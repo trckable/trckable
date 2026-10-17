@@ -9,8 +9,12 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('an unknown site goes to the main dashboard, not Settings', async ({ page }) => {
+  // The main dashboard is whichever site the person's bare address opens (the busiest one, which other specs' visits change).
+  await page.goto(API + '/?view=data')
+  await expect(page.locator('.brief .kcs .kc').first()).toBeVisible()
+  const main = new URL(page.url()).pathname
   await page.goto(API + '/no-such-site.example?view=data')
-  await expect(page).toHaveURL(API + '/example.com?view=data')
+  await expect(page).toHaveURL(API + main + '?view=data')
   await expect(page.locator('.brief .kcs .kc').first()).toBeVisible()
   await expect(page.getByText('Pick a site')).toHaveCount(0)
 })
