@@ -68,9 +68,14 @@ export interface Mentions {
 
 const base = (site: string) => `/sites/${encodeURIComponent(site)}/mentions`
 
+/** A page the visits confirmed ("ref") is shown with the news until the screens name it. */
+const known = (m: Mention): Mention => ((m.source as string) === 'ref' ? { ...m, source: 'news' } : m)
+
 export const mentionsApi = {
-  list: (site: string, period: Period, signal?: AbortSignal) => call<Mentions>('GET', `${base(site)}?period=${period}`, undefined, signal, true),
+  list: (site: string, period: Period, signal?: AbortSignal) =>
+    call<Mentions>('GET', `${base(site)}?period=${period}`, undefined, signal, true).then((r) => ({ ...r, mentions: r.mentions.map(known), driving: r.driving && known(r.driving) })),
   curves: (site: string, period: Period, signal?: AbortSignal) => call<Curves>('GET', `${base(site)}/curves?period=${period}`, undefined, signal, true),
-  detail: (site: string, id: number, signal?: AbortSignal) => call<Detail>('GET', `${base(site)}/${id}`, undefined, signal, true),
+  detail: (site: string, id: number, signal?: AbortSignal) =>
+    call<Detail>('GET', `${base(site)}/${id}`, undefined, signal, true).then((r) => ({ ...r, mention: known(r.mention) })),
   setWords: (site: string, keywords: string[]) => call<Words>('PUT', `${base(site)}/keywords`, { keywords }),
 }
