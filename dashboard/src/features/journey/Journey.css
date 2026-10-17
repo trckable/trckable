@@ -8,6 +8,19 @@
 .modal.journey-dialog > * {
   flex-shrink: 0; /* a tall story scrolls; its parts never squash */
 }
+/* The window holds one height: the who and the numbers stay in view, the visits scroll inside. */
+.modal.journey-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: min(720px, 85vh);
+  overflow: hidden;
+}
+.modal.journey-dialog > .jr-visits {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 .jr-corner {
   position: absolute;
   top: 16px;

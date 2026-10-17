@@ -50,6 +50,7 @@ export const copy = defineCopy('journey', {
   here: 'Here now',
   older: 'Older visits are not shown.',
   noPages: 'No pages recorded in this visit.',
+  moreEvents: (n: number) => `+${n} more`,
 
   // The menu.
   copyId: 'Copy visitor id',

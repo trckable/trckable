@@ -1373,6 +1373,7 @@ export default {
   'journey.here': 'Jetzt hier',
   'journey.older': 'Ältere Besuche werden nicht gezeigt.',
   'journey.noPages': 'Keine Seiten in diesem Besuch erfasst.',
+  'journey.moreEvents': (n: number) => `+${n} weitere`,
   'journey.copyId': 'Besucher-ID kopieren',
   'journey.copied': 'Besucher-ID kopiert',
   'journey.copyFailed': 'Die ID ließ sich nicht kopieren',

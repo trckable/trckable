@@ -1365,6 +1365,7 @@ export default {
   'journey.here': 'Nu hier',
   'journey.older': 'Oudere bezoeken worden niet getoond.',
   'journey.noPages': 'Geen pagina’s vastgelegd in dit bezoek.',
+  'journey.moreEvents': (n: number) => `+${n} meer`,
   'journey.copyId': 'Bezoeker-id kopiëren',
   'journey.copied': 'Bezoeker-id gekopieerd',
   'journey.copyFailed': 'De id kon niet worden gekopieerd',

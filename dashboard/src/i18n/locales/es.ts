@@ -1376,6 +1376,7 @@ export default {
   'journey.here': 'Aquí ahora',
   'journey.older': 'No se muestran las visitas más antiguas.',
   'journey.noPages': 'No hay páginas registradas en esta visita.',
+  'journey.moreEvents': (n: number) => `+${n} más`,
   'journey.copyId': 'Copiar id del visitante',
   'journey.copied': 'Id del visitante copiado',
   'journey.copyFailed': 'No se pudo copiar el id',
