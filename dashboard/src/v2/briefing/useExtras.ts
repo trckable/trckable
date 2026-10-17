@@ -1,7 +1,7 @@
 // The two things a card can say that come from outside the report: a new mention of the site today, and pages that got
 // slower than their usual. Each is asked once and never blocks the page.
 import { goalName } from '../../lib/goalName'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { more } from '../../lib/apiMore'
 import { addDays, diffDays, type ISODate, type Range } from '../../lib/dates'
 import type { SearchReport, Site } from '../../lib/api'
@@ -73,6 +73,18 @@ interface ExtrasWant {
   countries: { code: string; people: number }[]
 }
 
+// The speed figures of a day or a stretch, kept for a minute: the page's other numbers may be asked again (a report lands, a filter is set), the speed of the same days is not.
+const heldVitals = new Map<string, { at: number; v: ReturnType<typeof more.vitals> }>()
+function vitalsOf(site: string, from: ISODate, to: ISODate) {
+  const key = `${site}|${from}|${to}`
+  const k = heldVitals.get(key)
+  if (k && Date.now() - k.at < 60_000) return k.v
+  const v = more.vitals(site, { from, to })
+  heldVitals.set(key, { at: Date.now(), v })
+  v.catch(() => heldVitals.delete(key)) // a failed read is not kept
+  return v
+}
+
 const none: Extras = { mention: null, speed: null, buyers: null, search: null, stuck: null, funnel: null, first: null }
 
 /** The path's steps in this period and in the one before it, and the first step where fewer go on than usual. */
@@ -115,12 +127,18 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
   const funnelKey = want.funnel ? want.funnel.steps.map((x) => x.value).join(',') : ''
   const countryKey = want.countries.map((x) => x.code).join(',')
   const key = `${site.id}|${today}|${range.from}|${range.to}|${want.money}|${want.search}|${want.page}|${funnelKey}|${countryKey}`
+  // What the read uses is in `key`; a report that lands makes new `range` and `want` objects with the same contents, which must not read everything again.
+  const latest = useRef({ range, want })
+  useEffect(() => {
+    latest.current = { range, want }
+  })
   useEffect(() => {
     if (!on || isShared()) return
+    const { range, want } = latest.current
     let live = true
     const day0 = Math.floor(new Date(today + 'T00:00:00Z').getTime() / 1000)
     const mention = site.mentions ? mentionsApi.list(site.id, '7d').then((r) => r.mentions.filter((m) => m.posted_at >= day0 - 3600).sort((a, b) => b.posted_at - a.posted_at)[0] ?? null, () => null) : Promise.resolve(null)
-    const vit = (from: ISODate, to: ISODate) => moduleOn(site.id, 'vitals').then((on) => (on ? more.vitals(site.id, { from, to }) : null)).then((v) => (v && v.samples >= 5 && v.lcp_ms != null && v.inp_ms != null && v.cls_1k != null ? ([v.lcp_ms / 1000, v.inp_ms, v.cls_1k / 1000] as [number, number, number]) : null), () => null)
+    const vit = (from: ISODate, to: ISODate) => moduleOn(site.id, 'vitals').then((on) => (on ? vitalsOf(site.id, from, to) : null)).then((v) => (v && v.samples >= 5 && v.lcp_ms != null && v.inp_ms != null && v.cls_1k != null ? ([v.lcp_ms / 1000, v.inp_ms, v.cls_1k / 1000] as [number, number, number]) : null), () => null)
     const buyers = want.money ? extrasApi.buyers(site.id, { from: range.from, to: range.to }, 20).then((r) => r.buyers ?? [], () => null) : Promise.resolve(null)
     const refunds = want.money ? extrasApi.refunds(site.id, { from: range.from, to: range.to }).then((r) => (r.filtered ? null : r), () => null) : Promise.resolve(null)
     // Google is a day behind, so a single day is read as the week it ends.
@@ -140,7 +158,7 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
     return () => {
       live = false
     }
-  }, [key, site.id, site.mentions, today, on, range, want.money, want.search, want.page, want.funnel, want.countries])
+  }, [key, site.id, site.mentions, today, on])
   return got && got.key === key ? got.x : none
 }
 

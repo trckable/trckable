@@ -5,7 +5,7 @@ import { APIError, cachedReport, dropReports, peekReport, type Report, type Repo
 /** Fetches a report, keeping the last one on screen while the next loads. A
  *  period read before is shown at once, whatever its age, and refreshed behind
  *  it when it is older than the cache keeps it (lib/api.ts). */
-export function useReport(site: string | null, q: ReportQuery | null, opts: { live?: boolean } = {}) {
+export function useReport(site: string | null, q: ReportQuery | null, opts: { poll?: boolean } = {}) {
   const [data, setData] = useState<Report | null>(() => (site && q ? (peekReport(site, q) ?? null) : null))
   const [error, setError] = useState<string | null>(null)
   // The analytics store can still be opening after a restart. It answers 503
@@ -84,8 +84,8 @@ export function useReport(site: string | null, q: ReportQuery | null, opts: { li
     return () => window.removeEventListener('trckable:refresh', again)
   }, [site])
 
-  // Ranges that include today refresh every 30 s (the live stream covers the rest).
-  useVisibleInterval(() => setTick((n) => n + 1), 30_000, !!opts.live)
+  // Only a page with no live stream (a shared link) reads again on a timer: once a minute. Everyone else's report is read again when the stream brings something (useLiveRefresh).
+  useVisibleInterval(() => setTick((n) => n + 1), 60_000, !!opts.poll, 5 * 60_000)
 
   return { data, error, warming, loading, stale: loading && lastKey !== key, refresh: (skipCache = false) => {
     fresh.current = skipCache
