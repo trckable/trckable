@@ -2949,6 +2949,8 @@ export default {
   'briefing.normal': 'normale',
   'briefing.usual': 'come al solito',
   'briefing.leaveEarly': 'più persone se ne vanno subito',
+  'goalname.outbound': 'Clic sui link in uscita',
+  'goalname.form': 'Invii di moduli',
   'briefing.checksOff': 'controlli spenti',
   'briefing.whySheet': 'Come si calcola il punteggio',
   'briefing.whySheetSub': 'Ogni parte rispetto al solito, poi sommate',

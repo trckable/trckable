@@ -2939,6 +2939,8 @@ export default {
   'briefing.normal': 'normal',
   'briefing.usual': 'wie üblich',
   'briefing.leaveEarly': 'mehr gehen früh',
+  'goalname.outbound': 'Klicks auf externe Links',
+  'goalname.form': 'Formularübermittlungen',
   'briefing.checksOff': 'Prüfungen aus',
   'briefing.whySheet': 'Wie die Punktzahl entsteht',
   'briefing.whySheetSub': 'Jeder Teil gegen das Übliche, dann addiert',

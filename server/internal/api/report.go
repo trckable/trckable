@@ -6,6 +6,7 @@ import (
 	"math"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -23,6 +24,9 @@ import (
 //	segment    a saved segment's id: its filters are added to the f ones
 //	sofar      1 = with compare=previous, a period that includes now is compared
 //	           with the same elapsed time of the period before, not all of it
+//	sincehour  0-23 = count the first day of the period from that hour of the
+//	           site's day on, so "people since 09:00" is a count of people, not
+//	           a sum of hours
 //	daily      1 = include per-day data for the scrubber
 //	deep       1 = also break down exit pages, regions, cities, languages, browser versions and screens (Full mode)
 //	tz         override the site's timezone
@@ -134,6 +138,13 @@ func (a *API) parse(w http.ResponseWriter, r *http.Request, siteID string, allow
 		p := params
 		p.From, p.To, p.Daily = startOfDay(cf, loc).UTC(), startOfDay(ct, loc).UTC(), false
 		prev = &p
+	}
+
+	// The first day counted from an hour on (the comparison period, if any,
+	// is already fixed above and keeps its whole days).
+	if h, err := strconv.Atoi(v.Get("sincehour")); err == nil && h > 0 && h < 24 {
+		f := from.In(loc)
+		params.From = time.Date(f.Year(), f.Month(), f.Day(), h, 0, 0, 0, loc).UTC()
 	}
 
 	return &asked{

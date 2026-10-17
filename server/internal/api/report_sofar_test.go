@@ -32,3 +32,35 @@ func TestReportCompareSoFar(t *testing.T) {
 		t.Fatalf("day before, so far: %v", v)
 	}
 }
+
+// People since an hour are counted as people: one visitor seen in two hours is one.
+func TestReportSinceHour(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	g.clock.Store(time.Date(2026, 9, 21, 15, 0, 0, 0, time.UTC).UnixMilli())
+	at := func(h int) int64 { return time.Date(2026, 9, 21, h, 0, 0, 0, time.UTC).UnixMilli() }
+	n := uint64(0)
+	add := func(e event.Event) { n++; e.EventID = n; g.event(t, e) }
+	add(event.Event{Kind: event.KindPageview, TS: at(7), Visitor: 1, Path: "/"})
+	add(event.Event{Kind: event.KindPageview, TS: at(10), Visitor: 1, Path: "/"})
+	add(event.Event{Kind: event.KindPageview, TS: at(11), Visitor: 1, Path: "/a"})
+	add(event.Event{Kind: event.KindPageview, TS: at(12), Visitor: 2, Path: "/"})
+	g.waitApplied(t, n)
+	visitors := func(q string) float64 {
+		_, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/report?from=2026-09-21&to=2026-09-21"+q, "")
+		return out["current"].(map[string]any)["kpis"].(map[string]any)["visitors"].(float64)
+	}
+	if v := visitors(""); v != 2 {
+		t.Fatalf("whole day: %v", v)
+	}
+	if v := visitors("&sincehour=9"); v != 2 {
+		t.Fatalf("since 09:00: %v", v)
+	}
+	if v := visitors("&sincehour=11"); v != 2 {
+		t.Fatalf("since 11:00: %v", v)
+	}
+	if v := visitors("&sincehour=12"); v != 1 {
+		t.Fatalf("since 12:00: %v", v)
+	}
+}

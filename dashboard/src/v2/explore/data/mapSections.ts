@@ -1,4 +1,5 @@
 // The other sections' answers, said as Explore's models. Pure: mapSections.test.ts.
+import { goalName } from '../../../lib/goalName'
 import type { CrawlerReport, FunnelResult, FunnelStep, Money, PaidStep, Report, SearchReport, SearchRow as ApiSearchRow, WebVitals } from '../../../lib/api'
 import { fmtDay } from '../../../lib/dates'
 import { fmtFixed, fmtInt } from '../../../lib/format'
@@ -30,6 +31,12 @@ export function leakOf(steps: Step[]): Funnel['leak'] {
   return { at, r, ur }
 }
 
+/** A step as it is read: Paid in words, a goal by its label or humanized event name, a page by its path. */
+const stepName = (s: { kind: string; label?: string; value: string }): string => {
+  if (s.kind === 'paid') return copy.paid
+  return s.kind === 'goal' ? goalName(s.label, s.value) : s.label || s.value
+}
+
 /** The last step of a funnel on a site with payments: the visitors of the step before who then paid. */
 export const PAID_STEP: PaidStep = { kind: 'paid', value: 'paid' }
 
@@ -42,8 +49,8 @@ export function stepsOf(wanted: (FunnelStep | PaidStep)[] | undefined, pages: { 
 export function mapFunnel(o: { cur: FunnelResult[]; prev?: FunnelResult[]; report: Report; ghost: boolean }): Funnel {
   const { cur, prev, report } = o
   const base = !!report.previous && baseEnough(report.previous.kpis.visitors)
-  const steps: Step[] = cur.map((s, i) => ({ name: s.kind === 'paid' ? copy.paid : s.label || s.value, v: s.visitors, c: prev?.[i]?.visitors ?? 0 }))
-  const goals: Goal[] = (report.current.goals ?? []).map((g) => ({ name: g.label || g.value, ...statOf(g.visitors, report.previous?.goals?.find((p) => p.value === g.value)?.visitors, base) }))
+  const steps: Step[] = cur.map((s, i) => ({ name: stepName(s), v: s.visitors, c: prev?.[i]?.visitors ?? 0 }))
+  const goals: Goal[] = (report.current.goals ?? []).map((g) => ({ name: goalName(g.label, g.value), ...statOf(g.visitors, report.previous?.goals?.find((p) => p.value === g.value)?.visitors, base) }))
   const pages = (report.current.dims.page ?? []).map((r) => ({ name: r.value, ...statOf(r.visitors, report.previous?.dims.page?.find((p) => p.value === r.value)?.visitors, base) }))
   return { steps, leak: leakOf(steps), goals, vs: copy.vsUsual, ghost: o.ghost, goalsOn: goals.length > 0, pages }
 }

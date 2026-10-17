@@ -12,10 +12,19 @@ export function ScoreSheet({ rows, only, onSee, onClose }: { rows: WhyRow[]; onl
   const total = totalOf(rows)
   const title = only ? (shown[0]?.name ?? copy.whySheet) : copy.whySheet
   const sub = total === null ? copy.whySheetSub : String(total)
-  const pct = (k: Score['key']) => String(Math.round(WEIGHT[k] * 100))
   return (
     <InfoSheet title={title} sub={only ? undefined : sub} onClose={onClose} close={copy.close}>
-      {shown.map((r) => (
+      <ScoreBody rows={shown} all={!only} onSee={onSee} />
+    </InfoSheet>
+  )
+}
+
+/** The sheet's body: each part with its figures, its number and the way to the table behind it; the weights when the ring opened it. */
+export function ScoreBody({ rows, all, onSee }: { rows: WhyRow[]; all: boolean; onSee: (k: Score['key']) => void }) {
+  const pct = (k: Score['key']) => String(Math.round(WEIGHT[k] * 100))
+  return (
+    <>
+      {rows.map((r) => (
         <div key={r.key} data-why={r.key}>
           <InfoRow t={r.name} d={`${r.figures} ${r.rule}`} r={<b>{r.value}</b>} />
           <button type="button" className="xb" onClick={() => onSee(r.key)}>
@@ -23,7 +32,7 @@ export function ScoreSheet({ rows, only, onSee, onClose }: { rows: WhyRow[]; onl
           </button>
         </div>
       ))}
-      {!only && rows.length > 0 && <p className="mk-quiet">{copy.whyWeights(pct('traffic'), pct('engagement'), pct('uptime'))}</p>}
-    </InfoSheet>
+      {all && rows.length > 0 && <p className="mk-quiet">{copy.whyWeights(pct('traffic'), pct('engagement'), pct('uptime'))}</p>}
+    </>
   )
 }

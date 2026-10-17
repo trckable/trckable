@@ -42,7 +42,7 @@ import { nextStep, setupRows } from './steps'
 import { copy } from './copy'
 import { LOOKED_AT, sinceOf } from './since'
 import { goExplore } from './deeper'
-import { useSetup, useUptime, useUsual } from './hooks'
+import { useSetup, useSinceCount, useUptime, useUsual } from './hooks'
 import { bounceNote, kpiCards, noteOf, pctText, usualNote } from './kpis'
 import { unitOf } from './model'
 import { calmTopics } from './cards'
@@ -103,6 +103,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const prev = useMemo(() => normal(previous), [previous])
   const unit = unitOf(period)
   const today = todayIn(site.timezone)
+  const sinceCount = useSinceCount(site.id, today, LOOKED_AT, range.to === today)
   const usual = useUsual(site.id, range.to, unit === 'today' || unit === 'yesterday')
   const hist = useHistory(site, today, data?.bucket === 'hour', !!data)
   const notes = useNotes(site.id, { from: addDays(today, -365), to: today }, () => undefined)
@@ -185,7 +186,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const sales = cur.money?.payments ?? 0
   const lockSec = dayStart + LOOKED_AT * 3600
   const down = up.list.reduce((n, x) => n + Math.max(0, Math.min(x.ended_at ?? nowSec, nowSec) - Math.max(x.started_at, lockSec)), 0)
-  const sn = unit === 'today' && v > 0 ? sinceOf({ series: cur.series, nowMin: end, sales, downSec: down, calm: stories.length === 0 && sales === 0, day: v }) : null
+  const sn = unit === 'today' && v > 0 ? sinceOf({ people: sinceCount, nowMin: end, sales, downSec: down, calm: stories.length === 0 && sales === 0 }) : null
   const since = sn ? <SinceLine sn={sn} /> : undefined
   const reader = readerOf(recent.length ? recent : visits, site.domain, top?.value)
   const sub = heroSub(reader && !learning && !low ? copy.meet(readerWords(reader)) : null, low, say.sub, say.own)

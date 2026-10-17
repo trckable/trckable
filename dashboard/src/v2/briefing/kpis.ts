@@ -1,5 +1,6 @@
 // The four numbers under the hero, as the walkthrough builds them: People, the goal (or pageviews), Uptime, and
 // what people paid (or how many left after one page). Pure: kpis.test.ts.
+import { goalName } from '../../lib/goalName'
 import type { Result } from '../../lib/api'
 import { delta, fmtCompact, fmtFixed, fmtInt, fmtPct } from '../../lib/format'
 import { tooFew } from '../../lib/thin'
@@ -92,7 +93,7 @@ export function kpiCards(a: KpiIn): Kc[] {
   const cards: Kc[] = [
     { key: 'people', icon: 'people', label: copy.people, val: fmtInt(cur.kpis.visitors), note: say(rangeNote(a.peopleVerdict?.now ?? cur.kpis.visitors, a.peopleVerdict?.band, ` ${copy.peopleWord}`), learning, a.people.note), vals: a.people.vals, dn: false },
     goal
-      ? { key: 'goal', icon: 'goal', label: (goal.label || goal.value).replace(/^./, (c) => c.toUpperCase()), val: fmtInt(goal.visitors), note: say(rangeNote(goal.visitors, a.goalBand, ''), learning, bandNote(goal.visitors, a.goalBand) ?? noteOf(goal.visitors, prev?.goals?.find((g) => g.value === goal.value)?.visitors, a.before)), vals: a.goal?.vals ?? [], col: '#7f9cf5' }
+      ? { key: 'goal', icon: 'goal', label: goalName(goal.label, goal.value).replace(/^./, (c) => c.toUpperCase()), val: fmtInt(goal.visitors), note: say(rangeNote(goal.visitors, a.goalBand, ''), learning, bandNote(goal.visitors, a.goalBand) ?? noteOf(goal.visitors, prev?.goals?.find((g) => g.value === goal.value)?.visitors, a.before)), vals: a.goal?.vals ?? [], col: '#7f9cf5' }
       : { key: 'views', icon: 'click', label: copy.views, val: fmtCompact(cur.kpis.pageviews), note: a.learning ? { t: copy.learning } : noteOf(cur.kpis.pageviews, prev?.kpis.pageviews, a.before), vals: a.viewsVals, col: '#7f9cf5' },
     { key: 'uptime', icon: 'uptime', label: copy.uptimeCard, val: a.uptime.value === null ? '–' : `${a.uptimePct}%`, note: upNote, vals: a.uptime.value === null ? [] : a.uptimeVals, lo: Math.min(90, ...a.uptimeVals), hi: Math.min(90, ...a.uptimeVals) + (100 - Math.min(90, ...a.uptimeVals)) * 1.7, dn: down },
     cur.money && a.money

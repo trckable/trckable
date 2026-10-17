@@ -2942,6 +2942,8 @@ export default {
   'briefing.normal': 'normal',
   'briefing.usual': 'como siempre',
   'briefing.leaveEarly': 'más se van pronto',
+  'goalname.outbound': 'Clics en enlaces externos',
+  'goalname.form': 'Envíos de formularios',
   'briefing.checksOff': 'comprobaciones desactivadas',
   'briefing.whySheet': 'Cómo se calcula la puntuación',
   'briefing.whySheetSub': 'Cada parte frente a lo habitual, y luego sumadas',

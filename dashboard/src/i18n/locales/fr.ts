@@ -2937,6 +2937,8 @@ export default {
   'briefing.normal': 'normal',
   'briefing.usual': 'comme d’habitude',
   'briefing.leaveEarly': 'plus de départs précoces',
+  'goalname.outbound': 'Clics sur liens sortants',
+  'goalname.form': 'Envois de formulaires',
   'briefing.checksOff': 'vérifications désactivées',
   'briefing.whySheet': 'Comment le score est calculé',
   'briefing.whySheetSub': 'Chaque partie face à l’habituel, puis additionnées',

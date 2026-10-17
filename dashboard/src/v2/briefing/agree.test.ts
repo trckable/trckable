@@ -4,7 +4,6 @@ import type { Result } from '../../lib/api'
 import { usualNote } from './kpis'
 import { overall, sentence, sourceName, trafficFromBand, WEIGHT } from './model'
 import { moments, streak } from './moments'
-import { sinceOf } from './since'
 import { dayBandOf, verdictOf } from './usual'
 
 const cur = (v: number): Result => ({ approximate: false, kpis: { visitors: v, sessions: v, pageviews: v, bounce_rate: 0.5, avg_session_s: 60, views_per_session: 1, new_visitor_share: 0.5 }, series: [], dims: {}, goals: null })
@@ -43,14 +42,6 @@ describe('a run of days and today agree', () => {
     const base = { totals, days, from: 39, to: 39, elapsed: 600, today: true, week: false, filtered: false }
     expect(moments({ ...base, todayUp: verdictOf(580, band)?.st === 'up' }).pills.join()).not.toMatch(/10/)
     expect(moments({ ...base, todayUp: verdictOf(700, band)?.st === 'up' }).pills.join()).toMatch(/10/)
-  })
-})
-
-describe('since this morning', () => {
-  it('is never more than the day', () => {
-    const series = Array.from({ length: 24 }, (_, i) => ({ t: `2026-10-17T${String(i).padStart(2, '0')}:00`, visitors: 30, pageviews: 30 }))
-    expect(sinceOf({ series, nowMin: 15 * 60, sales: 0, downSec: 0, calm: false, day: 590 })?.people).toBeLessThanOrEqual(590)
-    expect(sinceOf({ series, nowMin: 15 * 60, sales: 0, downSec: 0, calm: false, day: 100 })?.people).toBe(100)
   })
 })
 

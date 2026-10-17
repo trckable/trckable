@@ -2949,6 +2949,8 @@ export default {
   'briefing.normal': 'normaal',
   'briefing.usual': 'zoals gewoonlijk',
   'briefing.leaveEarly': 'meer mensen vertrekken vroeg',
+  'goalname.outbound': 'Klikken op uitgaande links',
+  'goalname.form': 'Formulierverzendingen',
   'briefing.checksOff': 'controles uit',
   'briefing.whySheet': 'Hoe de score ontstaat',
   'briefing.whySheetSub': 'Elk deel tegenover het gebruikelijke, dan opgeteld',
