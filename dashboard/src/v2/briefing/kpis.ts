@@ -3,10 +3,10 @@
 import { goalName } from '../../lib/goalName'
 import type { Result } from '../../lib/api'
 import { delta, fmtCompact, fmtFixed, fmtInt, fmtPct } from '../../lib/format'
-import { tooFew } from '../../lib/thin'
+import { baseEnough, tooFew } from '../../lib/thin'
 import type { Kc } from '../ui/KpiCard'
 import { copy } from './copy'
-import type { Score } from './model'
+import { type Score, type Unit, type Usual } from './model'
 import { judge, type Band as UsualBand, type Judged, type Verdict } from './usual'
 
 /** "+27% vs usual", "as usual", "−6% vs the day before": the note on a number that has a figure to be told against. */
@@ -115,4 +115,26 @@ export function bounceNote(now: number, usual: number | null): Kc['note'] {
 export function pctText(pct: number | null): string {
   if (pct === null) return ''
   return Number.isInteger(pct) ? fmtInt(pct) : fmtFixed(pct, 1)
+}
+
+interface PeopleNoteIn {
+  verdict: Verdict | null
+  learning: boolean
+  usual: Usual | null
+  unit: Unit
+  prev: Result | undefined
+  v: number
+  before: string
+}
+
+/** The note on the People card: against the one verdict when the history says, else the server's usual, else the period before. */
+export function peopleNoteOf(a: PeopleNoteIn): Kc['note'] {
+  if (a.verdict && !a.learning) return usualNote(a.verdict.now, a.verdict.band.c, a.verdict.st)
+  const u = a.usual
+  if (u && u.average >= 5 && (u.weeks?.length ?? 0) > 0 && (a.unit === 'today' || a.unit === 'yesterday')) {
+    const d = a.v / u.average - 1
+    if (Math.abs(d) < 0.05) return { t: copy.asUsual }
+    return d > 0 ? { t: copy.vsUsual('+', Math.round(d * 100)), up: true } : { t: copy.vsUsual('−', Math.round(-d * 100)), dn: true }
+  }
+  return a.prev && baseEnough(a.prev.kpis.visitors) ? noteOf(a.v, a.prev.kpis.visitors, a.before) : { t: a.unit === 'today' ? copy.soFarToday : '' }
 }

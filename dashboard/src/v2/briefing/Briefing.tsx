@@ -11,15 +11,12 @@ import { fmtInt } from '../../lib/format'
 import { wholeMoney } from './wholeMoney'
 import { isShared, isViewer } from '../../lib/me'
 import { openSettings } from '../../lib/settings'
-import { baseEnough } from '../../lib/thin'
 import { toggleWatch, watched } from '../../lib/watch'
 import { useNow } from '../../features/incidents/useIncidents'
 import { useNotes } from '../../features/notes/useNotes'
 import { addDays } from '../../lib/dates'
 import { CardList } from '../ui/StoryCard'
 import { Hero } from '../ui/HeroCard'
-import { openExplore } from '../explore/open'
-import { navigate } from '../../lib/url'
 import { whyRows } from './scoreWhy'
 import { chartNote } from '../ui/DayChart'
 import { ChartBlock } from './ChartBlock'
@@ -41,9 +38,9 @@ import { siteNow } from './chart'
 import { nextStep, setupRows } from './steps'
 import { copy } from './copy'
 import { LOOKED_AT, sinceOf } from './since'
-import { goExplore } from './deeper'
+import { goExplore, seeScorePart } from './deeper'
 import { useSetup, useSinceCount, useUptime, useUsual } from './hooks'
-import { bounceNote, kpiCards, noteOf, pctText, usualNote } from './kpis'
+import { bounceNote, kpiCards, pctText, peopleNoteOf } from './kpis'
 import { unitOf } from './model'
 import { calmTopics } from './cards'
 import { Hold } from '../ui/Hold'
@@ -146,15 +143,6 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   // A day with nobody yet still has its chart and numbers once the site has a history; only a site that never had anyone is empty.
   const empty = cur.kpis.visitors === 0 && (parts.hd === 0 || !hist.daily)
   const v = cur.kpis.visitors
-  const peopleNote = () => {
-    if (parts.verdict && !learning) return usualNote(parts.verdict.now, parts.verdict.band.c, parts.st)
-    if (usual && usual.average >= 5 && (usual.weeks?.length ?? 0) > 0 && (unit === 'today' || unit === 'yesterday')) {
-      const d = v / usual.average - 1
-      if (Math.abs(d) < 0.05) return { t: copy.asUsual }
-      return d > 0 ? { t: copy.vsUsual('+', Math.round(d * 100)), up: true } : { t: copy.vsUsual('−', Math.round(-d * 100)), dn: true }
-    }
-    return prev && baseEnough(prev.kpis.visitors) ? noteOf(v, prev.kpis.visitors, before) : { t: unit === 'today' ? copy.soFarToday : '' }
-  }
   const pts = chart.points
   const pct = up.pct === null ? uptime.value : up.pct
   const kcs = kpiCards({
@@ -162,7 +150,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
     prev,
     learning,
     before,
-    people: { note: peopleNote(), vals: pts.map((p) => p.v) },
+    people: { note: peopleNoteOf({ verdict: parts.verdict, learning, usual, unit, prev, v, before }), vals: pts.map((p) => p.v) },
     goal: goalSlice.length ? { vals: goalSlice.slice(0, pts.length) } : null,
     viewsVals: cur.series.slice(0, pts.length).map((p) => p.pageviews),
     leave: { note: bounceNote(cur.kpis.bounce_rate, parts.bounceUsual), vals: pts.map((_, i) => cur.series[i]?.bounce_rate ?? 0) },
@@ -206,7 +194,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
           say={{ ...say, sub }}
           scores={scores}
           rows={whyRows(scores, parts.facts)}
-          onSee={(k) => (k === 'uptime' ? navigate(`/${encodeURIComponent(site.domain)}/incidents`) : openExplore(k === 'traffic' ? 'overtime' : 'pages'))}
+          onSee={(k) => seeScorePart(site, k)}
           learn={learning ? { day: Math.min(7, parts.hd + 1) } : null}
           crowd={crowd}
           since={since}
