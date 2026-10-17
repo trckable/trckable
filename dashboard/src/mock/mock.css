@@ -1436,7 +1436,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .mk-ring circle:last-of-type{transition:stroke-dasharray .45s ease,stroke .3s}
 @media (prefers-reduced-motion:reduce){.mk .mk-ring circle:last-of-type{transition:none}}
 /* a site before its first visit */
-.mk .snip{display:block;border:1px solid var(--mk-line);background:var(--mk-field);border-radius:12px;padding:var(--mk-s3);font-size:12px;color:var(--mk-muted);word-break:break-all;white-space:pre-wrap;text-align:left}
+.mk .snip{display:block;border:1px solid var(--mk-line);background:var(--mk-field);border-radius:12px;padding:var(--mk-s3);font-size:12px;color:var(--mk-muted);white-space:pre;overflow-x:auto;text-align:left}
 .mk .xrow2{display:flex;gap:var(--mk-s2);flex-wrap:wrap}
 .mk .fz{grid-template-columns:repeat(2,minmax(0,1fr))}
 .mk .sidecol.setup{display:flex;flex-direction:column;gap:var(--mk-s3);align-items:stretch;min-width:min(420px,100%);max-width:520px}

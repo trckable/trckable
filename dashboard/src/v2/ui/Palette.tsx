@@ -6,8 +6,10 @@ import { MkPortal } from './Portal'
 export interface PaletteItem {
   /** What is typed to find it, and what is shown. */
   title: string
-  /** The small word on the right ("table", "site", "peek"). */
+  /** The small word on the right ("site", "peek"); none for a row whose group already says it. */
   kind: string
+  /** More words that find it, beside its title ("Explore" for a table, whose group heading says it). */
+  also?: string
   group: string
   run: () => void
 }
@@ -19,7 +21,7 @@ export function Palette({ items, placeholder, none, onClose, initial = '' }: { i
   useEffect(() => input.current?.focus(), [])
   const list = useMemo(() => {
     const t = q.toLowerCase().trim()
-    return items.filter((i) => i.title.toLowerCase().includes(t)).slice(0, 16)
+    return items.filter((i) => `${i.title} ${i.also ?? ''}`.toLowerCase().includes(t)).slice(0, 16)
   }, [items, q])
   const sel = Math.max(0, Math.min(at, list.length - 1))
   const run = (i: PaletteItem | undefined) => {
@@ -64,11 +66,11 @@ export function Palette({ items, placeholder, none, onClose, initial = '' }: { i
             {list.map((i, k) => {
               const head = k === 0 || list[k - 1].group !== i.group ? <div className="pgh">{i.group}</div> : null
               return (
-                <div key={i.title + i.kind} style={{ display: 'contents' }}>
+                <div key={i.group + i.title + i.kind} style={{ display: 'contents' }}>
                   {head}
                   <button type="button" className={`pi${k === sel ? ' on' : ''}`} onClick={() => run(i)}>
                     {i.title}
-                    <span className="s">{i.kind}</span>
+                    {i.kind && <span className="s">{i.kind}</span>}
                   </button>
                 </div>
               )

@@ -136,6 +136,9 @@
   gap: 24px;
   align-items: start;
 }
+.nx-cols.solo {
+  grid-template-columns: minmax(0, 1fr);
+}
 .nx-sites {
   display: grid;
   gap: 22px;
