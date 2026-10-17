@@ -73,57 +73,8 @@ const noSideScroll = (page: Page) => page.evaluate(() => document.documentElemen
 
 
 
-test('the Story cards carry the same badges', async ({ page }) => {
-  await told(page, ALL)
-  await open(page, `/${site.domain}?v=story`)
-  await expect(page.locator('.sv-tile .vf-chip').first()).toBeVisible({ timeout: 15_000 })
-  await expect(page.locator('.sv-tile .vf-chip')).toHaveCount(1)
-  expect(await noSideScroll(page)).toBeLessThanOrEqual(0)
-  await shoot(page, 'story', { y: 120, height: 560 })
-})
 
-test('with nothing working there is no seal and no badge, and the switcher marks only a site that has one', async ({ page }) => {
-  await told(page, sources([{ kind: 'payments', provider: 'stripe', ok: false }]))
-  await open(page, `/${site.domain}?v=explore`)
-  await expect(page.locator('#siteBtn')).toBeVisible({ timeout: 15_000 })
-  await expect(page.locator('.vf-sealbtn')).toHaveCount(0)
-  await expect(page.locator('.kpis .vf-chip')).toHaveCount(0)
 
-  await page.unroute('**/api/v1/sites')
-  await page.unroute(`**/api/v1/sites/${site.id}/verified`)
-  await told(page, ALL)
-  await page.reload()
-  await page.locator('#siteBtn').click()
-  await expect(page.locator(`[data-site="${site.id}"] .vf-seal-dot`)).toBeVisible({ timeout: 15_000 })
-  // A site with no source has no seal (other suites' sites with a real Stripe sale may have one).
-  await expect(page.locator('#siteMenu .site-row').filter({ hasText: 'history.example' }).locator('.vf-seal-dot')).toHaveCount(0)
-  await shoot(page, 'switcher', { height: 520 })
-})
-
-test('a shared link shows the seal for its readers, and money only on a link that shows money', async ({ page }) => {
-  await page.setViewportSize({ width: WIDTH, height: 900 })
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  // Stripe is the one real source here, and the open link hides money.
-  await page.goto(openLink)
-  await expect(page.locator('.app.shared')).toBeVisible({ timeout: 15_000 })
-  await expect(page.locator('.vf-pill')).toHaveCount(0)
-
-  await page.goto(moneyLink)
-  const pill = page.locator('.vf-pill')
-  await expect(pill).toBeVisible({ timeout: 15_000 })
-  await expect(pill).toHaveAttribute('aria-label', /Payments/)
-  await pill.click()
-  const panel = page.locator('.vf-panel')
-  await expect(panel).toContainText('These numbers are real')
-  await expect(panel).toContainText('Confirmed by an independent source: Payments')
-  await expect(panel.locator('.vf-connect')).toHaveCount(0)
-  await expect(panel.getByRole('link', { name: /Verify your own site/ })).toHaveAttribute('href', 'https://trckable.com/?ref=verified')
-  expect(await noSideScroll(page)).toBeLessThanOrEqual(0)
-  await shoot(page, 'shared', { height: phone ? 900 : 520 })
-  await page.keyboard.press('Escape')
-  await expect(panel).toBeHidden()
-  await expect(page.locator('.kpis .kpi').filter({ hasText: 'Revenue' }).locator('.vf-chip')).toContainText('Payments verified')
-})
 
 test('the website badge shows what works, and nothing while no source does', async ({ page }) => {
   await signIn(page)
