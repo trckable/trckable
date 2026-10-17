@@ -1,0 +1,12 @@
+# gitleaks: the default rules, plus the allowlist below. Each entry is a real
+# false positive (a test fixture, a documented example) with the reason beside
+# it; nothing is allowed because it is inconvenient. A real secret that was
+# committed is rotated, not allowed.
+title = "trckable"
+
+[extend]
+useDefault = true
+
+# [[allowlists]]
+# description = "why this is not a secret"
+# paths = ['''path/to/fixture''']

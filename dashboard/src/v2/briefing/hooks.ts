@@ -1,7 +1,7 @@
 // What the Briefing reads besides the report: the server's "usual" for a day, the incident record over the period, and
 // what is not set up yet. Each is asked once and never blocks the page.
 import { useEffect, useState } from 'react'
-import { call, rangeQS, type Site } from '../../lib/api'
+import { api, call, rangeQS, type Site } from '../../lib/api'
 import { more } from '../../lib/apiMore'
 import type { Range } from '../../lib/dates'
 import { startOfDay, uptimeOf } from '../../features/incidents/model'
@@ -54,4 +54,22 @@ export function useSetup(site: Site) {
     }
   }, [site.id, can])
   return { can, noAlerts: alerts, noSearch: search }
+}
+
+/** The people seen today since the hour the day is taken to start for someone looking in: one count of people, never a sum of hours. */
+export function useSinceCount(site: string, today: string, hour: number, on: boolean): number | null {
+  const [got, setGot] = useState<{ key: string; n: number } | null>(null)
+  const key = `${site}|${today}|${hour}`
+  useEffect(() => {
+    if (!on) return
+    let live = true
+    api.report(site, { from: today, to: today, sincehour: hour }).then(
+      (r) => live && setGot({ key, n: r.current.kpis.visitors }),
+      () => undefined,
+    )
+    return () => {
+      live = false
+    }
+  }, [key, site, today, hour, on])
+  return got && got.key === key ? got.n : null
 }

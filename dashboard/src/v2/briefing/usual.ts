@@ -118,3 +118,31 @@ export function bandFromWeeks(weeks: number[]): Band | null {
 export function bandFromBefore(was: number | undefined): Band | null {
   return was === undefined || was < 3 ? null : { c: was, lo: Math.max(0, Math.floor(was * 0.75)), hi: Math.ceil(was * 1.25) + 1 }
 }
+
+/** The one verdict on how a period's people stand against their usual: what was counted, the usual it is told against, and whether it is above, below or inside. The headline, the People card, the score and the run of days all read this, so they cannot disagree. */
+export interface Verdict {
+  /** The figure judged: the same kind of count as the band (hourly sums against hourly sums, day people against day people). */
+  now: number
+  band: Band
+  st: Judged
+  /** How many times the usual, none when the usual is too small to say. */
+  ratio: number | null
+}
+
+export function verdictOf(now: number, band: Band | null | undefined): Verdict | null {
+  if (!band) return null
+  return { now, band, st: judge(now, band), ratio: band.c > 0.5 ? now / band.c : null }
+}
+
+/** The stretch of a period that counts against its usual: hours that have happened, and the share of the hour now running. */
+export interface CountedHour {
+  day: string
+  hour: number
+  fr: number
+}
+
+/** The people of those hours, added up hour by hour, which is how the usual of an hour-table band is added up too. */
+export function hourlyPeople(series: Point[], counted: CountedHour[]): number {
+  const seen = new Set(counted.map((h) => `${h.day}|${h.hour}`))
+  return series.reduce((n, p) => (seen.has(`${p.t.slice(0, 10)}|${Number(p.t.slice(11, 13))}`) ? n + p.visitors : n), 0)
+}
