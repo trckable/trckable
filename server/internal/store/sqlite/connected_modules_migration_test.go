@@ -29,7 +29,7 @@ func TestConnectedSitesGetTheirModules(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	exec(`DELETE FROM site_modules; PRAGMA user_version = ` + fmt.Sprint(step-1))
+	exec(`DELETE FROM site_modules; PRAGMA user_version = ` + fmt.Sprint(step-1)) //nolint:gosec // a number of ours, in a test
 	for _, id := range []string{paid, gone} {
 		exec(`INSERT INTO site_modules (site_id, module_id, enabled, updated_at) VALUES (?, 'revenue', 0, 1)`, id)
 	}

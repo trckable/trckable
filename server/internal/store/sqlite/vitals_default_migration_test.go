@@ -42,7 +42,7 @@ func TestVitalsDefaultKeepsExistingSites(t *testing.T) {
 		return id
 	}
 	plain, chose := site("plain.com"), site("chose.com")
-	if _, err := s.DB.ExecContext(ctx, `DELETE FROM site_modules; PRAGMA user_version = `+fmt.Sprint(step-1)); err != nil {
+	if _, err := s.DB.ExecContext(ctx, `DELETE FROM site_modules; PRAGMA user_version = `+fmt.Sprint(step-1)); err != nil { //nolint:gosec // a number of ours, in a test
 		t.Fatal(err)
 	}
 	if _, err := s.DB.ExecContext(ctx, `INSERT INTO site_modules (site_id, module_id, enabled, updated_at) VALUES (?, 'vitals', 1, 1)`, chose); err != nil {
