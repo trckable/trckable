@@ -44,3 +44,4 @@ html[data-motion='off'] .mk .setupmenu .sbar i{transition:none}
 .mk .setupmenu .spfoot button{text-decoration:underline}
 @media (max-width:900px){.mk .ringb .rtext{display:none}.mk .ringb{padding:0 var(--mk-s1)}}
 @media (max-width:700px){.mk .mk-menu.setupmenu{padding:var(--mk-s5) var(--mk-s4) calc(var(--mk-s4) + env(safe-area-inset-bottom))}.mk .ringw{position:static}.mk .setupmenu .sgo,.mk .setupmenu .snf{min-height:32px}}
+.mk .ringb.ringph{visibility:hidden}

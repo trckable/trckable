@@ -7,6 +7,7 @@ import { useSettings } from '../../lib/settings'
 const FIRST = 2500
 
 export function useSetup(site: Site | null, on: boolean) {
+  const [failed, setFailed] = useState<string | null>(null)
   const [got, setGot] = useState<{ site: string; state: SetupState } | null>(null)
   const id = site?.id ?? null
   const settingsOpen = useSettings() !== null
@@ -15,7 +16,7 @@ export function useSetup(site: Site | null, on: boolean) {
     more
       .setup(id)
       .then((state) => setGot({ site: id, state }))
-      .catch(() => undefined)
+      .catch(() => setFailed(id))
   }, [id, on])
   // The first read waits a little: the ring is not what the page is waiting for.
   useEffect(() => {
@@ -37,5 +38,7 @@ export function useSetup(site: Site | null, on: boolean) {
     [id],
   )
   const state = got && got.site === id ? got.state : null
-  return { state, reload: load, run }
+  // Still on its way: the header keeps the ring's place, so what is beside it does not move when it arrives.
+  const waiting = on && state === null && failed !== id
+  return { state, waiting, reload: load, run }
 }
