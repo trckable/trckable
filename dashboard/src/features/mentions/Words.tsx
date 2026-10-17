@@ -1,9 +1,11 @@
 import { Plus, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { toast } from '../../components/Toast'
 import { fail } from '../../lib/api'
+import { trust } from './trustCopy'
 import { isViewer } from '../../lib/me'
 import { mentionsApi, type LookAlike, type Words as WordsValue } from './api'
-import { LookAlikeNote } from './LookAlikeNote'
+import { LookAlikeNote, UncheckedNote } from './LookAlikeNote'
 import { otherMeaning } from './lookAlike'
 import { page } from './pageCopy'
 
@@ -12,20 +14,27 @@ export function Words({ site, words, onWords }: { site: string; words: WordsValu
   const [draft, setDraft] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [look, setLook] = useState<LookAlike | null>(null)
+  const [unchecked, setUnchecked] = useState<string | null>(null)
   const input = useRef<HTMLInputElement>(null)
   const viewer = isViewer()
   useEffect(() => {
     if (draft === '') input.current?.focus()
   }, [draft])
   const save = (added: string[], exclude: string[] = []) => {
+    const excluded = [...words.rules.excluded, ...exclude.filter((x) => !words.rules.excluded.includes(x))]
+    if (excluded.length > 20) {
+      toast(trust.excludedFull(20), 'warning')
+      return
+    }
     setBusy(true)
     mentionsApi
       .setWords(site, added)
       .then(async (w) => {
-        const rules = exclude.length > 0 ? await mentionsApi.setRules(site, { ...w.rules, excluded: [...w.rules.excluded, ...exclude.filter((x) => !w.rules.excluded.includes(x))].slice(0, 20) }) : w.rules
+        const rules = exclude.length > 0 ? await mentionsApi.setRules(site, { ...w.rules, excluded }) : w.rules
         onWords({ ...w, rules })
         setDraft(null)
         setLook(null)
+        setUnchecked(null)
       })
       .catch((e: unknown) => fail(e))
       .finally(() => setBusy(false))
@@ -40,7 +49,11 @@ export function Words({ site, words, onWords }: { site: string; words: WordsValu
     }
     setBusy(true)
     void otherMeaning(site, w)
-      .then((other) => (other ? setLook(other) : save([...words.added, w])))
+      .then((m) => {
+        if (m.kind === 'other') setLook(m.look)
+        else if (m.kind === 'unchecked') setUnchecked(w)
+        else save([...words.added, w])
+      })
       .finally(() => setBusy(false))
   }
   return (
@@ -86,6 +99,7 @@ export function Words({ site, words, onWords }: { site: string; words: WordsValu
         </li>
       )}
     </ul>
+    {unchecked && <UncheckedNote word={unchecked} onAdd={() => save([...words.added, unchecked])} onCancel={() => { setUnchecked(null); setDraft(null) }} />}
     {look && <LookAlikeNote look={look} onExclude={() => save([...words.added, look.word], look.suggest_exclude)} onOnly={() => save([...words.added, look.word])} onCancel={() => { setLook(null); setDraft(null) }} />}
     </>
   )

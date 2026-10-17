@@ -3308,4 +3308,7 @@ export default {
   'mentionsTrust.removeEntry': (w: string) => `Quitar ${w}`,
   'mentionsTrust.suggested': (w: string) => `Añadir «${w}»`,
   'mentionsTrust.lookTitle': (w: string) => `«${w}» también se usa para otra cosa en las noticias`,
+  'mentionsTrust.uncheckedTitle': (w: string) => `No se pudieron comprobar las noticias para «${w}» ahora mismo`,
+  'mentionsTrust.addAnyway': 'Añadir de todos modos',
+  'mentionsTrust.excludedFull': (n: number) => `Eso superaría el límite de ${n} palabras excluidas. Quita una primero.`,
 } satisfies Messages

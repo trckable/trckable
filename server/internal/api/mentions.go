@@ -4,8 +4,10 @@ import (
 	"errors"
 	"net/http"
 	"sort"
+	"strings"
 	"time"
 
+	"github.com/trckable/trckable/server/internal/ingest"
 	"github.com/trckable/trckable/server/internal/mentions"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
@@ -152,22 +154,42 @@ func (a *API) setMentionKeywords(w http.ResponseWriter, r *http.Request) {
 }
 
 // confirmedInPeriod sets the visitors of the pages the visits confirmed to
-// those that came in the chosen period (they are kept for the last month).
+// those that came in the chosen period, in one grouped query over the visits
+// the classifier called Social or Referral (the same ones that confirmed them).
+// A page that sent nobody in the period keeps its last month's count rather
+// than showing a zero it never had.
 func (a *API) confirmedInPeriod(r *http.Request, site string, list []sqlite.Mention, from, to time.Time) {
 	q := a.Query()
 	if q == nil {
 		return
 	}
+	var forms []any
+	at := map[string][]int{}
 	for i, m := range list {
-		form, ok := mentions.RefForm(m.URL)
-		if m.Via != mentions.ViaPage || !ok {
-			continue
+		if form, ok := mentions.RefForm(m.URL); ok && m.Via == mentions.ViaPage {
+			if _, dup := at[form]; !dup {
+				forms = append(forms, form)
+			}
+			at[form] = append(at[form], i)
 		}
+	}
+	if len(forms) == 0 {
+		return
+	}
+	args := append([]any{site, from.UTC(), to.UTC(), ingest.ChannelSocial, ingest.ChannelReferral}, forms...)
+	rows, err := q.DB.QueryContext(r.Context(), `SELECT referrer_url, count(DISTINCT visitor_id) FROM events WHERE site_id = ? AND kind = 1 AND ts >= ? AND ts < ? AND channel IN (?, ?)
+		AND referrer_url IN (`+strings.TrimSuffix(strings.Repeat("?,", len(forms)), ",")+`) GROUP BY referrer_url`, args...)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var form string
 		var n int64
-		err := q.DB.QueryRowContext(r.Context(), `SELECT count(DISTINCT visitor_id) FROM events WHERE site_id = ? AND kind = 1 AND ts >= ? AND ts < ? AND referrer_url = ?`,
-			site, from.UTC(), to.UTC(), form).Scan(&n)
-		if err == nil {
-			list[i].Visitors = n
+		if rows.Scan(&form, &n) == nil && n > 0 {
+			for _, i := range at[form] {
+				list[i].Visitors = n
+			}
 		}
 	}
 }

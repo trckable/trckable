@@ -30,3 +30,22 @@ export function LookAlikeNote({ look, onExclude, onOnly, onCancel }: { look: Loo
     </div>
   )
 }
+
+/** The news could not be asked: say so, and let the owner add the word anyway. */
+export function UncheckedNote({ word, onAdd, onCancel }: { word: string; onAdd: () => void; onCancel: () => void }) {
+  return (
+    <div className="mp-note" role="alert">
+      <p>
+        <strong>{trust.uncheckedTitle(word)}</strong>
+      </p>
+      <p className="mp-note-actions">
+        <button type="button" className="btn" onClick={onAdd}>
+          {trust.addAnyway}
+        </button>
+        <button type="button" className="btn ghost" onClick={onCancel}>
+          {trust.lookCancel}
+        </button>
+      </p>
+    </div>
+  )
+}

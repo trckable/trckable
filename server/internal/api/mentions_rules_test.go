@@ -144,3 +144,36 @@ func TestLookAlikeWarnsAboutAnotherMeaning(t *testing.T) {
 		t.Fatalf("a quote is refused: %d", code)
 	}
 }
+
+// A confirmed page's visitors follow the period (Social and Referral visits only); one that sent
+// nobody in the period keeps its month's count instead of a zero.
+func TestConfirmedVisitorsFollowThePeriod(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	now := g.advance(0)
+	for i, p := range []struct{ page string }{{"reddit.com/r/x/comments/1/a"}, {"reddit.com/r/x/comments/2/b"}} {
+		u := "https://" + p.page
+		g.mention(t, sqlite.Mention{Source: "ref", URL: u, Title: p.page, Host: "reddit.com", PostedAt: now.Add(-4 * 24 * time.Hour).Unix(), Via: mentions.ViaPage}, 9, now.Unix())
+		_ = i
+	}
+	ev := func(seq, visitor int, page, channel string, at time.Time) {
+		if _, err := g.api.Query().DB.Exec(`INSERT INTO events (seq, site_id, ts, kind, visitor_id, session_id, referrer_url, channel) VALUES (?, ?, ?, 1, ?, ?, ?, ?)`,
+			seq, g.site, at.UTC(), visitor, visitor, page, channel); err != nil {
+			t.Fatal(err)
+		}
+	}
+	ev(1, 1, "reddit.com/r/x/comments/1/a", "Referral", now.Add(-2*24*time.Hour))
+	ev(2, 2, "reddit.com/r/x/comments/1/a", "Social", now.Add(-3*24*time.Hour))
+	ev(3, 3, "reddit.com/r/x/comments/1/a", "Search", now.Add(-3*24*time.Hour))
+	ev(4, 4, "reddit.com/r/x/comments/1/a", "Referral", now.Add(-15*24*time.Hour)) // outside 7 days
+	_, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/mentions?period=7d", "")
+	got := map[string]float64{}
+	for _, m := range out["mentions"].([]any) {
+		m := m.(map[string]any)
+		got[m["title"].(string)] = m["visitors"].(float64)
+	}
+	if got["reddit.com/r/x/comments/1/a"] != 2 || got["reddit.com/r/x/comments/2/b"] != 9 {
+		t.Fatalf("two visits of the right channels in 7 days; the quiet page keeps its 9: %v", got)
+	}
+}

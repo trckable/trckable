@@ -3303,4 +3303,7 @@ export default {
   'mentionsTrust.removeEntry': (w: string) => `Retirer ${w}`,
   'mentionsTrust.suggested': (w: string) => `Ajouter « ${w} »`,
   'mentionsTrust.lookTitle': (w: string) => `« ${w} » désigne aussi autre chose dans l’actualité`,
+  'mentionsTrust.uncheckedTitle': (w: string) => `L’actualité n’a pas pu être vérifiée pour « ${w} » à l’instant`,
+  'mentionsTrust.addAnyway': 'Ajouter quand même',
+  'mentionsTrust.excludedFull': (n: number) => `Cela dépasserait la limite de ${n} mots exclus. Retirez-en un d’abord.`,
 } satisfies Messages
