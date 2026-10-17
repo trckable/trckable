@@ -89,6 +89,12 @@ type Seen interface {
 	SeenSite(ctx context.Context, site string, at int64)
 }
 
+// ProxySeen records that a site's events arrive through its own-domain
+// proxy (the setup checklist reads it). Optional.
+type ProxySeen interface {
+	SeenProxied(ctx context.Context, site string, at int64)
+}
+
 // GoalLabels keeps the name a goal was sent with, next to its key. Optional:
 // without it goals show their key.
 type GoalLabels interface {
@@ -121,6 +127,8 @@ type Handler struct {
 	Now     func() time.Time
 	Stats   Stats
 	Seen    Seen // optional: records that a site is alive
+	// Proxied records the last event that came through the site's proxy; optional.
+	Proxied ProxySeen
 	// Labels keeps goal names as written; optional.
 	Labels GoalLabels
 	// Module reports whether a site has a module on; nil means every module
@@ -143,6 +151,38 @@ type Handler struct {
 	limitIP   *limiter
 	seenMu    sync.Mutex
 	seenAt    map[string]int64
+	proxyAt   map[string]int64
+}
+
+// proxyEvery is how often a site's proxied events are written down: the
+// checklist asks about the last 7 days, so minutes are plenty.
+const proxyEvery = 10 * 60
+
+// markProxied notes that a site's event came through its proxy.
+func (h *Handler) markProxied(r *http.Request, site string, now time.Time) {
+	if h.Proxied == nil {
+		return
+	}
+	pk := r.Header.Get(proxyKeyHeader)
+	if pk == "" {
+		return
+	}
+	s, ok := h.Sites.Site(site)
+	if !ok || s.ProxyKey == "" || !auth.Equal(pk, s.ProxyKey) {
+		return
+	}
+	unix := now.Unix()
+	h.seenMu.Lock()
+	if h.proxyAt == nil {
+		h.proxyAt = map[string]int64{}
+	}
+	if unix-h.proxyAt[site] < proxyEvery {
+		h.seenMu.Unlock()
+		return
+	}
+	h.proxyAt[site] = unix
+	h.seenMu.Unlock()
+	go h.Proxied.SeenProxied(context.Background(), site, unix)
 }
 
 // markSeen notes that a site is sending events, at most once a minute so the
@@ -228,6 +268,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ev, drop, cookie, err := h.build(r, &p)
 	if err == nil && drop == "" && ev != nil {
 		h.markSeen(ev.Site, h.Now())
+		h.markProxied(r, ev.Site, h.Now())
 	}
 	if err == errRate {
 		w.Header().Set("Retry-After", "10")

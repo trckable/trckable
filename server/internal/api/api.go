@@ -106,6 +106,8 @@ type API struct {
 	once       sync.Once
 	stopping   chan struct{} // closed by Stop: live streams end so a restart need not wait for them
 	patterns   []string      // every route Routes registered
+	factsMu    sync.Mutex
+	facts      map[string]factsEntry // the setup checklist's analytics counts, kept a minute
 	stopOnce   sync.Once
 	shareHosts atomic.Pointer[map[string]string] // verified share domain -> site, kept in memory
 	shareTried atomic.Int64                      // when the list was last tried and failed (unix nanoseconds)
@@ -210,6 +212,12 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("DELETE /api/v1/sites/{site}/widgets/{id}", a.authed(a.deleteWidget))
 	handleFunc("GET /w/{id}", a.widgetPage)
 	handle("POST /api/v1/sites/{site}/install/check", a.authed(a.checkInstall))
+	handle("GET /api/v1/sites/{site}/setup", a.authed(a.checklist))
+	handle("PUT /api/v1/sites/{site}/setup/skip/{item}", a.authed(a.setupSkip(true)))
+	handle("DELETE /api/v1/sites/{site}/setup/skip/{item}", a.authed(a.setupSkip(false)))
+	handle("PUT /api/v1/sites/{site}/setup/locale", a.authed(a.setupLocale))
+	handle("PUT /api/v1/sites/{site}/setup/kind", a.authed(a.setupKind))
+	handle("POST /api/v1/sites/{site}/setup/funnel", a.authed(a.setupFunnel))
 	handle("DELETE /api/v1/sites/{site}", a.authed(a.deleteSite))
 	handle("GET /api/v1/sites/{site}/delete-preview", a.authed(a.deletePreview))
 	handle("GET /api/v1/sites/{site}/milestones", a.authed(a.milestones))
