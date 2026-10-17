@@ -92,6 +92,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   const src = sourceParts(data.sources)
   const tb = data.today ? todayBand(data.today.visitors, data.today.before, data.today.compare) : null
   const down = downSince !== undefined
+  const pulseClass = down || !stream.connected ? 'off' : (beat && 'ev') || ''
   const at = (ms: number) => new Date(ms).toLocaleTimeString(tag ?? [], { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone })
   const colorOf = (channel: string) => colors?.[channel] ?? channelColor(channel)
   return (
@@ -100,7 +101,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
         <Announce visits={stream.visits} />
         <section className="mk-card lnow" ref={ref} data-fit={fit}>
           <div className="lhead">
-            <span className={`mk-pulse ${down || !stream.connected ? 'off' : ''}`} />
+            <span key={beat} className={`mk-pulse ${pulseClass}`} />
             <span className="lt">{copy.live}</span>
             <span className="mk-quiet lm">{copy.window(at(now))}</span>
             <ChartSwitch mode={mode} onChange={pick} />
@@ -128,7 +129,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
               <WhyInline why={whyDown({ domain: whole?.domain ?? '', cause: whole?.down_cause, minutes: 0, ongoing: true })} />
             </div>
           )}
-          <MinuteChart bars={bars} mode={mode} total={visitors30(data.visitors, online)} beat={beat} phone={phone} timezone={timezone} label={(ago) => at(now - ago * 60_000)} />
+          <MinuteChart bars={bars} mode={mode} total={visitors30(data.visitors, online)} beat={beat} minute={Math.floor(now / 60_000)} phone={phone} timezone={timezone} label={(ago) => at(now - ago * 60_000)} />
           <div className="minl">
             <span>{copy.ago30}</span>
             <span>{copy.nowWord}</span>
