@@ -77,7 +77,11 @@ const chartLine = (learning: boolean, low: boolean, hd: number, note: () => stri
 /** An empty period has no series at all (the server sends null): an empty list, so nothing below has to ask. */
 const normal = (r?: Result): Result | undefined => (r ? { ...r, series: r.series ?? [] } : undefined)
 
-export default function Briefing({ site, data: page, loading, period, range, money, onGoal, visits }: BriefingProps) {
+/** Whole amounts read without their zero cents ("$87", not "$87.00"), as the walkthrough tells them. */
+const wholeMoney = (f: (minor: number) => string) => (minor: number) => f(minor).replace(/[.,]0+(?=\D|$)/, '')
+
+export default function Briefing({ site, data: page, loading, period, range, money: moneyIn, onGoal, visits }: BriefingProps) {
+  const money = useMemo(() => (moneyIn ? wholeMoney(moneyIn) : undefined), [moneyIn])
   const ui = useBriefingState(site.id)
   const [at, setAt] = useState<number | null>(null)
   const up = useUptime(site, range)
