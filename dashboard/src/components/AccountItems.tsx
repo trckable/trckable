@@ -106,7 +106,7 @@ function FeaturesItem({ go, user }: { go: Parameters<MenuItems>[0]; user: string
 /** The items of the avatar menu. */
 export default function AccountItems({ profile, v, go, site }: { profile: Profile | null; v: number; go: Parameters<MenuItems>[0]; site?: Site }) {
   // A build that has a plan puts one compact row at the top of the menu (v2/slots); the public product has none.
-  const { menuExtra } = useV2Extras()
+  const { menuExtra, menuAfterProfile } = useV2Extras()
   // The language list takes the menu's place until a choice or Back; Back puts focus on the row again.
   const [listing, setListing] = useState(false)
   const [back, setBack] = useState(false)
@@ -128,6 +128,7 @@ export default function AccountItems({ profile, v, go, site }: { profile: Profil
         <CircleUser size={18} strokeWidth={1.75} aria-hidden="true" />
         {copy.account}
       </button>
+      {typeof menuAfterProfile === 'function' ? menuAfterProfile(go) : menuAfterProfile}
       {site && canLeaveOut(site) && <OwnVisits site={site} go={go} />}
       <ThemeRow />
       <LanguageRow back={back} onOpen={() => setListing(true)} />
