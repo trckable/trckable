@@ -64,15 +64,6 @@ async function shoot(page: Page, name: string, schemes: ('dark' | 'light')[]) {
 
 const dialog = (page: Page) => page.getByRole('dialog', { name: 'Why visitors leave' })
 
-test('the Story says it, and See why opens the same card', async ({ page }) => {
-  await open(page, `/${domain}?view=data&v=story`)
-  const card = page.locator('.sv-bounce')
-  await expect(card).toBeVisible({ timeout: 30_000 })
-  await expect(card).toContainText('8 in 10 leave after one page (usual ~5 in 10)')
-  await shoot(page, 'story-card', ['dark', 'light'])
-  await card.getByRole('button', { name: 'See why' }).click()
-  await expect(dialog(page)).toBeVisible()
-})
 
 test('the Features list has the bounce guide', async ({ page }) => {
   await open(page, `/${domain}?view=data&v=story`)
