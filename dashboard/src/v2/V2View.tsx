@@ -113,6 +113,7 @@ export function V2View(p: V2Props) {
               today={today}
               customRange={p.range}
               grain={grain}
+              onReset={p.view.period === 'today' ? undefined : () => setView({ period: 'today', from: undefined, to: undefined, bucket: undefined, day: undefined })}
               onPick={(id) => setView({ period: id, from: undefined, to: undefined, bucket: undefined, day: undefined })}
               onCompare={(c) => setView({ compare: c })}
               bucket={p.view.bucket}

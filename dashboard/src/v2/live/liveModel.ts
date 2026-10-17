@@ -6,7 +6,8 @@ import type { Row } from '../../features/live/model'
 
 /** The 30 minutes as bars: each a share of the tallest, never under 3%, and flagged when nothing came. */
 export function barsOf(minutes: number[]): { h: number; z: boolean }[] {
-  const mx = Math.max(0.5, ...minutes)
+  // A quiet half hour stays small: one visit is a short bar, not a full-height one.
+  const mx = Math.max(4, ...minutes)
   return minutes.map((b) => ({ h: Math.max(3, (b / mx) * 100), z: b === 0 }))
 }
 
@@ -21,13 +22,15 @@ export interface Part {
   channel: string
   grow: number
   pct: number
+  /** Visitors from this source. */
+  n: number
 }
 
 /** The sources bar: the top five that are over 1% each, and the rest as one grey part. */
 export function sourceParts(sources: LiveNow['sources']): { parts: Part[]; other: number } {
   const total = sources.reduce((n, s) => n + s.visitors, 0)
   if (!total) return { parts: [], other: 0 }
-  const all = sources.map((s) => ({ channel: s.channel, grow: s.visitors / total, pct: Math.round((s.visitors / total) * 100) })).filter((s) => s.grow > 0.01)
+  const all = sources.map((s) => ({ channel: s.channel, grow: s.visitors / total, pct: Math.round((s.visitors / total) * 100), n: s.visitors })).filter((s) => s.grow > 0.01)
   const parts = all.slice(0, 5)
   return { parts, other: Math.max(0, 1 - parts.reduce((n, p) => n + p.grow, 0)) }
 }
@@ -71,3 +74,6 @@ export function listsOf(rows: Row[]) {
     devices: deviceSplit(rows),
   }
 }
+
+/** The half hour's visitors, never fewer than who is online: online counts anyone active in five minutes, so it cannot be the larger. */
+export const visitors30 = (visitors: number, online: number | null): number => Math.max(visitors, online ?? 0)

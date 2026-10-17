@@ -12,7 +12,7 @@ import { Check, CircleAlert, Coins, Info, TriangleAlert, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { friendly } from '../lib/errors'
 import { errorCopy } from '../lib/errorCopy'
-import { EVENT, hostIsUp, nextId, type Kind, type Told, type ToastAction } from './toastBus'
+import { EVENT, hostIsDown, hostIsUp, nextId, type Kind, type Told, type ToastAction } from './toastBus'
 import { toastCopy as t } from './toastCopy'
 import './Toast.css'
 
@@ -92,7 +92,10 @@ export default function ToastHost() {
     }
     window.addEventListener(EVENT, on)
     hostIsUp()
-    return () => window.removeEventListener(EVENT, on)
+    return () => {
+      window.removeEventListener(EVENT, on)
+      hostIsDown()
+    }
   }, [])
   const drop = useCallback((id: number) => setItems((list) => list.filter((x) => x.id !== id)), [])
   // Two regions that are always there, so a screen reader hears a toast the

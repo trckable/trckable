@@ -5,7 +5,7 @@ export const footerMoreCopy = defineCopy('footerMore', {
   feedback: 'Feedback',
   siteDown: (names: string[], why?: string) => (names.length === 1 ? `${names[0]} is down${why ? `: ${why}` : ''}` : `${names.length} sites are down`),
   siteDownTip: 'The server cannot open this site just now. Everything recorded before is kept, and trckable looks again on its own.',
-  siteQuiet: (n: number) => `${n} quiet`,
+  siteQuiet: (n: number) => (n === 1 ? '1 site quiet' : `${n} sites quiet`),
   siteQuietTip: 'No visits for hours on this site. The server still reaches it, so this is about traffic, not an outage.',
   status: {
     ok: { label: 'All systems normal', tip: 'This server answers, your sites answer our checks, and the visits it counts are showing up as they happen.' },

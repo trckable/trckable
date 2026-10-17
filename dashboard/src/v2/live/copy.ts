@@ -38,4 +38,7 @@ export const copy = defineCopy('v2.live', {
   computer: 'Computer',
   failed: 'Live could not be read. Trying again.',
   loading: 'Reading the last half hour',
+  chartStyle: 'Chart style',
+  bars: 'Bars',
+  line: 'Line',
 })
