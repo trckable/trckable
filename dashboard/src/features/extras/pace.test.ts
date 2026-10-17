@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { monthSoFar, paceOf, roundSig } from './pace'
+import { isMonthSoFar, monthSoFar, paceOf, roundSig } from './pace'
 
 describe('pace', () => {
   it('says nothing before three whole days have gone', () => {
@@ -27,5 +27,14 @@ describe('pace', () => {
 
   it('rounds to two significant figures', () => {
     expect([roundSig(9437), roundSig(94), roundSig(9), roundSig(123456), roundSig(0)]).toEqual([9400, 94, 9, 120000, 0])
+  })
+})
+
+describe('which period the projection speaks for', () => {
+  it('only the month so far, never a day, a week or a rolling 30 days', () => {
+    expect(isMonthSoFar({ from: '2026-10-01', to: '2026-10-18' }, '2026-10-18')).toBe(true)
+    expect(isMonthSoFar({ from: '2026-10-18', to: '2026-10-18' }, '2026-10-18')).toBe(false)
+    expect(isMonthSoFar({ from: '2026-09-19', to: '2026-10-18' }, '2026-10-18')).toBe(false)
+    expect(isMonthSoFar({ from: '2026-10-01', to: '2026-10-17' }, '2026-10-18')).toBe(false)
   })
 })

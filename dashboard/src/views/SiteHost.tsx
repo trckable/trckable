@@ -6,7 +6,7 @@ import { cachedReport, dropReports, showsInstall, api, type ReportQuery, type Si
 import { setWeekStart, todayIn, type Range } from '../lib/dates'
 import { fmtMoney } from '../lib/format'
 import { journeysOn } from '../features/cookieless/labels'
-import { navigate, oldAddressTarget, readView, setView, useLocation, wantsLive, writeView } from '../lib/url'
+import { navigate, oldAddressTarget, readView, setDefaultPeriodFor, setView, useLocation, wantsLive, writeView } from '../lib/url'
 import { queryOf, rangeOf } from '../lib/dashQuery'
 import { canAsk, canChange, isShared } from '../lib/me'
 import { useMods } from '../lib/useMods'
@@ -38,6 +38,7 @@ const JourneyDialog = lazy(() => import('../features/journey/JourneyDialog').the
 export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[]; identity?: React.ReactNode }) {
   // Before anything reads a date: "This week" starts on the site's own day.
   setWeekStart(site.week_start)
+  setDefaultPeriodFor(site)
   useKeymap()
   const shared = isShared()
   const { params } = useLocation()

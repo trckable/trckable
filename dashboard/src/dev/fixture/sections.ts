@@ -1,12 +1,13 @@
 // The answers Explore asks for beside the report: the funnel, the robots, the outbound links and the saved views. Dev only.
-import type { CrawlerReport, FunnelResult, FunnelStep } from '../../lib/api'
+import type { CrawlerReport, FunnelResult, FunnelStep, PaidStep } from '../../lib/api'
 import { hash, mulberry } from './rand'
 import { siteOf, countIn, dayIndex, reportOf, type Ctx, type Query } from './report'
 
 /** A funnel as the server answers it: each step counted from the people who reached the one before. */
-export function funnelOf(c: Ctx, id: string, q: Query, steps: FunnelStep[]): { steps: FunnelResult[] } {
+export function funnelOf(c: Ctx, id: string, q: Query, steps: (FunnelStep | PaidStep)[]): { steps: FunnelResult[] } {
   const rep = reportOf(c, id, q).current
-  const count = (s: FunnelStep) => {
+  const count = (s: FunnelStep | PaidStep) => {
+    if (s.kind === 'paid') return Math.max(rep.money?.paying_visitors ?? 0, rep.money?.customers ?? 0)
     if (s.kind === 'goal') return rep.goals?.find((g) => g.value === s.value)?.visitors ?? 0
     return rep.dims.entry_page?.find((r) => r.value === s.value)?.visitors ?? 0
   }
@@ -15,7 +16,7 @@ export function funnelOf(c: Ctx, id: string, q: Query, steps: FunnelStep[]): { s
     const raw = count(s)
     // The Show HN day: from the pricing page on, people leave more than usual (the walkthrough's "pricing starts leaking").
     const leak = c.w.key === 'hn' && i >= 2 && dayIndex(c, q.to) === Math.floor(c.nowAbs / 1440) ? 0.45 : 1
-    const v = i === 0 ? raw : Math.round(Math.min(out[i - 1].visitors, raw) * leak)
+    const v = i === 0 ? raw : Math.round(Math.min(out[i - 1].visitors, raw) * (s.kind === 'paid' ? 1 : leak))
     const first = out[0]?.visitors ?? v
     out.push({ ...s, label: s.kind === 'goal' ? rep.goals?.find((g) => g.value === s.value)?.label : undefined, visitors: v, rate: i === 0 || !out[i - 1].visitors ? 1 : v / out[i - 1].visitors, of_total: first ? v / first : 0, median_s: 20 + i * 15, dropped: i === 0 ? 0 : out[i - 1].visitors - v })
   })
