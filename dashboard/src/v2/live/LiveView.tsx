@@ -1,13 +1,13 @@
 // Live, in the walkthrough's own layout: the half hour as bars with who is here now, the people on the site, and under
 // them Today, the pages and the countries. The numbers are the server's last half hour and the stream's newer visits.
-import { Suspense, useEffect, useMemo } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { lazyLoad } from '../../lib/lazyLoad'
 import { onlineNow } from '../../lib/live'
 import { isShared, isViewer } from '../../lib/me'
 import { openSettings } from '../../lib/settings'
 import { tag } from '../../i18n'
 import { fmtInt, fmtMoney } from '../../lib/format'
-import { channelColor, channelLabel } from '../../lib/palette'
+import { channelColor } from '../../lib/palette'
 import type { Site } from '../../lib/api'
 import { BusyLine } from '../ui/BusyLine'
 import { WhyInline } from '../ui/WhyInline'
@@ -20,11 +20,16 @@ import { CountriesCard } from './CountriesCard'
 import { Announce } from '../ui/Announce'
 import { FeedList } from '../ui/FeedList'
 import { Rng } from '../ui/RangeBar'
-import { barsOf, changeOf, listsOf, sourceParts, todayBand } from './liveModel'
-import { LiveSpark } from './LiveSpark'
+import { barsOf, changeOf, listsOf, sourceParts, todayBand, visitors30 } from './liveModel'
+import { Spark } from '../ui/KpiCard'
+import { ChartSwitch } from './ChartSwitch'
+import { keepChartMode, readChartMode, type ChartMode } from './chartMode'
+import { MinuteChart } from './MinuteChart'
+import { Tick } from './Tick'
+import { useFit } from './cardWidth'
 import { DOCS } from '../../components/footerLinks'
-import { openMinute } from '../../features/live/switchView'
-import { LockCard } from '../ui/LockCard'
+import { RevenueLock } from './RevenueLock'
+import { SourceRows } from './SourceRows'
 import { copy } from './copy'
 import type { LiveStream } from './Live'
 
@@ -61,6 +66,7 @@ interface Props {
 export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Props) {
   const { data, failed, got, clock, skew, busier, week, downSince, colors } = feed
   const now = useTicking(clock, skew)
+  const { ref, fit } = useFit<HTMLElement>()
   useEffect(() => {
     liveLink.set(stream.connected)
     return () => liveLink.set(true)
@@ -69,6 +75,14 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   useEffect(() => liveCount.set(online), [online])
   const rows = useMemo(() => (data ? feedOf(data.recent, stream.visits, data.at, now) : []), [data, stream.visits, now])
   const lists = useMemo(() => listsOf(rows), [rows])
+  const [mode, setMode] = useState<ChartMode>(readChartMode)
+  const pick = (m: ChartMode) => {
+    setMode(m)
+    keepChartMode(m)
+  }
+  // Counts the visits that came in after the first look, for the line's end dot to beat once for each.
+  const [first] = useState(() => stream.visits[0]?.id ?? 0)
+  const beat = (stream.visits[0]?.id ?? 0) > first ? stream.visits[0].id : 0
   const upSources = useMemo(() => new Set((busier?.why ?? []).filter((w) => w.dim === 'source').map((w) => w.value)), [busier])
   if (!data) return <div className="liveview" role="region" aria-label={copy.live}><p className="mk-quiet">{failed ? copy.failed : copy.loading}</p></div>
   const n = online ?? 0
@@ -84,20 +98,21 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
     <>
       <div className="liveview" role="region" aria-label={copy.live}>
         <Announce visits={stream.visits} />
-        <section className="mk-card lnow">
+        <section className="mk-card lnow" ref={ref} data-fit={fit}>
           <div className="lhead">
             <span className={`mk-pulse ${down || !stream.connected ? 'off' : ''}`} />
             <span className="lt">{copy.live}</span>
             <span className="mk-quiet lm">{copy.window(at(now))}</span>
+            <ChartSwitch mode={mode} onChange={pick} />
           </div>
           <div className="lfig">
             <div>
               <span className="ll">{copy.onlineNow}</span>
-              <b className="lbign">{fmtInt(n)}</b>
+              <b className="lbign"><Tick n={n} pulse /></b>
             </div>
             <div>
               <span className="ll">{copy.visitors30}</span>
-              <b className="lbign">{fmtInt(data.visitors)}</b>
+              <b className="lbign"><Tick n={visitors30(data.visitors, online)} pulse /></b>
               {ch && <span className={`mk-ld ${ch.up ? 'up' : 'dn'}`}>{copy.change(ch.up, ch.pct)}</span>}
             </div>
           </div>
@@ -113,21 +128,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
               <WhyInline why={whyDown({ domain: whole?.domain ?? '', cause: whole?.down_cause, minutes: 0, ongoing: true })} />
             </div>
           )}
-          <div className="mins" role="group" aria-label={copy.minsLabel(data.visitors)}>
-            {bars.map((b, i) => (
-              <i
-                key={i}
-                className={b.z ? 'z' : ''}
-                style={{ height: `${b.h}%` }}
-                role={phone ? undefined : 'button'}
-                tabIndex={phone ? undefined : 0}
-                title={copy.openMinute(at(now - (bars.length - 1 - i) * 60_000))}
-                aria-label={copy.openMinute(at(now - (bars.length - 1 - i) * 60_000))}
-                onClick={() => void openMinute(bars.length - 1 - i, timezone)}
-                onKeyDown={(e) => e.key === 'Enter' && void openMinute(bars.length - 1 - i, timezone)}
-              />
-            ))}
-          </div>
+          <MinuteChart bars={bars} mode={mode} total={visitors30(data.visitors, online)} beat={beat} phone={phone} timezone={timezone} label={(ago) => at(now - ago * 60_000)} />
           <div className="minl">
             <span>{copy.ago30}</span>
             <span>{copy.nowWord}</span>
@@ -135,31 +136,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
           <div className={`lbottom${data.revenue || !isViewer() ? ' money' : ''}`}>
             <div className="lsrc">
               <span className="ll">{copy.topSources}</span>
-              {src.parts.length > 0 ? (
-                <>
-                  <div className="lsplit">
-                    {src.parts.map((p) => (
-                      <span key={p.channel} title={channelLabel(p.channel)} style={{ flexGrow: p.grow, background: colorOf(p.channel) }} />
-                    ))}
-                    {src.other > 0.02 && <span className="oth" style={{ flexGrow: src.other }} />}
-                  </div>
-                  <ul className="llegend">
-                    {src.parts.map((p) => (
-                      <li key={p.channel}>
-                        <span className="lg">
-                          <i style={{ background: colorOf(p.channel) }} />
-                          {channelLabel(p.channel)}
-                          <b>{p.pct}%</b>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              ) : (
-                <div className="mk-quiet" style={{ marginTop: 8 }}>
-                  {copy.noVisitors}
-                </div>
-              )}
+              <SourceRows parts={src.parts} color={colorOf} />
             </div>
             {data.revenue ? (
               <div className="lrev">
@@ -172,7 +149,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
               !isShared() && (
                 <div className="lrev">
                   <span className="ll">{copy.revenueToday}</span>
-                  <LockCard kind="rev" size="mini" go={copy.connect} onGo={() => openSettings(whole, 'payments')} onHow={() => window.open(DOCS, '_blank', 'noopener')} />
+                  <RevenueLock go={copy.connect} onGo={() => openSettings(whole, 'payments')} onHow={() => window.open(DOCS, '_blank', 'noopener')} />
                 </div>
               )
             )}
@@ -183,7 +160,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
             <span className="lt">{copy.onSite}</span>
             <span className="mk-quiet lm">{copy.people(n)}</span>
           </div>
-          <FeedList rows={rows} up={upSources} clock={now} more={Math.max(0, n - rows.length)} empty={down ? copy.nobodyDown : copy.nobody} onVisitor={onVisitor} cookieless={whole?.cookieless} />
+          <FeedList key={site} rows={rows} up={upSources} clock={now} more={Math.max(0, n - rows.length)} empty={down ? copy.nobodyDown : copy.nobody} onVisitor={onVisitor} cookieless={whole?.cookieless} />
         </section>
       </div>
       <div className="lcards">
@@ -207,7 +184,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
               {week.length > 1 && (
                 <>
                   <div className="mk-n" style={{ marginTop: 'var(--mk-s4)' }}>{copy.last7}</div>
-                  <LiveSpark vals={week} />
+                  <Spark vals={week} h={44} className="lsp" />
                 </>
               )}
             </div>

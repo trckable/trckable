@@ -28,6 +28,10 @@ export function hostIsUp() {
   drawn = true
   waiting.splice(0).forEach(send)
 }
+/** The host is gone (its screen was drawn again): what is told now waits for the next one, instead of going to no one. */
+export function hostIsDown() {
+  drawn = false
+}
 /** Called with the first message told before the host is there (so it can be fetched at once). */
 export const onWaiting = (f: () => void) => (wake = f)
 

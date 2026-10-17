@@ -8,11 +8,13 @@ import { useLeaving } from '../../features/live/useLeaving'
 import { channelLabel } from '../../lib/palette'
 import { copy as liveCopy } from '../../features/live/copy'
 import { copy } from '../live/copy'
+import { useArrivals } from '../live/useArrivals'
 
 const SHOWN = 8
 
 export function FeedList({ rows, up, clock, more, empty, onVisitor, cookieless }: { rows: Row[]; up: Set<string>; clock: number; more: number; empty: string; onVisitor?: (v: string) => void; cookieless?: boolean }) {
   const [all, setAll] = useState(false)
+  const marks = useArrivals(rows.map((r) => r.key))
   const list = useLeaving(rows)
   const shown = all ? list : list.slice(0, SHOWN)
   return (
@@ -23,7 +25,7 @@ export function FeedList({ rows, up, clock, more, empty, onVisitor, cookieless }
         const page = r.kind === 'goal' ? { title: liveCopy.goal(r.label || (r.goal ?? '')), text: liveCopy.goal(r.label || (r.goal ?? '')) } : { title: r.path, text: r.kind === 'active' ? copy.still : (r.path ?? '/') }
         const hot = up.has(r.channel || 'Direct') || clock - r.last < 30_000
         return (
-          <button key={r.key} type="button" className="lv" onClick={() => r.visitor && onVisitor?.(r.visitor)} disabled={!r.visitor || !onVisitor}>
+          <button key={r.key} type="button" className={`lv ${marks.get(r.key) ?? ''}`.trim()} onClick={() => r.visitor && onVisitor?.(r.visitor)} disabled={!r.visitor || !onVisitor}>
             <span className={`mk-dot ${hot ? '' : 'off'}`} />
             <span className="pg mono" title={page.title}>{page.text}</span>
             <span className="src" style={hot ? { color: 'var(--mk-lime)' } : undefined}>
