@@ -27,7 +27,7 @@ import { NotesSettings } from '../features/notes/NotesSettings'
 import { MilestonesSetting } from '../features/milestones/MilestonesSetting'
 import { ImportSetting } from '../features/install/ImportSetting'
 import { DeleteSite } from './Sites'
-import { CURRENCIES, withCurrent, zones } from '../lib/site'
+import { CURRENCIES, clock, withCurrent, zones } from '../lib/site'
 import './Settings.css'
 
 type TabID = SettingsTab
@@ -107,15 +107,6 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
       {tab === 'health' && <HealthSettings />}
     </>
   )
-}
-
-/** The time of day as the app writes it everywhere (24 hours, no seconds), in the site's own zone. */
-function clock(at: Date, zone: string) {
-  try {
-    return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: zone || undefined }).format(at)
-  } catch {
-    return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(at)
-  }
 }
 
 /** Once visits arrive, Install becomes a check you can run: this server reads

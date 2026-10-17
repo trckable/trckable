@@ -45,7 +45,6 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
   const [paths, setPaths] = useState('')
   const [err, setErr] = useState<string | null>(null)
   const [round, setRound] = useState(0)
-
   useEffect(() => {
     more
       .siteConfig(site.id)
@@ -56,7 +55,6 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
       })
       .catch((e: unknown) => setErr(words(e)))
   }, [site.id, round])
-
   // Which modules are on decides what this site records, so both the banner
   // card and the policy paragraph need it — once, not twice.
   useEffect(() => {
@@ -65,7 +63,6 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
       .then((r) => setMods(Object.fromEntries(r.modules.map((m) => [m.id, m.enabled]))))
       .catch(() => setMods({}))
   }, [site.id])
-
   const save = (patch: Partial<SiteConfig>, said?: string) => {
     if (!c) return
     const next = { ...c, ...patch }

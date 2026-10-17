@@ -21,3 +21,12 @@ export const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'CHF', 'JPY', 'SEK
 /** The picker items for a list, keeping a value the list does not know. */
 export const withCurrent = (list: string[], current: string, label = (v: string) => v) =>
   (list.includes(current) ? list : [current, ...list]).map((v) => ({ id: v, label: label(v) }))
+
+/** The time of day as the app writes it everywhere (24 hours, no seconds), in the site's own zone. */
+export function clock(at: Date, zone: string) {
+  try {
+    return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: zone || undefined }).format(at)
+  } catch {
+    return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(at)
+  }
+}
