@@ -44,7 +44,7 @@ export async function syncRead(local: ReadonlySet<string>): Promise<Set<string> 
  * The read set a bell shows: this browser's copy at first, joined with the account's once the server answers (never
  * replacing what was read meanwhile), kept in step with other tabs, and every mark told to the server once.
  */
-export function useReadSet(on: boolean) {
+export function useReadSet(on: boolean, delay = 3000) {
   const [read, setRead] = useState<Set<string>>(loadLocal)
   const latest = useRef(read)
   const join = useCallback((ids: Iterable<string>) => {
@@ -57,14 +57,16 @@ export function useReadSet(on: boolean) {
   useEffect(() => {
     if (!on) return
     let live = true
-    void syncRead(loadLocal()).then((all) => live && all && join(all))
+    // After the first paint has had its reads: the bell is not what the page is waiting for.
+    const first = setTimeout(() => void syncRead(loadLocal()).then((all) => live && all && join(all)), delay)
     const other = (e: StorageEvent) => e.key === KEY && join(loadLocal())
     window.addEventListener('storage', other)
     return () => {
       live = false
+      clearTimeout(first)
       window.removeEventListener('storage', other)
     }
-  }, [on, join])
+  }, [on, join, delay])
   const mark = useCallback(
     (ids: string[]) => {
       const fresh = ids.filter((id) => !latest.current.has(id))

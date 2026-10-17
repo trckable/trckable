@@ -31,7 +31,7 @@ describe('read state', () => {
 function mount() {
   const out: { current: ReturnType<typeof useReadSet> | null } = { current: null }
   const Probe = () => {
-    out.current = useReadSet(true)
+    out.current = useReadSet(true, 0)
     return null
   }
   const host = document.createElement('div')
@@ -48,6 +48,7 @@ describe('the read set a bell shows', () => {
     vi.spyOn(more, 'bellRead').mockReturnValue(new Promise((r) => (answer = r)))
     const post = vi.spyOn(more, 'markBellRead').mockResolvedValue({ read: [] })
     const { out, stop } = mount()
+    await act(() => new Promise((r) => setTimeout(r, 5)))
     act(() => out.current?.mark(['x']))
     expect(out.current?.read.has('x')).toBe(true)
     answer({ read: ['y'] })
