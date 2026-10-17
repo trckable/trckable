@@ -18,7 +18,7 @@ import { routeOf, SubRoute } from "./features/subpage";
 import { landing, namesSite } from "./lib/landing";
 import { openSettings, settingsTarget, useSettings } from "./lib/settings";
 import { useLatest } from "./lib/update";
-import { setMentionsOn, setRole } from "./lib/me";
+import { setRole } from "./lib/me";
 import { NoneShared, useGate } from "./features/onboarding/Gate";
 // The header of every page is its own chunk, fetched at once after the first paint: the first load carries only the page's boxes.
 const PageBar = lazyLoad(() => import("./v2/PageBar").then((m) => ({ default: m.PageBar })));
@@ -66,8 +66,7 @@ function App() {
         setBoot({ state: "login" });
         return;
       }
-      setRole(me.role);
-      setMentionsOn(me.mentions);
+      setRole(me.role, me.mentions);
       loadKeymap(me.keys);
       // Before choosing their own password a person may do nothing else (the server refuses /sites).
       const { sites } = me.must_change ? { sites: [] } : ((await early.sites) ?? (await api.sites()));

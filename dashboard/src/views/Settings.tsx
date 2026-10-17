@@ -63,8 +63,7 @@ const GROUPS: { name: string; tabs: TabID[] }[] = [
  *  left, the section on the right. Opening it does not change the address
  *  (lib/settings.ts); closing it leaves the dashboard exactly as it was. */
 export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSites: () => void }) {
-  const offered = (id: TabID) => id !== 'mentions' || hasMentions()
-  const tab = TABS.some((t) => t.id === p.tab && offered(t.id)) ? p.tab : 'site'
+  const tab = TABS.some((t) => t.id === p.tab && (t.id !== 'mentions' || hasMentions())) ? p.tab : 'site'
   const go = (id: TabID) => setSettingsTab(id)
   const close = closeSettings
   // Once visits arrive there is nothing left to install, only to verify.
@@ -72,7 +71,7 @@ export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSit
   const tabs: WindowTab[] = GROUPS.flatMap((g) =>
     g.tabs.flatMap((id) => {
       const t = TABS.find((x) => x.id === id)
-      return t && offered(id) ? [{ id: t.id, label: label(t), icon: t.icon, group: g.name }] : []
+      return t && (id !== 'mentions' || hasMentions()) ? [{ id: t.id, label: label(t), icon: t.icon, group: g.name }] : []
     }),
   )
   return (
