@@ -216,11 +216,19 @@ function searchReport(c: Ctx, id: string, sp: URLSearchParams) {
   return { property: `sc-domain:${siteOf(id).name}`, dim, rows: dim === 'query' ? rows : null, from: q.from, to: q.to, clicks: rows.reduce((p, x) => p + x.clicks, 0), impressions: rows.reduce((p, x) => p + x.impressions, 0), preliminary_from: dateOf(c, END - 1), ignored_filters: null }
 }
 
+/** The sites whose milestone the person has put away: it is not told again until the page is loaded again. */
+const closed = new Set<string>()
+
 export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams, body?: unknown): Reply | null {
   const seg = /^\/sites\/([^/]+)\/segments(?:\/(.+))?$/.exec(path)
   if (seg && method === 'POST') return ok(segments.add(decodeURIComponent(seg[1]), body as { name: string; query: string }))
   if (seg?.[2] && method === 'DELETE') {
     segments.drop(decodeURIComponent(seg[1]), seg[2])
+    return none()
+  }
+  const seen = /^\/sites\/([^/]+)\/milestones\/seen$/.exec(path)
+  if (seen && method === 'POST') {
+    closed.add(decodeURIComponent(seen[1]))
     return none()
   }
   if (method !== 'GET') return none()
@@ -284,6 +292,23 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
       return ok(searchReport(c, id, sp))
     case 'search-console':
       return ok(c.conn.search ? { connected: true, connection: { client_email: 'trckable@fixture.iam.gserviceaccount.com', property: `sc-domain:${site.name}`, created_at: secs(c, c.nowAbs - 9000) } } : { connected: false })
+    case 'insights': {
+      // What moved: the sources that sent clearly more or fewer people than the period before.
+      const r = reportOf(c, id, { ...parseQuery(sp), compare: 'previous', filters: [] })
+      const was = new Map((r.previous?.dims.referrer ?? []).map((x) => [x.value, x.visitors]))
+      const moves = (r.current.dims.referrer ?? []).map((x) => ({ value: x.value, now: x.visitors, was: was.get(x.value) ?? 0 })).filter((x) => x.now >= 20 && Math.abs(x.now - x.was) >= 20)
+      moves.sort((a, b) => Math.abs(b.now - b.was) - Math.abs(a.now - a.was))
+      return ok({ insights: moves.slice(0, 3).map((x) => ({ kind: 'source_move', dim: 'referrer', value: x.value, now: x.now, was: x.was, change: x.was ? (x.now - x.was) / x.was : 0 })) })
+    }
+    case 'report/pages-sell': {
+      const q = parseQuery(sp)
+      const by = new Map<string, { revenue: number; customers: number }>()
+      for (const x of salesIn(c, site, dayIndex(c, q.from) * 1440, (dayIndex(c, q.to) + 1) * 1440, q.filters)) {
+        const e = by.get(site.pages[x.page][0]) ?? { revenue: 0, customers: 0 }
+        by.set(site.pages[x.page][0], { revenue: e.revenue + x.amt * 100, customers: e.customers + (x.amt > 0 ? 1 : 0) })
+      }
+      return ok({ pages: [...by.entries()].sort((a, b) => b[1].revenue - a[1].revenue).map(([value, e]) => ({ value, visitors: 0, ...e })) })
+    }
     case 'segments':
       return ok(segments.list(id))
     case 'report/funnel':
@@ -312,7 +337,7 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     case 'annotations':
       return ok({ annotations: notesOf(c, id).map((n) => ({ id: `note_${n.min}`, day: dateOf(c, Math.floor(n.min / 1440)), text: n.text, created_at: secs(c, n.min), author: 'albi@example.com' })) })
     case 'milestones': {
-      const m = milestone(c, site)
+      const m = closed.has(id) ? null : milestone(c, site)
       const moment = m ? { kind: 'visitors', step: String(m), value: m, day: dateOf(c, END), created_at: secs(c, c.nowAbs), new: true, shared: false } : null
       return ok({ enabled: true, milestones: moment ? [moment] : [], moment })
     }
@@ -356,7 +381,11 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     case 'verified':
       return ok(siteJson(c, site).verified)
     case 'payments':
-      return ok({ connections: hasMoney(c, site) ? [{ id: 'pay_1', provider: 'stripe', mode: 'live', status: 'ok' }] : [], providers: [], webhook_base: '' })
+      return ok({
+        connections: hasMoney(c, site) ? [{ id: 'pay_1', site_id: id, provider: 'stripe', mode: 'live', label: 'Stripe', managed: true, webhook_url: '', created_at: secs(c, 0), last_event_at: secs(c, c.nowAbs - 20), pending: 0, payments: c.w.data[id].sales.length, has_secret: true }] : [],
+        providers: [{ id: 'stripe', name: 'Stripe', key_hint: 'rk_live_…', key_url: '', events: [], has_modes: true }],
+        webhook_base: '',
+      })
     case 'buyers': {
       const q = parseQuery(sp)
       const n = Number(sp.get('n') ?? 8)
