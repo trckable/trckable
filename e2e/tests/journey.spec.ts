@@ -100,6 +100,17 @@ test('tells one visitor’s story', async ({ page }) => {
   }
 })
 
+test('the window holds a height and the visits scroll inside it', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 520 })
+  const dialog = await openJourney(page)
+  const box = await dialog.boundingBox()
+  expect(box!.height).toBeLessThanOrEqual(520 * 0.85 + 1)
+  const list = dialog.locator('.jr-visits')
+  await expect.poll(() => list.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true)
+  await list.evaluate((el) => (el.scrollTop = el.scrollHeight))
+  await expect(dialog.getByRole('heading', { level: 2 })).toBeInViewport()
+})
+
 test('actions: filter by the source, copy id in the menu, Escape closes', async ({ page }) => {
   const dialog = await openJourney(page)
   await dialog.getByRole('button', { name: 'Visitor options' }).click()

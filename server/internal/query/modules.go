@@ -293,6 +293,9 @@ type Journey struct {
 // MaxJourneyVisits caps how much of one visitor's history is returned.
 const MaxJourneyVisits = 50
 
+// MaxJourneyEvents caps the events kept for each visit, so one long visit never leaves a newer one with no pages.
+const MaxJourneyEvents = 40
+
 // Journey returns a visitor's visits and events, newest visit first.
 func (q Q) Journey(ctx context.Context, site string, visitor uint64, upTo time.Time) (*Journey, error) {
 	conn, err := q.conn(ctx, site)
@@ -315,7 +318,8 @@ func (q Q) Journey(ctx context.Context, site string, visitor uint64, upTo time.T
 		return nil, fmt.Errorf("journey visits: %w", err)
 	}
 	var ids []uint64
-	byID := map[uint64]*JourneyVisit{}
+	// By position, not by pointer: the slice grows as visits are added, and a pointer into it would keep pointing at the old, smaller copy (the visits that lost their pages).
+	byID := map[uint64]int{}
 	for rows.Next() {
 		var v JourneyVisit
 		var id, eng uint64
@@ -331,7 +335,7 @@ func (q Q) Journey(ctx context.Context, site string, visitor uint64, upTo time.T
 		}
 		out.Visits = append(out.Visits, v)
 		ids = append(ids, id)
-		byID[id] = &out.Visits[len(out.Visits)-1]
+		byID[id] = len(out.Visits) - 1
 	}
 	rows.Close()
 	if err := rows.Err(); err != nil {
@@ -351,9 +355,11 @@ func (q Q) Journey(ctx context.Context, site string, visitor uint64, upTo time.T
 	}
 	//nolint:gosec // session ids are formatted uint64s, not text from a request; the site is bound as a parameter
 	rows, err = conn.QueryContext(ctx, `
-		SELECT session_id, ts, kind, coalesce(path, ''), coalesce(goal, ''), coalesce(props, ''), coalesce(engaged_ms, 0)
-		FROM events WHERE site_id = ? AND session_id IN (`+strings.Join(list, ", ")+`) AND kind <> 3
-		ORDER BY ts LIMIT 2000`, site)
+		SELECT session_id, ts, kind, coalesce(path, ''), coalesce(goal, ''), coalesce(props, ''), coalesce(engaged_ms, 0) FROM (
+			SELECT *, row_number() OVER (PARTITION BY session_id ORDER BY ts, seq) AS n
+			FROM events WHERE site_id = ? AND session_id IN (`+strings.Join(list, ", ")+`) AND kind <> 3
+		) WHERE n <= `+strconv.Itoa(MaxJourneyEvents)+`
+		ORDER BY ts`, site)
 	if err != nil {
 		return nil, fmt.Errorf("journey events: %w", err)
 	}
@@ -369,8 +375,8 @@ func (q Q) Journey(ctx context.Context, site string, visitor uint64, upTo time.T
 		if kind == 2 {
 			e.Kind = "goal"
 		}
-		if v := byID[id]; v != nil {
-			v.Events = append(v.Events, e)
+		if i, ok := byID[id]; ok {
+			out.Visits[i].Events = append(out.Visits[i].Events, e)
 		}
 	}
 	return out, rows.Err()

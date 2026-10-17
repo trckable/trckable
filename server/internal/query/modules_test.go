@@ -2,11 +2,16 @@ package query
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/trckable/trckable/server/internal/event"
 	"github.com/trckable/trckable/server/internal/ledger"
+	"github.com/trckable/trckable/server/internal/store/duck"
+	"github.com/trckable/trckable/server/internal/wal"
+	"github.com/trckable/trckable/server/internal/writer"
 )
 
 // The golden site again (Sep 10 2026 is a Thursday, so weekday index 3):
@@ -306,4 +311,61 @@ func TestFunnelPaidStep(t *testing.T) {
 			t.Error("a paid step in front was accepted")
 		}
 	})
+}
+
+// Every visit lists its own pages (visits added after the first were once left with none, because their events went
+// to a stale copy of the list), and a visit with thousands of events must not use up the room of the others.
+func TestJourneyLongVisitLeavesRoomForTheNext(t *testing.T) {
+	ctx := context.Background()
+	dir := t.TempDir()
+	st, err := duck.Open(ctx, filepath.Join(dir, "g.duckdb"), duck.Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { st.Close() })
+	lg, err := wal.Open(filepath.Join(dir, "wal"), wal.Options{NoSync: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { lg.Close() })
+	day := time.Date(2026, 9, 10, 0, 0, 0, 0, time.UTC)
+	var evs []event.Event
+	add := func(at time.Time, id uint64, path string) {
+		evs = append(evs, event.Event{Site: "s1", Kind: event.KindPageview, TS: at.UnixMilli(), Visitor: 1, Pageview: id, Path: path, Channel: "Direct", FirstSeen: day.UnixMilli()})
+	}
+	for i := 0; i < 2100; i++ {
+		add(day.Add(8*time.Hour+time.Duration(i)*time.Second), uint64(1000+i), "/long")
+	}
+	add(day.Add(14*time.Hour), 5000, "/later")
+	add(day.Add(14*time.Hour+time.Minute), 5001, "/later-2")
+	for i := range evs {
+		evs[i].EventID = uint64(i + 1)
+		b, _ := evs[i].Marshal()
+		if _, err := lg.Append(ctx, b); err != nil {
+			t.Fatal(err)
+		}
+	}
+	clock := day.Add(30 * time.Hour)
+	w := writer.New(lg, st, writer.Options{FlushEvery: 10 * time.Millisecond, IdleClose: 30 * time.Millisecond, Now: func() time.Time { return clock }})
+	wctx, cancel := context.WithCancel(ctx)
+	done := make(chan error, 1)
+	go func() { done <- w.Run(wctx) }()
+	for w.Applied() < uint64(len(evs)) {
+		time.Sleep(5 * time.Millisecond)
+	}
+	time.Sleep(100 * time.Millisecond)
+	cancel()
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	q := Q{DB: st.DB, Open: w.OpenSessions}
+	j, err := q.Journey(ctx, "s1", 1, day.Add(48*time.Hour))
+	if err != nil {
+		t.Fatal(err)
+	}
+	eq(t, "visits", len(j.Visits), 2)
+	eq(t, "the later visit lists both of its pages", len(j.Visits[0].Events), 2)
+	eq(t, "and says so", j.Visits[0].Pageviews, int64(2))
+	eq(t, "the long visit is capped", len(j.Visits[1].Events), MaxJourneyEvents)
+	eq(t, "and still counts every view", j.Visits[1].Pageviews, int64(2100))
 }
