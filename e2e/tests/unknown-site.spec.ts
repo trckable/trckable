@@ -9,8 +9,10 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('an unknown site goes to the main dashboard, not Settings', async ({ page }) => {
+  // The first site of the person's list, whichever the suite's other files have made first by now.
+  const first = ((await (await page.request.get(`${API}/api/v1/sites`)).json()) as { sites: { domain: string }[] }).sites[0].domain
   await page.goto(API + '/no-such-site.example?view=data')
-  await expect(page).toHaveURL(API + '/example.com?view=data')
+  await expect(page).toHaveURL(`${API}/${first}?view=data`)
   await expect(page.locator('.brief .kcs .kc').first()).toBeVisible()
   await expect(page.getByText('Pick a site')).toHaveCount(0)
 })
