@@ -20,7 +20,7 @@
   --accent-ink: var(--mk-on-lime);
   --accent-soft: var(--mk-limeD);
   --down: var(--mk-red);
-  --up: var(--mk-green);
+  --up: var(--mk-lime);
   --warn: var(--mk-amber);
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
