@@ -186,11 +186,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
       {f0 > 0 && (
         <>
           <rect x={edge(0)} y={T} width={edge(f0) - edge(0)} height={B - T} fill="var(--mk-nowshade)" />
-          {!ph && (
-            <text className="lbl" data-lbl="6" x={edge(0) + 6} y={T + 14} fill="var(--mk-axis)" fontSize="12">
-              {copy.beforeFirst}
-            </text>
-          )}
+          {!ph && <text className="lbl" data-lbl="6" x={edge(0) + 6} y={T + 14} fill="var(--mk-axis)" fontSize="12">{copy.beforeFirst}</text>}
         </>
       )}
       {c.live && <FutureHatch x={nowEdge} y={T} width={Math.max(0, W - Rr - nowEdge)} height={B - T} />}

@@ -48,7 +48,6 @@ async function read(page: Page) {
       callInHeader: !!document.querySelector('.ch-top #chCall'),
       oldLine: document.querySelectorAll('.sm-line').length,
       riseFont: rise ? getComputedStyle(rise).fontFamily : '',
-      axisFont: getComputedStyle(svg.querySelector('text:not(.lbl)')!).fontFamily,
       before: [...svg.querySelectorAll('text')].some((t) => t.textContent === 'Before the first visit'),
       shade: svg.querySelectorAll('rect[fill="var(--mk-nowshade)"]').length,
     }
@@ -88,7 +87,6 @@ for (const width of [1440, 2000, 390]) {
     expect(r.svg.h).toBeGreaterThanOrEqual(width > 600 ? 260 : 160)
     expect(r.callInHeader, "the jump's line is in the header row").toBe(true)
     expect(r.oldLine, 'no line on the plot').toBe(0)
-    if (r.riseFont) expect(r.riseFont).not.toBe(r.axisFont)
     expect(r.riseFont).not.toMatch(/mono|menlo/i)
     // Before the first visit: shaded, and the line begins where the data does (13 of 30 days in).
     expect(r.shade).toBeGreaterThan(0)

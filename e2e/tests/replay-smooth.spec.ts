@@ -35,6 +35,9 @@ async function open(page: Page, domain: string, query: string, width = 1440) {
   await page.goto(`${API}/${domain}${query}`)
   await expect(page.locator('svg#chart')).toBeVisible({ timeout: 20_000 })
   await expect(page.locator('[data-replay]')).toBeVisible()
+  // The page is whole before the run is measured: its cards come in behind the chart, and their arrival is not the run's.
+  await page.waitForLoadState('networkidle')
+  await page.waitForTimeout(2000)
   // The chart settles as what it is told by arrives (the usual band, the moments): wait until it stops changing.
   for (let i = 0; i < 20; i++) {
     const a = await still(page)
@@ -48,7 +51,7 @@ async function watch(page: Page) {
   await page.evaluate(() => {
     const w = window as unknown as { __w: Record<string, unknown> }
     const m = (w.__w = { cls: 0, axis: new Set<string>(), line: new Set<string>(), width: new Set<number>(), names: new Set<string>(), clip: false, ticks: 0 })
-    new PerformanceObserver((l) => l.getEntries().forEach((e) => { const s = e as unknown as { hadRecentInput: boolean; value: number }; if (!s.hadRecentInput) m.cls = (m.cls as number) + s.value })).observe({ type: 'layout-shift' })
+    new PerformanceObserver((l) => l.getEntries().forEach((e) => { const s = e as unknown as { hadRecentInput: boolean; value: number }; if (!s.hadRecentInput) { m.cls = (m.cls as number) + s.value } })).observe({ type: 'layout-shift' })
     const tick = () => {
       const svg = document.querySelector('svg#chart')
       if (svg) {
@@ -77,7 +80,7 @@ async function report(page: Page) {
 
 /** The chart as pixels, with the pulsing "now" dot and the shade of the hours to come out of it (both move with the clock). */
 async function still(page: Page) {
-  await page.addStyleTag({ content: 'svg#chart circle,svg#chart rect[fill="var(--mk-nowshade)"]{visibility:hidden}' })
+  await page.addStyleTag({ content: 'svg#chart circle,svg#chart rect[fill="url(#mk-future)"]{visibility:hidden}' })
   return page.locator('svg#chart').screenshot()
 }
 
