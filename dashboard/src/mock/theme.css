@@ -9,6 +9,7 @@
   --mk-hov: #1b1d21;
   --mk-bord2: #34373d;
   --mk-grab: #3a3d44;
+  --mk-barfill: #3a3d44;
   --mk-dim: #2f3238;
   --mk-bar: rgba(15,16,18,.96);
   --mk-limeL: rgba(198,255,58,.3);
@@ -63,6 +64,7 @@
     --mk-hov: #f3f4f1;
     --mk-bord2: #cfd3cc;
     --mk-grab: #c4c8c0;
+    --mk-barfill: #7b838f;
     --mk-dim: #c4c8c0;
     --mk-bar: rgba(255,255,255,.96);
     --mk-limeL: rgba(67,120,0,.4);
@@ -119,6 +121,7 @@
   --mk-hov: #f3f4f1;
   --mk-bord2: #cfd3cc;
   --mk-grab: #c4c8c0;
+  --mk-barfill: #7b838f;
   --mk-dim: #c4c8c0;
   --mk-bar: rgba(255,255,255,.96);
   --mk-limeL: rgba(67,120,0,.4);

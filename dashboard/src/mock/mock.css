@@ -217,7 +217,7 @@
 .mk .mfr>span{width:90px;color:var(--mk-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mk .mfr b{width:56px;text-align:right;font-variant-numeric:tabular-nums}
 .mk .mb{flex:1;height:14px;border-radius:7px;background:var(--mk-band);overflow:hidden}
-.mk .mb i{display:block;height:100%;background:var(--mk-grab);border-radius:7px}
+.mk .mb i{display:block;height:100%;background:var(--mk-barfill);border-radius:7px}
 .mk .mb i.red{background:var(--mk-red)}
 .mk .mk-ob{display:flex;flex-direction:column;gap:6px}
 .mk .obt{height:16px;border-radius:8px;background:var(--mk-band);position:relative;overflow:hidden}
