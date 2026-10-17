@@ -8,7 +8,7 @@ import { join } from 'node:path'
 import { lower, read, write } from './baseline.mjs'
 
 const root = new URL('../src/', import.meta.url).pathname
-const LITERAL = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/g
+const LITERAL = /(?<!&)#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/g
 const DEFINITION = /--[\w-]+\s*:\s*[^;}]+/g
 
 function files(dir) {
