@@ -36,8 +36,6 @@ interface PartsIn {
   extras: Extras
   /** Writes an amount in the site's currency; absent where revenue is not shown. */
   money?: (minor: number) => string
-  /** The replay's "now", as minutes into today; the clock itself when absent. */
-  clockAt?: number
 }
 
 /** What "usual" means on this page: the same weekday's last weeks (up to this time of day for today), else the period before. */
@@ -68,10 +66,10 @@ function bandsOf(series: Point[], table: ReturnType<typeof hourTable>, days: { t
 }
 
 export function useParts(a: PartsIn) {
-  const { site, cur, prev, usual, unit, range, today, bucket, hist, up, downMin, nowSec, notes, slices, extras, money, clockAt } = a
+  const { site, cur, prev, usual, unit, range, today, bucket, hist, up, downMin, nowSec, notes, slices, extras, money } = a
   const hourly = bucket === 'hour'
   const downNow = !!site.down_since
-  const clock = clockAt === undefined ? siteNow(site.timezone, new Date(nowSec * 1000)) : `${today}T${String(Math.floor(clockAt / 60)).padStart(2, '0')}:${String(clockAt % 60).padStart(2, '0')}`
+  const clock = siteNow(site.timezone, new Date(nowSec * 1000))
   return useMemo(() => {
     if (!cur) return null
     const days = (hist.daily ?? []).map((p) => p.t.slice(0, 10))

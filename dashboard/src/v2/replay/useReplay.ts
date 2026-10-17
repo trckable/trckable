@@ -1,77 +1,56 @@
-// The clock of the replay: it plays the day from midnight to now in twenty seconds, stops at each moment for a breath,
-// and can be paused, dragged, sped up and closed. The page reads `t` (minutes into the day) as its "now".
+// The replay of the day: one run of about three seconds along the chart, and the moment it has reached for the bar's
+// caption. Nothing else on the page changes while it plays. It can be stopped, and a click on Replay while it plays
+// stops it too. With reduced motion there is no run: the day is a list of its moments, the chart as it is.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { step, TICK_MS, type Moment } from './model'
+import type { Moment } from './model'
+import { reveal, runReveal } from './reveal'
 
 export interface Replay {
+  /** The bar is up (playing, or a moment's caption still on, or the list). */
   on: boolean
-  t: number
-  end: number
-  speed: 1 | 2 | 4
   playing: boolean
   cur: Moment | null
   reduced: boolean
+  /** Starts the run; a second call while it plays starts it again from the left. */
   open: () => void
+  /** Ends it where it is, and the chart is as it was. */
   close: () => void
-  toggle: () => void
-  seek: (t: number) => void
   pick: (m: Moment) => void
-  faster: () => void
 }
-
-const NEXT = { 1: 2, 2: 4, 4: 1 } as const
 
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
+/** The caption of the last moment stays this long after the line has reached the end. */
+const LINGER_MS = 1600
+
 export function useReplay(o: { moments: Moment[]; end: number }): Replay {
   const [on, setOn] = useState(false)
-  const [t, setT] = useState(0)
-  const [speed, setSpeed] = useState<1 | 2 | 4>(1)
   const [playing, setPlaying] = useState(false)
   const [cur, setCur] = useState<Moment | null>(null)
   const [rm, setRm] = useState(false)
-  const live = useRef({ ...o, t, speed, dwell: 0, endT: undefined as ReturnType<typeof setTimeout> | undefined })
+  const live = useRef({ ...o, halt: undefined as (() => void) | undefined, linger: undefined as ReturnType<typeof setTimeout> | undefined })
   useEffect(() => {
-    live.current = { ...live.current, ...o, t, speed }
+    live.current = { ...live.current, ...o }
   })
-  const stop = useCallback(() => {
-    clearTimeout(live.current.endT)
-    setPlaying(false)
-  }, [])
   const close = useCallback(() => {
-    stop()
+    clearTimeout(live.current.linger)
+    live.current.halt?.()
+    live.current.halt = undefined
+    setPlaying(false)
     setOn(false)
     setCur(null)
-  }, [stop])
-  const seek = useCallback((to: number, play = false) => {
-    const { moments, end, t: from } = live.current
-    const next = Math.max(0, Math.min(end, to))
-    setT(next)
-    live.current.t = next
-    const hit = moments.filter((m) => m.min <= next && (!play || m.min > from)).pop() ?? null
-    if (play) {
-      if (hit) {
-        setCur(hit)
-        live.current.dwell = 1900 / live.current.speed
-      }
-    } else setCur(hit)
   }, [])
   useEffect(() => {
     if (!playing) return
-    const id = setInterval(() => {
-      const r = live.current
-      if (r.dwell > 0) {
-        r.dwell -= TICK_MS
-        return
-      }
-      seek(r.t + step(r.end, r.speed), true)
-      if (r.t >= r.end) {
-        setPlaying(false)
-        r.endT = setTimeout(close, 1800)
-      }
-    }, TICK_MS)
-    return () => clearInterval(id)
-  }, [playing, seek, close])
+    // The moment the line is at: the last one at or before the minute it has reached.
+    return reveal.subscribe(() => {
+      const p = reveal.get()
+      if (p < 0) return
+      const { moments, end } = live.current
+      const hit = moments.filter((m) => m.min <= p * end).pop() ?? null
+      setCur((c) => (c === hit ? c : hit))
+    })
+  }, [playing])
   useEffect(() => {
     if (!on) return
     const key = (e: KeyboardEvent) => {
@@ -83,56 +62,25 @@ export function useReplay(o: { moments: Moment[]; end: number }): Replay {
     window.addEventListener('keydown', key, true)
     return () => window.removeEventListener('keydown', key, true)
   }, [on, close])
+  useEffect(() => close, [close])
   const open = useCallback(() => {
+    clearTimeout(live.current.linger)
+    live.current.halt?.()
     const r = reduced()
     setRm(r)
     setOn(true)
     setCur(null)
-    setSpeed(1)
     if (r) {
-      setT(live.current.end)
-      setPlaying(false)
-    } else {
-      setT(0)
-      live.current.t = 0
-      live.current.dwell = 0
-      setPlaying(true)
-    }
-    window.scrollTo(0, 0)
-  }, [])
-  const toggle = useCallback(() => {
-    clearTimeout(live.current.endT)
-    if (playing) {
       setPlaying(false)
       return
     }
-    if (live.current.t >= live.current.end - 1) {
-      setT(0)
-      live.current.t = 0
-      setCur(null)
-    }
     setPlaying(true)
-  }, [playing])
-  return {
-    on,
-    t,
-    end: o.end,
-    speed,
-    playing,
-    cur,
-    reduced: rm,
-    open,
-    close,
-    toggle,
-    seek: (to: number) => {
-      stop()
-      live.current.dwell = 0
-      seek(to)
-    },
-    pick: (m: Moment) => {
-      setT(m.min)
-      setCur(m)
-    },
-    faster: () => setSpeed((s) => NEXT[s]),
-  }
+    live.current.halt = runReveal(0, () => {
+      live.current.halt = undefined
+      setPlaying(false)
+      setCur(live.current.moments.at(-1) ?? null)
+      live.current.linger = setTimeout(close, LINGER_MS)
+    })
+  }, [close])
+  return { on, playing, cur, reduced: rm, open, close, pick: (m: Moment) => setCur(m) }
 }

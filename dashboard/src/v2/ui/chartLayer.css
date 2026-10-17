@@ -6,3 +6,7 @@
 /* Replay as a story: its rail lines up with the plot, whose left edge is the axis's width. */
 .mk .chwrap{--plot-l:36px}
 @media (max-width:500px){.mk .chwrap{--plot-l:8px}}
+
+/* A replay draws the line on: the marks that sit on it wait, and come in as the line reaches them. */
+.mk .chwrap [data-rv]{transition:opacity .3s}
+.mk .chwrap[data-reveal] [data-rv]:not([data-in]){opacity:0;pointer-events:none}
