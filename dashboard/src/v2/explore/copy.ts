@@ -51,7 +51,7 @@ export const copy = defineCopy('v2explore', {
     links: ['Links & bots', 'Outbound links and bots'],
     ai: ['AI & search', 'Google, AI assistants and crawlers'],
   },
-  sub: { overview: 'Overview', pages: 'Pages', countries: 'Countries', funnels: 'Funnels & goals', sales: 'Sales', sources: 'Channels', referrers: 'Referrers', utm: 'UTMs', search: 'Search', devices: 'Devices', browsers: 'Browsers', outbound: 'Links', bots: 'Bots', highlights: 'Highlights', overtime: 'Over time', hours: 'Hours', revmap: 'Revenue map', earners: 'Sources that pay', sells: 'Pages that sell', people: 'People', buyers: 'Latest buyers', retention: 'Retention', vsale: 'Visit to sale', toconvert: 'Time to convert', flow: 'Flow', ai: 'AI & search' },
+  sub: { overview: 'Overview', pages: 'Pages', countries: 'Countries', funnels: 'Goals', sales: 'Sales', sources: 'Channels', referrers: 'Referrers', utm: 'UTMs', search: 'Search', devices: 'Devices', browsers: 'Browsers', outbound: 'Links', bots: 'Bots', highlights: 'Highlights', overtime: 'Over time', hours: 'Hours', revmap: 'Revenue map', earners: 'Sources that pay', sells: 'Pages that sell', people: 'People', buyers: 'Latest buyers', retention: 'Retention', vsale: 'Visit to sale', toconvert: 'Time to convert', flow: 'Flow', ai: 'AI & search' },
   people: 'People',
   trackGoal: 'Track another goal',
   emptyHighlights: 'Nothing changed much',

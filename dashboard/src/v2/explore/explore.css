@@ -39,3 +39,4 @@
 .mk .xrt .xrw.avg{border-top:1px solid var(--mk-line);margin-top:6px;padding-top:9px;color:var(--mk-muted)}
 .mk .xrt .xrw.avg .xrcell{height:auto}
 @media (max-width:600px){.mk .xrt .xth,.mk .xrt .xrw{grid-template-columns:52px 52px repeat(var(--weeks),minmax(0,1fr));min-height:0}.mk .xrt .xrcell{font-size:11px}}
+.mk .xchb .kit-chart{margin:0}
