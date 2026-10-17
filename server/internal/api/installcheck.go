@@ -40,6 +40,10 @@ type installCheck struct {
 	// on-demand check loads it.
 	Script       string `json:"script,omitempty"`
 	ScriptStatus int    `json:"script_status,omitempty"`
+	// Kind is the guess from the homepage: shop, saas, content or other;
+	// Provider the payment provider the page carries (sitekind.go).
+	Kind     string `json:"kind,omitempty"`
+	Provider string `json:"provider,omitempty"`
 }
 
 // checkClient is the guarded client checks use; tests swap it so they never
@@ -173,6 +177,9 @@ func scriptStatus(parent context.Context, c installCheck) int {
 // tell a working install from one that stopped.
 func (a *API) remember(ctx context.Context, site string, c installCheck) {
 	_ = a.Ctl.SetCheck(ctx, site, sqlite.SiteCheck{At: time.Now().Unix(), Found: c.Found, Via: c.Via, Error: c.Error})
+	if c.Kind != "" { // the page was read; a chosen kind is never overwritten
+		_ = a.Ctl.GuessKind(ctx, site, c.Kind, c.Provider)
+	}
 }
 
 // The daily check's limits. One account cannot make this server read
@@ -261,6 +268,7 @@ func verifySite(parent context.Context, siteID, domain string) installCheck {
 		out.Error = final.Host + " answered " + http.StatusText(status)
 		return out
 	}
+	out.Kind, out.Provider = guessKind(page)
 	out.Found = snippetIn(page, siteID)
 	if out.Found == "site" {
 		out.Via = "page"

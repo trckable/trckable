@@ -856,6 +856,29 @@ var migrations = []string{
 		at        INTEGER NOT NULL,
 		PRIMARY KEY (user_id, notice_id)
 	) WITHOUT ROWID;`,
+	// The setup checklist's own marks, one row per site: what kind of site it
+	// is (a guess from the homepage, or the owner's choice), whether the owner
+	// confirmed the time zone and currency, when an event last came through
+	// the owner's own-domain proxy, and when a funnel was built. And one row
+	// per site and item for the steps the owner skipped (state skipped) or
+	// brought back (state kept, so a default does not skip it again). Plain
+	// IF NOT EXISTS tables, so a database stepped back and forward is safe.
+	`CREATE TABLE IF NOT EXISTS site_setup (
+		site_id             TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
+		kind                TEXT NOT NULL DEFAULT '',
+		kind_chosen         INTEGER NOT NULL DEFAULT 0,
+		provider            TEXT NOT NULL DEFAULT '',
+		locale_confirmed_at INTEGER NOT NULL DEFAULT 0,
+		proxy_seen_at       INTEGER NOT NULL DEFAULT 0,
+		funnel_built_at     INTEGER NOT NULL DEFAULT 0
+	) WITHOUT ROWID;
+	CREATE TABLE IF NOT EXISTS setup_skips (
+		site_id TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		item    TEXT NOT NULL,
+		state   TEXT NOT NULL,
+		at      INTEGER NOT NULL,
+		PRIMARY KEY (site_id, item)
+	) WITHOUT ROWID;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

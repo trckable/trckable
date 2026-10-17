@@ -1,0 +1,305 @@
+package api
+
+import (
+	"context"
+	"net/http"
+	"slices"
+	"time"
+
+	"github.com/trckable/trckable/server/internal/modules"
+	"github.com/trckable/trckable/server/internal/store/sqlite"
+	"github.com/trckable/trckable/server/internal/web"
+)
+
+// The setup checklist behind the ring in the header. Every value is computed
+// from data that already exists, plus the few marks site_setup keeps.
+//
+//	GET    /api/v1/sites/{site}/setup               the checklist (anyone who can read the site)
+//	PUT    /api/v1/sites/{site}/setup/skip/{item}   "Not for me" (owner)
+//	DELETE /api/v1/sites/{site}/setup/skip/{item}   bring it back (owner)
+//	PUT    /api/v1/sites/{site}/setup/locale        "That's right" for the time zone and currency (owner)
+//	PUT    /api/v1/sites/{site}/setup/kind          {"kind":"shop|saas|content|other"}: the owner's choice (owner)
+//	POST   /api/v1/sites/{site}/setup/funnel        the owner built a funnel (owner)
+//
+// Answer: {kind: {value, chosen, provider}, goal_suggestion, done, counted,
+// all_set, items: [{id, group, done, counted, skipped, skippable, detail}]}.
+// Groups: "core" always counts; "optional" counts until skipped; "more" never
+// counts. A write answers with the new checklist.
+
+const (
+	proxyFresh = 7 * 24 * time.Hour // events through the proxy within this long make it "done"
+	setupCore  = "core"
+	setupOpt   = "optional"
+	setupMore  = "more"
+)
+
+type setupItem struct {
+	ID        string         `json:"id"`
+	Group     string         `json:"group"`
+	Done      bool           `json:"done"`
+	Counted   bool           `json:"counted"`
+	Skipped   bool           `json:"skipped"`
+	Skippable bool           `json:"skippable"`
+	Detail    map[string]any `json:"detail,omitempty"`
+}
+
+type setupKindOut struct {
+	Value    string `json:"value"`
+	Chosen   bool   `json:"chosen"`
+	Provider string `json:"provider,omitempty"`
+}
+
+type setupOut struct {
+	Kind           setupKindOut `json:"kind"`
+	GoalSuggestion string       `json:"goal_suggestion"`
+	Done           int          `json:"done"`
+	Counted        int          `json:"counted"`
+	AllSet         bool         `json:"all_set"`
+	Items          []setupItem  `json:"items"`
+}
+
+// setupIn is everything the rules read, so they run without a server.
+type setupIn struct {
+	Now      time.Time
+	Timezone string
+	Currency string
+	Stored   sqlite.SiteSetup
+	Paths    int64 // distinct pageview paths, up to 3
+	Known    bool  // the analytics store answered
+	Crawlers bool
+	OwnIPs   int
+	Goals    bool
+	Payments *payState // nil: no payment connection
+	Search   bool
+	// The extras.
+	Vitals, Heatmaps bool
+	VitalsBytes      int
+	Team, Phone      bool
+	Keywords         bool
+}
+
+type payState struct {
+	Provider string
+	Sales    int
+}
+
+// goalSuggestion is the goal the Create > Goal form offers first.
+func goalSuggestion(kind string) string {
+	switch kind {
+	case sqlite.KindShop:
+		return "Purchase"
+	case sqlite.KindSaaS:
+		return "Sign-up"
+	case sqlite.KindContent:
+		return "Newsletter sign-up"
+	}
+	return ""
+}
+
+func buildSetup(in setupIn) setupOut {
+	kind := in.Stored.Kind
+	out := setupOut{
+		Kind:           setupKindOut{Value: kind, Chosen: in.Stored.KindChosen, Provider: in.Stored.Provider},
+		GoalSuggestion: goalSuggestion(kind),
+		Items:          []setupItem{},
+	}
+	add := func(id, group string, done bool, detail map[string]any) {
+		it := setupItem{ID: id, Group: group, Done: done, Detail: detail}
+		if group != setupMore {
+			it.Skippable = group == setupOpt
+			it.Counted = true
+			if it.Skippable && !done && in.skipped(id, kind) {
+				it.Skipped, it.Counted = true, false
+			}
+			if it.Skipped {
+				it.Group = setupMore // a skipped row waits under "More you can add"
+			}
+		}
+		out.Items = append(out.Items, it)
+	}
+
+	add("verified", setupCore, in.Paths >= 2, map[string]any{"pages": in.Paths})
+	add("own_visits", setupCore, in.OwnIPs > 0, nil)
+	locale := in.Timezone != "UTC" || in.Currency != "USD" || in.Stored.LocaleConfirmedAt > 0
+	add("locale", setupCore, locale, map[string]any{"timezone": in.Timezone, "currency": in.Currency})
+	add("goal", setupCore, in.Goals, map[string]any{"suggestion": out.GoalSuggestion})
+
+	pay := map[string]any{}
+	if in.Payments != nil {
+		pay["provider"], pay["sales"] = in.Payments.Provider, in.Payments.Sales
+	} else if in.Stored.Provider != "" {
+		pay["provider"] = in.Stored.Provider // seen on the page: "Connect Stripe"
+	}
+	add("payments", setupOpt, in.Payments != nil, pay)
+	add("funnel", setupOpt, in.Stored.FunnelBuiltAt > 0, nil)
+	add("search", setupOpt, in.Search, nil)
+	add("crawlers", setupOpt, in.Crawlers, nil)
+	var seen int64
+	proxy := in.Stored.ProxySeenAt > 0 && in.Now.Sub(time.Unix(in.Stored.ProxySeenAt, 0)) <= proxyFresh
+	if in.Stored.ProxySeenAt > 0 {
+		seen = in.Stored.ProxySeenAt
+	}
+	add("proxy", setupOpt, proxy, map[string]any{"last_seen": seen})
+
+	add("vitals", setupMore, in.Vitals, map[string]any{"bytes": in.VitalsBytes})
+	add("heatmaps", setupMore, in.Heatmaps, nil)
+	add("ga", setupMore, false, nil) // nothing is stored: a link
+	add("team", setupMore, in.Team, nil)
+	add("phone", setupMore, in.Phone, nil)
+	add("mentions", setupMore, in.Keywords, nil)
+
+	for _, it := range out.Items {
+		if it.Counted {
+			out.Counted++
+			if it.Done {
+				out.Done++
+			}
+		}
+	}
+	out.AllSet = out.Counted > 0 && out.Done == out.Counted
+	return out
+}
+
+// skipped says whether an item the owner can skip is skipped now: by their
+// word, or, with none on record, by a default. Bringing an item back records
+// "kept", so a default never skips it again.
+func (in setupIn) skipped(id, kind string) bool {
+	switch in.Stored.Skips[id] {
+	case sqlite.SkipSkipped:
+		return true
+	case sqlite.SkipKept:
+		return false
+	}
+	switch id {
+	case "payments":
+		return kind == sqlite.KindContent
+	case "funnel":
+		return in.Known && in.Paths == 1 // a site that only ever had one page has nothing to follow
+	}
+	return false
+}
+
+// setupOf reads what the rules need for one site.
+func (a *API) setupOf(r *http.Request, si sqlite.SiteInfo) (setupOut, error) {
+	ctx := r.Context()
+	in := setupIn{Now: a.Now(), Timezone: si.Timezone, Currency: si.Currency}
+	var err error
+	if in.Stored, err = a.Ctl.SetupOf(ctx, si.ID); err != nil {
+		return setupOut{}, err
+	}
+	if q := a.Query(); q != nil {
+		if f, err := q.Setup(ctx, si.ID); err == nil {
+			in.Known, in.Paths, in.Crawlers = true, f.Paths, f.Crawlers
+		}
+	}
+	if cfg, err := a.Ctl.SiteConfig(ctx, si.ID); err == nil {
+		in.OwnIPs = len(cfg.ExcludeIPs)
+		in.Goals = len(cfg.PageGoals) > 0
+	}
+	if !in.Goals {
+		labels, _ := a.Ctl.GoalLabels(ctx, si.ID)
+		in.Goals = len(labels) > 0
+	}
+	in.Payments = a.payStateOf(ctx, si.ID)
+	if c, err := a.Ctl.SearchConsoleOf(ctx, si.ID); err == nil && c.Property != "" {
+		in.Search = true
+	}
+	set := a.modulesOf(r, si.ID)
+	in.Vitals, in.Heatmaps = set.Has("vitals"), set.Has("heatmaps")
+	if m, ok := modules.Get("vitals"); ok {
+		in.VitalsBytes = web.TrackerSizes().Feature[m.Tracker]
+	}
+	p := principalOf(r)
+	if people, err := a.Ctl.People(ctx, p.account); err == nil {
+		in.Team = len(people) > 1
+	}
+	if p.user != nil {
+		if devs, err := a.Ctl.Devices(ctx, p.user.ID, p.device); err == nil {
+			in.Phone = len(devs) > 0
+		}
+	}
+	if words, err := a.Ctl.MentionKeywords(ctx, si.ID); err == nil {
+		in.Keywords = len(words) > 0
+	}
+	return buildSetup(in), nil
+}
+
+// payStateOf is the site's payments, as the checklist reads them: a real
+// connection (a hand-typed "custom" one is not) and the sales it has seen.
+func (a *API) payStateOf(ctx context.Context, site string) *payState {
+	if a.Revenue == nil {
+		return nil
+	}
+	conns, _ := a.Revenue.Connections(ctx, site, "")
+	var out *payState
+	for _, c := range conns {
+		if c.Provider == "custom" {
+			continue
+		}
+		if out == nil {
+			out = &payState{Provider: c.Provider}
+		}
+		out.Sales += c.Payments
+	}
+	return out
+}
+
+func (a *API) checklist(w http.ResponseWriter, r *http.Request) {
+	si, err := a.Ctl.SiteInfo(r.Context(), r.PathValue("site"))
+	if err != nil {
+		fail(w, http.StatusNotFound, "site not found")
+		return
+	}
+	out, err := a.setupOf(r, si)
+	if err != nil {
+		fail(w, http.StatusInternalServerError, "could not read the checklist")
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// setupWrite runs one change to the checklist's marks, then answers with the
+// checklist.
+func (a *API) setupWrite(w http.ResponseWriter, r *http.Request, change func(site string) error) {
+	site := r.PathValue("site")
+	if !a.siteExists(w, r) {
+		return
+	}
+	if err := change(site); err != nil {
+		fail(w, http.StatusInternalServerError, "could not save")
+		return
+	}
+	a.checklist(w, r)
+}
+
+func (a *API) setupSkip(skipped bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		item := r.PathValue("item")
+		if !slices.Contains(sqlite.SkippableItems, item) {
+			fail(w, http.StatusBadRequest, "that step cannot be skipped")
+			return
+		}
+		a.setupWrite(w, r, func(site string) error {
+			return a.Ctl.SetSkip(r.Context(), site, item, skipped, a.Now().Unix())
+		})
+	}
+}
+
+func (a *API) setupLocale(w http.ResponseWriter, r *http.Request) {
+	a.setupWrite(w, r, func(site string) error { return a.Ctl.ConfirmLocale(r.Context(), site, a.Now().Unix()) })
+}
+
+func (a *API) setupFunnel(w http.ResponseWriter, r *http.Request) {
+	a.setupWrite(w, r, func(site string) error { return a.Ctl.MarkFunnelBuilt(r.Context(), site, a.Now().Unix()) })
+}
+
+func (a *API) setupKind(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Kind string `json:"kind"`
+	}
+	if err := decode(r, &in); err != nil || !sqlite.ValidKind(in.Kind) {
+		fail(w, http.StatusBadRequest, "kind must be shop, saas, content or other")
+		return
+	}
+	a.setupWrite(w, r, func(site string) error { return a.Ctl.ChooseKind(r.Context(), site, in.Kind) })
+}
