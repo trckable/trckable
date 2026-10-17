@@ -184,3 +184,11 @@ test('every card of the old Data page is a tab of a section', async ({ page }) =
     }
   }
 })
+
+test('an old address with fs= opens the funnel it names', async ({ page }) => {
+  await open(page, 1440)
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=&x=funnels&fs=page:/&fs=page:/pricing`)
+  await expect(panel(page)).toBeVisible()
+  await expect(page.locator('#xp')).not.toContainText('We could not load this')
+  await expect(page.locator('#xp .xsec').first()).toBeVisible()
+})

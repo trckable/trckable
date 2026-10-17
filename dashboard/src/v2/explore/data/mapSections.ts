@@ -1,5 +1,5 @@
 // The other sections' answers, said as Explore's models. Pure: mapSections.test.ts.
-import type { CrawlerReport, FunnelResult, Money, Report, SearchReport, SearchRow as ApiSearchRow, WebVitals } from '../../../lib/api'
+import type { CrawlerReport, FunnelResult, FunnelStep, Money, Report, SearchReport, SearchRow as ApiSearchRow, WebVitals } from '../../../lib/api'
 import { fmtDay } from '../../../lib/dates'
 import { fmtFixed, fmtInt } from '../../../lib/format'
 import type { Mention as ApiMention } from '../../../features/mentions/api'
@@ -28,6 +28,12 @@ export function leakOf(steps: Step[]): Funnel['leak'] {
     }
   })
   return { at, r, ur }
+}
+
+/** The funnel's steps: those an old address names ("fs=page:/pricing"), else the two busiest entry pages and the first goal. */
+export function stepsOf(wanted: FunnelStep[] | undefined, pages: { value: string }[], goal?: { value: string }): FunnelStep[] {
+  if (wanted && wanted.length >= 2) return wanted
+  return [...pages.slice(0, 2).map((p) => ({ kind: 'page' as const, value: p.value })), ...(goal ? [{ kind: 'goal' as const, value: goal.value }] : [])]
 }
 
 export function mapFunnel(o: { cur: FunnelResult[]; prev?: FunnelResult[]; report: Report; ghost: boolean }): Funnel {

@@ -22,7 +22,7 @@ export interface DataCtx {
 export type TabData = Tabs[Tab]
 
 export function useTab(tab: Tab, c: DataCtx, on: boolean): Loaded<TabData> {
-  const key = [c.site.id, c.range.from, c.range.to, c.view.compare, c.view.test, keyOf(c.filters), tab].join('|')
+  const key = [c.site.id, c.range.from, c.range.to, c.view.compare, c.view.test, keyOf(c.filters), (c.view.funnel ?? []).map((s) => s.kind + s.value).join(','), tab].join('|')
   return useLoad<TabData>(key, (signal) => loadTab(tab, c, signal), on)
 }
 
