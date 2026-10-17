@@ -1,27 +1,4 @@
 /* Settings (views/Settings.tsx): loaded with the settings chunk. */
-.card.module-off {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 14px;
-}
-.card.module-off h3 {
-  margin: 0 0 4px;
-  font-size: 15px;
-}
-.card.module-off p {
-  margin: 0;
-  font-size: 13px;
-}
-@media (max-width: 640px) {
-  .card.module-off {
-    grid-template-columns: auto 1fr;
-  }
-  .card.module-off .btn {
-    grid-column: 1 / -1;
-  }
-}
-
 /* Install, once installed: the state first, the code a click away. */
 .card.install-check {
   position: relative;
@@ -354,7 +331,6 @@
   :root .gen-state {
     font-size: var(--ph-text-2);
   }
-  :root .card.module-off p,
   :root .install-check-head p,
   :root .install-step > span:last-child,
   :root .install-step .faint {

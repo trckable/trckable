@@ -47,10 +47,6 @@ func (a *API) aiSearch(w http.ResponseWriter, r *http.Request) {
 	if devices != 1 {
 		device = ""
 	}
-	crawlersOn := a.moduleOn(r, site, "crawlers")
-	if !crawlersOn {
-		opts.Page = "" // nothing is read with the module off: no counters to narrow
-	}
 	if a.moduleOn(r, site, "search") {
 		opts.Clicks = a.pageClicks(r, site, p, opts.Page, device)
 	}
@@ -62,9 +58,8 @@ func (a *API) aiSearch(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "private, max-age=30")
 	writeJSON(w, http.StatusOK, struct {
 		*query.AISearch
-		Crawlers bool `json:"crawlers"` // the module is on: robots are being recorded
-		Google   bool `json:"google"`   // Search Console answered: pages carry its clicks
-	}{rep, crawlersOn, opts.Clicks != nil})
+		Google bool `json:"google"` // Search Console answered: pages carry its clicks
+	}{rep, opts.Clicks != nil})
 }
 
 // pageClicks is Google's clicks per page path for the period, from the hour's
@@ -116,5 +111,5 @@ func (a *API) aiSeen(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]bool{"visitor": visitor, "crawler": crawler && a.moduleOn(r, site, "crawlers")})
+	writeJSON(w, http.StatusOK, map[string]bool{"visitor": visitor, "crawler": crawler})
 }

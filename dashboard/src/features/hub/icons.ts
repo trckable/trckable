@@ -46,6 +46,5 @@ export const ICONS: Record<string, LucideIcon> = {
   language: Languages,
   shortcuts: Keyboard,
   peek: Bot,
-  modules: Gauge,
   health: Activity,
 }

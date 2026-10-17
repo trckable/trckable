@@ -1,7 +1,8 @@
-// Settings → Modules: "A module that is off sends no JavaScript, runs nothing
-// and hides its views." Switching one off in the dialog is followed to the
-// served script, the real tracker in a real page, the server's own refusal
-// and the cards on the dashboard; switching it back restores each.
+// What the script records (Settings → General) and the features around it.
+// Most of trckable has no switch: it is there, with an empty state, whatever an
+// older client asks. Only what changes the script is a choice, and a choice
+// that is off sends no JavaScript, refuses its routes and hides its views; on
+// again restores each. Revenue and Search Console appear once connected.
 import { gzipSync } from 'node:zlib'
 import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
@@ -9,20 +10,20 @@ import { H, UA, newSite, openSettings, realPage, recent, type TestSite } from '.
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one browser is enough: the server does the work')
 
-type Mod = { id: string; name: string; enabled: boolean; tracker_bytes?: number }
+type Mod = { id: string; name: string; enabled: boolean; group: string; tracker_bytes?: number }
 type Listing = { modules: Mod[]; script: { bytes: number; core: number; full: number; url: string } }
 
 const listing = async (page: Page, site: TestSite) => (await (await page.request.get(`${API}/api/v1/sites/${site.id}/modules`, { headers: H })).json()) as Listing
 const on = async (page: Page, site: TestSite, id: string) => (await listing(page, site)).modules.find((m) => m.id === id)!.enabled
 const served = async (page: Page, site: TestSite) => (await page.request.get(`${API}/js/${site.id}.js`)).text()
 
-/** The module's switch in Settings → Modules, then the question it asks first. */
-async function flip(page: Page, site: TestSite, mod: Mod, to: boolean) {
-  await openSettings(page, site, 'modules')
-  const sw = page.getByRole('switch', { name: `${mod.name}: ${to ? 'off' : 'on'}` })
+/** A choice's switch in Settings → General → What the script records. */
+async function flip(page: Page, site: TestSite, name: string, to: boolean) {
+  await openSettings(page, site, 'site')
+  const sw = page.locator('#script-records').getByRole('switch', { name, exact: true })
+  await expect(sw).toHaveAttribute('aria-checked', String(!to))
   await sw.click()
-  await page.getByRole('dialog', { name: `${to ? 'Turn on' : 'Turn off'} ${mod.name}` }).getByRole('button', { name: to ? 'Turn on' : 'Turn off', exact: true }).click()
-  await expect(page.getByRole('switch', { name: `${mod.name}: ${to ? 'on' : 'off'}` })).toBeVisible()
+  await expect(sw).toHaveAttribute('aria-checked', String(to))
 }
 
 // What each module owns on the server. Off, the route answers 404; on, anything but.
@@ -34,31 +35,69 @@ const OWNS: Record<string, string> = {
   rhythm: 'report/heatmap?from=2026-01-01&to=2026-01-02',
   vitals: 'report/vitals?from=2026-01-01&to=2026-01-02',
   crawlers: 'report/crawlers?from=2026-01-01&to=2026-01-02',
+  notes: 'annotations?from=2026-01-01&to=2026-01-02',
   revenue: 'report/pages-sell?from=2026-01-01&to=2026-01-02',
   search: 'report/search?from=2026-01-01&to=2026-01-02',
   heatmaps: 'heat?path=/&from=2026-01-01&to=2026-01-02',
 }
 
-test('every module: switching it off in Settings is followed by the server, and switching it on brings it back', async ({ page }) => {
-  test.setTimeout(240_000)
-  const site = await newSite(page, 'mods')
-  const mods = (await listing(page, site)).modules
-  expect(mods.map((m) => m.id)).toEqual(expect.arrayContaining(['goals', 'outbound', 'revenue', 'funnels', 'notes', 'rhythm', 'journeys', 'map', 'retention', 'vitals', 'consent', 'crawlers', 'forms', 'heatmaps', 'search']))
+test('the choices: goals, vitals and heatmaps are switched in General, and the server follows', async ({ page }) => {
+  test.setTimeout(180_000)
+  const site = await newSite(page, 'choices')
   const status = (path: string) => page.request.get(`${API}/api/v1/sites/${site.id}/${path}`, { headers: H }).then((r) => r.status())
+  const names: Record<string, string> = { goals: 'Goals', vitals: 'Core Web Vitals', heatmaps: 'Heatmaps' }
 
-  for (const m of mods) {
-    // Start from on, whatever the default is; "records data" modules have no side effects here.
-    if (!m.enabled) await page.request.put(`${API}/api/v1/sites/${site.id}/modules/${m.id}`, { headers: H, data: { enabled: true } })
-    if (OWNS[m.id]) expect.soft(await status(OWNS[m.id]), `${m.id} on`).not.toBe(404)
-
-    await flip(page, site, { ...m, enabled: true }, false)
-    expect.soft(await on(page, site, m.id), `${m.id} off`).toBe(false)
-    if (OWNS[m.id]) expect.soft(await status(OWNS[m.id]), `${m.id} off: the server refuses`).toBe(404)
-
-    await flip(page, site, { ...m, enabled: false }, true)
-    expect.soft(await on(page, site, m.id), `${m.id} on again`).toBe(true)
-    if (OWNS[m.id]) expect.soft(await status(OWNS[m.id]), `${m.id} on again`).not.toBe(404)
+  for (const id of ['goals', 'vitals', 'heatmaps']) {
+    // Start from on, whatever the default is.
+    if (!(await on(page, site, id))) await page.request.put(`${API}/api/v1/sites/${site.id}/modules/${id}`, { headers: H, data: { enabled: true } })
+    expect.soft(await status(OWNS[id]), `${id} on`).not.toBe(404)
+    await flip(page, site, names[id], false)
+    expect.soft(await on(page, site, id), `${id} off`).toBe(false)
+    expect.soft(await status(OWNS[id]), `${id} off: the server refuses`).toBe(404)
+    await flip(page, site, names[id], true)
+    expect.soft(await on(page, site, id), `${id} on again`).toBe(true)
+    expect.soft(await status(OWNS[id]), `${id} on again`).not.toBe(404)
   }
+
+  // Outbound links and forms are two checkboxes inside Goals.
+  for (const id of ['outbound', 'forms']) {
+    await page.request.put(`${API}/api/v1/sites/${site.id}/modules/${id}`, { headers: H, data: { enabled: false } })
+    await openSettings(page, site, 'site')
+    const box = page.locator('#script-records .rec-sub').nth(id === 'outbound' ? 0 : 1).locator('input')
+    await box.click()
+    await expect.poll(() => on(page, site, id)).toBe(true)
+    await expect(box).toBeChecked()
+    await box.click()
+    await expect.poll(() => on(page, site, id)).toBe(false)
+    await expect(box).not.toBeChecked()
+  }
+})
+
+test('new sites record vitals; goals on, heatmaps off; the list carries each choice size', async ({ page }) => {
+  const site = await newSite(page, 'defaults')
+  const mods = (await listing(page, site)).modules
+  const by = (id: string) => mods.find((m) => m.id === id)!
+  expect(by('vitals').enabled).toBe(true)
+  expect(by('goals').enabled).toBe(true)
+  expect(by('heatmaps').enabled).toBe(false)
+  for (const id of ['goals', 'vitals', 'heatmaps']) expect(by(id).tracker_bytes, id).toBeGreaterThan(0)
+})
+
+test('what has no switch is always there, and revenue waits to be connected', async ({ page }) => {
+  const site = await newSite(page, 'always')
+  const status = (path: string) => page.request.get(`${API}/api/v1/sites/${site.id}/${path}`, { headers: H }).then((r) => r.status())
+  const mods = (await listing(page, site)).modules
+  expect(mods.filter((m) => m.group === 'always').map((m) => m.id).sort()).toEqual(['crawlers', 'funnels', 'journeys', 'map', 'notes', 'retention', 'rhythm'])
+  for (const m of mods.filter((x) => x.group === 'always')) {
+    // An older client asking for it off is answered, and nothing changes.
+    const off = await page.request.put(`${API}/api/v1/sites/${site.id}/modules/${m.id}`, { headers: H, data: { enabled: false } })
+    expect(off.ok(), m.id).toBe(true)
+    expect.soft(await on(page, site, m.id), `${m.id} still on`).toBe(true)
+    if (OWNS[m.id]) expect.soft(await status(OWNS[m.id]), `${m.id} answers`).not.toBe(404)
+  }
+  // Not connected: nothing to show, and the dashboard says how to start.
+  expect((await listing(page, site)).modules.find((m) => m.id === 'revenue')!.enabled).toBe(false)
+  expect(await status(OWNS.revenue)).toBe(404)
 })
 
 test('the script: a module that is off sends no code, and the sizes the dialog shows are the real ones', async ({ page }) => {

@@ -881,6 +881,10 @@ var migrations = []string{
 		at      INTEGER NOT NULL,
 		PRIMARY KEY (site_id, item)
 	) WITHOUT ROWID;`,
+	// 66: Core Web Vitals is on for new sites. A site that had not chosen keeps
+	// what it had (off), so nothing starts being recorded that was not before.
+	`INSERT OR IGNORE INTO site_modules (site_id, module_id, enabled, updated_at)
+	SELECT id, 'vitals', 0, CAST(strftime('%s', 'now') AS INTEGER) FROM sites;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

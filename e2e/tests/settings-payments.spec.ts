@@ -60,10 +60,8 @@ for (const p of PROVIDERS) {
     const site = await newSite(page, `pay-${p.id}`)
     expect((await page.request.patch(`${API}/api/v1/sites/${site.id}`, { headers: H, data: { name: site.domain, currency: sc.currency } })).ok()).toBe(true)
 
-    // Revenue is a module that starts off; its section says so, and connecting turns it on.
+    // Revenue has no switch: its section is the way in, and connecting a provider turns it on.
     await openSettings(page, site, 'payments')
-    await expect(page.getByText('The Revenue module is off')).toBeVisible()
-    await page.getByRole('button', { name: 'Turn on' }).click()
     await expect(page.getByText('CONNECT A PROVIDER').or(page.getByText(/Connect a provider/i)).first()).toBeVisible()
     const listing = (await (await page.request.get(`${API}/api/v1/sites/${site.id}/payments`, { headers: H })).json()) as Listing
     const info = listing.providers.find((x) => x.id === p.id)!

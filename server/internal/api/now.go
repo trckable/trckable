@@ -85,10 +85,8 @@ func (a *API) liveNow(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusServiceUnavailable, "analytics store warming up")
 		return
 	}
-	// The visitor id travels only while journeys is on, as on the stream.
-	withVisitor := a.moduleOn(r, site, "journeys")
 	withMoney := a.moduleOn(r, site, "revenue")
-	key := site + "|" + onOff(withVisitor) + onOff(withMoney)
+	key := site + "|" + onOff(withMoney)
 	now := a.Now()
 	var ver uint64
 	if a.Hub != nil {
@@ -98,7 +96,7 @@ func (a *API) liveNow(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, res)
 		return
 	}
-	n, err := q.LiveNow(r.Context(), site, now, withVisitor)
+	n, err := q.LiveNow(r.Context(), site, now)
 	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return

@@ -115,7 +115,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await scan(page, 'live')
     })
 
-    for (const tab of ['site', 'install', 'modules', 'notes', 'payments', 'privacy', 'alerts', 'health']) {
+    for (const tab of ['site', 'install', 'notes', 'payments', 'privacy', 'alerts', 'health']) {
       test(`settings, ${tab} meets WCAG 2.1 AA`, async ({ page }) => {
         const site = await start(page)
         await page.goto(`${BASE}/settings?site=${site.id}&tab=${tab}`)
