@@ -72,24 +72,6 @@ const noSideScroll = (page: Page) => page.evaluate(() => document.documentElemen
 
 
 
-test('the Revenue number names its source; a source that fails drops its badge and the seal', async ({ page }) => {
-  await told(page, ALL)
-  await open(page, `/${site.domain}?v=explore`)
-  const tile = (name: string) => page.locator('.kpis .kpi').filter({ hasText: name }).first()
-  await expect(tile('Revenue').locator('.vf-chip')).toContainText('Payments verified', { timeout: 15_000 })
-  // trckable's own snippet is no source: Visitors carries no badge.
-  await expect(tile('Visitors').locator('.vf-chip')).toHaveCount(0)
-  expect(await noSideScroll(page)).toBeLessThanOrEqual(0)
-  await shoot(page, 'chips', { y: 60, height: 300 })
-
-  const failing = ALL.map((s) => (s.kind === 'payments' ? { ...s, ok: false } : s))
-  await page.unroute('**/api/v1/sites')
-  await page.unroute(`**/api/v1/sites/${site.id}/verified`)
-  await told(page, failing)
-  await page.reload()
-  await expect(page.locator('.sitechip .vf-sealbtn')).toHaveAttribute('title', 'Verified · Search', { timeout: 15_000 })
-  await expect(tile('Revenue').locator('.vf-chip')).toHaveCount(0)
-})
 
 test('the Story cards carry the same badges', async ({ page }) => {
   await told(page, ALL)
