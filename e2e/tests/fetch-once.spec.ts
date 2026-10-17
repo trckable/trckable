@@ -20,8 +20,8 @@ const setHidden = (page: Page, hidden: boolean) =>
 const LOAD_MS = 10_000
 const WATCH_MS = 45_000
 
-// The most calls a first load may make (Live 18 and the Briefing 30 were measured, with the lazy reads that follow the load).
-const BUDGET = { Live: 18, Briefing: 30 }
+// The most calls a first load may make (Live 19 and the Briefing 31 were measured, with the lazy reads that follow the load and the bell and the setup ring sharing one read of the account's marks).
+const BUDGET = { Live: 19, Briefing: 31 }
 
 const tally = (urls: string[]) => {
   const out: Record<string, number> = {}
@@ -49,7 +49,10 @@ for (const [name, query] of [['Live', 'view=live'], ['Briefing', 'view=briefing'
       await page.route('**/api/v1/sites', async (route) => {
         if (frozen) return route.fulfill({ status: 200, contentType: 'application/json', body: frozen })
         const res = await route.fetch()
-        frozen = await res.text()
+        // The site measured and two others: the bell also reads the account's other sites, as many as the suite has made by now.
+        const all = (await res.json()) as { sites: { domain: string }[] }
+        const sites = [...all.sites.filter((s) => s.domain === HISTORY_DOMAIN), ...all.sites.filter((s) => s.domain !== HISTORY_DOMAIN).slice(0, 2)]
+        frozen = JSON.stringify({ ...all, sites })
         return route.fulfill({ response: res, body: frozen })
       })
       await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
