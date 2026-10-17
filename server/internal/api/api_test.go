@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
@@ -196,6 +197,8 @@ func TestSetupIsGuardedAndOneShot(t *testing.T) {
 	}
 	if code, out := do(t, c, "GET", g.srv.URL+"/api/v1/me", ""); code != 200 || out["email"] != "me@site.com" {
 		t.Fatalf("me after setup: %d %v", code, out)
+	} else if ip, _ := out["ip"].(string); net.ParseIP(ip) == nil {
+		t.Fatalf("me carries the caller's address, got %q", ip)
 	}
 }
 
