@@ -8,7 +8,7 @@ import { overall, type Part, type Score, type Sentence } from '../briefing/model
 import type { WhyRow } from '../briefing/scoreWhy'
 import { ScoreSheet } from './ScoreSheet'
 
-const RING = { lime: 'var(--mk-lime)', amber: '#f0c64a', red: 'var(--mk-red)' }
+const RING = { lime: 'var(--mk-lime)', amber: 'var(--mk-amber)', red: 'var(--mk-red)' }
 
 function Ring({ value, onOpen }: { value: number | null; onOpen: () => void }) {
   const r = 27
