@@ -95,8 +95,8 @@
 .person-name .you {
   padding: 1px 7px;
   border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent-strong, var(--accent));
+  background: var(--mk-sel);
+  color: var(--mk-text);
   font-size: 11px;
   font-weight: 600;
 }
@@ -193,8 +193,8 @@ button.sites-btn:hover {
 }
 .role-pill.owner {
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-  background: var(--accent-soft);
-  color: var(--accent-strong, var(--accent));
+  background: var(--mk-sel);
+  color: var(--mk-text);
 }
 .role-pill:hover:not(:disabled) {
   background-image: var(--hover-veil);

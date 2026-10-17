@@ -56,6 +56,8 @@ export interface VisitStory {
   os: string
   pageviews: number
   engagedS: number
+  /** Events not listed in the timeline. */
+  more: number
   live: boolean
   nodes: StoryNode[]
 }
@@ -170,6 +172,7 @@ export function buildStory(data: JourneyResult, now: number): Story {
       os: v.os ?? '',
       pageviews: v.pageviews,
       engagedS: v.engaged_s,
+      more: v.events_more ?? 0,
       live: i === 0 && now - end < LIVE_MS,
       nodes: nodesOf(v, byVisit.get(i) ?? [], key),
     }

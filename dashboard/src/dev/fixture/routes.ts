@@ -18,6 +18,7 @@ import {
 import { busierOf, nowOf } from './live'
 import { crawlersOf, funnelOf, heatOf, linksOf, scrollOf, segments } from './sections'
 import { hash, mulberry, pick } from './rand'
+import { setupChange, setupOf } from './setup'
 import { osOf, visitsOf, BROWSERS } from './visits'
 
 const CHANNEL_OF: Record<string, string> = { google: 'Search', direct: 'Direct', hn: 'Referral', reddit: 'Social', x: 'Social', newsletter: 'Email', chatgpt: 'Referral', github: 'Referral', badge: 'Referral' }
@@ -226,6 +227,10 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     segments.drop(decodeURIComponent(seg[1]), seg[2])
     return none()
   }
+  if (/^\/sites\/[^/]+\/setup(\/|$)/.test(path)) {
+    const out = method === 'GET' ? setupOf() : setupChange(method, path, body)
+    if (out) return ok(out)
+  }
   const seen = /^\/sites\/([^/]+)\/milestones\/seen$/.exec(path)
   if (seen && method === 'POST') {
     closed.add(decodeURIComponent(seen[1]))
@@ -237,7 +242,7 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     case '/setup':
       return ok({ email_codes: false, needs_setup: false, sso: [] })
     case '/me':
-      return ok({ kind: 'user', email: 'albi@example.com', role: roleOf(), operator: true, version: '0.7.23', keys: {}, update_check: false, must_change: false })
+      return ok({ kind: 'user', email: 'albi@example.com', role: roleOf(), ip: '203.0.113.7', operator: true, version: '0.7.23', keys: {}, update_check: false, must_change: false })
     case '/account':
       return ok({ email: 'albi@example.com', name: 'Albi', has_avatar: false })
     case '/sites':

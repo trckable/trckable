@@ -5,6 +5,7 @@ import { XEmpty, XNote, XSec } from '../../ui/XBits'
 import { XKcsPlain } from '../../ui/XKcs'
 import { XCols, type CRow } from '../../ui/XTable'
 import { copy } from '../copy'
+import { EmptyTab } from './PeopleTable'
 import type { XCtx } from '../ctx'
 import type { Bot, Mention, Speed as SpeedModel } from '../types'
 import { openAi } from '../../ui/AiHost'
@@ -58,7 +59,7 @@ export function Mentions({ x, d }: { x: XCtx; d: Mention[] }) {
 }
 
 export function Bots({ x, d }: { x: XCtx; d: Bot[] }) {
-  if (d.length === 0) return <XEmpty title={copy.emptyPeriod} hint={copy.emptyPeriodHint} />
+  if (d.length === 0) return <EmptyTab x={x} />
   const total = d.reduce((p, b) => p + b.count, 0) || 1
   const max = Math.max(1, ...d.map((b) => b.count))
   const rows: CRow[] = d.map((b) => ({ key: b.name, a: b.name, bar: b.count / max, c: [fmtInt(b.count), `${Math.round((b.count / total) * 100)}%`] }))

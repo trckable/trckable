@@ -26,7 +26,7 @@ test('Display name: "What you call this site in trckable" shows in the header, t
   await expect(dialog.getByText('Saved').first()).toBeVisible()
   expect((await mine(page, site)).name).toBe('Bakery of the Bridge')
   // The dialog's own head follows.
-  await expect(dialog.locator('.gen-head-text b')).toHaveText('Bakery of the Bridge')
+  await expect(dialog.locator('.window-name b')).toHaveText('Bakery of the Bridge')
 
   // The dashboard header and the site list.
   await page.goto(`${API}/${site.domain}`)

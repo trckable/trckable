@@ -23,6 +23,7 @@ import { useV2Extras } from './slots'
 import { ExploreChip, Header, Logo } from './ui/Header'
 import { SegmentedSwitch } from './ui/SegmentedSwitch'
 import { SiteChip } from './ui/SiteMenu'
+import { SetupRing } from './setup/SetupRing'
 
 const Palette = lazyLoad(() => import('./ui/Palette').then((m) => ({ default: m.Palette })))
 
@@ -111,6 +112,7 @@ export function PageHeader(p: PageHeaderProps) {
           </>
         )}
         site={p.identity ? null : <SiteChip p={siteMenu} />}
+        ring={p.identity || !site ? null : <SetupRing site={site} onGoal={p.onGoal ?? (() => openFind(pal.create))} />}
         views={here && !p.identity ? <SegmentedSwitch id="views" label={copy.view} value={here} onChange={(t) => void switchTab(t, here)} items={[{ value: 'live', label: copy.live, title: copy.liveTitle, dot: down ? 'down' : 'ok', count: online ?? undefined }, { value: 'briefing', label: copy.briefing, title: copy.briefingTitle }]} /> : null}
         period={here === 'briefing' ? p.period : null}
         explore={<ExploreChip label={copy.explore} kbd="⌘K" onClick={exploreOpen} />}

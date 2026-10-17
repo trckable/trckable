@@ -147,7 +147,8 @@ export function mapLinks(rows: { key: string; value: string; visitors: number }[
     .sort((a, b) => b.v - a.v)
 }
 
-const SOURCES: Record<string, string> = { hn: copy.sourceNames.hn, ph: copy.sourceNames.ph, news: copy.sourceNames.news }
+/** The two sites we name; anything else is named by its own host. */
+const SOURCES: Record<string, string> = { hn: copy.sourceNames.hn, ph: copy.sourceNames.ph }
 
 /** The time of a mention in the site's own day: just the clock today, the day and the clock before. */
 function whenOf(unix: number, tz: string, today: string): string {
@@ -155,7 +156,7 @@ function whenOf(unix: number, tz: string, today: string): string {
   const at = (t: string) => parts.find((p) => p.type === t)?.value ?? ''
   const day = `${at('year')}-${at('month')}-${at('day')}`
   const clock = `${at('hour')}:${at('minute')}`
-  return day === today ? clock : `${fmtDay(day)} ${clock}`
+  return `${day === today ? copy.todayAt : fmtDay(day)} ${clock}`
 }
 
 export function mapMentions(list: ApiMention[], tz: string, today: string): Mention[] {

@@ -25,10 +25,12 @@ function XMore({ more }: { more: More }) {
   )
 }
 
+/** What a row did against its usual: the multiple when there is a usual to count from, nothing when it kept to it. */
 function delta(r: Row): { text: string; tone: string } {
-  if (r.st === 'up') return { text: `▲ ${r.c > 0.5 && r.v / r.c >= 1.3 ? mult(r.v / r.c) : copy.above}`, tone: 'up' }
-  if (r.st === 'dn') return { text: copy.below, tone: 'dn' }
-  return { text: copy.usual, tone: '' }
+  const ratio = r.c > 0.5 ? mult(r.v / r.c) : ''
+  if (r.st === 'up') return { text: `▲ ${ratio || copy.fresh}`, tone: 'up' }
+  if (r.st === 'dn') return { text: `▼ ${ratio || copy.below}`, tone: 'dn' }
+  return { text: '', tone: '' }
 }
 
 export interface XTableProps {
