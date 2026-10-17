@@ -132,6 +132,13 @@ test('the chart switch keeps bars or line across a reload and both draw the same
 })
 
 test('the sample revenue card on Live is never clipped: Connect sits fully inside the card', async ({ page }) => {
+  // Other specs may have connected payments on this site: the sample card is what a site without sales shows.
+  await page.route('**/api/v1/sites/*/now*', async (route) => {
+    const res = await route.fetch()
+    const body = await res.json()
+    delete body.revenue
+    await route.fulfill({ response: res, json: body })
+  })
   for (const width of [1440, 1024, 768, 390]) {
     await page.setViewportSize({ width, height: 900 })
     await signIn(page, '/example.com?view=live')

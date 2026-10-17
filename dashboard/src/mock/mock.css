@@ -1585,3 +1585,11 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .lbottom.money .lrev{min-width:240px}
 /* The account menu is a sheet on a phone: its desktop place (below the button) must not win over the sheet's bottom edge whichever stylesheet loaded last. */
 @media (max-width:640px){:root .mk .hd .account-menu .pop.menu.more-menu{top:auto}}
+
+/* The people on the site now: bigger than the old Live's 86 px, and it flashes the accent once when it changes. */
+.mk .lfig>div:first-child .lbign{font-size:96px;line-height:1;font-weight:700;letter-spacing:-.05em}
+.mk .tick.flash{display:inline-block;animation:mk-tickp 1s ease-out 1}
+@keyframes mk-tickp{0%{color:var(--mk-lime);transform:scale(1.07)}100%{color:inherit;transform:none}}
+@media (max-width:700px){
+.mk .lfig>div:first-child .lbign{font-size:76px}
+}

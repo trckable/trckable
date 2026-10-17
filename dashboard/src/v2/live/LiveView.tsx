@@ -105,7 +105,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
           <div className="lfig">
             <div>
               <span className="ll">{copy.onlineNow}</span>
-              <b className="lbign"><Tick n={n} /></b>
+              <b className="lbign"><Tick n={n} pulse /></b>
             </div>
             <div>
               <span className="ll">{copy.visitors30}</span>
