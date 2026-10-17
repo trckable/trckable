@@ -21,4 +21,8 @@ describe('why', () => {
     const w = whyUsual({ label: 'People', now: 926, weeks: [{ day: 'a', visitors: 700 }, { day: 'b', visitors: 750 }], weekday: 'Friday', at: '16:30' })
     expect(w.cause).toBe('People so far today: 926. The same stretch (up to 16:30) on the last Fridays: 700, 750.')
   })
+  it('a first day has nothing to be told against, and does not claim zeros', () => {
+    const w = whyUsual({ label: 'People', now: 33, weeks: [{ day: 'a', visitors: 0 }, { day: 'b', visitors: 0 }], weekday: 'Friday', at: '15:00' })
+    expect(w.cause).toBe('People has no earlier days to be told against yet.')
+  })
 })
