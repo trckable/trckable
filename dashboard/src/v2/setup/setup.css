@@ -10,8 +10,8 @@
 .mk .ringb .rtext{color:var(--mk-muted);font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:reduce){.mk .ringb .rarc{transition:none}}
 html[data-motion='off'] .mk .ringb .rarc{transition:none}
-.mk .setupmenu{left:0;width:360px;display:none;gap:var(--mk-s2);padding:var(--mk-s4)}
-.mk .setupmenu.on{display:grid}
+.mk .mk-menu.setupmenu{left:0;width:360px;display:none;gap:var(--mk-s2);padding:var(--mk-s4)}
+.mk .mk-menu.setupmenu.on{display:grid}
 .mk .setupmenu .skind{font-size:12.5px;color:var(--mk-muted);display:flex;gap:var(--mk-s2);flex-wrap:wrap;align-items:baseline}
 .mk .setupmenu .skinds{display:flex;gap:var(--mk-s1);flex-wrap:wrap;width:100%}
 .mk .setupmenu .skinds button[aria-pressed="true"]{color:var(--mk-text);font-weight:600}
@@ -43,4 +43,4 @@ html[data-motion='off'] .mk .setupmenu .sbar i{transition:none}
 .mk .setupmenu .spfoot{display:flex;justify-content:space-between;font-size:12px;color:var(--mk-muted);border-top:1px solid var(--mk-line);padding-top:var(--mk-s3)}
 .mk .setupmenu .spfoot button{text-decoration:underline}
 @media (max-width:760px){.mk .ringb .rtext{display:none}.mk .ringb{padding:0 var(--mk-s1)}}
-@media (max-width:700px){.mk .ringw{position:static}.mk .setupmenu .sgo,.mk .setupmenu .snf{min-height:32px}}
+@media (max-width:700px){.mk .mk-menu.setupmenu{padding:var(--mk-s5) var(--mk-s4) calc(var(--mk-s4) + env(safe-area-inset-bottom))}.mk .ringw{position:static}.mk .setupmenu .sgo,.mk .setupmenu .snf{min-height:32px}}
