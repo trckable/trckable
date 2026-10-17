@@ -13,6 +13,7 @@ import (
 // A site that disconnected, or never connected, is left as it was.
 func TestConnectedSitesGetTheirModules(t *testing.T) {
 	ctx := context.Background()
+	step := migrationWith(t, "FROM search_console WHERE true")
 	s := openT(t)
 	site := func(domain string) string {
 		id, err := s.CreateSite(ctx, DefaultAccount, domain, "")
@@ -28,7 +29,7 @@ func TestConnectedSitesGetTheirModules(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	exec(`DELETE FROM site_modules; PRAGMA user_version = ` + fmt.Sprint(len(migrations)-1))
+	exec(`DELETE FROM site_modules; PRAGMA user_version = ` + fmt.Sprint(step-1))
 	for _, id := range []string{paid, gone} {
 		exec(`INSERT INTO site_modules (site_id, module_id, enabled, updated_at) VALUES (?, 'revenue', 0, 1)`, id)
 	}
@@ -36,7 +37,7 @@ func TestConnectedSitesGetTheirModules(t *testing.T) {
 	exec(`INSERT INTO pay_connections (id, site_id, provider, created_at) VALUES ('pc_1', ?, 'stripe', 1)`, paid)
 	exec(`INSERT INTO pay_connections (id, site_id, provider, created_at, disabled_at) VALUES ('pc_2', ?, 'stripe', 1, 2)`, gone)
 	exec(`INSERT INTO search_console (site_id, key_enc, client_email, created_at) VALUES (?, 'x', 'a@b.c', 1)`, searched)
-	if err := s.MigrateTo(ctx, len(migrations)); err != nil {
+	if err := s.MigrateTo(ctx, step); err != nil {
 		t.Fatal(err)
 	}
 	has := func(site, id string) bool {
