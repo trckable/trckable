@@ -3,10 +3,10 @@
 import { useEffect, useRef, type KeyboardEvent, type MouseEvent } from 'react'
 import type { Site } from '../../lib/api'
 import { fmtMoney } from '../../lib/format'
-import type { Range } from '../../lib/dates'
+import { addDays, type Range } from '../../lib/dates'
 import { queryOf } from '../../lib/dashQuery'
 import { openSettings } from '../../lib/settings'
-import type { ViewState } from '../../lib/url'
+import { setView, type ViewState } from '../../lib/url'
 import { say } from '../ui/toast'
 import { FullButton } from './FullButton'
 import { Rail } from './Rail'
@@ -53,6 +53,8 @@ export default function PanelContent(p: ContentProps) {
     site: p.site,
     query: queryOf({ ...p.view, filters }, p.range),
     siteName: p.site.name || p.site.domain,
+    tabName: copy.sub[tab],
+    widen: addDays(p.range.from, 29) > p.range.to ? () => setView({ period: '30d', from: undefined, to: undefined, bucket: undefined, day: undefined }) : undefined,
     filters,
     options: meta.options,
     conn: meta.connected,

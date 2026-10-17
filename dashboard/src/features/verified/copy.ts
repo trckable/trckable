@@ -29,7 +29,7 @@ export const copy = defineCopy('verified', {
   checked: (when: string) => `Last checked ${when}`,
   // The small badge on a card.
   badgeText: { payments: 'Payments verified', search: 'Search verified' },
-  badge: (what: string) => `Verified: ${what}`,
+  badge: (what: string) => `${what}: checked against the source itself`,
   // The site switcher's seal.
   seal: 'Verified by trckable',
 })

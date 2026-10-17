@@ -67,7 +67,7 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
             <p className="muted">{rows || uptime ? summary : copy.reading}</p>
           </div>
           <div className="all-actions">
-            <AllPeriod view={{ ...view, days }} compared={view.layout === 'table' && lens === 'visitors' && !uptime} change={change} />
+            <AllPeriod view={{ ...view, days }} charts={said === copy.periodToday} compared={view.layout === 'table' && lens === 'visitors' && !uptime} change={change} />
             <AllViewMenu view={{ ...view, days }} sites={sites} money={money} change={change} reset={reset} />
           </div>
         </div>

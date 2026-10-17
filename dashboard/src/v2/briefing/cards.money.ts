@@ -147,7 +147,7 @@ export function searchCard(i: SearchIn): Story | null {
       const m = mark(r, was.get(r.key))
       return { l: `“${r.key}”`, t: copy.pos(fmtFixed(r.position, 1)), a: fmtInt(r.clicks), flag: m.flag, mark: m.cls }
     })
-  const tot = { l: copy.clicksTot(fmtInt(cur.clicks), fmtInt(cur.impressions)), t: `${copy.ctr(pct1(cur.impressions ? cur.clicks / cur.impressions : 0))} · ${copy.pos(fmtFixed(averagePosition(cur.rows), 1))}`, a: '', flag: '', tot: true }
+  const tot = { l: copy.clicksTot(fmtInt(cur.clicks), fmtInt(cur.impressions)), t: `${copy.ctr(pct1(cur.impressions ? cur.clicks / cur.impressions : 0))} · ${copy.avgPos(fmtFixed(averagePosition(cur.rows), 1))}`, a: '', flag: '', tot: true }
   const base = { key: 'search' as const, vis: { k: 'rcpt' as const, rows: [...list, tot] }, deeper: { kind: 'table' as const, tab: 'search' as const }, how: `${copy.searchKnow} ${i.rule}`, u: 'clicks' }
   if (fresh) {
     return { ...base, score: 74, head: copy.rankNew(fresh.key), rest: copy.onGoogle, why: copy.newWhy(copy.clicks(fresh.clicks), fmtFixed(fresh.position, 1)), val: 'new', m: fresh.clicks, ev: '', act: { k: 'set', t: copy.alertNewSearch, msg: copy.alertNewSearchMsg } }

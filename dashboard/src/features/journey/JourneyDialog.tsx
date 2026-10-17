@@ -15,12 +15,12 @@ import { useJourney, type JourneyState } from './useJourney'
 import { VisitCard } from './VisitCard'
 import './Journey.css'
 
-function Body({ state, visitor, titleId, onFilter }: { state: JourneyState; visitor: string; titleId: string; onFilter?: OnFilter }) {
+function Body({ state, titleId, onFilter }: { state: JourneyState; titleId: string; onFilter?: OnFilter }) {
   if (state.status === 'loading') {
     return (
       <>
         <h2 id={titleId} className="jr-title-wait">
-          {copy.title(visitor)}
+          {copy.dialog}
         </h2>
         <Loading height={220} label={copy.loading} />
       </>
@@ -29,10 +29,13 @@ function Body({ state, visitor, titleId, onFilter }: { state: JourneyState; visi
   if (state.status === 'failed') {
     return (
       <>
-        <h2 id={titleId}>{copy.title(visitor)}</h2>
+        <h2 id={titleId}>{copy.dialog}</h2>
         <p className="faint" role="alert">
           {copy.failed(state.error)}
         </p>
+        <button type="button" className="btn" onClick={state.retry}>
+          {copy.retry}
+        </button>
       </>
     )
   }
@@ -71,7 +74,7 @@ export function JourneyDialog({ site, visitor, query, onClose, onFilter }: { sit
           <X size={16} strokeWidth={2} aria-hidden="true" />
         </button>
       </div>
-      <Body state={state} visitor={visitor} titleId={titleId} onFilter={pick} />
+      <Body state={state} titleId={titleId} onFilter={pick} />
     </Modal>
   )
 }

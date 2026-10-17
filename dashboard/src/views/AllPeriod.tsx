@@ -19,7 +19,8 @@ function against(days: number): string {
   return compareWords({ period: `${days}d`, range: { from: addDays(to, 1 - days), to }, compare: 'previous' })
 }
 
-export function AllPeriod({ view, compared, change }: { view: View; compared: boolean; change: (c: Partial<View>) => void }) {
+/** `charts`: the numbers are today's and the period only draws the charts, so the button says so. */
+export function AllPeriod({ view, compared, charts, change }: { view: View; compared: boolean; charts: boolean; change: (c: Partial<View>) => void }) {
   return (
     <div className="all-period">
       <Popover
@@ -28,7 +29,7 @@ export function AllPeriod({ view, compared, change }: { view: View; compared: bo
         trigger={(p) => (
           <button type="button" className="btn range" {...p} aria-haspopup="menu">
             <Calendar size={15} strokeWidth={1.75} className="range-icon" aria-hidden="true" />
-            <span className="range-label">{copy.periodLabel(view.days)}</span>
+            <span className="range-label">{charts ? copy.periodCharts(copy.periodLabel(view.days)) : copy.periodLabel(view.days)}</span>
             <ChevronDown size={13} strokeWidth={1.75} className="range-chev" aria-hidden="true" />
           </button>
         )}
