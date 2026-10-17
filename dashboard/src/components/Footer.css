@@ -124,3 +124,8 @@ span.footer-key {
     justify-content: center;
   }
 }
+
+/* Not drawn yet (see Footer.tsx): it keeps its room, so nothing moves when it appears. */
+.app-footer-wait {
+  visibility: hidden;
+}

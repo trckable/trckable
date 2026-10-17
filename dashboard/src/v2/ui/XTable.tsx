@@ -25,12 +25,12 @@ function XMore({ more }: { more: More }) {
   )
 }
 
-/** What a row did against its usual: the multiple when there is a usual to count from, nothing when it kept to it. */
+/** What a row did against its usual: the multiple when there is a usual to count from, a dash when it kept to it or has none (a filtered view has no usual). */
 function delta(r: Row): { text: string; tone: string } {
   const ratio = r.c > 0.5 ? mult(r.v / r.c) : ''
   if (r.st === 'up') return { text: `▲ ${ratio || copy.fresh}`, tone: 'up' }
   if (r.st === 'dn') return { text: `▼ ${ratio || copy.below}`, tone: 'dn' }
-  return { text: '', tone: '' }
+  return { text: copy.noUsual, tone: '' }
 }
 
 export interface XTableProps {

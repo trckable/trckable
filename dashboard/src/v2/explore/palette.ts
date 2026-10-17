@@ -2,7 +2,11 @@
 // the page's own numbers suggest.
 import type { Report, Site } from '../../lib/api'
 import { countryName } from '../../lib/format'
-import { isShared } from '../../lib/me'
+import { hasMentions, isShared } from '../../lib/me'
+import { openSettings, SETTINGS_TABS, type SettingsTab } from '../../lib/settings'
+import { signOut } from '../../lib/signOut'
+import { setTheme, THEMES } from '../../lib/theme'
+import { copy as ic } from '../../components/itemsCopy'
 import { navigate, setView } from '../../lib/url'
 import { sourceName } from '../briefing/model'
 import { switchTab } from '../../features/live/switchView'
@@ -15,6 +19,10 @@ import { copy as bc } from '../../features/bounce/b'
 import { copy as kc } from '../../features/markers/copy'
 import { markersOn, setMarkers } from '../../features/markers/settings'
 import type { PaletteItem } from '../ui/Palette'
+
+/** The settings sections as the settings dialog names them (it is English), and the words besides that find each. */
+const TABS: Record<SettingsTab, string> = { site: 'General', install: 'Install', sharing: 'Sharing', widgets: 'Widgets', notes: 'Notes', payments: 'Payments', search: 'Search Console', mentions: 'Mentions', privacy: 'Data & privacy', alerts: 'Alerts', health: 'Health' }
+const TAB_WORDS: Partial<Record<SettingsTab, string>> = { sharing: 'share link public', alerts: 'notifications email report', privacy: 'cookies consent gdpr', site: 'site settings name timezone currency', payments: 'money stripe paddle' }
 
 const PERIODS: [string, string][] = [['today', 'Today'], ['7d', 'Last 7 days'], ['30d', 'Last 30 days'], ['90d', 'Last 90 days']]
 
@@ -37,6 +45,16 @@ export function paletteItems(o: { sites: Site[]; site: Site | null; data: Report
     { title: pc.refresh, kind: pc.kinds.action, group: pc.groups.goTo, run: () => window.dispatchEvent(new Event('trckable:refresh')) },
     { title: pc.clear, kind: pc.kinds.filter, group: pc.groups.goTo, run: () => setView({ filters: [], xf: undefined }) },
   )
+  // Settings (every section, so "alerts" and "share" find theirs), the Mentions page, the theme and sign out: what the menus hold.
+  if (o.site && !isShared()) {
+    const site = o.site
+    for (const t of SETTINGS_TABS.filter((t) => t !== 'mentions' || hasMentions())) out.push({ title: `${pc.settings} · ${TABS[t]}`, also: TAB_WORDS[t], kind: pc.kinds.settings, group: pc.groups.settings, run: () => openSettings(site, t) })
+    if (hasMentions()) out.push({ title: pc.mentionsPage, kind: pc.kinds.view, group: pc.groups.goTo, run: () => navigate('/' + encodeURIComponent(site.domain) + '/mentions') })
+  }
+  if (!isShared()) {
+    for (const t of THEMES) out.push({ title: pc.theme(ic.themes[t]), also: 'dark light auto appearance', kind: pc.kinds.theme, group: pc.groups.account, run: () => setTheme(t) })
+    out.push({ title: pc.signOut, also: 'log out', kind: pc.kinds.action, group: pc.groups.account, run: signOut })
+  }
   for (const s of o.sites) out.push({ title: pc.switchTo(s.name || s.domain), kind: pc.kinds.site, group: pc.groups.sites, run: () => navigate('/' + encodeURIComponent(s.domain)) })
   for (const [id, name] of PERIODS) out.push({ title: `${pc.period} · ${name}`, kind: pc.kinds.period, group: pc.groups.period, run: () => setView({ period: id, from: undefined, to: undefined }) })
   const dims = o.data?.current.dims

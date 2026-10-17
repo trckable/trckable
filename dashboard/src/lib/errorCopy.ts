@@ -6,6 +6,7 @@ import { defineCopy } from '../i18n'
 export const errorCopy = defineCopy('error', {
   unknown: 'Something went wrong',
   retry: 'Retry',
+  loadFailed: 'Couldn’t load this',
   offline: "Can't reach the server",
   signIn: 'Please sign in again',
   denied: 'Not allowed',

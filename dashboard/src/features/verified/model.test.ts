@@ -11,6 +11,11 @@ describe('what counts', () => {
     expect(working(v({ ok: false }, { kind: 'gsc' })).map((s) => s.kind)).toEqual(['gsc'])
   })
 
+  it('does not count a source that never answered, whatever it says', () => {
+    expect(working(v({ kind: 'gsc', checked: 0 }))).toEqual([])
+    expect(earned(v({ kind: 'gsc', checked: 0 }))).toEqual([])
+  })
+
   it('never counts the snippet on the site, an old server’s answer included', () => {
     expect(working(v({ kind: 'snippet' }))).toEqual([])
     expect(earned(v({ kind: 'snippet' }))).toEqual([])
