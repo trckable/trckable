@@ -3,13 +3,12 @@
 // a check for seven days and then gone.
 // Pictures for the review: SR_SHOTS=<folder> SR_SCHEME=light|dark.
 import { expect, test, type Page } from './fixtures'
-import { API, TOKEN } from '../playwright.config'
+import { API } from '../playwright.config'
 import { session } from './session'
 
-const AUTH = { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' }
 const SHOTS = process.env.SR_SHOTS
 const SCHEME = process.env.SR_SCHEME === 'light' ? 'light' : 'dark'
-const DOMAIN = 'setup-ring.example'
+const DOMAIN = `ring-${Date.now()}.example.org`
 
 test.use({ colorScheme: SCHEME })
 test.describe.configure({ mode: 'serial' })
@@ -19,12 +18,12 @@ let site = ''
 
 test.beforeAll(async ({ request }) => {
   cookie = await session('setup-ring')
-  const made = await request.post(`${API}/api/v1/sites`, { headers: AUTH, data: { domain: DOMAIN } })
-  site = made.ok() ? ((await made.json()) as { id: string }).id : (((await (await request.get(`${API}/api/v1/sites`, { headers: AUTH })).json()).sites as { id: string; domain: string }[]).find((s) => s.domain === DOMAIN)?.id ?? '')
-  expect(site).not.toBe('')
+  const H = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json', Cookie: `trckable_session=${cookie}` }
+  const made = await request.post(`${API}/api/v1/sites`, { headers: H, data: { domain: DOMAIN } })
+  expect(made.ok()).toBe(true)
+  site = ((await made.json()) as { id: string }).id
   // The optional steps but Payments are not for this site: five count, with Payments one of them.
-  for (const item of ['funnel', 'search', 'crawlers', 'proxy']) await request.put(`${API}/api/v1/sites/${site}/setup/skip/${item}`, { headers: AUTH })
-  await request.delete(`${API}/api/v1/sites/${site}/setup/skip/payments`, { headers: AUTH })
+  for (const item of ['funnel', 'search', 'crawlers', 'proxy']) expect((await request.put(`${API}/api/v1/sites/${site}/setup/skip/${item}`, { headers: H })).ok()).toBe(true)
 })
 
 async function open(page: Page) {
