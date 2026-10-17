@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react'
 import type { Why } from '../briefing/why'
 import { dash, ringTone } from '../briefing/geometry'
 import { copy } from '../briefing/copy'
+import { WhyBody } from './WhyBody'
 import { overall, type Part, type Score, type Sentence } from '../briefing/model'
 import type { WhyRow } from '../briefing/scoreWhy'
 import { ScoreSheet } from './ScoreSheet'
@@ -145,7 +146,7 @@ export function Hero({ say, scores, rows, onSee, learn, crowd = null, since, per
           )}
           {open && why && (
             <div className="hw show">
-              <b>{copy.whyDot}</b> {why.cause} <span className="ev">{why.todo}</span>
+              <WhyBody why={why} />
             </div>
           )}
           {moments && (moments.pills.length > 0 || moments.line) && (

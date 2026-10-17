@@ -10,6 +10,7 @@ import { Ico } from './icons'
 import { Spark } from './KpiCard'
 import { Rng } from './RangeBar'
 import { copy } from '../briefing/copy'
+import { WhyBody } from './WhyBody'
 import type { Act, Story, Vis } from '../briefing/cards'
 
 const CHEV = <Ico name="chev" className="ic-ch" strokeWidth={1.8} />
@@ -178,11 +179,7 @@ function Foot({ s, c }: { s: Story; c: CardCtx }) {
 function How({ s }: { s: Story }) {
   return (
     <div className="hw">
-      {s.cause && (
-        <>
-          <b>{copy.whyDot}</b> {s.cause.cause} <span className="ev">{s.cause.todo}</span>
-        </>
-      )}
+      {s.cause && <WhyBody why={s.cause} />}
       <b>{copy.how}.</b> {s.how} <span className="ev">{s.ev}</span>
     </div>
   )

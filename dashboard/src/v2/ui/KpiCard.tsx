@@ -3,6 +3,7 @@
 import { useId, useState, type ReactNode } from 'react'
 import type { Why } from '../briefing/why'
 import { copy } from '../briefing/copy'
+import { WhyBody } from './WhyBody'
 import { Ico } from './icons'
 import { spark } from '../briefing/geometry'
 import { Glide, useGlide } from './glide'
@@ -69,7 +70,7 @@ function Card({ k, h, foot }: { k: Kc; h?: number; foot?: ReactNode }) {
       <Spark vals={k.vals} lo={k.lo} hi={k.hi} h={h} name={`kc:${k.key}`} />
       {open && k.why && (
         <div className="hw show" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 2, background: 'var(--mk-card2)', padding: 'var(--mk-s3) var(--mk-s4)', borderRadius: '0 0 var(--mk-r) var(--mk-r)', color: 'var(--mk-muted)' }}>
-          <b>{copy.whyDot}</b> {k.why.cause} <span className="ev">{k.why.todo}</span>
+          <WhyBody why={k.why} />
         </div>
       )}
     </div>

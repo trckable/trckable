@@ -2589,6 +2589,7 @@ export default {
   'why.lookBack': 'Regardez ce qui a changé à ce moment-là : un déploiement, un certificat, un prestataire.',
   'why.noWeeks': (l: string) => `${l} n’a pas encore de jours antérieurs pour la comparaison.`,
   'why.weeksSaid': (l: string, now: string, weekday: string, at: string, list: string) => `${l} jusqu’ici aujourd’hui : ${now}. La même plage (jusqu’à ${at}) les derniers ${weekday}s : ${list}.`,
+  'why.askWhy': (cause: string) => `Pourquoi en est-il ainsi ? ${cause}`,
   'why.sourceBelow': 'Ouvrez Explore pour voir quelle source ou quelle page l’a fait bouger.',
   'v2explore.title': 'Explore',
   'v2explore.close': 'Fermer',

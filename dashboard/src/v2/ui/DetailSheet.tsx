@@ -5,6 +5,7 @@ import { Ico } from './icons'
 import { MkPortal } from './Portal'
 import { Visual, type CardCtx } from './StoryCard'
 import { copy } from '../briefing/copy'
+import { WhyBody } from './WhyBody'
 import type { Story } from '../briefing/cards'
 
 export function Detail({ s, site, c, onClose }: { s: Story; site: string; c: CardCtx; onClose: () => void }) {
@@ -38,9 +39,7 @@ export function Detail({ s, site, c, onClose }: { s: Story; site: string; c: Car
           <p className="cdw">{s.why}</p>
           <div className="hw show">
             {s.cause && (
-              <>
-                <b>{copy.whyDot}</b> {s.cause.cause} <span className="ev">{s.cause.todo}</span>
-              </>
+              <WhyBody why={s.cause} />
             )}
             <b>{copy.how}.</b> {s.how} <span className="ev">{s.ev}</span>
           </div>

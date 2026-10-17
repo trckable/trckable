@@ -43,6 +43,8 @@ export interface V2Extras {
   menuBeforeProfile?: ReactNode | ((go: (fn: () => void) => () => void) => ReactNode)
   /** What Sign out does, when it is more than ending this session. */
   signOut?: () => void
+  /** Opens Peek with a question ready to send. A build with no Peek leaves it out, and a "Why?" shows its text alone. */
+  askPeek?: (question: string) => void
   /** Draws "Add a site" in the site menu through this (it may show it off, with a reason). */
   addSiteGuard?: (render: (off: boolean) => ReactNode) => ReactNode
 }
