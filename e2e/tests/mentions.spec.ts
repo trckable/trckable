@@ -169,6 +169,11 @@ test('Settings: a new name is checked against the news, and the rules are edited
   await seed(page, mentions, 'mentions-rules')
   const site = ((await (await page.request.get(`${API}/api/v1/sites`)).json()) as { sites: { id: string; domain: string }[] }).sites.find((s) => s.domain === HISTORY_DOMAIN)!
   let saved: unknown = null
+  let named: string[] | null = null
+  await page.route('**/api/v1/sites/*/mentions/keywords', async (r) => {
+    named = (r.request().postDataJSON() as { keywords: string[] }).keywords
+    await r.fulfill({ json: { ...words, added: named } })
+  })
   await page.route('**/api/v1/sites/*/mentions/lookalike*', (r) => r.fulfill({ json: { word: 'albas', checked: true, elsewhere: 2, examples: ['Dan Albas MP Report: a train', 'MP Dan Albas on the budget'], suggest_exclude: ['Dan', 'MP'] } }))
   await page.route('**/api/v1/sites/*/mentions/rules', async (r) => {
     saved = r.request().postDataJSON()
@@ -186,9 +191,10 @@ test('Settings: a new name is checked against the news, and the rules are edited
   await expect(warn).toContainText('Dan Albas MP Report: a train')
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-rules-dark-1440.png` })
   await warn.getByRole('button', { name: /Add it and exclude/ }).click()
-  await expect(card.locator('li.mentions-word', { hasText: 'albas' })).toHaveCount(1)
-  await card.getByRole('button', { name: 'Save rules' }).click()
+  // The name and its excluded words are saved together, in one action.
+  await expect.poll(() => named).toEqual(['Acme Metrics', 'albas'])
   await expect.poll(() => saved).toMatchObject({ topic: ['analytics'], excluded: ['Dan', 'MP'] })
+  await expect(card.locator('li.mentions-word', { hasText: 'albas' })).toHaveCount(1)
   await page.emulateMedia({ colorScheme: 'light' })
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-rules-light-1440.png` })
   await page.setViewportSize({ width: 390, height: 1800 })

@@ -177,8 +177,9 @@ func (a *API) confirmedInPeriod(r *http.Request, site string, list []sqlite.Ment
 		return
 	}
 	args := append([]any{site, from.UTC(), to.UTC(), ingest.ChannelSocial, ingest.ChannelReferral}, forms...)
-	rows, err := q.DB.QueryContext(r.Context(), `SELECT referrer_url, count(DISTINCT visitor_id) FROM events WHERE site_id = ? AND kind = 1 AND ts >= ? AND ts < ? AND channel IN (?, ?)
-		AND referrer_url IN (`+strings.TrimSuffix(strings.Repeat("?,", len(forms)), ",")+`) GROUP BY referrer_url`, args...)
+	marks := strings.TrimSuffix(strings.Repeat("?,", len(forms)), ",")
+	query := "SELECT referrer_url, count(DISTINCT visitor_id) FROM events WHERE site_id = ? AND kind = 1 AND ts >= ? AND ts < ? AND channel IN (?, ?) AND referrer_url IN (" + marks + ") GROUP BY referrer_url" //nolint:gosec // only "?" placeholders are joined in
+	rows, err := q.DB.QueryContext(r.Context(), query, args...)
 	if err != nil {
 		return
 	}

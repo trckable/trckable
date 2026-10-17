@@ -219,11 +219,11 @@ func domainLeft(s []rune, at int) bool {
 		return true
 	}
 	r := s[at-1]
-	switch {
-	case r == '.':
+	switch r {
+	case '.':
 		// a subdomain: a label stands before the dot
 		return at >= 2 && wordRune(s[at-2])
-	case r == '-' || r == '_' || r == '=':
+	case '-', '_', '=':
 		return false
 	}
 	return !wordRune(r)
@@ -234,11 +234,11 @@ func domainRight(s []rune, at int) bool {
 		return true
 	}
 	r := s[at]
-	switch {
-	case r == '.':
+	switch r {
+	case '.':
 		// the end of a sentence, not the start of a longer address
 		return at+1 >= len(s) || !wordRune(s[at+1])
-	case r == '-' || r == '_':
+	case '-', '_':
 		return false
 	}
 	return !wordRune(r)
@@ -267,7 +267,7 @@ func hasWord(text, word string) bool {
 }
 
 func wordLeft(s []rune, at int) bool {
-	return at == 0 || !(wordRune(s[at-1]) || s[at-1] == '-' || s[at-1] == '_')
+	return at == 0 || (!wordRune(s[at-1]) && s[at-1] != '-' && s[at-1] != '_')
 }
 
 func wordRight(s []rune, at int) bool {
