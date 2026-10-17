@@ -296,7 +296,7 @@
 .mk .mk-ld{font-size:12px;color:var(--mk-faint)}
 .mk .mk-ld.up{color:var(--mk-lime)}
 .mk .mk-ld.dn{color:var(--mk-red)}
-.mk .lnow .mins{height:96px;padding:14px 22px 0}
+.mk .lnow .mins,.mk .lnow .mline{height:96px;padding:14px 22px 0}
 .mk .lnow .minl{padding:4px 22px 0}
 .mk .lbottom{display:grid;grid-template-columns:1fr;gap:18px;padding:18px 22px 20px;border-top:1px solid var(--mk-line);margin-top:16px}
 .mk .lbottom.money{grid-template-columns:minmax(0,1fr) auto;gap:32px}
@@ -410,7 +410,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .act{padding:var(--mk-s4) var(--mk-s5);gap:var(--mk-s4)}
 .mk .lhead{padding:var(--mk-s5) var(--mk-s5) 0}
 .mk .lfig{padding:var(--mk-s4) var(--mk-s5) 0}
-.mk .lnow .mins{padding:var(--mk-s4) var(--mk-s5) 0}
+.mk .lnow .mins,.mk .lnow .mline{padding:var(--mk-s4) var(--mk-s5) 0}
 .mk .lnow .minl{padding:var(--mk-s1) var(--mk-s5) 0}
 .mk .lbottom{padding:var(--mk-s4) var(--mk-s5) var(--mk-s5);margin-top:var(--mk-s4);gap:var(--mk-s4)}
 .mk .lbottom.money{gap:var(--mk-s6)}
@@ -427,7 +427,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .lr{padding:var(--mk-s2) 0}
 .mk .lbign,.mk .lbig,.mk .lmoney,.mk .st .v,.mk .big{font-variant-numeric:tabular-nums}
 .mk .lv .pg,.mk .sale .gn,.mk .lr span,.mk .rr .rl{min-width:0}
-.mk .lnow .mins{flex:1;height:auto;min-height:96px}
+.mk .lnow .mins,.mk .lnow .mline{flex:1;height:auto;min-height:96px}
 .mk .lfeed{max-height:420px}
 .mk *{scrollbar-width:thin;scrollbar-color:#2f3238 transparent}
 .mk .xph .x{border-color:#34373d;color:var(--mk-text)}
@@ -481,7 +481,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .hero{padding:var(--mk-s5) var(--mk-s4) var(--mk-s2)}
 .mk .facts{margin:var(--mk-s2) calc(var(--mk-s4) * -1) 0}
 .mk .fact{padding:var(--mk-s3) var(--mk-s4)}
-.mk .lhead, .mk .lfig, .mk .lnow .mins, .mk .lnow .minl{padding-left:var(--mk-s4);padding-right:var(--mk-s4)}
+.mk .lhead, .mk .lfig, .mk .lnow .mins, .mk .lnow .mline, .mk .lnow .minl{padding-left:var(--mk-s4);padding-right:var(--mk-s4)}
 .mk .lbottom{padding:var(--mk-s4)}
 .mk .lfeed{padding:var(--mk-s2) var(--mk-s4) 0}
 
@@ -571,7 +571,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .lfig>div:nth-child(2) .lbign{font-size:22px;order:2}
 .mk .lfig>div:nth-child(2) .ll{order:1}
 .mk .lfig>div:nth-child(2) .mk-ld{order:3;flex-basis:100%}
-.mk .lnow .mins{height:72px;flex:none;padding:var(--mk-s4) var(--mk-s4) 0}
+.mk .lnow .mins,.mk .lnow .mline{height:72px;flex:none;padding:var(--mk-s4) var(--mk-s4) 0}
 .mk .lnow .minl{padding:var(--mk-s1) var(--mk-s4) 0}
 .mk .lbottom, .mk .lbottom.money{grid-template-columns:1fr;gap:var(--mk-s4);padding:var(--mk-s4)}
 .mk .lon .lhead{padding:var(--mk-s4) var(--mk-s4) var(--mk-s1)}
@@ -1126,7 +1126,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .lfig>div:nth-child(2) .ll{order:0;font-size:12px}
 .mk .lfig>div:nth-child(2) .lbign{font-size:22px;order:1}
 .mk .lfig>div:nth-child(2) .mk-ld{order:2;flex-basis:auto;font-size:12px}
-.mk .lnow .mins{padding:var(--mk-s3) 0 0;height:72px}
+.mk .lnow .mins,.mk .lnow .mline{padding:var(--mk-s3) 0 0;height:72px}
 .mk .lnow .minl{padding:var(--mk-s1) 0 0}
 .mk .lbottom, .mk .lbottom.money{padding:var(--mk-s4) 0 0;margin-top:var(--mk-s4)}
 .mk .lfeed{padding:0}
@@ -1545,4 +1545,38 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .mk-menu{background:var(--pane);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);border-color:var(--pane-hair)}
 @media (min-width:601px){
 .mk .mk-menu{border-radius:12px;box-shadow:var(--pane-shadow),inset 0 1px 0 var(--pane-top)}
+}
+/* Live's arrival moment: a new visit slides in at the top, the rows below make room, a lime glow fades and its dot beats once. */
+.mk .lchart{display:grid;flex:1 1 auto;min-height:0}
+.mk .lchart>*{grid-area:1/1;transition:opacity .2s}
+.mk .lchart[data-mode=bars] .mline,.mk .lchart[data-mode=line] .mins{opacity:0;pointer-events:none}
+.mk .mline{box-sizing:border-box;display:flex}
+.mk .mline-in{position:relative;flex:1;min-height:70px}
+.mk .mline-in svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.mk .mline-s{stroke:var(--mk-lime);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 0 5px var(--mk-limeD))}
+.mk .mline-s.run{stroke-dasharray:3 5;filter:none}
+.mk .mline-dot{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--mk-lime);box-shadow:0 0 8px var(--mk-lime);pointer-events:none}
+.mk .mline-dot.beat{animation:mk-beat 1s ease-out 1}
+@keyframes mk-beat{0%{transform:scale(1)}30%{transform:scale(1.9)}100%{transform:scale(1)}}
+.mk .mhits{position:absolute;inset:0;display:flex}
+.mk .mhits i{flex:1;cursor:pointer}
+.mk .mhits i:focus-visible{outline:2px solid var(--mk-lime);outline-offset:-2px}
+.mk .lhead .mk-cs{margin-left:auto}
+.mk .mk-cs{display:flex;border:1px solid var(--mk-line);border-radius:10px;padding:2px;gap:2px}
+.mk .mk-cs button{width:30px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--mk-muted)}
+.mk .mk-cs button.on{background:var(--mk-fill);color:var(--mk-text)}
+.mk .lv.arriving{overflow:hidden;animation:mk-arrive .45s cubic-bezier(.2,.7,.2,1) backwards,mk-glow 2s ease-out backwards}
+.mk .lv.arriving .mk-dot{animation:mk-beat 1s ease-out 1}
+.mk .lv.arriving.batch{animation:mk-fade .5s ease-out backwards,mk-glow 2s ease-out backwards}
+@keyframes mk-arrive{from{opacity:0;transform:translateY(-10px);max-height:0;padding-top:0;padding-bottom:0}to{max-height:64px}}
+@keyframes mk-fade{from{opacity:0}}
+@keyframes mk-glow{from{background:var(--mk-limeD)}to{background:transparent}}
+/* Reduced motion keeps only the glow, since the rule above that stops every animation would take it too. */
+.mk .lv.arriving.calm{animation:mk-glow 2s ease-out backwards!important}
+.mk .lv.arriving.calm .mk-dot{animation:none!important}
+@media (prefers-reduced-motion:reduce){
+.mk .lchart>*{transition:none!important}
+}
+@media (max-width:700px){
+.mk .lchart{flex:none}
 }
