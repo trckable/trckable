@@ -47,6 +47,7 @@ export function ChartBlock(p: ChartBlockProps) {
         <span className="mk-quiet" id="chNote" style={p.down ? { color: 'var(--mk-red)' } : undefined}>
           {p.note}
         </span>
+        <span className="mk-quiet" id="chCall" />
         <Suspense fallback={null}>
           <MentionsChip site={p.site} labels={labels} from={p.series[0]?.t.slice(0, 10) ?? p.range.from} to={p.range.to} />
         </Suspense>

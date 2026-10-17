@@ -7,6 +7,8 @@
 // chart's layer and the day-by-day chart's, from one setting (settings.ts).
 import { Link2 } from 'lucide-react'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import type { ReactNode } from 'react'
 import type { Bucket, Site } from '../../lib/api'
 import { fmtDay } from '../../lib/dates'
 import { readView, setView } from '../../lib/url'
@@ -44,6 +46,17 @@ export interface SourceMarkersProps {
   bucket: Bucket
   /** Opens Explore with the filter (the day-by-day chart is in Story). */
   explore?: boolean
+}
+
+/** The biggest jump's line goes in the chart's header row when it has one (the slot Briefing's chart leaves), else on the plot's own top-left. */
+function callout(text: ReactNode, left: number, width: number) {
+  const slot = document.getElementById('chCall')
+  if (slot) return createPortal(text, slot)
+  return (
+    <p className="sm-line" style={{ left, top: LANE_H + 2, maxWidth: width }}>
+      {text}
+    </p>
+  )
 }
 
 export default function SourceMarkers(p: SourceMarkersProps) {
@@ -87,17 +100,16 @@ export default function SourceMarkers(p: SourceMarkersProps) {
   const left = (m: { at: number }) => Math.max(4, Math.min(m.at - POP_W / 2, g.w - POP_W - 4))
   return (
     <div ref={root} role="group" aria-label={copy.group} className="sm-marks">
-      {lead && (
-        <p className="sm-line" style={{ left: g.x(0) + 4, top: LANE_H + 2, maxWidth: g.w - g.x(0) - 12 }}>
-          {copy.line(fmtDay(lead.day), lead.name, lead.added)}
-          {tag && <> · {tag}</>}
-        </p>
-      )}
+      {lead && callout(<>
+        {copy.line(fmtDay(lead.day), lead.name, lead.added)}
+        {tag && <> · {tag}</>}
+      </>, g.x(0) + 4, g.w - g.x(0) - 12)}
       {marks.map((m) => (
         <button
           key={m.i}
           type="button"
           className={`sm-mark ${m.jump.kind}${open === m.i ? ' on' : ''}`}
+          data-lbl="3"
           style={{ left: m.at, top }}
           aria-label={copy.mark(m.jump.name, m.jump.added, fmtDay(m.jump.day), m.more.length)}
           aria-expanded={open === m.i}
