@@ -18,6 +18,12 @@
     --mk-red: #c62828;
     --mk-grid: #eef0eb;
     --mk-axis: #5f6671;
+    --mk-band: rgba(0, 0, 0, 0.06);
+    --mk-bandh: rgba(0, 0, 0, 0.09);
+    --mk-fill: #d4d8d0;
+    --mk-field: #ffffff;
+    --mk-hover: #eceee9;
+    --mk-dash: #d4d8d0;
   }
 }
 :root[data-theme='light'] :is(.mk, .mk-tokens) {
@@ -33,6 +39,12 @@
   --mk-red: #c62828;
   --mk-grid: #eef0eb;
   --mk-axis: #5f6671;
+  --mk-band: rgba(0, 0, 0, 0.06);
+  --mk-bandh: rgba(0, 0, 0, 0.09);
+  --mk-fill: #d4d8d0;
+  --mk-field: #ffffff;
+  --mk-hover: #eceee9;
+  --mk-dash: #d4d8d0;
 }
 /* Inside the dashboard the walkthrough is a body, not a page: no padding of its own, no background over the page. */
 .mk.mk-body {
