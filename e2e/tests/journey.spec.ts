@@ -65,7 +65,7 @@ async function openJourney(page: Page) {
   })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(API + '/example.com?view=live')
-  const row = page.locator('.live-feed .live-open').first()
+  const row = page.locator('.lfeed .lv:not([disabled])').first()
   await expect(row).toBeVisible({ timeout: 15_000 })
   await row.focus()
   await page.keyboard.press('Enter')

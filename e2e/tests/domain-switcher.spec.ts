@@ -103,7 +103,7 @@ test('opened already filtered: every domain is listed and that one is on; Live h
   await page.keyboard.press('Escape')
   // Live shows every visit of the site and takes no filter, so it has no domain control.
   await open(page, `/${two}?view=live`)
-  await expect(page.locator('.hdr-band')).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('.liveview')).toBeVisible({ timeout: 30_000 })
   await expect(tag(page)).toHaveCount(0)
 })
 

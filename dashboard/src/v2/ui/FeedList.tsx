@@ -2,13 +2,16 @@
 // Eight rows show; the rest open in place, so the list never scrolls inside its card.
 import { useState } from 'react'
 import type { Row } from '../../features/live/model'
+import { copy as off } from '../../features/cookieless/copy'
+import { why } from '../../features/cookieless/why'
 import { useLeaving } from '../../features/live/useLeaving'
 import { channelLabel } from '../../lib/palette'
+import { copy as liveCopy } from '../../features/live/copy'
 import { copy } from '../live/copy'
 
 const SHOWN = 8
 
-export function FeedList({ rows, up, clock, more, empty, onVisitor }: { rows: Row[]; up: Set<string>; clock: number; more: number; empty: string; onVisitor?: (v: string) => void }) {
+export function FeedList({ rows, up, clock, more, empty, onVisitor, cookieless }: { rows: Row[]; up: Set<string>; clock: number; more: number; empty: string; onVisitor?: (v: string) => void; cookieless?: boolean }) {
   const [all, setAll] = useState(false)
   const list = useLeaving(rows)
   const shown = all ? list : list.slice(0, SHOWN)
@@ -17,11 +20,12 @@ export function FeedList({ rows, up, clock, more, empty, onVisitor }: { rows: Ro
       {shown.length === 0 && <div className="mk-quiet" style={{ padding: '16px 20px' }}>{empty}</div>}
       {shown.map((r) => {
         const src = r.referrer ? r.referrer.replace(/^www\./, '') : channelLabel(r.channel || 'Direct')
+        const page = r.kind === 'goal' ? { title: liveCopy.goal(r.label || (r.goal ?? '')), text: liveCopy.goal(r.label || (r.goal ?? '')) } : { title: r.path, text: r.kind === 'active' ? copy.still : (r.path ?? '/') }
         const hot = up.has(r.channel || 'Direct') || clock - r.last < 30_000
         return (
           <button key={r.key} type="button" className="lv" onClick={() => r.visitor && onVisitor?.(r.visitor)} disabled={!r.visitor || !onVisitor}>
             <span className={`mk-dot ${hot ? '' : 'off'}`} />
-            <span className="pg mono" title={r.path}>{r.kind === 'active' ? copy.still : (r.path ?? '/')}</span>
+            <span className="pg mono" title={page.title}>{page.text}</span>
             <span className="src" style={hot ? { color: 'var(--mk-lime)' } : undefined}>
               {src}
             </span>
@@ -39,6 +43,11 @@ export function FeedList({ rows, up, clock, more, empty, onVisitor }: { rows: Ro
         <button type="button" className="seeall" onClick={() => setAll(true)}>
           {copy.seeAll(list.length + more)} {'\u203A'}
         </button>
+      )}
+      {cookieless && (
+        <p className="mk-quiet cookieless-note" title={why} style={{ padding: '0 20px 16px', margin: 0, fontSize: 12 }}>
+          {off.journeysOff}
+        </p>
       )}
     </div>
   )

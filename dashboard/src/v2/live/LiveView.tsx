@@ -179,7 +179,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
             <span className="lt">{copy.onSite}</span>
             <span className="mk-quiet lm">{copy.people(n)}</span>
           </div>
-          <FeedList rows={rows} up={upSources} clock={now} more={Math.max(0, n - rows.length)} empty={down ? copy.nobodyDown : copy.nobody} onVisitor={onVisitor} />
+          <FeedList rows={rows} up={upSources} clock={now} more={Math.max(0, n - rows.length)} empty={down ? copy.nobodyDown : copy.nobody} onVisitor={onVisitor} cookieless={whole?.cookieless} />
         </section>
       </div>
       <div className="lcards">

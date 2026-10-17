@@ -104,7 +104,7 @@ test.describe('the dashboard', () => {
       await page.route('**/api/v1/sites/*/live', (route) => route.abort())
       await page.clock.install()
       await page.goto(`${API}/example.com?view=${view}`)
-      await expect(page.locator(view == 'live' ? '.live-online' : '.range-picker')).toBeVisible({ timeout: 15_000 })
+      await expect(page.locator(view == 'live' ? '.liveview .lbign' : '.range-picker').first()).toBeVisible({ timeout: 15_000 })
       await page.waitForTimeout(500)
       const loaded = calls
       await run(page, 10)

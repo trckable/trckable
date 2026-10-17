@@ -7,6 +7,7 @@ import type { Report, Result, Site, Visit } from '../../lib/api'
 import { fmtRange, presetById, todayIn, type Range } from '../../lib/dates'
 import { dayWords } from '../dayWords'
 import { fmtInt } from '../../lib/format'
+import { wholeMoney } from './wholeMoney'
 import { isShared, isViewer } from '../../lib/me'
 import { openSettings } from '../../lib/settings'
 import { baseEnough } from '../../lib/thin'
@@ -76,9 +77,6 @@ const chartLine = (learning: boolean, low: boolean, hd: number, note: () => stri
 
 /** An empty period has no series at all (the server sends null): an empty list, so nothing below has to ask. */
 const normal = (r?: Result): Result | undefined => (r ? { ...r, series: r.series ?? [] } : undefined)
-
-/** Whole amounts read without their zero cents ("$87", not "$87.00"), as the walkthrough tells them. */
-const wholeMoney = (f: (minor: number) => string) => (minor: number) => f(minor).replace(/[.,]0+(?=\D|$)/, '')
 
 export default function Briefing({ site, data: page, loading, period, range, money: moneyIn, onGoal, visits }: BriefingProps) {
   const money = useMemo(() => (moneyIn ? wholeMoney(moneyIn) : undefined), [moneyIn])
