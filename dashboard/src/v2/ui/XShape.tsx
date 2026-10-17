@@ -23,10 +23,10 @@ export function XShape({ shape }: { shape: Shape }) {
       <div className="sv">
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
           {[0, 0.5, 1].map((t) => (
-            <line key={t} x1="0" x2={W} y1={y(top * t).toFixed(1)} y2={y(top * t).toFixed(1)} stroke="#1d1f23" vectorEffect="non-scaling-stroke" />
+            <line key={t} x1="0" x2={W} y1={y(top * t).toFixed(1)} y2={y(top * t).toFixed(1)} stroke="var(--mk-grid)" vectorEffect="non-scaling-stroke" />
           ))}
-          <polygon points={`0,${H} ${line} ${W},${H}`} fill="rgba(255,255,255,.04)" />
-          <polyline points={line} fill="none" stroke="#c6ff3a" strokeWidth="2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          <polygon points={`0,${H} ${line} ${W},${H}`} fill="var(--mk-areafill2)" />
+          <polyline points={line} fill="none" stroke="var(--mk-lime)" strokeWidth="2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
         </svg>
         <div className="xl">
           {shape.x.map((t, i) => (

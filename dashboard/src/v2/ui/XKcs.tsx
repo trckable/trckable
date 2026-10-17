@@ -12,7 +12,7 @@ export function XKcs({ items }: { items: Kc[] }) {
       {items.map((k) => {
         const dn = k.st === 'dn'
         return (
-          <div key={k.icon} className={`kc ${dn ? 'dn' : ''}`} data-k={k.icon} style={{ color: dn ? '#ff6b6b' : (k.col ?? '#c6ff3a') }}>
+          <div key={k.icon} className={`kc ${dn ? 'dn' : ''}`} data-k={k.icon} style={{ color: dn ? 'var(--mk-red)' : (k.col ?? 'var(--mk-lime)') }}>
             <div className="kt">
               <span className="ki">
                 <XIco name={KEEP[k.icon] ?? k.icon} className="" />
@@ -39,7 +39,7 @@ export function XKcsPlain({ items, three }: { items: Xkc[]; three?: boolean }) {
         <div key={k.label} className={`kc ns ${k.tone === 'dn' ? 'dn' : ''}`}>
           <div className="kt">
             <span className="ki">
-              <XIco name={k.icon} className="" style={{ color: k.tone === 'dn' ? '#ff6b6b' : '#c6ff3a' }} />
+              <XIco name={k.icon} className="" style={{ color: k.tone === 'dn' ? 'var(--mk-red)' : 'var(--mk-lime)' }} />
             </span>
             <span className="kl">{k.label}</span>
             <span className={`kn ${k.tone}`}>{k.tag}</span>
