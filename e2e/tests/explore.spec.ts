@@ -85,7 +85,7 @@ test('the picker has eleven sections in four groups, and the tabs of a section s
   await expect(page.locator('#xm-pick .xgl')).toHaveText(['Traffic', 'Audience', 'Results', 'Site'])
   await expect(page.locator('#xm-pick .xmi')).toHaveCount(11)
   await page.locator('#xm-pick').getByRole('menuitem', { name: /^Sources/ }).click()
-  await expect(page.locator('.xsub').getByRole('tab')).toHaveText(['Channels', 'Referrers', 'UTMs', 'Search', 'Sources that pay'])
+  await expect(page.locator('.xsub').getByRole('tab')).toHaveText(['Channels', 'Referrers', 'UTMs', 'UTM source', 'UTM medium', 'Search', 'Sources that pay'])
   await page.getByRole('tab', { name: 'Referrers' }).click()
   await expect(page.getByRole('tab', { name: 'Referrers' })).toHaveAttribute('aria-selected', 'true')
   // Payments are not connected here: Sales says so and tags itself in the picker.
@@ -162,9 +162,10 @@ test('on a phone it is a sheet from the bottom, opened by the bar, and its menus
 // Nothing of the old Data page is without a home: each of its cards is a tab of a section, and opens without an error.
 const HOMES: Record<string, string[]> = {
   overview: ['highlights', 'overtime', 'hours'],
-  pages: ['sells'],
-  sources: ['earners'],
-  places: ['revmap', 'people'],
+  pages: ['exits', 'groups', 'sells'],
+  sources: ['utmsource', 'medium', 'earners'],
+  places: ['regions', 'cities', 'languages', 'revmap', 'people'],
+  tech: ['bversion', 'screens'],
   results: ['retention', 'vsale', 'toconvert', 'flow'],
   sales: ['buyers'],
   ai: ['ai'],

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useVisibleInterval } from './visibleInterval'
-import { APIError, cachedReport, peekReport, type Report, type ReportQuery } from './api'
+import { APIError, cachedReport, dropReports, peekReport, type Report, type ReportQuery } from './api'
 
 /** Fetches a report, keeping the last one on screen while the next loads. A
  *  period read before is shown at once, whatever its age, and refreshed behind
@@ -72,6 +72,17 @@ export function useReport(site: string | null, q: ReportQuery | null, opts: { li
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- key is site + q's content; q is a new object each render and would refetch every time
   }, [key, tick])
+
+  // The palette's "Refresh": every number of the site is read again, in place.
+  useEffect(() => {
+    const again = () => {
+      if (site) dropReports(site)
+      fresh.current = true
+      setTick((n) => n + 1)
+    }
+    window.addEventListener('trckable:refresh', again)
+    return () => window.removeEventListener('trckable:refresh', again)
+  }, [site])
 
   // Ranges that include today refresh every 30 s (the live stream covers the rest).
   useVisibleInterval(() => setTick((n) => n + 1), 30_000, !!opts.live)

@@ -6,7 +6,7 @@ import { dropReports, showsInstall, api, type ReportQuery, type Site } from '../
 import { setWeekStart, todayIn, type Range } from '../lib/dates'
 import { fmtMoney } from '../lib/format'
 import { journeysOn } from '../features/cookieless/labels'
-import { navigate, readView, useLocation, wantsLive, writeView } from '../lib/url'
+import { navigate, readView, setView, useLocation, wantsLive, writeView } from '../lib/url'
 import { queryOf, rangeOf } from '../lib/dashQuery'
 import { canAsk, canChange, isShared } from '../lib/me'
 import { useMods } from '../lib/useMods'
@@ -27,6 +27,7 @@ import { useLiveRefresh } from './useLiveRefresh'
 const V2View = lazy(() => import('../v2/V2View').then((m) => ({ default: m.V2View }))) // the two screens and their styles: one chunk, fetched when the page shows one
 const GaReturn = lazy(() => import('../features/install/GaReturn').then((m) => ({ default: m.GaReturn }))) // only on the way back from Google (?import=ga)
 const Signals = lazy(() => import('../features/signals/Signals')) // the tab's count, the sale toast and the notices: once the stream has spoken
+const Notices = lazy(() => import('./Notices')) // the note over test payments
 const AddGoals = lazy(() => import('./AddGoals').then((m) => ({ default: m.AddGoals })))
 const JourneyDialog = lazy(() => import('../features/journey/JourneyDialog').then((m) => ({ default: m.JourneyDialog })))
 
@@ -140,6 +141,11 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
         </Suspense>
       )}
       {!shared && <MilestonesSlot ms={ms} site={site} quiet={waiting} revenue={mods === null || shows(mods, 'cards', 'revenue')} />}
+      {view.test && (
+        <Suspense fallback={null}>
+          <Notices kind="test" onAct={() => setView({ test: false })} />
+        </Suspense>
+      )}
       <AskPanel open={askOn && askOpen} onClose={() => setAskOpen(false)} />
     </>
   )

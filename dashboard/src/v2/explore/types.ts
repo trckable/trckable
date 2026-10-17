@@ -16,6 +16,9 @@ export interface Row {
   v: number
   c: number
   st: Tone
+  /** Customers and attributed revenue (minor units) from this row, where payments are connected. */
+  cust?: number
+  rev?: number
 }
 
 /** A number, the range it usually sits in, and where it is now. */
@@ -185,7 +188,10 @@ export interface Connected {
 /** Tables that bring their own numbers: the cards the old Full page had, each opened by its section as it was. */
 export type HostedTab = 'highlights' | 'overtime' | 'hours' | 'revmap' | 'earners' | 'sells' | 'people' | 'buyers' | 'retention' | 'vsale' | 'toconvert' | 'flow' | 'ai'
 
-export type Tab = HostedTab | 'overview' | 'pages' | 'sources' | 'referrers' | 'utm' | 'search' | 'countries' | 'devices' | 'browsers' | 'funnels' | 'sales' | 'speed' | 'mentions' | 'outbound' | 'bots'
+/** The breakdowns only the deep report has: where people left, regions and cities, the parts of a campaign, language, browser version, screen width, page groups. */
+export type DeepTab = 'exits' | 'groups' | 'regions' | 'cities' | 'utmsource' | 'medium' | 'bversion' | 'screens' | 'languages'
+
+export type Tab = HostedTab | DeepTab | 'overview' | 'pages' | 'sources' | 'referrers' | 'utm' | 'search' | 'countries' | 'devices' | 'browsers' | 'funnels' | 'sales' | 'speed' | 'mentions' | 'outbound' | 'bots'
 
 export type Section = 'overview' | 'pages' | 'sources' | 'places' | 'tech' | 'results' | 'sales' | 'speed' | 'mentions' | 'links' | 'ai'
 
@@ -200,6 +206,15 @@ export interface Tabs {
   countries: Table
   devices: Table
   outbound: Table
+  exits: Table
+  groups: Table
+  regions: Table
+  cities: Table
+  utmsource: Table
+  medium: Table
+  bversion: Table
+  screens: Table
+  languages: Table
   bots: Bot[]
   search: Search
   funnels: Funnel

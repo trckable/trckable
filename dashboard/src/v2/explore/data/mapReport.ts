@@ -6,7 +6,8 @@ import { channelLabel } from '../../../lib/palette'
 import { baseEnough, tooFew } from '../../../lib/thin'
 import { sourceName } from '../../briefing/model'
 import { copy } from '../copy'
-import type { Down, FilterDim, Kc, Option, Overview, Shape, Stat, Tab, Table } from '../types'
+import type { Down, FilterDim, Kc, Option, Overview, Row, Shape, Stat, Tab, Table } from '../types'
+import type { Basis } from './basis'
 import { noteOf, rowsOf, statOf } from './stats'
 
 /** What the uptime card needs: the share of the period the site answered, and the incidents of the period. */
@@ -37,11 +38,11 @@ function shapeOf(r: Report, now: ISODate): Shape | null {
 }
 
 /** The overview's four cards: people, a goal (or views), money (or uptime), and who left after one page. */
-export function mapOverview(r: Report, o: { money?: (minor: number) => string; uptime: Uptime | null; now: ISODate; usual?: boolean }): Overview {
+export function mapOverview(r: Report, o: { money?: (minor: number) => string; uptime: Uptime | null; now: ISODate; basis?: Basis }): Overview {
   const cur = r.current
   const prev = r.previous
   const base = !!prev && baseEnough(prev.kpis.visitors)
-  const pe = (s: Stat): Kc['note'] => (o.usual ?? true) ? noteOf(s, copy.vsUsual, copy.asUsual, '') : noteOf(s, copy.vsBefore, copy.asBefore, '')
+  const pe = (s: Stat): Kc['note'] => noteOf(s, copy.vs[o.basis ?? 'usual'], o.basis && o.basis !== 'usual' ? copy.asBefore : copy.asUsual, '')
   const people = statOf(cur.kpis.visitors, prev?.kpis.visitors, base)
   const goal = (cur.goals ?? []).find((g) => g.visitors > 0)
   const gs = goal ? statOf(goal.visitors, prev?.goals?.find((g) => g.value === goal.value)?.visitors, base) : null
@@ -115,13 +116,28 @@ const TABLES: Partial<Record<Tab, TableCfg>> = {
   countries: { key: 'country', dim: 'country', name: countryName, code: true },
   devices: { key: 'device', dim: 'device', name: (v) => v },
   browsers: { key: 'browser', name: (v) => v },
+  exits: { key: 'exit_page', dim: 'exit_page', name: (v) => v },
+  groups: { key: 'group', dim: 'group', name: (v) => v },
+  regions: { key: 'region', dim: 'region', name: (v) => v },
+  cities: { key: 'city', dim: 'city', name: (v) => v },
+  utmsource: { key: 'source', dim: 'source', name: (v) => v },
+  medium: { key: 'medium', dim: 'medium', name: (v) => v },
+  bversion: { key: 'browser_version', dim: 'browser_version', name: (v) => v },
+  screens: { key: 'screen', dim: 'screen', name: (v) => v },
+  languages: { key: 'language', dim: 'language', name: (v) => v },
 }
+
+/** A visit has one entry page but many pages and sections, and a sale belongs to the visit: nothing to attribute to those. */
+const NO_SALE = new Set(['page', 'group', 'exit_page', 'hostname'])
 
 /** A table of people for one tab: the dimension's rows against the period before, each said in its own words. */
 export function mapTable(tab: Tab, r: Report): Table {
   const t = TABLES[tab]
   if (!t) return { rows: [] }
-  const rows = rowsOf(r.current.dims[t.key], r.previous?.dims[t.key], r.previous?.kpis.visitors, t.name, t.code ? (v) => ({ code: v }) : undefined)
+  const sales = !!r.current.money && !NO_SALE.has(t.key)
+  const paid = new Map((sales ? (r.current.revenue_dims?.[t.key] ?? []) : []).map((x) => [x.value, x]))
+  const extra = (v: string): Partial<Row> => ({ ...(t.code ? { code: v } : {}), ...(sales ? { cust: paid.get(v)?.customers ?? 0, rev: paid.get(v)?.revenue ?? 0 } : {}) })
+  const rows = rowsOf(r.current.dims[t.key], r.previous?.dims[t.key], r.previous?.kpis.visitors, t.name, extra)
   return { rows, dim: t.dim }
 }
 

@@ -115,3 +115,26 @@ test('Live shows eight people at most, with no scroll inside the card', async ({
   await expect(page.locator('.lon')).toBeVisible()
   expect(await page.locator('.lfeed .lv').count()).toBeLessThanOrEqual(8)
 })
+
+test('the page that Google Analytics sends people back to opens the import, and test payments say so with a way out', async ({ page }) => {
+  await open(page, 1440, '?view=briefing&import=ga')
+  await expect(page.getByRole('dialog').filter({ has: page.locator('.fa-import') })).toBeVisible({ timeout: 20_000 })
+  await page.keyboard.press('Escape')
+  await open(page, 1440, '?view=briefing&payments=test')
+  await expect(page.getByText('test payments', { exact: false }).first()).toBeVisible({ timeout: 20_000 })
+  await page.getByRole('button', { name: 'Back to live revenue' }).click()
+  await expect(page).not.toHaveURL(/payments=test/)
+})
+
+test('the chart can be cut by week from the period menu, and Refresh is in the palette', async ({ page }) => {
+  await open(page, 1440, '?view=briefing')
+  await page.locator('#perBtn').click()
+  await page.locator('#perMenu .mk-lseg button', { hasText: 'Week' }).click()
+  await expect(page).toHaveURL(/bucket=week/)
+  await page.keyboard.press('Escape')
+  await page.keyboard.press('ControlOrMeta+k')
+  const refresh = page.waitForRequest(/\/report/)
+  await page.locator('.pal.on .palbox input').fill('refresh')
+  await page.keyboard.press('Enter')
+  await refresh
+})

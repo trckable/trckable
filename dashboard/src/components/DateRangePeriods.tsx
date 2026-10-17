@@ -5,23 +5,13 @@ import { Check, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import { caps, keyFor } from '../lib/keys'
 import type { Bucket } from '../lib/api'
-import { PRESETS, diffDays, fmtRange, type CompareMode, type ISODate, type Preset } from '../lib/dates'
+import { PRESETS, bucketsFor, diffDays, fmtRange, type CompareMode, type ISODate, type Preset } from '../lib/dates'
 import { CalendarIcon, type PickerValue } from './DatePicker'
 import { BUCKET_LABEL, CMP_LABEL, CMP_SHORT, PERIODS_FIRST, PERIODS_MORE, periodsCopy as t } from './dateRangeCopy'
 import './ListPop.css'
 import './DateRangePeriods.css'
 
 const COMPARES: CompareMode[] = ['none', 'previous', 'year', 'custom']
-
-/** Which granularities make sense for a period this long (undefined = auto). */
-function bucketsFor(days: number): (Bucket | undefined)[] {
-  const out: (Bucket | undefined)[] = [undefined]
-  if (days <= 14) out.push('hour')
-  if (days <= 400) out.push('day')
-  if (days >= 7) out.push('week')
-  if (days >= 60) out.push('month')
-  return out.length > 2 ? out : []
-}
 
 const byId = (ids: string[]) => ids.flatMap((id) => PRESETS.filter((p) => p.id === id))
 

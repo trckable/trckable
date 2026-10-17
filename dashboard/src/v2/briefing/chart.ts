@@ -1,6 +1,7 @@
 // The chart's numbers from the report: which points are drawn, where the hours still to come begin, the band, the
 // outages and the label over the biggest rise. Pure: chart.test.ts.
 import type { Bucket, Point, Result } from '../../lib/api'
+import { tag } from '../../i18n'
 import { fmtDay } from '../../lib/dates'
 import { copy } from './copy'
 import type { ChartIn, Down } from '../ui/DayChart'
@@ -20,10 +21,10 @@ export function siteNow(tz: string, now = new Date()): string {
 }
 
 /** An axis label: the hour for a day, the weekday at each midnight for longer stretches by the hour, the date for days. */
-function tickOf(hourly: boolean, n: number, h: number, date: string, day: string): string {
-  if (!hourly) return day.replace(/^[A-Za-z]+,? /, '')
+function tickOf(hourly: boolean, n: number, h: number, date: string): string {
+  if (!hourly) return String(Number(date.slice(8, 10)))
   if (n <= 48) return `${pad(h)}:00`
-  return h === 0 ? new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }) : ''
+  return h === 0 ? new Date(date + 'T12:00:00Z').toLocaleDateString(tag ?? 'en-US', { weekday: 'short', timeZone: 'UTC' }) : ''
 }
 
 interface ChartArgs {
@@ -81,7 +82,7 @@ export function chartOf(a: ChartArgs): ChartIn {
     const day = fmtDay(p.t.slice(0, 10))
     const days = a.cur.series.length > 24
     const name = hourly ? `${days ? `${day} ` : ''}${pad(h)}:00` : day
-    const tick = tickOf(hourly, a.cur.series.length, h, p.t.slice(0, 10), day)
+    const tick = tickOf(hourly, a.cur.series.length, h, p.t.slice(0, 10))
     return { i, name, tick, v, lo: full.lo, hi: full.hi, st, raw }
   })
   const ladder = Array.from({ length: Math.max(a.cur.series.length, pts.length) }, (_, i) => bandAt(i))
@@ -98,7 +99,7 @@ export function chartOf(a: ChartArgs): ChartIn {
   const ratio = best >= 0 && c0 > 0.5 ? points[best].v / c0 : 0
   const rise = best >= 0 ? { i: best, text: `${a.riseName ?? copy.traffic} · ${ratio >= 1.3 ? `${mult(ratio)} a usual ${hourly ? 'hour' : 'day'}` : 'above usual'}`, short: `${sourceShort(a.riseName ?? copy.traffic)} ${ratio >= 1.3 ? mult(ratio) : 'up'}` } : undefined
   // The axis names every bucket of the period, the hours still to come too (a phone draws the whole day).
-  const axis = a.cur.series.map((p, i) => ({ i, tick: tickOf(hourly, a.cur.series.length, Number(p.t.slice(11, 13)), p.t.slice(0, 10), fmtDay(p.t.slice(0, 10))) }))
+  const axis = a.cur.series.map((p, i) => ({ i, tick: tickOf(hourly, a.cur.series.length, Number(p.t.slice(11, 13)), p.t.slice(0, 10)) }))
   // A sale sits where it happened on the hours of the day, when the chart is by the hour and short enough to read them.
   const sales =
     hourly && a.cur.series.length <= 48

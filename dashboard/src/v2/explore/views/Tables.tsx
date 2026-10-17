@@ -25,6 +25,15 @@ const CFG: Partial<Record<Tab, Cfg>> = {
   utm: { head: copy.heads.campaign },
   browsers: { head: copy.heads.browser },
   outbound: { head: copy.heads.link, mono: true, unit: copy.heads.clicks },
+  exits: { head: copy.heads.exit, mono: true },
+  groups: { head: copy.heads.group, mono: true },
+  regions: { head: copy.heads.region },
+  cities: { head: copy.heads.city },
+  utmsource: { head: copy.heads.utmSource },
+  medium: { head: copy.heads.medium },
+  bversion: { head: copy.heads.version },
+  screens: { head: copy.heads.screen },
+  languages: { head: copy.heads.language },
 }
 
 function Note({ tab, x }: { tab: Tab; x: XCtx }) {
@@ -62,6 +71,7 @@ export function Tables({ tab, x, d }: { tab: Tab; x: XCtx; d: Table }) {
         onPick={dim ? (r) => x.pick(dim, r.val) : undefined}
         dim={dim}
         limit={Math.max(c.min ?? 0, x.limit)}
+        money={x.money}
         onAll={x.showAll}
       />
       <Note tab={tab} x={x} />

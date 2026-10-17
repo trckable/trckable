@@ -1,6 +1,7 @@
 // Live and the Briefing: the walkthrough's header, and one of its two screens under it. This replaces the dashboard's
 // own header and control rows for these two views; Explore (the full numbers) opens over either as a panel.
 import { useEffect, useState, type ReactNode } from 'react'
+import { tag } from '../i18n'
 import { lazyLoad, whenIdle } from '../lib/lazyLoad'
 import { setView, type ViewState } from '../lib/url'
 import { PageHeader } from './PageHeader'
@@ -51,7 +52,7 @@ interface V2Props {
 
 function vsWords(day: boolean, weekday: string, view: ViewState, range: Range): string | undefined {
   if (day) return copy.vsUsual(weekday)
-  return view.compare === 'none' ? undefined : `vs ${compareLabel(view.period, view.compare, range)}`
+  return view.compare === 'none' ? undefined : copy.vsLabel(compareLabel(view.period, view.compare, range))
 }
 
 const grain = (a: ISODate, b: ISODate) => (a === b ? 'by hour' : 'by day')
@@ -64,7 +65,7 @@ export function V2View(p: V2Props) {
   }
   const options = FIRST.flatMap((id) => preset(id) ?? [])
   const more = MORE.flatMap((id) => preset(id) ?? [])
-  const weekday = new Date(p.range.to + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })
+  const weekday = new Date(p.range.to + 'T12:00:00Z').toLocaleDateString(tag ?? 'en-US', { weekday: 'long', timeZone: 'UTC' })
   const day = p.view.period === 'today' || p.view.period === 'yesterday'
   const vs = vsWords(day, weekday, p.view, p.range)
   const label = day ? `${p.view.period === 'today' ? copy.today : copy.yesterday} · ${dayWords(p.range.to)}` : (PRESETS.find((q) => q.id === p.view.period)?.label ?? rangeWords(p.range, today, copy.todayWord))
@@ -110,6 +111,8 @@ export function V2View(p: V2Props) {
               grain={grain}
               onPick={(id) => setView({ period: id, from: undefined, to: undefined, bucket: undefined, day: undefined })}
               onCompare={(c) => setView({ compare: c })}
+              bucket={p.view.bucket}
+              onBucket={(b) => setView({ bucket: b })}
               onRange={(from, to) => setView({ period: 'custom', from, to, bucket: undefined, day: undefined })}
             />
           ) : null
