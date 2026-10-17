@@ -130,7 +130,9 @@ function siteJson(c: Ctx, s: SiteDef): Site {
   const first = sc.since?.[s.id] != null ? sc.since[s.id] * 1440 : 0
   const ongoing = c.w.data[s.id].inc.find((i) => c.nowAbs >= i.a && c.nowAbs < i.b)
   const since = secs(c, first) - (sc.since?.[s.id] != null && v.n === 0 ? -(c.nowAbs - 30) * 60 : 86400 * 12)
+  // The first day of data is the site's first day: it was added a few hours ago.
   const created = v.n === 0 ? secs(c, c.nowAbs - 25) : since
+  const addedAt = c.w.key === 'firstday' ? secs(c, c.nowAbs - 300) : created
   const lastAt = v.n ? secs(c, v.t[v.n - 1]) : undefined
   const verified: VerifiedSource[] = [{ kind: 'snippet', ok: true, since: created, checked: secs(c, c.nowAbs), detail: 'the snippet is on the homepage' }]
   if (c.conn.rev && s.money) verified.push({ kind: 'payments', ok: true, since: created, checked: secs(c, c.nowAbs), detail: 'payments are flowing' })
@@ -142,7 +144,7 @@ function siteJson(c: Ctx, s: SiteDef): Site {
     timezone: 'UTC',
     currency: 'USD',
     proxy_key: `tkb_px_${s.id}`,
-    created_at: created,
+    created_at: addedAt,
     watched_since: created,
     mentions: mentionsOf(c, s.id).length > 0,
     week_start: 1,

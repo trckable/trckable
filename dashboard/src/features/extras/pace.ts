@@ -29,6 +29,9 @@ export function monthSoFar(today: string): { from: string; to: string } | null {
   return { from: `${today.slice(0, 7)}-01`, to: yesterday }
 }
 
+/** The period on screen is this month so far (its first day to today): the only one a projection of the month speaks for. */
+export const isMonthSoFar = (range: { from: string; to: string }, today: string): boolean => range.to === today && range.from === `${today.slice(0, 7)}-01`
+
 /** `sum` is what the whole days so far added up to. */
 export function paceOf(sum: number, today: string): Pace | null {
   const span = monthSoFar(today)

@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { oldAddressTarget, readView, writeView } from './url'
+import { afterEach, describe, expect, it } from 'vitest'
+import { oldAddressTarget, readView, setDefaultPeriodFor, writeView } from './url'
 
 describe('the chart metric in the address', () => {
   it('is revenue or pageviews when the address says so, visitors (nothing) otherwise', () => {
@@ -27,5 +27,19 @@ describe('addresses the old Data page made', () => {
   it('leave any other address alone', () => {
     expect(at('')).toBeNull()
     expect(at('view=briefing&period=7d')).toBeNull()
+  })
+})
+
+describe('the period of an address without one', () => {
+  afterEach(() => setDefaultPeriodFor({}))
+  it('is Today in a site\'s first week, 30 days after, and an explicit period always wins', () => {
+    const now = 1_800_000_000
+    setDefaultPeriodFor({ created_at: now - 86400 }, now)
+    expect(readView(new URLSearchParams('')).period).toBe('today')
+    expect(writeView(readView(new URLSearchParams('')))).toBe('')
+    expect(readView(new URLSearchParams('period=30d')).period).toBe('30d')
+    expect(writeView(readView(new URLSearchParams('period=30d')))).toBe('?period=30d')
+    setDefaultPeriodFor({ created_at: now - 9 * 86400 }, now)
+    expect(readView(new URLSearchParams('')).period).toBe('30d')
   })
 })

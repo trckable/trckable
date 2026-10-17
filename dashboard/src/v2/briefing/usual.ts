@@ -129,9 +129,14 @@ export interface Verdict {
   ratio: number | null
 }
 
+/** How many times its usual a figure is: the one rule every screen counts a multiple by (the Briefing's headline and chart label, Explore's rows). None when the usual is too small to say. */
+export function timesUsual(now: number, band: Band | null | undefined): number | null {
+  return band && band.c > 0.5 ? now / band.c : null
+}
+
 export function verdictOf(now: number, band: Band | null | undefined): Verdict | null {
   if (!band) return null
-  return { now, band, st: judge(now, band), ratio: band.c > 0.5 ? now / band.c : null }
+  return { now, band, st: judge(now, band), ratio: timesUsual(now, band) }
 }
 
 /** The stretch of a period that counts against its usual: hours that have happened, and the share of the hour now running. */

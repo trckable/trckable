@@ -94,15 +94,24 @@ function compareOf(v: string | null, period: string): CompareMode {
   return period === 'custom' ? 'none' : 'previous'
 }
 
+/** The period an address without one means: 30 days, or Today while the site is in its first week and has no 30 days to show. Set by the page of a site before it reads the address. */
+let defaultPeriod = '30d'
+const WEEK = 7 * 86400
+
+/** A site added less than a week ago opens on Today: a 30-day axis would be mostly days before it existed. */
+export function setDefaultPeriodFor(site: { created_at?: number }, nowSec = Math.floor(Date.now() / 1000)) {
+  defaultPeriod = site.created_at && nowSec - site.created_at < WEEK ? 'today' : '30d'
+}
+
 export function readView(params: URLSearchParams): ViewState {
   const from = params.get('from') ?? undefined
   const to = params.get('to') ?? undefined
   const cmp = params.get('compare')
   return {
-    period: from && to ? 'custom' : (params.get('period') ?? '30d'),
+    period: from && to ? 'custom' : (params.get('period') ?? defaultPeriod),
     from,
     to,
-    compare: compareOf(cmp, from && to ? 'custom' : (params.get('period') ?? '30d')),
+    compare: compareOf(cmp, from && to ? 'custom' : (params.get('period') ?? defaultPeriod)),
     cfrom: params.get('cfrom') ?? undefined,
     cto: params.get('cto') ?? undefined,
     filters: params.getAll('f').flatMap((f) => parseFilterParam(f) ?? []),
@@ -132,7 +141,7 @@ export function writeView(v: ViewState): string {
   if (v.period === 'custom' && v.from && v.to) {
     p.set('from', v.from)
     p.set('to', v.to)
-  } else if (v.period !== '30d') p.set('period', v.period)
+  } else if (v.period !== defaultPeriod) p.set('period', v.period)
   // Only what differs from the default is written: "none" on a preset period, anything but "none" on a custom range.
   if (v.compare !== compareOf(null, v.from && v.to ? 'custom' : v.period)) p.set('compare', v.compare)
   if (v.compare === 'custom' && v.cfrom && v.cto) {

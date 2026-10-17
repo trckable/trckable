@@ -213,7 +213,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
             )
           }
         />
-        {!empty && <Kcs items={kcs} foot={{ people: <PaceFoot site={site.id} today={today} live={range.to === today} /> }} />}
+        {!empty && <Kcs items={kcs} foot={{ people: <PaceFoot site={site.id} today={today} range={range} /> }} />}
         <div className="npw">
           {lock.queued.length > 0 && (
             <button type="button" className="newpill" onClick={lock.release}>

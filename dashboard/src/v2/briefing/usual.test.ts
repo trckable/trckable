@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Point } from '../../lib/api'
-import { dayBandOf, hourlyPeople, hourTable, judge, stretchBand, verdictOf } from './usual'
+import { dayBandOf, hourlyPeople, hourTable, judge, stretchBand, timesUsual, verdictOf } from './usual'
 
 describe('usual', () => {
   it('has no table without weeks behind it', () => {
@@ -49,5 +49,13 @@ describe('one verdict', () => {
   it('adds up only the hours that have happened', () => {
     const series = [8, 9, 10, 11].map((h, i) => ({ t: `2026-10-17T${String(h).padStart(2, '0')}:00`, visitors: 10 * (i + 1), pageviews: 0 }))
     expect(hourlyPeople(series, [8, 9, 10].map((hour) => ({ day: '2026-10-17', hour, fr: 1 })))).toBe(60)
+  })
+})
+
+describe('timesUsual', () => {
+  it('is the figure over its usual, none when there is no usual to count from', () => {
+    expect(timesUsual(50, { c: 10, lo: 5, hi: 15 })).toBe(5)
+    expect(timesUsual(50, { c: 0.4, lo: 0, hi: 1 })).toBeNull()
+    expect(timesUsual(50, null)).toBeNull()
   })
 })

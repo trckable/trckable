@@ -92,7 +92,7 @@ function readFunnel(site: string, range: Range, days: number, want: NonNullable<
   const before: Range = { from: addDays(range.from, -days), to: addDays(range.from, -1) }
   return Promise.all([more.funnel(site, range, want.steps), more.funnel(site, before, want.steps).catch(() => null)]).then(
     ([c, p]) => {
-      const steps = c.steps.map((s, i) => ({ name: stepName(s, copy.paidStep), v: s.visitors, c: p?.steps[i]?.visitors ?? 0 }))
+      const steps = c.steps.map((s, i) => ({ name: s.kind === 'paid' && i > 0 ? copy.paidStep(stepName(c.steps[i - 1], '')) : stepName(s, copy.paidStep('')), v: s.visitors, c: p?.steps[i]?.visitors ?? 0 }))
       return { steps, leak: leakOf(steps), alt: want.alt }
     },
     () => null,
