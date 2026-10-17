@@ -1,5 +1,5 @@
 // The bell's list, read once (and again every few minutes), and which of it has been read by this person.
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, type Site } from '../../lib/api'
 import { incidents } from '../../features/incidents/api'
 import { mentionsApi } from '../../features/mentions/api'
@@ -15,11 +15,18 @@ export function useNotices(site: Site | null, sites: Site[]) {
   const { bell: extra, bellMore } = useV2Extras()
   const items = useMemo(() => withFeed(own, extra), [own, extra])
   const can = !isShared()
+  // The list is read again with every new fact about a site (its last visit moves all day); the bell is read again only when the sites it asks about change.
+  const asked = useRef(sites)
+  useEffect(() => {
+    asked.current = sites
+  })
+  const sitesKey = sites.map((s) => `${s.id}:${s.domain}:${!!s.mentions}:${!!s.last_event_at}`).join('|')
   useEffect(() => {
     if (!can) return
     let live = true
     const run = async () => {
       const now = Math.floor(Date.now() / 1000)
+      const sites = asked.current
       const domain = (id: string) => sites.find((s) => s.id === id)?.domain
       const parts = await Promise.all([
         incidents.account(7).then((r) => fromIncidents(r.incidents, domain, now), () => []),
@@ -44,7 +51,7 @@ export function useNotices(site: Site | null, sites: Site[]) {
       clearTimeout(first)
       stop()
     }
-  }, [site?.id, site?.domain, site?.mentions, sites, can]) // eslint-disable-line react-hooks/exhaustive-deps -- the site's own fields say when it changed
+  }, [site?.id, site?.domain, site?.mentions, sitesKey, can]) // eslint-disable-line react-hooks/exhaustive-deps -- the site's own fields and sitesKey say when it changed
   const { read, mark: send } = useReadSet(can)
   const mark = useCallback((id: string) => send([id]), [send])
   const markAll = useCallback(() => {

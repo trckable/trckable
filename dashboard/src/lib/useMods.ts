@@ -27,7 +27,7 @@ export function useMods(site: string): Mods {
     if (version === 0 && mods) return
     let live = true
     api
-      .modules(site)
+      .modules(site, version > 0)
       .then((d) => live && setMods(Object.fromEntries(d.modules.map((m) => [m.id, m.enabled]))))
       .catch(() => live && setMods((m) => m ?? {})) // a module view that 404s simply hides itself
     return () => {

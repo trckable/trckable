@@ -1,5 +1,5 @@
-// The sites list kept right while the dashboard is open: one read every few
-// seconds while the tab is shown, so the last visit, the down flag and the
+// The sites list kept right while the dashboard is open: one read every 30 s
+// while the tab is shown (and one on return after 5 minutes away), so the last visit, the down flag and the
 // check each surface draws its state from (the switcher's dot and line, the
 // header, All sites, the Sites list, the Live view) follow the server without
 // a refresh. Every surface reads the same list; none keeps a copy. The tick
@@ -9,14 +9,15 @@ import { useEffect, useState } from 'react'
 import { api, type Site } from './api'
 import { visibleInterval } from './visibleInterval'
 
-export const SITES_POLL_MS = 15_000
+export const SITES_POLL_MS = 30_000
+const AWAY_MS = 5 * 60_000
 
 /** Whether a read brought anything new: a site's state is all in these few fields. */
 export function changed(a: Site[], b: Site[]): boolean {
   return JSON.stringify(a) !== JSON.stringify(b)
 }
 
-/** Reads the list again every few seconds while `on`; `apply` gets only a list that differs. Returns a counter that moves with each read, to re-render by. */
+/** Reads the list again every 30 s while `on`; `apply` gets only a list that differs. Returns a counter that moves with each read, to re-render by. */
 export const NO_SITES: Site[] = []
 
 export function useLiveSites(on: boolean, current: Site[], apply: (sites: Site[]) => void): number {
@@ -33,7 +34,7 @@ export function useLiveSites(on: boolean, current: Site[], apply: (sites: Site[]
           setTick((n) => n + 1)
         })
         .catch(() => {}) // the list on screen stays until the next read
-    const stop = visibleInterval(() => void read(), SITES_POLL_MS)
+    const stop = visibleInterval(() => void read(), SITES_POLL_MS, AWAY_MS)
     return () => {
       gone = true
       stop()

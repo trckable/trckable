@@ -115,9 +115,9 @@ describe('live stream', () => {
     expect(FakeSource.all).toHaveLength(2) // opened again
     expect(FakeSource.all[0].readyState).toBe(FakeSource.CLOSED)
     expect(on.refetch).toHaveBeenCalledOnce() // at once, for what it missed
-    vi.advanceTimersByTime(15_000)
+    vi.advanceTimersByTime(60_000)
     expect(on.refetch).toHaveBeenCalledTimes(2)
-    vi.advanceTimersByTime(15_000)
+    vi.advanceTimersByTime(60_000)
     expect(on.refetch).toHaveBeenCalledTimes(3)
     last().send('ping', {})
     expect(on.up).toHaveBeenLastCalledWith(true)
@@ -134,17 +134,38 @@ describe('live stream', () => {
     expect(on.refetch).toHaveBeenCalledOnce()
     vi.advanceTimersByTime(5000)
     expect(FakeSource.all).toHaveLength(2)
-    vi.advanceTimersByTime(10_000)
+    vi.advanceTimersByTime(60_000)
     expect(on.refetch).toHaveBeenCalledTimes(2)
     stop()
   })
 
-  it('refetches and reconnects when the tab is shown again', () => {
+  const setShown = (state: 'visible' | 'hidden') => {
+    doc.visibilityState = state
+    doc.dispatchEvent(new Event('visibilitychange'))
+  }
+
+  // Time passes with the stream alive: a ping every 10 s, as the server sends.
+  const stay = (ms: number) => {
+    for (let t = 0; t < ms; t += 10_000) {
+      vi.advanceTimersByTime(10_000)
+      last().send('ping', {})
+    }
+  }
+
+  it('reconnects when the tab is shown again, and reads the report only after a long while away', () => {
     const on = handlers()
     const stop = connect('s1', on)
     last().send('ping', {})
+    setShown('hidden')
+    stay(60_000)
     last().readyState = 0 // died quietly while hidden
-    doc.dispatchEvent(new Event('visibilitychange'))
+    setShown('visible')
+    expect(on.refetch).not.toHaveBeenCalled() // a minute away: nothing new was announced
+    expect(FakeSource.all).toHaveLength(2)
+    last().send('ping', {})
+    setShown('hidden')
+    stay(6 * 60_000)
+    setShown('visible')
     expect(on.refetch).toHaveBeenCalledOnce()
     expect(FakeSource.all).toHaveLength(2)
     ;(globalThis.window as EventTarget).dispatchEvent(new Event('online'))
@@ -152,6 +173,22 @@ describe('live stream', () => {
     stop()
     vi.advanceTimersByTime(60_000)
     expect(on.refetch).toHaveBeenCalledOnce()
+  })
+
+  it('asks for nothing while hidden, and once on return for the visits that came meanwhile', () => {
+    const on = handlers()
+    const stop = connect('s1', on)
+    last().send('ping', {})
+    setShown('hidden')
+    last().send('visit', { ts: 1, path: '/' })
+    vi.advanceTimersByTime(30_000)
+    expect(on.refetch).not.toHaveBeenCalled()
+    setShown('visible')
+    expect(on.refetch).toHaveBeenCalledOnce()
+    last().send('visit', { ts: 2, path: '/' })
+    vi.advanceTimersByTime(5_000)
+    expect(on.refetch).toHaveBeenLastCalledWith(true) // a burst of visits: settled
+    stop()
   })
 })
 

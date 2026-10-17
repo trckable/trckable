@@ -878,6 +878,21 @@ export interface Profile {
   signed_in_with?: string
 }
 
+type SiteModules = { modules: ModuleInfo[]; script: ScriptInfo }
+const heldModules = new Map<string, Promise<SiteModules>>()
+/** A site's modules, shared for a minute by everything that asks (the page's switches, the Briefing's speed and search lines); `fresh` reads them again, as after a change. */
+function siteModules(site: string, fresh = false): Promise<SiteModules> {
+  let p = fresh ? undefined : heldModules.get(site)
+  if (!p) {
+    const q = call<SiteModules>('GET', `/sites/${site}/modules`)
+    p = q
+    heldModules.set(site, q)
+    q.catch(() => heldModules.get(site) === q && heldModules.delete(site)) // a failed read is not kept
+    setTimeout(() => heldModules.get(site) === q && heldModules.delete(site), 60_000)
+  }
+  return p
+}
+
 const heldMilestones = new Map<string, Promise<Milestones>>()
 function sharedMilestones(site: string, next: boolean): Promise<Milestones> {
   const key = `${site}|${next}`
@@ -929,7 +944,7 @@ export const api = {
   renameSegment: (site: string, id: string, name: string) => call<Segment>('PATCH', `/sites/${site}/segments/${id}`, { name }),
   deleteSegment: (site: string, id: string) => act('DELETE', `/sites/${site}/segments/${id}`),
   annotations: (site: string, from: string, to: string) => call<{ annotations: Annotation[] }>('GET', shareMode ? `/share/annotations?from=${from}&to=${to}` : `/sites/${site}/annotations?from=${from}&to=${to}`),
-  modules: (site: string) => call<{ modules: ModuleInfo[]; script: ScriptInfo }>('GET', `/sites/${site}/modules`),
+  modules: siteModules,
 }
 
 // A tiny request cache so hovering, re-opening a period, or switching back to

@@ -13,7 +13,9 @@ const SILENT_MS = 25_000
 const SETTLE_MS = 500
 const MAX_WAIT_MS = 5000
 // While the stream is stuck, the report and its online count are polled.
-const POLL_MS = 15_000
+const POLL_MS = 60_000
+// Back on a tab left this long, the report is read again even if the stream told nothing.
+const AWAY_MS = 5 * 60_000
 
 export type LiveHandlers = {
   online: (n: number | null) => void
@@ -21,9 +23,10 @@ export type LiveHandlers = {
   sale: (s: Sale) => void
   // true while the stream delivers; false while it is stuck or reconnecting.
   up: (ok: boolean) => void
-  // Read the report again, past its cache: something new arrived, the tab
-  // was shown again, or (while the stream is stuck) it is time to poll.
-  refetch: () => void
+  // Read the report again, past its cache: something new arrived (settled:
+  // true, a burst of visits that may go on), the tab was shown again after a
+  // long while, or (while the stream is stuck) it is time to poll.
+  refetch: (settled?: boolean) => void
 }
 
 /** Opens the site's live stream and keeps it open. Returns a stop func. */
@@ -31,7 +34,13 @@ export function connect(site: string, on: LiveHandlers): () => void {
   let es: EventSource | null = null
   let retry: ReturnType<typeof setTimeout> | undefined
   let poll: (() => void) | undefined
-  const settle = debounce(on.refetch, SETTLE_MS, MAX_WAIT_MS)
+  // A hidden tab reads nothing: what arrived meanwhile is read once on return.
+  let missed = false
+  let hiddenAt = 0
+  const settle = debounce(() => {
+    if (document.visibilityState === 'visible') on.refetch(true)
+    else missed = true
+  }, SETTLE_MS, MAX_WAIT_MS)
   let state: boolean | null = null // not known until the stream speaks or fails
   const up = (ok: boolean) => {
     if (ok === state) return
@@ -40,8 +49,8 @@ export function connect(site: string, on: LiveHandlers): () => void {
     poll?.()
     poll = undefined
     if (ok) return
-    on.refetch() // what the stream may have missed
-    poll = visibleInterval(on.refetch, POLL_MS, false) // the wake below reads on return
+    if (document.visibilityState === 'visible') on.refetch() // what the stream may have missed
+    poll = visibleInterval(() => on.refetch(), POLL_MS, AWAY_MS)
   }
   const dog = watchdog(SILENT_MS, () => {
     up(false)
@@ -83,8 +92,14 @@ export function connect(site: string, on: LiveHandlers): () => void {
   }
   // A tab shown again or a network back: the stream may have died quietly.
   const wake = () => {
-    if (document.visibilityState !== 'visible') return
-    on.refetch()
+    if (document.visibilityState !== 'visible') {
+      hiddenAt ||= Date.now()
+      return
+    }
+    const away = hiddenAt ? Date.now() - hiddenAt : 0
+    hiddenAt = 0
+    if (missed || away >= AWAY_MS) on.refetch()
+    missed = false
     if (es?.readyState !== EventSource.OPEN) open()
   }
   open()

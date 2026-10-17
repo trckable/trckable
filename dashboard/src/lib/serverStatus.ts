@@ -1,8 +1,8 @@
 // What the footer's dot says: is the server there, and is it keeping up. One
 // cheap question a minute (who am I), paused while the tab is hidden. Where
-// the person may read the server's health (the operator), the same minute
-// also looks at how far behind the writer is; anyone else gets a 404 once and
-// never asks again.
+// the person may read the server's health (the operator, which the same
+// answer says), the same minute also looks at how far behind the writer is;
+// anyone else never asks.
 import { useEffect, useState } from 'react'
 import { APIError, call, type Health } from './api'
 
@@ -14,7 +14,8 @@ const LATE_LAG = 5_000
 
 async function look(health: { off: boolean }): Promise<ServerStatus> {
   try {
-    await call('GET', '/me', undefined, undefined, true)
+    const me = await call<{ operator?: boolean }>('GET', '/me', undefined, undefined, true)
+    if (!me.operator) health.off = true
   } catch (e) {
     // A refusal (signed out) still means the server answered.
     if (!(e instanceof APIError) || e.status >= 500) return 'down'

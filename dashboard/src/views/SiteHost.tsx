@@ -50,8 +50,8 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
     [range.from, range.to, view.compare, view.cfrom, view.cto, view.period, filtersKey, view.test, view.bucket, view.attr], // eslint-disable-line react-hooks/exhaustive-deps -- view and range are new objects each render: keyed by content (filtersKey)
   )
   const live = range.to === today
-  const { data, error, loading, refresh } = useReport(site.id, query, { live })
-  // A shared link has no session, so no stream (its report refreshes on a timer); a new visit on the stream reloads the report past its cache.
+  const { data, error, loading, refresh } = useReport(site.id, query, { poll: shared && live })
+  // A shared link has no session, so no stream (its report is read again once a minute); a new visit on the stream reloads the report past its cache.
   const refreshHours = useRef<(skipCache: boolean) => void>(undefined)
   const stream = useLiveRefresh(shared ? '' : site.id, live, refresh, refreshHours)
 
