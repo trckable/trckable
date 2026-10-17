@@ -18,6 +18,7 @@ vi.mock('../components/Confirm', () => ({ confirm: (...a: unknown[]) => ask(...a
 vi.mock('../lib/me', async (orig) => ({ ...(await orig<typeof import('../lib/me')>()), canChange: () => true }))
 
 import { ScriptRecords } from './ScriptRecords'
+import { recordsCopy } from './recordsCopy'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -85,7 +86,7 @@ describe('turning a choice off', () => {
     const vitals = host.querySelectorAll<HTMLElement>('[role="switch"]')[1]
     act(() => vitals.click())
     await settle()
-    expect(ask).toHaveBeenCalledWith(expect.objectContaining({ title: 'Turn off vitals?', danger: true, body: expect.stringContaining('Nothing already recorded is deleted.') as string }))
+    expect(ask).toHaveBeenCalledWith(expect.objectContaining({ title: 'Turn off Core Web Vitals?', danger: true, body: expect.stringContaining('Nothing already recorded is deleted.') as string }))
     expect(setModule).not.toHaveBeenCalled()
     act(() => vitals.click())
     await settle()
@@ -101,5 +102,31 @@ describe('turning a choice off', () => {
     await settle()
     expect(ask).not.toHaveBeenCalled()
     expect(setModule).toHaveBeenCalledWith('s1', 'heatmaps', true)
+  })
+
+  it('says it in the page’s own words, not the server’s', async () => {
+    const api = answer(true)
+    api.modules[3] = { ...api.modules[3], gap: 'Server English' }
+    list.mockResolvedValue(api)
+    ask.mockResolvedValue(false)
+    act(() => root.render(<ScriptRecords site={site} />))
+    await settle()
+    act(() => host.querySelectorAll<HTMLElement>('[role="switch"]')[1].click())
+    await settle()
+    const body = (ask.mock.calls[0][0] as { body: string }).body
+    expect(body).toContain(recordsCopy.gap.vitals)
+    expect(body).not.toContain('Server English')
+  })
+
+  it('turning Goals off says outbound links and forms stop with it', async () => {
+    list.mockResolvedValue(answer(true))
+    ask.mockResolvedValue(false)
+    act(() => root.render(<ScriptRecords site={site} />))
+    await settle()
+    act(() => host.querySelectorAll<HTMLElement>('[role="switch"]')[0].click())
+    await settle()
+    const body = (ask.mock.calls[0][0] as { body: string }).body
+    expect(body).toContain(recordsCopy.gap.goals)
+    expect(body).toContain(recordsCopy.withGoals)
   })
 })

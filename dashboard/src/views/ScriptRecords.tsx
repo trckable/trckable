@@ -16,6 +16,8 @@ import { recordsCopy } from './recordsCopy'
 import './ScriptRecords.css'
 
 const bytes = (n: number) => (n >= 1024 ? `${(n / 1024).toFixed(2)} KB` : `${n} B`)
+/** A choice's name in the language of the page (the server's list is English). */
+const nameOf = (id: string): string => (id === 'outbound' || id === 'forms' ? recordsCopy[id] : recordsCopy[id as 'goals' | 'vitals' | 'heatmaps'].name)
 const cost = (m: ModuleInfo | undefined) => (m?.tracker_bytes ? recordsCopy.adds(bytes(m.tracker_bytes)) : recordsCopy.free)
 
 export function ScriptRecords({ site }: { site: Site }) {
@@ -38,8 +40,8 @@ export function ScriptRecords({ site }: { site: Site }) {
   const get = (id: string) => mods?.find((m) => m.id === id)
   // Turning one off loses what it would have recorded from now on: say so first.
   const change = async (id: string, enabled: boolean) => {
-    const m = get(id)
-    if (!enabled && m && !(await confirm({ title: recordsCopy.offTitle(m.name), body: `${m.gap ?? ''} ${recordsCopy.offStays}`.trim(), confirmLabel: recordsCopy.turnOff, cancelLabel: recordsCopy.keep, danger: true }))) return
+    const gap = recordsCopy.gap[id as keyof typeof recordsCopy.gap]
+    if (!enabled && gap && !(await confirm({ title: recordsCopy.offTitle(nameOf(id)), body: [gap, id === 'goals' ? recordsCopy.withGoals : '', recordsCopy.offStays].filter(Boolean).join(' '), confirmLabel: recordsCopy.turnOff, cancelLabel: recordsCopy.keep, danger: true }))) return
     set(id, enabled)
   }
   const set = (id: string, enabled: boolean) => {

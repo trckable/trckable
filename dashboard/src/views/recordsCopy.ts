@@ -12,6 +12,14 @@ export const recordsCopy = defineCopy('records', {
   offStays: 'Nothing already recorded is deleted.',
   turnOff: 'Turn off',
   keep: 'Keep it on',
+  gap: {
+    goals: 'Goals stop being recorded. Past goals stay.',
+    outbound: 'Outbound clicks and downloads stop being recorded. Past ones stay.',
+    forms: 'Form submissions stop being counted. Past ones stay.',
+    vitals: 'Speed scores stop being recorded. Past ones stay.',
+    heatmaps: 'Click, scroll and form counts stop being recorded. Past ones stay.',
+  },
+  withGoals: 'Outbound links and form submissions stop with it.',
   consent: {
     button: 'Ask before counting',
     title: 'Ask visitors before counting them?',
