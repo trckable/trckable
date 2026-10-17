@@ -352,7 +352,9 @@
 .mk{--mk-h:44px}
 }
 .mk{-webkit-text-size-adjust:100%}
-.mk{overflow-x:clip}
+.mk{overflow-x:visible}
+/* Nothing runs off the side of the page, but a menu may reach past the box it hangs from (the page's own padding) */
+html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk{padding:var(--mk-s5) var(--mk-s6) var(--mk-s6)}
 @media (max-width:700px){
 .mk{padding:var(--mk-s4) var(--mk-s4) 104px}
@@ -878,7 +880,7 @@
 .mk .tline::after, .mk .contrib button::after, .mk .ft a::after{content:"";position:absolute;inset:-12px -6px}
 
 }
-.mk body:has(.mk-menu.on) .tabbar{visibility:hidden}
+body:has(.mk-menu.on) .tabbar{visibility:hidden}
 @container (max-width:600px){
 .mk .mk-menu.on{z-index:96;box-shadow:0 0 0 100vmax rgba(0,0,0,.55)}
 .mk .mk-menu{padding-bottom:calc(var(--mk-s4) + env(safe-area-inset-bottom))}

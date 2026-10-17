@@ -8,6 +8,7 @@ import { speedCopy } from '../features/overview/speedCopy'
 import { fmtSecs, replaySeconds, SPEEDS, speedOf } from '../features/overview/replayTime'
 import './MenuPop.css'
 import './sheet.css'
+import { Lifted } from './Lifted'
 
 export default function SpeedPop({ speed, points, onPick }: { speed: string; points: number; onPick: (id: string) => void }) {
   const showing = useMarkers()
@@ -27,7 +28,7 @@ export default function SpeedPop({ speed, points, onPick }: { speed: string; poi
     all[(to + all.length) % all.length]?.focus()
   }
   return (
-    <div className="pop menu-pop speed-pop" role="menu" tabIndex={-1} aria-label={speedCopy.speed} onKeyDown={onKey}>
+    <Lifted className="pop menu-pop speed-pop" role="menu" tabIndex={-1} aria-label={speedCopy.speed} onKeyDown={onKey}>
       <div className="menu-pop-head">
         <b>{speedCopy.speed}</b>
         <span className="faint">{speedCopy.playsIn(fmtSecs(replaySeconds(points, speedOf(speed).secs)))}</span>
@@ -63,6 +64,6 @@ export default function SpeedPop({ speed, points, onPick }: { speed: string; poi
       <div className="menu-pop-head speed-keys faint" aria-hidden="true">
         {speedCopy.speedKeys}
       </div>
-    </div>
+    </Lifted>
   )
 }

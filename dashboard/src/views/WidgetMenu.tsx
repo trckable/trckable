@@ -3,6 +3,7 @@ import { Ellipsis } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useMenuNav } from '../lib/headerMenu'
 import { TEXT } from './widgetKinds'
+import { Lifted } from '../components/Lifted'
 
 export interface WidgetMenuItem {
   label: string
@@ -31,7 +32,7 @@ export function WidgetMenu({ items }: { items: WidgetMenuItem[] }) {
         <Ellipsis size={18} strokeWidth={1.75} aria-hidden="true" />
       </button>
       {open && (
-        <div className="pop menu" role="menu" aria-label={TEXT.menu}>
+        <Lifted className="pop menu" role="menu" aria-label={TEXT.menu}>
           {items.map((it) => (
             <button
               key={it.label}
@@ -48,7 +49,7 @@ export function WidgetMenu({ items }: { items: WidgetMenuItem[] }) {
               {it.label}
             </button>
           ))}
-        </div>
+        </Lifted>
       )}
     </div>
   )

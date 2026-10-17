@@ -39,10 +39,11 @@ describe('Tooltip', () => {
     act(() => root.render(<Tooltip text="Why">{(p) => <button type="button" {...p}>i</button>}</Tooltip>))
     const b = host.querySelector('button') as HTMLButtonElement
     act(() => b.focus())
-    expect(host.querySelector('[role=tooltip]')?.textContent).toBe('Why')
-    expect(b.getAttribute('aria-describedby')).toBe((host.querySelector('[role=tooltip]') as HTMLElement).id)
+    // The tip is drawn on the page's top layer, not inside the trigger's box.
+    expect(document.querySelector('[role=tooltip]')?.textContent).toBe('Why')
+    expect(b.getAttribute('aria-describedby')).toBe((document.querySelector('[role=tooltip]') as HTMLElement).id)
     key('Escape')
-    expect(host.querySelector('[role=tooltip]')).toBeNull()
+    expect(document.querySelector('[role=tooltip]')).toBeNull()
   })
 })
 

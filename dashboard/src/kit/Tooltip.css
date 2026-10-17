@@ -48,3 +48,12 @@
   text-decoration-color: var(--text-3);
   text-underline-offset: 3px;
 }
+/* On the page's top layer: placed by the code (fixed, from the trigger), above everything and clipped by nothing. */
+.tip.tip-top {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  overflow: visible;
+  z-index: 2147483647;
+  color: var(--text-2);
+}

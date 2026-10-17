@@ -1,12 +1,15 @@
 // The menus of Explore's toolbar: a button and the list it opens. On a wide screen the list hangs under its button; on a
 // phone it is a sheet from the bottom, with a grab bar and a dim behind it.
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
+import { useTopLayerWhen } from '../../lib/topLayer'
 
 export function XMenu({ id, cls, open, label, button, pick, children }: { id: string; cls?: string; open: boolean; label: string; button: ReactNode; pick?: boolean; children: ReactNode }) {
+  const menu = useRef<HTMLDivElement>(null)
+  useTopLayerWhen(open, menu)
   return (
     <div className={`xw ${cls ?? ''}`}>
       {button}
-      <div className={`mk-menu xm ${pick ? 'xmenu' : ''} ${open ? 'on' : ''}`} id={`xm-${id}`} role="menu" aria-label={label}>
+      <div ref={menu} className={`mk-menu xm ${pick ? 'xmenu' : ''} ${open ? 'on' : ''}`} id={`xm-${id}`} role="menu" aria-label={label}>
         {children}
       </div>
     </div>

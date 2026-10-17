@@ -18,6 +18,7 @@ import { filterCopy as t } from './filterCopy'
 import { DimRows, IdleRows, ValueRows } from './FilterRows'
 import './ListPop.css'
 import './FilterPop.css'
+import { Lifted } from './Lifted'
 
 export default function FilterPop({
   rows,
@@ -130,7 +131,7 @@ export default function FilterPop({
   const nothing = ALL_DIMS.every((d) => count(d.dim) === 0)
 
   return (
-    <div ref={box} className="pop lpop filter-pop" role="menu" tabIndex={-1} aria-label={t.search} onKeyDown={arrows}>
+    <Lifted innerRef={box} className="pop lpop filter-pop" role="menu" tabIndex={-1} aria-label={t.search} onKeyDown={arrows}>
       <div className="lsearch">
         {dim ? (
           <button type="button" className="back" onClick={() => setDim(null)} aria-label={t.back}>
@@ -169,6 +170,6 @@ export default function FilterPop({
         {!showValues && <DimRows count={count} picked={picked} onOpen={openDim} />}
         {!showValues && <IdleRows count={count} />}
       </div>
-    </div>
+    </Lifted>
   )
 }

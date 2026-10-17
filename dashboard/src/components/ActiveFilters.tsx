@@ -12,6 +12,7 @@ import './MenuPop.css'
 import { useChipFit } from './useChipFit'
 import { truncateMiddle } from '../lib/visitor'
 import { filterMenu } from './panelOpen'
+import { Lifted } from './Lifted'
 
 /** One chip as a person reads it; `raw` is what goes back on remove and flip. */
 export type Shown<T> = { key: string; dim: string; op: string; not: boolean; value: string; dot?: string; raw: T }
@@ -89,7 +90,7 @@ export function ActiveFilters<T>({ filters, onRemove, onFlip, onClear, onSave, c
             <ChevronDown size={13} strokeWidth={1.75} aria-hidden="true" />
           </button>
           {open && (
-            <div className="pop menu-pop filters-pop" role="menu">
+            <Lifted className="pop menu-pop filters-pop" role="menu">
               <div className="menu-pop-head">
                 <b>{t.title}</b>
                 <span className="faint">{t.inForce(filters.length)}</span>
@@ -128,7 +129,7 @@ export function ActiveFilters<T>({ filters, onRemove, onFlip, onClear, onSave, c
                   {compound ? t.saveInMenu : t.saveInMenuOne}
                 </button>
               </div>
-            </div>
+            </Lifted>
           )}
         </div>
         )}

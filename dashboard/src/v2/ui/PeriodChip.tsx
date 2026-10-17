@@ -1,11 +1,12 @@
 // The period, as the header says it ("Today · Fri 16 Oct", and what it is set against), and its menu: five periods, More,
 // the comparison, and a calendar for custom dates. The menu is a sheet from the bottom on a phone.
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { ISODate } from '../../lib/dates'
 import { rangeWords } from '../dayWords'
 import { copy } from '../copy'
 import { Calendar } from './PeriodCalendar'
 import { useMenu } from './useMenu'
+import { useTopLayerWhen } from '../../lib/topLayer'
 
 export interface PeriodOption {
   id: string
@@ -37,6 +38,8 @@ export interface PeriodChipProps {
 
 export function PeriodChip(p: PeriodChipProps) {
   const { open, attach, toggle, close } = useMenu()
+  const menu = useRef<HTMLDivElement>(null)
+  useTopLayerWhen(open, menu)
   const [cal, setCal] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const opt = (o: PeriodOption) => (
@@ -82,7 +85,7 @@ export function PeriodChip(p: PeriodChipProps) {
         <span>{p.label}</span>
         {p.vs && <span className="vs hide-s">{p.vs}</span>}
       </button>
-      <div className={`mk-menu pmenu${open ? ' on' : ''}${cal ? ' cal' : ''}`} id="perMenu">
+      <div ref={menu} className={`mk-menu pmenu${open ? ' on' : ''}${cal ? ' cal' : ''}`} id="perMenu">
         {open && cal && (
           <Calendar
             p={p}

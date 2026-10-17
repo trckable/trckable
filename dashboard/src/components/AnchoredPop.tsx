@@ -64,6 +64,12 @@ export function AnchoredPop({
   useLayoutEffect(() => {
     const el = box.current
     const btn = anchor.current
+    // On the page's top layer: no card's overflow or stacking can clip it or cover it.
+    try {
+      el?.showPopover()
+    } catch {
+      // No top layer in this browser: the high z-index lifts it.
+    }
     if (!el || !btn || sheet) return
     setAt(placePop(btn.getBoundingClientRect(), { w: el.offsetWidth, h: el.offsetHeight }, { w: window.innerWidth, h: window.innerHeight }))
   }, [anchor, sheet])
@@ -152,6 +158,7 @@ export function AnchoredPop({
         ref={box}
         className={('pop anchored ' + className).trim()}
         role="dialog"
+        popover="manual"
         aria-label={label}
         style={at ? { left: at.left, top: at.top, bottom: at.bottom, maxHeight: Math.min(maxHeight, at.room) } : { visibility: sheet ? undefined : 'hidden' }}
         onKeyDown={keys}

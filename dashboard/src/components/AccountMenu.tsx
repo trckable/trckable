@@ -9,6 +9,7 @@ import { useProfile } from '../lib/profile'
 import { AccountDot, type AccountAlert } from './AccountDot'
 import { PersonAvatar } from './PersonAvatar'
 import { copy } from './moreCopy'
+import { Lifted } from './Lifted'
 
 const load = () => import('./AccountItems')
 const AccountItems = lazyLoad(load)
@@ -47,11 +48,11 @@ export function AccountMenu({ site, alert }: { site?: Site; alert?: AccountAlert
         <AccountDot alert={alert} />
       </button>
       {open && (
-        <div className="pop menu more-menu" role="menu" aria-label={copy.accountMenu}>
+        <Lifted className="pop menu more-menu" role="menu" aria-label={copy.accountMenu}>
           <Suspense fallback={null}>
             <AccountItems profile={profile} v={v} go={go} site={site} />
           </Suspense>
-        </div>
+        </Lifted>
       )}
     </div>
   )

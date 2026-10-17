@@ -9,6 +9,7 @@ import { useMenuNav, useOnlyOpen, type MenuItems } from '../lib/headerMenu'
 import { lazyLoad, warm, whenIdle } from '../lib/lazyLoad'
 import { openCreate, useCreateAvailable } from '../features/create/openCreate'
 import { copy } from './moreCopy'
+import { Lifted } from './Lifted'
 
 // The items are their own chunk (MoreItems.tsx), fetched while idle or on the
 // way to the button (lib/lazyLoad).
@@ -67,9 +68,9 @@ function Own(props: MoreProps & { onCreate?: () => void }) {
         {props.milestones?.dot && <span className="more-dot" aria-hidden="true" />}
       </button>
       {open && (
-        <div className="pop menu more-menu" role="menu" aria-label={copy.more}>
+        <Lifted className="pop menu more-menu" role="menu" aria-label={copy.more}>
           <Items p={props} go={go} />
-        </div>
+        </Lifted>
       )}
     </div>
   )

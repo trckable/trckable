@@ -1,8 +1,9 @@
 // The bell at the end of the header: a dot with how many are unread, and the list under it (a sheet on a phone).
 // Markup and classes are the walkthrough's own.
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { MkPortal } from './Portal'
 import { useMenu } from './useMenu'
+import { useTopLayerWhen } from '../../lib/topLayer'
 
 export interface BellRow {
   id: string
@@ -104,6 +105,8 @@ function List(p: BellProps & { close: () => void }) {
 
 export function BellMenu(p: BellProps) {
   const { open, attach, toggle, close } = useMenu()
+  const menu = useRef<HTMLDivElement>(null)
+  useTopLayerWhen(open && !p.sheet, menu)
   return (
     <div className="bellw" ref={attach} style={{ position: 'relative' }}>
       <button type="button" className="ib bell" id="bellBtn" data-bell="1" title={p.title} aria-label={p.title} aria-haspopup="menu" aria-expanded={open} onClick={toggle}>
@@ -116,7 +119,7 @@ export function BellMenu(p: BellProps) {
         </svg>
       </button>
       {!p.sheet && (
-        <div className={`mk-menu bellmenu${open ? ' on' : ''}`} id="bellMenu">
+        <div ref={menu} className={`mk-menu bellmenu${open ? ' on' : ''}`} id="bellMenu">
           {open && <List {...p} close={close} />}
         </div>
       )}

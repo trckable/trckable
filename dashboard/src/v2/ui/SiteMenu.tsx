@@ -1,6 +1,6 @@
 // The site in the header, and the list that opens from it (SiteList): every site with who is on it now, a finder, and what
 // belongs to this site. The check beside the name says when something independent vouches for the numbers.
-import { Suspense, useCallback, type ReactNode } from 'react'
+import { Suspense, useCallback, useRef, type ReactNode } from 'react'
 import type { Site } from '../../lib/api'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { layoutReady, preloadLayout } from '../../features/sites/useSiteLayout'
@@ -10,6 +10,7 @@ import { useDomainControl } from '../../lib/domainControl'
 import { copy } from '../copy'
 import { domainLabel } from './DomainRows'
 import { useMenu } from './useMenu'
+import { useTopLayerWhen } from '../../lib/topLayer'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
 const warmUp = () => {
@@ -36,6 +37,8 @@ interface SiteMenuProps {
 
 export function SiteChip({ p }: { p: SiteMenuProps }) {
   const { open, setOpen, attach, close } = useMenu()
+  const menu = useRef<HTMLDivElement>(null)
+  useTopLayerWhen(open, menu)
   const cur = p.current
   const domains = useDomainControl()
   const picked = cur && domains ? domainLabel(domains) : null
@@ -75,7 +78,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
         <span className="mk-kbd">{'S'}</span>
       </button>
       {cur && <VerifiedPill verified={cur.verified} site={cur} seal />}
-      <div className={`mk-menu sites${open ? ' on' : ''}`} id="siteMenu" role={open ? 'dialog' : undefined} aria-label={open ? copy.sites : undefined}>
+      <div ref={menu} className={`mk-menu sites${open ? ' on' : ''}`} id="siteMenu" role={open ? 'dialog' : undefined} aria-label={open ? copy.sites : undefined}>
         {open && (
           <Suspense fallback={null}>
             <SiteList

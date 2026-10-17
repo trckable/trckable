@@ -175,7 +175,7 @@ describe('the ratio and its two badges', () => {
     const badge = host.querySelectorAll('.ais-pg')[2].querySelector<HTMLElement>('.info-badge')
     expect(badge?.getAttribute('aria-label')).toBe('Google sent 80 clicks to this page and no AI crawler read it in this period.')
     act(() => badge?.focus())
-    expect(host.querySelector('[role="tooltip"]')?.textContent).toContain('80 clicks')
+    expect(document.querySelector('[role="tooltip"]')?.textContent).toContain('80 clicks')
     expect(host.querySelectorAll('.ais-pg')[1].querySelector('.info-badge')?.getAttribute('aria-label')).toContain('read this page 40 times and sent nobody')
   })
 

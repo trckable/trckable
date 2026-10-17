@@ -36,7 +36,7 @@ function Tail({ s, online, today }: { s: Site; online: number; today?: number })
     const tip = down ? copy.downTip(silence(s)) : copy.quietTip(silence(s))
     const Icon = down ? CircleAlert : Moon
     return (
-      <Tooltip text={tip} float>
+      <Tooltip text={tip}>
         {(p) => (
           <span {...p} role="button" tabIndex={0} aria-label={tip} className={`now state-icon ${down ? 'down' : 'quiet'}`} onClick={(e) => { e.stopPropagation(); p.onClick() }} onKeyDown={(e) => e.key === 'Enter' && p.onClick()}>
             <Icon size={16} strokeWidth={2} aria-hidden="true" />
