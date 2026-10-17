@@ -859,7 +859,8 @@ var migrations = []string{
 	// The setup checklist's own marks, one row per site: what kind of site it
 	// is (a guess from the homepage, or the owner's choice), whether the owner
 	// confirmed the time zone and currency, when an event last came through
-	// the owner's own-domain proxy, and when a funnel was built. And one row
+	// the owner's own-domain proxy, when a funnel was built, and the most distinct pageview paths seen once it
+	// reached 3 (it never goes back, so the count is not repeated). And one row
 	// per site and item for the steps the owner skipped (state skipped) or
 	// brought back (state kept, so a default does not skip it again). Plain
 	// IF NOT EXISTS tables, so a database stepped back and forward is safe.
@@ -870,7 +871,8 @@ var migrations = []string{
 		provider            TEXT NOT NULL DEFAULT '',
 		locale_confirmed_at INTEGER NOT NULL DEFAULT 0,
 		proxy_seen_at       INTEGER NOT NULL DEFAULT 0,
-		funnel_built_at     INTEGER NOT NULL DEFAULT 0
+		funnel_built_at     INTEGER NOT NULL DEFAULT 0,
+		paths_seen          INTEGER NOT NULL DEFAULT 0
 	) WITHOUT ROWID;
 	CREATE TABLE IF NOT EXISTS setup_skips (
 		site_id TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,

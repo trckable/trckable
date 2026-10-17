@@ -89,7 +89,7 @@ func TestSetupRules(t *testing.T) {
 	t.Run("a done step is never skipped", func(t *testing.T) {
 		in := baseIn()
 		in.Stored.Skips["payments"] = sqlite.SkipSkipped
-		in.Payments = &payState{Provider: "stripe"}
+		in.Payments = &payState{Provider: "stripe", Sales: 1}
 		it := itemOf(t, buildSetup(in), "payments")
 		if it.Skipped || !it.Counted || !it.Done {
 			t.Fatalf("%+v", it)
@@ -98,7 +98,7 @@ func TestSetupRules(t *testing.T) {
 	t.Run("all done reads all set, with the skipped ones out", func(t *testing.T) {
 		in := baseIn()
 		in.Paths, in.OwnIPs, in.Goals, in.Timezone = 3, 1, true, "Europe/Berlin"
-		in.Payments, in.Search, in.Crawlers = &payState{}, true, true
+		in.Payments, in.Search, in.Crawlers = &payState{Sales: 2}, true, true
 		in.Stored.FunnelBuiltAt = 1
 		in.Stored.Skips["proxy"] = sqlite.SkipSkipped
 		o := buildSetup(in)
@@ -122,6 +122,21 @@ func TestSetupDefaults(t *testing.T) {
 		in.Payments = &payState{Provider: "stripe", Sales: 12}
 		it := itemOf(t, buildSetup(in), "payments")
 		if !it.Done || !it.Counted || it.Detail["provider"] != "stripe" {
+			t.Fatalf("%+v", it)
+		}
+	})
+	t.Run("a connection without a sale is not done yet, and still names the provider", func(t *testing.T) {
+		in := baseIn()
+		in.Payments = &payState{Provider: "stripe"}
+		it := itemOf(t, buildSetup(in), "payments")
+		if it.Done || !it.Counted || it.Detail["provider"] != "stripe" {
+			t.Fatalf("%+v", it)
+		}
+	})
+	t.Run("a saas site never starts with the funnel skipped", func(t *testing.T) {
+		in := baseIn()
+		in.Paths, in.Stored.Kind = 1, sqlite.KindSaaS
+		if it := itemOf(t, buildSetup(in), "funnel"); it.Skipped || !it.Counted {
 			t.Fatalf("%+v", it)
 		}
 	})
@@ -242,10 +257,12 @@ func TestSetupEndpointEachItem(t *testing.T) {
 	// Pageviews on two paths; the second makes the script "seen on 2 pages".
 	g.event(t, event.Event{Kind: event.KindPageview, EventID: 1, Visitor: 1, Path: "/", TS: g.now.Add(-time.Hour).UnixMilli()})
 	g.waitApplied(t, 1)
+	g.advance(2 * time.Minute) // the page count is reused for a minute
 	out = getSetup(t, g, c)
 	if apiItem(t, out, "verified")["done"] == true || apiItem(t, out, "funnel")["skipped"] != true {
 		t.Fatalf("one path: verified %v funnel %v", apiItem(t, out, "verified"), apiItem(t, out, "funnel"))
 	}
+	g.advance(2 * time.Minute) // the page count is reused for a minute
 	g.event(t, event.Event{Kind: event.KindPageview, EventID: 2, Visitor: 1, Path: "/pricing", TS: g.now.Add(-time.Hour).UnixMilli()})
 	g.waitApplied(t, 2)
 	out = getSetup(t, g, c)
@@ -287,6 +304,9 @@ func TestSetupEndpointEachItem(t *testing.T) {
 	if _, err := g.ctl.DB.Exec(`INSERT INTO pay_connections (id, site_id, provider, created_at) VALUES ('c2', ?, 'stripe', 1)`, g.site); err != nil {
 		t.Fatal(err)
 	}
+	if apiItem(t, getSetup(t, g, c), "payments")["done"] == true {
+		t.Fatal("a connection without a sale is not done")
+	}
 	if _, err := g.ctl.DB.Exec(`INSERT INTO pay_payments (site_id, provider, id, connection_id, paid_at, currency, gross, version) VALUES (?, 'stripe', 'p1', 'c2', 1, 'USD', 500, 1)`, g.site); err != nil {
 		t.Fatal(err)
 	}
@@ -318,6 +338,7 @@ func TestSetupEndpointEachItem(t *testing.T) {
 	if _, err := g.api.Query().DB.Exec(`INSERT INTO crawler_hits (site_id, day, name, kind, path, hits, errors) VALUES (?, DATE '2026-09-20', 'GPTBot', 'train', '/', 3, 0)`, g.site); err != nil {
 		t.Fatal(err)
 	}
+	g.advance(2 * time.Minute)
 	if apiItem(t, getSetup(t, g, c), "crawlers")["done"] != true {
 		t.Fatal("crawlers")
 	}
@@ -428,7 +449,7 @@ func TestSetupIsHiddenOnShareLinks(t *testing.T) {
 // choice is never overwritten by a later guess.
 func TestSetupKindIsGuessedAndChosenKindSticks(t *testing.T) {
 	g := newRig(t)
-	page := `<html><a href="/cart">Cart</a><script src="https://js.stripe.com/v3/"></script></html>`
+	page := `<html><a href="/cart">Cart</a><script src="https://js.stripe.com/v3/"></script><script data-site="` + g.site + `"></script></html>`
 	site := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, page) }))
 	defer site.Close()
 	was := checkClient
@@ -466,12 +487,49 @@ func TestSetupKindIsGuessedAndChosenKindSticks(t *testing.T) {
 		t.Fatalf("choose: %d %v", code, o)
 	}
 	g.advance(11 * time.Minute) // the check is limited
-	page = `<html><a href="/pricing">Pricing</a></html>`
+	page = `<html><a href="/pricing">Pricing</a><script data-site="` + g.site + `"></script></html>`
 	if code, out := do(t, c, "POST", setupURL(g, "")[:len(setupURL(g, ""))-len("/setup")]+"/install/check", "", csrf, "1"); code != 200 || out["kind"] != "saas" {
 		t.Fatalf("second check: %d %v", code, out)
 	}
 	k = getSetup(t, g, c)["kind"].(map[string]any)
-	if k["value"] != "content" || k["chosen"] != true {
+	if k["value"] != "content" || k["chosen"] != true || k["provider"] != nil {
 		t.Fatalf("a later guess overwrote the owner's choice: %v", k)
+	}
+}
+
+// A guess is kept only from a page that carries this site's script at the
+// site's own address.
+func TestKindIsKeptOnlyFromTheSitesOwnPage(t *testing.T) {
+	if !sameSite("www.Site.com", "site.com") || !sameSite("site.com", "site.com") || sameSite("other.com", "site.com") {
+		t.Fatal("sameSite")
+	}
+	g := newRig(t)
+	page := `<html><a href="/cart">Cart</a></html>` // a shop page without the script
+	site := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, page) }))
+	defer site.Close()
+	was := checkClient
+	defer func() { checkClient = was }()
+	checkClient = func() *http.Client {
+		return &http.Client{Transport: roundTrip(func(r *http.Request) (*http.Response, error) {
+			u, _ := url.Parse(site.URL)
+			r2 := r.Clone(r.Context())
+			r2.URL.Scheme, r2.URL.Host = u.Scheme, u.Host
+			return http.DefaultTransport.RoundTrip(r2)
+		})}
+	}
+	c := client()
+	g.setup(t, c)
+	check := g.srv.URL + "/api/v1/sites/" + g.site + "/install/check"
+	if code, _ := do(t, c, "POST", check, "", csrf, "1"); code != 200 {
+		t.Fatal("check")
+	}
+	if k := getSetup(t, g, c)["kind"].(map[string]any); k["value"] != "" {
+		t.Fatalf("a page without the script set the kind: %v", k)
+	}
+	// A page that redirects to another host: the response's URL is not the site's.
+	redirected := installCheck{URL: "https://elsewhere.com/", Found: "site", Kind: "shop"}
+	g.api.remember(context.Background(), g.site, "site.com", redirected)
+	if k := getSetup(t, g, c)["kind"].(map[string]any); k["value"] != "" {
+		t.Fatalf("a redirect elsewhere set the kind: %v", k)
 	}
 }

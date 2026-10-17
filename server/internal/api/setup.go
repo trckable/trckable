@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/modules"
+	"github.com/trckable/trckable/server/internal/query"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 	"github.com/trckable/trckable/server/internal/web"
 )
@@ -130,7 +131,7 @@ func buildSetup(in setupIn) setupOut {
 	} else if in.Stored.Provider != "" {
 		pay["provider"] = in.Stored.Provider // seen on the page: "Connect Stripe"
 	}
-	add("payments", setupOpt, in.Payments != nil, pay)
+	add("payments", setupOpt, in.Payments != nil && in.Payments.Sales > 0, pay)
 	add("funnel", setupOpt, in.Stored.FunnelBuiltAt > 0, nil)
 	add("search", setupOpt, in.Search, nil)
 	add("crawlers", setupOpt, in.Crawlers, nil)
@@ -174,7 +175,7 @@ func (in setupIn) skipped(id, kind string) bool {
 	case "payments":
 		return kind == sqlite.KindContent
 	case "funnel":
-		return in.Known && in.Paths == 1 // a site that only ever had one page has nothing to follow
+		return kind != sqlite.KindSaaS && in.Known && in.Paths == 1 // a site that only ever had one page has nothing to follow
 	}
 	return false
 }
@@ -187,11 +188,7 @@ func (a *API) setupOf(r *http.Request, si sqlite.SiteInfo) (setupOut, error) {
 	if in.Stored, err = a.Ctl.SetupOf(ctx, si.ID); err != nil {
 		return setupOut{}, err
 	}
-	if q := a.Query(); q != nil {
-		if f, err := q.Setup(ctx, si.ID); err == nil {
-			in.Known, in.Paths, in.Crawlers = true, f.Paths, f.Crawlers
-		}
-	}
+	a.setupFacts(ctx, si.ID, &in)
 	if cfg, err := a.Ctl.SiteConfig(ctx, si.ID); err == nil {
 		in.OwnIPs = len(cfg.ExcludeIPs)
 		in.Goals = len(cfg.PageGoals) > 0
@@ -302,4 +299,49 @@ func (a *API) setupKind(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.setupWrite(w, r, func(site string) error { return a.Ctl.ChooseKind(r.Context(), site, in.Kind) })
+}
+
+// factsFor is how long a site's page count is reused when it is still under 3:
+// the count scans the site's events, and the ring asks on every page load.
+const factsFor = time.Minute
+
+type factsEntry struct {
+	at time.Time
+	f  query.SetupFacts
+}
+
+// setupFacts fills in what the analytics store knows. Three paths is final
+// (kept with the site's setup row, never read again); a smaller count is kept
+// in memory for a minute.
+func (a *API) setupFacts(ctx context.Context, site string, in *setupIn) {
+	if in.Stored.PathsSeen >= 3 {
+		in.Known, in.Paths = true, in.Stored.PathsSeen
+	}
+	q := a.Query()
+	if q == nil {
+		return
+	}
+	a.factsMu.Lock()
+	e, ok := a.facts[site]
+	a.factsMu.Unlock()
+	if !ok || in.Now.Sub(e.at) >= factsFor {
+		f, err := q.Setup(ctx, site, in.Stored.PathsSeen >= 3)
+		if err != nil {
+			return
+		}
+		e = factsEntry{at: in.Now, f: f}
+		a.factsMu.Lock()
+		if a.facts == nil {
+			a.facts = map[string]factsEntry{}
+		}
+		a.facts[site] = e
+		a.factsMu.Unlock()
+		if f.Paths >= 3 {
+			a.Ctl.SetPathsSeen(ctx, site, f.Paths)
+		}
+	}
+	in.Known, in.Crawlers = true, e.f.Crawlers
+	if in.Stored.PathsSeen < 3 {
+		in.Paths = e.f.Paths
+	}
 }

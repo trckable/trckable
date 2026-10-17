@@ -106,6 +106,8 @@ type API struct {
 	once       sync.Once
 	stopping   chan struct{} // closed by Stop: live streams end so a restart need not wait for them
 	patterns   []string      // every route Routes registered
+	factsMu    sync.Mutex
+	facts      map[string]factsEntry // the setup checklist's analytics counts, kept a minute
 	stopOnce   sync.Once
 	shareHosts atomic.Pointer[map[string]string] // verified share domain -> site, kept in memory
 	shareTried atomic.Int64                      // when the list was last tried and failed (unix nanoseconds)

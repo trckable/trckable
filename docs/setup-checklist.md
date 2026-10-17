@@ -25,7 +25,7 @@ marks kept per site.
 | `own_visits` | core | the site leaves out at least one address of yours |
 | `locale` | core | time zone or currency is not UTC/USD, or you confirmed them |
 | `goal` | core | a goal exists (page goal, or a goal event was seen) |
-| `payments` | optional | a payment provider is connected (`detail.provider`, `detail.sales`) |
+| `payments` | optional | a connected payment provider has at least one sale (`detail.provider`, `detail.sales`) |
 | `funnel` | optional | a funnel was built |
 | `search` | optional | Search Console has a property |
 | `crawlers` | optional | an AI crawler hit was recorded |
@@ -38,8 +38,8 @@ item moves to `more` (`skipped: true`) and can be brought back. `done` and
 
 ## Smart defaults
 
-- A site with a connected payment provider has `payments` done.
-- A site that has only ever had pageviews on one path starts with `funnel` skipped.
+- A site with a connected payment provider that already has sales has `payments` done.
+- A site that has only ever had pageviews on one path starts with `funnel` skipped (never a SaaS site).
 - A site the install check reads as a content site (feed, articles, a blog path)
   starts with `payments` skipped. Bringing an item back stays back.
 
@@ -48,7 +48,7 @@ item moves to `more` (`skipped: true`) and can be brought back. `done` and
 The install check also reads the homepage (no crawling) for the kind: `shop`,
 `saas`, `content` or `other`, and the payment provider it carries (Stripe,
 Paddle, Lemon Squeezy, Polar, Gumroad). A kind you choose is never overwritten
-by a later guess.
+by a later guess (the payment provider seen keeps updating). The kind is only kept from a check whose page carries this site's script at the site's own address.
 
 ## Changes (owners only; viewers and API keys get 403)
 

@@ -37,6 +37,7 @@ type SiteSetup struct {
 	LocaleConfirmedAt int64
 	ProxySeenAt       int64
 	FunnelBuiltAt     int64
+	PathsSeen         int64
 	Skips             map[string]string // item -> skipped | kept
 }
 
@@ -44,8 +45,8 @@ type SiteSetup struct {
 func (s *Store) SetupOf(ctx context.Context, site string) (SiteSetup, error) {
 	out := SiteSetup{Skips: map[string]string{}}
 	var chosen int
-	err := s.DB.QueryRowContext(ctx, `SELECT kind, kind_chosen, provider, locale_confirmed_at, proxy_seen_at, funnel_built_at FROM site_setup WHERE site_id = ?`, site).
-		Scan(&out.Kind, &chosen, &out.Provider, &out.LocaleConfirmedAt, &out.ProxySeenAt, &out.FunnelBuiltAt)
+	err := s.DB.QueryRowContext(ctx, `SELECT kind, kind_chosen, provider, locale_confirmed_at, proxy_seen_at, funnel_built_at, paths_seen FROM site_setup WHERE site_id = ?`, site).
+		Scan(&out.Kind, &chosen, &out.Provider, &out.LocaleConfirmedAt, &out.ProxySeenAt, &out.FunnelBuiltAt, &out.PathsSeen)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return out, err
 	}
@@ -97,11 +98,12 @@ func (s *Store) ChooseKind(ctx context.Context, site, kind string) error {
 	return err
 }
 
-// GuessKind stores what the install check read from the homepage (and the
-// payment provider it saw, if any) unless the owner already chose a kind.
+// GuessKind stores what the install check read from the homepage: the kind
+// (unless the owner already chose one) and the payment provider it saw.
 func (s *Store) GuessKind(ctx context.Context, site, kind, provider string) error {
 	_, err := s.DB.ExecContext(ctx, `INSERT INTO site_setup (site_id, kind, provider) VALUES (?, ?, ?)
-		ON CONFLICT(site_id) DO UPDATE SET kind = excluded.kind, provider = excluded.provider WHERE site_setup.kind_chosen = 0`, site, kind, provider)
+		ON CONFLICT(site_id) DO UPDATE SET
+			kind = CASE WHEN site_setup.kind_chosen = 0 THEN excluded.kind ELSE site_setup.kind END, provider = excluded.provider`, site, kind, provider)
 	return err
 }
 
@@ -111,4 +113,10 @@ func (s *Store) SeenProxied(ctx context.Context, site string, at int64) {
 	// Best effort, like SeenSite: the next event records it again.
 	_, _ = s.DB.ExecContext(ctx, `INSERT INTO site_setup (site_id, proxy_seen_at) VALUES (?, ?)
 		ON CONFLICT(site_id) DO UPDATE SET proxy_seen_at = excluded.proxy_seen_at WHERE site_setup.proxy_seen_at < excluded.proxy_seen_at`, site, at)
+}
+
+// SetPathsSeen keeps that the site has had pageviews on n distinct paths.
+func (s *Store) SetPathsSeen(ctx context.Context, site string, n int64) {
+	_, _ = s.DB.ExecContext(ctx, `INSERT INTO site_setup (site_id, paths_seen) VALUES (?, ?)
+		ON CONFLICT(site_id) DO UPDATE SET paths_seen = excluded.paths_seen WHERE site_setup.paths_seen < excluded.paths_seen`, site, n)
 }
