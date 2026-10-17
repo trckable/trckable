@@ -1,5 +1,6 @@
 // The two things a card can say that come from outside the report: a new mention of the site today, and pages that got
 // slower than their usual. Each is asked once and never blocks the page.
+import { goalName } from '../../lib/goalName'
 import { useEffect, useMemo, useState } from 'react'
 import { more } from '../../lib/apiMore'
 import { addDays, diffDays, type ISODate, type Range } from '../../lib/dates'
@@ -79,7 +80,7 @@ function readFunnel(site: string, range: Range, days: number, want: NonNullable<
   const before: Range = { from: addDays(range.from, -days), to: addDays(range.from, -1) }
   return Promise.all([more.funnel(site, range, want.steps), more.funnel(site, before, want.steps).catch(() => null)]).then(
     ([c, p]) => {
-      const steps = c.steps.map((s, i) => ({ name: s.kind === 'paid' ? copy.paidStep : s.label || s.value, v: s.visitors, c: p?.steps[i]?.visitors ?? 0 }))
+      const steps = c.steps.map((s, i) => ({ name: stepName(s, copy.paidStep), v: s.visitors, c: p?.steps[i]?.visitors ?? 0 }))
       return { steps, leak: leakOf(steps), alt: want.alt }
     },
     () => null,
@@ -141,4 +142,10 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
     }
   }, [key, site.id, site.mentions, today, on, range, want.money, want.search, want.page, want.funnel, want.countries])
   return got && got.key === key ? got.x : none
+}
+
+/** A funnel step as it is read: Paid in words, a goal by its label or humanized event name, a page by its path. */
+function stepName(s: { kind: string; label?: string; value: string }, paid: string): string {
+  if (s.kind === 'paid') return paid
+  return s.kind === 'goal' ? goalName(s.label, s.value) : s.label || s.value
 }

@@ -11,7 +11,9 @@ import { moments } from './moments'
 import type { Extras } from './useExtras'
 import type { SliceData } from './useSlices'
 import { engagementFromBounce, sourceName, engagementScore, sentence, trafficFromBand, trafficScore, uptimeScore, type Score, type Unit, type Usual } from './model'
-import { dayBandOf, hourTable, judge, stretchBand, usualBounce, type Band } from './usual'
+import type { ScoreFacts } from './scoreWhy'
+import { pctText } from './kpis'
+import { dayBandOf, hourlyPeople, hourTable, stretchBand, usualBounce, verdictOf, type Band } from './usual'
 import type { History } from './useHistory'
 
 const weekdayOf = (day: string) => new Date(day + 'T12:00:00Z').toLocaleDateString(tag ?? 'en-US', { weekday: 'long', timeZone: 'UTC' })
@@ -106,14 +108,25 @@ export function useParts(a: PartsIn) {
     const moneyTable = hourly && hist.hourly ? hourTable(hist.hourly, today, 'short', (p) => p.revenue ?? 0, true) : null
     const moneyBand = moneyTable && live ? stretchBand(moneyTable, wholeHours, 'short', true) : null
     const v = cur.kpis.visitors
-    const st = whole ? judge(v, whole) : ''
+    // One verdict for the headline, the People card, the score and the run of days. The hour table adds up people hour
+    // by hour, so it is told against the people of the same hours added up the same way (a visitor active in three
+    // hours counts three times on both sides); a day band is told against the day's people.
+    const verdict = verdictOf(table ? hourlyPeople(cur.series, wholeHours) : v, whole)
+    const st = verdict?.st ?? ''
     const bounceUsual = hist.daily ? usualBounce(hist.daily, today, unit === 'today' || unit === 'yesterday' ? new Date(range.to + 'T12:00:00Z').getUTCDay() : null) : null
     const scored: Score[] = [
-      whole && !learning ? trafficFromBand(v, whole) : trafficScore(cur, prev),
+      verdict && !learning ? trafficFromBand(verdict.now, verdict.band) : trafficScore(cur, prev),
       bounceUsual !== null && !learning ? engagementFromBounce(cur.kpis.bounce_rate, bounceUsual, cur.kpis.sessions) : engagementScore(cur, prev),
       uptime,
     ]
-    const scores: Score[] = downNow ? scored.map((x) => (x.key === 'uptime' ? x : { ...x, value: null, verdict: 'none', words: copy.unknownDown })) : scored
+    const told: Score[] = downNow ? scored.map((x) => (x.key === 'uptime' ? x : { ...x, value: null, verdict: 'none', words: copy.unknownDown })) : scored
+    // A part with no number and nothing to say (no monitor data for a past day, too few visits) is not shown, and weighs nothing.
+    const scores = told.filter((x) => x.value !== null || (x.key !== 'uptime' && x.words !== ''))
+    const facts: ScoreFacts = {
+      traffic: verdict && !learning ? { now: verdict.now, lo: verdict.band.lo, hi: verdict.band.hi, hourly: !!table, weekday, at: live && unit === 'today' ? clock.slice(11) : null } : null,
+      engagement: bounceUsual !== null && !learning ? { leave: cur.kpis.bounce_rate, usual: bounceUsual } : null,
+      uptime: up.pct === null ? null : { pct: pctText(up.pct), downMin },
+    }
     const clockOf = (t: number) => siteNow(site.timezone, new Date(t * 1000)).slice(11)
     const periodEnd = Math.max(up.from0 + 1, Math.min(up.from0 + (live ? 86400 : 86400 * Math.max(1, days.indexOf(range.to) - days.indexOf(range.from) + 1)), up.from0 + 86400 * 400))
     const uptimeIn: UptimeIn = {
@@ -156,7 +169,7 @@ export function useParts(a: PartsIn) {
     const lead = learning ? undefined : leadSource(slices.slices.referrer, cur.kpis.visitors, site.domain)
     const jump = lead?.band ? { name: sourceName(lead.value), value: lead.value, visitors: lead.v, times: lead.band.c > 0.5 ? lead.v / lead.band.c : null, vs: unit === 'today' || unit === 'yesterday' ? 'your usual' : undefined, st: lead.st === 'dn' ? ('dn' as const) : ('up' as const) } : null
     const usualWords = usualWordsOf(unit, weekday, clock.slice(11))
-    const say = sentence({ cur, prev, usual, unit, weekday, self: site.domain, downMin, learning, low, jump, ongoing: downNow ? { since: uptimeIn.since, minutes: uptimeIn.minutesNow } : undefined, incidents: up.list.filter((x) => x.ended_at !== null).map((x, i) => ({ from: uptimeIn.incidents[i]?.from ?? '', to: uptimeIn.incidents[i]?.to ?? '', minutes: Math.round(((x.ended_at ?? nowSec) - x.started_at) / 60) })), lost: uptimeIn.lost, band: whole && !learning ? { ratio: whole.c > 0.5 ? v / whole.c : null, st, words: usualWords } : null })
+    const say = sentence({ cur, prev, usual, unit, weekday, self: site.domain, downMin, learning, low, jump, ongoing: downNow ? { since: uptimeIn.since, minutes: uptimeIn.minutesNow } : undefined, incidents: up.list.filter((x) => x.ended_at !== null).map((x, i) => ({ from: uptimeIn.incidents[i]?.from ?? '', to: uptimeIn.incidents[i]?.to ?? '', minutes: Math.round(((x.ended_at ?? nowSec) - x.started_at) / 60) })), lost: uptimeIn.lost, band: verdict && !learning ? { ratio: verdict.ratio, st, words: usualWords } : null })
     const top = jump
     const downs = up.list.flatMap((x) => {
       const per = hourly ? 3600 : 86400
@@ -175,6 +188,6 @@ export function useParts(a: PartsIn) {
       hist.daily && !learning && !low
         ? moments({ totals, days, todayUp: unit === 'today' ? st === 'up' : false, from: Math.max(0, days.indexOf(range.from)), to: Math.max(0, days.indexOf(range.to)), elapsed: Math.round(nowHour * 60), today: unit === 'today', week: unit === 'week', filtered: false })
         : { pills: [], line: '' }
-    return { hhmm: clock.slice(11), learning, hd, low, uptime, scores, stories, say, top, chart, weekday, whole, moneyBand, st, bounceUsual, mo }
+    return { hhmm: clock.slice(11), learning, hd, low, uptime, scores, facts, stories, say, top, chart, weekday, whole, verdict, moneyBand, st, bounceUsual, mo }
   }, [cur, prev, usual, unit, up.pct, up.list, up.from0, downNow, downMin, site.domain, money, site.down_since, site.down_cause, site.timezone, site.watched_since, range.to, range.from, bucket, nowSec, hist, hourly, today, notes, clock, slices, extras])
 }

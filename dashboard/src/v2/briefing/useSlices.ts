@@ -1,6 +1,7 @@
 // The slices a card is told by (sources, countries, devices, pages), each with its usual: what the server says the same
 // weekday brought, for a day; the period before, for anything longer. And the two extra answers a card gives: the page
 // a source's people landed on, and the source a country's came from.
+import { goalName } from '../../lib/goalName'
 import { useEffect, useMemo, useState } from 'react'
 import { api, call, rangeQS, type Filter, type Result, type Row, type Site } from '../../lib/api'
 import type { Range } from '../../lib/dates'
@@ -63,7 +64,7 @@ export function useSlices(site: Site, range: Range, cur: Result | undefined, pre
       }
       const gl = (cur.goals ?? []).filter((g) => g.visitors > 0 || day).slice(0, 8)
       const gb = await Promise.all(gl.map((g) => (day ? usualBand(site.id, range.to, [{ dim: 'goal', value: g.value }]) : Promise.resolve(bandFromBefore(prev?.goals?.find((x) => x.value === g.value)?.visitors)))))
-      const goals = gl.map((g, i): Slice => ({ value: g.value, name: g.label || g.value, v: g.visitors, band: gb[i] }))
+      const goals = gl.map((g, i): Slice => ({ value: g.value, name: goalName(g.label, g.value), v: g.visitors, band: gb[i] }))
       const src = movers(out.referrer, total).sort((a, b) => Math.abs(b.v - (b.band?.c ?? 0)) - Math.abs(a.v - (a.band?.c ?? 0)))[0]
       const cty = movers(out.country, total)[0]
       const [page, from] = await Promise.all([
