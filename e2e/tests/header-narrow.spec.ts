@@ -54,6 +54,8 @@ for (const scheme of ['dark', 'light'] as const)
         expect(new Set(group).size, `gaps ${JSON.stringify(gaps)} ${JSON.stringify(row)}`).toBe(1)
         expect(group.every((g) => g === 12), `gaps ${JSON.stringify(gaps)}`).toBe(true)
         const last = row[row.length - 1]
+        expect(last.sel, 'the person is the last control at the right').toBe('.hd .account-btn')
+        expect(row.map((c) => c.sel).indexOf('.hd .ib.bell'), 'the bell is just before the person').toBe(row.length - 2)
         expect(last.x + last.w, 'nothing leaves the screen').toBeLessThanOrEqual(w)
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'no sideways scroll').toBe(true)
       })
