@@ -1,0 +1,47 @@
+/* The setup ring and its panel. Colours come from the theme tokens, so both themes are right. */
+.mk .ringw{position:relative;flex:none}
+.mk .ringb{display:flex;align-items:center;gap:7px;height:var(--mk-h);padding:0 var(--mk-s2) 0 var(--mk-s1);border-radius:99px;color:var(--mk-text);font-size:12.5px;white-space:nowrap}
+.mk .ringb:hover,.mk .ringb[aria-expanded="true"]{background:var(--mk-hov)}
+.mk .ringb:focus-visible{outline:2px solid var(--mk-lime);outline-offset:2px}
+.mk .ringb svg{width:24px;height:24px;flex:none}
+.mk .ringb .rtrack{fill:none;stroke:var(--mk-fill);stroke-width:4}
+.mk .ringb .rarc{fill:none;stroke:var(--mk-lime);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .3s ease}
+.mk .ringb .rtick{fill:none;stroke:var(--mk-lime);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.mk .ringb .rtext{color:var(--mk-muted);font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){.mk .ringb .rarc{transition:none}}
+html[data-motion='off'] .mk .ringb .rarc{transition:none}
+.mk .mk-menu.setupmenu{left:0;width:360px;display:none;gap:var(--mk-s2);padding:var(--mk-s4)}
+.mk .mk-menu.setupmenu.on{display:grid}
+.mk .setupmenu .skind{font-size:12.5px;color:var(--mk-muted);display:flex;gap:var(--mk-s2);flex-wrap:wrap;align-items:baseline}
+.mk .setupmenu .skinds{display:flex;gap:var(--mk-s1);flex-wrap:wrap;width:100%}
+.mk .setupmenu .skinds button[aria-pressed="true"]{color:var(--mk-text);font-weight:600}
+.mk .setupmenu .shead{display:flex;justify-content:space-between;align-items:baseline}
+.mk .setupmenu .shead b{font-size:14.5px}
+.mk .setupmenu .shead span{font-size:12.5px;color:var(--mk-muted);font-variant-numeric:tabular-nums}
+.mk .setupmenu .sbar{height:6px;background:var(--mk-fill);border-radius:99px;overflow:hidden}
+.mk .setupmenu .sbar i{display:block;height:100%;background:var(--mk-lime);border-radius:99px;transition:width .3s ease}
+@media (prefers-reduced-motion:reduce){.mk .setupmenu .sbar i{transition:none}}
+html[data-motion='off'] .mk .setupmenu .sbar i{transition:none}
+.mk .setupmenu .sgrp{display:grid;gap:2px}
+.mk .setupmenu .sgrp h4{margin:4px 0 2px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mk-muted)}
+.mk .setupmenu .sprow{display:grid;grid-template-columns:18px 1fr auto;gap:var(--mk-s2);align-items:center;padding:6px var(--mk-s2);border-radius:8px}
+.mk .setupmenu .sprow:hover{background:var(--mk-hov)}
+.mk .setupmenu .schk{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--mk-fill);display:grid;place-items:center}
+.mk .setupmenu .sprow.done .schk{background:var(--mk-lime);border-color:var(--mk-lime)}
+.mk .setupmenu .sprow.done .schk::after{content:"";width:7px;height:3.5px;border:2px solid var(--mk-on-lime);border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
+.mk .setupmenu .stxt b{display:block;font-size:12.5px;font-weight:600}
+.mk .setupmenu .stxt small{font-size:11.5px;color:var(--mk-muted)}
+.mk .setupmenu .sprow.done .stxt b{color:var(--mk-muted);font-weight:500}
+.mk .setupmenu .sacts{display:flex;gap:var(--mk-s2);align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.mk .setupmenu .sgo,.mk .setupmenu .snf,.mk .setupmenu .smore{font:inherit;font-size:12.5px;padding:2px 0;cursor:pointer}
+.mk .setupmenu .sgo{color:var(--mk-lime);font-weight:600}
+.mk .setupmenu .snf{color:var(--mk-muted)}
+.mk .setupmenu .sok{font-size:12px;color:var(--mk-muted)}
+.mk .setupmenu .smore{display:flex;justify-content:space-between;align-items:center;color:var(--mk-muted);padding:6px var(--mk-s2);border-radius:8px;width:100%}
+.mk .setupmenu .smore:hover{background:var(--mk-hov)}
+.mk .setupmenu button:focus-visible{outline:2px solid var(--mk-lime);outline-offset:2px}
+.mk .setupmenu .spfoot{display:flex;justify-content:space-between;font-size:12px;color:var(--mk-muted);border-top:1px solid var(--mk-line);padding-top:var(--mk-s3)}
+.mk .setupmenu .spfoot button{text-decoration:underline}
+@media (max-width:900px){.mk .ringb .rtext{display:none}.mk .ringb{padding:0 var(--mk-s1)}}
+@media (max-width:700px){.mk .mk-menu.setupmenu{padding:var(--mk-s5) var(--mk-s4) calc(var(--mk-s4) + env(safe-area-inset-bottom))}.mk .ringw{position:static}.mk .setupmenu .sgo,.mk .setupmenu .snf{min-height:32px}}
+.mk .ringb.ringph{visibility:hidden}

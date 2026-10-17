@@ -14,5 +14,18 @@ export function PeopleTable({ x, ...p }: { x: XCtx } & XTableProps) {
         </button>
       </XEmpty>
     )
-  return <XEmpty title={copy.emptyPeriod} hint={copy.emptyPeriodHint} />
+  return <EmptyTab x={x} />
+}
+
+/** A table with no rows in the period: what is missing, why it may be, and the one thing to try. */
+export function EmptyTab({ x }: { x: XCtx }) {
+  return (
+    <XEmpty title={copy.emptyTab(x.tabName)} hint={x.widen ? copy.emptyTabShort : copy.emptyTabLater}>
+      {x.widen && (
+        <button type="button" className="xb" onClick={x.widen}>
+          {copy.widen}
+        </button>
+      )}
+    </XEmpty>
+  )
 }

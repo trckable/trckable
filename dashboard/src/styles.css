@@ -2609,6 +2609,29 @@ body {
   outline-offset: -2px;
   box-shadow: none;
 }
+/* The account menu's rows follow the v2 menus: one active row (the mouse's, marked data-act by useActiveRow, or the key's, never both),
+   a small gap so the fills stand alone, one row height. */
+:root .pop.menu.more-menu {
+  gap: 2px;
+}
+:root .pop.menu.more-menu button[role='menuitem'] {
+  min-height: 40px;
+  outline: 0;
+}
+:root .pop.menu.more-menu button[role='menuitem']:is(:hover, :focus-visible):not([data-act]) {
+  background: transparent;
+}
+:root .pop.menu.more-menu button[role='menuitem']:is([data-act], :focus-visible) {
+  background: radial-gradient(120px 60px at var(--x, 50%) var(--y, 50%), var(--pane-sheen), transparent 70%), var(--pane-row);
+}
+:root .pop.menu.more-menu:has([data-act]) button[role='menuitem']:focus-visible:not([data-act]) {
+  background: transparent;
+}
+@media (max-width: 640px) {
+  :root .pop.menu.more-menu button[role='menuitem'] {
+    min-height: 44px;
+  }
+}
 :root .pop.menu button + button,
 :root .menu-group + .menu-group,
 :root .sites-strip,

@@ -23,8 +23,8 @@ const EVERY: Record<Section, Tab[]> = {
   sales: ['sales', 'buyers'],
   speed: ['speed'],
   mentions: ['mentions'],
-  links: ['outbound', 'bots'],
-  ai: ['ai'],
+  links: ['outbound'],
+  ai: ['ai', 'bots'],
 }
 
 /** What a shared link can read: the report alone (the public endpoint answers nothing else), so its tables and the payments the report carries. */

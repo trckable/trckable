@@ -88,10 +88,10 @@ export function flag(code: string) {
 
 const moneyFmt = new Map<string, Intl.NumberFormat>()
 
-/** Formats minor units of a currency: fmtMoney(123456, 'USD', 2) → "$1,234.56". */
+/** Formats minor units of a currency by one rule everywhere: whole amounts have no cents ("$87", "$218"), and an amount under 100 that is not whole keeps them ("$87.50"). `cents` forces either. */
 export function fmtMoney(minor: number, currency: string, exponent: number, opts: { cents?: boolean } = {}): string {
   const major = minor / Math.pow(10, exponent)
-  const cents = opts.cents ?? Math.abs(major) < 100
+  const cents = opts.cents ?? (Math.abs(major) < 100 && minor % Math.pow(10, exponent) !== 0)
   const key = `${currency}:${exponent}${cents ? ':c' : ''}`
   let f = moneyFmt.get(key)
   if (!f) {

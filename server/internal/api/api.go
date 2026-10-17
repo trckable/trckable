@@ -188,8 +188,8 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("POST /api/v1/logout", a.logout)
 	handle("GET /api/v1/me", a.authed(a.me))
 	handle("PUT /api/v1/me/keys", a.authed(a.setKeys))
-	handle("GET /api/v1/me/bell", a.authed(a.bellRead))
-	handle("POST /api/v1/me/bell", a.authed(a.markBellRead))
+	handle("GET /api/v1/me/bell-read", a.authed(a.bellRead))
+	handle("POST /api/v1/me/bell-read", a.authed(a.markBellRead))
 	handle("GET /api/v1/me/devices", a.authed(a.devices))
 	handle("DELETE /api/v1/me/devices/{id}", a.authed(a.removeDevice))
 	handle("GET /api/v1/sites", a.authed(a.sites))
@@ -618,7 +618,7 @@ func mustChangeAllowed(r *http.Request) bool {
 // rather than to the instance: their password, name, picture, second step
 // keyboard shortcuts and read notices.
 func ownAccount(path string) bool {
-	return strings.HasPrefix(path, "/api/v1/account/") || path == "/api/v1/account" || path == "/api/v1/logout" || path == "/api/v1/me/keys" || path == "/api/v1/me/bell" || path == "/api/v1/feedback" || strings.HasPrefix(path, "/api/v1/me/devices") || closingMilestones(path)
+	return strings.HasPrefix(path, "/api/v1/account/") || path == "/api/v1/account" || path == "/api/v1/logout" || path == "/api/v1/me/keys" || path == "/api/v1/me/bell-read" || path == "/api/v1/feedback" || strings.HasPrefix(path, "/api/v1/me/devices") || closingMilestones(path)
 }
 
 // closingMilestones is a person closing a milestone's moment: their own
@@ -787,6 +787,15 @@ func (a *API) ip(r *http.Request) string {
 		h, _, _ = net.SplitHostPort(r.RemoteAddr)
 	}
 	return limitKey(h)
+}
+
+// callerIP is the address a request came from, as the ingest would see it.
+func (a *API) callerIP(r *http.Request) string {
+	if a.ClientIP != nil {
+		return a.ClientIP(r)
+	}
+	h, _, _ := net.SplitHostPort(r.RemoteAddr)
+	return h
 }
 
 func limitKey(addr string) string {
@@ -973,6 +982,8 @@ func (a *API) me(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys, "must_change": a.Ctl.MustChange(r.Context(), p.user.ID),
 		// Only owners upgrade, so only their dashboards look.
 		"update_check": a.UpdateCheck && p.user.Role == sqlite.RoleOwner,
+		// The address this request came from: Filtering's "Add my current IP".
+		"ip": a.callerIP(r),
 		// The instance's own health (every event, the disk, backups) is for
 		// the installation's own account.
 		"operator": p.operator()})

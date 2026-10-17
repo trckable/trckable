@@ -19,5 +19,5 @@ export const copy = defineCopy('palette', {
   source: 'source',
   country: 'country',
   groups: { create: 'Create', ask: 'Ask', goTo: 'Go to', sites: 'Sites', period: 'Period', filters: 'Filters' },
-  kinds: { action: 'action', create: 'new', peek: 'peek', table: 'table', view: 'view', filter: 'filter', site: 'site', period: 'period' },
+  kinds: { action: 'action', create: 'new', peek: 'peek', view: 'view', filter: 'filter', site: 'site', period: 'period' },
 })

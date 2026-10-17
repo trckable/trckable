@@ -87,3 +87,16 @@
   font-size: 14.5px;
   line-height: 1.6;
 }
+.wiz-kind {
+  display: grid;
+  gap: 14px;
+}
+.wiz-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.wiz-kinds .btn[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}

@@ -18,7 +18,7 @@ export function XMiniFunnel({ steps, leak, ghost, onConnect }: { steps: Step[]; 
             <div className="mfr">
               <span>{s.name}</span>
               <div className="mb">
-                <i className={hot ? 'red' : ''} style={{ width: `${Math.max(3, (s.v / first) * 100)}%` }} />
+                <i className={hot ? 'red' : ''} style={{ width: s.v > 0 ? `${Math.max(3, (s.v / first) * 100)}%` : 0 }} />
               </div>
               <b>{fmtInt(s.v)}</b>
             </div>
