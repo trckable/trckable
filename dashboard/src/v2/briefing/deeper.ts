@@ -23,3 +23,9 @@ export function goDeeper(site: Site, d: Deeper) {
 export function goExplore() {
   openExplore('overview')
 }
+
+/** The table behind a part of the score: traffic over time, engagement on the pages, uptime in the status record. */
+export function seeScorePart(site: Site, k: 'traffic' | 'engagement' | 'uptime') {
+  if (k === 'uptime') navigate(`/${encodeURIComponent(site.domain)}/incidents`)
+  else openExplore(k === 'traffic' ? 'overtime' : 'pages')
+}
