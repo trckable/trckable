@@ -58,7 +58,11 @@ type Config struct {
 	// 20m; default 20m, 0 turns it off). ProductHuntToken is a Product Hunt
 	// developer token (TRCKABLE_PRODUCTHUNT_TOKEN); without one that source is
 	// left out and not shown.
-	MentionsEvery    time.Duration
+	MentionsEvery time.Duration
+	// MentionsOn: whether Mentions exists at all (TRCKABLE_MENTIONS=on). Off
+	// by default: nothing is searched and nothing about mentions shows in the
+	// dashboard, the API, the bell or any email.
+	MentionsOn       bool
 	ProductHuntToken string
 	BackupS3         string // TRCKABLE_BACKUP_S3: https://key:secret@host/bucket/prefix?region=… (optional)
 	BackupDays       int    // TRCKABLE_BACKUP_KEEP_DAYS: off-site copies, every one for 7 days, then the newest of each day, up to this many days (default 30)
@@ -114,6 +118,7 @@ func Load() Config {
 		NoticeDays:   envDays("TRCKABLE_PAYMENT_NOTICE_DAYS", 30),
 	}
 	c.UptimeEvery = envDuration("TRCKABLE_UPTIME_EVERY", 5*time.Minute)
+	c.MentionsOn = envBool("TRCKABLE_MENTIONS") || strings.EqualFold(strings.TrimSpace(os.Getenv("TRCKABLE_MENTIONS")), "on")
 	c.MentionsEvery = envDuration("TRCKABLE_MENTIONS_EVERY", 20*time.Minute)
 	c.ProductHuntToken = strings.TrimSpace(envFile("TRCKABLE_PRODUCTHUNT_TOKEN"))
 	c.OIDCRequireTOTP = !strings.EqualFold(strings.TrimSpace(os.Getenv("OIDC_REQUIRE_TOTP")), "false") && os.Getenv("OIDC_REQUIRE_TOTP") != "0"

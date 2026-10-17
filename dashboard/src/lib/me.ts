@@ -4,9 +4,11 @@
 // Anything but a plain "owner" reads: a missing or new role never shows a
 // control the server would refuse.
 let role = 'viewer'
+let mentionsOn = false // set with the role, from /me: whether the server has Mentions switched on
 
-export const setRole = (r?: string) => {
+export const setRole = (r?: string, withMentions?: boolean) => {
   role = r === 'owner' ? 'owner' : 'viewer'
+  mentionsOn = withMentions === true
 }
 
 /** A viewer reads this instance. They change nothing except their own account. */
@@ -25,6 +27,9 @@ export const setShared = (modules?: Record<string, boolean>) => {
 }
 
 export const isShared = () => shared
+
+// Mentions is switched on by the server (TRCKABLE_MENTIONS); off, nothing of it is offered.
+export const hasMentions = () => mentionsOn
 
 /** Whether this page may offer a create, edit or delete control: an owner,
  *  never a viewer and never a shared link. */

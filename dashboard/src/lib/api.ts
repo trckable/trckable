@@ -918,7 +918,7 @@ export const api = {
    *  only means "not signed in yet" (or "set up first"), which /setup and /me
    *  already say, so it must not trigger the sign-in screen on its own. */
   early: () => ({
-    me: call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean }>('GET', '/me', undefined, undefined, true).catch(() => null),
+    me: call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean; mentions?: boolean }>('GET', '/me', undefined, undefined, true).catch(() => null),
     sites: call<{ sites: Site[] }>('GET', '/sites', undefined, undefined, true).catch(() => null),
   }),
   sites: () => call<{ sites: Site[] }>('GET', '/sites'),

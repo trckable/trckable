@@ -53,7 +53,7 @@ func TestMentionsListWordsAndDriving(t *testing.T) {
 		t.Fatalf("sources: %v", out["sources"])
 	}
 	words, _ := out["words"].(map[string]any)
-	if def, _ := words["default"].([]any); len(def) != 1 || def[0] != "site.com" {
+	if def, _ := words["default"].([]any); len(def) != 2 || def[0] != "site.com" || def[1] != "www.site.com" {
 		t.Fatalf("a site's own address is searched: %v", words)
 	}
 
@@ -102,5 +102,33 @@ func TestMentionMomentsJoinTheSpikeTheyExplain(t *testing.T) {
 	}
 	if strings.Contains(body, "Show HN") {
 		t.Fatalf("a mention that brought nobody is not a moment: %s", body)
+	}
+}
+
+// Switched off, Mentions answers nothing and no other answer carries one.
+func TestMentionsOffShowsNothingAnywhere(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	now := g.advance(0)
+	g.mention(t, sqlite.Mention{Source: "hn", URL: "https://news.ycombinator.com/item?id=1", Title: "Show HN", Host: "news.ycombinator.com", PostedAt: now.Add(-2 * time.Hour).Unix()}, 212, now.Add(-time.Hour).Truncate(time.Hour).Unix())
+	g.api.MentionsOn = false
+	base := g.srv.URL + "/api/v1/sites/" + g.site + "/mentions"
+	for _, path := range []string{base, base + "/keywords", base + "/curves", base + "/1"} {
+		if code, _ := do(t, c, "GET", path, ""); code != http.StatusNotFound {
+			t.Errorf("%s answered %d with Mentions off", path, code)
+		}
+	}
+	if code, _ := do(t, c, "PUT", base+"/keywords", `{"keywords":["acme"]}`, csrf, "1"); code != http.StatusNotFound {
+		t.Errorf("words saved with Mentions off: %d", code)
+	}
+	if _, out := do(t, c, "GET", g.srv.URL+"/api/v1/me", ""); out["mentions"] != false {
+		t.Errorf("/me says %v", out["mentions"])
+	}
+	_, sites := do(t, c, "GET", g.srv.URL+"/api/v1/sites", "")
+	for _, s := range sites["sites"].([]any) {
+		if s.(map[string]any)["mentions"] == true {
+			t.Errorf("the site list counts a mention: %v", s)
+		}
 	}
 }

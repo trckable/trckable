@@ -242,7 +242,7 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     case '/setup':
       return ok({ email_codes: false, needs_setup: false, sso: [] })
     case '/me':
-      return ok({ kind: 'user', email: 'albi@example.com', role: roleOf(), ip: '203.0.113.7', operator: true, version: '0.7.23', keys: {}, update_check: false, must_change: false })
+      return ok({ kind: 'user', email: 'albi@example.com', role: roleOf(), ip: '203.0.113.7', operator: true, version: '0.7.23', keys: {}, update_check: false, must_change: false, mentions: true })
     case '/account':
       return ok({ email: 'albi@example.com', name: 'Albi', has_avatar: false })
     case '/sites':

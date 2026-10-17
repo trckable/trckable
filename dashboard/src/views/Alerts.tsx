@@ -11,7 +11,7 @@ import { words } from '../lib/errors'
 import { toast } from '../components/Toast'
 import { EmptyState } from '../components/EmptyState'
 import { WeeklyNow } from './WeeklyNow'
-import { KINDS } from './alertKinds'
+import { KINDS, shownKinds } from './alertKinds'
 import { advice, ago, kindOf, SEND_LABEL, SendIcon, shown, stored, whereOf } from './alertsParts'
 
 export function AlertsSettings({ site }: { site: Site }) {
@@ -86,7 +86,7 @@ export function AlertsSettings({ site }: { site: Site }) {
   const dest = kindOf(target)
   const where = whereOf(target)
   let summary = 'Tell trckable where to send them, then pick what matters'
-  if (on) summary = `${on} of ${KINDS.length} on · sent to ${where}`
+  if (on) summary = `${on} of ${shownKinds().length} on · sent to ${where}`
   else if (where) summary = 'None on yet: pick what to be told about below'
 
   // Under the address: how the last test went, or what can go there.
@@ -173,7 +173,7 @@ export function AlertsSettings({ site }: { site: Site }) {
 
       {!target.trim() && !list.length && <EmptyState line="Alerts tell you when something needs you." action="Add where to send them" onAction={() => document.querySelector<HTMLInputElement>('.al-field input')?.focus()} />}
       <div className={'al-kinds' + (target.trim() ? '' : ' waiting')}>
-        {KINDS.map((k) => {
+        {shownKinds().map((k) => {
           const a = find(k.id)
           const isOn = !!a?.enabled
           return (

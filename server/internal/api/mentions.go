@@ -35,7 +35,7 @@ type mentionOut struct {
 	Driving bool `json:"driving,omitempty"`
 }
 
-// words is what a site is searched for: its address and name, then the words
+// words is what a site is searched for: its address, then the words
 // a person added.
 type mentionWords struct {
 	Default []string `json:"default"`
@@ -53,6 +53,17 @@ func (a *API) mentionWords(r *http.Request, site string) (mentionWords, error) {
 		return mentionWords{}, err
 	}
 	return mentionWords{Default: sqlite.JoinWords(sqlite.SiteRow{Domain: row.Domain, Name: row.Name}, nil), Added: added, Max: sqlite.MaxKeywords}, nil
+}
+
+// ifMentions answers 404 while Mentions is switched off.
+func (a *API) ifMentions(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !a.MentionsOn {
+			http.NotFound(w, r)
+			return
+		}
+		h(w, r)
+	}
 }
 
 func (a *API) mentions(w http.ResponseWriter, r *http.Request) {

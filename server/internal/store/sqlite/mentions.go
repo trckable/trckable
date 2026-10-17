@@ -8,8 +8,8 @@ import (
 	"unicode/utf8"
 )
 
-// MaxKeywords is how many extra search words a site may add; its address and
-// name are always searched on top of them.
+// MaxKeywords is how many extra search words a site may add; its address is
+// always searched on top of them.
 const MaxKeywords = 10
 
 // ErrKeywords is a list of words that cannot be kept; the message says why.
@@ -99,8 +99,8 @@ func (s *Store) SetMentionKeywords(ctx context.Context, site string, words []str
 	return tx.Commit()
 }
 
-// SearchWords are every word a site is searched for: its address, its name
-// when that is a different word, then the ones added. In that order, no repeats.
+// SearchWords are every word a site is searched for: its address (with and
+// without "www."), then the ones added. In that order, no repeats.
 func (s *Store) SearchWords(ctx context.Context, site SiteRow) ([]string, error) {
 	added, err := s.MentionKeywords(ctx, site.ID)
 	if err != nil {
@@ -109,19 +109,15 @@ func (s *Store) SearchWords(ctx context.Context, site SiteRow) ([]string, error)
 	return JoinWords(site, added), nil
 }
 
-// JoinWords is SearchWords for words already read. A site's address is always
-// searched; its name only when it is distinctive: it holds the address's own
-// label ("Acme" for acme.example) or is two words or more. A lone ordinary word
-// ("Notes", "Studio") would find everything but the site.
+// JoinWords is SearchWords for words already read. Only the address is a
+// default: the bare name in it ("acme" for acme.example) also names people,
+// places and other sites, so it is searched only when its owner adds it.
 func JoinWords(site SiteRow, added []string) []string {
 	out := []string{}
 	seen := map[string]bool{}
-	name := strings.TrimSpace(site.Name)
-	label := strings.ToLower(strings.SplitN(strings.TrimPrefix(strings.ToLower(site.Domain), "www."), ".", 2)[0])
-	if len(strings.Fields(name)) < 2 && (len(label) < 3 || !strings.Contains(strings.ToLower(name), label)) {
-		name = ""
-	}
-	for _, k := range append([]string{site.Domain, name}, added...) {
+	domain := strings.TrimSpace(site.Domain)
+	bare := strings.TrimPrefix(strings.ToLower(domain), "www.")
+	for _, k := range append([]string{bare, "www." + bare}, added...) {
 		k = strings.TrimSpace(k)
 		if utf8.RuneCountInString(k) < 3 || seen[strings.ToLower(k)] {
 			continue
@@ -211,6 +207,12 @@ func (s *Store) SaveScore(ctx context.Context, id, visitors, peak, at int64) err
 // MarkMentionAlerted records that a mention has been told about.
 func (s *Store) MarkMentionAlerted(ctx context.Context, id int64) error {
 	_, err := s.DB.ExecContext(ctx, `UPDATE mentions SET alerted = 1 WHERE id = ?`, id)
+	return err
+}
+
+// DeleteMention removes one mention.
+func (s *Store) DeleteMention(ctx context.Context, id int64) error {
+	_, err := s.DB.ExecContext(ctx, `DELETE FROM mentions WHERE id = ?`, id)
 	return err
 }
 
