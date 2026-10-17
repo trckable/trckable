@@ -3141,4 +3141,9 @@ export default {
   'v2.buckets.month': 'Maand',
   'palette.refresh': 'Cijfers verversen',
   'palette.kinds.action': 'actie',
+
+  'briefing.cards.refundRow': (what: string) => `Terugbetaling · ${what}`,
+  'briefing.cards.refundTot': 'Terugbetaald',
+  'briefing.cards.refunds90': (n: number, one: boolean) => `Dat zijn ${n} terugbetaling${n === 1 ? '' : 'en'} in de laatste 90 dagen. ${one ? 'Een kort bericht aan die persoon' : 'Een kort bericht aan iedereen'} laat vaak de reden zien.`,
+  'briefing.paidStep': 'Betaald',
 } satisfies Messages

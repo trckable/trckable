@@ -3131,4 +3131,9 @@ export default {
   'v2.buckets.month': 'Monat',
   'palette.refresh': 'Zahlen aktualisieren',
   'palette.kinds.action': 'Aktion',
+
+  'briefing.cards.refundRow': (what: string) => `Rückerstattung · ${what}`,
+  'briefing.cards.refundTot': 'Erstattet',
+  'briefing.cards.refunds90': (n: number, one: boolean) => `Das sind ${n} Rückerstattung${n === 1 ? '' : 'en'} in den letzten 90 Tagen. ${one ? 'Eine kurze Nachricht an ihn' : 'Eine kurze Nachricht an jeden'} zeigt oft den Grund.`,
+  'briefing.paidStep': 'Bezahlt',
 } satisfies Messages

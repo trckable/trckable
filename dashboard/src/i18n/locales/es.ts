@@ -3134,4 +3134,9 @@ export default {
   'v2.buckets.month': 'Mes',
   'palette.refresh': 'Actualizar las cifras',
   'palette.kinds.action': 'acción',
+
+  'briefing.cards.refundRow': (what: string) => `Reembolso · ${what}`,
+  'briefing.cards.refundTot': 'Reembolsado',
+  'briefing.cards.refunds90': (n: number, one: boolean) => `Son ${n} reembolso${n === 1 ? '' : 's'} en los últimos 90 días. ${one ? 'Un mensaje corto a esa persona' : 'Un mensaje corto a cada una'} suele mostrar el motivo.`,
+  'briefing.paidStep': 'Pagado',
 } satisfies Messages
