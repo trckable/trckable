@@ -1625,10 +1625,17 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .lnow .lfig{display:flex;flex-direction:row;flex-wrap:wrap;align-items:flex-end;gap:var(--mk-s3) var(--mk-s6)}
 .mk .lnow .lfig>div,.mk .lnow .lfig>div:nth-child(2){display:flex;flex-direction:column;flex-wrap:nowrap;align-items:flex-start;gap:var(--mk-s1);order:0;margin:0;text-align:left}
 .mk .lnow .lfig .ll{order:0;font-size:13px}
-.mk .lnow .lfig .lbign,.mk .lnow .lfig>div:first-child .lbign,.mk .lnow .lfig>div:nth-child(2) .lbign{font-size:80px;line-height:1;font-weight:700;letter-spacing:-.05em;order:1}
 .mk .lnow .lfig .mk-ld{order:2;flex-basis:auto;font-size:12px}
+/* The pair reads as main and side: the half hour is the big number, the people on the site now the small one; labels share a row, numbers share a baseline. */
+.mk .lnow .lfig{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto auto;justify-content:start;align-items:start;column-gap:var(--mk-s6);row-gap:var(--mk-s1)}
+.mk .lnow .lfig>div.lmain,.mk .lnow .lfig>div.lside{display:grid;grid-template-rows:subgrid;grid-row:span 3;gap:0}
+.mk .lnow .lfig .lbign{line-height:1;font-weight:700;letter-spacing:-.05em;align-self:baseline}
+.mk .lnow .lfig .lmain .lbign{font-size:80px}
+.mk .lnow .lfig .lside .lbign{font-size:40px;font-weight:600}
+.mk .lnow .lfig .lside .ll{color:var(--mk-muted)}
 @media all{
-.mk .lnow[data-fit=tiny] .lfig .lbign,.mk .lnow[data-fit=tiny] .lfig>div:first-child .lbign,.mk .lnow[data-fit=tiny] .lfig>div:nth-child(2) .lbign{font-size:60px}
+.mk .lnow[data-fit=tiny] .lfig .lmain .lbign{font-size:60px}
+.mk .lnow[data-fit=tiny] .lfig .lside .lbign{font-size:32px}
 }
 /* Under the numbers: the sources as rows, the revenue as a short block; one column until there is room for two. */
 .mk .lnow .lbottom,.mk .lnow .lbottom.money{grid-template-columns:1fr;gap:var(--mk-s4);align-items:start;margin-top:var(--mk-s4)}
