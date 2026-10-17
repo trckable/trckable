@@ -107,7 +107,8 @@ test('on a phone a card opens a sheet that tells the cause, about this site', as
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=today&v=`)
   // The card about the outage, once the cards have settled (a card that is still moving is not tapped).
-  const card = page.locator('article[data-topic="uptime"] .ic-h').first()
+  await expect(page.locator('article.icard.sk')).toHaveCount(0) // the loading shapes are not cards: a tap on one opens nothing
+  const card = page.locator('article.icard:not(.sk)[data-topic="uptime"] .ic-h').first()
   await expect(card).toBeVisible()
   await card.scrollIntoViewIfNeeded()
   await card.click()
@@ -139,3 +140,29 @@ test('the outage Why? in Live and in the Briefing names the site and what the ch
   await expect(hero).toContainText(HISTORY_DOMAIN)
   await expect(hero).toContainText('connection refused')
 })
+
+// A tap on any card of the Briefing on a phone opens that card's sheet, whichever card it is and in whatever order they come.
+for (const q of ['?view=briefing&period=today', '?view=briefing&period=7d', '?view=briefing&period=30d']) {
+  test(`on a phone every card opens its sheet (${q})`, async ({ page }) => {
+    await markDown(page)
+    await page.setViewportSize({ width: 390, height: 900 })
+    await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+    await page.goto(`${API}/${HISTORY_DOMAIN}${q}&v=`)
+    // The loading shapes are not cards: a tap on one opens nothing, so wait until the real ones are here.
+    await expect(page.locator('article.icard.sk')).toHaveCount(0)
+    const cards = page.locator('article.icard:not(.sk)')
+    await expect(cards.first()).toBeVisible()
+    const n = await cards.count()
+    expect(n).toBeGreaterThan(0)
+    for (let i = 0; i < n; i++) {
+      const head = cards.nth(i).locator('.ic-h, .kt[role="button"]').first()
+      const topic = await cards.nth(i).getAttribute('data-topic')
+      await head.scrollIntoViewIfNeeded()
+      await head.click()
+      const sheet = page.locator('aside.cd')
+      await expect(sheet, `card ${i} (${topic})`).toBeVisible()
+      await sheet.locator('button[title="Close"]').click()
+      await expect(sheet).toHaveCount(0)
+    }
+  })
+}
