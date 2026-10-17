@@ -13,6 +13,8 @@ vi.mock('../lib/apiMore', async (orig) => ({
   api: { modules: (...a: unknown[]) => list(...a) },
   more: { setModule: (...a: unknown[]) => setModule(...a) },
 }))
+const ask = vi.fn<(...a: unknown[]) => Promise<boolean>>()
+vi.mock('../components/Confirm', () => ({ confirm: (...a: unknown[]) => ask(...a) }))
 vi.mock('../lib/me', async (orig) => ({ ...(await orig<typeof import('../lib/me')>()), canChange: () => true }))
 
 import { ScriptRecords } from './ScriptRecords'
@@ -32,6 +34,7 @@ const site = { id: 's1', domain: 'site.com' } as never
 beforeEach(() => {
   list.mockReset()
   setModule.mockReset()
+  ask.mockReset()
   host = document.createElement('div')
   document.body.append(host)
   root = createRoot(host)
@@ -69,5 +72,34 @@ describe('what the script records', () => {
     act(() => root.render(<ScriptRecords site={site} />))
     await settle()
     for (const box of host.querySelectorAll<HTMLInputElement>('.rec-sub input')) expect(box.disabled).toBe(true)
+  })
+})
+
+describe('turning a choice off', () => {
+  it('asks first, says what stops, and does nothing when declined', async () => {
+    list.mockResolvedValue(answer(true))
+    setModule.mockResolvedValue(answer(true))
+    ask.mockResolvedValueOnce(false).mockResolvedValueOnce(true)
+    act(() => root.render(<ScriptRecords site={site} />))
+    await settle()
+    const vitals = host.querySelectorAll<HTMLElement>('[role="switch"]')[1]
+    act(() => vitals.click())
+    await settle()
+    expect(ask).toHaveBeenCalledWith(expect.objectContaining({ title: 'Turn off vitals?', danger: true, body: expect.stringContaining('Nothing already recorded is deleted.') as string }))
+    expect(setModule).not.toHaveBeenCalled()
+    act(() => vitals.click())
+    await settle()
+    expect(setModule).toHaveBeenCalledWith('s1', 'vitals', false)
+  })
+
+  it('turning one on needs no question', async () => {
+    list.mockResolvedValue(answer(true))
+    setModule.mockResolvedValue(answer(true))
+    act(() => root.render(<ScriptRecords site={site} />))
+    await settle()
+    act(() => host.querySelectorAll<HTMLElement>('[role="switch"]')[2].click())
+    await settle()
+    expect(ask).not.toHaveBeenCalled()
+    expect(setModule).toHaveBeenCalledWith('s1', 'heatmaps', true)
   })
 })

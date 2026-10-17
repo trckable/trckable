@@ -3,6 +3,7 @@ package modules
 import (
 	"context"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/trckable/trckable/server/internal/store/sqlite"
@@ -64,5 +65,43 @@ func TestDefaultsAndToggles(t *testing.T) {
 	}
 	if err := store.Set(ctx, site, "nope", true); err == nil {
 		t.Error("unknown module accepted")
+	}
+}
+
+// Outbound links and forms are goals: with Goals off they leave the script
+// and read as off, and come back as chosen when Goals does.
+func TestOutboundAndFormsFollowGoals(t *testing.T) {
+	ctx := context.Background()
+	st, err := sqlite.Open(ctx, filepath.Join(t.TempDir(), "m.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.Close()
+	site, _, _ := st.EnsureSite(ctx, sqlite.DefaultAccount, "example.com")
+	store := Store{DB: st.DB}
+	for _, id := range []string{"outbound", "forms"} {
+		if err := store.Set(ctx, site, id, true); err != nil {
+			t.Fatal(err)
+		}
+	}
+	set, _ := store.Of(ctx, site)
+	if got := set.Tracker(); !slices.Contains(got, TrackOutbound) || !slices.Contains(got, TrackForms) {
+		t.Fatalf("goals on: %v", got)
+	}
+	if err := store.Set(ctx, site, "goals", false); err != nil {
+		t.Fatal(err)
+	}
+	set, _ = store.Of(ctx, site)
+	if set.Has("outbound") || set.Has("forms") {
+		t.Errorf("with goals off they read as on: %v", set)
+	}
+	for _, f := range set.Tracker() {
+		if f == TrackGoals || f == TrackOutbound || f == TrackForms {
+			t.Errorf("goals off, yet the script carries %s", f)
+		}
+	}
+	_ = store.Set(ctx, site, "goals", true)
+	if set, _ = store.Of(ctx, site); !set.Has("outbound") || !set.Has("forms") {
+		t.Error("their own choice did not come back with goals")
 	}
 }

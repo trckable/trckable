@@ -115,7 +115,7 @@ var All = []Module{
 			"Recorded ones stay in your reports",
 		}},
 	{ID: "revenue", Group: Connect, Name: "Revenue", Summary: "Stripe, Lemon Squeezy, Polar, Paddle, Dodo, Gumroad and PayPal: which traffic pays.",
-		Tracker: TrackCheckout, Collects: true, Gap: "Revenue is hidden and checkout links lose the visitor id. Payments keep arriving, so nothing is lost.",
+		Tracker: TrackCheckout, Collects: true, Gap: "Checkout links carry the visitor id only while a provider is connected. Payments keep arriving, so nothing is lost.",
 		Server: "webhook inbox, payment ledger, reconciliation every 6 h, exchange rates",
 		Gives: []string{
 			"Revenue, conversion and revenue per visitor beside your traffic",
@@ -128,9 +128,9 @@ var All = []Module{
 			"Checks your provider for missed payments every 6 hours",
 		},
 		Loses: []string{
-			"Revenue is hidden from the dashboard; payments keep arriving and are kept",
-			"Checkout links lose the visitor id, so sales made while off are unattributed",
-			"Turn it back on and everything recorded meanwhile is there",
+			"Disconnecting hides revenue from the dashboard; payments keep arriving and are kept",
+			"Checkout links lose the visitor id, so sales made while disconnected are unattributed",
+			"Connect again and everything recorded meanwhile is there",
 		}},
 	{ID: "funnels", Group: Always, Name: "Funnels", Summary: "Follow visitors through steps and see where they stop.", On: true,
 		Gives: []string{
@@ -138,19 +138,16 @@ var All = []Module{
 			"See the drop-off at each step and the time between them",
 			"Filters apply, so you can compare channels",
 		},
-		Costs: []string{"Nothing in the browser — it reads what is already stored"},
-		Loses: []string{"The funnel card disappears. Your data is untouched."}},
+		Costs: []string{"Nothing in the browser — it reads what is already stored"}},
 	{ID: "notes", Group: Always, Name: "Notes", Summary: "A line on a day: why the chart looks the way it does.", On: true,
 		Gives: []string{
 			"A note on any day, shown as a marker on the chart",
 			"Share links can carry them, if you say so",
 		},
-		Costs: []string{"Nothing in the browser — notes are typed by you, not recorded"},
-		Loses: []string{"Markers and the notes list disappear, and no new notes can be added. Existing notes are kept."}},
+		Costs: []string{"Nothing in the browser — notes are typed by you, not recorded"}},
 	{ID: "rhythm", Group: Always, Name: "Weekly rhythm", Summary: "When your visitors come: hour by weekday.", On: true,
 		Gives: []string{"Shows when your audience is actually awake", "Good for choosing when to publish or deploy"},
-		Costs: []string{"Nothing in the browser — it reads what is already stored"},
-		Loses: []string{"The rhythm card disappears. Your data is untouched."}},
+		Costs: []string{"Nothing in the browser — it reads what is already stored"}},
 	{ID: "journeys", Group: Always, Name: "Journeys", Summary: "One visitor's whole history: visits, pages, goals and payments.", On: true,
 		Gives: []string{
 			"One person's whole story: every visit, page, goal and payment",
@@ -159,19 +156,16 @@ var All = []Module{
 		Costs: []string{
 			"Nothing in the browser",
 			"The live feed carries the pseudonymous visitor id while this is on",
-		},
-		Loses: []string{"The People card and journeys disappear, and the live feed stops carrying visitor ids."}},
+		}},
 	{ID: "map", Group: Always, Name: "Map", Summary: "Visitors on a world map (the map file downloads only when you open it).", On: true,
 		Gives: []string{"Your countries on a world map", "Click a country to filter the whole dashboard"},
-		Costs: []string{"27 KB of map outlines, downloaded once, only when you open the map tab"},
-		Loses: []string{"The map tab disappears. The country list stays."}},
+		Costs: []string{"27 KB of map outlines, downloaded once, only when you open the map tab"}},
 	{ID: "retention", Group: Always, Name: "Retention", Summary: "Of the people who first came in a week, how many came back.", On: true,
 		Gives: []string{
 			"A cohort grid: each week's new visitors, and how many returned in the weeks after",
 			"The one number that says whether a site is building an audience or renting one",
 		},
-		Costs: []string{"Nothing in the browser — it is worked out from visits you already have"},
-		Loses: []string{"The retention card disappears. Nothing stops being recorded."}},
+		Costs: []string{"Nothing in the browser — it is worked out from visits you already have"}},
 	{ID: "vitals", Group: Choice, Name: "Core Web Vitals", Summary: "How fast your pages feel, measured by the browsers that visited them.", On: true,
 		Tracker: TrackVitals, Collects: true, Gap: "Speed scores stop being recorded. Past ones stay.",
 		Gives: []string{
@@ -201,7 +195,6 @@ var All = []Module{
 			"Nothing already recorded changes",
 		}},
 	{ID: "crawlers", Group: Always, Name: "AI assistants & crawlers", Summary: "Who crawls you: AI answers, search indexing and training data.",
-		Collects: true, Gap: "Crawler hits stop being recorded. Past ones stay.",
 		Server: "one endpoint your server posts to; nothing extra while idle",
 		Gives: []string{
 			"See which AI assistants read your pages to answer questions",
@@ -211,8 +204,7 @@ var All = []Module{
 		Costs: []string{
 			"Nothing in the browser — robots do not run JavaScript",
 			"Your server forwards robot requests to /api/crawl (one middleware)",
-		},
-		Loses: []string{"New crawler hits stop being recorded", "Recorded ones stay in your reports"}},
+		}},
 	{ID: "forms", Group: Choice, Name: "Form submissions", Summary: "Count every form people send as a goal, with no code.",
 		Tracker: TrackForms, Collects: true, Gap: "Form submissions stop being counted. Past ones stay.",
 		Gives: []string{
@@ -253,7 +245,7 @@ var All = []Module{
 			"A Google service account with read-only access: five minutes, once",
 			"Your server asks Google for the report; no visitor data is sent",
 		},
-		Loses: []string{"The Search terms tab goes away", "Nothing was copied from Google, so nothing is lost", "The key stays on this server until you disconnect"}},
+		Loses: []string{"The Search terms tab goes away once disconnected", "Nothing was copied from Google, so nothing is lost"}},
 	// Asking in plain words is not a module: the MCP server is the way.
 }
 
@@ -321,7 +313,15 @@ func (st Store) Of(ctx context.Context, site string) (Set, error) {
 			out[id] = on
 		}
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return out, err
+	}
+	// Outbound links and forms are goals: with Goals off they record nothing
+	// and read as off; their own choice comes back with Goals.
+	if !out["goals"] {
+		out["outbound"], out["forms"] = false, false
+	}
+	return out, nil
 }
 
 // Set turns a module on or off for a site.

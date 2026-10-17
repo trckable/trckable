@@ -136,6 +136,13 @@ export default {
 
   // cards
   'records.title': 'Wat het script vastlegt',
+  'records.offTitle': (name: string) => `${name} uitzetten?`,
+  'records.offStays': 'Wat al is vastgelegd wordt niet verwijderd.',
+  'records.turnOff': 'Uitzetten',
+  'records.keep': 'Aan laten staan',
+  'records.consent.button': 'Vragen voor het tellen',
+  'records.consent.title': 'Bezoekers vragen voordat ze worden geteld?',
+  'records.consent.body': 'Tot iemand akkoord gaat, bewaart het script niets, en wie weigert wordt helemaal niet geteld. Een terugkerende bezoeker lijkt nieuw voordat hij akkoord gaat, dus toewijzing over meerdere dagen begint bij toestemming. Hoe er wordt gevraagd kies je in dit onderdeel.',
   'records.lead': 'Al het andere is er gewoon. Dit verandert wat de browser verstuurt, dus elke regel zegt wat hij aan het script toevoegt.',
   'records.total': (size: string) => `Script ${size}`,
   'records.adds': (size: string) => `Voegt ${size} toe.`,
@@ -1574,7 +1581,7 @@ export default {
   'crawlers.setup.title': 'Crawlergegevens koppelen',
   'crawlers.setup.hint': 'Robots voeren geen JavaScript uit: je server of CDN meldt ze.',
   'crawlers.setup.help': 'Alleen de naam van de robot, de pagina en het tijdstip worden verstuurd. Geen adres, geen cookie, geen bezoeker.',
-  'crawlers.setup.titles': ['Waar draait je site?', 'Voeg de code toe', 'Zet het aan'],
+  'crawlers.setup.titles': ['Waar draait je site?', 'Voeg de code toe', 'Wacht op de eerste robot'],
   'crawlers.setup.leads': ['Robots draaien geen JavaScript, dus je server of CDN meldt ze aan ons.', 'Plak hem waar je site draait. Hij vertraagt nooit een bezoek.', 'Crawlers verschijnen in AI en zoeken zodra de eerste er is.'],
   'crawlers.setup.step': (n: number, total: number) => `Stap ${n} van ${total}`,
   'crawlers.setup.options.0.label': 'Cloudflare',

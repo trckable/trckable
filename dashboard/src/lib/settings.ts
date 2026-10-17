@@ -6,7 +6,15 @@
 import { useEffect, useState } from 'react'
 import { navigate } from './url'
 
-export type SettingsTab = 'site' | 'install' | 'sharing' | 'widgets' | 'notes' | 'payments' | 'search' | 'mentions' | 'privacy' | 'alerts' | 'health'
+export const SETTINGS_TABS = ['site', 'install', 'sharing', 'widgets', 'notes', 'payments', 'search', 'mentions', 'privacy', 'alerts', 'health'] as const
+export type SettingsTab = (typeof SETTINGS_TABS)[number]
+
+/** Where an old or mistyped ?tab= goes: a section that exists opens as named; any other (the Modules tab that is gone, say) opens General, scrolled to What the script records. */
+export function settingsTarget(raw: string | null): { tab: SettingsTab; extra?: Record<string, string> } {
+  if (!raw) return { tab: 'site' }
+  const tab = SETTINGS_TABS.find((t) => t === raw)
+  return tab ? { tab } : { tab: 'site', extra: { focus: 'script-records' } }
+}
 export type SettingsOpen = { site: string; tab: SettingsTab; extra?: Record<string, string> }
 
 let open: SettingsOpen | null = null

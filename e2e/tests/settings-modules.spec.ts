@@ -23,6 +23,7 @@ async function flip(page: Page, site: TestSite, name: string, to: boolean) {
   const sw = page.locator('#script-records').getByRole('switch', { name, exact: true })
   await expect(sw).toHaveAttribute('aria-checked', String(!to))
   await sw.click()
+  if (!to) await page.getByRole('dialog').getByRole('button', { name: 'Turn off', exact: true }).click()
   await expect(sw).toHaveAttribute('aria-checked', String(to))
 }
 
@@ -68,6 +69,7 @@ test('the choices: goals, vitals and heatmaps are switched in General, and the s
     await expect.poll(() => on(page, site, id)).toBe(true)
     await expect(box).toBeChecked()
     await box.click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Turn off', exact: true }).click()
     await expect.poll(() => on(page, site, id)).toBe(false)
     await expect(box).not.toBeChecked()
   }
@@ -113,13 +115,20 @@ test('the script: a module that is off sends no code, and the sizes the dialog s
   expect(info.script.bytes).toBe(info.script.core)
 
   for (const id of ['goals', 'outbound', 'revenue', 'vitals', 'forms']) {
+    // Outbound links and forms are goals: they only ship with Goals on, so they are measured on top of it.
+    const inGoals = id === 'outbound' || id === 'forms'
+    if (inGoals) await set('goals', true)
+    const base = inGoals ? await size() : core
     await set(id, true)
     const now = await size()
     const m = (await listing(page, site)).modules.find((x) => x.id === id)!
     // "+N B in the browser": that module costs about what it says.
-    expect(now, `${id} adds code`).toBeGreaterThan(core)
-    expect(Math.abs(now - core - (m.tracker_bytes ?? 0)), `${id}: ${now - core} B added, ${m.tracker_bytes} B promised`).toBeLessThan(40)
+    expect(now, `${id} adds code`).toBeGreaterThan(base)
+    // Measured on its own the cost is the promise; on top of Goals it shares code with it, so it is never more.
+    if (inGoals) expect(now - base, `${id}: ${now - base} B added, ${m.tracker_bytes} B promised`).toBeLessThanOrEqual((m.tracker_bytes ?? 0) + 40)
+    else expect(Math.abs(now - base - (m.tracker_bytes ?? 0)), `${id}: ${now - base} B added, ${m.tracker_bytes} B promised`).toBeLessThan(40)
     await set(id, false)
+    if (inGoals) await set('goals', false)
     expect(await size(), `${id} off again`).toBe(core)
   }
   // The same figure the strip shows follows the switches.

@@ -32,10 +32,10 @@ const FEATURES = [
   ['forms', 'f', '__FORMS__'],
 ]
 
-// The budget is about the script trckable ships by default. Core Web Vitals is
-// a performance-measurement module a site asks for, and it costs what it
-// costs — visibly, in the modules page, before anyone turns it on. Every
-// variant without it still has to fit BUDGET.
+// The budget is about the script trckable ships by default: goals and Core Web
+// Vitals (checked below). The other optional features cost what they cost,
+// visibly, in Settings → General → What the script records. Every variant
+// without them still has to fit BUDGET.
 const OPTIONAL = new Set(['vitals', 'consent', 'banner', 'forms'])
 // 2,700 since 24 Sep 2026 (was 2,560): the consent module's decline rules add
 // about 120 bytes, and the heaviest optional mix is 2,689.
@@ -155,6 +155,13 @@ if (onlineGzip > ONLINE_BUDGET) {
   console.error(`✗ online.js is ${onlineGzip} B gzip, over its ${ONLINE_BUDGET} B budget`)
   if (process.argv.includes('--check')) process.exit(1)
 }
+
+// A new site ships goals and Core Web Vitals, so that script is held to the
+// 2 KB the site says, not to the looser budget for optional features.
+const fresh = built[variantName(new Set(['goals', 'vitals']))]
+console.log(`a new site's script (goals + vitals): ${fresh.bytes} B minified · ${fresh.gzip} B gzip (budget ${BUDGET}) ${fresh.gzip <= BUDGET ? '✓' : '✗ OVER'}`)
+if (fresh.gzip > BUDGET) console.error(`✗ the default script (goals + vitals) is ${fresh.gzip} B gzip, over ${BUDGET}`)
+if (process.argv.includes('--check') && fresh.gzip > BUDGET) process.exit(1)
 
 const possible = ([name]) => !([...IMPOSSIBLE].every((c) => name.includes(c)))
 const overBudget = Object.entries(built).filter(possible).filter(([name, v]) => v.gzip > budgetFor(name))

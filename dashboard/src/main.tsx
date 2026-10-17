@@ -16,7 +16,7 @@ import { openAddSite, useAccountTab, useAddSite } from "./lib/account";
 import { AddSiteHost } from "./features/onboarding/AddSiteHost";
 import { routeOf, SubRoute } from "./features/subpage";
 import { landing, namesSite } from "./lib/landing";
-import { openSettings, useSettings, type SettingsTab } from "./lib/settings";
+import { openSettings, settingsTarget, useSettings } from "./lib/settings";
 import { useLatest } from "./lib/update";
 import { setRole } from "./lib/me";
 import { NoneShared, useGate } from "./features/onboarding/Gate";
@@ -104,8 +104,8 @@ function App() {
     if (boot.state !== "ready" || gated || path !== "/settings") return;
     const s = boot.sites.find((x) => x.id === params.get("site"));
     if (!s) return;
-    const visitor = params.get("visitor");
-    openSettings(s, (params.get("tab") as SettingsTab) || "site", visitor ? { visitor } : undefined, { replace: true });
+    const { tab, extra } = settingsTarget(params.get("tab"));
+    openSettings(s, tab, params.get("visitor") ? { ...extra, visitor: params.get("visitor") ?? "" } : extra, { replace: true });
   }, [boot, gated, path, params]);
 
   // Keep the address bar honest about the screen shown.

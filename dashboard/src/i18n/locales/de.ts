@@ -146,6 +146,13 @@ export default {
 
   // cards
   'records.title': 'Was das Skript aufzeichnet',
+  'records.offTitle': (name: string) => `${name} ausschalten?`,
+  'records.offStays': 'Bereits Aufgezeichnetes wird nicht gelöscht.',
+  'records.turnOff': 'Ausschalten',
+  'records.keep': 'Eingeschaltet lassen',
+  'records.consent.button': 'Vor dem Zählen fragen',
+  'records.consent.title': 'Besucher fragen, bevor sie gezählt werden?',
+  'records.consent.body': 'Bis jemand zustimmt, speichert das Skript nichts, und wer ablehnt, wird gar nicht gezählt. Ein wiederkehrender Besucher wirkt vor der Zustimmung neu, die Zuordnung über mehrere Tage beginnt also mit der Zustimmung. Wie gefragt wird, wählst du in diesem Bereich.',
   'records.lead': 'Alles andere ist einfach da. Diese Punkte ändern, was der Browser sendet; jede Zeile sagt, was sie dem Skript hinzufügt.',
   'records.total': (size: string) => `Skript ${size}`,
   'records.adds': (size: string) => `Fügt ${size} hinzu.`,
@@ -1577,7 +1584,7 @@ export default {
   'crawlers.setup.title': 'Crawler-Daten verbinden',
   'crawlers.setup.hint': 'Roboter führen kein JavaScript aus: Dein Server oder CDN meldet sie.',
   'crawlers.setup.help': 'Es werden nur der Name des Roboters, die Seite und die Uhrzeit gesendet. Keine Adresse, kein Cookie, kein Besucher.',
-  'crawlers.setup.titles': ['Wo läuft deine Website?', 'Code einfügen', 'Einschalten'],
+  'crawlers.setup.titles': ['Wo läuft deine Website?', 'Code einfügen', 'Auf den ersten Roboter warten'],
   'crawlers.setup.leads': ['Roboter führen kein JavaScript aus, darum meldet dein Server oder CDN sie uns.', 'Füge ihn dort ein, wo deine Website läuft. Er bremst keinen Besuch.', 'Crawler erscheinen in KI & Suche, sobald der erste da ist.'],
   'crawlers.setup.step': (n: number, total: number) => `Schritt ${n} von ${total}`,
   'crawlers.setup.options.0.label': 'Cloudflare',

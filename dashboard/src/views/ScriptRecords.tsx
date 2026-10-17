@@ -3,12 +3,14 @@
 // browser sends, so each line shows what it adds to the script. Turning one
 // off stops new data and never deletes what was recorded.
 import { useEffect, useState } from 'react'
+import { confirm } from '../components/Confirm'
 import { Row } from '../components/Row'
 import { Switch } from '../components/Switch'
 import { Loading } from '../components/loading/Loading'
 import { api, fail, more, type ModuleInfo, type ScriptInfo, type Site } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { canChange } from '../lib/me'
+import { settingsParam } from '../lib/settings'
 import { modulesChanged } from '../lib/useMods'
 import { recordsCopy } from './recordsCopy'
 import './ScriptRecords.css'
@@ -29,7 +31,17 @@ export function ScriptRecords({ site }: { site: Site }) {
     api.modules(site.id).then(take).catch((e: unknown) => setErr(words(e)))
   }, [site.id])
 
+  // An old link to the Modules tab lands here.
+  useEffect(() => {
+    if (mods && settingsParam('focus') === 'script-records') document.getElementById('script-records')?.scrollIntoView({ block: 'start' })
+  }, [mods])
   const get = (id: string) => mods?.find((m) => m.id === id)
+  // Turning one off loses what it would have recorded from now on: say so first.
+  const change = async (id: string, enabled: boolean) => {
+    const m = get(id)
+    if (!enabled && m && !(await confirm({ title: recordsCopy.offTitle(m.name), body: `${m.gap ?? ''} ${recordsCopy.offStays}`.trim(), confirmLabel: recordsCopy.turnOff, cancelLabel: recordsCopy.keep, danger: true }))) return
+    set(id, enabled)
+  }
   const set = (id: string, enabled: boolean) => {
     setBusy(id)
     more
@@ -46,7 +58,7 @@ export function ScriptRecords({ site }: { site: Site }) {
     const m = get(id)
     return (
       <label className="rec-sub">
-        <input type="checkbox" checked={!!m?.enabled} disabled={!goals?.enabled || busy === id || !canChange()} onChange={(e) => set(id, e.target.checked)} />
+        <input type="checkbox" checked={!!m?.enabled} disabled={!goals?.enabled || busy === id || !canChange()} onChange={(e) => void change(id, e.target.checked)} />
         <span>{recordsCopy[id]}</span>
         <span className="faint num">{cost(m)}</span>
       </label>
@@ -57,7 +69,7 @@ export function ScriptRecords({ site }: { site: Site }) {
     return (
       <>
         <Row label={recordsCopy[id].name} hint={`${recordsCopy[id].hint} ${cost(m)}`}>
-          <Switch on={!!m?.enabled} disabled={busy === id || !canChange()} onChange={() => set(id, !m?.enabled)} />
+          <Switch on={!!m?.enabled} disabled={busy === id || !canChange()} onChange={() => void change(id, !m?.enabled)} />
         </Row>
         {children}
       </>

@@ -137,6 +137,13 @@ export default {
 
   // cards
   'records.title': 'Ce que le script enregistre',
+  'records.offTitle': (name: string) => `Désactiver ${name} ?`,
+  'records.offStays': 'Rien de ce qui est déjà enregistré n’est supprimé.',
+  'records.turnOff': 'Désactiver',
+  'records.keep': 'Le garder activé',
+  'records.consent.button': 'Demander avant de compter',
+  'records.consent.title': 'Demander aux visiteurs avant de les compter ?',
+  'records.consent.body': 'Tant que personne n’accepte, le script ne stocke rien, et celui qui refuse n’est pas compté du tout. Un visiteur qui revient paraît nouveau avant d’accepter, l’attribution sur plusieurs jours commence donc au consentement. Vous choisissez comment demander dans cette section.',
   'records.lead': 'Tout le reste est simplement là. Ces options changent ce que le navigateur envoie ; chaque ligne dit ce qu’elle ajoute au script.',
   'records.total': (size: string) => `Script ${size}`,
   'records.adds': (size: string) => `Ajoute ${size}.`,
@@ -1575,7 +1582,7 @@ export default {
   'crawlers.setup.title': 'Connecter les données des robots',
   'crawlers.setup.hint': 'Les robots n’exécutent pas JavaScript : votre serveur ou votre CDN les signale.',
   'crawlers.setup.help': 'Seuls le nom du robot, la page et l’heure sont envoyés. Pas d’adresse, pas de cookie, pas de visiteur.',
-  'crawlers.setup.titles': ['Où tourne votre site ?', 'Ajoutez le code', 'Activez-le'],
+  'crawlers.setup.titles': ['Où tourne votre site ?', 'Ajoutez le code', 'Attendez le premier robot'],
   'crawlers.setup.leads': ['Les robots n’exécutent pas JavaScript : votre serveur ou votre CDN nous les signale.', 'Collez-le là où tourne votre site. Il ne ralentit jamais une visite.', 'Les robots apparaissent dans IA et recherche dès que le premier arrive.'],
   'crawlers.setup.step': (n: number, total: number) => `Étape ${n} sur ${total}`,
   'crawlers.setup.options.0.label': 'Cloudflare',

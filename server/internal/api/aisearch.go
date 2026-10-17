@@ -15,8 +15,8 @@ import (
 )
 
 // aiSearch serves GET /api/v1/sites/{site}/report/ai-search, with the report's
-// own period and filters. It works with the crawlers module off: the robots'
-// side is then empty, and says so.
+// own period and filters. The robots' side is empty, and says so, until a
+// server reports them.
 func (a *API) aiSearch(w http.ResponseWriter, r *http.Request) {
 	q, p, ok := a.params(w, r)
 	if !ok {

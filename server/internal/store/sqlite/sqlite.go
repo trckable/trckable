@@ -885,6 +885,15 @@ var migrations = []string{
 	// what it had (off), so nothing starts being recorded that was not before.
 	`INSERT OR IGNORE INTO site_modules (site_id, module_id, enabled, updated_at)
 	SELECT id, 'vitals', 0, CAST(strftime('%s', 'now') AS INTEGER) FROM sites;`,
+	// 67: revenue and Search Console are on once connected. A site that connected
+	// before this, and has an old "off" row, would otherwise be connected and
+	// refused: its payments routes answered 404.
+	`INSERT INTO site_modules (site_id, module_id, enabled, updated_at)
+	SELECT DISTINCT site_id, 'revenue', 1, CAST(strftime('%s', 'now') AS INTEGER) FROM pay_connections WHERE disabled_at IS NULL
+	ON CONFLICT (site_id, module_id) DO UPDATE SET enabled = 1, updated_at = excluded.updated_at;
+	INSERT INTO site_modules (site_id, module_id, enabled, updated_at)
+	SELECT site_id, 'search', 1, CAST(strftime('%s', 'now') AS INTEGER) FROM search_console WHERE true
+	ON CONFLICT (site_id, module_id) DO UPDATE SET enabled = 1, updated_at = excluded.updated_at;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

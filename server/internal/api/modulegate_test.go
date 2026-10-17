@@ -70,6 +70,17 @@ func TestFeaturesWithoutASwitchAlwaysAnswer(t *testing.T) {
 			t.Errorf("GET %s answered 404 (%v): a feature without a switch must work", path, out)
 		}
 	}
+	// A journey and the latest buyers no longer wait for journeys to be on.
+	if code, out := do(t, c, "GET", base+"/journey/1"+period, ""); code == http.StatusNotFound {
+		t.Errorf("GET /journey answered 404 (%v) with journeys asked off", out)
+	}
+	if code, _ := do(t, c, "GET", base+"/buyers"+period, ""); code != http.StatusNotFound {
+		t.Errorf("GET /buyers with no provider connected: %d, want 404", code)
+	}
+	do(t, c, "PUT", base+"/modules/revenue", `{"enabled":true}`, csrf, "1")
+	if code, out := do(t, c, "GET", base+"/buyers"+period, ""); code == http.StatusNotFound {
+		t.Errorf("GET /buyers with revenue connected and journeys asked off answered 404 (%v)", out)
+	}
 	note := `{"day":"2026-09-20","text":"Launch"}`
 	if code, out := do(t, c, "POST", base+"/annotations", note, csrf, "1"); code != http.StatusCreated {
 		t.Errorf("a note with Notes asked off: %d %v, want 201", code, out)
