@@ -107,14 +107,14 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
             <ChartSwitch mode={mode} onChange={pick} />
           </div>
           <div className="lfig">
-            <div>
-              <span className="ll">{copy.onlineNow}</span>
-              <b className="lbign"><Tick n={n} pulse /></b>
-            </div>
-            <div>
+            <div className="lmain">
               <span className="ll">{copy.visitors30}</span>
               <b className="lbign"><Tick n={visitors30(data.visitors, online)} pulse /></b>
               {ch && <span className={`mk-ld ${ch.up ? 'up' : 'dn'}`}>{copy.change(ch.up, ch.pct)}</span>}
+            </div>
+            <div className="lside">
+              <span className="ll">{copy.onlineNow}</span>
+              <b className="lbign"><Tick n={n} pulse /></b>
             </div>
           </div>
           <BusyLine busier={busier} site={site} timezone={timezone} />

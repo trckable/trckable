@@ -14,13 +14,13 @@ export function LiveSkeleton() {
           <span className="lt">{copy.live}</span>
         </div>
         <div className="lfig">
-          <div>
-            <span className="ll">{copy.onlineNow}</span>
-            {bone(72, 48)}
-          </div>
-          <div>
+          <div className="lmain">
             <span className="ll">{copy.visitors30}</span>
             {bone(88, 48)}
+          </div>
+          <div className="lside">
+            <span className="ll">{copy.onlineNow}</span>
+            {bone(48, 28)}
           </div>
         </div>
         <div className="mins" aria-hidden="true">

@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- Live's two numbers no longer read as the same kind: "Came in the last 30 min" is the big one and "On the site now" the smaller one beside it, with the labels on one line and the numbers on one baseline, so 16 in the half hour against 4 online now is no longer mistaken for a mistake.
 - Mentions no longer match a site by its bare name: only the address (`acme.example`, `www.acme.example`) is searched unless the owner adds a word, so a headline about someone who shares the name ("Dan Albas" for albas.al) is no longer a mention. News items kept under the old rule are dropped at the next round when the site's words no longer name them. Mentions is now off until `TRCKABLE_MENTIONS=on`: while off nothing is searched, and the dashboard, API, bell, setup list and weekly email show nothing of it.
 - A Briefing "Why?" can lead on to Peek again: under its text a build that has Peek shows Ask Peek, which opens Peek with the question and the numbers behind it ready to send. The public product has no Peek and shows the text alone, with no button.
 - The header's controls look like one set at every width: the site, the search, the bell and the person are boxes of the same height (40 px on a phone) with the same border and fill, one gap between them, and a long site name is cut with an ellipsis before anything is pushed off the screen.
