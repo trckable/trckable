@@ -76,9 +76,10 @@ export function chartNote(c: ChartIn, at: number | null, down = false, short = f
   if (!c.band) return ''
   const up = c.points.filter((p) => p.st === 'up').length
   const dn = c.points.filter((p) => p.st === 'dn').length
+  // The period's own verdict says it first: inside the usual band, no hour or day is called above or below it.
+  if (c.overall === '') return c.bucket !== 'hour' && up + dn ? copy.normalOverall(up + dn, c.points.length) : copy.withinBand
   // A phone says it short: "Above usual · 4 of 17 h".
   if (short && c.bucket === 'hour' && (up || dn)) return `${up ? copy.aboveShort(up) : copy.belowShort(dn)}${copy.ofHours(c.points.length)}`
-  if (c.overall === '' && c.bucket !== 'hour') return up + dn ? copy.normalOverall(up + dn, c.points.length) : copy.withinBand
   if (up) return copy.aboveBand(up, c.points.length, c.unit)
   if (dn) return copy.belowBand(dn, c.unit)
   return copy.withinBand

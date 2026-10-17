@@ -4,6 +4,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import './explore.css'
 import { MkPortal } from '../ui/Portal'
 import { copy } from '../copy'
+import { XSkeleton } from '../ui/XBits'
 import type { ContentProps } from './PanelContent'
 import { keyOf } from './key'
 import { askOf, closeExplore, type Ask } from './open'
@@ -15,7 +16,8 @@ import { firstFocusable, usePanelKeys } from './usePanelKeys'
 const PanelContent = lazy(() => import('./PanelContent'))
 const PageDetails = lazy(() => import('./PageDetails'))
 
-const OUT = 340
+// A little longer than the exit glide (explore.css, 180 ms), so the panel is gone from view before it is taken out.
+const OUT = 240
 
 const sameAsk = (a: Ask | null, b: Ask | null): boolean => (a === null || b === null ? a === b : a.tab === b.tab && keyOf(a.filters) === keyOf(b.filters))
 
@@ -80,7 +82,7 @@ export function ExplorePanel(p: PanelProps) {
       {!fw && <div className={`xscrim${on ? ' on' : ''}`} id="xscrim" onClick={closeExplore} aria-hidden="true" />}
       <aside ref={box} className={`xp${on ? ' on' : ''}${fw ? ' full' : ''}`} id="xp" aria-label={copy.exploreTab} tabIndex={-1}>
         {shown && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<XSkeleton cards={2} label={copy.loading} />}>
             <PanelContent {...p} ask={shown} full={fw} onFull={toggleFull} close={closeExplore} />
           </Suspense>
         )}

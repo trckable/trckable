@@ -5,19 +5,21 @@ import type { Why } from '../briefing/why'
 import { dash, ringTone } from '../briefing/geometry'
 import { copy } from '../briefing/copy'
 import { overall, type Part, type Score, type Sentence } from '../briefing/model'
+import type { WhyRow } from '../briefing/scoreWhy'
+import { ScoreSheet } from './ScoreSheet'
 
 const RING = { lime: 'var(--mk-lime)', amber: 'var(--mk-amber)', red: 'var(--mk-red)' }
 
-function Ring({ value }: { value: number | null }) {
+function Ring({ value, onOpen }: { value: number | null; onOpen: () => void }) {
   const r = 27
   return (
-    <div className="mk-ring">
+    <button type="button" className="mk-ring" onClick={onOpen} title={copy.whyScoreOpen} aria-label={`${copy.whyScoreOpen} ${value ?? ''}`}>
       <svg viewBox="0 0 64 64">
         <circle cx="32" cy="32" r={r} fill="none" stroke="var(--mk-line)" strokeWidth="5" />
         {value !== null && <circle cx="32" cy="32" r={r} fill="none" stroke={RING[ringTone(value)]} strokeWidth="5" strokeLinecap="round" strokeDasharray={dash(value, r)} />}
       </svg>
       <b>{value ?? '–'}</b>
-    </div>
+    </button>
   )
 }
 
@@ -36,7 +38,7 @@ interface Crowd {
   note: string
 }
 
-function Side({ scores, learn, crowd }: { scores: Score[]; learn: { day: number } | null; crowd: Crowd | null }) {
+function Side({ scores, learn, crowd, onOpen }: { scores: Score[]; learn: { day: number } | null; crowd: Crowd | null; onOpen: (k: Score['key'] | 'all') => void }) {
   if (crowd) {
     return (
       <div className="sidecol">
@@ -66,15 +68,15 @@ function Side({ scores, learn, crowd }: { scores: Score[]; learn: { day: number 
   const names = { traffic: copy.traffic, engagement: copy.engagement, uptime: copy.uptime }
   return (
     <div className="pulsewrap">
-      <Ring value={overall(scores)} />
+      <Ring value={overall(scores)} onOpen={() => onOpen('all')} />
       <div className="contrib">
         {scores.map((s) => (
-          <button key={s.key} type="button" className={toneOf(s)} data-contrib={s.key}>
+          <button key={s.key} type="button" className={toneOf(s)} data-contrib={s.key} onClick={() => onOpen(s.key)}>
             <b>
               <span className="cn">{names[s.key]} </span>
               {s.value ?? '–'}
             </b>
-            <span>{s.words}</span>
+            <span className="cw">{s.words}</span>
           </button>
         ))}
       </div>
@@ -85,6 +87,10 @@ function Side({ scores, learn, crowd }: { scores: Score[]; learn: { day: number 
 interface HeroProps {
   say: Sentence
   scores: Score[]
+  /** What each part is made of, for the sheet a part (or the ring) opens. */
+  rows: WhyRow[]
+  /** Opens the table behind a part. */
+  onSee: (k: Score['key']) => void
   learn: { day: number } | null
   since?: ReactNode
   period: string
@@ -103,8 +109,9 @@ interface HeroProps {
   why?: Why | null
 }
 
-export function Hero({ say, scores, learn, crowd = null, since, period, onPeriod, chart, moments, onReplay, enter, why }: HeroProps) {
+export function Hero({ say, scores, rows, onSee, learn, crowd = null, since, period, onPeriod, chart, moments, onReplay, enter, why }: HeroProps) {
   const [open, setOpen] = useState(false)
+  const [sheet, setSheet] = useState<Score['key'] | 'all' | null>(null)
   return (
     <section className={`mk-card hero${say.bad ? ' bad' : ''}${enter ? ' enter' : ''}`}>
       <div className="htop">
@@ -152,9 +159,10 @@ export function Hero({ say, scores, learn, crowd = null, since, period, onPeriod
             </div>
           )}
         </div>
-        <Side scores={scores} learn={learn} crowd={crowd} />
+        <Side scores={scores} learn={learn} crowd={crowd} onOpen={setSheet} />
       </div>
       {chart}
+      {sheet && <ScoreSheet rows={rows} only={sheet === 'all' ? null : sheet} onSee={onSee} onClose={() => setSheet(null)} />}
     </section>
   )
 }
