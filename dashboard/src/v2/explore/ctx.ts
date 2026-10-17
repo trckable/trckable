@@ -14,6 +14,10 @@ export interface XCtx {
   /** The report's question for this site, period and filters, for the cards that read their own numbers. */
   query: ReportQuery
   siteName: string
+  /** The open table's name, for a line that says what is missing. */
+  tabName: string
+  /** Switches the period to the last 30 days; absent when the period is already that long. */
+  widen?: () => void
   filters: Filter[]
   options: Partial<Record<FilterDim, Option[]>>
   conn: Connected

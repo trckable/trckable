@@ -99,11 +99,39 @@ export interface AiSearchReport {
   google: boolean
 }
 
+/** One step of the setup ring's checklist (GET /sites/{id}/setup). */
+export interface SetupItem {
+  id: string
+  /** core always counts, optional counts until skipped, more never counts (a skipped step waits there). */
+  group: 'core' | 'optional' | 'more'
+  done: boolean
+  counted: boolean
+  skipped: boolean
+  skippable: boolean
+  detail?: Record<string, unknown>
+}
+
+export type SiteKind = 'shop' | 'saas' | 'content' | 'other'
+
+export interface SetupState {
+  kind: { value: SiteKind | ''; chosen: boolean; provider?: string }
+  goal_suggestion: string
+  done: number
+  counted: number
+  all_set: boolean
+  items: SetupItem[]
+}
+
 export const more = {
-  me: () => call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean }>('GET', '/me'),
+  me: () => call<{ kind: string; email?: string; ip?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean }>('GET', '/me'),
   setKeys: (keys: Record<string, string>) => call<{ keys: Record<string, string> }>('PUT', '/me/keys', { keys }),
   bellRead: () => call<{ read: string[] }>('GET', '/me/bell-read'),
   markBellRead: (read: string[]) => call<{ read: string[] }>('POST', '/me/bell-read', { read }),
+  setup: (site: string) => call<SetupState>('GET', `/sites/${site}/setup`, undefined, undefined, true),
+  setupSkip: (site: string, item: string, skipped: boolean) => call<SetupState>(skipped ? 'PUT' : 'DELETE', `/sites/${site}/setup/skip/${item}`),
+  setupLocale: (site: string) => call<SetupState>('PUT', `/sites/${site}/setup/locale`),
+  setupKind: (site: string, kind: SiteKind) => call<SetupState>('PUT', `/sites/${site}/setup/kind`, { kind }),
+  setupFunnel: (site: string) => call<SetupState>('POST', `/sites/${site}/setup/funnel`, undefined, undefined, true),
   createSite: (domain: string) => call<Site>('POST', '/sites', { domain }),
   updateSite: (id: string, patch: { name?: string; timezone?: string; currency?: string }) => call<Site>('PATCH', `/sites/${id}`, patch),
   deleteSite: (id: string, domain: string) => call<{ events: number; sessions: number; payments: number; connections: number }>('DELETE', `/sites/${id}`, { domain }),

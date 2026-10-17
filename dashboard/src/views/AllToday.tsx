@@ -198,7 +198,7 @@ export function AllToday({ lens, rows, sites, surges, colorOf, start, period, da
         )}
         {!figures && <UptimeCard sites={sites} days={days} quiet={quietSites(sites).length} open={() => open('uptime')} />}
       </div>
-      <div className="nx-cols">
+      <div className={feed.length > 0 ? 'nx-cols' : 'nx-cols solo'}>
         <div className="nx-sites">
           {lens === 'revenue' && (
             <section aria-label={next.totalRevenue}>
@@ -226,24 +226,22 @@ export function AllToday({ lens, rows, sites, surges, colorOf, start, period, da
               )
             })}
         </div>
-        <aside className="nx-feedcol" aria-label={next.feed}>
-          <h3>{next.feed}</h3>
-          <div className="nx-feed">
-            {feed.length === 0 && <p className="muted">{next.feedEmpty}</p>}
-            <ul>
-              {feed.map((e) => (
-                <li key={e.key} className={e.tone}>
-                  <SiteMark site={e.mark} size={16} />
-                  <span>
-                    {e.text}
-                    {e.detail && <small>{e.detail}</small>}
-                  </span>
-                  <time>{when(e.at)}</time>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </aside>
+        {feed.length > 0 && (
+          <aside className="nx-feedcol" aria-label={next.feed}>
+            <h3>{next.feed}</h3>
+            <div className="nx-feed">
+              <ul>
+                {feed.map((e) => (
+                  <li key={e.key} className={e.tone}>
+                    <SiteMark site={e.mark} size={16} />
+                    <span>{e.text}{e.detail && <small>{e.detail}</small>}</span>
+                    <time>{when(e.at)}</time>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </aside>
+        )}
       </div>
     </div>
   )

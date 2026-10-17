@@ -41,6 +41,7 @@ export function VisitCard({ v, currency, onFilter }: { v: VisitStory; currency: 
           <TimelineNode key={n.key} n={n} index={i} first={i === 0} live={v.live} currency={currency} onFilter={onFilter} />
         ))}
       </ol>
+      {v.more > 0 && <p className="faint jr-none">{copy.moreEvents(v.more)}</p>}
     </li>
   )
 }

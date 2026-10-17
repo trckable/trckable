@@ -40,7 +40,6 @@ export const next = defineCopy('allnext', {
   whyMover: (today: string, usual: string, ref: string) => `${today} so far, where ${ref} had ${usual} by now.`,
   surgeWhy: (times: string, source: string) => `${times}× busier than usual right now${source ? `. ${source}` : ''}`,
   feed: 'Live',
-  feedEmpty: 'Nothing to report yet.',
   feedSurge: (name: string, times: string) => `${name} is ${times}× busier than usual`,
   feedQuiet: (name: string) => `${name} went quiet`,
   feedDown: (name: string) => `${name} stopped answering`,

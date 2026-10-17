@@ -1,4 +1,4 @@
-// Adding a site: Your site → Install → Revenue (optional). The Install step is
+// Adding a site: Your site → Kind → Install → Revenue (optional). The Install step is
 // the same component a new site's dashboard shows, and it listens to the live
 // stream, so the first visit turns it live here too.
 import { Banknote, Globe } from 'lucide-react'
@@ -9,7 +9,7 @@ import { Name } from '../../components/Logo'
 import { Modal } from '../../kit/Modal'
 import { StepBody } from '../../components/StepBody'
 import { Steps } from '../../components/Steps'
-import { type Site, more } from '../../lib/apiMore'
+import { type Site, type SiteKind, more } from '../../lib/apiMore'
 import { formWords } from '../../lib/formWords'
 import { openSettings } from '../../lib/settings'
 import { navigate } from '../../lib/url'
@@ -18,14 +18,16 @@ import { wizard as t } from './copy'
 import { checkDomain, cleanDomain, isAdded } from './domain'
 import { DomainStep, type Verdict } from './DomainStep'
 import { Install } from './Install'
+import { guessOf } from './kind'
+import { KindStep } from './KindStep'
 import './wizard.css'
 
 // The wizard has no report to refresh: it only watches for the first visit.
 const noRefetch = () => {}
 
 function Title({ step, site, live }: { step: number; site: Site | null; live: boolean }) {
-  if (step === 2 && live) return <>{t.titleLive}</>
-  if (step === 2) return <>{t.addTo[0]} <Name /> {t.addTo[1]} {site?.domain}</>
+  if (step === 3 && live) return <>{t.titleLive}</>
+  if (step === 3) return <>{t.addTo[0]} <Name /> {t.addTo[1]} {site?.domain}</>
   return <>{t.title[step - 1]}</>
 }
 
@@ -35,6 +37,9 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
   const [site, setSite] = useState<Site | null>(null)
   const [busy, setBusy] = useState(false)
   const [refusal, setRefusal] = useState('')
+  const [kind, setKind] = useState<SiteKind | null>(null)
+  const [guess, setGuess] = useState<SiteKind | null>(null)
+  const [reading, setReading] = useState(false)
   const stream = useLive(site?.id ?? null, noRefetch)
   const live = stream.visits.length > 0
 
@@ -43,6 +48,26 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
   const verdict: Verdict = checked === 'ok' && !site && isAdded(clean, sites.map((x) => x.domain)) ? 'added' : checked
   const valid = verdict === 'ok' || site !== null
   const reason = verdict === 'ok' || site ? '' : t.needs[verdict]
+  // The homepage read suggests the kind; nothing found leaves the chips unchosen.
+  const readKind = (id: string) => {
+    setReading(true)
+    more
+      .checkInstall(id)
+      .then((c) => {
+        const g = guessOf(c)
+        setGuess(g)
+        setKind((k) => k ?? g)
+      })
+      .catch(() => undefined)
+      .finally(() => setReading(false))
+  }
+  const keepKind = () => {
+    if (!site || !kind) {
+      setStep(3)
+      return
+    }
+    more.setupKind(site.id, kind).catch(() => undefined).finally(() => setStep(3))
+  }
   const create = () => {
     if (site) {
       setStep(2)
@@ -58,6 +83,7 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
         setSite(s)
         onSites()
         setStep(2)
+        readKind(s.id)
       })
       .catch((e: unknown) => setRefusal(formWords(e, { 500: t.failed, 502: t.failed, 503: t.failed, 504: t.failed })))
       .finally(() => setBusy(false))
@@ -75,13 +101,14 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
 
   return (
     <Modal label={t.label} className="wizard add-site" onClose={onClose} keepSize={false}>
-      <DialogHead icon={step === 3 ? Banknote : Globe} heading={<Title step={step} site={site} live={live} />} hint={t.sub[step - 1]} />
-      <Steps labels={t.steps} at={step - 1} done={live && step === 2 ? 1 : undefined} onGo={(i) => setStep(i + 1)} />
+      <DialogHead icon={step === 4 ? Banknote : Globe} heading={<Title step={step} site={site} live={live} />} hint={t.sub[step - 1]} />
+      <Steps labels={t.steps} at={step - 1} done={live && step === 3 ? 2 : undefined} onGo={(i) => setStep(i + 1)} />
 
       <StepBody step={step} className="wiz-step" fit>
         {step === 1 && <DomainStep domain={site ? site.domain : domain} setDomain={(d) => { setDomain(d); setRefusal('') }} refusal={refusal} clean={clean} verdict={verdict} locked={site !== null} onSubmit={create} />}
-        {step === 2 && site && <Install site={site} visits={stream.visits} variant="wizard" />}
-        {step === 3 && <p className="muted wiz-revenue">{t.revenueBody}</p>}
+        {step === 2 && <KindStep reading={reading} guess={guess} value={kind} onPick={setKind} />}
+        {step === 3 && site && <Install site={site} visits={stream.visits} variant="wizard" />}
+        {step === 4 && <p className="muted wiz-revenue">{t.revenueBody}</p>}
       </StepBody>
 
       {step === 1 && (
@@ -101,20 +128,33 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
       {step === 2 && (
         <DialogActions
           left={
-            <button type="button" className="btn ghost" onClick={open}>
-              {t.later}
+            <button type="button" className="btn ghost" onClick={() => setStep(3)}>
+              {t.kindSkip}
             </button>
           }
         >
-          <button type="button" className={live ? 'btn primary big' : 'btn big'} onClick={() => setStep(3)}>
-            {t.next}
+          <button type="button" className="btn primary big" disabled={!kind} onClick={keepKind}>
+            {t.kindNext}
           </button>
         </DialogActions>
       )}
       {step === 3 && (
         <DialogActions
           left={
-            <button type="button" className="btn ghost" onClick={() => setStep(2)}>
+            <button type="button" className="btn ghost" onClick={open}>
+              {t.later}
+            </button>
+          }
+        >
+          <button type="button" className={live ? 'btn primary big' : 'btn big'} onClick={() => setStep(4)}>
+            {t.next}
+          </button>
+        </DialogActions>
+      )}
+      {step === 4 && (
+        <DialogActions
+          left={
+            <button type="button" className="btn ghost" onClick={() => setStep(3)}>
               {t.back}
             </button>
           }

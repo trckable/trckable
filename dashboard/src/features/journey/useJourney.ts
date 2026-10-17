@@ -8,11 +8,12 @@ import { buildStory, type Story } from './model'
 
 const REFRESH_MS = 20_000
 
-export type JourneyState = { status: 'loading' } | { status: 'failed'; error: string } | { status: 'ready'; story: Story; currency: string }
+export type JourneyState = { status: 'loading' } | { status: 'failed'; error: string; retry: () => void } | { status: 'ready'; story: Story; currency: string }
 
 export function useJourney(site: string, visitor: string, query: ReportQuery): JourneyState {
   const [data, setData] = useState<{ result: JourneyResult; at: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [attempt, setAttempt] = useState(0)
   useEffect(() => {
     let live = true
     let timer = 0
@@ -36,9 +37,9 @@ export function useJourney(site: string, visitor: string, query: ReportQuery): J
       live = false
       clearTimeout(timer)
     }
-  }, [site, visitor, query])
+  }, [site, visitor, query, attempt])
   const story = useMemo(() => (data ? buildStory(data.result, data.at) : null), [data])
   if (story && data) return { status: 'ready', story, currency: data.result.currency ?? 'USD' }
-  if (error) return { status: 'failed', error }
+  if (error) return { status: 'failed', error, retry: () => { setError(null); setAttempt((n) => n + 1) } }
   return { status: 'loading' }
 }

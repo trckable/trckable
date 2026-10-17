@@ -58,3 +58,20 @@ by a later guess (the payment provider seen keeps updating). The kind is only ke
 - `POST /api/v1/sites/{site}/setup/funnel`: a funnel was built.
 
 Each answers with the new checklist.
+
+## The ring in the header
+
+The dashboard draws this as a ring right of the site switcher: done over counted
+("4/9 set up"), and a panel under it (a bottom sheet on a phone) with the
+steps in their groups. Each open step has the one action that opens the place
+it gets done; an item you can skip also has "Not for me" ("I don't sell
+online" for payments) and moves to "More you can add", where "Bring back" puts
+it back. Done steps read "Done" and cannot be clicked.
+
+- When every counted step is done the ring is a check for 7 days, then it goes.
+- "Hide this" is kept per account. The ring comes back when more is left
+  undone than when you hid it, for example after payments are disconnected.
+- Viewers see the ring and its steps but get no actions. Shared links and
+  embeds never show it.
+- `GET /api/v1/me` also answers with `ip`, the address the request came from,
+  for Settings → Data & privacy → "Add my current IP".

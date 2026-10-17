@@ -607,6 +607,8 @@ export interface JourneyVisit {
   os?: string
   pageviews: number
   engaged_s: number
+  /** Events the visit has beyond the ones listed. */
+  events_more?: number
   /** null when the visit holds no pageview or goal. */
   events: { at: string; kind: string; path?: string; goal?: string; label?: string; props?: string; engaged_s?: number }[] | null
 }
@@ -808,6 +810,8 @@ export interface InstallCheck {
   /** The tag's script, and what it answered (absent: it could not be loaded). */
   script?: string
   script_status?: number
+  /** The guess from the homepage: shop, saas, content or other. */
+  kind?: string
 }
 
 /** A moment the data shows: a visitor step, the best day, a first. */

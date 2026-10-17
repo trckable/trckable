@@ -789,6 +789,15 @@ func (a *API) ip(r *http.Request) string {
 	return limitKey(h)
 }
 
+// callerIP is the address a request came from, as the ingest would see it.
+func (a *API) callerIP(r *http.Request) string {
+	if a.ClientIP != nil {
+		return a.ClientIP(r)
+	}
+	h, _, _ := net.SplitHostPort(r.RemoteAddr)
+	return h
+}
+
 func limitKey(addr string) string {
 	ip := net.ParseIP(addr)
 	if ip == nil || ip.To4() != nil {
@@ -973,6 +982,8 @@ func (a *API) me(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys, "must_change": a.Ctl.MustChange(r.Context(), p.user.ID),
 		// Only owners upgrade, so only their dashboards look.
 		"update_check": a.UpdateCheck && p.user.Role == sqlite.RoleOwner,
+		// The address this request came from: Filtering's "Add my current IP".
+		"ip": a.callerIP(r),
 		// The instance's own health (every event, the disk, backups) is for
 		// the installation's own account.
 		"operator": p.operator()})

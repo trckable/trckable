@@ -5,7 +5,7 @@ import type { Site } from '../lib/api'
 export function SettingsHead({ site }: { site: Site }) {
   return (
     <>
-      <SiteMark site={site} size={44} />
+      <SiteMark site={site} size={36} />
       <span className="window-who">
         <span className="window-name">
           <b>{site.name || site.domain}</b>

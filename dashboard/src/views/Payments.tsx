@@ -48,7 +48,7 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
 
   const byId = (id: string) => data?.providers.find((p) => p.id === id)
   const connected = data?.connections ?? []
-  const recorded = connected.reduce((n, c) => n + c.payments, 0)
+  const recorded = connected.reduce((n, c) => n + (c.payments || 0), 0)
   const available = data?.providers.filter((p) => !connected.some((c) => c.provider === p.id)) ?? []
   useConnectFirst(available, setAdding)
   return (
@@ -209,7 +209,7 @@ function ConnectionRow({ site, c, provider, onChange }: { site: Site; c: PayConn
               <span className="dot" style={{ background: status.tone, borderRadius: '50%' }} />
               <span className="muted conn-text">
                 {status.text}
-                {c.payments > 0 && (
+                {(c.payments || 0) > 0 && (
                   <span className="faint num">
                     {' '}
                     · {c.payments.toLocaleString()} payment{c.payments === 1 ? '' : 's'}

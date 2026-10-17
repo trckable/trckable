@@ -10,6 +10,7 @@ export const copy = defineCopy('journey', {
   title: (id: string) => `Visitor ${id}`,
   loading: 'Loading this visitor’s journey…',
   failed: (why: string) => `Couldn’t load this journey: ${why}`,
+  retry: 'Try again',
   empty: 'No visits recorded for this visitor in this period.',
   close: 'Close',
   options: 'Visitor options',
@@ -49,6 +50,7 @@ export const copy = defineCopy('journey', {
   here: 'Here now',
   older: 'Older visits are not shown.',
   noPages: 'No pages recorded in this visit.',
+  moreEvents: (n: number) => `+${n} more`,
 
   // The menu.
   copyId: 'Copy visitor id',
