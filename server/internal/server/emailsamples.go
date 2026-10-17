@@ -98,7 +98,7 @@ func EmailSamples(base string) []mailkit.Page {
 	}
 	prev := &query.Result{KPIs: query.KPIs{Visitors: 4000, Pageviews: 10800, BounceRate: 0.5, AvgSessionS: 120}}
 	link := base + "/" + domain + "?from=2026-10-05&to=2026-10-11&compare=previous"
-	weekly := alerts.Event{Kind: "weekly", Title: "Your week", Email: weeklyEmail(domain, from, from.AddDate(0, 0, 7), cur, prev, aiWeek{Visitors: 702}, "Busiest moment: Thu 18:45, 53 people online, mostly from Facebook.", link)}
+	weekly := alerts.Event{Kind: "weekly", Title: "Your week", Email: weeklyEmail(domain, from, from.AddDate(0, 0, 7), cur, prev, aiWeek{Visitors: 702}, "Busiest moment: Thu 18:45, 53 people online, mostly from Facebook.", link, weeklyMentions(weekMentionSamples(), base+"/"+domain+"/mentions"))}
 	out = append(out, alert("weekly", weekly))
 
 	// A client's report in German, in the client's colour.
@@ -122,4 +122,14 @@ func page(name string, r alerts.Report) mailkit.Page {
 		}
 	}
 	return p
+}
+
+// weekMentionSamples are the week's mentions in the sample weekly email.
+func weekMentionSamples() []sqlite.Mention {
+	return []sqlite.Mention{
+		{Source: "hn", URL: "https://news.ycombinator.com/item?id=41234567", Title: "Show HN: A one-person shop that ships in a day", Visitors: 1240},
+		{Source: "ph", URL: "https://www.producthunt.com/posts/one-person-shop", Title: "One-person shop: checkout in a day", Visitors: 310},
+		{Source: "news", Host: "indiehackers.example", URL: "https://indiehackers.example/posts/shipping-fast", Title: "How a solo founder ships a store in a day", Visitors: 64},
+		{Source: "news", Host: "devweekly.example", URL: "https://devweekly.example/issues/212", Title: "Dev Weekly 212", Visitors: 9},
+	}
 }

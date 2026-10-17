@@ -138,8 +138,8 @@ func revenueLine(cur, prev *query.Result) string {
 // weeklyEmail is the report as a designed email: the same numbers and
 // sentences as weeklyText, laid out by package reports on the mail kit. The
 // stop link is added to it when it is sent.
-func weeklyEmail(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, busiest, link string) *mailkit.Email {
-	var x reports.Weekly
+func weeklyEmail(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, busiest, link string, men reports.Weekly) *mailkit.Email {
+	x := men
 	x.Link = link
 	if cur.KPIs.Visitors > 0 {
 		for _, line := range []string{aiLine(ai), revenueLine(cur, prev), goalLine(cur)} {
@@ -286,7 +286,7 @@ func (s *Server) weeklyEvent(ctx context.Context, q *query.Q, info sqlite.SiteIn
 	}
 	ev.Title, ev.Message, ev.Data = weeklyText(info.Domain, from, to, cur, prev, ai, busiest, link)
 	ev.Text = ev.Title + " — " + ev.Message
-	ev.Email = weeklyEmail(info.Domain, from, to, cur, prev, ai, busiest, link)
+	ev.Email = weeklyEmail(info.Domain, from, to, cur, prev, ai, busiest, link, s.weekMentions(ctx, siteID, info.Domain, from, to))
 	return ev, true
 }
 

@@ -37,6 +37,8 @@ type Words struct {
 	YourWeek        string // the weekly email's title
 	OpenWeek        string // its button
 	PerDay          string // the caption over its bars of visitors a day
+	Talked          string // the weekly email's section on mentions
+	More            string // its "+%d more" link
 	Date            func(time.Time) string
 	Thousands       string // the digit group separator
 	Months          [12]string
@@ -64,7 +66,8 @@ var words = map[string]Words{
 		SentBy: "Sent by %s", AI: "AI assistants", YourWeek: "Your week", OpenWeek: "Open your week", Thousands: ",",
 		Months: [12]string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"},
 		PerDay: "Visitors per day",
-		Days:   [7]string{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"},
+		Talked: "Who talked about you", More: "+%d more",
+		Days: [7]string{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"},
 	},
 	// NEEDS REVIEW: German, French, Spanish, Italian and Dutch below were not
 	// checked by a native speaker.
@@ -77,7 +80,8 @@ var words = map[string]Words{
 		SentBy: "Gesendet von %s", AI: "KI-Assistenten", YourWeek: "Deine Woche", OpenWeek: "Deine Woche öffnen", Thousands: ".",
 		Months: [12]string{"Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"},
 		PerDay: "Besucher pro Tag",
-		Days:   [7]string{"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"},
+		Talked: "Wer über dich gesprochen hat", More: "+%d weitere",
+		Days: [7]string{"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"},
 	},
 	"fr": {
 		Weekly: "Rapport hebdomadaire", Monthly: "Rapport mensuel", Visitors: "Visiteurs", Pageviews: "Pages vues", Bounce: "Taux de rebond", Session: "Durée de visite",
@@ -88,7 +92,8 @@ var words = map[string]Words{
 		SentBy: "Envoyé par %s", AI: "Assistants IA", YourWeek: "Votre semaine", OpenWeek: "Ouvrir votre semaine", Thousands: " ",
 		Months: [12]string{"janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."},
 		PerDay: "Visiteurs par jour",
-		Days:   [7]string{"dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."},
+		Talked: "Qui a parlé de vous", More: "+%d de plus",
+		Days: [7]string{"dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."},
 	},
 	"es": {
 		Weekly: "Informe semanal", Monthly: "Informe mensual", Visitors: "Visitantes", Pageviews: "Páginas vistas", Bounce: "Tasa de rebote", Session: "Duración de la visita",
@@ -99,7 +104,8 @@ var words = map[string]Words{
 		SentBy: "Enviado por %s", AI: "Asistentes de IA", YourWeek: "Tu semana", OpenWeek: "Abrir tu semana", Thousands: ".",
 		Months: [12]string{"ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"},
 		PerDay: "Visitantes por día",
-		Days:   [7]string{"dom", "lun", "mar", "mié", "jue", "vie", "sáb"},
+		Talked: "Quién habló de ti", More: "+%d más",
+		Days: [7]string{"dom", "lun", "mar", "mié", "jue", "vie", "sáb"},
 	},
 	"it": {
 		Weekly: "Rapporto settimanale", Monthly: "Rapporto mensile", Visitors: "Visitatori", Pageviews: "Visualizzazioni di pagina", Bounce: "Frequenza di rimbalzo", Session: "Durata della visita",
@@ -110,7 +116,8 @@ var words = map[string]Words{
 		SentBy: "Inviato da %s", AI: "Assistenti IA", YourWeek: "La tua settimana", OpenWeek: "Apri la tua settimana", Thousands: ".",
 		Months: [12]string{"gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"},
 		PerDay: "Visitatori al giorno",
-		Days:   [7]string{"dom", "lun", "mar", "mer", "gio", "ven", "sab"},
+		Talked: "Chi ha parlato di te", More: "+%d altre",
+		Days: [7]string{"dom", "lun", "mar", "mer", "gio", "ven", "sab"},
 	},
 	"nl": {
 		Weekly: "Weekrapport", Monthly: "Maandrapport", Visitors: "Bezoekers", Pageviews: "Paginaweergaven", Bounce: "Bouncepercentage", Session: "Bezoekduur",
@@ -121,7 +128,8 @@ var words = map[string]Words{
 		SentBy: "Verzonden door %s", AI: "AI-assistenten", YourWeek: "Jouw week", OpenWeek: "Open je week", Thousands: ".",
 		Months: [12]string{"jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"},
 		PerDay: "Bezoekers per dag",
-		Days:   [7]string{"zo", "ma", "di", "wo", "do", "vr", "za"},
+		Talked: "Wie over je sprak", More: "+%d meer",
+		Days: [7]string{"zo", "ma", "di", "wo", "do", "vr", "za"},
 	},
 }
 

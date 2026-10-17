@@ -111,7 +111,7 @@ export const copy = defineCopy('briefing.cards', {
   newMention: (host: string) => `New mention on ${host}`,
   commentsSoFar: 'Comments so far',
   followLand: (page: string) => `People who follow it land on ${page}. Replying early helps most.`,
-  mentionHow: 'We watch Hacker News, Reddit, GitHub and Stack Overflow for links to your domain.',
+  mentionHow: 'We watch Hacker News, Product Hunt and the news and blogs for links to your domain.',
   mentionEv: (points: number, comments: number, at: string) => `${points} points and ${comments} comments at ${at}.`,
   alertMentions: 'Alert me on new mentions',
   alertMentionsMsg: (site: string) => `We will tell you when someone links to ${site}`,
