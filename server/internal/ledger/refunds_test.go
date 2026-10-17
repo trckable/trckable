@@ -177,3 +177,16 @@ func TestRefundRowsAlwaysAddUp(t *testing.T) {
 		}
 	}
 }
+
+func TestAReversalChangesTheAmountNotTheCount(t *testing.T) {
+	d := func(day int) time.Time { return time.Date(2026, 9, day, 12, 0, 0, 0, time.UTC) }
+	facts := []Fact{{Provider: "stripe", ID: "a", Refunds: []RefundAt{{At: d(1), Amount: 100}, {At: d(2), Amount: -40}, {At: d(3), Amount: 60}}}}
+	rows := RefundsIn("s1", facts, d(1), d(9))
+	var sum int64
+	for _, r := range rows {
+		sum += r.Amount
+	}
+	if len(rows) != 3 || sum != 120 || CountRefunds(rows) != 2 {
+		t.Fatalf("%d rows adding up to %d count as %d refunds, want 3 rows, 120, 2", len(rows), sum, CountRefunds(rows))
+	}
+}

@@ -42,3 +42,15 @@ func RefundsIn(site string, facts []Fact, from, to time.Time) []Refund {
 	})
 	return out
 }
+
+// CountRefunds is how many refunds the rows are: a reversal (a negative row)
+// changes the amount, never the count.
+func CountRefunds(rows []Refund) int {
+	n := 0
+	for _, r := range rows {
+		if r.Amount > 0 {
+			n++
+		}
+	}
+	return n
+}

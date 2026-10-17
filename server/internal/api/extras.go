@@ -355,7 +355,7 @@ func (a *API) refunds(w http.ResponseWriter, r *http.Request) {
 	if len(rows) > n {
 		rows = rows[:n]
 	}
-	out["refunds"], out["count"], out["amount"] = append([]ledger.Refund{}, rows...), len(in), total
-	out["count_90d"] = len(ledger.RefundsIn(p.Site, facts, p.To.Add(-refundWindow), p.To))
+	out["refunds"], out["count"], out["amount"] = append([]ledger.Refund{}, rows...), ledger.CountRefunds(in), total
+	out["count_90d"] = ledger.CountRefunds(ledger.RefundsIn(p.Site, facts, p.To.Add(-refundWindow), p.To))
 	writeJSON(w, http.StatusOK, out)
 }
