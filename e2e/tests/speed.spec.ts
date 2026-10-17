@@ -34,9 +34,9 @@ test('first load stays small and the report stays fast', async ({ page, browserN
   await page.fill('input[type=password]', PASSWORD)
   await page.click('button[type=submit]')
   await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 20_000 })
-  // A site with visits opens in Live, which asks for no report: what is timed here is Data.
-  await page.goto(BASE + '/?view=data')
-  await expect(page.locator('.kpi .value.num').first()).toBeVisible()
+  // A site with visits opens in Live: its first load is what is counted.
+  await page.goto(BASE + '/?view=live')
+  await expect(page.locator('.lnow').first()).toBeVisible()
 
   // A cold load of the same dashboard, counted.
   const asked: { path: string; at: number }[] = []
@@ -48,7 +48,7 @@ test('first load stays small and the report stays fast', async ({ page, browserN
     if (u.pathname.startsWith('/api/') && !u.pathname.endsWith('/stream') && !u.pathname.endsWith('/live') && !lazy) asked.push({ path: u.pathname, at: Date.now() })
   })
   await page.reload()
-  await expect(page.locator('.kpi .value.num').first()).toBeVisible()
+  await expect(page.locator('.lnow').first()).toBeVisible()
   await page.waitForLoadState('networkidle', { timeout: 15_000 })
   expect(asked.length, asked.map((a) => a.path).join('\n')).toBeLessThanOrEqual(FIRST_LOAD_REQUESTS)
   // setup, me and sites leave together, not one after another.
