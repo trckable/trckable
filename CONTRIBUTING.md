@@ -81,6 +81,7 @@ it before opening a pull request: CI does, and tells you what failed.
   The pull request title is the same line.
 - **Sign the CLA once.** On your first pull request a bot comments; comment
   `I have read the CLA Document and I hereby sign the CLA` ([CLA.md](CLA.md)).
+- **No secrets in a commit.** Keys, tokens, passwords and private keys never go in, not even for a test or in an old commit: CI runs gitleaks on every pull request. A test value that only looks like a secret is listed with its reason in `.gitleaks.toml`; a real one is rotated first.
 - **Stay inside the size budgets.** The tracker build fails past 2 KB gzip
   (`pnpm size` in `tracker/`), and the dashboard's first load has a budget too.
 - **Every visible string is plain English and short**, and every feature works
