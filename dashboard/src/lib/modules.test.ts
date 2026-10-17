@@ -3,17 +3,19 @@
 // one of its entry points away — and nothing that belongs to another.
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_ON, MODULES, createItems, isOn, settingsModule, shows, type EntryPoints, type Mods } from './modules'
+import { ALWAYS, CHOICES, DEFAULT_ON, MODULES, createItems, isOn, shows, type EntryPoints, type Mods } from './modules'
 
 const goSource = readFileSync(new URL('../../../server/internal/modules/modules.go', import.meta.url), 'utf8')
 // Each module in the server's list starts with {ID: "…" and runs to the next
 // one; "On: true" inside it makes it on by default.
 const entries = goSource.split('{ID: "').slice(1)
-const serverModules = entries.map((e) => ({ id: e.slice(0, e.indexOf('"')), on: /\bOn: true\b/.test(e) }))
+const serverModules = entries.map((e) => ({ id: e.slice(0, e.indexOf('"')), on: /\bOn: true\b/.test(e), group: /Group: (\w+)/.exec(e)?.[1] }))
 
 const allOn: Mods = Object.fromEntries(Object.keys(MODULES).map((id) => [id, true]))
 const without = (id: string): Mods => ({ ...allOn, [id]: false })
-const kinds: (keyof EntryPoints)[] = ['create', 'cards', 'filters', 'tabs', 'settings']
+const kinds: (keyof EntryPoints)[] = ['create', 'cards', 'filters', 'tabs']
+// Everything that can be off: the choices, and revenue and search until connected.
+const switchable = Object.keys(MODULES).filter((id) => !ALWAYS.includes(id))
 
 describe('module registry', () => {
   it('lists exactly the modules the server offers', () => {
@@ -22,19 +24,36 @@ describe('module registry', () => {
   })
 
   it('has the same defaults as the server', () => {
-    for (const m of serverModules) expect([m.id, DEFAULT_ON[m.id] === true]).toEqual([m.id, m.on])
+    for (const m of serverModules.filter((m) => !ALWAYS.includes(m.id))) expect([m.id, DEFAULT_ON[m.id] === true]).toEqual([m.id, m.on])
   })
 
-  it('makes Funnels and Notes real modules, on by default', () => {
-    expect(isOn(null, 'funnels')).toBe(true)
-    expect(isOn(null, 'notes')).toBe(true)
+  it('splits the modules the way the server does', () => {
+    const group = (id: string) => serverModules.find((m) => m.id === id)?.group
+    for (const id of ALWAYS) expect([id, group(id)]).toEqual([id, 'Always'])
+    for (const id of CHOICES) expect([id, group(id)]).toEqual([id, 'Choice'])
+    expect(group('revenue')).toBe('Connect')
+    expect(group('search')).toBe('Connect')
+  })
+
+  it('has no switch for a module that is simply there', () => {
+    for (const id of ALWAYS) {
+      expect(isOn(null, id)).toBe(true)
+      expect(isOn({}, id)).toBe(true)
+      expect(isOn({ [id]: false }, id)).toBe(true)
+    }
+  })
+
+  it('turns vitals and goals on for a new site, before the list has loaded', () => {
+    expect(isOn(null, 'vitals')).toBe(true)
+    expect(isOn(null, 'goals')).toBe(true)
+    expect(isOn(null, 'heatmaps')).toBe(false)
   })
 
   it('never offers a site in the Create menu', () => {
     expect(createItems(allOn)).toEqual(['goal', 'funnel', 'note'])
   })
 
-  describe.each(Object.keys(MODULES))('%s off', (id) => {
+  describe.each(switchable)('%s off', (id) => {
     const off = without(id)
     const mine = MODULES[id]
 
@@ -55,16 +74,12 @@ describe('module registry', () => {
       const gone = mine.create ?? []
       expect(createItems(off)).toEqual(createItems(allOn).filter((c) => !gone.includes(c)))
     })
-
-    it('owns its settings sections', () => {
-      for (const tab of mine.settings ?? []) expect(settingsModule(tab)).toBe(id)
-    })
   })
 
   it('shows core entry points whatever is off', () => {
     const none: Mods = {}
     expect(shows(none, 'filters', 'channel')).toBe(true)
     expect(shows(none, 'cards', 'sources')).toBe(true)
-    expect(createItems(none)).toEqual([])
+    expect(createItems(none)).toEqual(['funnel', 'note'])
   })
 })

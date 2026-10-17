@@ -1,4 +1,4 @@
-import { Activity, Bell, Blocks, Check, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, LayoutTemplate, RefreshCw, Search, Newspaper, Settings as Cog, Share2, ShieldCheck, StickyNote, TriangleAlert } from 'lucide-react'
+import { Activity, Bell, Check, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, LayoutTemplate, RefreshCw, Search, Newspaper, Settings as Cog, Share2, ShieldCheck, StickyNote, TriangleAlert } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { isViewer } from '../lib/me'
 import { api, siteState, fail, type InstallCheck, type Site, type SiteState, more } from '../lib/apiMore'
@@ -14,7 +14,7 @@ import { InlineEdit } from '../components/InlineEdit'
 import { Row } from '../components/Row'
 import { Copyable } from '../components/Copyable'
 import { Install } from '../features/install/Install'
-import { ModulesSettings } from './Modules'
+import { ScriptRecords } from './ScriptRecords'
 import { PaymentsSettings } from './Payments'
 import { PrivacyTab, ReportSettings } from '../features/privacy/PrivacyTab'
 import { Locked } from '../components/Locked'
@@ -23,12 +23,10 @@ import { WidgetsSettings } from './Widgets'
 import { HealthSettings } from './Health'
 import { AlertsTab } from '../features/reports/AlertsTab'
 import { SearchSettings } from './Search'
-import { moduleOf } from './settingsModules'
 import { NotesSettings } from '../features/notes/NotesSettings'
 import { MilestonesSetting } from '../features/milestones/MilestonesSetting'
 import { ImportSetting } from '../features/install/ImportSetting'
 import { DeleteSite } from './Sites'
-import { ModuleOff } from './ModuleOff'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import './Settings.css'
 
@@ -43,7 +41,6 @@ const MentionsSettings = lazy(() => import('../features/mentions/MentionsSetting
 const TABS: { id: TabID; label: string; icon: typeof Cog }[] = [
   { id: 'site', label: 'General', icon: Cog },
   { id: 'install', label: 'Install', icon: Code },
-  { id: 'modules', label: 'Modules', icon: Blocks },
   { id: 'sharing', label: 'Sharing', icon: Share2 },
   { id: 'widgets', label: 'Widgets', icon: LayoutTemplate },
   { id: 'notes', label: 'Notes', icon: StickyNote },
@@ -57,7 +54,7 @@ const TABS: { id: TabID; label: string; icon: typeof Cog }[] = [
 
 // The dialog's menu, grouped the way an owner looks for things.
 const GROUPS: { name: string; tabs: TabID[] }[] = [
-  { name: 'This site', tabs: ['site', 'install', 'modules', 'sharing', 'widgets', 'notes'] },
+  { name: 'This site', tabs: ['site', 'install', 'sharing', 'widgets', 'notes'] },
   { name: 'Money', tabs: ['payments'] },
   { name: 'Data', tabs: ['search', 'mentions', 'privacy', 'alerts'] },
   { name: 'Instance', tabs: ['health'] },
@@ -71,31 +68,15 @@ export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSit
   const close = closeSettings
   // Once visits arrive there is nothing left to install, only to verify.
   const label = (t: (typeof TABS)[number]) => (t.id === 'install' && p.site.last_event_at ? 'Verify' : t.label)
-  // Sections that belong to a module say so when it is off, and offer to
-  // turn it on, instead of showing a setup that leads nowhere.
-  const [mods, setMods] = useState<Partial<Record<string, boolean>> | null>(null)
-  const loadMods = () =>
-    api
-      .modules(p.site.id)
-      .then((r) => setMods(Object.fromEntries(r.modules.map((m) => [m.id, m.enabled]))))
-      .catch(() => setMods({}))
-  useEffect(() => {
-    void loadMods()
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadMods is a new function every render; refetch only when the site or the open section changes
-  }, [p.site.id, tab])
-  const off = (id: TabID) => {
-    const m = moduleOf(id)
-    return mods !== null && m !== undefined && mods[m] === false
-  }
   const tabs: WindowTab[] = GROUPS.flatMap((g) =>
     g.tabs.flatMap((id) => {
       const t = TABS.find((x) => x.id === id)
-      return t ? [{ id: t.id, label: label(t), icon: t.icon, group: g.name, flag: off(t.id) ? <span className="tag quiet">Off</span> : undefined }] : []
+      return t ? [{ id: t.id, label: label(t), icon: t.icon, group: g.name }] : []
     }),
   )
   return (
     <Window label={`Settings for ${p.site.domain}`} head={<SettingsHead site={p.site} />} tabs={tabs} tab={tab} onTab={(id) => go(id as TabID)} onClose={close}>
-      {off(tab) ? <ModuleOff site={p.site} tab={tab} icon={TABS.find((t) => t.id === tab)?.icon} onOn={loadMods} /> : <SettingsSection tab={tab} site={p.site} onSites={p.onSites} />}
+      <SettingsSection tab={tab} site={p.site} onSites={p.onSites} />
     </Window>
   )
 }
@@ -108,6 +89,7 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
       {tab === 'site' && (
         <>
           <SiteSettings key={site.id} site={site} onSaved={onSites} />
+          <ScriptRecords key={'sr' + site.id} site={site} />
           <Locked><SiteLook site={site} onSaved={onSites} /><ReportSettings key={'r' + site.id} site={site} onSites={onSites} /></Locked>
           {!isViewer() && <DangerZone site={site} onSites={onSites} />}
         </>
@@ -117,9 +99,8 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
       {tab === 'widgets' && <Locked><WidgetsSettings key={'wg' + site.id} site={site} /></Locked>}
       {tab === 'install' && <><InstallSection site={site} /><ImportSetting key={'im' + site.id} site={site} /></>}
       {tab === 'notes' && <><NotesSettings key={'n' + site.id} site={site} /><MilestonesSetting key={'ms' + site.id} site={site} /></>}
-      {tab === 'modules' && <ModulesSettings key={'m' + site.id} site={site} />}
       {tab === 'payments' && <PaymentsSettings key={'pay' + site.id} site={site} onSiteChange={onSites} />}
-      {tab === 'search' && <SearchSettings key={'sc' + site.id} site={site} />}
+      {tab === 'search' && <Locked><SearchSettings key={'sc' + site.id} site={site} /></Locked>}
       {tab === 'mentions' && <Suspense fallback={null}><MentionsSettings key={'mn' + site.id} site={site} /></Suspense>}
       {tab === 'privacy' && <Locked><PrivacyTab key={'pv' + site.id} site={site} onSites={onSites} /></Locked>}
       {tab === 'alerts' && <Locked><AlertsTab key={'al' + site.id} site={site} /></Locked>}

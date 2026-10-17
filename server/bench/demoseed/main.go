@@ -89,8 +89,6 @@ func main() {
 	must(err)
 	// The history ends now, so the site has been seen now, as ingest would record it.
 	ctl.SeenSite(ctx, site, time.Now().Unix())
-	// Robots are an opt-in module; the demo shows them.
-	must(modules.Store{DB: ctl.DB}.Set(ctx, site, "crawlers", true))
 	ctl.Close()
 
 	rng := rand.New(rand.NewSource(*seed)) //nolint:gosec // seeded so demo data is repeatable, not security

@@ -245,10 +245,14 @@ func TestSetupEndpointEachItem(t *testing.T) {
 	g.setup(t, c)
 
 	out := getSetup(t, g, c)
-	for _, id := range []string{"verified", "own_visits", "locale", "goal", "payments", "funnel", "search", "crawlers", "proxy", "vitals", "heatmaps", "ga", "team", "phone", "mentions"} {
+	for _, id := range []string{"verified", "own_visits", "locale", "goal", "payments", "funnel", "search", "crawlers", "proxy", "heatmaps", "ga", "team", "phone", "mentions"} {
 		if apiItem(t, out, id)["done"] == true {
 			t.Errorf("%s is done on a new site", id)
 		}
+	}
+	// Core Web Vitals are on for a new site, so that item is already done.
+	if apiItem(t, out, "vitals")["done"] != true {
+		t.Errorf("vitals is not done on a new site, where they are on by default")
 	}
 	if out["counted"] != 9.0 || out["done"] != 0.0 {
 		t.Fatalf("new site: %v", out)

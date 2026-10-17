@@ -1,9 +1,10 @@
 // The one place the dashboard learns what each module puts on screen. The
 // server's list (server/internal/modules) says which modules exist and which
-// are on; this says where each one shows up, so turning one off takes away
-// every way in at once: its cards, its Create entries, its filters, its tabs
-// and its settings section. Nothing else in the UI checks a module by name.
-import type { SettingsTab } from './settings'
+// are on; this says where each one shows up: its cards, its Create entries,
+// its filters and its tabs. Three kinds, as on the server: most have no
+// switch and are simply there, revenue and search appear once connected, and
+// only what changes the script is a choice. Nothing else in the UI checks a
+// module by name.
 
 /** Which modules a site has on, as the server sent them; null while loading. */
 export type Mods = Partial<Record<string, boolean>> | null
@@ -19,8 +20,6 @@ export interface EntryPoints {
   filters?: string[]
   /** Tabs inside cards (the map tab). */
   tabs?: string[]
-  /** Settings sections that exist for this module. */
-  settings?: SettingsTab[]
 }
 
 // Every module the server knows is listed, even one with no entry points of
@@ -29,9 +28,9 @@ export interface EntryPoints {
 export const MODULES: Record<string, EntryPoints> = {
   goals: { create: ['goal'], cards: ['goals'], filters: ['goal'] },
   outbound: {},
-  revenue: { cards: ['revenue'], settings: ['payments'] },
+  revenue: { cards: ['revenue'] },
   funnels: { create: ['funnel'], cards: ['funnel'] },
-  notes: { create: ['note'], cards: ['notes'], settings: ['notes'] },
+  notes: { create: ['note'], cards: ['notes'] },
   rhythm: { cards: ['rhythm'] },
   journeys: { cards: ['people', 'journey'] },
   map: { cards: ['money-map'], tabs: ['map'] },
@@ -40,17 +39,22 @@ export const MODULES: Record<string, EntryPoints> = {
   consent: {},
   crawlers: { cards: ['crawlers'] },
   forms: {},
-  search: { settings: ['search'] },
+  search: {},
   heatmaps: { cards: ['heatmaps'] },
 }
 
+/** No switch: always there, with an empty state where nothing was collected. */
+export const ALWAYS: readonly string[] = ['funnels', 'notes', 'rhythm', 'journeys', 'map', 'retention', 'crawlers']
+
+/** What changes the script or what it collects: the only modules with a switch. */
+export const CHOICES: readonly string[] = ['goals', 'outbound', 'forms', 'vitals', 'heatmaps', 'consent']
+
 /** On for a site that has not said otherwise (the server's default_on). */
-export const DEFAULT_ON: Partial<Record<string, true>> = {
-  goals: true, funnels: true, notes: true, rhythm: true, journeys: true, map: true, retention: true,
-}
+export const DEFAULT_ON: Partial<Record<string, true>> = { goals: true, vitals: true }
 
 /** Whether a module is on. While the list is loading, the defaults answer. */
 export function isOn(mods: Mods, id: string): boolean {
+  if (ALWAYS.includes(id)) return true
   if (mods === null) return DEFAULT_ON[id] === true
   return mods[id] === true
 }
@@ -75,6 +79,3 @@ const CREATE_ORDER: CreateId[] = ['goal', 'funnel', 'note']
 
 /** The Create menu's entries whose modules are on, in menu order. */
 export const createItems = (mods: Mods): CreateId[] => CREATE_ORDER.filter((c) => shows(mods, 'create', c))
-
-/** Settings sections that belong to a module, and which one. */
-export const settingsModule = (tab: SettingsTab): string | undefined => ownerOf('settings', tab)

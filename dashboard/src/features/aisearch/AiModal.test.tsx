@@ -16,7 +16,6 @@ import AiModal from './AiModal'
 const rep = {
   visitors: 20,
   crawled: 140,
-  crawlers: true,
   google: false,
   referrers: [
     { value: 'chatgpt.com', visitors: 12 },

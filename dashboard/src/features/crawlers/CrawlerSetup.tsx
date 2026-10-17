@@ -8,7 +8,7 @@ import { DialogActions } from '../../components/DialogActions'
 import { DialogHead } from '../../components/DialogHead'
 import { Modal } from '../../kit/Modal'
 import { Stepper } from '../../components/Stepper'
-import { fail, type Site, more } from '../../lib/apiMore'
+import { type Site, more } from '../../lib/apiMore'
 import { addDays, todayIn } from '../../lib/dates'
 import { fmtInt } from '../../lib/format'
 import { visibleInterval } from '../../lib/visibleInterval'
@@ -20,7 +20,7 @@ import './CrawlerSetup.css'
 const t = copy.setup
 const TOTAL = 3
 
-/** Robots reported in the last two days, once something is switched on: it polls while the sheet is open. */
+/** Robots reported in the last two days, once the code is in place: it polls while the sheet waits for the first one. */
 function useArrived(site: Site, on: boolean): number {
   const [n, setN] = useState(0)
   useEffect(() => {
@@ -38,13 +38,10 @@ function useArrived(site: Site, on: boolean): number {
   return n
 }
 
-export function CrawlerSetup({ site, on, onChanged, onClose }: { site: Site; on: boolean; onChanged: () => void; onClose: () => void }) {
+export function CrawlerSetup({ site, onChanged, onClose }: { site: Site; onChanged: () => void; onClose: () => void }) {
   const [step, setStep] = useState(1)
   const [setup, setSetup] = useState<Setup>('cloudflare')
-  const [enabled, setEnabled] = useState(on)
-  const [busy, setBusy] = useState(false)
-  const [turned, setTurned] = useState(false)
-  const arrived = useArrived(site, enabled)
+  const arrived = useArrived(site, step === 3)
   const plan = useMemo(() => ({ host: location.origin, site: site.id, key: site.proxy_key, domain: site.domain }), [site])
   const top = useRef<HTMLDivElement>(null)
   const first = useRef(true)
@@ -63,25 +60,8 @@ export function CrawlerSetup({ site, on, onChanged, onClose }: { site: Site; on:
     setSetup(id)
     setStep(2)
   }
-  // The code is in place: switch crawler data on, then wait for the first robot.
-  const turnOn = () => {
-    if (enabled) {
-      setStep(3)
-      return
-    }
-    setBusy(true)
-    more
-      .setModule(site.id, 'crawlers', true)
-      .then(() => {
-        setEnabled(true)
-        setTurned(true)
-        setStep(3)
-      })
-      .catch((e: unknown) => fail(e, turnOn))
-      .finally(() => setBusy(false))
-  }
   const close = () => {
-    if (turned || arrived > 0) onChanged()
+    if (arrived > 0) onChanged()
     onClose()
   }
   const platform = t.options.find((o) => o.id === setup)?.label
@@ -132,7 +112,7 @@ export function CrawlerSetup({ site, on, onChanged, onClose }: { site: Site; on:
       >
         {step > 1 && <span className="cs-chip">{platform}</span>}
         {step === 2 && (
-          <button type="button" className="btn primary big" disabled={busy} onClick={turnOn}>
+          <button type="button" className="btn primary big" onClick={() => setStep(3)}>
             {t.next}
           </button>
         )}

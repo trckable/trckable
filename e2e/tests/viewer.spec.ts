@@ -89,7 +89,7 @@ const PAGES = [
   '/example.com?account=sites',
   '/example.com?account=keys',
   '/example.com?account=people',
-  ...['site', 'install', 'modules', 'sharing', 'notes', 'payments', 'search', 'privacy', 'alerts'].map((t) => `/settings?site={site}&tab=${t}`),
+  ...['site', 'install', 'sharing', 'notes', 'payments', 'search', 'privacy', 'alerts'].map((t) => `/settings?site={site}&tab=${t}`),
 ]
 
 test('a viewer is offered no create, edit or delete control anywhere', async ({ page }) => {
@@ -113,7 +113,7 @@ test('a viewer is offered no create, edit or delete control anywhere', async ({ 
 test('the search finds an owner\'s controls', async ({ page }) => {
   const owner = await session('viewer')
   await page.context().addCookies([{ name: 'trckable_session', value: owner, url: API }])
-  await page.goto(`${API}/settings?site=${site}&tab=modules`)
+  await page.goto(`${API}/settings?site=${site}&tab=site`)
   await page.waitForLoadState('load') // not "networkidle": the live stream can keep it from ever coming
   // The switches arrive with the tab's data, after the network first goes
   // quiet in WebKit: ask again until they are there.

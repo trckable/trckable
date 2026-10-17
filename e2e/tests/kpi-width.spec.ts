@@ -28,7 +28,7 @@ async function open(page: Page, width: number, revenue: boolean) {
   await page.setViewportSize({ width, height: 900 })
   if (!revenue) await withoutPayments(page)
   if (revenue) {
-    // The revenue module is off until a provider is connected: switch it on, and give the report its money.
+    // Revenue is off until a provider is connected: switch it on, and give the report its money.
     await page.route(/\/api\/v1\/sites\/[^/]+\/modules$/, async (route) => {
       const res = await route.fetch()
       const body = await res.json()

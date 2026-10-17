@@ -413,7 +413,7 @@ func (a *API) shareAnnotations(w http.ResponseWriter, r *http.Request) {
 		Plan bool   `json:"planned,omitempty"`
 	}
 	out := []note{}
-	if !sh.Notes || !a.modulesOf(r, sh.SiteID).Has("notes") {
+	if !sh.Notes {
 		writeJSON(w, http.StatusOK, map[string]any{"annotations": out})
 		return
 	}

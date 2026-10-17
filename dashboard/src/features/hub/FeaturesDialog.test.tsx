@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Site } from '../../lib/api'
 import FeaturesDialog from './FeaturesDialog'
+import { CHOICES } from '../../lib/modules'
 import { FEATURES } from './registry'
 import { hasUnseen } from './seen'
 
@@ -50,11 +51,11 @@ describe('the Features pop-up', () => {
     expect(hasUnseen('a@b.c')).toBe(false)
   })
 
-  it('gives an owner a switch for each module, and Try it on one that is off', () => {
+  it('gives an owner a switch for each choice, and Try it on one that is off', () => {
     draw()
-    expect(document.querySelectorAll('[role="switch"]')).toHaveLength(FEATURES.filter((f) => f.module).length)
+    expect(document.querySelectorAll('[role="switch"]')).toHaveLength(FEATURES.filter((f) => f.module && CHOICES.includes(f.module)).length)
     expect(document.querySelector('#feat-heatmaps .tag')?.textContent).toBe('Try it')
-    expect(document.querySelector('#feat-map .tag')?.textContent).toBe('On')
+    expect(document.querySelector('#feat-map .tag')?.textContent).toBe('Built in')
   })
 
   it('gives a viewer the status and no switch', () => {

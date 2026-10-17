@@ -59,16 +59,11 @@ func TestAISearchTab(t *testing.T) {
 		return nil
 	}
 
-	// The module is off by default: AI's visitors are still there, the robots are not read.
+	// Crawlers have no switch: the robots are read from the start, asking them off changes nothing.
+	do(t, owner, "PUT", base+"/modules/crawlers", `{"enabled":false}`, csrf, "1")
 	out := fetch("")
-	if out["crawlers"] != false || out["visitors"] != float64(2) || out["google"] != false {
-		t.Fatalf("with the crawlers module off: %v", out)
-	}
-
-	do(t, owner, "PUT", base+"/modules/crawlers", `{"enabled":true}`, csrf, "1")
-	out = fetch("")
-	if out["crawlers"] != true || out["crawled"] != float64(13) {
-		t.Fatalf("crawlers on: %v", out)
+	if out["visitors"] != float64(2) || out["google"] != false || out["crawled"] != float64(13) {
+		t.Fatalf("crawlers: %v", out)
 	}
 	if p := page(out, "/pricing"); p["read"] != float64(1) || p["sent"] != float64(2) {
 		t.Fatalf("/pricing: %v", p)
@@ -130,11 +125,7 @@ func TestAISeenRoute(t *testing.T) {
 	g.event(t, event.Event{Kind: event.KindCrawler, EventID: 1, TS: at, Path: "/", Browser: "OpenAI", OS: "train"})
 	g.event(t, event.Event{Kind: event.KindPageview, EventID: 2, Pageview: 2, TS: at, Visitor: 1, Path: "/", Channel: "AI", RefHost: "chatgpt.com"})
 	g.waitApplied(t, 2)
-	if _, out := do(t, owner, "GET", base, ""); out["visitor"] != true || out["crawler"] != false {
-		t.Fatalf("a visitor, and a crawler with the module off: %v", out)
-	}
-	do(t, owner, "PUT", g.srv.URL+"/api/v1/sites/"+g.site+"/modules/crawlers", `{"enabled":true}`, csrf, "1")
-	if _, out := do(t, owner, "GET", base, ""); out["crawler"] != true {
-		t.Fatalf("a crawler with the module on: %v", out)
+	if _, out := do(t, owner, "GET", base, ""); out["visitor"] != true || out["crawler"] != true {
+		t.Fatalf("a visitor and a crawler: %v", out)
 	}
 }

@@ -67,9 +67,6 @@ func (a *API) params(w http.ResponseWriter, r *http.Request) (*query.Q, query.Pa
 }
 
 func (a *API) heatmap(w http.ResponseWriter, r *http.Request) {
-	if !a.needs(w, r, "rhythm") {
-		return
-	}
 	q, p, ok := a.params(w, r)
 	if !ok {
 		return
@@ -83,9 +80,6 @@ func (a *API) heatmap(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) funnel(w http.ResponseWriter, r *http.Request) {
-	if !a.needs(w, r, "funnels") {
-		return
-	}
 	// A funnel is a report like any other: a GET, so viewers and read-only
 	// keys see it too. The steps come as JSON in ?steps=, size-limited.
 	var in struct{ Steps []query.Step }
@@ -148,9 +142,6 @@ func (a *API) goalProps(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) journey(w http.ResponseWriter, r *http.Request) {
-	if !a.needs(w, r, "journeys") {
-		return
-	}
 	// Visitor ids travel as base 36, the same short form /events and the live
 	// stream use.
 	visitor, err := strconv.ParseUint(r.PathValue("visitor"), 36, 64)
@@ -201,9 +192,6 @@ func (a *API) moduleOn(r *http.Request, site, id string) bool {
 
 // retention is the cohort grid: who came back, week by week.
 func (a *API) retention(w http.ResponseWriter, r *http.Request) {
-	if !a.needs(w, r, "retention") {
-		return
-	}
 	q, p, ok := a.params(w, r)
 	if !ok {
 		return
@@ -235,9 +223,6 @@ func (a *API) vitals(w http.ResponseWriter, r *http.Request) {
 
 // crawlers reports who crawled the site: AI answers, indexing and training.
 func (a *API) crawlers(w http.ResponseWriter, r *http.Request) {
-	if !a.needs(w, r, "crawlers") {
-		return
-	}
 	q, p, ok := a.params(w, r)
 	if !ok {
 		return

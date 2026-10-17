@@ -49,6 +49,9 @@ func (a *API) listModules(w http.ResponseWriter, r *http.Request) {
 	)
 	for _, m := range modules.All {
 		m.TrackerBytes = sizes.Feature[m.Tracker] // measured by the tracker build
+		if n, ok := sizes.OnGoals[m.ID]; ok {
+			m.TrackerBytes = n // outbound and forms ship with Goals, which they share code with
+		}
 		costs := make([]string, len(m.Costs))
 		for i, c := range m.Costs {
 			costs[i] = strings.ReplaceAll(fill.Replace(c), "{bytes}", fmtBytes(m.TrackerBytes))

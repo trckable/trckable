@@ -1,5 +1,6 @@
 // The privacy report: the facts of one site, read from its real settings and
 // modules, and nothing else. No wording of its own beyond copy.ts.
+import { ALWAYS } from '../../lib/modules'
 import type { PolicyInput } from '../../lib/policy'
 import { policyText } from '../../lib/policy'
 import { copy } from './copy'
@@ -32,6 +33,8 @@ export function buildReport(p: PolicyInput): Report {
   const s = copy.settings
   const days = c.retention_days
   const collected = [copy.collected.page, city ? copy.collected.city : copy.collected.country, copy.collected.device, copy.collected.time]
+  // What has no switch is always collected, so it is told with the rest, not as a choice that is on.
+  for (const id of ALWAYS) if (!(free && (id === 'journeys' || id === 'retention')) && id in copy.adds) collected.push(copy.adds[id as keyof typeof copy.adds])
   const notCollected = [copy.notCollected.ip, copy.notCollected.crossSite, copy.notCollected.person]
   if (free) notCollected.push(copy.notCollected.cookieless)
   else notCollected.push(m.consent ? copy.notCollected.cookieAsk(COOKIE.name, COOKIE.days) : copy.notCollected.cookie(COOKIE.name, COOKIE.days))
@@ -47,7 +50,7 @@ export function buildReport(p: PolicyInput): Report {
     collected,
     notCollected,
     modules: Object.keys(copy.adds)
-      .filter((id) => m[id])
+      .filter((id) => !ALWAYS.includes(id) && m[id])
       .map((id) => copy.adds[id as keyof typeof copy.adds]),
     where: copy.where,
     banner: copy.banner[bannerKind(p)],
