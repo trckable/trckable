@@ -99,6 +99,8 @@ export interface CRow {
   /** The share of the widest row, 0 to 1: draws the bar behind the name. */
   bar?: number
   mono?: boolean
+  /** A tap on the row, as a filter would: the row is a button. */
+  onPick?: () => void
   c: ReactNode[]
 }
 
@@ -113,23 +115,34 @@ export function XCols({ first, cols, rows, xc, xcm, limit, onAll }: { first: str
           </span>
         ))}
       </div>
-      {rows.slice(0, limit).map((r) => (
-        <div key={r.key} className="xrw">
-          {r.bar !== undefined ? (
-            <span className="mk-bar">
-              <i style={{ width: `${r.bar * 100}%` }} />
-              <span className={r.mono ? 'mono' : ''}>{r.a}</span>
-            </span>
-          ) : (
-            <span className="two">{r.a}</span>
-          )}
-          {r.c.map((x, i) => (
-            <span key={cols[i].h} className={`mk-n ${cols[i].hm ? 'hm' : ''}`}>
-              {x}
-            </span>
-          ))}
-        </div>
-      ))}
+      {rows.slice(0, limit).map((r) => {
+        const inner = (
+          <>
+            {r.bar !== undefined ? (
+              <span className="mk-bar">
+                <i style={{ width: `${r.bar * 100}%` }} />
+                <span className={r.mono ? 'mono' : ''}>{r.a}</span>
+              </span>
+            ) : (
+              <span className="two">{r.a}</span>
+            )}
+            {r.c.map((x, i) => (
+              <span key={cols[i].h} className={`mk-n ${cols[i].hm ? 'hm' : ''}`}>
+                {x}
+              </span>
+            ))}
+          </>
+        )
+        return r.onPick ? (
+          <button key={r.key} type="button" className="xrw" onClick={r.onPick}>
+            {inner}
+          </button>
+        ) : (
+          <div key={r.key} className="xrw">
+            {inner}
+          </div>
+        )
+      })}
       <XMore more={{ len: rows.length, shown: limit, onAll }} />
     </div>
   )

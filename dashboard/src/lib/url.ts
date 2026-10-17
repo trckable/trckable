@@ -120,7 +120,7 @@ export function readView(params: URLSearchParams): ViewState {
     v: params.get('v')?.match(/^(story|explore)$/)?.[0],
     story: params.get('story')?.match(/^[a-z]{1,12}$/)?.[0],
     surge: params.get('sg')?.match(/^\d{9,11}$/) ? Number(params.get('sg')) : undefined,
-    xp: params.get('x')?.match(/^[a-z]{3,12}$/)?.[0],
+    xp: params.get('x')?.match(/^[a-z]{2,12}$/)?.[0],
     xf: params.has('xf') ? params.getAll('xf').flatMap((f) => parseFilterParam(f) ?? []) : undefined,
   }
 }

@@ -181,6 +181,8 @@ test('every card of the old Data page is a tab of a section', async ({ page }) =
       const tab = page.locator(`#xp [data-xtab="${t}"]`)
       if ((await tab.count()) > 0) await tab.click()
       await expect(page.locator('#xp')).not.toContainText('We could not load this')
+      // The tab is drawn in the panel's own frame, not as the old card.
+      await expect(page.locator('#xp .kit-card, #xp .bl, #xp .by-row')).toHaveCount(0)
     }
   }
 })
