@@ -63,14 +63,14 @@ describe('keymap', () => {
     // Esc closes what is open, [ and ] set Replay's speed, Tab and Enter belong to the page's own controls.
     for (const reserved of ['escape', '[', ']', 'tab', 'enter', 'space']) expect(seen.has(reserved)).toBe(false)
     // The ones this round added, and the periods they sit beside.
-    expect(['site', 'user', 'settings', 'filter', 'share'].map(keyFor)).toEqual(['s', 'u', ',', '/', 'shift+s'])
+    expect(['site', 'user', 'settings', 'filter', 'share', 'replay'].map(keyFor)).toEqual(['s', 'u', ',', '/', 'shift+s', 'r'])
     expect(keyFor('period.now')).toBe('n')
     expect(keyFor('period.mtd')).toBe('m')
   })
 
   it('names every action in words and puts it in a group the list draws', () => {
     expect(new Set(ACTIONS.map((a) => a.label)).size).toBe(ACTIONS.length)
-    expect(new Set(ACTIONS.map((a) => a.group))).toEqual(new Set(['around', 'page']))
+    expect(new Set(ACTIONS.map((a) => a.group))).toEqual(new Set(['around', 'page', 'period']))
   })
 
   it('refuses a key an action already has, Shift S included', () => {

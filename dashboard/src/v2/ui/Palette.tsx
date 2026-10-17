@@ -12,8 +12,8 @@ export interface PaletteItem {
   run: () => void
 }
 
-export function Palette({ items, placeholder, none, onClose }: { items: PaletteItem[]; placeholder: string; none: (q: string) => string; onClose: () => void }) {
-  const [q, setQ] = useState('')
+export function Palette({ items, placeholder, none, onClose, initial = '' }: { items: PaletteItem[]; placeholder: string; none: (q: string) => string; onClose: () => void; initial?: string }) {
+  const [q, setQ] = useState(initial)
   const [at, setAt] = useState(0)
   const input = useRef<HTMLInputElement>(null)
   useEffect(() => input.current?.focus(), [])

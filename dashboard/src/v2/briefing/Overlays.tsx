@@ -1,6 +1,6 @@
 // What the Briefing opens over itself: a card in full, the notes of the site, tomorrow's email as it will read, and
 // the dialog that adds a note.
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import type { Site } from '../../lib/api'
 import type { Range } from '../../lib/dates'
 import { useNotes } from '../../features/notes/useNotes'
@@ -27,10 +27,16 @@ interface OverlaysProps {
 }
 
 export function Overlays({ ui, site, range, today, notes, ctx, headline, kcs, shown, canNote }: OverlaysProps) {
+  // The palette's "Create · A note".
+  useEffect(() => {
+    const open = () => canNote && ui.setAddNote(true)
+    window.addEventListener('trckable:note', open)
+    return () => window.removeEventListener('trckable:note', open)
+  }, [canNote, ui])
   return (
     <>
       {ui.open && <Detail s={ui.open} site={site.domain} c={ctx} onClose={() => ui.setOpen(null)} />}
-      {ui.sheet === 'notes' && <NotesSheet site={site.domain} notes={notes.notes} onClose={() => ui.setSheet(null)} onAdd={canNote ? () => ui.setAddNote(true) : undefined} />}
+      {ui.sheet === 'notes' && <NotesSheet site={site.domain} siteId={site.id} notes={notes.notes} onChanged={notes.load} onClose={() => ui.setSheet(null)} onAdd={canNote ? () => ui.setAddNote(true) : undefined} />}
       {ui.sheet === 'mail' && (
         <MailSheet
           site={site.domain}

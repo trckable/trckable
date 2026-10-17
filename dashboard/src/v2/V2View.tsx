@@ -11,6 +11,7 @@ import { compareLabel, PRESETS, todayIn, type ISODate, type Range } from '../lib
 import { dayWords, rangeWords } from './dayWords'
 import { switchTab } from '../features/live/switchView'
 import { useViewKeys } from './useViewKeys'
+import { usePeriodKeys } from './usePeriodKeys'
 import { BriefingSlot } from './briefing/BriefingSlot'
 import { FreshSlot } from './briefing/FreshSlot'
 import { copy } from './copy'
@@ -71,6 +72,7 @@ export function V2View(p: V2Props) {
   if (p.view.xp !== undefined && !opened) setOpened(true)
   useEffect(() => whenIdle(ExplorePanel.preload), [])
   useViewKeys(here)
+  usePeriodKeys({ on: here === 'briefing' && !p.waiting, today, range: p.range, view: p.view, day })
   // An old address with filters lands where the filters can be seen.
   useEffect(() => {
     if (!p.waiting) routeFiltered(p.view)
@@ -89,6 +91,7 @@ export function V2View(p: V2Props) {
         tab={here}
         data={p.data}
         onAsk={p.onAsk}
+        onGoal={p.onGoal}
         period={
           here === 'briefing' && !p.waiting ? (
             <PeriodChip

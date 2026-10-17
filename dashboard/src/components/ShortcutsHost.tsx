@@ -9,7 +9,7 @@ import { openFeatures } from './AccountMenu'
 import { pressed } from '../lib/keys'
 
 const Shortcuts = lazy(() => import('../views/Shortcuts'))
-const CLICKS = ['site', 'user', 'settings', 'filter', 'share', 'replay']
+const CLICKS = ['site', 'user', 'settings', 'filter', 'share', 'replay', 'create']
 
 /** The control a shortcut stands for, when it is on the page, on screen and enabled. */
 function control(id: string): HTMLElement | undefined {

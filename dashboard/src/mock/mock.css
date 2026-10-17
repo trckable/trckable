@@ -662,6 +662,8 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 }
 .mk .irow{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s3) 0;border-top:1px solid var(--mk-line);min-height:56px}
 .mk .irow:first-child{border-top:0}
+.mk .irow input{flex:1;min-width:0;height:36px;border-radius:10px;border:1px solid var(--mk-line);background:#0f1012;color:var(--mk-text);padding:0 12px;font:inherit}
+.mk .irow .ir{display:flex;gap:var(--mk-s2)}
 .mk .irow .il{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .mk .irow .il b{font-weight:600}
 .mk .irow small{color:var(--mk-muted);font-size:12px}
