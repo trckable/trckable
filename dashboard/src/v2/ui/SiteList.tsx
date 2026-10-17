@@ -13,7 +13,6 @@ import { EMPTY, flat, placeKey, sectionsOf, type Place } from '../../features/si
 import { saveLayout, useSiteLayout } from '../../features/sites/useSiteLayout'
 import { useReorder } from '../../features/sites/useReorder'
 import { useFolded } from '../../features/sites/useFolded'
-import { useOverview } from '../../views/useOverview'
 import { useToday } from '../../features/sites/useToday'
 import { digitIndex, stepFocus, typing } from '../../features/sites/nav'
 import { copy as menu } from '../../features/sites/menuCopy'
@@ -58,8 +57,6 @@ export function SiteList(p: SiteListProps) {
   const [said, setSaid] = useState('')
   const [folded, fold] = useFolded()
   const numbers = useToday()
-  // Who is on each site now: read while the list is open, not on every page.
-  const { rows } = useOverview(1)
   const layout = useSiteLayout() ?? EMPTY
   const domains = useDomainControl()
   // Opening the list starts the first few sites' reports, so a pick shows numbers at once.
@@ -100,7 +97,7 @@ export function SiteList(p: SiteListProps) {
         },
       }
   const item = (s: Site, place: Place) => (
-    <SiteRow key={s.id} site={s} place={place} on={s.id === current?.id} arrange={found ? null : arrange} online={rows?.find((r) => r.id === s.id)?.online ?? 0} today={numbers?.get(s.id)?.visitors} onPick={() => pick(s)} />
+    <SiteRow key={s.id} site={s} place={place} on={s.id === current?.id} arrange={found ? null : arrange} today={numbers?.get(s.id)?.visitors} onPick={() => pick(s)} />
   )
   const onKeys = (e: KeyboardEvent) => {
     const box = root.current

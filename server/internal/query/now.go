@@ -104,13 +104,14 @@ func (q Q) LiveNow(ctx context.Context, site string, now time.Time) (*Now, error
 		return nil, err
 	}
 
+	// Online counts anyone with any event in five minutes (a goal, a page left open), so the half hour counts them too: Online can never be more than the half hour's visitors.
 	from, before := now.Add(-NowWindow), now.Add(-2*NowWindow)
 	err = q.DB.QueryRowContext(ctx, `
 		SELECT count(DISTINCT visitor_id) FILTER (WHERE ts >= ?),
 		       count(DISTINCT visitor_id) FILTER (WHERE ts < ?)
 		FROM events
-		WHERE site_id = ? AND kind = 1 AND ts >= ? AND ts <= ?`,
-		from, from, site, before, now).Scan(&out.Visitors, &out.Previous)
+		WHERE site_id = ? AND (kind = 1 OR ts >= ?) AND ts >= ? AND ts <= ?`,
+		from, from, site, now.Add(-5*time.Minute), before, now).Scan(&out.Visitors, &out.Previous)
 	if err != nil {
 		return nil, err
 	}

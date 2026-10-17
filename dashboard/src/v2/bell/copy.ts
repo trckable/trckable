@@ -16,8 +16,5 @@ export const copy = defineCopy('bell', {
   mention: (host: string) => `New mention on ${host}`,
   milestone: (kind: string, value: number) => (kind === 'visitors' ? `You passed ${fmtInt(value)} visitors` : `Milestone: ${fmtInt(value)} ${kind}`),
   milestoneSub: 'Milestone',
-  spike: 'Traffic spike',
-  customer: 'New customer',
-  weekly: 'Your weekly report is ready',
   menu: 'Notifications',
 })

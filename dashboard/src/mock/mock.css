@@ -296,17 +296,10 @@
 .mk .mk-ld{font-size:12px;color:var(--mk-faint)}
 .mk .mk-ld.up{color:var(--mk-lime)}
 .mk .mk-ld.dn{color:var(--mk-red)}
-.mk .lnow .mins{height:96px;padding:14px 22px 0}
+.mk .lnow .mins,.mk .lnow .mline{height:96px;padding:14px 22px 0}
 .mk .lnow .minl{padding:4px 22px 0}
 .mk .lbottom{display:grid;grid-template-columns:1fr;gap:18px;padding:18px 22px 20px;border-top:1px solid var(--mk-line);margin-top:16px}
 .mk .lbottom.money{grid-template-columns:minmax(0,1fr) auto;gap:32px}
-.mk .lsplit{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px;margin:10px 0 10px}
-.mk .lsplit button,.mk .lsplit span,.mk .lsplit .oth{min-width:3px;display:block}
-.mk .lsplit .oth{background:var(--mk-fill)}
-.mk .llegend{list-style:none;display:flex;flex-wrap:wrap;gap:4px 16px;margin:0;padding:0;font-size:12.5px}
-.mk .llegend .lg{display:flex;align-items:center;gap:6px;color:var(--mk-muted)}
-.mk .llegend i{width:8px;height:8px;border-radius:2px}
-.mk .llegend b{color:var(--mk-text);font-weight:600;margin-left:2px}
 .mk .lmoney{display:block;font-size:30px;letter-spacing:-.02em;margin-top:8px;font-variant-numeric:tabular-nums}
 .mk .lfeed{padding:6px 22px 0;max-height:520px;overflow:auto}
 .mk .lon .lv:first-child{border-top:0}
@@ -410,7 +403,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .act{padding:var(--mk-s4) var(--mk-s5);gap:var(--mk-s4)}
 .mk .lhead{padding:var(--mk-s5) var(--mk-s5) 0}
 .mk .lfig{padding:var(--mk-s4) var(--mk-s5) 0}
-.mk .lnow .mins{padding:var(--mk-s4) var(--mk-s5) 0}
+.mk .lnow .mins,.mk .lnow .mline{padding:var(--mk-s4) var(--mk-s5) 0}
 .mk .lnow .minl{padding:var(--mk-s1) var(--mk-s5) 0}
 .mk .lbottom{padding:var(--mk-s4) var(--mk-s5) var(--mk-s5);margin-top:var(--mk-s4);gap:var(--mk-s4)}
 .mk .lbottom.money{gap:var(--mk-s6)}
@@ -427,7 +420,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .lr{padding:var(--mk-s2) 0}
 .mk .lbign,.mk .lbig,.mk .lmoney,.mk .st .v,.mk .big{font-variant-numeric:tabular-nums}
 .mk .lv .pg,.mk .sale .gn,.mk .lr span,.mk .rr .rl{min-width:0}
-.mk .lnow .mins{flex:1;height:auto;min-height:96px}
+.mk .lnow .mins,.mk .lnow .mline{flex:1;height:auto;min-height:96px}
 .mk .lfeed{max-height:420px}
 .mk *{scrollbar-width:thin;scrollbar-color:#2f3238 transparent}
 .mk .xph .x{border-color:#34373d;color:var(--mk-text)}
@@ -481,7 +474,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .hero{padding:var(--mk-s5) var(--mk-s4) var(--mk-s2)}
 .mk .facts{margin:var(--mk-s2) calc(var(--mk-s4) * -1) 0}
 .mk .fact{padding:var(--mk-s3) var(--mk-s4)}
-.mk .lhead, .mk .lfig, .mk .lnow .mins, .mk .lnow .minl{padding-left:var(--mk-s4);padding-right:var(--mk-s4)}
+.mk .lhead, .mk .lfig, .mk .lnow .mins, .mk .lnow .mline, .mk .lnow .minl{padding-left:var(--mk-s4);padding-right:var(--mk-s4)}
 .mk .lbottom{padding:var(--mk-s4)}
 .mk .lfeed{padding:var(--mk-s2) var(--mk-s4) 0}
 
@@ -571,7 +564,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .lfig>div:nth-child(2) .lbign{font-size:22px;order:2}
 .mk .lfig>div:nth-child(2) .ll{order:1}
 .mk .lfig>div:nth-child(2) .mk-ld{order:3;flex-basis:100%}
-.mk .lnow .mins{height:72px;flex:none;padding:var(--mk-s4) var(--mk-s4) 0}
+.mk .lnow .mins,.mk .lnow .mline{height:72px;flex:none;padding:var(--mk-s4) var(--mk-s4) 0}
 .mk .lnow .minl{padding:var(--mk-s1) var(--mk-s4) 0}
 .mk .lbottom, .mk .lbottom.money{grid-template-columns:1fr;gap:var(--mk-s4);padding:var(--mk-s4)}
 .mk .lon .lhead{padding:var(--mk-s4) var(--mk-s4) var(--mk-s1)}
@@ -713,6 +706,11 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .hero .ch-top{display:flex;align-items:center;justify-content:space-between}
 .mk .bdot{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:var(--mk-lime);color:#0a0b0c;font-size:12px;font-style:normal;font-weight:700;display:grid;place-items:center;padding:0 4px;line-height:1}
 .mk .ib.bell{position:relative}
+/* A short wiggle for what is new (useBellAlert): the glyph turns about the top of the bell; not with reduced motion. */
+.mk .ib.bell.shake svg{transform-origin:50% 12%;animation:mk-bell-shake .6s ease-in-out}
+@keyframes mk-bell-shake{0%,100%{transform:rotate(0)}15%{transform:rotate(16deg)}30%{transform:rotate(-14deg)}45%{transform:rotate(10deg)}60%{transform:rotate(-8deg)}75%{transform:rotate(4deg)}}
+@media (prefers-reduced-motion:reduce){.mk .ib.bell.shake svg{animation:none}}
+html[data-motion='off'] .mk .ib.bell.shake svg{animation:none}
 .mk .bellmenu{left:auto;right:0;width:380px;padding:0}
 .mk .nfh,.mk .nff{display:flex;justify-content:space-between;align-items:center;padding:var(--mk-s2) var(--mk-s3);gap:var(--mk-s3)}
 .mk .nfh{border-bottom:1px solid var(--mk-line)}
@@ -1126,7 +1124,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .lfig>div:nth-child(2) .ll{order:0;font-size:12px}
 .mk .lfig>div:nth-child(2) .lbign{font-size:22px;order:1}
 .mk .lfig>div:nth-child(2) .mk-ld{order:2;flex-basis:auto;font-size:12px}
-.mk .lnow .mins{padding:var(--mk-s3) 0 0;height:72px}
+.mk .lnow .mins,.mk .lnow .mline{padding:var(--mk-s3) 0 0;height:72px}
 .mk .lnow .minl{padding:var(--mk-s1) 0 0}
 .mk .lbottom, .mk .lbottom.money{padding:var(--mk-s4) 0 0;margin-top:var(--mk-s4)}
 .mk .lfeed{padding:0}
@@ -1522,6 +1520,21 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .fresh-back:hover{color:var(--mk-text)}
 @media (max-width:600px){.mk .downbox .lk3{display:inline-flex;align-items:center;min-height:44px;min-width:44px}}
 .mk .sitelist > :not(#siteList){flex:none}
+/* the period when it is not today: the pill and a × that goes back */
+.mk .pwrap.set{display:flex;align-items:center}
+.mk .pwrap.set .pill{border-top-right-radius:0;border-bottom-right-radius:0;border-right:0}
+.mk .pill-x{align-self:stretch;width:34px;display:inline-grid;place-items:center;border:1px solid var(--mk-line);border-left:0;border-radius:0 12px 12px 0;background:var(--mk-card);color:var(--mk-muted)}
+.mk .pill-x:hover{color:var(--mk-text);background:var(--mk-hov)}
+.mk .pill-x:focus-visible{outline:2px solid var(--mk-lime);outline-offset:1px}
+@media (max-width:600px){.mk .pill-x{width:44px}}
+/* the list's rows: a mark with the state dot on it; the foot is one row, the rest under More */
+.mk .site-row .mkwrap{position:relative;display:inline-flex;flex:none}
+.mk .site-row .mkwrap .mk-dot{position:absolute;right:-3px;bottom:-3px;box-sizing:content-box;border:2px solid var(--pane,var(--mk-card2));box-shadow:none}
+.mk .mfoot.sfoot{flex-direction:row;align-items:center;gap:var(--mk-s1);padding:var(--mk-s2) 0 0}
+.mk .mfoot.sfoot .mi{width:auto;font-size:13.5px;min-height:var(--mk-h)}
+.mk .mfoot.sfoot .mi.more{margin-left:auto;color:var(--mk-muted);gap:var(--mk-s1)}
+.mk .mfoot.sfoot .mi.more svg.up{transform:rotate(180deg)}
+.mk .mfoot.sfoot-more{margin-top:0;padding-top:0;border-top:0}
 /* 601 to 700 px: no phone bar yet, but too narrow for one row: the header wraps, the views take a row of their own below, and the bell stays. */
 @container (min-width:601px) and (max-width:700px){
 .mk .hd{flex-wrap:wrap;height:auto;min-height:0;position:static;margin:0;padding:0;box-sizing:border-box;row-gap:var(--mk-s2)}
@@ -1547,3 +1560,84 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 @media (min-width:601px){
 .mk .mk-menu{border-radius:12px;box-shadow:var(--pane-shadow),inset 0 1px 0 var(--pane-top)}
 }
+/* Live's arrival moment: a new visit slides in at the top, the rows below make room, a lime glow fades and its dot beats once. */
+.mk .lchart{display:grid;flex:1 1 auto;min-height:0}
+.mk .lchart>*{grid-area:1/1;transition:opacity .2s}
+.mk .lchart[data-mode=bars] .mline,.mk .lchart[data-mode=line] .mins{opacity:0;pointer-events:none}
+.mk .mline{box-sizing:border-box;display:flex}
+.mk .mline-in{position:relative;flex:1;min-height:70px}
+.mk .mline-in svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.mk .mline-s{stroke:var(--mk-lime);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 0 5px var(--mk-limeD))}
+.mk .mline-s.run{stroke-dasharray:3 5;filter:none}
+.mk .mline-dot{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--mk-lime);box-shadow:0 0 8px var(--mk-lime);pointer-events:none}
+.mk .mline-dot.beat{animation:mk-beat 1s ease-out 1}
+@keyframes mk-beat{0%{transform:scale(1)}30%{transform:scale(1.9)}100%{transform:scale(1)}}
+.mk .mhits{position:absolute;inset:0;display:flex}
+.mk .mhits i{flex:1;cursor:pointer}
+.mk .mhits i:focus-visible{outline:2px solid var(--mk-lime);outline-offset:-2px}
+.mk .lhead .mk-cs{margin-left:auto}
+.mk .mk-cs{display:flex;border:1px solid var(--mk-line);border-radius:10px;padding:2px;gap:2px}
+.mk .mk-cs button{width:30px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--mk-muted)}
+.mk .mk-cs button.on{background:var(--mk-fill);color:var(--mk-text)}
+.mk .lv.arriving{overflow:hidden;animation:mk-arrive .45s cubic-bezier(.2,.7,.2,1) backwards,mk-glow 2s ease-out backwards}
+.mk .lv.arriving .mk-dot{animation:mk-beat 1s ease-out 1}
+.mk .lv.arriving.batch{animation:mk-fade .5s ease-out backwards,mk-glow 2s ease-out backwards}
+@keyframes mk-arrive{from{opacity:0;transform:translateY(-10px);max-height:0;padding-top:0;padding-bottom:0}to{max-height:64px}}
+@keyframes mk-fade{from{opacity:0}}
+@keyframes mk-glow{from{background:var(--mk-limeD)}to{background:transparent}}
+/* Reduced motion keeps only the glow, since the rule above that stops every animation would take it too. */
+.mk .lv.arriving.calm{animation:mk-glow 2s ease-out backwards!important}
+.mk .lv.arriving.calm .mk-dot{animation:none!important}
+@media (prefers-reduced-motion:reduce){
+.mk .lchart>*{transition:none!important}
+}
+@media (max-width:700px){
+.mk .lchart{flex:none}
+}
+
+/* Live's sample revenue card sits in an auto-width column and its size containment shrinks it to nothing: give it room so its Connect button is never cut. */
+.mk .lbottom.money .lrev{min-width:240px}
+/* The account menu is a sheet on a phone: its desktop place (below the button) must not win over the sheet's bottom edge whichever stylesheet loaded last. */
+@media (max-width:640px){:root .mk .hd .account-menu .pop.menu.more-menu{top:auto}}
+
+/* The people on the site now: bigger than the old Live's 86 px, and it flashes the accent once when it changes. */
+.mk .lfig>div:first-child .lbign{font-size:96px;line-height:1;font-weight:700;letter-spacing:-.05em}
+.mk .tick.flash{display:inline-block;animation:mk-tickp 1s ease-out 1}
+@keyframes mk-tickp{0%{color:var(--mk-lime);transform:scale(1.07)}100%{color:inherit;transform:none}}
+@media (max-width:700px){
+.mk .lfig>div:first-child .lbign{font-size:76px}
+}
+
+/* Live's left card: the two top cards are one height; the chart takes whatever room the content leaves. The two big numbers are one pair. */
+.mk .lnow .lhead{flex-wrap:nowrap;gap:var(--mk-s3)}
+.mk .lnow .lhead .lm{margin:0 auto 0 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk .lnow .lfig{display:flex;flex-direction:row;flex-wrap:wrap;align-items:flex-end;gap:var(--mk-s3) var(--mk-s6)}
+.mk .lnow .lfig>div,.mk .lnow .lfig>div:nth-child(2){display:flex;flex-direction:column;flex-wrap:nowrap;align-items:flex-start;gap:var(--mk-s1);order:0;margin:0;text-align:left}
+.mk .lnow .lfig .ll{order:0;font-size:13px}
+.mk .lnow .lfig .lbign,.mk .lnow .lfig>div:first-child .lbign,.mk .lnow .lfig>div:nth-child(2) .lbign{font-size:80px;line-height:1;font-weight:700;letter-spacing:-.05em;order:1}
+.mk .lnow .lfig .mk-ld{order:2;flex-basis:auto;font-size:12px}
+@media all{
+.mk .lnow[data-fit=tiny] .lfig .lbign,.mk .lnow[data-fit=tiny] .lfig>div:first-child .lbign,.mk .lnow[data-fit=tiny] .lfig>div:nth-child(2) .lbign{font-size:60px}
+}
+/* Under the numbers: the sources as rows, the revenue as a short block; one column until there is room for two. */
+.mk .lnow .lbottom,.mk .lnow .lbottom.money{grid-template-columns:1fr;gap:var(--mk-s4);align-items:start;margin-top:var(--mk-s4)}
+@media all{
+.mk .lnow[data-fit=wide] .lbottom.money{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:var(--mk-s6)}
+}
+.mk .lsrows{list-style:none;margin:var(--mk-s2) 0 0;padding:0;display:flex;flex-direction:column;gap:var(--mk-s2)}
+.mk .lsrows li{display:grid;grid-template-columns:minmax(0,9.5em) minmax(40px,1fr) 2.5em 3em;align-items:center;gap:var(--mk-s3);font-size:13px}
+.mk .lsn{display:flex;align-items:center;gap:var(--mk-s2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk .lsn i{width:8px;height:8px;border-radius:50%;flex:none}
+.mk .lsb{height:6px;border-radius:3px;background:var(--mk-fill);overflow:hidden}
+.mk .lsb u{display:block;height:100%;border-radius:3px;transition:width .3s}
+.mk .lsrows b{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.mk .lsrows em{text-align:right;font-style:normal;color:var(--mk-muted);font-variant-numeric:tabular-nums}
+.mk .lsq{margin-top:var(--mk-s2)}
+.mk .lrevc{margin-top:var(--mk-s2);padding:var(--mk-s3) var(--mk-s4);border:1px dashed var(--mk-line);border-radius:12px;display:flex;flex-direction:column;gap:var(--mk-s1)}
+.mk .lrevc p{margin:0}
+.mk .lrevc .lt1{font-weight:600;font-size:14px}
+.mk .lrevc .lt2{color:var(--mk-muted);font-size:12px}
+.mk .lrevb{display:flex;align-items:center;gap:var(--mk-s3);margin-top:var(--mk-s2);flex-wrap:wrap}
+.mk .lrevb .lkgo{height:32px;padding:0 14px;border-radius:10px;background:var(--mk-lime);color:var(--mk-on-lime,#0a0b0c);font-weight:600}
+.mk .lrevb .how{color:var(--mk-muted);font-size:13px}
+.mk .lsp{display:block;width:100%;height:44px;color:var(--mk-lime);margin-top:var(--mk-s2)}
