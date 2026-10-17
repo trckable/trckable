@@ -12,7 +12,7 @@ export function useFeatureMods(site: Site | null) {
     if (!site) return
     let live = true
     api
-      .modules(site.id)
+      .modules(site.id, true)
       .then((d) => live && setList(d.modules))
       .catch(() => live && setList([]))
     return () => {

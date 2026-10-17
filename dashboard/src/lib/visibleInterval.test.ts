@@ -46,6 +46,20 @@ describe('visibleInterval', () => {
     stop()
   })
 
+  it('calls on return only after being away as long as asked', () => {
+    const run = vi.fn()
+    const stop = visibleInterval(run, 60_000, 5 * 60_000)
+    show('hidden')
+    vi.advanceTimersByTime(4 * 60_000)
+    show('visible')
+    expect(run).not.toHaveBeenCalled()
+    show('hidden')
+    vi.advanceTimersByTime(6 * 60_000)
+    show('visible')
+    expect(run).toHaveBeenCalledTimes(1)
+    stop()
+  })
+
   it('starts hidden and waits for the tab to be shown', () => {
     show('hidden')
     const run = vi.fn()

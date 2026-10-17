@@ -8,10 +8,10 @@ import { MINUTE } from './model'
 // The stream says something arrived: read /now again once visits settle for
 // a moment, and at least every few seconds while they keep coming.
 const SETTLE_MS = 700
-const MAX_WAIT_MS = 4000
+const MAX_WAIT_MS = 10_000
 // A failed read is tried again after this long.
 const RETRY_MS = 5000
-// While the stream is stuck, /now is polled like the report is.
+// While the stream is stuck, /now is polled.
 const POLL_MS = 15_000
 // How often "2 min ago" and the idle cut-off are worked out again.
 const TICK_MS = 5000
@@ -80,7 +80,7 @@ export function useLiveNow(site: string, stream: Stream) {
   // Something new on the stream.
   const settle = useRef<ReturnType<typeof debounce> | null>(null)
   useEffect(() => {
-    const d = debounce(load, SETTLE_MS, MAX_WAIT_MS)
+    const d = debounce(() => document.visibilityState === 'visible' && load(), SETTLE_MS, MAX_WAIT_MS)
     settle.current = d
     return d.cancel
   }, [load])

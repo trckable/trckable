@@ -5,10 +5,10 @@ export { onlineNow } from './live'
 /**
  * Server-sent events: online count and each new visit as it happens.
  * refetch is called (past the report cache) once new visits or sales
- * settle, when the tab is shown again, and every 15 s while the stream is
- * stuck; stale is true then.
+ * settle (settled is true then), when the tab is shown again after 5
+ * minutes, and every minute while the stream is stuck; stale is true then.
  */
-export function useLive(site: string | null, refetch: () => void, keep = 30) {
+export function useLive(site: string | null, refetch: (settled?: boolean) => void, keep = 30) {
   const again = useRef(refetch)
   useEffect(() => {
     again.current = refetch
@@ -38,7 +38,7 @@ export function useLive(site: string | null, refetch: () => void, keep = 30) {
           setSales((ss) => [{ ...sale, id: ++id }, ...ss].slice(0, keep))
         },
         up: setConnected,
-        refetch: () => again.current(),
+        refetch: (settled) => again.current(settled),
       })
     })
     return () => {
