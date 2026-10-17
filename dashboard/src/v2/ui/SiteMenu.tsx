@@ -1,6 +1,6 @@
 // The site in the header, and the list that opens from it (SiteList): every site with who is on it now, a finder, and what
 // belongs to this site. The check beside the name says when something independent vouches for the numbers.
-import { Suspense, useCallback, useRef, type ReactNode } from 'react'
+import { Suspense, useCallback, useRef } from 'react'
 import type { Site } from '../../lib/api'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { layoutReady, preloadLayout } from '../../features/sites/useSiteLayout'
@@ -11,6 +11,8 @@ import { copy } from '../copy'
 import { domainLabel } from './DomainRows'
 import { MenuFoot, type FootItem } from './MenuFoot'
 import { useMenu } from './useMenu'
+import { SetupLine } from './SetupLine'
+import { WorkspaceRow, type Workspace } from './WorkspaceRow'
 import { useTopLayerWhen } from '../../lib/topLayer'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
@@ -27,7 +29,7 @@ interface SiteMenuProps {
   sites: Site[]
   current: Site | null
   /** The workspace line at the top, when the account has one. */
-  workspace?: { name: string; d: string; run?: () => void; mark?: ReactNode }
+  workspace?: Workspace
   onPick: (id: string) => void
   footer: FootItem[]
   find: string
@@ -67,21 +69,10 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
               sites={p.sites}
               current={cur}
               workspace={
-                p.workspace && (
-                  <button type="button" className="mi ws" onClick={() => {
-                      p.workspace?.run?.()
-                      close()
-                    }}>
-                    {p.workspace.mark}
-                    <span className="mt2">
-                      <div className="nm">{p.workspace.name}</div>
-                      <div className="d">{p.workspace.d}</div>
-                    </span>
-                    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-                      <path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" fill="none" strokeWidth="1.5" />
-                    </svg>
-                  </button>
-                )
+                <>
+                  {p.workspace && <WorkspaceRow w={p.workspace} close={done} />}
+                  <SetupLine close={done} />
+                </>
               }
               onPick={p.onPick}
               footer={footer}
