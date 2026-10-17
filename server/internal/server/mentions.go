@@ -132,7 +132,7 @@ func (s *Server) newMentionFinder() *mentionFinder {
 
 // runMentions looks once per period, a little after the start.
 func (s *Server) runMentions(ctx context.Context) {
-	if s.cfg.MentionsEvery <= 0 {
+	if !s.cfg.MentionsOn || s.cfg.MentionsEvery <= 0 {
 		return
 	}
 	f := s.newMentionFinder()
@@ -155,6 +155,7 @@ func (f *mentionFinder) round(ctx context.Context) {
 	for _, site := range sites {
 		if w, err := f.st.SearchWords(ctx, site); err == nil && len(w) > 0 {
 			words[site.ID] = w[:min(len(w), mentionsPerSite)]
+			f.dropStaleNews(ctx, site.ID, words[site.ID])
 		}
 	}
 	deadline := f.now().Add(f.every)
@@ -169,6 +170,21 @@ func (f *mentionFinder) round(ctx context.Context) {
 	wg.Wait()
 	if ctx.Err() == nil {
 		f.score(ctx, sites)
+	}
+}
+
+// dropStaleNews removes the news items kept for a site that its words no
+// longer name (a word dropped, or a rule that matched too loosely), so a wrong
+// mention does not stay once the matching is stricter.
+func (f *mentionFinder) dropStaleNews(ctx context.Context, site string, words []string) {
+	have, err := f.st.Mentions(ctx, site, 0, f.now().Add(time.Hour).Unix(), 1000)
+	if err != nil {
+		return
+	}
+	for _, m := range have {
+		if m.Source == mentions.News && !mentions.HasAny(m.Title+" "+m.Snippet+" "+m.URL, words) {
+			_ = f.st.DeleteMention(ctx, m.ID)
+		}
 	}
 }
 

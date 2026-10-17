@@ -1,5 +1,5 @@
 // Explore's ten sections in four groups, and the tables each one holds.
-import { isShared } from '../../lib/me'
+import { hasMentions, isShared } from '../../lib/me'
 import type { FilterDim, Section, Tab } from './types'
 
 export type { Section, Tab } from './types'
@@ -31,7 +31,7 @@ const EVERY: Record<Section, Tab[]> = {
 const SHARED: Tab[] = ['overview', 'pages', 'sources', 'referrers', 'utm', 'countries', 'devices', 'browsers', 'sales', 'earners']
 
 /** Whether a table is offered here: all of them, but on a shared link only those the report can fill. */
-export const offered = (t: Tab): boolean => !isShared() || SHARED.includes(t)
+export const offered = (t: Tab): boolean => (t !== 'mentions' || hasMentions()) && (!isShared() || SHARED.includes(t))
 
 /** A section's tables, as offered here. */
 export const TABS = Object.fromEntries(SECTIONS.map((s) => [s, []])) as unknown as Record<Section, Tab[]>

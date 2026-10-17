@@ -57,6 +57,9 @@ type API struct {
 	// MentionSources are the places mentions are searched (hn, news, and ph
 	// with a Product Hunt token), so the dashboard shows only those.
 	MentionSources []string
+	// MentionsOn says Mentions is switched on; off, its routes answer 404 and
+	// no other answer carries a mention.
+	MentionsOn bool
 	// PurgeAnalytics removes a site's rows from the analytics store. It runs on
 	// the writer's connection (the only one allowed to write DuckDB); nil while
 	// the store is still warming up, and deleting a site then is refused.
@@ -301,11 +304,11 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}/busier", a.authed(a.busierNow))
 	handle("GET /api/v1/sites/{site}/incidents", a.authed(a.incidents))
 	handle("GET /api/v1/sites/{site}/probes", a.authed(a.probes))
-	handle("GET /api/v1/sites/{site}/mentions", a.authed(a.mentions))
-	handle("GET /api/v1/sites/{site}/mentions/keywords", a.authed(a.mentionKeywords))
-	handle("GET /api/v1/sites/{site}/mentions/curves", a.authed(a.mentionCurves))
-	handle("GET /api/v1/sites/{site}/mentions/{id}", a.authed(a.mentionDetail))
-	handle("PUT /api/v1/sites/{site}/mentions/keywords", a.authed(a.setMentionKeywords))
+	handle("GET /api/v1/sites/{site}/mentions", a.authed(a.ifMentions(a.mentions)))
+	handle("GET /api/v1/sites/{site}/mentions/keywords", a.authed(a.ifMentions(a.mentionKeywords)))
+	handle("GET /api/v1/sites/{site}/mentions/curves", a.authed(a.ifMentions(a.mentionCurves)))
+	handle("GET /api/v1/sites/{site}/mentions/{id}", a.authed(a.ifMentions(a.mentionDetail)))
+	handle("PUT /api/v1/sites/{site}/mentions/keywords", a.authed(a.ifMentions(a.setMentionKeywords)))
 	handle("PATCH /api/v1/sites/{site}/incidents/{id}", a.authed(a.incidentNote))
 	handle("GET /api/v1/incidents", a.authed(a.accountIncidents))
 	handle("GET /api/v1/health", a.authed(a.health))
@@ -979,7 +982,7 @@ func (a *API) me(w http.ResponseWriter, r *http.Request) {
 	// The version is for the dashboard's footer; every response carries it in
 	// X-Trckable-Version anyway.
 	keys, _ := a.Ctl.UserKeymap(r.Context(), p.user.ID)
-	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys, "must_change": a.Ctl.MustChange(r.Context(), p.user.ID),
+	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys, "must_change": a.Ctl.MustChange(r.Context(), p.user.ID), "mentions": a.MentionsOn,
 		// Only owners upgrade, so only their dashboards look.
 		"update_check": a.UpdateCheck && p.user.Role == sqlite.RoleOwner,
 		// The address this request came from: Filtering's "Add my current IP".
@@ -1061,7 +1064,10 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 	checks, _ := a.Ctl.Checks(r.Context(), principalOf(r).account)
 	downs, _ := a.Ctl.DownProbes(r.Context(), principalOf(r).account)
 	blocked, _ := a.Ctl.BlockedProbes(r.Context(), principalOf(r).account)
-	talked, _ := a.Ctl.SitesWithMentions(r.Context())
+	talked := map[string]bool{}
+	if a.MentionsOn {
+		talked, _ = a.Ctl.SitesWithMentions(r.Context())
+	}
 	out := []siteListRow{}
 	for _, s := range rows {
 		b := brands[s.ID]

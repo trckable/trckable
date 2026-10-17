@@ -32,9 +32,9 @@ func TestMentionKeywordsAreCleanedAndCapped(t *testing.T) {
 	if kept, _ := st.MentionKeywords(ctx, site); len(kept) != 2 {
 		t.Fatalf("a refused list changed nothing: %v", kept)
 	}
-	// The address and the name come first, a word is searched once.
-	words := JoinWords(SiteRow{Domain: "acme.com", Name: "Acme"}, []string{"acme", "@acme"})
-	if !reflect.DeepEqual(words, []string{"acme.com", "Acme", "@acme"}) {
+	// The address comes first, a word is searched once.
+	words := JoinWords(SiteRow{Domain: "acme.com", Name: "Acme"}, []string{"acme", "@acme", "ACME"})
+	if !reflect.DeepEqual(words, []string{"acme.com", "www.acme.com", "acme", "@acme"}) {
 		t.Fatalf("%v", words)
 	}
 }
@@ -109,17 +109,18 @@ func TestMentionsPeriodScoreCursorPruneAndDelete(t *testing.T) {
 	}
 }
 
-func TestSearchWordsKeepTheNameOnlyWhenItIsDistinctive(t *testing.T) {
+func TestSearchWordsAreTheAddressOnly(t *testing.T) {
 	for _, c := range []struct {
 		domain, name string
+		added        []string
 		want         []string
 	}{
-		{"acme.example", "Acme", []string{"acme.example", "Acme"}},                 // holds the address's own label
-		{"acme.example", "Acme Metrics", []string{"acme.example", "Acme Metrics"}}, // two words
-		{"notes.example", "Studio", []string{"notes.example"}},                     // one ordinary word says nothing about the site
-		{"x.example", "", []string{"x.example"}},
+		{"albas.al", "albas", nil, []string{"albas.al", "www.albas.al"}}, // the bare name is not a default
+		{"acme.example", "Acme Metrics", nil, []string{"acme.example", "www.acme.example"}},
+		{"www.acme.example", "", nil, []string{"acme.example", "www.acme.example"}},
+		{"albas.al", "albas", []string{"albas"}, []string{"albas.al", "www.albas.al", "albas"}}, // the owner may add it
 	} {
-		got := JoinWords(SiteRow{Domain: c.domain, Name: c.name}, nil)
+		got := JoinWords(SiteRow{Domain: c.domain, Name: c.name}, c.added)
 		if !slices.Equal(got, c.want) {
 			t.Errorf("%s / %s: %v, want %v", c.domain, c.name, got, c.want)
 		}

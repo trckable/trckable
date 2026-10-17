@@ -1,6 +1,6 @@
 import { Activity, Bell, Check, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, LayoutTemplate, RefreshCw, Search, Newspaper, Settings as Cog, Share2, ShieldCheck, StickyNote, TriangleAlert } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
-import { isViewer } from '../lib/me'
+import { hasMentions, isViewer } from '../lib/me'
 import { api, siteState, fail, type InstallCheck, type Site, type SiteState, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { Window, type WindowTab } from '../components/Window'
@@ -63,7 +63,8 @@ const GROUPS: { name: string; tabs: TabID[] }[] = [
  *  left, the section on the right. Opening it does not change the address
  *  (lib/settings.ts); closing it leaves the dashboard exactly as it was. */
 export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSites: () => void }) {
-  const tab = TABS.some((t) => t.id === p.tab) ? p.tab : 'site'
+  const offered = (id: TabID) => id !== 'mentions' || hasMentions()
+  const tab = TABS.some((t) => t.id === p.tab && offered(t.id)) ? p.tab : 'site'
   const go = (id: TabID) => setSettingsTab(id)
   const close = closeSettings
   // Once visits arrive there is nothing left to install, only to verify.
@@ -71,7 +72,7 @@ export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSit
   const tabs: WindowTab[] = GROUPS.flatMap((g) =>
     g.tabs.flatMap((id) => {
       const t = TABS.find((x) => x.id === id)
-      return t ? [{ id: t.id, label: label(t), icon: t.icon, group: g.name }] : []
+      return t && offered(id) ? [{ id: t.id, label: label(t), icon: t.icon, group: g.name }] : []
     }),
   )
   return (

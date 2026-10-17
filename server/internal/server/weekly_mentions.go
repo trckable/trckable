@@ -48,6 +48,9 @@ func (s *Server) mentionsPage(domain string) string {
 
 // weekMentions reads the mentions posted in the week from the same store the Mentions page reads.
 func (s *Server) weekMentions(ctx context.Context, siteID, domain string, from, to time.Time) reports.Weekly {
+	if !s.cfg.MentionsOn {
+		return reports.Weekly{}
+	}
 	list, err := s.ctl.Mentions(ctx, siteID, from.Unix(), to.Unix(), weeklyMentionsRead)
 	if err != nil {
 		return reports.Weekly{}

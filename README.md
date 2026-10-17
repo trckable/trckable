@@ -83,7 +83,7 @@ Nothing is paid, limited or held back. The complete list: [features](https://doc
 - **API and MCP server.** Read-only tools for Claude, Cursor or ChatGPT, and an HTTP API: [API](https://docs.trckable.com/api/), [MCP](https://docs.trckable.com/api/mcp/).
 - **Sign in with Google, Microsoft or OIDC.** Free on every install: [sign-in](https://docs.trckable.com/self-host/sign-in-with-a-provider/).
 - **Privacy by default.** Cookieless, no IP address ever stored: [privacy](https://docs.trckable.com/privacy/), and a printable [privacy report](docs/privacy-report.md) for every site.
-- **Mentions.** See where your site is talked about (Hacker News, the news and blogs, Product Hunt) and the visitors each mention brought: [mentions](docs/mentions.md). A self-hosted server sends your site's address, name and the words you add to Algolia, Google News and GDELT to search, nothing about your visitors; `TRCKABLE_MENTIONS_EVERY=0` turns it off.
+- **Mentions.** See where your site is talked about (Hacker News, the news and blogs, Product Hunt) and the visitors each mention brought: [mentions](docs/mentions.md). A self-hosted server sends your site's address and the words you add to Algolia, Google News and GDELT to search, nothing about your visitors; it is off until `TRCKABLE_MENTIONS=on`.
 - **Heatmaps without recording anyone.** An opt-in module of about 1.5 KB: [heatmaps](docs/heatmaps.md).
 - **Widgets for your own pages.** Live now, revenue, a privacy seal and Online, with no script and no cookie: [widgets](docs/widgets.md).
 - **Client reports.** Weekly or monthly email and PDF for the people who pay for them: [client reports](docs/client-reports.md).

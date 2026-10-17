@@ -181,6 +181,9 @@ func bucketKey(hour, bucket string) string {
 // mentionMoments are the mentions posted in the period that brought visitors,
 // each at the hour it was posted.
 func (a *API) mentionMoments(r *http.Request, site string, p query.Params, loc *time.Location) []moments.Moment {
+	if !a.MentionsOn {
+		return nil
+	}
 	list, err := a.Ctl.Mentions(r.Context(), site, p.From.Unix(), p.To.Unix(), maxMoments)
 	if err != nil {
 		return nil

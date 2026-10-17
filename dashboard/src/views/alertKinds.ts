@@ -2,6 +2,7 @@
 import { Banknote, Bell, CalendarDays, HardDrive, Newspaper, TrendingUp, Trophy, WifiOff, Zap } from 'lucide-react'
 import type { Alert, Site } from '../lib/apiMore'
 import { copy as mentions } from '../features/mentions/copy'
+import { hasMentions } from '../lib/me'
 
 const DAYS = ['Sunday', 'Monday']
 
@@ -15,3 +16,6 @@ export const KINDS: { id: Alert['kind']; label: string; Icon: typeof Bell; befor
   { id: 'milestone', label: 'Milestone reached', Icon: Trophy, fallback: 0, hint: () => 'A round number, the day after it is reached; money without the amount' },
   { id: 'mention', label: mentions.alert.label, Icon: Newspaper, fallback: 0, hint: () => mentions.alert.hint },
 ]
+
+/** The alerts on offer: Mentions' one only while Mentions is switched on. */
+export const shownKinds = () => KINDS.filter((k) => k.id !== 'mention' || hasMentions())

@@ -77,6 +77,7 @@ type setupIn struct {
 	VitalsBytes      int
 	Team, Phone      bool
 	Keywords         bool
+	MentionsOn       bool
 }
 
 type payState struct {
@@ -147,7 +148,9 @@ func buildSetup(in setupIn) setupOut {
 	add("ga", setupMore, false, nil) // nothing is stored: a link
 	add("team", setupMore, in.Team, nil)
 	add("phone", setupMore, in.Phone, nil)
-	add("mentions", setupMore, in.Keywords, nil)
+	if in.MentionsOn {
+		add("mentions", setupMore, in.Keywords, nil)
+	}
 
 	for _, it := range out.Items {
 		if it.Counted {
@@ -215,6 +218,7 @@ func (a *API) setupOf(r *http.Request, si sqlite.SiteInfo) (setupOut, error) {
 			in.Phone = len(devs) > 0
 		}
 	}
+	in.MentionsOn = a.MentionsOn
 	if words, err := a.Ctl.MentionKeywords(ctx, si.ID); err == nil {
 		in.Keywords = len(words) > 0
 	}

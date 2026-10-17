@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -225,5 +226,32 @@ func TestProductHuntReadsPageAfterPage(t *testing.T) {
 	posts, err := RecentPH(context.Background(), p, "tok", time.Now())
 	if err != nil || len(posts) != 2 || p.n != 2 {
 		t.Fatalf("until the list ends: %d posts, %d calls, %v", len(posts), p.n, err)
+	}
+}
+
+func TestAddressWordsAgainstRealisticHeadlines(t *testing.T) {
+	defaults := []string{"albas.al", "www.albas.al"}
+	for _, c := range []struct {
+		name  string
+		text  string
+		words []string
+		want  bool
+	}{
+		{"surname of someone else", "Dan Albas MP Report: Alto: $113 billion for a train", defaults, false},
+		{"the domain in a headline", "Why I moved my analytics to albas.al", defaults, true},
+		{"the domain with www", "Read more at www.albas.al/pricing.", defaults, true},
+		{"the domain as a link only", "A review https://blog.example/go?to=https://albas.al/", defaults, true},
+		{"owner-added bare word", "Dan Albas MP Report", append(slices.Clone(defaults), "albas"), true},
+		{"longer domain, same start", "Visit albas.alberta.ca for permits", defaults, false},
+		{"longer domain, same end", "Try notalbas.al for hosting", defaults, false},
+		{"another tld", "albas.com launches a store", defaults, false},
+		{"brand as a plain word", "The albas of Ibiza", defaults, false},
+		{"in another language", "Neue Analyse-Tools wie albas.al im Test", defaults, true},
+		{"upper case", "ALBAS.AL goes live", defaults, true},
+		{"after a sentence end", "We now use albas.al.", defaults, true},
+	} {
+		if got := HasAny(c.text, c.words); got != c.want {
+			t.Errorf("%s: %q = %v, want %v", c.name, c.text, got, c.want)
+		}
 	}
 }

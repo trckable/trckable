@@ -26,6 +26,13 @@ export const setShared = (modules?: Record<string, boolean>) => {
 
 export const isShared = () => shared
 
+// Mentions is switched on by the server (TRCKABLE_MENTIONS); off, nothing of it is offered.
+let mentionsOn = false
+export const setMentionsOn = (on?: boolean) => {
+  mentionsOn = on === true
+}
+export const hasMentions = () => mentionsOn
+
 /** Whether this page may offer a create, edit or delete control: an owner,
  *  never a viewer and never a shared link. */
 export const canChange = () => role === 'owner' && !shared

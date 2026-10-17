@@ -272,6 +272,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 		},
 	}
 	a.MentionSources = MentionSources(cfg.ProductHuntToken != "")
+	a.MentionsOn = cfg.MentionsOn
 	a.SendWeekly = s.sendWeeklyNow
 	a.OnSurge = s.tellSurge
 	if len(cfg.OIDC) > 0 {

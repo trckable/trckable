@@ -93,7 +93,7 @@ func newRig(t *testing.T) *rig {
 	if err != nil {
 		t.Fatal(err)
 	}
-	a = &API{Ctl: ctl, Hub: hub, Token: "automation-token", SetupEnv: "tkb_setup_test", Now: tick, Revenue: rev, Box: box,
+	a = &API{MentionsOn: true, Ctl: ctl, Hub: hub, Token: "automation-token", SetupEnv: "tkb_setup_test", Now: tick, Revenue: rev, Box: box,
 		PurgeAnalytics: w.PurgeSite,
 		ErasePerson:    w.ErasePerson,
 		Query: func() *query.Q {

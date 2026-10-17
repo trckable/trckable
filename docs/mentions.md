@@ -7,10 +7,11 @@ Mentions shows who is talking about your site and how many people they sent. Ope
 
 ## What is watched
 
-Every 20 minutes your server looks for three kinds of words:
+Mentions is off until you set `TRCKABLE_MENTIONS=on`. Off, nothing is searched and nothing about mentions shows in the dashboard, the API, the bell or any email.
 
-- your site's address (always),
-- its name, when the name is distinctive (it holds the address's own label, or is two words or more; a lone ordinary word would find everything but your site),
+Every 20 minutes your server looks for two kinds of words:
+
+- your site's address (always, with and without `www.`). The bare name inside it is not searched by itself: "acme" also names people, places and other sites,
 - up to 10 words you add yourself in **Settings → Mentions**: a product name, a handle, anything people call your site.
 
 It looks in:
@@ -27,8 +28,8 @@ Each visit belongs to one mention: when a place has several mentions, one ends w
 
 ## What leaves your server
 
-To search, your server sends your site's address, name and the words you added to Algolia (Hacker News), Google News, GDELT and, with a token, Product Hunt. Nothing about your visitors is sent: the searches are only your words. What comes back is public: a link, a title, a handle and a time. It is stored with the site and removed with it, and with its retention setting.
+To search, your server sends your site's address and the words you added to Algolia (Hacker News), Google News, GDELT and, with a token, Product Hunt. Nothing about your visitors is sent: the searches are only your words. What comes back is public: a link, a title, a handle and a time. It is stored with the site and removed with it, and with its retention setting.
 
-## Turn it off
+## Turn it on or off
 
-Set `TRCKABLE_MENTIONS_EVERY=0` and nothing is searched and nothing is sent. Any other duration (`30m`, `1h`) changes how often.
+Set `TRCKABLE_MENTIONS=on` to turn it on; unset, it is off. With it on, set `TRCKABLE_MENTIONS_EVERY=0` and nothing is searched and nothing is sent. Any other duration (`30m`, `1h`) changes how often.

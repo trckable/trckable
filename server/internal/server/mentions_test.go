@@ -85,6 +85,10 @@ func newMentionRig(t *testing.T) *mentionRig {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// The recorded answers name the site by its bare name, which only counts when its owner added it.
+	if err := st.SetMentionKeywords(ctx, site, []string{"Acme"}, 1); err != nil {
+		t.Fatal(err)
+	}
 	r := &mentionRig{st: st, db: dk, site: site, now: mday.Add(12 * time.Hour), net: &recorded{t: t, calls: map[string]int{}, limit: map[string]bool{}}}
 	r.f = &mentionFinder{
 		st: st, get: r.net, every: 20 * time.Minute, token: "tok",
@@ -426,4 +430,34 @@ func TestRoundSharesNoSlicesBetweenPasses(t *testing.T) {
 		}
 	}
 	r.f.round(ctx) // go test -race fails here if two passes sort one slice
+}
+
+// A news item kept under a looser rule goes at the next round when the site's
+// words no longer name it; one that names the address stays.
+func TestRoundDropsNewsTheWordsNoLongerName(t *testing.T) {
+	r := newMentionRig(t)
+	ctx := context.Background()
+	if err := r.st.SetMentionKeywords(ctx, r.site, nil, 1); err != nil {
+		t.Fatal(err)
+	}
+	at := r.now.Add(-time.Hour).Unix()
+	for i, title := range []string{"Dan Acme MP Report: a train", "Launch notes from acme.example today"} {
+		_, err := r.st.SaveMention(ctx, sqlite.Mention{Site: r.site, Source: "news", URL: "https://paper.example/" + string(rune('a'+i)), Title: title, Host: "paper.example", PostedAt: at}, at)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	r.f.round(ctx)
+	got := 0
+	for _, m := range r.all(t) {
+		if m.Host == "paper.example" {
+			got++
+			if !strings.Contains(m.Title, "acme.example") {
+				t.Fatalf("a headline about someone else stayed: %q", m.Title)
+			}
+		}
+	}
+	if got != 1 {
+		t.Fatalf("want the one article that names the address, got %d", got)
+	}
 }
