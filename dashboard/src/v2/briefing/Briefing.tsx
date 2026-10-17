@@ -8,7 +8,6 @@ import { PAID_STEP } from '../explore/data/mapSections'
 import { fmtRange, presetById, todayIn, type Range } from '../../lib/dates'
 import { dayWords } from '../dayWords'
 import { fmtInt } from '../../lib/format'
-import { wholeMoney } from './wholeMoney'
 import { isShared, isViewer } from '../../lib/me'
 import { openSettings } from '../../lib/settings'
 import { baseEnough } from '../../lib/thin'
@@ -84,8 +83,7 @@ const chartLine = (learning: boolean, low: boolean, hd: number, note: () => stri
 /** An empty period has no series at all (the server sends null): an empty list, so nothing below has to ask. */
 const normal = (r?: Result): Result | undefined => (r ? { ...r, series: r.series ?? [] } : undefined)
 
-export default function Briefing({ site, data: page, loading, period, range, money: moneyIn, onGoal, visits }: BriefingProps) {
-  const money = useMemo(() => (moneyIn ? wholeMoney(moneyIn) : undefined), [moneyIn])
+export default function Briefing({ site, data: page, loading, period, range, money, onGoal, visits }: BriefingProps) {
   const ui = useBriefingState(site.id)
   const [at, setAt] = useState<number | null>(null)
   const up = useUptime(site, range)
@@ -193,7 +191,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const canNote = !isViewer() && !isShared()
   const replayStory = /* any period but today plays as a story */ pts.length > 1 && v > 0 && storyR.phase === 'off' ? storyR.start : undefined
   const replayToday = !rv.r.on && end >= 60 && v > 0 ? rv.r.open : undefined
-  const chartBlock = { site, range, chart, at, onAt: setAt, story: storyR, series: cur.series.slice(0, pts.length), bucket: data?.bucket ?? 'day', money: moneyIn, total: fmtN(v), source: top?.value, note: chartLine(learning, low, parts.hd, () => chartNote(chart, at, downNow, window.matchMedia('(max-width: 500px)').matches)), down: uptime.verdict === 'down', notes: notes.notes.length, onNotes: () => ui.setSheet('notes') }
+  const chartBlock = { site, range, chart, at, onAt: setAt, story: storyR, series: cur.series.slice(0, pts.length), bucket: data?.bucket ?? 'day', money, total: fmtN(v), source: top?.value, note: chartLine(learning, low, parts.hd, () => chartNote(chart, at, downNow, window.matchMedia('(max-width: 500px)').matches)), down: uptime.verdict === 'down', notes: notes.notes.length, onNotes: () => ui.setSheet('notes') }
   const body = (
 
     <div className="mk mk-body">

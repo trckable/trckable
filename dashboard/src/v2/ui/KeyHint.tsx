@@ -19,8 +19,8 @@ export function KeyHint({ onHide }: { onHide: () => void }) {
       <span>
         <kbd>{'Esc'}</kbd> {copy.keyClose}
       </span>
-      <button type="button" className="gh" data-hint="1" title={copy.keyHide} onClick={onHide}>
-        &times;
+      <button type="button" className="gh" data-hint="1" onClick={onHide}>
+        {copy.keyHide}
       </button>
     </div>
   )
