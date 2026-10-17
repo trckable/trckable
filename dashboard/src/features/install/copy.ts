@@ -108,16 +108,24 @@ export const waitCard = defineCopy('install.wait', {
 /** The add-site wizard: Your site → Install → Revenue (optional). */
 export const wizard = defineCopy('install.wizard', {
   label: 'Add a site',
-  steps: ['Your site', 'Install', 'Revenue (optional)'],
-  title: ['Add a site', '', 'Attribute revenue'],
+  steps: ['Your site', 'Kind', 'Install', 'Revenue (optional)'],
+  title: ['Add a site', 'What kind of site is it?', '', 'Attribute revenue'],
   /** "Add trckable to example.com", with the logo's own word between. */
   addTo: ['Add', 'to'],
   titleLive: 'Peekaboo! It works.',
   sub: [
     'The domain to count visits on.',
+    'So we can set up what matters for it. You can change it later.',
     'Copy the code, then check it is in.',
     'Optional. See which traffic brings paying customers.',
   ],
+  kinds: { shop: 'Shop', saas: 'SaaS', content: 'Blog', other: 'Other' },
+  kindReading: 'Reading your homepage…',
+  kindLooks: (name: string) => `Looks like: ${name}`,
+  kindChosen: 'Your choice',
+  kindNone: 'We couldn’t tell. Pick one, or skip.',
+  kindSkip: 'Skip',
+  kindNext: 'Continue',
   domain: 'Domain',
   domainHelp: 'Paste a full address if you like.',
   countPre: 'We’ll count',

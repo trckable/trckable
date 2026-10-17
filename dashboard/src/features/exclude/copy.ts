@@ -13,5 +13,9 @@ export const copy = defineCopy('exclude', {
     many: 'Use 50 addresses or fewer. Remove a few.',
     saved: (n: number) => `${n} ${n === 1 ? 'address' : 'addresses'} excluded`,
     cleared: 'No addresses are excluded now',
+    add: 'Add my current IP',
+    added: 'Your address is now left out',
+    have: 'Your address is already left out',
+    fail: 'Could not read your address',
   },
 })

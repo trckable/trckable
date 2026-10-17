@@ -9,6 +9,8 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('an unknown site goes to the main dashboard, not Settings', async ({ page }) => {
+  // The first site of the person's list, whichever the suite's other files have made first by now.
+  const first = ((await (await page.request.get(`${API}/api/v1/sites`)).json()) as { sites: { domain: string }[] }).sites[0].domain
   await page.goto(API + '/no-such-site.example?view=data')
   // The main dashboard is the person's first site: other suites in the same run may have added sites, so any site of theirs will do.
   await expect(page).toHaveURL(new RegExp(`^${API}/(?!no-such-site)[a-z0-9.-]+\\?view=data$`))

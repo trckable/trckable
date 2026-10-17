@@ -810,6 +810,8 @@ export interface InstallCheck {
   /** The tag's script, and what it answered (absent: it could not be loaded). */
   script?: string
   script_status?: number
+  /** The guess from the homepage: shop, saas, content or other. */
+  kind?: string
 }
 
 /** A moment the data shows: a visitor step, the best day, a first. */

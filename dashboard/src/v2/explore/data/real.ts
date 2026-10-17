@@ -14,6 +14,7 @@ import { siteNow } from '../../briefing/chart'
 import { read as readHistory } from '../../briefing/useHistory'
 import { hourTable, stretchBand } from '../../briefing/usual'
 import type { Usual } from '../../briefing/model'
+import { funnelBuilt } from '../../setup/funnelBuilt'
 import type { Down, SavedView, Tab } from '../types'
 import { basisOf, type Basis } from './basis'
 import { scaled } from './scaled'
@@ -110,6 +111,7 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
       const goal = (report.current.goals ?? [])[0]
       const steps = stepsOf(c.view.funnel, pages, goal, !!report.current.money)
       if (steps.length < 2) return mapFunnel({ cur: [], report, ghost: !report.current.money })
+      funnelBuilt(c.site.id, c.view.funnel?.length ?? 0)
       const p = before(report)
       const [cur, prev] = await Promise.all([more.funnel(c.site.id, q, steps), report.previous ? more.funnel(c.site.id, { ...q, from: p.from, to: p.to, compare: undefined }, steps) : Promise.resolve(null)])
       return mapFunnel({ cur: cur.steps, prev: prev?.steps, report, ghost: !report.current.money })
