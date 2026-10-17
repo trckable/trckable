@@ -147,7 +147,7 @@ export function useParts(a: PartsIn) {
       uptime: uptimeIn,
       mention: mention && unit === 'today' ? { host: mentionHost(mention), title: mention.title, at: clockOf(mention.posted_at), points: mention.points ?? 0, comments: mention.comments ?? 0, page: cur.dims.entry_page?.[0]?.value ?? '/' } : undefined,
       speed: extras.speed ?? undefined,
-      sales: cur.money && money && extras.buyers ? { money: cur.money, buyers: extras.buyers, band: moneyBand, fmt: money, clock: (iso) => clockOf(Date.parse(iso) / 1000), today: unit === 'today', rule } : undefined,
+      sales: cur.money && money && extras.buyers ? { money: cur.money, buyers: extras.buyers, refunds: extras.refunds, band: moneyBand, fmt: money, clock: (iso) => clockOf(Date.parse(iso) / 1000), today: unit === 'today', rule } : undefined,
       search: extras.search ?? undefined,
       stuck: extras.stuck ?? undefined,
       funnel: extras.funnel ?? undefined,

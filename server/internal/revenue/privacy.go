@@ -46,13 +46,16 @@ type PersonPayment struct {
 	Tax      int64     `json:"tax,omitempty"`
 	Kind     string    `json:"kind"`
 	Test     bool      `json:"test,omitempty"`
+	Country  string    `json:"country,omitempty"` // the billing country the provider named, when it did
 }
 
 // PaymentsOf lists the payments attributed to one visitor.
 func (s *Service) PaymentsOf(ctx context.Context, site string, visitor uint64) ([]PersonPayment, error) {
 	rows, err := s.DB.QueryContext(ctx,
-		`SELECT provider, id, paid_at, currency, gross, coalesce(tax, 0), kind, test
-		 FROM pay_payments WHERE site_id = ? AND visitor_id = ? ORDER BY paid_at`,
+		`SELECT p.provider, p.id, p.paid_at, p.currency, p.gross, coalesce(p.tax, 0), p.kind, p.test,
+		        coalesce(nullif(p.country, ''), (SELECT max(h.country) FROM pay_hints h WHERE h.site_id = p.site_id AND h.provider = p.provider AND h.country <> ''
+		            AND (h.payment_id = p.id OR h.payment_id IN (SELECT a.alias FROM pay_aliases a WHERE a.site_id = p.site_id AND a.provider = p.provider AND a.payment_id = p.id))), '')
+		 FROM pay_payments p WHERE p.site_id = ? AND p.visitor_id = ? ORDER BY p.paid_at`,
 		site, int64(visitor)) //nolint:gosec // visitor ids are stored bit for bit as SQLite's signed int64; the round trip is lossless
 	if err != nil {
 		return nil, err
@@ -63,7 +66,7 @@ func (s *Service) PaymentsOf(ctx context.Context, site string, visitor uint64) (
 		var p PersonPayment
 		var at int64
 		var test int
-		if err := rows.Scan(&p.Provider, &p.ID, &at, &p.Currency, &p.Gross, &p.Tax, &p.Kind, &test); err != nil {
+		if err := rows.Scan(&p.Provider, &p.ID, &at, &p.Currency, &p.Gross, &p.Tax, &p.Kind, &test, &p.Country); err != nil {
 			return nil, err
 		}
 		p.PaidAt, p.Test = time.UnixMilli(at).UTC(), test == 1 // paid_at is unix ms

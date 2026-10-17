@@ -45,7 +45,7 @@ func TestMoneyAlertBackfill(t *testing.T) {
 		}
 	}
 	// The schema as it was before the migration.
-	if _, err := s.DB.ExecContext(ctx, `DROP TABLE pay_notices; ALTER TABLE pay_hints DROP COLUMN from_plan; ALTER TABLE pay_hints DROP COLUMN to_plan; PRAGMA user_version = 63`); err != nil {
+	if _, err := s.DB.ExecContext(ctx, `DROP TABLE pay_notices; ALTER TABLE pay_hints DROP COLUMN from_plan; ALTER TABLE pay_hints DROP COLUMN to_plan; ALTER TABLE pay_hints DROP COLUMN country; ALTER TABLE pay_payments DROP COLUMN country; PRAGMA user_version = 63`); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.MigrateTo(ctx, 64); err != nil {

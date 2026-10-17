@@ -3,7 +3,8 @@
 // set up yet. Everything comes from the report the page already read, the site's own past (its "usual"), and the
 // incident record.
 import { useEffect, useMemo, useState } from 'react'
-import type { Report, Result, Site, Visit } from '../../lib/api'
+import type { FunnelStep, PaidStep, Report, Result, Site, Visit } from '../../lib/api'
+import { PAID_STEP } from '../explore/data/mapSections'
 import { fmtRange, presetById, todayIn, type Range } from '../../lib/dates'
 import { dayWords } from '../dayWords'
 import { fmtInt } from '../../lib/format'
@@ -109,7 +110,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const downMin = Math.round(up.lost / 60)
   const slices = useSlices(site, range, cur0, prev, unit, cur0?.kpis.visitors ?? 0, !!cur0 && !!hist.daily)
   const stuckPage = cur0?.dims.entry_page?.find((r) => r.value === '/pricing')?.value ?? cur0?.dims.entry_page?.[0]?.value ?? null
-  const pathSteps = [...(cur0?.dims.entry_page ?? []).slice(0, 2).map((p) => ({ kind: 'page' as const, value: p.value })), ...((cur0?.goals ?? []).filter((g) => g.visitors > 0).slice(0, 1).map((g) => ({ kind: 'goal' as const, value: g.value })))]
+  const pathSteps: (FunnelStep | PaidStep)[] = [...(cur0?.dims.entry_page ?? []).slice(0, 2).map((p) => ({ kind: 'page' as const, value: p.value })), ...((cur0?.goals ?? []).filter((g) => g.visitors > 0).slice(0, 1).map((g) => ({ kind: 'goal' as const, value: g.value }))), ...(cur0?.money ? [PAID_STEP] : [])]
   const funnelWant = useSame(pathSteps.length >= 3 ? { steps: pathSteps, alt: (cur0?.dims.entry_page ?? []).find((p) => !/signup|checkout|cart/.test(p.value) && p.value !== '/' && !pathSteps.some((x) => x.value === p.value))?.value } : null)
   const countryWant = useSame((cur0?.dims.country ?? []).slice(0, 5).map((r) => ({ code: r.value, people: r.visitors })))
   const extras = useExtras(site, today, range, { money: !!cur0?.money, search: setupState.can && !setupState.noSearch, page: unit === 'today' ? stuckPage : null, funnel: funnelWant, countries: countryWant }, !!cur0)

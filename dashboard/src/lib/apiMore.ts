@@ -16,7 +16,7 @@ export interface ProbeLook {
 
 export * from './api'
 export { siteState, type SiteState } from '../features/sitestatus/status'
-import type { APIKey, Added, Alert, Annotation, Brand, Cohorts, CrawlerReport, FunnelResult, FunnelStep, Health, Heatmap, InstallCheck, JourneyResult, ModuleInfo, PayConnection, Person, PersonFound, PersonPayment, Profile, Provider, ReportQuery, ReportSchedule, ReportSchedules, ScriptInfo, ScrollReport, SearchConnection, SearchProperty, SearchReport, Segment, Share, ShareLook, Site, SiteAccessList, SiteConfig, SiteRow, TwoStep, Verified, WebVitals, Widget, WidgetLook } from './api'
+import type { APIKey, Added, Alert, Annotation, Brand, Cohorts, CrawlerReport, FunnelResult, FunnelStep, Health, Heatmap, InstallCheck, JourneyResult, ModuleInfo, PaidStep, PayConnection, Person, PersonFound, PersonPayment, Profile, Provider, ReportQuery, ReportSchedule, ReportSchedules, ScriptInfo, ScrollReport, SearchConnection, SearchProperty, SearchReport, Segment, Share, ShareLook, Site, SiteAccessList, SiteConfig, SiteRow, TwoStep, Verified, WebVitals, Widget, WidgetLook } from './api'
 
 /** A phone signed in to the account with its own token (never shown). */
 export interface Device {
@@ -170,7 +170,7 @@ export const more = {
   probes: (site: string) => call<{ probes: ProbeLook[] }>('GET', `/sites/${encodeURIComponent(site)}/probes`),
   keys: () => call<{ keys: APIKey[] }>('GET', '/keys'),
   heatmap: (site: string, q: ReportQuery) => call<Heatmap>('GET', `/sites/${site}/report/heatmap` + rangeQS(q)),
-  funnel: (site: string, q: ReportQuery, steps: FunnelStep[]) => call<{ steps: FunnelResult[] }>('GET', `/sites/${site}/report/funnel` + rangeQS(q) + '&steps=' + encodeURIComponent(JSON.stringify(steps))),
+  funnel: (site: string, q: ReportQuery, steps: (FunnelStep | PaidStep)[]) => call<{ steps: FunnelResult[] }>('GET', `/sites/${site}/report/funnel` + rangeQS(q) + '&steps=' + encodeURIComponent(JSON.stringify(steps))),
   journey: (site: string, visitor: string, q: ReportQuery) => call<JourneyResult>('GET', `/sites/${site}/journey/${visitor}` + rangeQS(q)),
   siteConfig: (site: string) => call<SiteConfig>('GET', `/sites/${site}/config`),
   setSiteConfig: (site: string, c: SiteConfig) => call<SiteConfig>('PUT', `/sites/${site}/config`, c),

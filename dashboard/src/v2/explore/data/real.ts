@@ -108,7 +108,7 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
       const report = await cachedReport(c.site.id, q, undefined, signal)
       const pages = report.current.dims.entry_page ?? []
       const goal = (report.current.goals ?? [])[0]
-      const steps = stepsOf(c.view.funnel, pages, goal)
+      const steps = stepsOf(c.view.funnel, pages, goal, !!report.current.money)
       if (steps.length < 2) return mapFunnel({ cur: [], report, ghost: !report.current.money })
       const p = before(report)
       const [cur, prev] = await Promise.all([more.funnel(c.site.id, q, steps), report.previous ? more.funnel(c.site.id, { ...q, from: p.from, to: p.to, compare: undefined }, steps) : Promise.resolve(null)])

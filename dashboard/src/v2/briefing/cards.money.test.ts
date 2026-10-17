@@ -15,6 +15,30 @@ describe('the sales cards', () => {
     expect(c.why).toContain('Usual $80–$140 by now.')
     expect(c.vis).toMatchObject({ k: 'rcpt' })
   })
+  it('puts the buyer\'s country on the receipt line, and nothing when the provider named none', () => {
+    const [c] = salesCards({ ...base, money: money(), band: null, buyers: [{ id: 'a', at: '2026-10-16T15:20:00Z', amount: 8700, kind: 'new', country: 'DE' }, { id: 'b', at: '2026-10-16T16:00:00Z', amount: 500, kind: 'new' }] })
+    const rows = c.vis?.k === 'rcpt' ? c.vis.rows : []
+    expect(rows.map((r) => r.flag)).toEqual(['\u{1F1E9}\u{1F1EA}', '', ''])
+  })
+  it('lists the refunds as a receipt and counts them over 90 days', () => {
+    const refunds = { count: 2, amount: 3000, count_90d: 5, refunds: [{ id: 'x', at: '2026-10-16T15:20:00Z', amount: 2000, kind: 'subscription', country: 'FR' }, { id: 'y', at: '2026-10-16T12:00:00Z', amount: 1000, kind: 'renewal' }] }
+    const [c] = salesCards({ ...base, money: money({ refunds: 3000, payments: 0, revenue: -3000 }), band: null, buyers: [], refunds })
+    expect(c.bad).toBe(true)
+    expect(c.why).toBe('That makes 5 refunds in the last 90 days. A short note to each often shows why.')
+    expect(c.vis).toEqual({
+      k: 'rcpt',
+      rows: [
+        { l: 'Refund · New customer', t: '15:20', a: '-$20', flag: '\u{1F1EB}\u{1F1F7}', neg: true },
+        { l: 'Refund · Renewal', t: '12:00', a: '-$10', flag: '', neg: true },
+        { l: 'Refunded', t: '', a: '-$30', flag: '', neg: true, tot: true },
+      ],
+    })
+  })
+  it('keeps the plain refund line when the refunds could not be read', () => {
+    const [c] = salesCards({ ...base, money: money({ refunds: 3000, payments: 0, revenue: -3000 }), band: null, buyers: [], refunds: null })
+    expect(c.vis).toBeNull()
+    expect(c.why).toBe('A short note to each often shows why.')
+  })
   it('says a refund first, and a quiet day when nothing sold under the usual', () => {
     expect(salesCards({ ...base, money: money({ refunds: 4000, payments: 0, revenue: -4000 }), band: null, buyers: [] })[0].bad).toBe(true)
     const [none] = salesCards({ ...base, money: money({ payments: 0, revenue: 0 }), band: { c: 9000, lo: 6000, hi: 12000 }, buyers: [] })
