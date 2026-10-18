@@ -1128,7 +1128,6 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .khint, .mk .npw{display:flex}
 .mk .khint{display:none}
 .mk .liveview>.mk-card, .mk .liveview .mk-card{background:none;border:0;border-radius:0;box-shadow:none}
-.mk .lcards{display:none}
 .mk .lnow .lhead, .mk .lon .lhead{padding:var(--mk-s2) 0}
 .mk .lnow .lfig{display:flex;flex-direction:row;align-items:flex-end;justify-content:space-between;gap:var(--mk-s4);padding:0}
 .mk .lnow .lfig>div:first-child{order:0}
@@ -1779,3 +1778,74 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 .mk .mk-waiting{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 0;text-align:center}
 .mk .mk-waiting b{font-size:15px;font-weight:600}
 .mk .mk-waiting-fig{width:clamp(140px,18vw,200px);margin-bottom:6px}
+/* Live's three cards under the half hour: Analytics, Speed & uptime, AI & mentions. Each keeps one height from the first frame, loading, empty or full. */
+.mk .lcards>.mk-card{min-height:300px}
+.mk .lsw{margin-left:auto}
+.mk .lsw button{width:auto;padding:0 var(--mk-s2);font-size:12px;font-weight:500}
+.mk .lhero{display:flex;align-items:baseline;flex-wrap:wrap;gap:var(--mk-s1) var(--mk-s2);font-size:44px;margin:var(--mk-s2) 0 var(--mk-s4)}
+.mk .lhero small{margin-left:0}
+.mk .lhword{align-self:center}
+.mk .lbars{display:flex;flex-direction:column;gap:6px;margin-top:auto}
+.mk .lbar{position:relative;display:flex;justify-content:space-between;align-items:center;gap:var(--mk-s2);height:28px;padding:0 10px;font-size:13px}
+.mk .lbar i{position:absolute;inset:0 auto 0 0;border-radius:8px;background:var(--mk-limeD)}
+.mk .lbar.top i{background:var(--mk-limeL)}
+.mk .lbar span,.mk .lbar b{position:relative;min-width:0}
+.mk .lbar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk .lbar b{font-weight:600;font-variant-numeric:tabular-nums}
+.mk .lflag{margin-right:6px}
+.mk .lhbody{display:flex;flex-direction:column;gap:var(--mk-s4);flex:1}
+.mk .lhc button{border:0;background:none;color:var(--mk-text);font:inherit;text-align:left;cursor:pointer;padding:0}
+.mk .lhn{font-size:44px;font-weight:600;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.mk .lhspeed{display:flex;flex-direction:column;align-items:center;gap:var(--mk-s1);width:100%}
+.mk .lhc svg.lhgauge{width:200px;height:108px;margin:0;display:block}
+.mk .lhspeed .lhn{margin-top:-52px;font-size:36px}
+.mk .lhz{fill:none;stroke-width:12}
+.mk .lhz.good{stroke:var(--mk-lime)}
+.mk .lhz.mid{stroke:var(--mk-amber)}
+.mk .lhz.poor{stroke:var(--mk-red)}
+.mk .lhknob{fill:var(--mk-card);stroke:var(--mk-text);stroke-width:3}
+.mk .lhgrade{font-size:13px;font-weight:600;text-transform:capitalize}
+.mk .lhgrade.good{color:var(--mk-lime)}
+.mk .lhgrade.mid{color:var(--mk-amber)}
+.mk .lhgrade.poor{color:var(--mk-red)}
+.mk .lhup{display:flex;flex-direction:column;gap:6px;width:100%;margin-top:auto}
+.mk .lhstrip{display:grid;grid-template-columns:repeat(30,minmax(0,1fr));gap:3px}
+.mk .lhstrip i{height:26px;border-radius:4px;background:var(--mk-lime)}
+.mk .lhstrip i.quiet{background:var(--mk-amber)}
+.mk .lhstrip i.down{background:var(--mk-red)}
+.mk .lhstrip i.unwatched{background:var(--mk-sel)}
+.mk .lhstrip i:last-child{outline:2px solid var(--mk-text);outline-offset:1px}
+.mk .lhaxis{display:flex;justify-content:space-between;gap:var(--mk-s2);font-size:11px;color:var(--mk-faint)}
+.mk .lhc.bad{border-color:var(--mk-redL);background:var(--mk-redD)}
+.mk .lhc.bad .lhaxis{color:var(--mk-muted)}
+.mk .lhdown{color:var(--mk-red);font-weight:600}
+.mk .lhbig{display:flex;flex-direction:column;gap:var(--mk-s2);margin-top:var(--mk-s3)}
+.mk .lhbig b{font-size:56px;font-weight:600;letter-spacing:-.04em;line-height:1;color:var(--mk-red)}
+.mk .lhbig span{font-size:13px;color:var(--mk-muted)}
+.mk .lhai{display:flex;align-items:center;justify-content:space-between;gap:var(--mk-s4)}
+.mk .lhcount{display:flex;flex-direction:column;gap:var(--mk-s2);min-width:0}
+.mk .lhcount span:not(.lhmarks){font-size:13px;color:var(--mk-muted)}
+.mk .lhmarks{display:flex;gap:4px}
+.mk .lhmarks i{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;background:var(--mk-sel2);color:var(--mk-text)}
+.mk .lhring{position:relative;flex:none;width:84px;height:84px;display:grid;place-items:center;align-content:center}
+.mk .lhc svg{margin:0}
+.mk .lhring svg{position:absolute;inset:0;width:84px;height:84px;display:block}
+.mk .lhtrack{fill:none;stroke:var(--mk-sel);stroke-width:9}
+.mk .lhfill{fill:none;stroke:var(--mk-lime);stroke-width:9;stroke-linecap:round}
+.mk .lhring b{position:relative;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.mk .lhring span{position:relative;font-size:10px;color:var(--mk-faint)}
+.mk .lhment{display:flex;flex-direction:column;gap:var(--mk-s2);padding-top:var(--mk-s3)!important;border-top:1px solid var(--mk-line)!important;border-radius:0;margin-top:auto}
+.mk .lhment .lhl{display:flex;align-items:center;gap:var(--mk-s2);font-size:13px;color:var(--mk-muted)}
+.mk .lhment .lhl b{color:var(--mk-text);font-weight:600}
+.mk .lhchips{display:flex;flex-wrap:wrap;gap:6px}
+.mk .lhchip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:3px 9px 3px 4px;border-radius:99px;background:var(--mk-sel);color:var(--mk-muted)}
+.mk .lhchip i{width:16px;height:16px;border-radius:5px;display:grid;place-items:center;font-style:normal;font-size:9px;font-weight:700;background:var(--mk-sel2);color:var(--mk-text)}
+.mk .lhempty{display:flex;align-items:center;gap:var(--mk-s3);color:var(--mk-faint);font-size:13px;margin:auto 0;min-height:64px}
+.mk .lhart{width:64px;height:64px;flex:none;opacity:.8}
+.mk .lhtext{display:flex;flex-direction:column;align-items:flex-start;gap:var(--mk-s1)}
+.mk .lhc button.lhgo{color:var(--mk-lime);font-weight:600;font-size:13px}
+.mk .lhc button.lhgo:hover{text-decoration:underline}
+.mk .lhquiet{color:var(--mk-faint)}
+@container (max-width:700px){
+.mk .lcards{order:0;grid-template-columns:1fr;margin:var(--mk-s4) 0 0}
+}

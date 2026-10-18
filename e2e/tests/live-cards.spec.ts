@@ -1,5 +1,5 @@
-// The three cards under Live: today so far, top pages right now, and where
-// the people are from. Each opens Data on today; a row narrows it to one page.
+// The cards under Live: Analytics (today so far, the pages and the countries behind one switch),
+// then Speed & uptime and AI & mentions.
 import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
@@ -72,20 +72,21 @@ test('the cards show today and the pages people are on', async ({ page }) => {
   await signIn(page, '/example.com?view=live')
   await expect(page.locator('.lnow .lfig .lbign').first()).toBeVisible({ timeout: 15_000 })
   const run = await visit(page, 'livecards', 4)
-  const today = cards(page).locator('.lcard', { hasText: 'Today' }).first()
+  const today = cards(page).locator('.lan')
   await expect(today).toBeVisible({ timeout: 10_000 })
-  await expect(today.locator('.lbig')).not.toHaveText(/^0/)
-  const pages = cards(page).locator('.lcard', { hasText: 'Pages' })
-  await expect(pages.locator('.lr', { hasText: run })).toBeVisible({ timeout: 10_000 })
+  await expect(today.locator('.lhero')).not.toHaveText(/^0/)
+  const pages = cards(page).locator('.lan')
+  await expect(pages.locator('.lbar', { hasText: run })).toBeVisible({ timeout: 10_000 })
 })
 
-test('on a phone the cards give way to the two panels and nothing runs off the side', async ({ page }) => {
+test('on a phone the cards stack and nothing runs off the side', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await signIn(page, '/example.com?view=live')
   await expect(page.locator('.lnow .lfig .lbign').first()).toBeVisible({ timeout: 15_000 })
   await visit(page, 'livecards-phone-' + 'long-'.repeat(12))
-  // The cards are for a wider screen; the two panels stack, and the long path stays inside its row.
-  await expect(page.locator('.lcards')).toBeHidden()
+  // The cards stack under the two panels, and the long path stays inside its row.
+  await expect(page.locator('.lcards')).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   const rows = await page.locator('.lfeed .lv').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right))
   for (const right of rows) expect(right).toBeLessThanOrEqual(390)
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
