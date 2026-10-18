@@ -1,121 +1,152 @@
-/* The incident history page (IncidentsPage.tsx): loaded with it. */
+/* The incident history page (IncidentsPage.tsx): loaded with it. Colours are the walkthrough's tokens, so both themes follow. */
 .inc-page {
-  padding: 8px 0 60px;
   display: grid;
-  gap: 16px;
+  align-content: start;
+  gap: 20px;
+  padding: 18px 0 60px;
   min-width: 0;
 }
 .inc-head {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 12px 24px;
-}
-.inc-head h1 {
-  margin: 4px 0 2px;
-  font-size: 26px;
-  letter-spacing: -0.03em;
-}
-.inc-head p {
-  margin: 0;
-}
-.inc-back {
-  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  color: var(--text-3);
-  font-size: 13px;
-}
-.inc-page h2 {
-  margin: 0 0 10px;
-  font-size: 16px;
-}
-.inc-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  justify-content: space-between;
   gap: 12px;
 }
-.inc-card {
-  display: grid;
-  gap: 4px;
-  padding: 14px 16px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-}
-.inc-card small {
-  color: var(--text-3);
-  font-size: 12px;
-  font-weight: 600;
-}
-.inc-card b {
-  font-size: 24px;
-  letter-spacing: -0.02em;
-}
-.inc-clear {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px 18px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-}
-.inc-clear.unwatched .inc-tick {
-  color: var(--text-3);
-  background: color-mix(in srgb, var(--text-3) 18%, transparent);
-}
-.inc-clear b {
-  display: block;
+.inc-head h1 {
+  margin: 0;
   font-size: 18px;
-  letter-spacing: -0.02em;
+  font-weight: 650;
+  letter-spacing: -0.01em;
 }
-.inc-clear small {
-  color: var(--text-3);
-  font-size: 13px;
-}
-.inc-tick {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  color: var(--up);
-  background: color-mix(in srgb, var(--up) 16%, transparent);
-}
-.inc-card em {
-  color: var(--text-3);
-  font-size: 12px;
-  font-style: normal;
+.inc-fail {
+  margin: 0;
+  color: var(--mk-red);
 }
 
-/* The timeline: a strip for a short period, a grid for a year. */
+/* The one answer: the state, the uptime beside it, one line under. */
+.inc-hero {
+  display: grid;
+  gap: 6px;
+}
+.inc-big {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  margin: 0;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.inc-state.up {
+  color: var(--mk-green);
+}
+.inc-state.down {
+  color: var(--mk-red);
+}
+.inc-state.quiet {
+  color: var(--mk-amber);
+}
+.inc-pct {
+  font-variant-numeric: tabular-nums;
+}
+.inc-state + .inc-pct::before {
+  content: '·';
+  margin-right: 14px;
+  color: var(--mk-faint);
+}
+.inc-over {
+  color: var(--mk-muted);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.inc-line {
+  margin: 0;
+  color: var(--mk-muted);
+  font-size: 14px;
+}
+
+/* The figures: the dashboard's numbers (same face, size and weight), in one quiet row. */
+.inc-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 40px;
+  margin: 14px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--mk-line);
+}
+.inc-stats div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.inc-stats dt {
+  color: var(--mk-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.inc-stats dd {
+  margin: 0;
+  color: var(--mk-text);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.inc-info,
+.inc-word {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--mk-faint);
+  cursor: pointer;
+  vertical-align: middle;
+}
+.inc-info {
+  display: inline-grid;
+  place-items: center;
+}
+.inc-info:hover,
+.inc-word:hover {
+  color: var(--mk-text);
+}
+.inc-word {
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+}
+
+/* The days we have watched: a strip for a short period, a grid for a year. All sites draws its rows' strips and the legend with these too, outside the walkthrough's tokens: the old ones stand in. */
 .inc-timeline {
   display: grid;
-  gap: 8px;
-  padding: 14px 16px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
+  gap: 10px;
 }
 .inc-days i {
-  --tone: var(--up);
+  --tone: var(--mk-green, var(--up));
   display: block;
   border-radius: 3px;
   background: color-mix(in srgb, var(--tone) 38%, transparent);
 }
 .inc-days i.quiet {
-  --tone: var(--warn);
+  --tone: var(--mk-amber, var(--warn));
   background: var(--tone);
 }
 .inc-days i.down {
-  --tone: var(--down);
+  --tone: var(--mk-red, var(--down));
   background: var(--tone);
 }
 .inc-days i.blank {
   background: none;
+}
+.inc-days i.unwatched {
+  --tone: var(--text-3);
+  background: color-mix(in srgb, var(--tone) 22%, transparent);
 }
 .inc-days .info {
   display: block;
@@ -124,19 +155,20 @@
   width: 100%;
   height: 100%;
 }
-.inc-days i.unwatched {
-  --tone: var(--text-3);
-  background: color-mix(in srgb, var(--tone) 22%, transparent);
-}
 .inc-days.strip {
   display: flex;
-  gap: 2px;
+  gap: 3px;
 }
 .inc-days.strip > i,
 .inc-days.strip > .info {
   flex: 1;
   min-width: 2px;
   height: 28px;
+}
+.inc-timeline .inc-days.strip > i,
+.inc-timeline .inc-days.strip > .info {
+  max-width: 28px;
+  height: 32px;
 }
 .inc-days.grid {
   display: grid;
@@ -148,6 +180,14 @@
 .inc-days.grid .info {
   aspect-ratio: 1;
 }
+.inc-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  color: var(--mk-faint);
+  font-size: 12px;
+}
 .inc-legend {
   display: flex;
   flex-wrap: wrap;
@@ -155,8 +195,6 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  color: var(--text-3);
-  font-size: 12px;
 }
 .inc-legend li::before {
   content: '';
@@ -168,62 +206,78 @@
   background: var(--tone);
 }
 .inc-legend .ok {
-  --tone: color-mix(in srgb, var(--up) 38%, transparent);
+  --tone: color-mix(in srgb, var(--mk-green, var(--up)) 38%, transparent);
 }
 .inc-legend .quiet {
-  --tone: var(--warn);
+  --tone: var(--mk-amber, var(--warn));
 }
 .inc-legend .unwatched {
   --tone: color-mix(in srgb, var(--text-3) 22%, transparent);
 }
 .inc-legend .down {
-  --tone: var(--down);
+  --tone: var(--mk-red, var(--down));
 }
 
-/* The list. */
+/* The list: one calm row per incident, a hairline between. */
 .inc-rows {
   display: grid;
-  gap: 10px;
-  margin: 0 0 12px;
+  margin: 0;
   padding: 0;
   list-style: none;
+  border-top: 1px solid var(--mk-line);
 }
 .inc-row {
-  --tone: var(--warn);
+  --tone: var(--mk-amber);
   display: grid;
   gap: 4px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--tone);
-  border-radius: 10px;
-  background: var(--surface);
+  padding: 14px 0 14px 14px;
+  border-bottom: 1px solid var(--mk-line);
+  box-shadow: inset 3px 0 0 var(--tone);
 }
 .inc-row.down {
-  --tone: var(--down);
-}
-.inc-row p {
-  margin: 0;
-  font-size: 13px;
-  overflow-wrap: anywhere;
+  --tone: var(--mk-red);
 }
 .inc-row-head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 4px 14px;
+  gap: 2px 12px;
+}
+.inc-row-head b {
+  font-size: 15px;
+}
+.inc-when {
+  margin-left: auto;
+  color: var(--mk-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.inc-saw {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 16px;
+  margin: 0;
+  color: var(--mk-muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
 }
 .inc-lost {
-  color: var(--text-2);
-  font-size: 13px;
+  color: var(--mk-text);
 }
 .inc-note {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 4px 12px;
+  margin: 0;
+  font-size: 13px;
 }
 .inc-note button {
-  color: var(--text-3);
+  color: var(--mk-faint);
+}
+.inc-note button:hover {
+  color: var(--mk-text);
 }
 .inc-note-form {
   display: flex;
@@ -231,34 +285,65 @@
   align-items: center;
   gap: 8px;
 }
+/* A field has no border: a soft fill. */
 .inc-note-form input {
   flex: 1 1 240px;
   min-width: 0;
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--mk-field);
+  color: var(--mk-text);
+  font: inherit;
+  outline: none;
 }
-.inc-fail {
+.inc-note-form input:focus-visible {
+  box-shadow: 0 0 0 2px var(--mk-line);
+}
+.inc-note-form .btn {
+  height: 36px;
+}
+.inc-note-form .inc-fail {
   flex-basis: 100%;
-  color: var(--down);
+  font-size: 12.5px;
 }
-
-/* The period picker is the dashboard's own, which the header's row lays out:
-   here it lays itself out, and the comparison it also offers is not for this page. */
-.inc-head .range-picker.quiet {
-  position: relative;
+.inc-empty {
   display: flex;
   align-items: center;
-  gap: 4px;
-}
-.inc-card {
-  align-content: start;
-}
-
-/* The picker's menu hangs from the picker, as on the dashboard (there the control row is its anchor). */
-.inc-head .range-pop {
-  top: calc(100% + 6px);
-  right: 0;
-}
-
-.inc-foot {
+  gap: 10px;
   margin: 0;
-  font-size: 12px;
+  padding: 18px 0;
+  border-top: 1px solid var(--mk-line);
+  color: var(--mk-muted);
+}
+.inc-empty svg {
+  color: var(--mk-green);
+}
+
+/* The Plan & billing phone layout: one column, compact. */
+@media (max-width: 600px) {
+  .inc-page {
+    gap: 16px;
+    padding-top: 12px;
+  }
+  .inc-big {
+    font-size: 30px;
+  }
+  .inc-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 16px;
+  }
+  .inc-stats dd {
+    font-size: 20px;
+  }
+  .inc-timeline .inc-days.strip > i,
+  .inc-timeline .inc-days.strip > .info {
+    height: 26px;
+  }
+  .inc-when {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
 }

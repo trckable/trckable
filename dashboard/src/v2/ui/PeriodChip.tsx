@@ -41,6 +41,8 @@ export interface PeriodChipProps {
   onReset?: () => void
   /** The unit the chart is cut in for the chosen dates ("by hour", "by day"). */
   grain: (from: ISODate, to: ISODate) => string
+  /** A page with nothing to set against: the menu has no comparison row. */
+  noCompare?: boolean
   /** A second chip on the page (Explore at full width) needs ids of its own. */
   idBase?: string
 }
@@ -140,16 +142,18 @@ export function PeriodChip(p: PeriodChipProps) {
             </button>
             {moreOpen && p.more.map(opt)}
             <div className="mk-lline" />
-            <div className="mk-lopt">
-              <span>{copy.compare}</span>
-              <div className="mk-lseg">
-                {cmp.map((c) => (
-                  <button key={c.v} type="button" className={p.compare === c.v ? 'on' : ''} disabled={c.off} title={c.title} onClick={() => p.onCompare(c.v)}>
-                    {c.t}
-                  </button>
-                ))}
+            {!p.noCompare && (
+              <div className="mk-lopt">
+                <span>{copy.compare}</span>
+                <div className="mk-lseg">
+                  {cmp.map((c) => (
+                    <button key={c.v} type="button" className={p.compare === c.v ? 'on' : ''} disabled={c.off} title={c.title} onClick={() => p.onCompare(c.v)}>
+                      {c.t}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
             {buckets.length > 0 && p.onBucket && (
               <div className="mk-lopt">
                 <span>{copy.groupBy}</span>
@@ -162,7 +166,7 @@ export function PeriodChip(p: PeriodChipProps) {
                 </div>
               </div>
             )}
-            <div className="mk-lline" />
+            {(!p.noCompare || (buckets.length > 0 && p.onBucket)) && <div className="mk-lline" />}
             <button type="button" className="mi" onClick={() => setCal(true)}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
                 <rect x="2.5" y="3.5" width="11" height="10" rx="2" />

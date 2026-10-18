@@ -147,3 +147,18 @@ export function accountTotals(sites: { id: string; watched_since?: number }[], l
   const pct = span ? Math.max(0, 100 - (seconds / span) * 100) : 100
   return { count, pct: seconds > 0 && pct >= 99.95 ? 99.9 : pct, down, watched: span > 0 }
 }
+
+/** What a period's incident rows add up to: the figures the page shows are these, so they always equal the rows under them. `seconds` is the time inside [from, to] (overlaps once); `lost` adds the estimates the rows carry, `lostSome` says there is one. */
+export function figuresOf(list: Incident[], from: number, to: number, now: number): { count: number; seconds: number; lost: number; lostSome: boolean } {
+  const est = list.filter((x) => x.expected_visits !== null)
+  return { count: list.length, seconds: affectedSeconds(list, from, to, now), lost: est.reduce((n, x) => n + (x.expected_visits ?? 0), 0), lostSome: est.length > 0 }
+}
+
+export type Standing = { kind: 'up' } | { kind: 'unknown' } | { kind: 'down' | 'quiet'; since: number }
+
+/** How the site is right now: down while the server's probe finds it so (the site's own word, as everywhere), else the incident still open, else up. `open` is undefined while it is not known. */
+export function standingOf(downSince: number | undefined, open: Incident | null | undefined): Standing {
+  if (downSince) return { kind: 'down', since: downSince }
+  if (open === undefined) return { kind: 'unknown' }
+  return open ? { kind: open.kind, since: open.started_at } : { kind: 'up' }
+}
