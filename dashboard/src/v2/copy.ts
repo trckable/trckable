@@ -20,6 +20,8 @@ export const copy = defineCopy('v2', {
   exploreTab: 'Explore',
   allSites: 'All sites',
   askPeek: 'Ask Peek',
+  home: 'Home',
+  askOrSearch: 'Ask or search',
   find: 'Find a site...',
   addSite: '+ Add a site',
   share: 'Share this site',
