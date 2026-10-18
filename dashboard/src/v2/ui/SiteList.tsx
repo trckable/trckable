@@ -48,6 +48,8 @@ interface SiteListProps {
   all: string
   /** The slim menu (prototype): one line a site, a finder only for a long list, no key hints. */
   slim?: boolean
+  /** Prototype: the sites under a muted heading for each account. */
+  byAccount?: { name: string; sites: Site[] }[]
   close: () => void
 }
 
@@ -100,7 +102,7 @@ export function SiteList(p: SiteListProps) {
   // While a site is dragged the rows show where it would land.
   const sections = reorder.preview ? sectionsOf(sites, reorder.preview) : committed
   // The sites on screen, top to bottom (a folded group's are not): 1–9 pick from them.
-  const shown = found ?? sections.filter((sec) => !folded.has(placeKey(sec.place))).flatMap((sec) => sec.sites)
+  const shown = found ?? p.byAccount?.flatMap((a) => a.sites) ?? sections.filter((sec) => !folded.has(placeKey(sec.place))).flatMap((sec) => sec.sites)
   const pick = (s: Site) => {
     p.close()
     if (s.id !== current?.id) p.onPick(s.id)
@@ -174,6 +176,14 @@ export function SiteList(p: SiteListProps) {
         {found && <ul className="site-group">{found.map((s) => item(s, { kind: 'rest' }))}</ul>}
         {found?.length === 0 && <p className="mk-quiet sites-none">{menu.noMatch(q)}</p>}
         {!found &&
+          p.byAccount?.map((a) => (
+            <section key={a.name} className="site-section" aria-label={a.name}>
+              {p.byAccount!.length > 1 && <p className="acct-head">{a.name}</p>}
+              <ul className="site-group">{a.sites.map((s) => item(s, { kind: 'rest' }))}</ul>
+            </section>
+          ))}
+        {!found &&
+          !p.byAccount &&
           sections.map((sec) => {
             const key = placeKey(sec.place)
             const shut = folded.has(key)

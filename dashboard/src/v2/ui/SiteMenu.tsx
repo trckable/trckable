@@ -14,7 +14,7 @@ import { useMenu } from './useMenu'
 import { SetupLine } from './SetupLine'
 import { WorkspaceRow, type Workspace } from './WorkspaceRow'
 import { useTopLayerWhen } from '../../lib/topLayer'
-import { currentWorkspace, menuVariant, slimMenu, ThinAccount, AccountView } from './menuProto'
+import { currentWorkspace, menuVariant, slimMenu, ThinAccount, AccountView, AccountChips, accountSites, byAccount } from './menuProto'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
 const warmUp = () => {
@@ -40,6 +40,7 @@ interface SiteMenuProps {
 export function SiteChip({ p }: { p: SiteMenuProps }) {
   const { open, setOpen, attach, close } = useMenu()
   const [accounts, setAccounts] = useState(false)
+  const [acct, setAcct] = useState(0)
   const menu = useRef<HTMLDivElement>(null)
   useTopLayerWhen(open, menu)
   const cur = p.current
@@ -57,6 +58,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
   const baseline = p.workspace ?? (variant === 'current' ? currentWorkspace : undefined)
   let account: ReactNode = baseline && <WorkspaceRow w={baseline} close={done} />
   if (variant === 'a') account = <ThinAccount onOpen={() => setAccounts(true)} />
+  if (variant === 'e') account = <AccountChips at={acct} onPick={setAcct} />
   const footer = <MenuFoot items={slim ? p.footer.filter((f) => f.key === 'add') : p.footer} done={done} />
   return (
     <div ref={attach} style={{ position: 'relative' }} className="sitechip">
@@ -75,7 +77,8 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
         {open && !accounts && (
           <Suspense fallback={null}>
             <SiteList
-              sites={p.sites}
+              sites={variant === 'e' ? accountSites(p.sites, acct) : p.sites}
+              byAccount={variant === 'd' ? byAccount(p.sites) : undefined}
               current={cur}
               workspace={
                 <>

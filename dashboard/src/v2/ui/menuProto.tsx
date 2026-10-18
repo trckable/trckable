@@ -1,17 +1,43 @@
 // Prototype of a slimmer site menu (development only; not for merge): ?menu=a, or current for today's. A: the account is a thin line
 // (its name and a chevron) at the top; pressing it swaps the menu, in place, for the account list with a Back row.
+import { useState } from 'react'
+import type { Site } from '../../lib/api'
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import { protoParams, type MenuVariant } from '../../dev/fixture/proto'
 import type { Workspace } from './WorkspaceRow'
 
 export const menuVariant = (): MenuVariant | null => (import.meta.env.DEV ? protoParams().menu : null)
 /** The slim menu's cuts (one line a site, no key hints, a short foot). */
-export const slimMenu = (): boolean => menuVariant() === 'a'
+export const slimMenu = (): boolean => ['a', 'd', 'e'].includes(menuVariant() ?? '')
 
 const ACCOUNTS = [
-  { id: 'personal', name: 'Personal', sites: 4 },
-  { id: 'studio', name: 'Studio Kalendar', sites: 3 },
+  { id: 'personal', name: 'Personal', sites: 4, ids: ['trk', 'kal', 'tash', 'veni'] },
+  { id: 'studio', name: 'Studio Kalendar', sites: 3, ids: ['blog1', 'blog2', 'shop'] },
 ]
+/** The sites of each account (D shows them all, under headings; E one account at a time). */
+export const byAccount = (sites: Site[]) => ACCOUNTS.map((a) => ({ name: a.name, sites: sites.filter((s) => a.ids.includes(s.id)) })).filter((a) => a.sites.length > 0)
+const FEW = 3
+
+/** E: the accounts as a row of small pills; the one pressed fills the list below at once. More than three: the rest behind +N. */
+export function AccountChips({ at, onPick }: { at: number; onPick: (i: number) => void }) {
+  const [all, setAll] = useState(false)
+  const shown = all ? ACCOUNTS : ACCOUNTS.slice(0, FEW)
+  return (
+    <div className="acct-chips">
+      {shown.map((a, i) => (
+        <button key={a.id} type="button" data-stop className={`acct-chip${i === at ? ' on' : ''}`} aria-pressed={i === at} onClick={() => onPick(i)}>
+          {a.name}
+        </button>
+      ))}
+      {!all && ACCOUNTS.length > FEW && (
+        <button type="button" data-stop className="acct-chip" onClick={() => setAll(true)}>
+          {`+${ACCOUNTS.length - FEW}`}
+        </button>
+      )}
+    </div>
+  )
+}
+export const accountSites = (sites: Site[], at: number) => sites.filter((s) => ACCOUNTS[at].ids.includes(s.id))
 const MANAGE = 'Manage accounts'
 
 function Mark({ name }: { name: string }) {

@@ -2,8 +2,8 @@
 // fixture answers with. Both are kept for the tab, so a reload or a link inside the app stays on them.
 const KEY = 'trckable:menuproto'
 
-export type MenuVariant = 'current' | 'a'
-const VARIANTS: readonly string[] = ['current', 'a']
+export type MenuVariant = 'current' | 'a' | 'd' | 'e'
+const VARIANTS: readonly string[] = ['current', 'a', 'd', 'e']
 
 export function protoParams(): { menu: MenuVariant | null; sites: 4 | 7 } {
   const sp = new URLSearchParams(location.search)
