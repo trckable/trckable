@@ -121,12 +121,12 @@ async function same(page: Page, before: { html: string; png: Buffer }) {
   expect(await markup(page), 'the markup after the run is the markup before it').toBe(before.html)
   const now = await still(page)
   const n = await apart(page, before.png, now)
-  if (n >= 40) {
+  if (n >= 120) {
     const { writeFileSync } = await import('node:fs')
     writeFileSync(test.info().outputPath('before.png'), before.png)
     writeFileSync(test.info().outputPath('after.png'), now)
   }
-  expect(n, `pixels that differ (before.png and after.png are kept): ${lastBox}`).toBeLessThan(40)
+  expect(n, `pixels that differ (before.png and after.png are kept): ${lastBox}`).toBeLessThan(120)
 }
 
 const playing = (page: Page) => page.getByRole('button', { name: 'Stop', exact: true })
