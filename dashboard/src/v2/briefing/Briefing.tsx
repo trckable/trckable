@@ -128,6 +128,11 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const keyed = lock.known
   useBriefingKeys({ on: active, cards: (ui.all ? keyed : keyed.slice(0, 4)).map((s) => s.key), ui, open: (k) => ui.setOpen(keyed.find((s) => s.key === k) ?? null) })
   const rp = useReplay(sig)
+  // A run does not play out of sight: leaving for Live ends it, and the chart is as it was when the Briefing is back.
+  const { stop: stopReplay, playing: replaying } = rp
+  useEffect(() => {
+    if (!active && replaying) stopReplay()
+  }, [active, replaying, stopReplay])
   if (!cur || !parts) return loading || !data ? <BriefingSkeleton site={site.id} label={copy.loading} /> : null
   const label = unit === 'today' ? `${presetById('today')?.label ?? 'Today'} · ${dayWords(range.to)}` : (presetById(period)?.label ?? fmtRange(range, today))
   const before = copy.before[unit]

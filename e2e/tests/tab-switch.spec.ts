@@ -142,6 +142,17 @@ for (const width of [1280, 390]) {
     await page.waitForTimeout(2800) // the Briefing's reading is done
     await slow(page)
     const go = (name: string) => (width < 600 ? page.locator('.tabbar').getByRole('button', { name }) : tab(page, name))
+    // A Replay that is playing ends when Live is shown, and is not playing when the Briefing is back.
+    const replay = page.locator('.brief [data-replay]').first()
+    if (await replay.isVisible()) {
+      await replay.click()
+      await expect(replay).toHaveAttribute('aria-label', 'Stop')
+      await go('Live').click()
+      await expect(page.locator('.liveview')).toBeVisible()
+      await go('Briefing').click()
+      await expect(page.locator('.brief')).toBeVisible()
+      await expect(replay).toHaveAttribute('aria-label', 'Replay')
+    }
     for (const [to, shown, other] of [['Live', '.liveview', '.brief'], ['Briefing', '.brief', '.liveview'], ['Live', '.liveview', '.brief'], ['Briefing', '.brief', '.liveview']] as const) {
       await watch(page)
       await go(to).click()
