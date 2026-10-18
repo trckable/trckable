@@ -118,10 +118,8 @@ button.an-pr:hover .path{background:var(--an-fill-2)}
 .an-btn:disabled{opacity:.45;cursor:not-allowed}
 .an-btn.small{height:32px;padding:0 12px;font-size:12px}
 .an-btn.quiet{background:none;color:var(--an-muted)}
-.an-in{height:40px;width:100%;border:0;outline:0;border-radius:10px;background:var(--an-fill);padding:0 14px;font:inherit;font-size:14px;color:var(--an-ink);transition:background .15s,box-shadow .15s}
+.an-in{height:40px;width:100%;border-radius:10px;padding:0 14px;font:inherit;font-size:14px;color:var(--an-ink)}
 .an-in::placeholder{color:var(--an-faint)}
-.an-in:hover{background:var(--an-fill-2)}
-.an-in:focus-visible{background:var(--an-fill);box-shadow:0 0 0 2px var(--an-accent)}
 .an-in:disabled{opacity:.5}
 
 

@@ -227,10 +227,6 @@
 .danger-type .input {
   font-family: var(--mono);
 }
-.danger-type .input:focus {
-  box-shadow: 0 0 0 2px var(--down);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--down) 18%, transparent);
-}
 .danger-working {
   display: grid;
   justify-items: center;
@@ -279,12 +275,6 @@
     opacity: 0;
     transform: translateY(10px) scale(0.99);
   }
-}
-.danger-type .input:focus,
-.danger-type .input:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--down);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--down) 22%, transparent);
 }
 
 /* While it deletes: rows dissolving one after another, and a sweep. */

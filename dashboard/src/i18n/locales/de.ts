@@ -2269,6 +2269,7 @@ export default {
   'v2.allSites': 'Alle Websites',
   'v2.askPeek': 'Peek fragen',
   'v2.home': 'Startseite',
+  'v2.askOrSearch': 'Fragen oder suchen',
   'v2.find': 'Website suchen...',
   'v2.addSite': '+ Website hinzufügen',
   'v2.share': 'Diese Website teilen',
