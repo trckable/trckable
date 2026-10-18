@@ -63,7 +63,7 @@ function incidents(site: Site) {
 }
 
 function SpeedBlock({ site, speed }: { site: Site; speed?: number | null }) {
-  if (speed == null) return <EmptyBlock site={site} line={h.empty.speed} setup="install" waiting={speed === undefined} />
+  if (speed == null) return <EmptyBlock site={site} line={h.empty.speed} setup="install" waiting={speed === undefined} reserve={132} />
   const grade = gradeOf(0, speed)
   return (
     <button type="button" className="lhspeed" onClick={() => openExplore('speed')}>
@@ -76,7 +76,7 @@ function SpeedBlock({ site, speed }: { site: Site; speed?: number | null }) {
 
 function UptimeBlock({ site, up, down }: { site: Site; up?: Health['uptime']; down: boolean }) {
   const days = up ? up.days.map((d, i) => (down && i === up.days.length - 1 ? ('down' as const) : d)) : undefined
-  if (!days || (!down && up?.pct == null)) return down ? null : <EmptyBlock site={site} line={h.empty.uptime} setup="health" waiting={up === undefined} />
+  if (!days || (!down && up?.pct == null)) return down ? null : <EmptyBlock site={site} line={h.empty.uptime} setup="health" waiting={up === undefined} reserve={46} />
   return (
     <button type="button" className="lhup" onClick={() => incidents(site)}>
       <Strip days={days} />

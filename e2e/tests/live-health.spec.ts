@@ -2,6 +2,7 @@
 // visits with the assistants that came, and mentions. A site that is
 // down shows it in red, a figure with nothing behind it says "Set up" (a dash to a viewer), and on a phone the four
 // sit two by two. The answers are faked through the routes; what is under test is how the cards tell them.
+import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
@@ -37,6 +38,7 @@ async function fake(page: Page, o: Fake = {}) {
   await page.route(/\/api\/v1\/sites\/[^/]+\/mentions/, (r) => r.fulfill({ json: { mentions: o.empty ? [] : [{ id: 1, source: 'hn', url: 'https://example.org', title: 'x', host: 'example.org', posted_at: NOW - 3600, found_at: NOW - 3000, visitors: 0 }] } }))
   await page.goto(`${API}/example.com?view=live`)
   await expect(page.locator('.lnow .lfig .lbign').first()).toBeVisible({ timeout: 15_000 })
+  await page.locator('.lcards').scrollIntoViewIfNeeded() // the cards read their figures when they come near the screen
 }
 
 const cards = (page: Page) => page.locator('.lcards')
@@ -86,3 +88,16 @@ test('a viewer sees a dash, not Set up', async ({ page }) => {
   await expect(cards(page).locator('.lhempty').first()).toContainText('—')
   await expect(cards(page)).not.toContainText('Set up')
 })
+
+for (const scheme of ['dark', 'light'] as const) {
+  for (const down of [false, true]) {
+    test(`the cards meet WCAG 2.1 AA in the ${scheme} theme${down ? ' while the site is down' : ''}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme })
+      await fake(page, { down })
+      await expect(cards(page).locator('.lhc').first()).toBeVisible()
+      await page.waitForTimeout(800)
+      const found = await new AxeBuilder({ page }).include('.lcards').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
+      expect(found.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([])
+    })
+  }
+}

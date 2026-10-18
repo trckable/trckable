@@ -8,10 +8,12 @@ interface Props {
   site: Site
   now: number
   downSince?: number
+  /** Whether the cards are on screen or close to it; nothing is read before. */
+  near: boolean
 }
 
-export function HealthCards({ site, now, downSince }: Props) {
-  const health = useHealth(site, true)
+export function HealthCards({ site, now, downSince, near }: Props) {
+  const health = useHealth(site, near)
   return (
     <>
       <SpeedUptimeCard site={site} health={health} now={now} downSince={downSince} />

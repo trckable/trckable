@@ -1778,7 +1778,8 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 .mk .mk-waiting{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 0;text-align:center}
 .mk .mk-waiting b{font-size:15px;font-weight:600}
 .mk .mk-waiting-fig{width:clamp(140px,18vw,200px);margin-bottom:6px}
-/* Live's three cards under the half hour: Analytics, Speed & uptime, AI & mentions. */
+/* Live's three cards under the half hour: Analytics, Speed & uptime, AI & mentions. Each keeps one height from the first frame, loading, empty or full. */
+.mk .lcards>.mk-card{min-height:300px}
 .mk .lsw{margin-left:auto}
 .mk .lsw button{width:auto;padding:0 var(--mk-s2);font-size:12px;font-weight:500}
 .mk .lhero{display:flex;align-items:baseline;flex-wrap:wrap;gap:var(--mk-s1) var(--mk-s2);font-size:44px;margin:var(--mk-s2) 0 var(--mk-s4)}

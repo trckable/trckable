@@ -83,7 +83,7 @@ export function AiMentionsCard({ site, health }: Props) {
         <span className="t">{h.aiMentions}</span>
       </div>
       <div className="pb lhbody">
-        {ai || answers ? <Crawlers ai={ai} answers={answers} /> : <EmptyBlock site={site} line={h.empty.ai} setup="install" waiting={waiting} />}
+        {ai || answers ? <Crawlers ai={ai} answers={answers} /> : <EmptyBlock site={site} line={h.empty.ai} setup="install" waiting={waiting} reserve={96} />}
         {hasMentions() && site.mentions && mentions && <Mentions m={mentions} />}
       </div>
     </section>

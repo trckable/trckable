@@ -12,10 +12,12 @@ interface Props {
   setup: SettingsTab
   /** True while the figure is still being read: nothing is said yet. */
   waiting: boolean
+  /** The height (px) kept while it is read, so what lands does not move what is beside it. */
+  reserve?: number
 }
 
-export function EmptyBlock({ site, line, setup, waiting }: Props) {
-  if (waiting) return <div className="lhempty" aria-busy="true" />
+export function EmptyBlock({ site, line, setup, waiting, reserve = 0 }: Props) {
+  if (waiting) return <div className="lhempty" aria-busy="true" style={{ minHeight: reserve }} />
   return (
     <div className="lhempty">
       <Figure name="lamp" className="lhart" minWidth={0} />

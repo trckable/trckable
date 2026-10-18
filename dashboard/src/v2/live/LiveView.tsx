@@ -19,6 +19,7 @@ import type { Busier, LiveNow } from '../../features/live/api'
 import { useTicking } from '../../features/live/useTicking'
 import { AnalyticsCard } from './AnalyticsCard'
 import { HealthCards } from './HealthCards'
+import { useNear } from './useNear'
 import { Announce } from '../ui/Announce'
 import { FeedList } from '../ui/FeedList'
 import { barsOf, changeOf, listsOf, sourceParts, visitors30 } from './liveModel'
@@ -65,6 +66,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   const { data, failed, got, clock, skew, busier, downSince, colors } = feed
   const now = useTicking(clock, skew)
   const { ref, fit } = useFit<HTMLElement>()
+  const [cardsRef, cardsNear] = useNear<HTMLDivElement>()
   useEffect(() => {
     liveLink.set(stream.connected)
     return () => liveLink.set(true)
@@ -161,9 +163,9 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
           <FeedList key={site} rows={rows} up={upSources} clock={now} empty={down ? copy.nobodyDown : copy.nobody} onVisitor={onVisitor} cookieless={whole?.cookieless} />
         </section>
       </div>
-      <div className="lcards">
+      <div className="lcards" ref={cardsRef}>
         <AnalyticsCard today={data.today} lists={lists} />
-        {whole && !feed.sample && !isShared() && <HealthCards site={whole} now={now} downSince={downSince} />}
+        {whole && !feed.sample && !isShared() && <HealthCards site={whole} now={now} downSince={downSince} near={cardsNear} />}
       </div>
     </>
   )
