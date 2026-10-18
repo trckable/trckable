@@ -33,7 +33,19 @@ export interface NowToday {
   last: number[] // the same for last week's whole day (24)
 }
 
-export const liveNow = (site: string, signal?: AbortSignal) => call<LiveNow>('GET', `/sites/${encodeURIComponent(site)}/now`, undefined, signal)
+const heard = new Set<() => void>()
+
+/** Called after every /now answer: the one pulse the dashboard already has, so the bell can look again without a timer of its own. Returns the stop function. */
+export function onNowAnswer(f: () => void): () => void {
+  heard.add(f)
+  return () => void heard.delete(f)
+}
+
+export const liveNow = (site: string, signal?: AbortSignal) =>
+  call<LiveNow>('GET', `/sites/${encodeURIComponent(site)}/now`, undefined, signal).then((d) => {
+    heard.forEach((f) => f())
+    return d
+  })
 
 /** Who brings more people than usual: a source (by name), an entry page, a country code or a campaign. */
 export interface BusierWhy {

@@ -8,9 +8,9 @@ import { navigate } from '../../lib/url'
 import { openSettings } from '../../lib/settings'
 import { BellMenu, type BellRow } from '../ui/BellMenu'
 import { copy } from './copy'
-import { badge, type Notice } from './notices'
+import { badge, rowsOf, unreadCount, type Notice } from './notices'
 import { useBellAlert } from './useBellAlert'
-import type { useNotices } from './useNotices'
+import { OPEN_GAP_MS, type useNotices } from './useNotices'
 
 const MilestoneSheet = lazyLoad(() => import('./MilestoneSheet'))
 
@@ -34,11 +34,17 @@ function go(n: Notice) {
 }
 
 export function Bell({ site, notices }: { site: Site | null; notices: ReturnType<typeof useNotices> }) {
-  const { items, read, unread, mark, markAll, can, dismiss, archive } = notices
+  const { items, read, refresh, mark, markAll, can, dismiss, archive } = notices
   const [sheet, setSheet] = useState(false)
   const [told, setTold] = useState<Milestone | null>(null)
   const [open, setOpen] = useState(false)
+  // The rows the menu lists, and the badge counted from those same rows.
+  const listed = rowsOf(items, read)
+  const unread = unreadCount(listed)
   const shaking = useBellAlert(items, read, unread, open, notices.ready)
+  useEffect(() => {
+    if (open) refresh(OPEN_GAP_MS)
+  }, [open, refresh])
   useEffect(() => {
     const q = window.matchMedia('(max-width: 600px)')
     const f = () => setSheet(q.matches)
@@ -47,7 +53,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
     return () => q.removeEventListener('change', f)
   }, [])
   if (!can) return null
-  const rows: BellRow[] = items.map((n) => ({ id: n.id, kind: n.kind, title: n.title, sub: `${n.sub} · ${when(n.at)}`, unread: !n.seen && !read.has(n.id), dismissable: n.dismissable }))
+  const rows: BellRow[] = listed.map((n) => ({ id: n.id, kind: n.kind, title: n.title, sub: `${n.sub} · ${when(n.at)}`, unread: n.unread, dismissable: n.dismissable }))
   const old: BellRow[] = (archive?.items ?? []).map((n) => ({ id: n.id, kind: n.kind, title: n.title, sub: `${n.sub} · ${when(n.at)}`, unread: false }))
   return (
     <>
