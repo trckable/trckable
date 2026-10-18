@@ -1,4 +1,4 @@
-// The locked card of a section whose source is not connected: revenue, search or goals. It says what connecting gives and shows no example figures.
+// The locked card of a section whose source is not connected: revenue, search or goals.
 import { copy as brief } from '../../briefing/copy'
 import { LockCard } from '../../ui/LockCard'
 import type { Setup, XCtx } from '../ctx'
