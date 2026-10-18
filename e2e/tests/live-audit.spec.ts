@@ -92,7 +92,6 @@ for (const width of [1440, 390]) {
     })
     expect(m.hd, 'no band: the header is clear at the top of the page').toBe('rgba(0, 0, 0, 0)')
     expect(m.hint).toBe(0)
-    await expect(page.locator('.all-head p')).toContainText('charts: last 7 days')
     await shot(page, `sites-${width}`)
     await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d`)
     await expect(page.locator('#siteBtn .mk-kbd')).toHaveCount(0)

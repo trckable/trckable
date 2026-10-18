@@ -62,7 +62,7 @@ test('a site page: the site card, Live/Data, Ask and the avatar are one height',
 test('All sites: the same row, the same height', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/sites`)
-  await expect(page.locator('.all-sites')).toBeVisible()
+  await expect(page.locator('.tm-page')).toBeVisible()
   await same(page, ['site'], 'all', ['capsule'])
 })
 

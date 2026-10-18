@@ -46,7 +46,7 @@ test('All sites follows the same last visit on the page that is open', async ({ 
   await page.context().addCookies([{ name: 'trckable_session', value: await session('live-state-all'), url: API }])
   const seen = await fakeLastSeen(page)
   await page.goto(`${API}/sites`)
-  const main = page.locator('.all-sites')
+  const main = page.locator('.tm-page')
   await expect(main).toContainText(/quiet/i, { timeout: 20_000 })
   seen.at = Math.floor(Date.now() / 1000) - 5
   await expect(main).not.toContainText(/quiet/i, WAIT)
