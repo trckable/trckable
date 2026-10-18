@@ -1,4 +1,3 @@
-import { Check } from 'lucide-react'
 import { lazy, Suspense, useSyncExternalStore } from 'react'
 import type { Page } from './Ghost'
 
@@ -50,7 +49,11 @@ export function Figure(props: Props) {
         {props.name === 'rack' && <Rack />}
         {props.name === 'logic' && <Logic />}
       </Suspense>
-      {done && <Check className="tkf-done" size={22} strokeWidth={2.5} />}
+      {done && (
+        <svg className="tkf-done" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      )}
     </div>
   )
 }
