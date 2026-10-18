@@ -76,24 +76,40 @@ export function withFeed(own: Notice[], feed: Notice[] | undefined): Notice[] {
   if (!feed?.length) return own
   const told = new Set(feed.map((f) => f.kind))
   const ids = new Set(feed.map((f) => f.id))
-  return [...own.filter((n) => !ids.has(n.id) && !((n.kind === 'spike' || n.kind === 'milestone') && told.has(n.kind))), ...feed].sort((a, b) => b.at - a.at).slice(0, 40)
+  return [...own.filter((n) => !ids.has(n.id) && !((n.kind === 'spike' || n.kind === 'milestone') && told.has(n.kind))), ...feed].sort(byNewest).slice(0, 40)
 }
+
+/** The list's one order: newest first, and the id for notices of the same second, so the same rows never swap places between reads. */
+export const byNewest = (a: Pick<Notice, 'at' | 'id'>, b: Pick<Notice, 'at' | 'id'>): number => b.at - a.at || a.id.localeCompare(b.id)
 
 /** Newest first, a week back at most, and never more than 40. */
 export function arrange(all: Notice[], now: number): Notice[] {
   const seen = new Set<string>()
   return all
     .filter((n) => n.at <= now + 60 && n.at >= now - 7 * 86400 && !seen.has(n.id) && !!seen.add(n.id))
-    .sort((a, b) => b.at - a.at)
+    .sort(byNewest)
     .slice(0, 40)
 }
+
+export type NoticeRow = Notice & { unread: boolean }
 
 /** Whether a notice counts as unread: the one rule for the dot on its row and for the bell's badge. */
 export const isUnread = (n: Notice, read: ReadonlySet<string>): boolean => !n.seen && !read.has(n.id)
 
 /** The rows the menu lists, newest first, each with its own unread mark (`sub` is left to the caller, which words the time). */
-export const rowsOf = (list: Notice[], read: ReadonlySet<string>): (Notice & { unread: boolean })[] => list.map((n) => ({ ...n, unread: isUnread(n, read) }))
+export const rowsOf = (list: Notice[], read: ReadonlySet<string>): NoticeRow[] => list.map((n) => ({ ...n, unread: isUnread(n, read) }))
 
 /** The badge number: how many of the rows the menu shows are unread, never a count of anything else. */
 export const unreadCount = (rows: readonly { unread: boolean }[]): number => rows.filter((r) => r.unread).length
 export const badge = (n: number): string => (n > 9 ? '9+' : String(n))
+
+/**
+ * The rows an open menu shows when the list behind it changes: nothing the person can see is taken away or moved. A row
+ * that left the list (read in a build's own list, which keeps only unread ones) stays, read, until the menu shuts; only a
+ * row put away (`gone`) goes. A new row takes its place in the one order, so the newest lands on top.
+ */
+export function settle(shown: readonly NoticeRow[], next: readonly NoticeRow[], gone: ReadonlySet<string>): NoticeRow[] {
+  const live = new Set(next.map((r) => r.id))
+  const kept = shown.filter((r) => !live.has(r.id) && !gone.has(r.id)).map((r) => (r.unread ? { ...r, unread: false } : r))
+  return [...next.filter((r) => !gone.has(r.id)), ...kept].sort(byNewest)
+}

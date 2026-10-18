@@ -16,10 +16,13 @@ export function FeedList({ rows, up, clock, more, empty, onVisitor, cookieless }
   const [all, setAll] = useState(false)
   const box = useRef<HTMLDivElement>(null)
   const [below, setBelow] = useState(false)
-  // A soft fade at the bottom edge while more rows wait below the fold of the list.
+  const [above, setAbove] = useState(false)
+  // A soft fade at each edge of the list while more rows wait past it, so rows never end in a hard cut under the head.
   const look = useCallback(() => {
     const el = box.current
-    if (el) setBelow(el.scrollHeight - el.scrollTop - el.clientHeight > 4)
+    if (!el) return
+    setBelow(el.scrollHeight - el.scrollTop - el.clientHeight > 4)
+    setAbove(el.scrollTop > 4)
   }, [])
   useEffect(() => {
     const el = box.current
@@ -33,7 +36,7 @@ export function FeedList({ rows, up, clock, more, empty, onVisitor, cookieless }
   const list = useLeaving(rows)
   const shown = all ? list : list.slice(0, SHOWN)
   return (
-    <div className="lfeed" ref={box} data-below={below || undefined} onScroll={look}>
+    <div className="lfeed" ref={box} data-below={below || undefined} data-above={above || undefined} onScroll={look}>
       {shown.length === 0 && <div className="mk-quiet" style={{ padding: '16px 20px' }}>{empty}</div>}
       {shown.map((r) => {
         const src = r.referrer ? r.referrer.replace(/^www\./, '') : channelLabel(r.channel || 'Direct')

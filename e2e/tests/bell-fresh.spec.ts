@@ -49,6 +49,9 @@ for (const width of [1440, 390]) {
     const mile = (step: string, value: number, ago: number) => ({ kind: 'visitors', step: `fresh${width}-${step}`, value, day: '2026-01-01', created_at: now - ago, new: false, shared: false })
     const list = [mile('100', 100, 7200)]
     await page.route(/\/api\/v1\/sites\/[^/]+\/milestones(\?|$)/, (route) => route.fulfill({ json: { enabled: true, milestones: [...list], moment: null } }))
+    // Only the rows this spec brings: the shared database holds incidents and mentions that other specs made.
+    await page.route(/\/api\/v1\/incidents(\?|$)/, (route) => route.fulfill({ json: { incidents: [] } }))
+    await page.route(/\/api\/v1\/sites\/[^/]+\/mentions(\?|$)/, (route) => route.fulfill({ json: { mentions: [] } }))
     await page.setViewportSize({ width, height: 844 })
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
     await page.goto(`${API}/${HISTORY_DOMAIN}?view=live&v=`)

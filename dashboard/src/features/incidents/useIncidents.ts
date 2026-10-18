@@ -1,5 +1,5 @@
 // The incident record, loaded when a screen asks: a period of one site (the
-// chart's markers, the page's cards), a site's whole list a page at a time,
+// chart's markers, the page's cards), the one still going on,
 // and the account's for All sites. A failed read leaves the screen as it was:
 // no markers, no list, never an error over a page that is otherwise fine.
 import { useCallback, useEffect, useState } from 'react'
@@ -36,35 +36,38 @@ export function useAccountIncidents(days: number) {
   return { list: r.data?.incidents ?? [], quiet: r.data?.quiet_tracked ?? {}, ready: r.ready, failed: r.failed }
 }
 
-/** A site's list, newest first, fifty at a time. */
-export function useIncidentList(site: string) {
-  const [pages, setPages] = useState<{ site: string; list: Incident[]; next: number | null; failed: boolean } | null>(null)
-  const [busy, setBusy] = useState(false)
-  const first = pages?.site === site ? pages : null
+/** The incident still going on at a site, if any (undefined until known), read again every half minute so the page's state is live. */
+export function useOpenIncident(site: string): Incident | null | undefined {
+  const [open, setOpen] = useState<{ site: string; x: Incident | null } | null>(null)
   useEffect(() => {
     let current = true
-    incidents.page(site).then(
-      (r) => current && setPages({ site, list: r.incidents, next: r.next_before, failed: false }),
-      () => current && setPages({ site, list: [], next: null, failed: true }),
-    )
+    const read = () =>
+      incidents.page(site).then(
+        (r) => current && setOpen({ site, x: r.incidents.find((x) => x.ended_at === null) ?? null }),
+        () => undefined, // a failed read leaves the state as it was
+      )
+    void read()
+    const timer = window.setInterval(() => void read(), 30_000)
     return () => {
       current = false
+      window.clearInterval(timer)
     }
   }, [site])
-  const more = () => {
-    if (!first?.next || busy) return
-    setBusy(true)
-    incidents.page(site, first.next).then(
-      (r) => setPages({ site, list: [...first.list, ...r.incidents], next: r.next_before, failed: false }),
-      () => setPages({ ...first, failed: true }),
-    ).finally(() => setBusy(false))
-  }
-  const edit = (x: Incident) => setPages((p) => (p ? { ...p, list: p.list.map((y) => (y.id === x.id ? x : y)) } : p))
-  return { list: first?.list ?? [], next: first?.next ?? null, ready: !!first, failed: !!first?.failed, busy, more, edit }
+  return open?.site === site ? open.x : undefined
 }
 
 /** One moment (unix seconds) for a whole screen, so its figures agree with each other. */
 export function useNow(): number {
   const [now] = useState(() => Math.floor(Date.now() / 1000))
+  return now
+}
+
+/** The clock (unix seconds), moved on every half minute: the state of the site on screen counts its time up while the page is open. */
+export function useClock(): number {
+  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000))
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Math.floor(Date.now() / 1000)), 30_000)
+    return () => window.clearInterval(timer)
+  }, [])
   return now
 }
