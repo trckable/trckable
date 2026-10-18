@@ -52,10 +52,11 @@ export function SetupRing({ site, onGoal, fresh = false, visited = false }: { si
         <RingMark done={state.done} counted={state.counted} check={mode === 'check'} />
         <span className="rtext">{words}</span>
       </button>
-      <div ref={menu} className={`mk-menu setupmenu${open ? ' on' : ''}`} role="dialog" aria-label={copy.title(state.done, state.counted)}>
+      <div ref={menu} className={`mk-menu setupmenu${open ? ' on' : ''}`} role="dialog" aria-label={mode === 'check' ? copy.allSet : copy.title(state.done, state.counted)}>
         {open && (
           <SetupPanel
             state={state}
+            check={mode === 'check'}
             locked={fresh && !visited}
             x={{ site, onGoal, can: can('setup.run'), change: (fn) => void run(fn), close }}
             onHide={() => {

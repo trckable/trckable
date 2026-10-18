@@ -17,6 +17,7 @@ html[data-motion='off'] .mk .ringb .rarc{transition:none}
 .mk .setupmenu .shead svg{width:24px;height:24px;flex:none}
 .mk .setupmenu .rtrack{fill:none;stroke:var(--mk-fill);stroke-width:4}
 .mk .setupmenu .rarc{fill:none;stroke:var(--mk-lime);stroke-width:4;stroke-linecap:round}
+.mk .setupmenu .rtick{fill:none;stroke:var(--mk-lime);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 .mk .setupmenu .sgrp{display:grid;gap:2px}
 .mk .setupmenu .stxt{min-width:0}
 .mk .setupmenu .stxt b{display:block;font-size:12.5px;font-weight:600}
@@ -41,8 +42,7 @@ html[data-motion='off'] .mk .ringb .rarc{transition:none}
 .mk .setupmenu .spop{position:relative;flex:none;display:inline-flex}
 .mk .setupmenu .sdots{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--mk-muted);cursor:pointer}
 .mk .setupmenu .sdots:hover,.mk .setupmenu .sdots[aria-expanded="true"]{background:var(--mk-hov);color:var(--mk-text)}
-.mk .setupmenu .spmenu{position:absolute;z-index:2;right:0;top:100%;min-width:150px;display:grid;padding:4px;border-radius:10px;background:var(--mk-card);border:1px solid var(--mk-line);box-shadow:0 8px 24px var(--mk-shc)}
-.mk .setupmenu .spmenu.up{top:auto;bottom:100%}
+.mk .setupmenu .spmenu{position:fixed;inset:auto;margin:0;overflow:auto;z-index:2;min-width:150px;display:grid;padding:4px;border-radius:10px;background:var(--mk-card);border:1px solid var(--mk-line);box-shadow:0 8px 24px var(--mk-shc)}
 .mk .setupmenu .spmenu button{font:inherit;font-size:12.5px;text-align:left;padding:6px var(--mk-s2);border-radius:6px;white-space:nowrap;cursor:pointer;color:var(--mk-text)}
 .mk .setupmenu .spmenu button:hover{background:var(--mk-hov)}
 .mk .setupmenu .spmenu button[aria-checked="true"]{font-weight:600}

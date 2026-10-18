@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { placePop, type PopAt } from '../../components/popPlace'
 
 export interface PopItem {
   label: string
@@ -6,11 +7,33 @@ export interface PopItem {
   checked?: boolean
 }
 
-/** A small button that opens a short menu: Escape or a click outside shuts it, the arrow keys move, and focus returns to the button. */
-export function Pop({ label, className, items, up, children }: { label: string; className: string; items: PopItem[]; up?: boolean; children: ReactNode }) {
+/** A small button that opens a short menu: Escape or a click outside shuts it, the arrow keys move, and focus returns to the button.
+ * The menu is on the top layer, under the button and right-aligned with it (above when there is no room below), so the panel's edges and rows never clip or cover it. */
+export function Pop({ label, className, items, children }: { label: string; className: string; items: PopItem[]; children: ReactNode }) {
   const [open, setOpen] = useState(false)
   const box = useRef<HTMLSpanElement>(null)
   const btn = useRef<HTMLButtonElement>(null)
+  const menu = useRef<HTMLSpanElement>(null)
+  const [at, setAt] = useState<PopAt | null>(null)
+  useLayoutEffect(() => {
+    const el = menu.current
+    const b = btn.current
+    if (!open || !el || !b) return setAt(null)
+    try {
+      el.showPopover()
+    } catch {
+      // No top layer in this browser: the z-index lifts it.
+    }
+    const place = () => setAt(placePop(b.getBoundingClientRect(), { w: el.offsetWidth, h: el.offsetHeight }, { w: window.innerWidth, h: window.innerHeight }))
+    place()
+    // The panel follows the page: the menu goes with its button.
+    window.addEventListener('scroll', place, true)
+    window.addEventListener('resize', place)
+    return () => {
+      window.removeEventListener('scroll', place, true)
+      window.removeEventListener('resize', place)
+    }
+  }, [open])
   useEffect(() => {
     if (!open) return
     const away = (e: PointerEvent) => {
@@ -41,7 +64,7 @@ export function Pop({ label, className, items, up, children }: { label: string; 
         {children}
       </button>
       {open && (
-        <span className={`spmenu${up ? ' up' : ''}`} role="menu" aria-label={label}>
+        <span ref={menu} popover="manual" className="spmenu" role="menu" aria-label={label} style={at ? menuStyle(at) : { visibility: 'hidden' }}>
           {items.map((it) => (
             <button
               key={it.label}
@@ -61,3 +84,5 @@ export function Pop({ label, className, items, up, children }: { label: string; 
     </span>
   )
 }
+
+const menuStyle = (at: PopAt): CSSProperties => ({ left: at.left, top: at.top, bottom: at.bottom, maxHeight: at.room })
