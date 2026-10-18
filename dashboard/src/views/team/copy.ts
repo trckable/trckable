@@ -13,12 +13,7 @@ export const copy = defineCopy('team', {
   sortLabel: 'Sort sites',
   sort: { attention: 'Attention', traffic: 'Traffic', change: 'Change' },
   receiving: 'Receiving',
-  notVerified: 'Not verified',
   more: (name: string) => `More for ${name}`,
-  // The ⋯ menu. Share, Status page and Widgets are also the site list's (#421): one copy once it has merged.
-  share: 'Share',
-  statusPage: 'Status page',
-  widgets: 'Widgets',
   add: 'Add a site',
   emptyTitle: 'No sites in this team yet',
   emptySub: 'Add the first one and its numbers show up here.',
