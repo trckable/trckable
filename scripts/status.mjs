@@ -46,7 +46,8 @@ for (const p of prs) {
 console.log(B('\nWaiting to be released'))
 const log = sh('git', ['show', 'origin/main:CHANGELOG.md'])
 const unreleased = (log.match(/## Unreleased\n([\s\S]*?)(?=\n## \d)/)?.[1] ?? '').split('\n').filter((l) => l.startsWith('- '))
-line('changelog lines', unreleased.length ? Y(`${unreleased.length} under Unreleased on main`) : G('none: main is released'))
+const pending = sh('git', ['ls-tree', '--name-only', 'origin/main', 'changes/']).split('\n').filter((f) => f.endsWith('.md') && f !== 'changes/README.md').length
+line('changelog lines', unreleased.length + pending ? Y(`${unreleased.length + pending} pending on main`) : G('none: main is released'))
 
 console.log(B('\nVersions'))
 const want = sh('git', ['show', 'origin/main:VERSION'])

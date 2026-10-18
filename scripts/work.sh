@@ -30,4 +30,4 @@ git pull -q --ff-only origin main
 "$ROOT/scripts/tidy.sh"
 git checkout -q -b "$TOPIC"
 printf '\033[32m✓ on %s, from main at %s\033[0m\n' "$TOPIC" "$(git log -1 --format=%h)"
-echo "  Each change: its code, its CHANGELOG line under Unreleased, its docs. Then: pnpm ship"
+echo "  Each change: its code, its changes/<slug>.md note, its docs. Then: pnpm ship"

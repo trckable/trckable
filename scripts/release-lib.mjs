@@ -50,11 +50,31 @@ export function releaseDate(now) {
   return `${now.getUTCDate()} ${'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' ')[now.getUTCMonth()]} ${now.getUTCFullYear()}`
 }
 
-/** The changelog with "## Unreleased" cut into a section for v, and the notes that section holds. */
-export function cutChangelog(log, v, date) {
-  const body = log.match(/## Unreleased\n([\s\S]*?)(?=\n## |$)/)?.[1].trim()
-  if (!body) throw new Error('CHANGELOG.md: the "## Unreleased" section is empty; write down what changed first')
-  return { log: log.replace('## Unreleased\n', `## Unreleased\n\n## ${v} (${date})\n`), body }
+/**
+ * The changelog entries held in changes/*.md fragments, in a stable order
+ * (by file name): files is [{ name, text }]. A fragment is one entry; a line
+ * that does not start with "- " gets one, and a leading "---" front matter
+ * block is ignored. README.md in that folder is not a fragment.
+ */
+export function fragmentLines(files) {
+  return files
+    .filter((f) => f.name.endsWith('.md') && f.name !== 'README.md')
+    .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+    .map((f) => f.text.replace(/^---\n[\s\S]*?\n---\n/, '').trim())
+    .filter(Boolean)
+    .map((t) => (t.startsWith('- ') ? t : `- ${t}`))
+}
+
+/**
+ * The changelog with the pending notes cut into a section for v, and the notes
+ * that section holds: the fragments (fragments is [{ name, text }]) first, then
+ * whatever already stands under "## Unreleased".
+ */
+export function cutChangelog(log, v, date, fragments = []) {
+  const standing = log.match(/## Unreleased\n([\s\S]*?)(?=\n## |$)/)?.[1].trim()
+  const body = [...fragmentLines(fragments), standing].filter(Boolean).join('\n')
+  if (!body) throw new Error('CHANGELOG.md: nothing to release; add a changes/<name>.md fragment first')
+  return { log: log.replace(/## Unreleased\n[\s\S]*?(?=\n## |$)/, `## Unreleased\n\n## ${v} (${date})\n\n${body}\n`), body }
 }
 
 /** 75 → "1m 15s", 9 → "9s". */
