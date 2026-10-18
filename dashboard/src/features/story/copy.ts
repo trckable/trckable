@@ -1,5 +1,4 @@
-// Replay as a story: the pops on the timeline and the card at its end. What
-// moves to the message files when translations come.
+// The words of the moments a period holds (the pops on the chart and the story's captions).
 import { fmtInt } from '../../lib/format'
 import { defineCopy } from '../../i18n'
 
@@ -12,19 +11,4 @@ export const copy = defineCopy('story', {
   ai: (bot: string) => `First AI assistant visit · ${bot}`,
   milestone: (what: string) => `Milestone · ${what}`,
   note: 'Note',
-  moments: 'Moments in this period',
-  jumpTo: (what: string, when: string) => `${when}: ${what}. Jump there`,
-  prev: 'Previous moment (←)',
-  next: 'Next moment (→)',
-  stop: 'Stop replay (Esc)',
-  // The card at the end.
-  visitors: (n: string) => `${n} visitors`,
-  bestHour: (h: string) => `best hour ${h}`,
-  bestDay: (d: string) => `best day ${d}`,
-  topSource: (s: string) => `top source ${s}`,
-  sales: (n: number) => (n === 1 ? '1 sale' : `${n} sales`),
-  share: 'Share',
-  again: 'Replay again',
-  close: 'Close',
-  summary: 'Replay summary',
 })

@@ -21,6 +21,7 @@ export const copy = defineCopy('briefing', {
   nobody: (when: string) => `Nobody ${when}`,
   when: { today: 'yet today', yesterday: 'came yesterday', week: 'came this week', month: 'came this month', range: 'came in this period' },
   sentFewer: (name: string) => `${name} sent far fewer people than usual`,
+  though: (name: string) => `, though ${name} sent fewer`,
   sentFewerShort: ' sent far fewer people.',
   dayOne: 'Day one:',
   notAnswering: (name: string) => `${name} isn't answering.`,
@@ -66,9 +67,6 @@ export const copy = defineCopy('briefing', {
   aRenewal: (a: string) => `a renewal · ${a}`,
   anotherSale: (a: string) => `another sale · ${a}`,
   beforeFirst: 'Before the first visit',
-  replayBar: 'Replay of the day',
-  replayList: 'The day, moment by moment',
-  closeReplay: 'Close replay (Esc)',
   // Sheets, the quiet states.
   allNotes: 'All notes',
   addNote: 'Add a note',
@@ -94,8 +92,8 @@ export const copy = defineCopy('briefing', {
   unknownNow: 'unknown now',
   unknownDown: 'unknown while down',
   // The email row, the keys.
-  mailOn: "Tomorrow's Briefing, in your inbox at 08:00:",
-  mailOff: "Tomorrow's Briefing is off:",
+  mailOn: "Tomorrow's Briefing, in your inbox at 08:00.",
+  mailOff: "Tomorrow's Briefing is off.",
   preview: 'Preview',
   manage: 'Manage',
   turnOffMail: 'Turn off',

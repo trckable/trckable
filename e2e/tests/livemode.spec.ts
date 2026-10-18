@@ -97,6 +97,67 @@ test('a visit slides in and the numbers move, without a reload', async ({ page }
   expect(reloads).toBe(0)
 })
 
+for (const [name, width, height] of [['desktop', 1440, 900], ['phone', 390, 844]] as const) {
+  test(`${name}: people on the site now is the big number first, the last 30 minutes the smaller one after it`, async ({ page }) => {
+    await page.setViewportSize({ width, height })
+    await signIn(page, '/example.com?view=live')
+    await expect(online(page)).toBeVisible({ timeout: 15_000 })
+    const pair = page.locator('.lnow .lfig > div')
+    await expect(pair.nth(0).locator('.ll')).toHaveText('On the site now')
+    await expect(pair.nth(1).locator('.ll')).toHaveText('Came in the last 30 min')
+    const a = (await pair.nth(0).boundingBox())!
+    const b = (await pair.nth(1).boundingBox())!
+    // Side by side the first is on the left; stacked it is on top.
+    expect(a.x < b.x || a.y < b.y).toBe(true)
+    const size = (i: number) => pair.nth(i).locator('.lbign').evaluate((el) => parseFloat(getComputedStyle(el).fontSize))
+    expect(await size(0)).toBeGreaterThan(await size(1))
+  })
+}
+
+test('a new visitor animates in and the headline numbers do not move, and the numbers never go blank or NaN', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.addInitScript(() => {
+    const w = window as unknown as { __shifts: { value: number; outside: boolean }[]; __bad: string[] }
+    w.__shifts = []
+    w.__bad = []
+    new PerformanceObserver((list) => {
+      for (const e of list.getEntries() as unknown as { value: number; hadRecentInput: boolean; sources: { node: Node | null }[] }[]) {
+        if (e.hadRecentInput) continue
+        // Data (a bar's height, a country row) may move what is under it; the headline numbers and their labels may not.
+        const outside = e.sources.some((s) => !!s.node && !!(s.node.parentElement ?? (s.node as Element)).closest('.lfig'))
+        w.__shifts.push({ value: e.value, outside })
+      }
+    }).observe({ type: 'layout-shift', buffered: true })
+    const look = () => {
+      for (const el of document.querySelectorAll('.lnow .lfig .rn')) {
+        const t = el.querySelector('.rn-text')?.textContent ?? ''
+        const d = el.querySelector('.rn-digits')?.textContent ?? ''
+        if (!/^\d[\d,.\s]*$/.test(t) || !/\d/.test(d) || /NaN/.test(t + d)) w.__bad.push(`${t}|${d}`)
+      }
+      requestAnimationFrame(look)
+    }
+    requestAnimationFrame(look)
+  })
+  await signIn(page, '/example.com?view=live')
+  await expect(online(page)).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('.lfeed .lv').first()).toBeVisible({ timeout: 15_000 })
+  await page.waitForTimeout(1500)
+  const start = await page.evaluate(() => (window as unknown as { __shifts: unknown[] }).__shifts.length)
+  const before = await num(page, '.lnow .lfig .lbign')
+  const run = await visit(page, 'livemotion')
+  const row = page.locator('.lfeed .lv', { has: page.locator(`.pg[title*="${run}"]`) })
+  await expect(row).toHaveClass(/arriving/, { timeout: 5_000 })
+  await expect.poll(() => num(page, '.lnow .lfig .lbign'), { timeout: 5_000 }).toBeGreaterThan(before)
+  await page.waitForTimeout(1200)
+  const seen = await page.evaluate(() => {
+    const w = window as unknown as { __shifts: { value: number; outside: boolean }[]; __bad: string[] }
+    return { shifts: w.__shifts, bad: w.__bad }
+  })
+  // The new row pushes the rows under it down inside the list; the two headline numbers and their labels stay where they are.
+  expect(seen.shifts.slice(start).filter((s) => s.outside)).toEqual([])
+  expect(seen.bad).toEqual([])
+})
+
 test('a visit that arrives later is marked as arriving, then settles; the first look is not', async ({ page }) => {
   await signIn(page, '/example.com?view=live')
   await expect(online(page)).toBeVisible({ timeout: 15_000 })

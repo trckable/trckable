@@ -40,7 +40,7 @@ export function FeedList({ rows, up, clock, more, empty, onVisitor, cookieless }
         const page = r.kind === 'goal' ? { title: liveCopy.goal(r.label || (r.goal ?? '')), text: liveCopy.goal(r.label || (r.goal ?? '')) } : { title: r.path, text: r.kind === 'active' ? copy.still : (r.path ?? '/') }
         const hot = up.has(r.channel || 'Direct') || clock - r.last < 30_000
         return (
-          <button key={r.key} type="button" className={`lv ${marks.get(r.key) ?? ''}`.trim()} onClick={() => r.visitor && onVisitor?.(r.visitor)} disabled={!r.visitor || !onVisitor}>
+          <button key={r.key} type="button" className={`lv ${r.leaving ? 'leaving' : (marks.get(r.key) ?? '')}`.trim()} onClick={() => r.visitor && onVisitor?.(r.visitor)} disabled={r.leaving || !r.visitor || !onVisitor}>
             <span className={`mk-dot ${hot ? '' : 'off'}`} />
             <span className="pg mono" title={page.title}>{page.text}</span>
             <span className="src" style={hot ? { color: 'var(--mk-lime)' } : undefined}>

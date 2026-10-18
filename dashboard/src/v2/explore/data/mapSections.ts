@@ -57,10 +57,10 @@ export function mapFunnel(o: { cur: FunnelResult[]; prev?: FunnelResult[]; repor
 
 /** What the period earned, by kind: there is no list of single sales to read, so each kind is one line. The lines add up to the period's net revenue (what the Briefing and the buyers say); what is neither new nor a renewal is the upgrades. */
 export function mapSales(money: Money | undefined, label: string): Sales {
-  if (!money) return { state: 'connect', sales: [], payments: 0 }
+  if (!money) return { state: 'connect', sales: [] }
   const one = (kind: Sale['kind'], text: string, amt: number): Sale[] => (amt === 0 ? [] : [{ kind, label: text, from: '', country: '', device: '', when: label, amt }])
   const upgrades = money.revenue - money.new_revenue - money.renewal_revenue + money.refunds
-  return { state: 'ok', payments: money.payments, sales: [...one('new', copy.salesNew, money.new_revenue), ...one('upgrade', copy.salesUpgrade, upgrades), ...one('renewal', copy.salesRenewal, money.renewal_revenue), ...one('refund', copy.salesRefund, -money.refunds)] }
+  return { state: 'ok', sales: [...one('new', copy.salesNew, money.new_revenue), ...one('upgrade', copy.salesUpgrade, upgrades), ...one('renewal', copy.salesRenewal, money.renewal_revenue), ...one('refund', copy.salesRefund, -money.refunds)] }
 }
 
 // ---- search ----

@@ -1,7 +1,7 @@
 // Moving between Live, the Briefing and Data, deliberately: Live is one screen,
 // so it opens at the top, and so does the Briefing (as the walkthrough's does); Data comes back scrolled to where it was left.
 import { rememberTab, type Tab } from '../../lib/tab'
-import { readView, setView } from '../../lib/url'
+import { plainView, readView, setView, type ViewState } from '../../lib/url'
 import { transition } from '../../lib/viewTransition'
 import { minuteView } from './minute'
 
@@ -17,15 +17,31 @@ export async function switchView(live: boolean, now: boolean): Promise<void> {
 
 /** What the address says for each tab. The Briefing is told by the day, so a bare 30 days becomes today. */
 function patchFor(to: Tab): Parameters<typeof setView>[0] {
-  if (to === 'live') return { live: true }
+  if (to === 'live') return { live: true, ...plainView() }
   if (to === 'data') return { live: false }
   const cur = readView(new URLSearchParams(location.search))
+  if (kept) {
+    const back = kept
+    kept = null
+    return { live: false, briefing: true, ...back }
+  }
   return { live: false, briefing: true, ...(cur.period === '30d' && !cur.from ? { period: 'today' } : {}) }
+}
+
+/** What the Briefing had set (the period, the comparison, the filters and the panel) when Live was opened: Live has none of them, and the Briefing gets them back. */
+let kept: Partial<ViewState> | null = null
+
+function keep(from: Tab) {
+  if (from !== 'briefing') return
+  const { period, from: f, to, compare, cfrom, cto, bucket, filters, xp, xf } = readView(new URLSearchParams(location.search))
+  kept = { period, from: f, to, compare, cfrom, cto, bucket, ...(xp ? { xp, xf: xf ?? filters } : {}) }
 }
 
 export async function switchTab(to: Tab, from: Tab): Promise<void> {
   if (to === from) return
   rememberTab(to)
+  if (to === 'live') keep(from)
+  else if (to !== 'briefing') kept = null
   if (from === 'data') dataScroll = scrollY
   const top = to === 'data' ? dataScroll : 0
   await transition(
