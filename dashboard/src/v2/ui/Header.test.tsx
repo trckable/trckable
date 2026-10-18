@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { openPeek } from '../openPeek'
+import { openPeek, peekAction } from '../openPeek'
 import { Logo } from './Header'
 
 describe('the header’s logo', () => {
@@ -31,5 +31,12 @@ describe('the ghost', () => {
     openPeek()
     window.removeEventListener('trckable:ask', on)
     expect(heard).toBe(1)
+  })
+
+  it('asks for Peek only where the build provides one', () => {
+    const own = () => {}
+    expect(peekAction(undefined, undefined)).toBeUndefined()
+    expect(peekAction(undefined, () => {})).toBe(openPeek)
+    expect(peekAction(own, undefined)).toBe(own)
   })
 })

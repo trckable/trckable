@@ -34,6 +34,7 @@ const kind = (u: string) => u.replace(/^\/api\/v1/, '').replace(/\/sites\/[^/?]+
 for (const [name, query] of [['Live', 'view=live'], ['Briefing', 'view=briefing']] as const) {
   test.describe(name, () => {
     let cookie = ''
+    const turned: boolean[] = []
     test.beforeAll(async () => {
       cookie = await session('fetch-once')
     })
@@ -56,9 +57,12 @@ for (const [name, query] of [['Live', 'view=live'], ['Briefing', 'view=briefing'
         return route.fulfill({ response: res, body: frozen })
       })
       await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+      const from = Date.now()
       await page.goto(`${API}/${HISTORY_DOMAIN}?${query}&v=`)
       await page.waitForLoadState('networkidle')
       await page.waitForTimeout(LOAD_MS) // the lazy reads that follow it (the bell at 3 s, the surge line at 8 s)
+      // Live reads /now again when the server's minute turns (that is its job: the chart moves on), so a load that spans a turn asks for it twice, once.
+      turned.push(Math.floor(from / 60_000) !== Math.floor(Date.now() / 60_000))
       return calls
     }
 
@@ -72,7 +76,9 @@ for (const [name, query] of [['Live', 'view=live'], ['Briefing', 'view=briefing'
       test.info().annotations.push({ type: 'requests', description: line })
 
       // Nothing is asked twice by the load, and the minute after it asks again for none of the numbers (the report, the sites, the mentions, the bell's lists): only /now and the few lines on a longer timer.
-      const twice = Object.entries(tally(first)).filter(([, n]) => n > 1)
+      // (/now is allowed one more read when the minute turned during the load, which the clock says.)
+      const turn = turned.at(-1) ?? false
+      const twice = Object.entries(tally(first)).filter(([u, n]) => n > (turn && /\/now$/.test(kind(u)) ? 2 : 1))
       expect(twice, 'asked twice by the load').toEqual([])
       const again = minute.filter((u) => /\/(report|mentions|milestones|incidents|busier)(\?|$)/.test(u.replace(/\/sites\/[^/?]+/, '')))
       expect(again, 'asked again within 45 s').toEqual([])

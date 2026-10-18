@@ -4,10 +4,11 @@
 import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
+import { PORT, origin } from '../ports'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one browser is enough: the server counts')
 
-const SITE_ORIGIN = 'http://127.0.0.1:18301'
+const SITE_ORIGIN = origin(PORT.site)
 
 let cookie = ''
 test.beforeAll(async () => {

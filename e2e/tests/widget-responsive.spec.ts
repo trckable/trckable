@@ -8,10 +8,11 @@ import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 import { stripeSale } from './verified-kit'
+import { PORT, origin } from '../ports'
 
 const H = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36'
-const SITE = 'http://127.0.0.1:18301'
+const SITE = origin(PORT.site)
 const WIDTHS = [320, 390, 768, 1280]
 const SHOTS = process.env.WIDGET_SHOTS
 

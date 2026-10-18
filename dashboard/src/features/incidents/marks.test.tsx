@@ -1,11 +1,12 @@
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import type { Incident } from './api'
 import { bucketFor, lineOf } from './IncidentMarks'
 import { routeOf } from '../subpage'
 import { Summary } from './Summary'
 import { Timeline } from './Timeline'
 import type { Site } from '../../lib/api'
+import { setRole } from '../../lib/me'
 
 const at = (iso: string) => Date.parse(iso) / 1000
 const inc = (o: Partial<Incident>): Incident => ({ id: 'i', site: 's', kind: 'down', started_at: 0, ended_at: null, cause: 'x', expected_visits: null, note: '', ...o })
@@ -30,9 +31,13 @@ describe('the incident marks on the chart', () => {
 })
 
 describe('the incident page', () => {
+  afterEach(() => setRole())
   it('reads its address as the site and the page', () => {
     const sites = [site('a.example'), site('b.example')]
     expect(routeOf(sites, '/b.example/incidents')).toMatchObject({ sub: 'incidents', site: { id: 'b.example' } })
+    // The Mentions page is an address only where the server has Mentions on.
+    expect(routeOf(sites, '/b.example/mentions')).toMatchObject({ sub: null })
+    setRole('owner', true)
     expect(routeOf(sites, '/b.example/mentions')).toMatchObject({ sub: 'mentions', site: { id: 'b.example' } })
     expect(routeOf(sites, '/b.example')).toMatchObject({ sub: null, site: { id: 'b.example' } })
     expect(routeOf(sites, '/nope.example/incidents')).toEqual({ site: null, sub: null })

@@ -11,11 +11,12 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { PORT } from '../ports'
 
 const BIN = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../server/bin/trckabled')
 const PASSWORD = 'first run e2e password 1'
 const SHOTS = process.env.TRCKABLE_SHOTS // a folder: screenshots of each step, for review
-const PORTS = { chromium: 18311, firefox: 18312, webkit: 18313 } as Record<string, number>
+const PORTS = PORT.onboarding
 
 // One server per browser, and its tests in order: Skip first, while there
 // is still no site, then the whole first run.

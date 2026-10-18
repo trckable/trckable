@@ -41,11 +41,14 @@ export interface PeriodChipProps {
   onReset?: () => void
   /** The unit the chart is cut in for the chosen dates ("by hour", "by day"). */
   grain: (from: ISODate, to: ISODate) => string
+  /** A second chip on the page (Explore at full width) needs ids of its own. */
+  idBase?: string
 }
 
 export function PeriodChip(p: PeriodChipProps) {
   const [head, ...tail] = p.label.split(' · ')
   const rest = tail.join(" · ")
+  const base = p.idBase ?? 'per'
   const { open, attach, toggle, close } = useMenu()
   const menu = useRef<HTMLDivElement>(null)
   useTopLayerWhen(open, menu)
@@ -89,7 +92,7 @@ export function PeriodChip(p: PeriodChipProps) {
     <div className={`pwrap${p.onReset ? ' set' : ''}`} ref={attach}>
       <button
         type="button"
-        id="perBtn"
+        id={`${base}Btn`}
         onKeyDown={esc}
         className="pill"
         title={p.label}
@@ -113,7 +116,7 @@ export function PeriodChip(p: PeriodChipProps) {
           </svg>
         </button>
       )}
-      <div ref={menu} className={`mk-menu pmenu${open ? ' on' : ''}${cal ? ' cal' : ''}`} id="perMenu">
+      <div ref={menu} className={`mk-menu pmenu${open ? ' on' : ''}${cal ? ' cal' : ''}`} id={`${base}Menu`}>
         {open && cal && (
           <Calendar
             p={p}

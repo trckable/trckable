@@ -28,6 +28,7 @@ import { MilestonesSetting } from '../features/milestones/MilestonesSetting'
 import { ImportSetting } from '../features/install/ImportSetting'
 import { DeleteSite } from './Sites'
 import { CURRENCIES, clock, withCurrent, zones } from '../lib/site'
+import { SavedFlag, useSaved } from '../components/SavedFlag'
 import './Settings.css'
 
 type TabID = SettingsTab
@@ -189,7 +190,10 @@ function InstallSection({ site }: { site: Site }) {
   const headText = () => {
     if (checking) return `Checking ${site.domain}…`
     if (verified) return fresh ? `Connected and verified` : `Snippet found, but no visits in the last day`
-    return page?.found === 'other' ? `Not verified: another site's snippet` : `Not verified`
+    // Say what was checked: the snippet, on the homepage.
+    if (page?.found === 'other') return `Snippet seen, but it is another site's`
+    if (page?.found === 'nosite') return `Snippet seen, but without a site id`
+    return `Snippet not seen`
   }
   const subText = () => {
     if (checking) return 'This server fetches your homepage and up to 20 scripts it links to, looks for this site\'s id in them, then asks for the latest visit it recorded.'
@@ -277,15 +281,6 @@ function agoText(ts: number): string {
   return d === 1 ? 'a day ago' : `${d} days ago`
 }
 
-/** "Saved" that fades away, so a save needs no button and no banner. */
-function useSaved() {
-  const [saved, setSaved] = useState(false)
-  return [saved, () => {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 1600)
-  }] as const
-}
-
 /** The end of the General tab: deleting the site, with the same dialog as
  *  the sites list (it asks for the domain and says what goes with it). */
 function DangerZone({ site, onSites }: { site: Site; onSites: () => void }) {
@@ -333,9 +328,7 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
       <div className="card-head" style={{ paddingBottom: 10 }}>
         <h2>Basics</h2>
         <span className={'gen-state ' + state}>{stateText}</span>
-        <span className={saved ? 'saved on' : 'saved'} aria-live="polite">
-          Saved
-        </span>
+        <SavedFlag on={saved} />
       </div>
 
       <Row label="Display name" hint="What you call this site in trckable">

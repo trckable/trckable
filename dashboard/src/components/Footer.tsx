@@ -2,6 +2,7 @@ import { BookOpen, MessageSquare } from 'lucide-react'
 import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
 import type { Site } from '../lib/api'
 import { canAsk } from '../lib/me'
+import { pageLoading } from '../lib/pageLoading'
 import { caps, keyFor, useKeymap } from '../lib/keys'
 import { openShortcuts } from './ShortcutsHost'
 import { footerCopy as t } from './footerCopy'
@@ -16,6 +17,8 @@ const ServerStatus = lazy(statusChunk)
 
 /** How long the page has to settle before the foot is drawn: it sits under everything, so it would move with each part that arrives. */
 const SETTLE = 1200
+/** A page that is still loading after this long gets its foot anyway. */
+const WAIT_MAX = 20_000
 
 /** A page that offers Ask marks itself (components/Ask.tsx); the key is only hinted at where there is something behind it. */
 const marked = (on: () => void) => {
@@ -47,14 +50,20 @@ export function Footer({ version, newer, onNewer, site, sites }: { version?: str
   const [feedback, setFeedback] = useState(false)
   // Held back (still taking its room) until the status has arrived and the page has had a moment: a foot that fills in and
   // slides down as the page loads is a layout shift on every screen.
-  const [settled, setSettled] = useState(false)
+  const [ready, setReady] = useState(false)
+  const [tired, setTired] = useState(false)
+  const loading = pageLoading.use() > 0
   useEffect(() => {
     let live = true
-    void Promise.all([statusChunk(), new Promise((r) => setTimeout(r, SETTLE))]).then(() => live && setSettled(true))
+    void Promise.all([statusChunk(), new Promise((r) => setTimeout(r, SETTLE))]).then(() => live && setReady(true))
+    const cap = setTimeout(() => setTired(true), WAIT_MAX)
     return () => {
       live = false
+      clearTimeout(cap)
     }
   }, [])
+  // Drawn when the status has arrived and the page has its numbers (or has been long enough about it).
+  const settled = ready && (!loading || tired)
   useKeymap()
   const ask = useSyncExternalStore(marked, askOffered, () => false) && canAsk()
   const whatsNew = (

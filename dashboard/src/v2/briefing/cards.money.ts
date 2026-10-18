@@ -212,7 +212,7 @@ export function leakCard(i: { f: FunnelStory; domain: string; rule: string }): S
     score: 74,
     bad: true,
     head: copy.leakHead(fmtInt(b.v), fmtInt(a.v), a.name, b.name),
-    rest: copy.leakRest(fmtInt(usual)),
+    rest: copy.leakRest(fmtInt(usual), fmtInt(a.v)),
     vis: { k: 'funnel', rows },
     why: alt ? copy.leakAlt(alt) : copy.leakUsualRange,
     val: pct0(leak.r),

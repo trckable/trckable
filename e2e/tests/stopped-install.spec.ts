@@ -1,6 +1,6 @@
 // Two layouts that went wrong: a stopped site in the switcher kept only a red
 // ring where its dot should be (the stopped banner's class styled the dot),
-// and Settings → Install squeezed the "Not verified" card under the code panel
+// and Settings → Install squeezed the "Snippet not seen" card under the code panel
 // (the scrolling column shrank it).
 import { expect, test, type Locator, type Page } from './fixtures'
 import { API } from '../playwright.config'
@@ -96,7 +96,7 @@ for (const size of [
     )
     await page.goto(`${API}/settings?site=${site.id}&tab=install`)
     const card = page.locator('.card.install-check')
-    await expect(card.getByRole('heading', { name: 'Not verified' })).toBeVisible()
+    await expect(card.getByRole('heading', { name: 'Snippet not seen' })).toBeVisible()
     const more = page.getByRole('button', { name: 'Hide the code' })
     await expect(more).toBeVisible()
     const panel = page.locator('.inst-settings')

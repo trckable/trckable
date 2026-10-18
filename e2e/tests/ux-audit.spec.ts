@@ -40,6 +40,39 @@ for (const width of [1440, 390]) {
   }
 }
 
+test('Explore at full width has the period, and its menu changes it', async ({ page }) => {
+  await open(page, 1440, '?view=briefing')
+  await page.locator('.mk-chip.exb').click()
+  await page.locator('.xfull').click()
+  const chip = page.locator('#xp #xperBtn')
+  await expect(chip).toBeVisible()
+  await chip.click()
+  await page.locator('#xperMenu').getByRole('button', { name: /Last 7 days/ }).click()
+  await expect(page).toHaveURL(/period=7d/)
+  await expect(chip).toContainText('Last 7 days')
+})
+
+test('the foot waits for a slow Briefing: nothing moves when its numbers arrive late', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 })
+  await cdp.send('Network.enable')
+  await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 150, downloadThroughput: 400_000, uploadThroughput: -1 })
+  await page.addInitScript(() => {
+    const w = window as unknown as { __cls: number }
+    w.__cls = 0
+    new PerformanceObserver((list) => {
+      for (const e of list.getEntries() as unknown as { value: number; hadRecentInput: boolean }[]) if (!e.hadRecentInput) w.__cls += e.value
+    }).observe({ type: 'layout-shift', buffered: true })
+  })
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&v=`)
+  await expect(page.locator('.brief')).toBeVisible({ timeout: 60_000 })
+  await page.waitForTimeout(4000)
+  expect(await cls(page)).toBe(0)
+})
+
 test('a section of the settings is in the address, opens from it, and leaves with the dialog', async ({ page }) => {
   await open(page, 1280, '?view=briefing')
   await expect(page.locator('.brief')).toBeVisible()

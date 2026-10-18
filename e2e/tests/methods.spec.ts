@@ -40,12 +40,13 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { METHODS, tag, type Ctx, type Method } from '../../dashboard/src/lib/install'
 import { API, TOKEN } from '../playwright.config'
+import { PORT, origin } from '../ports'
 
 const PKG = fileURLToPath(new URL('../../packages/trckable/', import.meta.url))
 const pkgRequire = createRequire(PKG + 'package.json')
 const esbuild = pkgRequire('esbuild') as typeof import('esbuild')
 const auth = { Authorization: `Bearer ${TOKEN}` }
-const PROXY = 'http://127.0.0.1:18302'
+const PROXY = origin(PORT.proxy)
 const HOST = 'http://stats.example.com'
 const CHROME_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36'
 

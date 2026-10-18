@@ -348,9 +348,11 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     case 'annotations':
       return ok({ annotations: notesOf(c, id).map((n) => ({ id: `note_${n.min}`, day: dateOf(c, Math.floor(n.min / 1440)), text: n.text, created_at: secs(c, n.min), author: 'albi@example.com' })) })
     case 'milestones': {
-      const m = closed.has(id) ? null : milestone(c, site)
-      const moment = m ? { kind: 'visitors', step: String(m), value: m, day: dateOf(c, END), created_at: secs(c, c.nowAbs), new: true, shared: false } : null
-      return ok({ enabled: true, milestones: moment ? [moment] : [], moment })
+      // Told once, then kept in the list (as the server does): a milestone that was seen is still one, no longer new.
+      const m = milestone(c, site)
+      const fresh = !closed.has(id)
+      const row = m ? { kind: 'visitors', step: String(m), value: m, day: dateOf(c, END), created_at: secs(c, c.nowAbs), new: fresh, shared: false } : null
+      return ok({ enabled: true, milestones: row ? [row] : [], moment: row && fresh ? row : null })
     }
     case 'mentions': {
       const list = mentionsOf(c, id).map((x, i) => ({

@@ -17,3 +17,6 @@ export function donePeek() {
   delete document.documentElement.dataset.peekOpening
   document.documentElement.style.removeProperty('cursor')
 }
+
+/** What asks for Peek in the header and in ⌘K: the page's own, else the event where the build provides Peek, else nothing (the public product has no Peek, so no dead button). */
+export const peekAction = (own: (() => void) | undefined, provided: unknown): (() => void) | undefined => own ?? (provided ? openPeek : undefined)

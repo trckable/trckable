@@ -70,7 +70,7 @@ export const copy = defineCopy('briefing', {
   replayList: 'The day, moment by moment',
   closeReplay: 'Close replay (Esc)',
   // Sheets, the quiet states.
-  notes: 'Notes',
+  allNotes: 'All notes',
   addNote: 'Add a note',
   noNotes: 'No notes yet. A note shows as a marker on the chart.',
   mailPreview: 'Email preview',
@@ -214,6 +214,7 @@ export const copy = defineCopy('briefing', {
   wasNormal: 'Everything was normal',
   stillLearning: 'Still learning what is normal here',
   allNormal: 'Everything else was normal',
+  oneNormal: (topic: string) => `${topic} looked normal`,
   paused: 'The other numbers are paused',
   pausedRest: 'until the site answers again.',
   nothingElse: 'Nothing else needs a look',

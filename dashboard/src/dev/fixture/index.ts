@@ -1,6 +1,6 @@
 // Fixture mode (a development build only): `?fixture=hn` answers the whole API from one of the mock's scenarios, with the
 // clock at the scenario's "now", so the page can be set beside the mock number for number. `&conn=` says what is
-// connected: none (the default), rev, search or both; `&hold=1` never answers a report, so a loading shape can be looked at. The choice is kept for the tab, so a reload or a link inside the
+// connected: none (the default), rev, search or both; `&hold=1` never answers a report, so a loading shape can be looked at; `&lag=400` answers every read late, each at its own time. The choice is kept for the tab, so a reload or a link inside the
 // app stays on it. main.tsx loads this behind `import.meta.env.DEV`, so a production build carries none of it.
 import { SCN, END, SITES, SRCS } from './data'
 import { buildWorld } from './engine'
@@ -21,7 +21,7 @@ function connOf(name: ConnName): Conn {
   return { rev: name === 'rev' || name === 'both', search: name === 'search' || name === 'both', goals: true, uptime: true, alerts: true }
 }
 
-function chosen(): { name: string; conn: ConnName; hold: boolean } | null {
+function chosen(): { name: string; conn: ConnName; hold: boolean; lag: number } | null {
   const sp = new URLSearchParams(location.search)
   const fromUrl = sp.get('fixture')
   let raw = fromUrl
@@ -47,7 +47,15 @@ function chosen(): { name: string; conn: ConnName; hold: boolean } | null {
   } catch {
     /* only the reload forgets it */
   }
-  return { name, conn, hold }
+  const lag = Number(sp.get('lag') ?? 0) || 0
+  return { name, conn, hold, lag }
+}
+
+/** `&lag=400`: every answer comes late, each read at its own time (up to lag × 4), as on a slow line, so what moves when one arrives before another shows. */
+function lagOf(path: string, lag: number): number {
+  let h = 0
+  for (const ch of path) h = (h * 31 + ch.charCodeAt(0)) % 4
+  return lag * (h + 1)
 }
 
 /** The page's clock stands at one moment, as the mock's does. */
@@ -83,7 +91,8 @@ export function installFixture() {
       console.warn(`fixture: no answer for ${method} ${url.pathname}`)
       return Promise.resolve(new Response(JSON.stringify({ error: 'not in the fixture' }), { status: 404, headers: { 'Content-Type': 'application/json' } }))
     }
-    return Promise.resolve(new Response(r.status === 204 ? null : JSON.stringify(r.body), { status: r.status, headers: { 'Content-Type': 'application/json' } }))
+    const res = new Response(r.status === 204 ? null : JSON.stringify(r.body), { status: r.status, headers: { 'Content-Type': 'application/json' } })
+    return pick.lag ? new Promise<Response>((done) => setTimeout(() => done(res), lagOf(url.pathname, pick.lag))) : Promise.resolve(res)
   }
   window.EventSource = class FixtureStream extends EventTarget {
     static readonly CONNECTING = 0

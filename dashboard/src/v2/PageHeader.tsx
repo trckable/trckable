@@ -16,7 +16,7 @@ import { Bell } from './bell/Bell'
 import { useNotices } from './bell/useNotices'
 import { goExplore } from './briefing/deeper'
 import { copy } from './copy'
-import { openPeek } from './openPeek'
+import { peekAction } from './openPeek'
 import { paletteItems } from './explore/palette'
 import { copy as pal } from './explore/paletteCopy'
 import { useV2Extras } from './slots'
@@ -94,6 +94,8 @@ export function PageHeader(p: PageHeaderProps) {
     all: copy.allSites,
   }
   const here = p.tab
+  // Peek is there only where the build gives one: a page's own, or the slot. The public product has none, so no row or button asks for it.
+  const ask = peekAction(p.onAsk, slots.askPeek)
   // A page with a site opens Explore; a page without one has nothing to open it on, so ⌘K's list opens instead.
   const exploreOpen = () => (site ? goExplore() : setFind(true))
   return (
@@ -101,7 +103,7 @@ export function PageHeader(p: PageHeaderProps) {
       <Header
         logo={p.identity ? <div className="hd-id">{p.identity}</div> : (
           <>
-            <Logo title={copy.askPeek} onClick={p.onAsk ?? openPeek} />
+            <Logo title={ask ? copy.askPeek : copy.allSites} onClick={ask ?? (() => navigate('/sites'))} />
             {p.update && (
               <button type="button" className="update-pill" onClick={p.onUpdate} title={copy.updateOut(p.update)}>
                 <span className="dot" aria-hidden="true" />
@@ -145,7 +147,7 @@ export function PageHeader(p: PageHeaderProps) {
           </>
         }
       />
-      {find && <Palette items={paletteItems({ sites: p.sites, site, data: p.data ?? null, here: here ?? 'briefing', onAsk: p.onAsk ?? openPeek, onGoal: p.onGoal, domainOf: (s) => s.domain })} placeholder={pal.placeholder} none={pal.none} initial={seed} onClose={() => setFind(false)} />}
+      {find && <Palette items={paletteItems({ sites: p.sites, site, data: p.data ?? null, here: here ?? 'briefing', onAsk: ask, onGoal: p.onGoal, domainOf: (s) => s.domain })} placeholder={pal.placeholder} none={pal.none} initial={seed} onClose={() => setFind(false)} />}
     </>
   )
 }

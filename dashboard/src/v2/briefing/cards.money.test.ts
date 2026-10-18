@@ -80,7 +80,7 @@ describe('the signup path and a first customer', () => {
   it('names the step where fewer go on than usual, and what usually goes on there', () => {
     const c = leakCard({ f: { steps, leak: { at: 2, r: 0.1, ur: 0.4 }, alt: '/docs' }, domain: 'a.com', rule: 'Rule.' })
     expect(c?.head).toBe('Only 12 of 120 people made it from /pricing to signup')
-    expect(c?.rest).toBe(', usually about 48')
+    expect(c?.rest).toBe(', usually about 48 of 120')
     expect(c?.why).toBe('Many go to /docs instead.')
     expect(c?.vis).toMatchObject({ k: 'funnel', rows: [{ hot: '' }, { hot: '' }, { hot: '10% go on here, usually 40%' }] })
   })

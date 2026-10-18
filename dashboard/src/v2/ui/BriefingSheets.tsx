@@ -9,7 +9,7 @@ import { InfoRow, InfoSheet } from './InfoSheet'
 export function NotesSheet({ site, siteId, notes, onClose, onAdd, onChanged }: { site: string; siteId: string; notes: Annotation[]; onClose: () => void; onAdd?: () => void; onChanged: () => void }) {
   return (
     <InfoSheet
-      title={copy.notes}
+      title={copy.allNotes}
       sub={site}
       onClose={onClose}
       close={copy.close}

@@ -29,7 +29,6 @@ whenIdle(PageBar.preload);
 const Setup = lazy(() => import("./views/Auth").then((m) => ({ default: m.Setup })));
 const Login = lazy(() => import("./views/Auth").then((m) => ({ default: m.Login })));
 const FirstPassword = lazy(() => import("./views/FirstPassword").then((m) => ({ default: m.FirstPassword })));
-const Footer = lazy(() => import("./components/Footer").then((m) => ({ default: m.Footer })));
 const UpdateDialog = lazy(() => import("./components/UpdateDialog"));
 // Only people with more than one site open it, so it loads when asked.
 const AllSites = lazy(() => import("./views/AllSites").then((m) => ({ default: m.AllSites })));
@@ -39,6 +38,7 @@ import { ShortcutsHost } from "./components/ShortcutsHost";
 const SharedSite = lazy(() => import("./views/SharedSite"));
 import { Toasts } from "./components/Toast"; import { Hints } from "./features/hints/HintsDoor"; import { Boundary } from "./components/Boundary"; import "./lib/pwa";
 import "./phone.css"; // last: what it sets on a phone wins over the styles imported before it
+import { Footer } from "./components/Footer";
 void import("./kit/glass").then((m) => m.startGlass()); // the glass: its own small chunk, asked for at once, so the first load keeps its weight
 applySavedTheme();
 type Boot =
@@ -206,7 +206,7 @@ function App() {
   return (
     <div className="app">
       {page}
-      <Suspense fallback={null}><Footer version={boot.version} newer={latest?.v} onNewer={() => setShowUpdate(true)} site={site?.id} sites={boot.sites} /></Suspense>
+      <Footer version={boot.version} newer={latest?.v} onNewer={() => setShowUpdate(true)} site={site?.id} sites={boot.sites} />
       {showUpdate && latest && boot.version && (
         <Suspense fallback={null}>
           <UpdateDialog latest={latest} current={boot.version} onClose={() => setShowUpdate(false)} />

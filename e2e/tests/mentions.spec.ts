@@ -70,6 +70,8 @@ test('the mentions page shows who is talking now, filters the feed and opens one
   expect(page.url()).toContain('?m=3')
   await expect(panel.getByRole('button', { name: 'Close' })).toBeFocused()
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-detail-dark-1440.png` })
+  // The foot is drawn once the page has settled: scan after it, not while it flips from hidden.
+  await expect(page.locator('footer.app-footer:not(.app-footer-wait)')).toBeVisible()
   const found = (await new AxeBuilder({ page }).exclude('.brand').analyze()).violations
   expect(found.map((v) => `${v.id} ${v.nodes.map((n) => n.target.join()).join(' | ')}`)).toEqual([])
   await page.keyboard.press('Escape')

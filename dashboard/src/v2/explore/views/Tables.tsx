@@ -7,6 +7,7 @@ import { valueOf } from '../filters'
 import { ROW_DIM } from '../sections'
 import type { Tab, Table } from '../types'
 import { PeopleTable } from './PeopleTable'
+import { rowWords } from '../pointer'
 
 interface Cfg {
   head: string
@@ -45,11 +46,11 @@ function Note({ tab, x }: { tab: Tab; x: XCtx }) {
             {copy.pageDetails} {'›'}
           </button>
         ) : (
-          copy.notePage
+          rowWords().page
         )}
       </XNote>
     )
-  if (tab === 'referrers') return <XNote>{copy.noteSource}</XNote>
+  if (tab === 'referrers') return <XNote>{rowWords().source}</XNote>
   if (tab === 'utm') return <XNote>{copy.noteUtm}</XNote>
   if (tab === 'outbound') return <XNote>{copy.noteLinks}</XNote>
   return null
