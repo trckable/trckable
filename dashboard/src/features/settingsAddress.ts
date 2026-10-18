@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import type { Site } from '../lib/api'
 import { toast } from '../components/toastBus'
 import { errorCopy } from '../lib/errorCopy'
-import { isViewer } from '../lib/me'
+import { can } from '../lib/permissions'
 import { closeSettings, openSettings, settingsInAddress, useSettings } from '../lib/settings'
 import { routeOf } from './subpage'
 
@@ -14,7 +14,7 @@ export function useSettingsAddress(sites: Site[] | null, path: string, params: U
   useEffect(() => {
     if (!sites || !named) return
     // A viewer changes no settings: the section in the address is dropped, with a word, not left to open nothing.
-    if (isViewer()) {
+    if (!can('site.settings')) {
       closeSettings()
       toast(errorCopy.denied, 'info')
       return
