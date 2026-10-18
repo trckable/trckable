@@ -72,6 +72,31 @@ test('Mentions: its page stays on the page, and the palette has its entry', asyn
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d`)
   await expect(page.locator('.hd')).toBeVisible()
   await page.keyboard.press('ControlOrMeta+k')
-  await page.keyboard.type('mentions')
+  await expect(page.locator('.palbox')).toBeVisible()
+  await page.locator('.palbox input').fill('mentions')
   await expect(page.locator('.palbox .pi').filter({ hasText: 'Mentions' }).first()).toBeVisible()
 })
+
+for (const width of [1440, 390]) {
+  test(`${width}: /sites has the Briefing's header, no hint on the site pill, and words that match the period`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 })
+    await page.emulateMedia({ colorScheme: 'dark' })
+    await page.context().addCookies([{ name: 'trckable_session', value: await session('live-audit'), url: API }])
+    await page.addInitScript(() => localStorage.setItem('trckable.onboarding.skipped', '1'))
+    await page.goto(`${API}/sites?period=7&lens=visitors&layout=overview`)
+    await expect(page.locator('.hd')).toBeVisible()
+    await page.waitForTimeout(800)
+    const m = await page.evaluate(() => {
+      const hd = getComputedStyle(document.querySelector('.hd')!).backgroundColor
+      const body = getComputedStyle(document.body).backgroundColor
+      return { hd, body, hint: document.querySelectorAll('#siteBtn .mk-kbd').length }
+    })
+    expect(m.hd, 'no band: the header is the page colour').toBe(m.body)
+    expect(m.hint).toBe(0)
+    const line = await page.locator('.all-head p').textContent()
+    expect(line).toContain('charts: last 7 days')
+    await shot(page, `sites-${width}`)
+    await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d`)
+    await expect(page.locator('#siteBtn .mk-kbd')).toHaveCount(0)
+  })
+}
