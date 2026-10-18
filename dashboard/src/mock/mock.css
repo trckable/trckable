@@ -686,8 +686,6 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .planw{display:block}
 .mk .planmenu{left:auto;right:0;width:320px}
 .mk .mk-chip.plan{gap:var(--mk-s2);font-weight:600}
-.mk .pdot{width:8px;height:8px;border-radius:50%;background:var(--mk-lime);flex:none}
-.mk .pdot.warn{background:var(--mk-amber)}
 .mk .mk-chip.plan.warn{color:var(--mk-amber)}
 .mk .pl{display:flex;flex-direction:column;gap:var(--mk-s2);padding:var(--mk-s3)}
 .mk .plh{display:flex;justify-content:space-between;align-items:baseline;gap:var(--mk-s3)}
@@ -849,8 +847,6 @@ html[data-motion='off'] .mk .ib.bell.shake svg{animation:none}
 .mk .lcards>.mk-card{height:100%}
 .mk .pgh{padding:var(--mk-s3) var(--mk-s3) var(--mk-s1);font-size:12px;color:var(--mk-muted);text-transform:uppercase;letter-spacing:.06em}
 .mk #palList{max-height:min(56vh,480px)}
-.mk .mfoot.col{flex-direction:column;gap:0;padding:var(--mk-s2) 0 0}
-.mk .mfoot.col .mi{font-size:14px;color:var(--mk-text)}
 .mk .cdb .dots{padding:var(--mk-s2) 0}
 .mk .mailpv .mh{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--mk-muted);border-bottom:1px solid var(--mk-line);padding-bottom:var(--mk-s3)}
 .mk .mailpv .mh b{color:var(--mk-text);font-weight:600}
@@ -1470,18 +1466,12 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .site-row:hover .site-open,.mk .site-row:hover .btn.icon.ghost,.mk .site-row:focus-within .site-open,.mk .site-row:focus-within .btn.icon.ghost{opacity:1}
 .mk .site-row .site-open:hover,.mk .site-row .btn.icon.ghost:hover{background:var(--mk-hov);color:var(--mk-text)}
 .mk .site-head .btn.icon.ghost{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--mk-faint)}
-.mk .mi .state-line.stopped{color:var(--mk-red)}
 .mk .mi .state-line.quiet{color:var(--mk-amber)}
-.mk .mi .now.state-icon{display:inline-grid;place-items:center}
-.mk .mi .now.state-icon.down{color:var(--mk-red)}
-.mk .mi .now.state-icon.quiet{color:var(--mk-amber)}
 .mk .sites-domains{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--mk-line);padding-bottom:var(--mk-s2);margin-bottom:var(--mk-s2)}
 .mk .dom-row[aria-checked="true"] .nm{color:var(--mk-lime)}
 .mk .sites-none{padding:var(--mk-s2) var(--mk-s3);font-size:13px}
 .mk .site-row.sortable.dragging .mi.site{cursor:grabbing}
 .mk .mk-chip .dom{color:var(--mk-lime);font-size:12px;white-space:nowrap}
-.mk .sitelist .foot-keys{margin:var(--mk-s2) 0 0;padding:0 var(--mk-s3) var(--mk-s1);font-size:12px;display:flex;gap:var(--mk-s2)}
-@media (max-width:600px){.mk .sitelist .foot-keys{display:none}}
 .mk .account-btn{position:relative}
 .mk .acct-dot{position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:50%;border:2px solid var(--mk-bg);background:var(--mk-amber)}
 .mk .acct-dot.bad{background:var(--mk-red)}
@@ -1519,9 +1509,6 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .site-row .mkwrap .mk-dot{position:absolute;right:-3px;bottom:-3px;box-sizing:content-box;border:2px solid var(--pane,var(--mk-card2));box-shadow:none}
 .mk .mfoot.sfoot{flex-direction:row;align-items:center;gap:var(--mk-s1);padding:var(--mk-s2) 0 0}
 .mk .mfoot.sfoot .mi{width:auto;font-size:14px;min-height:var(--mk-h)}
-.mk .mfoot.sfoot .mi.more{margin-left:auto;color:var(--mk-muted);gap:var(--mk-s1)}
-.mk .mfoot.sfoot .mi.more svg.up{transform:rotate(180deg)}
-.mk .mfoot.sfoot-more{margin-top:0;padding-top:0;border-top:0}
 /* 601 to 700 px: no phone bar yet, but too narrow for one row: the header wraps, the views take a row of their own below, and the bell stays. */
 @container (min-width:601px) and (max-width:700px){
 .mk .hd{flex-wrap:wrap;height:auto;min-height:0;position:static;margin:0;padding:0;box-sizing:border-box;row-gap:var(--mk-s2)}
@@ -1698,10 +1685,6 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 /* The person is the last thing on the right, whatever a build puts before them; the bell comes just before (the view switch, order 9, wraps below them). */
 .mk .hd>.bellw{order:7}
 .mk .hd>.account-menu{order:8}
-/* The account line of the site menu opens its list in place. */
-.mk .mi.ws svg{transition:transform .15s}
-.mk .mi.ws.open svg{transform:rotate(180deg)}
-.mk .ws-list{display:flex;flex-direction:column;padding:var(--mk-s1) 0 var(--mk-s2);border-bottom:1px solid var(--mk-line);margin-bottom:var(--mk-s2)}
 
 /* Compact header, 700 to 1100 px (a tablet, an unfolded phone): the site's key hint and the setup ring give way (the ring's line is
    in the site menu), the period says only its first word (the whole in its tooltip), the search is a square like the bell and the
@@ -1739,3 +1722,22 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 }
 /* Full width: a short table (a label and one or two counts) keeps to a readable width instead of reaching both edges. */
 .mk .xp.full .xt.xc{max-width:900px}
+/* The site menu: one line a site (a quiet one is grey, only a real problem is coloured), a finder with no border, All sites' total in line with the sites' numbers. */
+.mk .mk-dot.idle{background:var(--mk-faint)}
+.mk .mi .now.state-word{font-size:12px;color:var(--mk-faint);white-space:nowrap}
+.mk .mi .now.state-word.down{color:var(--mk-red);font-weight:600}
+.mk .find-wrap{position:relative;margin:0 0 var(--mk-s2)}
+.mk .find-wrap>svg{position:absolute;left:var(--mk-s3);top:50%;transform:translateY(-50%);color:var(--mk-faint);pointer-events:none}
+.mk .mk-menu #siteFind{height:40px;margin:0;padding:0 var(--mk-s3) 0 calc(var(--mk-s3) + 24px);font-size:14px;border:0;outline:0;box-shadow:none;background:color-mix(in srgb,var(--mk-text) 7%,transparent);color:var(--mk-text)}
+.mk .mk-menu #siteFind::placeholder{color:var(--mk-faint)}
+.mk .mi.all:has(>.now){padding-right:calc(var(--mk-s3) + 60px)}
+@media (max-width:600px){.mk .mi.all:has(>.now){padding-right:calc(var(--mk-s3) + 92px)}}
+/* The teams: a small square before the site, and the list that opens from it */
+.mk .teamchip{display:flex;align-items:center;gap:var(--mk-s1)}
+.mk .team-btn{padding:0 var(--mk-s1)}
+.mk .team-mk{display:inline-grid;place-items:center;flex:none;border-radius:6px;background:var(--mk-hov);color:var(--mk-text);font-size:12px;font-weight:700}
+.mk .team-btn .team-mk{width:24px;height:24px}
+.mk .mi.team{gap:var(--mk-s2)}
+.mk .mi.team.manage{color:var(--mk-muted);font-size:13px}
+.mk .mi.team>svg{margin-left:auto;color:var(--mk-lime)}
+.mk .mk-menu.teams{width:260px}

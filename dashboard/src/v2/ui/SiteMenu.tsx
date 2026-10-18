@@ -1,6 +1,6 @@
-// The site in the header, and the list that opens from it (SiteList): every site with who is on it now, a finder, and what
-// belongs to this site. The check beside the name says when something independent vouches for the numbers.
-import { Suspense, useCallback, useRef } from 'react'
+// The site in the header, and the list that opens from it (SiteList): the current team's sites with today's visitors, a finder
+// for a long list, and what belongs to this site. A build with teams puts their square before the site. The check beside the name says when something independent vouches for the numbers.
+import { Suspense, useCallback, useRef, type ReactNode } from 'react'
 import type { Site } from '../../lib/api'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { layoutReady, preloadLayout } from '../../features/sites/useSiteLayout'
@@ -10,8 +10,7 @@ import { copy } from '../copy'
 import { domainLabel } from './DomainRows'
 import { MenuFoot, type FootItem } from './MenuFoot'
 import { useMenu } from './useMenu'
-import { SetupLine } from './SetupLine'
-import { WorkspaceRow, type Workspace } from './WorkspaceRow'
+import { useOnlyOpen } from '../../lib/headerMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
@@ -27,8 +26,8 @@ const DOT: Record<string, string> = { stopped: 'down', quiet: 'quiet' }
 interface SiteMenuProps {
   sites: Site[]
   current: Site | null
-  /** The workspace line at the top, when the account has one. */
-  workspace?: Workspace
+  /** The teams' square, before the site, when the build has teams. */
+  team?: ReactNode
   onPick: (id: string) => void
   footer: FootItem[]
   find: string
@@ -37,6 +36,7 @@ interface SiteMenuProps {
 
 export function SiteChip({ p }: { p: SiteMenuProps }) {
   const { open, setOpen, attach, close } = useMenu()
+  useOnlyOpen('sites', open, close)
   const menu = useRef<HTMLDivElement>(null)
   useTopLayerWhen(open, menu)
   const cur = p.current
@@ -51,6 +51,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
   const footer = <MenuFoot items={p.footer} done={done} />
   return (
     <div ref={attach} style={{ position: 'relative' }} className="sitechip">
+      {p.team}
       <button type="button" id="siteBtn" className="mk-chip" aria-haspopup="menu" aria-expanded={open} data-key="site" {...warm(warmUp)} onClick={toggle}>
         <span className={`mk-dot ${DOT[state] ?? ''}`} />
         <span className="nmx">{cur ? cur.name || cur.domain : p.all}</span>
@@ -65,12 +66,6 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
             <SiteList
               sites={p.sites}
               current={cur}
-              workspace={
-                <>
-                  {p.workspace && <WorkspaceRow w={p.workspace} close={done} />}
-                  <SetupLine close={done} />
-                </>
-              }
               onPick={p.onPick}
               footer={footer}
               find={p.find}

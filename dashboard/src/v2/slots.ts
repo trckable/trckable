@@ -4,7 +4,6 @@
 import { createContext, useContext, type ReactNode } from 'react'
 import type { AccountAlert } from '../components/AccountDot'
 import type { Notice } from './bell/notices'
-import type { Workspace } from './ui/WorkspaceRow'
 
 /** A site waiting to be handed to someone: a note and a Stop on its row, an amber dot. */
 export interface SiteMove {
@@ -13,6 +12,15 @@ export interface SiteMove {
   stopLabel: string
   stopWord: string
   stop: () => void
+}
+
+/** The person's teams, for the square at the start of the header. Switching is the build's: it moves the whole page to the team picked. */
+export interface Teams {
+  list: { id: string; name: string; /** The team's own mark at `size` px, in place of the initial on a square. */ mark?: (size: number) => ReactNode; /** A team that cannot be opened: its row is drawn off. */ off?: boolean }[]
+  /** The id of the team in view. */
+  current: string
+  onPick: (id: string) => void
+  onManage: () => void
 }
 
 export interface V2Extras {
@@ -34,8 +42,8 @@ export interface V2Extras {
     dismiss: (id: string) => void
     archive: { items: Notice[]; load: () => void; loading: boolean; words: { dismiss: string; archive: string; fresh: string; none: string } }
   }
-  /** The workspace line at the top of the site menu, and what a press on it does. */
-  workspace?: Workspace
+  /** The teams the person is in: a small square with the current one's initial before the site, and a list of them that opens from it. A build with a single account leaves it out. */
+  teams?: Teams
   /** A site that is being handed to someone, by its id and name. */
   siteMoves?: (siteId: string, name: string) => SiteMove | undefined
   /** The signed-in person's name, when their profile has none (on the account button and in the menu). */

@@ -2,7 +2,6 @@
 // One read feeds the rows, the cards and the online counts, so they agree; it is read
 // again every few seconds while the tab is shown, and when it is shown again.
 import { useEffect, useState } from 'react'
-import { feedOnline, holdOnline } from '../lib/allOnline'
 import { type SiteRow, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { visibleInterval } from '../lib/visibleInterval'
@@ -23,19 +22,16 @@ export function useOverview(days: number) {
           if (mine.signal.aborted) return
           setErr('')
           setRows(r.sites)
-          feedOnline(r.sites)
         })
         // A later read that fails keeps the numbers on screen until the next one.
         .catch((e: unknown) => first && !mine.signal.aborted && setErr(words(e)))
     }
     const again = () => read(false)
-    const release = holdOnline()
     read(true)
     const stop = visibleInterval(again, OVERVIEW_POLL_MS)
     return () => {
       ac.abort()
       stop()
-      release()
     }
   }, [days])
   return { rows, err }

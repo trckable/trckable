@@ -23,6 +23,7 @@ import { useV2Extras } from './slots'
 import { ExploreChip, Header, Logo } from './ui/Header'
 import { SegmentedSwitch } from './ui/SegmentedSwitch'
 import { SiteChip } from './ui/SiteMenu'
+import { TeamSquare } from './ui/TeamSquare'
 import { SetupRing } from './setup/SetupRing'
 
 const Palette = lazyLoad(() => import('./ui/Palette').then((m) => ({ default: m.Palette })))
@@ -45,9 +46,6 @@ export interface PageHeaderProps {
   /** A shared link: whose numbers these are, in place of the ghost and the site menu; no Live, bell or person. */
   identity?: ReactNode
 }
-
-/** The dot by "Tracking & script check": amber while the snippet is not found or nothing has arrived. */
-const tracking = (s: Site): 'ok' | 'warn' => (s.last_event_at && s.check?.found !== 'none' && s.check?.found !== 'nosite' ? 'ok' : 'warn')
 
 export function PageHeader(p: PageHeaderProps) {
   const online = liveCount.use()
@@ -79,17 +77,8 @@ export function PageHeader(p: PageHeaderProps) {
     sites: p.sites,
     current: site,
     onPick: (id: string) => (id === '*' ? navigate('/sites') : navigate('/' + encodeURIComponent(p.sites.find((s) => s.id === id)?.domain ?? ''))),
-    footer: site
-      ? [
-          { key: 'add', label: copy.addSite, run: openAddSite },
-          { key: 'settings', label: copy.settings, run: () => openSettings(site, 'site') },
-          { key: 'install', label: copy.track, dot: tracking(site), run: () => openSettings(site, 'install'), more: true },
-          { key: 'share', label: copy.share, run: () => openSettings(site, 'sharing'), more: true },
-          { key: 'status', label: copy.statusPage, run: () => navigate(`/${encodeURIComponent(site.domain)}/incidents`), more: true },
-          { key: 'widgets', label: copy.widgets, run: () => openSettings(site, 'widgets'), more: true },
-        ].filter((f) => !viewer || f.key === 'status')
-      : [{ key: 'add', label: copy.addSite, run: openAddSite }].filter(() => !viewer),
-    workspace: slots.workspace,
+    footer: viewer ? [] : [{ key: 'add', label: copy.addSite, run: openAddSite }],
+    team: slots.teams && <TeamSquare teams={slots.teams} />,
     find: copy.find,
     all: copy.allSites,
   }
