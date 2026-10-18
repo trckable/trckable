@@ -5,6 +5,7 @@ import { confirm } from '../../components/Confirm'
 import { toast } from '../../components/Toast'
 import { fail, more, type Annotation } from '../../lib/apiMore'
 import { copy } from '../../features/notes/listCopy'
+import { noteRemoved } from '../../features/notes/undo'
 import { dayWords } from '../dayWords'
 import { InfoRow } from './InfoSheet'
 
@@ -25,7 +26,11 @@ export function NoteLine({ n, site, onChanged }: { n: Annotation; site: string; 
       .finally(() => setBusy(false))
   }
   const remove = () =>
-    void confirm({ title: copy.removeTitle, body: copy.removeBody(n.text), confirmLabel: copy.remove, danger: true, busyLabel: copy.removing, done: copy.removed, run: () => more.deleteAnnotation(site, n.id) }).then((ok) => ok && onChanged())
+    void confirm({ title: copy.removeTitle, body: copy.removeBody(n.text), confirmLabel: copy.remove, danger: true, busyLabel: copy.removing, run: () => more.deleteAnnotation(site, n.id) }).then((ok) => {
+      if (!ok) return
+      noteRemoved(site, n, onChanged)
+      onChanged()
+    })
   if (editing) {
     return (
       <form

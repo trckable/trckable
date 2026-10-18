@@ -1275,6 +1275,8 @@ export default {
   'notes.list.removeBody': (text: string) => `« ${text} » disparaît du graphique pour toute l’équipe. Elle ne pourra pas être rétablie.`,
   'notes.list.removing': 'Suppression…',
   'notes.list.removed': 'Note supprimée',
+  'notes.list.undo': 'Annuler',
+  'notes.list.restored': 'Note rétablie',
   'notes.list.close': 'Fermer',
   'notes.list.tab': 'Notes',
   'notes.marker': (n: number, day: string) => `${count(n, 'note', 'notes')} le ${dayLabel(day, { weekday: true })}`,

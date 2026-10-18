@@ -38,7 +38,7 @@ export default function ConfirmDialog({ req, done }: { req: Req; done: (v: strin
   }
   const Mark = req.danger ? TriangleAlert : CircleHelp
   return (
-    <Modal label={req.title} className="confirm-modal" onClose={busy ? undefined : () => done(null)}>
+    <Modal label={req.title} className="confirm-modal" over onClose={busy ? undefined : () => done(null)}>
       <form className="confirm-body" onSubmit={(e) => { e.preventDefault(); submit() }} aria-busy={busy}>
         <DialogHead icon={Mark} danger={req.danger} heading={req.title} />
         {req.body && <p className="muted confirm-lead">{req.body}</p>}

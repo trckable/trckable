@@ -23,13 +23,13 @@
   gap: 10px;
   height: 52px;
   padding: 0 12px 0 16px;
-  border: 1px solid var(--border-2);
+  border: 0;
   border-radius: 12px;
-  background: var(--sunken);
+  background: color-mix(in srgb, var(--text) 7%, transparent);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .wiz-field:focus-within {
-  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
   box-shadow: 0 0 0 4px var(--accent-soft);
 }
 .wiz-prefix {
@@ -49,7 +49,7 @@
   outline: none;
 }
 .wiz-field.bad {
-  border-color: var(--down);
+  box-shadow: 0 0 0 2px var(--down);
 }
 .wiz-field.bad:focus-within {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--down) 18%, transparent);

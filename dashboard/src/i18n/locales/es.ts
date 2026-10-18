@@ -1287,6 +1287,8 @@ export default {
   'notes.list.removeBody': (text: string) => `«${text}» desaparece del gráfico para todo el equipo. No se puede recuperar.`,
   'notes.list.removing': 'Eliminando…',
   'notes.list.removed': 'Nota eliminada',
+  'notes.list.undo': 'Deshacer',
+  'notes.list.restored': 'Nota recuperada',
   'notes.list.close': 'Cerrar',
   'notes.list.tab': 'Notas',
   'notes.marker': (n: number, day: string) => `${count(n, 'nota', 'notas')} el ${dayLabel(day, { weekday: true })}`,

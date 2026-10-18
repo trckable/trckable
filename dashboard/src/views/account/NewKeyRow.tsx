@@ -54,14 +54,16 @@ export function NewKeyRow({ onClose, onCreated }: { onClose: () => void; onCreat
     onClose()
   }
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape from any control of the form closes the form, not the window
     <form
       className="person add-row"
+      onKeyDown={leave}
       onSubmit={(e) => {
         e.preventDefault()
         if (!busy) create()
       }}
     >
-      <input className="input" aria-label={t.nameLabel} value={name} maxLength={80} autoFocus placeholder={t.namePlaceholder} onKeyDown={leave} onChange={(e) => { setName(e.target.value); setProblem(null) }} {...fieldProps('new-key-err', problem)} />
+      <input className="input" aria-label={t.nameLabel} value={name} maxLength={80} autoFocus placeholder={t.namePlaceholder} onChange={(e) => { setName(e.target.value); setProblem(null) }} {...fieldProps('new-key-err', problem)} />
       <button type="submit" className="btn primary" disabled={busy}>
         {busy ? t.creating : t.create}
       </button>

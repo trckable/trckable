@@ -1284,6 +1284,8 @@ export default {
   'notes.list.removeBody': (text: string) => `„${text}“ verschwindet für alle im Team aus dem Diagramm. Das lässt sich nicht rückgängig machen.`,
   'notes.list.removing': 'Löschen…',
   'notes.list.removed': 'Notiz gelöscht',
+  'notes.list.undo': 'Rückgängig',
+  'notes.list.restored': 'Notiz zurück',
   'notes.list.close': 'Schließen',
   'notes.list.tab': 'Notizen',
   'notes.marker': (n: number, day: string) => `${count(n, 'Notiz', 'Notizen')} am ${dayLabel(day, { weekday: true })}`,
