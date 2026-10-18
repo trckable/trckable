@@ -6,7 +6,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { AI_DOMAIN, API, HISTORY_DOMAIN } from '../playwright.config'
+import { API, HISTORY_DOMAIN } from '../playwright.config'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough for the panel')
 
@@ -206,18 +206,37 @@ test('an old address with filters opens Explore with the chip on, and shutting i
   await expect(page).not.toHaveURL(/f=country/)
 })
 
-// The AI view of a site that has AI visitors among others: only assistants we know, none of the rest, the header is what the rows add up to,
-// and the bars are drawn in proportion.
-test('the AI view lists only assistants, adds up to its header and draws bars in proportion', async ({ page }) => {
+// The AI view: the rows are what the server names as assistants (the answer is held here, so no site has to carry AI visits), the header is what
+// they add up to and the bars are drawn in proportion; with none, the empty state.
+const aiAnswer = (assistants: { name: string; visitors: number; referrer?: string }[]) => ({
+  visitors: assistants.reduce((n, a) => n + a.visitors, 0),
+  assistants,
+  referrers: [],
+  crawled: 0,
+  bots: [],
+  pages: [],
+  google: false,
+})
+
+test('the AI view lists the assistants, adds up to its header and draws bars in proportion', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(`${API}/${AI_DOMAIN}?view=briefing&period=7d&f=channel:AI&x=ai`)
-  await expect(page.locator('#xp .xsec', { hasText: 'AI assistants' })).toBeVisible()
+  const answer = aiAnswer([{ name: 'ChatGPT', visitors: 14, referrer: 'chatgpt.com' }, { name: 'Claude', visitors: 2 }, { name: 'Perplexity', visitors: 1 }])
+  await page.route('**/report/ai-search**', (r) => r.fulfill({ json: answer }))
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&f=channel:AI&x=ai`)
   const assistants = page.locator('#xp .xt.xc', { has: page.locator('.xth', { hasText: 'Assistant' }) }).first()
   await expect(assistants.locator('.xrw')).toHaveText([/ChatGPT\s*14/, /Claude\s*2/, /Perplexity\s*1/])
-  await expect(page.locator('#xp')).not.toContainText(/google\.com|instagram|\(unknown\)/)
   await expect(page.locator('#xp .xsec', { hasText: 'AI assistants' })).toContainText('17')
   const widths = await assistants.locator('.mk-bar i').evaluateAll((els) => els.map((e) => (e as HTMLElement).getBoundingClientRect().width))
   expect(widths[0]).toBeGreaterThan(widths[1] * 5)
   expect(widths[1]).toBeGreaterThan(widths[2])
+})
+
+test('the AI view with no AI visits says so', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  await page.route('**/report/ai-search**', (r) => r.fulfill({ json: aiAnswer([]) }))
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&f=channel:AI&x=ai`)
+  await expect(page.locator('#xp .xsec', { hasText: 'AI assistants' })).toContainText('0')
+  await expect(page.locator('#xp')).toContainText(/None in this period/)
 })

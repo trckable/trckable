@@ -48,18 +48,6 @@ if (!existsSync(LABELS)) {
   )
   writeFileSync(LABELS, rows.join('\n') + '\n')
 }
-// A week of arrivals from everywhere: ChatGPT (by referrer, and tagged utm_source by an app that sends none or a referrer of its own), Claude, Perplexity, and
-// plenty that is no AI (Google, Instagram, direct), for Explore's AI view to tell apart.
-export const AI_DOMAIN = 'ai.example'
-const AI = join(DATA, 'ai.ndjson')
-if (!existsSync(AI)) {
-  const noon = Math.floor(Date.now() / 86_400_000) * 86_400_000 + 12 * 3_600_000
-  const from: [number, string, string][] = [[8, 'chatgpt.com', ''], [4, '', 'chatgpt.com'], [2, 'google.com', 'chatgpt.com'], [2, 'claude.ai', ''], [1, 'perplexity.ai', ''], [9, 'google.com', ''], [3, 'l.instagram.com', ''], [6, '', '']]
-  const rows = from.flatMap(([n, referrer, source], k) =>
-    Array.from({ length: n }, (_, i) => JSON.stringify({ ts: new Date(noon - 86_400_000 + (k * 20 + i) * 60_000).toISOString(), path: '/', visitor: `ai-${k}-${i}`, referrer, source })),
-  )
-  writeFileSync(AI, rows.join('\n') + '\n')
-}
 export const API = origin(PORT.api)
 export const TOKEN = 'e2e-token'
 
@@ -95,7 +83,7 @@ export default defineConfig({
   webServer: [
     {
       // example.com first (the suite's own site), then the one with history, then the server.
-      command: `sh -c '"${BIN}" site add example.com && "${BIN}" site add ${HISTORY_DOMAIN} && "${BIN}" import ${HISTORY_DOMAIN} "${HISTORY}" && "${BIN}" site add ${BUSY_DOMAIN} && "${BIN}" import ${BUSY_DOMAIN} "${BUSY}" && "${BIN}" site add ${LABELS_DOMAIN} && "${BIN}" import ${LABELS_DOMAIN} "${LABELS}" && "${BIN}" site add ${AI_DOMAIN} && "${BIN}" import ${AI_DOMAIN} "${AI}" && exec "${BIN}" serve'`,
+      command: `sh -c '"${BIN}" site add example.com && "${BIN}" site add ${HISTORY_DOMAIN} && "${BIN}" import ${HISTORY_DOMAIN} "${HISTORY}" && "${BIN}" site add ${BUSY_DOMAIN} && "${BIN}" import ${BUSY_DOMAIN} "${BUSY}" && "${BIN}" site add ${LABELS_DOMAIN} && "${BIN}" import ${LABELS_DOMAIN} "${LABELS}" && exec "${BIN}" serve'`,
       url: `${API}/readyz`,
       reuseExistingServer: false,
       env: {
