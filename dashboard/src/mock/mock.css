@@ -1748,3 +1748,22 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 @container (max-width:1200px){
 .mk .hd .planw{display:none}
 }
+
+/* Live audit, phone: the sticky header's band no longer covers the first row (the room it takes is given back below it), the site's
+   name keeps a place in the header whatever else sits beside it, and the last line of a page clears the bar at the bottom. */
+@container (max-width:600px){
+.mk .hd{margin-bottom:0}
+.mk .hd>div:has(#siteBtn){min-width:104px}
+.mk .hd>div:has(#siteBtn) #siteBtn{min-width:104px}
+.mk .hd .planw,.mk .hd .update-pill{display:none}
+}
+@media (max-width:700px){
+.app:has(.mk .tabbar){padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+}
+/* Under 1000 px a card's note sits on a line of its own, so its label keeps the width. */
+@container (max-width:1000px){
+.mk .kc .kt{flex-wrap:wrap;row-gap:2px}
+.mk .kc .kn{margin-left:0;flex-basis:100%;order:3}
+}
+/* Full width: a short table (a label and one or two counts) keeps to a readable width instead of reaching both edges. */
+.mk .xp.full .xt.xc{max-width:900px}

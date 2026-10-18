@@ -9,6 +9,8 @@ const FIRST = 2500
 
 export function useSetup(site: Site | null, on: boolean) {
   const [got, setGot] = useState<{ site: string; state: SetupState } | null>(null)
+  // The checklist could not be had (a viewer's, an offline server): the header's slot then has nothing to wait for.
+  const [failed, setFailed] = useState<string | null>(null)
   const id = site?.id ?? null
   const settingsOpen = useSettings() !== null
   // What this browser last knew of the site: shown at once, and refreshed behind it.
@@ -22,7 +24,7 @@ export function useSetup(site: Site | null, on: boolean) {
         // A site not known before waits until the tab is looked at again: a ring arriving late would push the header's other controls.
         if (known || reveal) setGot({ site: id, state })
       })
-      .catch(() => undefined)
+      .catch(() => setFailed(id))
   }, [id, on, known])
   // The first read waits a little: the ring is not what the page is waiting for.
   useEffect(() => {
@@ -47,5 +49,5 @@ export function useSetup(site: Site | null, on: boolean) {
     [id],
   )
   const state = got && got.site === id ? got.state : known
-  return { state, run }
+  return { state, run, failed: failed === id }
 }

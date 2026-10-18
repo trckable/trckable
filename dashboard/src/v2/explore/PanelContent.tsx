@@ -166,7 +166,7 @@ export default function PanelContent(p: ContentProps) {
         </span>
         {p.full && p.period}
         <FullButton full={p.full} onClick={p.onFull} />
-        <button type="button" className="ib x" id="xpClose" title={copy.close} onClick={p.close}>
+        <button type="button" className="ib x" id="xpClose" aria-label={copy.close} title={copy.close} onClick={p.close}>
           {'×'}
         </button>
       </div>

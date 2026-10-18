@@ -7,6 +7,7 @@ import { span, when } from '../features/sitestatus/time'
 import type { Site, SiteRow } from '../lib/api'
 import { fmtInt, fmtMoney } from '../lib/format'
 import { tag } from '../i18n'
+import { clock } from '../lib/site'
 import { next } from './allNextCopy'
 
 /** How much of the site's own day has passed, 0 to 1. */
@@ -41,7 +42,7 @@ export interface Item {
 
 /** A day as people say it: the time when it is today, the weekday for the last six days, else the date. */
 export function dayWord(unix: number, now = Date.now()): string {
-  if (new Date(unix * 1000).toDateString() === new Date(now).toDateString()) return new Date(unix * 1000).toLocaleTimeString(tag, { hour: '2-digit', minute: '2-digit' })
+  if (new Date(unix * 1000).toDateString() === new Date(now).toDateString()) return clock(new Date(unix * 1000), '')
   const old = now / 1000 - unix > 6 * 86400
   return new Date(unix * 1000).toLocaleDateString(tag, old ? { day: 'numeric', month: 'short' } : { weekday: 'short' })
 }

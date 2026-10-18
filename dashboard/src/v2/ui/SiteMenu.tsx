@@ -5,7 +5,6 @@ import type { Site } from '../../lib/api'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { layoutReady, preloadLayout } from '../../features/sites/useSiteLayout'
 import { dotState } from '../../features/sites/StateDot'
-import { VerifiedPill } from '../../features/verified/VerifiedPill'
 import { useDomainControl } from '../../lib/domainControl'
 import { copy } from '../copy'
 import { domainLabel } from './DomainRows'
@@ -61,7 +60,6 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
         </svg>
         <span className="mk-kbd">{'S'}</span>
       </button>
-      {cur && <VerifiedPill verified={cur.verified} site={cur} seal />}
       <div ref={menu} className={`mk-menu sites${open ? ' on' : ''}`} id="siteMenu" role={open ? 'dialog' : undefined} aria-label={open ? copy.sites : undefined}>
         {open && (
           <Suspense fallback={null}>

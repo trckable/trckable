@@ -108,7 +108,7 @@ export function bounceNote(now: number, usual: number | null): Kc['note'] {
   const pct = Math.round(now * 100)
   if (usual !== null && pct > Math.round((usual + 0.04) * 100)) return { t: copy.higherThanUsual, dn: true }
   if (usual !== null && pct < Math.round((usual - 0.04) * 100)) return { t: copy.lowerThanUsual, up: true }
-  return { t: copy.asUsual }
+  return { t: usual === null ? '' : copy.asUsual }
 }
 
 /** An uptime figure as the card writes it: whole when it is whole, one decimal otherwise, nothing without one. */
