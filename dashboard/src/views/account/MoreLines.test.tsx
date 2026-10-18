@@ -29,7 +29,7 @@ describe('the account window: exclude my visits', () => {
 
   it('says it neutrally, because the dashboard cannot see the site\'s browser', () => {
     draw([site])
-    expect(button()?.textContent).toBe('Exclude this browser')
+    expect(button()?.textContent).toBe('Exclude')
   })
 
   it('opens the site with ?trckable=ignore in a new tab', () => {
@@ -43,10 +43,10 @@ describe('the account window: exclude my visits', () => {
     const open = vi.spyOn(window, 'open').mockReturnValue(null)
     draw([site])
     act(() => button()?.click())
-    expect(button()?.textContent).toBe('Count this browser again')
+    expect(button()?.textContent).toBe('Count again')
     act(() => button()?.click())
     expect(open).toHaveBeenLastCalledWith('https://shop.example/?trckable=track', '_blank', 'noopener')
-    expect(button()?.textContent).toBe('Exclude this browser')
+    expect(button()?.textContent).toBe('Exclude')
   })
 
   it('is absent with no site on screen, and for a cookieless site', () => {

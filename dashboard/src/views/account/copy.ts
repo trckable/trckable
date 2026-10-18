@@ -9,14 +9,16 @@ export const copy = defineCopy('account', {
   viewer: 'Viewer',
   /** The lines that came from the avatar menu. */
   lines: {
-    languageHint: 'The page starts again in the language you pick',
-    featuresHint: 'Everything trckable can do, and what is new',
+    languageHint: 'The dashboard language',
+    featuresHint: 'What trckable can do',
     open: 'Open',
     new: 'New',
-    installHint: 'Open trckable from your home screen or dock, like any app',
+    installHint: 'Open it like an app',
     privacy: 'Privacy',
     ownVisits: 'Your own visits',
-    ownVisitsHint: (site: string) => `Opens ${site} once in a new tab, where the tracker keeps this browser out of its counts, or counts it again`,
+    leave: 'Exclude',
+    again: 'Count again',
+    ownVisitsHint: { excluded: 'This browser is left out', counted: 'This browser is counted', unknown: 'Leave out this browser' },
   },
   tabs: {
     sites: 'Sites',

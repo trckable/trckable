@@ -31,10 +31,10 @@ export function PrefCards({ user, sites }: { user: string; sites: Site[] }) {
         <SaleLines />
         {/* The check itself is in lib/update.ts: this browser, once a day, nothing about the instance sent. */}
         {!isViewer() && (
-          <Line icon={BellRing} label="New versions" hint="Once a day this browser asks GitHub's list of releases. Nothing about this server is sent.">
+          <Line icon={BellRing} label="New versions" hint="Check for new versions">
             <Switch
               on={updates}
-              label="Tell me when a new version is out"
+              label="New versions"
               onChange={() => {
                 setChecksHere(!updates)
                 setUpdates(!updates)

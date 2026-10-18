@@ -45,7 +45,7 @@ test('exclude my visits: the menu opens the site with the flag, and the IP list 
   // It sits in the account window now (Account tab, Privacy).
   await page.goto(`${API}/${domain}?view=briefing&account=profile`)
   const win = page.getByRole('dialog', { name: 'Profile, your account' })
-  const leave = win.getByRole('button', { name: 'Exclude this browser' })
+  const leave = win.getByRole('button', { name: 'Exclude' })
   await expect(leave).toBeVisible()
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/exclude-menu-1280-dark.png` })
   const opened = context.waitForEvent('page')
@@ -55,7 +55,7 @@ test('exclude my visits: the menu opens the site with the flag, and the IP list 
   expect(tab.url()).toBe(`https://${domain}/?trckable=ignore`)
   await tab.close()
 
-  const again = win.getByRole('button', { name: 'Count this browser again' })
+  const again = win.getByRole('button', { name: 'Count again' })
   await expect(again).toBeVisible()
   const back = context.waitForEvent('page')
   await again.click()

@@ -189,24 +189,30 @@
     flex: 1;
   }
 }
-/* On a phone a line's control sits under its label and hint, the whole width:
-   the theme's System / Dark / Light, for one. */
+/* A line is icon, name, one line of hint, and its control at the end, on the phone too. */
+.srow.acct-line {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+.srow.acct-line .srow-text .faint {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.srow.acct-line .srow-ctl {
+  flex: none;
+  max-width: none;
+}
+.srow.acct-line .srow-ctl .input {
+  min-width: 0;
+  width: auto;
+  max-width: 130px;
+  flex: none;
+}
 @media (max-width: 760px) {
-  .srow.acct-line {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    align-items: center;
-    gap: 6px 12px;
-  }
-  .srow.acct-line .srow-ctl {
-    grid-column: 1 / -1;
-  }
-  .srow.acct-line .seg {
-    width: 100%;
-  }
-  .srow.acct-line .seg button,
-  .srow.acct-line .srow-ctl .btn {
-    flex: 1;
+  .srow.acct-line .seg button {
+    padding: 0 10px;
   }
 }
 

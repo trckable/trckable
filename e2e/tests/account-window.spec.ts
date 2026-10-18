@@ -83,7 +83,7 @@ test('the avatar menu holds six rows; the rest is in the account window and ⌘K
   const win = page.getByRole('dialog', { name: 'Profile, your account' })
   await expect(win.getByRole('combobox', { name: 'Language' })).toBeVisible()
   await expect(win.getByRole('button', { name: /^Features/ })).toBeVisible()
-  await expect(win.getByRole('button', { name: 'Exclude this browser' })).toBeVisible()
+  await expect(win.getByRole('button', { name: 'Exclude' })).toBeVisible()
   await page.keyboard.press('Escape')
 
   // ⌘K finds each.

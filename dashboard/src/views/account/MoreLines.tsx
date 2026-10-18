@@ -2,7 +2,6 @@
 // app and leaving this browser out of a site's counts. Each is also in the ⌘K palette (v2/explore/palette.ts).
 import { useState } from 'react'
 import { Eye, EyeOff, Languages, Smartphone, Sparkle } from 'lucide-react'
-import { copy as exclude } from '../../features/exclude/copy'
 import { canLeaveOut, choose, nextChoice, stateOf } from '../../features/exclude/ownVisits'
 import { openFeatures } from '../../features/hub/openFeatures'
 import { chooseLang, chosen } from '../../i18n/choose'
@@ -46,7 +45,7 @@ export function FeaturesLine({ user }: { user: string }) {
   return (
     <Line icon={Sparkle} label={items.features} hint={copy.lines.featuresHint}>
       {fresh && <span className="tag on">{copy.lines.new}</span>}
-      <button type="button" className="btn" aria-label={fresh ? items.featuresNew : items.features} onClick={() => openFeatures()}>
+      <button type="button" className="btn ghost small" aria-label={fresh ? items.featuresNew : items.features} onClick={() => openFeatures()}>
         {copy.lines.open}
       </button>
     </Line>
@@ -59,7 +58,7 @@ export function InstallLine() {
   if (!way) return null
   return (
     <Line icon={Smartphone} label={items.install} hint={way === 'ios' ? items.installHint : copy.lines.installHint}>
-      <button type="button" className="btn" onClick={() => (way === 'ios' ? toast(items.installHint, 'info') : void install())}>
+      <button type="button" className="btn ghost small" onClick={() => (way === 'ios' ? toast(items.installHint, 'info') : void install())}>
         {items.install}
       </button>
     </Line>
@@ -71,20 +70,21 @@ export function OwnVisitsCard({ sites }: { sites: Site[] }) {
   const [, again] = useState(0)
   const site = siteForSegment(sites, location.pathname.slice(1))
   if (!site || !canLeaveOut(site)) return null
-  const next = nextChoice(stateOf(site))
+  const state = stateOf(site)
+  const next = nextChoice(state)
   return (
     <section className="card acct-group">
       <h2 className="acct-title">{copy.lines.privacy}</h2>
-      <Line icon={next === 'ignore' ? EyeOff : Eye} label={copy.lines.ownVisits} hint={copy.lines.ownVisitsHint(site.name || site.domain)}>
+      <Line icon={next === 'ignore' ? EyeOff : Eye} label={copy.lines.ownVisits} hint={copy.lines.ownVisitsHint[state ?? 'unknown']}>
         <button
           type="button"
-          className="btn"
+          className="btn ghost small"
           onClick={() => {
             choose(site, next)
             again((n) => n + 1)
           }}
         >
-          {next === 'ignore' ? exclude.leave : exclude.again}
+          {next === 'ignore' ? copy.lines.leave : copy.lines.again}
         </button>
       </Line>
     </section>
