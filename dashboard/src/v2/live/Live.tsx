@@ -1,7 +1,4 @@
 // Live: reads the site's last half hour and hands it to the view. The numbers are the server's last half hour and the stream's newer visits.
-import { useMemo } from 'react'
-import { addDays, todayIn } from '../../lib/dates'
-import { useReport } from '../../lib/useReport'
 import type { Sale, Site, Visit } from '../../lib/api'
 import { useBusier } from '../../features/live/useBusier'
 import { useLiveNow } from '../../features/live/useLiveNow'
@@ -29,8 +26,6 @@ export interface LiveProps {
 function ServerLive(p: LiveProps) {
   const { data, got, failed, clock, skew } = useLiveNow(p.site, p.stream)
   const busier = useBusier(p.site)
-  const today = todayIn(p.timezone)
-  const week = useReport(p.site, useMemo(() => ({ from: addDays(today, -6), to: today }), [today]))
   const feed: LiveFeed = {
     data,
     failed,
@@ -38,7 +33,6 @@ function ServerLive(p: LiveProps) {
     clock,
     skew,
     busier,
-    week: (week.data?.current.series ?? []).map((d) => d.visitors),
     downSince: p.whole?.down_since,
     ...fixtureLook(),
   }

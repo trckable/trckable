@@ -18,7 +18,15 @@ describe('speedOf', () => {
 })
 
 describe('aiOf', () => {
-  it('counts the robots that answer or train, not search engines', () => expect(aiOf(crawl({ answer: 10, train: 4, index: 99 }))).toEqual({ hits: 14, answers: 10 }))
+  it('counts the robots that answer or train, not search engines, and names the assistants that came', () => {
+    const r = crawl({ answer: 10, train: 4, index: 99 })
+    r.series = [
+      { name: 'Anthropic', kind: 'answer', total: 10, values: [] },
+      { name: 'OpenAI', kind: 'train', total: 4, values: [] },
+      { name: 'Google', kind: 'index', total: 99, values: [] },
+    ]
+    expect(aiOf(r)).toEqual({ hits: 14, engines: [{ name: 'Anthropic', mark: 'C', hits: 10 }, { name: 'OpenAI', mark: 'O', hits: 4 }] })
+  })
   it('says nothing when none came', () => {
     expect(aiOf(crawl({ index: 5 }))).toBeNull()
     expect(aiOf(null)).toBeNull()
@@ -28,15 +36,15 @@ describe('aiOf', () => {
 describe('uptimeFigure', () => {
   const since = NOW - 30 * DAY
   it('is nothing for a site never watched', () => expect(uptimeFigure([], '2026-10-18', 'UTC', NOW, 0)).toBeNull())
-  it('gives sixteen days and a full share for a quiet record', () => {
+  it('gives thirty days and a full share for a quiet record', () => {
     const f = uptimeFigure([], '2026-10-18', 'UTC', NOW, since)
-    expect(f?.days).toHaveLength(16)
+    expect(f?.days).toHaveLength(30)
     expect(f?.pct).toBe(100)
   })
   it('colours the day of an outage and keeps the share under 100', () => {
     const x: Incident = { id: 'a', site: 's', kind: 'down', started_at: NOW - 3600, ended_at: NOW - 1800, cause: '', expected_visits: null, note: '' }
     const f = uptimeFigure([x], '2026-10-18', 'UTC', NOW, since)
-    expect(f?.days[15]).toBe('down')
+    expect(f?.days[29]).toBe('down')
     expect(f?.pct).toBeLessThan(100)
   })
 })

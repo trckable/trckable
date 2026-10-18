@@ -1,5 +1,5 @@
 // Live, in the walkthrough's own layout: the half hour as bars with who is here now, the people on the site, and under
-// them Today, the pages and the countries. The numbers are the server's last half hour and the stream's newer visits.
+// them Analytics, Speed & uptime, and AI & mentions. The numbers are the server's last half hour and the stream's newer visits.
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { lazyLoad } from '../../lib/lazyLoad'
 import { onlineNow } from '../../lib/live'
@@ -7,7 +7,7 @@ import { isShared } from '../../lib/me'
 import { can } from '../../lib/permissions'
 import { openSettings } from '../../lib/settings'
 import { tag } from '../../i18n'
-import { fmtInt, fmtMoney } from '../../lib/format'
+import { fmtMoney } from '../../lib/format'
 import { channelColor } from '../../lib/palette'
 import type { Site } from '../../lib/api'
 import { BusyLine } from '../ui/BusyLine'
@@ -17,12 +17,11 @@ import { liveCount, liveLink } from '../../features/live/liveLink'
 import { feedOf, seriesAt } from '../../features/live/model'
 import type { Busier, LiveNow } from '../../features/live/api'
 import { useTicking } from '../../features/live/useTicking'
-import { CountriesCard } from './CountriesCard'
+import { AnalyticsCard } from './AnalyticsCard'
+import { HealthCards } from './HealthCards'
 import { Announce } from '../ui/Announce'
 import { FeedList } from '../ui/FeedList'
-import { Rng } from '../ui/RangeBar'
-import { barsOf, changeOf, listsOf, sourceParts, todayBand, visitors30 } from './liveModel'
-import { Spark } from '../ui/KpiCard'
+import { barsOf, changeOf, listsOf, sourceParts, visitors30 } from './liveModel'
 import { ChartSwitch } from './ChartSwitch'
 import { keepChartMode, readChartMode, type ChartMode } from './chartMode'
 import { MinuteChart } from './MinuteChart'
@@ -31,7 +30,6 @@ import { useFit } from './cardWidth'
 import { DOCS } from '../../components/footerLinks'
 import { RevenueLock } from './RevenueLock'
 import { SourceRows } from './SourceRows'
-import { HealthStrip } from './HealthStrip'
 import { copy } from './copy'
 import type { LiveStream } from './Live'
 
@@ -46,8 +44,6 @@ export interface LiveFeed {
   clock: number
   skew: number
   busier: Busier | null
-  /** Visitors on each of the last seven days. */
-  week: number[]
   /** Unix seconds the site stopped answering, while it is down. */
   downSince?: number
   /** True for the development sample: nothing beside the walkthrough's own blocks is added. */
@@ -66,7 +62,7 @@ interface Props {
 }
 
 export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Props) {
-  const { data, failed, got, clock, skew, busier, week, downSince, colors } = feed
+  const { data, failed, got, clock, skew, busier, downSince, colors } = feed
   const now = useTicking(clock, skew)
   const { ref, fit } = useFit<HTMLElement>()
   useEffect(() => {
@@ -92,7 +88,6 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   const phone = window.matchMedia('(max-width: 600px)').matches // a thumb taps the bar; it is no target to tab to
   const ch = changeOf(data.visitors, data.previous)
   const src = sourceParts(data.sources)
-  const tb = data.today ? todayBand(data.today.visitors, data.today.before, data.today.compare) : null
   const down = downSince !== undefined
   const pulseClass = down || !stream.connected ? 'off' : (beat && 'ev') || ''
   const at = (ms: number) => new Date(ms).toLocaleTimeString(tag ?? [], { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone })
@@ -167,50 +162,9 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
         </section>
       </div>
       <div className="lcards">
-        {data.today && data.today.visitors > 0 && (
-          <section className="mk-card lcard">
-            <div className="ph">
-              <span className="t">{copy.today}</span>
-              {tb && <span className="mk-quiet">{tb.word === 'usual' ? copy.usualWord : copy[tb.word]}</span>}
-            </div>
-            <div className="pb">
-              <div className="lbig">
-                {fmtInt(data.today.visitors)}
-                <small>{copy.visitors}</small>
-              </div>
-              {tb && (
-                <>
-                  <Rng v={data.today.visitors} lo={tb.lo} hi={tb.hi} max={tb.max} />
-                  <div className="mk-n">{copy.usual(tb.lo, tb.hi)}</div>
-                </>
-              )}
-              {week.length > 1 && (
-                <>
-                  <div className="mk-n" style={{ marginTop: 'var(--mk-s4)' }}>{copy.last7}</div>
-                  <Spark vals={week} h={44} className="lsp" />
-                </>
-              )}
-            </div>
-          </section>
-        )}
-        {lists.pages.length > 0 && (
-          <section className="mk-card lcard">
-            <div className="ph">
-              <span className="t">{copy.pages}</span>
-            </div>
-            <div className="pb">
-              {lists.pages.map((p) => (
-                <div className="lr" key={p.label}>
-                  <span className="mono">{p.label}</span>
-                  <b>{p.n}</b>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-        <CountriesCard lists={lists} />
+        <AnalyticsCard today={data.today} lists={lists} />
+        {whole && !feed.sample && !isShared() && <HealthCards site={whole} now={now} downSince={downSince} />}
       </div>
-      {whole && !feed.sample && !isShared() && <HealthStrip site={whole} now={now} downSince={downSince} />}
     </>
   )
 }
