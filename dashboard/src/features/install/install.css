@@ -398,3 +398,17 @@
     font-size: 19px;
   }
 }
+
+/* On the setup screen (inside the page's own button reset) the switch and the buttons keep their look. */
+.inst .switch {
+  border: 1px solid var(--border-2);
+  background: var(--surface-2);
+}
+.inst .switch.on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.inst .inst-ai-copy {
+  border: 1px solid var(--border-2);
+  background: var(--surface-2);
+}
