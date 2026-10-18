@@ -184,14 +184,19 @@ export function sentence(o: SayIn): Sentence {
     return { lead: copy.dayOne, long: [{ t: people(v), em: true }, { t: copy.soFar }, ...andC2, { t: '.' }], short: [{ t: copy.soFarShort(people(v)), em: true }], sub: copy.learnSub, bad: false }
   }
   const rose = o.band ? o.band.st === 'up' : ratio !== null && ratio >= 1.15
-  // A source that sent far fewer people cannot lead a busy headline: the mood waits for the period's own verdict.
-  const up = o.jump?.st === 'dn' ? false : rose || !!(o.jump?.times && o.jump.times >= 1.5)
+  // A source that sent far fewer people cannot lead a busy headline: the mood is the period's own verdict, the one the score and the run of days read.
+  const jumped = o.jump?.st !== 'dn' && !!(o.jump?.times && o.jump.times >= 1.5)
+  const up = o.band ? rose : rose && o.jump?.st !== 'dn' || jumped
   const down = o.band ? o.band.st === 'dn' : ratio !== null && ratio <= 0.7
   const adj = moodWord(o.downMin > 0, up, down)
   let c1: Part[]
   let short: Part[]
   const low = !!o.low
-  if (top?.st === 'dn') {
+  if (top?.st === 'dn' && up) {
+    // The site as a whole is above its usual: the drop is told as a contrast, never as the story.
+    c1 = [{ t: `${people(v)} came, above ${words}${copy.though(top.name)}` }]
+    short = [{ t: `${people(v)} came`, em: true }, { t: `, above usual${copy.though(top.name)}.` }]
+  } else if (top?.st === 'dn') {
     c1 = [{ t: copy.sentFewer(top.name) }]
     short = [{ t: top.name, em: true }, { t: copy.sentFewerShort }]
   } else if (top && x && !low) {

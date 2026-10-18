@@ -112,3 +112,32 @@ describe('a long period is told against a usual period', () => {
     expect((half?.c ?? 0) < (whole?.c ?? 0)).toBe(true)
   })
 })
+
+// Live, a news site, Sunday 18 Oct, 11:12: the day is above usual (the 22nd in a row, score 80), and Google sent fewer than usual.
+describe('a source that sent fewer never contradicts a day above usual', () => {
+  const verdict = verdictOf(700, band)
+  const google = { name: 'Google', value: 'google.com', visitors: 120, times: 0.4, vs: 'your usual', st: 'dn' as const }
+  const say = (jump: typeof google | null) => sentence({ cur: cur(590), unit: 'today', weekday: 'Sunday', self: 'x.com', downMin: 0, learning: false, jump, band: verdict ? { ratio: verdict.ratio, st: verdict.st, words: 'a usual Sunday' } : null })
+  it('the headline, the score and the run of days all say above', () => {
+    expect(verdict?.st).toBe('up')
+    const head = say(google)
+    const text = head.long.map((p) => p.t).join('')
+    expect(head.lead).toContain('busy')
+    expect(text).toContain('above a usual Sunday, though Google sent fewer')
+    expect(text).not.toContain('far fewer')
+    expect(head.short.map((p) => p.t).join('')).toBe('590 people came, above usual, though Google sent fewer.')
+    expect(head.bad).toBe(false)
+    expect(trafficFromBand(verdict?.now ?? 0, band).verdict).toBe('above')
+    const days = Array.from({ length: 40 }, (_, i) => new Date(Date.UTC(2026, 8, 8 + i, 12)).toISOString().slice(0, 10))
+    const totals: number[] = days.map((_, i) => (i >= 30 ? 300 : 100))
+    totals[39] = 0
+    const m = moments({ totals, days, from: 39, to: 39, elapsed: 672, today: true, week: false, filtered: false, todayUp: verdict?.st === 'up' })
+    expect(m.pills.join()).toMatch(/day in a row above usual/)
+  })
+  it('keeps the far-fewer headline when the site is not above usual', () => {
+    const inside = verdictOf(580, band)
+    const head = sentence({ cur: cur(590), unit: 'today', weekday: 'Sunday', self: 'x.com', downMin: 0, learning: false, jump: google, band: inside ? { ratio: inside.ratio, st: inside.st, words: 'a usual Sunday' } : null })
+    expect(head.long.map((p) => p.t).join('')).toContain('Google sent far fewer people than usual')
+    expect(head.lead).not.toContain('busy')
+  })
+})
