@@ -14,12 +14,12 @@ const SUPPORT_DEFAULT = 'https://github.com/trckable/trckable/issues'
 const clock = (tz: string, at: number): string => new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: tz }).format(at)
 
 /** The headline and the line of a stage. A site that has waited for days says so, in place of the first two. */
-function wordsOf(stage: Stage, site: Site, check: InstallCheckHandle, days: number): { head: string; line: string } {
+function wordsOf(stage: Stage, check: InstallCheckHandle, days: number): { head: string; line: string } {
   const last = lastOf(check.state)
   if (days > 0 && (stage === 'waiting' || stage === 'limited')) return { head: t.stale.head, line: t.stale.line(days) }
   switch (stage) {
     case 'unreachable':
-      return { head: t.unreachable.head(site.domain), line: t.unreachable.line }
+      return { head: t.unreachable.head, line: t.unreachable.line }
     case 'blocked':
       return { head: t.blocked.head, line: t.blocked.line(last?.script_status ?? 0) }
     case 'waiting':
@@ -70,7 +70,7 @@ const toneOf = (stage: Stage): 'ok' | 'wait' | 'warn' => {
 export function SetupStatus({ site, check, arrived }: { site: Site; check: InstallCheckHandle; arrived: boolean }) {
   const stage = stageOf(check.state, arrived)
   const days = staleDays(site)
-  const { head, line } = wordsOf(stage, site, check, days)
+  const { head, line } = wordsOf(stage, check, days)
   const busy = check.state.phase === 'checking'
   const wait = stage === 'waiting' || stage === 'limited'
   const tone = toneOf(stage)
@@ -87,7 +87,7 @@ export function SetupStatus({ site, check, arrived }: { site: Site; check: Insta
         <div className="setup-act">
           {stage === 'found' ? (
             <a className="btn primary" href={`https://${site.domain}`} target="_blank" rel="noreferrer">
-              {t.open(site.domain)}
+              {t.open}
             </a>
           ) : (
             <button type="button" className="btn primary" disabled={busy} onClick={check.start}>

@@ -1764,3 +1764,4 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
  .menu-list .open-touch{display:flex}
 }
 @media (max-width:600px){.menu-list .open-touch{display:flex}}
+@media (max-width:520px){.mk .hd .mk-chip .nv{font-size:0;padding:0;width:8px;height:8px;background:var(--mk-amber)}}

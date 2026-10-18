@@ -5,11 +5,9 @@
 // of them; its Continue opens Live mode.
 // Its own lazy chunk: only the first run ever loads it.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Wordmark } from '../../components/Logo'
 import { fail, type Site, more, type Visit } from '../../lib/apiMore'
-import { openAccount } from '../../lib/account'
-import { signOut } from '../../lib/signOut'
 import { navigate } from '../../lib/url'
+import { PageHeader } from '../../v2/PageHeader'
 import { useFocusTrap } from '../install/useFocusTrap'
 import { FirstCards } from '../install/FirstCards'
 import { SetupInstall } from '../install/SetupInstall'
@@ -22,6 +20,8 @@ import { markSkipped } from './skipped'
 import { SiteStep } from './SiteStep'
 import { SiteTabs } from './SiteTabs'
 import { SiteWatch } from './SiteWatch'
+import '../../mock/mock.css'
+import '../../mock/theme.css'
 import './onboarding.css'
 import '../../kit/Modal.css'
 
@@ -109,43 +109,33 @@ export default function Onboarding({ onClose, onSites, required = false, resume 
     return () => window.removeEventListener('keydown', onKey)
   })
 
-  const titles: Record<Step, string> = { site: copy.site.title, install: copy.install.title, here: copy.here.title }
-  const subs: Record<Step, string> = {
-    site: copy.site.sub,
-    install: copy.install.sub(shown),
-    here: copy.here.sub(shown),
-  }
+  // The install step has no heading of its own: the status card under the header is it.
+  const titles = { site: copy.site.title, here: copy.here.title }
+  const subs = { site: copy.site.sub, here: copy.here.sub(shown) }
 
   return (
     <div ref={box} className={required ? 'ob gated' : 'ob'} role="dialog" aria-modal="true" aria-label={copy.label}>
-      <header className="ob-top">
-        <Wordmark />
-        <Dots at={dotOf(step)} />
-        {required ? (
-          <nav className="ob-exits" aria-label={copy.account}>
-            <a className="btn ghost" href="https://trckable.com/docs/">
-              {copy.docs}
-            </a>
-            <button type="button" className="btn ghost" onClick={() => openAccount('profile')}>
-              {copy.profile}
-            </button>
-            <button type="button" className="btn ghost" onClick={() => signOut()}>
-              {copy.signOut}
-            </button>
-          </nav>
-        ) : (
+      <div className="mk ob-hd">
+        <PageHeader sites={sites} site={site} waiting visited={arrived} onPickSite={(id) => id !== '*' && setActive(id)} />
+      </div>
+      <Dots at={dotOf(step)} />
+      {!required && (
+        <div className="ob-bar">
           <button type="button" className="btn ghost ob-skip" onClick={skip} aria-keyshortcuts="Escape">
             {copy.skip} <span className="kbd">{copy.skipHint}</span>
           </button>
-        )}
-      </header>
+        </div>
+      )}
       <main className={`ob-main ob-${step}`} key={step}>
-        <div className="ob-text">
-          <span className="faint ob-step">{copy.progress(dotOf(step) + 1, 3)}</span>
-          <h1 ref={heading} tabIndex={-1}>
-            {titles[step]}
-          </h1>
-          <p className="muted">{subs[step]}</p>
+        <div className={step === 'install' ? 'ob-text ob-quiet' : 'ob-text'}>
+          {step !== 'install' && (
+            <>
+              <h1 ref={heading} tabIndex={-1}>
+                {titles[step]}
+              </h1>
+              <p className="muted">{subs[step]}</p>
+            </>
+          )}
           {step === 'site' && <SiteStep domain={domain} onDomain={setDomain} busy={busy} ready={!!clean} onSubmit={create} />}
           {step === 'here' && site && <FirstCards site={site} quiet />}
           {step === 'here' && (

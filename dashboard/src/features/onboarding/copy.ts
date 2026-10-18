@@ -7,10 +7,6 @@ export const copy = defineCopy('onboarding', {
   label: 'Set up your first site',
   skip: 'Skip for now',
   skipHint: 'Esc',
-  account: 'Account',
-  docs: 'Docs',
-  profile: 'Profile',
-  signOut: 'Sign out',
   enterKey: '↵',
   progress: (at: number, of: number) => `Step ${at} of ${of}`,
 
@@ -34,10 +30,6 @@ export const copy = defineCopy('onboarding', {
     none: '—',
     waiting: 'Your dashboard, ready and waiting',
     opened: (where: string, path: string) => (where ? `${where} · opened ${path}` : `Opened ${path}`),
-  },
-  install: {
-    title: 'One line in your site’s head',
-    sub: (domain: string) => `Paste it, open ${domain} once, and this moves on by itself.`,
   },
   here: {
     title: 'Someone’s here.',

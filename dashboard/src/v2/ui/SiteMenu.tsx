@@ -12,6 +12,7 @@ import { MenuFoot, type FootItem } from './MenuFoot'
 import { useMenu } from './useMenu'
 import { useOnlyOpen } from '../../lib/headerMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
+import { midEllipsis } from '../../lib/midEllipsis'
 import { SiteMark } from '../../components/SiteMark'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
@@ -62,7 +63,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
             {DOT[state] && !p.unverified && <span className={`mk-dot ${DOT[state]}`} />}
           </span>
         )}
-        <span className="nmx">{cur ? cur.name || cur.domain : p.all}</span>
+        <span className="nmx" title={cur ? cur.name || cur.domain : undefined}>{cur ? midEllipsis(cur.name || cur.domain, 26) : p.all}</span>
         {picked && <span className="dom">{`/ ${picked}`}</span>}
         {cur && p.unverified && <span className="nv">{copy.notVerified}</span>}
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">

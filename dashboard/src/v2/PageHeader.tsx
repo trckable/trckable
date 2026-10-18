@@ -47,6 +47,8 @@ export interface PageHeaderProps {
   waiting?: boolean
   /** A visit has landed while the setup screen is still up. */
   visited?: boolean
+  /** The site picked in the site menu, where the page keeps its own (the first run switches between the sites it added). */
+  onPickSite?: (id: string) => void
   /** A shared link: whose numbers these are, in place of the ghost and the site menu; no Live, bell or person. */
   identity?: ReactNode
 }
@@ -77,11 +79,15 @@ export function PageHeader(p: PageHeaderProps) {
     return () => window.removeEventListener('keydown', key, true)
   }, [])
   const site = p.site
+  const pickSite = (id: string) => {
+    if (p.onPickSite) p.onPickSite(id)
+    else navigate(id === '*' ? '/sites' : '/' + encodeURIComponent(p.sites.find((s) => s.id === id)?.domain ?? ''))
+  }
   const siteMenu = {
     sites: p.sites,
     current: site,
     unverified: !!p.waiting && !p.visited,
-    onPick: (id: string) => (id === '*' ? navigate('/sites') : navigate('/' + encodeURIComponent(p.sites.find((s) => s.id === id)?.domain ?? ''))),
+    onPick: pickSite,
     footer: viewer ? [] : [{ key: 'add', label: copy.addSite, run: openAddSite }],
     team: slots.teams && <TeamSquare teams={slots.teams} />,
     find: copy.find,

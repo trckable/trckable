@@ -37,7 +37,7 @@ test('before the first visit: the setup screen, Not verified, a locked ring, no 
   await page.keyboard.press('Escape')
   // One card says where it stands. The server cannot reach the suite's site: it says so, and never "found".
   const status = screen.locator('.setup-status')
-  await expect(status.locator('h2')).toContainText(/Waiting for the first visit|Can’t reach/, { timeout: 20_000 })
+  await expect(status.locator('h2')).toContainText(/Waiting for the first visit|Can’t reach your site/, { timeout: 20_000 })
   await expect(status).toContainText('last check', { timeout: 20_000 })
   await status.getByRole('button', { name: /Check (now|again)/ }).click()
   await status.locator('summary').click()

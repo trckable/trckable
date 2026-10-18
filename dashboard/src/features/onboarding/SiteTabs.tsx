@@ -1,3 +1,4 @@
+import { midEllipsis } from '../../lib/midEllipsis'
 import { SiteMark } from '../../components/SiteMark'
 import type { Site, Visit } from '../../lib/api'
 import { copy } from './copy'
@@ -9,9 +10,9 @@ export function SiteTabs({ sites, active, seen, onPick }: { sites: Site[]; activ
       {sites.map((s) => {
         const got = (seen[s.id]?.length ?? 0) > 0
         return (
-          <button key={s.id} type="button" role="tab" aria-selected={s.id === active} className={s.id === active ? 'ob-site on' : 'ob-site'} onClick={() => onPick(s.id)}>
+          <button key={s.id} type="button" role="tab" aria-selected={s.id === active} className={s.id === active ? 'ob-site on' : 'ob-site'} title={s.domain} onClick={() => onPick(s.id)}>
             <SiteMark site={s} size={16} />
-            <span className="ob-site-name">{s.domain}</span>
+            <span className="ob-site-name">{midEllipsis(s.domain, 20)}</span>
             <i className={got ? 'ob-sdot got' : 'ob-sdot'} aria-hidden="true" />
             <span className="sr">{got ? copy.more.receiving : copy.more.waiting}</span>
           </button>
