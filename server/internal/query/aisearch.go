@@ -148,7 +148,8 @@ func (q Q) AISearch(ctx context.Context, p Params, o AIOptions) (*AISearch, erro
 		SELECT GROUPING(r) AS g, a, coalesce(r, ''), count(DISTINCT visitor_id)
 		FROM (SELECT `+aiAssistantSQL+` AS a, referrer AS r, visitor_id FROM s WHERE channel = ?)
 		WHERE a IS NOT NULL
-		GROUP BY GROUPING SETS ((a, r), (a))`, append(append([]any{}, args...), channelAI)...)
+		GROUP BY GROUPING SETS ((a, r), (a))
+		ORDER BY 4 DESC, 3`, append(append([]any{}, args...), channelAI)...) // ties: the referrer that sorts first, not whichever the scan met first
 	if err != nil {
 		return nil, fmt.Errorf("ai assistants: %w", err)
 	}
