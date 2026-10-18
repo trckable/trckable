@@ -1,7 +1,7 @@
 // The AI assistants by name: the referrers the channel rules (server ingest)
-// put in the AI channel, grouped under the product people know them by.
+// put in the AI channel, under the product people know them by.
+// (The AI view's rows are grouped by the server, which also reads utm_source.)
 // Pure: assistants.test.ts.
-import type { Row } from '../../lib/api'
 
 const NAMES: [string, string][] = [
   ['chatgpt.com', 'ChatGPT'],
@@ -27,20 +27,4 @@ const NAMES: [string, string][] = [
 export function assistantOf(referrer: string): string {
   const host = referrer.toLowerCase().replace(/^www\./, '')
   return NAMES.find(([h]) => host === h || host.endsWith('.' + h) || host.startsWith(h + '/'))?.[1] ?? (referrer || '(unknown)')
-}
-
-/** Rows grouped by assistant, the busiest first, each with the referrer that sent most of it (what a click filters by). */
-export function byAssistant(rows: Row[]): { name: string; visitors: number; referrer: string }[] {
-  const by = new Map<string, { visitors: number; referrer: string; top: number }>()
-  for (const r of rows) {
-    const name = assistantOf(r.value)
-    const a = by.get(name) ?? { visitors: 0, referrer: r.value, top: -1 }
-    a.visitors += r.visitors
-    if (r.visitors > a.top) {
-      a.referrer = r.value
-      a.top = r.visitors
-    }
-    by.set(name, a)
-  }
-  return [...by].map(([name, a]) => ({ name, visitors: a.visitors, referrer: a.referrer })).sort((a, b) => b.visitors - a.visitors || a.name.localeCompare(b.name))
 }

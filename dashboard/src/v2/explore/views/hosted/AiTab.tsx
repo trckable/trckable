@@ -6,7 +6,6 @@ import { XCols, type CRow } from '../../../ui/XTable'
 import { Loading } from '../../../../components/loading/Loading'
 import { fmtInt } from '../../../../lib/format'
 import { messageOf, more, type SearchReport } from '../../../../lib/apiMore'
-import { byAssistant } from '../../../../features/extras/assistants'
 import { aiCopy } from '../../../../features/aisearch/copy'
 import { useAiSearch } from '../../../../features/aisearch/useAiSearch'
 import { copy } from '../../copy'
@@ -51,9 +50,12 @@ export default function AiTab({ x }: { x: XCtx }) {
   const [setup, setSetup] = useState(false)
   if (rep === undefined) return <Loading height={180} />
   if (rep === null) return <XError title={aiCopy.failed} onRetry={reload} />
-  const people = byAssistant(rep.referrers.map((r) => ({ value: r.value, visitors: r.visitors }))).slice(0, ROWS)
+  const people = rep.assistants.slice(0, ROWS)
   const top = Math.max(1, ...people.map((a) => a.visitors))
-  const assistants: CRow[] = people.map((a) => ({ key: a.referrer, a: a.name, bar: a.visitors / top, onPick: () => x.pick('referrer', a.referrer), c: [fmtInt(a.visitors)] }))
+  const assistants: CRow[] = people.map((a) => {
+    const host = a.referrer
+    return { key: a.name, a: a.name, bar: a.visitors / top, onPick: host ? () => x.pick('referrer', host) : undefined, c: [fmtInt(a.visitors)] }
+  })
   const hit = Math.max(1, ...rep.bots.map((b) => b.hits))
   const crawlers: CRow[] = rep.bots.slice(0, ROWS).map((b) => ({ key: `${b.name}/${b.kind}`, a: `${b.name} · ${aiCopy.kind[b.kind] ?? b.kind}`, bar: b.hits / hit, c: [fmtInt(b.hits)] }))
   const pages = rep.pages.filter((p) => p.read > 0 || p.flag).slice(0, ROWS)
@@ -63,7 +65,7 @@ export default function AiTab({ x }: { x: XCtx }) {
     <>
       <XSec a={aiCopy.google}  />
       <GoogleLines x={x} />
-      <XSec a={aiCopy.assistants} b={fmtInt(rep.visitors)} />
+      <XSec a={aiCopy.assistants} b={fmtInt(people.reduce((n, a) => n + a.visitors, 0))} />
       {assistants.length === 0 ? <XEmpty title={aiCopy.noAssistants} hint="" /> : <XCols first={aiCopy.assistant} cols={[{ h: aiCopy.visitors }]} rows={assistants} xc="minmax(0,1fr) 84px" limit={x.limit} onAll={x.showAll} />}
       <XSec a={aiCopy.crawlers} b={fmtInt(rep.crawled)} />
       {crawlers.length === 0 ? (

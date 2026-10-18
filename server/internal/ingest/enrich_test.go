@@ -25,6 +25,16 @@ func TestClassify(t *testing.T) {
 		{"cpc is paid", "https://site.com/?utm_medium=cpc&utm_source=google", "", ChannelPaid},
 		{"fbclid is paid", "https://site.com/?fbclid=x", "https://l.facebook.com/", ChannelPaid},
 		{"other site", "https://site.com/", "https://someblog.dev/post", ChannelReferral},
+		{"instagram link shim", "https://site.com/", "https://l.instagram.com/?u=x", ChannelSocial},
+		{"instagram story utm ig", "https://site.com/?utm_source=ig&utm_medium=social", "", ChannelSocial},
+		{"instagram with no referrer, utm_source ig", "https://site.com/?utm_source=ig", "", ChannelSocial},
+		{"facebook app, fbclid, no referrer", "https://site.com/?fbclid=IwAR0", "", ChannelPaid},
+		{"google news utm", "https://site.com/?utm_source=google&utm_medium=organic", "https://www.google.com/", ChannelSearch},
+		{"google discover, no referrer, utm google", "https://site.com/?utm_source=google", "", ChannelReferral},
+		{"gaming utm_source is no gpt", "https://site.com/?utm_source=gptshop", "", ChannelReferral},
+		{"hostnames that contain ai are not AI", "https://site.com/", "https://mail-ai.example/", ChannelReferral},
+		{"a site called chatgpt-fans", "https://site.com/", "https://chatgpt-fans.example/", ChannelReferral},
+		{"an AI site by utm_source only", "https://site.com/?utm_source=perplexity", "", ChannelAI},
 		{"ref producthunt is social", "https://site.com/?ref=producthunt", "", ChannelSocial},
 		{"utm_source producthunt is social", "https://site.com/?utm_source=producthunt", "", ChannelSocial},
 		{"ref unknown name is referral", "https://site.com/?ref=friend", "", ChannelReferral},
@@ -149,6 +159,26 @@ func TestLocalAddressesAreNeverASource(t *testing.T) {
 	for _, ref := range []string{"http://localhost:3000/page", "http://127.0.0.1:8080/", "http://[::1]:5173/", "https://my.app.local/x", "https://x.test/"} {
 		if host, clean := parseReferrer(ref, "site.com"); host != "" || clean != "" {
 			t.Errorf("referrer %q kept as %q %q", ref, host, clean)
+		}
+	}
+}
+
+// A visit brought in from a file is told the channel the way a live one is.
+func TestChannelOfMatchesLive(t *testing.T) {
+	cases := []struct{ ref, source, medium, want string }{
+		{"", "", "", ChannelDirect},
+		{"https://l.instagram.com/", "", "", ChannelSocial},
+		{"google.com", "", "", ChannelSearch},
+		{"chatgpt.com", "", "", ChannelAI},
+		{"", "chatgpt.com", "", ChannelAI},
+		{"", "ig", "social", ChannelSocial},
+		{"", "newsletter", "", ChannelEmail},
+		{"", "", "cpc", ChannelPaid},
+		{"someblog.dev", "", "", ChannelReferral},
+	}
+	for _, c := range cases {
+		if got := ChannelOf(c.ref, c.source, c.medium); got != c.want {
+			t.Errorf("ChannelOf(%q, %q, %q) = %s, want %s", c.ref, c.source, c.medium, got, c.want)
 		}
 	}
 }
