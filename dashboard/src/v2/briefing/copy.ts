@@ -21,6 +21,7 @@ export const copy = defineCopy('briefing', {
   nobody: (when: string) => `Nobody ${when}`,
   when: { today: 'yet today', yesterday: 'came yesterday', week: 'came this week', month: 'came this month', range: 'came in this period' },
   sentFewer: (name: string) => `${name} sent far fewer people than usual`,
+  though: (name: string) => `, though ${name} sent fewer`,
   sentFewerShort: ' sent far fewer people.',
   dayOne: 'Day one:',
   notAnswering: (name: string) => `${name} isn't answering.`,
