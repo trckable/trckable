@@ -11,6 +11,7 @@ import (
 
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/ipfilter"
+	"github.com/trckable/trckable/server/internal/permissions"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 	"github.com/trckable/trckable/server/internal/weburl"
 )
@@ -19,6 +20,9 @@ import (
 // Analytics live in DuckDB, where only the writer may write, so the purge is
 // handed to it as a maintenance job.
 func (a *API) deleteSite(w http.ResponseWriter, r *http.Request) {
+	if !requireAct(w, r, permissions.ActSiteDelete, "only an owner can delete a site") {
+		return
+	}
 	site := r.PathValue("site")
 	info, err := a.Ctl.SiteInfo(r.Context(), site)
 	if err != nil {
