@@ -117,7 +117,7 @@ func PHMatch(posts []PHPost, keywords []string) []Mention {
 		if p.Tagline != "" {
 			title += " — " + p.Tagline
 		}
-		out = append(out, Mention{Source: PH, URL: strings.TrimSpace(p.URL), Title: Snippet(title), Snippet: Sentence(p.Tagline, keywords), Author: p.Maker, Host: PHHost, PostedAt: p.At, Points: p.Votes})
+		out = append(out, Mention{Source: PH, URL: strings.TrimSpace(p.URL), Title: Snippet(title), Snippet: Sentence(p.Tagline, keywords), Author: p.Maker, Host: PHHost, PostedAt: p.At, Points: p.Votes, Link: strings.TrimSpace(p.Website)})
 	}
 	return out
 }

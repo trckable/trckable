@@ -126,3 +126,48 @@ func TestSearchWordsAreTheAddressOnly(t *testing.T) {
 		}
 	}
 }
+
+func TestMentionRulesAreCleanedAndKeptPerSite(t *testing.T) {
+	ctx := context.Background()
+	st, site := openIncidents(t)
+	err := st.SetMentionRules(ctx, site, MentionRules{Topic: []string{" analytics ", "Analytics"}, Excluded: []string{"MP", ""}, Blocked: []string{"https://www.Reddit.com/r/x", "reddit.com"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, _ := st.MentionRules(ctx, site)
+	if !reflect.DeepEqual(got, MentionRules{Topic: []string{"analytics"}, Required: []string{}, Excluded: []string{"MP"}, Blocked: []string{"reddit.com"}}) {
+		t.Fatalf("%+v", got)
+	}
+	if err := st.SetMentionRules(ctx, site, MentionRules{Required: []string{`a "quote"`}}); !errors.Is(err, ErrKeywords) {
+		t.Fatalf("%v", err)
+	}
+	if kept, _ := st.MentionRules(ctx, site); len(kept.Topic) != 1 {
+		t.Fatalf("a refused list changed nothing: %+v", kept)
+	}
+}
+
+func TestOnlyShownMentionsAreListedAndCounted(t *testing.T) {
+	ctx := context.Background()
+	st, site := openIncidents(t)
+	for i, state := range []string{MentionShown, MentionHidden, MentionRejected, MentionPending} {
+		if _, err := st.SaveMention(ctx, Mention{Site: site, Source: "news", URL: "https://x.example/" + string(rune('a'+i)), Host: "x.example", PostedAt: 100, State: state}, 100); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if l, _ := st.Mentions(ctx, site, 0, 1000, 10); len(l) != 1 || l[0].State != MentionShown {
+		t.Fatalf("%+v", l)
+	}
+	if l, _ := st.HiddenMentions(ctx, site, 10); len(l) != 2 {
+		t.Fatalf("hidden and rejected: %+v", l)
+	}
+	if talked, _ := st.SitesWithMentions(ctx); !talked[site] {
+		t.Fatal("the shown one counts")
+	}
+	// Finding one again does not change what it is.
+	if _, err := st.SaveMention(ctx, Mention{Site: site, Source: "news", URL: "https://x.example/b", Host: "x.example", Title: "later", PostedAt: 100, State: MentionShown}, 200); err != nil {
+		t.Fatal(err)
+	}
+	if st, _, _ := st.MentionState(ctx, site, "https://x.example/b"); st != MentionHidden {
+		t.Fatalf("still %s", st)
+	}
+}

@@ -64,7 +64,7 @@ func SearchHN(ctx context.Context, d Doer, keywords []string, since int64) ([]Me
 			title, kind, said = h.CommentText, "comment", h.CommentText
 		}
 		out = append(out, Mention{Source: HN, URL: hnItem(h.ObjectID), Kind: kind, Title: Snippet(title), Author: h.Author,
-			Host: HNHost, PostedAt: h.CreatedAt, Points: h.Points, Comments: h.NumComments, Snippet: Sentence(said, keywords)})
+			Host: HNHost, PostedAt: h.CreatedAt, Points: h.Points, Comments: h.NumComments, Snippet: Sentence(said, keywords), Link: strings.TrimSpace(h.URL)})
 	}
 	return out, nil
 }

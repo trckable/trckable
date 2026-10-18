@@ -9,15 +9,23 @@ Mentions shows who is talking about your site and how many people they sent. Ope
 
 Mentions is off until you set `TRCKABLE_MENTIONS=on`. Off, nothing is searched and nothing about mentions shows in the dashboard, the API, the bell or any email.
 
-Every 20 minutes your server looks for two kinds of words:
+Every 20 minutes your server looks for:
 
-- your site's address (always, with and without `www.`). The bare name inside it is not searched by itself: "acme" also names people, places and other sites,
-- up to 10 words you add yourself in **Settings → Mentions**: a product name, a handle, anything people call your site.
+- your site's address (always, with and without `www.`, and as a subdomain). It counts only as a whole address: `acme.example` is in "I moved to acme.example." and in `acme[.]example`, and not in `notacme.example`, `acme.example.org` or a page of your own site,
+- up to 10 names you add yourself in **Settings → Mentions**: a product name, a handle, anything people call your site. The bare name in your address ("acme") is only suggested, never searched until you add it. Even then it counts only with a topic word of your site beside it ("acme" and "analytics"), and in the news only as a phrase of two words or more. This keeps a headline about someone who shares your name out.
+
+When unsure, a mention is not shown: a missed one costs little, a wrong one costs your trust.
+
+## What you can say about your mentions
+
+Per site you can set topic words, required words (all must be in the text), excluded words (one rules it out) and blocked sites. **Not about us** on a mention hides it for good: it stays in a hidden list you can restore from, and you are offered to exclude the words that set it apart or block its source. When you add a name, the news is sampled for it first: if headlines use it for something else, you see them and are offered words to exclude.
+
+A page that sent your site visitors is listed as a confirmed mention with how many came (at least two in the last month), and comes first. A story that several publishers copy, or that Google News and the publisher both carry, is one mention. Every number you see (the Briefing, the palette, the bell, the weekly email) is the mentions in the list.
 
 It looks in:
 
 - **Hacker News**, through Algolia's public search: stories and comments, one request per site for all its words.
-- **News and blogs**, through Google News's RSS search and GDELT: only articles that name one of your words in the headline, the summary or the address count.
+- **News and blogs**, through Google News's RSS search and GDELT: only articles that pass the rules above count.
 - **Product Hunt**, when `TRCKABLE_PRODUCTHUNT_TOKEN` is set (a Product Hunt developer token). Without it that source is hidden.
 
 ## What a mention brings

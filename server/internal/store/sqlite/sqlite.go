@@ -894,6 +894,21 @@ var migrations = []string{
 	INSERT INTO site_modules (site_id, module_id, enabled, updated_at)
 	SELECT site_id, 'search', 1, CAST(strftime('%s', 'now') AS INTEGER) FROM search_console WHERE true
 	ON CONFLICT (site_id, module_id) DO UPDATE SET enabled = 1, updated_at = excluded.updated_at;`,
+	// Mentions you can trust: a mention keeps how it matched (via: the site's
+	// address, a name with a co-word, or a page the visits came from), what it
+	// points at, and whether it shows (state: shown; hidden by the owner as
+	// "Not about us"; rejected by a judge; pending a judge's answer). The
+	// owner's rules per site: topic words (a name word needs one beside it),
+	// required and excluded words, and blocked sites.
+	`ALTER TABLE mentions ADD COLUMN state TEXT NOT NULL DEFAULT 'shown';
+	ALTER TABLE mentions ADD COLUMN via TEXT NOT NULL DEFAULT '';
+	ALTER TABLE mentions ADD COLUMN link TEXT NOT NULL DEFAULT '';
+	CREATE TABLE IF NOT EXISTS mention_rules (
+		site_id TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		kind    TEXT NOT NULL,
+		value   TEXT NOT NULL,
+		PRIMARY KEY (site_id, kind, value)
+	) WITHOUT ROWID;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

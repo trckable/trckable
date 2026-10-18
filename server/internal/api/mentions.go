@@ -3,8 +3,12 @@ package api
 import (
 	"errors"
 	"net/http"
+	"sort"
+	"strings"
 	"time"
 
+	"github.com/trckable/trckable/server/internal/ingest"
+	"github.com/trckable/trckable/server/internal/mentions"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -41,6 +45,10 @@ type mentionWords struct {
 	Default []string `json:"default"`
 	Added   []string `json:"added"`
 	Max     int      `json:"max"`
+	// Suggested is the name in the address ("albas" for albas.al): offered,
+	// never searched until the owner adds it.
+	Suggested []string            `json:"suggested"`
+	Rules     sqlite.MentionRules `json:"rules"`
 }
 
 func (a *API) mentionWords(r *http.Request, site string) (mentionWords, error) {
@@ -52,7 +60,12 @@ func (a *API) mentionWords(r *http.Request, site string) (mentionWords, error) {
 	if err != nil {
 		return mentionWords{}, err
 	}
-	return mentionWords{Default: sqlite.JoinWords(sqlite.SiteRow{Domain: row.Domain, Name: row.Name}, nil), Added: added, Max: sqlite.MaxKeywords}, nil
+	rules, err := a.Ctl.MentionRules(r.Context(), site)
+	if err != nil {
+		return mentionWords{}, err
+	}
+	return mentionWords{Default: sqlite.JoinWords(sqlite.SiteRow{Domain: row.Domain, Name: row.Name}, nil), Added: added, Max: sqlite.MaxKeywords,
+		Suggested: suggestedName(row.Domain, added), Rules: rules}, nil
 }
 
 // ifMentions answers 404 while Mentions is switched off.
@@ -87,6 +100,12 @@ func (a *API) mentions(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, "could not read the mentions")
 		return
 	}
+	a.confirmedInPeriod(r, site, list, now.Add(-span), now)
+	// The pages that sent visitors come first: the visits confirm them.
+	sort.SliceStable(list, func(i, j int) bool {
+		a, b := list[i].Via == mentions.ViaPage, list[j].Via == mentions.ViaPage
+		return a && !b || a && b && list[i].Visitors > list[j].Visitors
+	})
 	out := make([]mentionOut, 0, len(list))
 	var driving *mentionOut
 	for _, m := range list {
@@ -132,4 +151,46 @@ func (a *API) setMentionKeywords(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.mentionKeywords(w, r)
+}
+
+// confirmedInPeriod sets the visitors of the pages the visits confirmed to
+// those that came in the chosen period, in one grouped query over the visits
+// the classifier called Social or Referral (the same ones that confirmed them).
+// A page that sent nobody in the period keeps its last month's count rather
+// than showing a zero it never had.
+func (a *API) confirmedInPeriod(r *http.Request, site string, list []sqlite.Mention, from, to time.Time) {
+	q := a.Query()
+	if q == nil {
+		return
+	}
+	var forms []any
+	at := map[string][]int{}
+	for i, m := range list {
+		if form, ok := mentions.RefForm(m.URL); ok && m.Via == mentions.ViaPage {
+			if _, dup := at[form]; !dup {
+				forms = append(forms, form)
+			}
+			at[form] = append(at[form], i)
+		}
+	}
+	if len(forms) == 0 {
+		return
+	}
+	args := append([]any{site, from.UTC(), to.UTC(), ingest.ChannelSocial, ingest.ChannelReferral}, forms...)
+	marks := strings.TrimSuffix(strings.Repeat("?,", len(forms)), ",")
+	query := "SELECT referrer_url, count(DISTINCT visitor_id) FROM events WHERE site_id = ? AND kind = 1 AND ts >= ? AND ts < ? AND channel IN (?, ?) AND referrer_url IN (" + marks + ") GROUP BY referrer_url" //nolint:gosec // only "?" placeholders are joined in
+	rows, err := q.DB.QueryContext(r.Context(), query, args...)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var form string
+		var n int64
+		if rows.Scan(&form, &n) == nil && n > 0 {
+			for _, i := range at[form] {
+				list[i].Visitors = n
+			}
+		}
+	}
 }
