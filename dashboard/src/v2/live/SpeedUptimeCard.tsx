@@ -76,7 +76,7 @@ function SpeedBlock({ site, speed }: { site: Site; speed?: number | null }) {
 
 function UptimeBlock({ site, up, down }: { site: Site; up?: Health['uptime']; down: boolean }) {
   const days = up ? up.days.map((d, i) => (down && i === up.days.length - 1 ? ('down' as const) : d)) : undefined
-  if (!days || (!down && up?.pct == null)) return down ? null : <EmptyBlock site={site} line={h.empty.uptime} setup="health" waiting={up === undefined} reserve={46} />
+  if (!days || (!down && up?.pct == null)) return down ? null : <EmptyBlock site={site} line={h.empty.uptime} setup="health" waiting={up === undefined} reserve={64} />
   return (
     <button type="button" className="lhup" onClick={() => incidents(site)}>
       <Strip days={days} />
