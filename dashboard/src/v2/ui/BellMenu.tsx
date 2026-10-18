@@ -46,6 +46,12 @@ const PATH: Record<string, ReactNode> = {
       <path d="M3 19c0-3 3-5 6-5s6 2 6 5M16 6a3 3 0 0 1 0 6" />
     </>
   ),
+  answer: (
+    <>
+      <path d="M9 10h.01M15 10h.01" />
+      <path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z" />
+    </>
+  ),
   weekly: <path d="M7 3h7l4 4v14H7z M14 3v4h4" />,
 }
 

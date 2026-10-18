@@ -5,6 +5,7 @@ import { diffDays, fmtDay, type ISODate } from '../../lib/dates'
 import { fmtInt, fmtPct } from '../../lib/format'
 import { times } from '../../lib/times'
 import { say as milestone } from '../milestones/words'
+import { answersCopy as answers } from '../answers/copy'
 import { copy } from './copy'
 import type { Pin } from './pins'
 
@@ -45,6 +46,8 @@ export function figureOf(pin: Pin, money: (minor: number) => string): Figure {
     }
     case 'ai':
       return { text: n.name ?? '' }
+    case 'answer':
+      return { text: answers.engine[n.name ?? ''] ?? '' }
     case 'move':
       return { text: signed(n.change ?? 0), unit: copy.unit.visitors }
     case 'pays':

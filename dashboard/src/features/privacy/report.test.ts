@@ -74,3 +74,13 @@ describe('buildReport', () => {
     expect(r.where).toContain('On your server')
   })
 })
+
+describe('buildReport and Answers', () => {
+  it('tells where the questions go only when assistants are asked', () => {
+    expect(buildReport(input()).whereAnswers).toBeUndefined()
+    expect(buildReport(input({ answers: [] } as never)).whereAnswers).toBeUndefined()
+    const r = buildReport({ ...input(), answers: ['OpenAI', 'Perplexity', 'Anthropic'] })
+    expect(r.whereAnswers).toBe('Answers sends your questions to OpenAI, Perplexity, and Anthropic. Nothing about your visitors.')
+    expect(r.where).toContain('On your server')
+  })
+})

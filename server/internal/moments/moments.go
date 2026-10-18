@@ -16,23 +16,24 @@ type Moment struct {
 	T    string `json:"t"`
 	Kind string `json:"kind"` // spike | surge | mention | answer | sale | country | ai | milestone | note
 
-	Factor   float64 `json:"factor,omitempty"`   // spike, surge: times the usual; absent for new traffic (see Quiet)
-	Referrer string  `json:"referrer,omitempty"` // spike: who sent them; surge: the referring host of the source
-	Visitors int64   `json:"visitors,omitempty"` // spike: visitors in the bucket; surge: the most online at once
-	Count    int64   `json:"count,omitempty"`    // sale: payments in the bucket
-	Amount   int64   `json:"amount,omitempty"`   // sale: net, minor units
-	Channel  string  `json:"channel,omitempty"`  // sale: the channel that earned most of it
-	What     string  `json:"what,omitempty"`     // sale: new | upgrade | renewal | sale, when all its payments were of one kind
-	Country  string  `json:"country,omitempty"`  // country: its first visit ever
-	Bot      string  `json:"bot,omitempty"`      // ai: the assistant; answer: the engine (openai | perplexity | anthropic)
-	Question int64   `json:"question,omitempty"` // answer: the question's id
-	Step     string  `json:"step,omitempty"`     // milestone: its step ("1k")
-	Family   string  `json:"family,omitempty"`   // milestone: its kind (visitors, revenue, ...)
-	Value    float64 `json:"value,omitempty"`    // milestone: the round number reached
-	Currency string  `json:"currency,omitempty"` // milestone: revenue's currency
-	Text     string  `json:"text,omitempty"`     // note: its words; surge: the source as a name ("Facebook"); mention: its title
-	Mention  string  `json:"mention,omitempty"`  // mention: where it was posted (hn | ph | news); spike, surge: set when a mention from the same host explains it
-	Brought  int64   `json:"brought,omitempty"`  // mention: visitors it brought; spike, surge: those of the mention that explains it
+	Factor    float64 `json:"factor,omitempty"`     // spike, surge: times the usual; absent for new traffic (see Quiet)
+	Referrer  string  `json:"referrer,omitempty"`   // spike: who sent them; surge: the referring host of the source
+	Visitors  int64   `json:"visitors,omitempty"`   // spike: visitors in the bucket; surge: the most online at once
+	Count     int64   `json:"count,omitempty"`      // sale: payments in the bucket
+	Amount    int64   `json:"amount,omitempty"`     // sale: net, minor units
+	Channel   string  `json:"channel,omitempty"`    // sale: the channel that earned most of it
+	What      string  `json:"what,omitempty"`       // sale: new | upgrade | renewal | sale, when all its payments were of one kind
+	Country   string  `json:"country,omitempty"`    // country: its first visit ever
+	Bot       string  `json:"bot,omitempty"`        // ai: the assistant; answer: the engine (openai | perplexity | anthropic)
+	Question  int64   `json:"question,omitempty"`   // answer: the question's id
+	FirstEver bool    `json:"first_ever,omitempty"` // answer: the first time any assistant named the site
+	Step      string  `json:"step,omitempty"`       // milestone: its step ("1k")
+	Family    string  `json:"family,omitempty"`     // milestone: its kind (visitors, revenue, ...)
+	Value     float64 `json:"value,omitempty"`      // milestone: the round number reached
+	Currency  string  `json:"currency,omitempty"`   // milestone: revenue's currency
+	Text      string  `json:"text,omitempty"`       // note: its words; surge: the source as a name ("Facebook"); mention: its title
+	Mention   string  `json:"mention,omitempty"`    // mention: where it was posted (hn | ph | news); spike, surge: set when a mention from the same host explains it
+	Brought   int64   `json:"brought,omitempty"`    // mention: visitors it brought; spike, surge: those of the mention that explains it
 }
 
 // Spike is a bucket far above the ones before it.

@@ -3,6 +3,7 @@
 import { ALWAYS } from '../../lib/modules'
 import type { PolicyInput } from '../../lib/policy'
 import { policyText } from '../../lib/policy'
+import { tag } from '../../i18n'
 import { copy } from './copy'
 
 /** The visitor cookie's name and its Max-Age in days (tracker/src/core.ts: 34560000 s). */
@@ -14,6 +15,8 @@ export type Report = {
   notCollected: string[]
   modules: string[]
   where: string
+  /** Where Answers sends its questions: left out when no assistant is asked. */
+  whereAnswers?: string
   banner: string
   policy: string
 }
@@ -26,7 +29,12 @@ export function bannerKind(p: PolicyInput): 'free' | 'asks' | 'cookie' {
   return p.modules.consent ? 'asks' : 'cookie'
 }
 
-export function buildReport(p: PolicyInput): Report {
+/** What the report is made from: the policy's facts, and the names of the companies Answers asks (none when it is off). */
+export type ReportInput = PolicyInput & { answers?: string[] }
+
+const list = (names: string[]) => new Intl.ListFormat(tag ?? 'en', { type: 'conjunction' }).format(names)
+
+export function buildReport(p: ReportInput): Report {
   const { config: c, modules: m } = p
   const free = c.consent_free
   const city = c.record_city && !free
@@ -53,6 +61,7 @@ export function buildReport(p: PolicyInput): Report {
       .filter((id) => !ALWAYS.includes(id) && m[id])
       .map((id) => copy.adds[id as keyof typeof copy.adds]),
     where: copy.where,
+    whereAnswers: p.answers?.length ? copy.whereAnswers(list(p.answers)) : undefined,
     banner: copy.banner[bannerKind(p)],
     policy: policyText(p),
   }

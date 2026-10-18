@@ -1,6 +1,6 @@
 // What each kind of pin is on a card: its icon, its name and its own colour,
 // all from the dashboard's tokens (so both themes keep their contrast).
-import { Bot, Coins, Flag, Link2, Newspaper, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react'
+import { Bot, Coins, Flag, Ghost, Link2, Newspaper, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react'
 import type { SideKind } from '../../components/SideCard/SideCard'
 import { titleOf } from './copy'
 import type { Chip } from './SourceChip'
@@ -10,6 +10,7 @@ const KINDS: Record<PinKind, { Icon: LucideIcon; tint: string }> = {
   spike: { Icon: TrendingUp, tint: 'var(--accent)' },
   surge: { Icon: TrendingUp, tint: 'var(--accent)' },
   mention: { Icon: Newspaper, tint: 'var(--accent)' },
+  answer: { Icon: Ghost, tint: 'var(--ch-5)' },
   sale: { Icon: Coins, tint: 'var(--money)' },
   referrer: { Icon: Link2, tint: 'var(--ch-1)' },
   drop: { Icon: TrendingDown, tint: 'var(--down)' },
@@ -45,6 +46,8 @@ export function chipsOf(pin: Pin): Chip[] {
       return n.name ? [{ host: n.name }] : []
     case 'drop':
       return n.name ? [{ path: n.name }] : []
+    case 'answer':
+      return []
     case 'ai':
       return [{ channel: 'AI' }]
     case 'move':

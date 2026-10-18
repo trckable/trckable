@@ -7,7 +7,7 @@ import type { Filter, Milestone } from '../../lib/api'
 import type { Insight } from '../extras/extrasApi'
 import type { Moment, SaleWhat } from '../story/moments'
 
-export type PinKind = 'spike' | 'surge' | 'mention' | 'sale' | 'referrer' | 'drop' | 'milestone' | 'ai' | 'move' | 'pays'
+export type PinKind = 'spike' | 'surge' | 'mention' | 'answer' | 'sale' | 'referrer' | 'drop' | 'milestone' | 'ai' | 'move' | 'pays'
 
 export interface Pin {
   id: string
@@ -48,6 +48,10 @@ export interface Figures {
   /** Where a mention was posted, and the visitors it brought (a spike one explains has them too). */
   mention?: string
   brought?: number
+  /** An answer: the question, what the assistant did about it and whether it is the first time any assistant named the site. */
+  question?: string
+  did?: 'seen' | 'dropped'
+  first?: boolean
 }
 
 const day = (t: string) => t.slice(0, 10)
@@ -68,8 +72,12 @@ export function pinsFromMoments(list: Moment[], money: boolean): Pin[] {
       case 'mention':
         out.push({ ...base, kind: 'mention', score: 78, filters: m.referrer ? [{ dim: 'referrer', value: m.referrer }] : [], showDay: true, n: { visitors: m.brought, referrer: m.referrer, name: m.text, mention: m.mention } })
         break
+      case 'answer':
+        // Several come in one bucket (an engine and a question each), so the id carries both.
+        out.push({ ...base, id: `answer:${m.bot}:${m.question}:${m.t}`, kind: 'answer', score: m.first_ever ? 88 : 74, filters: [], showDay: true, n: { name: m.bot, question: m.text, did: m.what === 'dropped' ? 'dropped' : 'seen', first: m.first_ever } })
+        break
       case 'sale':
-        if (money) out.push({ ...base, kind: 'sale', score: 60 + 20 * ((m.amount ?? 0) / biggest), filters: m.channel ? [{ dim: 'channel', value: m.channel }] : [], showDay: true, n: { count: m.count, amount: m.amount, channel: m.channel, what: m.what } })
+        if (money) out.push({ ...base, kind: 'sale', score: 60 + 20 * ((m.amount ?? 0) / biggest), filters: m.channel ? [{ dim: 'channel', value: m.channel }] : [], showDay: true, n: { count: m.count, amount: m.amount, channel: m.channel, what: m.what === 'seen' || m.what === 'dropped' ? undefined : m.what } })
         break
       case 'ai':
         out.push({ ...base, kind: 'ai', score: 55, filters: [{ dim: 'channel', value: 'AI' }], showDay: false, n: { name: m.bot } })
