@@ -1,7 +1,6 @@
 // Who is talking about a site: the page behind /{domain}/mentions. A hero for
 // what is happening now, the feed with its filters, one mention's detail in a
 // panel, and an empty state that teaches. All of it is this chunk.
-import { ArrowLeft } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Loading } from '../../components/loading/Loading'
 import type { Site } from '../../lib/api'
@@ -69,16 +68,7 @@ export default function MentionsPage({ site, header }: { site: Site; header: Rea
     <>
       {header}
       <main className="mp-page">
-        <div className="mp-head">
-          <div>
-            <button type="button" className="linkish mp-back" onClick={() => navigate('/' + encodeURIComponent(site.domain))}>
-              <ArrowLeft size={14} aria-hidden="true" />
-              {page.back}
-            </button>
-            <h1>{copy.title}</h1>
-            <p className="muted">{site.name || site.domain}</p>
-          </div>
-        </div>
+        <h1 className="mp-title">{copy.title}</h1>
         {got.state === 'loading' && <Loading height={200} />}
         {got.state === 'failed' && <p className="muted" role="alert">{page.failed}</p>}
         {data && w && list.length === 0 && period === '30d' && <Empty site={site.id} words={w} sources={data.sources} onWords={setWords} />}

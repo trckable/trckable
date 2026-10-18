@@ -36,7 +36,7 @@ test('with an incident: the state, the figures equal the rows, no back link', as
   await expect(page.getByText('Back to the dashboard')).toHaveCount(0)
   await expect(page.locator('.inc-state')).toHaveText('Up')
   // The figures are what the two rows add up to: 2 incidents, 3h down or quiet, 42 visits.
-  const stat = (name: string) => page.locator('.inc-stats div').filter({ hasText: name }).locator('dd')
+  const stat = (name: string) => page.locator('.ps-stats div').filter({ hasText: name }).locator('dd')
   await expect(page.locator('.inc-row')).toHaveCount(2)
   await expect(stat('Incidents')).toHaveText('2')
   await expect(stat('Down or quiet for')).toHaveText('3h')
@@ -56,7 +56,7 @@ test('a site that is down says so in red, and an empty period says so once', asy
   await expect(page.locator('.inc-state.up')).toHaveText('Up')
   await expect(page.locator('.inc-empty')).toHaveText('No incidents in this period')
   await expect(page.locator('.inc-row')).toHaveCount(0)
-  await expect(page.locator('.inc-stats div').filter({ hasText: 'Incidents' }).locator('dd')).toHaveText('0')
+  await expect(page.locator('.ps-stats div').filter({ hasText: 'Incidents' }).locator('dd')).toHaveText('0')
   await expect(page.locator('.inc-days i.unwatched')).toHaveCount(0)
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/incidents-none.png` })
 })

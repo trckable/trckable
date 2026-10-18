@@ -32,6 +32,13 @@ test('each link shows what it brought, and a tap opens the dashboard for it', as
   await expect(page.getByRole('heading', { name: /Your links/ })).toBeVisible({ timeout: 20_000 })
   const rows = page.locator('.yl-row')
   await expect(rows).toHaveCount(3)
+  // The figures are the rows added up: 3 links, 515 visitors, 21 goals, $540.
+  const stat = (name: string) => page.locator('.ps-stats div').filter({ hasText: name }).locator('dd')
+  await expect(stat('Links')).toHaveText('3')
+  await expect(stat('Visitors')).toHaveText('515')
+  await expect(stat('Reached a goal')).toHaveText('21')
+  await expect(stat('Revenue')).toHaveText('$540')
+  await expect(page.getByText('Back to the dashboard')).toHaveCount(0)
   await expect(rows.nth(0)).toContainText('trustmrr.com')
   await expect(rows.nth(0)).toContainText('412')
   await expect(rows.nth(0)).toContainText('$540')
