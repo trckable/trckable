@@ -1656,11 +1656,13 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 @keyframes mk-shift{from{opacity:.55;transform:translateX(3%)}}
 .mk .mk-pulse.ev{animation:mk-beat 1s ease-out 1,mk-pl 2s infinite}
 
-/* Two columns: the list scrolls inside its card, which is as tall as the Live card beside it; a soft fade shows there is more below. */
+/* Two columns: the list scrolls inside its card, which is as tall as the Live card beside it; a soft fade at the top and bottom edge shows there is more past it. */
 @container (min-width:701px){
 .mk .liveview>.lon{contain:size}
 .mk .liveview .lon .lfeed{flex:1 1 0;min-height:0;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain}
-.mk .liveview .lon .lfeed[data-below]{-webkit-mask-image:linear-gradient(to bottom,var(--mk-text) calc(100% - 40px),transparent);mask-image:linear-gradient(to bottom,var(--mk-text) calc(100% - 40px),transparent)}
+.mk .liveview .lon .lfeed[data-below],.mk .liveview .lon .lfeed[data-above]{--fa:0px;--fb:0px;-webkit-mask-image:linear-gradient(to bottom,transparent,var(--mk-text) var(--fa),var(--mk-text) calc(100% - var(--fb)),transparent);mask-image:linear-gradient(to bottom,transparent,var(--mk-text) var(--fa),var(--mk-text) calc(100% - var(--fb)),transparent)}
+.mk .liveview .lon .lfeed[data-above]{--fa:28px}
+.mk .liveview .lon .lfeed[data-below]{--fb:40px}
 }
 /* Menus and lists, one row (the palette, the site list, the period, Explore's menus, the bell): one active row at a time, a small gap
    between neighbours, one rhythm on the 4px grid. The active row is the one under the mouse (data-act, set by useActiveRow) or the one
