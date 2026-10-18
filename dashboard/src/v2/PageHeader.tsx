@@ -109,7 +109,7 @@ export function PageHeader(p: PageHeaderProps) {
         explore={<ExploreChip label={copy.explore} kbd="⌘K" onClick={exploreOpen} />}
         extras={slots.headerExtra}
         bell={p.identity ? null : <Bell site={site} notices={notices} />}
-        account={isShared() ? null : <AccountMenu site={site ?? undefined} alert={slots.accountAlert} />}
+        account={isShared() ? null : <AccountMenu alert={slots.accountAlert} />}
         keys={
           <>
             {site && !isShared() && !viewer && (
@@ -136,7 +136,7 @@ export function PageHeader(p: PageHeaderProps) {
           </>
         }
       />
-      {find && <Palette items={paletteItems({ sites: p.sites, site, data: p.data ?? null, here: here ?? 'briefing', onAsk: ask, onGoal: p.onGoal, domainOf: (s) => s.domain })} placeholder={pal.placeholder} none={pal.none} initial={seed} onClose={() => setFind(false)} />}
+      {find && <Palette items={paletteItems({ sites: p.sites, site, data: p.data ?? null, here: here ?? 'briefing', onAsk: ask, onGoal: p.onGoal, extra: slots.paletteRows, domainOf: (s) => s.domain })} placeholder={pal.placeholder} none={pal.none} initial={seed} onClose={() => setFind(false)} />}
     </>
   )
 }

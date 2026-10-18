@@ -66,3 +66,36 @@ test('site settings never scrolls sideways on a phone or a big phone, shows no O
   await expect(list.getByRole('switch', { name: 'Heatmaps', exact: true })).toHaveAttribute('aria-checked', 'false')
   await expect(list.getByRole('switch', { name: 'Goals', exact: true })).toBeVisible()
 })
+
+test('the avatar menu holds six rows; the rest is in the account window and ⌘K', async ({ page, context, browserName }) => {
+  test.skip(browserName !== 'chromium', 'one browser is enough')
+  await context.addCookies([{ name: 'trckable_session', value: await session('account-window'), url: API }])
+  await page.goto(API + '/example.com?view=briefing')
+  await page.getByRole('button', { name: 'Account', exact: true }).click()
+  const menu = page.getByRole('menu', { name: 'Account' })
+  const rows = menu.locator('[role="menuitem"], [role="menuitemradio"]')
+  await expect(rows).toHaveCount(6) // Profile, the three themes, Shortcuts, Sign out
+  for (const gone of ['Language', 'Features', 'Install app', 'Exclude this browser']) await expect(menu.getByRole('menuitem', { name: gone })).toHaveCount(0)
+  await page.keyboard.press('Escape')
+
+  // The window has them as lines.
+  await page.goto(API + '/example.com?view=briefing&account=profile')
+  const win = page.getByRole('dialog', { name: 'Profile, your account' })
+  await expect(win.getByRole('combobox', { name: 'Language' })).toBeVisible()
+  await expect(win.getByRole('button', { name: /^Features/ })).toBeVisible()
+  await expect(win.getByRole('button', { name: 'Exclude this browser' })).toBeVisible()
+  await page.keyboard.press('Escape')
+
+  // ⌘K finds each.
+  await expect(page.getByRole('button', { name: 'Account', exact: true })).toBeVisible()
+  await page.keyboard.press('ControlOrMeta+k')
+  const input = page.locator('.pal.on .palbox input')
+  await expect(input).toBeVisible() // the list is its own chunk
+  for (const word of ['Language · Deutsch', 'Features', 'Shortcuts', 'Profile', 'Exclude this browser']) {
+    await input.fill(word)
+    await expect(page.locator('.pal.on .pi', { hasText: word }).first()).toBeVisible()
+  }
+  await input.fill('Profile')
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('dialog', { name: 'Profile, your account' })).toBeVisible()
+})

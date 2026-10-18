@@ -5,7 +5,7 @@
 // data-key, so a key does exactly what its button does, and nothing when the
 // page has no such button.
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { openFeatures } from './AccountMenu'
+import { openFeatures } from '../features/hub/openFeatures'
 import { pressed } from '../lib/keys'
 
 const Shortcuts = lazy(() => import('../views/Shortcuts'))

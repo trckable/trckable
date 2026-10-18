@@ -204,7 +204,8 @@
   .srow.acct-line .seg {
     width: 100%;
   }
-  .srow.acct-line .seg button {
+  .srow.acct-line .seg button,
+  .srow.acct-line .srow-ctl .btn {
     flex: 1;
   }
 }

@@ -1,4 +1,4 @@
-// Leaving your own visits out. The avatar menu opens the site with the
+// Leaving your own visits out. The account window opens the site with the
 // tracker's own flag (?trckable=ignore, then ?trckable=track to undo), and
 // Settings → Data & privacy → Exclude IP ranges drops visits from your own
 // addresses before anything is counted. A site of its own, so no other suite's
@@ -35,18 +35,17 @@ test('exclude my visits: the menu opens the site with the flag, and the IP list 
   expect((await visit(page, site, domain, '/first', 'aaaa1')).ok()).toBe(true)
   await expect.poll(() => paths(page, site), { timeout: 15_000 }).toEqual(['/first'])
 
-  // The menu: neutral wording, then the way back. The site itself is not
+  // The window: neutral wording, then the way back. The site itself is not
   // reachable from here, so the tab it opens is answered by the test.
   const flags: string[] = []
   await context.route(`https://${domain}/**`, (route) => {
     flags.push(route.request().url())
     return route.fulfill({ contentType: 'text/html', body: '<title>site</title>' })
   })
-  await page.goto(`${API}/${domain}?view=briefing`)
-  const avatar = page.getByRole('button', { name: 'Account', exact: true })
-  await avatar.click()
-  const menu = page.getByRole('menu', { name: 'Account' })
-  const leave = menu.getByRole('menuitem', { name: 'Exclude this browser' })
+  // It sits in the account window now (Account tab, Privacy).
+  await page.goto(`${API}/${domain}?view=briefing&account=profile`)
+  const win = page.getByRole('dialog', { name: 'Profile, your account' })
+  const leave = win.getByRole('button', { name: 'Exclude this browser' })
   await expect(leave).toBeVisible()
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/exclude-menu-1280-dark.png` })
   const opened = context.waitForEvent('page')
@@ -56,10 +55,10 @@ test('exclude my visits: the menu opens the site with the flag, and the IP list 
   expect(tab.url()).toBe(`https://${domain}/?trckable=ignore`)
   await tab.close()
 
-  await avatar.click()
-  await menu.getByRole('menuitem', { name: 'Count this browser again' }).click({ trial: true })
+  const again = win.getByRole('button', { name: 'Count this browser again' })
+  await expect(again).toBeVisible()
   const back = context.waitForEvent('page')
-  await menu.getByRole('menuitem', { name: 'Count this browser again' }).click()
+  await again.click()
   const tab2 = await back
   await tab2.waitForLoadState()
   expect(tab2.url()).toBe(`https://${domain}/?trckable=track`)

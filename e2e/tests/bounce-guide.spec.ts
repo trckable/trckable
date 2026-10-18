@@ -67,8 +67,12 @@ const dialog = (page: Page) => page.getByRole('dialog', { name: 'Why visitors le
 
 test('the Features list has the bounce guide', async ({ page }) => {
   await open(page, `/${domain}?view=briefing`)
-  await page.getByRole('button', { name: 'Account' }).click()
-  await page.getByRole('menuitem', { name: /^Features/ }).click()
+  // The avatar menu no longer holds Features: ⌘K finds it.
+  await expect(page.getByRole('button', { name: 'Account', exact: true })).toBeVisible()
+  await page.keyboard.press('ControlOrMeta+k')
+  await expect(page.locator('.pal.on .palbox input')).toBeVisible() // the list is its own chunk
+  await page.locator('.pal.on .palbox input').fill('Features')
+  await page.keyboard.press('Enter')
   const feats = page.getByRole('dialog', { name: 'Features', exact: true })
   await feats.getByRole('searchbox', { name: 'Search features' }).fill('bounce')
   const tile = feats.locator('#feat-bounce')
