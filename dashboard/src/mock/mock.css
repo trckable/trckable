@@ -1779,3 +1779,26 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 .mk .mk-waiting{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 0;text-align:center}
 .mk .mk-waiting b{font-size:15px;font-weight:600}
 .mk .mk-waiting-fig{width:clamp(140px,18vw,200px);margin-bottom:6px}
+
+/* Live's Health strip: one card under the pages and countries, four figures side by side (two by two on a narrow screen). */
+.mk .lhealth{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:var(--mk-s4);padding:0}
+.mk .lhealth[data-count="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}
+.mk .lhseg{display:flex;align-items:baseline;flex-wrap:wrap;gap:var(--mk-s1) var(--mk-s3);min-width:0;padding:var(--mk-s4) var(--mk-s5);border:0;border-left:1px solid var(--mk-line);border-radius:0;background:none;color:var(--mk-text);font:inherit;text-align:left;cursor:pointer}
+.mk .lhseg:first-child{border-left:0}
+.mk .lhseg:hover{background:var(--mk-hov)}
+.mk .lhl{display:flex;align-items:center;gap:var(--mk-s2);color:var(--mk-muted);font-size:13px;font-weight:500}
+.mk .lhn{font-size:20px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mk .lhn.quiet{color:var(--mk-faint);font-size:13px;font-weight:500;letter-spacing:0}
+.mk .lhw{color:var(--mk-faint);font-size:12px}
+.mk .lhseg.bad .lhn,.mk .lhseg.bad .lhw{color:var(--mk-red)}
+.mk .lhbar{flex:none;align-self:center}
+.mk .lhb{fill:var(--mk-lime)}
+.mk .lhb.quiet{fill:var(--mk-amber)}
+.mk .lhb.down{fill:var(--mk-red)}
+.mk .lhb.unwatched{fill:var(--mk-sel2)}
+@container (max-width:700px){
+.mk .lhealth,.mk .lhealth[data-count="3"]{grid-template-columns:1fr 1fr}
+.mk .lhseg{flex-direction:column;align-items:flex-start;padding:var(--mk-s3) var(--mk-s4);border-left:0;border-top:1px solid var(--mk-line)}
+.mk .lhseg:nth-child(-n+2){border-top:0}
+.mk .lhseg:nth-child(even){border-left:1px solid var(--mk-line)}
+}

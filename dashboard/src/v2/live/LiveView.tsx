@@ -31,6 +31,7 @@ import { useFit } from './cardWidth'
 import { DOCS } from '../../components/footerLinks'
 import { RevenueLock } from './RevenueLock'
 import { SourceRows } from './SourceRows'
+import { HealthStrip } from './HealthStrip'
 import { copy } from './copy'
 import type { LiveStream } from './Live'
 
@@ -209,6 +210,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
         )}
         <CountriesCard lists={lists} />
       </div>
+      {whole && !feed.sample && !isShared() && <HealthStrip site={whole} now={now} downSince={downSince} />}
     </>
   )
 }

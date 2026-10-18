@@ -1,0 +1,1 @@
+Live ends with a Health strip: page speed, uptime (red with how long when the site is down) with the last 16 days, AI crawler hits and, where Mentions is on, mentions, each opening its own part of Explore, and "Set up" (a dash for a viewer) where there is nothing yet.
