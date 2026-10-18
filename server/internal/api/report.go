@@ -220,7 +220,8 @@ func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, a
 		}
 		out["previous"] = pr
 		out["previous_from"] = prev.From.In(loc).Format("2006-01-02")
-		out["previous_to"] = prev.To.In(loc).AddDate(0, 0, -1).Format("2006-01-02")
+		// The last day the comparison reaches: the day before the end when it ends at midnight, the same day when it ends part way through one ("so far").
+		out["previous_to"] = prev.To.Add(-time.Nanosecond).In(loc).Format("2006-01-02")
 	}
 	if onlineOK {
 		out["online"] = online
