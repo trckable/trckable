@@ -1,4 +1,4 @@
-import { Activity, Bell, Check, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, LayoutTemplate, RefreshCw, Search, Newspaper, Settings as Cog, Share2, ShieldCheck, StickyNote, TriangleAlert } from 'lucide-react'
+import { Activity, Bell, Check, ChevronRight, CircleCheck, Code, CreditCard, Ghost, Info as InfoIcon, LayoutTemplate, RefreshCw, Search, Newspaper, Settings as Cog, Share2, ShieldCheck, StickyNote, TriangleAlert } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { hasMentions, isViewer } from '../lib/me'
 import { api, siteState, fail, type InstallCheck, type Site, type SiteState, more } from '../lib/apiMore'
@@ -27,6 +27,7 @@ import { NotesSettings } from '../features/notes/NotesSettings'
 import { MilestonesSetting } from '../features/milestones/MilestonesSetting'
 import { ImportSetting } from '../features/install/ImportSetting'
 import { DeleteSite } from './Sites'
+import { hasAnswers } from '../features/answers/on'
 import { CURRENCIES, clock, withCurrent, zones } from '../lib/site'
 import { SavedFlag, useSaved } from '../components/SavedFlag'
 import './Settings.css'
@@ -34,6 +35,7 @@ import './Settings.css'
 type TabID = SettingsTab
 
 const IconCrop = lazy(() => import('../components/AvatarCrop'))
+const AnswersSettings = lazy(() => import('../features/answers/AnswersSettings'))
 const MentionsSettings = lazy(() => import('../features/mentions/MentionsSettings'))
 
 // Only the open site lives here. Anything about the account — the list of
@@ -48,6 +50,7 @@ const TABS: { id: TabID; label: string; icon: typeof Cog }[] = [
   { id: 'payments', label: 'Payments', icon: CreditCard },
   { id: 'search', label: 'Search Console', icon: Search },
   { id: 'mentions', label: 'Mentions', icon: Newspaper },
+  { id: 'answers', label: 'Answers', icon: Ghost },
   { id: 'privacy', label: 'Data & privacy', icon: ShieldCheck },
   { id: 'alerts', label: 'Alerts', icon: Bell },
   { id: 'health', label: 'Health', icon: Activity },
@@ -57,14 +60,14 @@ const TABS: { id: TabID; label: string; icon: typeof Cog }[] = [
 const GROUPS: { name: string; tabs: TabID[] }[] = [
   { name: 'This site', tabs: ['site', 'install', 'sharing', 'widgets', 'notes'] },
   { name: 'Money', tabs: ['payments'] },
-  { name: 'Data', tabs: ['search', 'mentions', 'privacy', 'alerts'] },
+  { name: 'Data', tabs: ['search', 'mentions', 'answers', 'privacy', 'alerts'] },
   { name: 'Instance', tabs: ['health'] },
 ]
 /** A site's settings as a dialog over its dashboard: the sections on the
  *  left, the section on the right. Opening it does not change the address
  *  (lib/settings.ts); closing it leaves the dashboard exactly as it was. */
 export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSites: () => void }) {
-  const tab = TABS.some((t) => t.id === p.tab && (t.id !== 'mentions' || hasMentions())) ? p.tab : 'site'
+  const tab = TABS.some((t) => t.id === p.tab && (t.id !== 'mentions' || hasMentions()) && (t.id !== 'answers' || hasAnswers())) ? p.tab : 'site'
   const go = (id: TabID) => setSettingsTab(id)
   const close = closeSettings
   // Once visits arrive there is nothing left to install, only to verify.
@@ -72,7 +75,7 @@ export function SettingsDialog(p: { sites: Site[]; site: Site; tab: TabID; onSit
   const tabs: WindowTab[] = GROUPS.flatMap((g) =>
     g.tabs.flatMap((id) => {
       const t = TABS.find((x) => x.id === id)
-      return t && (id !== 'mentions' || hasMentions()) ? [{ id: t.id, label: label(t), icon: t.icon, group: g.name }] : []
+      return t && (id !== 'mentions' || hasMentions()) && (id !== 'answers' || hasAnswers()) ? [{ id: t.id, label: label(t), icon: t.icon, group: g.name }] : []
     }),
   )
   return (
@@ -103,6 +106,7 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
       {tab === 'payments' && <PaymentsSettings key={'pay' + site.id} site={site} onSiteChange={onSites} />}
       {tab === 'search' && <Locked><SearchSettings key={'sc' + site.id} site={site} /></Locked>}
       {tab === 'mentions' && <Suspense fallback={null}><MentionsSettings key={'mn' + site.id} site={site} /></Suspense>}
+      {tab === 'answers' && <Suspense fallback={null}><AnswersSettings key={'an' + site.id} site={site} /></Suspense>}
       {tab === 'privacy' && <Locked><PrivacyTab key={'pv' + site.id} site={site} onSites={onSites} /></Locked>}
       {tab === 'alerts' && <Locked><AlertsTab key={'al' + site.id} site={site} /></Locked>}
       {tab === 'health' && <HealthSettings />}

@@ -11,6 +11,8 @@ import { useAiSearch } from '../../../../features/aisearch/useAiSearch'
 import { copy } from '../../copy'
 import type { XCtx } from '../../ctx'
 
+import { AnswersLine } from '../../../../features/answers/AnswersLine'
+import { hasAnswers } from '../../../../features/answers/on'
 const CrawlerSetup = lazy(() => import('../../../../features/crawlers/CrawlerSetup').then((m) => ({ default: m.CrawlerSetup })))
 const ROWS = 12
 
@@ -63,6 +65,7 @@ export default function AiTab({ x }: { x: XCtx }) {
   const reads: CRow[] = pages.map((p) => ({ key: p.path, a: p.flag ? `${p.path} · ${aiCopy.flag[p.flag]}` : p.path, bar: p.read / read, mono: true, onPick: () => x.pick('page', p.path), c: [fmtInt(p.read), fmtInt(p.sent)] }))
   return (
     <>
+      {hasAnswers() && <AnswersLine x={x} />}
       <XSec a={aiCopy.google}  />
       <GoogleLines x={x} />
       <XSec a={aiCopy.assistants} b={fmtInt(people.reduce((n, a) => n + a.visitors, 0))} />

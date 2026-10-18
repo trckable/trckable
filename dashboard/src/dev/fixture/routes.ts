@@ -15,6 +15,7 @@ import {
   siteOf,
   type Ctx,
 } from './report'
+import { answersReport, answersSettings, answersState } from './answers'
 import { busierOf, nowOf } from './live'
 import { crawlersOf, funnelOf, heatOf, linksOf, scrollOf, segments } from './sections'
 import { hash, mulberry, pick } from './rand'
@@ -324,6 +325,10 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
       const bots = crawlersOf(c, id, parseQuery(sp)).series.filter((s) => s.kind === 'train')
       return ok({ visitors: 12, assistants: [{ name: 'ChatGPT', visitors: 9, referrer: 'chatgpt.com' }, { name: 'Perplexity', visitors: 3, referrer: 'perplexity.ai' }], referrers: [{ value: 'chatgpt.com', visitors: 9 }, { value: 'perplexity.ai', visitors: 3 }], crawled: bots.reduce((n, s) => n + s.total, 0), bots: bots.map((s) => ({ name: s.name, kind: s.kind, hits: s.total })), pages: [], google: c.conn.search })
     }
+    case 'report/answers':
+      return ok(answersReport(answersState()))
+    case 'answers':
+      return ok(answersSettings(answersState()))
     case 'report/crawlers':
       return ok(crawlersOf(c, id, parseQuery(sp)))
     case 'report/scroll': {

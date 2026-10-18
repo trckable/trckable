@@ -16,6 +16,7 @@ import type { ChartTab } from './hosted/Charts'
 
 const XCharts = lazy(() => import('./hosted/Charts'))
 const AiTab = lazy(() => import('./hosted/AiTab'))
+const AnswersTab = lazy(() => import('../../../features/answers/AnswersTab'))
 const Earners = lazy(() => import('./hosted/Revenue').then((m) => ({ default: m.Earners })))
 const SalePages = lazy(() => import('./hosted/Revenue').then((m) => ({ default: m.SalePages })))
 const Buyers = lazy(() => import('./hosted/Lines').then((m) => ({ default: m.Buyers })))
@@ -62,6 +63,7 @@ export function Hosted({ tab, x }: { tab: HostedTab; x: XCtx }) {
       {tab === 'retention' && <Retention x={x} query={q} />}
       {tab === 'people' && <People x={x} onPick={setVisitor} />}
       {tab === 'ai' && <AiTab x={x} />}
+      {tab === 'answers' && <AnswersTab x={x} />}
       {visitor && (
         <JourneyDialog
           site={x.site}
