@@ -16,7 +16,6 @@ const GOALS: Record<SiteKind, string> = { shop: 'Purchase', saas: 'Sign-up', con
 export function setupOf(): SetupState {
   const items = [
     core('verified', true, { pages: 14 }),
-    core('own_visits', false),
     core('locale', state.locale, { timezone: 'Europe/Berlin', currency: 'EUR' }),
     core('goal', false, { suggestion: GOALS[state.kind] }),
     opt('payments', false, { provider: 'stripe' }),
@@ -24,6 +23,7 @@ export function setupOf(): SetupState {
     opt('search', true),
     opt('crawlers', false),
     opt('proxy', true, { last_seen: 1760000000 }),
+    extra('own_visits', false),
     extra('vitals', false, { bytes: 1130 }),
     extra('heatmaps', false),
     extra('ga', false),
