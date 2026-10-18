@@ -12,6 +12,7 @@ import { badge, rowsOf, settle, unreadCount, type Notice, type NoticeRow } from 
 import { useBellAlert } from './useBellAlert'
 import { OPEN_GAP_MS, type useNotices } from './useNotices'
 import { dateFmt } from '../../lib/format'
+import { QUERY } from '../../kit/breakpoints'
 
 const MilestoneSheet = lazyLoad(() => import('./MilestoneSheet'))
 
@@ -53,7 +54,7 @@ function useOpenRows(src: NoticeRow[], open: boolean, gone: ReadonlySet<string>)
 
 export function Bell({ site, notices }: { site: Site | null; notices: ReturnType<typeof useNotices> }) {
   const { items, read, refresh, mark, markAll, can, dismiss, archive } = notices
-  const [sheet, setSheet] = useState(() => window.matchMedia('(max-width: 600px)').matches)
+  const [sheet, setSheet] = useState(() => window.matchMedia(QUERY.xs).matches)
   const [told, setTold] = useState<Milestone | null>(null)
   const [open, setOpen] = useState(false)
   // Rows put away while the menu is open leave it at once; the rest of a change waits for nothing and moves nothing.
@@ -72,7 +73,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
   }, [open, refresh])
   const warm = useCallback(() => refresh(OPEN_GAP_MS, true), [refresh])
   useEffect(() => {
-    const q = window.matchMedia('(max-width: 600px)')
+    const q = window.matchMedia(QUERY.xs)
     const f = () => setSheet(q.matches)
     q.addEventListener('change', f)
     return () => q.removeEventListener('change', f)

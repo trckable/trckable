@@ -19,6 +19,7 @@ import { Timeline } from './Timeline'
 import { useClock, useNow, useOpenIncident, usePeriodIncidents } from './useIncidents'
 import type { Incident } from './api'
 import '../../mock/mock.css'
+import '../../kit/layout.css'
 import '../../mock/theme.css'
 import './incidentsPage.css'
 

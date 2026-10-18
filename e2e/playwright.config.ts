@@ -37,6 +37,20 @@ if (!existsSync(BUSY)) {
   )
   writeFileSync(BUSY, rows.join('\n') + '\n')
 }
+// Two weeks of steady traffic, enough for the Briefing to know what is usual: it scores the day (the ring, or the scores' card on a phone).
+export const STEADY_DOMAIN = 'steady.example'
+const STEADY = join(DATA, 'steady.ndjson')
+if (!existsSync(STEADY)) {
+  const noon = Math.floor(Date.now() / 86_400_000) * 86_400_000 + 12 * 3_600_000
+  const perDay = [190, 210, 175, 240, 200, 185, 220, 195, 230, 180, 205, 190, 215, 200]
+  const rows = perDay.flatMap((n, d) =>
+    Array.from({ length: n }, (_, i) => JSON.stringify({ ts: new Date(noon - (d + 1) * 86_400_000 + i * 60_000).toISOString(), path: i % 3 ? '/pricing' : '/', visitor: `steady-${d}-${i}`, referrer: i % 4 ? 'google.com' : '' })),
+  )
+  // And visitors in the last minutes of today, so the day has something to score.
+  const first = Math.max(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()) + 1000, Date.now() - 40 * 20_000)
+  const today = Array.from({ length: 40 }, (_, i) => JSON.stringify({ ts: new Date(first + i * 10_000).toISOString(), path: i % 3 ? '/pricing' : '/', visitor: `steady-today-${i}`, referrer: i % 4 ? 'google.com' : '' }))
+  writeFileSync(STEADY, [...rows, ...today].join('\n') + '\n')
+}
 // A month with a first day of data in the middle (nothing before it), a peak on that first day and on the last, and
 // a source behind most rises: the chart's labels with the most in their way.
 export const LABELS_DOMAIN = 'labels.example'
@@ -88,7 +102,7 @@ export default defineConfig({
   webServer: [
     {
       // example.com first (the suite's own site), then the one with history, then the server.
-      command: `sh -c '"${BIN}" site add example.com && "${BIN}" site add ${HISTORY_DOMAIN} && "${BIN}" import ${HISTORY_DOMAIN} "${HISTORY}" && "${BIN}" site add ${BUSY_DOMAIN} && "${BIN}" import ${BUSY_DOMAIN} "${BUSY}" && "${BIN}" site add ${LABELS_DOMAIN} && "${BIN}" import ${LABELS_DOMAIN} "${LABELS}" && "${BIN}" site add ${TRUTH_DOMAIN} && "${BIN}" import ${TRUTH_DOMAIN} "${TRUTH}" && exec "${BIN}" serve'`,
+      command: `sh -c '"${BIN}" site add example.com && "${BIN}" site add ${HISTORY_DOMAIN} && "${BIN}" import ${HISTORY_DOMAIN} "${HISTORY}" && "${BIN}" site add ${BUSY_DOMAIN} && "${BIN}" import ${BUSY_DOMAIN} "${BUSY}" && "${BIN}" site add ${STEADY_DOMAIN} && "${BIN}" import ${STEADY_DOMAIN} "${STEADY}" && "${BIN}" site add ${LABELS_DOMAIN} && "${BIN}" import ${LABELS_DOMAIN} "${LABELS}" && "${BIN}" site add ${TRUTH_DOMAIN} && "${BIN}" import ${TRUTH_DOMAIN} "${TRUTH}" && exec "${BIN}" serve'`,
       url: `${API}/readyz`,
       reuseExistingServer: false,
       env: {

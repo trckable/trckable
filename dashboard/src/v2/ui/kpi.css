@@ -28,7 +28,7 @@
 }
 /* Explore at full width on a tablet: the section list takes 224 px, so the content has room for two cards across, not four, and its two
    tables stack. From 1040 px (the content is 768 px or more) it is the desktop layout. */
-@media (min-width: 601px) and (max-width: 1039px) {
+@media (--sm-up) and (--md-down) {
   .mk .xp.full .kcs.xk {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }

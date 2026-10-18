@@ -7,7 +7,7 @@ import { useBootCache } from "./lib/bootCache";
 import { api, setUnauthorizedHandler, type Site } from "./lib/api"; import { startEarly, takeEarly, takeSetup } from "./lib/earlyStart";
 import { navigate, useLocation } from "./lib/url"; import "./lib/legacyPaths";
 import { AccountDialog, SettingsDialog, usePreloadDialogs } from "./views/dialogs";
-import "./styles.css"; import "./field.css";
+import "./kit/breakpoints.css"; import "./styles.css"; import "./field.css";
 import { lazyLoad, whenIdle } from "./lib/lazyLoad";
 import { SiteHost } from "./views/SiteHost";
 import { applySavedTheme } from "./lib/theme";

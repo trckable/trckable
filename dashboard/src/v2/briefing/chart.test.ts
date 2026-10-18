@@ -7,12 +7,19 @@ const res = (xs: number[]): Result => ({ approximate: false, kpis: { visitors: 0
 
 describe('the chart of a day', () => {
   const day = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
-  it('stops at the hour it is and shades the hours still to come', () => {
+  it('stops at the hour it is and shades the hours still to come, with the axis running to the end of the day', () => {
     const c = chartOf({ cur: res(day), prev: res(day), bucket: 'hour', unit: 'today', nowT: '2026-10-16T09:30', weekday: 'Friday' })
     expect(c.live).toBe(true)
     expect(c.points).toHaveLength(10)
-    expect(c.span).toBe(12)
+    expect(c.span).toBe(24)
     expect(c.points[0].name).toBe('00:00')
+  })
+  it('a site whose clock is just past midnight still draws the whole day, not the first few hours', () => {
+    const c = chartOf({ cur: res(day), prev: res(day), bucket: 'hour', unit: 'today', nowT: '2026-10-16T00:12', weekday: 'Friday' })
+    expect(c.span).toBe(24)
+    expect(c.points).toHaveLength(1)
+    expect(c.elapsed).toBeCloseTo(0.2, 1)
+    expect(c.axis[23].tick).toBe('23:00')
   })
   it('a whole past day has every hour and nothing to come', () => {
     const c = chartOf({ cur: res(day), prev: res(day), bucket: 'hour', unit: 'yesterday', nowT: '2026-10-17T09:30', weekday: 'Friday' })

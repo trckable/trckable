@@ -11,6 +11,7 @@ import { askOf, closeExplore, type Ask } from './open'
 import { pageDetails } from './pageStore'
 import { keepFull, wasFull } from './persist'
 import { firstFocusable, usePanelKeys } from './usePanelKeys'
+import { QUERY } from '../../kit/breakpoints'
 
 // The content is its own chunk: nothing of it is loaded until Explore is first opened.
 const PanelContent = lazy(() => import('./PanelContent'))
@@ -21,7 +22,7 @@ const OUT = 240
 
 const sameAsk = (a: Ask | null, b: Ask | null): boolean => (a === null || b === null ? a === b : a.tab === b.tab && keyOf(a.filters) === keyOf(b.filters))
 
-const wide = () => matchMedia('(min-width:701px)').matches
+const wide = () => matchMedia(QUERY['sm-up']).matches
 
 type PanelProps = Omit<ContentProps, 'ask' | 'full' | 'onFull' | 'close'>
 

@@ -1,0 +1,1 @@
+Layouts follow one set of widths on every screen: card rows always fill their row, the Briefing chart keeps a sensible height from a phone to a tablet, the day's chart runs to the end of the day, the scores sit side by side on a phone, and a sheet is never covered by the bottom bar.

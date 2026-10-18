@@ -9,6 +9,7 @@ import type { Story } from './cards'
 import { copy } from './copy'
 import { goDeeper } from './deeper'
 import type { useBriefingState } from './useBriefingState'
+import { QUERY } from '../../kit/breakpoints'
 
 export function cardCtx(o: { site: Site; ui: ReturnType<typeof useBriefingState>; wset: Record<string, Watched>; nowSec: number; hhmm: string; spark: number[]; onGoal: () => void }): CardCtx {
   const { site, ui, wset } = o
@@ -18,7 +19,7 @@ export function cardCtx(o: { site: Site; ui: ReturnType<typeof useBriefingState>
   return {
     verified: site.verified,
     know: () => null,
-    onOpen: (s) => window.matchMedia('(max-width: 600px)').matches && ui.setOpen(s),
+    onOpen: (s) => window.matchMedia(QUERY.xs).matches && ui.setOpen(s),
     onDeeper: (s) => goDeeper(site, s.deeper),
     watched: (s) => key(s) in wset,
     onWatch: (s) => {
