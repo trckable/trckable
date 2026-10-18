@@ -1,0 +1,1 @@
+Fields have no border and no coloured ring anywhere: one soft fill, and on focus a slightly stronger fill with a faint neutral line (the ⌘K search no longer glows lime, Settings selects lose their outline), all from one shared stylesheet that a test now guards.

@@ -69,6 +69,12 @@ export function PageHeader(p: PageHeaderProps) {
     setFind(true)
   }
   useEffect(() => whenIdle(Palette.preload), [])
+  // The phone's bar opens the same box.
+  useEffect(() => {
+    const on = () => openFind('')
+    window.addEventListener('trckable:find', on)
+    return () => window.removeEventListener('trckable:find', on)
+  }, [])
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (pressed(e, 'ask')) {
@@ -122,7 +128,7 @@ export function PageHeader(p: PageHeaderProps) {
         ring={p.identity || !site ? null : <SetupRing site={site} onGoal={p.onGoal ?? (() => openFind(pal.create))} fresh={!!p.waiting} visited={!!p.visited} />}
         views={here && !p.identity && !p.waiting ? <SegmentedSwitch id="views" label={copy.view} value={here} onChange={(t) => void switchTab(t, here)} items={[{ value: 'live', label: copy.live, title: copy.liveTitle, dot: down ? 'down' : 'ok', count: online ?? undefined }, { value: 'briefing', label: copy.briefing, title: copy.briefingTitle }]} /> : null}
         period={here === 'briefing' ? p.period : null}
-        explore={p.waiting ? null : <ExploreChip label={copy.explore} kbd="⌘K" onClick={exploreOpen} />}
+        explore={p.waiting ? null : <ExploreChip label={question ? copy.askOrSearch : copy.explore} kbd="⌘K" onClick={question ? () => setFind(true) : exploreOpen} />}
         extras={slots.headerExtra}
         bell={p.identity ? null : <Bell site={site} notices={notices} />}
         account={isShared() ? null : <AccountMenu alert={slots.accountAlert} />}

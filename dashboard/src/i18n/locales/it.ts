@@ -2264,6 +2264,7 @@ export default {
   'v2.allSites': 'Tutti i siti',
   'v2.askPeek': 'Chiedi a Peek',
   'v2.home': 'Home',
+  'v2.askOrSearch': 'Chiedi o cerca',
   'v2.find': 'Cerca un sito...',
   'v2.addSite': '+ Aggiungi un sito',
   'v2.share': 'Condividi questo sito',
