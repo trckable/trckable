@@ -11,6 +11,7 @@ import { DialogHead } from './DialogHead'
 import { Chevron } from './DatePicker'
 import { Month } from './DateRangeMonth'
 import { toast } from './Toast'
+import { noteRemoved } from '../features/notes/undo'
 import { fail, type Annotation, type Site, more } from '../lib/apiMore'
 import { addDays, fmtDay, type ISODate } from '../lib/dates'
 import { fmtInt } from '../lib/format'
@@ -177,7 +178,7 @@ export function NoteDialog({
                     more
                       .deleteAnnotation(site.id, n.id)
                       .then(() => {
-                        toast('Note removed')
+                        noteRemoved(site.id, n, onSaved)
                         onSaved()
                       })
                       .catch((e: unknown) => fail(e))

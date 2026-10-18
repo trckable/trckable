@@ -9,14 +9,36 @@ import { useGlide } from '../components/glide'
 import { useLockScroll } from '../components/lockScroll'
 import './Modal.css'
 
-// Escape closes the dialog on top, not every open one at once.
-const stack: (() => void)[] = []
+// The one overlay manager. Escape closes the dialog on top, not every open one at once, and only one dialog is
+// ever in view: a dialog opened from another takes its place, and the one beneath comes back when it closes
+// (the way back). A question about what is beneath (`over`: a confirmation) is the one thing that nests.
+type Entry = { close: () => void; over: boolean; back: () => HTMLElement | null }
+const stack: Entry[] = []
 if (typeof document !== 'undefined')
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape' || stack.length === 0) return
     e.stopPropagation()
-    stack[stack.length - 1]()
+    stack[stack.length - 1].close()
   })
+
+/** Everything below the topmost replacing dialog is put away: out of sight, out of reach. A sheet of the page (the
+ *  Briefing's drawers) is put away too while a dialog is open: body[data-modal] says so to its styles. */
+function settle() {
+  const top = stack.map((s) => s.over).lastIndexOf(false)
+  if (top === -1) delete document.body.dataset.modal
+  else document.body.dataset.modal = ''
+  stack.forEach((s, i) => {
+    const el = s.back()
+    if (!el) return
+    if (i < top) {
+      el.setAttribute('data-under', '')
+      el.setAttribute('inert', '')
+    } else {
+      el.removeAttribute('data-under')
+      el.removeAttribute('inert')
+    }
+  })
+}
 
 /** Keys pressed while focus is inside a same-origin frame never reach this page's
  *  document: hear Escape there too. A frame from another origin cannot be reached
@@ -107,6 +129,7 @@ export function Modal({
   className = '',
   keepSize = true,
   focus = 'first',
+  over = false,
   children,
 }: {
   label: string
@@ -119,9 +142,12 @@ export function Modal({
    *  (a window whose first control is a close button that should not glow). */
   focus?: 'first' | 'box'
   className?: string
+  /** A question about the dialog beneath (a confirmation): it shows over it instead of replacing it. */
+  over?: boolean
   children: ReactNode
 }) {
   useLockScroll()
+  const back = useRef<HTMLDivElement>(null)
   // The entry is pushed once, on mount, so a re-render of an outer dialog can
   // never jump it above the one that opened later.
   const latest = useRef(onClose)
@@ -129,16 +155,19 @@ export function Modal({
     latest.current = onClose
   })
   useEffect(() => {
-    const entry = () => latest.current?.()
+    const close = () => latest.current?.()
+    const entry: Entry = { close, over, back: () => back.current }
     stack.push(entry)
-    const top = () => stack[stack.length - 1] === entry && entry()
+    settle()
+    const top = () => stack[stack.length - 1] === entry && close()
     const unhear = box.current ? hearFrames(box.current, top) : undefined
     return () => {
       unhear?.()
       const at = stack.lastIndexOf(entry)
       if (at !== -1) stack.splice(at, 1)
+      settle()
     }
-  }, [])
+  }, [over])
   // While it is open, a dialog that changes shape (a tab, a step) eases to
   // its new height instead of jumping, and always ends at its content's own
   // height. A dialog that kept the tallest tab's height left an empty block
@@ -160,7 +189,6 @@ export function Modal({
   }, [focus, before])
   // When the dialog goes, a copy of it stays for the length of its exit
   // animation and fades out. The copy is inert: no role, nothing to reach.
-  const back = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = back.current
     return () => {

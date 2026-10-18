@@ -7,6 +7,7 @@ import { isViewer } from '../../lib/me'
 import { confirm } from '../../components/Confirm'
 import { toast } from '../../components/Toast'
 import { copy } from './listCopy'
+import { noteRemoved } from './undo'
 
 export function NoteRow({ n, site, onJump, onChanged }: { n: Annotation; site: Site; onJump: (day: string) => void; onChanged: () => void }) {
   const [editing, setEditing] = useState(false)
@@ -18,9 +19,12 @@ export function NoteRow({ n, site, onJump, onChanged }: { n: Annotation; site: S
       confirmLabel: copy.remove,
       danger: true,
       busyLabel: copy.removing,
-      done: copy.removed,
       run: () => more.deleteAnnotation(site.id, n.id),
-    }).then((ok) => ok && onChanged())
+    }).then((ok) => {
+      if (!ok) return
+      noteRemoved(site.id, n, onChanged)
+      onChanged()
+    })
   return (
     <li className="note-row">
       <button type="button" className="note-jump" aria-label={`${n.text}. ${copy.jump(n.day)}`} onClick={() => onJump(n.day)}>

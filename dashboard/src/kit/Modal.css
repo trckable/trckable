@@ -10,7 +10,9 @@
   display: grid;
   place-items: center;
   padding: 16px;
-  z-index: 40;
+  /* Over the page's own sheets (70), the Explore panel (71), the palette (80) and menus (96): a dialog opened from any of
+     them is on top of it. Menus, pickers (120+) and toasts (200) opened from the dialog are above it. */
+  z-index: 100;
 }
 
 /* Every dialog: a soft light from the top corner, and a small fade and scale
@@ -254,4 +256,10 @@
     border: 1px solid var(--border-2);
     border-radius: 50%;
   }
+}
+
+/* A dialog that another one has taken the place of: out of sight until the one on top closes. */
+.modal-back[data-under] {
+  visibility: hidden;
+  pointer-events: none;
 }

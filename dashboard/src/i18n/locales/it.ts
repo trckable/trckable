@@ -1281,6 +1281,8 @@ export default {
   'notes.list.removeBody': (text: string) => `«${text}» sparisce dal grafico per tutto il team. Non si può ripristinare.`,
   'notes.list.removing': 'Eliminazione…',
   'notes.list.removed': 'Nota eliminata',
+  'notes.list.undo': 'Annulla',
+  'notes.list.restored': 'Nota ripristinata',
   'notes.list.close': 'Chiudi',
   'notes.list.tab': 'Note',
   'notes.marker': (n: number, day: string) => `${int(n)} · ${dayLabel(day, { weekday: true })}`,

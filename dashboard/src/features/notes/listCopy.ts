@@ -31,6 +31,8 @@ export const copy = defineCopy('notes.list', {
   removeBody: (text: string) => `“${text}” goes from the chart for everyone on the team. It cannot be brought back.`,
   removing: 'Deleting…',
   removed: 'Note deleted',
+  undo: 'Undo',
+  restored: 'Note back',
   close: 'Close',
 
   // Settings.

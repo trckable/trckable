@@ -10,10 +10,10 @@
   max-width: calc(100vw - 32px); /* never hangs off the edge of a narrow screen */
   pointer-events: none;
 }
-/* The Share dialog is a bottom sheet on a phone and its controls sit low: a
-   toast goes to the top there, in the strip the sheet leaves. */
+/* A dialog is a bottom sheet on a phone and its buttons sit low: while one is open (or a sheet of the page), a toast
+   goes to the top, in the strip the sheet leaves, so it never covers the button it is about. */
 @media (max-width: 640px) {
-  body:has(.sd-modal) .toasts {
+  body:has(.modal-back:not(.leaving), .mk .cd.on) .toasts {
     top: calc(8px + env(safe-area-inset-top));
     bottom: auto;
     left: 16px;

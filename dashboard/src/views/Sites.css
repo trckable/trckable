@@ -25,12 +25,12 @@
   color: var(--text-2);
 }
 .stages li.now .stage-mark {
-  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
   border-right-color: transparent;
   animation: spin 0.8s linear infinite;
 }
 .stages li.done .stage-mark {
-  border-color: var(--up);
+  box-shadow: 0 0 0 2px var(--up);
   background: var(--up);
   position: relative;
 }
@@ -83,13 +83,13 @@
   align-items: center;
   gap: 14px;
   padding: 14px 16px;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: 14px;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--text) 7%, transparent);
   transition: border-color 0.15s;
 }
 .site-card.stopped {
-  border-color: color-mix(in srgb, var(--down) 35%, var(--border));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--down) 35%, var(--border));
 }
 .site-card-text {
   display: grid;
@@ -129,7 +129,7 @@
 }
 .site-pill.live {
   color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 .site-pill.live::before {
   background: var(--accent);
@@ -139,7 +139,7 @@
 }
 .site-pill.stopped {
   color: var(--down);
-  border-color: color-mix(in srgb, var(--down) 40%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--down) 40%, transparent);
 }
 .site-pill.stopped::before {
   background: var(--down);
@@ -155,9 +155,9 @@
   justify-content: center;
   gap: 8px;
   min-height: 56px;
-  border: 1.5px dashed var(--border-2);
+  border: 0;
   border-radius: 14px;
-  background: transparent;
+  background: color-mix(in srgb, var(--text) 7%, transparent);
   color: var(--text-2);
   font: inherit;
   font-size: 13.5px;
@@ -181,7 +181,7 @@
 /* ---- Deleting: a dialog that looks as serious as it is ---------------------- */
 .modal.danger-modal {
   width: min(520px, 100%);
-  border-color: color-mix(in srgb, var(--down) 45%, var(--border));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--down) 45%, var(--border));
   background:
     radial-gradient(520px 180px at 0% 0%, color-mix(in srgb, var(--down) 12%, transparent), transparent 70%),
     var(--surface);
@@ -228,7 +228,7 @@
   font-family: var(--mono);
 }
 .danger-type .input:focus {
-  border-color: var(--down);
+  box-shadow: 0 0 0 2px var(--down);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--down) 18%, transparent);
 }
 .danger-working {
@@ -283,7 +283,7 @@
 .danger-type .input:focus,
 .danger-type .input:focus-visible {
   outline: none;
-  border-color: var(--down);
+  box-shadow: 0 0 0 2px var(--down);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--down) 22%, transparent);
 }
 

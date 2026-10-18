@@ -1274,6 +1274,8 @@ export default {
   'notes.list.removeBody': (text: string) => `“${text}” verdwijnt uit de grafiek voor iedereen in het team. Dit kan niet worden teruggedraaid.`,
   'notes.list.removing': 'Verwijderen…',
   'notes.list.removed': 'Notitie verwijderd',
+  'notes.list.undo': 'Ongedaan maken',
+  'notes.list.restored': 'Notitie terug',
   'notes.list.close': 'Sluiten',
   'notes.list.tab': 'Notities',
   'notes.marker': (n: number, day: string) => `${count(n, 'notitie', 'notities')} op ${dayLabel(day, { weekday: true })}`,
