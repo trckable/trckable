@@ -1,6 +1,7 @@
 // The bell's list and which of it has been read by this person: one store for the badge and the menu. It is read once after
 // the first paint and again when the sites it asks about change, when /now answers, when a tab is shown after a minute away
-// and when the menu opens (never more than once in a minute by the first three, and never in a hidden tab).
+// and when the menu opens or is about to (never more than once in a minute by the first three, and never in a hidden tab).
+// The last list is kept in memory, so a bell that mounts again starts with it.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, type Site } from '../../lib/api'
 import { incidents } from '../../features/incidents/api'
@@ -17,9 +18,14 @@ export const GAP_MS = 60_000
 /** The least time between two reads when the menu is opened. */
 export const OPEN_GAP_MS = 5000
 
+/** The last list read, for a bell that mounts again (as long as it is the same account: the same sites). */
+let held: { key: string; own: Notice[] } | null = null
+const keyOf = (sites: Site[]) => sites.map((s) => s.id).join(',')
+const heldFor = (sites: Site[]) => (held && held.key === keyOf(sites) ? held.own : null)
+
 export function useNotices(site: Site | null, sites: Site[]) {
-  const [own, setItems] = useState<Notice[]>([])
-  const [ready, setReady] = useState(false)
+  const [own, setItems] = useState<Notice[]>(() => heldFor(sites) ?? [])
+  const [loaded, setLoaded] = useState(() => !!heldFor(sites))
   const { bell: extra, bellMore } = useV2Extras()
   const items = useMemo(() => withFeed(own, extra), [own, extra])
   const can = !isShared()
@@ -47,6 +53,7 @@ export function useNotices(site: Site | null, sites: Site[]) {
   useEffect(() => {
     refreshExtra.current = bellRefresh
   })
+  const { read, mark: send, synced, sync: syncRead } = useReadSet(can)
   const run = useCallback(async () => {
     const { site, sites } = ctx.current
     const now = Math.floor(Date.now() / 1000)
@@ -61,20 +68,25 @@ export function useNotices(site: Site | null, sites: Site[]) {
         o.mentions ? mentionsApi.list(o.id, '7d').then((r) => fromMentions(r.mentions, o.domain), () => []) : Promise.resolve([]),
       ]),
     ])
+    const list = arrange(parts.flat(), now)
+    held = { key: keyOf(sites), own: list }
     if (alive.current) {
-      setItems(arrange(parts.flat(), now))
-      setReady(true)
+      setItems(list)
+      setLoaded(true)
     }
   }, [])
   const again = useRef<(gap?: number) => void>(() => undefined)
   const later = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   /** Reads the lists again unless a read is on its way; one that began less than `gap` ms ago puts it off to when the gap is over (once). A hidden tab reads nothing. */
   const refresh = useCallback(
-    (gap = GAP_MS) => {
-      if (!can || document.visibilityState === 'hidden' || flight.current) return
+    (gap = GAP_MS, soon = false) => {
+      if (!can || document.visibilityState === 'hidden') return
+      syncRead()
+      if (flight.current) return
       const wait = last.current + gap - Date.now()
       if (wait > 0) {
-        if (!later.current)
+        // The menu opening (or about to) wants the list as it is: a read that came a moment ago answers it, and a second one must not land while it is open.
+        if (!soon && !later.current)
           later.current = setTimeout(() => {
             later.current = undefined
             again.current(gap)
@@ -87,7 +99,7 @@ export function useNotices(site: Site | null, sites: Site[]) {
         flight.current = null
       })
     },
-    [can, run],
+    [can, run, syncRead],
   )
   useEffect(() => {
     again.current = refresh
@@ -122,11 +134,12 @@ export function useNotices(site: Site | null, sites: Site[]) {
       document.removeEventListener('visibilitychange', shown)
     }
   }, [site?.id, site?.domain, site?.mentions, sitesKey, can, refresh])
-  const { read, mark: send } = useReadSet(can)
   const mark = useCallback((id: string) => send([id]), [send])
   const markAll = useCallback(() => {
     bellMore?.readAll()
     send(items.map((i) => i.id))
   }, [send, items, bellMore])
+  // Ready when the whole list can be drawn at once: the site's own rows, what the account has read and the build's own rows.
+  const ready = loaded && synced && (bellMore?.ready ?? true)
   return { items, read, refresh, mark, markAll, can, ready, dismiss: bellMore?.dismiss, archive: bellMore?.archive }
 }

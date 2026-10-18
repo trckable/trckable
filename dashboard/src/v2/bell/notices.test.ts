@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { arrange, badge, othersOf, OTHERS, rowsOf, unreadCount, withFeed, type Notice } from './notices'
+import { arrange, badge, othersOf, OTHERS, rowsOf, settle, unreadCount, withFeed, type Notice } from './notices'
 
 const n = (id: string, at: number, kind: Notice['kind'] = 'down'): Notice => ({ id, kind, site: 'a.com', title: id, sub: '', at })
 
@@ -52,5 +52,28 @@ describe('the account’s other sites', () => {
     expect(out.map((s) => s.id)).not.toContain('a')
     expect(out.map((s) => s.id)).not.toContain('b')
     expect(out).toHaveLength(OTHERS)
+  })
+})
+
+describe('the rows of an open bell', () => {
+  const row = (id: string, at: number, unread = true) => ({ ...n(id, at), unread })
+
+  it('keeps notices of one second in one order whatever order they arrive in', () => {
+    const now = 10_000_000
+    const a = arrange([n('x', now - 5), n('y', now - 5)], now).map((r) => r.id)
+    const b = arrange([n('y', now - 5), n('x', now - 5)], now).map((r) => r.id)
+    expect(a).toEqual(b)
+  })
+
+  it('puts a new row on top and moves nothing else', () => {
+    const shown = [row('b', 20), row('a', 10)]
+    expect(settle(shown, [row('c', 30), ...shown], new Set()).map((r) => r.id)).toEqual(['c', 'b', 'a'])
+  })
+
+  it('keeps a row that left the list as read, and drops one put away', () => {
+    const shown = [row('b', 20), row('a', 10)]
+    const out = settle(shown, [row('a', 10)], new Set())
+    expect(out.map((r) => [r.id, r.unread])).toEqual([['b', false], ['a', true]])
+    expect(settle(shown, [row('a', 10)], new Set(['b'])).map((r) => r.id)).toEqual(['a'])
   })
 })
