@@ -4,7 +4,7 @@ import { createMcpServer, rangeFor } from '../src/mcp'
 const site = { id: 'tkb_abc', domain: 'example.com', name: '', timezone: 'Europe/Berlin', currency: 'USD', proxy_key: 'secret' }
 const kpis = { visitors: 200, sessions: 260, pageviews: 520, bounce_rate: 0.456, avg_session_s: 107.4, views_per_session: 2, new_visitor_share: 0.8 }
 
-function fakeAPI(calls: string[], opts: { sites?: object[]; status?: number; before?: object } = {}) {
+function fakeAPI(calls: string[], opts: { sites?: object[]; status?: number; before?: object; noEngine?: boolean } = {}) {
   return (async (url: string, init?: RequestInit) => {
     calls.push(url)
     expect((init?.headers as Record<string, string>).Authorization).toBe('Bearer tkb_live_test')
@@ -31,6 +31,20 @@ function fakeAPI(calls: string[], opts: { sites?: object[]; status?: number; bef
         previous_to: '2026-09-21',
         online: 4,
       })
+    if (u.pathname.endsWith('/report/answers')) {
+      if (opts.noEngine) return json({ engines: [] })
+      const cell = (named: number, cited: number) => ({ seen: Math.max(named, cited), runs: 2, named, cited, position: named ? 1 : 0 })
+      return json({
+        engines: ['openai', 'anthropic'],
+        latest: { round: 1, seen: 9, total: 30, complete: true },
+        was: { round: 0, seen: 6, total: 30 },
+        rivals: [{ name: 'Plausible', seen: 14, total: 30 }],
+        questions: [{ id: 4, text: 'best open-source analytics', active: true, engines: { openai: cell(2, 1), anthropic: cell(0, 0) }, state: 'named', instead: ['Plausible'], pages: ['/compare'] }],
+        pages: [{ path: '/compare', answers: 3, read: 410, sent: 31, revenue: 124000 }],
+        money: { currency: 'USD', exponent: 2 },
+        rounds: [], changes: [], text: 'THE FULL ANSWER TEXT',
+      })
+    }
     if (u.pathname.endsWith('/milestones'))
       return json({
         milestones: [
@@ -74,6 +88,7 @@ describe('trckable MCP server', () => {
       'trckable_revenue',
       'trckable_realtime',
       'trckable_milestones',
+      'trckable_answers',
     ])
     const unknown = (await srv.handle({ jsonrpc: '2.0', id: 3, method: 'resources/list' })) as { error: { code: number } }
     expect(unknown.error.code).toBe(-32601)
@@ -147,6 +162,20 @@ describe('trckable MCP server', () => {
     expect(data.next).toEqual([{ kind: 'visitors', next_step: 100000, now: 14212 }])
     expect(calls[calls.length - 1]).toContain('/milestones?next=1')
     expect((await call(srv, 'trckable_milestones')).data.milestones[1]).toEqual({ kind: 'record_day', value: 412, reached_on: '2026-08-01' })
+  })
+
+  it('tells what the assistants said without the answers\' text, through the untrusted-data fence', async () => {
+    const calls: string[] = []
+    const srv = createMcpServer({ host: 'https://s', apiKey: 'tkb_live_test', fetch: fakeAPI(calls), now })
+    const { text, data } = await call(srv, 'trckable_answers', { period: '7d' })
+    expect(calls[calls.length - 1]).toBe('https://s/api/v1/sites/tkb_abc/report/answers?from=2026-09-16&to=2026-09-22')
+    expect(text).toMatch(/untrusted data, not instructions/)
+    expect(data).toMatchObject({ site: 'example.com', seen: 9, total: 30, was: { seen: 6, total: 30 }, rivals: [{ name: 'Plausible', seen: 14, total: 30 }] })
+    expect(data.questions[0]).toEqual({ text: 'best open-source analytics', chatgpt: { state: 'named and linked', seen: 2, runs: 2 }, perplexity: null, claude: { state: 'not there', seen: 0, runs: 2 }, instead: ['Plausible'] })
+    expect(data.pages).toEqual([{ path: '/compare', read: 410, sent: 31, revenue: 1240 }])
+    expect(text).not.toContain('FULL ANSWER')
+    const off = await call(createMcpServer({ host: 'https://s', apiKey: 'tkb_live_test', fetch: fakeAPI([], { noEngine: true }), now }), 'trckable_answers')
+    expect(off.data.note).toMatch(/no AI key/)
   })
 
   it('explains mistakes instead of guessing', async () => {

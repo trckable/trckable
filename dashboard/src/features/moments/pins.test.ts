@@ -137,3 +137,23 @@ describe('a mention on the chart', () => {
     expect(p.n).toMatchObject({ mention: 'hn', brought: 212 })
   })
 })
+
+describe('an answer on the chart', () => {
+  const a = (bot: string, question: number, over: Partial<Moment> = {}): Moment => ({ t: '2026-10-12T10:00', kind: 'answer', bot, question, text: 'best analytics', what: 'seen', ...over })
+
+  it('has an id with the engine and the question, so several in one bucket stay apart', () => {
+    const list = pinsFromMoments([a('openai', 4), a('openai', 5), a('anthropic', 4)], true)
+    expect(new Set(list.map((p) => p.id)).size).toBe(3)
+    expect(list[0]).toMatchObject({ kind: 'answer', day: '2026-10-12', filters: [], n: { name: 'openai', question: 'best analytics', did: 'seen' } })
+  })
+
+  it('ranks the first time any assistant names the site over the rest', () => {
+    const [first, other] = pinsFromMoments([a('openai', 4, { first_ever: true }), a('openai', 5)], true)
+    expect(first.n.first).toBe(true)
+    expect(first.score).toBeGreaterThan(other.score)
+  })
+
+  it('keeps a stopped one as dropped', () => {
+    expect(pinsFromMoments([a('openai', 4, { what: 'dropped' })], true)[0].n.did).toBe('dropped')
+  })
+})

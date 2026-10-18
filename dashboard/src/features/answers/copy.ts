@@ -22,6 +22,7 @@ export const answersCopy = defineCopy('answers', {
   instead: 'Named instead',
   none: 'No one else',
   engine: rec({ openai: 'ChatGPT', perplexity: 'Perplexity', anthropic: 'Claude' }),
+  company: rec({ openai: 'OpenAI', perplexity: 'Perplexity', anthropic: 'Anthropic' }),
   runs: (a: number, total: number) => `${n(a)} of ${n(total)} runs`,
   honest: 'What each API answered, asked fresh with web search on. People using the apps may see something else.',
   from: (country: string) => `Asked from ${country}`,
@@ -66,6 +67,7 @@ export const answersCopy = defineCopy('answers', {
     noQuestions: ['Answers has no questions yet', 'Add a few questions and see if ChatGPT, Perplexity and Claude name you.'],
     add: 'Add questions',
   },
+  alert: { label: 'Answers', hint: 'When an assistant that named you in the last two rounds stops naming you: once per question' },
   change: {
     seen: (engine: string, q: string) => `${engine} started naming you for “${q}”`,
     dropped: (engine: string, q: string) => `${engine} stopped naming you for “${q}”`,

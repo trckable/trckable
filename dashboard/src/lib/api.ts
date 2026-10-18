@@ -220,7 +220,7 @@ export interface Visit {
 export interface Alert {
   id: string
   site_id: string
-  kind: 'stopped' | 'spike' | 'customer' | 'disk' | 'weekly' | 'milestone' | 'surge' | 'mention'
+  kind: 'stopped' | 'spike' | 'customer' | 'disk' | 'weekly' | 'milestone' | 'surge' | 'mention' | 'answer'
   enabled: boolean
   target: string
   threshold: number

@@ -5,7 +5,7 @@ import { bucketLabel } from '../../charts/timeScale'
 import { fmtDay } from '../../lib/dates'
 
 export type SaleWhat = 'new' | 'upgrade' | 'renewal' | 'sale'
-export type MomentKind = 'spike' | 'surge' | 'mention' | 'sale' | 'country' | 'ai' | 'milestone' | 'note'
+export type MomentKind = 'spike' | 'surge' | 'mention' | 'answer' | 'sale' | 'country' | 'ai' | 'milestone' | 'note'
 
 export interface Moment {
   t: string
@@ -16,8 +16,11 @@ export interface Moment {
   count?: number
   amount?: number
   channel?: string
-  /** A sale's kind, when all its payments were the same. */
-  what?: SaleWhat
+  /** A sale's kind, when all its payments were the same; an answer's change (seen, dropped). */
+  what?: SaleWhat | 'seen' | 'dropped'
+  /** An answer's question (its id) and whether it is the first time any assistant named the site. */
+  question?: number
+  first_ever?: boolean
   country?: string
   bot?: string
   step?: string

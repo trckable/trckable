@@ -228,7 +228,7 @@ Hosted checkout links (Stripe Payment Links, Lemon Squeezy, Polar and Dodo check
 }
 ```
 
-Tools: `trckable_sites`, `trckable_overview`, `trckable_sources`, `trckable_pages`, `trckable_audience`, `trckable_goals`, `trckable_revenue`, `trckable_realtime`, `trckable_milestones`. Dates follow each site's timezone; periods like `7d`, `mtd` or `lastmonth`, or exact `from`/`to` dates, with an optional comparison.
+Tools: `trckable_sites`, `trckable_overview`, `trckable_sources`, `trckable_pages`, `trckable_audience`, `trckable_goals`, `trckable_revenue`, `trckable_realtime`, `trckable_milestones`, `trckable_answers` (what ChatGPT, Perplexity and Claude say about the site, without the answers' text). Dates follow each site's timezone; periods like `7d`, `mtd` or `lastmonth`, or exact `from`/`to` dates, with an optional comparison.
 
 ## Command line
 

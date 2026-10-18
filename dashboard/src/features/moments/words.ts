@@ -10,6 +10,8 @@ import { fmtDay } from '../../lib/dates'
 import { fmtInt, fmtPct } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
 import { times } from '../../lib/times'
+import { answerLine } from '../story/words'
+import { answersCopy as answers } from '../answers/copy'
 import { copy as mentions } from '../mentions/copy'
 import { jumpOf } from '../mentions/model'
 import { copy, titleOf } from './copy'
@@ -56,6 +58,8 @@ export function say(pin: Pin, money: (minor: number) => string): Said {
       const line = mentions.postedLine(mentions.postedHead[sourceOf(n.mention)], n.visitors ?? 0)
       return { title, line, big: copy.visitors(n.visitors ?? 0), facts: [n.name ?? '', when(pin.day)].filter(Boolean) }
     }
+    case 'answer':
+      return { title, line: answerLine({ bot: n.name, text: n.question, what: n.did, first_ever: n.first }), big: answers.engine[n.name ?? ''] ?? '', facts: [n.question ?? '', when(pin.day)].filter(Boolean) }
     case 'surge':
       return { title, line: n.name ? copy.surgeFrom(n.name) : title, big: copy.visitors(n.visitors ?? 0), facts: [copy.usual(times(n.factor ?? 0)), when(pin.day)] }
     case 'sale': {

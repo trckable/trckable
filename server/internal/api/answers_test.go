@@ -243,7 +243,7 @@ func TestAnswersSetupItemAndMoments(t *testing.T) {
 	_, out := do(t, c, "GET", base+"/moments?from=2026-09-22&to=2026-09-22&bucket=hour", "")
 	var found bool
 	for _, m := range out["moments"].([]any) {
-		if mm := m.(map[string]any); mm["kind"] == "answer" && mm["bot"] == "openai" && mm["what"] == "seen" && mm["question"] == float64(qs[0].ID) {
+		if mm := m.(map[string]any); mm["kind"] == "answer" && mm["bot"] == "openai" && mm["what"] == "seen" && mm["first_ever"] == true && mm["question"] == float64(qs[0].ID) {
 			found = true
 		}
 	}
