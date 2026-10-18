@@ -66,6 +66,7 @@ func TestOnlyAnOwnerDeletesASiteOrErasesAPerson(t *testing.T) {
 			{"a viewer", viewer, []string{csrf, "1"}, http.StatusForbidden},
 			{"an API key", client(), []string{"Authorization", "Bearer " + key}, http.StatusForbidden},
 			{"a shared link", client(), []string{"Cookie", shared, csrf, "1"}, http.StatusUnauthorized},
+			{"the automation token", client(), []string{"Authorization", "Bearer automation-token"}, http.StatusForbidden},
 		} {
 			if code, out := do(t, who.c, rt.method, rt.path, rt.body, who.hdr...); code != who.want {
 				t.Errorf("%s as %s: %d %v, want %d", rt.name, who.name, code, out, who.want)
