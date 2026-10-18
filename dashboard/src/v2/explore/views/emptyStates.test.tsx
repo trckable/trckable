@@ -76,6 +76,19 @@ describe('what has no switch says so when nothing is there', () => {
     expect(host.querySelector('#xTrack')).toBeNull()
   })
 
+  it('funnels: a viewer sees the ghost step with no Connect revenue button', () => {
+    const steps = [{ n: 'a', v: 10 }, { n: 'b', v: 5 }]
+    const d = { steps, leak: { at: -1, r: 0, ur: 0 }, goals: [], vs: '', ghost: true, goalsOn: true, pages: [] }
+    const ctx = { ...x, custom: { steps: [], goals: [] }, edit: false, setEdit: vi.fn() } as unknown as XCtx
+    setRole('owner')
+    act(() => root.render(<Results x={ctx} d={d as never} />))
+    expect(host.querySelector('.mfn .lk3')).not.toBeNull()
+    setRole('viewer')
+    act(() => root.render(<Results x={ctx} d={d as never} />))
+    expect(host.querySelector('.mfn')).not.toBeNull()
+    expect(host.querySelector('.mfn .lk3')).toBeNull()
+  })
+
   it('funnels: a line, and goals the one step to set them up', () => {
     setRole('owner')
     const d = { steps: [], leak: { at: -1, r: 0, ur: 0 }, goals: [], vs: '', ghost: false, goalsOn: false, pages: [] }

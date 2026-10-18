@@ -85,7 +85,7 @@ export function Results({ x, d }: { x: XCtx; d: Funnel }) {
         )}
       </div>
       {x.edit && <Editor x={x} d={d} />}
-      {steps.length >= 2 ? <XMiniFunnel steps={steps} leak={d.leak} ghost={d.ghost} onConnect={() => x.connect('rev')} /> : (
+      {steps.length >= 2 ? <XMiniFunnel steps={steps} leak={d.leak} ghost={d.ghost} onConnect={can('payment.manage') ? () => x.connect('rev') : undefined} /> : (
         <XEmpty title={copy.emptyFunnel} hint={copy.emptyFunnelHint}>
           {!can('funnel.create') && <span className="mk-quiet">{lockCopy.ask}</span>}
         </XEmpty>
