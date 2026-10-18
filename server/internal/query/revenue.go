@@ -35,28 +35,28 @@ const AttributionWindow = 90 * 24 * time.Hour
 
 // Money is a report's revenue, in minor units of Currency.
 type Money struct {
-	Currency       string   `json:"currency"`
-	Exponent       int      `json:"exponent"` // minor-unit digits (2 for USD, 0 for JPY)
-	Revenue        int64    `json:"revenue"`  // paid, minus tax, minus refunds and lost disputes
-	Refunds        int64    `json:"refunds"`
-	Payments       int64    `json:"payments"`
-	Customers      int64    `json:"customers"`
-	PayingVisitors int64    `json:"paying_visitors"` // visitors in this period who paid (attributed)
-	Conversion     float64  `json:"conversion"`      // paying visitors / visitors
-	PerVisitor     float64  `json:"revenue_per_visitor"`
-	NewRevenue     int64    `json:"new_revenue"`       // one-time + first subscription payments
-	RenewalRevenue int64    `json:"renewal_revenue"`   // later subscription payments
+	Currency       string  `json:"currency"`
+	Exponent       int     `json:"exponent"` // minor-unit digits (2 for USD, 0 for JPY)
+	Revenue        int64   `json:"revenue"`  // paid, minus tax, minus refunds and lost disputes
+	Refunds        int64   `json:"refunds"`
+	Payments       int64   `json:"payments"`
+	Customers      int64   `json:"customers"`
+	PayingVisitors int64   `json:"paying_visitors"` // visitors in this period who paid (attributed)
+	Conversion     float64 `json:"conversion"`      // paying visitors / visitors
+	PerVisitor     float64 `json:"revenue_per_visitor"`
+	NewRevenue     int64   `json:"new_revenue"`     // one-time + first subscription payments
+	RenewalRevenue int64   `json:"renewal_revenue"` // later subscription payments
 	// What each kind took before refunds, so the kinds and the refunds add up
 	// to Revenue: NewGross + UpgradeGross + RenewalGross - Refunds. An upgrade
 	// is a payment that moved a customer to another plan (it leaves renewals
 	// and new sales alone).
-	NewGross     int64 `json:"new_gross"`
-	UpgradeGross int64 `json:"upgrade_gross"`
-	RenewalGross int64 `json:"renewal_gross"`
-	Unattributed   int64    `json:"unattributed"`      // revenue with no known visit (no metadata, no link)
-	Unconverted    int64    `json:"unconverted"`       // payments waiting for an FX rate (not in the sums yet)
-	NoRate         []string `json:"no_rate,omitempty"` // currencies the ECB publishes no rate for: those payments never convert
-	Test           bool     `json:"test,omitempty"`
+	NewGross     int64    `json:"new_gross"`
+	UpgradeGross int64    `json:"upgrade_gross"`
+	RenewalGross int64    `json:"renewal_gross"`
+	Unattributed int64    `json:"unattributed"`      // revenue with no known visit (no metadata, no link)
+	Unconverted  int64    `json:"unconverted"`       // payments waiting for an FX rate (not in the sums yet)
+	NoRate       []string `json:"no_rate,omitempty"` // currencies the ECB publishes no rate for: those payments never convert
+	Test         bool     `json:"test,omitempty"`
 }
 
 // DayMoney is one day's revenue for the scrubber and the chart's tooltip.
