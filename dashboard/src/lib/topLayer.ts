@@ -38,7 +38,11 @@ export function liftToTop(el: HTMLElement): () => void {
     window.addEventListener('scroll', place, true)
     window.addEventListener('resize', place)
   }
+  // A menu that grows in place (the period's list becoming the calendar) is kept whole again.
+  const grown = !sheet && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(place) : null
+  grown?.observe(el)
   return () => {
+    grown?.disconnect()
     window.removeEventListener('scroll', place, true)
     window.removeEventListener('resize', place)
     try {
