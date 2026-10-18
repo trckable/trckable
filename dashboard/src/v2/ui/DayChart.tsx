@@ -2,6 +2,7 @@
 // above the band (and red where it fell under), the band in soft white, the hours still to come shaded, and a dot that
 // pulses at "now". The line never runs into hours that have not happened. Hovering reads one point in the line above.
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { flushSync } from 'react-dom'
 import type { Bucket } from '../../lib/api'
 import { fmtInt } from '../../lib/format'
 import { copy } from '../briefing/copy'
@@ -99,7 +100,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
     if (!el) return
     const read = () => setSize({ W: Math.max(260, el.clientWidth || 900), H: el.clientHeight || 260 })
     read()
-    const ro = new ResizeObserver(read)
+    const ro = new ResizeObserver(() => el.clientWidth > 0 && flushSync(read)) // out of sight (behind Live) no size: kept as it was; shown, applied before the paint
     ro.observe(el)
     return () => ro.disconnect()
   }, [])

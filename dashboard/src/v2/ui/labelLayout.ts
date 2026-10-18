@@ -132,12 +132,13 @@ export function useLabelLayout(geo: { pts: number[][] }) {
     let id = 0
     const run = () => {
       cancelAnimationFrame(id)
-      id = requestAnimationFrame(() => layout(root, live.current.pts))
+      id = requestAnimationFrame(() => root.getBoundingClientRect().width > 0 && layout(root, live.current.pts))
     }
     again.current = run
     const lane = root.querySelector('.chlay-in')
     const mo = new MutationObserver(run)
     if (lane) mo.observe(lane, { childList: true, subtree: true })
+    // Out of sight (the Briefing kept built behind Live) there is nothing to measure; shown again, the ResizeObserver places them.
     const ro = new ResizeObserver(run)
     ro.observe(root)
     return () => {

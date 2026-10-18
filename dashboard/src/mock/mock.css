@@ -1763,3 +1763,6 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 .mk .sitechip .mkwrap{position:relative;display:inline-flex;flex:none}
 .mk .sitechip .mkwrap .mk-dot{position:absolute;right:-3px;bottom:-3px;box-sizing:content-box;border:2px solid var(--mk-bg);box-shadow:none}
 @media (prefers-reduced-motion:reduce){.mk #views .mk-dot{animation:none}}
+/* A screen kept built while it is not the one shown (v2/V2View): it takes no place of its own. */
+.mk .view-pane{display:contents}
+.mk .view-pane[hidden]{display:none}
