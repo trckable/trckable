@@ -204,7 +204,7 @@ func TestAISearchAssistantsAreKnownAndAddUp(t *testing.T) {
 	add := func(id, visitor int, channel, ref, utm string) {
 		t.Helper()
 		_, err := q.DB.Exec(`INSERT INTO sessions (site_id, session_id, visitor_id, start, last, channel, referrer, utm_source, entry_page, pvs, goals, engaged_ms, dur)
-			VALUES ('s1', ` + itoa(id) + `, ` + itoa(visitor) + `, TIMESTAMP '2026-09-10 11:00:00', TIMESTAMP '2026-09-10 11:05:00', '` + channel + `', '` + ref + `', '` + utm + `', '/x', 1, 0, 0, 0)`)
+			VALUES ('s1', ?, ?, TIMESTAMP '2026-09-10 11:00:00', TIMESTAMP '2026-09-10 11:05:00', ?, ?, ?, '/x', 1, 0, 0, 0)`, id, visitor, channel, ref, utm)
 		if err != nil {
 			t.Fatal(err)
 		}
