@@ -31,6 +31,7 @@ marks kept per site.
 | `proxy` | optional | an event came through your own-domain proxy in the last 7 days (`detail.last_seen`) |
 | `own_visits` | more | the site leaves out at least one address of yours |
 | `vitals`, `heatmaps`, `ga`, `team`, `phone`, `mentions` | more | never counted |
+| `answers` | more | never counted; listed only where the server has an AI key (see [answers](answers.md)): done when the site has a question |
 
 The counted steps come in the order that suits the site's kind: a shop gets the goal, payments, then Search Console; a blog starts with Search Console; a SaaS gets the goal, then a funnel. `core` always counts. `optional` counts until you say "not for me"; a skipped
 item moves to `more` (`skipped: true`) and can be brought back. `done` and

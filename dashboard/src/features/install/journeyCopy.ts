@@ -6,6 +6,7 @@ export const journey = defineCopy('install.journey', {
   limited: { head: 'Waiting for the first visit', line: 'Checked a lot just now. Looking again soon.' },
   notfound: { head: 'Script not found', line: 'Add the code to your page’s <head>, then publish.' },
   wrongid: { head: 'Not this site’s script', line: 'The script on the page has another id. Copy the code again.' },
+  elsewhere: { head: 'Visits from another domain', line: (host: string, more: number) => `Visits are arriving from ${host}${more > 0 ? ` and ${more} more` : ''}: add it, or fix the script.` },
   unreachable: { head: 'Can’t reach your site', line: 'Is the site online?' },
   blocked: { head: 'The script does not load', line: (status: number) => (status ? `It answered ${status}.` : 'It could not be loaded.') },
   found: { head: 'Script found', line: 'Open your site once: the first visit shows here.' },

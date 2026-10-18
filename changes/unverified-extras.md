@@ -1,0 +1,1 @@
+The setup card of a site with no visit yet says when visits are arriving from another hostname ("Visits are arriving from other.com: add it, or fix the script"), from a small bounded count of refused hostnames kept for 7 days (the top 5 and a total, hostname only), and a site still without a visit three days after it was added sends its owners one email with the install line.

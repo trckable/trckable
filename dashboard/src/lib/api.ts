@@ -220,7 +220,7 @@ export interface Visit {
 export interface Alert {
   id: string
   site_id: string
-  kind: 'stopped' | 'spike' | 'customer' | 'disk' | 'weekly' | 'milestone' | 'surge' | 'mention'
+  kind: 'stopped' | 'spike' | 'customer' | 'disk' | 'weekly' | 'milestone' | 'surge' | 'mention' | 'answer'
   enabled: boolean
   target: string
   threshold: number
@@ -830,6 +830,9 @@ export interface InstallCheck {
   script_status?: number
   /** The guess from the homepage: shop, saas, content or other. */
   kind?: string
+  /** Hostnames the site's events were refused from in the last 7 days (top 5), and how many events in all. */
+  elsewhere?: { host: string; n: number }[]
+  elsewhere_total?: number
 }
 
 /** A moment the data shows: a visitor step, the best day, a first. */
