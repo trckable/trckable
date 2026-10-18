@@ -5,6 +5,7 @@
 import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
+import { visit } from './audit-kit'
 
 const SHOTS = process.env.SR_SHOTS
 const SCHEME = process.env.SR_SCHEME === 'light' ? 'light' : 'dark'
@@ -78,18 +79,20 @@ test('a phone opens the panel as a sheet at the bottom', async ({ page }) => {
 
 test('Not for me on Payments lowers what counts and moves the row to More', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
+  // A site with a visit has its steps open (before it, they wait); the first visit also counts Install.
+  await visit(page.request, { id: site, domain: DOMAIN }, '/')
   await open(page)
   await page.locator('.ringb').click({ timeout: 15_000 })
   const panel = page.locator('.setupmenu.on')
-  await expect(page.locator('.ringb .rtext')).toHaveText('0/4 set up')
+  await expect(page.locator('.ringb .rtext')).toHaveText('1/4 set up')
   await panel.locator('[data-step="payments"]').getByRole('button', { name: 'More' }).click()
   await panel.getByRole('menuitem', { name: 'I don’t sell online' }).click()
-  await expect(page.locator('.ringb .rtext')).toHaveText('0/3 set up')
+  await expect(page.locator('.ringb .rtext')).toHaveText('1/3 set up')
   await expect(panel.locator('[data-step="payments"]')).toHaveCount(0)
   await panel.getByRole('button', { name: /More you can add/ }).click()
   await expect(panel.locator('[data-step="payments"] button', { hasText: 'Bring back' })).toBeVisible()
   await panel.locator('[data-step="payments"] button', { hasText: 'Bring back' }).click()
-  await expect(page.locator('.ringb .rtext')).toHaveText('0/4 set up')
+  await expect(page.locator('.ringb .rtext')).toHaveText('1/4 set up')
 })
 
 test('everything done: a check for seven days, then no ring', async ({ page }) => {
