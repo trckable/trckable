@@ -88,6 +88,8 @@ async function still(page: Page) {
 /** The chart's markup without what a replay writes on (the clip's width and the tip's place, which stay in it unused), and the labels' measured offsets to a tenth of a pixel (a text measured twice differs in the last digits). */
 const markup = (page: Page) => page.locator('svg#chart').evaluate((e) => e.outerHTML.replace(/<clipPath.*?<\/clipPath>/, '').replace(/<circle data-rv-tip[^>]*>/, '').replace(/(data-d[xy]=")(-?[\d.]+)"/g, (_, a, n) => `${a}${Number(n).toFixed(1)}"`))
 
+let lastBox = ''
+
 /** How many pixels of two pictures differ by more than a hair (decoded in the page, so no library is needed). */
 async function apart(page: Page, a: Buffer, b: Buffer): Promise<number> {
   const blank = await page.context().newPage() // the dashboard's own page does not let a data: address be read
@@ -103,10 +105,13 @@ async function apart(page: Page, a: Buffer, b: Buffer): Promise<number> {
     const [p, q] = [await read(x), await read(y)]
     if (p.width !== q.width || p.height !== q.height) return Infinity
     let n = 0
+    let [x0, y0, x1, y1] = [1e9, 1e9, -1, -1]
     // Not the last two rows: the picture's own edge may be touched by what sits under the chart.
-    for (let i = 0; i < p.data.length - 8 * p.width; i += 4) if (Math.abs(p.data[i] - q.data[i]) + Math.abs(p.data[i + 1] - q.data[i + 1]) + Math.abs(p.data[i + 2] - q.data[i + 2]) > 24) n++
+    for (let i = 0; i < p.data.length - 8 * p.width; i += 4) if (Math.abs(p.data[i] - q.data[i]) + Math.abs(p.data[i + 1] - q.data[i + 1]) + Math.abs(p.data[i + 2] - q.data[i + 2]) > 24) { n++; const k = i / 4; const [cx, cy] = [k % p.width, Math.floor(k / p.width)]; x0 = Math.min(x0, cx); y0 = Math.min(y0, cy); x1 = Math.max(x1, cx); y1 = Math.max(y1, cy) }
+    ;(window as unknown as { box: string }).box = `${x0},${y0}-${x1},${y1} of ${p.width}x${p.height}`
     return n
   }, [a.toString('base64'), b.toString('base64')] as const)
+  lastBox = await blank.evaluate(() => (window as unknown as { box?: string }).box ?? '')
   await blank.close()
   return n
 }
@@ -121,7 +126,7 @@ async function same(page: Page, before: { html: string; png: Buffer }) {
     writeFileSync(test.info().outputPath('before.png'), before.png)
     writeFileSync(test.info().outputPath('after.png'), now)
   }
-  expect(n, 'pixels that differ (before.png and after.png are kept)').toBeLessThan(40)
+  expect(n, `pixels that differ (before.png and after.png are kept): ${lastBox}`).toBeLessThan(40)
 }
 
 const playing = (page: Page) => page.getByRole('button', { name: 'Stop', exact: true })

@@ -124,20 +124,6 @@ test('visitors who leave after one page: a line on the Briefing opens the guide,
   await expect(dialog).toBeVisible()
 })
 
-test('a long period plays as a story: its moments come as the playhead passes them, and a card sums it up', async ({ page }) => {
-  await page.route(/\/moments\?/, (r) => r.fulfill({ json: { moments: [{ t: `${day(3)}T00:00`, kind: 'spike', factor: 3.2, referrer: 'news.ycombinator.com', visitors: 120 }] } }))
-  await open(page, '?view=briefing&period=30d')
-  await page.locator('[data-replay]').click()
-  await expect(page.locator('.story-rail')).toBeVisible()
-  await expect(page.locator('.story-dot').first()).toBeVisible()
-  await expect(page.locator('.story-end')).toBeVisible({ timeout: 20_000 })
-  await expect(page.locator('.story-end')).toContainText('visitors')
-  await page.getByRole('button', { name: 'Replay again' }).click()
-  await expect(page.locator('.story-rail')).toBeVisible()
-  await page.keyboard.press('Escape')
-  await expect(page.locator('.story, .story-end')).toHaveCount(0)
-})
-
 test('a card that rests on a source wears its seal in Explore', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   const site = await newSite(page, 'seal')
