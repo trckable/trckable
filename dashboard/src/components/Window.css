@@ -215,8 +215,6 @@
 }
 .modal.window :is(.btn, .input, select, input[type='text'], input[type='url'], input[type='email'], input[type='password'], input[type='number']) {
   border-radius: var(--mk-rc, 10px);
-  border-color: var(--mk-line);
-  background: var(--mk-field);
 }
 .modal.window .btn.primary {
   background: var(--mk-lime);

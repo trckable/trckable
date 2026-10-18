@@ -192,15 +192,9 @@
   height: 34px;
   box-sizing: border-box;
   padding: 0 10px;
-  border: 1px solid var(--raised-line);
   border-radius: 8px;
-  background: var(--raised-well);
   color: var(--text);
   font: inherit;
-}
-.side-card-input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
 }
 .side-card-error {
   color: var(--down);
