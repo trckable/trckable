@@ -7,6 +7,7 @@ const bone = (w: number | string, h: number) => <i className="skl" style={{ widt
 
 export function LiveSkeleton() {
   return (
+    <>
     <div className="liveview" role="region" aria-label={copy.live} aria-busy="true">
       <section className="mk-card lnow">
         <div className="lhead">
@@ -51,5 +52,15 @@ export function LiveSkeleton() {
         </div>
       </section>
     </div>
+    <div className="lcards" aria-hidden="true">
+      {[copy.analytics, copy.health.speedUptime, copy.health.aiMentions].map((t) => (
+        <section key={t} className="mk-card lcard">
+          <div className="ph">
+            <span className="t">{t}</span>
+          </div>
+        </section>
+      ))}
+    </div>
+    </>
   )
 }
