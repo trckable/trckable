@@ -140,9 +140,7 @@ export function mapSpeed(cur: WebVitals, prev?: WebVitals): Speed {
     .toSorted((a, b) => b.visitors - a.visitors)
     .slice(0, 8)
     .map((p) => ({ name: p.value, v: p.visitors, val: written(0, p.visitors / 1000), grade: gradeOf(0, p.visitors / 1000) }))
-  const devices: SlowPage[] = (cur.devices ?? [])
-    .filter((d) => d.lcp_ms != null && d.n >= MIN_VITALS)
-    .map((d) => ({ name: d.value, v: d.lcp_ms!, val: written(0, d.lcp_ms! / 1000), grade: gradeOf(0, d.lcp_ms! / 1000) }))
+  const devices: SlowPage[] = (cur.devices ?? []).flatMap((d) => (d.lcp_ms == null || d.n < MIN_VITALS ? [] : [{ name: d.value, v: d.lcp_ms, val: written(0, d.lcp_ms / 1000), grade: gradeOf(0, d.lcp_ms / 1000) }]))
   return { kcs: [kc(0, 'speed', copy.loadingWord, copy.lcp), kc(1, 'click', copy.response, copy.inp), kc(2, 'goal', copy.stability, copy.cls)], pages, devices }
 }
 

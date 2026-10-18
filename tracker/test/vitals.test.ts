@@ -17,7 +17,10 @@ const setHidden = (h: boolean) => {
   win.document.dispatchEvent(new win.Event('visibilitychange'))
 }
 const flush = () => new Promise((r) => setTimeout(r, 0))
-const lastE = () => sent.filter((e) => e.k == 'e').at(-1)!
+const lastE = () => {
+  const es = sent.filter((e) => e.k == 'e')
+  return es[es.length - 1]
+}
 const hide = async () => {
   vi.setSystemTime(Date.now() + 5000)
   setHidden(true)

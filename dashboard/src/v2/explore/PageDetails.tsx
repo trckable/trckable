@@ -90,12 +90,15 @@ function Body({ site, range, view, page }: { site: Site; range: Range; view: Vie
   const reached = read.state === 'ok' && read.data.samples > 0 ? [100, ...read.data.reached.map((x) => (x <= 1 ? Math.round(x * 100) : Math.round(x)))] : null
   const v = speed.state === 'ok' && speed.data.samples >= MIN_VITALS ? speed.data : null
   // Each score is built from its own page views: a browser reports what it can measure.
-  const has = (score: number | null | undefined, n: number | undefined) => (score != null && (n ?? v?.samples ?? 0) >= MIN_VITALS ? score : null)
-  const lcp = has(v?.lcp_ms, v?.lcp_n) != null ? v!.lcp_ms! / 1000 : null
+  const has = (score: number | null | undefined, n: number | undefined) => (v && score != null && (n ?? v.samples) >= MIN_VITALS ? score : null)
+  const lcpMs = has(v?.lcp_ms, v?.lcp_n)
+  const inpMs = has(v?.inp_ms, v?.inp_n)
+  const clsK = has(v?.cls_1k, v?.cls_n)
+  const lcp = lcpMs != null ? lcpMs / 1000 : null
   const dash = '\u2013'
   let line: string = copy.noSpeed
   if (speed.state === 'loading') line = copy.loading
-  if (v) line = copy.speedLine(lcp != null ? `${fmtFixed(lcp, 1)} s` : dash, has(v.inp_ms, v.inp_n) != null ? `${Math.round(v.inp_ms!)} ms` : dash, has(v.cls_1k, v.cls_n) != null ? fmtFixed(v.cls_1k! / 1000, 2) : dash)
+  if (v) line = copy.speedLine(lcp != null ? `${fmtFixed(lcp, 1)} s` : dash, inpMs != null ? `${Math.round(inpMs)} ms` : dash, clsK != null ? fmtFixed(clsK / 1000, 2) : dash)
   return (
     <div className="px">
       <b>{page}</b>
