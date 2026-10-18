@@ -79,7 +79,6 @@ test('skip for now opens All sites, and the first run stays away', async ({ page
   await run.getByLabel('Domain').fill(one)
   await page.keyboard.press('Enter')
   await expect(run.getByRole('img', { name: 'Step 2 of 3' })).toBeVisible({ timeout: 15_000 })
-  await expect(run.getByText('Testing on localhost? Add data-dev to the script tag.')).toBeVisible()
   await expect(run.getByRole('tablist', { name: 'Your sites' })).toHaveCount(0)
   if (process.env.TRCKABLE_SHOTS) await page.screenshot({ path: `${process.env.TRCKABLE_SHOTS}/onboarding-skip-${browserName}.png` })
   await run.getByRole('button', { name: 'Skip for now — open my dashboard' }).click()

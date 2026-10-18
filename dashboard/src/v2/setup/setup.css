@@ -63,3 +63,6 @@ html[data-motion='off'] .mk .setupmenu .sfold svg{transition:none}
 /* The verified seal takes the ring's place once setup is done: one indicator at a time, in a slot as wide as the ring's own square. */
 .mk .hd .ringw.seal-slot{display:grid;place-items:center;width:var(--hc,40px);margin-left:0;flex:none}
 @container (max-width:600px){.mk .hd .ringw.seal-slot{width:20px;margin-left:calc(var(--mk-s2) * -1)}}
+
+.mk .setupmenu .sprow.locked{opacity:.55}
+.mk .setupmenu .sprow.locked .stick{color:var(--mk-muted)}

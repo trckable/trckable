@@ -3,6 +3,7 @@ import { defineCopy } from '../i18n'
 
 export const copy = defineCopy('v2', {
   today: 'Today',
+  notVerified: 'Not verified',
   yesterday: 'Yesterday',
   todayWord: 'today',
   vsUsual: (weekday: string) => `vs usual ${weekday}`,

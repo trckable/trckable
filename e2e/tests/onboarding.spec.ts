@@ -98,8 +98,9 @@ test('with no site the first run cannot be left, and stays on every address', as
   await page.goBack()
   await expect(run).toBeVisible()
   // The account stays reachable: Profile opens over it, Sign out is there.
-  await expect(run.getByRole('button', { name: 'Sign out' })).toBeVisible()
-  await run.getByRole('button', { name: 'Profile' }).click()
+  await run.getByRole('button', { name: 'Account', exact: true }).click()
+  await expect(page.getByRole('menu', { name: 'Account' }).getByText('Sign out')).toBeVisible()
+  await page.getByRole('menu', { name: 'Account' }).getByText('Profile').first().click()
   await expect(page.getByRole('dialog', { name: /Account|Profile/i }).first()).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(run).toBeVisible()
@@ -128,9 +129,9 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
   // Step 2: the install card, with this site's snippet.
   await expect(run.getByRole('img', { name: 'Step 2 of 3' })).toBeVisible({ timeout: 15_000 })
   const card = run.getByRole('region', { name: 'Install trckable' })
-  await expect(card.getByRole('button', { name: 'Check my site' })).toBeVisible()
-  // One centred column: the heading and the card share a horizontal centre.
-  await expectCentred(page, run.getByRole('heading', { name: 'One line in your site’s head' }), card)
+  await expect(run.getByRole('button', { name: /Check (now|again)/ })).toBeVisible()
+  // One centred column: the status and the card share a horizontal centre.
+  await expectCentred(page, run.locator('.setup-status'), card)
   const sites = (await (await page.request.get(`${base}/api/v1/sites`)).json()).sites as { id: string; domain: string }[]
   const site = sites.find((s) => s.domain === domain)
   expect(site?.id).toMatch(/^tkb_/)
@@ -197,8 +198,8 @@ test('after the first verified site, Add a site closes like any dialog and an un
   await wizard.getByLabel('Domain').press('Enter')
   await wizard.getByRole('button', { name: 'Skip' }).click()
   await expect(wizard.getByRole('tablist', { name: 'How to install' })).toBeVisible({ timeout: 15_000 })
-  await wizard.getByRole('button', { name: /do it later/ }).click()
-  await expect(page.getByText('Waiting for the first visit').first()).toBeVisible({ timeout: 15_000 })
+  await wizard.getByRole('button', { name: 'Later' }).click()
+  await expect(page.locator('.setup-status').first()).toBeVisible({ timeout: 15_000 })
   await expect(gate).toHaveCount(0)
   for (const path of ['/settings', '/sites', '/' + verified]) {
     await page.goto(base + path)
@@ -206,7 +207,7 @@ test('after the first verified site, Add a site closes like any dialog and an un
     await expect(gate).toHaveCount(0)
   }
   await page.goto(`${base}/${verified}`)
-  await expect(page.getByText('Waiting for the first visit')).toHaveCount(0)
+  await expect(page.locator('.setup-status')).toHaveCount(0)
 })
 
 test('/settings is not a page: an owner lands on the dashboard, a viewer is never held in the first run', async ({ page, browserName }) => {

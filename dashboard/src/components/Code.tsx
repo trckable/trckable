@@ -84,30 +84,37 @@ const WORDS = new Set(['text', 'markdown'])
 // script tag is one long line, and hiding half of it behind a scrollbar is the
 // worst thing this component can do.
 
-export function CodeBlock({ code, lang, wrap: always, copyLabel }: { code: string; lang?: string; wrap?: boolean; copyLabel?: string }) {
+export function CodeBlock({ code, lang, wrap: always, copyLabel, compact }: { code: string; lang?: string; wrap?: boolean; copyLabel?: string; /** No bar: the copy button sits in the block's corner. */ compact?: boolean }) {
   const [copied, setCopied] = useState(false)
   const toks = useMemo(() => (PROSE.has(lang ?? '') ? [{ t: code }] : lex(code)), [code, lang])
   // One long line is unreadable behind a scrollbar; several short ones are
   // fine, and wrapping those would be worse.
   const wrap = always || WRAPS.has(lang ?? '') || (!code.includes('\n') && code.length > 60)
+  const copy = (
+    <button
+      type="button"
+      aria-label={copyLabel}
+      onClick={() =>
+        navigator.clipboard?.writeText(code).then(() => {
+          setCopied(true)
+          setTimeout(() => setCopied(false), 1500)
+        })
+      }
+    >
+      {copied ? 'Copied' : 'Copy'}
+    </button>
+  )
   return (
-    <div className="code-card">
-      <div className="code-bar">
-        <span className="faint num">{lang ?? langOf(code)}</span>
-        <span className="spacer" style={{ flex: 1 }} />
-        <button
-          type="button"
-          aria-label={copyLabel}
-          onClick={() =>
-            navigator.clipboard?.writeText(code).then(() => {
-              setCopied(true)
-              setTimeout(() => setCopied(false), 1500)
-            })
-          }
-        >
-          {copied ? 'Copied' : 'Copy'}
-        </button>
-      </div>
+    <div className={compact ? 'code-card compact' : 'code-card'}>
+      {compact ? (
+        <div className="code-corner">{copy}</div>
+      ) : (
+        <div className="code-bar">
+          <span className="faint num">{lang ?? langOf(code)}</span>
+          <span className="spacer" style={{ flex: 1 }} />
+          {copy}
+        </div>
+      )}
       <pre className={['code', wrap && 'wrap', WORDS.has(lang ?? '') && 'words'].filter(Boolean).join(' ')}>
         {toks.map((t, i) => (
           <span key={i} className={t.c}>

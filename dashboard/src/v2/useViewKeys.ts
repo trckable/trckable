@@ -5,9 +5,10 @@ import { pressed } from '../lib/keys'
 import { isShared } from '../lib/me'
 import { goExplore } from './briefing/deeper'
 
-export function useViewKeys(here: 'live' | 'briefing') {
+export function useViewKeys(here: 'live' | 'briefing', on = true) {
   useEffect(() => {
-    const on = (e: KeyboardEvent) => {
+    if (!on) return
+    const keys = (e: KeyboardEvent) => {
       const tg = (e.target as HTMLElement).tagName
       if (tg === 'INPUT' || tg === 'SELECT' || tg === 'TEXTAREA') return
       if (document.querySelector('.xscrim.on, .pal.on, .cd.on')) return
@@ -17,7 +18,7 @@ export function useViewKeys(here: 'live' | 'briefing') {
       else return
       e.preventDefault()
     }
-    document.addEventListener('keydown', on)
-    return () => document.removeEventListener('keydown', on)
-  }, [here])
+    document.addEventListener('keydown', keys)
+    return () => document.removeEventListener('keydown', keys)
+  }, [here, on])
 }

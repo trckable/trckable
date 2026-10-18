@@ -44,6 +44,12 @@ export interface PageHeaderProps {
   /** A newer version of the product, when there is one: a small pill by the ghost. */
   update?: string
   onUpdate?: () => void
+  /** The site has no verified install: its page is the setup screen, with no Live, Briefing, Explore or period, and the chip says so. */
+  waiting?: boolean
+  /** A visit has landed while the setup screen is still up. */
+  visited?: boolean
+  /** The site picked in the site menu, where the page keeps its own (the first run switches between the sites it added). */
+  onPickSite?: (id: string) => void
   /** A shared link: whose numbers these are, in place of the ghost and the site menu; no Live, bell or person. */
   identity?: ReactNode
 }
@@ -80,10 +86,15 @@ export function PageHeader(p: PageHeaderProps) {
     return () => window.removeEventListener('keydown', key, true)
   }, [])
   const site = p.site
+  const pickSite = (id: string) => {
+    if (p.onPickSite) p.onPickSite(id)
+    else navigate(id === '*' ? '/sites' : '/' + encodeURIComponent(p.sites.find((s) => s.id === id)?.domain ?? ''))
+  }
   const siteMenu = {
     sites: p.sites,
     current: site,
-    onPick: (id: string) => (id === '*' ? navigate('/sites') : navigate('/' + encodeURIComponent(p.sites.find((s) => s.id === id)?.domain ?? ''))),
+    unverified: !!p.waiting && !p.visited,
+    onPick: pickSite,
     footer: viewer ? [] : [{ key: 'add', label: copy.addSite, run: openAddSite }],
     team: slots.teams && <TeamSquare teams={slots.teams} />,
     find: copy.find,
@@ -112,10 +123,10 @@ export function PageHeader(p: PageHeaderProps) {
           </>
         )}
         site={p.identity ? null : <SiteChip p={siteMenu} />}
-        ring={p.identity || !site ? null : <SetupRing site={site} onGoal={p.onGoal ?? (() => openFind(pal.create))} />}
-        views={here && !p.identity ? <SegmentedSwitch id="views" label={copy.view} value={here} onChange={(t) => void switchTab(t, here)} items={[{ value: 'live', label: copy.live, title: copy.liveTitle, dot: down ? 'down' : 'ok', count: online ?? undefined }, { value: 'briefing', label: copy.briefing, title: copy.briefingTitle }]} /> : null}
+        ring={p.identity || !site ? null : <SetupRing site={site} onGoal={p.onGoal ?? (() => openFind(pal.create))} fresh={!!p.waiting} visited={!!p.visited} />}
+        views={here && !p.identity && !p.waiting ? <SegmentedSwitch id="views" label={copy.view} value={here} onChange={(t) => void switchTab(t, here)} items={[{ value: 'live', label: copy.live, title: copy.liveTitle, dot: down ? 'down' : 'ok', count: online ?? undefined }, { value: 'briefing', label: copy.briefing, title: copy.briefingTitle }]} /> : null}
         period={here === 'briefing' ? p.period : null}
-        explore={<ExploreChip label={question ? copy.askOrSearch : copy.explore} kbd="⌘K" onClick={exploreOpen} />}
+        explore={p.waiting ? null : <ExploreChip label={question ? copy.askOrSearch : copy.explore} kbd="⌘K" onClick={exploreOpen} />}
         extras={slots.headerExtra}
         bell={p.identity ? null : <Bell site={site} notices={notices} />}
         account={isShared() ? null : <AccountMenu alert={slots.accountAlert} />}
@@ -145,7 +156,7 @@ export function PageHeader(p: PageHeaderProps) {
           </>
         }
       />
-      {find && <Palette items={paletteItems({ sites: p.sites, site, data: p.data ?? null, here: here ?? 'briefing', onAsk: ask, onGoal: p.onGoal, extra: slots.paletteRows, domainOf: (s) => s.domain })} placeholder={question ? pal.placeholderAsk : pal.placeholder} ask={question && { run: question, title: pal.askRow, kind: pal.kinds.peek, group: pal.groups.ask }} none={pal.none} initial={seed} onClose={() => setFind(false)} />}
+      {find && <Palette items={paletteItems({ sites: p.sites, site, data: p.data ?? null, here: here ?? 'briefing', fresh: p.waiting, onAsk: ask, onGoal: p.onGoal, extra: slots.paletteRows, domainOf: (s) => s.domain })} placeholder={question ? pal.placeholderAsk : pal.placeholder} ask={question && { run: question, title: pal.askRow, kind: pal.kinds.peek, group: pal.groups.ask }} none={pal.none} initial={seed} onClose={() => setFind(false)} />}
     </>
   )
 }

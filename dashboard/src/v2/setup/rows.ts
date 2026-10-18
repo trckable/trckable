@@ -25,6 +25,8 @@ export interface RowView {
   sub: string
   done: boolean
   acts: RowAct[]
+  /** Waits for the first visit: shown, with nothing to press. */
+  locked?: boolean
 }
 
 export interface RowCtx {
@@ -61,7 +63,7 @@ function base(it: SetupItem, x: RowCtx, goalSuggestion: string): { title: string
   const has = str(d, 'provider') !== ''
   switch (it.id) {
     case 'verified':
-      return { title: copy.verified.title, sub: it.done ? copy.verified.done(num(d, 'pages')) : copy.verified.sub(num(d, 'pages')), go: { label: copy.verified.go, run: at('install') } }
+      return { title: it.done ? copy.verified.title : copy.verified.install, sub: it.done ? copy.verified.done(num(d, 'pages')) : copy.verified.sub(num(d, 'pages')), go: { label: copy.verified.go, run: at('install') } }
     case 'own_visits':
       return { title: copy.own.title, sub: copy.own.sub, go: { label: copy.own.go, run: at('privacy', { focus: 'exclude-ips' }) } }
     case 'locale':

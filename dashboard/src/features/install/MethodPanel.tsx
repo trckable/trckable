@@ -1,5 +1,5 @@
-// One method: where it goes, the code (numbered when there are several
-// things to do), a copy button on every block, and its page in the docs.
+// One method: where it goes and its docs page on one small line, then the code (numbered when
+// there are several things to do) with its copy button inside the block.
 import { ExternalLink } from 'lucide-react'
 import { CodeBlock } from '../../components/Code'
 import { Info } from '../../components/Info'
@@ -14,8 +14,14 @@ export function MethodPanel({ method, ctx }: { method: Method; ctx: Ctx }) {
   return (
     <div key={method.id} id={panelId} role="tabpanel" aria-labelledby={tabId(method.id)} className="inst-panel rise">
       <p className="inst-where">
-        {method.where}
-        {method.note && <Info text={method.note} />}
+        <span>
+          {method.where}
+          {method.note && <Info text={method.note} />}
+        </span>
+        <a className="inst-docs" href={docsFor(method)} target="_blank" rel="noreferrer">
+          {copy.docs(method.name)}
+          <ExternalLink size={12} strokeWidth={1.75} aria-hidden="true" />
+        </a>
       </p>
       {many ? (
         <ol className="inst-steps">
@@ -27,19 +33,13 @@ export function MethodPanel({ method, ctx }: { method: Method; ctx: Ctx }) {
                 </span>
                 {s.title}
               </span>
-              <CodeBlock code={s.code} copyLabel={copy.copyStep(s.title)} />
+              <CodeBlock code={s.code} copyLabel={copy.copyStep(s.title)} compact />
             </li>
           ))}
         </ol>
       ) : (
-        <div className="inst-code-one">
-          <CodeBlock code={steps[0].code} copyLabel={copy.copyCode} />
-        </div>
+        <CodeBlock code={steps[0].code} copyLabel={copy.copyCode} compact />
       )}
-      <a className="inst-docs" href={docsFor(method)} target="_blank" rel="noreferrer">
-        {copy.docs(method.name)}
-        <ExternalLink size={13} strokeWidth={1.75} aria-hidden="true" />
-      </a>
     </div>
   )
 }

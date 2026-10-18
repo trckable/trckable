@@ -8,9 +8,35 @@
 .modal.wizard.add-site {
   width: min(620px, 100%);
   max-width: 620px;
+  gap: 12px;
 }
 .wiz-step {
-  gap: 16px;
+  gap: 12px;
+}
+.add-site .dlg-head h2 {
+  font-size: 17px;
+}
+
+/* A phone: the dialog is the whole screen, and its buttons stay at the bottom while the rest scrolls. */
+@media (max-width: 640px) {
+  :root .modal-back:has(> .modal.add-site) {
+    place-items: stretch;
+  }
+  :root .modal.add-site {
+    height: 100dvh;
+    max-height: 100dvh;
+    padding-bottom: 0;
+    border-width: 0;
+    border-radius: 0;
+  }
+  :root .modal.add-site > .dialog-actions {
+    position: sticky;
+    bottom: 0;
+    margin: auto -20px 0;
+    padding: 12px 20px max(16px, env(safe-area-inset-bottom));
+    background: var(--surface);
+    box-shadow: 0 -1px 0 var(--border);
+  }
 }
 .wiz-domain {
   display: grid;

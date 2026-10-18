@@ -1,7 +1,7 @@
 // Adding a site: Your site → Kind → Install → Revenue (optional). The Install step is
 // the same component a new site's dashboard shows, and it listens to the live
 // stream, so the first visit turns it live here too.
-import { Banknote, Globe } from 'lucide-react'
+import { ArrowRight, Banknote, Globe } from 'lucide-react'
 import { useState } from 'react'
 import { DialogActions } from '../../components/DialogActions'
 import { DialogHead } from '../../components/DialogHead'
@@ -20,10 +20,23 @@ import { DomainStep, type Verdict } from './DomainStep'
 import { Install } from './Install'
 import { guessOf } from './kind'
 import { KindStep } from './KindStep'
+import { useInstallCheck } from './useInstallCheck'
 import './wizard.css'
 
 // The wizard has no report to refresh: it only watches for the first visit.
 const noRefetch = () => {}
+
+const headIcon = (step: number) => {
+  if (step === 3) return undefined
+  return step === 4 ? Banknote : Globe
+}
+
+/** The one button of the Install step: it checks, then goes on to Revenue. */
+function labelOf({ checking, passed, settled }: { checking: boolean; passed: boolean; settled: boolean }): string {
+  if (checking) return t.checkingBtn
+  if (passed) return t.continue
+  return settled ? t.anyway : t.installed
+}
 
 function Title({ step, site, live }: { step: number; site: Site | null; live: boolean }) {
   if (step === 3 && live) return <>{t.titleLive}</>
@@ -42,6 +55,16 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
   const [reading, setReading] = useState(false)
   const stream = useLive(site?.id ?? null, noRefetch)
   const live = stream.visits.length > 0
+  // "I've installed it" runs the check, and goes on to Revenue once the script is found (or a visit came).
+  const check = useInstallCheck(site?.id ?? '', live)
+  const [going, setGoing] = useState(false)
+  const found = check.state.phase === 'done' && check.state.result.found === 'site'
+  const passed = live || found
+  const checking = check.state.phase === 'checking'
+  const settled = check.state.phase !== 'idle' && !checking
+  // Once the check passes the way is open; if it does not, the button offers to go on anyway.
+  if (going && passed && step === 3) setStep(4)
+  if (going && settled && !passed) setGoing(false)
 
   const clean = site ? site.domain : cleanDomain(domain)
   const checked = checkDomain(clean, site ? clean : domain)
@@ -93,6 +116,15 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
     onClose()
     navigate('/' + encodeURIComponent(site.domain))
   }
+  const installed = () => {
+    if (passed || settled) {
+      setStep(4)
+      return
+    }
+    setGoing(true)
+    check.start()
+  }
+  const installLabel = labelOf({ checking, passed, settled })
   const payments = () => {
     if (!site) return
     onClose()
@@ -101,13 +133,13 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
 
   return (
     <Modal label={t.label} className="wizard add-site" onClose={onClose} keepSize={false}>
-      <DialogHead icon={step === 4 ? Banknote : Globe} heading={<Title step={step} site={site} live={live} />} hint={t.sub[step - 1]} />
-      <Steps labels={t.steps} at={step - 1} done={live && step === 3 ? 2 : undefined} onGo={(i) => setStep(i + 1)} />
+      <DialogHead icon={headIcon(step)} heading={<Title step={step} site={site} live={live} />} hint={t.sub[step - 1]} />
+      <Steps compact labels={t.steps} at={step - 1} done={live && step === 3 ? 2 : undefined} onGo={(i) => setStep(i + 1)} />
 
       <StepBody step={step} className="wiz-step" fit>
         {step === 1 && <DomainStep domain={site ? site.domain : domain} setDomain={(d) => { setDomain(d); setRefusal('') }} refusal={refusal} clean={clean} verdict={verdict} locked={site !== null} onSubmit={create} />}
         {step === 2 && <KindStep reading={reading} guess={guess} value={kind} onPick={setKind} />}
-        {step === 3 && site && <Install site={site} visits={stream.visits} variant="wizard" />}
+        {step === 3 && site && <Install site={site} visits={stream.visits} variant="wizard" check={check} />}
         {step === 4 && <p className="muted wiz-revenue">{t.revenueBody}</p>}
       </StepBody>
 
@@ -146,8 +178,10 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
             </button>
           }
         >
-          <button type="button" className={live ? 'btn primary big' : 'btn big'} onClick={() => setStep(4)}>
-            {t.next}
+          <button type="button" className="btn primary big" disabled={checking} onClick={installed}>
+            {checking && <span className="btn-spin" aria-hidden="true" />}
+            {installLabel}
+            {!checking && <ArrowRight size={16} strokeWidth={2} aria-hidden="true" />}
           </button>
         </DialogActions>
       )}

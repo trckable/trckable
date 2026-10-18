@@ -37,10 +37,12 @@ export function nextLook(s: CheckState, live: boolean): number | null {
   }
 }
 
-export function useInstallCheck(site: string, live: boolean) {
+/** auto: the first look starts at once, with no button pressed. at: when the last look ended (ms). */
+export function useInstallCheck(site: string, live: boolean, auto = false) {
   const [state, setState] = useState<CheckState>({ phase: 'idle' })
   // Each round is one check; bumping it asks for another.
-  const [round, setRound] = useState(0)
+  const [round, setRound] = useState(auto ? 1 : 0)
+  const [at, setAt] = useState<number | null>(null)
 
   useEffect(() => {
     if (round === 0) return
@@ -49,9 +51,14 @@ export function useInstallCheck(site: string, live: boolean) {
     setState((s) => ({ phase: 'checking', last: lastOf(s) }))
     more
       .checkInstall(site)
-      .then((result) => current && setState({ phase: 'done', result }))
+      .then((result) => {
+        if (!current) return
+        setState({ phase: 'done', result })
+        setAt(Date.now())
+      })
       .catch((e: unknown) => {
         if (!current) return
+        setAt(Date.now())
         const limited = e instanceof APIError && e.status === 429
         setState((s) => ({ phase: limited ? 'limited' : 'failed', last: lastOf(s) }))
       })
@@ -68,5 +75,8 @@ export function useInstallCheck(site: string, live: boolean) {
   }, [wait, state])
 
   const start = useCallback(() => setRound((n) => n + 1), [])
-  return { state, start }
+  return { state, start, at }
 }
+
+/** What the hook hands back, for a screen that owns the check and passes it down. */
+export type InstallCheckHandle = ReturnType<typeof useInstallCheck>

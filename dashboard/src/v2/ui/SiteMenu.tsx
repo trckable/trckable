@@ -12,6 +12,7 @@ import { MenuFoot, type FootItem } from './MenuFoot'
 import { useMenu } from './useMenu'
 import { useOnlyOpen } from '../../lib/headerMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
+import { midEllipsis } from '../../lib/midEllipsis'
 import { SiteMark } from '../../components/SiteMark'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
@@ -27,12 +28,28 @@ const DOT: Record<string, string> = { stopped: 'down', quiet: 'quiet' }
 interface SiteMenuProps {
   sites: Site[]
   current: Site | null
+  /** No verified install yet: the chip says so, in amber, and shows no dot. */
+  unverified?: boolean
   /** The teams' square, before the site, when the build has teams. */
   team?: ReactNode
   onPick: (id: string) => void
   footer: FootItem[]
   find: string
   all: string
+}
+
+/** The site's name, cut in the middle when it is long: the whole name stays in the tooltip and for a screen reader. */
+function NameText({ cur, all }: { cur: Site | null; all: string }) {
+  if (!cur) return <span className="nmx">{all}</span>
+  const full = cur.name || cur.domain
+  const short = midEllipsis(full, 26)
+  if (short === full) return <span className="nmx">{full}</span>
+  return (
+    <span className="nmx" title={full}>
+      <span aria-hidden="true">{short}</span>
+      <span className="sr">{full}</span>
+    </span>
+  )
 }
 
 export function SiteChip({ p }: { p: SiteMenuProps }) {
@@ -57,11 +74,12 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
         {cur && (
           <span className="mkwrap">
             <SiteMark site={cur} size={18} />
-            {DOT[state] && <span className={`mk-dot ${DOT[state]}`} />}
+            {DOT[state] && !p.unverified && <span className={`mk-dot ${DOT[state]}`} />}
           </span>
         )}
-        <span className="nmx">{cur ? cur.name || cur.domain : p.all}</span>
+        <NameText cur={cur} all={p.all} />
         {picked && <span className="dom">{`/ ${picked}`}</span>}
+        {cur && p.unverified && <span className="nv">{copy.notVerified}</span>}
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
           <path d="M3 4.5 6 7.5 9 4.5" stroke="var(--mk-muted)" fill="none" strokeWidth="1.5" />
         </svg>

@@ -4,10 +4,11 @@ import { lineOf } from '../../features/milestones/words'
 import type { Milestone, Site } from '../../lib/api'
 import type { Incident } from '../../features/incidents/api'
 import type { Mention } from '../../features/mentions/api'
+import { STALE_DAYS } from '../../features/install/journey'
 import { sourceName } from '../briefing/model'
 import { copy } from './copy'
 
-export type NoticeKind = 'down' | 'up' | 'spike' | 'sale' | 'mention' | 'milestone' | 'weekly' | 'failed' | 'plan' | 'team'
+export type NoticeKind = 'down' | 'up' | 'spike' | 'sale' | 'mention' | 'milestone' | 'weekly' | 'failed' | 'plan' | 'team' | 'setup'
 
 export interface Notice {
   id: string
@@ -48,6 +49,14 @@ export function fromIncidents(list: Incident[], domain: (id: string) => string |
     if (i.ended_at !== null && i.ended_at <= now) out.push({ id: `up:${i.id}`, kind: 'up', site: d, title: copy.backUp(d), sub: copy.wasDown(mins(i.ended_at - i.started_at)), at: i.ended_at })
   }
   return out
+}
+
+/** A site added days ago that has still had no visit: one gentle reminder to finish the install. */
+export function fromSetup(sites: Site[], now: number): Notice[] {
+  return sites.flatMap((s) => {
+    const at = (s.created_at ?? 0) + STALE_DAYS * 86400
+    return s.created_at && !s.last_event_at && at <= now ? [{ id: `setup:${s.id}`, kind: 'setup' as const, site: s.domain, title: copy.setupTitle(s.domain), sub: copy.setupSub, at }] : []
+  })
 }
 
 export function fromMentions(list: Mention[], domain: string): Notice[] {

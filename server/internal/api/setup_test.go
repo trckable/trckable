@@ -39,11 +39,15 @@ func TestSetupRules(t *testing.T) {
 			t.Fatalf("group %s", g)
 		}
 	})
-	t.Run("the script is installed from two paths", func(t *testing.T) {
+	t.Run("the script is installed from the first visit", func(t *testing.T) {
 		in := baseIn()
-		in.Paths = 1
+		in.Paths = 0
 		if itemOf(t, buildSetup(in), "verified").Done {
-			t.Fatal("one path is not enough")
+			t.Fatal("no visit is not installed")
+		}
+		in.Paths = 1
+		if it := itemOf(t, buildSetup(in), "verified"); !it.Done || it.Detail["pages"] != int64(1) {
+			t.Fatalf("one visit installs it: %+v", it)
 		}
 		in.Paths = 2
 		it := itemOf(t, buildSetup(in), "verified")
@@ -286,12 +290,12 @@ func TestSetupEndpointEachItem(t *testing.T) {
 		t.Fatalf("new site: %v", out)
 	}
 
-	// Pageviews on two paths; the second makes the script "seen on 2 pages".
+	// Pageviews on two paths; the first one verifies the install, the second is seen as a second page.
 	g.event(t, event.Event{Kind: event.KindPageview, EventID: 1, Visitor: 1, Path: "/", TS: g.now.Add(-time.Hour).UnixMilli()})
 	g.waitApplied(t, 1)
 	g.advance(2 * time.Minute) // the page count is reused for a minute
 	out = getSetup(t, g, c)
-	if apiItem(t, out, "verified")["done"] == true || apiItem(t, out, "funnel")["skipped"] != true {
+	if apiItem(t, out, "verified")["done"] != true || apiItem(t, out, "funnel")["skipped"] != true {
 		t.Fatalf("one path: verified %v funnel %v", apiItem(t, out, "verified"), apiItem(t, out, "funnel"))
 	}
 	g.advance(2 * time.Minute) // the page count is reused for a minute

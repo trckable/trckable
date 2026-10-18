@@ -41,9 +41,8 @@
   align-items: center;
   gap: 4px;
   min-width: 0;
-  padding: 4px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  padding: 3px;
+  border-radius: 10px;
   background: var(--sunken);
 }
 .inst-tabs {
@@ -78,11 +77,11 @@
   flex: 1 0 auto;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  height: 36px;
-  padding: 0 12px;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
   border: 1px solid transparent;
-  border-radius: 9px;
+  border-radius: 8px;
   background: transparent;
   color: var(--text-2);
   font: inherit;
@@ -113,10 +112,11 @@
   flex: none;
 }
 .inst-tabs-row > .picker > .btn.picker-btn {
-  height: 36px;
-  padding: 0 12px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0 10px;
   border-color: transparent;
-  border-radius: 9px;
+  border-radius: 8px;
   background: transparent;
   color: var(--text-2);
 }
@@ -133,21 +133,23 @@
 .inst-panel {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
 }
 .inst-where {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
   margin: 0;
   color: var(--text-2);
-  font-size: 13px;
+  font-size: 12.5px;
 }
 .inst-steps {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -155,14 +157,14 @@
 .inst-steps li {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
 }
 .inst-step-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 550;
 }
 .inst-step-n {
@@ -176,108 +178,65 @@
   color: var(--accent-ink);
   font-size: 11.5px;
 }
-/* The one block most people copy gets the big button. */
-.inst-code-one .code-bar button {
-  padding: 7px 16px;
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-size: 12.5px;
-  font-weight: 600;
-}
-.inst-code-one .code-bar button:hover {
-  background: var(--accent-strong);
-  color: var(--accent-ink);
-  background-image: var(--hover-veil);
-}
 .inst-docs {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  align-self: flex-start;
-  color: var(--text-2);
-  font-size: 12.5px;
+  gap: 4px;
+  color: var(--text-3);
+  font-size: 12px;
+  white-space: nowrap;
 }
 .inst-docs:hover {
   color: var(--text);
 }
 
-/* Cookieless. */
-.inst-cl {
+/* The two rows under the code: cookieless, and install with AI. Soft fill, no borders. */
+.inst-extras {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  padding: 4px 12px;
+  border-radius: 10px;
+  background: var(--sunken);
 }
-.inst-cl-label {
+.inst-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
-  cursor: pointer;
-}
-.inst-cl-label input {
-  width: 17px;
-  height: 17px;
-  margin: 2px 0 0;
-  flex: none;
-  accent-color: var(--accent);
-}
-.inst-cl-label > span:not(.btn-spin) {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  min-height: 40px;
   font-size: 13.5px;
 }
-.inst-cl-label .faint {
-  font-size: 12.5px;
+.inst-row > svg {
+  flex: none;
+  color: var(--accent);
+}
+.inst-row-label {
+  flex: 1;
 }
 .inst-cl-hint {
-  margin: 0 0 0 27px;
-  font-size: 12.5px;
+  margin: -4px 0 6px;
+  padding-left: 46px;
+  font-size: 12px;
 }
-
-/* Install with AI. */
+.inst-cl-hint:empty {
+  display: none;
+}
+.inst-extras .switch {
+  flex: none;
+}
 .inst-ai {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
-}
-.inst-ai-text {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 180px;
-}
-.inst-ai-text h3 {
-  font-size: 14px;
-}
-.inst-ai-text p {
-  margin: 0;
-  font-size: 12.5px;
-}
-.inst-ai-text .linkish {
-  align-self: flex-start;
+  min-height: 44px;
 }
 .inst-ai-copy {
   flex: none;
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12.5px;
 }
-.inst-ai-prompt {
-  flex-basis: 100%;
-  min-width: 0;
+.inst-extras > .inst-cl + .inst-ai {
+  border-top: 1px solid var(--border);
 }
 
-/* "I've installed it", then what was found. */
-.inst-done {
-  align-self: flex-start;
-}
+/* What the check found, small. */
 .inst-check ul {
   display: flex;
   flex-direction: column;
@@ -290,11 +249,11 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 7px 10px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  font-size: 13.5px;
-  line-height: 1.45;
+  font-size: 13px;
+  line-height: 1.4;
 }
 .inst-found > svg,
 .inst-found > .pulse,
@@ -348,172 +307,12 @@
 @media (max-width: 520px) {
   /* On a phone the code wraps: half a script tag behind a scrollbar is the
      worst way to show it. */
-  .inst pre.code,
-  .wait-card pre.code {
+  .inst pre.code {
     white-space: pre-wrap;
     word-break: break-all; /* keep an attribute on its own indented line */
   }
   .inst-tab {
     padding: 0 10px;
-  }
-  .inst-ai-copy,
-  .inst-done {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-/* ---- The new-site card ------------------------------------------------------
-   One calm card, centred, with nothing behind it. */
-.wait-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 22px;
-  width: min(640px, 100%);
-  margin: 48px auto 24px;
-  text-align: center;
-}
-.wait-back {
-  align-self: flex-start;
-  margin-bottom: -6px;
-  font-size: 13px;
-  text-decoration: none;
-}
-.wait-back:hover {
-  color: var(--text);
-}
-.wait-card > .inst-tabs-row,
-.wait-card > .inst-panel,
-.wait-card > .inst-check {
-  align-self: stretch;
-  text-align: left;
-}
-.wait-mark {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 84px;
-  height: 84px;
-}
-.wait-mark .ring {
-  position: absolute;
-  inset: 0;
-  border: 1.5px solid var(--accent);
-  border-radius: 50%;
-  animation: wait-ring 2.4s ease-out infinite;
-}
-.wait-mark .ring.b {
-  animation-delay: 1.2s;
-}
-.wait-mark.live .ring {
-  animation: none;
-  opacity: 0;
-}
-@keyframes wait-ring {
-  0% {
-    transform: scale(0.6);
-    opacity: 0.55;
-  }
-  100% {
-    transform: scale(1.6);
-    opacity: 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .wait-mark .ring {
-    animation: none;
-    opacity: 0.25;
-  }
-}
-.wait-text {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.wait-text h2 {
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-.wait-sub {
-  margin: 0;
-  font-size: 15.5px;
-}
-.wait-sub code {
-  font-family: var(--mono);
-  color: var(--text);
-}
-/* Four small tabs, centred, like pills; More… sits with them. */
-.wait-card .inst-tabs-row {
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-  padding: 0;
-  border: 0;
-  background: none;
-}
-.wait-card .inst-tabs {
-  flex: 0 1 auto;
-}
-.wait-card .inst-tab {
-  flex: none;
-  height: 34px;
-  border-radius: 999px;
-  font-size: 14px;
-}
-.wait-card .inst-tab svg {
-  display: none;
-}
-.wait-card .inst-tab.on {
-  box-shadow: none;
-}
-.wait-card .inst-tabs-row > .picker > .btn.picker-btn {
-  min-height: 34px;
-  height: 34px;
-  padding: 0 14px;
-  border-color: transparent;
-  border-radius: 999px;
-  background: none;
-  color: var(--text-2);
-}
-.wait-card .inst-where,
-.wait-card .inst-docs {
-  display: none;
-}
-.wait-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-}
-.wait-btn {
-  background: none;
-  height: 40px;
-  padding: 0 16px;
-  border: 1px solid var(--border-2);
-  border-radius: 999px;
-}
-.wait-foot {
-  margin: 0;
-  font-size: 13px;
-}
-@media (max-width: 520px) {
-  .wait-card {
-    margin-top: 24px;
-    gap: 18px;
-  }
-  .wait-text h2 {
-    font-size: 23px;
-  }
-  .wait-card .inst-tabs-row,
-  .wait-card .inst-tabs {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .wait-btn {
-    width: 100%;
-    justify-content: center;
   }
 }
 
@@ -541,8 +340,144 @@
     min-height: var(--ph-hit);
   }
 }
+/* ---- A site with no verified install ----------------------------------------
+   One centred screen: the install, the live line, and where to get help. */
+.setup-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(620px, 100%);
+  margin: 40px auto 24px;
+}
+.setup-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.setup-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.setup-status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--sunken);
+}
+.setup-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.setup-head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.setup-head svg {
+  flex: none;
+}
+.setup-status.ok {
+  background: color-mix(in srgb, var(--up) 14%, transparent);
+}
+.setup-status.ok svg {
+  color: var(--up);
+}
+.setup-status.warn svg {
+  color: var(--warn);
+}
+.setup-says {
+  margin: 0;
+  padding-left: 28px;
+  color: var(--text-2);
+  font-size: 13.5px;
+}
+.setup-act {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 8px 0 0 28px;
+}
+.setup-act .btn {
+  height: 34px;
+  padding: 0 14px;
+}
+.setup-last {
+  font-size: 12px;
+}
+.setup-why {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.setup-why summary {
+  cursor: pointer;
+  text-align: right;
+}
+.setup-why ul {
+  margin: 8px 0 0;
+  padding-left: 16px;
+}
+.setup-why li {
+  margin: 2px 0;
+}
+.setup-why p {
+  display: flex;
+  gap: 14px;
+  margin: 8px 0 0;
+}
+.setup-why a {
+  color: var(--text-2);
+}
+.setup-why .linkish {
+  margin: 0;
+}
+.setup-why[open] {
+  flex-basis: 100%;
+  margin-left: 0;
+}
+.setup-why[open] summary {
+  text-align: left;
+}
+.setup-code > summary {
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.setup-code > .inst {
+  margin-top: 10px;
+}
+@media (max-width: 640px) {
+  .setup-screen {
+    margin-top: 12px;
+  }
+  .setup-title {
+    font-size: 19px;
+  }
+}
 
-.wait-dev {
-  margin: -8px 0 0;
-  font-size: 13px;
+/* On the setup screen (inside the page's own button reset) the switch and the buttons keep their look. */
+.inst .switch {
+  border: 1px solid var(--border-2);
+  background: var(--surface-2);
+}
+.inst .switch.on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.inst .inst-ai-copy {
+  border: 1px solid var(--border-2);
+  background: var(--surface-2);
+}
+.setup-flow,
+.setup-flow .inst {
+  min-width: 0;
+}
+.setup-flow .code-card {
+  max-width: 100%;
 }
