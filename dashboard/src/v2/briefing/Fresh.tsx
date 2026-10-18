@@ -149,7 +149,7 @@ export default function Fresh({ site, visits }: { site: Site; visits: Visit[] })
   const [since] = useState(() => clock(site.timezone))
   const name = site.name || site.domain
   return (
-    <div className="mk mk-body">
+    <div className="mk mk-body mk-fresh">
       <div className="brief">
         <section className="mk-card hero" aria-label={copy.freshLabel}>
           <div className="htop">
