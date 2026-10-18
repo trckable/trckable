@@ -25,6 +25,7 @@ export const copy = defineCopy('sites.menu', {
   installHelp: 'Install help',
   downTip: (span: string) => `Not reachable for ${span}. Open the site to see what’s wrong.`,
   downShort: (span: string) => `down ${span}`,
+  noLiveVisits: 'No live visits yet',
   quietShort: (span: string) => `quiet ${span}`,
   quietTip: (span: string) => `No visits for ${span}. Nothing looks wrong with the page.`,
 

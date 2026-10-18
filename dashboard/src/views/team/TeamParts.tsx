@@ -20,7 +20,7 @@ export const openSite = (s: TeamSite) => navigate('/' + encodeURIComponent(s.dom
 
 /** The state in the list's own words: Receiving, quiet 7h, down 23m, Not verified. */
 export function Status({ s }: { s: TeamSite }) {
-  const word = { stopped: menu.downShort(s.silent), quiet: menu.quietShort(s.silent), new: menu.notVerified, now: copy.receiving, live: copy.receiving }[s.state]
+  const word = { stopped: menu.downShort(s.silent), quiet: s.silent ? menu.quietShort(s.silent) : menu.noLiveVisits, new: menu.notVerified, now: copy.receiving, live: copy.receiving }[s.state]
   const kind = { stopped: 'down', quiet: 'warn', new: 'warn', now: 'ok', live: 'ok' }[s.state]
   return <span className={'tm-status ' + kind}>{word}</span>
 }

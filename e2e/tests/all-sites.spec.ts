@@ -70,6 +70,14 @@ test('All sites: totals are the rows, sorts, states and the ⋯ menu', async ({ 
   ids = await order()
   expect(ids.indexOf(busy.id)).toBeLessThan(ids.indexOf(empty.id))
 
+  // A site not installed yet opens its install card, which leads back to Sites.
+  await row(empty).getByRole('button', { name: empty.domain }).click()
+  const back = page.getByRole('link', { name: '← Sites' })
+  await expect(back).toBeVisible({ timeout: 20_000 })
+  await back.click()
+  await expect(page).toHaveURL(/\/sites$/)
+  await row(busy).waitFor()
+
   // The ⋯ menu opens the site's settings over its dashboard.
   await row(busy).getByRole('button', { name: /^More for / }).click()
   await page.getByRole('menuitem', { name: 'Site settings' }).click()
