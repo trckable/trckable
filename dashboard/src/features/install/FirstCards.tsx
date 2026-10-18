@@ -6,7 +6,7 @@ import { lazy, Suspense, useState } from 'react'
 import { cardModal } from '../../components/CardModal/copy'
 import { SideCard } from '../../components/SideCard/SideCard'
 import type { Site } from '../../lib/api'
-import { canChange } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { useNarrow } from '../../lib/useNarrow'
 import { first } from './firstCopy'
 import { useSeen } from './seen'
@@ -21,7 +21,7 @@ const t = first.cards
 /** `quiet`: the first run, where Settings is out of reach, so a card that
  *  could only send you there is left out. */
 export function FirstCards({ site, quiet = false }: { site: Site; quiet?: boolean }) {
-  return canChange() ? <Cards site={site} quiet={quiet} /> : null
+  return can('site.settings') ? <Cards site={site} quiet={quiet} /> : null
 }
 
 function Cards({ site, quiet }: { site: Site; quiet: boolean }) {

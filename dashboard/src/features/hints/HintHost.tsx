@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Hint } from '../../components/Hint'
 import { caps, keyFor } from '../../lib/keys'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { useLocation } from '../../lib/url'
 import { copy } from './copy'
 import { nextHint, type HintId } from './rules'
@@ -38,7 +38,7 @@ export default function HintHost() {
   const [state, setState] = useState(kept)
   const asked = useRef(false)
   useEffect(() => {
-    const viewer = isViewer()
+    const viewer = !can('setup.run')
     const t = setInterval(() => {
       tick((n) => n + 1)
       if (asked.current) return

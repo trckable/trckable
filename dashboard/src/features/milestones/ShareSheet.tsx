@@ -5,7 +5,7 @@ import { Download, Image as ImageIcon, Link2, Link2Off, Mail, Moon, Sun, X } fro
 import { useState } from 'react'
 import { fail, type Milestone, type Site } from '../../lib/api'
 import { copyImage, shareApi } from './share'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { Modal } from '../../kit/Modal'
 import { Switch } from '../../components/Switch'
 import { toast } from '../../components/Toast'
@@ -52,7 +52,7 @@ export function ShareSheet({ site, m, onClose, onChanged }: { site: Site; m: Mil
       </div>
       <img className="ms-card" src={card('svg')} width={1200} height={630} alt={copy.card} />
       <div className="ms-side">
-        {!isViewer() && !shared && (
+        {can('share.manage') && !shared && (
           <button type="button" className="btn primary" onClick={makeLink}>
             <Link2 size={15} strokeWidth={1.75} aria-hidden="true" />
             {copy.copyLink}
@@ -64,7 +64,7 @@ export function ShareSheet({ site, m, onClose, onChanged }: { site: Site; m: Mil
             <span className="faint">{copy.linkOnce}</span>
           </>
         )}
-        {!isViewer() && shared && (
+        {can('share.manage') && shared && (
           <button type="button" className="btn ghost" onClick={revoke}>
             <Link2Off size={15} strokeWidth={1.75} aria-hidden="true" />
             {link ? copy.revoke : `${copy.shared} · ${copy.revoke}`}

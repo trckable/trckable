@@ -122,7 +122,7 @@ test('All sites has no Add a site for a viewer', async ({ page }) => {
 // The same search finds the owner's controls, so an empty list above means
 // there were none, not that the search looked in the wrong place.
 test('the search finds an owner\'s controls', async ({ page }) => {
-  const owner = await session('viewer')
+  const owner = await session('owner')
   await page.context().addCookies([{ name: 'trckable_session', value: owner, url: API }])
   await page.goto(`${API}/settings?site=${site}&tab=site`)
   await page.waitForLoadState('load') // not "networkidle": the live stream can keep it from ever coming
@@ -144,4 +144,64 @@ test('on a phone, a viewer on a site with no visit yet gets the account menu ins
     const b = await menu.boundingBox()
     return !!b && b.x >= 0 && b.x + b.width <= 375 && b.y >= 0 && b.y + b.height <= 700
   }).toBe(true)
+})
+
+// The key is heard once the page has mounted its keys: ask again until the palette is there.
+async function openPalette(page: Page) {
+  const palette = page.getByRole('dialog', { name: /./ }).last()
+  await expect(async () => {
+    if (!(await palette.isVisible())) await page.keyboard.press('ControlOrMeta+k')
+    await expect(palette).toBeVisible({ timeout: 1500 })
+  }).toPass()
+  return palette
+}
+
+// The ⌘K palette is a second way to every control: a viewer finds the reads
+// and their own browser choices in it, and no row that creates or changes.
+test('a viewer\'s palette has no Create row and no Settings row', async ({ page }) => {
+  await open(page, '/example.com?view=briefing')
+  const palette = await openPalette(page)
+  const text = await palette.innerText()
+  expect(text).not.toMatch(/^(New goal|New funnel|New note|Site settings|Settings ·)/im)
+  // What a search for the changing words finds is nothing a viewer could use.
+  for (const word of ['goal', 'funnel', 'settings', 'share', 'alerts']) {
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.type(word)
+    await page.waitForTimeout(150)
+    expect(await palette.innerText(), word).not.toMatch(/^(New goal|New funnel|New note|Site settings|Settings ·)/im)
+  }
+  // The search does find what a viewer has: the reads and their own choices.
+  await page.keyboard.press('ControlOrMeta+a')
+  await page.keyboard.type('sign out')
+  await expect(palette).toContainText('Sign out')
+})
+
+// The site list's ⋯ is the status page and the site itself: nothing that
+// changes, nothing that arranges (the layout is saved for everyone).
+test('a viewer\'s site row menu holds the status page and nothing that changes', async ({ page }) => {
+  await open(page, '/example.com?view=briefing')
+  await page.locator('#siteBtn').click()
+  await page.getByRole('button', { name: /: options$/ }).first().click()
+  const items = (await page.getByRole('menuitem').allInnerTexts()).map((t) => t.trim())
+  expect(items.join('|')).toMatch(/Status page/)
+  expect(items.filter((t) => /settings|share|widgets|pin|group|move|install/i.test(t))).toEqual([])
+})
+
+// An old link that opens the add-a-site wizard opens nothing for a viewer.
+test('an old ?add=site link does not open the wizard for a viewer', async ({ page }) => {
+  await open(page, '/example.com?add=site')
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(page.getByText(/add a site/i)).toHaveCount(0)
+})
+
+// The same searches find the rows for the owner, so the empty result above means there were none.
+test('the owner\'s palette does have the Create and Settings rows', async ({ page }) => {
+  const owner = await session('owner')
+  await page.context().addCookies([{ name: 'trckable_session', value: owner, url: API }])
+  await page.goto(`${API}/example.com?view=briefing`)
+  await page.waitForLoadState('load')
+  await page.waitForTimeout(500)
+  const palette = await openPalette(page)
+  await page.keyboard.type('settings')
+  await expect(palette).toContainText(/Settings ·/)
 })

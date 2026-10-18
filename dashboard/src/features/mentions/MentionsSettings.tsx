@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { toast } from '../../components/Toast'
 import { Field } from '../../components/Field'
 import { fail, type Site } from '../../lib/api'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { mentionsApi, type LookAlike, type Rules, type Source, type Words } from './api'
 import { LookAlikeNote, UncheckedNote } from './LookAlikeNote'
 import { RulesEditor } from './RulesEditor'
@@ -40,7 +40,7 @@ export default function MentionsSettings({ site }: { site: Site }) {
       .catch(() => setWords(null))
   }, [site.id])
   if (!words || !rules) return null
-  const viewer = isViewer()
+  const viewer = !can('mention.manage')
   const put = (w: string) => {
     if (w && !added.some((x) => x.toLowerCase() === w.toLowerCase()) && added.length < words.max) setAdded([...added, w])
     setDraft('')

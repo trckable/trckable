@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { heatApi } from '../../features/heatmap/api'
 import { markHeatDone } from '../../features/heatmap/guide'
-import { canChange } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { isOn } from '../../lib/modules'
 import { modulesChanged, useMods } from '../../lib/useMods'
 import { glow, pageSize, place, strength, busiest } from '../../features/heatmap/model'
@@ -47,7 +47,7 @@ function Clicks({ site, range, page, q }: { site: Site; range: Range; page: stri
       })
       .catch((e: unknown) => fail(e))
   if (!map) {
-    const off = mods !== null && !isOn(mods, 'heatmaps') && canChange()
+    const off = mods !== null && !isOn(mods, 'heatmaps') && can('site.settings')
     return (
       <div className="mk-quiet">
         {heat.state === 'loading' ? copy.loading : copy.noHeat}

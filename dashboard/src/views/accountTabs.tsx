@@ -2,7 +2,7 @@
 // has Account alone: asked for another, they land on their own account.
 import { CircleUser, Globe, KeyRound, Users } from 'lucide-react'
 import type { AccountTab } from '../lib/account'
-import { isViewer } from '../lib/me'
+import { can } from '../lib/permissions'
 import { copy } from './account/copy'
 
 export interface WindowTab {
@@ -25,7 +25,7 @@ export const tabsFor = (viewer: boolean) => OWN.filter((t) => !(t.owner && viewe
 
 /** The window's tabs for this person, and the one to open. */
 export function useWindowTabs(asked: AccountTab) {
-  const tabs = tabsFor(isViewer())
+  const tabs = tabsFor(!can('member.manage'))
   const tab = tabs.some((t) => t.id === asked) ? asked : 'profile'
   return { tabs, tab }
 }

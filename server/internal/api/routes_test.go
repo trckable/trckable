@@ -413,7 +413,42 @@ func TestEveryRouteChecksWhoIsAsking(t *testing.T) {
 			t.Errorf("routeRules lists %s, which is not a route any more", pattern)
 		}
 	}
+
+	// The other half of the matrix: the owner gets through every route that is
+	// not public. Run last and in this order, because some calls take the
+	// ground away (the site, the session): a guard that locked the owner out
+	// of a route its rule lets in would otherwise go unseen.
+	for _, pattern := range ownerOrder(g.api.patterns) {
+		if routeRules[pattern] == "public" || pattern == "POST /api/v1/logout" {
+			continue
+		}
+		method, raw, _ := strings.Cut(pattern, " ")
+		path := fill.Replace(raw)
+		g.advance(11 * time.Minute)
+		code, body := send(caller{"the owner", owner, "", true}, method, path)
+		if refused(code, body) || code >= 500 && code != http.StatusServiceUnavailable {
+			t.Errorf("%s %s as the owner: %d %s, want it let through", method, path, code, strings.TrimSpace(body))
+		}
+	}
 	if len(seen) < 100 {
 		t.Fatalf("only %d routes were tried: the route list is not being recorded", len(seen))
 	}
+}
+
+// ownerOrder lists the routes with the ones that end the world last: after
+// the site is deleted every other site route answers "site not found".
+func ownerOrder(patterns []string) []string {
+	last := map[string]bool{"DELETE /api/v1/sites/{site}": true, "POST /api/v1/me/leave": true}
+	out := make([]string, 0, len(patterns))
+	for _, p := range patterns {
+		if !last[p] {
+			out = append(out, p)
+		}
+	}
+	for _, p := range patterns {
+		if last[p] {
+			out = append(out, p)
+		}
+	}
+	return out
 }

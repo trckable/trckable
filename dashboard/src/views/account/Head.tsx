@@ -2,11 +2,11 @@
 // close button is the window's own.
 import { PersonAvatar } from '../../components/PersonAvatar'
 import type { Profile } from '../../lib/api'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { copy } from './copy'
 
 export function AccountHead({ profile, email, v }: { profile: Profile | null; email?: string; v: number }) {
-  const viewer = isViewer()
+  const viewer = !can('member.manage')
   return (
     <>
       <PersonAvatar p={profile} email={email} v={v} size="big" />

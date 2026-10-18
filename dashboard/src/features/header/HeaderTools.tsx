@@ -5,7 +5,8 @@
 import { Search, Share2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { caps, keyFor, useKeymap } from '../../lib/keys'
-import { canAsk, isShared } from '../../lib/me'
+import { isShared } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { ViewSwitch } from '../live/ViewSwitch'
 import { copy } from './copy'
 import { useWide } from './useWide'
@@ -33,7 +34,7 @@ export function HeaderTools(p: Props) {
       <div className="spacer" />
       {wide && !shared && !p.waiting && <ViewSwitch live={p.live} briefing={p.briefing} />}
       {p.extra}
-      {canAsk() && !p.waiting && (
+      {can('peek.ask') && !p.waiting && (
         <button type="button" className="btn ghost ask" onClick={p.onAsk} aria-expanded={p.askOpen} aria-label={copy.ask} title={copy.askTitle(askKey)}>
           <Search size={17} strokeWidth={1.75} aria-hidden="true" />
           <span className="ask-label">{copy.ask}</span>

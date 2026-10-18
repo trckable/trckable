@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { type SearchConnection, type SearchProperty, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
-import { isViewer } from '../lib/me'
+import { can } from '../lib/permissions'
 
 // The properties the connected Google account may read, for the picker.
 // Listing them asks Google with the stored key, which the server lets owners
@@ -10,7 +10,7 @@ export function useSearchProperties(siteID: string, conn: SearchConnection | nul
   const [props, setProps] = useState<SearchProperty[] | null>(null)
   const [propsErr, setPropsErr] = useState('')
   useEffect(() => {
-    if (!conn || isViewer()) return
+    if (!conn || !can('search.connect')) return
     // eslint-disable-next-line react-hooks/set-state-in-effect -- a new account or site starts a new fetch, so the last one's error goes
     setPropsErr('')
     more

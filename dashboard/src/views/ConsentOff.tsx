@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { confirm } from '../components/Confirm'
 import { Info } from '../components/Info'
 import { fail, more, type Site } from '../lib/apiMore'
-import { canChange } from '../lib/me'
+import { can } from '../lib/permissions'
 import { modulesChanged } from '../lib/useMods'
 import { recordsCopy } from './recordsCopy'
 
@@ -32,7 +32,7 @@ export function ConsentOff({ site, onOn }: { site: Site; onOn: () => void }) {
       <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>
         Keep the cookie and ask first. trckable can read the consent manager you already run, or ask with a small bar of its own — about its one cookie and nothing else.
       </p>
-      <button type="button" className="btn" style={{ alignSelf: 'flex-start' }} disabled={turning || !canChange()} onClick={() => void turnOn()}>
+      <button type="button" className="btn" style={{ alignSelf: 'flex-start' }} disabled={turning || !can('site.settings')} onClick={() => void turnOn()}>
         {recordsCopy.consent.button}
       </button>
     </section>

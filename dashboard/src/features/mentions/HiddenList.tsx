@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fail } from '../../lib/api'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { mentionsApi, type Mention } from './api'
 import { trust } from './trustCopy'
 
@@ -31,7 +31,7 @@ export function HiddenList({ site, tick, onRestored }: { site: string; tick: num
         {list.map((m) => (
           <li key={m.id}>
             <span>{m.title || m.host}</span>
-            {!isViewer() && (
+            {can('mention.manage') && (
               <button type="button" className="btn ghost" aria-label={trust.restoreOne(m.title || m.host)} onClick={() => void restore(m)}>
                 {trust.restore}
               </button>

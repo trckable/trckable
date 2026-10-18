@@ -4,6 +4,7 @@ import { type Person, more } from '../../lib/apiMore'
 import { confirm, confirmWith } from '../../components/Confirm'
 import { toast } from '../../components/Toast'
 import { people } from './peopleCopy'
+import { isOwnerRole } from '../../lib/permissions'
 
 type Asked = { title: string; body: string; confirmLabel: string; busyLabel: string; done?: string; danger?: boolean }
 
@@ -33,7 +34,7 @@ export function peopleActions(o: { load: () => void; setPeople: (p: Person[]) =>
   const setRole = (p: Person, role: string) =>
     more.setPersonRole(p.id, role).then((r) => {
       const name = p.name || p.email.split('@')[0]
-      toast(role === 'owner' ? people.change.nowOwner(name) : people.change.nowViewer(name))
+      toast(isOwnerRole(role) ? people.change.nowOwner(name) : people.change.nowViewer(name))
       o.setPeople(r.people ?? [])
     })
   const reset = async (p: Person) => {

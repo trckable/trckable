@@ -10,7 +10,7 @@ import { Created } from '../features/sharelinks/Created'
 import { LinkRow } from '../features/sharelinks/LinkRow'
 import { NewLink, type Made } from '../features/sharelinks/NewLink'
 import { type Share, type Site, more } from '../lib/apiMore'
-import { isViewer } from '../lib/me'
+import { can } from '../lib/permissions'
 import '../features/sharelinks/sharelinks.css'
 
 // The card for a post, and the link's own look (logo, colour, domain): a dialog, fetched when it is asked for.
@@ -21,7 +21,7 @@ export function Shares({ site }: { site: Site }) {
   const [making, setMaking] = useState(false)
   const [made, setMade] = useState<Made | null>(null)
   const [card, setCard] = useState(false)
-  const readOnly = isViewer()
+  const readOnly = !can('share.manage')
   const load = () => more.shares(site.id).then((r) => setList(r.shares ?? [])).catch(() => setList([]))
   useEffect(() => {
     void load()

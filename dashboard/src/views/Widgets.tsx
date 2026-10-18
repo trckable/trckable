@@ -5,7 +5,7 @@
 import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { type Site, type Widget, more } from '../lib/apiMore'
-import { isViewer } from '../lib/me'
+import { can } from '../lib/permissions'
 import { TEXT } from './widgetKinds'
 import { WidgetCreator } from './WidgetCreator'
 import { WidgetEditor } from './WidgetEditor'
@@ -34,7 +34,7 @@ export function WidgetsSettings({ site }: { site: Site }) {
     <section className="wg" id="widgets">
       <div className="wg-head">
         <h2 title={TEXT.pageHint}>{TEXT.pageTitle}</h2>
-        {!isViewer() && (
+        {can('widget.manage') && (
           <button type="button" className="btn primary" onClick={() => setMaking(true)}>
             <Plus size={16} strokeWidth={2} aria-hidden="true" />
             {TEXT.newWidget}

@@ -2,6 +2,7 @@
 // read on their row.
 // Plain functions, so the rules are tested without a screen.
 import type { Person } from '../../lib/api'
+import { isOwnerRole } from '../../lib/permissions'
 
 export type RoleLock = 'self' | 'last' | 'holder' | null
 
@@ -10,7 +11,7 @@ export type RoleLock = 'self' | 'last' | 'holder' | null
  *  the account) and yourself (another owner changes your role). The only
  *  owner is named first: it says more. */
 export function roleLock(p: Pick<Person, 'email' | 'role'> & { holder?: boolean }, me: string | undefined, owners: number): RoleLock {
-  if (p.role === 'owner' && owners <= 1) return 'last'
+  if (isOwnerRole(p.role) && owners <= 1) return 'last'
   if (p.holder) return 'holder'
   if (p.email === me) return 'self'
   return null
@@ -21,7 +22,7 @@ export function roleLock(p: Pick<Person, 'email' | 'role'> & { holder?: boolean 
 export function orderPeople<T extends Pick<Person, 'email' | 'role' | 'last_seen'>>(list: T[], me: string | undefined): T[] {
   const rank = (p: T) => {
     if (p.email === me) return 0
-    return p.role === 'owner' ? 1 : 2
+    return isOwnerRole(p.role) ? 1 : 2
   }
   return [...list].sort((x, y) => rank(x) - rank(y) || (y.last_seen || 0) - (x.last_seen || 0))
 }

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/trckable/trckable/server/internal/permissions"
 	"net/http"
 	"time"
 	"unicode/utf8"
@@ -46,7 +47,7 @@ func (a *API) sendFeedback(w http.ResponseWriter, r *http.Request) {
 // feedbackList is for the instance's owners only.
 func (a *API) feedbackList(w http.ResponseWriter, r *http.Request) {
 	p := principalOf(r)
-	if p.user == nil || p.user.Role != sqlite.RoleOwner {
+	if !canUser(p.user, permissions.ActFeedbackRead) {
 		fail(w, http.StatusForbidden, "only an owner reads feedback")
 		return
 	}

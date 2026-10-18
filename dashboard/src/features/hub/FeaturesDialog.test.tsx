@@ -11,7 +11,7 @@ import { hasUnseen } from './seen'
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 const state = vi.hoisted(() => ({ owner: true }))
-vi.mock('../../lib/me', () => ({ canChange: () => state.owner }))
+vi.mock('../../lib/permissions', () => ({ can: () => state.owner }))
 vi.mock('./useFeatureMods', () => ({ useFeatureMods: () => ({ mods: { heatmaps: false, map: true }, busy: '', set: () => Promise.resolve(true) }) }))
 vi.mock('./open', () => ({ needsSite: () => false, openWhere: () => undefined }))
 

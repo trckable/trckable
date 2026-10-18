@@ -9,7 +9,7 @@ import { Switch } from '../components/Switch'
 import { Loading } from '../components/loading/Loading'
 import { api, fail, more, type ModuleInfo, type ScriptInfo, type Site } from '../lib/apiMore'
 import { words } from '../lib/errors'
-import { canChange } from '../lib/me'
+import { can } from '../lib/permissions'
 import { settingsParam } from '../lib/settings'
 import { modulesChanged } from '../lib/useMods'
 import { recordsCopy } from './recordsCopy'
@@ -60,7 +60,7 @@ export function ScriptRecords({ site }: { site: Site }) {
     const m = get(id)
     return (
       <label className="rec-sub">
-        <input type="checkbox" checked={!!m?.enabled} disabled={!goals?.enabled || busy === id || !canChange()} onChange={(e) => void change(id, e.target.checked)} />
+        <input type="checkbox" checked={!!m?.enabled} disabled={!goals?.enabled || busy === id || !can('site.settings')} onChange={(e) => void change(id, e.target.checked)} />
         <span>{recordsCopy[id]}</span>
         <span className="faint num">{cost(m)}</span>
       </label>
@@ -71,7 +71,7 @@ export function ScriptRecords({ site }: { site: Site }) {
     return (
       <>
         <Row label={recordsCopy[id].name} hint={`${recordsCopy[id].hint} ${cost(m)}`}>
-          <Switch on={!!m?.enabled} disabled={busy === id || !canChange()} onChange={() => void change(id, !m?.enabled)} />
+          <Switch on={!!m?.enabled} disabled={busy === id || !can('site.settings')} onChange={() => void change(id, !m?.enabled)} />
         </Row>
         {children}
       </>

@@ -5,7 +5,7 @@
 import { Link2, Share2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { Site } from '../../lib/api'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { Modal } from '../../kit/Modal'
 import { toast } from '../../components/Toast'
 import { ACCENTS, cardUrl, fileName, type CardWords, type Look, type Metric } from './card'
@@ -89,7 +89,7 @@ export default function ShareDialog({ site: first, sites, onClose }: { site: Sit
           <span className="faint">{copy.subtitle}</span>
         </div>
         {!linking && <Periods value={look.period} onChange={(p) => set({ period: p })} className="sd-period is-head" />}
-        {!isViewer() && (
+        {can('share.manage') && (
           <button type="button" className="btn sd-linkbtn" aria-pressed={linking} title={copy.linkTitle} onClick={() => setLinking((x) => !x)}>
             <Link2 size={16} strokeWidth={1.8} aria-hidden="true" />
             <span className="label">{copy.link}</span>

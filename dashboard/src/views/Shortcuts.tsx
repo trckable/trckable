@@ -7,7 +7,7 @@ import { useConfirm } from '../components/Confirm'
 import { Modal } from '../kit/Modal'
 import { toast } from '../components/Toast'
 import { fail, more } from '../lib/apiMore'
-import { canAsk } from '../lib/me'
+import { can } from '../lib/permissions'
 import { FieldError } from '../kit/FieldError'
 import { caps, comboOf, customKeys, keyFor, loadKeymap, useKeymap } from '../lib/keys'
 import { ACTIONS, takenBy, type Group } from '../lib/shortcutList'
@@ -137,7 +137,7 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
       <FieldError id="keys-why" error={why} />
       <div className="keys-grid">
         {GROUPS.map((g) => {
-          const items = g.id === 'mouse' ? [] : ACTIONS.filter((a) => a.group === g.id && (a.id !== 'ask' || canAsk()))
+          const items = g.id === 'mouse' ? [] : ACTIONS.filter((a) => a.group === g.id && (a.id !== 'ask' || can('peek.ask')))
           return (
             <section key={g.id} className={`keys-group g-${g.id}${g.id === 'period' ? ' wide' : ''}`}>
               <header>

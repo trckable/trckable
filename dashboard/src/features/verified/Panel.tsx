@@ -5,7 +5,7 @@
 import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { more, type Verified, type VerifiedSource } from '../../lib/apiMore'
-import { canChange } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { openSettings } from '../../lib/settings'
 import { copy } from './copy'
 import { SourceMark, Seal, Tick } from './Marks'
@@ -59,7 +59,7 @@ export default function Panel({ verified, site, viewer, brand, close }: Props) {
   const data = fresh ?? verified
   const rows = working(data)
   const names = earned(data).map((k) => copy.names[k]).join(', ')
-  const connect = !viewer && !!site && canChange() ? missing(data) : []
+  const connect = !viewer && !!site && can('site.settings') ? missing(data) : []
   const when = lastChecked(data)
   return (
     <div className="vf-panel">

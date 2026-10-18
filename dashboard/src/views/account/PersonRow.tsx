@@ -11,6 +11,7 @@ import { seenText } from '../personSeen'
 import { people } from './peopleCopy'
 import { RolePill } from './RolePill'
 import { SitesButton } from './SitesButton'
+import { isOwnerRole } from '../../lib/permissions'
 
 export interface RowActions {
   /** Asks first: opens the confirmation for a role change. */
@@ -41,7 +42,7 @@ function Status({ p, waiting }: { p: Person; waiting: boolean }) {
 
 function RowMenu({ p, self, access, act }: { p: Person; self: boolean; access: SiteAccess; act: RowActions }) {
   const m = people.menu
-  const viewer = p.role !== 'owner'
+  const viewer = !isOwnerRole(p.role)
   return (
     <Menu label={m.options(p.email)}>
       {(close) => {
@@ -72,7 +73,7 @@ export function PersonRow({ p, me, owners, waiting, access, act }: { p: Person; 
   const self = p.email === me
   return (
     <div className={'person human' + (self ? ' self' : '') + (waiting ? ' waiting' : '')}>
-      <PersonAvatar p={p} id={self ? undefined : p.id} v={self ? v : p.avatar_v} className={'person-avatar' + (p.role === 'owner' ? ' owner' : '')} />
+      <PersonAvatar p={p} id={self ? undefined : p.id} v={self ? v : p.avatar_v} className={'person-avatar' + (isOwnerRole(p.role) ? ' owner' : '')} />
       <span className="person-text">
         <span className="person-name">
           {p.name || p.email.split('@')[0]}

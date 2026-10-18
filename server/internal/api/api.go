@@ -12,6 +12,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/trckable/trckable/server/internal/permissions"
 	"io"
 	"log/slog"
 	"net"
@@ -579,7 +580,7 @@ func (a *API) authed(h http.HandlerFunc) http.Handler {
 // It answers the request itself when one of them says no.
 func (a *API) personGuards(w http.ResponseWriter, r *http.Request, u sqlite.User) (principal, bool) {
 	p := principal{user: &u, account: u.AccountID}
-	if u.Role != sqlite.RoleOwner {
+	if !permissions.Can(u.Role, permissions.ActSitesAll) {
 		sites, err := a.Ctl.ViewerSites(r.Context(), u.AccountID, u.ID)
 		if err != nil {
 			// Unreadable limits show nothing, never everything.
@@ -590,7 +591,7 @@ func (a *API) personGuards(w http.ResponseWriter, r *http.Request, u sqlite.User
 	}
 	// A viewer reads the reports and nothing else — except their own
 	// account, which is theirs to look after.
-	if u.Role == sqlite.RoleViewer && r.Method != http.MethodGet && !ownAccount(r.URL.Path) {
+	if !permissions.Can(u.Role, permissions.ActChange) && r.Method != http.MethodGet && !ownAccount(r.URL.Path) {
 		fail(w, http.StatusForbidden, "your account can read this instance, not change it")
 		return p, false
 	}
@@ -996,7 +997,7 @@ func (a *API) me(w http.ResponseWriter, r *http.Request) {
 	keys, _ := a.Ctl.UserKeymap(r.Context(), p.user.ID)
 	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys, "must_change": a.Ctl.MustChange(r.Context(), p.user.ID), "mentions": a.MentionsOn,
 		// Only owners upgrade, so only their dashboards look.
-		"update_check": a.UpdateCheck && p.user.Role == sqlite.RoleOwner,
+		"update_check": a.UpdateCheck && permissions.Can(p.user.Role, permissions.ActUpdateCheck),
 		// The address this request came from: Filtering's "Add my current IP".
 		"ip": a.callerIP(r),
 		// The instance's own health (every event, the disk, backups) is for
@@ -1116,7 +1117,7 @@ type siteListRow struct {
 // reports never needs it.
 func (a *API) proxyKeyFor(r *http.Request, key string) string {
 	u := r.Context().Value(ctxKey{}).(principal).user
-	if u == nil || u.Role != sqlite.RoleOwner {
+	if !canUser(u, permissions.ActProxyKey) {
 		return ""
 	}
 	return key
@@ -1185,7 +1186,7 @@ func (a *API) updateSite(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) keys(w http.ResponseWriter, r *http.Request) {
 	// The list of keys is for whoever makes and revokes them: owners.
-	if u := r.Context().Value(ctxKey{}).(principal).user; u == nil || u.Role != sqlite.RoleOwner {
+	if u := r.Context().Value(ctxKey{}).(principal).user; !canUser(u, permissions.ActKeyRead) {
 		fail(w, http.StatusForbidden, "only an owner can see this instance's API keys")
 		return
 	}

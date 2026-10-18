@@ -11,6 +11,7 @@ import { fail, type Person } from '../../lib/api'
 import { people } from './peopleCopy'
 import './peoplePop.css'
 import './roleDialog.css'
+import { isOwnerRole } from '../../lib/permissions'
 
 const t = people.change
 const OWNER_ICONS: LucideIcon[] = [Globe, UserPlus, KeyRound]
@@ -19,7 +20,7 @@ const VIEWER_ICONS: LucideIcon[] = [Lock, Eye]
 export default function RoleDialog({ p, role, run, onClose }: { p: Person; role: string; run: () => Promise<unknown>; onClose: () => void }) {
   const [trusted, setTrusted] = useState(false)
   const [busy, setBusy] = useState(false)
-  const promote = role === 'owner'
+  const promote = isOwnerRole(role)
   const name = p.name || p.email.split('@')[0]
   const title = promote ? t.ownerTitle(name) : t.viewerTitle(name)
   const lines = promote ? t.ownerLines : t.viewerLines

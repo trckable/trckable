@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"github.com/trckable/trckable/server/internal/permissions"
 	"net/http"
 	"net/url"
 	"slices"
@@ -439,7 +440,7 @@ func (a *API) alertList(w http.ResponseWriter, r *http.Request) {
 	}
 	// A destination can be a secret (a Slack or Discord webhook URL is one):
 	// a viewer sees that an alert goes somewhere, not the address itself.
-	if u.Role != sqlite.RoleOwner {
+	if !permissions.Can(u.Role, permissions.ActAlertTarget) {
 		for i := range list {
 			list[i].Target = redactTarget(list[i].Target)
 		}

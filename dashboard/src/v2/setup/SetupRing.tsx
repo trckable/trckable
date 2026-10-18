@@ -2,7 +2,8 @@
 // what is left. It follows the site, and goes quiet once everything counted is done.
 import { useEffect, useRef, useState } from 'react'
 import type { Site } from '../../lib/apiMore'
-import { canChange, isShared } from '../../lib/me'
+import { isShared } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { useTopLayerWhen } from '../../lib/topLayer'
 import { earned } from '../../features/verified/model'
 import { VerifiedPill } from '../../features/verified/VerifiedPill'
@@ -56,7 +57,7 @@ export function SetupRing({ site, onGoal, fresh = false, visited = false }: { si
           <SetupPanel
             state={state}
             locked={fresh && !visited}
-            x={{ site, onGoal, can: canChange(), change: (fn) => void run(fn), close }}
+            x={{ site, onGoal, can: can('setup.run'), change: (fn) => void run(fn), close }}
             onHide={() => {
               hide(site.id, left(state))
               close()

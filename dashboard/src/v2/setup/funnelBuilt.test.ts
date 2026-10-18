@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const setupFunnel = vi.fn<(site: string) => Promise<object>>(() => Promise.resolve({}))
 let owner = true
 vi.mock('../../lib/apiMore', () => ({ more: { setupFunnel: (s: string) => setupFunnel(s) } }))
-vi.mock('../../lib/me', () => ({ canChange: () => owner }))
+vi.mock('../../lib/permissions', () => ({ can: () => owner }))
 
 const load = async () => (await import('./funnelBuilt')).funnelBuilt
 

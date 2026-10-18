@@ -3,7 +3,7 @@
 // loses nothing.
 import { useEffect, useState } from 'react'
 import { api, fail, type Site } from '../../lib/api'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { Row } from '../../components/Row'
 import { shareApi } from './share'
 import { Switch } from '../../components/Switch'
@@ -28,7 +28,7 @@ export function MilestonesSetting({ site }: { site: Site }) {
   return (
     <section className="card">
       <Row label={copy.setting} hint={copy.settingHint}>
-        <Switch on={on} disabled={isViewer()} onChange={flip} />
+        <Switch on={on} disabled={!can('site.settings')} onChange={flip} />
       </Row>
     </section>
   )

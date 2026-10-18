@@ -1,18 +1,17 @@
-// Who is signed in, for the handful of places that have to hide a control
-// rather than let the server refuse it. The server is still the one enforcing
-// this: the UI only avoids offering a button that would come back 403.
-// Anything but a plain "owner" reads: a missing or new role never shows a
-// control the server would refuse.
-let role = 'viewer'
+// Who is signed in and what kind of page this is. What a role may do is not
+// here: that is permissions.ts (`can`). A role with no row there may do
+// nothing, so a missing or new role never shows a control the server would
+// refuse.
+let role = ''
 let mentionsOn = false // set with the role, from /me: whether the server has Mentions switched on
 
 export const setRole = (r?: string, withMentions?: boolean) => {
-  role = r === 'owner' ? 'owner' : 'viewer'
+  role = r ?? ''
   mentionsOn = withMentions === true
 }
 
-/** A viewer reads this instance. They change nothing except their own account. */
-export const isViewer = () => role !== 'owner'
+/** The role to ask the table about: a shared link reads, whoever opens it. */
+export const currentRole = () => (shared ? 'viewer' : role)
 
 // A shared link is one site's numbers and nothing else: no account, no
 // settings, no live stream, no notes. The server already refuses all of it;
@@ -22,7 +21,6 @@ let sharedMods: Record<string, boolean> = {}
 
 export const setShared = (modules?: Record<string, boolean>) => {
   shared = true
-  role = 'viewer'
   if (modules) sharedMods = modules
 }
 
@@ -31,14 +29,6 @@ export const isShared = () => shared
 // Mentions is switched on by the server (TRCKABLE_MENTIONS); off, nothing of it is offered.
 export const hasMentions = () => mentionsOn
 
-/** Whether this page may offer a create, edit or delete control: an owner,
- *  never a viewer and never a shared link. */
-export const canChange = () => role === 'owner' && !shared
-
 /** Which modules the shared site has on: they travel with the link, because a
  *  shared page cannot ask for them itself. */
 export const sharedModules = () => sharedMods
-
-/** Whether Ask is offered: it sets up an AI assistant with an API key, which
- *  only an owner can make. Never a viewer, never a shared link. */
-export const canAsk = () => canChange()

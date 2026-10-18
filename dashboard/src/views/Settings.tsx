@@ -1,6 +1,7 @@
 import { Activity, Bell, Check, ChevronRight, CircleCheck, Code, CreditCard, Info as InfoIcon, LayoutTemplate, RefreshCw, Search, Newspaper, Settings as Cog, Share2, ShieldCheck, StickyNote, TriangleAlert } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
-import { hasMentions, isViewer } from '../lib/me'
+import { hasMentions } from '../lib/me'
+import { can } from '../lib/permissions'
 import { api, siteState, fail, type InstallCheck, type Site, type SiteState, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { Window, type WindowTab } from '../components/Window'
@@ -32,7 +33,6 @@ import { SavedFlag, useSaved } from '../components/SavedFlag'
 import './Settings.css'
 
 type TabID = SettingsTab
-
 const IconCrop = lazy(() => import('../components/AvatarCrop'))
 const MentionsSettings = lazy(() => import('../features/mentions/MentionsSettings'))
 
@@ -86,13 +86,13 @@ function SettingsSection({ tab, site, onSites }: { tab: TabID; site: Site; onSit
   return (
     <>
       {/* Saying it once is kinder than letting every save come back 403. */}
-      {isViewer() && <p className="viewer-note">Your account reads this instance. Settings are shown as they are, and an owner changes them.</p>}
+      {!can('site.settings') && <p className="viewer-note">Your account reads this instance. Settings are shown as they are, and an owner changes them.</p>}
       {tab === 'site' && (
         <>
           <SiteSettings key={site.id} site={site} onSaved={onSites} />
           <ScriptRecords key={'sr' + site.id} site={site} />
           <Locked><SiteLook site={site} onSaved={onSites} /><ReportSettings key={'r' + site.id} site={site} onSites={onSites} /></Locked>
-          {!isViewer() && <DangerZone site={site} onSites={onSites} />}
+          {can('site.delete') && <DangerZone site={site} onSites={onSites} />}
         </>
       )}
       {tab === 'sharing' && <Shares key={'sh' + site.id} site={site} />}

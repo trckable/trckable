@@ -5,7 +5,7 @@ import { SiteMark } from '../../components/SiteMark'
 import { copy as menu } from '../../features/sites/menuCopy'
 import { openSiteTab } from '../../features/sites/OpenSite'
 import { fmtInt, fmtMoney } from '../../lib/format'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { openSettings, type SettingsTab } from '../../lib/settings'
 import { navigate } from '../../lib/url'
 import { Spark } from '../AllSitesSpark'
@@ -76,10 +76,10 @@ export function SiteMenu({ s }: { s: TeamSite }) {
     >
       {(close) => (
         <div role="menu">
-          {!isViewer() && item(menu.siteSettings, tab('site'), close)}
-          {!isViewer() && item(menu.share, tab('sharing'), close)}
+          {can('site.settings') && item(menu.siteSettings, tab('site'), close)}
+          {can('share.manage') && item(menu.share, tab('sharing'), close)}
           {item(menu.statusPage, () => navigate(`/${encodeURIComponent(s.domain)}/incidents`), close)}
-          {!isViewer() && item(menu.widgets, tab('widgets'), close)}
+          {can('widget.manage') && item(menu.widgets, tab('widgets'), close)}
           {item(menu.openSite(s.domain), () => openSiteTab(s.domain), close)}
         </div>
       )}

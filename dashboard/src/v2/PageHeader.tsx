@@ -7,7 +7,8 @@ import { openAddSite } from '../lib/account'
 import { liveCount, siteDown } from '../features/live/liveLink'
 import { switchTab } from '../features/live/switchView'
 import { AccountMenu } from '../components/AccountMenu'
-import { isShared, isViewer } from '../lib/me'
+import { isShared } from '../lib/me'
+import { can } from '../lib/permissions'
 import { pressed } from '../lib/keys'
 import { navigate } from '../lib/url'
 import { openSettings } from '../lib/settings'
@@ -59,7 +60,7 @@ export function PageHeader(p: PageHeaderProps) {
   const down = siteDown.use()
   const slots = useV2Extras()
   const notices = useNotices(p.site, p.sites)
-  const viewer = isViewer()
+  const viewer = !can('site.add')
   const [find, setFind] = useState(false)
   const [seed, setSeed] = useState('')
   const openFind = (q: string) => {

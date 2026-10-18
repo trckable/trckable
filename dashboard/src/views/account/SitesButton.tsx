@@ -9,6 +9,7 @@ import type { Person } from '../../lib/api'
 import { people } from './peopleCopy'
 import { SitesPop } from './peopleLazy'
 import { sitesSummary } from './rules'
+import { isOwnerRole } from '../../lib/permissions'
 
 function Stack({ marks }: { marks: Parameters<typeof SiteMark>[0]['site'][] }) {
   return (
@@ -31,7 +32,7 @@ export function SitesButton({ p, access: acc }: { p: Person; access: SiteAccess 
   const btn = useRef<HTMLButtonElement>(null)
   const viewer = acc.of(p.id)
   if (!acc.shown) return null
-  const owner = p.role === 'owner'
+  const owner = isOwnerRole(p.role)
   // A viewer whose access is not known yet (the list is still coming) shows nothing.
   if (!owner && !viewer) return null
   const s = sitesSummary(owner ? null : (viewer?.sites ?? null), acc.sites)

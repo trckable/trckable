@@ -15,7 +15,7 @@ vi.mock('../lib/apiMore', async (orig) => ({
 }))
 const ask = vi.fn<(...a: unknown[]) => Promise<boolean>>()
 vi.mock('../components/Confirm', () => ({ confirm: (...a: unknown[]) => ask(...a) }))
-vi.mock('../lib/me', async (orig) => ({ ...(await orig<typeof import('../lib/me')>()), canChange: () => true }))
+vi.mock('../lib/permissions', () => ({ can: () => true }))
 
 import { ScriptRecords } from './ScriptRecords'
 import { recordsCopy } from './recordsCopy'

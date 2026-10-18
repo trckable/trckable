@@ -27,7 +27,10 @@ const data = { current: { dims: { referrer: [{ value: 'news.ycombinator.com', vi
 const site = { id: 's', domain: 'a.example', name: 'A' } as Site
 
 describe('the palette', () => {
-  beforeEach(() => openExplore.mockClear())
+  beforeEach(() => {
+    openExplore.mockClear()
+    me.setRole('owner')
+  })
 
   it('opens Explore with the filter on, so the chip shows and every table is narrowed', () => {
     const items = paletteItems({ sites: [site], site, data, here: 'briefing', domainOf: (s) => s.domain })
@@ -102,7 +105,17 @@ describe('the palette', () => {
     expect(find()).toBeUndefined()
   })
 
+  it('offers a viewer nothing that creates or changes: no Create rows, no Settings rows, the reads and their own prefs stay', () => {
+    me.setRole('viewer', true)
+    const items = paletteItems({ sites: [site], site, data, here: 'briefing', onGoal: () => undefined, domainOf: (s) => s.domain })
+    const titles = items.map((i) => i.title)
+    expect(items.filter((i) => i.group === 'Create')).toEqual([])
+    expect(titles.filter((t) => t.startsWith('Settings') || t === 'Site settings')).toEqual([])
+    expect(titles).toEqual(expect.arrayContaining(['Theme · Dark', 'Profile', 'Sign out', 'Mentions']))
+  })
+
   it('leaves Live, the Briefing, Explore and the periods out for a site with no verified install', () => {
+    me.setRole('owner', true)
     const items = paletteItems({ sites: [site], site, data, here: 'briefing', fresh: true, domainOf: (s) => s.domain })
     const titles = items.map((i) => i.title)
     expect(titles).not.toContain('Go to Live')

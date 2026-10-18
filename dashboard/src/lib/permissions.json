@@ -1,0 +1,137 @@
+{
+  "note": "The one role table, as the dashboard (lib/permissions.ts) and the server (internal/permissions/permissions.go) both keep it. 'server' is the server action that enforces a dashboard action. Both tests read this file.",
+  "actions": {
+    "site.add": {
+      "roles": [
+        "owner"
+      ],
+      "server": "instance.change"
+    },
+    "site.settings": {
+      "roles": [
+        "owner"
+      ],
+      "server": "instance.change"
+    },
+    "site.delete": {
+      "roles": [
+        "owner"
+      ],
+      "server": "instance.change"
+    },
+    "goal.create": {
+      "roles": [
+        "owner"
+      ],
+      "server": "instance.change"
+    },
+    "funnel.create": {
+      "roles": [
+        "owner"
+      ],
+      "server": "instance.change"
+    },
+    "note.write": {
+      "roles": [
+        "owner"
+      ],
+      "server": "instance.change"
+    },
+    "share.manage": {
+      "roles": [
+        "owner"
+      ],
+      "server": "instance.change"
+    },
+    "widget.manage": {
+      "roles": [
+        "owner"
+      ],
+      "server": "instance.change"
+    },
+    "alert.manage": {
+      "roles": [
+        "owner"
+      ],
+      "server": "instance.change"
+    },
+    "payment.manage": {
+      "roles": [
+        "owner"
+      ],
+      "server": "instance.change"
+    },
+    "mention.manage": {
+      "roles": [
+        "owner"
+      ],
+      "server": "instance.change"
+    },
+    "data.erase": {
+      "roles": [
+        "owner"
+      ],
+      "server": "instance.change"
+    },
+    "peek.ask": {
+      "roles": [
+        "owner"
+      ],
+      "server": "instance.change"
+    },
+    "setup.run": {
+      "roles": [
+        "owner"
+      ],
+      "server": "instance.change"
+    },
+    "member.manage": {
+      "roles": [
+        "owner"
+      ],
+      "server": "member.manage"
+    },
+    "search.connect": {
+      "roles": [
+        "owner"
+      ],
+      "server": "search.connect"
+    },
+    "import.google": {
+      "roles": [
+        "owner"
+      ],
+      "server": "import.google"
+    },
+    "update.check": {
+      "roles": [
+        "owner"
+      ],
+      "server": "update.check"
+    }
+  },
+  "serverOnly": {
+    "account.own": [
+      "owner",
+      "viewer"
+    ],
+    "sites.all": [
+      "owner"
+    ],
+    "key.read": [
+      "owner"
+    ],
+    "feedback.read": [
+      "owner"
+    ],
+    "secret.read": [
+      "owner"
+    ],
+    "proxy.key": [
+      "owner"
+    ],
+    "alert.target": [
+      "owner"
+    ]
+  }
+}

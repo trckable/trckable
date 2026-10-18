@@ -6,7 +6,7 @@ import { BellRing } from 'lucide-react'
 import { SaleLines, TabCountLine } from '../../features/signals/PrefLines'
 import { Switch } from '../../components/Switch'
 import type { Site } from '../../lib/api'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { checksHere, setChecksHere } from '../../lib/update'
 import { Line } from '../AccountLine'
 import { copy } from './copy'
@@ -30,7 +30,7 @@ export function PrefCards({ user, sites }: { user: string; sites: Site[] }) {
         <InstallLine />
         <SaleLines />
         {/* The check itself is in lib/update.ts: this browser, once a day, nothing about the instance sent. */}
-        {!isViewer() && (
+        {can('update.check') && (
           <Line icon={BellRing} label="New versions" hint="Check for new versions">
             <Switch
               on={updates}

@@ -12,7 +12,7 @@ import { Hero } from './Hero'
 import { mentionsApi, type Hidden, type Mention, type Period, type Words } from './api'
 import { HiddenList } from './HiddenList'
 import { HideNote } from './HideNote'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { fail } from '../../lib/api'
 import { copy } from './copy'
 import { page } from './pageCopy'
@@ -76,7 +76,7 @@ export default function MentionsPage({ site, header }: { site: Site; header: Rea
           <>
             {note && <HideNote note={note} onExclude={(x) => keepOut('excluded', x)} onBlock={(x) => keepOut('blocked', x)} onUndo={undo} onDone={() => setNote(null)} />}
             {hero && <Hero hero={hero} curves={curves} onOpen={open} />}
-            <Feed list={list} curves={curves} filter={filter} period={period} onFilter={setFilter} onPeriod={setPeriod} onOpen={(m) => open(m.id)} onHide={isViewer() ? undefined : hide} />
+            <Feed list={list} curves={curves} filter={filter} period={period} onFilter={setFilter} onPeriod={setPeriod} onOpen={(m) => open(m.id)} onHide={!can('mention.manage') ? undefined : hide} />
           </>
         )}
         {data && <HiddenList site={site.id} tick={tick} onRestored={reload} />}

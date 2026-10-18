@@ -3,6 +3,7 @@
 import type { Report, Site } from '../../lib/api'
 import { countryName } from '../../lib/format'
 import { hasMentions, isShared } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { openAccount } from '../../lib/account'
 import { openSettings, SETTINGS_TABS, type SettingsTab } from '../../lib/settings'
 import { chooseLang, chosen } from '../../i18n/choose'
@@ -42,9 +43,9 @@ export function paletteItems(o: { sites: Site[]; site: Site | null; data: Report
   const ready = !o.fresh
   if (o.onAsk) out.push({ title: pc.ask, kind: pc.kinds.peek, group: pc.groups.ask, run: o.onAsk })
   // What the old Create menu made: a goal, a funnel (its steps are set in Explore), a note on the chart (the Briefing's sheet).
-  if (o.site && o.onGoal && !isShared()) out.push({ title: pc.newGoal, kind: pc.kinds.create, group: pc.groups.create, run: o.onGoal })
-  if (o.site && ready && !isShared()) out.push({ title: pc.newFunnel, kind: pc.kinds.create, group: pc.groups.create, run: () => openExplore('funnels') })
-  if (o.site && ready && o.here === 'briefing' && !isShared()) out.push({ title: pc.newNote, kind: pc.kinds.create, group: pc.groups.create, run: () => window.dispatchEvent(new Event('trckable:note')) })
+  if (o.site && o.onGoal && can('goal.create')) out.push({ title: pc.newGoal, kind: pc.kinds.create, group: pc.groups.create, run: o.onGoal })
+  if (o.site && ready && can('funnel.create')) out.push({ title: pc.newFunnel, kind: pc.kinds.create, group: pc.groups.create, run: () => openExplore('funnels') })
+  if (o.site && ready && o.here === 'briefing' && can('note.write')) out.push({ title: pc.newNote, kind: pc.kinds.create, group: pc.groups.create, run: () => window.dispatchEvent(new Event('trckable:note')) })
   // The tables and the two views belong to a site; a page without one offers the sites and the periods only.
   if (o.site && ready) for (const t of ALL_TABS.filter(offered)) out.push({ title: t in copy.sub ? copy.sub[t] : copy.names[sectionOf(t)][0], also: copy.title, kind: '', group: copy.title, run: () => openExplore(t) })
   // The chart's markers (the sources' pills) are shown or put away from here; the guide to leaving after one page opens from here too.
@@ -58,10 +59,11 @@ export function paletteItems(o: { sites: Site[]; site: Site | null; data: Report
     { title: pc.clear, kind: pc.kinds.filter, group: pc.groups.goTo, run: () => setView({ filters: [], xf: undefined }) },
   )
   // Settings (every section, so "alerts" and "share" find theirs), the Mentions page, the theme and sign out: what the menus hold.
+  // A viewer is offered neither the settings nor their sections, as the header and the site menu do not offer them.
   if (o.site && !isShared()) {
     const site = o.site
-    out.push({ title: pc.siteSettings, also: 'settings preferences site', kind: pc.kinds.settings, group: pc.groups.settings, run: () => openSettings(site, 'site') })
-    for (const t of SETTINGS_TABS.filter((t) => t !== 'mentions' || hasMentions())) out.push({ title: `${pc.settings} · ${TABS[t]}`, also: TAB_WORDS[t], kind: pc.kinds.settings, group: pc.groups.settings, run: () => openSettings(site, t) })
+    if (can('site.settings')) out.push({ title: pc.siteSettings, also: 'settings preferences site', kind: pc.kinds.settings, group: pc.groups.settings, run: () => openSettings(site, 'site') })
+    if (can('site.settings')) for (const t of SETTINGS_TABS.filter((t) => t !== 'mentions' || hasMentions())) out.push({ title: `${pc.settings} · ${TABS[t]}`, also: TAB_WORDS[t], kind: pc.kinds.settings, group: pc.groups.settings, run: () => openSettings(site, t) })
     if (hasMentions()) out.push({ title: pc.mentionsPage, kind: pc.kinds.view, group: pc.groups.goTo, run: () => navigate('/' + encodeURIComponent(site.domain) + '/mentions') })
   }
   if (!isShared()) {

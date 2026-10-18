@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 import { Check, TriangleAlert, X } from 'lucide-react'
 import { api, type Site } from '../../lib/api'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { openSettings } from '../../lib/settings'
 import { navigate } from '../../lib/url'
 import { copy as incidents } from '../incidents/copy'
@@ -34,7 +34,7 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
   const { state, again } = useChecks(site.id)
   const recent = useRecent(site.id)
   const probes = useProbes(site.id)
-  const mute = useMute(site, !isViewer())
+  const mute = useMute(site, can('alert.manage'))
   const probed = down ? site.down_since : undefined
   const downSince = down ? (probed ?? site.check?.down_since) : undefined
   const result = state.phase === 'done' ? state.result : undefined
@@ -106,7 +106,7 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
         <a className="btn ghost" href={`https://${site.domain}`} target="_blank" rel="noopener noreferrer">
           {copy.open}
         </a>
-        {!isViewer() && (
+        {can('alert.manage') && (
           <button type="button" className="btn ghost" onClick={() => openSettings(site, 'install')}>
             {copy.guide}
           </button>

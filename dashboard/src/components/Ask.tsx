@@ -2,7 +2,7 @@
 // listener as a window event, so no card imports it; it draws only
 // where a listener has said it is there (a mark on the page) and for people
 // who may ask. Without one there is nothing to ask and nothing is drawn.
-import { canAsk } from '../lib/me'
+import { can } from '../lib/permissions'
 import { Ghost } from './Logo'
 
 /** What a card says about itself: plain text, never markup. */
@@ -24,7 +24,7 @@ const SIZE = { width: 28, height: 28, minHeight: 0, opacity: 0.75 }
 
 export function AskAbout({ about }: { about: AboutThis }) {
   // A listener marks the page when it is there.
-  if (!document.documentElement.hasAttribute('data-ask-about') || !canAsk()) return null
+  if (!document.documentElement.hasAttribute('data-ask-about') || !can('peek.ask')) return null
   return (
     <button
       type="button"

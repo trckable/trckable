@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"github.com/trckable/trckable/server/internal/permissions"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -15,7 +16,7 @@ import (
 
 func (a *API) owner(w http.ResponseWriter, r *http.Request) *sqlite.User {
 	u := r.Context().Value(ctxKey{}).(principal).user
-	if u == nil || u.Role != sqlite.RoleOwner {
+	if !canUser(u, permissions.ActMemberManage) {
 		fail(w, http.StatusForbidden, "only an owner can manage the people on this instance")
 		return nil
 	}
