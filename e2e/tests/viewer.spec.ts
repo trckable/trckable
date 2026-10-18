@@ -65,17 +65,20 @@ async function writeControls(page: Page): Promise<string[]> {
     const shown = (el: Element) => el.checkVisibility()
     const enabled = (el: Element) => !(el as HTMLButtonElement).disabled && el.getAttribute('aria-disabled') !== 'true' && !el.closest('fieldset:disabled')
     const found: string[] = []
+    // This browser's own choices (the tab's count, the sale chime, notices, the language) are kept in the browser, not on the server: a viewer has them too.
+    const local = /^(Live count in the tab|Sale sound|Browser notices|Language)$/
     // A funnel's steps live in the address, not the database: taking one out
     // changes what the viewer looks at, nothing anyone else sees.
     for (const el of document.querySelectorAll('button:not(.funnel-steps *), [role="switch"], [role="menuitem"], a.btn')) {
       if (!shown(el) || !enabled(el)) continue
       const name = (el.getAttribute('aria-label') || (el as HTMLElement).innerText || el.getAttribute('title') || '').trim()
+      if (local.test(name)) continue
       if (el.getAttribute('role') === 'switch') found.push('switch: ' + name)
       else if (re.test(name)) found.push(name)
     }
     // An editable settings field is a write too.
     for (const el of document.querySelectorAll('.window-body :is(input, textarea, select):not([type=search]):not([readonly])')) {
-      if (shown(el) && enabled(el)) found.push('field: ' + (el.getAttribute('name') || el.getAttribute('aria-label') || el.id || 'unnamed'))
+      if (shown(el) && enabled(el) && !local.test(el.getAttribute('aria-label') ?? '')) found.push('field: ' + (el.getAttribute('name') || el.getAttribute('aria-label') || el.id || 'unnamed'))
     }
     return found
   }, WRITES.source)

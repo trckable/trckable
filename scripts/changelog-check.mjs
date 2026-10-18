@@ -1,5 +1,7 @@
-// Every change people will notice carries its own line in CHANGELOG.md, under
-// "## Unreleased", in the same pull request. Written at the end, a release's
+// Every change people will notice carries its own note, a new file
+// changes/<slug>.md holding one line, in the same pull request. A file per
+// change (instead of a line in CHANGELOG.md) means two pull requests never
+// touch the same lines; pnpm release compiles them. Written at the end, a release's
 // notes are a memory exercise; written with the change, they are just true.
 //
 //   node scripts/changelog-check.mjs [base]    base defaults to origin/main
@@ -24,13 +26,14 @@ const labels = (process.env.PR_LABELS || '').split(',').map((s) => s.trim())
 const marked = labels.includes('no-changelog') || git('log', '--format=%B', `${base}..HEAD`).includes('[no-changelog]')
 if (marked) process.exit(0)
 
-const diff = git('diff', `${base}...HEAD`, '--', 'CHANGELOG.md')
-const unreleased = git('show', 'HEAD:CHANGELOG.md').match(/## Unreleased\n([\s\S]*?)(?=\n## \d)/)?.[1] ?? ''
-const added = diff.split('\n').filter((l) => l.startsWith('+- ') || l.startsWith('+  '))
-if (added.length && unreleased.trim()) process.exit(0)
+const added = git('diff', '--name-only', '--diff-filter=A', `${base}...HEAD`, '--', 'changes')
+  .split('\n')
+  .filter((f) => /^changes\/[^/]+\.md$/.test(f) && f !== 'changes/README.md')
+if (added.length) process.exit(0)
 
 console.error(`CHANGELOG.md: this branch changes what ships (${touched.slice(0, 3).join(', ')}${touched.length > 3 ? ', …' : ''})
-but adds no line under "## Unreleased". Add one in plain words, or mark the
+but adds no changes/<slug>.md note. Add one line in plain words (see
+changes/README.md), or mark the
 change as one nobody notices: the no-changelog label on the pull request, or
 "[no-changelog]" in a commit message.`)
 process.exit(1)

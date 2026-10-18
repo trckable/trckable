@@ -4,6 +4,7 @@
 import { createContext, useContext, type ReactNode } from 'react'
 import type { AccountAlert } from '../components/AccountDot'
 import type { Notice } from './bell/notices'
+import type { PaletteItem } from './ui/Palette'
 
 /** A site waiting to be handed to someone: a note and a Stop on its row, an amber dot. */
 export interface SiteMove {
@@ -32,6 +33,8 @@ export interface V2Extras {
   menuExtra?: ReactNode
   /** Rows right below the person's Profile (a build's own page of the account). */
   menuAfterProfile?: ReactNode | ((go: (fn: () => void) => () => void) => ReactNode)
+  /** More rows of the ⌘K palette, in its Account group (a build's own pages and settings, now that the menu holds only a few rows). */
+  paletteRows?: PaletteItem[]
   /** A dot on the person's avatar when the account needs them (a limit reached): the public product has none. */
   accountAlert?: AccountAlert | null
   /** More rows of the bell, after the ones the site tells itself (a build's own notices). */

@@ -8,6 +8,17 @@ vi.mock('../../lib/theme', () => ({ THEMES: ['system', 'dark', 'light'], setThem
 vi.mock('../../lib/signOut', () => ({ signOut: vi.fn() }))
 vi.mock('../../lib/settings', async (orig) => ({ ...(await orig<object>()), openSettings: vi.fn() }))
 vi.mock('../../features/live/switchView', () => ({ switchTab: vi.fn() }))
+const account = vi.hoisted(() => ({ openAccount: vi.fn() }))
+vi.mock('../../lib/account', () => account)
+const lang = vi.hoisted(() => ({ chooseLang: vi.fn(), chosen: () => 'auto' }))
+vi.mock('../../i18n/choose', () => lang)
+const features = vi.hoisted(() => ({ openFeatures: vi.fn() }))
+vi.mock('../../features/hub/openFeatures', () => features)
+const shortcuts = vi.hoisted(() => ({ openShortcuts: vi.fn() }))
+vi.mock('../../components/ShortcutsHost', () => shortcuts)
+vi.mock('../../components/toastBus', () => ({ toast: vi.fn() }))
+vi.mock('../../lib/installApp', () => ({ install: vi.fn(), isInstalled: () => false }))
+vi.mock('../../lib/pwa', () => ({ offer: { get: () => null } }))
 
 import * as me from '../../lib/me'
 import { paletteItems } from './palette'
@@ -52,6 +63,29 @@ describe('the palette', () => {
     const items = paletteItems({ sites: [site], site, data, here: 'briefing', domainOf: (s) => s.domain })
     expect(items.some((i) => i.title.startsWith('Settings') || i.title === 'Sign out')).toBe(false)
     vi.restoreAllMocks()
+  })
+
+  it('finds what the avatar menu gave up: Profile, Language, Features, Shortcuts and the own-visits choice', () => {
+    vi.stubGlobal('navigator', { userAgent: 'x', maxTouchPoints: 0 })
+    const items = paletteItems({ sites: [site], site, data, here: 'briefing', domainOf: (s) => s.domain })
+    vi.unstubAllGlobals()
+    const by = (title: string) => items.find((i) => i.title === title)
+    by('Profile')?.run()
+    expect(account.openAccount).toHaveBeenCalledWith('profile')
+    by('Language · Deutsch')?.run()
+    expect(lang.chooseLang).toHaveBeenCalledWith('de')
+    by('Features')?.run()
+    expect(features.openFeatures).toHaveBeenCalled()
+    by('Shortcuts')?.run()
+    expect(shortcuts.openShortcuts).toHaveBeenCalled()
+    expect(by('Exclude this browser')).toBeDefined()
+    expect(items.some((i) => i.title === 'Install app')).toBe(false) // no offer, not iOS: nowhere to install from
+  })
+
+  it('adds a build’s own rows to the Account group', () => {
+    const extra = { title: 'Email notifications', kind: 'action', group: 'Account', run: vi.fn() }
+    const items = paletteItems({ sites: [site], site, data, here: 'briefing', extra: [extra], domainOf: (s) => s.domain })
+    expect(items).toContain(extra)
   })
 
   it('offers Peek before Create', () => {

@@ -11,7 +11,7 @@ type Kept = { id: string; node: ReactNode }
 const seen = new Map<string, Kept>()
 const KEEP = 8
 
-export function Hold({ ready, id, first, children }: { ready: boolean; id: string; first: ReactNode; children: ReactNode }) {
+export function Hold({ quiet = false, ready, id, first, children }: { quiet?: boolean; ready: boolean; id: string; first: ReactNode; children: ReactNode }) {
   const [last, setLast] = useState<Kept | null>(() => seen.get(id) ?? null)
   useEffect(() => {
     if (!ready || last?.id === id) return
@@ -25,7 +25,7 @@ export function Hold({ ready, id, first, children }: { ready: boolean; id: strin
   // One wrapper whether held or not, so the page that follows is the same elements as the one it replaces: its ring, its
   // numbers and its line move from what they showed instead of being drawn anew.
   // While the first shape of the page stands in, the page is loading: the foot waits for its height.
-  usePageLoading(!ready && !last)
+  usePageLoading(!quiet && !ready && !last)
   if (!ready && !last) return <>{first}</>
   const held = !ready && !!last
   // The same address read again is not dimmed: it is the page as it was, being refreshed.

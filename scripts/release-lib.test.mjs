@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { adminMergeCommand, bump, checksState, dirtyBeyondFigures, docsVersionMessage, mergeBlockedByPolicy, cutChangelog, duration, newer, releaseDate, timings, versionMismatches } from './release-lib.mjs'
+import { fragmentLines, adminMergeCommand, bump, checksState, dirtyBeyondFigures, docsVersionMessage, mergeBlockedByPolicy, cutChangelog, duration, newer, releaseDate, timings, versionMismatches } from './release-lib.mjs'
 
 test('newer compares each part as a number', () => {
   assert.equal(newer('0.10.0', '0.9.9'), true)
@@ -42,11 +42,24 @@ test('versionMismatches names every place that disagrees', () => {
   assert.deepEqual(versionMismatches('0.4.1', (f) => (f === 'CHANGELOG.md' ? '## 0.4.10 (1 Oct 2026)\n' : files[f])), ['CHANGELOG.md'])
 })
 
+test('cutChangelog compiles the fragments in name order, ahead of what stands under Unreleased', () => {
+  const frags = [
+    { name: 'b-fix.md', text: '---\nsection: Fixed\n---\nThe bell opens again.\n' },
+    { name: 'README.md', text: 'not a note' },
+    { name: 'a-new.md', text: '- A new thing.\n' },
+  ]
+  assert.deepEqual(fragmentLines(frags), ['- A new thing.', '- The bell opens again.'])
+  const { log, body } = cutChangelog('# Changelog\n\n## Unreleased\n\n- standing\n\n## 0.4.0 (27 Sep 2026)\n- old\n', '0.4.1', '28 Sep 2026', frags)
+  assert.equal(body, '- A new thing.\n- The bell opens again.\n- standing')
+  assert.equal(log, '# Changelog\n\n## Unreleased\n\n## 0.4.1 (28 Sep 2026)\n\n- A new thing.\n- The bell opens again.\n- standing\n\n## 0.4.0 (27 Sep 2026)\n- old\n')
+  assert.throws(() => cutChangelog('## Unreleased\n\n## 0.4.0 (x)\n', '0.4.1', 'd', [{ name: 'README.md', text: 'x' }]), /nothing to release/)
+})
+
 test('cutChangelog turns Unreleased into the release, with a fresh Unreleased above', () => {
   const { log, body } = cutChangelog('# Changelog\n\n## Unreleased\n\n- a fix\n\n## 0.4.0 (27 Sep 2026)\n- old\n', '0.4.1', '28 Sep 2026')
   assert.equal(body, '- a fix')
   assert.equal(log, '# Changelog\n\n## Unreleased\n\n## 0.4.1 (28 Sep 2026)\n\n- a fix\n\n## 0.4.0 (27 Sep 2026)\n- old\n')
-  assert.throws(() => cutChangelog('## Unreleased\n\n## 0.4.0 (x)\n', '0.4.1', 'd'), /empty/)
+  assert.throws(() => cutChangelog('## Unreleased\n\n## 0.4.0 (x)\n', '0.4.1', 'd'), /nothing to release/)
 })
 
 test('releaseDate is UTC', () => {

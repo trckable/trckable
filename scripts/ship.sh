@@ -24,12 +24,12 @@ step "one version everywhere"
 node scripts/version-check.mjs || fail "one version everywhere: see above"
 node --test scripts/*.test.mjs > /dev/null || fail "the release scripts' tests: node --test scripts/*.test.mjs"
 
-# Every change people will notice brings its own changelog line (stage 2 of
+# Every change people will notice brings its own changes/<slug>.md note (stage 2 of
 # ops SHIPPING.md). A release branch only moves the version, so it is exempt.
 if [ "$BRANCH" != main ] && [[ $BRANCH != release-* ]]; then
-  step "a CHANGELOG line for what changed"
+  step "a changes/ note for what changed"
   git fetch -q origin main
-  node scripts/changelog-check.mjs origin/main || fail "add the CHANGELOG line, then ship again"
+  node scripts/changelog-check.mjs origin/main || fail "add the changes/ note, then ship again"
 fi
 
 # golangci-lint: pinned, built by go run (cached after the first time), never installed.

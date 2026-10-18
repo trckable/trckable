@@ -92,26 +92,3 @@
   background: transparent;
   border: 1px solid color-mix(in srgb, var(--up) 35%, transparent);
 }
-
-/* The language row: the language now at the end, the list's check before each name. */
-.menu-value {
-  margin-left: auto;
-  color: var(--text-3);
-  font-size: 12.5px;
-}
-.menu-check {
-  display: inline-flex;
-  width: 18px;
-  flex: none;
-  justify-content: center;
-}
-
-/* The small dot after an item that has something new (Features). */
-.pop.menu .menu-dot {
-  flex: none;
-  width: 7px;
-  height: 7px;
-  margin-left: auto;
-  border-radius: 50%;
-  background: var(--accent);
-}

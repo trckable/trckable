@@ -1,12 +1,10 @@
 // The account dialog: everything that belongs to the person, not to the site
 // they happen to be looking at. It opens over whatever is on screen, so the
 // Settings page can stay about one site.
-import { BellRing, Camera, Eye, EyeOff, ImageUp, LockKeyhole, LogOut, ShieldCheck, Trash2 } from 'lucide-react'
+import { Camera, Eye, EyeOff, ImageUp, LockKeyhole, LogOut, ShieldCheck, Trash2 } from 'lucide-react'
 import { Modal } from '../kit/Modal'
 import { Window } from '../components/Window'
 import { PersonAvatar } from '../components/PersonAvatar'
-import { checksHere, setChecksHere } from '../lib/update'
-import { Switch } from '../components/Switch'
 import { Suspense, lazy, useEffect, useRef, useState, type ReactNode } from 'react'
 import { api, fail, refused, wrong, type Profile, type TwoStep as TwoStepState, type Site, more } from '../lib/apiMore'
 import { toast } from '../components/Toast'
@@ -26,8 +24,7 @@ import { Line, SignedInWith } from './AccountLine'
 import { AccountHead } from './account/Head'
 import './Account.css'
 import { Keys } from './account/Keys'
-import { ThemeLine } from './account/ThemeLine'
-import { SaleLines, TabCountLine } from '../features/signals/PrefLines'
+import { PrefCards } from './account/PrefCards'
 import { People } from './account/People'
 import { Devices } from './account/Devices'
 // The setup wizard carries the QR encoder, so it is fetched only when someone
@@ -50,7 +47,7 @@ export function AccountDialog({ tab: asked, sites, email, onSites }: { tab: Tab;
         {tab === 'sites' && !viewer && <SitesSettings sites={sites} onSites={onSites} />}
         {tab === 'keys' && !viewer && <Keys />}
         {tab === 'people' && !viewer && <People me={email} />}
-        {(tab === 'profile' || viewer) && <ProfileTab email={email} p={profile} v={v} onProfile={setProfile} />}
+        {(tab === 'profile' || viewer) && <ProfileTab email={email} p={profile} v={v} sites={sites} onProfile={setProfile} />}
       </div>
     </Window>
   )
@@ -60,11 +57,11 @@ interface ProfileProps {
   email?: string
   p: Profile | null
   v: number
+  sites: Site[]
   onProfile: (p: Profile) => void
 }
 
-function ProfileTab({ email, p, v, onProfile }: ProfileProps) {
-  const [updates, setUpdates] = useState(checksHere())
+function ProfileTab({ email, p, v, sites, onProfile }: ProfileProps) {
   const [pw, setPw] = useState(false)
   return (
     <>
@@ -85,29 +82,7 @@ function ProfileTab({ email, p, v, onProfile }: ProfileProps) {
         </Line>
       </section>
 
-      <section className="card acct-group">
-        <h2 className="acct-title">{acopy.appearance}</h2>
-        <ThemeLine />
-        <TabCountLine />
-      </section>
-
-      <section className="card acct-group">
-        <h2 className="acct-title">Preferences</h2>
-        <SaleLines />
-        {/* The check itself is in lib/update.ts: this browser, once a day, nothing about the instance sent. */}
-        {!isViewer() && (
-          <Line icon={BellRing} label="New versions" hint="Once a day this browser asks GitHub's list of releases. Nothing about this server is sent.">
-            <Switch
-              on={updates}
-              label="Tell me when a new version is out"
-              onChange={() => {
-                setChecksHere(!updates)
-                setUpdates(!updates)
-              }}
-            />
-          </Line>
-        )}
-      </section>
+      <PrefCards user={p?.email ?? email ?? ''} sites={sites} />
 
       {pw && <PasswordDialog onClose={() => setPw(false)} />}
     </>

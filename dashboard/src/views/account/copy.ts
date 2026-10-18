@@ -7,6 +7,19 @@ export const copy = defineCopy('account', {
   accountLabel: 'Profile, your account',
   owner: 'Owner',
   viewer: 'Viewer',
+  /** The lines that came from the avatar menu. */
+  lines: {
+    languageHint: 'The dashboard language',
+    featuresHint: 'What trckable can do',
+    open: 'Open',
+    new: 'New',
+    installHint: 'Open it like an app',
+    privacy: 'Privacy',
+    ownVisits: 'Your own visits',
+    leave: 'Exclude',
+    again: 'Count again',
+    ownVisitsHint: { excluded: 'This browser is left out', counted: 'This browser is counted', unknown: 'Leave out this browser' },
+  },
   tabs: {
     sites: 'Sites',
     keys: 'API keys',

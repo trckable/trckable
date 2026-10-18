@@ -21,7 +21,7 @@ const LOAD_MS = 10_000
 const WATCH_MS = 45_000
 
 // The most calls a first load may make (Live 19 and the Briefing 31 were measured, with the lazy reads that follow the load and the bell and the setup ring sharing one read of the account's marks).
-const BUDGET = { Live: 19, Briefing: 33 } // (the Briefing's was 31 until a young site opened on Today, which reads the 30 days behind it as well and the day's own hours)
+const BUDGET = { Live: 19, Briefing: 37 } // (the Briefing's was 31 until a young site opened on Today, which reads the 30 days behind it as well and the day's own hours; 33 until Live is built behind it when the page is idle, so the first switch to it has its numbers: 4 reads)
 
 const tally = (urls: string[]) => {
   const out: Record<string, number> = {}
