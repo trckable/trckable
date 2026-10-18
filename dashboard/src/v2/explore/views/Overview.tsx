@@ -30,7 +30,7 @@ export function Overview({ x, d }: { x: XCtx; d: Model }) {
         </div>
         <div>
           <XSec a={copy.topSources} />
-          <PeopleTable x={x} rows={d.sources} head={copy.heads.source} selected={valueOf(x.filters, 'referrer')} onPick={(r) => x.pick('referrer', r.val)} dim="referrer" limit={5} onAll={x.showAll} go={{ label: copy.showAllSources, section: 'sources', run: () => x.goTo('sources') }} />
+          <PeopleTable x={x} rows={d.sources} head={copy.heads.source} selected={valueOf(x.filters, 'channel')} onPick={(r) => x.pick('channel', r.val)} dim="channel" limit={5} onAll={x.showAll} go={{ label: copy.showAllSources, section: 'sources', run: () => x.goTo('sources') }} />
         </div>
       </div>
     </>

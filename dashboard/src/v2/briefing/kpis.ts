@@ -91,7 +91,7 @@ export function kpiCards(a: KpiIn): Kc[] {
   // An uptime nobody measured (a past day with no monitor data) is not a card with a dash: the card is left out.
   const unmeasured = a.uptime.value === null && !down
   const cards: Kc[] = [
-    { key: 'people', icon: 'people', label: copy.people, val: fmtInt(cur.kpis.visitors), note: say(rangeNote(a.peopleVerdict?.now ?? cur.kpis.visitors, a.peopleVerdict?.band, ` ${copy.peopleWord}`), learning, a.people.note), vals: a.people.vals, dn: false },
+    { key: 'people', icon: 'people', label: copy.people, val: fmtInt(cur.kpis.visitors), note: say(a.peopleVerdict ? rangeNote(a.peopleVerdict.now, a.peopleVerdict.band, ` ${copy.peopleWord}`) : learning, learning, a.people.note), vals: a.people.vals, dn: false },
     goal
       ? { key: 'goal', icon: 'goal', label: goalName(goal.label, goal.value).replace(/^./, (c) => c.toUpperCase()), val: fmtInt(goal.visitors), note: say(rangeNote(goal.visitors, a.goalBand, ''), learning, bandNote(goal.visitors, a.goalBand) ?? noteOf(goal.visitors, prev?.goals?.find((g) => g.value === goal.value)?.visitors, a.before)), vals: a.goal?.vals ?? [], col: 'var(--mk-blue)' }
       : { key: 'views', icon: 'click', label: copy.views, val: fmtCompact(cur.kpis.pageviews), note: a.learning ? { t: copy.learning } : noteOf(cur.kpis.pageviews, prev?.kpis.pageviews, a.before), vals: a.viewsVals, col: 'var(--mk-blue)' },

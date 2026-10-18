@@ -134,8 +134,11 @@ export function timesUsual(now: number, band: Band | null | undefined): number |
   return band && band.c > 0.5 ? now / band.c : null
 }
 
+/** A usual under one person says nothing to tell a number by: 2 against "0–0" is not busy, it is a site that has not yet seen enough of this day. */
+export const thin = (band: Band | null | undefined): boolean => !band || band.hi < 1
+
 export function verdictOf(now: number, band: Band | null | undefined): Verdict | null {
-  if (!band) return null
+  if (!band || thin(band)) return null
   return { now, band, st: judge(now, band), ratio: timesUsual(now, band) }
 }
 
@@ -150,4 +153,34 @@ export interface CountedHour {
 export function hourlyPeople(series: Point[], counted: CountedHour[]): number {
   const seen = new Set(counted.map((h) => `${h.day}|${h.hour}`))
   return series.reduce((n, p) => (seen.has(`${p.t.slice(0, 10)}|${Number(p.t.slice(11, 13))}`) ? n + p.visitors : n), 0)
+}
+
+/**
+ * A long period's usual: the same number of days, the stretches right before it (up to eight), their middle and spread,
+ * so a month's people are told against a usual month and never against one day's range. The stretches count people the
+ * way the daily history does, so the band is scaled to the period's own count (a person back on two days is two on
+ * both sides). A period that ends today counts the share of today that has passed. None without two whole stretches
+ * after the site's first visit.
+ */
+export function periodBand(totals: number[], days: string[], from: string, to: string, people: number, todayShare = 1): Band | null {
+  const a = days.indexOf(from)
+  const b = days.indexOf(to)
+  if (a < 0 || b < a) return null
+  const n = b - a + 1
+  const sum = (x: number, y: number) => totals.slice(x, y + 1).reduce((s, t) => s + t, 0)
+  const own = sum(a, b)
+  if (own <= 0) return null
+  const first = totals.findIndex((t) => t > 0)
+  const stretches: number[] = []
+  for (let end = a - 1; end - n + 1 >= Math.max(0, first) && stretches.length < 8; end -= n) stretches.push(sum(end - n + 1, end))
+  const band = bandFromWeeks(stretches)
+  if (!band) return null
+  const k = (people / own) * ((n - 1 + todayShare) / n)
+  return { c: band.c * k, lo: band.lo * k, hi: band.hi * k }
+}
+
+/** The one band a day's people are told by: the server's weeks of this weekday when it has two or more (what Why? lists and the cards beside it read), else the band the hours or the days add up to. */
+export function usualPeople(weeks: number[], other: Band | null): { band: Band | null; byWeeks: boolean } {
+  const byWeeks = bandFromWeeks(weeks)
+  return byWeeks ? { band: byWeeks, byWeeks: true } : { band: other, byWeeks: false }
 }
