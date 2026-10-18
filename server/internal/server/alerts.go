@@ -99,6 +99,7 @@ func (s *Server) runAlerts(ctx context.Context) {
 		s.checkMilestones(ctx)
 		s.checkSurges(ctx)
 		s.checkReports(ctx)
+		s.checkSetupMail(ctx)
 	}
 }
 

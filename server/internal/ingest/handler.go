@@ -139,6 +139,10 @@ type Handler struct {
 	// tile. The server writes it out once a minute (botcount.go).
 	Bots BotCounts
 
+	// Hosts counts the events refused for a hostname the site does not list
+	// (hostcount.go). Written out with the bot counts.
+	Hosts HostCounts
+
 	// Heats counts what the heatmaps script reported, per element and day
 	// (heat.go). Written out with the bot counts.
 	Heats                      HeatCounts
@@ -351,6 +355,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 		return nil, "", nil, errBadPayload
 	}
 	if !hostAllowed(u.Host, site, p.Dev == 1) {
+		h.Hosts.Add(p.Site, u.Host, h.Now())
 		return nil, "", nil, errHost
 	}
 	// A browser always says which site it is on. When it does, that site must

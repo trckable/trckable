@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { arrange, badge, othersOf, OTHERS, rowsOf, settle, unreadCount, withFeed, type Notice } from './notices'
+import { arrange, badge, fromAnswers, othersOf, OTHERS, rowsOf, settle, unreadCount, withFeed, type Notice } from './notices'
 
 const n = (id: string, at: number, kind: Notice['kind'] = 'down'): Notice => ({ id, kind, site: 'a.com', title: id, sub: '', at })
 
@@ -75,5 +75,29 @@ describe('the rows of an open bell', () => {
     const out = settle(shown, [row('a', 10)], new Set())
     expect(out.map((r) => [r.id, r.unread])).toEqual([['b', false], ['a', true]])
     expect(settle(shown, [row('a', 10)], new Set(['b'])).map((r) => r.id)).toEqual(['a'])
+  })
+})
+
+describe('the bell and Answers', () => {
+  const rep = {
+    changes: [
+      { at: 5000, engine: 'openai' as const, question_id: 4, question: 'best analytics', kind: 'dropped' as const },
+      { at: 4000, engine: 'anthropic' as const, question_id: 4, question: 'best analytics', kind: 'seen' as const, first_ever: true },
+    ],
+    paused: true,
+  }
+
+  it('shows a change as a row that opens Answers, the first time with its own words, and a budget that ran out', () => {
+    let opened = 0
+    const rows = fromAnswers(rep, 'a.com', 9000, () => opened++)
+    expect(rows.map((r) => r.title)).toEqual(['ChatGPT stopped naming you for “best analytics”', 'Peekaboo. Claude just named you.', 'Paused until the 1st: this month’s budget is used.'])
+    expect(new Set(rows.map((r) => r.id)).size).toBe(3)
+    rows[0].open?.()
+    expect(opened).toBe(1)
+    expect(rows.every((r) => r.kind === 'answer' && r.site === 'a.com')).toBe(true)
+  })
+
+  it('is nothing when nothing changed', () => {
+    expect(fromAnswers({}, 'a.com', 9000, () => undefined)).toEqual([])
   })
 })

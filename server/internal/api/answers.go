@@ -778,7 +778,7 @@ func (a *API) answerMoments(r *http.Request, site string, p query.Params, loc *t
 		}
 		at := time.Unix(c.At, 0).In(loc)
 		hour := time.Date(at.Year(), at.Month(), at.Day(), at.Hour(), 0, 0, 0, time.UTC).Format("2006-01-02T15:04")
-		out = append(out, moments.Moment{T: bucketKey(hour, p.Bucket), Kind: "answer", Bot: c.Engine, Question: c.QuestionID, Text: c.Question, What: c.Kind})
+		out = append(out, moments.Moment{T: bucketKey(hour, p.Bucket), Kind: "answer", Bot: c.Engine, Question: c.QuestionID, Text: c.Question, What: c.Kind, FirstEver: c.FirstEver})
 	}
 	return out
 }

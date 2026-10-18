@@ -6,17 +6,22 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, type Site } from '../../lib/api'
 import { incidents } from '../../features/incidents/api'
 import { mentionsApi } from '../../features/mentions/api'
+import { answersApi } from '../../features/answers/api'
+import { openExplore } from '../explore/open'
 import { isShared } from '../../lib/me'
 import { useV2Extras } from '../slots'
 import { onNowAnswer } from '../../features/live/api'
 import { visibleInterval } from '../../lib/visibleInterval'
 import { useReadSet } from './readState'
-import { arrange, fromIncidents, fromSetup, fromMentions, fromMilestones, othersOf, withFeed, type Notice } from './notices'
+import { arrange, fromIncidents, fromSetup, fromMentions, fromMilestones, fromAnswers, othersOf, withFeed, type Notice } from './notices'
 
 /** The least time between two reads the bell starts by itself. */
 export const GAP_MS = 60_000
 /** The least time between two reads when the menu is opened. */
 export const OPEN_GAP_MS = 5000
+
+/** The week the bell looks back over, as the report's range (day keys in UTC). */
+const answersRange = (now: number) => ({ from: new Date((now - 7 * 86400) * 1000).toISOString().slice(0, 10), to: new Date(now * 1000).toISOString().slice(0, 10) })
 
 /** The last list read, for a bell that mounts again (as long as it is the same account: the same sites). */
 let held: { key: string; own: Notice[] } | null = null
@@ -35,7 +40,7 @@ export function useNotices(site: Site | null, sites: Site[]) {
   useEffect(() => {
     asked.current = sites
   })
-  const sitesKey = sites.map((s) => `${s.id}:${s.domain}:${!!s.mentions}:${!!s.last_event_at}`).join('|')
+  const sitesKey = sites.map((s) => `${s.id}:${s.domain}:${!!s.mentions}:${!!s.answers}:${!!s.last_event_at}`).join('|')
   const ctx = useRef({ site, sites })
   const last = useRef(0)
   const flight = useRef<Promise<void> | null>(null)
@@ -64,6 +69,7 @@ export function useNotices(site: Site | null, sites: Site[]) {
       incidents.account(7).then((r) => fromIncidents(r.incidents, domain, now), () => []),
       site ? api.milestones(site.id).then((r) => fromMilestones(r.milestones, site.domain), () => []) : Promise.resolve([]),
       site?.mentions ? mentionsApi.list(site.id, '7d').then((r) => fromMentions(r.mentions, site.domain), () => []) : Promise.resolve([]),
+      site?.answers ? answersApi.report(site.id, answersRange(now), undefined).then((r) => fromAnswers(r, site.domain, now, () => openExplore('answers')), () => []) : Promise.resolve([]),
       // The account's other sites tell their milestones and mentions too, the first few of them.
       ...othersOf(sites, site).flatMap((o) => [
         api.milestones(o.id).then((r) => fromMilestones(r.milestones, o.domain), () => []),
@@ -135,7 +141,7 @@ export function useNotices(site: Site | null, sites: Site[]) {
       pulse()
       document.removeEventListener('visibilitychange', shown)
     }
-  }, [site?.id, site?.domain, site?.mentions, sitesKey, can, refresh])
+  }, [site?.id, site?.domain, site?.mentions, site?.answers, sitesKey, can, refresh])
   const mark = useCallback((id: string) => send([id]), [send])
   const markAll = useCallback(() => {
     bellMore?.readAll()

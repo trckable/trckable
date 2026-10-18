@@ -4,12 +4,14 @@ import { lineOf } from '../../features/milestones/words'
 import type { Milestone, Site } from '../../lib/api'
 import type { Incident } from '../../features/incidents/api'
 import type { Mention } from '../../features/mentions/api'
+import { answersCopy } from '../../features/answers/copy'
+import type { AnswersReport } from '../../features/answers/api'
 import { STALE_DAYS } from '../../features/install/journey'
 import { sourceName } from '../briefing/model'
 import { isDown } from '../../features/incidents/model'
 import { copy } from './copy'
 
-export type NoticeKind = 'down' | 'up' | 'spike' | 'sale' | 'mention' | 'milestone' | 'weekly' | 'failed' | 'plan' | 'team' | 'setup'
+export type NoticeKind = 'down' | 'up' | 'spike' | 'sale' | 'mention' | 'answer' | 'milestone' | 'weekly' | 'failed' | 'plan' | 'team' | 'setup'
 
 export interface Notice {
   id: string
@@ -62,6 +64,19 @@ export function fromSetup(sites: Site[], now: number): Notice[] {
 
 export function fromMentions(list: Mention[], domain: string): Notice[] {
   return list.map((m) => ({ id: `mention:${m.id}`, kind: 'mention' as const, site: domain, title: copy.mention(m.source === 'hn' ? sourceName(m.host) : m.host), sub: m.title, at: m.posted_at }))
+}
+
+/** What the assistants did lately with the site's questions (the first time one names it is told as such), and a budget that ran out. */
+export function fromAnswers(rep: Pick<AnswersReport, 'changes' | 'paused'>, domain: string, now: number, open: () => void): Notice[] {
+  const c = answersCopy
+  const out: Notice[] = (rep.changes ?? []).map((x) => {
+    const engine = c.engine[x.engine] ?? x.engine
+    const started = x.first_ever ? c.first(engine) : c.change.seen(engine, x.question)
+    const title = x.kind === 'dropped' ? c.change.dropped(engine, x.question) : started
+    return { id: `answer:${x.engine}:${x.question_id}:${x.at}`, kind: 'answer' as const, site: domain, title, sub: c.section[0], at: x.at, open }
+  })
+  if (rep.paused) out.push({ id: `answer:paused:${new Date(now * 1000).toISOString().slice(0, 7)}`, kind: 'answer', site: domain, title: c.paused, sub: c.section[0], at: now, open })
+  return out
 }
 
 export function fromMilestones(list: Milestone[], domain: string): Notice[] {

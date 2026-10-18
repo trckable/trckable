@@ -39,3 +39,13 @@ describe('the way to the first visit', () => {
     expect(whyOf('arrived')).toBeNull()
   })
 })
+
+describe('visits from another domain', () => {
+  it('is told whenever refused hosts are known and no visit came', () => {
+    const done = (o: Partial<InstallCheck>) => stageOf({ phase: 'done', result: check(o) }, false)
+    expect(done({ found: 'none', elsewhere: [{ host: 'other.com', n: 3 }], elsewhere_total: 3 })).toBe('elsewhere')
+    expect(done({ error: 'no answer', elsewhere: [{ host: 'other.com', n: 3 }] })).toBe('elsewhere')
+    expect(done({ found: 'none', elsewhere: [] })).toBe('notfound')
+    expect(stageOf({ phase: 'done', result: check({ elsewhere: [{ host: 'other.com', n: 3 }] }) }, true)).toBe('arrived')
+  })
+})

@@ -2,7 +2,7 @@
 import type { InstallCheck, Site } from '../../lib/api'
 import type { CheckState } from './useInstallCheck'
 
-export type Stage = 'waiting' | 'limited' | 'notfound' | 'wrongid' | 'unreachable' | 'blocked' | 'found' | 'arrived'
+export type Stage = 'waiting' | 'limited' | 'elsewhere' | 'notfound' | 'wrongid' | 'unreachable' | 'blocked' | 'found' | 'arrived'
 
 /** Days without a visit after which the screen says it is still waiting and offers to remove the site. */
 export const STALE_DAYS = 3
@@ -18,6 +18,7 @@ export function stageOf(s: CheckState, arrived: boolean): Stage {
   if (s.phase === 'limited') return 'limited'
   const c = lastOf(s)
   if (!c) return 'waiting'
+  if (c.elsewhere?.length) return 'elsewhere'
   if (c.error) return 'unreachable'
   if (c.found === 'other' || c.found === 'nosite') return 'wrongid'
   if (c.found !== 'site') return 'notfound'

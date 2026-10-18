@@ -1,10 +1,11 @@
 // How one moment reads in its pop: an icon, a line and a faint second line.
-import { Bot, Coins, Flag, Globe, Newspaper, StickyNote, TrendingUp, type LucideIcon } from 'lucide-react'
+import { Bot, Coins, Flag, Ghost, Globe, Newspaper, StickyNote, TrendingUp, type LucideIcon } from 'lucide-react'
 import type { MilestoneKind } from '../../lib/api'
 import { countryName, flag } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
 import { times } from '../../lib/times'
 import { say } from '../milestones/words'
+import { answersCopy as answers } from '../answers/copy'
 import { copy as mentions } from '../mentions/copy'
 import { jumpOf } from '../mentions/model'
 import { copy } from './copy'
@@ -16,7 +17,14 @@ export interface Words {
   sub?: string
 }
 
-const ICONS: Record<MomentKind, LucideIcon> = { spike: TrendingUp, surge: TrendingUp, mention: Newspaper, sale: Coins, country: Globe, ai: Bot, milestone: Flag, note: StickyNote }
+const ICONS: Record<MomentKind, LucideIcon> = { spike: TrendingUp, surge: TrendingUp, mention: Newspaper, answer: Ghost, sale: Coins, country: Globe, ai: Bot, milestone: Flag, note: StickyNote }
+
+/** What an assistant did about a question: the first time it names the site is told on its own. */
+export function answerLine(m: Pick<Moment, 'bot' | 'text' | 'what' | 'first_ever'>): string {
+  const engine = answers.engine[m.bot ?? ''] ?? m.bot ?? ''
+  if (m.what === 'dropped') return answers.change.dropped(engine, m.text ?? '')
+  return m.first_ever ? answers.first(engine) : answers.change.seen(engine, m.text ?? '')
+}
 
 /** fmt writes an amount in the site's currency (sales only exist with it). */
 export function wordsOf(m: Moment, fmt?: (minor: number) => string): Words {
@@ -31,6 +39,8 @@ export function wordsOf(m: Moment, fmt?: (minor: number) => string): Words {
     }
     case 'mention':
       return { icon, line: mentions.postedLine(mentions.postedHead[m.mention === 'hn' || m.mention === 'ph' ? m.mention : 'news'], m.brought ?? 0), sub: m.text }
+    case 'answer':
+      return { icon, line: answerLine(m), sub: m.first_ever ? answers.firstHint : undefined }
     case 'sale': {
       const sub = [fmt && m.amount ? '+' + fmt(m.amount) : '', m.channel ? channelLabel(m.channel) : ''].filter(Boolean).join(' · ')
       return { icon, line: copy.sale(m.count ?? 1), sub: sub || undefined }

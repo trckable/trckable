@@ -983,6 +983,20 @@ var migrations = []string{
 		month       TEXT PRIMARY KEY,
 		cost_micros INTEGER NOT NULL DEFAULT 0
 	) WITHOUT ROWID;`,
+	// 72: visits turned away because their page was on another hostname, so the
+	// setup card can say where they come from (hosts.go). A hostname and a
+	// count per site and day, nothing else; a week is kept. setup_mail_at is when
+	// the one reminder email about a site with no visit went out; sites already
+	// older than the wait start as done, so nobody is told about an old site.
+	`CREATE TABLE IF NOT EXISTS rejected_hosts (
+		site_id TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		day     TEXT NOT NULL,
+		host    TEXT NOT NULL,
+		n       INTEGER NOT NULL,
+		PRIMARY KEY (site_id, day, host)
+	) WITHOUT ROWID;
+	ALTER TABLE sites ADD COLUMN setup_mail_at INTEGER NOT NULL DEFAULT 0;
+	UPDATE sites SET setup_mail_at = CAST(strftime('%s', 'now') AS INTEGER) WHERE created_at < CAST(strftime('%s', 'now') AS INTEGER) - 259200;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

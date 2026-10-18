@@ -8,6 +8,9 @@ import { Modal } from '../../kit/Modal'
 import { Loading } from '../../components/loading/Loading'
 import { tag } from '../../i18n'
 import { api, more, type Site } from '../../lib/apiMore'
+import { answersApi } from '../answers/api'
+import { answersCopy } from '../answers/copy'
+import { hasAnswers } from '../../lib/me'
 import { copy } from './copy'
 import { buildReport, type Report } from './report'
 import './ReportSheet.css'
@@ -46,7 +49,7 @@ function Body({ r }: { r: Report }) {
       <Part title={copy.part.collected} items={r.collected} />
       <Part title={copy.part.notCollected} items={r.notCollected} />
       <Part title={copy.part.modules} items={r.modules} />
-      <Part title={copy.part.where} items={[r.where]} />
+      <Part title={copy.part.where} items={r.whereAnswers ? [r.where, r.whereAnswers] : [r.where]} />
       <section className="pr-part">
         <h3>{copy.part.banner}</h3>
         <p>{r.banner}</p>
@@ -70,8 +73,10 @@ function printSheet() {
 export default function ReportSheet({ site, print, onClose }: { site: Site; print: boolean; onClose: () => void }) {
   const [r, setR] = useState<Report | 'failed' | null>(null)
   useEffect(() => {
-    Promise.all([more.siteConfig(site.id), api.modules(site.id)])
-      .then(([config, mods]) => setR(buildReport({ domain: site.domain, host: location.host, config, modules: Object.fromEntries(mods.modules.map((m) => [m.id, m.enabled])) })))
+    // The companies Answers asks are told only where it is on; a failed read of them leaves the line out, not the report.
+    const asked = hasAnswers() ? answersApi.setup(site.id).then((s) => s.engines.map((e) => answersCopy.company[e.id] ?? e.name), () => []) : Promise.resolve([])
+    Promise.all([more.siteConfig(site.id), api.modules(site.id), asked])
+      .then(([config, mods, answers]) => setR(buildReport({ domain: site.domain, host: location.host, config, modules: Object.fromEntries(mods.modules.map((m) => [m.id, m.enabled])), answers })))
       .catch(() => setR('failed'))
   }, [site.id, site.domain])
   const ready = typeof r === 'object' && r !== null

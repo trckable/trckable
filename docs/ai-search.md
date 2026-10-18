@@ -211,6 +211,7 @@ curl -X POST https://stats.example.com/api/crawl \
 
 ## Where else it shows up
 
+- **What the assistants say about you.** A line under the tab tells in how many of their answers ChatGPT, Perplexity and Claude named or linked your site, and opens Answers: [answers](answers.md).
 - **Once, when it first happens.** The first AI visitor, or the first AI robot, gets
   one guide card, at most one a day, and not again once you put it away.
 - **In the weekly report.** One line: "AI assistants sent 128 visitors; crawlers read
