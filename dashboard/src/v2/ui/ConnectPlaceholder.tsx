@@ -53,7 +53,7 @@ export function Act({ text, rest, label, onAct }: { text: string; rest?: string;
 export interface Setup {
   key: string
   b: string
-  act: () => void
+  act?: () => void
 }
 
 /** One thing not set up yet, as the locked preview of what it would show. */

@@ -2459,6 +2459,7 @@ export default {
   'briefing.cards.topicNames.pages': 'pagina’s',
   'briefing.cards.topicNames.goals': 'doelen',
   'v2.lock.how': 'Hoe het werkt',
+  'v2.lock.ask': 'Vraag een Owner of Admin om er een toe te voegen',
   'v2.lock.revLine': 'Zie wat elke bron oplevert',
   'v2.lock.revSub': 'Koppel Stripe, Paddle of Lemon Squeezy',
   'v2.lock.searchLine': 'Zie de zoekopdrachten die mensen brengen',

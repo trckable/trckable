@@ -1,0 +1,1 @@
+Viewers can read every dashboard and report and ask Peek about it, but see no add, edit or delete controls, no setup checklist and no settings window. Where a goal, funnel or note list is empty, they see the same empty state an Owner does, with the line "Ask an Owner or Admin to add one" in place of the button.

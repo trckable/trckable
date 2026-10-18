@@ -21,15 +21,16 @@ function setupOf(key: 'rev' | 'search' | 'goals' | 'uptime' | 'alerts', site: Si
 }
 
 /** What is not set up yet: revenue, search, goals, uptime checks, alerts. */
-export function setupRows(o: { site: Site; cur: Result; can: boolean; noSearch: boolean; noAlerts: boolean; onGoal: () => void }): Setup[] {
-  if (!o.can) return []
+export function setupRows(o: { site: Site; cur: Result; can: boolean; shared: boolean; noSearch: boolean; noAlerts: boolean; onGoal: () => void }): Setup[] {
+  if (o.shared) return []
   const want: ('rev' | 'search' | 'goals' | 'uptime' | 'alerts')[] = []
   if (!o.cur.money) want.push('rev')
   if (o.noSearch) want.push('search')
   if ((o.cur.goals ?? []).length === 0) want.push('goals')
   if (!o.site.watched_since) want.push('uptime')
   if (o.noAlerts) want.push('alerts')
-  return want.map((k) => setupOf(k, o.site, o.onGoal))
+  // Someone who may not set it up sees the same card and is asked to turn to an Owner or Admin.
+  return want.map((k) => (o.can ? setupOf(k, o.site, o.onGoal) : { ...setupOf(k, o.site, o.onGoal), act: undefined }))
 }
 
 export interface Next {
