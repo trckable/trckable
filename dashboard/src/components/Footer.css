@@ -113,9 +113,9 @@ span.footer-key {
   .app:has(.mk-fresh) > .app-footer {
     display: none;
   }
-  /* The toast waits below the screen; on this one-screen page that waiting place would add 70 px of scroll. */
-  body:has(.mk-fresh) .mk-toast:not(.on) {
-    display: none;
+  /* The room kept under a page for the bottom bar's height is not needed by this one-screen page. */
+  .app:has(.mk-fresh):has(.mk .tabbar) {
+    padding-bottom: 0;
   }
   .app-footer-start,
   .app-footer-end {
