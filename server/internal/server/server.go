@@ -55,14 +55,15 @@ var Version = "0.7.25" // the VERSION file; release builds stamp it too
 
 // Server is a running trckable instance.
 type Server struct {
-	cfg    config.Config
-	judge  atomic.Pointer[mentionJudge] // the optional yes/no check on a mention (SetMentionJudge)
-	ctl    *sqlite.Store
-	held   heldAlerts // alerts sent whose mark failed (alerts.go)
-	log    *wal.Log
-	ingest *ingest.Handler
-	http   *http.Server
-	geo    *geo.DB
+	cfg     config.Config
+	judge   atomic.Pointer[mentionJudge] // the optional yes/no check on a mention (SetMentionJudge)
+	answers *answerAsker                 // nil when Answers is off (no key, or TRCKABLE_ANSWERS_EVERY=0)
+	ctl     *sqlite.Store
+	held    heldAlerts // alerts sent whose mark failed (alerts.go)
+	log     *wal.Log
+	ingest  *ingest.Handler
+	http    *http.Server
+	geo     *geo.DB
 	// asn is the network database behind stricter bot filtering. It is only
 	// downloaded once a site that uses it gets a visit.
 	asn        *geo.DB
@@ -275,6 +276,16 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	a.MentionSources = MentionSources(cfg.ProductHuntToken != "")
 	a.MentionsOn = cfg.MentionsOn
 	a.MentionGet = alerts.SafeClient(10 * time.Second)
+	if cfg.AnswersEvery > 0 {
+		if f := s.newAnswerAsker(); len(f.askers) > 0 {
+			s.answers = f
+			a.AnswerEngines = nil
+			for _, k := range f.askers {
+				a.AnswerEngines = append(a.AnswerEngines, string(k.Engine()))
+			}
+			a.AnswersWake, a.AnswerBudget, a.AnswerMax, a.AnswerRuns = f.Wake, cfg.AnswersBudget, cfg.AnswersQuestions, cfg.AnswersRuns
+		}
+	}
 	a.SendWeekly = s.sendWeeklyNow
 	a.OnSurge = s.tellSurge
 	if len(cfg.OIDC) > 0 {
@@ -482,6 +493,7 @@ func (s *Server) Run(ctx context.Context) error {
 	s.goGuarded("health alerts", func() { s.runHealthAlerts(wctx) }) // the installation's own problems, sent as they start and clear
 	s.goGuarded("checks", func() { s.runChecks(wctx) })              // each site's snippet, looked for once a day
 	s.goGuarded("uptime", func() { s.runUptime(wctx) })              // each homepage answers? looked at every few minutes
+	s.goGuarded("answers", func() { s.runAnswers(wctx) })            // AI assistants asked the owner's questions, once a week
 	s.goGuarded("mentions", func() { s.runMentions(wctx) })          // where each site is talked about, searched every 20 minutes
 	s.goGuarded("log retry", func() { s.runLogRetry(wctx) })         // events again once a full disk has room
 

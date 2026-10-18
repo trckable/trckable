@@ -909,6 +909,80 @@ var migrations = []string{
 		value   TEXT NOT NULL,
 		PRIMARY KEY (site_id, kind, value)
 	) WITHOUT ROWID;`,
+	// 71: Answers. Questions an owner asks AI assistants, the sites to compare
+	// with, the questions a running round froze at its start and the budget it holds, one row per answer (ok = 0 for a failed ask, with our own short
+	// message), the other sites each answer named or linked, the changes a
+	// finished round made (seen, dropped) for moments, the bell and alerts, and
+	// the estimated spend per month for the server-wide budget.
+	`CREATE TABLE IF NOT EXISTS answer_sites (
+		site_id    TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
+		country    TEXT NOT NULL DEFAULT '',
+		next_at    INTEGER NOT NULL DEFAULT 0,
+		round      INTEGER NOT NULL DEFAULT 0,
+		asked_at   INTEGER NOT NULL DEFAULT 0,
+		frozen     TEXT NOT NULL DEFAULT '',
+		reserved   INTEGER NOT NULL DEFAULT 0,
+		updated_at INTEGER NOT NULL
+	) WITHOUT ROWID;
+	CREATE TABLE IF NOT EXISTS answer_questions (
+		id         INTEGER PRIMARY KEY AUTOINCREMENT,
+		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		text       TEXT NOT NULL COLLATE NOCASE,
+		active     INTEGER NOT NULL DEFAULT 1,
+		created_at INTEGER NOT NULL,
+		UNIQUE(site_id, text)
+	);
+	CREATE TABLE IF NOT EXISTS answer_competitors (
+		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		name       TEXT NOT NULL,
+		domain     TEXT NOT NULL DEFAULT '',
+		created_at INTEGER NOT NULL,
+		PRIMARY KEY (site_id, name)
+	) WITHOUT ROWID;
+	CREATE TABLE IF NOT EXISTS answer_runs (
+		id          INTEGER PRIMARY KEY AUTOINCREMENT,
+		site_id     TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		question_id INTEGER NOT NULL REFERENCES answer_questions(id) ON DELETE CASCADE,
+		round       INTEGER NOT NULL,
+		engine      TEXT NOT NULL,
+		model       TEXT NOT NULL,
+		run         INTEGER NOT NULL,
+		asked_at    INTEGER NOT NULL,
+		ok          INTEGER NOT NULL,
+		error       TEXT NOT NULL DEFAULT '',
+		text        TEXT NOT NULL DEFAULT '',
+		citations   TEXT NOT NULL DEFAULT '[]',
+		sources     TEXT NOT NULL DEFAULT '[]',
+		named       INTEGER NOT NULL DEFAULT 0,
+		cited       INTEGER NOT NULL DEFAULT 0,
+		position    INTEGER NOT NULL DEFAULT 0,
+		cited_paths TEXT NOT NULL DEFAULT '[]',
+		cost_micros INTEGER NOT NULL DEFAULT 0,
+		UNIQUE(question_id, round, engine, run)
+	);
+	CREATE INDEX IF NOT EXISTS answer_runs_site_round ON answer_runs(site_id, round);
+	CREATE TABLE IF NOT EXISTS answer_rivals (
+		run_id   INTEGER NOT NULL REFERENCES answer_runs(id) ON DELETE CASCADE,
+		name     TEXT NOT NULL,
+		named    INTEGER NOT NULL,
+		cited    INTEGER NOT NULL,
+		position INTEGER NOT NULL,
+		PRIMARY KEY (run_id, name)
+	) WITHOUT ROWID;
+	CREATE TABLE IF NOT EXISTS answer_changes (
+		site_id     TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		question_id INTEGER NOT NULL REFERENCES answer_questions(id) ON DELETE CASCADE,
+		engine      TEXT NOT NULL,
+		round       INTEGER NOT NULL,
+		kind        TEXT NOT NULL,
+		first_ever  INTEGER NOT NULL DEFAULT 0,
+		alerted     INTEGER NOT NULL DEFAULT 0,
+		PRIMARY KEY (site_id, question_id, engine, round)
+	) WITHOUT ROWID;
+	CREATE TABLE IF NOT EXISTS answer_spend (
+		month       TEXT PRIMARY KEY,
+		cost_micros INTEGER NOT NULL DEFAULT 0
+	) WITHOUT ROWID;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

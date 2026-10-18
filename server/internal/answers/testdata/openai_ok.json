@@ -1,0 +1,4 @@
+{"model":"gpt-4.1-mini-2025","output":[
+{"type":"web_search_call","id":"ws_1","status":"completed","action":{"type":"search","query":"best analytics","sources":[{"url":"https://plausible.io/"},{"url":"https://example.com/compare?utm_source=openai"}]}},
+{"type":"message","role":"assistant","content":[{"type":"output_text","text":"Plausible and Example are privacy-friendly choices.","annotations":[{"type":"url_citation","url":"https://example.com/compare?utm_source=openai","title":"Compare"},{"type":"url_citation","url":"https://example.com/compare?utm_source=openai","title":"Compare"},{"type":"url_citation","url":"https://plausible.io/","title":"Plausible"}]}]}],
+"usage":{"input_tokens":1000,"output_tokens":100}}

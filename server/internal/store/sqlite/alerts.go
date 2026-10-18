@@ -31,7 +31,7 @@ type Alert struct {
 
 // AlertKinds are the four, plus the weekly report, milestones reached, a
 // traffic surge and a mention that brought visitors (opt-in), in the order the dashboard shows them.
-var AlertKinds = []string{"stopped", "spike", "customer", "disk", "weekly", "milestone", "surge", "mention"}
+var AlertKinds = []string{"stopped", "spike", "customer", "disk", "weekly", "milestone", "surge", "mention", "answer"}
 
 // Alerts lists a site's alerts.
 func (s *Store) Alerts(ctx context.Context, site string) ([]Alert, error) {

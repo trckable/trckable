@@ -64,8 +64,18 @@ type Config struct {
 	// dashboard, the API, the bell or any email.
 	MentionsOn       bool
 	ProductHuntToken string
-	BackupS3         string // TRCKABLE_BACKUP_S3: https://key:secret@host/bucket/prefix?region=… (optional)
-	BackupDays       int    // TRCKABLE_BACKUP_KEEP_DAYS: off-site copies, every one for 7 days, then the newest of each day, up to this many days (default 30)
+	// Answers asks ChatGPT, Perplexity and Claude the owner's questions every
+	// week (TRCKABLE_ANSWERS_*). An engine without a key is left out; with no
+	// key at all, or TRCKABLE_ANSWERS_EVERY=0, Answers does not exist.
+	OpenAIKey, PerplexityKey, AnthropicKey string
+	AnswersEvery                           time.Duration // round interval per site; 0 = off, never under 24h
+	AnswersRuns                            int           // runs per question and engine, 1 to 3
+	AnswersQuestions                       int           // questions per site, 1 to 100
+	AnswersBudget                          int           // USD a month for the whole server, estimated; 0 = no cap
+	OpenAIModel, PerplexityModel           string        // overrides; empty = the built-in default
+	AnthropicModel                         string
+	BackupS3                               string // TRCKABLE_BACKUP_S3: https://key:secret@host/bucket/prefix?region=… (optional)
+	BackupDays                             int    // TRCKABLE_BACKUP_KEEP_DAYS: off-site copies, every one for 7 days, then the newest of each day, up to this many days (default 30)
 	// NoticeDays: how long a payment provider's raw notice (it carries the
 	// payer's email, name and address) is kept after it was read into the
 	// ledger (TRCKABLE_PAYMENT_NOTICE_DAYS, default 30; 0 keeps them). A site's
@@ -120,6 +130,19 @@ func Load() Config {
 	c.UptimeEvery = envDuration("TRCKABLE_UPTIME_EVERY", 5*time.Minute)
 	c.MentionsOn = envBool("TRCKABLE_MENTIONS") || strings.EqualFold(strings.TrimSpace(os.Getenv("TRCKABLE_MENTIONS")), "on")
 	c.MentionsEvery = envDuration("TRCKABLE_MENTIONS_EVERY", 20*time.Minute)
+	c.OpenAIKey = strings.TrimSpace(envFile("TRCKABLE_OPENAI_KEY"))
+	c.PerplexityKey = strings.TrimSpace(envFile("TRCKABLE_PERPLEXITY_KEY"))
+	c.AnthropicKey = strings.TrimSpace(envFile("TRCKABLE_ANTHROPIC_KEY"))
+	c.AnswersEvery = envDuration("TRCKABLE_ANSWERS_EVERY", 7*24*time.Hour)
+	if c.AnswersEvery > 0 && c.AnswersEvery < 24*time.Hour {
+		c.AnswersEvery = 24 * time.Hour
+	}
+	c.AnswersRuns = min(max(envInt("TRCKABLE_ANSWERS_RUNS", 2), 1), 3)
+	c.AnswersQuestions = min(max(envInt("TRCKABLE_ANSWERS_QUESTIONS", 10), 1), 100)
+	c.AnswersBudget = envDays("TRCKABLE_ANSWERS_BUDGET", 20)
+	c.OpenAIModel = strings.TrimSpace(os.Getenv("TRCKABLE_ANSWERS_OPENAI_MODEL"))
+	c.PerplexityModel = strings.TrimSpace(os.Getenv("TRCKABLE_ANSWERS_PERPLEXITY_MODEL"))
+	c.AnthropicModel = strings.TrimSpace(os.Getenv("TRCKABLE_ANSWERS_ANTHROPIC_MODEL"))
 	c.ProductHuntToken = strings.TrimSpace(envFile("TRCKABLE_PRODUCTHUNT_TOKEN"))
 	c.OIDCRequireTOTP = !strings.EqualFold(strings.TrimSpace(os.Getenv("OIDC_REQUIRE_TOTP")), "false") && os.Getenv("OIDC_REQUIRE_TOTP") != "0"
 	c.OIDCSignup = envBool("OIDC_ALLOW_SIGNUP")

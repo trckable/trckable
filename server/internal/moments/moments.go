@@ -14,7 +14,7 @@ import (
 // own clock, "2026-09-27T20:00", the same keys as the report's series).
 type Moment struct {
 	T    string `json:"t"`
-	Kind string `json:"kind"` // spike | surge | mention | sale | country | ai | milestone | note
+	Kind string `json:"kind"` // spike | surge | mention | answer | sale | country | ai | milestone | note
 
 	Factor   float64 `json:"factor,omitempty"`   // spike, surge: times the usual; absent for new traffic (see Quiet)
 	Referrer string  `json:"referrer,omitempty"` // spike: who sent them; surge: the referring host of the source
@@ -24,7 +24,8 @@ type Moment struct {
 	Channel  string  `json:"channel,omitempty"`  // sale: the channel that earned most of it
 	What     string  `json:"what,omitempty"`     // sale: new | upgrade | renewal | sale, when all its payments were of one kind
 	Country  string  `json:"country,omitempty"`  // country: its first visit ever
-	Bot      string  `json:"bot,omitempty"`      // ai: the assistant
+	Bot      string  `json:"bot,omitempty"`      // ai: the assistant; answer: the engine (openai | perplexity | anthropic)
+	Question int64   `json:"question,omitempty"` // answer: the question's id
 	Step     string  `json:"step,omitempty"`     // milestone: its step ("1k")
 	Family   string  `json:"family,omitempty"`   // milestone: its kind (visitors, revenue, ...)
 	Value    float64 `json:"value,omitempty"`    // milestone: the round number reached
@@ -140,7 +141,7 @@ func Top(s []Spike, n int) []Spike {
 // Sort puts moments in time order; within a bucket, a fixed order of kinds so
 // the story reads the same every time.
 func Sort(ms []Moment) {
-	rank := map[string]int{"note": 0, "milestone": 1, "spike": 2, "surge": 3, "mention": 4, "country": 5, "ai": 6, "sale": 7}
+	rank := map[string]int{"note": 0, "milestone": 1, "spike": 2, "surge": 3, "mention": 4, "answer": 5, "country": 6, "ai": 7, "sale": 8}
 	sort.SliceStable(ms, func(a, b int) bool {
 		if ms[a].T != ms[b].T {
 			return ms[a].T < ms[b].T

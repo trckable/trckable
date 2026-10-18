@@ -356,3 +356,72 @@ func (q Q) AISeen(ctx context.Context, site string) (visitor, crawler bool, err 
 		site, channelAI, site, channelAI, site, crawlAnswer, crawlTrain).Scan(&visitor, &crawler)
 	return visitor, crawler, err
 }
+
+// AIPagesFor is the two numbers of the AI & Search tab for exactly these pages:
+// how often AI read each and how many visitors AI sent to it as their first
+// page. Unlike AISearch it is not cut to the busiest pages, so a page an
+// answer linked is found wherever it ranks. A path nobody read or was sent to
+// is in the answer with zeros.
+func (q Q) AIPagesFor(ctx context.Context, p Params, paths []string) ([]AIPage, error) {
+	out := make([]AIPage, 0, len(paths))
+	if len(paths) == 0 {
+		return out, nil
+	}
+	tz, err := safeTZ(p.TZ)
+	if err != nil {
+		return nil, err
+	}
+	loc, _ := time.LoadLocation(tz)
+	conn, err := q.conn(ctx, p.Site)
+	if err != nil {
+		return nil, err
+	}
+	defer q.done(conn)
+	cte, args, err := sessionsCTE(p)
+	if err != nil {
+		return nil, err
+	}
+	from := p.From.In(loc).Format(time.DateOnly)
+	to := p.To.In(loc).Add(-time.Nanosecond).AddDate(0, 0, 1).Format(time.DateOnly)
+	in := strings.TrimSuffix(strings.Repeat("?,", len(paths)), ",")
+	scope := `site_id = ? AND day >= CAST(? AS DATE) AND day < CAST(? AS DATE) AND kind IN ('` + crawlAnswer + `', '` + crawlTrain + `')`
+	all := append(append([]any{}, args...), channelAI)
+	for _, pa := range paths {
+		all = append(all, pa)
+	}
+	all = append(all, p.Site, from, to)
+	for _, pa := range paths {
+		all = append(all, pa)
+	}
+	//nolint:gosec // in is a run of placeholders and scope a constant; every value is bound
+	rows, err := conn.QueryContext(ctx, cte+`,
+		sent AS (SELECT entry_page AS path, count(DISTINCT visitor_id) AS n FROM s
+			WHERE channel = ? AND entry_page IN (`+in+`) GROUP BY 1),
+		read AS (SELECT path, sum(hits)::BIGINT AS n FROM crawler_hits
+			WHERE `+scope+` AND path IN (`+in+`) GROUP BY 1)
+		SELECT coalesce(read.path, sent.path), coalesce(read.n, 0)::BIGINT, coalesce(sent.n, 0)::BIGINT
+		FROM read FULL OUTER JOIN sent ON read.path = sent.path`, all...)
+	if err != nil {
+		return nil, fmt.Errorf("ai pages: %w", err)
+	}
+	defer rows.Close()
+	found := map[string]AIPage{}
+	for rows.Next() {
+		var pg AIPage
+		if err := rows.Scan(&pg.Path, &pg.Read, &pg.Sent); err != nil {
+			return nil, err
+		}
+		found[pg.Path] = pg
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	for _, pa := range paths {
+		pg, ok := found[pa]
+		if !ok {
+			pg = AIPage{Path: pa}
+		}
+		out = append(out, pg)
+	}
+	return out, nil
+}
