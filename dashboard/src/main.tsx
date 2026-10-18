@@ -33,7 +33,7 @@ const Login = lazy(() => import("./views/Auth").then((m) => ({ default: m.Login 
 const FirstPassword = lazy(() => import("./views/FirstPassword").then((m) => ({ default: m.FirstPassword })));
 const UpdateDialog = lazy(() => import("./components/UpdateDialog"));
 // Only people with more than one site open it, so it loads when asked.
-const AllSites = lazy(() => import("./views/AllSites").then((m) => ({ default: m.AllSites })));
+const TeamHome = lazy(() => import("./views/team/TeamHome").then((m) => ({ default: m.TeamHome })));
 import { ConfirmHost } from "./components/Confirm";
 import { ShortcutsHost } from "./components/ShortcutsHost";
 // A shared link is its own entry point: no setup, no sign-in, one site.
@@ -182,7 +182,7 @@ function App() {
   else if (all)
     page = (
       <Suspense fallback={<Loading height={320} />}>
-        <AllSites sites={boot.sites} header={header} />
+        <TeamHome sites={boot.sites} header={header} />
       </Suspense>
     );
   else if (site && sub) page = <SubRoute {...{ sub, site, header }} />;

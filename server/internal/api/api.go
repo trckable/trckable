@@ -205,6 +205,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/site-layout", a.authed(a.siteLayout))
 	handle("PUT /api/v1/site-layout", a.authed(a.setSiteLayout))
 	handle("GET /api/v1/overview", a.authed(a.overview))
+	handle("GET /api/v1/team", a.authed(a.team))
 	handle("POST /api/v1/sites", a.authed(a.createSite))
 	handle("GET /api/v1/sites/{site}", a.authed(a.site))
 	handle("PATCH /api/v1/sites/{site}", a.authed(a.updateSite))

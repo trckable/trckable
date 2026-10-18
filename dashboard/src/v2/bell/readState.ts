@@ -44,8 +44,12 @@ export async function syncRead(local: ReadonlySet<string>): Promise<Set<string> 
  * The read set a bell shows: this browser's copy at first, joined with the account's once the server answers (never
  * replacing what was read meanwhile), kept in step with other tabs, and every mark told to the server once.
  */
+// Whether the account's list has been asked for once in this page (a bell that mounts again does not wait for it again).
+let askedOnce = false
+
 export function useReadSet(on: boolean, delay = 3000) {
   const [read, setRead] = useState<Set<string>>(loadLocal)
+  const [synced, setSynced] = useState(askedOnce)
   const latest = useRef(read)
   const join = useCallback((ids: Iterable<string>) => {
     const u = new Set([...ids, ...latest.current])
@@ -54,19 +58,28 @@ export function useReadSet(on: boolean, delay = 3000) {
     saveLocal(u)
     setRead(u)
   }, [])
+  const started = useRef(false)
+  /** Asks for the account's list, once: at the delay below, or sooner when the bell is about to be opened. `synced` says it has answered (or could not). */
+  const sync = useCallback(() => {
+    if (started.current) return
+    started.current = true
+    void syncRead(loadLocal()).then((all) => {
+      if (all) join(all)
+      askedOnce = true
+      setSynced(true)
+    })
+  }, [join])
   useEffect(() => {
     if (!on) return
-    let live = true
     // After the first paint has had its reads: the bell is not what the page is waiting for.
-    const first = setTimeout(() => void syncRead(loadLocal()).then((all) => live && all && join(all)), delay)
+    const first = setTimeout(sync, delay)
     const other = (e: StorageEvent) => e.key === KEY && join(loadLocal())
     window.addEventListener('storage', other)
     return () => {
-      live = false
       clearTimeout(first)
       window.removeEventListener('storage', other)
     }
-  }, [on, join, delay])
+  }, [on, join, delay, sync])
   const mark = useCallback(
     (ids: string[]) => {
       const fresh = ids.filter((id) => !latest.current.has(id))
@@ -76,5 +89,5 @@ export function useReadSet(on: boolean, delay = 3000) {
     },
     [join],
   )
-  return { read, mark }
+  return { read, mark, synced, sync }
 }

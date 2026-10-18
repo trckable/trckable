@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { dayWord } from '../../views/allNext'
 import { when } from './time'
 
 describe('times of day', () => {
@@ -8,7 +7,6 @@ describe('times of day', () => {
     now.setHours(21, 9, 0, 0)
     const unix = now.getTime() / 1000
     expect(when(unix)).toBe('21:09')
-    expect(dayWord(unix, now.getTime())).toBe('21:09')
     const old = unix - 3 * 86400
     expect(when(old)).toMatch(/21:09$/)
     expect(when(old)).not.toMatch(/AM|PM/i)

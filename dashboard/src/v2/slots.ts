@@ -41,6 +41,8 @@ export interface V2Extras {
   bellMore?: {
     /** Read the build's own list again: called when the bell opens, when a tab is shown after a minute away and when /now answers (at most once a minute), so its rows and the badge follow the same moments as the public ones. */
     refresh?: () => void
+    /** False until the build's own list has been read once: the bell shows its single placeholder until then, so its rows and the public ones arrive together. Left out, the list counts as read. */
+    ready?: boolean
     readAll: () => void
     dismiss: (id: string) => void
     archive: { items: Notice[]; load: () => void; loading: boolean; words: { dismiss: string; archive: string; fresh: string; none: string } }
@@ -59,6 +61,10 @@ export interface V2Extras {
   signOut?: () => void
   /** Opens Peek with a question ready to send. A build with no Peek leaves it out, and a "Why?" shows its text alone. */
   askPeek?: (question: string) => void
+  /** All sites: one more figure at the end of the team strip (a plan's ring). */
+  teamStrip?: ReactNode
+  /** All sites: one more line under a site's state in its row (over its plan's limit), by the site's id. */
+  siteStatus?: (siteId: string) => ReactNode
   /** Draws "Add a site" in the site menu through this (it may show it off, with a reason). */
   addSiteGuard?: (render: (off: boolean) => ReactNode) => ReactNode
 }

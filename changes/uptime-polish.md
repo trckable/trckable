@@ -1,0 +1,1 @@
+Uptime & incidents: no back link, the Briefing's period pill, the site's state first (Up, Down for 9m, Quiet), one row of figures that equal the incident rows under them, only the days we watched in the strip, a clean list with an empty state, and the explanations behind small (i) marks.

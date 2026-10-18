@@ -723,6 +723,17 @@ html[data-motion='off'] .mk .ib.bell.shake svg{animation:none}
 .mk .nft small{font-size:12px;color:var(--mk-muted)}
 .mk .nf.unread .nft b{color:var(--mk-text)}
 .mk .nfd{width:8px;height:8px;border-radius:50%;background:var(--mk-lime);flex:none}
+/* The one placeholder row while the list is being read for the first time: a row's own height, so nothing below it moves when the rows replace it. */
+.mk .nfs{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s3);min-height:56px;box-sizing:border-box}
+.mk .nfs i{width:22px;height:22px;flex:none;border-radius:50%;background:var(--mk-line)}
+.mk .nfs span{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.mk .nfs b,.mk .nfs small{display:block;height:10px;border-radius:5px;background:var(--mk-line)}
+.mk .nfs b{width:62%}
+.mk .nfs small{width:38%}
+.mk .nfs i,.mk .nfs b,.mk .nfs small{animation:mk-nfs 1.2s ease-in-out infinite alternate}
+@keyframes mk-nfs{from{opacity:.55}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.mk .nfs i,.mk .nfs b,.mk .nfs small{animation:none}}
+html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-motion='off'] .mk .nfs small{animation:none}
 .mk .plb.mini{display:inline-block;width:90px;height:8px}
 @keyframes mk-sp{to{transform:rotate(360deg)}}
 .mk .xp{transition:transform .32s cubic-bezier(.2,.8,.2,1),width .3s cubic-bezier(.2,.8,.2,1),top .3s cubic-bezier(.2,.8,.2,1),border-radius .3s}
@@ -1645,11 +1656,13 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 @keyframes mk-shift{from{opacity:.55;transform:translateX(3%)}}
 .mk .mk-pulse.ev{animation:mk-beat 1s ease-out 1,mk-pl 2s infinite}
 
-/* Two columns: the list scrolls inside its card, which is as tall as the Live card beside it; a soft fade shows there is more below. */
+/* Two columns: the list scrolls inside its card, which is as tall as the Live card beside it; a soft fade at the top and bottom edge shows there is more past it. */
 @container (min-width:701px){
 .mk .liveview>.lon{contain:size}
 .mk .liveview .lon .lfeed{flex:1 1 0;min-height:0;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain}
-.mk .liveview .lon .lfeed[data-below]{-webkit-mask-image:linear-gradient(to bottom,var(--mk-text) calc(100% - 40px),transparent);mask-image:linear-gradient(to bottom,var(--mk-text) calc(100% - 40px),transparent)}
+.mk .liveview .lon .lfeed[data-below],.mk .liveview .lon .lfeed[data-above]{--fa:0px;--fb:0px;-webkit-mask-image:linear-gradient(to bottom,transparent,var(--mk-text) var(--fa),var(--mk-text) calc(100% - var(--fb)),transparent);mask-image:linear-gradient(to bottom,transparent,var(--mk-text) var(--fa),var(--mk-text) calc(100% - var(--fb)),transparent)}
+.mk .liveview .lon .lfeed[data-above]{--fa:28px}
+.mk .liveview .lon .lfeed[data-below]{--fb:40px}
 }
 /* Menus and lists, one row (the palette, the site list, the period, Explore's menus, the bell): one active row at a time, a small gap
    between neighbours, one rhythm on the 4px grid. The active row is the one under the mouse (data-act, set by useActiveRow) or the one
