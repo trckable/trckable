@@ -43,14 +43,7 @@
   min-width: 0;
   height: 44px;
   padding: 0 8px 0 12px;
-  border: 0;
   border-radius: 11px;
-  background: color-mix(in srgb, var(--text) 7%, transparent);
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-.al-field:focus-within {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 60%, var(--border-2));
-  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .al-field-kind {
   display: grid;
@@ -60,12 +53,9 @@
 .al-field input {
   flex: 1;
   min-width: 0;
-  border: 0;
-  background: none;
   color: var(--text);
   font: inherit;
   font-size: 13.5px;
-  outline: none;
 }
 .al-chip {
   padding: 3px 9px;
