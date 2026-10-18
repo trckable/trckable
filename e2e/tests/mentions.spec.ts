@@ -96,6 +96,7 @@ test('a phone gets the page and the detail as a sheet; with nothing found the pa
   await page.unroute('**/api/v1/sites/*/mentions?*')
   let saved: string[] | null = null
   await page.route('**/api/v1/sites/*/mentions?*', (r) => r.fulfill({ json: answer([]) }))
+  await page.route('**/api/v1/sites/*/mentions/lookalike*', (r) => r.fulfill({ json: { word: 'acmemetrics', checked: true, elsewhere: 0, examples: [], suggest_exclude: [] } }))
   await page.route('**/api/v1/sites/*/mentions/keywords', async (r) => {
     saved = (r.request().postDataJSON() as { keywords: string[] }).keywords
     await r.fulfill({ json: { ...words, added: saved } })
