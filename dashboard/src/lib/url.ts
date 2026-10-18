@@ -186,11 +186,18 @@ export function setView(patch: Partial<ViewState>) {
   const data: Partial<ViewState> = cur.live === undefined && writeView(cur) !== '' ? { live: false } : {}
   // Moving to Live or Data leaves the briefing unless the change says otherwise.
   const leave: Partial<ViewState> = patch.live !== undefined && !('briefing' in patch) ? { briefing: undefined } : {}
-  const next = { ...cur, ...data, ...leave, ...patch }
+  const merged = { ...cur, ...data, ...leave, ...patch }
+  // Under Explore's panel the filters are the panel's own (xf): an address's f= is taken into it, so taking them off there takes them off for good.
+  const next = merged.xp ? { ...merged, xf: merged.xf ?? merged.filters, filters: [] } : merged
   // An open settings section stays in the address (lib/settings.ts).
   const settings = new URLSearchParams(location.search).get('settings')
   const view = writeView(next)
   navigate(location.pathname + (settings ? view + (view ? '&' : '?') + 'settings=' + encodeURIComponent(settings) : view), { replace: Object.keys(patch).every((k) => k === 'day') })
+}
+
+/** The period, comparison, filters and panel put back to what a fresh page has: what Live is shown with, since it has none of them. */
+export function plainView(): Partial<ViewState> {
+  return { period: defaultPeriod, from: undefined, to: undefined, compare: compareOf(null, defaultPeriod), cfrom: undefined, cto: undefined, bucket: undefined, day: undefined, filters: [], xp: undefined, xf: undefined }
 }
 
 /** Where an address the old Data page made (?v=story, ?v=explore, Full) goes: the Briefing, and Explore for the ones that were its numbers. Null for any other address. */
