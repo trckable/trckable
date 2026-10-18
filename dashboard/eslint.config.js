@@ -9,6 +9,13 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import jsxA11y from 'eslint-plugin-jsx-a11y'
 import globals from 'globals'
 
+// A role is compared in one place: lib/permissions.ts. Everywhere else asks
+// can('some.action') (or isOwnerRole for a person listed on the People tab).
+const ROLE_COMPARED = {
+  selector: "BinaryExpression[operator=/^[!=]==?$/]:has(Literal[value=/^(viewer|owner|admin)$/]):has(:matches(Identifier[name=/[rR]ole$/], MemberExpression[property.name=/[rR]ole$/]))",
+  message: "Do not compare a role here: ask can('action') from lib/permissions.ts.",
+}
+
 export default tseslint.config(
   { ignores: ['dist/**', 'scripts/**', 'eslint.config.js'] },
   js.configs.recommended,
@@ -24,6 +31,7 @@ export default tseslint.config(
     plugins: { react },
     settings: { react: { version: 'detect' } },
     rules: {
+      'no-restricted-syntax': ['error', ROLE_COMPARED],
       'no-nested-ternary': 'error',
       'react-hooks/exhaustive-deps': 'error',
       // Off: it trusts the types over the runtime, and here the runtime is
@@ -60,11 +68,16 @@ export default tseslint.config(
     },
   },
   {
+    // The one place that compares roles.
+    files: ['src/lib/permissions.ts'],
+    rules: { 'no-restricted-syntax': 'off' },
+  },
+  {
     // The AI bots card is read on phones: a title= never shows there, so its
     // hints are the Info tooltip or a tap that shows the whole text.
     files: ['src/features/crawlers/**/*.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', { selector: "JSXAttribute[name.name='title']", message: 'title= never shows on a phone: use <Info> or tap to show.' }],
+      'no-restricted-syntax': ['error', ROLE_COMPARED, { selector: "JSXAttribute[name.name='title']", message: 'title= never shows on a phone: use <Info> or tap to show.' }],
     },
   },
 )

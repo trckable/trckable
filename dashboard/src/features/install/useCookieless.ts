@@ -3,7 +3,7 @@
 // writes it into the site's own script, so the snippet never has to change.
 import { useEffect, useState } from 'react'
 import { type SiteConfig, more } from '../../lib/apiMore'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { toast } from '../../components/Toast'
 import { copy } from './copy'
 
@@ -42,5 +42,5 @@ export function useCookieless(site: string): Cookieless {
       .catch(() => toast(copy.cookieless.failed, 'error'))
       .finally(() => setSaving(false))
   }
-  return { on: cfg ? cfg.consent_free : null, saving, locked: isViewer(), set }
+  return { on: cfg ? cfg.consent_free : null, saving, locked: !can('site.settings'), set }
 }

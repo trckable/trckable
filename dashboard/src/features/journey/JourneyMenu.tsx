@@ -5,7 +5,7 @@
 import { Menu } from '../../components/Menu'
 import { toast } from '../../components/Toast'
 import type { Site } from '../../lib/api'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { openSettings } from '../../lib/settings'
 import { copy } from './copy'
 
@@ -31,8 +31,8 @@ export function JourneyMenu({ site, visitor }: { site: Site; visitor: string }) 
         return (
           <>
             {item(copy.copyId, () => void copyId(visitor))}
-            {!isViewer() && item(copy.dataRequest, request, { title: copy.dataRequestHint })}
-            {!isViewer() && item(copy.erase, request, { danger: true })}
+            {can('data.erase') && item(copy.dataRequest, request, { title: copy.dataRequestHint })}
+            {can('data.erase') && item(copy.erase, request, { danger: true })}
           </>
         )
       }}

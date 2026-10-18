@@ -4,14 +4,14 @@ import { History } from 'lucide-react'
 import { lazy, Suspense, useState } from 'react'
 import { Row } from '../../components/Row'
 import type { Site } from '../../lib/api'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { first } from './firstCopy'
 
 const ImportDialog = lazy(() => import('./ImportDialog').then((m) => ({ default: m.ImportDialog })))
 
 export function ImportSetting({ site }: { site: Site }) {
   const [open, setOpen] = useState(false)
-  if (isViewer()) return null
+  if (!can('import.google')) return null
   return (
     <section className="card">
       <Row label={first.importSetting}>

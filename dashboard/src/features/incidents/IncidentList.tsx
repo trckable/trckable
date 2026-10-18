@@ -2,7 +2,7 @@
 // a short note on one ("Hosting migration"); a viewer only reads.
 import { useState } from 'react'
 import { AskAbout } from '../../components/Ask'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { fmtInt } from '../../lib/format'
 import { when } from '../sitestatus/time'
 import { incidents, type Incident } from './api'
@@ -42,7 +42,7 @@ function Note({ site, x, onSaved }: { site: string; x: Incident; onSaved: (x: In
   return (
     <p className="inc-note">
       {x.note && <span>{x.note}</span>}
-      {!isViewer() && (
+      {can('note.write') && (
         <button type="button" className="linkish" onClick={() => setEditing(true)}>
           {x.note ? copy.editNote : copy.addNote}
         </button>

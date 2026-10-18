@@ -6,7 +6,7 @@ import { fail, type Site, type Widget, more } from '../lib/apiMore'
 import { Switch } from '../components/Switch'
 import { confirm } from '../components/Confirm'
 import { toast } from '../components/Toast'
-import { isViewer } from '../lib/me'
+import { can } from '../lib/permissions'
 import { MAX_NAME, TEXT, cornerCode, frameCode, hasOldCode, kindOf, previewUrl, size } from './widgetKinds'
 import { WidgetMenu, type WidgetMenuItem } from './WidgetMenu'
 
@@ -61,7 +61,7 @@ export function WidgetRow({ site, w, base, onChange, onEdit }: { site: Site; w: 
   }
   const items: WidgetMenuItem[] = []
   if (w.kind === 'online') items.push({ label: TEXT.copyCorner, icon: <PanelBottomOpen size={18} strokeWidth={1.75} aria-hidden="true" />, run: () => copy(cornerCode(base, w), TEXT.script) })
-  if (!isViewer()) {
+  if (can('widget.manage')) {
     items.push({
       label: TEXT.delete,
       icon: <Trash2 size={18} strokeWidth={1.75} aria-hidden="true" />,
@@ -80,7 +80,7 @@ export function WidgetRow({ site, w, base, onChange, onEdit }: { site: Site; w: 
   const copyCode = () => copy(frameCode(base, w, site.domain), TEXT.snippet)
   return (
     <div className="wg-row">
-      <Thumb site={site} w={w} onOpen={isViewer() ? undefined : () => onEdit(w)} />
+      <Thumb site={site} w={w} onOpen={!can('widget.manage') ? undefined : () => onEdit(w)} />
       <span className="wg-row-text">
         {renaming ? (
           <input
@@ -107,7 +107,7 @@ export function WidgetRow({ site, w, base, onChange, onEdit }: { site: Site; w: 
         <span className="faint">{k.name}</span>
       </span>
       <span className="wg-acts">
-        {!isViewer() && (
+        {can('widget.manage') && (
           <button type="button" className="btn icon ghost" aria-label={TEXT.edit} title={TEXT.edit} onClick={() => onEdit(w)}>
             <Pencil size={17} strokeWidth={1.75} aria-hidden="true" />
           </button>
@@ -115,13 +115,13 @@ export function WidgetRow({ site, w, base, onChange, onEdit }: { site: Site; w: 
         <button type="button" className="btn icon ghost" aria-label={TEXT.copyFrame} title={hasOldCode(w) ? `${TEXT.copyFrame}. ${TEXT.newCode}` : TEXT.copyFrame} onClick={copyCode}>
           <Copy size={17} strokeWidth={1.75} aria-hidden="true" />
         </button>
-        {!isViewer() && (
+        {can('widget.manage') && (
           <button type="button" className="btn icon ghost" aria-label={TEXT.rename} title={TEXT.rename} onClick={() => setRenaming(true)}>
             <TextCursorInput size={17} strokeWidth={1.75} aria-hidden="true" />
           </button>
         )}
       </span>
-      {!isViewer() && <Switch on={on} label={`${w.name} on`} onChange={toggle} />}
+      {can('widget.manage') && <Switch on={on} label={`${w.name} on`} onChange={toggle} />}
       {items.length > 0 && <WidgetMenu items={items} />}
     </div>
   )

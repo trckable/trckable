@@ -3,7 +3,8 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { lazyLoad } from '../../lib/lazyLoad'
 import { onlineNow } from '../../lib/live'
-import { isShared, isViewer } from '../../lib/me'
+import { isShared } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { openSettings } from '../../lib/settings'
 import { tag } from '../../i18n'
 import { fmtInt, fmtMoney } from '../../lib/format'
@@ -134,7 +135,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
             <span>{copy.ago30}</span>
             <span>{copy.nowWord}</span>
           </div>
-          <div className={`lbottom${data.revenue || !isViewer() ? ' money' : ''}`}>
+          <div className={`lbottom${data.revenue || can('payment.manage') ? ' money' : ''}`}>
             <div className="lsrc">
               <span className="ll">{copy.topSources}</span>
               <SourceRows parts={src.parts} color={colorOf} />
@@ -146,7 +147,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
               </div>
             ) : (
               whole &&
-              !isViewer() &&
+              can('payment.manage') &&
               !isShared() && (
                 <div className="lrev">
                   <span className="ll">{copy.revenueToday}</span>

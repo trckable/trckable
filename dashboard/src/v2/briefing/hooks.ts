@@ -6,7 +6,8 @@ import { more } from '../../lib/apiMore'
 import type { Range } from '../../lib/dates'
 import { startOfDay, uptimeOf } from '../../features/incidents/model'
 import { useNow, usePeriodIncidents } from '../../features/incidents/useIncidents'
-import { isShared, isViewer } from '../../lib/me'
+import { isShared } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import type { Usual } from './model'
 
 /** What the server calls usual for the day (the same weekday, up to the same time), for today and yesterday. */
@@ -43,17 +44,17 @@ export function useUptime(site: Site, range: Range) {
 export function useSetup(site: Site) {
   const [alerts, setAlerts] = useState(false)
   const [search, setSearch] = useState(false)
-  const can = !isShared() && !isViewer()
+  const allowed = !isShared() && can('note.write')
   useEffect(() => {
-    if (!can) return
+    if (!allowed) return
     let live = true
     more.alerts(site.id).then((r) => live && setAlerts(r.alerts.length === 0), () => undefined)
     more.searchConsole(site.id).then((r) => live && setSearch(!r.connected), () => undefined)
     return () => {
       live = false
     }
-  }, [site.id, can])
-  return { can, noAlerts: alerts, noSearch: search }
+  }, [site.id, allowed])
+  return { can: allowed, noAlerts: alerts, noSearch: search }
 }
 
 /** The people seen today since the hour the day is taken to start for someone looking in: one count of people, never a sum of hours. */

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { toast } from '../../components/Toast'
 import { fail } from '../../lib/api'
 import { trust } from './trustCopy'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { mentionsApi, type LookAlike, type Words as WordsValue } from './api'
 import { LookAlikeNote, UncheckedNote } from './LookAlikeNote'
 import { otherMeaning } from './lookAlike'
@@ -16,7 +16,7 @@ export function Words({ site, words, onWords }: { site: string; words: WordsValu
   const [look, setLook] = useState<LookAlike | null>(null)
   const [unchecked, setUnchecked] = useState<string | null>(null)
   const input = useRef<HTMLInputElement>(null)
-  const viewer = isViewer()
+  const viewer = !can('mention.manage')
   useEffect(() => {
     if (draft === '') input.current?.focus()
   }, [draft])

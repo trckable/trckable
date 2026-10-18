@@ -59,7 +59,7 @@ func (a *API) gaRedirectURL() string {
 // a viewer, has no business connecting a Google account.
 func (a *API) gaOwner(w http.ResponseWriter, r *http.Request) *sqlite.User {
 	u := principalOf(r).user
-	if u == nil || u.Role != sqlite.RoleOwner {
+	if !canUser(u, ActImportGoogle) {
 		fail(w, http.StatusForbidden, "only an owner can import from Google Analytics")
 		return nil
 	}

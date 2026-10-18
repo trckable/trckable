@@ -8,6 +8,7 @@ import type { Person } from '../../lib/api'
 import { people } from './peopleCopy'
 import { RolePop } from './peopleLazy'
 import { roleLock, type RoleLock } from './rules'
+import { isOwnerRole } from '../../lib/permissions'
 
 const LOCKS: Record<Exclude<RoleLock, null>, string> = { self: people.lockSelf, last: people.lockLast, holder: people.lockHolder }
 
@@ -15,7 +16,7 @@ export function RolePill({ p, me, owners, onAsk }: { p: Person; me?: string; own
   const [open, setOpen] = useState(false)
   const btn = useRef<HTMLButtonElement>(null)
   const lock = roleLock(p, me, owners)
-  const name = p.role === 'owner' ? people.roles.owner.name : people.roles.viewer.name
+  const name = isOwnerRole(p.role) ? people.roles.owner.name : people.roles.viewer.name
   const label = people.rolePill(p.email, name) + (lock ? '. ' + LOCKS[lock] : '')
   return (
     // The tooltip sits on a wrapper: a disabled button shows none in every browser.
@@ -23,7 +24,7 @@ export function RolePill({ p, me, owners, onAsk }: { p: Person; me?: string; own
       <button
         ref={btn}
         type="button"
-        className={'role-pill' + (p.role === 'owner' ? ' owner' : '')}
+        className={'role-pill' + (isOwnerRole(p.role) ? ' owner' : '')}
         aria-label={label}
         aria-haspopup="dialog"
         aria-expanded={open}

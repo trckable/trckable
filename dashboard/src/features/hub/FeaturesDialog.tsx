@@ -8,7 +8,7 @@ import { confirm } from '../../components/Confirm'
 import { Modal } from '../../kit/Modal'
 import { toast } from '../../components/toastBus'
 import type { Site } from '../../lib/api'
-import { canChange } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { copy } from './copy'
 import { FeatureCard } from './FeatureCard'
 import { canOpen, canToggle, matches, statusOf } from './model'
@@ -27,7 +27,7 @@ const textOf = (f: Feature) => {
 export default function FeaturesDialog({ site, user, onClose }: { site: Site | null; user: string; onClose: () => void }) {
   const [query, setQuery] = useState('')
   const { mods, busy, set } = useFeatureMods(site)
-  const owner = canChange()
+  const owner = can('site.settings')
   // Looking at the list is what makes it seen: the menu's dot goes.
   useEffect(() => markAllSeen(user), [user])
   const shown = useMemo(() => FEATURES.filter((f) => matches(textOf(f), query)), [query])

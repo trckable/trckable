@@ -3,7 +3,7 @@
 import { Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { fail, type Annotation, type Site, more } from '../../lib/apiMore'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { confirm } from '../../components/Confirm'
 import { toast } from '../../components/Toast'
 import { copy } from './listCopy'
@@ -31,7 +31,7 @@ export function NoteRow({ n, site, onJump, onChanged }: { n: Annotation; site: S
         <span className="note-text">{n.text}</span>
         {n.author && <span className="faint note-author">{copy.by(n.author)}</span>}
       </button>
-      {!isViewer() && (
+      {can('note.write') && (
         <span className="note-actions">
           <button type="button" className="btn icon ghost" aria-label={copy.editLabel(n.text)} title={copy.edit} onClick={() => setEditing(true)}>
             <Pencil size={16} strokeWidth={1.75} aria-hidden="true" />

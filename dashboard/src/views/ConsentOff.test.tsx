@@ -8,7 +8,7 @@ const setModule = vi.fn<(...a: unknown[]) => Promise<unknown>>()
 vi.mock('../lib/apiMore', async (orig) => ({ ...(await orig<typeof import('../lib/apiMore')>()), more: { setModule: (...a: unknown[]) => setModule(...a) } }))
 const ask = vi.fn<(...a: unknown[]) => Promise<boolean>>()
 vi.mock('../components/Confirm', () => ({ confirm: (...a: unknown[]) => ask(...a) }))
-vi.mock('../lib/me', async (orig) => ({ ...(await orig<typeof import('../lib/me')>()), canChange: () => true }))
+vi.mock('../lib/permissions', () => ({ can: () => true }))
 
 import { ConsentOff } from './ConsentOff'
 

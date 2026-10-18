@@ -15,7 +15,7 @@ import { modeNote, modeTag, statusOf } from '../lib/payments'
 import { CodeBlock } from '../components/Code'
 import { Picker } from '../components/Picker'
 import { confirmWith, useConfirm } from '../components/Confirm'
-import { isViewer } from '../lib/me'
+import { can } from '../lib/permissions'
 import { settle, toast } from '../components/Toast'
 import { useConnectFirst } from './useConnectFirst'
 import { Connect } from './PaymentsConnect'
@@ -94,7 +94,7 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
               {data.key_error}. Webhooks answer 503, so providers keep retrying for a while (Stripe about three days). Start the server with the original TRCKABLE_SECRET, or its old data/secret.key,
               to pick up where it was. If that key is gone for good, start over with this server's key and reconnect each provider.
             </span>
-            {!isViewer() && (
+            {can('payment.manage') && (
               <button
                 type="button"
                 className="btn danger pay-startover"

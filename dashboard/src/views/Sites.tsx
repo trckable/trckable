@@ -20,7 +20,7 @@ import { navigate } from '../lib/url'
 import { Menu } from '../components/Menu'
 import { toast } from '../components/Toast'
 import { AddWizard } from '../features/install/AddWizard'
-import { isViewer } from '../lib/me'
+import { can } from '../lib/permissions'
 import { openSettings } from '../lib/settings'
 import './Sites.css'
 
@@ -39,7 +39,7 @@ export function SitesSettings({ sites, onSites }: { sites: Site[]; onSites: () =
             {sites.length} {sites.length === 1 ? 'site' : 'sites'} · {live} receiving visits{stopped ? ` · ${stopped} stopped` : ''}
           </span>
         </span>
-        {!isViewer() && (
+        {can('site.add') && (
           <button type="button" className="btn primary" onClick={() => setWizard(true)}>
             <Plus size={16} strokeWidth={2} aria-hidden="true" />
             Add a site
@@ -51,7 +51,7 @@ export function SitesSettings({ sites, onSites }: { sites: Site[]; onSites: () =
         {sites.map((s) => (
           <SiteRow key={s.id} site={s} onSites={onSites} onDelete={() => setDrop(s)} />
         ))}
-        {!isViewer() && (
+        {can('site.add') && (
           <button type="button" className="site-add" onClick={() => setWizard(true)}>
             <Plus size={18} strokeWidth={1.75} aria-hidden="true" />
             Add a site
@@ -100,7 +100,7 @@ function SiteRow({ site, onSites, onDelete }: { site: Site; onSites: () => void;
         </span>
       </div>
       <div className="site-card-actions">
-        {state === 'new' && !isViewer() ? (
+        {state === 'new' && can('site.add') ? (
           <button type="button" className="btn" onClick={() => {
               closeAccount()
               openSettings(site, 'install')
@@ -112,7 +112,7 @@ function SiteRow({ site, onSites, onDelete }: { site: Site; onSites: () => void;
             Open
           </button>
         )}
-        {!isViewer() && (
+        {can('site.add') && (
           <button type="button" className="btn icon ghost" aria-label={`${site.domain} settings`} title="Settings" onClick={() => {
             closeAccount()
             openSettings(site)
@@ -130,7 +130,7 @@ function SiteRow({ site, onSites, onDelete }: { site: Site; onSites: () => void;
             }}>
               Open dashboard
             </button>
-            {!isViewer() && (
+            {can('site.add') && (
               <>
                 <button type="button" role="menuitem" onClick={() => {
                   close()

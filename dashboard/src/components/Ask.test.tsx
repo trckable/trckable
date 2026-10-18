@@ -2,7 +2,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../lib/me', () => ({ canAsk: () => true }))
+vi.mock('../lib/permissions', () => ({ can: () => true }))
 import { AskAbout } from './Ask'
 
 const about = { title: 'Visitors', facts: ['1,204'], question: 'Why?' }

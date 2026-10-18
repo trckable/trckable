@@ -4,7 +4,7 @@
 import { lazy, Suspense, useState } from 'react'
 import type { InstallCheck, Site, Visit } from '../../lib/api'
 import { METHODS, type Ctx } from '../../lib/install'
-import { canChange } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { aiPrompt, copy as inst, waitCard } from '../../features/install/copy'
 import { first as firstCopy } from '../../features/install/firstCopy'
 import { outcomeOf } from '../../features/install/outcome'
@@ -49,7 +49,7 @@ function Other({ site, ctx, visits }: { site: Site; ctx: Ctx; visits: Visit[] })
   const [prompt, setPrompt] = useState(false)
   const method = methodOf(id)
   const groups = [...new Set(METHODS.map((m) => m.group))]
-  const owner = canChange()
+  const owner = can('setup.run')
   const [importSeen, putImportAway] = useSeen('import', site.id)
   const [importing, setImporting] = useState(false)
   const weekly = useWeeklyEmail(site, owner)

@@ -1,7 +1,7 @@
 import { BookOpen, MessageSquare } from 'lucide-react'
 import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
 import type { Site } from '../lib/api'
-import { canAsk } from '../lib/me'
+import { can } from '../lib/permissions'
 import { pageLoading } from '../lib/pageLoading'
 import { caps, keyFor, useKeymap } from '../lib/keys'
 import { openShortcuts } from './ShortcutsHost'
@@ -65,7 +65,7 @@ export function Footer({ version, newer, onNewer, site, sites }: { version?: str
   // Drawn when the status has arrived and the page has its numbers (or has been long enough about it).
   const settled = ready && (!loading || tired)
   useKeymap()
-  const ask = useSyncExternalStore(marked, askOffered, () => false) && canAsk()
+  const ask = useSyncExternalStore(marked, askOffered, () => false) && can('peek.ask')
   const whatsNew = (
     <>
       {newer && <i className="footer-dot" aria-hidden="true" />}

@@ -15,7 +15,7 @@ import (
 
 func (a *API) owner(w http.ResponseWriter, r *http.Request) *sqlite.User {
 	u := r.Context().Value(ctxKey{}).(principal).user
-	if u == nil || u.Role != sqlite.RoleOwner {
+	if !canUser(u, ActMemberManage) {
 		fail(w, http.StatusForbidden, "only an owner can manage the people on this instance")
 		return nil
 	}

@@ -8,7 +8,8 @@ import { PAID_STEP } from '../explore/data/mapSections'
 import { fmtRange, presetById, todayIn, type Range } from '../../lib/dates'
 import { dayWords } from '../dayWords'
 import { fmtInt } from '../../lib/format'
-import { isShared, isViewer } from '../../lib/me'
+import { isShared } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { openSettings } from '../../lib/settings'
 import { toggleWatch, watched } from '../../lib/watch'
 import { useNow } from '../../features/incidents/useIncidents'
@@ -181,7 +182,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const crowd = low && !learning ? { big: v === 1 ? copy.onePerson : copy.nPeople(fmtInt(v)), n: dots, note: copy.dotNote(dots < Math.round(v) ? dots : 0) } : null
   const headline = `${say.lead} ${say.long.map((p) => p.t).join('')}`
   const watchRows = watchRowsOf(site.id, wset, stories)
-  const canNote = !isViewer() && !isShared()
+  const canNote = can('note.write') && !isShared()
   const replayIn = replayInOf({ replay: rp, site, query: queryOf(readView(new URLSearchParams(location.search)), range), bucket: data?.bucket ?? 'day', chart, series: cur.series.slice(0, pts.length), total: v, today: unit === 'today', end, clock: clock.slice(11, 16), moments, period: label, source: top?.value, money: isShared() ? undefined : money, onShare: () => openSettings(site, 'sharing') })
   const onReplay = replayIn ? stopOrGo(rp.playing, rp.stop, rp.start) : undefined
 

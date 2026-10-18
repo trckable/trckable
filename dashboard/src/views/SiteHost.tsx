@@ -8,7 +8,8 @@ import { fmtMoney } from '../lib/format'
 import { journeysOn } from '../features/cookieless/labels'
 import { navigate, oldAddressTarget, readView, setDefaultPeriodFor, setView, useLocation, wantsLive, writeView } from '../lib/url'
 import { queryOf, rangeOf } from '../lib/dashQuery'
-import { canAsk, canChange, isShared } from '../lib/me'
+import { isShared } from '../lib/me'
+import { can } from '../lib/permissions'
 import { useMods } from '../lib/useMods'
 import { shows } from '../lib/modules'
 import { onlineNow } from '../lib/useLive'
@@ -104,7 +105,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
     window.addEventListener('trckable:bounce', open)
     return () => window.removeEventListener('trckable:bounce', open)
   }, [shared])
-  const askOn = canAsk()
+  const askOn = can('peek.ask')
   const narrow = useNarrow()
   const money = mods === null || shows(mods, 'cards', 'revenue') ? cur?.money : undefined
   const fmtM = (minor: number) => (money ? fmtMoney(minor, money.currency, money.exponent) : '')
@@ -124,7 +125,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
           data={data}
           loading={loading || firstLoad}
           money={money ? fmtM : undefined}
-          onGoal={() => canChange() && setAddGoals(true)}
+          onGoal={() => can('peek.ask') && setAddGoals(true)}
           onAsk={askOn ? () => setAskOpen(true) : undefined}
           identity={identity}
           top={view.surge ? <Suspense fallback={null}><SurgeLine site={site.id} tz={site.timezone} started={view.surge} filters={view.filters} /></Suspense> : undefined}

@@ -16,6 +16,7 @@ import { people as t } from './peopleCopy'
 import { orderPeople } from './rules'
 import { peopleActions } from './usePeopleActions'
 import './people.css'
+import { isOwnerRole } from '../../lib/permissions'
 
 export function People({ me }: { me?: string }) {
   const [list, setList] = useState<Person[] | null>(null)
@@ -38,7 +39,7 @@ export function People({ me }: { me?: string }) {
     return () => window.removeEventListener('trckable:profile', load)
   }, [])
 
-  const owners = list?.filter((p) => p.role === 'owner').length ?? 0
+  const owners = list?.filter((p) => isOwnerRole(p.role)).length ?? 0
   const act = { ...peopleActions({ load, setPeople: setList, issue: setIssued }), allow: setAllowing, askRole: (p: Person, role: string) => setAsking({ p, role }) }
 
   // You first, then the owners, then the viewers; the ones still to sign in last, in their own group.

@@ -13,7 +13,7 @@ import { confirm, confirmWith } from '../components/Confirm'
 import { DialogActions } from '../components/DialogActions'
 import { DialogHead } from '../components/DialogHead'
 import { Field } from '../components/Field'
-import { isViewer } from '../lib/me'
+import { can } from '../lib/permissions'
 import { usePictureVersion } from '../lib/profile'
 import { SitesSettings } from './Sites'
 import { InlineEdit } from '../components/InlineEdit'
@@ -34,7 +34,7 @@ const AvatarCrop = lazy(() => import('../components/AvatarCrop'))
 
 export function AccountDialog({ tab: asked, sites, email, onSites }: { tab: Tab; sites: Site[]; email?: string; onSites: () => void }) {
   const { tabs, tab } = useWindowTabs(asked)
-  const viewer = isViewer()
+  const viewer = !can('member.manage')
   const [profile, setProfile] = useState<Profile | null>(null)
   const v = usePictureVersion() // one cache-buster for the header, this window and the people list
   useEffect(() => {

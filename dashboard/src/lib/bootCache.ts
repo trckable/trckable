@@ -5,7 +5,7 @@
 // public/theme.js reads it before the first paint; forgotten at sign-out, so another person's names never show.
 import { useEffect } from 'react'
 import type { Site } from './api'
-import { canAsk } from './me'
+import { can } from './permissions'
 
 const KEY = 'trckable:boot'
 
@@ -27,7 +27,7 @@ const write = (next: Record<string, unknown>) => {
 }
 
 export function keepBoot(sites: Site[]) {
-  write({ ...read(), s: sites.map((s) => ({ d: s.domain, n: s.name, e: s.last_event_at ? 1 : 0 })), k: canAsk() ? 1 : 0 })
+  write({ ...read(), s: sites.map((s) => ({ d: s.domain, n: s.name, e: s.last_event_at ? 1 : 0 })), k: can('peek.ask') ? 1 : 0 })
 }
 
 /** The boxes of the story: how tall each was (px) at this window width. */

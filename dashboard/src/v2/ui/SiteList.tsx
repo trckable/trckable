@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Site } from '../../lib/api'
 import { useV2Extras } from '../slots'
 import { useDomainControl } from '../../lib/domainControl'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { openSettings } from '../../lib/settings'
 import { navigate } from '../../lib/url'
 import { prefetchSite } from '../../lib/dashQuery'
@@ -86,7 +86,7 @@ export function SiteList(p: SiteListProps) {
     p.close()
     if (s.id !== current?.id) p.onPick(s.id)
   }
-  const arrange: Arrange | null = isViewer()
+  const arrange: Arrange | null = !can('site.settings')
     ? null
     : {
         sites,
@@ -99,7 +99,7 @@ export function SiteList(p: SiteListProps) {
         },
       }
   const item = (s: Site, place: Place) => (
-    <SiteRow key={s.id} clash={clashes(twice, s)} move={moves?.(s.id, s.name || s.domain)} site={s} place={place} on={s.id === current?.id} arrange={found ? null : arrange} today={numbers?.get(s.id)?.visitors} settings={isViewer() ? undefined : (tab) => { p.close(); openSettings(s, tab) }} status={() => { p.close(); navigate(`/${encodeURIComponent(s.domain)}/incidents`) }} onPick={() => pick(s)} />
+    <SiteRow key={s.id} clash={clashes(twice, s)} move={moves?.(s.id, s.name || s.domain)} site={s} place={place} on={s.id === current?.id} arrange={found ? null : arrange} today={numbers?.get(s.id)?.visitors} settings={!can('site.settings') ? undefined : (tab) => { p.close(); openSettings(s, tab) }} status={() => { p.close(); navigate(`/${encodeURIComponent(s.domain)}/incidents`) }} onPick={() => pick(s)} />
   )
   const onKeys = (e: KeyboardEvent) => {
     const box = root.current

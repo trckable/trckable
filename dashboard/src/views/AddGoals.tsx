@@ -10,7 +10,7 @@ import { Modal } from '../kit/Modal'
 import { CodeBlock } from '../components/Code'
 import { OptionCards, type Option } from '../components/OptionCards'
 import { fail, type ContentGroup, type SiteConfig, type Site, more } from '../lib/apiMore'
-import { isViewer } from '../lib/me'
+import { can } from '../lib/permissions'
 import { toast } from '../components/Toast'
 import { copy } from './addGoalsCopy'
 import { goalCode } from './goalCode'
@@ -60,7 +60,7 @@ function PageGoals({ site, pages, onChanged, onClose }: { site: Site; pages: str
   const [path, setPath] = useState('')
   const [nameErr, setNameErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const viewer = isViewer()
+  const viewer = !can('goal.create')
   useEffect(() => {
     more.siteConfig(site.id).then(setCfg).catch(() => setCfg(null))
   }, [site.id])

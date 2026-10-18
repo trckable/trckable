@@ -4,7 +4,7 @@ import { openAccount } from '../lib/account'
 import type { Profile } from '../lib/api'
 import type { MenuItems } from '../lib/headerMenu'
 import { caps, keyFor } from '../lib/keys'
-import { isViewer } from '../lib/me'
+import { can } from '../lib/permissions'
 import { signOut } from '../lib/signOut'
 import { THEMES, useTheme } from '../lib/theme'
 import { useV2Extras } from '../v2/slots'
@@ -33,7 +33,7 @@ function ThemeRow() {
 
 /** Who is signed in: picture, name, email and role. */
 function Who({ profile, v }: { profile: Profile | null; v: number }) {
-  const viewer = isViewer()
+  const viewer = !can('member.manage')
   const { personName, personRole } = useV2Extras()
   return (
     <div className="menu-who">

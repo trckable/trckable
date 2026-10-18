@@ -6,14 +6,14 @@ import { useEffect, useState } from 'react'
 import { Ghost } from '../../components/Logo'
 import { type Site } from '../../lib/api'
 import { needsFirstRun } from '../../lib/gate'
-import { isViewer } from '../../lib/me'
+import { can } from '../../lib/permissions'
 import { signOut } from '../../lib/signOut'
 import { navigate } from '../../lib/url'
 import { wasSkipped } from './skipped'
 
 export function useGate(sites: Site[] | null, mustChange: boolean, path: string) {
   const [passed, setPassed] = useState(wasSkipped)
-  const gated = sites !== null && !mustChange && !passed && needsFirstRun(sites, !isViewer())
+  const gated = sites !== null && !mustChange && !passed && needsFirstRun(sites, can('site.add'))
   useEffect(() => {
     if (gated && path !== '/') navigate('/', { replace: true })
   }, [gated, path])
