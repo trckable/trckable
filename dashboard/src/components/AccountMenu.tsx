@@ -1,8 +1,7 @@
 // The avatar's menu at the end of the header's first row: what belongs to the
 // person, not to the page on screen (that is the ⋯ next to the period):
-// Profile, theme, shortcuts, sign out. The items are their own chunk.
+// Profile, theme, shortcuts, sign out (the rest is in the account window and the ⌘K palette). The items are their own chunk.
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import type { Site } from '../lib/api'
 import { useMenuNav, useOnlyOpen } from '../lib/headerMenu'
 import { lazyLoad, warm, whenIdle } from '../lib/lazyLoad'
 import { useProfile } from '../lib/profile'
@@ -12,13 +11,9 @@ import { PersonAvatar } from './PersonAvatar'
 import { copy } from './moreCopy'
 import { Lifted } from './Lifted'
 
-const load = () => import('./AccountItems')
-const AccountItems = lazyLoad(load)
+const AccountItems = lazyLoad(() => import('./AccountItems'))
 
-/** Open the Features pop-up from anywhere. It lives in the menu's chunk (which the first load already knows how to fetch), and fetches its own. */
-export const openFeatures = () => void load().then((m) => m.showFeatures())
-
-export function AccountMenu({ site, alert }: { site?: Site; alert?: AccountAlert | null }) {
+export function AccountMenu({ alert }: { alert?: AccountAlert | null }) {
   useEffect(() => whenIdle(AccountItems.preload), [])
   const { profile, v } = useProfile()
   // A person whose profile has no name is called what their host calls them.
@@ -54,7 +49,7 @@ export function AccountMenu({ site, alert }: { site?: Site; alert?: AccountAlert
       {open && (
         <Lifted className="pop menu more-menu" role="menu" aria-label={copy.accountMenu}>
           <Suspense fallback={null}>
-            <AccountItems profile={profile} v={v} go={go} site={site} />
+            <AccountItems profile={profile} v={v} go={go} />
           </Suspense>
         </Lifted>
       )}

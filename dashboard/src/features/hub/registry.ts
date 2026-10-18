@@ -16,7 +16,7 @@ export type Where =
   | { to: 'ai' }
   | { to: 'live' }
   | { to: 'all' }
-  | { to: 'press'; key: 'share' | 'filter' | 'replay' | 'user' | 'ask' }
+  | { to: 'press'; key: 'share' | 'filter' | 'replay' | 'ask' }
   | { to: 'shortcuts' }
 
 export interface Feature {
@@ -76,8 +76,8 @@ export const FEATURES: Feature[] = [
 
   { id: 'install', group: 'setup', where: settings('install') },
   { id: 'ga', group: 'setup', where: settings('install') },
-  { id: 'pwa', group: 'setup', where: { to: 'press', key: 'user' } },
-  { id: 'language', group: 'setup', where: { to: 'press', key: 'user' } },
+  { id: 'pwa', group: 'setup', where: account('profile') },
+  { id: 'language', group: 'setup', where: account('profile') },
   { id: 'shortcuts', group: 'setup', where: { to: 'shortcuts' } },
   { id: 'peek', group: 'setup', where: { to: 'press', key: 'ask' } },
   { id: 'health', group: 'setup', where: settings('health') },

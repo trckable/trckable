@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- The avatar menu is short: Profile, theme, Shortcuts and Sign out under who you are. Language, Features, Install app and "Count this browser again" moved into the Account tab of the account window (Appearance, Preferences, and a Privacy card for your own visits on the site you are looking at), and every one of them, with Profile, is found from the ⌘K palette (a language is picked from it directly).
 - The site list: every number and state word ends at one right edge (All sites included), a row's actions sit in their own column (shown on hover or focus, always on touch) and never cover the name, a row's ⋯ opens Site settings first, every state of a site shows in the list (receiving, down, quiet, not verified) and All sites says how many are not fine; Site settings is also in the profile menu and the ⌘K palette.
 - Explore at full width always shows the whole section list: the collapse arrow that folded it to icons is gone, since the room is there, and a folded list saved from before is ignored.
 - Setting up your own visits is an extra, no longer a core step: it sits under "More you can add" and no longer counts in "N of M" (a new site counts eight steps, not nine). The steps come in the order that suits the site's kind, so the next one is the most valuable: a shop gets the goal, then payments, then Search Console; a SaaS gets the goal, then a funnel; a blog starts with Search Console.
