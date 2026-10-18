@@ -16,10 +16,24 @@
 //	mentionreplay -in dump.json          every hit, one per line
 //	mentionreplay -in dump.json -all     every item, with the reason for each refusal
 //
+// Given a data directory (or a copy of one) it reads the sites, the owners'
+// words and rules and the stored items itself, from trckable.db opened
+// read-only, and the visits around each item from trckable.duckdb opened
+// read-only, and writes a CSV and a markdown table of the last -days days:
+//
+//	mentionreplay -data /var/lib/trckable -days 30 -csv replay.csv -md replay.md
+//
+// Only hits are listed unless -all is given. "Visits around it" are the site's
+// pageviews and the visitors who came from the item's host, from the day
+// before to the day after the item was posted (UTC). The matcher has no
+// score; "rule" is how it matched (domain, name, page) or why it refused, and
+// "matched" is the word or site that decided it.
+//
 // Exit status is 0 whatever the matcher said; the summary goes to standard error.
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -34,7 +48,29 @@ import (
 func main() {
 	in := flag.String("in", "", "the JSON dump (default: standard input)")
 	all := flag.Bool("all", false, "print the refused items too, with the reason")
+	dir := flag.String("data", "", "a data directory (or a copy of one) holding trckable.db and trckable.duckdb, opened read-only")
+	days := flag.Int("days", 30, "with -data: how many days back to replay")
+	until := flag.String("until", "", "with -data: the end of the window, YYYY-MM-DD (default: now)")
+	csvOut := flag.String("csv", "", "with -data: write the report as CSV to this file")
+	mdOut := flag.String("md", "", "with -data: write the report as a markdown table to this file")
 	flag.Parse()
+	if *dir != "" {
+		end := time.Now()
+		if *until != "" {
+			t, err := time.Parse("2006-01-02", *until)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "mentionreplay: -until is YYYY-MM-DD")
+				os.Exit(1)
+			}
+			end = t.AddDate(0, 0, 1)
+		}
+		opt := dataOptions{Dir: *dir, Days: *days, Until: end, All: *all, CSV: *csvOut, MD: *mdOut}
+		if err := runData(context.Background(), opt, os.Stderr); err != nil {
+			fmt.Fprintln(os.Stderr, "mentionreplay:", err)
+			os.Exit(1)
+		}
+		return
+	}
 	if err := run(*in, *all, os.Stdin, os.Stdout, os.Stderr); err != nil {
 		fmt.Fprintln(os.Stderr, "mentionreplay:", err)
 		os.Exit(1)
