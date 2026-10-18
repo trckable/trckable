@@ -19,6 +19,10 @@ function wordsOf(stage: Stage, check: InstallCheckHandle, days: number): { head:
   const last = lastOf(check.state)
   if (days > 0 && (stage === 'waiting' || stage === 'limited')) return { head: t.stale.head, line: t.stale.line(days) }
   switch (stage) {
+    case 'elsewhere': {
+      const hosts = last?.elsewhere ?? []
+      return { head: t.elsewhere.head, line: t.elsewhere.line(hosts[0]?.host ?? '', hosts.length - 1) }
+    }
     case 'unreachable':
       return { head: t.unreachable.head, line: t.unreachable.line }
     case 'blocked':

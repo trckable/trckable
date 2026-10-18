@@ -2997,6 +2997,8 @@ export default {
   'install.journey.notfound.line': 'Voeg de code toe aan de <head> van je pagina en publiceer.',
   'install.journey.wrongid.head': 'Niet het script van deze site',
   'install.journey.wrongid.line': 'Het script op de pagina heeft een ander id. Kopieer de code opnieuw.',
+  'install.journey.elsewhere.head': 'Bezoeken van een ander domein',
+  'install.journey.elsewhere.line': (host: string, more: number) => `Er komen bezoeken van ${host}${more > 0 ? ` en ${more} andere` : ''}: voeg het toe of corrigeer het script.`,
   'install.journey.unreachable.head': 'Je site is niet bereikbaar',
   'install.journey.unreachable.line': 'Staat de site online?',
   'install.journey.blocked.head': 'Het script laadt niet',
