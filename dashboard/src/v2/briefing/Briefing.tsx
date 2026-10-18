@@ -21,6 +21,11 @@ import { chartNote } from '../ui/DayChart'
 import { ChartBlock, warmStory } from './ChartBlock'
 import { fmtInt as fmtN } from '../../lib/format'
 import { useStoryReplay } from './useStoryReplay'
+import { labMode } from '../replay/lab'
+import { labInOf } from '../replay/labIn'
+import { useLab } from '../replay/useLab'
+import { queryOf } from '../../lib/dashQuery'
+import { readView } from '../../lib/url'
 import { BounceNote } from './BounceNote'
 import { PaceFoot } from './PaceFoot'
 import { KeyHint } from '../ui/KeyHint'
@@ -36,6 +41,7 @@ import { startOfDay } from '../../features/incidents/model'
 import { siteNow } from './chart'
 import { nextStep, setupRows } from './steps'
 import { copy } from './copy'
+import { chartLine, heroSub } from './lines'
 import { LOOKED_AT, sinceOf } from './since'
 import { goExplore, seeScorePart } from './deeper'
 import { useSetup, useSinceCount, useUptime, useUsual } from './hooks'
@@ -68,16 +74,6 @@ export interface BriefingProps {
   onGoal: () => void
   /** The latest visits on the site, for "meet one of them". */
   visits: Visit[]
-}
-
-const heroSub = (meet: string | null, low: boolean, fallback: string, own?: boolean): string => {
-  if (meet && !own) return meet
-  return low ? copy.fewVisitors : fallback
-}
-
-const chartLine = (learning: boolean, low: boolean, hd: number, note: () => string): string => {
-  if (learning) return copy.learningNormal(hd + 1)
-  return low ? copy.quietSite : note()
 }
 
 /** An empty period has no series at all (the server sends null): an empty list, so nothing below has to ask. */
@@ -134,6 +130,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const keyed = lock.known
   useBriefingKeys({ cards: (ui.all ? keyed : keyed.slice(0, 4)).map((s) => s.key), ui, open: (k) => ui.setOpen(keyed.find((s) => s.key === k) ?? null) })
   const storyR = useStoryReplay(cur?.series.length ?? 0)
+  const lab = useLab(sig)
   if (!cur || !parts) return loading || !data ? <BriefingSkeleton site={site.id} label={copy.loading} /> : null
   const label = unit === 'today' ? `${presetById('today')?.label ?? 'Today'} · ${dayWords(range.to)}` : (presetById(period)?.label ?? fmtRange(range, today))
   const before = copy.before[unit]
@@ -183,11 +180,15 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const headline = `${say.lead} ${say.long.map((p) => p.t).join('')}`
   const watchRows = watchRowsOf(site.id, wset, stories)
   const canNote = !isViewer() && !isShared()
-  const replaying = unit === 'today' ? rv.r.playing : storyR.playing
+  const mode = labMode()
+  const labIn = mode ? labInOf({ mode, lab, site, query: queryOf(readView(new URLSearchParams(location.search)), range), bucket: data?.bucket ?? 'day', chart, series: cur.series.slice(0, pts.length), total: v, today: unit === 'today', end, clock: clock.slice(11, 16), moments: rv.moments, period: label, source: top?.value, money: isShared() ? undefined : money, onShare: () => openSettings(site, 'sharing') }) : null
   const replayStory = /* any period but today plays as a story */ pts.length > 1 && v > 0 ? stopOrGo(storyR.playing, storyR.stop, storyR.start) : undefined
   const replayToday = end >= 60 && v > 0 ? stopOrGo(rv.r.playing, rv.r.close, rv.r.open) : undefined
+  const replayLab = labIn ? stopOrGo(lab.playing, lab.stop, lab.start) : undefined
+  const plain = unit === 'today' ? { on: rv.r.playing, go: replayToday } : { on: storyR.playing, go: replayStory }
+  const replay = mode ? { on: lab.playing, go: replayLab } : plain
 
-  const chartBlock = { site, range, chart, at, onAt: setAt, story: storyR, series: cur.series.slice(0, pts.length), bucket: data?.bucket ?? 'day', money, total: fmtN(v), source: top?.value, note: chartLine(learning, low, parts.hd, () => chartNote(chart, at, downNow, window.matchMedia('(max-width: 500px)').matches)), down: uptime.verdict === 'down', notes: notes.notes.length, onNotes: () => ui.setSheet('notes') }
+  const chartBlock = { site, range, chart, at, onAt: setAt, story: storyR, series: cur.series.slice(0, pts.length), bucket: data?.bucket ?? 'day', money, total: fmtN(v), source: top?.value, lab: labIn ?? undefined, note: chartLine(learning, low, parts.hd, () => chartNote(chart, at, downNow, window.matchMedia('(max-width: 500px)').matches)), down: uptime.verdict === 'down', notes: notes.notes.length, onNotes: () => ui.setSheet('notes') }
   const body = (
 
     <div className="mk mk-body">
@@ -204,9 +205,9 @@ export default function Briefing({ site, data: page, loading, period, range, mon
           onPeriod={() => document.querySelector<HTMLElement>('.mk-pill, .range-picker, .btn.range')?.click()}
           moments={mo}
           why={heroWhy}
-          onReplay={unit === 'today' ? replayToday : replayStory}
-          replaying={replaying}
-          onWarm={warmStory}
+          onReplay={replay.go}
+          replaying={replay.on}
+          onWarm={mode ? undefined : warmStory}
           chart={
             empty ? null : (
               <ChartBlock {...chartBlock} />

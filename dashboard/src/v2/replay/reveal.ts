@@ -26,8 +26,8 @@ const inOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2,
 const out = (t: number) => 1 - Math.pow(1 - t, 3)
 
 /** Plays from `from` (0 at the start) to the end, then hands back to the still chart and calls `done`. The returned function stops it where it is. */
-export function runReveal(from: number, done: () => void): () => void {
-  const ms = REPLAY_MS * (1 - from)
+export function runReveal(from: number, done: () => void, total = REPLAY_MS): () => void {
+  const ms = total * (1 - from)
   const t0 = performance.now()
   let id = 0
   const frame = (now: number) => {

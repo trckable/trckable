@@ -1,0 +1,65 @@
+/* The replay lab (a prototype). The layer over the chart and the row under it take no part in the page's flow: the layer is
+   absolute, the row has its height from the start, and a run only changes opacity and transforms. */
+.mk .lab-stage{position:relative}
+.mk .lab-over{position:absolute;inset:0;pointer-events:none}
+.mk .lab-stage[data-phase=off] .lab-over{display:none}
+.mk .lab-mark{position:absolute;left:0;top:34px;bottom:22px;width:1px;background:var(--mk-lime);opacity:0;transition:opacity .25s;will-change:transform}
+.mk .lab-stage[data-run] .lab-mark{opacity:.6}
+.mk .lab-tag{position:absolute;left:0;bottom:-20px;transform:translateX(-50%);padding:1px 8px;border-radius:8px;background:var(--mk-card);border:1px solid var(--mk-line);font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--mk-text)}
+.mk .lab-m-clock .lab-tag{display:none}
+.mk .lab-pin{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;border:2px solid var(--mk-lime);opacity:0;transition:opacity .25s;will-change:transform}
+.mk .lab-stage[data-run] .lab-pin{opacity:.55}
+.mk .lab-hud{position:absolute;left:44px;top:4px;display:flex;align-items:baseline;gap:10px;padding:6px 14px;border-radius:14px;border:1px solid var(--mk-line);background:color-mix(in srgb,var(--mk-card) 80%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);opacity:0;transition:opacity .3s}
+.mk .lab-stage[data-phase=on] .lab-hud{opacity:1}
+.mk .lab-n{display:inline-grid;font-size:28px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.mk .lab-n>*{grid-area:1/1;font-style:normal}
+.mk .lab-gh{visibility:hidden}
+.mk .lab-u{font-size:13px;color:var(--mk-muted)}
+.mk .lab-clock{font-size:28px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--mk-lime);min-width:5.4ch;padding-right:10px;border-right:1px solid var(--mk-line)}
+.mk .lab-cap{position:absolute;left:0;top:0;transform:translate3d(var(--x,0),var(--y,0),0)}
+.mk .lab-dot{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--mk-lime);box-shadow:0 0 0 3px var(--mk-limeD);opacity:0;transform:scale(.3);transition:opacity .3s,transform .35s cubic-bezier(.2,.8,.2,1)}
+.mk .lab-cap[data-s=show] .lab-dot{opacity:1;transform:scale(1.25)}
+.mk .lab-cap[data-s=settled] .lab-dot{opacity:.9;transform:scale(.8)}
+.mk .lab-cap.sale .lab-dot{background:var(--mk-text)}
+.mk .lab-bub{position:absolute;bottom:14px;left:50%;max-width:min(300px,76vw);padding:6px 11px;border-radius:12px;border:1px solid var(--mk-line);background:var(--mk-card);box-shadow:0 6px 24px var(--mk-bandh);opacity:0;transform:translate(-50%,6px);transition:opacity .35s,transform .45s cubic-bezier(.2,.8,.2,1);white-space:nowrap}
+.mk .lab-cap[data-lean=l] .lab-bub{left:-10px;transform:translate(0,6px)}
+.mk .lab-cap[data-lean=r] .lab-bub{left:auto;right:-10px;transform:translate(0,6px)}
+.mk .lab-cap[data-below="1"] .lab-bub{bottom:auto;top:14px}
+.mk .lab-cap[data-s=show] .lab-bub{opacity:1;transform:translate(-50%,0)}
+.mk .lab-cap[data-s=show][data-lean=l] .lab-bub,.mk .lab-cap[data-s=show][data-lean=r] .lab-bub{transform:none}
+.mk .lab-cap[data-s=settled] .lab-bub{opacity:0}
+.mk .lab-bub b{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis}
+.mk .lab-bub span{display:block;font-size:11.5px;color:var(--mk-muted);overflow:hidden;text-overflow:ellipsis}
+.mk .lab-stage[data-phase=end] :is(.lab-hud,.lab-mark,.lab-pin,.lab-bub){display:none}
+/* The row under the chart. */
+.mk .lab-foot{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;min-height:48px;margin-top:10px;padding-left:44px}
+.mk .lab-main{flex:1 1 0;min-width:0;display:grid}
+.mk .lab-main>*{grid-area:1/1}
+.mk .lab-chips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
+.mk .lab-foot:not([data-phase=on]) .lab-chip{visibility:hidden!important}
+.mk .lab-chip{background:var(--mk-card);display:inline-flex;gap:7px;align-items:baseline;padding:4px 11px;border-radius:999px;border:1px solid var(--mk-line);font-size:12.5px;visibility:hidden}
+.mk .lab-chip b{font-variant-numeric:tabular-nums;color:var(--mk-lime)}
+.mk .lab-chip[data-s=show],.mk .lab-chip[data-s=settled]{visibility:visible}
+.mk .lab-chip[data-s=show]{animation:lab-flash 1.1s ease-out}
+@keyframes lab-flash{0%{background:var(--mk-lime);color:var(--mk-bg);transform:scale(.92);opacity:0}25%{opacity:1;transform:scale(1.04)}100%{background:var(--mk-card)}}
+.mk .lab-wrap{margin:0;font-size:14px;font-weight:600;line-height:1.35;opacity:0;transition:opacity .5s .1s}
+.mk .lab-foot[data-phase=end] .lab-wrap{opacity:1}
+.mk .lab-act{display:flex;justify-content:flex-end;gap:6px;flex:none;min-width:254px;min-height:32px}
+.mk .lab-btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:10px;border:1px solid var(--mk-line);background:var(--mk-card);color:var(--mk-text);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.mk .lab-btn:hover{background:var(--mk-hover)}
+.mk .lab-btn.pri{background:var(--mk-lime);border-color:var(--mk-lime);color:var(--mk-bg)}
+.mk .lab-btn.ic{width:32px;padding:0;justify-content:center}
+@media (max-width:600px){
+  .mk .lab-hud{left:8px;top:2px;padding:4px 10px;gap:8px}
+  .mk .lab-n,.mk .lab-clock{font-size:21px}
+  .mk .lab-foot{flex-direction:column;gap:8px;padding-left:0;min-height:88px}
+  .mk .lab-act{min-width:0;justify-content:flex-start}
+  .mk .lab-chips{display:grid}
+  .mk .lab-chip{grid-area:1/1;justify-self:start;max-width:100%}
+  .mk .lab-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mk .lab-bub{max-width:70vw}
+}
+@media (prefers-reduced-motion:reduce){
+  .mk .lab-chip[data-s=show]{animation:none}
+  .mk .lab-bub,.mk .lab-dot{transition:none}
+}

@@ -11,6 +11,7 @@ import type { Range } from '../../lib/dates'
 import { copy } from './copy'
 import { HeroChart, type ChartIn } from '../ui/DayChart'
 import type { StoryReplay } from './useStoryReplay'
+import { LabStage, type LabIn } from '../ui/LabStage'
 
 // Replay as a story, for the periods that are not today: its own chunk, fetched when it starts.
 const Story = lazyLoad(() => import('../../features/story/Story'))
@@ -36,11 +37,29 @@ export interface ChartBlockProps {
   down: boolean
   notes: number
   onNotes: () => void
+  /** The replay lab (?replay=story|clock on a development build) tells the period itself. */
+  lab?: LabIn
 }
 
 export function ChartBlock(p: ChartBlockProps) {
   const query = queryOf(readView(new URLSearchParams(location.search)), p.range)
   const labels = p.series.map((x) => x.t)
+  const hero = (
+    <HeroChart
+      c={p.chart}
+      at={p.at}
+      onAt={p.onAt}
+      layer={
+        isShared()
+          ? undefined
+          : (g) => (
+              <Suspense fallback={null}>
+                <MomentLayer g={g} site={p.site} query={query} labels={labels} series={p.series} bucket={p.bucket} money={p.money ?? (() => '')} />
+              </Suspense>
+            )
+      }
+    />
+  )
   return (
     <div className="chwrap">
       <div className="ch-top">
@@ -55,20 +74,7 @@ export function ChartBlock(p: ChartBlockProps) {
           {copy.noteBtn(p.notes)}
         </button>
       </div>
-      <HeroChart
-        c={p.chart}
-        at={p.at}
-        onAt={p.onAt}
-        layer={
-          isShared()
-            ? undefined
-            : (g) => (
-                <Suspense fallback={null}>
-                  <MomentLayer g={g} site={p.site} query={query} labels={labels} series={p.series} bucket={p.bucket} money={p.money ?? (() => '')} />
-                </Suspense>
-              )
-        }
-      />
+      {p.lab ? <LabStage l={p.lab}>{hero}</LabStage> : hero}
       {p.story.phase !== 'off' && (
         <Suspense fallback={null}>
           <Story
