@@ -361,6 +361,7 @@
   gap: 14px;
 }
 .setup-status {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -480,4 +481,19 @@
 }
 .setup-flow .code-card {
   max-width: 100%;
+}
+
+/* The logic board in the card's corner while the first visit is awaited; every check lit when it has come (a phone does not draw it). */
+.setup-fig {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  width: 84px;
+  pointer-events: none;
+}
+.setup-status:has(.setup-fig) {
+  padding-right: 120px;
+}
+.setup-fig:has(.tkf) {
+  pointer-events: auto;
 }

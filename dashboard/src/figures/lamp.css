@@ -1,0 +1,19 @@
+/* The desk lamp: the beam sweeps. (rules from iso-glow / ai-iso-skill, MIT, (c) 2026 Tolga Cohce; notice in the figure file). */
+.tkf[data-fig="lamp"] .lamp-light {opacity:0;pointer-events:none}
+.tkf[data-fig="lamp"].lit .lamp-light {opacity:1}
+.tkf[data-fig="lamp"] .lamp-spring {fill:none;stroke:var(--f-ink);stroke-width:1;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.tkf[data-fig="lamp"] .lamp-rim {fill:none;stroke:var(--f-line);stroke-width:1;vector-effect:non-scaling-stroke;stroke-linecap:round}
+.tkf[data-fig="lamp"].lit .lamp-rim {stroke:var(--f-accent-hi);stroke-width:2.6;filter:url(#tkf-glow)}
+.tkf[data-fig="lamp"] .lamp-tick {fill:var(--f-ink-hi)}
+.tkf[data-fig="lamp"].lit .lamp-tick {fill:var(--f-accent-hi)}
+.tkf[data-fig="lamp"] .lamp-det.on {stroke:var(--f-accent)}
+.tkf[data-fig="lamp"] .tk-sweep {transform-box:view-box;transform-origin:232px 115px;animation:tk-sweep 4s ease-in-out infinite alternate}
+@keyframes tk-sweep{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
+/* light theme: no light pools, a fainter cone */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) .tkf[data-fig="lamp"] g[id="lamp-pool"], :root:not([data-theme='dark']) .tkf[data-fig="lamp"] #lamp-bookpool {display:none}
+  :root:not([data-theme='dark']) .tkf[data-fig="lamp"] #lamp-cone {opacity:.55}
+}
+:root[data-theme='light'] .tkf[data-fig="lamp"] g[id="lamp-pool"], :root[data-theme='light'] .tkf[data-fig="lamp"] #lamp-bookpool {display:none}
+:root[data-theme='light'] .tkf[data-fig="lamp"] #lamp-cone {opacity:.55}
+@media (prefers-reduced-motion: reduce) { .tkf[data-fig="lamp"] .tk-sweep { animation: none; } }

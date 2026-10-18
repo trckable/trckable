@@ -238,6 +238,8 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     closed.add(decodeURIComponent(seen[1]))
     return none()
   }
+  // The install check finds no script: the setup card shows its first stage.
+  if (method === 'POST' && /\/install\/check$/.test(path)) return ok({ url: 'https://' + decodeURIComponent(path.split('/')[2]), status: 200, found: 'none', scripts: 3 })
   if (method !== 'GET') return none()
   const sites = SITES
   switch (path) {

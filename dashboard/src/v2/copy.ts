@@ -55,3 +55,9 @@ export const copy = defineCopy('v2', {
   updateOut: (v: string) => `trckable ${v} is out`,
   upgrade: 'is out: see how to upgrade',
 })
+
+/** A page with nothing to show because the site has had no visit yet. */
+export const waiting = defineCopy('waiting', {
+  title: 'Waiting for the first visit',
+  hint: 'The numbers show up here as soon as someone visits.',
+})

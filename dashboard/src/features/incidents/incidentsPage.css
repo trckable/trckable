@@ -26,6 +26,7 @@
 
 /* The one answer: the state, the uptime beside it, one line under. */
 .inc-hero {
+  position: relative;
   display: grid;
   gap: 6px;
 }
@@ -316,4 +317,15 @@
     margin-left: 0;
     flex-basis: 100%;
   }
+}
+
+/* The server rack with its red LED, in the corner of the hero while the site is down; a phone does not draw it. */
+.inc-hero:has(.inc-fig) {
+  padding-right: 130px;
+}
+.inc-fig {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 108px;
 }

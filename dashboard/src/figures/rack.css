@@ -1,0 +1,19 @@
+/* The server rack: one red LED, unit 04 down. (rules from iso-glow / ai-iso-skill, MIT, (c) 2026 Tolga Cohce; notice in the figure file). */
+.tkf[data-fig="rack"] .rack-port {fill:var(--f-recess);stroke:var(--f-line);stroke-width:1;vector-effect:non-scaling-stroke}
+.tkf[data-fig="rack"] .rack-port.on {stroke:var(--f-accent)}
+.tkf[data-fig="rack"] .rack-glyph {fill:none;stroke:var(--f-line);stroke-width:1;vector-effect:non-scaling-stroke;stroke-linecap:round}
+.tkf[data-fig="rack"] .rack-bar {fill:var(--f-accent)}
+.tkf[data-fig="rack"] .rack-scr {opacity:.25}
+.tkf[data-fig="rack"].on .rack-scr {opacity:1}
+.tkf[data-fig="rack"] .rack-led.ok {fill:var(--f-accent)}
+.tkf[data-fig="rack"] .rack-led.down {fill:var(--f-down);animation:tk-down 1.1s ease-in-out infinite;filter:url(#tkf-glow)}
+.tkf[data-fig="rack"] .tk-red {fill:var(--f-down)}
+@keyframes tk-down{0%,100%{opacity:1}50%{opacity:.15}}
+@media (prefers-reduced-motion: reduce) {
+}
+
+/* the LED is a button: a click makes it blink fast; units light under the pointer */
+.tkf .tk-hit { fill: transparent; cursor: pointer; }
+.tkf.tk-blinking .rack-led.down { animation-duration: .22s; }
+.tkf[data-fig="rack"] .rack-btn { cursor: pointer; }
+.tkf[data-fig="rack"] .rack-unit:hover .rack-glyph { stroke: var(--f-accent); }

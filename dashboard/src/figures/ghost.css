@@ -1,0 +1,76 @@
+/* The ghost holding a lamp, searching page cards until one lights (the 404).
+   Motion is CSS only; with less motion asked for, it shows the finished state. */
+.tkf-s-hi { stop-color: var(--f-ghost-hi); } .tkf-s-mid { stop-color: var(--f-ghost); } .tkf-s-lo { stop-color: var(--f-ghost-lo); }
+.tkf-t-hi { stop-color: var(--f-ghost-side); } .tkf-t-lo { stop-color: var(--f-ghost-deep); }
+.tkf-l-hi { stop-color: var(--f-accent-hi); stop-opacity: .8; } .tkf-l-lo { stop-color: var(--f-accent); stop-opacity: .22; }
+
+.tk-gback, .tk-gside { fill: url(#tkf-gs); stroke: var(--f-ghost-line); stroke-opacity: .28; stroke-width: 1; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.tk-gback { stroke-opacity: .9; }
+.tk-gface { fill: url(#tkf-gf); stroke: var(--f-ghost-line); stroke-width: 1.2; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.tk-eye { fill: var(--f-eye); }
+.tk-glint { fill: var(--f-ghost-hi); }
+.tk-mouth { fill: none; stroke: var(--f-eye); stroke-width: 1.2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.tk-cheek { fill: var(--f-cheek); opacity: .5; }
+.tk-shine { fill: none; stroke: #fff; stroke-opacity: .55; stroke-width: 2.4; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.tk-fold { fill: none; stroke: var(--f-ghost-deep); stroke-opacity: .4; stroke-width: 1.2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.tk-halo { fill: var(--f-accent); opacity: var(--f-halo); filter: url(#tkf-bloom); }
+.tk-shadow { fill: var(--f-detail); opacity: .6; animation: tk-shadow 3s ease-in-out infinite; }
+
+.tk-ghost, .tk-lamp, .tk-arm, .tk-knuckle, .tkf .wire-under, .tk-beamg, .tk-hand { animation: tk-bob 3s ease-in-out infinite; }
+@keyframes tk-bob { 50% { transform: translateY(-5px); } }
+@keyframes tk-shadow { 50% { opacity: .35; } }
+.tk-arm { fill: none; stroke: var(--f-ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.tk-knuckle { fill: var(--f-deck); stroke: var(--f-line); vector-effect: non-scaling-stroke; }
+
+/* the lamp: a clear glass shade over a bulb */
+.tk-inner { fill: var(--f-recess); stroke: var(--f-line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.tk-socket { fill: var(--f-deck); stroke: var(--f-line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.tk-bulb { fill: var(--f-accent-hi); fill-opacity: .85; stroke: var(--f-accent); stroke-width: 1; vector-effect: non-scaling-stroke; filter: url(#tkf-glow); }
+.tk-fil { fill: none; stroke: var(--f-accent); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.tk-glass { fill: url(#tkf-gl); fill-opacity: calc(var(--f-shade-a) * 4); stroke: var(--f-accent-hi); stroke-opacity: .55; stroke-width: 1; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.tk-rib { stroke: var(--f-accent-hi); stroke-opacity: .28; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.tk-streak { fill: none; stroke: #fff; stroke-opacity: .5; stroke-width: 2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.tk-cap { fill: var(--f-deck); stroke: var(--f-line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.tk-rim { fill: none; stroke: var(--f-accent-hi); stroke-width: 2.2; vector-effect: non-scaling-stroke; filter: url(#tkf-glow); }
+
+.tk-b0 { stop-color: var(--f-accent-hi); stop-opacity: var(--f-beam); } .tk-b1 { stop-color: var(--f-accent-hi); stop-opacity: 0; }
+.tk-beamg > path { transform-origin: inherit; }
+.tk-cone { transform-box: view-box; transform-origin: inherit; animation: tk-aim 6s ease-in-out infinite; }
+@keyframes tk-aim { 0%, 8% { transform: rotate(var(--r1)); } 28%, 36% { transform: rotate(var(--r2)); } 56%, 86% { transform: rotate(var(--r3)); } 100% { transform: rotate(var(--r1)); } }
+.tk-spot { fill: var(--f-accent); opacity: .16; filter: url(#tkf-bloom); }
+.tk-spotg { animation: tk-spot 6s ease-in-out infinite; }
+@keyframes tk-spot { 0%, 8% { transform: translateX(var(--t1)); } 28%, 36% { transform: translateX(var(--t2)); } 56%, 86% { transform: translateX(var(--t3)); } 100% { transform: translateX(var(--t1)); } }
+
+.tk-cbar { fill: var(--f-recess); stroke: var(--f-line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.tk-found { opacity: 0; animation: tk-found 6s steps(1) infinite; }
+.tk-found circle { fill: none; stroke: var(--f-accent); stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+.tk-found path { fill: none; stroke: var(--f-accent-hi); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.tk-c3 { animation: tk-hit 6s steps(1) infinite; }
+.tk-c3 .face { animation: tk-hitf 6s steps(1) infinite; }
+.tk-c3 .face.top { animation-name: tk-hitt; }
+@keyframes tk-found { 0% { opacity: 0; } 58%, 86% { opacity: 1; } 90% { opacity: 0; } }
+@keyframes tk-hit { 0% { filter: none; } 58%, 86% { filter: url(#tkf-soft); } 90% { filter: none; } }
+@keyframes tk-hitf { 0% { stroke: var(--f-line); } 58%, 86% { stroke: var(--f-accent); } 90% { stroke: var(--f-line); } }
+@keyframes tk-hitt { 0% { fill: var(--f-deck); stroke: var(--f-line); } 58%, 86% { fill: var(--f-glass-on); stroke: var(--f-accent); } 90% { fill: var(--f-deck); stroke: var(--f-line); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tk-found { opacity: 1; }
+  .tk-cone { transform: rotate(var(--r3)); }
+  .tk-spotg { transform: translateX(var(--t3)); }
+  .tk-c3 .face { stroke: var(--f-accent); }
+  .tk-c3 .face.top { fill: var(--f-glass-on); }
+  .tk-blink { animation: none !important; }
+}
+
+/* following the pointer: the sweep stands aside, the beam and spot glide to it */
+.tkf-ghost svg { touch-action: pan-y; }
+.tk-follow .tk-cone, .tk-follow .tk-spotg { animation: none; transition: transform .22s ease-out; }
+.tk-beamg, .tk-spotg, .tk-cone { pointer-events: none; }
+.tk-eyes { transform: translate(var(--ex, 0px), var(--ey, 0px)); transition: transform .12s ease-out; }
+.tk-blink { transform-box: fill-box; transform-origin: center; animation: tk-blink 5s infinite; }
+@keyframes tk-blink { 0%, 93%, 100% { transform: scaleY(1); } 95.5% { transform: scaleY(.08); } }
+/* the cards are links: one lights when the pointer or the keyboard is on it */
+.tk-a { cursor: pointer; outline: none; }
+.tk-a:hover .face, .tk-a:focus-visible .face { stroke: var(--f-accent); }
+.tk-a:hover .face.top, .tk-a:focus-visible .face.top { fill: var(--f-glass-on); }
+.tk-a:hover .tk-card, .tk-a:focus-visible .tk-card { filter: url(#tkf-soft); }

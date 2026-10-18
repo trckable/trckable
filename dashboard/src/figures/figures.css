@@ -1,0 +1,55 @@
+/* Shared by every isometric figure: its colour tokens (a dark and a light set,
+   built on the dashboard's own) and the base strokes. Face, line, glow and
+   filter names follow iso-glow / ai-iso-skill (MIT, (c) 2026 Tolga Cohce). */
+.tkf {
+  --f-body: #17181a; --f-deck: #1b1d1f; --f-line: #3d4144; --f-detail: #2b2e30;
+  --f-glass: #0f1011; --f-glass-on: #141a0c; --f-recess: #0e0f10; --f-ink: #868b8f;
+  --f-ink-hi: #e6e8e9; --f-live: #f4f5f5; --f-down-hi: #ff9a9a; --f-halo-hot: .22; --f-accent: var(--accent); --f-accent-hi: #dcff9a; --f-down: #ff4d4d;
+  --f-ghost: #b8ff3c; --f-ghost-hi: #e4ffa6; --f-ghost-lo: #86bd22; --f-ghost-side: #7fb51c; --f-ghost-deep: #4f7a0e; --f-ghost-line: #d8ff94;
+  --f-eye: #0b0d10; --f-cheek: #ff8fa3; --f-beam: .42; --f-halo: .1; --f-shade-a: .18;
+  display: block; width: 100%; height: auto; overflow: visible; font-family: var(--font-mono, ui-monospace, monospace);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) .tkf {
+  --f-body: #ececeb; --f-deck: #f3f3f2; --f-line: #8e9397; --f-detail: #c3c6c8;
+  --f-glass: #dcdede; --f-glass-on: #eef3e2; --f-recess: #e2e4e4; --f-ink: #6a6f73;
+  --f-ink-hi: #16181a; --f-live: #0c0d0e; --f-down-hi: #ff5a5a; --f-halo-hot: 0;
+  --f-accent-hi: #3f6300; --f-down: #d92d2d;
+  --f-ghost-hi: #d9ff8a; --f-ghost-lo: #8fcc1f; --f-ghost-side: #8fcc1f; --f-ghost-deep: #6aa00f; --f-ghost-line: #4d7300;
+  --f-cheek: #ff7a93; --f-beam: .3; --f-halo: 0; --f-shade-a: .3;
+  }
+}
+:root[data-theme='light'] .tkf {
+  --f-body: #ececeb; --f-deck: #f3f3f2; --f-line: #8e9397; --f-detail: #c3c6c8;
+  --f-glass: #dcdede; --f-glass-on: #eef3e2; --f-recess: #e2e4e4; --f-ink: #6a6f73;
+  --f-ink-hi: #16181a; --f-live: #0c0d0e; --f-down-hi: #ff5a5a; --f-halo-hot: 0;
+  --f-accent-hi: #3f6300; --f-down: #d92d2d;
+  --f-ghost-hi: #d9ff8a; --f-ghost-lo: #8fcc1f; --f-ghost-side: #8fcc1f; --f-ghost-deep: #6aa00f; --f-ghost-line: #4d7300;
+  --f-cheek: #ff7a93; --f-beam: .3; --f-halo: 0; --f-shade-a: .3;
+}
+
+.tkf .face { fill: var(--f-body); stroke: var(--f-line); stroke-width: 1; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.tkf .face.top { fill: var(--f-deck); }
+.tkf .detail { fill: none; stroke: var(--f-detail); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.tkf .label { fill: var(--f-ink); font-family: var(--font-mono, ui-monospace, monospace); }
+.tkf .wire-under { fill: none; stroke: var(--bg); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+
+
+/* Shared parts of the lit figures (rules from iso-glow / ai-iso-skill, MIT, (c) 2026 Tolga Cohce; notice in the figure file). */
+.tkf .face.recess {fill:var(--f-recess)}
+.tkf .glass {fill:var(--f-glass)}
+.tkf .glass.hot {fill:var(--f-glass-on);stroke:var(--f-accent)}
+.tkf .halo {fill:var(--f-accent);opacity:0}
+.tkf .halo.hot {opacity:.22}
+.tkf .scr {fill:var(--f-accent-hi);font-family:var(--font-mono)}
+.tkf .scr-accent {fill:var(--f-accent)}
+.tkf .led {fill:var(--f-detail)}
+.tkf .led.hot {fill:var(--f-accent)}
+.tkf .wire {fill:none;stroke:var(--f-line);stroke-width:1;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}
+.tkf .wire.hot {stroke:var(--f-accent)}
+.tkf .pulse {fill:none;stroke:var(--f-accent-hi);stroke-width:2.2;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:70,1200;stroke-dashoffset:70;opacity:0}
+.tkf .press.lit .face,.tkf .press.latched .face {fill:var(--f-accent);stroke:var(--f-accent-hi)}
+.tkf .press.lit .face.top,.tkf .press.latched .face.top {fill:var(--f-accent-hi)}
+.tkf .press.lit {filter:url(#tkf-glow)}
+.tkf .halo.hot { opacity: var(--f-halo-hot); }
+@media (prefers-reduced-motion: reduce) { .tkf * { animation: none !important; } }

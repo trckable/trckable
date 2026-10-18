@@ -1,5 +1,6 @@
 // The page's one answer: how the site is right now (Up, Down for 9m, Quiet for 2h) and the period's uptime beside it, one
 // line of what happened, and the four figures the incident rows below add up to. Only the time we were watching counts.
+import { Figure } from '../../figures/Figure'
 import { fmtInt } from '../../lib/format'
 import { copy } from './copy'
 import { duration, tooShort, uptimeOf, type Standing } from './model'
@@ -57,6 +58,7 @@ export function Hero({ now, at, f, w, over }: { now: Standing; at: number; f: Fi
   const uptimeTip = [w.quietTracked === false ? copy.downOnlyNote : copy.uptimeNote, w.since && copy.watchedSince(w.since)].filter(Boolean).join(' · ')
   return (
     <section className="inc-hero" aria-label={copy.title}>
+      {now.kind === 'down' && <Figure name="rack" minWidth={641} className="inc-fig" />}
       <p className="inc-big">
         <State now={now} at={at} />
         <span className="inc-pct">{u.value}</span>

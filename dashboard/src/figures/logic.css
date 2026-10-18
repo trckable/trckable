@@ -1,0 +1,62 @@
+/* The logic board: four checks light in turn. (rules from iso-glow / ai-iso-skill, MIT, (c) 2026 Tolga Cohce; notice in the figure file). */
+.tkf[data-fig="logic"] .chip .face {fill:var(--f-recess)}
+.tkf[data-fig="logic"] .chip .face.top {fill:var(--f-glass)}
+.tkf[data-fig="logic"] .chip text {fill:var(--f-ink)}
+.tkf[data-fig="logic"] .hole {fill:var(--f-detail)}
+.tkf[data-fig="logic"] .wire {stroke-width:1.6}
+.tkf[data-fig="logic"] .wire-under {stroke:var(--f-deck);stroke-width:3.2}
+.tkf[data-fig="logic"] .bit {fill:var(--f-ink)}
+.tkf[data-fig="logic"] .pulse {stroke-width:2.6}
+.tkf[data-fig="logic"] .ledg[class*="tk-s"] .face {animation:tk-ledf 4s steps(1) infinite;animation-delay:inherit}
+.tkf[data-fig="logic"] .ledg[class*="tk-s"] .face.top {animation-name:tk-ledt}
+.tkf[data-fig="logic"] .ledg[class*="tk-s"] {animation:tk-ledg 4s steps(1) infinite}
+.tkf[data-fig="logic"] .bit[class*="tk-s"],.tkf[data-fig="logic"] .gname[class*="tk-s"] {animation:tk-bit 4s steps(1) infinite}
+.tkf[data-fig="logic"] .tk-s1 {animation-delay:0s!important}
+.tkf[data-fig="logic"] .tk-s2 {animation-delay:.6s!important}
+.tkf[data-fig="logic"] .tk-s3 {animation-delay:1.2s!important}
+.tkf[data-fig="logic"] .tk-s4 {animation-delay:1.8s!important}
+@keyframes tk-ledf{0%{fill:var(--f-body)}12%,82%{fill:var(--f-accent);stroke:var(--f-accent-hi)}88%{fill:var(--f-body)}}
+@keyframes tk-ledt{0%{fill:var(--f-deck)}12%,82%{fill:var(--f-accent-hi);stroke:var(--f-accent-hi)}88%{fill:var(--f-deck)}}
+@keyframes tk-ledg{0%{filter:none}12%,82%{filter:url(#tkf-glow)}88%{filter:none}}
+@keyframes tk-bit{0%{fill:var(--f-ink)}12%,82%{fill:var(--f-accent-hi)}88%{fill:var(--f-ink)}}
+.tkf[data-fig="logic"] .tk-w {animation:tk-wire 4s steps(1) infinite}
+@keyframes tk-wire{0%{stroke:var(--f-line)}30%,82%{stroke:var(--f-accent)}88%{stroke:var(--f-line)}}
+@media (prefers-reduced-motion: reduce) {
+  .tkf[data-fig="logic"] .ledg[class*="tk-s"] .face {fill:var(--f-accent);stroke:var(--f-accent-hi)}
+  .tkf[data-fig="logic"] .ledg[class*="tk-s"] .face.top {fill:var(--f-accent-hi)}
+  .tkf[data-fig="logic"] .bit[class*="tk-s"] {fill:var(--f-accent-hi)}
+}
+
+/* levers flip and the checks restart on a click */
+.tkf[data-fig="logic"] .lever { cursor: pointer; }
+.tkf[data-fig="logic"] .lever:hover .face { stroke: var(--f-accent); }
+.tkf[data-fig="logic"] .chip:hover .face.top { stroke: var(--f-accent); }
+.tkf.tk-restart *, .tkf.tk-restart { animation: none !important; }
+
+/* done: every check stays lit, and the check badge sits on the board's corner */
+:where([data-figure="logic"][data-state="done"]) { position: relative; }
+[data-state="done"] .tkf[data-fig="logic"] .ledg[class*="tk-s"],
+[data-state="done"] .tkf[data-fig="logic"] .ledg[class*="tk-s"] .face,
+[data-state="done"] .tkf[data-fig="logic"] .bit[class*="tk-s"],
+[data-state="done"] .tkf[data-fig="logic"] .gname[class*="tk-s"],
+[data-state="done"] .tkf[data-fig="logic"] .tk-w { animation: none; }
+[data-state="done"] .tkf[data-fig="logic"] .ledg[class*="tk-s"] { filter: url(#tkf-glow); }
+[data-state="done"] .tkf[data-fig="logic"] .ledg[class*="tk-s"] .face { fill: var(--f-accent); stroke: var(--f-accent-hi); }
+[data-state="done"] .tkf[data-fig="logic"] .ledg[class*="tk-s"] .face.top { fill: var(--f-accent-hi); }
+[data-state="done"] .tkf[data-fig="logic"] .bit[class*="tk-s"],
+[data-state="done"] .tkf[data-fig="logic"] .gname[class*="tk-s"] { fill: var(--f-accent-hi); }
+[data-state="done"] .tkf[data-fig="logic"] .tk-w { stroke: var(--f-accent); }
+.tkf-done { position: absolute; right: -4px; top: -4px; padding: 3px; border-radius: 50%; color: var(--accent-ink); background: var(--accent); box-sizing: content-box; }
+
+/* fail: the checks stop; the first holds green, the second is red, the rest stay dark */
+[data-state="fail"] .tkf[data-fig="logic"] .ledg[class*="tk-s"],
+[data-state="fail"] .tkf[data-fig="logic"] .ledg[class*="tk-s"] .face,
+[data-state="fail"] .tkf[data-fig="logic"] .bit[class*="tk-s"],
+[data-state="fail"] .tkf[data-fig="logic"] .gname[class*="tk-s"],
+[data-state="fail"] .tkf[data-fig="logic"] .tk-w { animation: none; }
+[data-state="fail"] .tkf[data-fig="logic"] .ledg.tk-s1 { filter: url(#tkf-glow); }
+[data-state="fail"] .tkf[data-fig="logic"] .ledg.tk-s1 .face { fill: var(--f-accent); stroke: var(--f-accent-hi); }
+[data-state="fail"] .tkf[data-fig="logic"] .ledg.tk-s1 .face.top, [data-state="fail"] .tkf[data-fig="logic"] .bit.tk-s1, [data-state="fail"] .tkf[data-fig="logic"] .gname.tk-s1 { fill: var(--f-accent-hi); }
+[data-state="fail"] .tkf[data-fig="logic"] .ledg.tk-s2 { filter: url(#tkf-glow); }
+[data-state="fail"] .tkf[data-fig="logic"] .ledg.tk-s2 .face { fill: var(--f-down); stroke: var(--f-down-hi); }
+[data-state="fail"] .tkf[data-fig="logic"] .ledg.tk-s2 .face.top, [data-state="fail"] .tkf[data-fig="logic"] .bit.tk-s2, [data-state="fail"] .tkf[data-fig="logic"] .gname.tk-s2 { fill: var(--f-down-hi); }

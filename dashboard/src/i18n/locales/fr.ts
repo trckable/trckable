@@ -3299,4 +3299,6 @@ export default {
   'mentionsTrust.addAnyway': 'Ajouter quand même',
   'mentionsTrust.excludedFull': (n: number) => `Cela dépasserait la limite de ${n} mots exclus. Retirez-en un d’abord.`,
   'address.noSite': (name: string) => `Aucun site nommé ${name}`,
+  'waiting.title': 'En attente de la première visite',
+  'waiting.hint': 'Les chiffres apparaissent ici dès que quelqu’un visite le site.',
 } satisfies Messages

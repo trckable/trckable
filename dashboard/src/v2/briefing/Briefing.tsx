@@ -59,6 +59,7 @@ import { useRecent } from './useRecent'
 import { useHistory, useHourly, wantsHours } from './useHistory'
 import { useParts } from './useParts'
 import { useSlice } from './useSeries'
+import { Waiting } from '../ui/Waiting'
 
 export interface BriefingProps {
   site: Site
@@ -167,6 +168,8 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const shown = lock.known.slice(0, 4)
   rememberCards(site.id, shown.map((x) => x.key))
   const rest = lock.known.slice(4)
+  const quiet = site.last_event_at ? <p className="mk-quiet">{copy.empty}</p> : <Waiting />
+  const cards = empty ? quiet : <CardList list={shown} c={ctx} />
   const act = isShared() ? null : nextStep({ site, cur, stories, top, downNow })
   const setups = setupRows({ site, cur, can: setupState.can, noSearch: setupState.noSearch, noAlerts: setupState.noAlerts, onGoal })
   const heroWhy = stories.find((x) => x.key === 'uptime')?.cause ?? stories.find((x) => x.key === 'sources')?.cause ?? (usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : null)
@@ -220,7 +223,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
           )}
         </div>
         <WatchCard rows={watchRows} onStop={(k) => toggleWatch(k, { at: 0, m: 0, u: '' })} />
-        {empty ? <p className="mk-quiet">{copy.empty}</p> : <CardList list={shown} c={ctx} />}
+        {cards}
         {rest.length > 0 && (
           <button type="button" className="morebtn" id="moreBtn" onClick={() => ui.setAll((a) => !a)}>
             {ui.all ? copy.hideMore(rest.length) : copy.more(rest.length)}

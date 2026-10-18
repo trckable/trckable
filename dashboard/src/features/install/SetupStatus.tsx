@@ -1,6 +1,7 @@
 // Where the site is on its way to the first visit: one headline, at most one line, one action, and a small "Why?".
 // Every state uses this same card; only the words and the action change (journey.ts says which state it is).
 import { Check, TriangleAlert } from 'lucide-react'
+import { Figure } from '../../figures/Figure'
 import { DOCS } from '../../components/footerLinks'
 import type { Site } from '../../lib/api'
 import { openSettings } from '../../lib/settings'
@@ -67,6 +68,9 @@ const toneOf = (stage: Stage): 'ok' | 'wait' | 'warn' => {
   return stage === 'waiting' || stage === 'limited' || stage === 'found' ? 'wait' : 'warn'
 }
 
+/** The logic board by tone: every check lit when the visit came, stopped at a red one on a failure, cycling while it is awaited. */
+const boardOf = { ok: 'done', warn: 'fail', wait: undefined } as const
+
 export function SetupStatus({ site, check, arrived }: { site: Site; check: InstallCheckHandle; arrived: boolean }) {
   const stage = stageOf(check.state, arrived)
   const days = staleDays(site)
@@ -76,6 +80,7 @@ export function SetupStatus({ site, check, arrived }: { site: Site; check: Insta
   const tone = toneOf(stage)
   return (
     <div className={'setup-status ' + tone} aria-live="polite" data-stage={stage}>
+      <Figure name="logic" minWidth={641} state={boardOf[tone]} className="setup-fig" />
       <div className="setup-head">
         {tone === 'ok' && <Check size={18} strokeWidth={2.25} aria-hidden="true" />}
         {tone === 'warn' && <TriangleAlert size={18} strokeWidth={1.75} aria-hidden="true" />}
