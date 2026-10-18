@@ -214,14 +214,14 @@
 }
 /* The walkthrough's page: its own black in the dark theme, with none of the dashboard's ambient glow behind it. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']):has(#app.mk) body {
+  :root:not([data-theme='light']):has(:is(#app.mk, .mk-bar)) body {
     background: #0a0b0c;
   }
 }
-:root[data-theme='dark']:has(#app.mk) body {
+:root[data-theme='dark']:has(:is(#app.mk, .mk-bar)) body {
   background: #0a0b0c;
 }
-:root:has(#app.mk) body::before {
+:root:has(:is(#app.mk, .mk-bar)) body::before {
   display: none;
 }
 /* The page's own top padding on a phone is the walkthrough's header to fill: it sits at the very top. */

@@ -838,6 +838,7 @@ export default {
   'allsites.periodLabel': (days: number) => (days === 365 ? '12 derniers mois' : `${days} derniers jours`),
   'allsites.periodToday': 'Aujourd’hui',
   'allsites.periodCharts': (label: string) => `Graphiques : ${label}`,
+  'allsites.todayCharts': (label: string) => `Aujourd’hui · graphiques: ${label.charAt(0).toLowerCase()}${label.slice(1)}`,
   'allsites.siteCount': (n: number) => `${n} ${n === 1 ? 'site' : 'sites'}`,
   'allsites.siteCountOf': (n: number, all: number) => `${n} sites sur ${all}`,
   'allsites.view': 'Affichage',

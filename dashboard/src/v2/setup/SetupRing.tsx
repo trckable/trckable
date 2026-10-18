@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Site } from '../../lib/apiMore'
 import { canChange, isShared } from '../../lib/me'
 import { useTopLayerWhen } from '../../lib/topLayer'
+import { earned } from '../../features/verified/model'
 import { VerifiedPill } from '../../features/verified/VerifiedPill'
 import { useMenu } from '../ui/useMenu'
 import { copy } from './copy'
@@ -39,7 +40,7 @@ export function SetupRing({ site, onGoal }: { site: Site | null; onGoal: () => v
   if (!site) return null
   // One indicator at a time, in one slot: the ring while setup is open (the verify step is a row in its panel), the verified seal
   // once the ring has gone, or where there is no setup to show. Nothing while the checklist is still on its way.
-  if (mode === 'none' && (state || failed || !on)) return <div className="ringw seal-slot"><VerifiedPill verified={site.verified} site={site} seal /></div>
+  if (mode === 'none' && (state || failed || !on)) return earned(site.verified).length === 0 ? null : <div className="ringw seal-slot"><VerifiedPill verified={site.verified} site={site} seal /></div>
   if (!state || mode === 'none') return null
   const words = said ?? ''
   return (

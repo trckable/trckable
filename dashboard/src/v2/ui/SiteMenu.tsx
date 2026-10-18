@@ -58,7 +58,6 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
           <path d="M3 4.5 6 7.5 9 4.5" stroke="var(--mk-muted)" fill="none" strokeWidth="1.5" />
         </svg>
-        <span className="mk-kbd">{'S'}</span>
       </button>
       <div ref={menu} className={`mk-menu sites${open ? ' on' : ''}`} id="siteMenu" role={open ? 'dialog' : undefined} aria-label={open ? copy.sites : undefined}>
         {open && (

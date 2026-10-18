@@ -837,6 +837,7 @@ export default {
   'allsites.periodLabel': (days: number) => (days === 365 ? 'Laatste 12 maanden' : `Laatste ${days} dagen`),
   'allsites.periodToday': 'Vandaag',
   'allsites.periodCharts': (label: string) => `Grafieken: ${label}`,
+  'allsites.todayCharts': (label: string) => `Vandaag · grafieken: ${label.charAt(0).toLowerCase()}${label.slice(1)}`,
   'allsites.siteCount': (n: number) => `${n} ${n === 1 ? 'site' : 'sites'}`,
   'allsites.siteCountOf': (n: number, all: number) => `${n} van ${all} sites`,
   'allsites.view': 'Weergave',

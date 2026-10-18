@@ -850,6 +850,7 @@ export default {
   'allsites.periodLabel': (days: number) => (days === 365 ? 'Últimos 12 meses' : `Últimos ${days} días`),
   'allsites.periodToday': 'Hoy',
   'allsites.periodCharts': (label: string) => `Gráficos: ${label}`,
+  'allsites.todayCharts': (label: string) => `Hoy · gráficos: ${label.charAt(0).toLowerCase()}${label.slice(1)}`,
   'allsites.siteCount': (n: number) => `${n} ${n === 1 ? 'sitio' : 'sitios'}`,
   'allsites.siteCountOf': (n: number, all: number) => `${n} de ${all} sitios`,
   'allsites.view': 'Vista',
