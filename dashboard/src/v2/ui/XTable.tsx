@@ -34,6 +34,13 @@ function delta(r: Row): { text: string; tone: string } {
   return { text: r.c > 0.5 ? copy.asUsual : copy.noUsual, tone: '' }
 }
 
+/** A row's people out of the period's, whole percents; a row under half a percent says so rather than "0%". */
+export function shareOf(v: number, of: number): string {
+  if (v <= 0 || of <= 0) return '0%'
+  const p = Math.min(100, (v / of) * 100)
+  return p < 0.5 ? copy.underOne : `${Math.round(p)}%`
+}
+
 export interface XTableProps {
   rows: Row[]
   head: string
@@ -46,16 +53,17 @@ export interface XTableProps {
   /** The filter a row sets: written on the row as the mock did. */
   dim?: string
   limit: number
+  /** The people of the period: a row's share is its people out of these, not out of the rows on show. */
+  of: number
   /** Writes an amount in the site's currency: with it, rows that carry sales get their conversion and revenue. */
   money?: (minor: number) => string
   onAll: () => void
   go?: { label: string; run: () => void; section?: string }
 }
 
-export function XTable({ rows, head, unit = copy.people, mono, flags, selected, onPick, dim, limit, money, onAll, go }: XTableProps) {
+export function XTable({ rows, head, unit = copy.people, mono, flags, selected, onPick, dim, limit, of, money, onAll, go }: XTableProps) {
   const paid = !!money && rows.some((r) => r.rev !== undefined)
   const max = Math.max(1, ...rows.map((r) => Math.max(r.v, r.c)))
-  const total = rows.reduce((p, r) => p + r.v, 0) || 1
   return (
     <div className={`xt${paid ? ' xc' : ''}`} style={paid ? ({ '--xc': 'minmax(0,1fr) 70px 96px 64px 64px 84px', '--xcm': 'minmax(0,1fr) 52px 64px' } as React.CSSProperties) : undefined}>
       <div className="xth">
@@ -76,8 +84,8 @@ export function XTable({ rows, head, unit = copy.people, mono, flags, selected, 
             </span>
             <span className="mk-n">{fmtInt(r.v)}</span>
             <span className={`d ${d.tone}`}>{d.text}</span>
-            <span className="sh">{Math.round((r.v / total) * 100)}%</span>
-            {paid && <span className="mk-n hm">{r.v > 0 ? fmtPct((r.cust ?? 0) / r.v) : '–'}</span>}
+            <span className="sh">{shareOf(r.v, of)}</span>
+            {paid && <span className="mk-n hm">{r.v > 0 ? fmtPct(Math.min(1, (r.cust ?? 0) / r.v)) : '–'}</span>}
             {paid && <span className="mk-n hm">{r.rev ? money(r.rev) : '–'}</span>}
           </>
         )

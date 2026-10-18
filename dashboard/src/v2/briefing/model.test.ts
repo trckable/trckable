@@ -7,7 +7,7 @@ const kpis = (o: Partial<Result['kpis']> = {}): Result['kpis'] => ({ visitors: 0
 const result = (v: number, dims: Result['dims'] = {}, extra: Partial<Result> = {}): Result => ({ approximate: false, kpis: kpis({ visitors: v, sessions: v }), series: [], dims, goals: null, ...extra })
 const say = (o: Partial<SayIn> & Pick<SayIn, 'cur'>): ReturnType<typeof sentence> => sentence({ unit: 'today', weekday: 'Friday', self: 'x.com', downMin: 0, learning: false, ...o })
 const text = (p: Part[]) => p.map((x) => x.t).join('')
-const money = { currency: 'USD', exponent: 2, revenue: 8700, refunds: 0, payments: 1, customers: 1, paying_visitors: 1, conversion: 0, revenue_per_visitor: 0, new_revenue: 0, renewal_revenue: 0, unattributed: 0, unconverted: 0 }
+const money = { currency: 'USD', exponent: 2, revenue: 8700, refunds: 0, payments: 1, customers: 1, paying_visitors: 1, conversion: 0, revenue_per_visitor: 0, new_revenue: 0, renewal_revenue: 0, new_gross: 0, upgrade_gross: 0, renewal_gross: 0, unattributed: 0, unconverted: 0 }
 
 describe('periods and multiples', () => {
   it('names the kind of period', () => {

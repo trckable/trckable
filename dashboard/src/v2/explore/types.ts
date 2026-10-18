@@ -74,10 +74,14 @@ export interface Overview {
   down: Down[]
   pages: Row[]
   sources: Row[]
+  /** The people of the period: the whole a row's share is a share of. */
+  of: number
 }
 
 export interface Table {
   rows: Row[]
+  /** The people of the period: the whole a row's share is a share of. */
+  of: number
   /** The filter a tapped row sets, where the rows are not the table's usual kind (a channel, not a source). */
   dim?: string
 }
@@ -162,8 +166,9 @@ export interface Speed {
 export interface Mention {
   title: string
   src: string
-  pts: number
-  cm: number
+  /** Hacker News points and comments; null where the place does not count them. */
+  pts: number | null
+  cm: number | null
   when: string
 }
 

@@ -29,6 +29,7 @@ import (
 //	           a sum of hours
 //	daily      1 = include per-day data for the scrubber
 //	deep       1 = also break down exit pages, regions, cities, languages, browser versions and screens (Full mode)
+//	limit      rows per breakdown, 1-100 (default 10)
 //	tz         override the site's timezone
 func (a *API) report(w http.ResponseWriter, r *http.Request) {
 	a.reportFor(w, r, r.PathValue("site"), true, false)
@@ -96,6 +97,7 @@ func (a *API) parse(w http.ResponseWriter, r *http.Request, siteID string, allow
 		Site: siteID, From: startOfDay(from, loc).UTC(), To: startOfDay(to, loc).UTC(),
 		TZ: tzName, Filters: filters, Bucket: bucket, Daily: v.Get("daily") == "1" && days <= 400,
 		Deep:     v.Get("deep") == "1",
+		Limit:    rowsAsked(v.Get("limit")),
 		Currency: si.Currency, Test: v.Get("payments") == "test",
 		// Money and goals are read only while their modules are on. Set before
 		// the comparison period is derived, so both halves match.
@@ -152,6 +154,16 @@ func (a *API) parse(w http.ResponseWriter, r *http.Request, siteID string, allow
 		TZ: tzName, Bucket: bucket,
 		Live: !to.Before(startOfDay(today, loc)),
 	}
+}
+
+// rowsAsked reads ?limit=: how many rows each breakdown lists, up to the 100 a
+// report can carry. Nothing, or something else, is the default (the engine's 10).
+func rowsAsked(s string) int {
+	n, err := strconv.Atoi(s)
+	if err != nil || n < 1 || n > 100 {
+		return 0
+	}
+	return n
 }
 
 // reportFor builds the report for one site. allowRevenue is how a public share

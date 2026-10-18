@@ -6,7 +6,7 @@ const kpis = (visitors: number, extra: Partial<KPIs> = {}): KPIs => ({ visitors,
 const hours = (xs: number[]) => xs.map((visitors, h) => ({ t: `2026-10-16T${String(h).padStart(2, '0')}:00`, visitors, pageviews: visitors * 2 }))
 const result = (visitors: number, o: Partial<Result> = {}): Result => ({ approximate: false, kpis: kpis(visitors), series: hours([1, 2, 3, 4]), dims: {}, goals: null, ...o })
 const report = (cur: Result, prev?: Result): Report => ({ site: 's', timezone: 'UTC', bucket: 'hour', from: '2026-10-16', to: '2026-10-16', current: cur, previous: prev })
-const money = (revenue: number): Money => ({ currency: 'USD', exponent: 2, revenue, refunds: 0, payments: 2, customers: 2, paying_visitors: 2, conversion: 0.01, revenue_per_visitor: 1, new_revenue: revenue, renewal_revenue: 0, unattributed: 0, unconverted: 0 })
+const money = (revenue: number): Money => ({ currency: 'USD', exponent: 2, revenue, refunds: 0, payments: 2, customers: 2, paying_visitors: 2, conversion: 0.01, revenue_per_visitor: 1, new_revenue: revenue, renewal_revenue: 0, new_gross: 0, upgrade_gross: 0, renewal_gross: 0, unattributed: 0, unconverted: 0 })
 const none = { uptime: null, now: '2026-10-16' }
 
 describe('the overview', () => {
@@ -86,6 +86,26 @@ describe('the tables', () => {
     expect(o.page?.map((x) => x.val)).toEqual(['/', '/pricing'])
     expect(o.country?.[0]).toEqual({ val: 'DE', name: 'Germany' })
     expect(o.device).toEqual([])
+  })
+})
+
+describe('what a table says it is out of', () => {
+  it('carries the period\'s people, so a share is of them and not of the rows on show', () => {
+    const cur = result(200, { dims: { country: [{ value: 'DE', visitors: 40 }, { value: 'US', visitors: 20 }] } })
+    expect(mapTable('countries', report(cur)).of).toBe(200)
+    expect(mapOverview(report(cur), none).of).toBe(200)
+    expect(mapTable('overview', report(cur)).of).toBe(200)
+  })
+  it('draws no line for uptime: the record has no curve, and made-up points would pass for one', () => {
+    const o = mapOverview(report(result(100)), { ...none, uptime: { pct: 100, down: [], lost: 0 } })
+    expect(o.kcs[2]).toMatchObject({ icon: 'uptime', val: '100.00%', vals: [] })
+  })
+  it('gives no revenue columns to a breakdown the report does not attribute sales to', () => {
+    const cur = result(100, { dims: { region: [{ value: 'Bavaria', visitors: 40 }], country: [{ value: 'DE', visitors: 40, revenue: 0 }] }, money: money(30500) })
+    expect(mapTable('regions', report(cur)).rows[0].rev).toBeUndefined()
+    expect(mapTable('regions', report(cur)).rows[0].cust).toBeUndefined()
+    // A breakdown it does attribute them to shows a real zero.
+    expect(mapTable('countries', report(cur)).rows[0]).toMatchObject({ rev: 0, cust: 0 })
   })
 })
 

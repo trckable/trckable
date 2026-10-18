@@ -48,7 +48,7 @@ export function Buyers({ x, query }: { x: XCtx; query: ReportQuery }) {
   if (list.length === 0) return <XEmpty title={c.none} hint="" />
   return (
     <>
-      <XSec a={copy.saleCount(list.length)} b={`${x.money(list.reduce((p, b) => p + b.amount, 0))} ${copy.net}`} />
+      <XSec a={copy.latestBuyers(list.length)} b={`${x.money(list.reduce((p, b) => p + b.amount, 0))} ${copy.net}`} />
       {list.map((b) => {
         const path = pathOf(b)
         const meta = b.visits ? [c.visits(b.visits), b.seconds !== undefined ? c.toBuy(b.seconds) : ''].filter(Boolean).join(' · ') : ''

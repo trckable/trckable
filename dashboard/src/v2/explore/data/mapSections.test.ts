@@ -52,26 +52,33 @@ describe('the funnel', () => {
 })
 
 describe('sales', () => {
-  const m = { revenue: 8200, payments: 2, new_revenue: 8700, renewal_revenue: 0, refunds: 500 } as Money
+  // The server's own golden day: $50 and $20 (with $5 refunded) taken new, a $7 renewal, $10 with no visit.
+  const money = (o: Partial<Money>): Money => ({ revenue: 0, payments: 0, refunds: 0, new_gross: 0, upgrade_gross: 0, renewal_gross: 0, ...o }) as Money
+  const m = money({ revenue: 8200, payments: 4, refunds: 500, new_gross: 8000, renewal_gross: 700 })
   it('has nothing to say until payments are connected', () => {
     expect(mapSales(undefined, 'Today').state).toBe('connect')
   })
-  it('lists what each kind earned, and leaves out a kind that earned nothing', () => {
+  it('lists what each kind took and the refunds that came off, and leaves out a kind with nothing', () => {
     const s = mapSales(m, 'Today')
     expect(s.state).toBe('ok')
     expect(s.sales.map((x) => [x.kind, x.amt, x.when])).toEqual([
-      ['new', 8700, 'Today'],
+      ['new', 8000, 'Today'],
+      ['renewal', 700, 'Today'],
       ['refund', -500, 'Today'],
     ])
+    expect(s.sales.reduce((p, x) => p + x.amt, 0)).toBe(m.revenue)
   })
-  it('agrees with the Briefing: two payments, an upgrade among them, add up to the period net', () => {
-    const two = { revenue: 30500, payments: 2, new_revenue: 8700, renewal_revenue: 0, refunds: 0 } as Money
+  it('shows an upgrade only when one was paid, and the lines still add up to the net', () => {
+    const two = money({ revenue: 30500, payments: 2, new_gross: 8700, upgrade_gross: 21800 })
     const s = mapSales(two, 'Today')
     expect(s.sales.map((x) => [x.kind, x.amt])).toEqual([
       ['new', 8700],
       ['upgrade', 21800],
     ])
     expect(s.sales.reduce((p, x) => p + x.amt, 0)).toBe(two.revenue)
+  })
+  it('says there is none when the period took no payment, not a list of zeros', () => {
+    expect(mapSales(money({}), 'Today')).toMatchObject({ state: 'none', sales: [] })
   })
 })
 
@@ -105,6 +112,12 @@ describe('search', () => {
       ['“trckable”', undefined],
       ['“new one”', true],
     ])
+  })
+  it('tells no usual when there is nothing to count from: no tag, no range', () => {
+    const none = mapSearch({ query: q, pages: q })
+    expect(none.kcs.map((k) => [k.tag, k.detail])).toEqual([['', ''], ['', ''], ['', ''], ['', '']])
+    const thin = mapSearch({ query: q, pages: q, prev: rep(3, 100, []) })
+    expect(thin.kcs.every((k) => k.tag === '' && k.detail === '')).toBe(true)
   })
   it('is not enough when Google has sent nobody', () => {
     expect(mapSearch({ query: rep(0, 0, null), pages: rep(0, 0, null) }).enough).toBe(false)
@@ -165,6 +178,16 @@ describe('mentions, robots and links', () => {
   it('lists the robots by what they read, most first', () => {
     const r = { series: [{ name: 'a', kind: 'k', total: 3, values: [] }, { name: 'b', kind: 'k', total: 9, values: [] }, { name: 'c', kind: 'k', total: 0, values: [] }] } as unknown as CrawlerReport
     expect(mapBots(r).map((b) => b.name)).toEqual(['b', 'a'])
+  })
+  it('names a robot once, with the hits of all its errands', () => {
+    const r = { series: [{ name: 'OpenAI', kind: 'train', total: 4, values: [] }, { name: 'OpenAI', kind: 'answer', total: 3, values: [] }, { name: 'Google', kind: 'index', total: 5, values: [] }] } as unknown as CrawlerReport
+    expect(mapBots(r)).toEqual([{ name: 'OpenAI', count: 7 }, { name: 'Google', count: 5 }])
+  })
+  it('says a mention\'s points and comments only where the place counts them', () => {
+    const day = Date.UTC(2026, 9, 16, 14, 5) / 1000
+    const one: ApiMention = { id: 1, source: 'hn', url: '', title: 't', host: 'x.com', posted_at: day, found_at: day, visitors: 0 }
+    expect(mapMentions([one], 'UTC', '2026-10-16')[0]).toMatchObject({ pts: null, cm: null })
+    expect(mapMentions([{ ...one, points: 0, comments: 0 }], 'UTC', '2026-10-16')[0]).toMatchObject({ pts: 0, cm: 0 })
   })
   it('lists outbound links from the url property only', () => {
     const rows = mapLinks([

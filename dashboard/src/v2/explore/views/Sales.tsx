@@ -1,5 +1,5 @@
 // Sales: each sale with who it came from, what kind it was and what it earned, newest first, and a switch by kind.
-import { XEmpty, XSec, XSub } from '../../ui/XBits'
+import { XEmpty, XNote, XSec, XSub } from '../../ui/XBits'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
 import { Lock } from './Lock'
@@ -28,7 +28,15 @@ function Line({ s, money }: { s: Sale; money: (minor: number) => string }) {
 
 export function Sales({ x, d }: { x: XCtx; d: Model }) {
   if (d.state === 'connect') return <Lock k="rev" x={x} />
-  if (d.state === 'none') return <XEmpty title={copy.emptyProducts} hint={copy.emptyProductsHint} />
+  if (d.state === 'none')
+    return (
+      <>
+        <XEmpty title={copy.emptyProducts} hint={copy.emptyProductsHint} />
+        <XNote>
+          <SourceChip verified={x.site.verified} slot="revenue" />
+        </XNote>
+      </>
+    )
   const list = d.sales.filter((s) => !x.kind || s.kind === x.kind)
   const net = list.reduce((p, s) => p + s.amt, 0)
   return (

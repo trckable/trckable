@@ -18,13 +18,14 @@ import type { Usual } from '../../briefing/model'
 import { funnelBuilt } from '../../setup/funnelBuilt'
 import type { Down, SavedView, Tab } from '../types'
 import { basisOf, type Basis } from './basis'
+import { EXPLORE_ROWS, LINKS_ROWS } from './rows'
 import { scaled, withSourceUsuals } from './scaled'
 import { mapOverview, mapTable, optionsOf, type Uptime } from './mapReport'
 import { mapBots, mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed } from './mapSections'
 import type { DataCtx, Meta, TabData } from './useExplore'
 
 /** Explore asks for the deep report: the breakdowns of regions, cities, exit pages and the rest ride in the same read. */
-const query = (c: DataCtx, filters: Filter[] = c.filters): ReportQuery => ({ ...queryOf({ ...c.view, filters }, c.range), deep: true })
+const query = (c: DataCtx, filters: Filter[] = c.filters): ReportQuery => ({ ...queryOf({ ...c.view, filters }, c.range), deep: true, limit: EXPLORE_ROWS })
 
 /** The range the report compared with: the period before. */
 const before = (r: Report): Range => ({ from: r.previous_from ?? r.from, to: r.previous_to ?? r.to })
@@ -154,8 +155,10 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
       // A site that does not watch for robots has none to list.
       return more.crawlers(c.site.id, q).then(mapBots, () => [])
     case 'outbound': {
-      const r = await call<{ properties: { key: string; value: string; visitors: number }[] | null }>('GET', `/sites/${c.site.id}/report/goal-props${rangeQS(q)}&goal=outbound_click`, undefined, signal)
-      return { rows: mapLinks(r.properties ?? []) }
+      const r = await call<{ properties: { key: string; value: string; visitors: number }[] | null }>('GET', `/sites/${c.site.id}/report/goal-props${rangeQS(q)}&goal=outbound_click&limit=${LINKS_ROWS}`, undefined, signal)
+      const rows = mapLinks(r.properties ?? [])
+      // A share here is of the clicks listed (the report names no total for them).
+      return { rows, of: rows.reduce((p, x) => p + x.v, 0) }
     }
     case 'highlights': case 'overtime': case 'hours': case 'revmap': case 'earners': case 'sells': case 'people': case 'buyers': case 'retention': case 'vsale': case 'toconvert': case 'flow': case 'ai':
       // These read their own numbers (views/Hosted.tsx).

@@ -5,6 +5,7 @@ import type { Site } from '../../lib/api'
 import { fmtMoney } from '../../lib/format'
 import { addDays, type Range } from '../../lib/dates'
 import { queryOf } from '../../lib/dashQuery'
+import { EXPLORE_ROWS } from './data/rows'
 import { openSettings } from '../../lib/settings'
 import { setView, type ViewState } from '../../lib/url'
 import { say } from '../ui/toast'
@@ -53,7 +54,7 @@ export default function PanelContent(p: ContentProps) {
   const money = p.money ?? ((m: number) => fmtMoney(m, p.site.currency || 'USD', 2, { cents: false }))
   const x: XCtx = {
     site: p.site,
-    query: queryOf({ ...p.view, filters }, p.range),
+    query: { ...queryOf({ ...p.view, filters }, p.range), limit: EXPLORE_ROWS },
     siteName: p.site.name || p.site.domain,
     tabName: copy.sub[tab],
     widen: addDays(p.range.from, 29) > p.range.to ? () => setView({ period: '30d', from: undefined, to: undefined, bucket: undefined, day: undefined }) : undefined,

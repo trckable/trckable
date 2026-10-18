@@ -35,21 +35,28 @@ const AttributionWindow = 90 * 24 * time.Hour
 
 // Money is a report's revenue, in minor units of Currency.
 type Money struct {
-	Currency       string   `json:"currency"`
-	Exponent       int      `json:"exponent"` // minor-unit digits (2 for USD, 0 for JPY)
-	Revenue        int64    `json:"revenue"`  // paid, minus tax, minus refunds and lost disputes
-	Refunds        int64    `json:"refunds"`
-	Payments       int64    `json:"payments"`
-	Customers      int64    `json:"customers"`
-	PayingVisitors int64    `json:"paying_visitors"` // visitors in this period who paid (attributed)
-	Conversion     float64  `json:"conversion"`      // paying visitors / visitors
-	PerVisitor     float64  `json:"revenue_per_visitor"`
-	NewRevenue     int64    `json:"new_revenue"`       // one-time + first subscription payments
-	RenewalRevenue int64    `json:"renewal_revenue"`   // later subscription payments
-	Unattributed   int64    `json:"unattributed"`      // revenue with no known visit (no metadata, no link)
-	Unconverted    int64    `json:"unconverted"`       // payments waiting for an FX rate (not in the sums yet)
-	NoRate         []string `json:"no_rate,omitempty"` // currencies the ECB publishes no rate for: those payments never convert
-	Test           bool     `json:"test,omitempty"`
+	Currency       string  `json:"currency"`
+	Exponent       int     `json:"exponent"` // minor-unit digits (2 for USD, 0 for JPY)
+	Revenue        int64   `json:"revenue"`  // paid, minus tax, minus refunds and lost disputes
+	Refunds        int64   `json:"refunds"`
+	Payments       int64   `json:"payments"`
+	Customers      int64   `json:"customers"`
+	PayingVisitors int64   `json:"paying_visitors"` // visitors in this period who paid (attributed)
+	Conversion     float64 `json:"conversion"`      // paying visitors / visitors
+	PerVisitor     float64 `json:"revenue_per_visitor"`
+	NewRevenue     int64   `json:"new_revenue"`     // one-time + first subscription payments
+	RenewalRevenue int64   `json:"renewal_revenue"` // later subscription payments
+	// What each kind took before refunds, so the kinds and the refunds add up
+	// to Revenue: NewGross + UpgradeGross + RenewalGross - Refunds. An upgrade
+	// is a payment that moved a customer to another plan (it leaves renewals
+	// and new sales alone).
+	NewGross     int64    `json:"new_gross"`
+	UpgradeGross int64    `json:"upgrade_gross"`
+	RenewalGross int64    `json:"renewal_gross"`
+	Unattributed int64    `json:"unattributed"`      // revenue with no known visit (no metadata, no link)
+	Unconverted  int64    `json:"unconverted"`       // payments waiting for an FX rate (not in the sums yet)
+	NoRate       []string `json:"no_rate,omitempty"` // currencies the ECB publishes no rate for: those payments never convert
+	Test         bool     `json:"test,omitempty"`
 }
 
 // DayMoney is one day's revenue for the scrubber and the chart's tooltip.
@@ -174,8 +181,11 @@ func (q Q) revenue(ctx context.Context, conn *sql.Conn, p Params, cte string, ct
 		       coalesce(sum(amount - refunded) FILTER (kind <> 'renewal'), 0),
 		       coalesce(sum(amount - refunded) FILTER (kind = 'renewal'), 0),
 		       coalesce(sum(amount - refunded) FILTER (NOT attributed), 0),
-		       count(DISTINCT visitor_id) FILTER (visitor_id <> 0 AND visitor_id IN (SELECT visitor_id FROM s))
-		FROM ar`, args...).Scan(&m.Revenue, &m.Refunds, &m.Payments, &m.Customers, &m.NewRevenue, &m.RenewalRevenue, &m.Unattributed, &m.PayingVisitors); err != nil {
+		       count(DISTINCT visitor_id) FILTER (visitor_id <> 0 AND visitor_id IN (SELECT visitor_id FROM s)),
+		       coalesce(sum(amount) FILTER (kind <> 'renewal' AND change <> 'upgrade'), 0),
+		       coalesce(sum(amount) FILTER (change = 'upgrade'), 0),
+		       coalesce(sum(amount) FILTER (kind = 'renewal' AND change <> 'upgrade'), 0)
+		FROM ar`, args...).Scan(&m.Revenue, &m.Refunds, &m.Payments, &m.Customers, &m.NewRevenue, &m.RenewalRevenue, &m.Unattributed, &m.PayingVisitors, &m.NewGross, &m.UpgradeGross, &m.RenewalGross); err != nil {
 		return fmt.Errorf("money: %w", err)
 	}
 	if v := res.KPIs.Visitors; v > 0 {

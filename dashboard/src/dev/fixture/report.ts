@@ -142,6 +142,9 @@ export function money(sales: Sale[], visitors: number): Money {
     revenue_per_visitor: visitors ? rev / visitors : 0,
     new_revenue: sum('new'),
     renewal_revenue: sum('renewal'),
+    new_gross: sum('new'),
+    upgrade_gross: 0,
+    renewal_gross: sum('renewal'),
     unattributed: 0,
     unconverted: 0,
   }
