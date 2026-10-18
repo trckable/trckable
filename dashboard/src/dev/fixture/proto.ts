@@ -1,9 +1,9 @@
-// Prototype switches for the slimmer site menu (development only): `?menu=current|a|b|c` picks the menu, `&sites=4|7` the sites the
+// Prototype switches for the slimmer site menu (development only): `?menu=current|a` picks the menu, `&sites=4|7` the sites the
 // fixture answers with. Both are kept for the tab, so a reload or a link inside the app stays on them.
 const KEY = 'trckable:menuproto'
 
-export type MenuVariant = 'current' | 'a' | 'b' | 'c'
-const VARIANTS: readonly string[] = ['current', 'a', 'b', 'c']
+export type MenuVariant = 'current' | 'a'
+const VARIANTS: readonly string[] = ['current', 'a']
 
 export function protoParams(): { menu: MenuVariant | null; sites: 4 | 7 } {
   const sp = new URLSearchParams(location.search)

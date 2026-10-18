@@ -23,6 +23,7 @@ import { SiteRow } from './SiteRow'
 import { SiteHead } from './SiteHead'
 import { DomainRows } from './DomainRows'
 import type { ReactNode } from 'react'
+import { Search } from 'lucide-react'
 
 const PREFETCH = 3
 
@@ -152,6 +153,8 @@ export function SiteList(p: SiteListProps) {
     <div className={`sitelist${reorder.id ? ' reordering' : ''}`} ref={root}>
       {p.workspace}
       {finder && (
+      <div className="find-wrap">
+        <Search size={16} strokeWidth={2} aria-hidden="true" />
       <input
         ref={search}
         id="siteFind"
@@ -163,6 +166,7 @@ export function SiteList(p: SiteListProps) {
         onChange={(e) => setQ(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && found?.[0] && pick(found[0])}
       />
+      </div>
       )}
       <div id="siteList" ref={list}>
         {!found && <AllRow slim={p.slim} on={!current} numbers={numbers} all={p.all} onPick={() => { p.close(); p.onPick('*') }} />}

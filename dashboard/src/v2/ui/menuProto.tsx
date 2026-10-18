@@ -1,17 +1,12 @@
-// Prototype of a slimmer site menu (development only; not for merge): ?menu=a|b|c, or current for today's. A: a thin account line that
-// opens a flyout at the side. B: the same line, opening the accounts in place above the sites. C: no line; the accounts are in the
-// avatar's menu. The cuts all three share (one line a site, no key hints, a short foot) are in SiteList, SiteRow and AllRow.
-import { useRef, useState, type ReactNode } from 'react'
-import { Check, ChevronRight } from 'lucide-react'
+// Prototype of a slimmer site menu (development only; not for merge): ?menu=a, or current for today's. A: the account is a thin line
+// (its name and a chevron) at the top; pressing it swaps the menu, in place, for the account list with a Back row.
+import { Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import { protoParams, type MenuVariant } from '../../dev/fixture/proto'
 import type { Workspace } from './WorkspaceRow'
 
 export const menuVariant = (): MenuVariant | null => (import.meta.env.DEV ? protoParams().menu : null)
-/** The three slim versions share the cuts; today's menu is the baseline. */
-export const slimMenu = (): boolean => {
-  const v = menuVariant()
-  return !!v && v !== 'current'
-}
+/** The slim menu's cuts (one line a site, no key hints, a short foot). */
+export const slimMenu = (): boolean => menuVariant() === 'a'
 
 const ACCOUNTS = [
   { id: 'personal', name: 'Personal', sites: 4 },
@@ -55,49 +50,25 @@ export const currentWorkspace: Workspace = {
   accounts: (close) => <Accounts close={close} />,
 }
 
-/** A and B: a thin line, "Personal ›". A opens a flyout at the side, B the accounts in place. */
-export function ThinAccount({ kind, close }: { kind: 'a' | 'b'; close: () => void }) {
-  const [open, setOpen] = useState(false)
-  const line = useRef<HTMLButtonElement>(null)
+/** The thin line at the top of the menu: the account's name and a chevron. */
+export function ThinAccount({ onOpen }: { onOpen: () => void }) {
   return (
-    <>
-      <button ref={line} type="button" data-stop className={`ws-thin${open ? ' open' : ''}`} aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        <span>{ACCOUNTS[0].name}</span>
-        <ChevronRight size={12} strokeWidth={2} aria-hidden="true" />
-      </button>
-      {open && kind === 'b' && (
-        <div className="ws-list">
-          <Accounts close={close} />
-        </div>
-      )}
-      {open && kind === 'a' && (
-        <div className="proto-fly" role="group" aria-label="Accounts">
-          <button type="button" data-stop className="ws-thin back" onClick={() => setOpen(false)}>
-            {'‹ Sites'}
-          </button>
-          <Accounts close={close} />
-        </div>
-      )}
-    </>
+    <button type="button" data-stop className="ws-thin" onClick={onOpen}>
+      <span>{ACCOUNTS[0].name}</span>
+      <ChevronRight size={12} strokeWidth={2} aria-hidden="true" />
+    </button>
   )
 }
 
-/** C: the accounts at the top of the avatar's menu. */
-export function AvatarAccounts({ go }: { go: (fn: () => void) => () => void }): ReactNode {
-  if (menuVariant() !== 'c') return null
+/** What takes the menu's place while the account line is open. */
+export function AccountView({ back, close }: { back: () => void; close: () => void }) {
   return (
-    <div className="proto-accts">
-      {ACCOUNTS.map((a, i) => (
-        <button key={a.id} type="button" role="menuitem" onClick={go(() => {})}>
-          <Mark name={a.name} />
-          {a.name}
-          {i === 0 && <Check size={14} strokeWidth={2} aria-hidden="true" className="acct-on" />}
-        </button>
-      ))}
-      <button type="button" role="menuitem" onClick={go(() => {})}>
-        <span className="acct-mk ghost" aria-hidden="true" />
-        {MANAGE}
+    <div className="sitelist">
+      <button type="button" data-stop className="ws-thin back" onClick={back}>
+        <ChevronLeft size={12} strokeWidth={2} aria-hidden="true" />
+        <span>Back</span>
       </button>
+      <Accounts close={close} />
     </div>
   )
 }

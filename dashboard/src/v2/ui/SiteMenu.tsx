@@ -1,6 +1,6 @@
 // The site in the header, and the list that opens from it (SiteList): every site with who is on it now, a finder, and what
 // belongs to this site. The check beside the name says when something independent vouches for the numbers.
-import { Suspense, useCallback, useRef, type ReactNode } from 'react'
+import { Suspense, useCallback, useRef, useState, type ReactNode } from 'react'
 import type { Site } from '../../lib/api'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { layoutReady, preloadLayout } from '../../features/sites/useSiteLayout'
@@ -14,7 +14,7 @@ import { useMenu } from './useMenu'
 import { SetupLine } from './SetupLine'
 import { WorkspaceRow, type Workspace } from './WorkspaceRow'
 import { useTopLayerWhen } from '../../lib/topLayer'
-import { currentWorkspace, menuVariant, slimMenu, ThinAccount } from './menuProto'
+import { currentWorkspace, menuVariant, slimMenu, ThinAccount, AccountView } from './menuProto'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
 const warmUp = () => {
@@ -39,6 +39,7 @@ interface SiteMenuProps {
 
 export function SiteChip({ p }: { p: SiteMenuProps }) {
   const { open, setOpen, attach, close } = useMenu()
+  const [accounts, setAccounts] = useState(false)
   const menu = useRef<HTMLDivElement>(null)
   useTopLayerWhen(open, menu)
   const cur = p.current
@@ -46,6 +47,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
   const picked = cur && domains ? domainLabel(domains) : null
   const state = cur ? dotState(cur) : 'live'
   const toggle = () => {
+    setAccounts(false)
     if (open) setOpen(false)
     else void Promise.all([layoutReady(LAYOUT_WAIT), SiteList.load()]).then(() => setOpen(true))
   }
@@ -54,8 +56,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
   const variant = menuVariant()
   const baseline = p.workspace ?? (variant === 'current' ? currentWorkspace : undefined)
   let account: ReactNode = baseline && <WorkspaceRow w={baseline} close={done} />
-  if (variant === 'a' || variant === 'b') account = <ThinAccount kind={variant} close={done} />
-  if (variant === 'c') account = null
+  if (variant === 'a') account = <ThinAccount onOpen={() => setAccounts(true)} />
   const footer = <MenuFoot items={slim ? p.footer.filter((f) => f.key === 'add') : p.footer} done={done} />
   return (
     <div ref={attach} style={{ position: 'relative' }} className="sitechip">
@@ -70,7 +71,8 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
       </button>
       {cur && <VerifiedPill verified={cur.verified} site={cur} seal />}
       <div ref={menu} className={`mk-menu sites${open ? ' on' : ''}`} id="siteMenu" role={open ? 'dialog' : undefined} aria-label={open ? copy.sites : undefined}>
-        {open && (
+        {open && accounts && <AccountView back={() => setAccounts(false)} close={done} />}
+        {open && !accounts && (
           <Suspense fallback={null}>
             <SiteList
               sites={p.sites}
