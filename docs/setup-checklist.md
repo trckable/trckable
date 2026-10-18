@@ -22,7 +22,6 @@ marks kept per site.
 | id | group | done when |
 | --- | --- | --- |
 | `verified` | core | pageviews arrived from 2 or more paths (`detail.pages`) |
-| `own_visits` | core | the site leaves out at least one address of yours |
 | `locale` | core | time zone or currency is not UTC/USD, or you confirmed them |
 | `goal` | core | a goal exists (page goal, or a goal event was seen) |
 | `payments` | optional | a connected payment provider has at least one sale (`detail.provider`, `detail.sales`) |
@@ -30,9 +29,10 @@ marks kept per site.
 | `search` | optional | Search Console has a property |
 | `crawlers` | optional | an AI crawler hit was recorded |
 | `proxy` | optional | an event came through your own-domain proxy in the last 7 days (`detail.last_seen`) |
+| `own_visits` | more | the site leaves out at least one address of yours |
 | `vitals`, `heatmaps`, `ga`, `team`, `phone`, `mentions` | more | never counted |
 
-`core` always counts. `optional` counts until you say "not for me"; a skipped
+The counted steps come in the order that suits the site's kind: a shop gets the goal, payments, then Search Console; a blog starts with Search Console; a SaaS gets the goal, then a funnel. `core` always counts. `optional` counts until you say "not for me"; a skipped
 item moves to `more` (`skipped: true`) and can be brought back. `done` and
 `counted` count only what is counted.
 

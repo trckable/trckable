@@ -30,9 +30,9 @@ func baseIn() setupIn {
 
 // The rules, without a server: what is done, what counts, and the defaults.
 func TestSetupRules(t *testing.T) {
-	t.Run("a new site counts nine and has none done", func(t *testing.T) {
+	t.Run("a new site counts eight and has none done", func(t *testing.T) {
 		o := buildSetup(baseIn())
-		if o.Counted != 9 || o.Done != 0 || o.AllSet {
+		if o.Counted != 8 || o.Done != 0 || o.AllSet {
 			t.Fatalf("counted %d done %d", o.Counted, o.Done)
 		}
 		if g := itemOf(t, o, "verified").Group; g != setupCore {
@@ -82,7 +82,7 @@ func TestSetupRules(t *testing.T) {
 		in.Stored.Skips["payments"] = sqlite.SkipSkipped
 		o := buildSetup(in)
 		it := itemOf(t, o, "payments")
-		if !it.Skipped || it.Counted || it.Group != setupMore || o.Counted != 8 {
+		if !it.Skipped || it.Counted || it.Group != setupMore || o.Counted != 7 {
 			t.Fatalf("%+v counted %d", it, o.Counted)
 		}
 	})
@@ -102,14 +102,42 @@ func TestSetupRules(t *testing.T) {
 		in.Stored.FunnelBuiltAt = 1
 		in.Stored.Skips["proxy"] = sqlite.SkipSkipped
 		o := buildSetup(in)
-		if !o.AllSet || o.Done != 8 || o.Counted != 8 {
+		if !o.AllSet || o.Done != 7 || o.Counted != 7 {
 			t.Fatalf("done %d of %d", o.Done, o.Counted)
+		}
+	})
+	t.Run("your own visits are an extra: they never count", func(t *testing.T) {
+		it := itemOf(t, buildSetup(baseIn()), "own_visits")
+		if it.Group != setupMore || it.Counted {
+			t.Fatalf("%+v", it)
+		}
+	})
+	t.Run("the first open step is the most valuable for the kind", func(t *testing.T) {
+		first := func(kind string) []string {
+			in := baseIn()
+			in.Stored.Kind = kind
+			var ids []string
+			for _, it := range buildSetup(in).Items {
+				if it.Counted {
+					ids = append(ids, it.ID)
+				}
+			}
+			return ids
+		}
+		if got := first(sqlite.KindShop); got[1] != "goal" || got[2] != "payments" || got[3] != "search" {
+			t.Fatalf("shop: %v", got)
+		}
+		if got := first(sqlite.KindContent); got[1] != "search" {
+			t.Fatalf("blog: %v", got)
+		}
+		if got := first(sqlite.KindSaaS); got[1] != "goal" || got[2] != "funnel" {
+			t.Fatalf("saas: %v", got)
 		}
 	})
 	t.Run("the extras never count", func(t *testing.T) {
 		in := baseIn()
 		in.Vitals, in.Heatmaps, in.Team, in.Phone, in.Keywords = true, true, true, true, true
-		if o := buildSetup(in); o.Counted != 9 || o.Done != 0 {
+		if o := buildSetup(in); o.Counted != 8 || o.Done != 0 {
 			t.Fatalf("done %d of %d", o.Done, o.Counted)
 		}
 	})
@@ -254,7 +282,7 @@ func TestSetupEndpointEachItem(t *testing.T) {
 	if apiItem(t, out, "vitals")["done"] != true {
 		t.Errorf("vitals is not done on a new site, where they are on by default")
 	}
-	if out["counted"] != 9.0 || out["done"] != 0.0 {
+	if out["counted"] != 8.0 || out["done"] != 0.0 {
 		t.Fatalf("new site: %v", out)
 	}
 
@@ -369,7 +397,7 @@ func TestSetupEndpointEachItem(t *testing.T) {
 	if apiItem(t, out, "mentions")["done"] != true || apiItem(t, out, "team")["done"] != true {
 		t.Fatalf("extras: %v", out["items"])
 	}
-	if out["counted"] != 9.0 {
+	if out["counted"] != 8.0 {
 		t.Fatalf("extras counted: %v", out["counted"])
 	}
 }
@@ -384,14 +412,14 @@ func TestSetupSkipAndUnskip(t *testing.T) {
 
 	code, out := do(t, c, "PUT", setupURL(g, "/skip/payments"), "", csrf, "1")
 	p := apiItem(t, out, "payments")
-	if code != 200 || p["skipped"] != true || p["counted"] == true || p["group"] != "more" || out["counted"] != 8.0 {
+	if code != 200 || p["skipped"] != true || p["counted"] == true || p["group"] != "more" || out["counted"] != 7.0 {
 		t.Fatalf("skip: %d %v", code, out)
 	}
 	if apiItem(t, getSetup(t, g, viewer), "payments")["skipped"] != true {
 		t.Fatal("a viewer sees the owner's skip")
 	}
 	code, out = do(t, c, "DELETE", setupURL(g, "/skip/payments"), "", csrf, "1")
-	if code != 200 || apiItem(t, out, "payments")["skipped"] == true || out["counted"] != 9.0 {
+	if code != 200 || apiItem(t, out, "payments")["skipped"] == true || out["counted"] != 8.0 {
 		t.Fatalf("unskip: %d %v", code, out)
 	}
 	if code, _ := do(t, c, "PUT", setupURL(g, "/skip/locale"), "", csrf, "1"); code != http.StatusBadRequest {

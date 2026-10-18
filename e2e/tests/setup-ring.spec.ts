@@ -55,9 +55,11 @@ test('the ring opens a panel and an action lands on the place that does it', asy
   await expect(panel).toBeVisible()
   await expect(panel).toContainText('Only you see this.')
   await shot(page, 'setup-ring', 1440)
-  // The first open step is the card with its one filled button; the others are rows that click as a whole.
+  // The first open step is the card with its one filled button; your own visits are an extra, not counted, under More you can add.
   await expect(panel.locator('.snext .sbtn')).toHaveCount(1)
-  await panel.locator('[data-step="own_visits"]').getByRole('button', { name: /Your own visits left out|Add my IP/ }).first().click()
+  await expect(panel.locator('[data-step="own_visits"]')).toHaveCount(0)
+  await panel.getByRole('button', { name: /More you can add/ }).click()
+  await panel.locator('[data-step="own_visits"]').getByRole('button', { name: /Your own visits left out/ }).click()
   await expect(page.getByRole('button', { name: 'Add my current IP' })).toBeVisible()
 })
 
@@ -79,15 +81,15 @@ test('Not for me on Payments lowers what counts and moves the row to More', asyn
   await open(page)
   await page.locator('.ringb').click({ timeout: 15_000 })
   const panel = page.locator('.setupmenu.on')
-  await expect(page.locator('.ringb .rtext')).toHaveText('0/5 set up')
+  await expect(page.locator('.ringb .rtext')).toHaveText('0/4 set up')
   await panel.locator('[data-step="payments"]').getByRole('button', { name: 'More' }).click()
   await panel.getByRole('menuitem', { name: 'I don’t sell online' }).click()
-  await expect(page.locator('.ringb .rtext')).toHaveText('0/4 set up')
+  await expect(page.locator('.ringb .rtext')).toHaveText('0/3 set up')
   await expect(panel.locator('[data-step="payments"]')).toHaveCount(0)
   await panel.getByRole('button', { name: /More you can add/ }).click()
   await expect(panel.locator('[data-step="payments"] button', { hasText: 'Bring back' })).toBeVisible()
   await panel.locator('[data-step="payments"] button', { hasText: 'Bring back' }).click()
-  await expect(page.locator('.ringb .rtext')).toHaveText('0/5 set up')
+  await expect(page.locator('.ringb .rtext')).toHaveText('0/4 set up')
 })
 
 test('everything done: a check for seven days, then no ring', async ({ page }) => {
