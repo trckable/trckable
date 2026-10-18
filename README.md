@@ -84,6 +84,7 @@ Nothing is paid, limited or held back. The complete list: [features](https://doc
 - **Sign in with Google, Microsoft or OIDC.** Free on every install: [sign-in](https://docs.trckable.com/self-host/sign-in-with-a-provider/).
 - **Privacy by default.** Cookieless, no IP address ever stored: [privacy](https://docs.trckable.com/privacy/), and a printable [privacy report](docs/privacy-report.md) for every site.
 - **Mentions.** See where your site is talked about (Hacker News, the news and blogs, Product Hunt) and the visitors each mention brought: [mentions](docs/mentions.md). A self-hosted server sends your site's address and the words you add to Algolia, Google News and GDELT to search, nothing about your visitors; it is off until `TRCKABLE_MENTIONS=on`.
+- **Answers.** Whether ChatGPT, Perplexity and Claude name you for your buyers' questions, and the visitors and revenue the pages they link to bring: [answers](docs/answers.md). A self-hosted server sends your questions and an approximate country to OpenAI, Perplexity and Anthropic, nothing about your visitors; it is off until an AI key is set.
 - **Heatmaps without recording anyone.** An opt-in module of about 1.5 KB: [heatmaps](docs/heatmaps.md).
 - **Widgets for your own pages.** Live now, revenue, a privacy seal and Online, with no script and no cookie: [widgets](docs/widgets.md).
 - **Client reports.** Weekly or monthly email and PDF for the people who pay for them: [client reports](docs/client-reports.md).

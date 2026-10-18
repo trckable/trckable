@@ -17,6 +17,7 @@ export const copy = defineCopy('moments', {
     surge: 'Busier than usual',
     newTraffic: 'New traffic',
     mention: 'Mentioned',
+    answer: 'Answers',
     sale: 'Sales',
     referrer: 'New referrer',
     drop: 'Fewer buyers',

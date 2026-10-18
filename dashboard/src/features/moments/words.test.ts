@@ -100,3 +100,11 @@ describe('what a mention says', () => {
     expect(s.facts).toEqual(['X launch', 'Wed, Oct 14'])
   })
 })
+
+describe('what an answer says', () => {
+  it('tells a start, a stop and the first time in the words of Answers', () => {
+    expect(say(pin('answer', { n: { name: 'openai', question: 'best analytics', did: 'seen' } }), usd)).toMatchObject({ title: 'Answers', line: 'ChatGPT started naming you for “best analytics”' })
+    expect(say(pin('answer', { n: { name: 'anthropic', question: 'best analytics', did: 'dropped' } }), usd).line).toBe('Claude stopped naming you for “best analytics”')
+    expect(say(pin('answer', { n: { name: 'openai', question: 'q', did: 'seen', first: true } }), usd).line).toBe('Peekaboo. ChatGPT just named you.')
+  })
+})

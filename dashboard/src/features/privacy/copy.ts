@@ -62,6 +62,7 @@ export const copy = defineCopy('privacy', {
     search: 'Search Console: Google\'s searches and clicks, as Google reports them',
   },
   where: 'On your server. Nothing is sent to another company',
+  whereAnswers: (names: string) => `Answers sends your questions to ${names}. Nothing about your visitors.`,
   banner: {
     free: 'Usually not. Cookieless mode stores nothing on the device, and several countries allow that without consent. Germany and Austria generally still ask for it.',
     asks: 'Yes, and trckable waits for the visitor\'s answer before it sets its cookie.',
