@@ -20,8 +20,8 @@ test('before the first visit: the setup screen, Not verified, a locked ring, no 
   await expect(screen.locator('.code-corner').getByRole('button', { name: 'Copy the code' })).toBeVisible()
   await expect(screen.getByRole('switch', { name: 'Cookieless' })).toBeVisible()
   await expect(screen.getByRole('button', { name: 'Copy prompt' })).toBeVisible()
-  await expect(screen.getByRole('link', { name: 'Docs' })).toBeVisible()
-  await expect(screen.getByRole('link', { name: 'Support' })).toBeVisible()
+  // Help is behind a small link, not shown up front.
+  await expect(screen.getByRole('link', { name: 'Support' })).toBeHidden()
   // The header: amber Not verified, no Live | Briefing, no Explore, no phone bar.
   await expect(page.locator('#siteBtn')).toContainText('Not verified')
   await expect(page.locator('#siteBtn .mk-dot')).toHaveCount(0)
@@ -35,14 +35,16 @@ test('before the first visit: the setup screen, Not verified, a locked ring, no 
   await expect(page.locator('.setupmenu .snext')).toContainText('Install', { timeout: 15_000 })
   await expect(page.locator('.setupmenu .sprow.locked').first()).toBeVisible()
   await page.keyboard.press('Escape')
-  // The live line looks by itself, and Check now looks again (the suite's server cannot reach the site: it says so, never "found").
-  const line = screen.locator('.setup-line').first()
-  await expect(line).toContainText('Checking for the first visit')
-  await expect(line).toContainText('last check', { timeout: 20_000 })
-  await screen.getByRole('button', { name: 'Check now' }).click()
+  // One card says where it stands. The server cannot reach the suite's site: it says so, and never "found".
+  const status = screen.locator('.setup-status')
+  await expect(status.locator('h2')).toContainText(/Waiting for the first visit|Can’t reach/, { timeout: 20_000 })
+  await expect(status).toContainText('last check', { timeout: 20_000 })
+  await status.getByRole('button', { name: /Check (now|again)/ }).click()
+  await status.locator('summary').click()
+  await expect(screen.getByRole('link', { name: 'Support' })).toBeVisible()
   // A real pageview: the line turns green, then Live opens with no reload.
   await visit(page.request, site, '/first')
-  await expect(screen.locator('.setup-line.ok')).toContainText('First visit received', { timeout: 30_000 })
+  await expect(screen.locator('.setup-status.ok')).toContainText('First visit received', { timeout: 30_000 })
   await expect(page.locator('#siteBtn')).not.toContainText('Not verified')
   await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible({ timeout: 30_000 })
   await expect(page.locator('#views')).toBeVisible()

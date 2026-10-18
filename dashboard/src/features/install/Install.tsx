@@ -4,7 +4,7 @@
 // prompt), and the check and then the first visit arrive. The wizard owns its footer
 // ("I've installed it"), so the check can be handed in.
 // Loaded on demand: only new sites and the wizard ever show it.
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import type { Site, Visit } from '../../lib/api'
 import type { Ctx } from '../../lib/install'
 import { AiCard } from './AiCard'
@@ -31,7 +31,7 @@ function Head({ site, variant }: { site: Site; variant: Variant }) {
   return <h2 className="inst-title-small">{copy.titleSettings(site.domain)}</h2>
 }
 
-export function Install({ site, visits, variant = 'wizard', after, check }: { site: Site; visits: Visit[]; variant?: Variant; after?: ReactNode; check?: InstallCheckHandle }) {
+export function Install({ site, visits, variant = 'wizard', check }: { site: Site; visits: Visit[]; variant?: Variant; check?: InstallCheckHandle }) {
   const [pick, setPick] = useState(firstMethod)
   const cookieless = useCookieless(site.id)
   const first = visits[0]
@@ -50,7 +50,6 @@ export function Install({ site, visits, variant = 'wizard', after, check }: { si
         <AiCard ctx={ctx} method={method} />
       </div>
       {check && check.state.phase !== 'idle' && <CheckPanel state={check.state} domain={site.domain} first={first} onAgain={check.start} />}
-      {after}
     </section>
   )
 }

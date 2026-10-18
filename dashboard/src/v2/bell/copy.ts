@@ -13,6 +13,8 @@ export const copy = defineCopy('bell', {
   noAnswerSince: (at: number) => `No answer since ${at24(at)}`,
   backUp: (d: string) => `${d} is back up`,
   wasDown: (min: number) => `It was down for ${min} minutes`,
+  setupTitle: (d: string) => `${d} has no visits yet`,
+  setupSub: 'Finish the install',
   mention: (host: string) => `New mention on ${host}`,
   milestoneSub: 'Milestone',
   menu: 'Notifications',

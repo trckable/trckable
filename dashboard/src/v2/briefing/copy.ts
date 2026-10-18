@@ -229,13 +229,6 @@ export const copy = defineCopy('briefing', {
   loading: 'Reading the numbers',
   // A site before its first visit.
   freshLabel: 'Waiting for the first visit',
-  freshChecking: 'Checking for the first visit…',
-  freshLast: (time: string) => `last check ${time}`,
-  freshCheckNow: 'Check now',
-  freshArrived: 'First visit received. Opening Live…',
-  freshHelp: 'Need help?',
-  freshDocs: 'Docs',
-  freshSupport: 'Support',
   empty: 'Nothing to tell yet: no visits in this period.',
   tline: 'Change the period',
 })

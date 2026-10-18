@@ -10,7 +10,7 @@ export default function Fresh({ site, visits }: { site: Site; visits: Visit[] })
     <div className="mk mk-body mk-fresh">
       <section className="setup-screen rise" aria-label={copy.freshLabel}>
         <h1 className="setup-title">{inst.titleCard(site.domain)}</h1>
-        <SetupInstall site={site} visits={visits} help />
+        <SetupInstall site={site} visits={visits} />
       </section>
     </div>
   )

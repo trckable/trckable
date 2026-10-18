@@ -355,40 +355,102 @@
   font-weight: 600;
   letter-spacing: -0.02em;
 }
-.setup-line {
+.setup-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.setup-status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--sunken);
+}
+.setup-head {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+.setup-head h2 {
   margin: 0;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--sunken);
-  font-size: 13.5px;
+  font-size: 16px;
+  font-weight: 600;
 }
-.setup-line > span:not(.pulse) {
-  flex: 1;
-}
-.setup-line .linkish {
-  margin: 0;
-}
-.setup-line.ok {
-  background: color-mix(in srgb, var(--up) 14%, transparent);
-  color: var(--text);
-}
-.setup-line.ok svg {
+.setup-head svg {
   flex: none;
+}
+.setup-status.ok {
+  background: color-mix(in srgb, var(--up) 14%, transparent);
+}
+.setup-status.ok svg {
   color: var(--up);
 }
-.setup-note {
-  margin: 6px 0 0;
-  font-size: 12.5px;
+.setup-status.warn svg {
+  color: var(--warn);
 }
-.setup-help {
+.setup-says {
   margin: 0;
+  padding-left: 28px;
+  color: var(--text-2);
+  font-size: 13.5px;
+}
+.setup-act {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 8px 0 0 28px;
+}
+.setup-act .btn {
+  height: 34px;
+  padding: 0 14px;
+}
+.setup-last {
+  font-size: 12px;
+}
+.setup-why {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.setup-why summary {
+  cursor: pointer;
+  text-align: right;
+}
+.setup-why ul {
+  margin: 8px 0 0;
+  padding-left: 16px;
+}
+.setup-why li {
+  margin: 2px 0;
+}
+.setup-why p {
+  display: flex;
+  gap: 14px;
+  margin: 8px 0 0;
+}
+.setup-why a {
+  color: var(--text-2);
+}
+.setup-why .linkish {
+  margin: 0;
+}
+.setup-why[open] {
+  flex-basis: 100%;
+  margin-left: 0;
+}
+.setup-why[open] summary {
+  text-align: left;
+}
+.setup-code > summary {
+  cursor: pointer;
+  color: var(--text-2);
   font-size: 12.5px;
 }
-.setup-help a {
-  color: var(--text-2);
+.setup-code > .inst {
+  margin-top: 10px;
 }
 @media (max-width: 640px) {
   .setup-screen {
