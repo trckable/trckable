@@ -54,6 +54,7 @@ export function NewKeyRow({ onClose, onCreated }: { onClose: () => void; onCreat
     onClose()
   }
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape from any control of the form closes the form, not the window
     <form
       className="person add-row"
       onKeyDown={leave}
