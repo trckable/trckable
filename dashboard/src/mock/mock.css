@@ -1775,3 +1775,12 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .acct-chips{display:flex;flex-wrap:wrap;gap:var(--mk-s1);margin:0 0 var(--mk-s2)}
 .mk .acct-chip{height:28px;padding:0 var(--mk-s3);border-radius:14px;border:0;background:color-mix(in srgb,var(--mk-text) 7%,transparent);color:var(--mk-muted);font-size:13px;font-weight:600}
 .mk .acct-chip.on{background:color-mix(in srgb,var(--mk-text) 16%,transparent);color:var(--mk-text)}
+/* Prototype F and G: the team before the site in the header */
+.mk .teamchip{display:flex;align-items:center;gap:var(--mk-s1)}
+.mk .team-btn{gap:var(--mk-s2);padding:0 var(--mk-s2)}
+.mk .team-btn.g{padding:0 var(--mk-s1)}
+.mk .team-btn .acct-mk{width:24px;height:24px}
+.mk .crumb-sep{color:var(--mk-faint);font-size:16px;padding:0 2px}
+.mk .team-chev{color:var(--mk-muted)}
+.mk .mk-menu.teams{width:260px}
+@media (max-width:600px){.mk .team-nm,.mk .team-chev,.mk .crumb-sep{display:none}}

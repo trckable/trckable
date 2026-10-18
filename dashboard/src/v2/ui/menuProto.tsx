@@ -1,14 +1,16 @@
 // Prototype of a slimmer site menu (development only; not for merge): ?menu=a, or current for today's. A: the account is a thin line
 // (its name and a chevron) at the top; pressing it swaps the menu, in place, for the account list with a Back row.
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { useMenu } from './useMenu'
+import { useTopLayerWhen } from '../../lib/topLayer'
 import type { Site } from '../../lib/api'
-import { Check, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Check, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { protoParams, type MenuVariant } from '../../dev/fixture/proto'
 import type { Workspace } from './WorkspaceRow'
 
 export const menuVariant = (): MenuVariant | null => (import.meta.env.DEV ? protoParams().menu : null)
 /** The slim menu's cuts (one line a site, no key hints, a short foot). */
-export const slimMenu = (): boolean => ['a', 'd', 'e'].includes(menuVariant() ?? '')
+export const slimMenu = (): boolean => ['a', 'd', 'e', 'f', 'g'].includes(menuVariant() ?? '')
 
 const ACCOUNTS = [
   { id: 'personal', name: 'Personal', sites: 4, ids: ['trk', 'kal', 'tash', 'veni'] },
@@ -96,6 +98,42 @@ export function AccountView({ back, close }: { back: () => void; close: () => vo
         <span>Back</span>
       </button>
       <Accounts close={close} />
+    </div>
+  )
+}
+
+/** F and G: the team in the header, before the site. F is a crumb ("Personal ⌄ /"), G only the team's square. Its menu lists the teams. */
+export function TeamMenu({ kind, at, onPick }: { kind: 'f' | 'g'; at: number; onPick: (i: number) => void }) {
+  const { open, attach, close, toggle } = useMenu()
+  const menu = useRef<HTMLDivElement>(null)
+  useTopLayerWhen(open, menu)
+  const t = ACCOUNTS[at]
+  return (
+    <div ref={attach} className="teamchip" style={{ position: 'relative' }}>
+      <button type="button" className={`mk-chip team-btn ${kind}`} aria-haspopup="menu" aria-expanded={open} aria-label={t.name} onClick={toggle}>
+        <Mark name={t.name} />
+        {kind === 'f' && <span className="nmx team-nm">{t.name}</span>}
+        {kind === 'f' && <ChevronDown size={12} strokeWidth={2} aria-hidden="true" className="team-chev" />}
+      </button>
+      {kind === 'f' && <span className="crumb-sep" aria-hidden="true">/</span>}
+      <div ref={menu} className={`mk-menu teams${open ? ' on' : ''}`} role={open ? 'menu' : undefined}>
+        {open && (
+          <>
+            {ACCOUNTS.map((a, i) => (
+              <button key={a.id} type="button" role="menuitem" className="mi acct" onClick={() => { onPick(i); close() }}>
+                <Mark name={a.name} />
+                <span className="mt2">
+                  <div className="nm">{a.name}</div>
+                </span>
+                {i === at && <Check size={14} strokeWidth={2} aria-hidden="true" />}
+              </button>
+            ))}
+            <button type="button" role="menuitem" className="mi acct manage" onClick={close}>
+              {MANAGE.replace('accounts', 'teams')}
+            </button>
+          </>
+        )}
+      </div>
     </div>
   )
 }

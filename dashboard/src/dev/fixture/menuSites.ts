@@ -27,7 +27,7 @@ const SEVEN: Def[] = [
 export function protoDefs(): Def[] | null {
   const { menu, sites } = protoParams()
   if (!menu) return null
-  return sites === 7 || menu === 'd' || menu === 'e' ? SEVEN : FOUR
+  return sites === 7 || menu !== 'current' && menu !== 'a' ? SEVEN : FOUR
 }
 
 /** The /sites list: the real first site (so its pages work) and clones of another for the rest. */

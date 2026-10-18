@@ -14,7 +14,7 @@ import { useMenu } from './useMenu'
 import { SetupLine } from './SetupLine'
 import { WorkspaceRow, type Workspace } from './WorkspaceRow'
 import { useTopLayerWhen } from '../../lib/topLayer'
-import { currentWorkspace, menuVariant, slimMenu, ThinAccount, AccountView, AccountChips, accountSites, byAccount, teams } from './menuProto'
+import { currentWorkspace, menuVariant, slimMenu, ThinAccount, AccountView, AccountChips, accountSites, byAccount, teams, TeamMenu } from './menuProto'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
 const warmUp = () => {
@@ -60,12 +60,17 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
   let account: ReactNode = baseline && <WorkspaceRow w={baseline} close={done} />
   if (variant === 'a') account = <ThinAccount onOpen={() => setAccounts(true)} />
   if (variant === 'e') account = <AccountChips at={acct} onPick={setAcct} />
+  const scoped = variant === 'f' || variant === 'g'
+  const own = variant === 'e' || scoped ? accountSites(p.sites, acct) : p.sites
+  const shown = cur && own.some((s) => s.id === cur.id) ? cur : (own[0] ?? cur)
+  const label = scopedLabel(shown, p.all)
   const footer = <MenuFoot items={slim ? p.footer.filter((f) => f.key === 'add') : p.footer} done={done} />
   return (
     <div ref={attach} style={{ position: 'relative' }} className="sitechip">
+      {scoped && <TeamMenu kind={variant} at={acct} onPick={setAcct} />}
       <button type="button" id="siteBtn" className="mk-chip" aria-haspopup="menu" aria-expanded={open} data-key="site" {...warm(warmUp)} onClick={toggle}>
         <span className={`mk-dot ${DOT[state] ?? ''}`} />
-        <span className="nmx">{cur ? cur.name || cur.domain : p.all}</span>
+        <span className="nmx">{label}</span>
         {picked && <span className="dom">{`/ ${picked}`}</span>}
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
           <path d="M3 4.5 6 7.5 9 4.5" stroke="var(--mk-muted)" fill="none" strokeWidth="1.5" />
@@ -78,7 +83,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
         {open && !accounts && (
           <Suspense fallback={null}>
             <SiteList
-              sites={variant === 'e' ? accountSites(p.sites, acct) : p.sites}
+              sites={own}
               byAccount={variant === 'd' ? byAccount(p.sites) : undefined}
               team={teams[team]}
               onTeam={(n) => setTeam(Math.max(0, teams.indexOf(n)))}
@@ -102,3 +107,4 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
     </div>
   )
 }
+const scopedLabel = (s: Site | null | undefined, all: string) => (s ? s.name || s.domain : all)

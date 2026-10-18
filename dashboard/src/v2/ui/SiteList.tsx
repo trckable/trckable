@@ -97,6 +97,8 @@ export function SiteList(p: SiteListProps) {
     const box = search.current
     if (q && box && document.activeElement !== box) box.focus({ preventScroll: true })
   }, [q, finder])
+  // A menu of one team's sites totals only those.
+  const own = useMemo(() => (numbers && p.slim ? new Map([...numbers].filter(([id]) => sites.some((s) => s.id === id))) : numbers), [numbers, sites, p.slim])
   const found = useMemo(() => {
     const t = q.trim().toLowerCase()
     return t ? flat(sites, layout).filter((s) => (s.name + ' ' + s.domain).toLowerCase().includes(t)) : null
@@ -177,7 +179,7 @@ export function SiteList(p: SiteListProps) {
       </div>
       )}
       <div id="siteList" ref={list}>
-        {!found && !p.byAccount && <AllRow slim={p.slim} on={!current} numbers={numbers} all={p.all} onPick={() => { p.close(); p.onPick('*') }} />}
+        {!found && !p.byAccount && <AllRow slim={p.slim} on={!current} numbers={own} all={p.all} onPick={() => { p.close(); p.onPick('*') }} />}
         {domains && current && !found && <DomainRows c={domains} close={p.close} />}
         {found && <ul className="site-group">{found.map((s) => item(s, { kind: 'rest' }))}</ul>}
         {found?.length === 0 && <p className="mk-quiet sites-none">{menu.noMatch(q)}</p>}
