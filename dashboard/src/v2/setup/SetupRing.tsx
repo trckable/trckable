@@ -9,8 +9,11 @@ import { copy } from './copy'
 import { useDoneSince, useHidden } from './memory'
 import { CIRCUMFERENCE, left, offset, ringMode } from './model'
 import { SetupPanel } from './SetupPanel'
+import { onSetupOpen, publishSetup } from './summary'
 import { useSetup } from './useSetup'
 import './setup.css'
+
+const ringWords = (mode: string, done: number, counted: number) => (mode === 'check' ? copy.allSet : copy.ring(done, counted))
 
 export function SetupRing({ site, onGoal }: { site: Site | null; onGoal: () => void }) {
   const on = !!site && !isShared()
@@ -18,12 +21,20 @@ export function SetupRing({ site, onGoal }: { site: Site | null; onGoal: () => v
   const { hidden, hide } = useHidden(on)
   const since = useDoneSince(site?.id ?? null, state ? state.all_set : null)
   const [now] = useState(Date.now)
-  const { open, attach, toggle, close } = useMenu()
+  const { open, setOpen, attach, toggle, close } = useMenu()
   const menu = useRef<HTMLDivElement>(null)
   useTopLayerWhen(open, menu)
   // Another site: the panel of the last one is shut.
   const id = site?.id
   useEffect(close, [id, close])
+  const mode = site && state ? ringMode({ state, hidden: hidden(site.id, left(state)), doneSince: since, now }) : 'none'
+  const said = site && state && mode !== 'none' ? ringWords(mode, state.done, state.counted) : null
+  useEffect(() => {
+    publishSetup(said)
+    return () => publishSetup(null)
+  }, [said])
+  // The site menu's own line for the ring, where the header has no room for it.
+  useEffect(() => onSetupOpen(() => setOpen(true)), [setOpen])
   if (site && waiting) {
     return (
       <div className="ringw" aria-hidden="true">
@@ -35,9 +46,8 @@ export function SetupRing({ site, onGoal }: { site: Site | null; onGoal: () => v
     )
   }
   if (!site || !state) return null
-  const mode = ringMode({ state, hidden: hidden(site.id, left(state)), doneSince: since, now })
   if (mode === 'none') return null
-  const words = mode === 'check' ? copy.allSet : copy.ring(state.done, state.counted)
+  const words = said ?? ''
   return (
     <div className="ringw" ref={attach}>
       <button type="button" className="ringb" data-ring={mode} aria-haspopup="dialog" aria-expanded={open} aria-label={copy.ringLabel(state.done, state.counted)} title={words} onClick={toggle}>

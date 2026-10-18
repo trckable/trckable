@@ -44,6 +44,8 @@ export interface PeriodChipProps {
 }
 
 export function PeriodChip(p: PeriodChipProps) {
+  const [head, ...tail] = p.label.split(' · ')
+  const rest = tail.join(" · ")
   const { open, attach, toggle, close } = useMenu()
   const menu = useRef<HTMLDivElement>(null)
   useTopLayerWhen(open, menu)
@@ -90,6 +92,7 @@ export function PeriodChip(p: PeriodChipProps) {
         id="perBtn"
         onKeyDown={esc}
         className="pill"
+        title={p.label}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => {
@@ -97,7 +100,10 @@ export function PeriodChip(p: PeriodChipProps) {
           toggle()
         }}
       >
-        <span>{p.label}</span>
+        <span>
+          {head}
+          {rest && <span className="pl-rest">{` · ${rest}`}</span>}
+        </span>
         {p.vs && <span className="vs hide-s">{p.vs}</span>}
       </button>
       {p.onReset && (

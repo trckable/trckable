@@ -4,6 +4,7 @@
 import { createContext, useContext, type ReactNode } from 'react'
 import type { AccountAlert } from '../components/AccountDot'
 import type { Notice } from './bell/notices'
+import type { Workspace } from './ui/WorkspaceRow'
 
 /** A site waiting to be handed to someone: a note and a Stop on its row, an amber dot. */
 export interface SiteMove {
@@ -32,7 +33,7 @@ export interface V2Extras {
     archive: { items: Notice[]; load: () => void; loading: boolean; words: { dismiss: string; archive: string; fresh: string; none: string } }
   }
   /** The workspace line at the top of the site menu, and what a press on it does. */
-  workspace?: { name: string; d: string; run?: () => void; /** The workspace's own mark, before its name. */ mark?: ReactNode }
+  workspace?: Workspace
   /** A site that is being handed to someone, by its id and name. */
   siteMoves?: (siteId: string, name: string) => SiteMove | undefined
   /** The signed-in person's name, when their profile has none (on the account button and in the menu). */
