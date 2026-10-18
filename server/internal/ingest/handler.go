@@ -230,7 +230,7 @@ type payload struct {
 	Engaged    uint32            `json:"en"` // running total of visible ms for this pageview
 	Scroll     uint8             `json:"sc"`
 	LCP        uint32            `json:"lcp"` // Core Web Vitals, with that module on
-	CLS        uint32            `json:"cls"` // thousandths
+	CLS        *uint32           `json:"cls"` // thousandths; 0 is a score (no shift), absent is "not measured"
 	INP        uint32            `json:"inp"`
 	Dev        int               `json:"dev"` // localhost allowed (tracker data-dev)
 	Cookieless int               `json:"c"`   // visitor is in cookieless mode: never set a cookie
@@ -493,7 +493,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 		if p.LCP < 6e5 {
 			e.LCPms = p.LCP
 		}
-		if p.CLS < 1e5 {
+		if p.CLS != nil && *p.CLS < 1e5 {
 			e.CLS1k = p.CLS
 		}
 		if p.INP < 6e5 {

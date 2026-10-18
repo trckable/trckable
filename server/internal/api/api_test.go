@@ -562,9 +562,13 @@ func TestWebVitalsEndToEnd(t *testing.T) {
 			lcp  uint32
 		}{{"/fast", 1000}, {"/slow", 3000}} {
 			pvid := uint64(1000 + id)
-			ev(event.Event{Kind: event.KindPageview, TS: g.now.Add(-time.Hour).UnixMilli(), Visitor: uint64(i + 1), Pageview: pvid, Path: page.path})
+			ev(event.Event{Kind: event.KindPageview, TS: g.now.Add(-time.Hour).UnixMilli(), Visitor: uint64(i + 1), Pageview: pvid, Path: page.path, Device: "desktop"})
+			cls := 40 + uint32(i)
+			// The tab was left once before (a smaller, earlier report), then at the end.
 			ev(event.Event{Kind: event.KindEngagement, TS: g.now.Add(-time.Hour).UnixMilli(), Visitor: uint64(i + 1), Pageview: pvid,
-				EngagedMs: 5000, LCPms: page.lcp + uint32(i)*100, CLS1k: 40 + uint32(i), INPms: 120 + uint32(i)*10})
+				EngagedMs: 2000, LCPms: 400, INPms: 20})
+			ev(event.Event{Kind: event.KindEngagement, TS: g.now.Add(-time.Hour).UnixMilli(), Visitor: uint64(i + 1), Pageview: pvid,
+				EngagedMs: 5000, LCPms: page.lcp + uint32(i)*100, CLS1k: &cls, INPms: 120 + uint32(i)*10})
 		}
 	}
 	g.waitApplied(t, id)
@@ -584,8 +588,11 @@ func TestWebVitalsEndToEnd(t *testing.T) {
 	if code != 200 {
 		t.Fatalf("vitals: %d %v", code, out)
 	}
-	if out["samples"] != 20.0 {
+	if out["samples"] != 20.0 { // 20 page views, each reporting twice
 		t.Fatalf("samples: %v", out["samples"])
+	}
+	if out["lcp_n"] != 20.0 || out["cls_n"] != 20.0 || out["inp_n"] != 20.0 {
+		t.Fatalf("counts: %v", out)
 	}
 	// The p75 spans both pages: 1000..1900 and 3000..3900 together.
 	if out["lcp_ms"].(float64) < 3000 || out["lcp_ms"].(float64) > 3700 {
@@ -604,6 +611,11 @@ func TestWebVitalsEndToEnd(t *testing.T) {
 	}
 	if v := pages[0].(map[string]any)["visitors"].(float64); v < 3000 {
 		t.Errorf("/slow's own p75 = %v", v)
+	}
+	// Every page view came from the same browser, so one device holds them all.
+	devices, _ := out["devices"].([]any)
+	if len(devices) != 1 || devices[0].(map[string]any)["n"] != 20.0 {
+		t.Fatalf("by device: %v", out["devices"])
 	}
 }
 

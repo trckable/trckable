@@ -132,6 +132,21 @@ describe('speed', () => {
       ['/a', '2.0 s', 'good'],
     ])
   })
+  it('shows a score only where enough page views stand behind it, each by its own count', () => {
+    const s = mapSpeed({ ...v(3400, 243, 90), lcp_n: 40, inp_n: 3, cls_n: 5 })
+    expect(s.kcs.map((k) => [k.val, k.detail])).toEqual([
+      ['3.4 s', 'Needs work'],
+      ['–', 'not enough yet: 3 of 5 visits'],
+      ['0.09', 'Good'],
+    ])
+  })
+  it('lists the devices with enough views, slowest first as the server sent them', () => {
+    const s = mapSpeed({ ...v(3000, 100, 10), devices: [{ value: 'mobile', n: 12, lcp_ms: 4200 }, { value: 'desktop', n: 30, lcp_ms: 1900 }, { value: 'tablet', n: 2, lcp_ms: 9000 }] })
+    expect(s.devices.map((d) => [d.name, d.val, d.grade])).toEqual([
+      ['mobile', '4.2 s', 'poor'],
+      ['desktop', '1.9 s', 'good'],
+    ])
+  })
   it('says nothing was measured rather than zero', () => {
     expect(mapSpeed(v(null, null, null)).kcs[0]).toMatchObject({ val: '–', detail: 'nothing measured yet' })
   })

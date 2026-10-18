@@ -641,3 +641,29 @@ func TestLocalAddressesAreNotASourceOnAVisit(t *testing.T) {
 		t.Errorf("a real ref tag was dropped: %+v", ev)
 	}
 }
+
+// A page that never shifted reports a layout shift of 0: that is a score, and
+// it is kept. A report with no layout shift at all (Safari, or a script built
+// without the module) has none. Numbers no page could reach are dropped.
+func TestWebVitalsAreKeptAsReportedAndWildOnesAreDropped(t *testing.T) {
+	h, l := newHandler(t)
+	send := func(vitals string) event.Event {
+		t.Helper()
+		body := `{"s":"tkb_test","k":"e","u":"https://site.com/","id":"e1","pv":"p1","v":"k3j2.m1a2b3","en":4000,"sc":50` + vitals + `}`
+		if w := post(h, body, chromeUA); w.Code != http.StatusAccepted {
+			t.Fatalf("status %d: %s", w.Code, w.Body)
+		}
+		e, _ := lastEvent(t, l)
+		return e
+	}
+	e := send(`,"lcp":1800,"cls":0,"inp":96`)
+	if e.LCPms != 1800 || e.CLS1k == nil || *e.CLS1k != 0 || e.INPms != 96 {
+		t.Fatalf("reported values changed: %+v", e)
+	}
+	if e = send(`,"lcp":1800`); e.CLS1k != nil {
+		t.Fatalf("no layout shift reported, but one was stored: %d", *e.CLS1k)
+	}
+	if e = send(`,"lcp":99999999,"cls":99999999,"inp":99999999`); e.LCPms != 0 || e.CLS1k != nil || e.INPms != 0 {
+		t.Fatalf("a wild number was kept: %+v", e)
+	}
+}

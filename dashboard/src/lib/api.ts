@@ -395,10 +395,19 @@ export interface WebVitals {
   lcp_ms?: number | null
   cls_1k?: number | null
   inp_ms?: number | null
+  /** How many page views each score is built from; they differ, because a browser reports what it can measure. */
+  lcp_n?: number
+  cls_n?: number
+  inp_n?: number
   good: number
   /** The slowest pages: visitors carries that page's own p75 LCP in ms. */
   pages?: Row[]
+  /** The same scores by kind of device. */
+  devices?: { value: string; n: number; lcp_ms?: number | null; cls_1k?: number | null; inp_ms?: number | null }[]
 }
+
+/** A score built from fewer page views than this is not shown: three visits are not a 75th percentile. */
+export const MIN_VITALS = 5
 
 /** The retention grid. back[i][k] is how many of cohort i came back k weeks
  *  later; a row is only as long as the range covers whole weeks. */
