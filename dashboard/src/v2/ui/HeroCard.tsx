@@ -1,7 +1,6 @@
 // The top card of the Briefing: the sentence, the score ring and what makes it up, and the day against its usual band.
 // Markup and classes are the walkthrough's own (mock/mock.css).
 import { useState, type ReactNode } from 'react'
-import { warm } from '../../lib/lazyLoad'
 import type { Why } from '../briefing/why'
 import { dash, ringTone } from '../briefing/geometry'
 import { copy } from '../briefing/copy'
@@ -103,19 +102,17 @@ interface HeroProps {
   chart: ReactNode
   /** The pills and the line under them (a record day, a run above usual). */
   moments?: { pills: string[]; line: string }
-  /** Play the day back; absent when there is not enough day to play. */
+  /** Play the period back; absent when there is not enough to play. */
   onReplay?: () => void
   /** It is playing: the button says Stop. */
   replaying?: boolean
-  /** Pointing at Replay: fetch what it will need. */
-  onWarm?: () => void
   /** The card has the first-load shimmer, or the site is down and not answering. */
   enter?: boolean
   /** Why the headline says what it says. */
   why?: Why | null
 }
 
-export function Hero({ say, scores, rows, onSee, learn, crowd = null, since, period, onPeriod, chart, moments, onReplay, replaying, onWarm, enter, why }: HeroProps) {
+export function Hero({ say, scores, rows, onSee, learn, crowd = null, since, period, onPeriod, chart, moments, onReplay, replaying, enter, why }: HeroProps) {
   const [open, setOpen] = useState(false)
   const [sheet, setSheet] = useState<Score['key'] | 'all' | null>(null)
   return (

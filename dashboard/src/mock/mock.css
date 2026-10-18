@@ -1154,40 +1154,10 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .rpb svg{width:11px;height:11px}
 .mk .rpl{display:inline-block;text-align:center}
 .mk .rpl::after{content:attr(data-ghost);display:block;height:0;overflow:hidden;visibility:hidden}
-.mk .rphl{outline:2px solid var(--mk-lime);outline-offset:3px;box-shadow:0 0 0 6px var(--mk-limeD2);animation:mk-rppulse 1.4s ease-in-out infinite}
-@keyframes mk-rppulse{50%{box-shadow:0 0 0 10px var(--mk-limeF)}}
-.mk .rpbar{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);width:min(680px,calc(100vw - 32px));z-index:65;background:var(--mk-card2);border:1px solid var(--mk-limeL);border-radius:16px;padding:var(--mk-s3) var(--mk-s4);box-shadow:0 12px 40px var(--mk-shc)}
-.mk .rpbar[hidden]{display:none}
-.mk .rpbar{animation:mk-rpin .25s ease-out backwards}
-@keyframes mk-rpin{from{opacity:0}}
-.mk .rpcap{font-size:14px;font-weight:600;min-height:20px;margin-bottom:var(--mk-s2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mk .rpcap:empty::before{content:"The day so far";color:var(--mk-muted);font-weight:500}
-.mk .rprow{display:flex;align-items:center;gap:var(--mk-s3)}
-.mk .rprow button{height:36px;min-width:36px;border-radius:10px;border:1px solid var(--mk-line);background:var(--mk-card);color:var(--mk-text);font-size:13px;font-weight:600;padding:0 var(--mk-s2);display:grid;place-items:center}
-.mk .rprow button:hover{background:var(--mk-hov)}
-.mk .rpclk{font-size:13px;color:var(--mk-muted);width:42px;flex:none}
-.mk .rpscr{flex:1;min-width:0;accent-color:var(--mk-lime);height:24px}
-.mk .rplist{list-style:none;margin:0;padding:0;max-height:min(46vh,320px);overflow:auto;display:grid;gap:2px}
-.mk .rplist button{all:unset;box-sizing:border-box;width:100%;display:flex;gap:var(--mk-s3);padding:var(--mk-s2);border-radius:8px;font-size:14px;cursor:pointer;min-height:36px;align-items:center}
-.mk .rplist button:hover,.mk .rplist button:focus-visible{background:var(--mk-hov)}
-.mk .rplist .t{font-family:var(--mono,ui-monospace,monospace);color:var(--mk-lime);flex:none}
-.mk .rpbar.rm .rprow{margin-top:var(--mk-s2)}
-.mk .rpt{bottom:calc(76px + 66px + env(safe-area-inset-bottom));z-index:66;pointer-events:none}
-.mk body.replaying #toast{display:none!important}
-@media (max-width:600px){
-.mk .rpbar{left:var(--mk-s2);right:var(--mk-s2);width:auto;transform:none;bottom:calc(76px + env(safe-area-inset-bottom));padding:var(--mk-s2) var(--mk-s3);border-radius:12px}
-.mk .rpbar:not(.rm){display:none}
-.mk .rpbar .rpcap{display:none}
-.mk .rpbar.rm .rpcap{display:block}
-.mk .rpt{left:var(--mk-s2);right:var(--mk-s2);bottom:calc(76px + 66px + env(safe-area-inset-bottom))}
-}
 @container (max-width:600px){
 .mk .hd .ib.bell{display:inline-grid!important}
 .mk .hd .bellw{display:block;margin-left:auto}
 .mk .hd .bellw .bdot{top:2px;right:2px;min-width:9px;width:9px;height:9px;padding:0;font-size:0;border:2px solid var(--mk-bg);box-sizing:content-box}
-}
-@media (prefers-reduced-motion:reduce){
-.mk .rphl,.mk .rpbar{animation:none}
 }
 .mk .xph .ib{width:32px;height:32px;font-size:18px;line-height:1;margin:0}
 .mk .xph .xfull{margin-left:auto}

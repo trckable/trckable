@@ -1,50 +1,54 @@
-// The bar at the bottom while the day is played back: what the line has reached, in a word. It sits over the page
-// (fixed), so it moves nothing. With reduced motion the moments are a list to step through instead, with a way out.
-// On a phone the caption is a toast over the page. Markup and classes are the walkthrough's own.
-import { MkPortal } from './Portal'
-import { copy } from '../briefing/copy'
-import type { Moment } from '../replay/model'
-import type { Replay } from '../replay/useReplay'
+// The replay's buttons and its one-line wrap-up, in the row above the chart: it takes the place of the chart's own line
+// and the Notes button while a replay is up, laid over that row (absolute), so it adds no height and moves nothing.
+import { RotateCcw, Share2, SkipForward, X } from 'lucide-react'
+import { fmtInt } from '../../lib/format'
+import { sourceName } from '../briefing/model'
+import { best } from '../../features/story/moments'
+import { copy } from '../replay/story.copy'
+import type { ReplayIn } from './ReplayStage'
 
-export function ReplayBar({ r, moments, phone }: { r: Replay; moments: Moment[]; phone: boolean }) {
-  if (!r.on) return null
-  const cap = r.cur?.txt ?? ''
-  const [at, ...rest] = cap.split(' · ')
+/** "By 23:33: 1,234 people, best hour 17:00, from Google": every number is the period's own. */
+export function wrapOf(r: ReplayIn): string {
+  const b = best(r.labels, r.vals, r.bucket)
+  const top = b ? bestOf(r, b) : ''
+  return copy.wrap(r.today ? copy.by(r.clock) : r.period, fmtInt(r.total), top, r.source ? sourceName(r.source) : undefined)
+}
+
+const bestOf = (r: ReplayIn, b: string) => (r.bucket === 'hour' ? copy.bestHour(b) : copy.bestDay(b))
+
+export function ReplayBar({ r }: { r: ReplayIn }) {
+  const { replay } = r
+  if (replay.phase === 'off') return null
   return (
-    <MkPortal>
-      <div className={`rpbar${r.reduced ? ' rm' : ''}`} role="region" aria-label={copy.replayBar}>
-        <div className="rpcap" aria-live="polite">
-          {r.reduced ? copy.replayList : cap}
-        </div>
-        {r.reduced && (
+    <div className="rp-bar" data-phase={replay.phase}>
+      {replay.phase === 'end' && (
+        <p className="rp-wrap" role="status">
+          {wrapOf(r)}
+        </p>
+      )}
+      {/* A new set of buttons for each phase, so the row is never one thing that moved. */}
+      <div className="rp-act" key={replay.phase}>
+        {replay.phase === 'on' ? (
+          <button type="button" className="rp-btn" onClick={replay.skip}>
+            <SkipForward size={14} strokeWidth={1.75} aria-hidden="true" />
+            <span>{copy.skip}</span>
+          </button>
+        ) : (
           <>
-            <ol className="rplist">
-              {moments.map((m) => (
-                <li key={m.min}>
-                  <button type="button" onClick={() => r.pick(m)}>
-                    <span className="t">{m.txt.split(' · ')[0]}</span>
-                    <span>{m.txt.split(' · ').slice(1).join(' · ')}</span>
-                  </button>
-                </li>
-              ))}
-            </ol>
-            <div className="rprow">
-              <button type="button" id="rpX" aria-label={copy.closeReplay} onClick={r.close}>
-                &times;
-              </button>
-            </div>
+            <button type="button" className="rp-btn" onClick={replay.start} aria-label={copy.again} title={copy.again}>
+              <RotateCcw size={14} strokeWidth={1.75} aria-hidden="true" />
+              <span>{copy.again}</span>
+            </button>
+            <button type="button" className="rp-btn pri" onClick={r.onShare} aria-label={copy.share} title={copy.share}>
+              <Share2 size={14} strokeWidth={1.75} aria-hidden="true" />
+              <span>{copy.share}</span>
+            </button>
+            <button type="button" className="rp-btn ic" onClick={replay.stop} aria-label={copy.close} title={copy.close}>
+              <X size={14} strokeWidth={1.75} aria-hidden="true" />
+            </button>
           </>
         )}
       </div>
-      {phone && !r.reduced && (
-        <div className={`mk-toast rpt${cap ? ' on' : ''}`}>
-          <div className="ic">{'▶'}</div>
-          <div>
-            <b>{rest.join(' · ')}</b>
-            <span>{at}</span>
-          </div>
-        </div>
-      )}
-    </MkPortal>
+    </div>
   )
 }

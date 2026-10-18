@@ -214,7 +214,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
         </g>
       )}
       {rise && (
-        <g data-rv={X(rise.p.i)}>
+        <g data-rv={X(rise.p.i)} data-rise="">
           <line x1={X(rise.p.i)} x2={X(rise.p.i)} y1={Y(rise.p.v) - 6} y2={T - 6} stroke="var(--mk-lime)" />
           <text className="lbl" data-lbl="2" x={flip ? X(rise.p.i) - 6 : Math.min(X(rise.p.i) + 6, W - Rr - rise.text.length * 7.4)} textAnchor={flip ? 'end' : undefined} y={T - 10} fill="var(--mk-lime)" fontSize="12" fontWeight="600">
             {rise.text}
