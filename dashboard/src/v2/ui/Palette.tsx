@@ -37,7 +37,7 @@ export function Palette({ items, placeholder, none, onClose, initial = '' }: { i
           if (!(e.target as HTMLElement).closest('.palbox')) onClose()
         }}
       >
-        <div className="palbox">
+        <div className="palbox" role="dialog" aria-modal="true" aria-label={placeholder}>
           <input
             ref={input}
             placeholder={placeholder}

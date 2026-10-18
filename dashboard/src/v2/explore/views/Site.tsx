@@ -29,7 +29,11 @@ export function Speed({ x, d }: { x: XCtx; d: SpeedModel }) {
     <>
       <XKcsPlain items={d.kcs} three />
       <XSec a={copy.slowest} b={copy.byLcp} />
-      <XCols first={copy.heads.page} cols={[{ h: copy.lcp }, { h: copy.rating }]} rows={rows} xc="minmax(0,1fr) 64px 112px" xcm="minmax(0,1fr) 52px 104px" limit={x.limit} onAll={x.showAll} />
+      {rows.length === 0 ? (
+        <XEmpty title={copy.emptySpeed} hint={copy.emptySpeedHint} />
+      ) : (
+        <XCols first={copy.heads.page} cols={[{ h: copy.lcp }, { h: copy.rating }]} rows={rows} xc="minmax(0,1fr) 64px 112px" xcm="minmax(0,1fr) 52px 104px" limit={x.limit} onAll={x.showAll} />
+      )}
       <XNote>{copy.noteSpeed}</XNote>
     </>
   )

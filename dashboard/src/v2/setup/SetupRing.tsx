@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import type { Site } from '../../lib/apiMore'
 import { canChange, isShared } from '../../lib/me'
 import { useTopLayerWhen } from '../../lib/topLayer'
+import { earned } from '../../features/verified/model'
+import { VerifiedPill } from '../../features/verified/VerifiedPill'
 import { useMenu } from '../ui/useMenu'
 import { copy } from './copy'
 import { useDoneSince, useHidden } from './memory'
@@ -17,7 +19,7 @@ const ringWords = (mode: string, done: number, counted: number) => (mode === 'ch
 
 export function SetupRing({ site, onGoal }: { site: Site | null; onGoal: () => void }) {
   const on = !!site && !isShared()
-  const { state, run } = useSetup(site, on)
+  const { state, run, failed } = useSetup(site, on)
   const { hidden, hide } = useHidden(on)
   const since = useDoneSince(site?.id ?? null, state ? state.all_set : null)
   const [now] = useState(Date.now)
@@ -35,8 +37,11 @@ export function SetupRing({ site, onGoal }: { site: Site | null; onGoal: () => v
   }, [said])
   // The site menu's own line for the ring, where the header has no room for it.
   useEffect(() => onSetupOpen(() => setOpen(true)), [setOpen])
-  if (!site || !state) return null
-  if (mode === 'none') return null
+  if (!site) return null
+  // One indicator at a time, in one slot: the ring while setup is open (the verify step is a row in its panel), the verified seal
+  // once the ring has gone, or where there is no setup to show. Nothing while the checklist is still on its way.
+  if (mode === 'none' && (state || failed || !on)) return earned(site.verified).length === 0 ? null : <div className="ringw seal-slot"><VerifiedPill verified={site.verified} site={site} seal /></div>
+  if (!state || mode === 'none') return null
   const words = said ?? ''
   return (
     <div className="ringw" ref={attach}>

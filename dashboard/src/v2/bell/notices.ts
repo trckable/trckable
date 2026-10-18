@@ -1,5 +1,6 @@
 // The bell's list: what happened that a person would want to hear of, put together from what the server already
 // records (incidents, milestones, mentions). Pure; read marks are kept by useNotices.
+import { lineOf } from '../../features/milestones/words'
 import type { Milestone, Site } from '../../lib/api'
 import type { Incident } from '../../features/incidents/api'
 import type { Mention } from '../../features/mentions/api'
@@ -54,7 +55,7 @@ export function fromMentions(list: Mention[], domain: string): Notice[] {
 }
 
 export function fromMilestones(list: Milestone[], domain: string): Notice[] {
-  return list.map((m) => ({ id: `mile:${m.kind}:${m.step}`, kind: 'milestone' as const, site: domain, title: copy.milestone(m.kind, m.value), sub: copy.milestoneSub, at: m.created_at, milestone: m }))
+  return list.map((m) => ({ id: `mile:${m.kind}:${m.step}`, kind: 'milestone' as const, site: domain, title: lineOf(m, true), sub: copy.milestoneSub, at: m.created_at, milestone: m }))
 }
 
 /**

@@ -53,7 +53,8 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
   // The overview's numbers are today's; the period only draws the sparklines.
   const said = view.layout === 'overview' && lens === 'visitors' && !uptime ? copy.periodToday : period
   const count = shown.length === sites.length ? copy.siteCount(sites.length) : copy.siteCountOf(shown.length, sites.length)
-  const summary = copy.summary(said, uptime ? incidents.lensUptime : lensWord[lens], count)
+  // The numbers are today's and only the charts follow the period: the line says both, so it never reads as another period than the address.
+  const summary = copy.summary(said === copy.periodToday ? copy.todayCharts(period) : said, uptime ? incidents.lensUptime : lensWord[lens], count)
   const props = { lens, rows: rows ?? [], sites: shown, colorOf, start: startIndex(rows ?? []), period }
 
   return (

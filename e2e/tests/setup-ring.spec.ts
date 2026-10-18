@@ -152,3 +152,46 @@ test('Add a site asks the kind after the domain: a choice is saved, Skip saves n
     if (pick) expect(kind.value).toBe('shop')
   }
 })
+
+// One indicator at a time in the header: the ring while setup is open, the verified seal once the ring has gone.
+const verifiedSites = (page: Page) =>
+  page.route(/\/api\/v1\/sites$/, async (route) => {
+    const res = await route.fetch()
+    const now = Math.floor(Date.now() / 1000)
+    const body = (await res.json()) as { sites: object[] }
+    const sites = body.sites.map((s) => ({ ...s, verified: { sources: [{ kind: 'payments', provider: 'stripe', ok: true, since: now - 86_400, checked: now, detail: '' }] } }))
+    await route.fulfill({ response: res, json: { ...body, sites } })
+  })
+const allDone = (page: Page) =>
+  page.route(/\/api\/v1\/sites\/[^/]+\/setup$/, async (route) => {
+    const res = await route.fetch()
+    const body = await res.json()
+    body.items = body.items.map((i: { counted: boolean; done: boolean }) => ({ ...i, done: i.counted ? true : i.done }))
+    body.done = body.counted
+    body.all_set = true
+    await route.fulfill({ response: res, json: body })
+  })
+
+for (const width of [1440, 948, 390]) {
+  test(`${width}px: while setup is open the header has no verified seal`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await verifiedSites(page)
+    await open(page)
+    await page.waitForTimeout(3500)
+    await expect(page.locator('.hd .vf-sealbtn')).toHaveCount(0)
+    if (width > 1100 || width <= 700) await expect(page.locator('.hd .ringb')).toBeVisible()
+    await page.unrouteAll({ behavior: 'ignoreErrors' })
+  })
+
+  test(`${width}px: once the ring has gone the seal takes its slot`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await verifiedSites(page)
+    await allDone(page)
+    await page.addInitScript(([id, ms]) => localStorage.setItem('trckable:ring:done', JSON.stringify({ [id as string]: Date.now() - (ms as number) })), [site, 8 * 86_400_000])
+    await open(page)
+    await expect(page.locator('.hd .ringb')).toHaveCount(0)
+    await expect(page.locator('.hd .ringw.seal-slot .vf-sealbtn')).toBeVisible({ timeout: 15_000 })
+    await shot(page, 'seal-slot', width)
+    await page.unrouteAll({ behavior: 'ignoreErrors' })
+  })
+}

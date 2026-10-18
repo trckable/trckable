@@ -59,4 +59,12 @@ describe('the palette', () => {
     expect(items[0].kind).toBe('peek')
     expect(items[1].title).toContain('Create')
   })
+
+  it('offers the Mentions page only where Mentions is on', () => {
+    const find = () => paletteItems({ sites: [site], site, data, here: 'briefing', domainOf: (s) => s.domain }).find((i) => i.title === 'Mentions' && i.group === 'Go to')
+    me.setRole('owner', true)
+    expect(find()).toBeTruthy()
+    me.setRole('owner', false)
+    expect(find()).toBeUndefined()
+  })
 })

@@ -64,7 +64,7 @@ for (const width of [390, 1440]) {
     const rows = list.locator('.nf')
     await expect(rows).toHaveCount(2)
     expect(await list.locator('.nf.unread').count()).toBe(Number(await dot.textContent()))
-    await expect(rows.first()).toContainText('1,000 visitors')
+    await expect(rows.first()).toContainText('1,000 people have visited your site')
     // Pressing inside the list does not shut it (the phone's sheet lives outside the bell's own box).
     await rows.nth(1).hover()
     await list.getByRole('button', { name: 'Mark all read' }).click()

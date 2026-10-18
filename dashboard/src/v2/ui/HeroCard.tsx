@@ -137,7 +137,7 @@ export function Hero({ say, scores, rows, onSee, learn, crowd = null, since, per
           <h1 className={`mk-hl s${say.bad ? ' bad' : ''}`}>{parts(say.short)}</h1>
           {say.sub && <p className="hsub">{say.sub}</p>}
           {onReplay && (
-            <button type="button" className="gh rpb" data-replay="1" data-key="replay" title={replaying ? copy.stopReplay : copy.replayTitle} onClick={onReplay} {...(onWarm ? warm(onWarm) : {})}>
+            <button type="button" className="gh rpb" data-replay="1" data-key="replay" aria-label={replaying ? copy.stop : copy.replay} title={replaying ? copy.stopReplay : copy.replayTitle} onClick={onReplay} {...(onWarm ? warm(onWarm) : {})}>
               <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
                 <path d={replaying ? 'M2.5 2.5h7v7h-7z' : 'M2.5 1.2v9.6L10.5 6z'} />
               </svg>

@@ -2,6 +2,7 @@
 // list and the card write these, so the first screen does not carry them.
 import type { Site } from '../../lib/api'
 import { tag } from '../../i18n'
+import { clock } from '../../lib/site'
 
 /** Seconds as the shortest honest span: 12m, 6h, 3d. */
 export function span(secs: number): string {
@@ -16,9 +17,10 @@ export function silence(s: Site, now = Date.now()): string {
   return s.last_event_at ? span(now / 1000 - s.last_event_at) : ''
 }
 
-/** A moment as people say it: the time today, else the day and time. */
+/** A moment as people say it: the time today, else the day and time. Times are 24 hours, as everywhere in the app. */
 export function when(unix: number): string {
   const d = new Date(unix * 1000)
   const today = d.toDateString() === new Date().toDateString()
-  return d.toLocaleString(tag, today ? { hour: '2-digit', minute: '2-digit' } : { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  if (today) return clock(d, '')
+  return `${d.toLocaleDateString(tag, { weekday: 'short', day: 'numeric', month: 'short' })}, ${clock(d, '')}`
 }

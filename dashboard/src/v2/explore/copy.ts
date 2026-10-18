@@ -117,6 +117,8 @@ export const copy = defineCopy('v2explore', {
   widen: 'Show the last 30 days',
   emptySearch: 'Not enough Google traffic yet',
   emptySearchHint: 'Search data shows once this period has more visits from Google.',
+  emptySpeed: 'No page measured yet',
+  emptySpeedHint: 'Load times show here once visitors have opened your pages.',
   emptyProducts: 'No products to sell here',
   emptyProductsHint: 'Sales appear once this site has a product.',
   emptyEarnersHint: 'A sale shows here once it can be tied to where the visitor came from.',
