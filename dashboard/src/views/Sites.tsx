@@ -272,7 +272,7 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
   ]
 
   return (
-    <Modal label={`Delete ${site.domain}`} className="danger-modal" keepSize={false} onClose={step === 'what' || step === 'last' ? onClose : undefined}>
+    <Modal label={`Delete ${site.domain}`} className="danger-modal" over keepSize={false} onClose={step === 'what' || step === 'last' ? onClose : undefined}>
       {step === 'what' && (
         <>
           <div className="danger-step" key="what">

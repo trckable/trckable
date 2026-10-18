@@ -45,7 +45,7 @@ export default function RoleDialog({ p, role, run, onClose }: { p: Person; role:
       })
   }
   return (
-    <Modal label={title} className="role-modal" onClose={busy ? undefined : onClose}>
+    <Modal label={title} className="role-modal" over onClose={busy ? undefined : onClose}>
       <form
         className="role-body"
         aria-busy={busy}
