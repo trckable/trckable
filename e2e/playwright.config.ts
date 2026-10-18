@@ -48,7 +48,7 @@ if (!existsSync(LABELS)) {
   )
   writeFileSync(LABELS, rows.join('\n') + '\n')
 }
-// A week of arrivals from everywhere: ChatGPT (by referrer, and tagged utm_source by an app that sends none or a referrer of its own; the importer is told the channel, as the live classifier would), Claude, Perplexity, and
+// A week of arrivals from everywhere: ChatGPT (by referrer, and tagged utm_source by an app that sends none or a referrer of its own), Claude, Perplexity, and
 // plenty that is no AI (Google, Instagram, direct), for Explore's AI view to tell apart.
 export const AI_DOMAIN = 'ai.example'
 const AI = join(DATA, 'ai.ndjson')
@@ -56,7 +56,7 @@ if (!existsSync(AI)) {
   const noon = Math.floor(Date.now() / 86_400_000) * 86_400_000 + 12 * 3_600_000
   const from: [number, string, string][] = [[8, 'chatgpt.com', ''], [4, '', 'chatgpt.com'], [2, 'google.com', 'chatgpt.com'], [2, 'claude.ai', ''], [1, 'perplexity.ai', ''], [9, 'google.com', ''], [3, 'l.instagram.com', ''], [6, '', '']]
   const rows = from.flatMap(([n, referrer, source], k) =>
-    Array.from({ length: n }, (_, i) => JSON.stringify({ ts: new Date(noon - 86_400_000 + (k * 20 + i) * 60_000).toISOString(), path: '/', visitor: `ai-${k}-${i}`, referrer, source, channel: k < 5 ? 'AI' : '' })),
+    Array.from({ length: n }, (_, i) => JSON.stringify({ ts: new Date(noon - 86_400_000 + (k * 20 + i) * 60_000).toISOString(), path: '/', visitor: `ai-${k}-${i}`, referrer, source })),
   )
   writeFileSync(AI, rows.join('\n') + '\n')
 }

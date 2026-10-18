@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/event"
+	"github.com/trckable/trckable/server/internal/ingest"
 )
 
 // Row is one line of an import file. Only ts and path are required.
@@ -359,7 +360,7 @@ func toEvent(site string, r Row, i int) (event.Event, bool) {
 	e.Pageview = hash64(site + "|pv|" + strconv.Itoa(i) + "|" + r.TS)
 	e.EventID = hash64(site + "|" + r.TS + "|" + path + "|" + r.Visitor + "|" + r.Goal + "|" + strconv.Itoa(i))
 	if e.Channel == "" {
-		e.Channel = channelFor(e.RefHost, r.Medium)
+		e.Channel = ingest.ChannelOf(e.RefHost, r.Source, r.Medium)
 	}
 	return e, true
 }
@@ -410,27 +411,6 @@ func refHost(ref string) string {
 		ref = ref[:i]
 	}
 	return strings.TrimPrefix(ref, "www.")
-}
-
-// channelFor is a small version of the live classifier, for rows that do not
-// name a channel.
-func channelFor(ref, medium string) string {
-	switch {
-	case medium == "cpc" || medium == "ppc" || medium == "paid":
-		return "Paid"
-	case medium == "email" || strings.Contains(ref, "mail."):
-		return "Email"
-	case ref == "":
-		return "Direct"
-	case strings.Contains(ref, "google.") || strings.Contains(ref, "bing.") || strings.Contains(ref, "duckduckgo") || strings.Contains(ref, "ecosia") || strings.Contains(ref, "yahoo"):
-		return "Search"
-	case strings.Contains(ref, "chatgpt") || strings.Contains(ref, "claude") || strings.Contains(ref, "perplexity") || strings.Contains(ref, "copilot") || strings.Contains(ref, "gemini"):
-		return "AI"
-	case strings.Contains(ref, "x.com") || strings.Contains(ref, "twitter") || strings.Contains(ref, "facebook") || strings.Contains(ref, "linkedin") || strings.Contains(ref, "reddit") || strings.Contains(ref, "instagram") || strings.Contains(ref, "youtube") || strings.Contains(ref, "tiktok"):
-		return "Social"
-	default:
-		return "Referral"
-	}
 }
 
 // hash64 is FNV-1a: stable, fast, and not reversible into whatever the source
