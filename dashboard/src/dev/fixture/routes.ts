@@ -276,6 +276,29 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
         }),
       })
     }
+    case '/team':
+      return ok({
+        sites: sites.map((s) => {
+          const series = dailyOf(c, s.id, END - 6, END).map((d) => d.kpis.visitors)
+          const today = reportOf(c, s.id, { from: dateOf(c, END), to: dateOf(c, END), bucket: 'day', filters: [] }).current
+          // The same weekday's earlier weeks, counted up to the same time of day; told only with two weeks to go on.
+          const cut = c.nowAbs - END * 1440
+          const past = [1, 2, 3, 4].map((k) => countIn(c, s.id, (END - 7 * k) * 1440, (END - 7 * k) * 1440 + cut, []))
+          const usual = past.reduce((n, v) => n + v, 0) / past.length
+          const revenue = today.money?.revenue
+          return {
+            id: s.id,
+            today: series[series.length - 1],
+            ...(usual > 0 ? { usual } : {}),
+            series,
+            online: online(c, s),
+            ...(today.dims.referrer?.[0] || today.dims.channel?.[0] ? { top_source: (today.dims.referrer?.[0] ?? today.dims.channel?.[0])?.value } : {}),
+            ...(revenue ? { revenue } : {}),
+            currency: 'USD',
+            exponent: 2,
+          }
+        }),
+      })
     case '/incidents':
       return ok({ incidents: sites.flatMap((s) => incidentsOf(c, s)), quiet_tracked: Object.fromEntries(sites.map((s) => [s.id, true])) })
   }
