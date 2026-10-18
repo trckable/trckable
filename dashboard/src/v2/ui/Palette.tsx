@@ -14,15 +14,30 @@ export interface PaletteItem {
   run: () => void
 }
 
-export function Palette({ items, placeholder, none, onClose, initial = '' }: { items: PaletteItem[]; placeholder: string; none: (q: string) => string; onClose: () => void; initial?: string }) {
+/** A line that reads as a question to Peek: a question mark, or a question word and something after it. */
+export const isQuestion = (q: string) => /\?\s*$/.test(q) || /^(why|how|what|when|which|who|did|is|are)\s+\S/i.test(q)
+
+/** Where typing a question goes: Peek, as the first row. */
+export interface PaletteAsk {
+  run: (question: string) => void
+  title: (question: string) => string
+  kind: string
+  group: string
+}
+
+export function Palette({ items, placeholder, none, onClose, initial = '', ask }: { items: PaletteItem[]; placeholder: string; none: (q: string) => string; onClose: () => void; initial?: string; ask?: PaletteAsk }) {
   const [q, setQ] = useState(initial)
   const [at, setAt] = useState(0)
   const input = useRef<HTMLInputElement>(null)
   useEffect(() => input.current?.focus(), [])
   const list = useMemo(() => {
     const t = q.toLowerCase().trim()
-    return items.filter((i) => `${i.title} ${i.also ?? ''}`.toLowerCase().includes(t)).slice(0, 16)
-  }, [items, q])
+    const found = items.filter((i) => `${i.title} ${i.also ?? ''}`.toLowerCase().includes(t)).slice(0, 16)
+    // A question, or words that match nothing, can be asked: Peek's row leads, the jumps stay below it.
+    const text = q.trim()
+    if (!ask || !text || !(isQuestion(text) || found.length === 0)) return found
+    return [{ title: ask.title(text), kind: ask.kind, group: ask.group, run: () => ask.run(text) }, ...found]
+  }, [items, q, ask])
   const sel = Math.max(0, Math.min(at, list.length - 1))
   const run = (i: PaletteItem | undefined) => {
     onClose()

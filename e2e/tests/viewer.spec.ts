@@ -113,6 +113,12 @@ test('a viewer is offered no create, edit or delete control anywhere', async ({ 
   expect(problems).toEqual([])
 })
 
+test('All sites has no Add a site for a viewer', async ({ page }) => {
+  await open(page, '/sites')
+  await expect(page.locator('.tm-row[data-site]').first()).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByRole('button', { name: 'Add a site' })).toHaveCount(0)
+})
+
 // The same search finds the owner's controls, so an empty list above means
 // there were none, not that the search looked in the wrong place.
 test('the search finds an owner\'s controls', async ({ page }) => {

@@ -5,6 +5,9 @@ import { trapTab } from '../../kit/Modal'
 
 const OPENED = 'trckable:sheet'
 
+/** Closes every open sheet (the logo goes home from wherever the person is). */
+export const closeSheets = () => window.dispatchEvent(new CustomEvent(OPENED, { detail: {} }))
+
 export function useSheet(box: RefObject<HTMLElement | null>, onClose: () => void) {
   const close = useRef(onClose)
   useEffect(() => {

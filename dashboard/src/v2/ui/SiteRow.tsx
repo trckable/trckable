@@ -18,6 +18,13 @@ import type { SiteMove } from '../slots'
 
 const DOT = { now: 'now', live: '', quiet: 'quiet', stopped: 'down', new: 'off' } as const
 
+/** The short word and the tip of a down or quiet site; a quiet one with no visit on record (imported history, a script seen) has no span to tell. */
+function stateWords(s: Site, down: boolean): [string, string | undefined] {
+  const span = silence(s)
+  if (down) return [copy.downShort(span), copy.downTip(span)]
+  return span ? [copy.quietShort(span), copy.quietTip(span)] : [copy.noLiveVisits, undefined]
+}
+
 /** What stands where the people on it would: "setup", or in words how long it has been down or quiet (a quiet one's dot is grey, a down one's red); else today's visitors. */
 function Tail({ s, today }: { s: Site; today?: number }) {
   const state = dotState(s)
@@ -30,9 +37,10 @@ function Tail({ s, today }: { s: Site; today?: number }) {
   }
   if (state === 'stopped' || state === 'quiet') {
     const down = state === 'stopped'
+    const [word, tip] = stateWords(s, down)
     return (
-      <span className={`now state-word ${down ? 'down' : 'quiet'}`} title={down ? copy.downTip(silence(s)) : copy.quietTip(silence(s))}>
-        {down ? copy.downShort(silence(s)) : copy.quietShort(silence(s))}
+      <span className={`now state-word ${down ? 'down' : 'quiet'}`} title={tip}>
+        {word}
       </span>
     )
   }

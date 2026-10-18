@@ -14,6 +14,14 @@ describe('a site the uptime probe finds not answering', () => {
   })
 })
 
+describe('a site with no live visit yet', () => {
+  it('is quiet, not new, once its script was seen', () => {
+    expect(statusOf(site({ check: { at: sec, found: 'site' } }), NOW)).toBe('quiet')
+    expect(statusOf(site({ verified: { sources: [{ kind: 'snippet', ok: true, since: 1, checked: 1, detail: '' }] } }), NOW)).toBe('quiet')
+    expect(statusOf(site({ check: { at: sec, found: 'none' } }), NOW)).toBe('new')
+  })
+})
+
 describe('a site’s status', () => {
   it('is new before the first visit, ok while visits are recent', () => {
     expect(statusOf(site(), NOW)).toBe('new')
