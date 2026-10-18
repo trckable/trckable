@@ -42,6 +42,9 @@ describe('which addresses sign-in may return to', () => {
   })
   it.each([
     '//evil.example/x',
+    '/.//evil.example',
+    '/./\\evil.example',
+    '/a/..//evil.example',
     '///evil.example',
     '/\\evil.example',
     '/\\/evil.example',

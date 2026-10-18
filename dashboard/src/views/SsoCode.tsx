@@ -5,6 +5,7 @@ import { useState, type SubmitEvent } from 'react'
 import { FieldError, fieldProps } from '../kit/FieldError'
 import { api } from '../lib/api'
 import { formWords } from '../lib/formWords'
+import { sameOrigin } from '../lib/returnTo'
 import { authCopy } from './authCopy'
 import { Shell } from './AuthShell'
 import { ssoCopy } from './ssoCopy'
@@ -12,7 +13,7 @@ import { ssoCopy } from './ssoCopy'
 export const wantsCode = () => new URLSearchParams(location.search).get('sso') === 'code'
 
 /** Only a path on this site is opened, whatever the server sent. */
-export const localPath = (to: string) => (to.startsWith('/') && !to.startsWith('//') && !to.includes('\\') ? to : '/')
+export const localPath = (to: string) => sameOrigin(to) ?? '/'
 
 export function SsoCode() {
   const [code, setCode] = useState('')

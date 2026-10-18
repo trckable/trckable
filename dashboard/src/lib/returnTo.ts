@@ -31,9 +31,11 @@ function hasOddChar(to: string): boolean {
 export function sameOrigin(to: string): string | null {
   if (!/^\/(?![/\\])/.test(to) || hasOddChar(to)) return null
   try {
-    const u = new URL(to, location.origin)
-    if (u.origin !== location.origin || /^\/(login|setup)(\/|$)/.test(u.pathname)) return null
-    return u.pathname + u.search + u.hash
+    const base = 'http://app.invalid' // any origin will do: only a path that stays on it is let through
+    const u = new URL(to, base)
+    if (u.origin !== base || /^\/(login|setup)(\/|$)/.test(u.pathname)) return null
+    const out = u.pathname + u.search + u.hash
+    return /^\/(?![/\\])/.test(out) ? out : null // dot segments can leave a second slash behind (/.//evil)
   } catch {
     return null
   }
