@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/trckable/trckable/server/internal/permissions"
 	"github.com/trckable/trckable/server/internal/revenue"
 )
 
@@ -131,7 +132,7 @@ func (a *API) exportPerson(w http.ResponseWriter, r *http.Request) {
 // erasePerson removes a visitor from the analytics store and cuts their
 // payments loose. What it cannot remove is named in the answer.
 func (a *API) erasePerson(w http.ResponseWriter, r *http.Request) {
-	if a.owner(w, r) == nil {
+	if !requireAct(w, r, permissions.ActDataErase, "only an owner can erase a person's data") {
 		return
 	}
 	if !a.siteExists(w, r) {
