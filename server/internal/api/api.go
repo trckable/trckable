@@ -26,6 +26,7 @@ import (
 	"github.com/trckable/trckable/server/internal/alerts"
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/ga"
+	"github.com/trckable/trckable/server/internal/mentions"
 	"github.com/trckable/trckable/server/internal/query"
 	"github.com/trckable/trckable/server/internal/realtime"
 	"github.com/trckable/trckable/server/internal/revenue"
@@ -60,6 +61,10 @@ type API struct {
 	// MentionsOn says Mentions is switched on; off, its routes answer 404 and
 	// no other answer carries a mention.
 	MentionsOn bool
+	// MentionGet fetches the news for the look-alike check on a name word; nil
+	// leaves that check off (it then says it checked nothing).
+	MentionGet mentions.Doer
+	lookAlike  lookAlikeGate
 	// PurgeAnalytics removes a site's rows from the analytics store. It runs on
 	// the writer's connection (the only one allowed to write DuckDB); nil while
 	// the store is still warming up, and deleting a site then is refused.
@@ -309,6 +314,12 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}/mentions/curves", a.authed(a.ifMentions(a.mentionCurves)))
 	handle("GET /api/v1/sites/{site}/mentions/{id}", a.authed(a.ifMentions(a.mentionDetail)))
 	handle("PUT /api/v1/sites/{site}/mentions/keywords", a.authed(a.ifMentions(a.setMentionKeywords)))
+	handle("GET /api/v1/sites/{site}/mentions/rules", a.authed(a.ifMentions(a.mentionRules)))
+	handle("PUT /api/v1/sites/{site}/mentions/rules", a.authed(a.ifMentions(a.setMentionRules)))
+	handle("GET /api/v1/sites/{site}/mentions/hidden", a.authed(a.ifMentions(a.hiddenMentions)))
+	handle("GET /api/v1/sites/{site}/mentions/lookalike", a.authed(a.ifMentions(a.mentionLookAlike)))
+	handle("POST /api/v1/sites/{site}/mentions/{id}/not-about-us", a.authed(a.ifMentions(a.notAboutUs)))
+	handle("POST /api/v1/sites/{site}/mentions/{id}/restore", a.authed(a.ifMentions(a.restoreMention)))
 	handle("PATCH /api/v1/sites/{site}/incidents/{id}", a.authed(a.incidentNote))
 	handle("GET /api/v1/incidents", a.authed(a.accountIncidents))
 	handle("GET /api/v1/health", a.authed(a.health))
