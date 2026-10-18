@@ -212,13 +212,19 @@ const ASK = 'Ask an Owner or Admin to add one'
 // and under it the quiet line instead of the button that would add one.
 test('a viewer sees the empty goals and funnel with the ask line and no add button', async ({ page, request }) => {
   const domain = `viewer-empty-${Date.now()}.test`
-  expect((await request.post(`${API}/api/v1/sites`, { headers: AUTH, data: { domain } })).ok()).toBeTruthy()
+  const made = await request.post(`${API}/api/v1/sites`, { headers: AUTH, data: { domain } })
+  expect(made.ok()).toBeTruthy()
+  // A site with no visit yet opens its setup, not the Briefing: one visit first.
+  const { id } = await made.json()
+  expect((await request.post(`${API}/api/e`, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36' }, data: { s: id, k: 'pv', u: `https://${domain}/` } })).ok()).toBeTruthy()
+  await expect.poll(async () => ((await (await request.get(`${API}/api/v1/sites/${id}/events?limit=1`, { headers: AUTH })).json()) as { events: unknown[] }).events.length, { timeout: 15_000 }).toBe(1)
   await open(page, `/${domain}?view=briefing&x=funnels`)
-  await expect(page.getByText('Not enough to draw a funnel')).toBeVisible({ timeout: 20_000 })
-  await expect(page.locator('[data-lock="goals"]')).toBeVisible()
-  await expect(page.getByText(ASK)).toHaveCount(2)
-  await expect(page.locator('[data-lock="goals"] .lkgo')).toHaveCount(0)
-  await expect(page.locator('#xTrack')).toHaveCount(0)
+  const explore = page.getByRole('complementary', { name: 'Explore' })
+  await expect(explore.getByText('Not enough to draw a funnel')).toBeVisible({ timeout: 20_000 })
+  await expect(explore.locator('[data-lock="goals"]')).toBeVisible()
+  await expect(explore.getByText(ASK)).toHaveCount(2)
+  await expect(explore.locator('[data-lock="goals"] .lkgo')).toHaveCount(0)
+  await expect(explore.locator('#xTrack')).toHaveCount(0)
 })
 
 // With goals on, the viewer reads them and is offered no way to add one.
