@@ -4,8 +4,9 @@ All notable changes to trckable are written down here. Versions follow
 [Semantic Versioning](https://semver.org): the `VERSION` file is the one
 source, and the server, the tracker and the npm package always carry it.
 Every release is tagged `vX.Y.Z` and gets a section here before it ships.
-Changes not released yet go under Unreleased; `pnpm release X.Y.Z` turns that
-section into the release.
+Changes not released yet are one-line files in `changes/` (see
+`changes/README.md`); `pnpm release X.Y.Z` compiles them, with whatever stands
+under Unreleased, into the release section.
 
 ## Unreleased
 

@@ -15,7 +15,8 @@
 // Prepare:
 // 1. Every place that carries the version gets the new one: VERSION, the
 //    tracker and npm package.json files, server.Version and the README badge.
-// 2. CHANGELOG.md's "## Unreleased" section becomes "## 0.2.0 (date)", and a
+// 2. The changes/*.md fragments (and whatever stands under CHANGELOG.md's
+//    "## Unreleased") become "## 0.2.0 (date)", and a
 //    fresh empty "## Unreleased" goes above it for the next changes.
 // 3. Everything that shows the product catches up in the same pull request:
 //    CI's figures (from its latest run on main, which measured this code) in
@@ -41,7 +42,7 @@
 // site's repo's scripts/after-release.sh (its deploys), when there is one.
 //
 // Nothing is merged that is not green, and nothing is tagged that is not on main.
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { execFileSync, spawn } from 'node:child_process'
 import { join } from 'node:path'
 import { adminMergeCommand, bump, checksState, cutChangelog, dirtyBeyondFigures, docsVersionMessage, duration, FIGURE_PATHS, mergeBlockedByPolicy, newer, releaseDate, timings, VERSION_PLACES } from './release-lib.mjs'
@@ -113,8 +114,11 @@ function prepare() {
     const path = join(ROOT, file)
     writeFileSync(path, bump(file, readFileSync(path, 'utf8'), OLD, V))
   }
-  const { log, body } = cutChangelog(readFileSync(join(ROOT, 'CHANGELOG.md'), 'utf8'), V, releaseDate(new Date()))
+  // The notes: every changes/<name>.md fragment, then what stands under Unreleased.
+  const fragments = readdirSync(join(ROOT, 'changes')).map((name) => ({ name, text: readFileSync(join(ROOT, 'changes', name), 'utf8') }))
+  const { log, body } = cutChangelog(readFileSync(join(ROOT, 'CHANGELOG.md'), 'utf8'), V, releaseDate(new Date()), fragments)
   writeFileSync(join(ROOT, 'CHANGELOG.md'), log)
+  for (const { name } of fragments) if (name !== 'README.md') rmSync(join(ROOT, 'changes', name))
 
   // Everything that shows the product catches up in this same pull request,
   // so nothing is left for after the release (ops SHIPPING.md, stage 3):

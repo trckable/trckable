@@ -71,8 +71,10 @@ it before opening a pull request: CI does, and tells you what failed.
 - **One change per pull request.** A fix and a clean-up are two pull requests.
 - **Behaviour changes come with a test.** A bug fix gets a test that fails
   without the fix.
-- **A changelog line.** Anything people will notice gets one line in
-  `CHANGELOG.md` under "Unreleased", in the same pull request. A change nobody
+- **A changelog note.** Anything people will notice gets one new file,
+  `changes/<slug>.md` holding one line (see `changes/README.md`), in the same
+  pull request; do not edit `CHANGELOG.md`, so pull requests never conflict
+  over it. A change nobody
   notices (tests, internal clean-ups, CI) is marked with the `no-changelog` label
   (or `[no-changelog]` in a commit message); ask in the pull request if unsure.
 - **Commit subjects** are imperative, at most 72 characters, and start with the
@@ -195,7 +197,7 @@ deletes local branches whose pull request is merged.
 | --- | --- | --- |
 | 1. Work | `pnpm work <topic>` | A fresh branch from the latest `main`. One topic per branch |
 | 2. Land | `pnpm ship` | `pnpm check`, then push and open the pull request; once every check is green it is squash-merged |
-| 3. Prepare | `pnpm release X.Y.Z` | Versions bumped, Unreleased notes dated, figures and screenshots refreshed, release pull request opened (`--ship` carries on through merge and publish) |
+| 3. Prepare | `pnpm release X.Y.Z` | Versions bumped, `changes/` notes compiled into the dated CHANGELOG section, figures and screenshots refreshed, release pull request opened (`--ship` carries on through merge and publish) |
 | 4. Publish | `pnpm release tag X.Y.Z` | After that pull request is merged: tags `main`, waits for the release workflow, checks GitHub, npm and the image |
 
 Six checks are required on `main`: server, tracker and npm package, dashboard,
