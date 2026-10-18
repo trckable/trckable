@@ -11,6 +11,8 @@ export interface PaletteItem {
   /** More words that find it, beside its title ("Explore" for a table, whose group heading says it). */
   also?: string
   group: string
+  /** A mark drawn before the title, as SVG. */
+  lead?: string
   run: () => void
 }
 
@@ -21,8 +23,10 @@ export const isQuestion = (q: string) => /\?\s*$/.test(q) || /^(why|how|what|whe
 export interface PaletteAsk {
   run: (question: string) => void
   title: (question: string) => string
+  /** The small word on the right of the row ("↵ Ask"). */
   kind: string
-  group: string
+  /** The Peek mark that leads the row, as the brand's SVG. */
+  lead: string
 }
 
 export function Palette({ items, placeholder, none, onClose, initial = '', ask }: { items: PaletteItem[]; placeholder: string; none: (q: string) => string; onClose: () => void; initial?: string; ask?: PaletteAsk }) {
@@ -36,7 +40,7 @@ export function Palette({ items, placeholder, none, onClose, initial = '', ask }
     // A question, or words that match nothing, can be asked: Peek's row leads, the jumps stay below it.
     const text = q.trim()
     if (!ask || !text || !(isQuestion(text) || found.length === 0)) return found
-    return [{ title: ask.title(text), kind: ask.kind, group: ask.group, run: () => ask.run(text) }, ...found]
+    return [{ title: ask.title(text), kind: ask.kind, group: '', lead: ask.lead, run: () => ask.run(text) }, ...found]
   }, [items, q, ask])
   const sel = Math.max(0, Math.min(at, list.length - 1))
   const run = (i: PaletteItem | undefined) => {
@@ -79,11 +83,12 @@ export function Palette({ items, placeholder, none, onClose, initial = '', ask }
           <div>
             {list.length === 0 && <div className="mk-quiet" style={{ padding: '14px 12px' }}>{none(q)}</div>}
             {list.map((i, k) => {
-              const head = k === 0 || list[k - 1].group !== i.group ? <div className="pgh">{i.group}</div> : null
+              const head = i.group && (k === 0 || list[k - 1].group !== i.group) ? <div className="pgh">{i.group}</div> : null
               return (
                 <Fragment key={i.title + i.kind}>
                   {head}
                   <button type="button" className={`pi${k === sel ? ' on' : ''}`} onClick={() => run(i)} onPointerMove={() => k !== sel && setAt(k)}>
+                    {i.lead && <span aria-hidden="true" style={{ display: 'flex' }} dangerouslySetInnerHTML={{ __html: i.lead }} />}
                     {i.title}
                     {i.kind && <span className="s">{i.kind}</span>}
                   </button>
