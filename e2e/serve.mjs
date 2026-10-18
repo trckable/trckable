@@ -122,6 +122,40 @@ createServer(async (req, res) => {
   </main></body></html>`)
       return
     }
+    // The web-vitals library, the ground truth for web-vitals.spec.ts.
+    if (url.pathname === '/_wv.js') {
+      res.writeHead(200, { 'content-type': 'application/javascript' }).end(await readFile(new URL('./node_modules/web-vitals/dist/web-vitals.iife.js', import.meta.url)))
+      return
+    }
+    // A page that is slow on purpose, carrying a site's own script (the vitals module is in it for a new site): a
+    // hero that arrives 1.2 s late and pushes the page down (a slow LCP and a layout shift), and a button that holds the
+    // main thread for 250 ms (a slow interaction). The library measures the same page beside the tracker.
+    const slow = url.pathname.match(/^\/vitals\/(tkb_[a-z0-9]+)\/[\w-]+$/)
+    if (slow) {
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(`<!doctype html><html><head><meta charset="utf-8"><title>Slow</title>
+  <script src="/_wv.js"></script>
+  <script>
+    window.__wv = {}
+    for (const [k, f] of [['lcp', 'onLCP'], ['cls', 'onCLS'], ['inp', 'onINP']]) webVitals[f]((m) => (window.__wv[k] = m.value), { reportAllChanges: true })
+  </script>
+  <script defer src="${TRCKABLE}/js/${slow[1]}.js" data-dev></script></head><body style="margin:0;font:16px sans-serif">
+  <p id="intro">Pricing</p><button id="buy" type="button">Buy</button>
+  <div style="height:600px;background:#ddd">The page under the hero: it moves when the hero arrives.</div>
+  <script>
+    setTimeout(() => {
+      const hero = document.createElement('div')
+      hero.id = 'hero'
+      hero.style.cssText = 'height:420px;font-size:44px'
+      hero.textContent = 'A hero that came late, with a headline big enough to be the largest thing on the page.'
+      document.body.insertBefore(hero, document.getElementById('buy'))
+    }, 2800)
+    document.getElementById('buy').onclick = () => {
+      const t = performance.now()
+      while (performance.now() - t < 250);
+    }
+  </script></body></html>`)
+      return
+    }
     // A page with the tracker and whatever body the test asks for in ?b= (goals-funnels.spec.ts):
     // /g/<run>/<name>. A page the browser really loads, so it is on the same footing as a customer's.
     if (url.pathname.startsWith('/g/')) {

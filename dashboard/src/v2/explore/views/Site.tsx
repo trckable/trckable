@@ -25,9 +25,28 @@ export function Speed({ x, d }: { x: XCtx; d: SpeedModel }) {
       </>,
     ],
   }))
+  const devices: CRow[] = d.devices.map((p) => ({
+    key: p.name,
+    a: p.name,
+    bar: p.v / Math.max(1, ...d.devices.map((x) => x.v)),
+    mono: true,
+    c: [
+      p.val,
+      <>
+        <i className={`vg ${p.grade}`} />
+        {copy.grades[p.grade]}
+      </>,
+    ],
+  }))
   return (
     <>
       <XKcsPlain items={d.kcs} three />
+      {devices.length > 0 && (
+        <>
+          <XSec a={copy.byDevice} b={copy.byLcp} />
+          <XCols first={copy.heads.device} cols={[{ h: copy.lcp }, { h: copy.rating }]} rows={devices} xc="minmax(0,1fr) 64px 112px" xcm="minmax(0,1fr) 52px 104px" limit={x.limit} onAll={x.showAll} />
+        </>
+      )}
       <XSec a={copy.slowest} b={copy.byLcp} />
       {rows.length === 0 ? (
         <XEmpty title={copy.emptySpeed} hint={copy.emptySpeedHint} />

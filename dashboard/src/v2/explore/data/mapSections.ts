@@ -1,4 +1,5 @@
 // The other sections' answers, said as Explore's models. Pure: mapSections.test.ts.
+import { MIN_VITALS } from '../../../lib/api'
 import type { CrawlerReport, FunnelResult, FunnelStep, Money, PaidStep, Report, SearchReport, SearchRow as ApiSearchRow, WebVitals } from '../../../lib/api'
 import { fmtDay } from '../../../lib/dates'
 import { fmtFixed, fmtInt } from '../../../lib/format'
@@ -125,8 +126,12 @@ export function mapSpeed(cur: WebVitals, prev?: WebVitals): Speed {
   const now = [(cur.lcp_ms ?? 0) / 1000, cur.inp_ms ?? 0, (cur.cls_1k ?? 0) / 1000] as const
   const was = prev ? ([(prev.lcp_ms ?? 0) / 1000, prev.inp_ms ?? 0, (prev.cls_1k ?? 0) / 1000] as const) : null
   const have = [cur.lcp_ms, cur.inp_ms, cur.cls_1k]
+  // Built from how many page views: a browser reports what it can measure, so the three differ. A score from a
+  // handful is a guess, and a guess is not shown.
+  const n = [cur.lcp_n ?? cur.samples, cur.inp_n ?? cur.samples, cur.cls_n ?? cur.samples]
   const kc = (i: 0 | 1 | 2, icon: string, label: string, abbr: string): Xkc => {
     if (have[i] == null) return { icon, label, val: '–', tag: abbr, tone: '', detail: copy.nothingMeasured }
+    if (n[i] < MIN_VITALS) return { icon, label, val: '–', tag: abbr, tone: '', detail: copy.fewVisits(n[i], MIN_VITALS) }
     const g = gradeOf(i, now[i])
     const usual = was && prev && [prev.lcp_ms, prev.inp_ms, prev.cls_1k][i] != null ? `${copy.usual} ${written(i, was[i])} · ` : ''
     return { icon, label, val: written(i, now[i]), tag: abbr, tone: g === 'good' ? '' : 'dn', detail: `${usual}${copy.grades[g]}` }
@@ -135,7 +140,8 @@ export function mapSpeed(cur: WebVitals, prev?: WebVitals): Speed {
     .toSorted((a, b) => b.visitors - a.visitors)
     .slice(0, 8)
     .map((p) => ({ name: p.value, v: p.visitors, val: written(0, p.visitors / 1000), grade: gradeOf(0, p.visitors / 1000) }))
-  return { kcs: [kc(0, 'speed', copy.loadingWord, copy.lcp), kc(1, 'click', copy.response, copy.inp), kc(2, 'goal', copy.stability, copy.cls)], pages }
+  const devices: SlowPage[] = (cur.devices ?? []).flatMap((d) => (d.lcp_ms == null || d.n < MIN_VITALS ? [] : [{ name: d.value, v: d.lcp_ms, val: written(0, d.lcp_ms / 1000), grade: gradeOf(0, d.lcp_ms / 1000) }]))
+  return { kcs: [kc(0, 'speed', copy.loadingWord, copy.lcp), kc(1, 'click', copy.response, copy.inp), kc(2, 'goal', copy.stability, copy.cls)], pages, devices }
 }
 
 // ---- mentions, bots, links ----

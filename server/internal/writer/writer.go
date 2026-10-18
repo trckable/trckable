@@ -739,7 +739,7 @@ func appendRow(app *duckdb.Appender, r *row) error {
 		nzU16(e.Screen),
 		nz(e.Goal), props,
 		nzU32(e.EngagedMs), nzU8(e.ScrollPct),
-		nzU32(e.LCPms), nzU32(e.CLS1k), nzU32(e.INPms),
+		nzU32(e.LCPms), nilU32(e.CLS1k), nzU32(e.INPms),
 		nzTrue(e.Imported),
 		nz(e.BrowserVersion),
 	)
@@ -886,6 +886,14 @@ func nzU64(v uint64) any {
 		return nil
 	}
 	return v
+}
+
+// nilU32 keeps a zero that was measured: only "not reported" is null.
+func nilU32(v *uint32) any {
+	if v == nil {
+		return nil
+	}
+	return *v
 }
 func nzU32(v uint32) any {
 	if v == 0 {

@@ -155,6 +155,8 @@ export interface SlowPage {
 export interface Speed {
   kcs: Xkc[]
   pages: SlowPage[]
+  /** Loading time by kind of device, once there are enough views on it. */
+  devices: SlowPage[]
 }
 
 export interface Mention {

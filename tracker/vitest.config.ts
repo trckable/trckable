@@ -9,7 +9,7 @@ export default defineConfig({
   test: {
     projects: [
       {
-        test: { name: 'core', include: ['test/core.test.ts'] },
+        test: { name: 'core', include: ['test/core.test.ts', 'test/vitals.test.ts'] },
         define: { __GOALS__: 'true', __OUTBOUND__: 'true', __CHECKOUT__: 'true', __VITALS__: 'true', __CONSENT__: 'false', __BANNER__: 'false', __FORMS__: 'true' },
       },
       {

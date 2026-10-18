@@ -18,7 +18,12 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 // 2,088 since 12 Oct 2026: a tab brought back after 30 minutes counts a new view,
 // and an open page says "still here" once a minute (34 bytes). 2,092 since 13 Oct
 // 2026: that "still here" goes every 3 minutes, back on screen within one (4 bytes).
-const BUDGET = 2092 // bytes, gzip, for the full script: 2 KB, as the site says
+// 2,318 since 18 Oct 2026: the Web Vitals are measured the way the web-vitals
+// library defines them (INP by interaction, a layout shift of 0 reported, nothing
+// counted for a page loaded in the background, a prerendered page timed from its
+// activation, the last entries read when the page is hidden): 247 bytes on a new
+// site's script (2,068 → 2,315). The classic snippet without them is 2,095.
+const BUDGET = 2318 // bytes, gzip, for the full script: 2 KB, as the site says
 const TARGET = 1638 // 1.6 KB goal
 
 // Keep in sync with server/internal/modules (Tracker* constants).
@@ -40,12 +45,13 @@ const OPTIONAL = new Set(['vitals', 'consent', 'banner', 'forms'])
 // 2,700 since 24 Sep 2026 (was 2,560): the consent module's decline rules add
 // about 120 bytes, and the heaviest optional mix is 2,689.
 // 2,740 since 12 Oct 2026, the same 34 bytes; 2,744 since 13 Oct, the same 4.
-const WITH_OPTIONAL_BUDGET = 2744
+// 2,984 since 18 Oct 2026, the Web Vitals above (heaviest mix 2,979).
+const WITH_OPTIONAL_BUDGET = 2984
 
 // trckable's own cookie bar carries markup, styles and words, so it has a
 // budget of its own. It replaces a consent manager that costs 30–90 KB, and
 // it is off unless a site asks for it.
-const BANNER_BUDGET = 3452 // 3,400 until 12 Oct 2026, the same 34 bytes; 3,452 since 13 Oct, the same change
+const BANNER_BUDGET = 3690 // 3,400 until 12 Oct 2026, the same 34 bytes; 3,452 since 13 Oct, the same change; 3,690 since 18 Oct, the Web Vitals
 
 // The heatmaps module is a script of its own, sent after the base script only
 // to a site that turned it on, so none of it counts against BUDGET. It has a

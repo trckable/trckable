@@ -4,7 +4,7 @@ import { goalName } from '../../lib/goalName'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { more } from '../../lib/apiMore'
 import { addDays, diffDays, type ISODate, type Range } from '../../lib/dates'
-import type { SearchReport, Site } from '../../lib/api'
+import { MIN_VITALS, type SearchReport, type Site } from '../../lib/api'
 import { extrasApi, type Buyer, type Refunds } from '../../features/extras/extrasApi'
 import { heatApi } from '../../features/heatmap/api'
 import { isShared } from '../../lib/me'
@@ -138,7 +138,7 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
     let live = true
     const day0 = Math.floor(new Date(today + 'T00:00:00Z').getTime() / 1000)
     const mention = site.mentions ? mentionsApi.list(site.id, '7d').then((r) => r.mentions.filter((m) => m.posted_at >= day0 - 3600).sort((a, b) => b.posted_at - a.posted_at)[0] ?? null, () => null) : Promise.resolve(null)
-    const vit = (from: ISODate, to: ISODate) => moduleOn(site.id, 'vitals').then((on) => (on ? vitalsOf(site.id, from, to) : null)).then((v) => (v && v.samples >= 5 && v.lcp_ms != null && v.inp_ms != null && v.cls_1k != null ? ([v.lcp_ms / 1000, v.inp_ms, v.cls_1k / 1000] as [number, number, number]) : null), () => null)
+    const vit = (from: ISODate, to: ISODate) => moduleOn(site.id, 'vitals').then((on) => (on ? vitalsOf(site.id, from, to) : null)).then((v) => (v && v.lcp_ms != null && v.inp_ms != null && v.cls_1k != null && Math.min(v.lcp_n ?? v.samples, v.inp_n ?? v.samples, v.cls_n ?? v.samples) >= MIN_VITALS ? ([v.lcp_ms / 1000, v.inp_ms, v.cls_1k / 1000] as [number, number, number]) : null), () => null)
     const buyers = want.money ? extrasApi.buyers(site.id, { from: range.from, to: range.to }, 20).then((r) => r.buyers ?? [], () => null) : Promise.resolve(null)
     const refunds = want.money ? extrasApi.refunds(site.id, { from: range.from, to: range.to }).then((r) => (r.filtered ? null : r), () => null) : Promise.resolve(null)
     // Google is a day behind, so a single day is read as the week it ends.

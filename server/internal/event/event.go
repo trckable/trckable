@@ -79,10 +79,12 @@ type Event struct {
 	ScrollPct uint8  `json:"sc,omitempty"`
 
 	// Core Web Vitals, as the browser measured them. CLS is in thousandths,
-	// because the wire carries integers and the score is a small decimal.
-	LCPms uint32 `json:"lcp,omitempty"`
-	CLS1k uint32 `json:"cls,omitempty"`
-	INPms uint32 `json:"inp,omitempty"`
+	// because the wire carries integers and the score is a small decimal. A
+	// page that did not shift reports 0, which is a score; nil is "not
+	// measured" (a browser without layout-shift, or a build without the module).
+	LCPms uint32  `json:"lcp,omitempty"`
+	CLS1k *uint32 `json:"cls,omitempty"`
+	INPms uint32  `json:"inp,omitempty"`
 
 	// Imported marks history brought in by `trckabled import`.
 	Imported bool `json:"im,omitempty"`

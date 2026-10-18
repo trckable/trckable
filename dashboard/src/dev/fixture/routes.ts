@@ -293,7 +293,7 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
       const long = dayIndex(c, q.to) - dayIndex(c, q.from) > 1
       const x = vitals(c, id)
       const v = long ? x.usual : x.cur
-      return ok({ samples: 40, lcp_ms: Math.round(v[0] * 1000), inp_ms: Math.round(v[1]), cls_1k: Math.round(v[2] * 1000), good: 1, pages: [{ value: site.pages[0][0], visitors: Math.round(v[0] * 1000), pageviews: 40 }] })
+      return ok({ samples: 40, lcp_n: 40, inp_n: 32, cls_n: 40, lcp_ms: Math.round(v[0] * 1000), inp_ms: Math.round(v[1]), cls_1k: Math.round(v[2] * 1000), good: 1, devices: [{ value: 'desktop', n: 26, lcp_ms: Math.round(v[0] * 900) }, { value: 'mobile', n: 14, lcp_ms: Math.round(v[0] * 1250) }], pages: [{ value: site.pages[0][0], visitors: Math.round(v[0] * 1000), pageviews: 40 }] })
     }
     case 'report/search':
       return ok(searchReport(c, id, sp))

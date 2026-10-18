@@ -335,41 +335,61 @@ export function start(c: Config): Tracker {
     fly || tries || go(p).catch(back)
   }
 
-  // Core Web Vitals, measured by the browser itself. They ride along with the
-  // engagement report, which is already sent when the page is hidden — the
-  // moment the numbers are final — so this costs no extra request.
-  // Everything lives in one object written by the observers and read by the
-  // flush, so with the module off nothing here is referenced and the whole
-  // block leaves the script.
-  let cwv!: Payload
+  // Core Web Vitals, measured by the browser itself, as the web-vitals library
+  // defines them. They ride along with the engagement report, which is already
+  // sent when the page is hidden (the moment the numbers are final), so this
+  // costs no extra request. The server keeps the largest of a page view's
+  // reports. Only the view the document was loaded as carries them: a soft
+  // navigation or a restore from the back/forward cache is a view of its own
+  // that the browser did not load, so it reports none rather than the first
+  // view's again. Everything is read by one function, so with the module off
+  // nothing here is referenced and the whole block leaves the script.
+  let snap!: (end?: 1) => Payload
   if (__VITALS__) {
-    cwv = {}
+    const cwv: Payload = {}
+    let done: unknown // the view the document was loaded as has ended
+    const drain: (() => void)[] = []
+    // Loaded in the background, or hidden since: what the browser measured after
+    // that is the visitor's absence, not the page's speed.
+    let hid = d.hidden && !(d as any).prerendering ? 0 : 1 / 0
+    d.addEventListener('visibilitychange', () => d.hidden && (hid = Math.min(hid, performance.now())))
     const watch = (type: string, cb: (e: any) => void) => {
       try {
-        new PerformanceObserver((l) => l.getEntries().forEach(cb)).observe({ type, buffered: true })
+        const po = new PerformanceObserver((l) => l.getEntries().forEach(cb))
+        po.observe({ type, buffered: true, durationThreshold: 40 } as any)
+        // Entries the browser has not delivered yet when the page is hidden.
+        drain.push(() => po.takeRecords().forEach(cb))
       } catch {}
     }
-    watch('largest-contentful-paint', (e) => (cwv.lcp = Math.round(e.startTime)))
+    watch('largest-contentful-paint', (e) => e.startTime < hid && (cwv.lcp = Math.max(e.startTime - ((performance.getEntriesByType('navigation')[0] as any)?.activationStart || 0), 0) | 0))
     // Layout shift is scored in session windows, not as a running total: at
-    // most 5 s long, ended by a 1 s gap. A plain sum would over-report a page
-    // that shifts a little, often.
+    // most 5 s long, ended by a 1 s gap; the worst window is the score. A
+    // browser that measures it and sees none reports 0, which is a score.
+    if (PerformanceObserver.supportedEntryTypes?.includes('layout-shift')) cwv.cls = 0
     let win = 0
     let first = 0
     let prev = 0
     watch('layout-shift', (e) => {
       if (e.hadRecentInput) return
-      if (win && (e.startTime - first > 5e3 || e.startTime - prev > 1e3)) win = 0
+      if (win && (e.startTime - first >= 5e3 || e.startTime - prev >= 1e3)) win = 0
       if (!win) first = e.startTime
       prev = e.startTime
       win += e.value
       // Thousandths, because CLS is a small decimal and the wire carries ints.
-      if (win * 1e3 > (cwv.cls as number || 0)) cwv.cls = Math.round(win * 1e3)
+      if (win * 1e3 > (cwv.cls as number)) cwv.cls = Math.round(win * 1e3)
     })
-    // The slowest interaction. Real INP is a high percentile once there are
-    // enough of them; on one page view the worst one is the honest answer.
-    watch('event', (e) => {
-      if (e.duration > (cwv.inp as number || 0)) cwv.inp = Math.round(e.duration)
-    })
+    // INP: the longest of each interaction (a tap is several events), and the
+    // slowest of them, except one for every 50 (a stray hiccup is not the page).
+    const ix: Record<number, number> = {}
+    watch('event', (e) => e.interactionId && (ix[e.interactionId] = Math.max(ix[e.interactionId] || 0, e.duration)))
+    snap = (end) => {
+      if (done) return {}
+      done = end
+      drain.forEach((f) => f())
+      const a = Object.values(ix).sort((x, y) => y - x)
+      if (a.length) cwv.inp = Math.round(a[Math.min(a.length - 1, (a.length / 50) | 0)])
+      return cwv
+    }
   }
 
   const flushEngagement = (ping?: number) => {
@@ -377,7 +397,7 @@ export function start(c: Config): Tracker {
       engaged += now() - visible
       visible = shown()
     }
-    if (pv && engaged > 0) send(__VITALS__ && ping != 1 ? { k: 'e', pv, en: engaged, sc: scroll, ...cwv } : { k: 'e', pv, en: engaged, sc: scroll })
+    if (pv && engaged > 0) send(__VITALS__ && ping != 1 ? { k: 'e', pv, en: engaged, sc: scroll, ...snap() } : { k: 'e', pv, en: engaged, sc: scroll })
   }
 
   const page = () => {
@@ -385,7 +405,10 @@ export function start(c: Config): Tracker {
     // while typing in a search box or ticking a filter is the same page.
     const url = loc.pathname + (c.hash ? loc.hash : '')
     if (url == last) return // SPA frameworks often push/replace the same URL
-    if (last) flushEngagement()
+    if (last) {
+      flushEngagement()
+      if (__VITALS__) snap(1)
+    }
     last = url
     pv = rid()
     engaged = scroll = 0
