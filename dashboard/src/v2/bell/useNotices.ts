@@ -21,7 +21,8 @@ export const OPEN_GAP_MS = 5000
 /** The last list read, for a bell that mounts again (as long as it is the same account: the same sites). */
 let held: { key: string; own: Notice[] } | null = null
 const keyOf = (sites: Site[]) => sites.map((s) => s.id).join(',')
-const heldFor = (sites: Site[]) => (held && held.key === keyOf(sites) ? held.own : null)
+// Before the sites are known (a page that has just mounted) the last list stands in for them.
+const heldFor = (sites: Site[]) => (held && (sites.length === 0 || held.key === keyOf(sites)) ? held.own : null)
 
 export function useNotices(site: Site | null, sites: Site[]) {
   const [own, setItems] = useState<Notice[]>(() => heldFor(sites) ?? [])

@@ -97,6 +97,7 @@ for (const width of [1440, 390]) {
     // Reading one changes its mark, not the list.
     const order = await menu.locator('.nft b').allTextContents()
     await menu.locator('.nf').nth(1).click()
+    await page.keyboard.press('Escape') // the milestone it opens
     await page.locator('#bellBtn').click()
     await expect(menu.locator('.nf')).toHaveCount(3)
     expect(await menu.locator('.nft b').allTextContents()).toEqual(order)
@@ -121,5 +122,57 @@ for (const width of [1440, 390]) {
     expect((await menu.locator('.nft b').allTextContents()).slice(1)).toEqual(order)
     const cls = await page.evaluate(() => (window as unknown as { __p: Probe }).__p.cls)
     expect(cls).toBeLessThan(0.02)
+  })
+}
+
+for (const width of [1440, 390]) {
+  test(`at ${width} px opening a row, and the read marks answering after it, never empty the list`, async ({ page }) => {
+    test.setTimeout(90_000)
+    const now = Math.floor(Date.now() / 1000)
+    const mile = (step: string, ago: number) => ({ kind: 'visitors', step: `keep${width}-${step}`, value: 100, day: '2026-01-01', created_at: now - ago, new: false, shared: false })
+    await page.route(/\/api\/v1\/sites\/[^/]+\/milestones(\?|$)/, (route) => route.fulfill({ json: { enabled: true, milestones: [mile('a', 7200), mile('b', 3600), mile('c', 1800)], moment: null } }))
+    await page.route(/\/api\/v1\/incidents(\?|$)/, (route) => route.fulfill({ json: { incidents: [] } }))
+    await page.route(/\/api\/v1\/sites\/[^/]+\/mentions(\?|$)/, (route) => route.fulfill({ json: { mentions: [] } }))
+    // The account's read marks answer late, after the row has been opened, and say another row was read elsewhere.
+    let release: () => void = () => undefined
+    const late = new Promise<void>((r) => (release = r))
+    await page.route(/\/api\/v1\/me\/bell-read$/, async (route) => {
+      await late
+      await route.fulfill({ json: { read: [`mile:visitors:keep${width}-b`] } })
+    })
+    await page.addInitScript(() => {
+      const w = window as unknown as { __k: { counts: number[]; empty: boolean } }
+      w.__k = { counts: [], empty: false }
+      const tick = () => {
+        const m = document.querySelector('#bellMenu.on, aside.cd.on')
+        if (m) {
+          const n = m.querySelectorAll('.nf').length
+          if (w.__k.counts[w.__k.counts.length - 1] !== n) w.__k.counts.push(n)
+          if (m.querySelector('.xnone')) w.__k.empty = true
+        }
+        requestAnimationFrame(tick)
+      }
+      requestAnimationFrame(tick)
+    })
+    await page.setViewportSize({ width, height: 844 })
+    await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+    await page.goto(`${API}/${HISTORY_DOMAIN}?view=live&v=`)
+    const menu = page.locator('#bellMenu.on, aside.cd.on')
+    // Opened before anything is read: one placeholder, never "nothing yet", then every row together.
+    await page.locator('#bellBtn').click()
+    await expect(menu.locator('.nfs')).toHaveCount(1)
+    await page.waitForTimeout(4000)
+    await expect(menu.locator('.nfs')).toHaveCount(1)
+    release()
+    await expect(menu.locator('.nf')).toHaveCount(3)
+    await menu.locator('.nf').first().click()
+    await page.keyboard.press('Escape')
+    await page.locator('#bellBtn').click()
+    await expect(menu.locator('.nf')).toHaveCount(3)
+    await page.waitForTimeout(1000)
+    const k = await page.evaluate(() => (window as unknown as { __k: { counts: number[]; empty: boolean } }).__k)
+    expect(k.empty).toBe(false)
+    expect(k.counts.filter((c) => c > 0 && c < 3)).toEqual([])
+    expect(await menu.locator('.nf.unread').count()).toBe(Number(await page.locator('#bellDot').textContent()))
   })
 }
