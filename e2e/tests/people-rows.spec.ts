@@ -220,6 +220,8 @@ for (const scheme of ['dark', 'light'] as const) {
     }
     await scan('rows')
     await sites.click()
+    // The rows are named once the popover is placed (it is drawn hidden until then): scan after that, not while it appears.
+    await expect(page.locator('.sites-pop').getByRole('menuitemcheckbox', { name: /\S/ }).first()).toBeVisible()
     await scan('sites popover')
     await page.keyboard.press('Escape')
     await pill.click()

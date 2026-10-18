@@ -8,7 +8,7 @@ const PASSWORD = process.env.TRCKABLE_A11Y_PASSWORD ?? 'correct horse battery'
 
 test.skip(!BASE, 'set TRCKABLE_A11Y_URL to a running trckabled with data')
 
-// "Last 30 days" ends today, so it is live; the pace line needs three whole days of this month.
+// "This month" runs to today, so it is live; the pace line needs three whole days of this month.
 const dayOfMonth = (tz: string) => Number(new Intl.DateTimeFormat('en-CA', { timeZone: tz, day: '2-digit' }).format(new Date()))
 
 test('the pace line sits in the Visitors tile once three days of the month have gone', async ({ page }) => {
@@ -19,7 +19,8 @@ test('the pace line sits in the Visitors tile once three days of the month have 
   await page.click('button[type=submit]')
   await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 20_000 })
   const site = await page.evaluate(async () => ((await (await fetch('/api/v1/sites')).json()) as { sites: { domain: string; timezone: string }[] }).sites[0])
-  await page.goto(`${BASE}/${site.domain}?view=briefing&period=30d`)
+  // The projection is only said on "This month": a day, a week or a rolling 30 days says nothing of the month.
+  await page.goto(`${BASE}/${site.domain}?view=briefing&period=mtd`)
   await expect(page.locator('.kc[data-k="people"]')).toBeVisible({ timeout: 20_000 })
   const pace = page.locator('.kc[data-k="people"] .kpi-pace')
   if (dayOfMonth(site.timezone) > 3) {
