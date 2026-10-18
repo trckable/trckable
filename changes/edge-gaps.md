@@ -1,0 +1,1 @@
+A link opened signed out opens itself after you sign in, a bad date in the address no longer breaks the page, a Briefing that cannot be read says so with a Retry, and a theme chosen in one tab reaches the others.

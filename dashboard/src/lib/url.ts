@@ -103,24 +103,39 @@ export function setDefaultPeriodFor(site: { created_at?: number }, nowSec = Math
   defaultPeriod = site.created_at && nowSec - site.created_at < WEEK ? 'today' : '30d'
 }
 
+/** A calendar day written YYYY-MM-DD, or undefined: "2026-13-45" and "abc" are no day. */
+function dayOf(v: string | null): string | undefined {
+  if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return undefined
+  const d = new Date(v + 'T00:00:00Z')
+  return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== v ? undefined : v
+}
+
+/** Both ends of a range, in order; none when either is no day. A range written backwards is read the right way round. */
+function rangeOf(a: string | null, b: string | null): [string, string] | [undefined, undefined] {
+  const x = dayOf(a)
+  const y = dayOf(b)
+  if (!x || !y) return [undefined, undefined]
+  return x <= y ? [x, y] : [y, x]
+}
+
 export function readView(params: URLSearchParams): ViewState {
-  const from = params.get('from') ?? undefined
-  const to = params.get('to') ?? undefined
+  const [from, to] = rangeOf(params.get('from'), params.get('to'))
+  const [cfrom, cto] = rangeOf(params.get('cfrom'), params.get('cto'))
   const cmp = params.get('compare')
   return {
     period: from && to ? 'custom' : (params.get('period') ?? defaultPeriod),
     from,
     to,
     compare: compareOf(cmp, from && to ? 'custom' : (params.get('period') ?? defaultPeriod)),
-    cfrom: params.get('cfrom') ?? undefined,
-    cto: params.get('cto') ?? undefined,
+    cfrom,
+    cto,
     filters: params.getAll('f').flatMap((f) => parseFilterParam(f) ?? []),
     // 'compact' was this mode's name until it became Core; links people
     // already shared keep working.
     mode: params.get('mode') === 'full' ? 'full' : 'core',
     bucket: (['hour', 'day', 'week', 'month'] as const).find((b) => b === params.get('bucket')),
     metric: CHART_METRICS.find((m) => m === params.get('metric')),
-    day: params.get('day') ?? undefined,
+    day: dayOf(params.get('day')),
     test: params.get('payments') === 'test',
     attr: params.get('attr') === 'first' ? 'first' : undefined,
     live: liveOf(params.get('view')),

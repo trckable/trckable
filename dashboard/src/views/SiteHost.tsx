@@ -26,6 +26,7 @@ import { useMilestones } from '../features/milestones/useMilestones'
 import { AskPanel } from './AskLazy'
 import { useLiveRefresh } from './useLiveRefresh'
 import { whenIdle } from '../lib/lazyLoad'
+import { LoadFailed } from '../components/LoadFailed'
 
 const V2View = lazy(() => import('../v2/V2View').then((m) => ({ default: m.V2View }))) // the two screens and their styles: one chunk, fetched when the page shows one
 const GaReturn = lazy(() => import('../features/install/GaReturn').then((m) => ({ default: m.GaReturn }))) // only on the way back from Google (?import=ga)
@@ -123,6 +124,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
           range={range}
           data={data}
           loading={loading || firstLoad}
+          failed={!data && error ? <LoadFailed reason={error} onRetry={() => refresh(true)} /> : undefined}
           money={money ? fmtM : undefined}
           onGoal={() => canChange() && setAddGoals(true)}
           onAsk={askOn ? () => setAskOpen(true) : undefined}

@@ -59,3 +59,11 @@ export function applySavedTheme() {
     /* storage blocked */
   }
 }
+
+// Another tab of this browser chose a theme: this one follows, and its controls with it.
+window.addEventListener('storage', (e) => {
+  if (e.key !== KEY && e.key !== null) return
+  const t = read()
+  applyTheme(t)
+  for (const w of watchers) w(t)
+})
