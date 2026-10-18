@@ -113,6 +113,10 @@ span.footer-key {
   .app:has(.mk-fresh) > .app-footer {
     display: none;
   }
+  /* The toast waits below the screen; on this one-screen page that waiting place would add 70 px of scroll. */
+  body:has(.mk-fresh) .mk-toast:not(.on) {
+    display: none;
+  }
   .app-footer-start,
   .app-footer-end {
     gap: 0 14px;
