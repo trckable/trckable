@@ -1,12 +1,12 @@
 // The line at the bottom of the Briefing about tomorrow's email: what it will say, a preview, and the switch.
 import { copy } from '../briefing/copy'
 
-export function MailRow({ on, headline, onPreview, onManage, onToggle }: { on: boolean; headline: string; onPreview: () => void; onManage: () => void; onToggle: () => void }) {
+export function MailRow({ on, onPreview, onManage, onToggle }: { on: boolean; onPreview: () => void; onManage: () => void; onToggle: () => void }) {
   return (
     <div className="mailrow">
       <span className="mi2">{'\u2709'}</span>
       <span className="mt">
-        <b>{on ? copy.mailOn : copy.mailOff}</b> <i>&quot;{headline}&quot;</i>
+        <b>{on ? copy.mailOn : copy.mailOff}</b>
       </span>
       <button type="button" className="gh" data-mpv="1" onClick={onPreview}>
         {copy.preview}

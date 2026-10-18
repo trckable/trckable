@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- Audit leftovers. Settings → Health stamps "Live" in the app's 24-hour time without seconds. The Briefing's email line no longer quotes today's partial headline as tomorrow's email. Explore's Sources has one UTMs tab instead of UTMs plus UTM source and UTM medium. Explore's Sales heads the list "All sales" instead of a payment count its few lines (one per kind) could not match; the net equals the lines shown.
 - The browser suite's replay specs compare the chart's label offsets to a tenth of a pixel, so a label measured twice with a last-digit difference no longer fails a run.
 - The chart's labels are moved by whole pixels, so a text measured twice with a last-digit difference no longer moves a label or changes the chart between two looks.
 - The time on a bell row is the viewer's own clock and day, not UTC, so a row told at 09:10 where you are no longer reads 07:10, and "today" turns at your midnight.

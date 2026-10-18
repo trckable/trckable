@@ -163,7 +163,7 @@ test('on a phone it is a sheet from the bottom, opened by the bar, and its menus
 const HOMES: Record<string, string[]> = {
   overview: ['highlights', 'overtime', 'hours'],
   pages: ['exits', 'groups', 'sells'],
-  sources: ['utmsource', 'medium', 'earners'],
+  sources: ['earners'],
   places: ['regions', 'cities', 'languages', 'revmap', 'people'],
   tech: ['bversion', 'screens'],
   results: ['retention', 'vsale', 'toconvert', 'flow'],
