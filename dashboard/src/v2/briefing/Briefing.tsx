@@ -192,7 +192,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
           crowd={crowd}
           since={since}
           period={label}
-          onPeriod={() => document.querySelector<HTMLElement>('.mk-pill, .range-picker, .btn.range')?.click()}
+          onPeriod={() => document.querySelector<HTMLElement>('#perBtn')?.click()}
           moments={mo}
           why={heroWhy}
           onReplay={onReplay}
