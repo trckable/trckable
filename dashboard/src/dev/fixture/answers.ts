@@ -54,15 +54,23 @@ const SEEN = [2, 3, 3, 4, 6, 9]
 
 const cell = (s: State, half: boolean): Cell => {
   if (s === 'none') return { seen: 0, runs: 2, named: 0, cited: 0, position: 0 }
-  const named = s === 'both' || s === 'named' ? (half ? 1 : 2) : 0
-  const cited = s === 'both' || s === 'cited' ? (half ? 1 : 2) : 0
-  return { seen: half ? 1 : 2, runs: 2, named, cited, position: named ? 2 : 0 }
+  const n = half ? 1 : 2
+  const named = s === 'both' || s === 'named' ? n : 0
+  const cited = s === 'both' || s === 'cited' ? n : 0
+  return { seen: n, runs: 2, named, cited, position: named ? 2 : 0 }
+}
+
+const NONE: State[] = ['none', 'none', 'none']
+/** The states per assistant for a question: the first one only, once, in `peek`; the matrix otherwise. */
+const matrixRow = (state: string, qi: number): State[] => {
+  if (state !== 'peek') return MATRIX[qi]
+  return qi === 0 ? ['both', 'named', 'none'] : NONE
 }
 
 const rows = (state: string): Row[] =>
   QUESTIONS.map((text, qi) => {
     const first = state === 'first'
-    const row: State[] = state === 'peek' ? (qi === 0 ? ['both', 'named', 'none'] : ['none', 'none', 'none']) : MATRIX[qi]
+    const row = matrixRow(state, qi)
     const engines: Row['engines'] = {}
     ENGINES.forEach((e, ei) => {
       const pending = first && (ei > 0 || qi > 5)
@@ -135,10 +143,10 @@ const run = (e: Engine, qi: number, r: number, s: State): Run => {
 
 export function answersQuestion(id: number, state: string, now: number): QuestionRounds {
   const qi = Math.max(0, Math.min(QUESTIONS.length - 1, id - 1))
-  const row: State[] = state === 'peek' ? (qi === 0 ? ['both', 'named', 'none'] : ['none', 'none', 'none']) : MATRIX[qi]
+  const row = matrixRow(state, qi)
   const rounds = SEEN.map((_, i) => ({
     round: now - (SEEN.length - 1 - i) * WEEK - 3 * 3600,
-    engines: Object.fromEntries(ENGINES.map((e, ei) => [e, [1, 2].map((r) => run(e, qi, r, HIST[row[ei]][i] ?? 'none'))])) as QuestionRounds['rounds'][number]['engines'],
+    engines: Object.fromEntries(ENGINES.map((e, ei) => [e, [1, 2].map((r) => run(e, qi, r, HIST[row[ei]][i] ?? 'none'))])),
   }))
   return { id, text: QUESTIONS[qi], active: true, rounds: rounds.reverse() }
 }

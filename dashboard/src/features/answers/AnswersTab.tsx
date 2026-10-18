@@ -20,12 +20,13 @@ import './answers.css'
 export default function AnswersTab({ x }: { x: XCtx }) {
   const { rep, setup, reload } = useAnswers(x.site.id, x.query)
   const [open, setOpen] = useState<Row | null>(null)
+  const [now] = useState(() => Math.floor(Date.now() / 1000))
   if (rep === undefined) return <Loading height={180} />
   if (rep === null) return <XError title={c.failed} onRetry={reload} />
   const phase = phaseOf(rep)
   if (phase === 'noengine') return <NoEngine />
   if (phase === 'noquestions') return <NoQuestions site={x.site} />
-  const first = firstEver(rep, Math.floor(Date.now() / 1000))
+  const first = firstEver(rep, now)
   const named = first && (rep.questions ?? []).find((q) => q.id === first.question_id)
   return (
     <div className="an">

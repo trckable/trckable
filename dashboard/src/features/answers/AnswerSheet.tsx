@@ -45,7 +45,8 @@ function RunBlock({ r, many, domain }: { r: Run; many: boolean; domain: string }
   return (
     <div className="an-run-one">
       {many && <small className="an-runno">{c.sheet.run(r.run)}</small>}
-      {!r.ok ? <p className="an-why">{c.sheet.errored}</p> : r.text ? <Said text={r.text} hit={r.sentence} /> : <p className="an-why">{c.sheet.gone}</p>}
+      {r.ok && r.text && <Said text={r.text} hit={r.sentence} />}
+      {(!r.ok || !r.text) && <p className="an-why">{r.ok ? c.sheet.gone : c.sheet.errored}</p>}
       {r.ok && (
         <dl>
           <dt>{c.sheet.linked}</dt>

@@ -58,8 +58,7 @@ export function SettingsRivals({ list, onList, max, suggested, viewer }: { list:
 }
 
 export function SettingsAsk({ setup, site, country, onCountry, viewer }: { setup: AnswersSetup; site: Site; country: string; onCountry: (c: string) => void; viewer: boolean }) {
-  const recent = (setup.asked_at ?? 0) + SIX_HOURS > Math.floor(Date.now() / 1000)
-  const [state, setState] = useState<'idle' | 'asking' | 'recent'>(recent ? 'recent' : 'idle')
+  const [state, setState] = useState<'idle' | 'asking' | 'recent'>(() => ((setup.asked_at ?? 0) + SIX_HOURS > Math.floor(Date.now() / 1000) ? 'recent' : 'idle'))
   const [said, setSaid] = useState('')
   const run = () => {
     setState('asking')

@@ -22,11 +22,19 @@ function Spark({ rounds }: { rounds: Round[] }) {
   )
 }
 
+/** The last line under the headline: how far a round is, that the budget paused it, or when the next one is. */
+function noteOf(rep: AnswersReport, progress?: { done: number; total: number }): string {
+  if (progress) return c.partial(progress.done, progress.total)
+  if (rep.paused) return c.paused
+  return rep.next_at ? c.next(dayOf(rep.next_at)) : ''
+}
+
 export function Summary({ rep, progress }: { rep: AnswersReport; progress?: { done: number; total: number } }) {
   const now = rep.latest
   const was = rep.was
   const rounds = rep.rounds ?? []
   const diff = now && was ? now.seen - was.seen : 0
+  const note = noteOf(rep, progress)
   return (
     <section className="an-hero" aria-label={c.seenOf}>
       <div className="an-big">
@@ -38,7 +46,7 @@ export function Summary({ rep, progress }: { rep: AnswersReport; progress?: { do
         <p className="an-honest">{c.honest}</p>
         <span className="an-meta">
           {rep.country && <span>{c.from(where(rep.country))}</span>}
-          {progress ? <span>{c.partial(progress.done, progress.total)}</span> : rep.paused ? <span>{c.paused}</span> : !!rep.next_at && <span>{c.next(dayOf(rep.next_at))}</span>}
+          {note && <span>{note}</span>}
         </span>
       </div>
       {rounds.length > 1 && (

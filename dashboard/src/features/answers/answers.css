@@ -253,3 +253,4 @@ button.an-pr:hover .path{background:var(--an-fill-2)}
 .an-run-one{display:flex;flex-direction:column;gap:8px;padding-top:6px}
 .an-run-one+.an-run-one{border-top:1px solid var(--an-line);padding-top:12px}
 .an-runno{font-size:11px;color:var(--an-faint)}
+.an-fig{width:min(240px,60%);margin:8px auto -6px}
