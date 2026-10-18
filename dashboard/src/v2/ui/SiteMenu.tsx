@@ -12,6 +12,7 @@ import { MenuFoot, type FootItem } from './MenuFoot'
 import { useMenu } from './useMenu'
 import { useOnlyOpen } from '../../lib/headerMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
+import { SiteMark } from '../../components/SiteMark'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
 const warmUp = () => {
@@ -53,7 +54,12 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
     <div ref={attach} style={{ position: 'relative' }} className="sitechip">
       {p.team}
       <button type="button" id="siteBtn" className="mk-chip" aria-haspopup="menu" aria-expanded={open} data-key="site" {...warm(warmUp)} onClick={toggle}>
-        <span className={`mk-dot ${DOT[state] ?? ''}`} />
+        {cur && (
+          <span className="mkwrap">
+            <SiteMark site={cur} size={18} />
+            {DOT[state] && <span className={`mk-dot ${DOT[state]}`} />}
+          </span>
+        )}
         <span className="nmx">{cur ? cur.name || cur.domain : p.all}</span>
         {picked && <span className="dom">{`/ ${picked}`}</span>}
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
