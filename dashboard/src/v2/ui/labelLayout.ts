@@ -89,7 +89,8 @@ export function layout(root: HTMLElement, pts: number[][]) {
   let hidden = 0
   shown.forEach((el, i) => {
     const spot = spots[i]
-    const [dx, dy] = spot ?? [0, 0]
+    // Whole pixels: a text measured twice differs in the last digits, and a label must not move for that.
+    const [dx, dy] = spot ? [Math.round(spot[0]), Math.round(spot[1])] : [0, 0]
     if (Number(el.dataset.dx ?? 0) !== dx || Number(el.dataset.dy ?? 0) !== dy) {
       el.style.translate = dx || dy ? `${dx}px ${dy}px` : ''
       el.dataset.dx = String(dx)

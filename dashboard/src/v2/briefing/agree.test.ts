@@ -4,7 +4,8 @@ import type { Result } from '../../lib/api'
 import { usualNote } from './kpis'
 import { overall, sentence, sourceName, trafficFromBand, WEIGHT } from './model'
 import { moments, streak } from './moments'
-import { dayBandOf, verdictOf } from './usual'
+import { bandFromWeeks, dayBandOf, periodBand, usualPeople, verdictOf } from './usual'
+import { kpiCards } from './kpis'
 
 const cur = (v: number): Result => ({ approximate: false, kpis: { visitors: v, sessions: v, pageviews: v, bounce_rate: 0.5, avg_session_s: 60, views_per_session: 1, new_visitor_share: 0.5 }, series: [], dims: {}, goals: null })
 
@@ -63,5 +64,51 @@ describe('a past custom day', () => {
     const u = { key: 'uptime' as const, value: null, verdict: 'none' as const, words: '' }
     expect(overall([t, e, u])).toBe(Math.round((80 * WEIGHT.traffic + 100 * WEIGHT.engagement) / (WEIGHT.traffic + WEIGHT.engagement)))
     expect(overall([t, e, { ...u, value: 100 }])).toBe(Math.round(80 * 0.4 + 100 * 0.25 + 100 * 0.35))
+  })
+})
+
+// Live, a Sunday morning: the hours add up to a usual of 0 to 0, while the server lists the last Sundays as 0, 1 and 8.
+describe('one band for the same people on the same day', () => {
+  const hourly = { c: 0, lo: 0, hi: 0 }
+  it('reads the weeks the Why? lists, so the headline, the card and the homepage visit card share it', () => {
+    const { band } = usualPeople([0, 1, 8], hourly)
+    expect(band).toEqual(bandFromWeeks([0, 1, 8]))
+    expect(Math.round(band?.hi ?? 0)).toBe(6)
+    const verdict = verdictOf(2, band)
+    expect(verdict?.st).toBe('')
+    const head = sentence({ cur: cur(2), unit: 'today', weekday: 'Sunday', self: 'x.com', downMin: 0, learning: false, band: verdict ? { ratio: verdict.ratio, st: verdict.st, words: 'a usual Sunday' } : null })
+    expect(head.lead.toLowerCase()).not.toContain('busy')
+  })
+  it('never calls a number above a usual of nothing: too little history says so', () => {
+    expect(verdictOf(2, hourly)).toBeNull()
+    expect(verdictOf(2, { c: 0, lo: 0, hi: 0.4 })).toBeNull()
+    const kc = kpiCards({ cur: { ...cur(2), series: [] }, learning: false, before: 'x', people: { note: { t: 'p' }, vals: [] }, goal: null, viewsVals: [], leave: { note: { t: 'l' }, vals: [] }, uptime: { key: 'uptime', value: 100, verdict: 'clear', words: '' } as never, low: true, peopleVerdict: null, uptimePct: '100', uptimeVals: [], moneyVals: [] })
+    expect(kc[0].note?.t).toBe('learning')
+  })
+})
+
+// Live, last 30 days: 169 people, and a usual of "0 to 5" that was one day's range summed over days.
+describe('a long period is told against a usual period', () => {
+  const days = Array.from({ length: 90 }, (_, i) => new Date(Date.UTC(2026, 6, 21 + i, 12)).toISOString().slice(0, 10))
+  // A small site: a few people a day, a crowd now and then.
+  const totals = days.map((_, i) => (i % 9 === 0 ? 12 : 1 + (i % 3)))
+  const from = days[60]
+  const to = days[89]
+  const own = totals.slice(60).reduce((a, b) => a + b, 0)
+  it('compares the month with the month before, never with a day', () => {
+    const b = periodBand(totals, days, from, to, own)
+    expect(b).not.toBeNull()
+    expect(b?.hi).toBeGreaterThan(own * 0.5)
+    const verdict = verdictOf(own, b)
+    expect(verdict && verdict.band.hi).toBeGreaterThan(20)
+    expect(verdict?.st).toBe('')
+  })
+  it('has no usual month before two whole months of history', () => {
+    expect(periodBand(totals.slice(30), days.slice(30), days[60], to, own)).toBeNull()
+  })
+  it('counts the share of today that has passed when the period ends today', () => {
+    const whole = periodBand(totals, days, from, to, own, 1)
+    const half = periodBand(totals, days, from, to, own, 0.5)
+    expect((half?.c ?? 0) < (whole?.c ?? 0)).toBe(true)
   })
 })

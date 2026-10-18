@@ -27,10 +27,21 @@ export interface SalesIn {
 const KIND: Record<string, string> = { upgrade: copy.upgrade, renewal: copy.renewal }
 const kindWord = (k: string) => KIND[k] ?? copy.newCustomer
 
+/** The sales list holds new customers and upgrades only (the server leaves renewals out) and at most this many. */
+export const BUYERS_ASKED = 20
+
+/** The payments of the period that the buyers list does not hold: its renewals, with what they came to. None when the list was cut short. */
+export function unlisted(buyers: Buyer[], money: Money): { n: number; net: number } {
+  if (buyers.length >= BUYERS_ASKED) return { n: 0, net: 0 }
+  const n = Math.max(0, money.payments - buyers.length)
+  return { n, net: n ? money.revenue - buyers.reduce((a, b) => a + b.amount, 0) : 0 }
+}
+
 function who(buyers: Buyer[], money: Money): string {
-  const nNew = buyers.length >= money.payments ? buyers.filter((b) => b.kind === 'new').length : money.customers
+  const rest = unlisted(buyers, money).n
+  const nNew = buyers.length >= money.payments || buyers.length < BUYERS_ASKED ? buyers.filter((b) => b.kind === 'new').length : money.customers
   const nUp = buyers.filter((b) => b.kind === 'upgrade').length
-  const nRen = buyers.filter((b) => b.kind === 'renewal').length
+  const nRen = buyers.filter((b) => b.kind === 'renewal').length + rest
   const parts = [nNew ? copy.becameCustomers(nNew) : '', nUp ? copy.upgraded(nUp) : '', nRen ? copy.renewals(nRen) : ''].filter(Boolean)
   return parts.length ? parts.join(', ') : copy.becameCustomers(money.payments)
 }
@@ -67,9 +78,12 @@ export function salesCards(i: SalesIn): Story[] {
     })
   }
   if (money.payments > 0) {
-    const total = money.revenue + money.refunds
+    // The headline, the rows and the total are the same sales, net of what went back: the rows add up to the total.
+    const total = money.revenue
     const rows = buyers.slice(0, 4).map((b) => ({ l: `${kindWord(b.kind)}${b.referrer ? copy.via(sourceName(b.referrer)) : ''}`, t: i.clock(b.at), a: `+${fmt(b.amount)}`, flag: flag(b.country ?? '') }))
     const extra = buyers.length > 4 ? [{ l: copy.more(buyers.length - 4), more: true }] : []
+    const un = unlisted(buyers, money)
+    const renewed = un.n > 0 ? [{ l: copy.renewals(un.n), t: '', a: `+${fmt(un.net)}`, flag: '' }] : []
     const bySource = new Map<string, number>()
     buyers.forEach((b) => b.referrer && bySource.set(b.referrer, (bySource.get(b.referrer) ?? 0) + 1))
     const top = [...bySource.entries()].sort((a, b) => b[1] - a[1])[0]
@@ -78,7 +92,7 @@ export function salesCards(i: SalesIn): Story[] {
       score: st === 'up' ? 72 : 62,
       head: who(buyers, money),
       rest: copy.paidIn(fmt(total)),
-      vis: { k: 'rcpt', rows: [...rows, ...extra, { l: copy.rowIn, t: '', a: fmt(total), flag: '', tot: true }] },
+      vis: { k: 'rcpt', rows: [...rows, ...extra, ...renewed, { l: copy.rowIn, t: '', a: fmt(total), flag: '', tot: true }] },
       why: `${range}${top ? copy.broughtOf(sourceName(top[0]), top[1], buyers.length) : ''}`.trim(),
       val: fmt(total),
       m: total,

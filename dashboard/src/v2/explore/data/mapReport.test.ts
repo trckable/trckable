@@ -43,6 +43,17 @@ describe('the overview', () => {
   })
 })
 
+describe('the overview and the Sources tab list the same sources', () => {
+  // Two direct visits have no referrer: the report has a channel for them and no referrer row.
+  const cur = result(2, { dims: { channel: [{ value: 'Direct', visitors: 2 }] } })
+  it('shows Direct 2 in the top sources, as the Sources tab does', () => {
+    const rep = report(cur, result(2))
+    const top = mapOverview(rep, none).sources
+    expect(top).toMatchObject([{ name: 'Direct', v: 2 }])
+    expect(top.map((r) => [r.name, r.v])).toEqual(mapTable('sources', rep).rows.map((r) => [r.name, r.v]))
+  })
+})
+
 describe('the tables', () => {
   const cur = result(100, {
     dims: {

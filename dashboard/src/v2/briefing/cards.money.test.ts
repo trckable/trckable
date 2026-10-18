@@ -48,6 +48,27 @@ describe('the sales cards', () => {
 
 const sr = (rows: { key: string; clicks: number }[]): SearchReport => ({ property: 'p', dim: 'query', rows: rows.map((r) => ({ ...r, impressions: r.clicks * 20, ctr: 0.05, position: 4 })), from: '', to: '', clicks: rows.reduce((n, r) => n + r.clicks, 0), impressions: 0, preliminary_from: '', ignored_filters: null })
 
+describe('the sales rows add up to the headline', () => {
+  const rowsOf = (c: ReturnType<typeof salesCards>[number]) => (c.vis?.k === 'rcpt' ? c.vis.rows : [])
+  const num = (a?: string) => Number((a ?? '').replace(/[^0-9.-]/g, ''))
+  it('lists the renewals the buyers list leaves out, so 2 sales are 2 lines', () => {
+    // One new customer ($120) and one renewal ($218): 1 customer, 2 payments, $338.
+    const [c] = salesCards({ ...base, money: money({ revenue: 33800, payments: 2, customers: 1, new_revenue: 12000, renewal_revenue: 21800 }), band: null, buyers: [{ id: 'a', at: '2026-10-16T15:20:00Z', amount: 12000, kind: 'new' }] })
+    expect(c.head).toBe('1 person became a customer, 1 renewal')
+    expect(c.rest).toBe(': $338 in')
+    const rows = rowsOf(c)
+    expect(rows.map((r) => r.l)).toEqual(['New customer', '1 renewal', 'Total in'])
+    const lines = rows.filter((r) => !r.tot)
+    expect(lines.reduce((n, r) => n + num(r.a), 0)).toBe(num(rows.find((r) => r.tot)?.a))
+  })
+  it('totals what was kept: a refunded sale is listed net, and the total is the net too', () => {
+    const [, c] = salesCards({ ...base, money: money({ revenue: 7000, refunds: 5000, payments: 2, customers: 2 }), band: null, buyers: [{ id: 'a', at: '2026-10-16T15:20:00Z', amount: 2000, kind: 'new' }, { id: 'b', at: '2026-10-16T16:20:00Z', amount: 5000, kind: 'new' }] })
+    const rows = rowsOf(c)
+    expect(rows.filter((r) => !r.tot).reduce((n, r) => n + num(r.a), 0)).toBe(num(rows.find((r) => r.tot)?.a))
+    expect(c.rest).toBe(': $70 in')
+  })
+})
+
 describe('the search card', () => {
   it('names a query that is new', () => {
     const c = searchCard({ story: { cur: sr([{ key: 'old', clicks: 30 }, { key: 'fresh one', clicks: 8 }]), prev: sr([{ key: 'old', clicks: 30 }]) }, domain: 'x.com', rule: '' })

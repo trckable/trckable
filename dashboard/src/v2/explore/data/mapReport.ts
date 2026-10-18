@@ -77,7 +77,8 @@ export function mapOverview(r: Report, o: { money?: (minor: number) => string; u
     shape: shapeOf(r, o.now),
     down: o.uptime?.down ?? [],
     pages: rows('page', (v) => v),
-    sources: rows('referrer', (v) => sourceName(v) || host(v)),
+    // The channels, as the Sources tab lists them: a direct visit has no referrer, so a list of referrers would leave it out.
+    sources: rows('channel', channelLabel),
   }
 }
 

@@ -13,7 +13,7 @@ import type { SliceData } from './useSlices'
 import { engagementFromBounce, sourceName, engagementScore, sentence, trafficFromBand, trafficScore, uptimeScore, type Score, type Unit, type Usual } from './model'
 import type { ScoreFacts } from './scoreWhy'
 import { pctText } from './kpis'
-import { dayBandOf, hourlyPeople, hourTable, stretchBand, timesUsual, usualBounce, verdictOf, type Band } from './usual'
+import { dayBandOf, hourlyPeople, hourTable, periodBand, stretchBand, timesUsual, usualBounce, usualPeople, verdictOf, type Band } from './usual'
 import type { History } from './useHistory'
 
 const weekdayOf = (day: string) => new Date(day + 'T12:00:00Z').toLocaleDateString(tag ?? 'en-US', { weekday: 'long', timeZone: 'UTC' })
@@ -94,14 +94,15 @@ export function useParts(a: PartsIn) {
         .map((h) => ({ ...h, fr: live && h.day === today ? Math.min(1, Math.max(0, nowHour - h.hour)) : 1 }))
       wholeHours = hours
       whole = stretchBand(table, hours)
-    } else if (bands) {
-      const ok = bands.filter((b): b is Band => !!b)
-      if (ok.length) {
-        const c = ok.reduce((x, b) => x + b.c, 0)
-        const m = Math.sqrt(ok.reduce((x, b) => x + ((b.hi - b.lo) / 2) ** 2, 0))
-        whole = { c, lo: Math.max(0, c - m), hi: c + m }
-      }
+    } else if (hist.daily && !hourly) {
+      // A stretch of days is told against the same number of days before it, not against the sum of each day's own range.
+      whole = periodBand(totals, days, range.from, range.to, cur.kpis.visitors, live ? Math.min(1, Math.max(0, nowHour / 24)) : 1)
     }
+    // The same figure on the same day has one band: the server's weeks of this weekday (what Why? lists and the cards
+    // beside it are told by), whatever the hour table adds up to.
+    const weeks = usual && (unit === 'today' || unit === 'yesterday') ? usual.weeks?.map((w) => w.visitors) ?? [] : []
+    const chosen = usualPeople(weeks, whole)
+    whole = chosen.band
     // What the sales of the period are told against: the average of the same hours, the weeks before.
     const moneyTable = hourly && hist.hourly ? hourTable(hist.hourly, today, 'short', (p) => p.revenue ?? 0, true) : null
     const moneyBand = moneyTable && live ? stretchBand(moneyTable, wholeHours, 'short', true) : null
@@ -109,7 +110,7 @@ export function useParts(a: PartsIn) {
     // One verdict for the headline, the People card, the score and the run of days. The hour table adds up people hour
     // by hour, so it is told against the people of the same hours added up the same way (a visitor active in three
     // hours counts three times on both sides); a day band is told against the day's people.
-    const verdict = verdictOf(table ? hourlyPeople(cur.series, wholeHours) : v, whole)
+    const verdict = verdictOf(table && !chosen.byWeeks ? hourlyPeople(cur.series, wholeHours) : v, whole)
     const st = verdict?.st ?? ''
     const bounceUsual = hist.daily ? usualBounce(hist.daily, today, unit === 'today' || unit === 'yesterday' ? new Date(range.to + 'T12:00:00Z').getUTCDay() : null) : null
     const scored: Score[] = [
