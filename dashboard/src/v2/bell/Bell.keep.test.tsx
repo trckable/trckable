@@ -51,7 +51,7 @@ afterEach(() => {
 describe('the bell after a row is opened', () => {
   it('holds hosted rows back until the build says its list is read, then shows all at once', async () => {
     vi.spyOn(incidents, 'account').mockResolvedValue({ incidents: [{ id: 'i1', site: 's1', kind: 'down', started_at: now - 100, ended_at: null, cause: '', expected_visits: null, note: '' }] })
-    vi.spyOn(api, 'milestones').mockResolvedValue({ enabled: true, milestones: [], moment: null } as never)
+    vi.spyOn(api, 'milestones').mockResolvedValue({ enabled: true, milestones: [], moment: null })
     vi.spyOn(more, 'bellRead').mockResolvedValue({ read: [] })
     const base = { readAll: () => undefined, dismiss: () => undefined, archive: { items: [], load: () => undefined, loading: false, words: { dismiss: 'd', archive: 'a', fresh: 'f', none: 'n' } } }
     const m = mount({ bell: [hosted('plan', now - 50)], bellMore: { ...base, ready: false } }, [site])
@@ -67,7 +67,7 @@ describe('the bell after a row is opened', () => {
 
   it('keeps its rows when a row is opened, the page mounts the bell again and the read marks arrive late', async () => {
     vi.spyOn(incidents, 'account').mockResolvedValue({ incidents: [{ id: 'i1', site: 's1', kind: 'down', started_at: now - 100, ended_at: null, cause: '', expected_visits: null, note: '' }] })
-    vi.spyOn(api, 'milestones').mockResolvedValue({ enabled: true, milestones: [], moment: null } as never)
+    vi.spyOn(api, 'milestones').mockResolvedValue({ enabled: true, milestones: [], moment: null })
     let answer: (v: { read: string[] }) => void = () => undefined
     vi.spyOn(more, 'bellRead').mockReturnValue(new Promise((r) => (answer = r)))
     vi.spyOn(more, 'markBellRead').mockResolvedValue({ read: [] })
