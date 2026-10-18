@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- The browser suite's replay specs compare the chart's label offsets to a tenth of a pixel, so a label measured twice with a last-digit difference no longer fails a run.
 - The time on a bell row is the viewer's own clock and day, not UTC, so a row told at 09:10 where you are no longer reads 07:10, and "today" turns at your midnight.
 - The bell's number stays right: it is counted from exactly the rows its menu lists (one rule for the dot on a row and the badge), and the list is read again when /now answers, when a tab is shown after a minute away and when the menu opens, so a notice that arrives while the page is open reaches the badge without a reload; reads stay at most one a minute and none in a hidden tab.
 - Live's two numbers no longer read as the same kind: "Came in the last 30 min" is the big one and "On the site now" the smaller one beside it, with the labels on one line and the numbers on one baseline, so 16 in the half hour against 4 online now is no longer mistaken for a mistake.

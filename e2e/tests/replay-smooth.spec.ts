@@ -84,8 +84,8 @@ async function still(page: Page) {
   return page.locator('svg#chart').screenshot()
 }
 
-/** The chart's markup without what a replay writes on (the clip's width and the tip's place, which stay in it unused). */
-const markup = (page: Page) => page.locator('svg#chart').evaluate((e) => e.outerHTML.replace(/<clipPath.*?<\/clipPath>/, '').replace(/<circle data-rv-tip[^>]*>/, ''))
+/** The chart's markup without what a replay writes on (the clip's width and the tip's place, which stay in it unused), and the labels' measured offsets to a tenth of a pixel (a text measured twice differs in the last digits). */
+const markup = (page: Page) => page.locator('svg#chart').evaluate((e) => e.outerHTML.replace(/<clipPath.*?<\/clipPath>/, '').replace(/<circle data-rv-tip[^>]*>/, '').replace(/(data-d[xy]=")(-?[\d.]+)"/g, (_, a, n) => `${a}${Number(n).toFixed(1)}"`))
 
 /** How many pixels of two pictures differ by more than a hair (decoded in the page, so no library is needed). */
 async function apart(page: Page, a: Buffer, b: Buffer): Promise<number> {
