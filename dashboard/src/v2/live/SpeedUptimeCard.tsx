@@ -2,7 +2,7 @@
 // that is down says so in red here as it does in the header and the incident record.
 import { tag } from '../../i18n'
 import type { Site } from '../../lib/api'
-import { fmtFixed } from '../../lib/format'
+import { dateFmt, fmtFixed } from '../../lib/format'
 import { navigate } from '../../lib/url'
 import { gradeOf } from '../explore/data/mapSections'
 import { openExplore } from '../explore/open'
@@ -56,7 +56,7 @@ interface Props {
 }
 
 /** The clock time in the site's own zone. */
-const clock = (ms: number, tz: string) => new Date(ms).toLocaleTimeString(tag ?? [], { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz })
+const clock = (ms: number, tz: string) => dateFmt(tag, { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz }).format(ms)
 
 function incidents(site: Site) {
   navigate(`/${encodeURIComponent(site.domain)}/incidents`)
