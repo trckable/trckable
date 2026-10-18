@@ -21,3 +21,8 @@ export function landing(
 export function namesSite(sites: { id: string }[], params: URLSearchParams): boolean {
   return sites.some((x) => x.id === params.get('site'))
 }
+
+/** The site's own address for one with a stray ending (/my.shop.co/nope), or null. */
+export function tidyPath(site: Site, path: string): string | null {
+  return path.slice(1).includes('/') ? '/' + encodeURIComponent(site.domain) : null
+}

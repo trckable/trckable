@@ -24,9 +24,17 @@ export function useLocation() {
   return { path: location.pathname, params: new URLSearchParams(location.search), hash: location.hash }
 }
 
+// How many entries this app has pushed on the way here (kept in each entry's state, so it survives a reload and Back).
+const stepOf = () => (history.state as { d?: number } | null)?.d ?? 0
+let steps = typeof history === 'undefined' ? 0 : stepOf()
+if (typeof window !== 'undefined') window.addEventListener('popstate', () => (steps = stepOf()))
+/** Entries pushed by this app so far: a later number minus an earlier one is how far Back goes between two moments. */
+export const historySteps = () => steps
+
 export function navigate(to: string, opts: { replace?: boolean } = {}) {
   if (to === snapshot()) return
-  history[opts.replace ? 'replaceState' : 'pushState'](null, '', to)
+  if (opts.replace) history.replaceState(history.state, '', to)
+  else history.pushState({ d: ++steps }, '', to)
   window.dispatchEvent(new Event(EVENT))
 }
 
@@ -103,24 +111,39 @@ export function setDefaultPeriodFor(site: { created_at?: number }, nowSec = Math
   defaultPeriod = site.created_at && nowSec - site.created_at < WEEK ? 'today' : '30d'
 }
 
+/** A calendar day written YYYY-MM-DD, or undefined: "2026-13-45" and "abc" are no day. */
+function dayOf(v: string | null): string | undefined {
+  if (!v || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return undefined
+  const d = new Date(v + 'T00:00:00Z')
+  return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== v ? undefined : v
+}
+
+/** Both ends of a range, in order; none when either is no day. A range written backwards is read the right way round. */
+function rangeOf(a: string | null, b: string | null): [string, string] | [undefined, undefined] {
+  const x = dayOf(a)
+  const y = dayOf(b)
+  if (!x || !y) return [undefined, undefined]
+  return x <= y ? [x, y] : [y, x]
+}
+
 export function readView(params: URLSearchParams): ViewState {
-  const from = params.get('from') ?? undefined
-  const to = params.get('to') ?? undefined
+  const [from, to] = rangeOf(params.get('from'), params.get('to'))
+  const [cfrom, cto] = rangeOf(params.get('cfrom'), params.get('cto'))
   const cmp = params.get('compare')
   return {
     period: from && to ? 'custom' : (params.get('period') ?? defaultPeriod),
     from,
     to,
     compare: compareOf(cmp, from && to ? 'custom' : (params.get('period') ?? defaultPeriod)),
-    cfrom: params.get('cfrom') ?? undefined,
-    cto: params.get('cto') ?? undefined,
+    cfrom,
+    cto,
     filters: params.getAll('f').flatMap((f) => parseFilterParam(f) ?? []),
     // 'compact' was this mode's name until it became Core; links people
     // already shared keep working.
     mode: params.get('mode') === 'full' ? 'full' : 'core',
     bucket: (['hour', 'day', 'week', 'month'] as const).find((b) => b === params.get('bucket')),
     metric: CHART_METRICS.find((m) => m === params.get('metric')),
-    day: params.get('day') ?? undefined,
+    day: dayOf(params.get('day')),
     test: params.get('payments') === 'test',
     attr: params.get('attr') === 'first' ? 'first' : undefined,
     live: liveOf(params.get('view')),
@@ -179,7 +202,7 @@ export function wantsLive(view: ViewState, site: { last_event_at?: number }): bo
 }
 
 /** Update part of the view; scrub moves replace history, everything else pushes. */
-export function setView(patch: Partial<ViewState>) {
+export function setView(patch: Partial<ViewState>, opts: { replace?: boolean } = {}) {
   const cur = readView(new URLSearchParams(location.search))
   // An address with a period, filters and so on is Data; if this change takes
   // the last of them out, it keeps saying Data.
@@ -192,7 +215,7 @@ export function setView(patch: Partial<ViewState>) {
   // An open settings section stays in the address (lib/settings.ts).
   const settings = new URLSearchParams(location.search).get('settings')
   const view = writeView(next)
-  navigate(location.pathname + (settings ? view + (view ? '&' : '?') + 'settings=' + encodeURIComponent(settings) : view), { replace: Object.keys(patch).every((k) => k === 'day') })
+  navigate(location.pathname + (settings ? view + (view ? '&' : '?') + 'settings=' + encodeURIComponent(settings) : view), { replace: opts.replace || Object.keys(patch).every((k) => k === 'day') })
 }
 
 /** The period, comparison, filters and panel put back to what a fresh page has: what Live is shown with, since it has none of them. */

@@ -55,6 +55,8 @@ export function useReport(site: string | null, q: ReportQuery | null, opts: { po
         })
         .catch((e: unknown) => {
           if (cancelled) return
+          // The report on screen is another period's: its numbers must not stay under this period's name.
+          if (onScreen.current !== key) setData(null)
           if (e instanceof APIError && e.status === 503) {
             setWarming(true)
             retry = setTimeout(load, 2000)

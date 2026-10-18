@@ -12,10 +12,12 @@ import { lazyLoad, whenIdle } from "./lib/lazyLoad";
 import { SiteHost } from "./views/SiteHost";
 import { applySavedTheme } from "./lib/theme";
 import { NO_SITES, useLiveSites } from "./lib/useLiveSites";
-import { openAddSite, useAccountTab, useAddSite } from "./lib/account";
+import { useAccountTab, useAddSite } from "./lib/account";
 import { AddSiteHost } from "./features/onboarding/AddSiteHost";
 import { routeOf, SubRoute } from "./features/subpage";
-import { landing, namesSite } from "./lib/landing";
+import { namesSite } from "./lib/landing";
+import { leaveStray } from "./lib/stray";
+import { keepSignInReturn } from "./lib/returnTo";
 import { openSettings, settingsTarget } from "./lib/settings";
 import { useSettingsAddress } from "./features/settingsAddress";
 import { useLatest } from "./lib/update";
@@ -113,16 +115,11 @@ function App() {
     if (shared) return;
     if (boot.state === "setup" && path !== "/setup")
       navigate("/setup" + location.hash, { replace: true });
-    if (boot.state === "login" && path !== "/login")
-      navigate("/login", { replace: true });
+    if (keepSignInReturn(boot.state, path, gated)) return;
     // Signed in at the root, or at an address that names none of this
     // person's sites (a typo, someone else's site, one since removed): their
     // main dashboard, never a page made up for an address it does not know.
-    if (boot.state === "ready" && !gated && !(path === "/settings" && namesSite(boot.sites, params)) && path !== "/sites" && !routeOf(boot.sites, path).site) {
-      const to = landing(boot.sites, new URLSearchParams(location.search));
-      navigate(to.path, { replace: true });
-      if (to.wizard) openAddSite();
-    }
+    if (boot.state === "ready" && !gated && !(path === "/settings" && namesSite(boot.sites, params)) && path !== "/sites") leaveStray(boot.sites, path, routeOf(boot.sites, path));
   }, [boot, path, shared, gated, params]);
 
   if (shared)

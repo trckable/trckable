@@ -41,6 +41,8 @@ interface V2Props {
   range: Range
   data: Report | null
   loading: boolean
+  /** The period's report could not be read and nothing older is shown: what says so, and asks again. */
+  failed?: ReactNode
   money?: (minor: number) => string
   onGoal: () => void
   /** Open Peek; absent where the person cannot ask. */
@@ -134,6 +136,7 @@ export function V2View(p: V2Props) {
       )}
     </>
   )
+  const shown = here === 'briefing' && p.failed ? p.failed : screen
   return (
     <div className="mk mk-body" id="app">
       <PageHeader
@@ -150,7 +153,7 @@ export function V2View(p: V2Props) {
       />
       <main id="main" className="vfade">
         {p.top}
-        {p.waiting ? <FreshSlot site={p.site} visits={p.live.stream.visits} /> : screen}
+        {p.waiting ? <FreshSlot site={p.site} visits={p.live.stream.visits} /> : shown}
       </main>
       {opened && !p.waiting && <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} period={periodChip('xper')} money={p.money} onGoal={p.onGoal} />}
       <AiHost site={p.site} />

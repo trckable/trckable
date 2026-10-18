@@ -3298,4 +3298,5 @@ export default {
   'mentionsTrust.uncheckedTitle': (w: string) => `L’actualité n’a pas pu être vérifiée pour « ${w} » à l’instant`,
   'mentionsTrust.addAnyway': 'Ajouter quand même',
   'mentionsTrust.excludedFull': (n: number) => `Cela dépasserait la limite de ${n} mots exclus. Retirez-en un d’abord.`,
+  'address.noSite': (name: string) => `Aucun site nommé ${name}`,
 } satisfies Messages
