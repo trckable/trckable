@@ -7,7 +7,7 @@ import { copy as menu } from '../../features/sites/menuCopy'
 import { totalOf, type Today } from '../../features/sites/useToday'
 import { copy } from '../copy'
 
-export function AllRow({ on, numbers, all, onPick }: { on: boolean; numbers: Map<string, Today> | null; all: string; onPick: () => void }) {
+export function AllRow({ on, numbers, all, slim, onPick }: { slim?: boolean; on: boolean; numbers: Map<string, Today> | null; all: string; onPick: () => void }) {
   const online = useOnlineAll()
   const sum = numbers && totalOf(numbers)
   return (
@@ -15,9 +15,14 @@ export function AllRow({ on, numbers, all, onPick }: { on: boolean; numbers: Map
       <LayoutGrid size={14} strokeWidth={1.75} aria-hidden="true" />
       <span className="mt2">
         <div className="nm">{all}</div>
-        <div className="d">{copy.overview}</div>
+        {!slim && <div className="d">{copy.overview}</div>}
       </span>
-      {sum && (
+      {sum && slim && (
+        <span className="now" title={menu.todayAll}>
+          <b>{fmtCompact(sum.visitors)}</b>
+        </span>
+      )}
+      {sum && !slim && (
         <span className="now strip-sum" title={`${menu.onlineAll} · ${menu.todayAll}`}>
           <b>{fmtCompact(online ?? 0)}</b> {copy.nowWord} · <b>{fmtCompact(sum.visitors)}</b> {menu.todayShort}
         </span>

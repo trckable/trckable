@@ -20,6 +20,8 @@ export const copy = defineCopy('sites.menu', {
   downTip: (span: string) => `Not reachable for ${span}. Open the site to see what’s wrong.`,
   downLine: (span: string) => `Not reachable · ${span}`,
   quietLine: (span: string) => `Quiet · ${span}`,
+  quietShort: (span: string) => `quiet ${span}`,
+  downShort: (span: string) => `down ${span}`,
   quietTip: (span: string) => `No visits for ${span}. Nothing looks wrong with the page.`,
 
   // The numbers: today's visitors per site, and both totals beside All sites.

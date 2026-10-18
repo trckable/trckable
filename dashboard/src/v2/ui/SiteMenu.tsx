@@ -1,6 +1,6 @@
 // The site in the header, and the list that opens from it (SiteList): every site with who is on it now, a finder, and what
 // belongs to this site. The check beside the name says when something independent vouches for the numbers.
-import { Suspense, useCallback, useRef } from 'react'
+import { Suspense, useCallback, useRef, type ReactNode } from 'react'
 import type { Site } from '../../lib/api'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { layoutReady, preloadLayout } from '../../features/sites/useSiteLayout'
@@ -14,6 +14,7 @@ import { useMenu } from './useMenu'
 import { SetupLine } from './SetupLine'
 import { WorkspaceRow, type Workspace } from './WorkspaceRow'
 import { useTopLayerWhen } from '../../lib/topLayer'
+import { currentWorkspace, menuVariant, slimMenu, ThinAccount } from './menuProto'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
 const warmUp = () => {
@@ -49,7 +50,13 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
     else void Promise.all([layoutReady(LAYOUT_WAIT), SiteList.load()]).then(() => setOpen(true))
   }
   const done = useCallback(() => close(), [close])
-  const footer = <MenuFoot items={p.footer} done={done} />
+  const slim = slimMenu()
+  const variant = menuVariant()
+  const baseline = p.workspace ?? (variant === 'current' ? currentWorkspace : undefined)
+  let account: ReactNode = baseline && <WorkspaceRow w={baseline} close={done} />
+  if (variant === 'a' || variant === 'b') account = <ThinAccount kind={variant} close={done} />
+  if (variant === 'c') account = null
+  const footer = <MenuFoot items={slim ? p.footer.filter((f) => f.key === 'add') : p.footer} done={done} />
   return (
     <div ref={attach} style={{ position: 'relative' }} className="sitechip">
       <button type="button" id="siteBtn" className="mk-chip" aria-haspopup="menu" aria-expanded={open} data-key="site" {...warm(warmUp)} onClick={toggle}>
@@ -70,7 +77,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
               current={cur}
               workspace={
                 <>
-                  {p.workspace && <WorkspaceRow w={p.workspace} close={done} />}
+                  {account}
                   <SetupLine close={done} />
                 </>
               }
@@ -78,6 +85,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
               footer={footer}
               find={p.find}
               all={p.all}
+              slim={slim}
               close={done}
             />
           </Suspense>

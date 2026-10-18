@@ -19,6 +19,7 @@ import { busierOf, nowOf } from './live'
 import { crawlersOf, funnelOf, heatOf, linksOf, scrollOf, segments } from './sections'
 import { hash, mulberry, pick } from './rand'
 import { setupChange, setupOf } from './setup'
+import { protoDefs, protoOverview, protoSiteList } from './menuSites'
 import { osOf, visitsOf, BROWSERS } from './visits'
 
 const CHANNEL_OF: Record<string, string> = { google: 'Search', direct: 'Direct', hn: 'Referral', reddit: 'Social', x: 'Social', newsletter: 'Email', chatgpt: 'Referral', github: 'Referral', badge: 'Referral' }
@@ -240,6 +241,7 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
   }
   if (method !== 'GET') return none()
   const sites = SITES
+  const proto = protoDefs()
   switch (path) {
     case '/setup':
       return ok({ email_codes: false, needs_setup: false, sso: [] })
@@ -248,12 +250,13 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     case '/account':
       return ok({ email: 'albi@example.com', name: 'Albi', has_avatar: false })
     case '/sites':
-      return ok({ sites: sites.map((s) => siteJson(c, s)) })
+      return ok({ sites: proto ? protoSiteList(proto, (id) => siteJson(c, sites.find((x) => x.id === id) ?? sites[0]), (m) => secs(c, c.nowAbs + m)) : sites.map((s) => siteJson(c, s)) })
     case '/site-layout':
       return ok({ order: [], pinned: [], groups: [] })
     case '/overview': {
       const days = Number(sp.get('days') ?? 30)
       const d2 = END
+      if (proto) return ok({ days, sites: protoOverview(proto) })
       return ok({
         days,
         sites: sites.map((s) => {

@@ -21,8 +21,17 @@ import type { SiteMove } from '../slots'
 const DOT = { now: 'now', live: '', quiet: 'quiet', stopped: 'down', new: 'off' } as const
 
 /** What stands where the people on it would: "setup", a moon (quiet) or an alert (down) when the dot alone cannot say it. */
-function Tail({ s, today }: { s: Site; today?: number }) {
+function Tail({ s, today, slim }: { s: Site; today?: number; slim?: boolean }) {
   const state = dotState(s)
+  if (slim && (state === 'stopped' || state === 'quiet')) {
+    const down = state === 'stopped'
+    const tip = down ? copy.downTip(silence(s)) : copy.quietTip(silence(s))
+    return (
+      <span className={`now state-word ${down ? 'down' : 'quiet'}`} title={tip}>
+        {down ? copy.downShort(silence(s)) : copy.quietShort(silence(s))}
+      </span>
+    )
+  }
   if (state === 'new') {
     return (
       <span className="now" title={first.dot.new}>
@@ -53,15 +62,18 @@ function Tail({ s, today }: { s: Site; today?: number }) {
   )
 }
 
+/** The dot's class; in the slim menu a quiet site's is grey: only a real problem is coloured. */
+const dot = (s: Site, slim?: boolean) => (slim && dotState(s) === 'quiet' ? 'idle' : DOT[dotState(s)])
+
 /** After a move React may re-insert the row, which drops focus: put it back. */
 function refocus(id: string) {
   requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-site="${CSS.escape(id)}"] .site`)?.focus())
 }
 
-export function SiteRow({ site, place, on, arrange: a, today, onPick, move }: { move?: SiteMove; site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; onPick: () => void }) {
+export function SiteRow({ site, place, on, arrange: a, today, onPick, move, slim, clash }: { slim?: boolean; clash?: boolean; move?: SiteMove; site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; onPick: () => void }) {
   const name = site.name || site.domain
   const line = stateLine(site)
-  const note = line ?? (site.domain === name ? undefined : site.domain)
+  const note = slim ? (clash && site.domain !== name ? site.domain : undefined) : (line ?? (site.domain === name ? undefined : site.domain))
   const moveStep = (dir: -1 | 1) => {
     if (!a) return
     a.save(step(a.sites, a.layout, site.id, dir), dir < 0 ? copy.up : copy.down)
@@ -91,13 +103,13 @@ export function SiteRow({ site, place, on, arrange: a, today, onPick, move }: { 
       >
         <span className="mkwrap">
           <SiteMark site={site} size={22} />
-          <span className={`mk-dot ${move ? 'quiet' : DOT[dotState(site)]}`} title={move?.title ?? first.dot[dotState(site)]} />
+          <span className={`mk-dot ${move ? 'quiet' : dot(site, slim)}`} title={move?.title ?? first.dot[dotState(site)]} />
         </span>
         <span className="mt2">
           <div className="nm">{name}</div>
           {move ? <div className="d state-line quiet moving" title={move.title}>{move.text}</div> : note && <div className={`d${line ? ` state-line ${dotState(site)}` : ''}`}>{note}</div>}
         </span>
-        <Tail s={site} today={today} />
+        <Tail s={site} today={today} slim={slim} />
       </button>
       {move && (
         <button type="button" data-stop className="btn sw-stop" aria-label={move.stopLabel} onClick={move.stop}>

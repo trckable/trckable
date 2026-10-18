@@ -1748,3 +1748,33 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 @container (max-width:1200px){
 .mk .hd .planw{display:none}
 }
+/* Prototype: slimmer site menu (?menu=a|b|c). One line a site; quiet is a muted word; only a real problem is coloured. */
+.mk .mk-dot.idle{background:var(--mk-faint)}
+.mk .mi .now.state-word{font-size:12px;color:var(--mk-faint);white-space:nowrap}
+.mk .mi .now.state-word.down{color:var(--mk-red);font-weight:600}
+.mk .ws-thin{display:flex;align-items:center;gap:var(--mk-s1);width:100%;min-height:28px;padding:0 var(--mk-s3);margin:0 0 var(--mk-s1);color:var(--mk-muted);font-size:12px;font-weight:600;letter-spacing:.02em;border-radius:var(--mk-rc)}
+.mk .ws-thin:hover,.mk .ws-thin.open{color:var(--mk-text)}
+.mk .ws-thin svg{transition:transform .15s}
+.mk .ws-thin.open svg{transform:rotate(90deg)}
+.mk .ws-thin.back{margin:0 0 var(--mk-s1)}
+.mk .ws-thin.back svg{display:none}
+.mk .acct-mk{display:inline-grid;place-items:center;width:22px;height:22px;flex:none;border-radius:6px;background:var(--mk-hov);color:var(--mk-text);font-size:12px;font-weight:700}
+.mk .acct-mk.ghost{background:none}
+.mk .mi.acct{gap:var(--mk-s2)}
+.mk .mi.acct.manage{color:var(--mk-muted);font-size:13px}
+.mk .mi.acct>svg{margin-left:auto;color:var(--mk-lime)}
+.mk .mk-menu.sites:has(.proto-fly){overflow:visible}
+.mk .proto-fly{position:absolute;left:calc(100% + 8px);top:0;width:250px;z-index:var(--z-menu);padding:var(--mk-s2);background:var(--mk-card2);border:1px solid var(--mk-line);border-radius:12px;box-shadow:0 20px 50px var(--mk-shc)}
+.mk .proto-fly .ws-thin.back{display:none}
+@media (max-width:600px){
+.mk .proto-fly{position:absolute;inset:0;width:auto;border:0;border-radius:inherit;box-shadow:none;z-index:2;overflow:auto}
+.mk .proto-fly .ws-thin.back{display:flex}
+}
+.mk .proto-accts,:root .proto-accts{display:flex;flex-direction:column;border-bottom:1px solid var(--mk-line,var(--line));padding-bottom:6px;margin-bottom:6px}
+.proto-accts .acct-mk{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;background:var(--hover,rgba(128,128,128,.2));font-size:12px;font-weight:700}
+.proto-accts .acct-on{margin-left:auto}
+.mk .mi .now{margin-left:auto}
+.mk .site-row .mi.site .mt2,.mk .mi.all .mt2{flex:1;min-width:0}
+/* All sites' total lines up with the sites' numbers (the open and ⋯ buttons keep their room at the right of a row). */
+.mk .mi.all:has(>.now){padding-right:calc(var(--mk-s3) + 60px)}
+@media (max-width:600px){.mk .mi.all:has(>.now){padding-right:calc(var(--mk-s3) + 92px)}}

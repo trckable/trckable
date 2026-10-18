@@ -1,4 +1,5 @@
 // The avatar menu's items (AccountMenu.tsx). Its own chunk, so the first load carries only the button.
+import { AvatarAccounts } from '../v2/ui/menuProto'
 import { useState } from 'react'
 import { CircleUser, Eye, EyeOff, Keyboard, LogOut, Smartphone, Sparkle } from 'lucide-react'
 import { choose, canLeaveOut, nextChoice, stateOf } from '../features/exclude/ownVisits'
@@ -125,6 +126,7 @@ export default function AccountItems({ profile, v, go, site }: { profile: Profil
     <>
       {menuExtra}
       <Who profile={profile} v={v} />
+      <AvatarAccounts go={go} />
       {typeof menuBeforeProfile === 'function' ? menuBeforeProfile(go) : menuBeforeProfile}
       <button type="button" role="menuitem" aria-label={copy.accountLabel} onClick={go(() => openAccount('sites'))}>
         <CircleUser size={18} strokeWidth={1.75} aria-hidden="true" />
