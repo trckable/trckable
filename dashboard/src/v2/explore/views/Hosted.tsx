@@ -1,6 +1,6 @@
 // The tabs whose numbers their own request reads: the highlights, the charts of the old Full page, sources that pay, pages
 // that sell, the people, the latest buyers, retention, and AI & search. Each reads what its card always read and is drawn
-// as the other tables are; the ones that read the payments show the locked sample until they are connected.
+// as the other tables are; the ones that read the payments show the locked card until they are connected.
 import { lazy, Suspense, useState } from 'react'
 import { Loading } from '../../../components/loading/Loading'
 import { cachedReport, type Report, type ReportQuery } from '../../../lib/api'

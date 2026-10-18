@@ -26,11 +26,11 @@ export function Overview({ x, d }: { x: XCtx; d: Model }) {
       <div className="x2">
         <div>
           <XSec a={copy.topPages} b={rowWords().filter} />
-          <PeopleTable x={x} rows={d.pages} head={copy.heads.page} mono selected={valueOf(x.filters, 'page')} onPick={(r) => x.pick('page', r.val)} dim="page" limit={5} onAll={x.showAll} go={{ label: copy.showAllPages, section: 'pages', run: () => x.goTo('pages') }} />
+          <PeopleTable x={x} rows={d.pages} head={copy.heads.page} mono selected={valueOf(x.filters, 'page')} onPick={(r) => x.pick('page', r.val)} dim="page" limit={5} of={d.of} onAll={x.showAll} go={{ label: copy.showAllPages, section: 'pages', run: () => x.goTo('pages') }} />
         </div>
         <div>
           <XSec a={copy.topSources} />
-          <PeopleTable x={x} rows={d.sources} head={copy.heads.source} selected={valueOf(x.filters, 'channel')} onPick={(r) => x.pick('channel', r.val)} dim="channel" limit={5} onAll={x.showAll} go={{ label: copy.showAllSources, section: 'sources', run: () => x.goTo('sources') }} />
+          <PeopleTable x={x} rows={d.sources} head={copy.heads.source} selected={valueOf(x.filters, 'channel')} onPick={(r) => x.pick('channel', r.val)} dim="channel" limit={5} of={d.of} onAll={x.showAll} go={{ label: copy.showAllSources, section: 'sources', run: () => x.goTo('sources') }} />
         </div>
       </div>
     </>

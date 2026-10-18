@@ -1,4 +1,4 @@
-// The locked sample of a section whose source is not connected: revenue, search or goals.
+// The locked card of a section whose source is not connected: revenue, search or goals. It says what connecting gives and shows no example figures.
 import { copy as brief } from '../../briefing/copy'
 import { LockCard } from '../../ui/LockCard'
 import type { Setup, XCtx } from '../ctx'

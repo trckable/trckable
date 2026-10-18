@@ -71,7 +71,7 @@ export function Mentions({ x, d }: { x: XCtx; d: Mention[] }) {
         </small>
       </>
     ),
-    c: [fmtInt(m.pts), fmtInt(m.cm), m.when],
+    c: [m.pts === null ? '–' : fmtInt(m.pts), m.cm === null ? '–' : fmtInt(m.cm), m.when],
   }))
   return (
     <>

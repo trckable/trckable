@@ -72,6 +72,7 @@ export function Tables({ tab, x, d }: { tab: Tab; x: XCtx; d: Table }) {
         onPick={dim ? (r) => x.pick(dim, r.val) : undefined}
         dim={dim}
         limit={Math.max(c.min ?? 0, x.limit)}
+        of={d.of}
         money={x.money}
         onAll={x.showAll}
       />

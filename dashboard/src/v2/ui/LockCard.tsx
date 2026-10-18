@@ -1,4 +1,4 @@
-// A locked preview, copied from the walkthrough: a blurred sample of what a feature would show, under one line on why and
+// A locked preview, copied from the walkthrough: a blurred sample of what a feature would show (not in Explore, which holds the reader's own figures), under one line on why and
 // the one button that sets it up. In the Briefing's grid, in Explore (big) and in Live (mini): one card, three sizes.
 import { useId, type ReactNode } from 'react'
 import { lockCopy, type LockKind } from './lockCopy'
@@ -99,13 +99,17 @@ export function LockCard({ kind, size = 'card', go, onGo, onHow }: LockCardProps
   const id = useId()
   const c = lockCopy
   const text = { title: c[`${kind}Title`], line: c[`${kind}Line`], sub: c[`${kind}Sub`] }
+  // In Explore (big) it is the reader's own figures that are missing, so no blurred example numbers stand where they will be.
+  const sampled = size !== 'big'
   return (
     <section className={`lkc${size === 'card' ? '' : ` ${size}`}`} data-lock={kind}>
-      <span className="lkc-tag">{c.sample}</span>
-      <div className="lkc-s" aria-hidden="true">
-        <h4>{text.title}</h4>
-        <Sample kind={kind} />
-      </div>
+      {sampled && <span className="lkc-tag">{c.sample}</span>}
+      {sampled && (
+        <div className="lkc-s" aria-hidden="true">
+          <h4>{text.title}</h4>
+          <Sample kind={kind} />
+        </div>
+      )}
       <div className="lkc-o" role="region" aria-labelledby={id}>
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <rect x="5" y="11" width="14" height="9" rx="2" />

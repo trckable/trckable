@@ -56,12 +56,12 @@ export function mapFunnel(o: { cur: FunnelResult[]; prev?: FunnelResult[]; repor
 
 // ---- sales ----
 
-/** What the period earned, by kind: there is no list of single sales to read, so each kind is one line. The lines add up to the period's net revenue (what the Briefing and the buyers say); what is neither new nor a renewal is the upgrades. */
+/** What the period earned, by kind: there is no list of single sales to read, so each kind is one line. The kinds are what was paid and the refunds come off as their own line, so the lines add up to the period's net revenue (what the Briefing and the buyers say). A period with no payment says there are none. */
 export function mapSales(money: Money | undefined, label: string): Sales {
   if (!money) return { state: 'connect', sales: [] }
   const one = (kind: Sale['kind'], text: string, amt: number): Sale[] => (amt === 0 ? [] : [{ kind, label: text, from: '', country: '', device: '', when: label, amt }])
-  const upgrades = money.revenue - money.new_revenue - money.renewal_revenue + money.refunds
-  return { state: 'ok', sales: [...one('new', copy.salesNew, money.new_revenue), ...one('upgrade', copy.salesUpgrade, upgrades), ...one('renewal', copy.salesRenewal, money.renewal_revenue), ...one('refund', copy.salesRefund, -money.refunds)] }
+  const sales = [...one('new', copy.salesNew, money.new_gross), ...one('upgrade', copy.salesUpgrade, money.upgrade_gross), ...one('renewal', copy.salesRenewal, money.renewal_gross), ...one('refund', copy.salesRefund, -money.refunds)]
+  return { state: money.payments === 0 && sales.length === 0 ? 'none' : 'ok', sales }
 }
 
 // ---- search ----
@@ -93,7 +93,8 @@ export function mapSearch(o: { query: SearchReport; pages: SearchReport; prev?: 
   const pos = averagePosition(query.rows)
   const pos0 = prev ? averagePosition(prev.rows) : 0
   const posSt = base ? movedOf(pos, pos0) : ''
-  const kc = (icon: string, label: string, val: string, st: string, detail: string): Xkc => ({ icon, label, val, ...tagOf(st), detail })
+  // With nothing to count from (no period before, or one too thin), no usual is told: no tag, no range.
+  const kc = (icon: string, label: string, val: string, st: string, detail: string): Xkc => (base ? { icon, label, val, ...tagOf(st), detail } : { icon, label, val, tag: '', tone: '', detail: '' })
   const known = new Set((prev?.rows ?? []).map((r) => r.key))
   return {
     on: true,
@@ -146,8 +147,11 @@ export function mapSpeed(cur: WebVitals, prev?: WebVitals): Speed {
 
 // ---- mentions, bots, links ----
 
+/** One line per robot: the report keeps a robot's errands (training, answering) apart, and the list says its name once with every hit. */
 export function mapBots(r: CrawlerReport): Bot[] {
-  return r.series.map((s) => ({ name: s.name, count: s.total })).filter((b) => b.count > 0).sort((a, b) => b.count - a.count)
+  const by = new Map<string, number>()
+  for (const s of r.series) by.set(s.name, (by.get(s.name) ?? 0) + s.total)
+  return [...by].map(([name, count]) => ({ name, count })).filter((b) => b.count > 0).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
 }
 
 export function mapLinks(rows: { key: string; value: string; visitors: number }[]): Row[] {
@@ -173,5 +177,5 @@ export function mapMentions(list: ApiMention[], tz: string, today: string): Ment
   return list
     .filter((m) => m.kind !== 'comment')
     .toSorted((a, b) => b.posted_at - a.posted_at)
-    .map((m) => ({ title: m.title, src: SOURCES[m.source] ?? m.host, pts: m.points ?? 0, cm: m.comments ?? 0, when: whenOf(m.posted_at, tz, today) }))
+    .map((m) => ({ title: m.title, src: SOURCES[m.source] ?? m.host, pts: m.points ?? null, cm: m.comments ?? null, when: whenOf(m.posted_at, tz, today) }))
 }

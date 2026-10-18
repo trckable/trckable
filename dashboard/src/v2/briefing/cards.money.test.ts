@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Money, SearchReport } from '../../lib/api'
 import { firstCard, leakCard, salesCards, searchCard, stuckCard } from './cards.money'
 
-const money = (o: Partial<Money> = {}): Money => ({ currency: 'USD', exponent: 2, revenue: 30500, refunds: 0, payments: 2, customers: 1, paying_visitors: 2, conversion: 0, revenue_per_visitor: 0, new_revenue: 8700, renewal_revenue: 0, unattributed: 0, unconverted: 0, ...o })
+const money = (o: Partial<Money> = {}): Money => ({ currency: 'USD', exponent: 2, revenue: 30500, refunds: 0, payments: 2, customers: 1, paying_visitors: 2, conversion: 0, revenue_per_visitor: 0, new_revenue: 8700, renewal_revenue: 0, new_gross: 0, upgrade_gross: 0, renewal_gross: 0, unattributed: 0, unconverted: 0, ...o })
 const usd = (m: number) => `$${Math.round(m / 100)}`
 const base = { fmt: usd, clock: (iso: string) => iso.slice(11, 16), today: true, rule: 'Compared with the last Fridays.' }
 

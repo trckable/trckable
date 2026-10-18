@@ -79,6 +79,7 @@ export function mapOverview(r: Report, o: { money?: (minor: number) => string; u
     pages: rows('page', (v) => v),
     // The channels, as the Sources tab lists them: a direct visit has no referrer, so a list of referrers would leave it out.
     sources: rows('channel', channelLabel),
+    of: cur.kpis.visitors,
   }
 }
 
@@ -93,9 +94,8 @@ function uptimeKc(u: Uptime | null): Kc {
     label: copy.kc.uptime,
     val: u?.pct == null ? '–' : `${fmtFixed(u.pct, 2)}%`,
     note: { c: down ? 'dn' : '', t: note },
-    vals: u?.pct == null ? [] : [100, 100, 100],
-    lo: 90,
-    hi: 117,
+    // The incident record has no curve to draw: a line of made-up points would pass for one.
+    vals: [],
     st: down ? 'dn' : '',
   }
 }
@@ -134,8 +134,10 @@ const NO_SALE = new Set(['page', 'group', 'exit_page', 'hostname'])
 /** A table of people for one tab: the dimension's rows against the period before, each said in its own words. */
 export function mapTable(tab: Tab, r: Report): Table {
   const t = TABLES[tab]
-  if (!t) return { rows: [] }
-  const sales = !!r.current.money && !NO_SALE.has(t.key)
+  if (!t) return { rows: [], of: r.current.kpis.visitors }
+  // Only the breakdowns the server attributes sales to carry them (not regions, cities, languages, screens...): a column of zeros there would say nobody paid.
+  const attributed = (r.current.dims[t.key] ?? []).some((x) => x.revenue !== undefined) || !!r.current.revenue_dims?.[t.key]
+  const sales = !!r.current.money && !NO_SALE.has(t.key) && attributed
   // The rows carry what they earned; the top list covers a row the report left without it.
   const paid = new Map<string, ApiRow>()
   if (sales) {
@@ -144,7 +146,7 @@ export function mapTable(tab: Tab, r: Report): Table {
   }
   const extra = (v: string): Partial<Row> => ({ ...(t.code ? { code: v } : {}), ...(sales ? { cust: paid.get(v)?.customers ?? 0, rev: paid.get(v)?.revenue ?? 0 } : {}) })
   const rows = rowsOf(r.current.dims[t.key], r.previous?.dims[t.key], r.previous?.kpis.visitors, t.name, extra)
-  return { rows, dim: t.dim }
+  return { rows, dim: t.dim, of: r.current.kpis.visitors }
 }
 
 const OPTION_DIMS: Record<FilterDim, { dim: string; name: (v: string) => string }> = {

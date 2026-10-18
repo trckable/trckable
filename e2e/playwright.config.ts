@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { PORT, origin } from './ports'
+import { TRUTH_DOMAIN, truthRows } from './truth-fixture'
 
 // Created once in the main process; workers inherit it through the env.
 const DATA = (process.env.TRCKABLE_DATA_DIR ??= mkdtempSync(join(tmpdir(), 'trckable-e2e-')))
@@ -48,6 +49,10 @@ if (!existsSync(LABELS)) {
   )
   writeFileSync(LABELS, rows.join('\n') + '\n')
 }
+// Every figure counted by hand (truth-fixture.ts): explore-truth.spec.ts holds each table of Explore to it.
+export { TRUTH_DOMAIN }
+const TRUTH = join(DATA, 'truth.ndjson')
+if (!existsSync(TRUTH)) writeFileSync(TRUTH, truthRows().join('\n') + '\n')
 export const API = origin(PORT.api)
 export const TOKEN = 'e2e-token'
 
@@ -83,7 +88,7 @@ export default defineConfig({
   webServer: [
     {
       // example.com first (the suite's own site), then the one with history, then the server.
-      command: `sh -c '"${BIN}" site add example.com && "${BIN}" site add ${HISTORY_DOMAIN} && "${BIN}" import ${HISTORY_DOMAIN} "${HISTORY}" && "${BIN}" site add ${BUSY_DOMAIN} && "${BIN}" import ${BUSY_DOMAIN} "${BUSY}" && "${BIN}" site add ${LABELS_DOMAIN} && "${BIN}" import ${LABELS_DOMAIN} "${LABELS}" && exec "${BIN}" serve'`,
+      command: `sh -c '"${BIN}" site add example.com && "${BIN}" site add ${HISTORY_DOMAIN} && "${BIN}" import ${HISTORY_DOMAIN} "${HISTORY}" && "${BIN}" site add ${BUSY_DOMAIN} && "${BIN}" import ${BUSY_DOMAIN} "${BUSY}" && "${BIN}" site add ${LABELS_DOMAIN} && "${BIN}" import ${LABELS_DOMAIN} "${LABELS}" && "${BIN}" site add ${TRUTH_DOMAIN} && "${BIN}" import ${TRUTH_DOMAIN} "${TRUTH}" && exec "${BIN}" serve'`,
       url: `${API}/readyz`,
       reuseExistingServer: false,
       env: {

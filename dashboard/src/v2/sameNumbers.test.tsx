@@ -44,6 +44,6 @@ describe('the same multiple on every screen', () => {
     const told = withSourceUsuals(prev, new Map([['news.ycombinator.com', band.c]]))
     const rows = rowsOf([{ value: 'news.ycombinator.com', visitors: hn }], told.dims.referrer, 700, (v) => v)
     expect(rows[0]).toMatchObject({ v: hn, c: 23, st: 'up' })
-    expect(renderToStaticMarkup(<XTable rows={rows} head="Source" limit={5} onAll={() => {}} />)).toContain(`▲ ${said}`)
+    expect(renderToStaticMarkup(<XTable rows={rows} head="Source" limit={5} of={10} onAll={() => {}} />)).toContain(`▲ ${said}`)
   })
 })

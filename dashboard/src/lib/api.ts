@@ -38,6 +38,10 @@ export interface Money {
   revenue_per_visitor: number
   new_revenue: number
   renewal_revenue: number
+  /** What each kind took before refunds: with the refunds they add up to the revenue. */
+  new_gross: number
+  upgrade_gross: number
+  renewal_gross: number
   unattributed: number
   unconverted: number
   no_rate?: string[] // currencies the ECB publishes no rate for: never converted
@@ -568,6 +572,8 @@ export interface ReportQuery {
   /** Also break down exit pages, regions and cities. Only Full shows them, so
    *  only Full asks — Core's scan stays the size it has always been. */
   deep?: boolean
+  /** Rows per breakdown (the server's own is 10; it carries up to 100). */
+  limit?: number
 }
 
 export interface Filter {
@@ -647,6 +653,7 @@ export function reportURL(site: string, q: ReportQuery): string {
   if (q.bucket) p.set('bucket', q.bucket)
   if (q.daily) p.set('daily', '1')
   if (q.deep) p.set('deep', '1')
+  if (q.limit) p.set('limit', String(q.limit))
   if (q.testPayments) p.set('payments', 'test')
   if (q.attr) p.set('attr', q.attr)
   for (const f of q.filters ?? []) p.append('f', filterParam(f))
