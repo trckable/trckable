@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"github.com/trckable/trckable/server/internal/permissions"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -180,7 +181,7 @@ func (a *API) paySync(w http.ResponseWriter, r *http.Request) {
 func (a *API) paySecret(w http.ResponseWriter, r *http.Request) {
 	// Who is asking first: a viewer or a key learns nothing, not even
 	// whether a connection with that id exists.
-	if p, ok := r.Context().Value(ctxKey{}).(principal); !ok || !canUser(p.user, ActSecretRead) {
+	if p, ok := r.Context().Value(ctxKey{}).(principal); !ok || !canUser(p.user, permissions.ActSecretRead) {
 		fail(w, http.StatusForbidden, "only a signed-in owner can read signing secrets")
 		return
 	}

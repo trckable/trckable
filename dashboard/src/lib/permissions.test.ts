@@ -47,7 +47,7 @@ describe('who may do what', () => {
   })
 })
 
-// The server keeps the same table (server/internal/api/permissions.go) and its
+// The server keeps the same table (server/internal/permissions/permissions.go) and its
 // test reads this same file: change one side and the other fails.
 describe('the table against the shared fixture', () => {
   it('lists the same actions', async () => {

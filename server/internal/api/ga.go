@@ -3,6 +3,7 @@ package api
 import (
 	"crypto/subtle"
 	"errors"
+	"github.com/trckable/trckable/server/internal/permissions"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -59,7 +60,7 @@ func (a *API) gaRedirectURL() string {
 // a viewer, has no business connecting a Google account.
 func (a *API) gaOwner(w http.ResponseWriter, r *http.Request) *sqlite.User {
 	u := principalOf(r).user
-	if !canUser(u, ActImportGoogle) {
+	if !canUser(u, permissions.ActImportGoogle) {
 		fail(w, http.StatusForbidden, "only an owner can import from Google Analytics")
 		return nil
 	}

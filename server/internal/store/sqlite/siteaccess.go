@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/auth"
+	"github.com/trckable/trckable/server/internal/permissions"
 )
 
 // Site access: a viewer may be limited to some of the account's sites.
@@ -70,7 +71,7 @@ func (s *Store) ViewerSites(ctx context.Context, account, id string) (map[string
 	if err != nil {
 		return nil, err
 	}
-	if role == RoleOwner || !raw.Valid {
+	if permissions.Can(role, permissions.ActSitesAll) || !raw.Valid {
 		return nil, nil
 	}
 	return siteSet(raw.String), nil

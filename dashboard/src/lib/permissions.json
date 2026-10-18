@@ -1,5 +1,5 @@
 {
-  "note": "The one role table, as the dashboard (lib/permissions.ts) and the server (internal/api/permissions.go) both keep it. 'server' is the server action that enforces a dashboard action. Both tests read this file.",
+  "note": "The one role table, as the dashboard (lib/permissions.ts) and the server (internal/permissions/permissions.go) both keep it. 'server' is the server action that enforces a dashboard action. Both tests read this file.",
   "actions": {
     "site.add": {
       "roles": [

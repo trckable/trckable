@@ -125,7 +125,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
           data={data}
           loading={loading || firstLoad}
           money={money ? fmtM : undefined}
-          onGoal={() => can('peek.ask') && setAddGoals(true)}
+          onGoal={() => can('goal.create') && setAddGoals(true)}
           onAsk={askOn ? () => setAskOpen(true) : undefined}
           identity={identity}
           top={view.surge ? <Suspense fallback={null}><SurgeLine site={site.id} tz={site.timezone} started={view.surge} filters={view.filters} /></Suspense> : undefined}

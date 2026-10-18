@@ -2,7 +2,7 @@
 // looks at a role itself (eslint fails a role compared anywhere else). The
 // server is still the one enforcing this: the table only avoids offering a
 // control that would come back 403, and it is held to the server's own table
-// (server/internal/api/permissions.go) by the fixture permissions.json.
+// (server/internal/permissions/permissions.go) by the fixture permissions.json.
 import { currentRole } from './me'
 
 export type Action =

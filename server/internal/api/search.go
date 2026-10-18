@@ -8,6 +8,7 @@ package api
 import (
 	"context"
 	"errors"
+	"github.com/trckable/trckable/server/internal/permissions"
 	"maps"
 	"net/http"
 	"strings"
@@ -110,7 +111,7 @@ func (a *API) searchConsole(w http.ResponseWriter, r *http.Request) {
 // Google with the stored key, which is setting the connection up: an owner's
 // job, not a viewer's or a script's.
 func (a *API) searchProperties(w http.ResponseWriter, r *http.Request) {
-	if u := principalOf(r).user; !canUser(u, ActSearchConnect) {
+	if u := principalOf(r).user; !canUser(u, permissions.ActSearchConnect) {
 		fail(w, http.StatusForbidden, "only an owner can set up Search Console")
 		return
 	}

@@ -11,10 +11,20 @@ import globals from 'globals'
 
 // A role is compared in one place: lib/permissions.ts. Everywhere else asks
 // can('some.action') (or isOwnerRole for a person listed on the People tab).
-const ROLE_COMPARED = {
-  selector: "BinaryExpression[operator=/^[!=]==?$/]:has(Literal[value=/^(viewer|owner|admin)$/]):has(:matches(Identifier[name=/[rR]ole$/], MemberExpression[property.name=/[rR]ole$/]))",
-  message: "Do not compare a role here: ask can('action') from lib/permissions.ts.",
-}
+// The role names count wherever they are written: compared either way round,
+// as a case, in a list that is searched, or held in a const.
+const ROLE = '/^(viewer|owner|admin)$/'
+const ROLE_MESSAGE = "Do not name or compare a role here: ask can('action') from lib/permissions.ts."
+const ROLE_COMPARED = [
+  `BinaryExpression[operator=/^[!=]==?$/]:has(Literal[value=${ROLE}])`,
+  `BinaryExpression[operator=/^[!=]==?$/]:has(TemplateLiteral[expressions.length=0][quasis.0.value.cooked=${ROLE}])`,
+  `SwitchCase[test.value=${ROLE}]`,
+  `SwitchCase > TemplateLiteral.test[expressions.length=0][quasis.0.value.cooked=${ROLE}]`,
+  `CallExpression[callee.property.name=/^(includes|indexOf|has)$/]:has(ArrayExpression > Literal[value=${ROLE}])`,
+  `NewExpression[callee.name='Set']:has(ArrayExpression > Literal[value=${ROLE}])`,
+  `VariableDeclarator[init.type='Literal'][init.value=${ROLE}]`,
+  `VariableDeclarator > TemplateLiteral.init[expressions.length=0][quasis.0.value.cooked=${ROLE}]`,
+].map((selector) => ({ selector, message: ROLE_MESSAGE }))
 
 export default tseslint.config(
   { ignores: ['dist/**', 'scripts/**', 'eslint.config.js'] },
@@ -31,7 +41,7 @@ export default tseslint.config(
     plugins: { react },
     settings: { react: { version: 'detect' } },
     rules: {
-      'no-restricted-syntax': ['error', ROLE_COMPARED],
+      'no-restricted-syntax': ['error', ...ROLE_COMPARED],
       'no-nested-ternary': 'error',
       'react-hooks/exhaustive-deps': 'error',
       // Off: it trusts the types over the runtime, and here the runtime is
@@ -77,7 +87,7 @@ export default tseslint.config(
     // hints are the Info tooltip or a tap that shows the whole text.
     files: ['src/features/crawlers/**/*.tsx'],
     rules: {
-      'no-restricted-syntax': ['error', ROLE_COMPARED, { selector: "JSXAttribute[name.name='title']", message: 'title= never shows on a phone: use <Info> or tap to show.' }],
+      'no-restricted-syntax': ['error', ...ROLE_COMPARED, { selector: "JSXAttribute[name.name='title']", message: 'title= never shows on a phone: use <Info> or tap to show.' }],
     },
   },
 )
