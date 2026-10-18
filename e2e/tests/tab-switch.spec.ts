@@ -57,8 +57,9 @@ const tab = (page: Page, name: string) => page.getByRole('tab', { name })
 // Every frame while a switch runs: what the main area holds, and the layout shifts the browser scores.
 async function watch(page: Page) {
   await page.evaluate(() => {
-    const w = window as unknown as { __f: string[]; __cls: number; __why: string[]; __stop: () => void }
+    const w = window as unknown as { __f: string[]; __h: number[]; __cls: number; __why: string[]; __stop: () => void }
     w.__f = []
+    w.__h = []
     w.__why = []
     w.__cls = 0
     new PerformanceObserver((l) => {
@@ -70,9 +71,10 @@ async function watch(page: Page) {
     }).observe({ type: 'layout-shift', buffered: false })
     let on = true
     const tick = () => {
-      const m = document.querySelector('#main')
+      const m = (document.querySelector('#main .view-pane:not([hidden])') ?? document.querySelector('#main')) as HTMLElement | null
       const kind = !m || !m.children.length ? 'blank' : m.querySelector('.sk, .skl') ? 'skeleton' : m.querySelector('.liveview > .mk-quiet') ? 'loading' : m.querySelector('.liveview') ? 'live' : m.querySelector('.brief') ? 'brief' : 'other'
       w.__f.push(kind)
+      w.__h.push(Math.round(m?.getBoundingClientRect().height ?? 0))
       if (on) requestAnimationFrame(tick)
     }
     w.__stop = () => (on = false)
@@ -84,9 +86,9 @@ async function report(page: Page) {
   await page.waitForFunction(() => !document.querySelector('#main .skl'), undefined, { timeout: 20_000 })
   await page.waitForTimeout(900)
   return page.evaluate(() => {
-    const w = window as unknown as { __f: string[]; __cls: number; __why: string[]; __stop: () => void }
+    const w = window as unknown as { __f: string[]; __h: number[]; __cls: number; __why: string[]; __stop: () => void }
     w.__stop()
-    return { frames: w.__f, cls: w.__cls, why: w.__why }
+    return { frames: w.__f, heights: w.__h, cls: w.__cls, why: w.__why }
   })
 }
 
@@ -120,6 +122,38 @@ for (const width of [1280, 390]) {
       const line = r.frames.filter((k, i) => k !== r.frames[i - 1]).join('>')
       console.log(`SWITCH ${width} -> ${to}: ${line} cls=${r.cls.toFixed(4)} ${r.why.join(' | ')}`)
       expect(bad, `${to}: frames without a screen; ${line}`).toHaveLength(0)
+      expect(r.cls, `${to}: layout shift`).toBeLessThan(0.02)
+    }
+  })
+}
+
+// Both screens stay built once shown (and Live is built behind the Briefing when the page is idle): going back and forth
+// has no loading shape, no card that arrives late (the screen's height is the same from its first frame to its last), no shift.
+for (const width of [1280, 390]) {
+  test(`${width}px: from the Briefing, both ways twice: one screen at a time, its height settled from the first frame, no shift`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+    await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
+    await expect(page.locator('.brief')).toBeVisible({ timeout: 20_000 })
+    await page.waitForFunction(() => !document.querySelector('#main .skl'), undefined, { timeout: 20_000 })
+    // Live is built when the page is idle, out of sight.
+    await expect(page.locator('.liveview')).toBeAttached({ timeout: 20_000 })
+    await expect(page.locator('.liveview')).toBeHidden()
+    await page.waitForTimeout(2800) // the Briefing's reading is done
+    await slow(page)
+    const go = (name: string) => (width < 600 ? page.locator('.tabbar').getByRole('button', { name }) : tab(page, name))
+    for (const [to, shown, other] of [['Live', '.liveview', '.brief'], ['Briefing', '.brief', '.liveview'], ['Live', '.liveview', '.brief'], ['Briefing', '.brief', '.liveview']] as const) {
+      await watch(page)
+      await go(to).click()
+      await expect(page.locator(shown)).toBeVisible()
+      await expect(page.locator(other)).toBeHidden()
+      const r = await report(page)
+      const line = r.frames.filter((k, i) => k !== r.frames[i - 1]).join('>')
+      console.log(`BACK-AND-FORTH ${width} -> ${to}: ${line} cls=${r.cls.toFixed(4)} ${r.why.join(' | ')}`)
+      expect(r.frames.filter((k) => k !== 'live' && k !== 'brief'), `${to}: frames without a screen; ${line}`).toHaveLength(0)
+      // From the first frame the new screen is as tall as it will be (the old one's last frame is the one before the switch).
+      const mine = r.heights.filter((_, i) => r.frames[i] === (to === 'Live' ? 'live' : 'brief'))
+      expect(Math.max(...mine) - Math.min(...mine), `${to}: the screen's height changed after it was shown`).toBeLessThanOrEqual(1)
       expect(r.cls, `${to}: layout shift`).toBeLessThan(0.02)
     }
   })

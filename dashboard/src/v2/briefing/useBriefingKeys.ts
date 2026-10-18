@@ -9,14 +9,15 @@ function nextCard(at: number, n: number, down: boolean): number {
   return Math.max(0, Math.min(n - 1, at + (down ? 1 : -1)))
 }
 
-export function useBriefingKeys(o: { cards: string[]; ui: ReturnType<typeof useBriefingState>; open: (key: string) => void }) {
+export function useBriefingKeys(o: { on: boolean; cards: string[]; ui: ReturnType<typeof useBriefingState>; open: (key: string) => void }) {
   const last = useRef(o)
   useEffect(() => {
     last.current = o
   })
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
-      const { cards, ui, open } = last.current
+      const { on: live, cards, ui, open } = last.current
+      if (!live) return
       if (e.metaKey || e.ctrlKey || e.altKey) return
       const tg = (e.target as HTMLElement).tagName
       if (tg === 'INPUT' || tg === 'SELECT' || tg === 'TEXTAREA') return

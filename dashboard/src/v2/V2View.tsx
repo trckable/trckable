@@ -111,8 +111,34 @@ export function V2View(p: V2Props) {
       onRange={(from, to) => setView({ period: 'custom', from, to, bucket: undefined, day: undefined })}
     />
   )
-  const brief = <BriefingSlot site={p.site} data={p.data} loading={p.loading} period={p.view.period} range={p.range} money={p.money} onGoal={p.onGoal} visits={p.live.stream.visits} />
-  const screen = here === 'briefing' ? brief : <Live {...p.live} />
+  // Both screens stay built once they have been shown, the one not on hidden: a switch moves no data and builds nothing, so
+  // there is no loading shape, no card that arrives late and no number that starts over. Live is built when the page is idle
+  // (its first answer is then already read); the Briefing keeps what it was showing while Live is on (Live has no period).
+  const [liveOn, setLiveOn] = useState(here === 'live')
+  const [briefFor, setBriefFor] = useState<string | null>(null)
+  if (here === 'live' && !liveOn) setLiveOn(true)
+  if (here === 'briefing' && briefFor !== p.site.id) setBriefFor(p.site.id)
+  useEffect(() => (p.identity ? undefined : whenIdle(() => setLiveOn(true))), [p.identity])
+  const now = { site: p.site, data: p.data, loading: p.loading, period: p.view.period, range: p.range, money: p.money, onGoal: p.onGoal, visits: p.live.stream.visits }
+  // What the Briefing last had, for while it waits (the functions are taken with the rest, and renewed with it).
+  const [kept, setKept] = useState(now)
+  const moved = (['site', 'data', 'loading', 'period', 'range', 'visits'] as const).some((k) => kept[k] !== now[k])
+  if (here === 'briefing' && moved) setKept(now)
+  const briefProps = here === 'briefing' ? now : kept
+  const screen = (
+    <>
+      {briefFor === p.site.id && (
+        <div className="view-pane" hidden={here !== 'briefing'}>
+          <BriefingSlot {...briefProps} active={here === 'briefing'} />
+        </div>
+      )}
+      {liveOn && (
+        <div className="view-pane" hidden={here !== 'live'}>
+          <Live {...p.live} />
+        </div>
+      )}
+    </>
+  )
   return (
     <div className="mk mk-body" id="app">
       <PageHeader
