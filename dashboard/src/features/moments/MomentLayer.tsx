@@ -98,6 +98,7 @@ export default function MomentLayer(p: LayerProps) {
               type="button"
               className={`moment-mark ${m.pin.kind}${m.more.length ? ' many' : ''}${current?.pins[0].id === m.pin.id ? ' on' : ''}${hit && (m.pin.id === hit || m.more.some((q) => q.id === hit)) ? ' hit' : ''}`}
               style={{ left: m.at, top: LANE }}
+              data-rv={m.at}
               aria-label={copy.marker(fmtDay(m.pin.day ?? ''), line, m.more.length)}
               aria-describedby={tip?.i === m.i ? id : undefined}
               onPointerDown={(e) => e.stopPropagation()}

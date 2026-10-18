@@ -1,5 +1,4 @@
-// Replay of the day: the moments worth stopping at, and the report as it stood at a time of day. Pure: model.test.ts.
-import type { Point, Result } from '../../lib/api'
+// Replay of the day: the moments worth stopping at. Pure: model.test.ts.
 
 export type Topic = 'sources' | 'mentions' | 'uptime' | 'sales'
 
@@ -54,24 +53,3 @@ export function momentsOf(o: MomentsIn): Moment[] {
   // Moments too close to the one before are folded into it, so the story never stutters.
   return out.sort((a, b) => a.min - b.min).filter((m, i, all) => !i || m.min - all[i - 1].min >= 3)
 }
-
-/** The report as it stood at `t` minutes into the day: hours not yet come hold nothing, the part-way hour part of its people. */
-export function asOf(cur: Result, t: number): Result {
-  const hour = Math.floor(t / 60)
-  const part = (t % 60) / 60
-  const series: Point[] = cur.series.map((p, i) => {
-    const day = i < 24 ? i : -1
-    if (day < 0 || day < hour) return p
-    const k = day === hour ? part : 0
-    return { ...p, visitors: Math.round(p.visitors * k), pageviews: Math.round(p.pageviews * k) }
-  })
-  const visitors = series.reduce((a, p) => a + p.visitors, 0)
-  const pageviews = series.reduce((a, p) => a + p.pageviews, 0)
-  const was = cur.kpis.visitors || 1
-  return { ...cur, series, kpis: { ...cur.kpis, visitors, pageviews, sessions: Math.round((cur.kpis.sessions * visitors) / was) } }
-}
-
-/** One tick of the clock: how far the playhead moves in a tick and whether it waits on a moment. Twenty seconds for the whole day at normal speed. */
-const REPLAY_MS = 20000
-export const TICK_MS = 45
-export const step = (end: number, speed: number): number => (end / (REPLAY_MS / TICK_MS)) * speed

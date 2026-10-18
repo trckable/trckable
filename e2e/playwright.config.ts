@@ -35,6 +35,18 @@ if (!existsSync(BUSY)) {
   )
   writeFileSync(BUSY, rows.join('\n') + '\n')
 }
+// A month with a first day of data in the middle (nothing before it), a peak on that first day and on the last, and
+// a source behind most rises: the chart's labels with the most in their way.
+export const LABELS_DOMAIN = 'labels.example'
+const LABELS = join(DATA, 'labels.ndjson')
+if (!existsSync(LABELS)) {
+  const day = Math.floor(Date.now() / 86_400_000) * 86_400_000
+  const perDay: Record<number, [number, string]> = { 0: [160, 'news.ycombinator.com'], 1: [14, 'google.com'], 2: [9, ''], 3: [90, 'google.com'], 4: [11, ''], 5: [10, 'reddit.com'], 6: [70, 'producthunt.com'], 7: [8, ''], 8: [12, 'google.com'], 9: [100, 'news.ycombinator.com'], 10: [9, ''], 11: [10, 'reddit.com'], 12: [75, 'google.com'], 13: [9, ''], 14: [8, ''], 15: [60, 'producthunt.com'], 16: [50, 'google.com'] }
+  const rows = Object.entries(perDay).flatMap(([ago, [n, ref]]) =>
+    Array.from({ length: n }, (_, i) => JSON.stringify({ ts: new Date(day - Number(ago) * 86_400_000 + 300_000 + i * 1000).toISOString(), path: i % 3 ? '/pricing' : '/', visitor: `labels-${ago}-${i}`, referrer: i % 4 ? ref : '' })),
+  )
+  writeFileSync(LABELS, rows.join('\n') + '\n')
+}
 export const API = 'http://127.0.0.1:18300'
 export const TOKEN = 'e2e-token'
 
@@ -70,7 +82,7 @@ export default defineConfig({
   webServer: [
     {
       // example.com first (the suite's own site), then the one with history, then the server.
-      command: `sh -c '"${BIN}" site add example.com && "${BIN}" site add ${HISTORY_DOMAIN} && "${BIN}" import ${HISTORY_DOMAIN} "${HISTORY}" && "${BIN}" site add ${BUSY_DOMAIN} && "${BIN}" import ${BUSY_DOMAIN} "${BUSY}" && exec "${BIN}" serve'`,
+      command: `sh -c '"${BIN}" site add example.com && "${BIN}" site add ${HISTORY_DOMAIN} && "${BIN}" import ${HISTORY_DOMAIN} "${HISTORY}" && "${BIN}" site add ${BUSY_DOMAIN} && "${BIN}" import ${BUSY_DOMAIN} "${BUSY}" && "${BIN}" site add ${LABELS_DOMAIN} && "${BIN}" import ${LABELS_DOMAIN} "${LABELS}" && exec "${BIN}" serve'`,
       url: `${API}/readyz`,
       reuseExistingServer: false,
       env: {

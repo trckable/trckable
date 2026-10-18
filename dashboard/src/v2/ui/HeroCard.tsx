@@ -1,6 +1,7 @@
 // The top card of the Briefing: the sentence, the score ring and what makes it up, and the day against its usual band.
 // Markup and classes are the walkthrough's own (mock/mock.css).
 import { useState, type ReactNode } from 'react'
+import { warm } from '../../lib/lazyLoad'
 import type { Why } from '../briefing/why'
 import { dash, ringTone } from '../briefing/geometry'
 import { copy } from '../briefing/copy'
@@ -104,13 +105,17 @@ interface HeroProps {
   moments?: { pills: string[]; line: string }
   /** Play the day back; absent when there is not enough day to play. */
   onReplay?: () => void
+  /** It is playing: the button says Stop. */
+  replaying?: boolean
+  /** Pointing at Replay: fetch what it will need. */
+  onWarm?: () => void
   /** The card has the first-load shimmer, or the site is down and not answering. */
   enter?: boolean
   /** Why the headline says what it says. */
   why?: Why | null
 }
 
-export function Hero({ say, scores, rows, onSee, learn, crowd = null, since, period, onPeriod, chart, moments, onReplay, enter, why }: HeroProps) {
+export function Hero({ say, scores, rows, onSee, learn, crowd = null, since, period, onPeriod, chart, moments, onReplay, replaying, onWarm, enter, why }: HeroProps) {
   const [open, setOpen] = useState(false)
   const [sheet, setSheet] = useState<Score['key'] | 'all' | null>(null)
   return (
@@ -132,11 +137,14 @@ export function Hero({ say, scores, rows, onSee, learn, crowd = null, since, per
           <h1 className={`mk-hl s${say.bad ? ' bad' : ''}`}>{parts(say.short)}</h1>
           {say.sub && <p className="hsub">{say.sub}</p>}
           {onReplay && (
-            <button type="button" className="gh rpb" data-replay="1" data-key="replay" title={copy.replayTitle} onClick={onReplay}>
+            <button type="button" className="gh rpb" data-replay="1" data-key="replay" title={replaying ? copy.stopReplay : copy.replayTitle} onClick={onReplay} {...(onWarm ? warm(onWarm) : {})}>
               <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
-                <path d="M2.5 1.2v9.6L10.5 6z" />
+                <path d={replaying ? 'M2.5 2.5h7v7h-7z' : 'M2.5 1.2v9.6L10.5 6z'} />
               </svg>
-              {copy.replay}
+              {/* The other word is laid under this one (invisible, no height), so the button is as wide for either. */}
+              <span className="rpl" data-ghost={replaying ? copy.replay : copy.stop}>
+                {replaying ? copy.stop : copy.replay}
+              </span>
             </button>
           )}
           {why && (
