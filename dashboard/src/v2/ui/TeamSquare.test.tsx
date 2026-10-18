@@ -21,6 +21,13 @@ describe('the team square', () => {
     expect(html).not.toContain('Manage teams')
   })
 
+  it('draws a team’s own mark in place of its initial', () => {
+    const own = { ...teams('p'), list: [{ id: 'p', name: 'Personal', mark: (size: number) => <i className="own-mark" data-size={size} /> }] }
+    const html = renderToStaticMarkup(<TeamSquare teams={own} />)
+    expect(html).toContain('own-mark')
+    expect(html).not.toContain('>P</span>')
+  })
+
   it('shows one team’s square even when it is the only one', () => {
     const one = { ...teams('p'), list: [{ id: 'p', name: 'Personal' }] }
     expect(renderToStaticMarkup(<TeamSquare teams={one} />)).toContain('>P</span>')

@@ -11,9 +11,10 @@ import { useMenu } from './useMenu'
 type Team = Teams['list'][number]
 
 function Mark({ team, size }: { team: Team; size: number }) {
+  if (team.mark) return <>{team.mark(size)}</>
   return (
     <span className="team-mk" style={{ width: size, height: size }} aria-hidden="true">
-      {team.mark ? team.mark(size) : team.name.slice(0, 1).toUpperCase()}
+      {team.name.slice(0, 1).toUpperCase()}
     </span>
   )
 }
@@ -45,7 +46,7 @@ export function TeamSquare({ teams }: { teams: Teams }) {
         {open && (
           <>
             {teams.list.map((t) => (
-              <button key={t.id} type="button" role="menuitemradio" aria-checked={t.id === here.id} className="mi team" onClick={go(() => t.id !== here.id && teams.onPick(t.id))}>
+              <button key={t.id} type="button" role="menuitemradio" aria-checked={t.id === here.id} disabled={t.off} className="mi team" onClick={go(() => t.id !== here.id && teams.onPick(t.id))}>
                 <Mark team={t} size={22} />
                 <span className="mt2">
                   <div className="nm">{t.name}</div>

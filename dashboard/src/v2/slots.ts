@@ -16,7 +16,7 @@ export interface SiteMove {
 
 /** The person's teams, for the square at the start of the header. Switching is the build's: it moves the whole page to the team picked. */
 export interface Teams {
-  list: { id: string; name: string; /** The team's own mark at `size` px, in place of its initial. */ mark?: (size: number) => ReactNode }[]
+  list: { id: string; name: string; /** The team's own mark at `size` px, in place of the initial on a square. */ mark?: (size: number) => ReactNode; /** A team that cannot be opened: its row is drawn off. */ off?: boolean }[]
   /** The id of the team in view. */
   current: string
   onPick: (id: string) => void
