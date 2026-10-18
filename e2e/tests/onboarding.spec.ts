@@ -215,9 +215,9 @@ test('/settings is not a page: an owner lands on the dashboard, a viewer is neve
   await page.goto(`${base}/settings`)
   await expect(page).toHaveURL(new RegExp(`/${verified.replace(/\./g, '\\.')}(\\?|$)`), { timeout: 15_000 })
   await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toHaveCount(0)
-  // The site list's first row opens that site's settings, over its dashboard.
-  await page.locator('#siteBtn').click()
-  await page.locator('#siteMenu').getByRole('button', { name: 'Site settings' }).click()
+  // The settings shortcut (the site menu has no row for it) opens that site's settings, over its dashboard.
+  await expect(page.locator('#siteBtn')).toBeVisible()
+  await page.locator('[data-key="settings"]').dispatchEvent('click')
   await expect(page.getByRole('dialog').first()).toBeVisible()
 
   const env = { ...process.env, TRCKABLE_DATA_DIR: dataDir, TRCKABLE_GEO: 'off' }

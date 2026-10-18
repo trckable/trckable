@@ -3,7 +3,6 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Site } from '../../lib/api'
 import { OpenSite } from '../../features/sites/OpenSite'
-import { stateLine } from '../../features/sites/stateLine'
 import { Moves, SiteRow } from './SiteRow'
 
 const NOW = Math.floor(Date.now() / 1000)
@@ -33,24 +32,24 @@ describe('a site in the list', () => {
     expect(html).not.toContain('vf-seal')
   })
 
-  it('says setup, down or quiet in the number’s place', () => {
+  it('says setup, or how long it has been down or quiet, in the number’s place', () => {
     expect(row(site({ last_event_at: undefined }), 0)).toContain('setup')
     const gone = row(site({ last_event_at: NOW - 3 * 86400, check: { at: NOW - 3600, error: 'example.com could not be reached over https' } }))
-    expect(gone).toContain('state-icon down')
-    expect(gone).toContain('aria-label="Not reachable for 3d. Open the site to see what’s wrong."')
+    expect(gone).toContain('state-word down')
+    expect(gone).toContain('down 3d')
+    expect(gone).toContain('title="Not reachable for 3d. Open the site to see what’s wrong."')
     expect(gone).toContain('mk-dot down')
     expect(gone).not.toContain('<b>')
     const quiet = row(site({ last_event_at: NOW - 7 * 3600, check: { at: NOW - 3600, found: 'none' } }))
-    expect(quiet).toContain('state-icon quiet')
-    expect(quiet).toContain('mk-dot quiet')
-    expect(quiet).toContain('aria-label="No visits for 7h. Nothing looks wrong with the page."')
+    expect(quiet).toContain('state-word quiet')
+    expect(quiet).toContain('quiet 7h')
+    expect(quiet).toContain('mk-dot idle')
     expect(row(site({ last_event_at: NOW - 3600 }), 5)).toContain('<b>5</b>')
   })
 
-  it('puts the state in words under the name, and the domain under a name that is not it', () => {
-    expect(row(site({ last_event_at: NOW - 7 * 3600, check: { at: NOW - 3600, found: 'none' } }))).toContain('Quiet · 7h')
-    expect(row(site())).toContain('>example.com<')
-    expect(row(site({ name: 'example.com' }))).not.toContain('class="d')
+  it('names the domain only when another site has the same name', () => {
+    expect(row(site())).not.toContain('class="d')
+    expect(renderToStaticMarkup(<SiteRow clash site={site({ name: 'Blog', domain: 'blog.tash.al' })} place={{ kind: 'rest' }} on={false} arrange={null} onPick={noop} />)).toContain('>blog.tash.al<')
   })
 
   it('marks the site you are on with aria-current', () => {
@@ -66,20 +65,6 @@ describe('a site that is being handed to someone', () => {
     expect(html).toContain('Moving to a@b.c')
     expect(html).toContain('sw-stop')
     expect(html).toContain('mk-dot quiet')
-  })
-})
-
-describe('the state line under a site name', () => {
-  const down = { check: { at: NOW, error: 'unreachable' } }
-  it('says how long a down site has been unreachable', () => {
-    expect(stateLine(site({ ...down, last_event_at: NOW - 2 * 86400 - 600 }))).toBe('Not reachable · 2d')
-  })
-  it('says how long a quiet site has had no visits', () => {
-    expect(stateLine(site({ last_event_at: NOW - 8 * 3600 }))).toBe('Quiet · 8h')
-  })
-  it('is empty for a live and for a new site', () => {
-    expect(stateLine(site({ last_event_at: NOW - 3600 }))).toBeNull()
-    expect(stateLine(site({ last_event_at: undefined }))).toBeNull()
   })
 })
 

@@ -3,7 +3,6 @@
 // the list opens and kept for a short while; the list never waits for them,
 // and shows no number until they are here.
 import { useEffect, useState } from 'react'
-import { feedOnline } from '../../lib/allOnline'
 import { type SiteRow, more } from '../../lib/apiMore'
 
 export interface Today {
@@ -42,7 +41,6 @@ export function useToday(): Map<string, Today> | null {
       .overview(7, ac.signal)
       .then((r) => {
         kept = { at: Date.now(), by: todayOf(r.sites) }
-        feedOnline(r.sites)
         setBy(kept.by)
       })
       .catch(() => {}) // no numbers is a list without them, not a broken one

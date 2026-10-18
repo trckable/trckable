@@ -3,10 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { V2ExtrasContext } from '../slots'
 import { MenuFoot } from './MenuFoot'
 
-const items = [
-  { key: 'add', label: 'Add a site', run: () => {} },
-  { key: 'settings', label: 'Settings', run: () => {} },
-]
+const items = [{ key: 'add', label: 'Add a site', run: () => {} }]
 
 describe('the site list’s foot', () => {
   it('draws Add a site through a build’s guard, which may show it off', () => {
@@ -17,7 +14,6 @@ describe('the site list’s foot', () => {
       </V2ExtrasContext.Provider>,
     )
     expect(html).toMatch(/<button[^>]*disabled[^>]*>Add a site/)
-    expect(html).toMatch(/<button(?![^>]*disabled)[^>]*>Settings/)
   })
 
   it('draws it plainly without one', () => {

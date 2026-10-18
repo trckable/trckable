@@ -38,11 +38,10 @@ test('a stopped site keeps its dot in the switcher', async ({ page, browserName 
   await page.goto(`${API}/example.com`)
   await page.locator('#siteBtn').click()
   const row = page.locator(`[data-site="${site.id}"]`)
-  const icon = row.locator('.state-icon.down')
-  await expect(icon).toBeVisible()
-  await expect(icon).toHaveAttribute('aria-label', 'Not reachable for 3d. Open the site to see what’s wrong.')
-  await expect(row.locator('.state-line')).toHaveText('Not reachable · 3d')
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/state-icon-down-${browserName}.png` })
+  const word = row.locator('.state-word.down')
+  await expect(word).toHaveText('down 3d')
+  await expect(word).toHaveAttribute('title', 'Not reachable for 3d. Open the site to see what’s wrong.')
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/state-word-down-${browserName}.png` })
   const dot = row.locator('.mk-dot.down')
   await expect(dot).toBeVisible()
   // The dot is the small dot before the name, not a box over it.
@@ -52,7 +51,7 @@ test('a stopped site keeps its dot in the switcher', async ({ page, browserName 
   expect(d.height).toBeLessThan(14)
 })
 
-test('a quiet site shows a moon with its explanation', async ({ page, browserName }) => {
+test('a quiet site shows a grey dot and how long it has been quiet, with its explanation', async ({ page, browserName }) => {
   const site = await newSite(page, `quiet-${browserName}`)
   const gone = await newSite(page, `gone-${browserName}`)
   const now = Math.floor(Date.now() / 1000)
@@ -73,11 +72,12 @@ test('a quiet site shows a moon with its explanation', async ({ page, browserNam
   await page.goto(`${API}/example.com`)
   await page.locator('#siteBtn').click()
   const row = page.locator(`[data-site="${site.id}"]`)
-  const icon = row.locator('.state-icon.quiet')
-  await expect(icon).toHaveAttribute('aria-label', 'No visits for 19h. Nothing looks wrong with the page.')
-  await expect(row.locator('.state-line')).toHaveText('Quiet · 19h')
+  const word = row.locator('.state-word.quiet')
+  await expect(word).toHaveText('quiet 19h')
+  await expect(word).toHaveAttribute('title', 'No visits for 19h. Nothing looks wrong with the page.')
+  await expect(row.locator('.mk-dot.idle')).toBeVisible()
   if (SHOTS) await page.waitForTimeout(400)
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/state-icon-quiet-${browserName}.png` })
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/state-word-quiet-${browserName}.png` })
 })
 
 for (const size of [
