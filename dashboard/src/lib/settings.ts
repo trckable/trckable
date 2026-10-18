@@ -6,6 +6,7 @@
 // /settings?site=…&tab=… link still works: main.tsx opens the dialog from it
 // and puts the dashboard's own address back.
 import { useEffect, useState } from 'react'
+import { can } from './permissions'
 import { navigate } from './url'
 
 export const SETTINGS_TABS = ['site', 'install', 'sharing', 'widgets', 'notes', 'payments', 'search', 'mentions', 'answers', 'privacy', 'alerts', 'health'] as const
@@ -39,6 +40,8 @@ export const settingsInAddress = (params: URLSearchParams): SettingsTab | null =
 /** Open a site's settings over its dashboard. From another page (All sites,
  *  say) the dashboard opens first, with the dialog on it. */
 export function openSettings(site: { id: string; domain: string }, tab: SettingsTab = 'site', extra?: Record<string, string>, opts: { replace?: boolean } = {}) {
+  // Settings are for those who may change them: a read-only copy is not offered, whichever control asked.
+  if (!can('site.settings')) return
   const home = '/' + encodeURIComponent(site.domain)
   if (location.pathname !== home) navigate(home, opts)
   open = { site: site.id, tab, extra }

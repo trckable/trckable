@@ -1,6 +1,8 @@
 // Goals & funnels: the funnel as bars with where people leave, the goals under it, and the card to change the funnel.
 import { XEmpty, XSec, XSub } from '../../ui/XBits'
 import { XGoals, XMiniFunnel } from '../../ui/XFunnel'
+import { can } from '../../../lib/permissions'
+import { lockCopy } from '../../ui/lockCopy'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
 import { Lock } from './Lock'
@@ -83,11 +85,15 @@ export function Results({ x, d }: { x: XCtx; d: Funnel }) {
         )}
       </div>
       {x.edit && <Editor x={x} d={d} />}
-      {steps.length >= 2 ? <XMiniFunnel steps={steps} leak={d.leak} ghost={d.ghost} onConnect={() => x.connect('rev')} /> : <XEmpty title={copy.emptyFunnel} hint={copy.emptyFunnelHint} />}
+      {steps.length >= 2 ? <XMiniFunnel steps={steps} leak={d.leak} ghost={d.ghost} onConnect={can('payment.manage') ? () => x.connect('rev') : undefined} /> : (
+        <XEmpty title={copy.emptyFunnel} hint={copy.emptyFunnelHint}>
+          {!can('funnel.create') && <span className="mk-quiet">{lockCopy.ask}</span>}
+        </XEmpty>
+      )}
       <XSec a={copy.goals} b={d.vs} />
       {!d.goalsOn && <Lock k="goals" x={x} />}
       <XGoals goals={d.goalsOn ? [...d.goals, ...own] : []} />
-      {d.goalsOn && (
+      {d.goalsOn && can('goal.create') && (
         <button type="button" className="xb" id="xTrack" onClick={() => x.connect('goals')}>
           {copy.trackGoal}
         </button>

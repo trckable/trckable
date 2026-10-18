@@ -3,7 +3,7 @@
 // server is still the one enforcing this: the table only avoids offering a
 // control that would come back 403, and it is held to the server's own table
 // (server/internal/permissions/permissions.go) by the fixture permissions.json.
-import { currentRole } from './me'
+import { currentRole, isShared } from './me'
 
 export type Action =
   | 'site.add'
@@ -35,12 +35,12 @@ export const ACTIONS: readonly Action[] = [
 ]
 
 // A role with no row may do nothing: a missing or new role never shows a
-// control the server would refuse. A viewer reads this instance; the person's
+// control the server would refuse. A viewer reads this instance and may ask Peek about it; the person's
 // own account (password, name, picture, shortcuts) is theirs whatever the
 // role, so it has no action here.
 const table = new Map<string, ReadonlySet<Action>>([
   ['owner', new Set(ACTIONS)],
-  ['viewer', new Set()],
+  ['viewer', new Set<Action>(['peek.ask'])],
 ])
 
 /** Give a role its row, for a build that has a role of its own. Called once
@@ -54,7 +54,7 @@ export const rolesOf = (action: Action): string[] => [...table].filter(([, set])
 
 /** Whether this page may offer the action to the person using it: never on a
  *  shared link, and never before anyone is known. */
-export const can = (action: Action): boolean => table.get(currentRole())?.has(action) ?? false
+export const can = (action: Action): boolean => !isShared() && (table.get(currentRole())?.has(action) ?? false)
 
 /** `can` for a component's top level. */
 export const useCan = (action: Action): boolean => can(action)

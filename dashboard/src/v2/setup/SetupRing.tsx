@@ -21,7 +21,7 @@ const ringWords = (mode: string, done: number, counted: number) => (mode === 'ch
 
 /** fresh: the site has no verified install yet and the page is its setup screen; visited: its first visit has landed (Install is then done). */
 export function SetupRing({ site, onGoal, fresh = false, visited = false }: { site: Site | null; onGoal: () => void; fresh?: boolean; visited?: boolean }) {
-  const on = !!site && !isShared()
+  const on = !!site && !isShared() && can('setup.run')
   const { state, run, failed } = useSetup(site, on, fresh)
   const { hidden, hide } = useHidden(on)
   const since = useDoneSince(site?.id ?? null, state ? state.all_set : null)

@@ -6,7 +6,7 @@ import { copy } from '../explore/copy'
 import type { Funnel, Goal, Step } from '../explore/types'
 import { Rng } from './RangeBar'
 
-export function XMiniFunnel({ steps, leak, ghost, onConnect }: { steps: Step[]; leak: Funnel['leak']; ghost: boolean; onConnect: () => void }) {
+export function XMiniFunnel({ steps, leak, ghost, onConnect }: { steps: Step[]; leak: Funnel['leak']; ghost: boolean; onConnect?: () => void }) {
   const first = steps[0]?.v || 1
   return (
     <div className="mf">
@@ -33,9 +33,11 @@ export function XMiniFunnel({ steps, leak, ghost, onConnect }: { steps: Step[]; 
             <b>{'–'}</b>
           </div>
           <div className="mfn">
-            <button type="button" className="lk3" onClick={onConnect}>
-              {copy.connectRevenue}
-            </button>
+            {onConnect && (
+              <button type="button" className="lk3" onClick={onConnect}>
+                {copy.connectRevenue}
+              </button>
+            )}
             {copy.toSeeWhoPaid}
           </div>
         </>

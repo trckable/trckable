@@ -6,6 +6,7 @@ export type LockKind = 'rev' | 'search' | 'goals' | 'uptime' | 'alerts'
 
 export const lockCopy = defineCopy('v2.lock', {
   how: 'How it works',
+  ask: 'Ask an Owner or Admin to add one',
   revLine: 'See what each source earns',
   revSub: 'Connect Stripe, Paddle or Lemon Squeezy',
   searchLine: 'See the searches that bring people',

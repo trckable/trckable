@@ -10,7 +10,7 @@ import { setupRows } from './steps'
 const site = { id: 's1', domain: 'site.com' } as Site
 const bare = { goals: [] } as unknown as Result
 const onGoal = vi.fn()
-const rows = (o: Partial<Parameters<typeof setupRows>[0]> = {}) => setupRows({ site, cur: bare, can: true, noSearch: true, noAlerts: true, onGoal, ...o })
+const rows = (o: Partial<Parameters<typeof setupRows>[0]> = {}) => setupRows({ site, cur: bare, can: true, shared: false, noSearch: true, noAlerts: true, onGoal, ...o })
 
 beforeEach(() => {
   openSettings.mockReset()
@@ -24,11 +24,11 @@ describe('what the Briefing offers to connect', () => {
 
   it('each button opens the right place', () => {
     const by = Object.fromEntries(rows().map((r) => [r.key, r]))
-    by.rev.act()
-    by.search.act()
-    by.uptime.act()
-    by.alerts.act()
-    by.goals.act()
+    by.rev.act?.()
+    by.search.act?.()
+    by.uptime.act?.()
+    by.alerts.act?.()
+    by.goals.act?.()
     expect(openSettings.mock.calls.map((c) => c[1])).toEqual(['payments', 'search', 'health', 'alerts'])
     expect(onGoal).toHaveBeenCalledTimes(1)
   })
@@ -39,7 +39,13 @@ describe('what the Briefing offers to connect', () => {
     expect(left).toEqual([])
   })
 
-  it('someone who cannot change settings is offered nothing', () => {
-    expect(rows({ can: false })).toEqual([])
+  it('someone who cannot change settings sees the same cards with no button to press', () => {
+    const viewer = rows({ can: false })
+    expect(viewer.map((r) => r.key)).toEqual(rows().map((r) => r.key))
+    expect(viewer.every((r) => r.act === undefined)).toBe(true)
+  })
+
+  it('a shared link is offered nothing', () => {
+    expect(rows({ can: false, shared: true })).toEqual([])
   })
 })

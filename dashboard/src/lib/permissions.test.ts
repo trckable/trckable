@@ -23,9 +23,14 @@ describe('who may do what', () => {
     for (const a of t.ACTIONS) expect(t.can(a)).toBe(true)
   })
 
-  it('keeps a viewer to reading', () => {
+  it('keeps a viewer to reading, and lets them ask Peek', () => {
     t.me.setRole('viewer')
-    for (const a of t.ACTIONS) expect(t.can(a)).toBe(false)
+    for (const a of t.ACTIONS) expect(t.can(a), a).toBe(a === 'peek.ask')
+  })
+
+  it('never offers a viewer the setup ring or a write control', () => {
+    t.me.setRole('viewer')
+    for (const a of ['setup.run', 'site.settings', 'goal.create', 'funnel.create', 'note.write'] as const) expect(t.can(a), a).toBe(false)
   })
 
   it.each([undefined, '', 'admin', 'Owner', 'editor', 'constructor'])('reads when the role is %j', (r) => {

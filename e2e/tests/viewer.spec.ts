@@ -205,3 +205,44 @@ test('the owner\'s palette does have the Create and Settings rows', async ({ pag
   await page.keyboard.type('settings')
   await expect(palette).toContainText(/Settings ·/)
 })
+
+const ASK = 'Ask an Owner or Admin to add one'
+
+// Goals and funnels with nothing set up: the same empty state an owner sees,
+// and under it the quiet line instead of the button that would add one.
+test('a viewer sees the empty goals and funnel with the ask line and no add button', async ({ page, request }) => {
+  const domain = `viewer-empty-${Date.now()}.test`
+  const made = await request.post(`${API}/api/v1/sites`, { headers: AUTH, data: { domain } })
+  expect(made.ok()).toBeTruthy()
+  // A site with no visit yet opens its setup, not the Briefing: one visit first.
+  const { id } = await made.json()
+  expect((await request.post(`${API}/api/e`, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36' }, data: { s: id, k: 'pv', u: `https://${domain}/` } })).ok()).toBeTruthy()
+  await expect.poll(async () => ((await (await request.get(`${API}/api/v1/sites/${id}/events?limit=1`, { headers: AUTH })).json()) as { events: unknown[] }).events.length, { timeout: 15_000 }).toBe(1)
+  await open(page, `/${domain}?view=briefing&x=funnels`)
+  const explore = page.getByRole('complementary', { name: 'Explore' })
+  await expect(explore.getByText('Not enough to draw a funnel')).toBeVisible({ timeout: 20_000 })
+  await expect(explore.locator('[data-lock="goals"]')).toBeVisible()
+  await expect(explore.getByText(ASK)).toHaveCount(2)
+  await expect(explore.locator('[data-lock="goals"] .lkgo')).toHaveCount(0)
+  await expect(explore.locator('#xTrack')).toHaveCount(0)
+})
+
+// With goals on, the viewer reads them and is offered no way to add one.
+test('a viewer sees the goals section with no Track a goal button', async ({ page }) => {
+  await open(page, '/example.com?view=briefing&x=funnels')
+  await expect(page.locator('.xsec').first()).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('#xTrack')).toHaveCount(0)
+  await expect(page.locator('[data-lock="goals"] .lkgo')).toHaveCount(0)
+})
+
+// Settings are not offered at all, not even as a read-only copy.
+test('a viewer opening a settings address gets no settings window', async ({ page }) => {
+  await open(page, `/example.com?settings=alerts`)
+  await expect(page.getByRole('dialog', { name: /^Settings for/ })).toHaveCount(0)
+})
+
+// The setup ring is the owner's checklist: a viewer has none.
+test('a viewer has no setup ring', async ({ page }) => {
+  await open(page, '/example.com?view=briefing')
+  await expect(page.locator('.ringb')).toHaveCount(0)
+})

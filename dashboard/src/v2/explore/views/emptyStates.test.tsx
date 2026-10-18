@@ -16,6 +16,8 @@ import { Lock } from './Lock'
 import { Results } from './Results'
 import XCharts from './hosted/Charts'
 import { copy } from '../copy'
+import { setRole } from '../../../lib/me'
+import { lockCopy } from '../../ui/lockCopy'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -38,6 +40,8 @@ afterEach(() => {
 })
 
 describe('what needs a connection shows the one step', () => {
+  beforeEach(() => setRole('owner'))
+
   it.each(['rev', 'search', 'goals'] as const)('%s: a button that starts it', (k) => {
     act(() => root.render(<Lock k={k} x={x} />))
     const go = [...host.querySelectorAll('button')].find((b) => !/how/i.test(b.textContent ?? ''))
@@ -55,7 +59,38 @@ describe('what has no switch says so when nothing is there', () => {
     expect(host.textContent).toContain(deepCopy.retention.none)
   })
 
+  it.each(['rev', 'search', 'goals'] as const)('%s: a viewer sees the card and is asked to turn to an Owner or Admin', (k) => {
+    setRole('viewer')
+    act(() => root.render(<Lock k={k} x={x} />))
+    expect(host.textContent).toContain(lockCopy.ask)
+    expect([...host.querySelectorAll('button')].filter((b) => !/how/i.test(b.textContent ?? ''))).toHaveLength(0)
+  })
+
+  it('funnels: a viewer sees the empty state and the ask line, and no Track a goal button', () => {
+    setRole('viewer')
+    const d = { steps: [], leak: { at: -1, r: 0, ur: 0 }, goals: [], vs: '', ghost: false, goalsOn: true, pages: [] }
+    const ctx = { ...x, custom: { steps: [], goals: [] }, edit: false, setEdit: vi.fn() } as unknown as XCtx
+    act(() => root.render(<Results x={ctx} d={d} />))
+    expect(host.textContent).toContain(copy.emptyFunnel)
+    expect(host.textContent).toContain(lockCopy.ask)
+    expect(host.querySelector('#xTrack')).toBeNull()
+  })
+
+  it('funnels: a viewer sees the ghost step with no Connect revenue button', () => {
+    const steps = [{ n: 'a', v: 10 }, { n: 'b', v: 5 }]
+    const d = { steps, leak: { at: -1, r: 0, ur: 0 }, goals: [], vs: '', ghost: true, goalsOn: true, pages: [] }
+    const ctx = { ...x, custom: { steps: [], goals: [] }, edit: false, setEdit: vi.fn() } as unknown as XCtx
+    setRole('owner')
+    act(() => root.render(<Results x={ctx} d={d as never} />))
+    expect(host.querySelector('.mfn .lk3')).not.toBeNull()
+    setRole('viewer')
+    act(() => root.render(<Results x={ctx} d={d as never} />))
+    expect(host.querySelector('.mfn')).not.toBeNull()
+    expect(host.querySelector('.mfn .lk3')).toBeNull()
+  })
+
   it('funnels: a line, and goals the one step to set them up', () => {
+    setRole('owner')
     const d = { steps: [], leak: { at: -1, r: 0, ur: 0 }, goals: [], vs: '', ghost: false, goalsOn: false, pages: [] }
     const ctx = { ...x, custom: { steps: [], goals: [] }, edit: false, setEdit: vi.fn() } as unknown as XCtx
     act(() => root.render(<Results x={ctx} d={d} />))
