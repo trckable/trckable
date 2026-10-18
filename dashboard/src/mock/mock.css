@@ -1767,7 +1767,10 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .mi.all:has(>.now){padding-right:calc(var(--mk-s3) + 60px)}
 @media (max-width:600px){.mk .mi.all:has(>.now){padding-right:calc(var(--mk-s3) + 92px)}}
 /* Prototype D and E: account headings, account pills (no borders: a soft fill) */
-.mk .acct-head{margin:var(--mk-s2) 0 0;padding:var(--mk-s2) var(--mk-s3) var(--mk-s1);font-size:12px;font-weight:600;color:var(--mk-faint)}
+.mk .acct-head{display:flex;align-items:center;gap:var(--mk-s1);width:100%;margin:var(--mk-s2) 0 0;padding:var(--mk-s2) var(--mk-s3) var(--mk-s1);font-size:12px;font-weight:600;color:var(--mk-faint);text-align:left}
+.mk .acct-head.on{color:var(--mk-text)}
+.mk .acct-head:hover{color:var(--mk-text)}
+.mk .acct-head svg{color:var(--mk-lime)}
 .mk .site-section:first-child .acct-head{margin-top:0}
 .mk .acct-chips{display:flex;flex-wrap:wrap;gap:var(--mk-s1);margin:0 0 var(--mk-s2)}
 .mk .acct-chip{height:28px;padding:0 var(--mk-s3);border-radius:14px;border:0;background:color-mix(in srgb,var(--mk-text) 7%,transparent);color:var(--mk-muted);font-size:13px;font-weight:600}

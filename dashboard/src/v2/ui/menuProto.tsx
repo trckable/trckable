@@ -16,6 +16,7 @@ const ACCOUNTS = [
 ]
 /** The sites of each account (D shows them all, under headings; E one account at a time). */
 export const byAccount = (sites: Site[]) => ACCOUNTS.map((a) => ({ name: a.name, sites: sites.filter((s) => a.ids.includes(s.id)) })).filter((a) => a.sites.length > 0)
+export const teams = ACCOUNTS.map((a) => a.name)
 const FEW = 3
 
 /** E: the accounts as a row of small pills; the one pressed fills the list below at once. More than three: the rest behind +N. */

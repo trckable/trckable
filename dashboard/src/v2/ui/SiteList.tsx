@@ -23,7 +23,8 @@ import { SiteRow } from './SiteRow'
 import { SiteHead } from './SiteHead'
 import { DomainRows } from './DomainRows'
 import type { ReactNode } from 'react'
-import { Search } from 'lucide-react'
+import { Check, LayoutGrid, Search } from 'lucide-react'
+import { fmtCompact } from '../../lib/format'
 
 const PREFETCH = 3
 
@@ -50,6 +51,9 @@ interface SiteListProps {
   slim?: boolean
   /** Prototype: the sites under a muted heading for each account. */
   byAccount?: { name: string; sites: Site[] }[]
+  /** Prototype: the team the person is on, and what a press on a team's heading or a site in it does. */
+  team?: string
+  onTeam?: (name: string) => void
   close: () => void
 }
 
@@ -104,6 +108,8 @@ export function SiteList(p: SiteListProps) {
   // The sites on screen, top to bottom (a folded group's are not): 1–9 pick from them.
   const shown = found ?? p.byAccount?.flatMap((a) => a.sites) ?? sections.filter((sec) => !folded.has(placeKey(sec.place))).flatMap((sec) => sec.sites)
   const pick = (s: Site) => {
+    const t = p.byAccount?.find((a) => a.sites.some((x) => x.id === s.id))
+    if (t) p.onTeam?.(t.name)
     p.close()
     if (s.id !== current?.id) p.onPick(s.id)
   }
@@ -171,14 +177,24 @@ export function SiteList(p: SiteListProps) {
       </div>
       )}
       <div id="siteList" ref={list}>
-        {!found && <AllRow slim={p.slim} on={!current} numbers={numbers} all={p.all} onPick={() => { p.close(); p.onPick('*') }} />}
+        {!found && !p.byAccount && <AllRow slim={p.slim} on={!current} numbers={numbers} all={p.all} onPick={() => { p.close(); p.onPick('*') }} />}
         {domains && current && !found && <DomainRows c={domains} close={p.close} />}
         {found && <ul className="site-group">{found.map((s) => item(s, { kind: 'rest' }))}</ul>}
         {found?.length === 0 && <p className="mk-quiet sites-none">{menu.noMatch(q)}</p>}
         {!found &&
           p.byAccount?.map((a) => (
             <section key={a.name} className="site-section" aria-label={a.name}>
-              {p.byAccount!.length > 1 && <p className="acct-head">{a.name}</p>}
+              {p.byAccount!.length > 1 && (
+                <button type="button" data-stop className={`acct-head${a.name === p.team ? ' on' : ''}`} aria-current={a.name === p.team ? 'true' : undefined} onClick={() => p.onTeam?.(a.name)}>
+                  {a.name}
+                  {a.name === p.team && <Check size={12} strokeWidth={2.5} aria-hidden="true" />}
+                </button>
+              )}
+              <button type="button" data-stop className="mi all" onClick={() => { p.onTeam?.(a.name); p.close(); p.onPick('*') }}>
+                <LayoutGrid size={14} strokeWidth={1.75} aria-hidden="true" />
+                <span className="mt2"><div className="nm">{p.all}</div></span>
+                {numbers && <span className="now"><b>{fmtCompact(a.sites.reduce((n, s) => n + (numbers.get(s.id)?.visitors ?? 0), 0))}</b></span>}
+              </button>
               <ul className="site-group">{a.sites.map((s) => item(s, { kind: 'rest' }))}</ul>
             </section>
           ))}

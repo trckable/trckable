@@ -14,7 +14,7 @@ import { useMenu } from './useMenu'
 import { SetupLine } from './SetupLine'
 import { WorkspaceRow, type Workspace } from './WorkspaceRow'
 import { useTopLayerWhen } from '../../lib/topLayer'
-import { currentWorkspace, menuVariant, slimMenu, ThinAccount, AccountView, AccountChips, accountSites, byAccount } from './menuProto'
+import { currentWorkspace, menuVariant, slimMenu, ThinAccount, AccountView, AccountChips, accountSites, byAccount, teams } from './menuProto'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
 const warmUp = () => {
@@ -41,6 +41,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
   const { open, setOpen, attach, close } = useMenu()
   const [accounts, setAccounts] = useState(false)
   const [acct, setAcct] = useState(0)
+  const [team, setTeam] = useState(0)
   const menu = useRef<HTMLDivElement>(null)
   useTopLayerWhen(open, menu)
   const cur = p.current
@@ -79,6 +80,8 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
             <SiteList
               sites={variant === 'e' ? accountSites(p.sites, acct) : p.sites}
               byAccount={variant === 'd' ? byAccount(p.sites) : undefined}
+              team={teams[team]}
+              onTeam={(n) => setTeam(Math.max(0, teams.indexOf(n)))}
               current={cur}
               workspace={
                 <>
