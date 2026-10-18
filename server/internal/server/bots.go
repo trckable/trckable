@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/trckable/trckable/server/internal/store/sqlite"
 	"github.com/trckable/trckable/server/internal/writer"
 )
 
@@ -20,6 +21,7 @@ func (s *Server) flushBots(ctx context.Context) {
 		return // no store yet: the counts wait
 	}
 	s.flushHeat(ctx, w) // the heatmaps' counters go out with the bot counts, on the same clock
+	s.flushHosts(ctx)
 	rows := s.ingest.Bots.Drain()
 	if len(rows) == 0 {
 		return
@@ -73,5 +75,22 @@ func (s *Server) flushHeat(ctx context.Context, w *writer.Writer) {
 			return
 		}
 		rows = rows[n:]
+	}
+}
+
+// flushHosts writes the hostnames refused since the last time into the store,
+// the same way: handed over once, given back when the write fails.
+func (s *Server) flushHosts(ctx context.Context) {
+	rows := s.ingest.Hosts.Drain()
+	if len(rows) == 0 {
+		return
+	}
+	out := make([]sqlite.RejectedHost, len(rows))
+	for i, r := range rows {
+		out[i] = sqlite.RejectedHost{Site: r.Site, Day: r.Day, Host: r.Host, N: r.N}
+	}
+	if err := s.ctl.AddRejectedHosts(ctx, out, time.Now()); err != nil {
+		s.ingest.Hosts.Restore(rows)
+		slog.Warn("could not write the refused hostnames, will try again", "err", err)
 	}
 }

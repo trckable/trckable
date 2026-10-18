@@ -2986,6 +2986,8 @@ export default {
   'install.journey.notfound.line': 'Füge den Code in den <head> deiner Seite ein und veröffentliche sie.',
   'install.journey.wrongid.head': 'Nicht das Skript dieser Website',
   'install.journey.wrongid.line': 'Das Skript auf der Seite hat eine andere ID. Kopiere den Code neu.',
+  'install.journey.elsewhere.head': 'Besuche von einer anderen Domain',
+  'install.journey.elsewhere.line': (host: string, more: number) => `Besuche kommen von ${host}${more > 0 ? ` und ${more} weiteren` : ''}: Füge sie hinzu oder korrigiere das Skript.`,
   'install.journey.unreachable.head': 'Deine Website ist nicht erreichbar',
   'install.journey.unreachable.line': 'Ist die Website online?',
   'install.journey.blocked.head': 'Das Skript lädt nicht',

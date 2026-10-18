@@ -44,6 +44,11 @@ type installCheck struct {
 	// Provider the payment provider the page carries (sitekind.go).
 	Kind     string `json:"kind,omitempty"`
 	Provider string `json:"provider,omitempty"`
+	// Elsewhere is where refused events came from in the last 7 days: the top
+	// hostnames this site does not list, and how many events in all. Only the
+	// on-demand check adds it.
+	Elsewhere      []sqlite.HostCount `json:"elsewhere,omitempty"`
+	ElsewhereTotal int64              `json:"elsewhere_total,omitempty"`
 }
 
 // checkClient is the guarded client checks use; tests swap it so they never
@@ -151,6 +156,11 @@ func (a *API) checkInstall(w http.ResponseWriter, r *http.Request) {
 	out := verifySite(r.Context(), si.ID, si.Domain)
 	a.remember(r.Context(), si.ID, si.Domain, out)
 	out.ScriptStatus = scriptStatus(r.Context(), out)
+	if si.LastEventAt == 0 {
+		if rh, err := a.Ctl.RejectedHostsOf(r.Context(), si.ID, a.Now()); err == nil {
+			out.Elsewhere, out.ElsewhereTotal = rh.Hosts, rh.Total
+		}
+	}
 	writeJSON(w, http.StatusOK, out)
 }
 

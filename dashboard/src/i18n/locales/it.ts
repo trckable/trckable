@@ -2996,6 +2996,8 @@ export default {
   'install.journey.notfound.line': 'Aggiungi il codice nell’<head> della pagina e pubblica.',
   'install.journey.wrongid.head': 'Non è lo script di questo sito',
   'install.journey.wrongid.line': 'Lo script nella pagina ha un altro id. Copia di nuovo il codice.',
+  'install.journey.elsewhere.head': 'Visite da un altro dominio',
+  'install.journey.elsewhere.line': (host: string, more: number) => `Arrivano visite da ${host}${more > 0 ? ` e altri ${more}` : ''}: aggiungilo o correggi lo script.`,
   'install.journey.unreachable.head': 'Il tuo sito non è raggiungibile',
   'install.journey.unreachable.line': 'Il sito è online?',
   'install.journey.blocked.head': 'Lo script non si carica',
