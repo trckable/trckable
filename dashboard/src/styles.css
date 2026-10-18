@@ -433,44 +433,6 @@ h2 {
   border-radius: 8px;
   font-size: 12px;
 }
-/* Fields have no border: a soft fill, the full width, 40 px tall. Focus is a ring, not a border. */
-.input {
-  height: 40px;
-  padding: 0 14px;
-  border-radius: 10px;
-  border: 0;
-  background: color-mix(in srgb, var(--text) 7%, transparent);
-  width: 100%;
-}
-/* A text field in focus: a thin accent border and a soft glow instead of the
-   thick ring buttons get (keyboard focus stays plain to see). */
-.input,
-input[type='text'],
-input[type='email'],
-input[type='search'],
-input[type='password'],
-input[type='url'],
-input[type='number'],
-textarea {
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-.input:focus-visible,
-input[type='text']:focus-visible,
-input[type='email']:focus-visible,
-input[type='search']:focus-visible,
-input[type='password']:focus-visible,
-input[type='url']:focus-visible,
-input[type='number']:focus-visible,
-textarea:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent);
-}
-@media (prefers-reduced-motion: reduce) {
-  .input,
-  textarea {
-    transition: none;
-  }
-}
 .field {
   display: flex;
   flex-direction: column;
@@ -1835,26 +1797,15 @@ body[data-mode] .card.overview {
   height: 48px;
   margin: 2px 2px 6px;
   padding: 0 10px;
-  border: 0;
   border-radius: 10px;
-  background: color-mix(in srgb, var(--text) 7%, transparent);
   color: var(--text-3);
-}
-.menu-search:focus-within {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 50%, var(--border));
-}
-.menu-search input:focus-visible {
-  box-shadow: none; /* the box around it shows the focus */
 }
 .menu-search input {
   flex: 1;
   min-width: 0;
-  border: 0;
-  background: none;
   color: var(--text);
   font: inherit;
   font-size: 14px;
-  outline: none;
 }
 .menu-text {
   display: grid;
@@ -2651,12 +2602,7 @@ body {
 }
 
 :root .pop:is(.menu-pop, .sites) .menu-search {
-  box-shadow: 0 0 0 2px var(--pane-hair);
   background: var(--pane-row);
-}
-:root .pop:is(.menu-pop, .sites) .menu-search:focus-within {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 28%, var(--pane-hair));
-  box-shadow: none;
 }
 :root .pop.sheet .pop-actions {
   background: transparent;

@@ -21,13 +21,4 @@
   flex: none;
   margin-top: 1px;
 }
-/* A field in error: its border and its focus ring turn the error colour. */
-.input[aria-invalid='true'],
-textarea[aria-invalid='true'] {
-  box-shadow: 0 0 0 2px var(--down);
-}
-.input[aria-invalid='true']:focus-visible,
-textarea[aria-invalid='true']:focus-visible {
-  box-shadow: 0 0 0 2px var(--down);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--down) 22%, transparent);
-}
+/* A field in error is told by the message under it (and aria-invalid); its look is in field.css. */

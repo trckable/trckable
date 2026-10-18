@@ -1,7 +1,8 @@
-// The search box that opens on ⌘K: type to jump to a table, a site, a period, a filter, or ask Peek (the first row).
+// The search box that opens on ⌘K: type to jump to a table, a site, a period, a filter, or ask Peek (its row leads for a question, and is the last row otherwise).
 // Arrow keys and Enter pick; Escape or a press outside closes. Markup and classes are the walkthrough's own.
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { MkPortal } from './Portal'
+import { askIntent, plain } from '../explore/askIntent'
 
 export interface PaletteItem {
   /** What is typed to find it, and what is shown. */
@@ -15,9 +16,6 @@ export interface PaletteItem {
   lead?: string
   run: () => void
 }
-
-/** A line that reads as a question to Peek: a question mark, or a question word and something after it. */
-export const isQuestion = (q: string) => /\?\s*$/.test(q) || /^(why|how|what|when|which|who|did|is|are)\s+\S/i.test(q)
 
 /** Where typing a question goes: Peek, as the first row. */
 export interface PaletteAsk {
@@ -35,12 +33,16 @@ export function Palette({ items, placeholder, none, onClose, initial = '', ask }
   const input = useRef<HTMLInputElement>(null)
   useEffect(() => input.current?.focus(), [])
   const list = useMemo(() => {
-    const t = q.toLowerCase().trim()
-    const found = items.filter((i) => `${i.title} ${i.also ?? ''}`.toLowerCase().includes(t)).slice(0, 16)
-    // A question, or words that match nothing, can be asked: Peek's row leads, the jumps stay below it.
+    const t = plain(q)
+    const hit = items.filter((i) => plain(`${i.title} ${i.also ?? ''}`).includes(t))
+    const found = hit.slice(0, 16)
     const text = q.trim()
-    if (!ask || !text || !(isQuestion(text) || found.length === 0)) return found
-    return [{ title: ask.title(text), kind: ask.kind, group: '', lead: ask.lead, run: () => ask.run(text) }, ...found]
+    if (!ask || !text) return found
+    const exact = items.some((i) => plain(i.title) === t || plain(i.also ?? '') === t)
+    const place = askIntent(text, hit.length, exact)
+    const row = { title: ask.title(text), kind: ask.kind, group: '', lead: ask.lead, run: () => ask.run(text) }
+    // A question leads; anything else keeps its jumps first and Peek's row one arrow below them.
+    return place === 'first' ? [row, ...found] : [...found, row]
   }, [items, q, ask])
   const sel = Math.max(0, Math.min(at, list.length - 1))
   const run = (i: PaletteItem | undefined) => {
