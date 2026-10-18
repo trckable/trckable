@@ -47,6 +47,13 @@ const PROVIDERS: Record<string, string> = { stripe: 'Stripe', paddle: 'Paddle', 
 /** A payment provider's id as its name; an unknown id is shown as it came. */
 export const providerName = (id: string): string => PROVIDERS[id] ?? id
 
+/** The first visit is the install, however many pages the server has seen: the install step then counts as done. */
+export function withInstall(s: SetupState): SetupState {
+  const v = s.items.find((i) => i.id === 'verified')
+  if (!v || v.done || !v.counted) return s
+  return { ...s, done: s.done + 1, items: s.items.map((i) => (i.id === 'verified' ? { ...i, done: true } : i)) }
+}
+
 /** Steps left to do. */
 export const left = (s: Pick<SetupState, 'done' | 'counted'>): number => Math.max(0, s.counted - s.done)
 

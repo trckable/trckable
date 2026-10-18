@@ -27,6 +27,8 @@ const DOT: Record<string, string> = { stopped: 'down', quiet: 'quiet' }
 interface SiteMenuProps {
   sites: Site[]
   current: Site | null
+  /** No verified install yet: the chip says so, in amber, and shows no dot. */
+  unverified?: boolean
   /** The teams' square, before the site, when the build has teams. */
   team?: ReactNode
   onPick: (id: string) => void
@@ -57,11 +59,12 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
         {cur && (
           <span className="mkwrap">
             <SiteMark site={cur} size={18} />
-            {DOT[state] && <span className={`mk-dot ${DOT[state]}`} />}
+            {DOT[state] && !p.unverified && <span className={`mk-dot ${DOT[state]}`} />}
           </span>
         )}
         <span className="nmx">{cur ? cur.name || cur.domain : p.all}</span>
         {picked && <span className="dom">{`/ ${picked}`}</span>}
+        {cur && p.unverified && <span className="nv">{copy.notVerified}</span>}
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
           <path d="M3 4.5 6 7.5 9 4.5" stroke="var(--mk-muted)" fill="none" strokeWidth="1.5" />
         </svg>

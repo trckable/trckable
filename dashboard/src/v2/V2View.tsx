@@ -34,7 +34,7 @@ const MORE = ['12mo', 'wtd', 'mtd', 'lastmonth', 'ytd']
 
 interface V2Props {
   tab: 'live' | 'briefing'
-  /** The site has had no visit yet: the page says it is listening, and how to install. */
+  /** The site has no verified install yet: its page is one setup screen (the install, and the wait for the first visit), with no Live, Briefing or Explore. */
   waiting?: boolean
   site: Site
   sites: Site[]
@@ -80,7 +80,7 @@ export function V2View(p: V2Props) {
   useEffect(() => whenIdle(ExplorePanel.preload), [])
   // The other tab's code, fetched on idle: switching to it then has nothing to wait for.
   useEffect(() => whenIdle(Briefing.preload), [])
-  useViewKeys(here)
+  useViewKeys(here, !p.waiting)
   usePeriodKeys({ on: here === 'briefing' && !p.waiting, today, range: p.range, view: p.view, day })
   // An old address with filters lands where the filters can be seen.
   useEffect(() => {
@@ -118,7 +118,9 @@ export function V2View(p: V2Props) {
       <PageHeader
         sites={p.sites}
         site={p.site}
-        tab={here}
+        tab={p.waiting ? undefined : here}
+        waiting={p.waiting}
+        visited={p.live.stream.visits.length > 0}
         data={p.data}
         onAsk={p.onAsk}
         identity={p.identity}
@@ -129,10 +131,10 @@ export function V2View(p: V2Props) {
         {p.top}
         {p.waiting ? <FreshSlot site={p.site} visits={p.live.stream.visits} /> : screen}
       </main>
-      {opened && <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} period={periodChip('xper')} money={p.money} onGoal={p.onGoal} />}
+      {opened && !p.waiting && <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} period={periodChip('xper')} money={p.money} onGoal={p.onGoal} />}
       <AiHost site={p.site} />
       <MkToastHost />
-      <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: copy.exploreTab }} hide={p.identity ? ['live'] : undefined} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />
+      {!p.waiting && <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: copy.exploreTab }} hide={p.identity ? ['live'] : undefined} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />}
     </div>
   )
 }

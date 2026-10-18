@@ -43,12 +43,13 @@ function Fold({ label, open, onToggle, children }: { label: string; open: boolea
 }
 
 /** The panel: the next step as a card, the other open steps as rows, the done ones and the extras one line each, and who sees it. */
-export function SetupPanel({ state, x, onHide }: { state: SetupState; x: RowCtx; onHide: () => void }) {
+export function SetupPanel({ state, x, onHide, locked }: { state: SetupState; x: RowCtx; onHide: () => void; /** Install is still open: the steps after it show, and wait. */ locked?: boolean }) {
   const [open, setOpen] = useState({ done: false, more: false })
   const toggle = (k: keyof typeof open) => setOpen({ ...open, [k]: !open[k] })
   const { todo, done, more: extra } = splitOf(state.items)
   const view = (it: SetupItem) => rowView(it, x, state.goal_suggestion)
   const rows = (items: SetupItem[]) => items.map((it) => <SetupRow key={it.id} row={view(it)} />)
+  const waiting = (items: SetupItem[]) => items.map((it) => <SetupRow key={it.id} row={{ ...view(it), acts: [], sub: copy.locked, locked: true }} />)
   return (
     <>
       <div className="shead">
@@ -58,7 +59,7 @@ export function SetupPanel({ state, x, onHide }: { state: SetupState; x: RowCtx;
       {todo.length > 0 && (
         <div className="sgrp">
           <NextCard row={view(todo[0])} />
-          {rows(todo.slice(1))}
+          {locked ? waiting(todo.slice(1)) : rows(todo.slice(1))}
         </div>
       )}
       {done.length > 0 && (

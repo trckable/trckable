@@ -12,6 +12,7 @@ export const copy = defineCopy('setup', {
   only: 'Only you see this.',
   hide: 'Hide this',
   kinds: { shop: 'Shop', saas: 'SaaS', content: 'Blog', other: 'Something else' },
+  locked: 'Opens after the first visit',
   doneCount: (n: number) => `${fmtInt(n)} done`,
   moreCount: (n: number) => `More you can add · ${fmtInt(n)}`,
   done: 'Done',
@@ -22,6 +23,7 @@ export const copy = defineCopy('setup', {
   on: 'On',
   verified: {
     title: 'Site verified',
+    install: 'Install',
     sub: (n: number) => (n === 0 ? 'Waiting for the first visit' : `Seen on ${n} of 2 pages`),
     done: (n: number) => `Seen on ${fmtInt(n)} pages`,
     go: 'Check install',

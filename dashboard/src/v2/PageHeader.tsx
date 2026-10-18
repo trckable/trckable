@@ -43,6 +43,10 @@ export interface PageHeaderProps {
   /** A newer version of the product, when there is one: a small pill by the ghost. */
   update?: string
   onUpdate?: () => void
+  /** The site has no verified install: its page is the setup screen, with no Live, Briefing, Explore or period, and the chip says so. */
+  waiting?: boolean
+  /** A visit has landed while the setup screen is still up. */
+  visited?: boolean
   /** A shared link: whose numbers these are, in place of the ghost and the site menu; no Live, bell or person. */
   identity?: ReactNode
 }
@@ -76,6 +80,7 @@ export function PageHeader(p: PageHeaderProps) {
   const siteMenu = {
     sites: p.sites,
     current: site,
+    unverified: !!p.waiting && !p.visited,
     onPick: (id: string) => (id === '*' ? navigate('/sites') : navigate('/' + encodeURIComponent(p.sites.find((s) => s.id === id)?.domain ?? ''))),
     footer: viewer ? [] : [{ key: 'add', label: copy.addSite, run: openAddSite }],
     team: slots.teams && <TeamSquare teams={slots.teams} />,
@@ -103,10 +108,10 @@ export function PageHeader(p: PageHeaderProps) {
           </>
         )}
         site={p.identity ? null : <SiteChip p={siteMenu} />}
-        ring={p.identity || !site ? null : <SetupRing site={site} onGoal={p.onGoal ?? (() => openFind(pal.create))} />}
-        views={here && !p.identity ? <SegmentedSwitch id="views" label={copy.view} value={here} onChange={(t) => void switchTab(t, here)} items={[{ value: 'live', label: copy.live, title: copy.liveTitle, dot: down ? 'down' : 'ok', count: online ?? undefined }, { value: 'briefing', label: copy.briefing, title: copy.briefingTitle }]} /> : null}
+        ring={p.identity || !site ? null : <SetupRing site={site} onGoal={p.onGoal ?? (() => openFind(pal.create))} fresh={!!p.waiting} visited={!!p.visited} />}
+        views={here && !p.identity && !p.waiting ? <SegmentedSwitch id="views" label={copy.view} value={here} onChange={(t) => void switchTab(t, here)} items={[{ value: 'live', label: copy.live, title: copy.liveTitle, dot: down ? 'down' : 'ok', count: online ?? undefined }, { value: 'briefing', label: copy.briefing, title: copy.briefingTitle }]} /> : null}
         period={here === 'briefing' ? p.period : null}
-        explore={<ExploreChip label={copy.explore} kbd="⌘K" onClick={exploreOpen} />}
+        explore={p.waiting ? null : <ExploreChip label={copy.explore} kbd="⌘K" onClick={exploreOpen} />}
         extras={slots.headerExtra}
         bell={p.identity ? null : <Bell site={site} notices={notices} />}
         account={isShared() ? null : <AccountMenu site={site ?? undefined} alert={slots.accountAlert} />}
@@ -136,7 +141,7 @@ export function PageHeader(p: PageHeaderProps) {
           </>
         }
       />
-      {find && <Palette items={paletteItems({ sites: p.sites, site, data: p.data ?? null, here: here ?? 'briefing', onAsk: ask, onGoal: p.onGoal, domainOf: (s) => s.domain })} placeholder={pal.placeholder} none={pal.none} initial={seed} onClose={() => setFind(false)} />}
+      {find && <Palette items={paletteItems({ sites: p.sites, site, data: p.data ?? null, here: here ?? 'briefing', fresh: p.waiting, onAsk: ask, onGoal: p.onGoal, domainOf: (s) => s.domain })} placeholder={pal.placeholder} none={pal.none} initial={seed} onClose={() => setFind(false)} />}
     </>
   )
 }

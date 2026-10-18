@@ -7,7 +7,7 @@ import { lastState, remember } from './memory'
 
 const FIRST = 2500
 
-export function useSetup(site: Site | null, on: boolean) {
+export function useSetup(site: Site | null, on: boolean, fresh = false) {
   const [got, setGot] = useState<{ site: string; state: SetupState } | null>(null)
   // The checklist could not be had (a viewer's, an offline server): the header's slot then has nothing to wait for.
   const [failed, setFailed] = useState<string | null>(null)
@@ -22,15 +22,15 @@ export function useSetup(site: Site | null, on: boolean) {
       .then((state) => {
         remember(id, state)
         // A site not known before waits until the tab is looked at again: a ring arriving late would push the header's other controls.
-        if (known || reveal) setGot({ site: id, state })
+        if (known || reveal || fresh) setGot({ site: id, state })
       })
       .catch(() => setFailed(id))
-  }, [id, on, known])
+  }, [id, on, known, fresh])
   // The first read waits a little: the ring is not what the page is waiting for.
   useEffect(() => {
-    const t = setTimeout(() => load(), FIRST)
+    const t = setTimeout(() => load(), fresh ? 0 : FIRST)
     return () => clearTimeout(t)
-  }, [load, settingsOpen])
+  }, [load, settingsOpen, fresh])
   useEffect(() => {
     const look = () => document.visibilityState === 'visible' && load(true)
     document.addEventListener('visibilitychange', look)

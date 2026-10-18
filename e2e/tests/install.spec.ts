@@ -79,3 +79,33 @@ test('Create key and Add someone keep their look on hover', async ({ page }) => 
     expect(Math.abs(icon!.y + icon!.height / 2 - (box!.y + box!.height / 2))).toBeLessThan(2)
   }
 })
+
+// The Install step of Add a site is small: it fits one screen at 1440x900 with no scrolling of its own, has one
+// primary action (which checks, then goes on to Revenue) and a quiet Later.
+test('the Install step fits 1440x900 without scrolling, with one primary action', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await signIn(page)
+  await page.goto(`${API}/example.com?add=site`)
+  const wizard = page.getByRole('dialog', { name: 'Add a site' })
+  await expect(wizard).toBeVisible({ timeout: 15_000 })
+  const domain = `compact-${Date.now()}.test`
+  await wizard.getByLabel('Domain').fill(domain)
+  await wizard.getByLabel('Domain').press('Enter')
+  await wizard.getByRole('button', { name: 'Skip' }).click()
+  await expect(wizard.getByRole('heading', { name: new RegExp(domain.replace(/\./g, '\\.')) })).toBeVisible({ timeout: 15_000 })
+  await expect(wizard.getByRole('tablist', { name: 'How to install' })).toBeVisible()
+  await expect(wizard.getByRole('switch', { name: 'Cookieless' })).toBeVisible()
+  await expect(wizard.getByRole('button', { name: 'Copy prompt' })).toBeVisible()
+  // Settled (the step eases to its height), then the dialog has nothing to scroll.
+  await expect
+    .poll(() => wizard.evaluate((el) => el.scrollHeight - el.clientHeight), { message: 'the dialog scrolls inside itself' })
+    .toBeLessThanOrEqual(0)
+  // One primary action and a quiet Later; the duplicate Next: revenue is gone.
+  await expect(wizard.locator('.dialog-actions .btn.primary')).toHaveCount(1)
+  await expect(wizard.getByRole('button', { name: 'Later' })).toBeVisible()
+  await expect(wizard.getByRole('button', { name: /Next: revenue|do it later/ })).toHaveCount(0)
+  // "I've installed it" checks, and goes on to Revenue (the suite's server cannot reach the site, so it offers Continue anyway first).
+  await wizard.getByRole('button', { name: /I.ve installed it/ }).click()
+  await wizard.getByRole('button', { name: /Continue anyway/ }).click({ timeout: 20_000 })
+  await expect(wizard.getByRole('heading', { name: 'Attribute revenue' })).toBeVisible()
+})

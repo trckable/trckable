@@ -9,7 +9,7 @@ import { VerifiedPill } from '../../features/verified/VerifiedPill'
 import { useMenu } from '../ui/useMenu'
 import { copy } from './copy'
 import { useDoneSince, useHidden } from './memory'
-import { left, ringMode } from './model'
+import { left, ringMode, withInstall } from './model'
 import { RingMark } from './RingMark'
 import { SetupPanel } from './SetupPanel'
 import { onSetupOpen, publishSetup } from './summary'
@@ -18,9 +18,11 @@ import './setup.css'
 
 const ringWords = (mode: string, done: number, counted: number) => (mode === 'check' ? copy.allSet : copy.ring(done, counted))
 
-export function SetupRing({ site, onGoal }: { site: Site | null; onGoal: () => void }) {
+/** fresh: the site has no verified install yet and the page is its setup screen; visited: its first visit has landed (Install is then done). */
+export function SetupRing({ site, onGoal, fresh = false, visited = false }: { site: Site | null; onGoal: () => void; fresh?: boolean; visited?: boolean }) {
   const on = !!site && !isShared()
-  const { state, run, failed } = useSetup(site, on)
+  const { state: read, run, failed } = useSetup(site, on, fresh)
+  const state = read && visited ? withInstall(read) : read
   const { hidden, hide } = useHidden(on)
   const since = useDoneSince(site?.id ?? null, state ? state.all_set : null)
   const [now] = useState(Date.now)
@@ -54,6 +56,7 @@ export function SetupRing({ site, onGoal }: { site: Site | null; onGoal: () => v
         {open && (
           <SetupPanel
             state={state}
+            locked={fresh && !visited}
             x={{ site, onGoal, can: canChange(), change: (fn) => void run(fn), close }}
             onHide={() => {
               hide(site.id, left(state))

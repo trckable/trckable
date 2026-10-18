@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { SetupItem, SetupState } from '../../lib/apiMore'
-import { CHECK_FOR, splitOf, hiddenBy, hideId, left, offset, percent, ringMode, rowsOf } from './model'
+import { CHECK_FOR, withInstall, splitOf, hiddenBy, hideId, left, offset, percent, ringMode, rowsOf } from './model'
 
 const item = (id: string, group: SetupItem['group'], o: Partial<SetupItem> = {}): SetupItem => ({ id, group, done: false, counted: group !== 'more', skipped: false, skippable: group === 'optional', ...o })
 const state = (done: number, counted: number): SetupState => ({ kind: { value: 'shop', chosen: false }, goal_suggestion: '', done, counted, all_set: counted > 0 && done === counted, items: [] })
@@ -88,5 +88,15 @@ describe('the folded panel', () => {
     expect(s.todo.map((i) => i.id)).toEqual(['locale', 'funnel'])
     expect(s.done.map((i) => i.id)).toEqual(['verified', 'search'])
     expect(s.more.map((i) => i.id)).toEqual(['payments', 'vitals'])
+  })
+})
+
+describe('the first visit', () => {
+  it('counts the install step as done, whatever the server has seen', () => {
+    const s = { ...state(1, 4), items: [item('verified', 'core'), item('goal', 'core', { done: true })] }
+    const got = withInstall(s)
+    expect(got.done).toBe(2)
+    expect(got.items.find((i) => i.id === 'verified')?.done).toBe(true)
+    expect(withInstall(got)).toBe(got)
   })
 })

@@ -197,8 +197,8 @@ test('after the first verified site, Add a site closes like any dialog and an un
   await wizard.getByLabel('Domain').press('Enter')
   await wizard.getByRole('button', { name: 'Skip' }).click()
   await expect(wizard.getByRole('tablist', { name: 'How to install' })).toBeVisible({ timeout: 15_000 })
-  await wizard.getByRole('button', { name: /do it later/ }).click()
-  await expect(page.getByText('Waiting for the first visit').first()).toBeVisible({ timeout: 15_000 })
+  await wizard.getByRole('button', { name: 'Later' }).click()
+  await expect(page.getByText('Checking for the first visit').first()).toBeVisible({ timeout: 15_000 })
   await expect(gate).toHaveCount(0)
   for (const path of ['/settings', '/sites', '/' + verified]) {
     await page.goto(base + path)
@@ -206,7 +206,7 @@ test('after the first verified site, Add a site closes like any dialog and an un
     await expect(gate).toHaveCount(0)
   }
   await page.goto(`${base}/${verified}`)
-  await expect(page.getByText('Waiting for the first visit')).toHaveCount(0)
+  await expect(page.getByText('Checking for the first visit')).toHaveCount(0)
 })
 
 test('/settings is not a page: an owner lands on the dashboard, a viewer is never held in the first run', async ({ page, browserName }) => {

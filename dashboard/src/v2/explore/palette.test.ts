@@ -67,4 +67,12 @@ describe('the palette', () => {
     me.setRole('owner', false)
     expect(find()).toBeUndefined()
   })
+
+  it('leaves Live, the Briefing, Explore and the periods out for a site with no verified install', () => {
+    const items = paletteItems({ sites: [site], site, data, here: 'briefing', fresh: true, domainOf: (s) => s.domain })
+    const titles = items.map((i) => i.title)
+    expect(titles).not.toContain('Go to Live')
+    expect(titles.some((t) => /briefing|explore|period|filter/i.test(t))).toBe(false)
+    expect(items.some((i) => i.title.startsWith('Settings'))).toBe(true)
+  })
 })
