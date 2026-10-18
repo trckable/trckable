@@ -1598,15 +1598,19 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .mk-cs button.on{background:var(--mk-fill);color:var(--mk-text)}
 .mk .lv.arriving{overflow:hidden;animation:mk-arrive .45s cubic-bezier(.2,.7,.2,1) backwards,mk-glow 2s ease-out backwards}
 .mk .lv.arriving .mk-dot{animation:mk-beat 1s ease-out 1}
+.mk .lv.leaving{pointer-events:none;overflow:hidden;animation:mk-leave .6s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes mk-leave{from{max-height:64px}40%{opacity:0}to{opacity:0;max-height:0;padding-top:0;padding-bottom:0;border-top-width:0}}
 .mk .lv.arriving.batch{animation:mk-fade .5s ease-out backwards,mk-glow 2s ease-out backwards}
 @keyframes mk-arrive{from{opacity:0;transform:translateY(-10px);max-height:0;padding-top:0;padding-bottom:0}to{max-height:64px}}
 @keyframes mk-fade{from{opacity:0}}
 @keyframes mk-glow{from{background:var(--mk-limeD)}to{background:transparent}}
-/* Reduced motion keeps only the glow, since the rule above that stops every animation would take it too. */
-.mk .lv.arriving.calm{animation:mk-glow 2s ease-out backwards!important}
+/* Reduced motion keeps a fade and the glow (no slide), since the rule above that stops every animation would take it too. */
+.mk .lv.arriving.calm{animation:mk-fade .4s ease-out backwards,mk-glow 2s ease-out backwards!important}
 .mk .lv.arriving.calm .mk-dot{animation:none!important}
 @media (prefers-reduced-motion:reduce){
 .mk .lchart>*{transition:none!important}
+.mk .lv.leaving{animation:mk-fadeout .4s ease-out forwards!important}
+@keyframes mk-fadeout{to{opacity:0}}
 }
 @media (max-width:700px){
 .mk .lchart{flex:none}
@@ -1617,10 +1621,8 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 /* The account menu is a sheet on a phone: its desktop place (below the button) must not win over the sheet's bottom edge whichever stylesheet loaded last. */
 @media (max-width:640px){:root .mk .hd .account-menu .pop.menu.more-menu{top:auto}}
 
-/* The people on the site now: bigger than the old Live's 86 px, and it flashes the accent once when it changes. */
+/* The people on the site now: bigger than the old Live's 86 px, and its changed digits roll. */
 .mk .lfig>div:first-child .lbign{font-size:96px;line-height:1;font-weight:700;letter-spacing:-.05em}
-.mk .tick.flash{display:inline-block;animation:mk-tickp 1s ease-out 1}
-@keyframes mk-tickp{0%{color:var(--mk-lime);transform:scale(1.07)}100%{color:inherit;transform:none}}
 @media (max-width:700px){
 .mk .lfig>div:first-child .lbign{font-size:76px}
 }
@@ -1632,7 +1634,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .lnow .lfig>div,.mk .lnow .lfig>div:nth-child(2){display:flex;flex-direction:column;flex-wrap:nowrap;align-items:flex-start;gap:var(--mk-s1);order:0;margin:0;text-align:left}
 .mk .lnow .lfig .ll{order:0;font-size:13px}
 .mk .lnow .lfig .mk-ld{order:2;flex-basis:auto;font-size:12px}
-/* The pair reads as main and side: the half hour is the big number, the people on the site now the small one; labels share a row, numbers share a baseline. */
+/* The pair reads as main and side: the people on the site now are the big number on the left, the half hour the small one on the right; labels share a row, numbers share a baseline. */
 .mk .lnow .lfig{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto auto;justify-content:start;align-items:start;column-gap:var(--mk-s6);row-gap:var(--mk-s1)}
 .mk .lnow .lfig>div.lmain,.mk .lnow .lfig>div.lside{display:grid;grid-template-rows:subgrid;grid-row:span 3;gap:0}
 .mk .lnow .lfig .lbign{line-height:1;font-weight:700;letter-spacing:-.05em;align-self:baseline}
