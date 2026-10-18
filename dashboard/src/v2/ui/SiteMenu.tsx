@@ -38,6 +38,20 @@ interface SiteMenuProps {
   all: string
 }
 
+/** The site's name, cut in the middle when it is long: the whole name stays in the tooltip and for a screen reader. */
+function NameText({ cur, all }: { cur: Site | null; all: string }) {
+  if (!cur) return <span className="nmx">{all}</span>
+  const full = cur.name || cur.domain
+  const short = midEllipsis(full, 26)
+  if (short === full) return <span className="nmx">{full}</span>
+  return (
+    <span className="nmx" title={full}>
+      <span aria-hidden="true">{short}</span>
+      <span className="sr">{full}</span>
+    </span>
+  )
+}
+
 export function SiteChip({ p }: { p: SiteMenuProps }) {
   const { open, setOpen, attach, close } = useMenu()
   useOnlyOpen('sites', open, close)
@@ -63,7 +77,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
             {DOT[state] && !p.unverified && <span className={`mk-dot ${DOT[state]}`} />}
           </span>
         )}
-        <span className="nmx" title={cur ? cur.name || cur.domain : undefined}>{cur ? midEllipsis(cur.name || cur.domain, 26) : p.all}</span>
+        <NameText cur={cur} all={p.all} />
         {picked && <span className="dom">{`/ ${picked}`}</span>}
         {cur && p.unverified && <span className="nv">{copy.notVerified}</span>}
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">

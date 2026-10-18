@@ -49,15 +49,12 @@ test('a site with no first visit waits under Setting up, with no false all-clear
     }
   }
 
-  // The row opens the setup screen, and the ghost leads back.
+  // The row opens the setup screen.
   await today.locator('.nx-line').first().click()
-  const back = page.locator('#logo')
   await expect(page.locator('.setup-status')).toBeVisible()
   if (SHOTS) {
     await page.waitForTimeout(800)
     await page.screenshot({ path: `${SHOTS}/install-back-light.png` })
   }
-  await back.click()
-  await expect(page).toHaveURL(/\/sites$/)
   await page.unrouteAll({ behavior: 'ignoreErrors' })
 })

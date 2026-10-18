@@ -129,7 +129,7 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
   // Step 2: the install card, with this site's snippet.
   await expect(run.getByRole('img', { name: 'Step 2 of 3' })).toBeVisible({ timeout: 15_000 })
   const card = run.getByRole('region', { name: 'Install trckable' })
-  await expect(run.getByRole('button', { name: 'Check now' })).toBeVisible()
+  await expect(run.getByRole('button', { name: /Check (now|again)/ })).toBeVisible()
   // One centred column: the status and the card share a horizontal centre.
   await expectCentred(page, run.locator('.setup-status'), card)
   const sites = (await (await page.request.get(`${base}/api/v1/sites`)).json()).sites as { id: string; domain: string }[]

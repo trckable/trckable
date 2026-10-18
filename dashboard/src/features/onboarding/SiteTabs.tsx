@@ -12,7 +12,8 @@ export function SiteTabs({ sites, active, seen, onPick }: { sites: Site[]; activ
         return (
           <button key={s.id} type="button" role="tab" aria-selected={s.id === active} className={s.id === active ? 'ob-site on' : 'ob-site'} title={s.domain} onClick={() => onPick(s.id)}>
             <SiteMark site={s} size={16} />
-            <span className="ob-site-name">{midEllipsis(s.domain, 20)}</span>
+            <span className="ob-site-name" aria-hidden="true">{midEllipsis(s.domain, 20)}</span>
+            <span className="sr">{s.domain}</span>
             <i className={got ? 'ob-sdot got' : 'ob-sdot'} aria-hidden="true" />
             <span className="sr">{got ? copy.more.receiving : copy.more.waiting}</span>
           </button>

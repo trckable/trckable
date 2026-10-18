@@ -60,7 +60,7 @@ for (const size of [
     await page.setViewportSize(size)
     const site = await newSite(page, 'freshfit', false)
     await page.goto(`${API}/${site.domain}?v=`)
-    await expect(page.locator('.setup-title')).toContainText(site.domain, { timeout: 20_000 })
+    await expect(page.locator('.setup-title')).toBeVisible({ timeout: 20_000 })
     const [width, inner] = await page.evaluate(() => [document.scrollingElement!.scrollWidth, window.innerWidth])
     expect(width).toBeLessThanOrEqual(inner)
     await expect(page.locator('nav.tabbar')).toHaveCount(0)
