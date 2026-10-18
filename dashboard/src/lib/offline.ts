@@ -4,4 +4,4 @@ import { toast } from '../components/toastBus'
 import { toastCopy } from '../components/toastCopy'
 
 addEventListener('offline', () => toast(toastCopy.offline, 'warning'))
-if (navigator.onLine === false) toast(toastCopy.offline, 'warning')
+if (!navigator.onLine) toast(toastCopy.offline, 'warning')

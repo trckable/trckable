@@ -59,7 +59,10 @@ export function XSub<T extends string>({ items, value, label, attr, onPick }: { 
     const el = strip.current
     if (!el) return
     const edges = () => {
-      el.dataset.more = el.scrollLeft > 1 ? (el.scrollLeft + el.clientWidth < el.scrollWidth - 1 ? 'both' : 'start') : el.scrollWidth > el.clientWidth + 1 ? 'end' : ''
+      const past = el.scrollLeft > 1
+      const beyond = el.scrollLeft + el.clientWidth < el.scrollWidth - 1
+      if (past) el.dataset.more = beyond ? 'both' : 'start'
+      else el.dataset.more = beyond ? 'end' : ''
     }
     edges()
     el.addEventListener('scroll', edges, { passive: true })
