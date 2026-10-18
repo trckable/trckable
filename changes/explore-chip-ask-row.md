@@ -1,0 +1,1 @@
+The header chip and the phone's third tab always open Explore; where Peek is available, ⌘K gets one "Ask Peek" row (with the Peek mark and ↵ Ask) when you type a question, and the permission table gains team.manage, with site.delete and data.erase named on the server.

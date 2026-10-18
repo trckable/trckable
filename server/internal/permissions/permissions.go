@@ -39,11 +39,18 @@ const (
 	ActAlertTarget Action = "alert.target"
 	// ActUpdateCheck is being told that a newer version is out.
 	ActUpdateCheck Action = "update.check"
+	// ActSiteDelete is deleting a site and everything it holds.
+	ActSiteDelete Action = "site.delete"
+	// ActTeamManage is the team's own settings: its name and icon.
+	ActTeamManage Action = "team.manage"
+	// ActDataErase is erasing a visitor's data from a site.
+	ActDataErase Action = "data.erase"
 )
 
 var ownerActions = []Action{
 	ActChange, ActAccountOwn, ActSitesAll, ActMemberManage, ActKeyRead, ActFeedbackRead,
 	ActSearchConnect, ActImportGoogle, ActSecretRead, ActProxyKey, ActAlertTarget, ActUpdateCheck,
+	ActSiteDelete, ActTeamManage, ActDataErase,
 }
 
 // permissions is the one role to actions table. An unknown role has no row

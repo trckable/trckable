@@ -22,6 +22,7 @@ export type Action =
   | 'peek.ask'
   | 'setup.run'
   | 'member.manage'
+  | 'team.manage'
   | 'search.connect'
   | 'import.google'
   | 'update.check'
@@ -30,7 +31,7 @@ export type Action =
 export const ACTIONS: readonly Action[] = [
   'site.add', 'site.settings', 'site.delete', 'goal.create', 'funnel.create', 'note.write',
   'share.manage', 'widget.manage', 'alert.manage', 'payment.manage', 'mention.manage', 'answers.manage', 'data.erase',
-  'peek.ask', 'setup.run', 'member.manage', 'search.connect', 'import.google', 'update.check',
+  'peek.ask', 'setup.run', 'member.manage', 'team.manage', 'search.connect', 'import.google', 'update.check',
 ]
 
 // A role with no row may do nothing: a missing or new role never shows a

@@ -17,7 +17,7 @@
       "roles": [
         "owner"
       ],
-      "server": "instance.change"
+      "server": "site.delete"
     },
     "goal.create": {
       "roles": [
@@ -77,7 +77,7 @@
       "roles": [
         "owner"
       ],
-      "server": "instance.change"
+      "server": "data.erase"
     },
     "peek.ask": {
       "roles": [
@@ -114,6 +114,12 @@
         "owner"
       ],
       "server": "update.check"
+    },
+    "team.manage": {
+      "roles": [
+        "owner"
+      ],
+      "server": "team.manage"
     }
   },
   "serverOnly": {
