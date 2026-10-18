@@ -31,3 +31,18 @@ test('before the first visit: ready and listening, the line to paste, the check,
   await expect(page.locator('.hero .kcs, .kcs').first()).toBeVisible({ timeout: 30_000 })
   await expect(page.locator('code.snip')).toHaveCount(0)
 })
+
+for (const size of [
+  { width: 390, height: 844 },
+  { width: 375, height: 667 },
+]) {
+  test(`before the first visit, on a ${size.width}x${size.height} phone, the page fits the screen and does not scroll`, async ({ page }) => {
+    test.slow()
+    await page.setViewportSize(size)
+    const site = await newSite(page, 'freshfit', false)
+    await page.goto(`${API}/${site.domain}?v=`)
+    await expect(page.locator('.hero .mk-hl').first()).toContainText(`${site.domain} is ready.`, { timeout: 20_000 })
+    const [scroll, inner] = await page.evaluate(() => [document.scrollingElement!.scrollHeight, window.innerHeight])
+    expect(scroll).toBeLessThanOrEqual(inner)
+  })
+}

@@ -108,6 +108,11 @@ span.footer-key {
   .app-footer-keys {
     display: none;
   }
+  /* A site before its first visit is one screen: the foot (about 190 px of room for links and the corner's button)
+     would push it past the phone's height and make it scroll for nothing. The Briefing it turns into has the foot. */
+  .app:has(.mk-fresh) > .app-footer {
+    display: none;
+  }
   .app-footer-start,
   .app-footer-end {
     gap: 0 14px;
