@@ -71,7 +71,6 @@
   padding: 2px 4px 2px 2px;
   border-radius: 10px;
   background: var(--sunken);
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--money) 70%, transparent);
   min-width: 0;
   transition: background 0.12s var(--ease);
 }

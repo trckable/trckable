@@ -16,8 +16,6 @@
   padding: 6px 8px 6px 10px;
   border-radius: 8px;
   background: var(--sunken);
-  /* The notes' own mark, as on the chart and in the Notes list. */
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--money) 70%, transparent);
   font-size: 13.5px;
 }
 .note-list li span {

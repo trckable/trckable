@@ -1747,3 +1747,8 @@ body[data-modal] .mk .cd {
 /* Something scrolled into view (a focus coming back, a jump to a field) never lands under a sticky header. */
 .mk #xpBody,.mk .cdb{scroll-padding-top:var(--mk-s8,72px)}
 .window-body{scroll-padding-top:72px}
+
+/* One rule for every sheet and menu on a phone: the bottom bar sits below them all (it is under every menu, scrim and
+   sheet), and while one is open it cannot be pressed either, so the last button of a sheet is never under it. */
+.mk .tabbar{z-index:25}
+body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.pmenu.on,.xm.on,.pal.on) .mk .tabbar{pointer-events:none}

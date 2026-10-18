@@ -32,6 +32,8 @@ export function AddRow({ onClose, onAdded }: { onClose: () => void; onAdded: (ma
   return (
     <form
       className="person add-row"
+      onKeyDown={leave}
+      noValidate
       onSubmit={(e) => {
         e.preventDefault()
         if (busy) return
@@ -39,7 +41,7 @@ export function AddRow({ onClose, onAdded }: { onClose: () => void; onAdded: (ma
         else setProblem(people.emailBad)
       }}
     >
-      <input className="input" type="email" aria-label={people.emailLabel} value={email} autoFocus placeholder={people.emailPlaceholder} onKeyDown={leave} onChange={(e) => { setEmail(e.target.value); setProblem(null) }} {...fieldProps('add-person-err', problem)} />
+      <input className="input" type="email" aria-label={people.emailLabel} value={email} autoFocus placeholder={people.emailPlaceholder} onChange={(e) => { setEmail(e.target.value); setProblem(null) }} {...fieldProps('add-person-err', problem)} />
       <span className="role-seg" role="radiogroup" aria-label={people.roleLabel} title={people.roleTip}>
         {[
           { id: 'owner', label: people.owner },
