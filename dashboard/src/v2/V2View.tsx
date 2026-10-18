@@ -118,7 +118,7 @@ export function V2View(p: V2Props) {
   const [briefFor, setBriefFor] = useState<string | null>(null)
   if (here === 'live' && !liveOn) setLiveOn(true)
   if (here === 'briefing' && briefFor !== p.site.id) setBriefFor(p.site.id)
-  useEffect(() => (p.identity ? undefined : whenIdle(() => setLiveOn(true))), [p.identity])
+  useEffect(() => (p.identity ? undefined : whenIdle(() => document.visibilityState === 'visible' && setLiveOn(true))), [p.identity])
   const now = { site: p.site, data: p.data, loading: p.loading, period: p.view.period, range: p.range, money: p.money, onGoal: p.onGoal, visits: p.live.stream.visits }
   // What the Briefing last had, for while it waits (the functions are taken with the rest, and renewed with it).
   const [kept, setKept] = useState(now)
