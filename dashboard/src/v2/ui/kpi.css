@@ -9,3 +9,36 @@
   text-align: right;
   overflow-wrap: anywhere;
 }
+/* Words wrap between words, never inside one; a name too long for the card ends in an ellipsis (its title has the whole of it). */
+.mk .kcs .kc .kl {
+  overflow-wrap: normal;
+  word-break: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mk .kcs .kc .kv {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: normal;
+}
+.mk .kcs .kc .kv small {
+  display: inline-block;
+  max-width: 100%;
+  white-space: normal;
+}
+/* Explore at full width on a tablet: the section list takes 224 px, so the content has room for two cards across, not four, and its two
+   tables stack. From 1040 px (the content is 768 px or more) it is the desktop layout. */
+@media (min-width: 601px) and (max-width: 1039px) {
+  .mk .xp.full .kcs.xk {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+  .mk .xp.full .kcs.xk:not(.k3) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mk .xp.full .x2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mk .xp.full .kcs.xk .kv {
+    font-size: clamp(24px, 3.6vw, 32px);
+  }
+}

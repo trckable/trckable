@@ -17,7 +17,7 @@ export function XKcs({ items }: { items: Kc[] }) {
               <span className="ki">
                 <XIco name={KEEP[k.icon] ?? k.icon} className="" />
               </span>
-              <span className="kl">{k.label}</span>
+              <span className="kl" title={k.label}>{k.label}</span>
               <span className={`kn ${k.note.c}`}>{k.note.t}</span>
             </div>
             <div className="kv">
@@ -41,7 +41,7 @@ export function XKcsPlain({ items, three }: { items: Xkc[]; three?: boolean }) {
             <span className="ki">
               <XIco name={k.icon} className="" style={{ color: k.tone === 'dn' ? 'var(--mk-red)' : 'var(--mk-lime)' }} />
             </span>
-            <span className="kl">{k.label}</span>
+            <span className="kl" title={k.label}>{k.label}</span>
             <span className={`kn ${k.tone}`}>{k.tag}</span>
           </div>
           <div className="kv">
