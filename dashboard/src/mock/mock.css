@@ -8,9 +8,8 @@
 .mk .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .mk{width:100%;max-width:1440px;padding:22px 32px 40px;container-type:inline-size}
 .mk .hd{display:flex;align-items:center;gap:14px}
-/* The header stays at the top of the window; its bottom edge shows once the page has moved under it (data-stuck, Header.tsx). */
+/* The header stays at the top of the window; a frosted layer shows under it once the page has moved (data-stuck, Header.tsx; see the end of this file). */
 .mk .hd{position:sticky;top:0;z-index:20;margin:-22px -32px 0;padding:22px 32px 0;box-sizing:content-box;background:var(--mk-bg);border-bottom:1px solid transparent;transition:border-color .15s}
-.mk .hd[data-stuck=true]{border-bottom-color:var(--mk-line)}
 .mk .logo{width:34px;height:34px}
 .mk .mk-chip{display:flex;align-items:center;gap:8px;border:1px solid var(--mk-line);background:var(--mk-card);border-radius:12px;height:36px;padding:0 12px;font-weight:600}
 .mk .mk-dot{width:8px;height:8px;border-radius:50%;background:var(--mk-green);flex:none}
@@ -795,9 +794,10 @@ html[data-motion='off'] .mk .ib.bell.shake svg{animation:none}
 .mk .cal .mk-back:hover{background:var(--mk-hov);color:var(--mk-text)}
 .mk .cf{display:flex;gap:var(--mk-s2);align-items:center;flex-wrap:wrap}
 .mk .cf .dash{color:var(--mk-faint)}
-.mk .cf .fld{display:flex;flex-direction:column;gap:2px;min-width:118px;padding:var(--mk-s2) var(--mk-s3);border:1px solid var(--mk-line);border-radius:var(--mk-rc);font-size:13px;font-weight:600;background:var(--mk-field)}
+.mk .cf .fld{display:flex;flex-direction:column;gap:2px;min-width:118px;padding:var(--mk-s2) var(--mk-s3);border:0;outline:0;border-radius:var(--mk-rc);font-size:13px;font-weight:600;background:var(--mk-field)}
 .mk .cf .fld small{font-size:12px;font-weight:500;color:var(--mk-muted)}
-.mk .cf .fld.on{border-color:var(--mk-lime)}
+.mk .cf .fld.on{background:var(--mk-limeD)}
+.mk .cf .fld.on small{color:var(--mk-text)}
 .mk .cf .nd{margin-left:auto;color:var(--mk-muted);font-size:12px}
 .mk .cal .mk-ch{margin:0;color:var(--mk-muted);font-size:12px}
 .mk .mk-cm{display:grid;grid-template-columns:1fr 1fr;gap:var(--mk-s5)}
@@ -807,14 +807,20 @@ html[data-motion='off'] .mk .ib.bell.shake svg{animation:none}
 .mk .mn:hover:not(:disabled){background:var(--mk-hov);color:var(--mk-text)}
 .mk .mn:disabled{opacity:.3;cursor:default}
 .mk .mk-cm .month:first-child .next{visibility:hidden}
-.mk .mk-cm .month:last-child:not(:only-child) .prev{visibility:hidden}
-.mk .mk-cm .month:only-child .next{visibility:visible}
+.mk .mk-cm .month:last-child .prev{visibility:hidden}
 .mk .dow,.mk .days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.mk .days{isolation:isolate}
 .mk .dow span{height:28px;display:grid;place-items:center;font-size:12px;color:var(--mk-muted)}
 .mk .mk-day{height:36px;display:grid;place-items:center;font-size:13px;border-radius:0;font-variant-numeric:tabular-nums;position:relative}
-.mk button.day:hover:not(:disabled):not(.mk-edge){background:var(--mk-hov2);border-radius:8px}
+.mk button.mk-day:hover:not(:disabled):not(.mk-edge){background:var(--mk-hov2);border-radius:8px}
 .mk .mk-day.in{background:var(--mk-limeD)}
-.mk .mk-day.edge{background:var(--mk-lime);color:var(--mk-on-lime);font-weight:700;border-radius:8px}
+.mk .mk-day.in.ws{border-radius:8px 0 0 8px}
+.mk .mk-day.in.we{border-radius:0 8px 8px 0}
+.mk .mk-day.in.ws.we{border-radius:8px}
+.mk .mk-day.mk-edge{background:var(--mk-lime);color:var(--mk-on-lime);font-weight:700;border-radius:8px}
+.mk .mk-day.mk-edge.rs:not(.we)::before,.mk .mk-day.mk-edge.re:not(.ws)::before{content:"";position:absolute;top:0;bottom:0;width:50%;background:var(--mk-limeD);z-index:-1}
+.mk .mk-day.mk-edge.rs::before{right:0}
+.mk .mk-day.mk-edge.re::before{left:0}
 .mk .mk-day.today:not(.mk-edge)::after{content:"";position:absolute;left:50%;bottom:4px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--mk-lime)}
 .mk .mk-day:disabled{color:var(--mk-faint);opacity:.45;cursor:default}
 .mk .mk-day.out{pointer-events:none}
@@ -1435,15 +1441,24 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .site-head .fold{display:flex;align-items:center;gap:var(--mk-s1);color:inherit;font:inherit;text-transform:inherit;letter-spacing:inherit;min-height:28px}
 .mk .site-head .fold svg{transition:transform .15s}
 .mk .site-head .fold[aria-expanded="true"] svg{transform:rotate(90deg)}
-.mk .site-row{display:flex;align-items:center;gap:2px;position:relative;border-radius:var(--mk-rc)}
+.mk .site-row{display:flex;align-items:center;gap:0;position:relative;border-radius:var(--mk-rc)}
 .mk .site-row .mi.site{flex:1;min-width:0}
 .mk .site-row.sortable .mi.site{cursor:grab}
 .mk .site-row .grip{position:absolute;left:-2px;opacity:0;color:var(--mk-faint);pointer-events:none}
 .mk .site-row:hover .grip{opacity:.7}
 .mk .site-row.dragging{background:var(--mk-card);box-shadow:0 10px 30px var(--mk-shc);z-index:2}
-.mk .site-row .site-open,.mk .site-row .btn.icon.ghost{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--mk-faint);opacity:0;flex:none}
-.mk .site-row:hover .site-open,.mk .site-row:hover .btn.icon.ghost,.mk .site-row:focus-within .site-open,.mk .site-row:focus-within .btn.icon.ghost{opacity:1}
+/* The actions sit in their own column at the end of the row (never over the numbers), shown on hover or focus; the same width is kept free at the end of All sites, so every number ends at one edge. */
+.mk .sitelist{--acts:68px}
+.mk .site-row .site-acts{flex:none;width:var(--acts);display:flex;align-items:center;justify-content:flex-end;gap:4px;opacity:0}
+.mk .site-row:hover .site-acts,.mk .site-row:focus-within .site-acts,.mk .site-row .site-acts:has([aria-expanded="true"]){opacity:1}
+.mk .site-row .site-open,.mk .site-row .btn.icon.ghost{display:inline-grid;place-items:center;width:32px;height:32px;min-width:32px;padding:0;border-radius:8px;color:var(--mk-faint);flex:none}
+.mk .site-row .btn.icon.ghost svg{width:16px;height:16px}
 .mk .site-row .site-open:hover,.mk .site-row .btn.icon.ghost:hover{background:var(--mk-hov);color:var(--mk-text)}
+.mk .mi.all{width:auto;margin-right:var(--acts)}
+.mk .mi .now{text-align:right;font-variant-numeric:tabular-nums}
+.mk .mi.all .all-problems{font-size:12px;color:var(--mk-faint)}
+.mk .mi.all .all-problems .down{color:var(--mk-red);font-weight:600}
+.open-touch{display:none}
 .mk .site-head .btn.icon.ghost{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--mk-faint)}
 .mk .mi .state-line.quiet{color:var(--mk-amber)}
 .mk .sites-domains{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--mk-line);padding-bottom:var(--mk-s2);margin-bottom:var(--mk-s2)}
@@ -1460,7 +1475,10 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk.mk-bar{position:relative;z-index:35}
 .header.quiet:has(.mk-bar){z-index:35}
 @media (max-width:600px){
- .mk .site-row .site-open,.mk .site-row .btn.icon.ghost{width:44px;height:44px;opacity:1}
+ .mk .sitelist{--acts:44px}
+ .mk .site-row .site-open{display:none}
+ .mk .site-row .btn.icon.ghost{width:44px;height:44px}
+ .mk .site-row .site-acts{opacity:1}
 }
 .mk .mins i[role=button]{cursor:pointer}
 .mk .mins i[role=button]:focus-visible{outline:2px solid var(--mk-lime);outline-offset:1px}
@@ -1703,14 +1721,12 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .xp.full .xt.xc{max-width:900px}
 /* The site menu: one line a site (a quiet one is grey, only a real problem is coloured), a finder with no border, All sites' total in line with the sites' numbers. */
 .mk .mk-dot.idle{background:var(--mk-faint)}
-.mk .mi .now.state-word{font-size:12px;color:var(--mk-faint);white-space:nowrap}
+.mk .mi .now.unverified,.mk .mi .now.state-word{font-size:12px;color:var(--mk-faint);white-space:nowrap}
 .mk .mi .now.state-word.down{color:var(--mk-red);font-weight:600}
 .mk .find-wrap{position:relative;margin:0 0 var(--mk-s2)}
 .mk .find-wrap>svg{position:absolute;left:var(--mk-s3);top:50%;transform:translateY(-50%);color:var(--mk-faint);pointer-events:none}
 .mk .mk-menu #siteFind{height:40px;margin:0;padding:0 var(--mk-s3) 0 calc(var(--mk-s3) + 24px);font-size:14px;border:0;outline:0;box-shadow:none;background:color-mix(in srgb,var(--mk-text) 7%,transparent);color:var(--mk-text)}
 .mk .mk-menu #siteFind::placeholder{color:var(--mk-faint)}
-.mk .mi.all:has(>.now){padding-right:calc(var(--mk-s3) + 60px)}
-@media (max-width:600px){.mk .mi.all:has(>.now){padding-right:calc(var(--mk-s3) + 92px)}}
 /* The teams: a small square before the site, and the list that opens from it */
 .mk .teamchip{display:flex;align-items:center;gap:var(--mk-s1)}
 .mk .team-btn{padding:0 var(--mk-s1)}
@@ -1741,3 +1757,30 @@ body[data-modal] .mk .cd {
    sheet), and while one is open it cannot be pressed either, so the last button of a sheet is never under it. */
 .mk .tabbar{z-index:25}
 body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.pmenu.on,.xm.on,.pal.on) .mk .tabbar{pointer-events:none}
+
+/* The stuck header (data-stuck, Header.tsx): clear at the top; once the page has moved under it, a frosted layer of its own (::before, so the header never becomes the box a fixed menu is placed in) that fades out along its lower edge instead of ending in a line. Solid without blur support or with reduced transparency. */
+.mk .hd{background:transparent;border-bottom:0}
+.mk .hd::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--mk-bg);opacity:0;pointer-events:none;-webkit-mask-image:linear-gradient(var(--mk-bg) calc(100% - 14px),transparent);mask-image:linear-gradient(var(--mk-bg) calc(100% - 14px),transparent);transition:opacity .15s}
+.mk .hd[data-stuck=true]::before{opacity:1}
+@supports (backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px)){
+.mk .hd::before{background:color-mix(in srgb,var(--mk-bg) 72%,transparent);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%)}
+@media (prefers-reduced-transparency:reduce){.mk .hd::before{background:var(--mk-bg);-webkit-backdrop-filter:none;backdrop-filter:none}}
+}
+@media (prefers-reduced-motion:reduce){.mk .hd::before{transition:none}}
+@container (min-width:601px) and (max-width:700px){.mk .hd::before{display:none}}
+
+/* The site chip carries the site's mark; its dot shows only for a site that is down (red) or not receiving data (amber), never green. Live keeps the one pulsing dot, still when motion is reduced. */
+.mk .sitechip .mkwrap{position:relative;display:inline-flex;flex:none}
+.mk .sitechip .mkwrap .mk-dot{position:absolute;right:-3px;bottom:-3px;box-sizing:content-box;border:2px solid var(--mk-bg);box-shadow:none}
+@media (prefers-reduced-motion:reduce){.mk #views .mk-dot{animation:none}}
+/* A screen kept built while it is not the one shown (v2/V2View): it takes no place of its own. */
+.mk .view-pane{display:contents}
+.mk .view-pane[hidden]{display:none}
+/* Touch: the row's ⋯ is the only action, so it carries Open site too. */
+@media (hover:none){
+ .mk .sitelist{--acts:44px}
+ .mk .site-row .site-open{display:none}
+ .mk .site-row .site-acts{opacity:1}
+ .menu-list .open-touch{display:flex}
+}
+@media (max-width:600px){.menu-list .open-touch{display:flex}}

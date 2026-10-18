@@ -49,10 +49,14 @@ for (const [width, scheme] of [[1440, 'dark'], [390, 'light']] as const) {
     const band = await page.evaluate(() => {
       const hd = document.querySelector('.hd')!.getBoundingClientRect()
       const lowest = Math.max(...[...document.querySelectorAll('.hd button, .hd #logo')].map((e) => e.getBoundingClientRect().bottom))
-      return { room: hd.bottom - lowest, solid: getComputedStyle(document.querySelector('.hd')!).backgroundColor }
+      const glass = getComputedStyle(document.querySelector('.hd')!, '::before')
+      return { room: hd.bottom - lowest, solid: glass.backgroundColor, shown: glass.opacity, line: getComputedStyle(document.querySelector('.hd')!).borderBottomWidth }
     })
     expect(band.room, 'room under the controls').toBeGreaterThanOrEqual(10)
+    // The band is a frosted layer that shows once the page has moved, and ends in a fade, not a line.
     expect(band.solid).not.toBe('rgba(0, 0, 0, 0)')
+    expect(band.shown).toBe('1')
+    expect(band.line).toBe('0px')
     await shot(page, `scrolled-${width}-${scheme}`)
   })
 }

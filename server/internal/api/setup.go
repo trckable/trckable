@@ -98,6 +98,34 @@ func goalSuggestion(kind string) string {
 	return ""
 }
 
+// setupOrders is the order the counted steps come in for each kind of site, so
+// the first one open is the most valuable for it: a shop sets up what it sells
+// (goal, revenue) before search; a blog starts with search; the rest of the
+// steps follow in the common order.
+var setupOrders = map[string][]string{
+	sqlite.KindShop:    {"verified", "goal", "payments", "search", "locale", "funnel", "crawlers", "proxy"},
+	sqlite.KindSaaS:    {"verified", "goal", "funnel", "payments", "search", "locale", "crawlers", "proxy"},
+	sqlite.KindContent: {"verified", "search", "goal", "locale", "crawlers", "proxy", "funnel", "payments"},
+}
+
+var setupOrderDefault = []string{"verified", "goal", "locale", "payments", "funnel", "search", "crawlers", "proxy"}
+
+// setupOrder ranks an item id: its place in the kind's order, and the extras (never counted) after.
+func setupOrder(kind string) func(string) int {
+	order, ok := setupOrders[kind]
+	if !ok {
+		order = setupOrderDefault
+	}
+	return func(id string) int {
+		for i, o := range order {
+			if o == id {
+				return i
+			}
+		}
+		return len(order)
+	}
+}
+
 func buildSetup(in setupIn) setupOut {
 	kind := in.Stored.Kind
 	out := setupOut{
@@ -121,7 +149,7 @@ func buildSetup(in setupIn) setupOut {
 	}
 
 	add("verified", setupCore, in.Paths >= 2, map[string]any{"pages": in.Paths})
-	add("own_visits", setupCore, in.OwnIPs > 0, nil)
+	add("own_visits", setupMore, in.OwnIPs > 0, nil) // optional: never counted
 	locale := in.Timezone != "UTC" || in.Currency != "USD" || in.Stored.LocaleConfirmedAt > 0
 	add("locale", setupCore, locale, map[string]any{"timezone": in.Timezone, "currency": in.Currency})
 	add("goal", setupCore, in.Goals, map[string]any{"suggestion": out.GoalSuggestion})
@@ -151,6 +179,9 @@ func buildSetup(in setupIn) setupOut {
 	if in.MentionsOn {
 		add("mentions", setupMore, in.Keywords, nil)
 	}
+
+	rank := setupOrder(kind)
+	slices.SortStableFunc(out.Items, func(a, b setupItem) int { return rank(a.ID) - rank(b.ID) })
 
 	for _, it := range out.Items {
 		if it.Counted {

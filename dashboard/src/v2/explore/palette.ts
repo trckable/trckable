@@ -59,6 +59,7 @@ export function paletteItems(o: { sites: Site[]; site: Site | null; data: Report
   // Settings (every section, so "alerts" and "share" find theirs), the Mentions page, the theme and sign out: what the menus hold.
   if (o.site && !isShared()) {
     const site = o.site
+    out.push({ title: pc.siteSettings, also: 'settings preferences site', kind: pc.kinds.settings, group: pc.groups.settings, run: () => openSettings(site, 'site') })
     for (const t of SETTINGS_TABS.filter((t) => t !== 'mentions' || hasMentions())) out.push({ title: `${pc.settings} · ${TABS[t]}`, also: TAB_WORDS[t], kind: pc.kinds.settings, group: pc.groups.settings, run: () => openSettings(site, t) })
     if (hasMentions()) out.push({ title: pc.mentionsPage, kind: pc.kinds.view, group: pc.groups.goTo, run: () => navigate('/' + encodeURIComponent(site.domain) + '/mentions') })
   }

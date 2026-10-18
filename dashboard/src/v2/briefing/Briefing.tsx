@@ -70,6 +70,8 @@ export interface BriefingProps {
   onGoal: () => void
   /** The latest visits on the site, for "meet one of them". */
   visits: Visit[]
+  /** False while Live is the screen and this one waits, built, out of sight. */
+  active?: boolean
 }
 
 /** An empty period has no series at all (the server sends null): an empty list, so nothing below has to ask. */
@@ -78,7 +80,7 @@ const normal = (r?: Result): Result | undefined => (r ? { ...r, series: r.series
 /** Replay's button: it stops what plays, and starts it when it does not. */
 const stopOrGo = (playing: boolean, stop: () => void, go: () => void) => (playing ? stop : go)
 
-export default function Briefing({ site, data: page, loading, period, range, money, onGoal, visits }: BriefingProps) {
+export default function Briefing({ site, data: page, loading, period, range, money, onGoal, visits, active = true }: BriefingProps) {
   const ui = useBriefingState(site.id)
   const [at, setAt] = useState<number | null>(null)
   const up = useUptime(site, range)
@@ -124,8 +126,13 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   // The cards keep the order the page opened with; what is new waits behind the pill.
   const lock = useCardLock([site.id, period, range.from, range.to].join('|'), parts?.stories ?? [])
   const keyed = lock.known
-  useBriefingKeys({ cards: (ui.all ? keyed : keyed.slice(0, 4)).map((s) => s.key), ui, open: (k) => ui.setOpen(keyed.find((s) => s.key === k) ?? null) })
+  useBriefingKeys({ on: active, cards: (ui.all ? keyed : keyed.slice(0, 4)).map((s) => s.key), ui, open: (k) => ui.setOpen(keyed.find((s) => s.key === k) ?? null) })
   const rp = useReplay(sig)
+  // A run does not play out of sight: leaving for Live ends it, and the chart is as it was when the Briefing is back.
+  const { stop: stopReplay, playing: replaying } = rp
+  useEffect(() => {
+    if (!active && replaying) stopReplay()
+  }, [active, replaying, stopReplay])
   if (!cur || !parts) return loading || !data ? <BriefingSkeleton site={site.id} label={copy.loading} /> : null
   const label = unit === 'today' ? `${presetById('today')?.label ?? 'Today'} · ${dayWords(range.to)}` : (presetById(period)?.label ?? fmtRange(range, today))
   const before = copy.before[unit]
@@ -192,7 +199,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
           crowd={crowd}
           since={since}
           period={label}
-          onPeriod={() => document.querySelector<HTMLElement>('.mk-pill, .range-picker, .btn.range')?.click()}
+          onPeriod={() => document.querySelector<HTMLElement>('#perBtn')?.click()}
           moments={mo}
           why={heroWhy}
           onReplay={onReplay}
@@ -230,7 +237,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
     </div>
   )
   return (
-    <Hold ready={ready} id={[site.id, period, range.from, range.to].join('|')} first={<BriefingSkeleton site={site.id} label={copy.loading} />}>
+    <Hold quiet={!active} ready={ready} id={[site.id, period, range.from, range.to].join('|')} first={<BriefingSkeleton site={site.id} label={copy.loading} />}>
       {body}
     </Hold>
   )

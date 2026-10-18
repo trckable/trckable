@@ -84,8 +84,8 @@ describe('Hide this', () => {
 
 describe('the folded panel', () => {
   it('splits what is left, what is done and what can wait', () => {
-    const s = splitOf([item('verified', 'core', { done: true }), item('own_visits', 'core'), item('payments', 'optional', { skipped: true, group: 'more' }), item('funnel', 'optional'), item('search', 'optional', { done: true }), item('vitals', 'more')])
-    expect(s.todo.map((i) => i.id)).toEqual(['own_visits', 'funnel'])
+    const s = splitOf([item('verified', 'core', { done: true }), item('locale', 'core'), item('payments', 'optional', { skipped: true, group: 'more' }), item('funnel', 'optional'), item('search', 'optional', { done: true }), item('vitals', 'more')])
+    expect(s.todo.map((i) => i.id)).toEqual(['locale', 'funnel'])
     expect(s.done.map((i) => i.id)).toEqual(['verified', 'search'])
     expect(s.more.map((i) => i.id)).toEqual(['payments', 'vitals'])
   })

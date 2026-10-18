@@ -1,5 +1,6 @@
 // What the site menu decides about its list, apart from drawing it.
 import type { Site } from '../../lib/api'
+import { dotState } from './StateDot'
 import { totalOf, type Today } from './useToday'
 
 /** A list this long has a finder; a shorter one brings it up when a letter is typed. */
@@ -28,4 +29,16 @@ export function teamTotal(numbers: Map<string, Today> | null, sites: Site[]): nu
   if (!numbers) return null
   const ids = new Set(sites.map((s) => s.id))
   return totalOf(new Map([...numbers].filter(([id]) => ids.has(id)))).visitors
+}
+
+/** How many of these sites are down, quiet or not verified yet: All sites says it under its name, so a failing site shows there too. */
+export function problemCounts(sites: Site[], now = Date.now()): { down: number; quiet: number; unverified: number } {
+  const c = { down: 0, quiet: 0, unverified: 0 }
+  for (const s of sites) {
+    const st = dotState(s, now)
+    if (st === 'stopped') c.down++
+    else if (st === 'quiet') c.quiet++
+    else if (st === 'new') c.unverified++
+  }
+  return c
 }

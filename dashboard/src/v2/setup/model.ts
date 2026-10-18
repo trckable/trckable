@@ -27,9 +27,6 @@ export function rowsOf(items: SetupItem[]): Rows {
   return { core: live('core'), optional: live('optional'), more: [...items.filter((i) => i.skipped), ...live('more')] }
 }
 
-/** How many steps still to do show before the rest fold. */
-export const SHOWN = 3
-
 export interface Split {
   /** Counted and not done, in the server's order. */
   todo: SetupItem[]
