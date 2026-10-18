@@ -18,7 +18,7 @@ function Kind({ state, x }: { state: SetupState; x: RowCtx }) {
     <div className="skind">
       <span>{copy.kind}</span>
       {x.can ? (
-        <Pop label={copy.kind} className="schip" up items={KINDS.map((v) => ({ label: copy.kinds[v], checked: v === k, run: () => x.change((s) => more.setupKind(s, v)) }))}>
+        <Pop label={copy.kind} className="schip" items={KINDS.map((v) => ({ label: copy.kinds[v], checked: v === k, run: () => x.change((s) => more.setupKind(s, v)) }))}>
           {copy.kinds[k]}
           <ChevronDown size={14} aria-hidden="true" />
         </Pop>
@@ -43,7 +43,7 @@ function Fold({ label, open, onToggle, children }: { label: string; open: boolea
 }
 
 /** The panel: the next step as a card, the other open steps as rows, the done ones and the extras one line each, and who sees it. */
-export function SetupPanel({ state, x, onHide, locked }: { state: SetupState; x: RowCtx; onHide: () => void; /** Install is still open: the steps after it show, and wait. */ locked?: boolean }) {
+export function SetupPanel({ state, x, onHide, locked, check }: { state: SetupState; x: RowCtx; onHide: () => void; /** Everything counted is done: the header's tick and words. */ check: boolean; /** Install is still open: the steps after it show, and wait. */ locked?: boolean }) {
   const [open, setOpen] = useState({ done: false, more: false })
   const toggle = (k: keyof typeof open) => setOpen({ ...open, [k]: !open[k] })
   const { todo, done, more: extra } = splitOf(state.items)
@@ -53,8 +53,8 @@ export function SetupPanel({ state, x, onHide, locked }: { state: SetupState; x:
   return (
     <>
       <div className="shead">
-        <RingMark done={state.done} counted={state.counted} check={false} />
-        <b>{copy.title(state.done, state.counted)}</b>
+        <RingMark done={state.done} counted={state.counted} check={check} />
+        <b>{check ? copy.allSet : copy.title(state.done, state.counted)}</b>
       </div>
       {todo.length > 0 && (
         <div className="sgrp">

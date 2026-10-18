@@ -2,7 +2,7 @@
 // a phone, "Not for me" lowers what counts and moves the row to More, and once everything counted is done the ring is
 // a check for seven days and then gone.
 // Pictures for the review: SR_SHOTS=<folder> SR_SCHEME=light|dark.
-import { expect, test, type Page } from './fixtures'
+import { expect, test, type Locator, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
 
@@ -92,6 +92,58 @@ test('Not for me on Payments lowers what counts and moves the row to More', asyn
   await expect(panel.locator('[data-step="payments"] button', { hasText: 'Bring back' })).toBeVisible()
   await panel.locator('[data-step="payments"] button', { hasText: 'Bring back' }).click()
   await expect(page.locator('.ringb .rtext')).toHaveText('0/4 set up')
+})
+
+test('the step menu and the site type menu open under their buttons, inside the window', async ({ page, request }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  const H = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json', Cookie: `trckable_session=${cookie}` }
+  expect((await request.put(`${API}/api/v1/sites/${site}/setup/kind`, { headers: H, data: { kind: 'saas' } })).ok()).toBe(true)
+  await page.route(/\/api\/v1\/sites\/[^/]+\/events/, (route) => route.fulfill({ json: { events: [{}] } }))
+  await open(page)
+  await page.locator('.ringb').click({ timeout: 15_000 })
+  const panel = page.locator('.setupmenu.on')
+  await expect(panel).toBeVisible()
+  const inside = async (menu: Locator, button: Locator) => {
+    await expect(menu).toBeVisible()
+    const m = (await menu.boundingBox())!
+    const b = (await button.boundingBox())!
+    const vp = page.viewportSize()!
+    expect(m.x).toBeGreaterThanOrEqual(0)
+    expect(m.y).toBeGreaterThanOrEqual(0)
+    expect(m.x + m.width).toBeLessThanOrEqual(vp.width)
+    expect(m.y + m.height).toBeLessThanOrEqual(vp.height)
+    expect(m.y).toBeGreaterThanOrEqual(b.y + b.height - 1) // below the button
+    expect(Math.abs(m.x + m.width - (b.x + b.width))).toBeLessThanOrEqual(1) // right edges line up
+  }
+  const dots = panel.locator('[data-step="payments"]').getByRole('button', { name: 'More' })
+  await dots.click()
+  await inside(page.getByRole('menu', { name: 'More' }), dots)
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/setup-step-menu-1440-${SCHEME}.png`, scale: 'css' })
+  await page.keyboard.press('Escape')
+  const chip = panel.locator('.schip')
+  await chip.click()
+  await inside(page.getByRole('menu', { name: 'Site type' }), chip)
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/setup-kind-menu-1440-${SCHEME}.png`, scale: 'css' })
+})
+
+test('everything done: the panel shows the check and All set, like the header', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.route(/\/api\/v1\/sites\/[^/]+\/setup$/, async (route) => {
+    const res = await route.fetch()
+    const body = await res.json()
+    body.items = body.items.map((i: { counted: boolean; done: boolean }) => ({ ...i, done: i.counted ? true : i.done }))
+    body.done = body.counted
+    body.all_set = true
+    await route.fulfill({ response: res, json: body })
+  })
+  await page.addInitScript(([id, ms]) => localStorage.setItem('trckable:ring:done', JSON.stringify({ [id as string]: Date.now() - (ms as number) })), [site, 86_400_000])
+  await open(page)
+  await page.locator('.ringb[data-ring="check"]').click({ timeout: 15_000 })
+  const head = page.locator('.setupmenu.on .shead')
+  await expect(head).toHaveText('All set')
+  await expect(head.locator('.rtick')).toHaveCount(1)
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/setup-allset-1440-${SCHEME}.png` })
+  await page.unrouteAll({ behavior: 'ignoreErrors' })
 })
 
 test('everything done: a check for seven days, then no ring', async ({ page }) => {
