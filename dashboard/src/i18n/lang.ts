@@ -23,3 +23,6 @@ export const lang = pickLang(saved(), browser, have)
 
 /** The tag Intl formats with: undefined for English (the browser's own), else the browser's regional form of the language (de-AT) or the plain one. */
 export const tag = lang === 'en' ? undefined : (browser.find((l) => l.slice(0, 2).toLowerCase() === lang) ?? lang)
+
+// Another tab of this browser chose a language: this one starts again in it.
+if (typeof window !== 'undefined') window.addEventListener('storage', (e) => e.key === KEY && location.reload())

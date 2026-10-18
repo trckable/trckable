@@ -3310,4 +3310,5 @@ export default {
   'mentionsTrust.uncheckedTitle': (w: string) => `Non è stato possibile controllare le notizie per «${w}» in questo momento`,
   'mentionsTrust.addAnyway': 'Aggiungi comunque',
   'mentionsTrust.excludedFull': (n: number) => `Supererebbe il limite di ${n} parole escluse. Rimuovine una prima.`,
+  'address.noSite': (name: string) => `Nessun sito chiamato ${name}`,
 } satisfies Messages

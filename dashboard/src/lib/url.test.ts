@@ -43,3 +43,20 @@ describe('the period of an address without one', () => {
     expect(readView(new URLSearchParams('')).period).toBe('30d')
   })
 })
+
+describe('days and ranges in the address', () => {
+  const v = (q: string) => readView(new URLSearchParams(q))
+  it('drop a range with an end that is no calendar day', () => {
+    expect(v('from=2026-13-45&to=abc')).toMatchObject({ period: '30d', from: undefined, to: undefined })
+    expect(v('from=2026-02-30&to=2026-03-01').from).toBeUndefined()
+    expect(v('from=2026-10-01').period).toBe('30d')
+  })
+  it('read a range written backwards the right way round', () => {
+    expect(v('from=2026-10-10&to=2026-01-01')).toMatchObject({ period: 'custom', from: '2026-01-01', to: '2026-10-10' })
+  })
+  it('drop a comparison range that is not days, and a scrubbed day that is none', () => {
+    expect(v('from=2026-10-01&to=2026-10-05&compare=custom&cfrom=zz&cto=yy')).toMatchObject({ cfrom: undefined, cto: undefined })
+    expect(v('day=garbage').day).toBeUndefined()
+    expect(v('day=2026-10-04').day).toBe('2026-10-04')
+  })
+})
