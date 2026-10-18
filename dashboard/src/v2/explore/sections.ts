@@ -1,5 +1,5 @@
 // Explore's ten sections in four groups, and the tables each one holds.
-import { hasMentions, isShared } from '../../lib/me'
+import { hasAnswers, hasMentions, isShared } from '../../lib/me'
 import type { FilterDim, Section, Tab } from './types'
 
 export type { Section, Tab } from './types'
@@ -8,7 +8,7 @@ const ALL_GROUPS: { key: 'traffic' | 'audience' | 'results' | 'site'; items: Sec
   { key: 'traffic', items: ['overview', 'pages', 'sources'] },
   { key: 'audience', items: ['places', 'tech'] },
   { key: 'results', items: ['results', 'sales'] },
-  { key: 'site', items: ['speed', 'mentions', 'links', 'ai'] },
+  { key: 'site', items: ['speed', 'mentions', 'links', 'ai', 'answers'] },
 ]
 
 const SECTIONS: Section[] = ALL_GROUPS.flatMap((g) => g.items)
@@ -25,13 +25,14 @@ const EVERY: Record<Section, Tab[]> = {
   mentions: ['mentions'],
   links: ['outbound'],
   ai: ['ai', 'bots'],
+  answers: ['answers'],
 }
 
 /** What a shared link can read: the report alone (the public endpoint answers nothing else), so its tables and the payments the report carries. */
 const SHARED: Tab[] = ['overview', 'pages', 'sources', 'referrers', 'utm', 'countries', 'devices', 'browsers', 'sales', 'earners']
 
 /** Whether a table is offered here: all of them, but on a shared link only those the report can fill. */
-export const offered = (t: Tab): boolean => (t !== 'mentions' || hasMentions()) && (!isShared() || SHARED.includes(t))
+export const offered = (t: Tab): boolean => (t !== 'mentions' || hasMentions()) && (t !== 'answers' || hasAnswers()) && (!isShared() || SHARED.includes(t))
 
 /** A section's tables, as offered here. */
 export const TABS = Object.fromEntries(SECTIONS.map((s) => [s, []])) as unknown as Record<Section, Tab[]>
@@ -53,4 +54,4 @@ export const FILTER_DIMS: FilterDim[] = ['referrer', 'page', 'country', 'device'
 export const ROW_DIM: Partial<Record<Tab, FilterDim>> = { pages: 'page', sources: 'referrer', referrers: 'referrer', utm: 'referrer', countries: 'country', devices: 'device' }
 
 /** The tabs whose numbers their own card reads (views/Hosted.tsx). */
-export const HOSTED: Tab[] = ['highlights', 'overtime', 'hours', 'revmap', 'earners', 'sells', 'people', 'buyers', 'retention', 'vsale', 'toconvert', 'flow', 'ai']
+export const HOSTED: Tab[] = ['highlights', 'overtime', 'hours', 'revmap', 'earners', 'sells', 'people', 'buyers', 'retention', 'vsale', 'toconvert', 'flow', 'ai', 'answers']

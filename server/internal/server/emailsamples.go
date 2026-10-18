@@ -69,6 +69,9 @@ func EmailSamples(base string) []mailkit.Page {
 	ev := mentionEvent(site, men, base+"/"+domain)
 	out = append(out, alert("mention", ev))
 
+	// An assistant that stopped naming the site.
+	out = append(out, alert("answer", answerEvent(domain, "ChatGPT stopped naming you", `For the question "best privacy-friendly analytics", ChatGPT named or linked your site in the last two rounds and did not this time.`, base+"/"+domain)))
+
 	// Money coming in: a new customer, an upgrade, a refund, and one found late.
 	ms := now.UnixMilli()
 	for _, m := range []struct {
@@ -98,7 +101,7 @@ func EmailSamples(base string) []mailkit.Page {
 	}
 	prev := &query.Result{KPIs: query.KPIs{Visitors: 4000, Pageviews: 10800, BounceRate: 0.5, AvgSessionS: 120}}
 	link := base + "/" + domain + "?from=2026-10-05&to=2026-10-11&compare=previous"
-	weekly := alerts.Event{Kind: "weekly", Title: "Your week", Email: weeklyEmail(domain, from, from.AddDate(0, 0, 7), cur, prev, aiWeek{Visitors: 702}, "Busiest moment: Thu 18:45, 53 people online, mostly from Facebook.", link, weeklyMentions(weekMentionSamples(), base+"/"+domain+"/mentions"))}
+	weekly := alerts.Event{Kind: "weekly", Title: "Your week", Email: weeklyEmail(domain, from, from.AddDate(0, 0, 7), cur, prev, aiWeek{Visitors: 702}, "Busiest moment: Thu 18:45, 53 people online, mostly from Facebook.", link, weeklyMentions(weekMentionSamples(), base+"/"+domain+"/mentions"), "AI assistants named you in 9 of 30 answers (+3).")}
 	out = append(out, alert("weekly", weekly))
 
 	// A client's report in German, in the client's colour.

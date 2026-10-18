@@ -73,6 +73,8 @@ func main() {
 		err = importCmd(cfg, os.Args[2:])
 	case "emails":
 		err = emailsCmd(cfg, os.Args[2:])
+	case "answers":
+		err = answersCmd(cfg, os.Args[2:])
 	case "version", "--version", "-v":
 		fmt.Println("trckabled", server.Version)
 	case "help", "--help", "-h":
@@ -494,6 +496,8 @@ usage:
   trckabled emails preview <dir>
                                write every email as HTML (pictures inlined),
                                its plain text, and an index.html gallery
+  trckabled answers check <domain> "<question>" [--country DE] [--engine openai]
+                               ask each engine with a key once; writes nothing
   trckabled version            print the version
 
 configuration: TRCKABLE_* environment variables (see docs/self-host/configuration)`)

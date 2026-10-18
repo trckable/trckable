@@ -32,6 +32,7 @@ func (s *Server) runRetention(ctx context.Context) {
 			slog.Warn("payment notice pass failed", "err", err)
 		}
 		s.pruneMentions(ctx)
+		s.pruneAnswers(ctx)
 		s.ctl.PruneSalts(ctx) // old cookieless salts go even on a day with no visits
 		timer.Reset(24 * time.Hour)
 	}

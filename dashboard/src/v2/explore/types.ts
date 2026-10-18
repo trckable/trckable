@@ -193,14 +193,14 @@ export interface Connected {
 }
 
 /** Tables that bring their own numbers: the cards the old Full page had, each opened by its section as it was. */
-export type HostedTab = 'highlights' | 'overtime' | 'hours' | 'revmap' | 'earners' | 'sells' | 'people' | 'buyers' | 'retention' | 'vsale' | 'toconvert' | 'flow' | 'ai'
+export type HostedTab = 'highlights' | 'overtime' | 'hours' | 'revmap' | 'earners' | 'sells' | 'people' | 'buyers' | 'retention' | 'vsale' | 'toconvert' | 'flow' | 'ai' | 'answers'
 
 /** The breakdowns only the deep report has: where people left, regions and cities, the parts of a campaign, language, browser version, screen width, page groups. */
 export type DeepTab = 'exits' | 'groups' | 'regions' | 'cities' | 'utmsource' | 'medium' | 'bversion' | 'screens' | 'languages'
 
 export type Tab = HostedTab | DeepTab | 'overview' | 'pages' | 'sources' | 'referrers' | 'utm' | 'search' | 'countries' | 'devices' | 'browsers' | 'funnels' | 'sales' | 'speed' | 'mentions' | 'outbound' | 'bots'
 
-export type Section = 'overview' | 'pages' | 'sources' | 'places' | 'tech' | 'results' | 'sales' | 'speed' | 'mentions' | 'links' | 'ai'
+export type Section = 'overview' | 'pages' | 'sources' | 'places' | 'tech' | 'results' | 'sales' | 'speed' | 'mentions' | 'links' | 'ai' | 'answers'
 
 /** Every section's answer for one site, period and set of filters. */
 export interface Tabs {
@@ -241,6 +241,7 @@ export interface Tabs {
   toconvert: null
   flow: null
   ai: null
+  answers: null
 }
 
 export interface SavedView {
