@@ -1,0 +1,1 @@
+Isometric figures where a page waits: a desk computer on the first step of adding a site, a logic board on the setup card of a site that has had no visit yet (every check lit, with a check, when the first visit comes), and a server rack with its red LED on the uptime page while a site is down; each loads on its own and a phone does not draw them.

@@ -1,0 +1,27 @@
+/* The desk computer types the script tag, then a check: adding a site. (rules from iso-glow / ai-iso-skill, MIT, (c) 2026 Tolga Cohce; notice in the figure file). */
+.tkf[data-fig="computer"] .crt {opacity:0}
+.tkf[data-fig="computer"].on .crt {opacity:1}
+.tkf .tk-mask {fill:var(--f-glass-on)}
+.tkf .tk-cur {animation:tk-blink 1s steps(1) infinite}
+.tkf .tk-cover {animation:tk-type 7s steps(26,end) infinite}
+@keyframes tk-type{0%{transform:translateX(0)}40%,100%{transform:translateX(80px)}}
+@keyframes tk-blink{50%{opacity:0}}
+.tkf .tk-check,.tkf .tk-ok {opacity:0;animation:tk-okin 7s ease-out infinite}
+.tkf .tk-ring {fill:none;stroke:var(--f-accent);stroke-width:1.4;vector-effect:non-scaling-stroke}
+.tkf .tk-tick {fill:none;stroke:var(--f-accent-hi);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:20;stroke-dashoffset:20;animation:tk-tick 7s ease-out infinite}
+.tkf .tk-check {filter:url(#tkf-glow)}
+@keyframes tk-okin{0%,46%{opacity:0}52%,92%{opacity:1}100%{opacity:0}}
+@keyframes tk-tick{0%,50%{stroke-dashoffset:20}58%,100%{stroke-dashoffset:0}}
+@media (prefers-reduced-motion: reduce) {
+  .tkf .tk-cover { transform: translateX(80px); }
+  .tkf .tk-cur { opacity: 1; }
+  .tkf .tk-check, .tkf .tk-ok { opacity: 1; }
+  .tkf .tk-tick { stroke-dashoffset: 0; }
+}
+
+/* typing by hand: the keys light under the pointer, the typing animation stands aside */
+.tkf[data-fig="computer"] .key { cursor: pointer; }
+.tkf[data-fig="computer"] .key:hover .face { fill: var(--f-accent); stroke: var(--f-accent-hi); }
+.tkf[data-fig="computer"] .key:hover .face.top { fill: var(--f-accent-hi); }
+.tkf.tk-manual .tk-cover, .tkf.tk-manual .tk-check, .tkf.tk-manual .tk-ok, .tkf.tk-manual .tk-tick { animation: none; }
+.tkf.tk-manual .tk-cover { transition: transform .08s steps(3); }

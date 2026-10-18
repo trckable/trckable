@@ -5,6 +5,7 @@
 // of them; its Continue opens Live mode.
 // Its own lazy chunk: only the first run ever loads it.
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Figure } from '../../figures/Figure'
 import { fail, type Site, more, type Visit } from '../../lib/apiMore'
 import { navigate } from '../../lib/url'
 import { PageHeader } from '../../v2/PageHeader'
@@ -130,6 +131,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume 
         <div className={step === 'install' ? 'ob-text ob-quiet' : 'ob-text'}>
           {step !== 'install' && (
             <>
+              {step === 'site' && <Figure name="computer" minWidth={641} className="ob-fig" />}
               <h1 ref={heading} tabIndex={-1}>
                 {titles[step]}
               </h1>

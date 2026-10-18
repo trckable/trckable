@@ -308,3 +308,9 @@ body:has(.ob.gated) .side-deck {
 .ob-main.ob-install {
   padding-top: 0;
 }
+
+/* The desk computer above the words of the first step: small (a phone does not draw it). */
+.ob-fig {
+  width: clamp(120px, 14vw, 160px);
+  margin-bottom: -4px;
+}
