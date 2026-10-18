@@ -6,6 +6,7 @@ import { Loading } from '../../components/loading/Loading'
 import { Segmented } from '../../kit'
 import type { Site } from '../../lib/api'
 import { openAddSite } from '../../lib/account'
+import { isViewer } from '../../lib/me'
 import { fmtInt, fmtMoney } from '../../lib/format'
 import { useV2Extras } from '../../v2/slots'
 import { briefing } from './briefing'
@@ -49,6 +50,7 @@ function Strip({ sites }: { sites: TeamSite[] }) {
 
 function Add({ className }: { className: string }) {
   const { addSiteGuard } = useV2Extras()
+  if (isViewer()) return null
   const draw = (off: boolean) => (
     <button type="button" className={className} disabled={off} onClick={openAddSite}>
       <Plus size={16} aria-hidden="true" />
