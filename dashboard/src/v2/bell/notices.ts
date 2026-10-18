@@ -79,5 +79,12 @@ export function arrange(all: Notice[], now: number): Notice[] {
     .slice(0, 40)
 }
 
-export const unreadCount = (list: Notice[], read: ReadonlySet<string>): number => list.filter((n) => !n.seen && !read.has(n.id)).length
+/** Whether a notice counts as unread: the one rule for the dot on its row and for the bell's badge. */
+export const isUnread = (n: Notice, read: ReadonlySet<string>): boolean => !n.seen && !read.has(n.id)
+
+/** The rows the menu lists, newest first, each with its own unread mark (`sub` is left to the caller, which words the time). */
+export const rowsOf = (list: Notice[], read: ReadonlySet<string>): (Notice & { unread: boolean })[] => list.map((n) => ({ ...n, unread: isUnread(n, read) }))
+
+/** The badge number: how many of the rows the menu shows are unread, never a count of anything else. */
+export const unreadCount = (rows: readonly { unread: boolean }[]): number => rows.filter((r) => r.unread).length
 export const badge = (n: number): string => (n > 9 ? '9+' : String(n))

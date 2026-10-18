@@ -28,6 +28,8 @@ export interface V2Extras {
   bell?: Notice[]
   /** A build with its own list: Mark all read reaches it, a notice can be put away, and what was read or put away is an archive. */
   bellMore?: {
+    /** Read the build's own list again: called when the bell opens, when a tab is shown after a minute away and when /now answers (at most once a minute), so its rows and the badge follow the same moments as the public ones. */
+    refresh?: () => void
     readAll: () => void
     dismiss: (id: string) => void
     archive: { items: Notice[]; load: () => void; loading: boolean; words: { dismiss: string; archive: string; fresh: string; none: string } }

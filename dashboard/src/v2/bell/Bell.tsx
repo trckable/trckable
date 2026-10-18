@@ -8,18 +8,22 @@ import { navigate } from '../../lib/url'
 import { openSettings } from '../../lib/settings'
 import { BellMenu, type BellRow } from '../ui/BellMenu'
 import { copy } from './copy'
-import { badge, type Notice } from './notices'
+import { badge, rowsOf, unreadCount, type Notice } from './notices'
 import { useBellAlert } from './useBellAlert'
-import type { useNotices } from './useNotices'
+import { OPEN_GAP_MS, type useNotices } from './useNotices'
 
 const MilestoneSheet = lazyLoad(() => import('./MilestoneSheet'))
 
-/** "16:05" for today, "Thu 15 Oct 16:05" for another day. */
-export function when(at: number): string {
-  const d = new Date(at * 1000)
-  const day = d.toISOString().slice(0, 10)
-  const time = d.toISOString().slice(11, 16)
-  return day === new Date().toISOString().slice(0, 10) ? time : `${dayWords(day)} ${time}`
+/** A moment's date ("2026-10-18") and clock ("09:10") in a zone (the viewer's own when none is given). */
+function parts(at: number, zone?: string): { day: string; time: string } {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: zone }).formatToParts(new Date(at * 1000)).map((x) => [x.type, x.value]))
+  return { day: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}` }
+}
+
+/** "16:05" for today, "Thu 15 Oct 16:05" for another day: the viewer's day and clock, not UTC. `now` and `zone` are for tests. */
+export function when(at: number, now = Date.now() / 1000, zone?: string): string {
+  const d = parts(at, zone)
+  return d.day === parts(now, zone).day ? d.time : `${dayWords(d.day)} ${d.time}`
 }
 
 function go(n: Notice) {
@@ -30,11 +34,17 @@ function go(n: Notice) {
 }
 
 export function Bell({ site, notices }: { site: Site | null; notices: ReturnType<typeof useNotices> }) {
-  const { items, read, unread, mark, markAll, can, dismiss, archive } = notices
+  const { items, read, refresh, mark, markAll, can, dismiss, archive } = notices
   const [sheet, setSheet] = useState(false)
   const [told, setTold] = useState<Milestone | null>(null)
   const [open, setOpen] = useState(false)
+  // The rows the menu lists, and the badge counted from those same rows.
+  const listed = rowsOf(items, read)
+  const unread = unreadCount(listed)
   const shaking = useBellAlert(items, read, unread, open, notices.ready)
+  useEffect(() => {
+    if (open) refresh(OPEN_GAP_MS)
+  }, [open, refresh])
   useEffect(() => {
     const q = window.matchMedia('(max-width: 600px)')
     const f = () => setSheet(q.matches)
@@ -43,7 +53,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
     return () => q.removeEventListener('change', f)
   }, [])
   if (!can) return null
-  const rows: BellRow[] = items.map((n) => ({ id: n.id, kind: n.kind, title: n.title, sub: `${n.sub} · ${when(n.at)}`, unread: !n.seen && !read.has(n.id), dismissable: n.dismissable }))
+  const rows: BellRow[] = listed.map((n) => ({ id: n.id, kind: n.kind, title: n.title, sub: `${n.sub} · ${when(n.at)}`, unread: n.unread, dismissable: n.dismissable }))
   const old: BellRow[] = (archive?.items ?? []).map((n) => ({ id: n.id, kind: n.kind, title: n.title, sub: `${n.sub} · ${when(n.at)}`, unread: false }))
   return (
     <>

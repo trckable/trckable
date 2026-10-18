@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { arrange, badge, othersOf, OTHERS, unreadCount, withFeed, type Notice } from './notices'
+import { arrange, badge, othersOf, OTHERS, rowsOf, unreadCount, withFeed, type Notice } from './notices'
 
 const n = (id: string, at: number, kind: Notice['kind'] = 'down'): Notice => ({ id, kind, site: 'a.com', title: id, sub: '', at })
 
@@ -11,8 +11,18 @@ describe('the bell list', () => {
   })
 
   it('counts what is unread and caps the badge', () => {
-    expect(unreadCount([n('a', 1), n('b', 2)], new Set(['a']))).toBe(1)
+    expect(unreadCount(rowsOf([n('a', 1), n('b', 2)], new Set(['a'])))).toBe(1)
     expect(badge(12)).toBe('9+')
+  })
+
+  it('has a badge that is always the number of unread rows listed, whatever the mix', () => {
+    const list = [n('a', 5), { ...n('b', 4), seen: true }, n('c', 3, 'mention'), n('d', 2, 'milestone')]
+    for (const read of [new Set<string>(), new Set(['a']), new Set(['a', 'c', 'zz']), new Set(['a', 'c', 'd'])]) {
+      const rows = rowsOf(list, read)
+      expect(unreadCount(rows)).toBe(rows.filter((r) => r.unread).length)
+      expect(rows.map((r) => r.id)).toEqual(list.map((x) => x.id))
+      expect(rows.find((r) => r.id === 'b')?.unread).toBe(false)
+    }
   })
 })
 
