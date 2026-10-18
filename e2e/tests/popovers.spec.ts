@@ -95,8 +95,8 @@ for (const width of WIDTHS) {
 
     test('All sites: a tooltip', async ({ page }) => {
       await page.goto(`${API}/sites`)
-      await expect(page.locator('.all-sites')).toBeVisible({ timeout: 30_000 })
-      const trigger = page.locator('.all-sites .tip-text:visible, .all-sites .info-dot:visible').first()
+      await expect(page.locator('.tm-page')).toBeVisible({ timeout: 30_000 })
+      const trigger = page.locator('.tm-page .tip-text:visible, .tm-page .info-dot:visible').first()
       if (await trigger.count()) {
         await trigger.scrollIntoViewIfNeeded()
         await trigger.hover()

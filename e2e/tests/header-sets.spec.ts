@@ -88,7 +88,7 @@ test('All sites in the site menu opens the overview', async ({ page }) => {
   await page.locator('#siteBtn').click()
   await page.locator('#siteMenu .mi.all').click()
   await expect(page).toHaveURL(/\/sites(\?|$)/)
-  await expect(page.locator('.all-head')).toBeVisible()
+  await expect(page.locator('.tm-head')).toBeVisible()
 })
 
 for (const [width, scheme, full] of [[1440, 'dark', false], [390, 'dark', false], [2000, 'light', true]] as const) {

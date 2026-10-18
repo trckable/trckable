@@ -53,6 +53,7 @@ var routeRules = map[string]string{
 	"GET /api/v1/site-layout":                                    "read",
 	"PUT /api/v1/site-layout":                                    "write",
 	"GET /api/v1/overview":                                       "read",
+	"GET /api/v1/team":                                           "read",
 	"GET /api/v1/incidents":                                      "read",
 	"GET /api/v1/sites/{site}/mentions":                          "read",
 	"GET /api/v1/sites/{site}/mentions/keywords":                 "read",

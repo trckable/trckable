@@ -59,6 +59,10 @@ export interface V2Extras {
   signOut?: () => void
   /** Opens Peek with a question ready to send. A build with no Peek leaves it out, and a "Why?" shows its text alone. */
   askPeek?: (question: string) => void
+  /** All sites: one more figure at the end of the team strip (a plan's ring). */
+  teamStrip?: ReactNode
+  /** All sites: one more line under a site's state in its row (over its plan's limit), by the site's id. */
+  siteStatus?: (siteId: string) => ReactNode
   /** Draws "Add a site" in the site menu through this (it may show it off, with a reason). */
   addSiteGuard?: (render: (off: boolean) => ReactNode) => ReactNode
 }
