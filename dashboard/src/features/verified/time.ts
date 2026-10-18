@@ -1,5 +1,6 @@
 // Time in the words of the chosen language (Intl, so no word list to translate).
 import { tag } from '../../i18n'
+import { dateFmt } from '../../lib/format'
 
 const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ['day', 86400],
@@ -16,7 +17,7 @@ export function agoWords(unix: number, now = Date.now()): string {
 }
 
 /** "15 Oct, 14:32". */
-export const whenWords = (unix: number): string => new Intl.DateTimeFormat(tag, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(unix * 1000)
+export const whenWords = (unix: number): string => dateFmt(tag, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(unix * 1000)
 
 /** "3 Oct". */
-export const dayWords = (unix: number): string => new Intl.DateTimeFormat(tag, { day: 'numeric', month: 'short' }).format(unix * 1000)
+export const dayWords = (unix: number): string => dateFmt(tag, { day: 'numeric', month: 'short' }).format(unix * 1000)

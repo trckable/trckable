@@ -109,6 +109,7 @@ export function PeriodChip(p: PeriodChipProps) {
           {head}
           {rest && <span className="pl-rest">{` · ${rest}`}</span>}
         </span>
+        {p.vs && ' '}
         {p.vs && <span className="vs hide-s">{p.vs}</span>}
       </button>
       {p.onReset && (

@@ -26,6 +26,7 @@ import { AiHost } from './ui/AiHost'
 import { useActiveRow } from './ui/activeRow'
 import { Live } from './live/Live'
 import type { LiveProps } from './live/Live'
+import { dateFmt } from '../lib/format'
 
 // Explore's panel is its own chunk, fetched when the page is idle, so the first load does not carry it.
 const ExplorePanel = lazyLoad(() => import('./explore/Panel').then((m) => ({ default: m.ExplorePanel })))
@@ -63,7 +64,7 @@ const grain = (a: ISODate, b: ISODate) => (a === b ? 'by hour' : 'by day')
 export function V2View(p: V2Props) {
   const today = todayIn(p.site.timezone)
   const { options, more } = periodOptions(today)
-  const weekday = new Date(p.range.to + 'T12:00:00Z').toLocaleDateString(tag ?? 'en-US', { weekday: 'long', timeZone: 'UTC' })
+  const weekday = dateFmt(tag ?? 'en-US', { weekday: 'long', timeZone: 'UTC' }).format(new Date(p.range.to + 'T12:00:00Z'))
   const day = p.view.period === 'today' || p.view.period === 'yesterday'
   const vs = vsWords(day, weekday, p.view, p.range)
   const label = day ? `${p.view.period === 'today' ? copy.today : copy.yesterday} · ${dayWords(p.range.to)}` : (PRESETS.find((q) => q.id === p.view.period)?.label ?? rangeWords(p.range, today, copy.todayWord))

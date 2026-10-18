@@ -1,6 +1,7 @@
 // A site's page: the Briefing or Live under the one header, Explore over either. It reads the period's report, keeps the
 // live stream, and holds the dialogs the two screens open (a visitor's journey, the goals). A shared link is the same page
 // read only: the Briefing and Explore on what the public report carries, with no Live, no person and nothing that writes.
+import { Booting } from '../components/skeleton/DashSkeleton'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { cachedReport, dropReports, showsInstall, api, type ReportQuery, type Site } from '../lib/api'
 import { setWeekStart, todayIn, type Range } from '../lib/dates'
@@ -137,7 +138,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
   useSiteDown(!!site.down_since)
   return (
     <>
-      <Suspense fallback={null}>
+      <Suspense fallback={<Booting />}>
         <V2View
           tab={liveView ? 'live' : 'briefing'}
           waiting={waiting}

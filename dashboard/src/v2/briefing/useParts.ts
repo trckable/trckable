@@ -15,8 +15,9 @@ import type { ScoreFacts } from './scoreWhy'
 import { pctText } from './kpis'
 import { dayBandOf, hourlyPeople, hourTable, periodBand, stretchBand, timesUsual, usualBounce, usualPeople, verdictOf, type Band } from './usual'
 import type { History } from './useHistory'
+import { dateFmt } from '../../lib/format'
 
-const weekdayOf = (day: string) => new Date(day + 'T12:00:00Z').toLocaleDateString(tag ?? 'en-US', { weekday: 'long', timeZone: 'UTC' })
+const weekdayOf = (day: string) => dateFmt(tag ?? 'en-US', { weekday: 'long', timeZone: 'UTC' }).format(new Date(day + 'T12:00:00Z'))
 
 interface PartsIn {
   site: Site

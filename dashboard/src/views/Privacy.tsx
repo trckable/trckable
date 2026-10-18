@@ -22,6 +22,7 @@ import './Privacy.css'
 import { Loading } from '../components/loading/Loading'
 import { ReportRows } from './ReportRows'
 import { Filtering } from './Filtering'
+import { dateFmt } from '../lib/format'
 
 const KEEP = [
   { id: '0', label: 'Keep everything' },
@@ -620,7 +621,7 @@ function DataRequest({ site }: { site: Site }) {
     }
   }
 
-  const when = (iso?: string) => (iso ? new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '—')
+  const when = (iso?: string) => (iso ? dateFmt(undefined, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(iso)) : '—')
 
   return (
     <section className="card" id="requests" style={{ gap: 12 }}>
@@ -715,7 +716,7 @@ function DataRequest({ site }: { site: Site }) {
 function utcMidnight(tz: string): string {
   try {
     const d = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()))
-    const t = new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d)
+    const t = dateFmt('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d)
     return t === '00:00' ? '' : ` — ${t} in ${tz.split('/').pop()?.replace(/_/g, ' ')}`
   } catch {
     return ''

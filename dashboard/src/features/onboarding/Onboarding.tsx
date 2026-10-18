@@ -25,6 +25,7 @@ import '../../mock/mock.css'
 import '../../mock/theme.css'
 import './onboarding.css'
 import '../../kit/Modal.css'
+import { browserZone } from '../../lib/format'
 
 /** required: nothing else may be reached until the first visit or "Skip for
  *  now" (Esc does nothing); resume: sites already added that have not had one. */
@@ -60,7 +61,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume 
 
   const create = () => {
     setBusy(true)
-    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const zone = browserZone()
     more
       .createSite(clean)
       .then((s) => more.updateSite(s.id, { timezone: zone }).catch(() => s))

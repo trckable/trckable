@@ -11,24 +11,25 @@ import { navigate } from '../../lib/url'
 import type { ChartGeo } from '../moments/marks'
 import type { Incident } from './api'
 import { copy } from './copy'
-import { dayIn, duration, lasted, startOfDay } from './model'
+import { dayIn, duration, isDown, lasted, startOfDay } from './model'
 import { incidentsPath } from './route'
 import { useNow, usePeriodIncidents } from './useIncidents'
 import './incidents.css'
+import { dateFmt } from '../../lib/format'
 
 const TIP_W = 250
 
 /** The line an incident has in the chart's tooltip. */
 export function lineOf(x: Incident, now: number): string {
-  const kind = x.kind === 'down' ? copy.down : copy.quiet
-  const why = x.kind === 'down' ? copy.notReachable : copy.noVisits
+  const kind = isDown(x) ? copy.down : copy.quiet
+  const why = isDown(x) ? copy.notReachable : copy.noVisits
   return (x.ended_at ? copy.line : copy.lineOpen)(kind, duration(lasted(x, now)), why)
 }
 
 /** The bucket of the chart an incident began in, or -1 when the chart does not show it. */
 export function bucketFor(x: Pick<Incident, 'started_at'>, labels: string[], bucket: Bucket, tz: string): number {
   if (bucket === 'hour') {
-    const hour = new Intl.DateTimeFormat('en-CA', { timeZone: tz, hourCycle: 'h23', hour: '2-digit' }).format(new Date(x.started_at * 1000))
+    const hour = dateFmt('en-CA', { timeZone: tz, hourCycle: 'h23', hour: '2-digit' }).format(new Date(x.started_at * 1000))
     return labels.indexOf(`${dayIn(x.started_at, tz)}T${hour}:00`)
   }
   return bucketOf(dayIn(x.started_at, tz), labels, bucket)
@@ -53,7 +54,7 @@ export default function IncidentMarks({ g, site, labels, bucket }: { g: ChartGeo
   return (
     <>
       {marks.map(([i, xs]) => {
-        const worst = xs.some((x) => x.kind === 'down') ? 'down' : 'quiet'
+        const worst = xs.some(isDown) ? 'down' : 'quiet'
         return (
           <button
             key={i}

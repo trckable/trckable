@@ -7,13 +7,14 @@ import { copy } from './copy'
 import type { ChartIn, Down } from '../ui/DayChart'
 import { mult, sourceShort, type Unit } from './model'
 import { judge, type Band, type Judged } from './usual'
+import { dateFmt } from '../../lib/format'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
 /** The site's clock as "2026-10-16T16:30", for a time zone. */
 export function siteNow(tz: string, now = new Date()): string {
   try {
-    const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).formatToParts(now).map((x) => [x.type, x.value]))
+    const p = Object.fromEntries(dateFmt('en-CA', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).formatToParts(now).map((x) => [x.type, x.value]))
     return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`
   } catch {
     return now.toISOString().slice(0, 16)
@@ -24,7 +25,7 @@ export function siteNow(tz: string, now = new Date()): string {
 function tickOf(hourly: boolean, n: number, h: number, date: string): string {
   if (!hourly) return String(Number(date.slice(8, 10)))
   if (n <= 48) return `${pad(h)}:00`
-  return h === 0 ? new Date(date + 'T12:00:00Z').toLocaleDateString(tag ?? 'en-US', { weekday: 'short', timeZone: 'UTC' }) : ''
+  return h === 0 ? dateFmt(tag ?? 'en-US', { weekday: 'short', timeZone: 'UTC' }).format(new Date(date + 'T12:00:00Z')) : ''
 }
 
 interface ChartArgs {

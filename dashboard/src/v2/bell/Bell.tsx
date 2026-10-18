@@ -11,12 +11,13 @@ import { copy } from './copy'
 import { badge, rowsOf, settle, unreadCount, type Notice, type NoticeRow } from './notices'
 import { useBellAlert } from './useBellAlert'
 import { OPEN_GAP_MS, type useNotices } from './useNotices'
+import { dateFmt } from '../../lib/format'
 
 const MilestoneSheet = lazyLoad(() => import('./MilestoneSheet'))
 
 /** A moment's date ("2026-10-18") and clock ("09:10") in a zone (the viewer's own when none is given). */
 function parts(at: number, zone?: string): { day: string; time: string } {
-  const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: zone }).formatToParts(new Date(at * 1000)).map((x) => [x.type, x.value]))
+  const p = Object.fromEntries(dateFmt('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: zone }).formatToParts(new Date(at * 1000)).map((x) => [x.type, x.value]))
   return { day: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}` }
 }
 

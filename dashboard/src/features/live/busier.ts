@@ -1,6 +1,6 @@
 // "Busier than usual": when Live says it, and the words of the panel behind it.
 // The rule itself lives on the server (internal/busier); this reads its answer.
-import { countryName } from '../../lib/format'
+import { countryName, dateFmt } from '../../lib/format'
 import type { Busier } from './api'
 import { copy } from './copy'
 import type { Surge } from '../signals/surge'
@@ -17,7 +17,7 @@ export function shown(b: Busier | null): 'busier' | 'quieter' | null {
 
 /** Clock time of a unix second in the site's zone, "14:32". */
 export function clock(sec: number, timezone: string): string {
-  const f = (zone: string) => new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: zone }).format(sec * 1000)
+  const f = (zone: string) => dateFmt('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: zone }).format(sec * 1000)
   try {
     return f(timezone || 'UTC')
   } catch {

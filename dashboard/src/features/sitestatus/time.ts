@@ -3,6 +3,7 @@
 import type { Site } from '../../lib/api'
 import { tag } from '../../i18n'
 import { clock } from '../../lib/site'
+import { dateFmt } from '../../lib/format'
 
 /** Seconds as the shortest honest span: 12m, 6h, 3d. */
 export function span(secs: number): string {
@@ -22,5 +23,5 @@ export function when(unix: number): string {
   const d = new Date(unix * 1000)
   const today = d.toDateString() === new Date().toDateString()
   if (today) return clock(d, '')
-  return `${d.toLocaleDateString(tag, { weekday: 'short', day: 'numeric', month: 'short' })}, ${clock(d, '')}`
+  return `${dateFmt(tag, { weekday: 'short', day: 'numeric', month: 'short' }).format(d)}, ${clock(d, '')}`
 }

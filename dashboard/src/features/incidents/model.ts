@@ -3,6 +3,7 @@
 // knows about the browser, so the page, the chart's markers and All sites read
 // it the same way.
 import type { Incident } from './api'
+import { dateFmt } from '../../lib/format'
 
 const DAY = 86400
 
@@ -25,14 +26,17 @@ export function dayIn(unix: number, tz: string): string {
   let f = zones.get(tz)
   if (!f) {
     try {
-      f = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' })
+      f = dateFmt('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' })
     } catch {
-      f = new Intl.DateTimeFormat('en-CA', { timeZone: 'UTC', year: 'numeric', month: '2-digit', day: '2-digit' })
+      f = dateFmt('en-CA', { timeZone: 'UTC', year: 'numeric', month: '2-digit', day: '2-digit' })
     }
     zones.set(tz, f)
   }
   return f.format(new Date(unix * 1000))
 }
+
+/** Whether an incident, or a standing, is a site that stopped answering (down), not a quiet spell. The one place that is decided. */
+export const isDown = (x: { kind: string }): boolean => x.kind === 'down'
 
 export type DayState = 'ok' | 'quiet' | 'down' | 'unwatched'
 
@@ -48,7 +52,7 @@ export function dayStates(list: Incident[], days: string[], tz: string, now: num
     const last = dayIn(x.ended_at ?? now, tz)
     for (const d of days) {
       if (d < first || d > last) continue
-      if (x.kind === 'down' || out.get(d) === 'ok' || out.get(d) === 'unwatched') out.set(d, x.kind)
+      if (isDown(x) || out.get(d) === 'ok' || out.get(d) === 'unwatched') out.set(d, x.kind)
     }
   }
   return out
@@ -107,7 +111,7 @@ export function startOfDay(day: string, tz: string): number {
   let offset = 0
   try {
     // What the clock reads in the zone at that moment, taken as if it were UTC, is the zone's offset from it.
-    const f = new Intl.DateTimeFormat('en-CA', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    const f = dateFmt('en-CA', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
     const p = Object.fromEntries(f.formatToParts(new Date(utc * 1000)).map((x) => [x.type, x.value]))
     offset = Date.parse(`${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}Z`) / 1000 - utc
   } catch {
@@ -137,7 +141,7 @@ export function accountTotals(sites: { id: string; watched_since?: number }[], l
   const down: string[] = []
   for (const s of sites) {
     const mine = list.filter((x) => x.site === s.id)
-    if (mine.some((x) => x.kind === 'down' && x.ended_at === null)) down.push(s.id)
+    if (mine.some((x) => isDown(x) && x.ended_at === null)) down.push(s.id)
     const t = rowTotals(mine, days, now, s.watched_since)
     count += t.count
     if (silentAllPeriod(mine, from) || t.span <= 0) continue
