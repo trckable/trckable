@@ -16,7 +16,7 @@ describe('a build’s own list in the bell', () => {
     const notices = {
       items: [n('keep', false), n('away', true)],
       read: new Set<string>(),
-      unread: 2,
+      refresh: vi.fn(),
       mark: () => undefined,
       markAll: () => undefined,
       can: true,
