@@ -3031,8 +3031,6 @@ export default {
   'v2.live.still': 'Toujours sur le site',
   'v2.live.replay': 'Relecture',
   'v2.live.replayTitle': 'Voir la relecture',
-  'v2.live.seeLess': 'Afficher moins',
-  'v2.live.seeAll': (n: number) => `Tout voir (${int(n)})`,
   'v2.live.today': 'Aujourd’hui',
   'v2.live.above': 'au-dessus de l’habituel',
   'v2.live.below': 'sous l’habituel',

@@ -847,8 +847,6 @@ html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-
 .mk .cal .mk-back{height:44px}
 .mk .cal{padding-bottom:var(--mk-s2)}
 }
-.mk .seeall{display:block;width:100%;text-align:left;color:var(--mk-muted);height:var(--mk-h);padding:0;font-size:13px;border-top:1px solid var(--mk-line)}
-.mk .seeall:hover{color:var(--mk-text)}
 .mk .lfeed{max-height:none!important;overflow:visible!important}
 .mk .lcards{align-items:stretch}
 .mk .lcards>.mk-card{height:100%}

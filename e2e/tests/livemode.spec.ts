@@ -254,7 +254,7 @@ test('the two top Live cards are the same height side by side', async ({ page })
   }
 })
 
-test('a long list scrolls inside its card with a fade, the cards keep one height, and See all toggles back', async ({ page }) => {
+test('a long list scrolls inside its card with a fade and the cards keep one height', async ({ page }) => {
   await page.route('**/api/v1/sites/*/now*', async (route) => {
     const res = await route.fetch()
     const body = await res.json()
@@ -272,16 +272,14 @@ test('a long list scrolls inside its card with a fade, the cards keep one height
     return !!a && !!b && Math.abs(a.height - b.height) <= 1
   }
   expect(await equal()).toBe(true)
-  await page.getByRole('button', { name: /^See all/ }).click()
   expect(await equal()).toBe(true)
   const feed = page.locator('.lon .lfeed')
   expect(await feed.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true)
   await expect(feed).toHaveAttribute('data-below', 'true')
   await feed.evaluate((el) => (el.scrollTop = el.scrollHeight))
   await expect(feed).not.toHaveAttribute('data-below', 'true')
-  await page.getByRole('button', { name: 'Show fewer' }).click()
-  await expect(page.getByRole('button', { name: /^See all/ })).toBeVisible()
   expect(await equal()).toBe(true)
+  await expect(page.locator('.lfeed .lv')).toHaveCount(19)
 })
 
 test('scrolling the people list leaves its head where it is, and the page does not scroll', async ({ page }) => {
@@ -296,7 +294,6 @@ test('scrolling the people list leaves its head where it is, and the page does n
   await page.setViewportSize({ width: 1440, height: 900 })
   await signIn(page, '/example.com?view=live')
   await expect(online(page)).toBeVisible({ timeout: 15_000 })
-  await page.getByRole('button', { name: /^See all/ }).click()
   const box = async (sel: string) => (await page.locator(sel).boundingBox())!
   const before = { head: await box('.lon .lhead'), card: await box('.lon') }
   const feed = page.locator('.lon .lfeed')

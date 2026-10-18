@@ -24,8 +24,6 @@ export const copy = defineCopy('v2.live', {
   still: 'Still on the site',
   replay: 'Replay',
   replayTitle: 'Watch replay',
-  seeLess: 'Show fewer',
-  seeAll: (n: number) => `See all ${fmtInt(n)}`,
   today: 'Today',
   above: 'above usual',
   below: 'below usual',

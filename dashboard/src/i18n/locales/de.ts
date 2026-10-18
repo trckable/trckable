@@ -3033,8 +3033,6 @@ export default {
   'v2.live.still': 'Noch auf der Website',
   'v2.live.replay': 'Rückblick',
   'v2.live.replayTitle': 'Rückblick ansehen',
-  'v2.live.seeLess': 'Weniger zeigen',
-  'v2.live.seeAll': (n: number) => `Alle ${int(n)} ansehen`,
   'v2.live.today': 'Heute',
   'v2.live.above': 'über dem Üblichen',
   'v2.live.below': 'unter dem Üblichen',
