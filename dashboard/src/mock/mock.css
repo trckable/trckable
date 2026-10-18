@@ -8,9 +8,8 @@
 .mk .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .mk{width:100%;max-width:1440px;padding:22px 32px 40px;container-type:inline-size}
 .mk .hd{display:flex;align-items:center;gap:14px}
-/* The header stays at the top of the window; its bottom edge shows once the page has moved under it (data-stuck, Header.tsx). */
+/* The header stays at the top of the window; a frosted layer shows under it once the page has moved (data-stuck, Header.tsx; see the end of this file). */
 .mk .hd{position:sticky;top:0;z-index:20;margin:-22px -32px 0;padding:22px 32px 0;box-sizing:content-box;background:var(--mk-bg);border-bottom:1px solid transparent;transition:border-color .15s}
-.mk .hd[data-stuck=true]{border-bottom-color:var(--mk-line)}
 .mk .logo{width:34px;height:34px}
 .mk .mk-chip{display:flex;align-items:center;gap:8px;border:1px solid var(--mk-line);background:var(--mk-card);border-radius:12px;height:36px;padding:0 12px;font-weight:600}
 .mk .mk-dot{width:8px;height:8px;border-radius:50%;background:var(--mk-green);flex:none}
@@ -1741,3 +1740,19 @@ body[data-modal] .mk .cd {
    sheet), and while one is open it cannot be pressed either, so the last button of a sheet is never under it. */
 .mk .tabbar{z-index:25}
 body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.pmenu.on,.xm.on,.pal.on) .mk .tabbar{pointer-events:none}
+
+/* The stuck header (data-stuck, Header.tsx): clear at the top; once the page has moved under it, a frosted layer of its own (::before, so the header never becomes the box a fixed menu is placed in) that fades out along its lower edge instead of ending in a line. Solid without blur support or with reduced transparency. */
+.mk .hd{background:transparent;border-bottom:0}
+.mk .hd::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--mk-bg);opacity:0;pointer-events:none;-webkit-mask-image:linear-gradient(var(--mk-bg) calc(100% - 14px),transparent);mask-image:linear-gradient(var(--mk-bg) calc(100% - 14px),transparent);transition:opacity .15s}
+.mk .hd[data-stuck=true]::before{opacity:1}
+@supports (backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px)){
+.mk .hd::before{background:color-mix(in srgb,var(--mk-bg) 72%,transparent);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%)}
+@media (prefers-reduced-transparency:reduce){.mk .hd::before{background:var(--mk-bg);-webkit-backdrop-filter:none;backdrop-filter:none}}
+}
+@media (prefers-reduced-motion:reduce){.mk .hd::before{transition:none}}
+@container (min-width:601px) and (max-width:700px){.mk .hd::before{display:none}}
+
+/* The site chip carries the site's mark; its dot shows only for a site that is down (red) or not receiving data (amber), never green. Live keeps the one pulsing dot, still when motion is reduced. */
+.mk .sitechip .mkwrap{position:relative;display:inline-flex;flex:none}
+.mk .sitechip .mkwrap .mk-dot{position:absolute;right:-3px;bottom:-3px;box-sizing:content-box;border:2px solid var(--mk-bg);box-shadow:none}
+@media (prefers-reduced-motion:reduce){.mk #views .mk-dot{animation:none}}
