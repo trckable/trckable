@@ -116,7 +116,7 @@ test('a viewer is offered no create, edit or delete control anywhere', async ({ 
 // The same search finds the owner's controls, so an empty list above means
 // there were none, not that the search looked in the wrong place.
 test('the search finds an owner\'s controls', async ({ page }) => {
-  const owner = await session('viewer')
+  const owner = await session('owner')
   await page.context().addCookies([{ name: 'trckable_session', value: owner, url: API }])
   await page.goto(`${API}/settings?site=${site}&tab=site`)
   await page.waitForLoadState('load') // not "networkidle": the live stream can keep it from ever coming
@@ -190,7 +190,7 @@ test('an old ?add=site link does not open the wizard for a viewer', async ({ pag
 
 // The same searches find the rows for the owner, so the empty result above means there were none.
 test('the owner\'s palette does have the Create and Settings rows', async ({ page }) => {
-  const owner = await session('viewer')
+  const owner = await session('owner')
   await page.context().addCookies([{ name: 'trckable_session', value: owner, url: API }])
   await page.goto(`${API}/example.com?view=briefing`)
   await page.waitForLoadState('load')
