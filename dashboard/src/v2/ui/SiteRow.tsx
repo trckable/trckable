@@ -52,7 +52,7 @@ function refocus(id: string) {
   requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-site="${CSS.escape(id)}"] .site`)?.focus())
 }
 
-export function SiteRow({ site, place, on, arrange: a, today, onPick, move, clash, settings }: { settings?: (tab: 'site' | 'install') => void; clash?: boolean; move?: SiteMove; site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; onPick: () => void }) {
+export function SiteRow({ site, place, on, arrange: a, today, onPick, move, clash, settings, status }: { settings?: (tab: 'site' | 'install' | 'sharing' | 'widgets') => void; status?: () => void; clash?: boolean; move?: SiteMove; site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; onPick: () => void }) {
   const name = site.name || site.domain
   // The domain says which is which only when two names are alike.
   const note = clash && site.domain !== name ? site.domain : undefined
@@ -100,14 +100,14 @@ export function SiteRow({ site, place, on, arrange: a, today, onPick, move, clas
       )}
       <div className="site-acts">
         <OpenSite domain={site.domain} />
-        <RowMenu site={site} place={place} a={a} step={moveStep} settings={settings} />
+        <RowMenu site={site} place={place} a={a} step={moveStep} settings={settings} status={status} />
       </div>
     </li>
   )
 }
 
 /** The row's ⋯: Site settings first (and Install help while nothing is verified), Open site (the ↗ is hidden on touch), then the ways to arrange. */
-export function RowMenu({ site, place, a, step: moveStep, settings }: { site: Site; place: Place; a: Arrange | null; step: (dir: -1 | 1) => void; settings?: (tab: 'site' | 'install') => void }) {
+export function RowMenu({ site, place, a, step: moveStep, settings, status }: { site: Site; place: Place; a: Arrange | null; step: (dir: -1 | 1) => void; settings?: (tab: 'site' | 'install' | 'sharing' | 'widgets') => void; status?: () => void }) {
   const here = placeKey(place)
   const sec = a ? sectionsOf(a.sites, a.layout).find((x) => x.sites.some((s) => s.id === site.id)) : undefined
   const at = sec ? sec.sites.findIndex((s) => s.id === site.id) : -1
@@ -121,7 +121,7 @@ export function RowMenu({ site, place, a, step: moveStep, settings }: { site: Si
     const l = addGroup(a.layout, name)
     a.save(moveTo(a.sites, l, site.id, { kind: 'group', name }), copy.toGroup(name))
   }
-  if (!settings && !site.domain && !a) return null
+  if (!settings && !status && !site.domain && !a) return null
   return (
     <Menu label={copy.options(site.name || site.domain)}>
       {(close) => {
@@ -134,6 +134,9 @@ export function RowMenu({ site, place, a, step: moveStep, settings }: { site: Si
           <>
             {settings && item(copy.siteSettings, () => settings('site'))}
             {settings && dotState(site) === 'new' && item(copy.installHelp, () => settings('install'))}
+            {settings && item(copy.share, () => settings('sharing'))}
+            {status && item(copy.statusPage, status)}
+            {settings && item(copy.widgets, () => settings('widgets'))}
             {site.domain && (
               <button type="button" role="menuitem" className="open-touch" onClick={() => { close(); openSiteTab(site.domain) }}>
                 {copy.openSite(site.domain)}
