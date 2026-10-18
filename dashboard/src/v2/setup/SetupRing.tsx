@@ -19,9 +19,10 @@ import './setup.css'
 
 const ringWords = (mode: string, done: number, counted: number) => (mode === 'check' ? copy.allSet : copy.ring(done, counted))
 
-export function SetupRing({ site, onGoal }: { site: Site | null; onGoal: () => void }) {
+/** fresh: the site has no verified install yet and the page is its setup screen; visited: its first visit has landed (Install is then done). */
+export function SetupRing({ site, onGoal, fresh = false, visited = false }: { site: Site | null; onGoal: () => void; fresh?: boolean; visited?: boolean }) {
   const on = !!site && !isShared()
-  const { state, run, failed } = useSetup(site, on)
+  const { state, run, failed } = useSetup(site, on, fresh)
   const { hidden, hide } = useHidden(on)
   const since = useDoneSince(site?.id ?? null, state ? state.all_set : null)
   const [now] = useState(Date.now)
@@ -55,6 +56,7 @@ export function SetupRing({ site, onGoal }: { site: Site | null; onGoal: () => v
         {open && (
           <SetupPanel
             state={state}
+            locked={fresh && !visited}
             x={{ site, onGoal, can: can('setup.run'), change: (fn) => void run(fn), close }}
             onHide={() => {
               hide(site.id, left(state))

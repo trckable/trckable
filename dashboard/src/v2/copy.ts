@@ -3,6 +3,7 @@ import { defineCopy } from '../i18n'
 
 export const copy = defineCopy('v2', {
   today: 'Today',
+  notVerified: 'Not verified',
   yesterday: 'Yesterday',
   todayWord: 'today',
   vsUsual: (weekday: string) => `vs usual ${weekday}`,
@@ -20,6 +21,8 @@ export const copy = defineCopy('v2', {
   exploreTab: 'Explore',
   allSites: 'All sites',
   askPeek: 'Ask Peek',
+  home: 'Home',
+  askOrSearch: 'Ask or search',
   find: 'Find a site...',
   addSite: '+ Add a site',
   share: 'Share this site',

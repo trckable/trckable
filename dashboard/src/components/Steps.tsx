@@ -13,7 +13,8 @@ function stepState(i: number, at: number, done?: number) {
 /** at is the current step, counting from 0. done marks a step finished even
  *  when it is the current one (the last one, once it worked). With onGo, the
  *  steps before the current one are buttons that go back to them. */
-export function Steps({ labels, at, done, onGo }: { labels: string[]; at: number; done?: number; onGo?: (i: number) => void }) {
+export function Steps({ labels, at, done, onGo, compact }: { labels: string[]; at: number; done?: number; onGo?: (i: number) => void; compact?: boolean }) {
+  if (compact) return <Dots labels={labels} at={at} done={done} onGo={onGo} />
   return (
     <ol className="wiz-steps" aria-label="Steps">
       {labels.map((label, i) => {
@@ -37,5 +38,28 @@ export function Steps({ labels, at, done, onGo }: { labels: string[]; at: number
         )
       })}
     </ol>
+  )
+}
+
+/** The small form: one dot a step and the name of the current one. Earlier dots go back, with onGo. */
+function Dots({ labels, at, done, onGo }: { labels: string[]; at: number; done?: number; onGo?: (i: number) => void }) {
+  return (
+    <div className="wiz-compact">
+      <ol className="wiz-dots" aria-label="Steps">
+        {labels.map((label, i) => {
+          const state = stepState(i, at, done)
+          return (
+            <li key={label} className={state} aria-current={i === at ? 'step' : undefined}>
+              {onGo && i < at ? (
+                <button type="button" className="wiz-dot-go" aria-label={label} title={label} onClick={() => onGo(i)} />
+              ) : (
+                <span aria-label={label} />
+              )}
+            </li>
+          )
+        })}
+      </ol>
+      <span className="wiz-now">{labels[at]}</span>
+    </div>
   )
 }

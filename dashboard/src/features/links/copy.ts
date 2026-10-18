@@ -3,11 +3,14 @@ import { defineCopy } from '../../i18n'
 
 export const copy = defineCopy('yourLinks', {
   title: 'Your links',
-  back: 'Back to the dashboard',
   failed: 'Could not read your links. Try again.',
   tip: 'Add ?ref=name to any link you share, or use utm_source. Each name becomes a row here with who it brought.',
   open: (name: string) => `Show only ${name}`,
   visitors: 'Visitors',
+  statLinks: 'Links',
+  statGoals: 'Reached a goal',
+  statRevenue: 'Revenue',
+  sumNote: 'Added up over the links below.',
   visitorsOf: (n: string) => `${n} visitors`,
   goals: (n: string) => `${n} reached a goal`,
   revenue: 'Revenue from this link',

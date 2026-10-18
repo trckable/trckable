@@ -1,12 +1,15 @@
 // Your links: every tagged link a site has shared (?ref=, utm_source) and what it brought in the period. Reached from the ⋯ menu; a row opens the dashboard for that link alone.
-import { ArrowLeft } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { DatePicker, type PickerValue } from '../../components/DatePicker'
 import { Loading } from '../../components/loading/Loading'
 import type { Site } from '../../lib/api'
 import { rangeOf } from '../../lib/dashQuery'
 import { todayIn } from '../../lib/dates'
-import { navigate, readView, setView, useLocation, writeView } from '../../lib/url'
+import { fmtInt, fmtMoney } from '../../lib/format'
+import { navigate, readView, useLocation, writeView } from '../../lib/url'
+import { PagePeriod } from '../../v2/ui/PagePeriod'
+import { PageStats } from '../../v2/ui/PageStats'
+import '../../mock/mock.css'
+import '../../mock/theme.css'
 import { copy } from './copy'
 import { Empty } from './Empty'
 import { LinkRow } from './LinkRow'
@@ -20,7 +23,6 @@ export default function LinksPage({ site, header }: { site: Site; header: ReactN
   const view = readView(params)
   const today = todayIn(site.timezone)
   const range = rangeOf(view, today)
-  const picker: PickerValue = { period: view.period, range, compare: 'none' }
   const { data, ready, failed, icons } = useLinks(site.id, range.from, range.to)
   const [now] = useState(() => Math.floor(Date.now() / 1000))
   const rows = data?.links ?? []
@@ -31,28 +33,26 @@ export default function LinksPage({ site, header }: { site: Site; header: ReactN
   return (
     <>
       {header}
-      <main className="yl-page">
+      <main className="mk mk-body yl-page">
         <div className="yl-head">
-          <div>
-            <button type="button" className="linkish yl-back" onClick={() => navigate('/' + encodeURIComponent(site.domain))}>
-              <ArrowLeft size={14} aria-hidden="true" />
-              {copy.back}
-            </button>
-            <h1>
-              {copy.title} <LinksTip text={copy.tip} />
-            </h1>
-          </div>
-          <DatePicker
-            noCompare
-            value={picker}
-            today={today}
-            tz={site.timezone}
-            onChange={(v) => setView({ period: v.period, from: v.period === 'custom' ? v.range.from : undefined, to: v.period === 'custom' ? v.range.to : undefined, compare: 'none' })}
-          />
+          <h1>
+            {copy.title} <LinksTip text={copy.tip} />
+          </h1>
+          <PagePeriod view={view} range={range} today={today} />
         </div>
         {failed && <p className="muted" role="alert">{copy.failed}</p>}
         {!ready && !failed && <Loading height={200} />}
         {ready && !failed && rows.length === 0 && <Empty domain={site.domain} />}
+        {rows.length > 0 && (
+          <PageStats
+            items={[
+              { label: copy.statLinks, value: fmtInt(rows.length) },
+              { label: <>{copy.visitors} <LinksTip text={copy.sumNote} /></>, value: fmtInt(rows.reduce((n, l) => n + l.visitors, 0)) },
+              ...(data?.goals ? [{ label: copy.statGoals, value: fmtInt(rows.reduce((n, l) => n + l.goals, 0)) }] : []),
+              ...(money && rows.some((l) => l.revenue) ? [{ label: copy.statRevenue, value: fmtMoney(rows.reduce((n, l) => n + (l.revenue ?? 0), 0), money.currency, money.exponent) }] : []),
+            ]}
+          />
+        )}
         {rows.length > 0 && (
           <div className="yl-list">
             {rows.map((l) => (

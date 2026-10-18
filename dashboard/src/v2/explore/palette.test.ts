@@ -113,4 +113,13 @@ describe('the palette', () => {
     expect(titles.filter((t) => t.startsWith('Settings') || t === 'Site settings')).toEqual([])
     expect(titles).toEqual(expect.arrayContaining(['Theme · Dark', 'Profile', 'Sign out', 'Mentions']))
   })
+
+  it('leaves Live, the Briefing, Explore and the periods out for a site with no verified install', () => {
+    me.setRole('owner', true)
+    const items = paletteItems({ sites: [site], site, data, here: 'briefing', fresh: true, domainOf: (s) => s.domain })
+    const titles = items.map((i) => i.title)
+    expect(titles).not.toContain('Go to Live')
+    expect(titles.some((t) => /briefing|explore|period|filter/i.test(t))).toBe(false)
+    expect(items.some((i) => i.title.startsWith('Settings'))).toBe(true)
+  })
 })

@@ -1,68 +1,92 @@
-// A site's uptime and incidents: the period's figures, a day-by-day timeline
-// (a year's grid for a long period) and every incident with what our checks
-// saw. Reached from the status panel, the chart's marks and the ⋯ menu.
-import { ArrowLeft } from 'lucide-react'
-import type { ReactNode } from 'react'
-import { DatePicker, periodLabel, type PickerValue } from '../../components/DatePicker'
+// A site's uptime and incidents: how the site is right now with the period's uptime beside it, the figures the incident
+// rows add up to, a day-by-day strip (a year's grid for a long period) and the incidents themselves with what our checks
+// saw. Reached from the status panel, the chart's marks and the ⋯ menu; Esc and the browser's back go back to the dashboard.
+import { Check } from 'lucide-react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Loading } from '../../components/loading/Loading'
 import { rangeOf } from '../../lib/dashQuery'
-import { fmtDay, todayIn } from '../../lib/dates'
+import { fmtDay, PRESETS, todayIn } from '../../lib/dates'
 import type { Site } from '../../lib/api'
-import { navigate, readView, setView, useLocation } from '../../lib/url'
+import { navigate, readView, useLocation } from '../../lib/url'
+import { PagePeriod } from '../../v2/ui/PagePeriod'
+import { copy as v2 } from '../../v2/copy'
+import { rangeWords } from '../../v2/dayWords'
 import { copy } from './copy'
+import { Hero } from './Hero'
 import { IncidentList } from './IncidentList'
-import { dayIn, silentAllPeriod, startOfDay } from './model'
-import { Summary } from './Summary'
+import { dayIn, figuresOf, silentAllPeriod, standingOf, startOfDay } from './model'
 import { Timeline } from './Timeline'
-import { useIncidentList, useNow, usePeriodIncidents } from './useIncidents'
+import { useClock, useNow, useOpenIncident, usePeriodIncidents } from './useIncidents'
+import type { Incident } from './api'
+import '../../mock/mock.css'
+import '../../mock/theme.css'
 import './incidentsPage.css'
+
+/** The period as a sentence part: "30 days", "this month", "today", or the dates. */
+function overWords(period: string, range: { from: string; to: string }, today: string): string {
+  const preset = PRESETS.find((q) => q.id === period)?.label
+  if (period === 'custom' || !preset) return rangeWords(range, today, v2.todayWord)
+  return period === 'today' ? v2.todayWord : preset.replace(/^Last (?=\d)/, '').replace(/^[A-Z](?=[a-z])/, (c) => c.toLowerCase())
+}
 
 export default function IncidentsPage({ site, header }: { site: Site; header: ReactNode }) {
   const { params } = useLocation()
   const view = readView(params)
   const today = todayIn(site.timezone)
   const range = rangeOf(view, today)
-  const picker: PickerValue = { period: view.period, range, compare: 'none' }
   const now = useNow()
+  const clock = useClock()
   const periodFrom = startOfDay(range.from, site.timezone)
   const to = Math.min(startOfDay(range.to, site.timezone) + 86400, now)
   // Only the time we were watching counts: before that, nothing is known.
   const from = Math.min(Math.max(periodFrom, site.watched_since ?? 0), to)
   const period = usePeriodIncidents(site.id, from, to)
-  const all = useIncidentList(site.id)
+  const open = useOpenIncident(site.id)
+  const [edited, setEdited] = useState<Record<string, Incident>>({})
+  // Esc goes back to the dashboard (the browser's back does as well), unless a menu or a field has it.
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return
+      const t = e.target as HTMLElement
+      if (t.closest('input, textarea, select, [contenteditable]') || document.querySelector('.pmenu.on, [popover]:popover-open')) return
+      navigate('/' + encodeURIComponent(site.domain))
+    }
+    window.addEventListener('keydown', key)
+    return () => window.removeEventListener('keydown', key)
+  }, [site.domain])
+  const list = period.list.map((x) => edited[x.id] ?? x).sort((a, b) => b.started_at - a.started_at)
   const since = (site.watched_since ?? 0) > periodFrom ? fmtDay(dayIn(site.watched_since ?? 0, site.timezone), { year: true }) : undefined
+  const span = to - from
+  const ready = period.ready && !period.failed
   return (
     <>
       {header}
-      <main className="inc-page">
+      <main className="mk mk-body inc-page">
         <div className="inc-head">
-          <div>
-            <button type="button" className="linkish inc-back" onClick={() => navigate('/' + encodeURIComponent(site.domain))}>
-              <ArrowLeft size={14} aria-hidden="true" />
-              {copy.back}
-            </button>
-            <h1>{copy.title}</h1>
-            <p className="muted">{site.name || site.domain}</p>
-          </div>
-          <DatePicker
-            noCompare
-            value={picker}
-            today={today}
-            tz={site.timezone}
-            onChange={(v) => setView({ period: v.period, from: v.period === 'custom' ? v.range.from : undefined, to: v.period === 'custom' ? v.range.to : undefined, compare: 'none' })}
-          />
+          <h1>{copy.title}</h1>
+          <PagePeriod view={view} range={range} today={today} />
         </div>
-        {period.failed && <p className="muted" role="alert">{copy.failed}</p>}
+        {period.failed && <p className="inc-fail" role="alert">{copy.failed}</p>}
         {!period.ready && !period.failed && <Loading height={140} />}
-        {period.summary && (
+        {ready && (
           <>
-            <Summary totals={period.summary} silent={silentAllPeriod(period.list, from)} label={periodLabel(picker, today)} watch={{ span: to - from, since, quietTracked: period.quietTracked }} />
-            <Timeline list={period.list} from={range.from} to={range.to} tz={site.timezone} now={now} watchedSince={site.watched_since} />
+            <Hero
+              now={standingOf(site.down_since, open)}
+              at={clock}
+              f={figuresOf(list, from, to, now)}
+              w={{ span, since, quietTracked: period.quietTracked, silent: silentAllPeriod(list, from) }}
+              over={overWords(view.period, range, today)}
+            />
+            <Timeline list={list} from={range.from} to={range.to} tz={site.timezone} now={now} watchedSince={site.watched_since} since={since} />
+            {list.length > 0 && <IncidentList domain={site.domain} list={list} now={now} edit={(x) => setEdited((e) => ({ ...e, [x.id]: x }))} />}
+            {list.length === 0 && span > 0 && (
+              <p className="inc-empty">
+                <Check size={16} strokeWidth={2.25} aria-hidden="true" />
+                {copy.empty}
+              </p>
+            )}
           </>
         )}
-        {!all.ready && !period.failed && <Loading height={120} />}
-        {all.ready && (all.list.length > 0 || all.failed) && <IncidentList domain={site.domain} list={all.list} next={all.next} busy={all.busy} failed={all.failed} now={now} more={all.more} edit={all.edit} />}
-        <p className="muted inc-foot">{copy.quietNote}</p>
       </main>
     </>
   )

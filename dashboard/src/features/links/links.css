@@ -1,31 +1,25 @@
 /* Your links (LinksPage.tsx): loaded with it. */
 .yl-page {
-  padding: 8px 0 60px;
   display: grid;
-  gap: 16px;
+  align-content: start;
+  gap: 20px;
+  padding: 18px 0 60px;
   min-width: 0;
 }
 .yl-head {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-end;
-  gap: 12px 24px;
+  gap: 12px;
 }
 .yl-head h1 {
-  margin: 4px 0 0;
-  font-size: 26px;
-  letter-spacing: -0.03em;
   display: flex;
   align-items: center;
   gap: 8px;
-}
-.yl-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--text-3);
-  font-size: 13px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
 }
 .yl-info {
   display: inline-grid;
@@ -38,22 +32,6 @@
 }
 .yl-info:hover {
   color: var(--text);
-}
-/* The period picker is the dashboard's own, which the header's row lays out: here it lays itself out, without the comparison. */
-.yl-head .range-picker.quiet {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.yl-head .btn.range {
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-.yl-head .range-pop {
-  top: calc(100% + 6px);
-  right: 0;
 }
 .yl-list {
   display: grid;

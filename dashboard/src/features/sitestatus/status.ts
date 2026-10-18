@@ -10,10 +10,15 @@ export const STOPPED_HOURS = 6
 
 export type Status = 'new' | 'ok' | 'quiet' | 'down'
 
+/** The script was seen on the page, or a payment/snippet source verified: the site is set up, whatever its visits say. */
+function scriptSeen(s: Site): boolean {
+  return s.check?.found === 'site' || !!s.verified?.sources.some((v) => v.kind === 'snippet' && v.ok)
+}
+
 export function statusOf(s: Site, now = Date.now()): Status {
   if (s.down_since) return 'down' // the uptime probe: some visitors may still get through, the site is down for our checks
   const last = s.last_event_at
-  if (!last) return 'new'
+  if (!last) return scriptSeen(s) ? 'quiet' : 'new' // imported history or a working script with no live visit yet is not "not installed"
   if (now / 1000 - last < STOPPED_HOURS * 3600) return 'ok'
   const c = s.check
   return c && c.at > last && c.error ? 'down' : 'quiet'

@@ -36,6 +36,24 @@ const Notices = lazy(() => import('./Notices')) // the note over test payments
 const AddGoals = lazy(() => import('./AddGoals').then((m) => ({ default: m.AddGoals })))
 const JourneyDialog = lazy(() => import('../features/journey/JourneyDialog').then((m) => ({ default: m.JourneyDialog })))
 
+/** How long the setup screen stays, green, after the first visit before Live opens. */
+const FIRST_VISIT_MS = 2400
+
+/** True while `on`, and for `ms` after it ends when `held` says it ended on a visit. */
+function useLinger(on: boolean, held: boolean, ms: number): boolean {
+  const [lingering, setLingering] = useState(false)
+  const was = useRef(on)
+  useEffect(() => {
+    const ended = was.current && !on
+    was.current = on
+    if (!ended || !held) return
+    setLingering(true)
+    const t = setTimeout(() => setLingering(false), ms)
+    return () => clearTimeout(t)
+  }, [on, held, ms])
+  return on || lingering
+}
+
 export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[]; identity?: React.ReactNode }) {
   // Before anything reads a date: "This week" starts on the site's own day.
   setWeekStart(site.week_start)
@@ -78,8 +96,12 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
       .then((r) => setEverTracked(r.events.length > 0))
       .catch(() => setEverTracked(true)) // on error, assume installed: never fake a working page
   }, [mayBeNew, everTracked, site.id])
-  const waiting = showsInstall({ site, hasData, filtered: view.filters.length > 0, everTracked }) && stream.visits.length === 0
-  const liveView = !shared && !waiting && wantsLive(view, site)
+  const visited = stream.visits.length > 0
+  const waitingNow = showsInstall({ site, hasData, filtered: view.filters.length > 0, everTracked }) && !visited
+  // The first visit turns the setup screen green for a moment before Live opens.
+  const waiting = useLinger(waitingNow, visited, FIRST_VISIT_MS)
+  // The site record has no visit yet when the stream brings the first one: it counts as seen, so Live is where this opens.
+  const liveView = !shared && !waiting && wantsLive(view, { last_event_at: site.last_event_at || (visited ? 1 : undefined) })
 
   // The addresses the old Data page had (?view=data, ?v=explore, Full) land here: the Briefing, and Explore for the ones that were its numbers.
   useEffect(() => {

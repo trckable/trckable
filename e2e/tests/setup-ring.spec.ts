@@ -78,6 +78,8 @@ test('a phone opens the panel as a sheet at the bottom', async ({ page }) => {
 
 test('Not for me on Payments lowers what counts and moves the row to More', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
+  // A site that has had events is not on its setup screen, so its steps are open (on it they wait for the first visit).
+  await page.route(/\/api\/v1\/sites\/[^/]+\/events/, (route) => route.fulfill({ json: { events: [{}] } }))
   await open(page)
   await page.locator('.ringb').click({ timeout: 15_000 })
   const panel = page.locator('.setupmenu.on')

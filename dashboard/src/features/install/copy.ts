@@ -20,8 +20,6 @@ export const copy = defineCopy('install', {
   label: 'Install trckable',
   titleCard: (domain: string) => `Add trckable to ${domain}`,
   titleSettings: (domain: string) => `Install on ${domain}`,
-  titleLive: 'Peekaboo! Your first visit just arrived.',
-  liveFrom: (path: string, country?: string) => (country ? `Someone opened ${path} from ${country}.` : `Someone opened ${path}.`),
   chipWaiting: 'Waiting for the first visit…',
   chipLive: 'Receiving visits',
 
@@ -37,12 +35,9 @@ export const copy = defineCopy('install', {
 
   // Cookieless.
   cookieless: {
-    label: 'Use cookieless tracking',
-    hint: 'No cookie, nothing stored in the browser.',
-    onServer: 'On for this site. The script picks it up by itself within an hour (browsers keep it up to an hour): nothing to re-paste.',
-    offServer: 'Off. Visitors get a first-party cookie, so returning visits and journeys are counted.',
-    onBundled: 'The code above has cookieless: true. Rebuild and deploy your app after changing this.',
-    offBundled: 'Rebuild and deploy your app after changing this: the setting is written into the code.',
+    label: 'Cookieless',
+    onServer: 'No cookie, nothing stored. The script picks it up within an hour: nothing to re-paste.',
+    onBundled: 'The code above has cookieless: true. Rebuild and deploy your app.',
     saving: 'Saving…',
     saved: (on: boolean) => (on ? 'Cookieless mode is on' : 'Cookieless mode is off'),
     failed: 'That did not save. Nothing changed: try again.',
@@ -67,14 +62,11 @@ export const copy = defineCopy('install', {
   // Install with AI.
   ai: {
     title: 'Install with AI',
-    body: 'One prompt for Cursor, Copilot or Claude Code: your site id, domain and server filled in, and where the code goes for your stack.',
-    button: 'Copy AI prompt',
-    copied: 'Prompt copied',
-    preview: 'Show the prompt',
+    button: 'Copy prompt',
+    copied: 'Copied',
   },
 
   // The check.
-  installed: 'OK, I’ve installed it',
   checkAgain: 'Look again',
   checking: (domain: string) => `Looking for the script on ${domain}…`,
   recheck: 'Looking again every 30 seconds while this is open.',
@@ -92,19 +84,6 @@ export const copy = defineCopy('install', {
   live: (path: string) => `Live: a visit to ${path} just arrived.`,
 })
 
-/** The new-site card on the dashboard: one calm card, nothing behind it. */
-export const waitCard = defineCopy('install.wait', {
-  title: 'Waiting for the first visit',
-  back: '← Sites',
-  subScript: ['Add this to the', '<head>', (domain: string) => `of ${domain}, then open the site once.`] as const,
-  subOther: (where: string) => `${where} Then open the site once.`,
-  check: 'Check my site',
-  prompt: 'Copy a prompt for your AI editor',
-  promptCopied: 'Prompt copied',
-  foot: 'Your dashboard opens here by itself the moment a visit arrives.',
-  dev: ['Testing on localhost? Add', 'data-dev', 'to the script tag.'] as const,
-})
-
 /** The add-site wizard: Your site → Install → Revenue (optional). */
 export const wizard = defineCopy('install.wizard', {
   label: 'Add a site',
@@ -116,7 +95,7 @@ export const wizard = defineCopy('install.wizard', {
   sub: [
     'The domain to count visits on.',
     'So we can set up what matters for it. You can change it later.',
-    'Copy the code, then check it is in.',
+    '',
     'Optional. See which traffic brings paying customers.',
   ],
   kinds: { shop: 'Shop', saas: 'SaaS', content: 'Blog', other: 'Other' },
@@ -148,8 +127,11 @@ export const wizard = defineCopy('install.wizard', {
   cancel: 'Cancel',
   adding: 'Adding…',
   add: 'Continue',
-  later: 'I’ll do it later',
-  next: 'Next: revenue',
+  installed: 'I’ve installed it',
+  checkingBtn: 'Checking…',
+  continue: 'Continue',
+  anyway: 'Continue anyway',
+  later: 'Later',
   back: 'Back to install',
   revenueBody: 'Each sale is tied to the visit that brought it: revenue per page, channel and campaign. It takes a restricted key and a minute.',
   revenueConnect: 'Connect payments',

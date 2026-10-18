@@ -5,6 +5,24 @@
 import { act, call, raw, rangeQS } from './api'
 
 // Lazy screens import everything API-shaped from here: the names of lib/api, and `more`.
+/** One site's day for the team overview. A number the server does not have is absent: no usual before two weeks of history, no revenue without a payment today, no source without a visit. */
+export interface TeamRow {
+  id: string
+  /** Visitors since the site's day began; the last of `series`. */
+  today: number
+  /** What the same stretch of the day brings on this weekday, the mean of the weeks before. */
+  usual?: number
+  /** Visitors per day for the last seven days, oldest first. */
+  series: number[]
+  online: number
+  top_source?: string
+  /** Today's net revenue, minor units. */
+  revenue?: number
+  currency: string
+  exponent: number
+  error?: string
+}
+
 /** One look at a homepage by the uptime probe: when, what answered and how fast, or why not. */
 export interface ProbeLook {
   at: number
@@ -238,6 +256,7 @@ export const more = {
   searchProperties: (site: string) => call<{ properties: SearchProperty[] }>('GET', `/sites/${site}/search-console/properties`),
   searchReport: (site: string, q: ReportQuery, dim: 'query' | 'page', signal?: AbortSignal) =>
     call<SearchReport>('GET', `/sites/${site}/report/search` + rangeQS(q) + '&dim=' + dim, undefined, signal),
+  team: (signal?: AbortSignal) => call<{ sites: TeamRow[] }>('GET', '/team', undefined, signal),
   overview: (days: number, signal?: AbortSignal) => call<{ days: number; sites: SiteRow[] }>('GET', `/overview?days=${days}`, undefined, signal),
   scroll: (site: string, q: ReportQuery, signal?: AbortSignal) => call<ScrollReport>('GET', `/sites/${site}/report/scroll` + rangeQS(q) + '&limit=10', undefined, signal),
   aiSearch: (site: string, q: ReportQuery, limit: number, signal?: AbortSignal) =>

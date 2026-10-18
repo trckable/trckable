@@ -11,7 +11,7 @@ import { useV2Extras } from '../slots'
 import { onNowAnswer } from '../../features/live/api'
 import { visibleInterval } from '../../lib/visibleInterval'
 import { useReadSet } from './readState'
-import { arrange, fromIncidents, fromMentions, fromMilestones, othersOf, withFeed, type Notice } from './notices'
+import { arrange, fromIncidents, fromSetup, fromMentions, fromMilestones, othersOf, withFeed, type Notice } from './notices'
 
 /** The least time between two reads the bell starts by itself. */
 export const GAP_MS = 60_000
@@ -60,6 +60,7 @@ export function useNotices(site: Site | null, sites: Site[]) {
     const now = Math.floor(Date.now() / 1000)
     const domain = (id: string) => sites.find((s) => s.id === id)?.domain
     const parts = await Promise.all([
+      Promise.resolve(fromSetup(sites, now)),
       incidents.account(7).then((r) => fromIncidents(r.incidents, domain, now), () => []),
       site ? api.milestones(site.id).then((r) => fromMilestones(r.milestones, site.domain), () => []) : Promise.resolve([]),
       site?.mentions ? mentionsApi.list(site.id, '7d').then((r) => fromMentions(r.mentions, site.domain), () => []) : Promise.resolve([]),

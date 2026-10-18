@@ -98,7 +98,7 @@ func TestAccountsCannotReachEachOther(t *testing.T) {
 	}
 
 	// Lists show B's own things only.
-	for _, path := range []string{"/api/v1/sites", "/api/v1/overview?days=7", "/api/v1/people", "/api/v1/keys"} {
+	for _, path := range []string{"/api/v1/sites", "/api/v1/overview?days=7", "/api/v1/team", "/api/v1/people", "/api/v1/keys"} {
 		code, body := send(b, "GET", path, "")
 		if code != http.StatusOK {
 			t.Errorf("GET %s as B: %d %s", path, code, body)

@@ -1,5 +1,5 @@
-// Every incident of a site, newest first, fifty at a time. An owner can write
-// a short note on one ("Hosting migration"); a viewer only reads.
+// The incidents of the period, newest first: how long, which kind, when, the visits it probably cost and what our checks
+// saw. An owner can write a short note on one ("Hosting migration"); a viewer only reads.
 import { useState } from 'react'
 import { AskAbout } from '../../components/Ask'
 import { can } from '../../lib/permissions'
@@ -57,37 +57,33 @@ const seenOf = (x: Incident) => (x.cause.endsWith('page answered') ? `${copy.see
 function Row({ x, now, domain, onSaved }: { x: Incident; now: number; domain?: string; onSaved: (x: Incident) => void }) {
   const kind = x.kind === 'down' ? copy.down : copy.quiet
   const span = duration(lasted(x, now))
+  const range = x.ended_at ? copy.from(when(x.started_at), when(x.ended_at)) : copy.ongoing(when(x.started_at))
+  const title = (x.ended_at ? copy.row : copy.rowOpen)(kind, span)
+  const saw = x.kind === 'down' ? x.cause : seenOf(x)
   return (
     <li className={'inc-row ' + x.kind}>
       <div className="inc-row-head">
-        <b>{(x.ended_at ? copy.row : copy.rowOpen)(kind, span)}</b>
-        <AskAbout about={{ title: (x.ended_at ? copy.row : copy.rowOpen)(kind, span), domain, facts: [x.ended_at ? copy.from(when(x.started_at), when(x.ended_at)) : copy.ongoing(when(x.started_at)), x.kind === 'down' ? x.cause : seenOf(x)], question: copy.askWhat(kind) }} />
-        <span className="muted">{x.ended_at ? copy.from(when(x.started_at), when(x.ended_at)) : copy.ongoing(when(x.started_at))}</span>
-        {x.expected_visits !== null && <span className="inc-lost">{copy.expected(fmtInt(x.expected_visits))}</span>}
+        <b>{title}</b>
+        <AskAbout about={{ title, domain, facts: [range, saw], question: copy.askWhat(kind) }} />
+        <span className="inc-when">{range}</span>
       </div>
-      <p className="muted">
-        {copy.seen}: {x.kind === 'down' ? x.cause : seenOf(x)}
+      <p className="inc-saw">
+        <span>{copy.seen}: {saw}</span>
+        {x.expected_visits !== null && <span className="inc-lost">{copy.expected(fmtInt(x.expected_visits))}</span>}
       </p>
       <Note site={x.site} x={x} onSaved={onSaved} />
     </li>
   )
 }
 
-export function IncidentList({ domain, list, next, busy, failed, now, more, edit }: { domain?: string; list: Incident[]; next: number | null; busy: boolean; failed: boolean; now: number; more: () => void; edit: (x: Incident) => void }) {
+export function IncidentList({ domain, list, now, edit }: { domain?: string; list: Incident[]; now: number; edit: (x: Incident) => void }) {
   return (
     <section aria-label={copy.list}>
-      <h2>{copy.list}</h2>
-      {failed && <p className="muted" role="alert">{copy.failed}</p>}
       <ul className="inc-rows">
         {list.map((x) => (
           <Row key={x.id} x={x} now={now} domain={domain} onSaved={edit} />
         ))}
       </ul>
-      {next !== null && (
-        <button type="button" className="btn ghost" onClick={more} disabled={busy}>
-          {copy.more}
-        </button>
-      )}
     </section>
   )
 }

@@ -5,6 +5,8 @@ export const copy = defineCopy('palette', {
   placeholder: 'Jump to a table, a site, a filter...',
   none: (q: string) => `No match for “${q}”. Try “pages”, “Germany” or “last 7 days”.`,
   ask: 'Ask Peek…',
+  askRow: (q: string) => `Ask Peek: ${q}`,
+  placeholderAsk: 'Ask Peek, or jump to a table, a site, a filter...',
   goLive: 'Go to Live',
   goBriefing: 'Go to Briefing',
   clear: 'Clear all filters',

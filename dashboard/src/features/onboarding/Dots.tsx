@@ -1,13 +1,7 @@
 import { STEPS } from './model'
 import { copy } from './copy'
 
-/** Progress as three dots; the words are for screen readers. */
+/** Progress, said to screen readers only: the setup ring in the header is what shows it. */
 export function Dots({ at }: { at: number }) {
-  return (
-    <div className="ob-dots" role="img" aria-label={copy.progress(at + 1, STEPS.length)}>
-      {STEPS.map((s, i) => (
-        <i key={s} className={i <= at ? 'on' : undefined} aria-hidden="true" />
-      ))}
-    </div>
-  )
+  return <div className="sr" role="img" aria-label={copy.progress(at + 1, STEPS.length)} />
 }

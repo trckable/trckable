@@ -1,4 +1,4 @@
-import { Check, ChevronRight, MoreHorizontal } from 'lucide-react'
+import { Check, ChevronRight, Lock, MoreHorizontal } from 'lucide-react'
 import { copy } from './copy'
 import { Pop } from './Pop'
 import type { RowAct, RowView } from './rows'
@@ -51,8 +51,9 @@ export function SetupRow({ row }: { row: RowView }) {
   )
   if (!main) {
     return (
-      <div className={`sprow${row.done ? ' done' : ''}`} data-step={row.id}>
+      <div className={`sprow${row.done ? ' done' : ''}${row.locked ? ' locked' : ''}`} data-step={row.id}>
         {row.done && <Check size={14} className="stick" aria-hidden="true" />}
+        {row.locked && <Lock size={13} className="stick" aria-hidden="true" />}
         {words}
       </div>
     )

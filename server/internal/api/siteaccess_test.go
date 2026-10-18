@@ -106,9 +106,9 @@ func TestLimitedViewerSeesOnlyTheirSites(t *testing.T) {
 	}
 
 	// The lists.
-	for _, path := range []string{"/api/v1/sites", "/api/v1/overview?days=7", "/api/v1/site-layout"} {
+	for _, path := range []string{"/api/v1/sites", "/api/v1/overview?days=7", "/api/v1/team", "/api/v1/site-layout"} {
 		code, body := send(viewer, "GET", path)
-		if code != http.StatusOK && (code != http.StatusServiceUnavailable || !strings.Contains(path, "overview")) {
+		if code != http.StatusOK && (code != http.StatusServiceUnavailable || (!strings.Contains(path, "overview") && !strings.Contains(path, "team"))) {
 			t.Errorf("GET %s: %d %s", path, code, body)
 		}
 		for _, leak := range []string{hidden, "hidden.com", "Secret client"} {
