@@ -67,7 +67,6 @@ describe('sales', () => {
   it('agrees with the Briefing: two payments, an upgrade among them, add up to the period net', () => {
     const two = { revenue: 30500, payments: 2, new_revenue: 8700, renewal_revenue: 0, refunds: 0 } as Money
     const s = mapSales(two, 'Today')
-    expect(s.payments).toBe(2)
     expect(s.sales.map((x) => [x.kind, x.amt])).toEqual([
       ['new', 8700],
       ['upgrade', 21800],

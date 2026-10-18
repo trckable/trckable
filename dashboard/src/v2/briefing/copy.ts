@@ -94,8 +94,8 @@ export const copy = defineCopy('briefing', {
   unknownNow: 'unknown now',
   unknownDown: 'unknown while down',
   // The email row, the keys.
-  mailOn: "Tomorrow's Briefing, in your inbox at 08:00:",
-  mailOff: "Tomorrow's Briefing is off:",
+  mailOn: "Tomorrow's Briefing, in your inbox at 08:00.",
+  mailOff: "Tomorrow's Briefing is off.",
   preview: 'Preview',
   manage: 'Manage',
   turnOffMail: 'Turn off',

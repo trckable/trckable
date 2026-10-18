@@ -233,7 +233,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
         <Setups rows={setups} />
         {act && <Act text={act.text} rest={act.rest} label={act.label} onAct={act.run} />}
         <BounceNote site={site} range={range} />
-        {!empty && canNote && <MailRow on={ui.mail} headline={headline} onPreview={() => ui.setSheet('mail')} onManage={() => openSettings(site, 'alerts')} onToggle={ui.toggleMail} />}
+        {!empty && canNote && <MailRow on={ui.mail} onPreview={() => ui.setSheet('mail')} onManage={() => openSettings(site, 'alerts')} onToggle={ui.toggleMail} />}
         {ui.hint && <KeyHint onHide={ui.hideHint} />}
       </div>
       <ReplayBar r={rv.r} moments={rv.moments} phone={window.matchMedia('(max-width: 600px)').matches} />

@@ -176,6 +176,7 @@ export const copy = defineCopy('v2explore', {
   kinds: { all: 'All', new: 'New', upgrade: 'Upgrades', renewal: 'Renewals', refund: 'Refunds' },
   kindLabel: 'Kind of sale',
   saleCount: (n: number) => `${n} ${n === 1 ? 'sale' : 'sales'}`,
+  allSales: 'All sales',
   net: 'net',
   tags: { new: 'new', upgrade: 'upgrade', renewal: 'renewal', refund: 'refund' },
   queries: 'Queries',

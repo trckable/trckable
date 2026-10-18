@@ -116,8 +116,6 @@ export interface Sales {
   /** What the section can say: no payments connected, nothing to sell here, or the list. */
   state: 'connect' | 'none' | 'ok'
   sales: Sale[]
-  /** How many payments the period took: the same count the Briefing and the buyers give. */
-  payments: number
 }
 
 export interface Step {

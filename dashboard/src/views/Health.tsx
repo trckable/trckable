@@ -6,6 +6,7 @@ import { Activity, ArchiveRestore, CircleCheck, CloudUpload, Cpu, CreditCard, Ha
 import { Card } from '../kit'
 import { type Health as H } from '../lib/api'
 import { useHealth } from './useHealth'
+import { HealthLive } from './HealthLive'
 import { fmtInt } from '../lib/format'
 import './Health.css'
 import { Loading } from '../components/loading/Loading'
@@ -168,10 +169,7 @@ export function HealthSettings() {
             trckable <span className="num">{h.version}</span> · up for {uptime(h.uptime_s)}
           </span>
         </span>
-        <span className="health-live faint" title="Refreshed every 15 seconds">
-          <span className="health-live-dot" aria-hidden="true" />
-          {err ? 'Could not refresh' : `Live · ${at?.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`}
-        </span>
+        <HealthLive at={at} err={err} />
       </section>
 
       <div className="htiles">
