@@ -1,0 +1,114 @@
+/* The one look for every field (input, textarea, select, search box).
+   No border, no coloured ring: a soft neutral fill, roomy padding, and on focus
+   a slightly stronger fill with a faint neutral inset line next to the caret.
+   Nothing else in the dashboard styles a field's border, outline or shadow:
+   field.guard.test.ts fails when a rule outside this file does. */
+:root {
+  --field-fill: color-mix(in srgb, var(--text) 7%, transparent);
+  --field-fill-hover: color-mix(in srgb, var(--text) 9%, transparent);
+  --field-fill-focus: color-mix(in srgb, var(--text) 12%, transparent);
+  --field-focus: inset 0 0 0 1px color-mix(in srgb, var(--text) 14%, transparent);
+  --field-height: 40px;
+  --field-pad: 0 14px;
+  --field-radius: 10px;
+}
+
+/* A field you type or pick in. */
+.input,
+.an-in,
+.side-card-input,
+.wg-name,
+.wg-text input,
+.feat-search input,
+.inc-note-form input,
+.mk .mk-menu input,
+.mk .palbox input,
+.mk .irow input,
+.mk .pmenu .dates input,
+.mk .xp select,
+.mk .xp input[type='text'],
+.mk .fresh-pick select {
+  border: 0;
+  outline: 0;
+  background: var(--field-fill);
+  transition: background-color 0.15s, box-shadow 0.15s;
+}
+.input {
+  height: var(--field-height);
+  padding: var(--field-pad);
+  border-radius: var(--field-radius);
+  width: 100%;
+}
+/* A box that holds a field and draws the look for it (the icon, the prefix, the clear button sit inside). */
+.wiz-field,
+.al-field,
+.menu-search,
+.pop-search,
+.notes-search,
+.select {
+  border: 0;
+  outline: 0;
+  background: var(--field-fill);
+  transition: background-color 0.15s, box-shadow 0.15s;
+}
+:is(.wiz-field, .al-field, .menu-search, .pop-search, .notes-search) input,
+:is(.wiz-field, .al-field, .menu-search, .pop-search, .notes-search) input:focus-visible {
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.input:hover,
+.an-in:hover,
+.side-card-input:hover,
+.wg-name:hover,
+.wg-text input:hover,
+.feat-search input:hover,
+.inc-note-form input:hover,
+:is(.wiz-field, .al-field, .menu-search, .pop-search, .notes-search, .select):hover {
+  background: var(--field-fill-hover);
+}
+
+.input:focus-visible,
+.an-in:focus-visible,
+.side-card-input:focus-visible,
+.wg-name:focus-visible,
+.wg-text input:focus-visible,
+.feat-search input:focus-visible,
+.inc-note-form input:focus-visible,
+input:is([type='text'], [type='email'], [type='search'], [type='password'], [type='url'], [type='number'], [type='date'], [type='time']):focus-visible,
+textarea:focus-visible,
+.mk .mk-menu input:focus-visible,
+.mk .palbox input:focus-visible,
+.mk .irow input:focus-visible,
+.mk .pmenu .dates input:focus-visible,
+.mk .xp select:focus-visible,
+.mk .xp input[type='text']:focus-visible,
+:is(.wiz-field, .al-field, .menu-search, .pop-search, .notes-search):focus-within,
+.select:has(select:focus-visible) {
+  outline: 0;
+  background: var(--field-fill-focus);
+  box-shadow: var(--field-focus);
+}
+/* Wrapped fields: the box shows the focus, not the input inside it. */
+:is(.wiz-field, .al-field, .menu-search, .pop-search, .notes-search) input:focus-visible {
+  box-shadow: none;
+  background: transparent;
+}
+
+/* A field with a problem: the message under it says so (FieldError); the box only gets a touch stronger. */
+.input[aria-invalid='true'],
+textarea[aria-invalid='true'],
+.wiz-field.bad {
+  background: var(--field-fill-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input,
+  .an-in,
+  .select,
+  textarea {
+    transition: none;
+  }
+}

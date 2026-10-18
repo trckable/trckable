@@ -65,7 +65,7 @@
 .mk .mk-goal.up .rng b{background:var(--mk-lime)}
 .mk .mk-menu{position:absolute;top:46px;left:0;width:390px;background:var(--mk-card2);border:1px solid var(--mk-line);border-radius:16px;padding:7px;z-index:30;display:none;box-shadow:0 20px 50px var(--mk-shc)}
 .mk .mk-menu.on{display:block}
-.mk .mk-menu input{width:100%;height:36px;border-radius:10px;border:1.5px solid var(--mk-lime);background:var(--mk-field);color:var(--mk-text);padding:0 12px;font:inherit;outline:0;margin-bottom:4px}
+.mk .mk-menu input{width:100%;height:36px;border-radius:10px;color:var(--mk-text);padding:0 12px;font:inherit;margin-bottom:4px}
 .mk .mi{display:flex;width:100%;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;text-align:left}
 .mk .mi .nm{font-weight:600}
 .mk .mi .d{color:var(--mk-muted);font-size:12px}
@@ -105,7 +105,7 @@
 .mk .pwrap{position:relative}
 .mk .pmenu{width:300px}
 .mk .pmenu .dates{display:flex;gap:6px;padding:6px 10px 4px;align-items:center}
-.mk .pmenu .dates input{border:0;background:var(--mk-band);color:var(--mk-text);height:32px;border-radius:8px;padding:0 6px;font:inherit;font-size:12px;width:100%;margin:0}
+.mk .pmenu .dates input{color:var(--mk-text);height:32px;border-radius:8px;padding:0 6px;font:inherit;font-size:12px;width:100%;margin:0}
 .mk .pmenu .dates button{height:32px;padding:0 10px;border-radius:8px;background:var(--mk-limeD);color:var(--mk-lime);font-weight:600;flex:none}
 .mk .mi.on .nm{color:var(--mk-lime)}
 .mk .chips{display:flex;gap:6px;flex-wrap:wrap}
@@ -235,7 +235,7 @@
 .mk .xph b{font-size:16px}
 .mk .xph .x{margin-left:auto}
 .mk #xpBody{overflow:auto;padding:0 22px 40px;flex:1}
-.mk .xp select,.mk .xp input[type=text]{height:34px;border-radius:10px;background:var(--mk-field);color:var(--mk-text);border:1px solid var(--mk-line);font:inherit;font-size:13px;padding:0 8px;min-width:0;width:100%}
+.mk .xp select,.mk .xp input[type=text]{height:34px;border-radius:10px;color:var(--mk-text);font:inherit;font-size:13px;padding:0 8px;min-width:0;width:100%}
 .mk .xb{height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--mk-line);color:var(--mk-muted);font-size:13px}
 .mk .xb:hover{background:var(--mk-hover);color:var(--mk-text)}
 .mk .xb.p{background:var(--mk-limeD);color:var(--mk-lime);border-color:var(--mk-limeL)}
@@ -257,11 +257,13 @@
 .mk .pal{position:fixed;inset:0;z-index:80;background:var(--mk-scrim);display:none;align-items:flex-start;justify-content:center;padding-top:14vh}
 .mk .pal.on{display:flex}
 .mk .palbox{width:min(560px,92vw);background:var(--mk-card2);border:1px solid var(--mk-line);border-radius:18px;padding:8px;box-shadow:0 30px 80px var(--mk-shc2)}
-.mk .palbox input{width:100%;height:42px;border-radius:12px;border:1.5px solid var(--mk-lime);background:var(--mk-field);color:var(--mk-text);padding:0 14px;font:inherit;font-size:15px;outline:0;margin-bottom:6px}
+.mk .palbox input{width:100%;height:42px;border-radius:12px;color:var(--mk-text);padding:0 14px;font:inherit;font-size:15px;margin-bottom:6px}
 .mk .pi{display:flex;width:100%;gap:10px;align-items:center;padding:9px 12px;border-radius:10px;text-align:left;font-size:13.5px}
 .mk .pi.on{background:var(--mk-sel)}
 .mk .pi .s{margin-left:auto;color:var(--mk-faint);font-size:12px}
 .mk .exb .t2{font-weight:600;font-size:13px}
+.mk .hd .exb{border-color:transparent;background:var(--mk-field)}
+.mk .hd .exb:hover{border-color:transparent;background:var(--mk-hovbg)}
 @media (max-width:700px){
 .mk .xp{top:auto;left:0;width:100%;height:94vh;border-radius:24px 24px 0 0;border-left:0;transform:translateY(104%)}
 .mk .xp.on{transform:none}
@@ -393,8 +395,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .vs{padding:3px 8px;line-height:1.2}
 .mk .mk-tag{display:inline-flex;align-items:center;height:20px;padding:0 var(--mk-s2)}
 .mk .moments{gap:var(--mk-s2);margin-top:var(--mk-s3)}
-.mk button:focus-visible,.mk select:focus-visible,.mk input:focus-visible,.mk [tabindex]:focus-visible,.mk a:focus-visible{outline:1px solid var(--mk-lime);outline-offset:1px}
-.mk .mk-menu input:focus-visible,.mk .palbox input:focus-visible{outline:0}
+.mk button:focus-visible,.mk [tabindex]:focus-visible,.mk a:focus-visible{outline:1px solid var(--mk-lime);outline-offset:1px}
 .mk button{transition:background .15s,color .15s,border-color .15s}
 .mk .brief,.mk .cards{gap:var(--mk-s4)}
 .mk .icard{padding:var(--mk-s5) var(--mk-s5) var(--mk-s4);gap:var(--mk-s4)}
@@ -434,7 +435,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .mi .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .mk .mi .now{white-space:nowrap}
 .mk .mfoot{padding:var(--mk-s3) var(--mk-s3) var(--mk-s1);margin-top:var(--mk-s2)}
-.mk .mk-menu input{margin-bottom:var(--mk-s2);padding:0 var(--mk-s3);border-width:1px}
+.mk .mk-menu input{margin-bottom:var(--mk-s2);padding:0 var(--mk-s3)}
 .mk .pmenu .dates{padding:var(--mk-s2) var(--mk-s3) var(--mk-s1);gap:var(--mk-s2)}
 .mk .scrim,.mk .xscrim,.mk .pal{background:var(--mk-scrim)}
 .mk .xscrim{z-index:var(--z-scrim)}
@@ -451,7 +452,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .xnote{margin-top:var(--mk-s3)}
 .mk .pal{padding-top:12vh;align-items:flex-start}
 .mk .palbox{padding:var(--mk-s2);border-radius:16px;max-height:76dvh;display:flex;flex-direction:column}
-.mk .palbox input{height:44px;margin-bottom:var(--mk-s2);border-width:1px}
+.mk .palbox input{height:44px;margin-bottom:var(--mk-s2)}
 .mk #palList{overflow:auto;overscroll-behavior:contain;min-height:0}
 .mk .pi{min-height:var(--mk-h);padding:var(--mk-s2) var(--mk-s3);gap:var(--mk-s3)}
 .mk .pi>*{min-width:0}
@@ -647,7 +648,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 }
 .mk .irow{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s3) 0;border-top:1px solid var(--mk-line);min-height:56px}
 .mk .irow:first-child{border-top:0}
-.mk .irow input{flex:1;min-width:0;height:36px;border-radius:10px;border:1px solid var(--mk-line);background:var(--mk-field);color:var(--mk-text);padding:0 12px;font:inherit}
+.mk .irow input{flex:1;min-width:0;height:36px;border-radius:10px;color:var(--mk-text);padding:0 12px;font:inherit}
 .mk .irow .ir{display:flex;gap:var(--mk-s2)}
 .mk .irow .il{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .mk .irow .il b{font-weight:600}
@@ -1163,7 +1164,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .xph .xfull+.x{margin-left:0}
 .mk .xph .mk-quiet{flex:1;min-width:0}
 .mk .xph .xfull{margin-left:0}
-.mk .xp :focus-visible{outline:1px solid var(--mk-lime);outline-offset:1px;box-shadow:none}
+.mk .xp :is(button,a,[tabindex],summary):focus-visible{outline:1px solid var(--mk-lime);outline-offset:1px;box-shadow:none}
 .mk .xtb{display:flex;align-items:center;gap:var(--mk-s2);margin:var(--mk-s3) 0 var(--mk-s2);flex-wrap:nowrap}
 .mk .xtb .sp{flex:1}
 .mk .xw{position:relative;display:flex;align-items:center;gap:var(--mk-s1);flex:none}
@@ -1235,7 +1236,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 @media (max-width:600px){
 .mk .xp .mfr>span{width:96px}
 }
-.mk .xp :focus-visible{outline:1px solid var(--mk-lime);outline-offset:-1px;box-shadow:none}
+.mk .xp :is(button,a,[tabindex],summary):focus-visible{outline:1px solid var(--mk-lime);outline-offset:-1px;box-shadow:none}
 .mk .xb:focus-visible,.mk .xchip2 button:focus-visible{outline-offset:1px}
 .mk .xtitle{display:none;align-items:center;gap:var(--mk-s2);font-size:15px;margin-right:var(--mk-s2)}
 .mk .xtitle .xi{width:18px;height:18px;color:var(--mk-lime)}
@@ -1733,9 +1734,8 @@ body[data-modal] .mk .cd {
 }
 
 /* Fields have no border: a soft fill, the full width of their row, 36 to 40 px tall; focus is a ring. */
-.mk .palbox input,.mk .mk-menu input,.mk .pmenu .dates input,.mk .xp select,.mk .xp input[type=text],.mk .irow input,.mk .fresh-pick select{border:0;background:var(--mk-band);color:var(--mk-text)}
+.mk .palbox input,.mk .mk-menu input,.mk .pmenu .dates input,.mk .xp select,.mk .xp input[type=text],.mk .irow input,.mk .fresh-pick select{color:var(--mk-text)}
 .mk .palbox input,.mk .mk-menu input,.mk .irow input{width:100%;height:40px}
-.mk .palbox input:focus-visible,.mk .mk-menu input:focus-visible,.mk .irow input:focus-visible,.mk .xp input[type=text]:focus-visible{box-shadow:0 0 0 2px var(--mk-lime)}
 
 /* Something scrolled into view (a focus coming back, a jump to a field) never lands under a sticky header. */
 .mk #xpBody,.mk .cdb{scroll-padding-top:var(--mk-s8,72px)}

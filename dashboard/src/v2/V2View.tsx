@@ -16,6 +16,7 @@ import { usePeriodKeys } from './usePeriodKeys'
 import { Briefing, BriefingSlot } from './briefing/BriefingSlot'
 import { FreshSlot } from './briefing/FreshSlot'
 import { copy } from './copy'
+import { useV2Extras } from './slots'
 import { PeriodChip } from './ui/PeriodChip'
 import { periodOptions } from './periodOptions'
 import { TabBar } from './ui/TabBar'
@@ -68,6 +69,7 @@ export function V2View(p: V2Props) {
   const vs = vsWords(day, weekday, p.view, p.range)
   const label = day ? `${p.view.period === 'today' ? copy.today : copy.yesterday} · ${dayWords(p.range.to)}` : (PRESETS.find((q) => q.id === p.view.period)?.label ?? rangeWords(p.range, today, copy.todayWord))
   const here = p.tab
+  const slots = useV2Extras()
   // Explore's panel is built the first time it is asked for, and stays so it can slide out again.
   const [opened, setOpened] = useState(false)
   if (p.view.xp !== undefined && !opened) setOpened(true)
@@ -83,7 +85,7 @@ export function V2View(p: V2Props) {
     // Once, on the address that was opened: shutting the panel clears the filters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [p.waiting])
-  const exploreOpen = () => goExplore()
+  const exploreOpen = () => (slots.askPeek ? window.dispatchEvent(new Event('trckable:find')) : goExplore())
   const setTab = (t: 'live' | 'briefing') => void switchTab(t, here)
   const periodChip = (idBase?: string) => (
     <PeriodChip
@@ -156,7 +158,7 @@ export function V2View(p: V2Props) {
       {opened && !p.waiting && <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} period={periodChip('xper')} money={p.money} onGoal={p.onGoal} />}
       <AiHost site={p.site} />
       <MkToastHost />
-      {!p.waiting && <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: copy.exploreTab }} hide={p.identity ? ['live'] : undefined} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />}
+      {!p.waiting && <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: slots.askPeek ? copy.askOrSearch : copy.exploreTab }} hide={p.identity ? ['live'] : undefined} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />}
     </div>
   )
 }
