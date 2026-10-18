@@ -13,6 +13,7 @@ import { pressed } from '../lib/keys'
 import { navigate } from '../lib/url'
 import { openSettings } from '../lib/settings'
 import { lazyLoad, whenIdle } from '../lib/lazyLoad'
+import { ghostSvg } from '../brand/logo'
 import { Bell } from './bell/Bell'
 import { useNotices } from './bell/useNotices'
 import { goExplore } from './briefing/deeper'
@@ -68,12 +69,6 @@ export function PageHeader(p: PageHeaderProps) {
     setFind(true)
   }
   useEffect(() => whenIdle(Palette.preload), [])
-  // The phone's bar opens the same box.
-  useEffect(() => {
-    const on = () => openFind('')
-    window.addEventListener('trckable:find', on)
-    return () => window.removeEventListener('trckable:find', on)
-  }, [])
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (pressed(e, 'ask')) {
@@ -104,10 +99,10 @@ export function PageHeader(p: PageHeaderProps) {
   const here = p.tab
   // Peek is there only where the build gives one: a page's own, or the slot. The public product has none, so no row or button asks for it.
   const ask = peekAction(p.onAsk, slots.askPeek)
-  // A page with a site opens Explore (where the build has Peek, the box that asks or searches opens instead); a page without one has nothing to open it on, so ⌘K's list opens instead.
-  // A typed question goes to Peek where the build provides it, with the question in the box.
+  // A page with a site opens Explore; a page without one has nothing to open it on, so ⌘K's list opens instead.
+  // Where the build provides Peek, a question typed into ⌘K goes to it, with the question as the draft.
   const question = slots.askPeek
-  const exploreOpen = () => (site && !question ? goExplore() : setFind(true))
+  const exploreOpen = () => (site ? goExplore() : setFind(true))
   return (
     <>
       <Header
@@ -127,7 +122,7 @@ export function PageHeader(p: PageHeaderProps) {
         ring={p.identity || !site ? null : <SetupRing site={site} onGoal={p.onGoal ?? (() => openFind(pal.create))} fresh={!!p.waiting} visited={!!p.visited} />}
         views={here && !p.identity && !p.waiting ? <SegmentedSwitch id="views" label={copy.view} value={here} onChange={(t) => void switchTab(t, here)} items={[{ value: 'live', label: copy.live, title: copy.liveTitle, dot: down ? 'down' : 'ok', count: online ?? undefined }, { value: 'briefing', label: copy.briefing, title: copy.briefingTitle }]} /> : null}
         period={here === 'briefing' ? p.period : null}
-        explore={p.waiting ? null : <ExploreChip label={question ? copy.askOrSearch : copy.explore} kbd="⌘K" onClick={exploreOpen} />}
+        explore={p.waiting ? null : <ExploreChip label={copy.explore} kbd="⌘K" onClick={exploreOpen} />}
         extras={slots.headerExtra}
         bell={p.identity ? null : <Bell site={site} notices={notices} />}
         account={isShared() ? null : <AccountMenu alert={slots.accountAlert} />}
@@ -157,7 +152,7 @@ export function PageHeader(p: PageHeaderProps) {
           </>
         }
       />
-      {find && <Palette items={paletteItems({ sites: p.sites, site, data: p.data ?? null, here: here ?? 'briefing', fresh: p.waiting, onAsk: ask, onGoal: p.onGoal, extra: slots.paletteRows, domainOf: (s) => s.domain })} placeholder={question ? pal.placeholderAsk : pal.placeholder} ask={question && { run: question, title: pal.askRow, kind: pal.kinds.peek, group: pal.groups.ask }} none={pal.none} initial={seed} onClose={() => setFind(false)} />}
+      {find && <Palette items={paletteItems({ sites: p.sites, site, data: p.data ?? null, here: here ?? 'briefing', fresh: p.waiting, onAsk: question ? undefined : ask, onGoal: p.onGoal, extra: slots.paletteRows, domainOf: (s) => s.domain })} placeholder={question ? pal.placeholderAsk : pal.placeholder} ask={question && { run: question, title: pal.askRow, kind: pal.askKey, lead: ghostSvg(16) }} none={pal.none} initial={seed} onClose={() => setFind(false)} />}
     </>
   )
 }
