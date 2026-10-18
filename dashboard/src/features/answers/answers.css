@@ -36,7 +36,7 @@
 .an-big b{font-size:32px;line-height:1.1;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .an-big b em{font-style:normal;color:var(--an-accent)}
 .an-was{font-size:13px;color:var(--an-muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.an-delta{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--an-soft);color:var(--an-accent);font-variant-numeric:tabular-nums}
+.an-delta{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--an-soft);color:var(--an-ink);font-variant-numeric:tabular-nums}
 .an-delta.dn{background:color-mix(in srgb,var(--mk-red,#ff6b6b) 14%,transparent);color:var(--mk-red,#ff6b6b)}
 .an-honest{font-size:12px;color:var(--an-faint);max-width:46em;line-height:1.5;margin:6px 0 0}
 .an-meta{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12px;color:var(--an-faint)}
@@ -82,7 +82,7 @@ button.an-qr:hover,button.an-qr:focus-visible{background:var(--an-fill)}
 .an-pages{border-radius:18px;background:var(--an-card);box-shadow:0 0 0 1px var(--an-line),0 18px 40px -26px color-mix(in srgb,var(--an-accent) 55%,transparent);padding:20px 22px 12px;position:relative;overflow:hidden}
 .an-pages::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:linear-gradient(90deg,transparent,var(--an-accent),transparent);opacity:.7}
 .an-ph{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
-.an-ph h3{margin:0;font-size:16px;font-weight:600;letter-spacing:-.01em}
+.an-ph h2{margin:0;font-size:16px;font-weight:600;letter-spacing:-.01em}
 .an-ph p{margin:0;font-size:13px;color:var(--an-muted)}
 .an-ph p b{color:var(--an-money);font-weight:600;font-variant-numeric:tabular-nums}
 .an-pt{display:flex;flex-direction:column}
@@ -249,7 +249,7 @@ button.an-pr:hover .path{background:var(--an-fill-2)}
 .an-pt.no-traffic .an-pr{grid-template-columns:minmax(0,1fr) 70px 96px}
 .an-pt.no-earn .an-pr{grid-template-columns:minmax(0,1fr) 70px 70px 70px}
 .an-pt.no-traffic.no-earn .an-pr{grid-template-columns:minmax(0,1fr) 70px}
-.an-qr.off{opacity:.6}
+.an-qr.off .q b{color:var(--an-muted)}
 .an-run-one{display:flex;flex-direction:column;gap:8px;padding-top:6px}
 .an-run-one+.an-run-one{border-top:1px solid var(--an-line);padding-top:12px}
 .an-runno{font-size:11px;color:var(--an-faint)}

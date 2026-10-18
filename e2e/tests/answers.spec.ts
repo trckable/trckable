@@ -118,13 +118,13 @@ test('an owner adds a question in Settings and saves it', async ({ page }) => {
   expect(sent).toEqual({ questions: [{ id: 4, text: 'best open-source analytics', active: true }, { text: 'privacy friendly analytics for a blog', active: true }] })
 })
 
-test('a viewer reads the settings and the section but finds nothing to change', async ({ page }) => {
+test('a viewer reads Answers but is offered nothing to change', async ({ page }) => {
   test.slow()
   await seed(page, 'answers-viewer', 'viewer')
-  await page.goto(`${API}/${HISTORY_DOMAIN}?settings=answers`)
-  await expect(page.getByText('best open-source analytics')).toBeVisible({ timeout: 20_000 })
-  await expect(page.getByLabel('Add a question')).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'Save questions' })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'Ask now' })).toHaveCount(0)
-  await expect(page.getByLabel('Ask from')).toBeDisabled()
+  await page.route('**/api/v1/sites/*/report/answers*', (r) => json(r, { ...report, questions: [], latest: null, was: null, rounds: [], pages: [] }))
+  await page.goto(`${API}/${HISTORY_DOMAIN}?x=answers`)
+  await expect(page.getByText('Ask what your buyers ask')).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByRole('button', { name: 'Add questions' })).toHaveCount(0)
+  // The Briefing's line is for reading too: it opens the section.
+  await expect(page.locator('.an')).toHaveCount(0)
 })

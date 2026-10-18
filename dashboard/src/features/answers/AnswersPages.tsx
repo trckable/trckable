@@ -16,7 +16,7 @@ export function AnswersPages({ rows, money, onPick }: { rows: PageRow[]; money: 
   return (
     <section className="an-pages" aria-label={c.pagesHead}>
       <div className="an-ph">
-        <h3>{c.pagesHead}</h3>
+        <h2>{c.pagesHead}</h2>
         {total > 0 && <p>{c.pagesTotal(money(total), paid)}</p>}
       </div>
       <div className={cols}>
