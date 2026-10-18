@@ -179,6 +179,9 @@ describe('mentions, robots and links', () => {
     const r = { series: [{ name: 'a', kind: 'k', total: 3, values: [] }, { name: 'b', kind: 'k', total: 9, values: [] }, { name: 'c', kind: 'k', total: 0, values: [] }] } as unknown as CrawlerReport
     expect(mapBots(r).map((b) => b.name)).toEqual(['b', 'a'])
   })
+  it('lists no robots when the site saw none (the report sends no series)', () => {
+    expect(mapBots({ series: null } as unknown as CrawlerReport)).toEqual([])
+  })
   it('names a robot once, with the hits of all its errands', () => {
     const r = { series: [{ name: 'OpenAI', kind: 'train', total: 4, values: [] }, { name: 'OpenAI', kind: 'answer', total: 3, values: [] }, { name: 'Google', kind: 'index', total: 5, values: [] }] } as unknown as CrawlerReport
     expect(mapBots(r)).toEqual([{ name: 'OpenAI', count: 7 }, { name: 'Google', count: 5 }])
