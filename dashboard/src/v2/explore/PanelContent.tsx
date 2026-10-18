@@ -174,8 +174,8 @@ export default function PanelContent(p: ContentProps) {
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- one place for the keys of every menu and list below */}
       <div id="xpBody" ref={body} onClick={away} onKeyDown={(e: KeyboardEvent) => keys.onKey(e)}>
         {p.full ? (
-          <div className={`xlay${s.folded ? ' rc' : ''}`}>
-            <Rail section={section} conn={meta.connected} folded={s.folded} onFold={act.fold} onPick={act.section} />
+          <div className="xlay">
+            <Rail section={section} conn={meta.connected} onPick={act.section} />
             <div className="xmain">{content}</div>
           </div>
         ) : (

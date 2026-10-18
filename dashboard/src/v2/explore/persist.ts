@@ -1,4 +1,4 @@
-// What Explore keeps for next time: whether it was full width, and whether its list of sections was folded.
+// What Explore keeps for next time: whether it was full width.
 const kept = (key: string): boolean => {
   try {
     return localStorage.getItem(key) === '1'
@@ -16,5 +16,3 @@ const keep = (key: string, on: boolean) => {
 
 export const wasFull = () => kept('trckable:xfull')
 export const keepFull = (on: boolean) => keep('trckable:xfull', on)
-export const wasFolded = () => kept('trckable:xrail')
-export const keepFolded = (on: boolean) => keep('trckable:xrail', on)
