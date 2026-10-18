@@ -3,6 +3,7 @@
 // as it was. Old links that carried ?account=… or ?add=site still open them
 // once, and the address is put back.
 import { useEffect, useState } from 'react'
+import { canChange } from './me'
 
 export type AccountTab = 'sites' | 'keys' | 'people' | 'profile'
 
@@ -60,10 +61,13 @@ export function closeAccount() {
 /** Is the add-a-site wizard open? */
 export function useAddSite(): boolean {
   useDialogs()
-  return adding
+  // An old link (?add=site) sets it before anyone is known: a viewer still gets no wizard.
+  return adding && canChange()
 }
 
+/** A viewer adds no site: the wizard stays shut for them, whatever opened it (a link, the first run, a key). */
 export function openAddSite() {
+  if (!canChange()) return
   adding = true
   emit()
 }

@@ -1,0 +1,1 @@
+A viewer is offered no way to create or change anything from the ⌘K palette (no Create rows, no Settings rows), and an old ?add=site link no longer opens the add-a-site wizard for them; the server's route table now also checks that the owner gets through every route, and a role change takes effect on the person's next request.
