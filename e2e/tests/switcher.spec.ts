@@ -59,13 +59,13 @@ test('pin, group, reorder by keyboard and drag, saved for the account, same orde
 
       // Pin the last new site: it goes to the top, under "Pinned".
       const [a, b, c, , , f] = sites
-      await row(page, f).getByRole('button', { name: `${f.domain}: arrange` }).click()
+      await row(page, f).getByRole('button', { name: `${f.domain}: options` }).click()
       await page.getByRole('menuitem', { name: 'Pin to top' }).click()
       await expect(menu.getByRole('heading', { name: 'Pinned' })).toBeVisible()
       await expect.poll(async () => (await layout(page.request)).pinned).toEqual([f.id])
 
       // A new group, with a site in it.
-      await row(page, a).getByRole('button', { name: `${a.domain}: arrange` }).click()
+      await row(page, a).getByRole('button', { name: `${a.domain}: options` }).click()
       await page.getByRole('menuitem', { name: 'New group…' }).click()
       const ask = page.getByRole('dialog', { name: 'New group' })
       await ask.getByLabel('Group name').fill(`Clients ${browserName}`)

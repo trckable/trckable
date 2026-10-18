@@ -1441,15 +1441,24 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .site-head .fold{display:flex;align-items:center;gap:var(--mk-s1);color:inherit;font:inherit;text-transform:inherit;letter-spacing:inherit;min-height:28px}
 .mk .site-head .fold svg{transition:transform .15s}
 .mk .site-head .fold[aria-expanded="true"] svg{transform:rotate(90deg)}
-.mk .site-row{display:flex;align-items:center;gap:2px;position:relative;border-radius:var(--mk-rc)}
+.mk .site-row{display:flex;align-items:center;gap:0;position:relative;border-radius:var(--mk-rc)}
 .mk .site-row .mi.site{flex:1;min-width:0}
 .mk .site-row.sortable .mi.site{cursor:grab}
 .mk .site-row .grip{position:absolute;left:-2px;opacity:0;color:var(--mk-faint);pointer-events:none}
 .mk .site-row:hover .grip{opacity:.7}
 .mk .site-row.dragging{background:var(--mk-card);box-shadow:0 10px 30px var(--mk-shc);z-index:2}
-.mk .site-row .site-open,.mk .site-row .btn.icon.ghost{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--mk-faint);opacity:0;flex:none}
-.mk .site-row:hover .site-open,.mk .site-row:hover .btn.icon.ghost,.mk .site-row:focus-within .site-open,.mk .site-row:focus-within .btn.icon.ghost{opacity:1}
+/* The actions sit in their own column at the end of the row (never over the numbers), shown on hover or focus; the same width is kept free at the end of All sites, so every number ends at one edge. */
+.mk .sitelist{--acts:68px}
+.mk .site-row .site-acts{flex:none;width:var(--acts);display:flex;align-items:center;justify-content:flex-end;gap:4px;opacity:0}
+.mk .site-row:hover .site-acts,.mk .site-row:focus-within .site-acts,.mk .site-row .site-acts:has([aria-expanded="true"]){opacity:1}
+.mk .site-row .site-open,.mk .site-row .btn.icon.ghost{display:inline-grid;place-items:center;width:32px;height:32px;min-width:32px;padding:0;border-radius:8px;color:var(--mk-faint);flex:none}
+.mk .site-row .btn.icon.ghost svg{width:16px;height:16px}
 .mk .site-row .site-open:hover,.mk .site-row .btn.icon.ghost:hover{background:var(--mk-hov);color:var(--mk-text)}
+.mk .mi.all{width:auto;margin-right:var(--acts)}
+.mk .mi .now{text-align:right;font-variant-numeric:tabular-nums}
+.mk .mi.all .all-problems{font-size:12px;color:var(--mk-faint)}
+.mk .mi.all .all-problems .down{color:var(--mk-red);font-weight:600}
+.open-touch{display:none}
 .mk .site-head .btn.icon.ghost{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--mk-faint)}
 .mk .mi .state-line.quiet{color:var(--mk-amber)}
 .mk .sites-domains{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--mk-line);padding-bottom:var(--mk-s2);margin-bottom:var(--mk-s2)}
@@ -1466,7 +1475,10 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk.mk-bar{position:relative;z-index:35}
 .header.quiet:has(.mk-bar){z-index:35}
 @media (max-width:600px){
- .mk .site-row .site-open,.mk .site-row .btn.icon.ghost{width:44px;height:44px;opacity:1}
+ .mk .sitelist{--acts:44px}
+ .mk .site-row .site-open{display:none}
+ .mk .site-row .btn.icon.ghost{width:44px;height:44px}
+ .mk .site-row .site-acts{opacity:1}
 }
 .mk .mins i[role=button]{cursor:pointer}
 .mk .mins i[role=button]:focus-visible{outline:2px solid var(--mk-lime);outline-offset:1px}
@@ -1709,14 +1721,12 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .xp.full .xt.xc{max-width:900px}
 /* The site menu: one line a site (a quiet one is grey, only a real problem is coloured), a finder with no border, All sites' total in line with the sites' numbers. */
 .mk .mk-dot.idle{background:var(--mk-faint)}
-.mk .mi .now.state-word{font-size:12px;color:var(--mk-faint);white-space:nowrap}
+.mk .mi .now.unverified,.mk .mi .now.state-word{font-size:12px;color:var(--mk-faint);white-space:nowrap}
 .mk .mi .now.state-word.down{color:var(--mk-red);font-weight:600}
 .mk .find-wrap{position:relative;margin:0 0 var(--mk-s2)}
 .mk .find-wrap>svg{position:absolute;left:var(--mk-s3);top:50%;transform:translateY(-50%);color:var(--mk-faint);pointer-events:none}
 .mk .mk-menu #siteFind{height:40px;margin:0;padding:0 var(--mk-s3) 0 calc(var(--mk-s3) + 24px);font-size:14px;border:0;outline:0;box-shadow:none;background:color-mix(in srgb,var(--mk-text) 7%,transparent);color:var(--mk-text)}
 .mk .mk-menu #siteFind::placeholder{color:var(--mk-faint)}
-.mk .mi.all:has(>.now){padding-right:calc(var(--mk-s3) + 60px)}
-@media (max-width:600px){.mk .mi.all:has(>.now){padding-right:calc(var(--mk-s3) + 92px)}}
 /* The teams: a small square before the site, and the list that opens from it */
 .mk .teamchip{display:flex;align-items:center;gap:var(--mk-s1)}
 .mk .team-btn{padding:0 var(--mk-s1)}
@@ -1766,3 +1776,11 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 /* A screen kept built while it is not the one shown (v2/V2View): it takes no place of its own. */
 .mk .view-pane{display:contents}
 .mk .view-pane[hidden]{display:none}
+/* Touch: the row's ⋯ is the only action, so it carries Open site too. */
+@media (hover:none){
+ .mk .sitelist{--acts:44px}
+ .mk .site-row .site-open{display:none}
+ .mk .site-row .site-acts{opacity:1}
+ .menu-list .open-touch{display:flex}
+}
+@media (max-width:600px){.menu-list .open-touch{display:flex}}

@@ -9,6 +9,7 @@ section into the release.
 
 ## Unreleased
 
+- The site list: every number and state word ends at one right edge (All sites included), a row's actions sit in their own column (shown on hover or focus, always on touch) and never cover the name, a row's ⋯ opens Site settings first, every state of a site shows in the list (receiving, down, quiet, not verified) and All sites says how many are not fine; Site settings is also in the profile menu and the ⌘K palette.
 - Explore at full width always shows the whole section list: the collapse arrow that folded it to icons is gone, since the room is there, and a folded list saved from before is ignored.
 - Setting up your own visits is an extra, no longer a core step: it sits under "More you can add" and no longer counts in "N of M" (a new site counts eight steps, not nine). The steps come in the order that suits the site's kind, so the next one is the most valuable: a shop gets the goal, then payments, then Search Console; a SaaS gets the goal, then a funnel; a blog starts with Search Console.
 - The setup panel is simpler: one title with the header's ring ("Set up · 2 of 7", no second percentage and bar), the next step as one highlighted card with one filled button, the other open steps as rows that are clickable as a whole with a chevron ("Not for me" waits in a small ⋯ menu), the done steps and "More you can add" as one quiet line each, the site type as a small chip that opens its four choices, and a quieter "Only you see this · Hide this". Rows have hover and focus states, and the menus work with the keyboard.

@@ -17,6 +17,7 @@ export const copy = defineCopy('palette', {
   newFunnel: 'Create · A funnel',
   newNote: 'Create · A note on the chart',
   settings: 'Settings',
+  siteSettings: 'Site settings',
   mentionsPage: 'Mentions',
   theme: (name: string) => `Theme · ${name}`,
   signOut: 'Sign out',
