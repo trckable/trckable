@@ -138,7 +138,7 @@ func revenueLine(cur, prev *query.Result) string {
 // weeklyEmail is the report as a designed email: the same numbers and
 // sentences as weeklyText, laid out by package reports on the mail kit. The
 // stop link is added to it when it is sent.
-func weeklyEmail(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, busiest, link string, men reports.Weekly) *mailkit.Email {
+func weeklyEmail(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, busiest, link string, men reports.Weekly, answersLine string) *mailkit.Email {
 	x := men
 	x.Link = link
 	if cur.KPIs.Visitors > 0 {
@@ -152,13 +152,17 @@ func weeklyEmail(domain string, from, to time.Time, cur, prev *query.Result, ai 
 		}
 		x.Moments = append(x.Moments, weeklyInsights(cur, prev)...)
 	}
+	// What the AI assistants said is not about this week's visitors: told even when none came.
+	if answersLine != "" {
+		x.Facts = append(x.Facts, answersLine)
+	}
 	d := reports.Data{Site: domain, Cadence: "weekly", Lang: "en", From: from, To: to, Cur: cur, Prev: prev}
 	return reports.WeeklyEmail(d, x)
 }
 
 // weeklyText words the report. It is plain text on purpose: every chat tool
 // and every mail client shows it the same.
-func weeklyText(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, busiest, link string) (title, msg string, data map[string]any) {
+func weeklyText(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, busiest, link, answersLine string) (title, msg string, data map[string]any) {
 	last := to.AddDate(0, 0, -1)
 	title = "Your week"
 	lines := []string{fmt.Sprintf("%s, %s – %s", domain, from.Format("Jan 2"), last.Format("Jan 2"))}
@@ -196,6 +200,9 @@ func weeklyText(domain string, from, to time.Time, cur, prev *query.Result, ai a
 		if line := revenueLine(cur, prev); line != "" {
 			lines = append(lines, line)
 		}
+	}
+	if answersLine != "" {
+		lines = append(lines, answersLine)
 	}
 	if busiest != "" && k.Visitors > 0 {
 		lines = append(lines, busiest)
@@ -282,9 +289,10 @@ func (s *Server) weeklyEvent(ctx context.Context, q *query.Q, info sqlite.SiteIn
 	if b, err := s.ctl.BusiestSurge(ctx, siteID, from.Unix(), to.Unix()); err == nil && b != nil {
 		busiest = surge.Busiest(*b, time.Unix(b.Started, 0).In(loc))
 	}
-	ev.Title, ev.Message, ev.Data = weeklyText(info.Domain, from, to, cur, prev, ai, busiest, link)
+	answers := s.answersWeekLine(ctx, siteID, from, to)
+	ev.Title, ev.Message, ev.Data = weeklyText(info.Domain, from, to, cur, prev, ai, busiest, link, answers)
 	ev.Text = ev.Title + " — " + ev.Message
-	ev.Email = weeklyEmail(info.Domain, from, to, cur, prev, ai, busiest, link, s.weekMentions(ctx, siteID, info.Domain, from, to))
+	ev.Email = weeklyEmail(info.Domain, from, to, cur, prev, ai, busiest, link, s.weekMentions(ctx, siteID, info.Domain, from, to), answers)
 	return ev, true
 }
 

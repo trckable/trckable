@@ -78,6 +78,8 @@ type setupIn struct {
 	Team, Phone      bool
 	Keywords         bool
 	MentionsOn       bool
+	AnswersOn        bool // an engine key is set
+	Questions        bool // the site has a question
 }
 
 type payState struct {
@@ -179,6 +181,9 @@ func buildSetup(in setupIn) setupOut {
 	if in.MentionsOn {
 		add("mentions", setupMore, in.Keywords, nil)
 	}
+	if in.AnswersOn {
+		add("answers", setupMore, in.Questions, nil)
+	}
 
 	rank := setupOrder(kind)
 	slices.SortStableFunc(out.Items, func(a, b setupItem) int { return rank(a.ID) - rank(b.ID) })
@@ -250,6 +255,11 @@ func (a *API) setupOf(r *http.Request, si sqlite.SiteInfo) (setupOut, error) {
 		}
 	}
 	in.MentionsOn = a.MentionsOn
+	if in.AnswersOn = a.AnswersOn(); in.AnswersOn {
+		if qs, err := a.Ctl.AnswerQuestionsOf(ctx, si.ID); err == nil {
+			in.Questions = len(qs) > 0
+		}
+	}
 	if words, err := a.Ctl.MentionKeywords(ctx, si.ID); err == nil {
 		in.Keywords = len(words) > 0
 	}

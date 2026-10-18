@@ -249,3 +249,23 @@ func TestAISearchAssistantsAreKnownAndAddUp(t *testing.T) {
 	eq(t, "no assistants", len(e.Assistants), 0)
 	eq(t, "no header", e.Visitors, int64(0))
 }
+
+// A page an answer linked is found wherever it ranks, and a page nobody read
+// is there with zeros.
+func TestAIPagesFor(t *testing.T) {
+	q := aiRig(t)
+	got, err := q.AIPagesFor(context.Background(), week, []string{"/pricing", "/blog", "/nobody"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	eq(t, "rows", len(got), 3)
+	eq(t, "pricing read", got[0].Read, int64(40))
+	eq(t, "pricing sent", got[0].Sent, int64(2))
+	eq(t, "blog read", got[1].Read, int64(0))
+	eq(t, "blog sent", got[1].Sent, int64(1))
+	eq(t, "nobody", got[2].Read+got[2].Sent, int64(0))
+	none, err := q.AIPagesFor(context.Background(), week, nil)
+	if err != nil || len(none) != 0 {
+		t.Fatal(none, err)
+	}
+}

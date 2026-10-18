@@ -1,0 +1,1 @@
+{"model":"claude-haiku-5-5","stop_reason":"pause_turn","content":[{"type":"text","text":"Searching. "}],"usage":{"input_tokens":100,"output_tokens":10,"server_tool_use":{"web_search_requests":1}}}

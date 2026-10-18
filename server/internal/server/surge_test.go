@@ -101,11 +101,11 @@ func TestWeeklyTellsTheBusiestMoment(t *testing.T) {
 	from := time.Date(2026, 10, 5, 0, 0, 0, 0, time.UTC)
 	cur := &query.Result{KPIs: query.KPIs{Visitors: 900, Pageviews: 2000}}
 	prev := &query.Result{KPIs: query.KPIs{Visitors: 800}}
-	_, msg, _ := weeklyText("x.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, line, "")
+	_, msg, _ := weeklyText("x.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, line, "", "")
 	if !strings.Contains(msg, line) {
 		t.Fatalf("the report leaves it out:\n%s", msg)
 	}
-	if _, msg, _ = weeklyText("x.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "", ""); strings.Contains(msg, "Busiest") {
+	if _, msg, _ = weeklyText("x.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "", "", ""); strings.Contains(msg, "Busiest") {
 		t.Fatalf("no surge, no line:\n%s", msg)
 	}
 }
