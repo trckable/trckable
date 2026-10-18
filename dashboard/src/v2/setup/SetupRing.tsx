@@ -9,7 +9,8 @@ import { VerifiedPill } from '../../features/verified/VerifiedPill'
 import { useMenu } from '../ui/useMenu'
 import { copy } from './copy'
 import { useDoneSince, useHidden } from './memory'
-import { CIRCUMFERENCE, left, offset, ringMode } from './model'
+import { left, ringMode } from './model'
+import { RingMark } from './RingMark'
 import { SetupPanel } from './SetupPanel'
 import { onSetupOpen, publishSetup } from './summary'
 import { useSetup } from './useSetup'
@@ -46,14 +47,10 @@ export function SetupRing({ site, onGoal }: { site: Site | null; onGoal: () => v
   return (
     <div className="ringw" ref={attach}>
       <button type="button" className="ringb" data-ring={mode} aria-haspopup="dialog" aria-expanded={open} aria-label={copy.ringLabel(state.done, state.counted)} title={words} onClick={toggle}>
-        <svg viewBox="0 0 36 36" aria-hidden="true">
-          <circle className="rtrack" cx="18" cy="18" r="14" />
-          <circle className="rarc" cx="18" cy="18" r="14" strokeDasharray={CIRCUMFERENCE} strokeDashoffset={mode === 'check' ? 0 : offset(state.done, state.counted)} transform="rotate(-90 18 18)" />
-          {mode === 'check' && <path className="rtick" d="M12 18.5l4 4 8-9" />}
-        </svg>
+        <RingMark done={state.done} counted={state.counted} check={mode === 'check'} />
         <span className="rtext">{words}</span>
       </button>
-      <div ref={menu} className={`mk-menu setupmenu${open ? ' on' : ''}`} role="dialog" aria-label={copy.title}>
+      <div ref={menu} className={`mk-menu setupmenu${open ? ' on' : ''}`} role="dialog" aria-label={copy.title(state.done, state.counted)}>
         {open && (
           <SetupPanel
             state={state}

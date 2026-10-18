@@ -13,6 +13,10 @@ export interface RowAct {
   run: () => void
   /** The quiet kind sits in the muted colour (Not for me, Change). */
   quiet?: boolean
+  /** Steps the row aside (Not for me): kept in the menu, not shown inline. */
+  skip?: boolean
+  /** The row says it in words, not with a chevron (That's right, Bring back). */
+  word?: boolean
 }
 
 export interface RowView {
@@ -103,15 +107,15 @@ export function rowView(it: SetupItem, x: RowCtx, goalSuggestion: string): RowVi
   }
   if (x.can) {
     if (it.skipped) {
-      acts.push({ label: copy.bringBack, run: () => x.change((s) => more.setupSkip(s, it.id, false)) })
+      acts.push({ label: copy.bringBack, word: true, run: () => x.change((s) => more.setupSkip(s, it.id, false)) })
     } else if (!it.done) {
       if (it.id === 'locale') {
-        acts.push({ label: copy.locale.right, run: () => x.change((s) => more.setupLocale(s)) })
+        acts.push({ label: copy.locale.right, word: true, run: () => x.change((s) => more.setupLocale(s)) })
         acts.push({ label: copy.locale.change, quiet: true, run: closing(() => openSettings(x.site, 'site')) })
       } else if (b.go) {
         acts.push({ label: b.go.label, run: closing(b.go.run) })
       }
-      if (it.skippable) acts.push({ label: it.id === 'payments' ? copy.noSales : copy.notForMe, quiet: true, run: () => x.change((s) => more.setupSkip(s, it.id, true)) })
+      if (it.skippable) acts.push({ label: it.id === 'payments' ? copy.noSales : copy.notForMe, quiet: true, skip: true, run: () => x.change((s) => more.setupSkip(s, it.id, true)) })
     }
   }
   return { id: it.id, title: b.title, sub: b.sub, done: it.done && !it.skipped, acts }
