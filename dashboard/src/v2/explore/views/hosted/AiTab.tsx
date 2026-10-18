@@ -8,10 +8,12 @@ import { fmtInt } from '../../../../lib/format'
 import { messageOf, more, type SearchReport } from '../../../../lib/apiMore'
 import { aiCopy } from '../../../../features/aisearch/copy'
 import { useAiSearch } from '../../../../features/aisearch/useAiSearch'
+import { hasAnswers } from '../../../../lib/me'
 import { copy } from '../../copy'
 import type { XCtx } from '../../ctx'
 
 const CrawlerSetup = lazy(() => import('../../../../features/crawlers/CrawlerSetup').then((m) => ({ default: m.CrawlerSetup })))
+const AnswersLine = lazy(() => import('../../../../features/answers/AnswersLine').then((m) => ({ default: m.AnswersLine })))
 const ROWS = 12
 
 /** Google's own searches, a few lines: what showed the site and was clicked (all of them are in Sources, Search). */
@@ -63,6 +65,11 @@ export default function AiTab({ x }: { x: XCtx }) {
   const reads: CRow[] = pages.map((p) => ({ key: p.path, a: p.flag ? `${p.path} · ${aiCopy.flag[p.flag]}` : p.path, bar: p.read / read, mono: true, onPick: () => x.pick('page', p.path), c: [fmtInt(p.read), fmtInt(p.sent)] }))
   return (
     <>
+      {hasAnswers() && (
+        <Suspense fallback={null}>
+          <AnswersLine x={x} />
+        </Suspense>
+      )}
       <XSec a={aiCopy.google}  />
       <GoogleLines x={x} />
       <XSec a={aiCopy.assistants} b={fmtInt(people.reduce((n, a) => n + a.visitors, 0))} />

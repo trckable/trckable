@@ -17,6 +17,7 @@ export type Action =
   | 'alert.manage'
   | 'payment.manage'
   | 'mention.manage'
+  | 'answers.manage'
   | 'data.erase'
   | 'peek.ask'
   | 'setup.run'
@@ -29,7 +30,7 @@ export type Action =
 /** Every action, the one list a new role's row is built from. */
 export const ACTIONS: readonly Action[] = [
   'site.add', 'site.settings', 'site.delete', 'goal.create', 'funnel.create', 'note.write',
-  'share.manage', 'widget.manage', 'alert.manage', 'payment.manage', 'mention.manage', 'data.erase',
+  'share.manage', 'widget.manage', 'alert.manage', 'payment.manage', 'mention.manage', 'answers.manage', 'data.erase',
   'peek.ask', 'setup.run', 'member.manage', 'team.manage', 'search.connect', 'import.google', 'update.check',
 ]
 

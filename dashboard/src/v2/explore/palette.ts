@@ -33,7 +33,7 @@ import { markersOn, setMarkers } from '../../features/markers/settings'
 import type { PaletteItem } from '../ui/Palette'
 
 /** The settings sections as the settings dialog names them (it is English), and the words besides that find each. */
-const TABS: Record<SettingsTab, string> = { site: 'General', install: 'Install', sharing: 'Sharing', widgets: 'Widgets', notes: 'Notes', payments: 'Payments', search: 'Search Console', mentions: 'Mentions', privacy: 'Data & privacy', alerts: 'Alerts', health: 'Health' }
+const TABS: Record<SettingsTab, string> = { site: 'General', install: 'Install', sharing: 'Sharing', widgets: 'Widgets', notes: 'Notes', payments: 'Payments', search: 'Search Console', mentions: 'Mentions', answers: 'Answers', privacy: 'Data & privacy', alerts: 'Alerts', health: 'Health' }
 const TAB_WORDS: Partial<Record<SettingsTab, string>> = { sharing: 'share link public', alerts: 'notifications email report', privacy: 'cookies consent gdpr', site: 'site settings name timezone currency', payments: 'money stripe paddle' }
 
 const PERIODS: [string, string][] = [['today', 'Today'], ['7d', 'Last 7 days'], ['30d', 'Last 30 days'], ['90d', 'Last 90 days']]

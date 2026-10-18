@@ -150,7 +150,7 @@ export function mapSpeed(cur: WebVitals, prev?: WebVitals): Speed {
 /** One line per robot: the report keeps a robot's errands (training, answering) apart, and the list says its name once with every hit. */
 export function mapBots(r: CrawlerReport): Bot[] {
   const by = new Map<string, number>()
-  for (const s of r.series) by.set(s.name, (by.get(s.name) ?? 0) + s.total)
+  for (const s of r.series ?? []) by.set(s.name, (by.get(s.name) ?? 0) + s.total)
   return [...by].map(([name, count]) => ({ name, count })).filter((b) => b.count > 0).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
 }
 

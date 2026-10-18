@@ -50,6 +50,7 @@ func (a *API) moments(w http.ResponseWriter, r *http.Request) {
 	out = append(out, salesOf(res)...)
 	out = append(out, a.firstsOf(r, q, p)...)
 	out = append(out, a.mentionMoments(r, site, p, ask.Loc)...)
+	out = append(out, a.answerMoments(r, site, p, ask.Loc)...)
 	out = append(out, a.dayMoments(r, site, ask)...)
 	out = moments.Explain(moments.Dedupe(out))
 	moments.Sort(out)

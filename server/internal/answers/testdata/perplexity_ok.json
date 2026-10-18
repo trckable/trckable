@@ -1,0 +1,1 @@
+{"model":"sonar","choices":[{"message":{"role":"assistant","content":"Example ties visits to revenue."}}],"search_results":[{"url":"https://www.example.com/compare/","title":"Compare"},{"url":"https://plausible.io/","title":"P"}],"citations":["https://plausible.io/","https://other.dev/a"],"usage":{"prompt_tokens":20,"completion_tokens":30}}

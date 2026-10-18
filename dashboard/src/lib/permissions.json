@@ -67,6 +67,12 @@
       ],
       "server": "instance.change"
     },
+    "answers.manage": {
+      "roles": [
+        "owner"
+      ],
+      "server": "instance.change"
+    },
     "data.erase": {
       "roles": [
         "owner"

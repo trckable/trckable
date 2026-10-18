@@ -65,7 +65,17 @@ type API struct {
 	// MentionGet fetches the news for the look-alike check on a name word; nil
 	// leaves that check off (it then says it checked nothing).
 	MentionGet mentions.Doer
-	lookAlike  lookAlikeGate
+	// AnswerEngines are the engines Answers has a key for (openai, perplexity,
+	// anthropic); none, or AnswersEvery 0, and Answers does not exist: its
+	// routes answer an empty set-up and nothing is asked. AnswersWake asks the
+	// scheduler to look now. AnswerBudget is the monthly cap in USD (0 = none),
+	// AnswerMax the questions a site may keep.
+	AnswerEngines []string
+	AnswersWake   func(site string)
+	AnswerBudget  int
+	AnswerMax     int
+	AnswerRuns    int // asks per question and engine in a round, to show progress
+	lookAlike     lookAlikeGate
 	// PurgeAnalytics removes a site's rows from the analytics store. It runs on
 	// the writer's connection (the only one allowed to write DuckDB); nil while
 	// the store is still warming up, and deleting a site then is refused.
@@ -311,6 +321,14 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}/busier", a.authed(a.busierNow))
 	handle("GET /api/v1/sites/{site}/incidents", a.authed(a.incidents))
 	handle("GET /api/v1/sites/{site}/probes", a.authed(a.probes))
+	handle("GET /api/v1/sites/{site}/answers/setup", a.authed(a.answersSetup))
+	handle("PUT /api/v1/sites/{site}/answers/questions", a.authed(a.setAnswerQuestions))
+	handle("PUT /api/v1/sites/{site}/answers/competitors", a.authed(a.setAnswerCompetitors))
+	handle("PUT /api/v1/sites/{site}/answers/country", a.authed(a.setAnswerCountry))
+	handle("POST /api/v1/sites/{site}/answers/run", a.authed(a.askAnswersNow))
+	handle("GET /api/v1/sites/{site}/answers/suggestions", a.authed(a.answerSuggestions))
+	handle("GET /api/v1/sites/{site}/answers/questions/{id}", a.authed(a.answerQuestion))
+	handle("GET /api/v1/sites/{site}/report/answers", a.authed(a.answersReport))
 	handle("GET /api/v1/sites/{site}/mentions", a.authed(a.ifMentions(a.mentions)))
 	handle("GET /api/v1/sites/{site}/mentions/keywords", a.authed(a.ifMentions(a.mentionKeywords)))
 	handle("GET /api/v1/sites/{site}/mentions/curves", a.authed(a.ifMentions(a.mentionCurves)))
@@ -995,7 +1013,7 @@ func (a *API) me(w http.ResponseWriter, r *http.Request) {
 	// The version is for the dashboard's footer; every response carries it in
 	// X-Trckable-Version anyway.
 	keys, _ := a.Ctl.UserKeymap(r.Context(), p.user.ID)
-	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys, "must_change": a.Ctl.MustChange(r.Context(), p.user.ID), "mentions": a.MentionsOn,
+	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys, "must_change": a.Ctl.MustChange(r.Context(), p.user.ID), "mentions": a.MentionsOn, "answers": a.AnswersOn(),
 		// Only owners upgrade, so only their dashboards look.
 		"update_check": a.UpdateCheck && permissions.Can(p.user.Role, permissions.ActUpdateCheck),
 		// The address this request came from: Filtering's "Add my current IP".
@@ -1102,6 +1120,7 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 		}
 		out[len(out)-1].ProbeBlockedSince = blocked[s.ID]
 		out[len(out)-1].Mentions = talked[s.ID]
+		out[len(out)-1].Answers = a.AnswersOn()
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"sites": out})
 }

@@ -80,7 +80,7 @@ export function Palette({ items, placeholder, none, onClose, initial = '', ask }
               }
             }}
           />
-          <div>
+          <div id="palList">
             {list.length === 0 && <div className="mk-quiet" style={{ padding: '14px 12px' }}>{none(q)}</div>}
             {list.map((i, k) => {
               const head = i.group && (k === 0 || list[k - 1].group !== i.group) ? <div className="pgh">{i.group}</div> : null

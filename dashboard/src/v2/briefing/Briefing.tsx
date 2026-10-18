@@ -24,6 +24,7 @@ import { replayInOf } from '../replay/storyIn'
 import { useReplay } from '../replay/useReplay'
 import { queryOf } from '../../lib/dashQuery'
 import { readView } from '../../lib/url'
+import { AnswersSlot } from './AnswersSlot'
 import { BounceNote } from './BounceNote'
 import { PaceFoot } from './PaceFoot'
 import { KeyHint } from '../ui/KeyHint'
@@ -223,6 +224,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
           )}
         </div>
         <WatchCard rows={watchRows} onStop={(k) => toggleWatch(k, { at: 0, m: 0, u: '' })} />
+        <AnswersSlot site={site} range={range} />
         {cards}
         {rest.length > 0 && (
           <button type="button" className="morebtn" id="moreBtn" onClick={() => ui.setAll((a) => !a)}>
