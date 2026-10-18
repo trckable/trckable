@@ -90,7 +90,10 @@ export interface AiPage {
 
 /** The AI & Search tab, less Google's terms. */
 export interface AiSearchReport {
+  /** The assistants' visitors added up: the sum of `assistants`. */
   visitors: number
+  /** Only assistants we know, busiest first; `referrer` is the host that sent most of them (none for an app that sends none). */
+  assistants: { name: string; visitors: number; referrer?: string }[]
   referrers: { value: string; visitors: number }[]
   crawled: number
   bots: AiBot[]

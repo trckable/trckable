@@ -9,7 +9,6 @@ import { cardModal } from '../../components/CardModal/copy'
 import { periodOf } from '../../components/CardModal/period'
 import { Loading } from '../../components/loading/Loading'
 import { fmtInt } from '../../lib/format'
-import { assistantOf, byAssistant } from '../extras/assistants'
 import { aiCopy, aiModalCopy as t, guideCopy } from './copy'
 import { useAiModal } from './useAiModal'
 import type { AiSeen } from './useAiSeen'
@@ -19,7 +18,7 @@ export default function AiModal({ site, seen, onClose, onGo }: { site: { id: str
   const data = useAiModal(site.id, period)
   const crawler = seen === 'crawler'
   const rep = data?.rep
-  const assistants = rep ? byAssistant(rep.referrers.map((r) => ({ value: r.value, visitors: r.visitors }))).slice(0, 5) : []
+  const assistants = rep ? rep.assistants.slice(0, 5) : []
   const landed = rep ? rep.pages.filter((p) => p.sent > 0).sort((a, b) => b.sent - a.sent).slice(0, 5) : []
   const read = rep ? rep.pages.filter((p) => p.read > 0).sort((a, b) => b.read - a.read).slice(0, 5) : []
   const series = data?.series ?? []
@@ -51,7 +50,7 @@ export default function AiModal({ site, seen, onClose, onGo }: { site: { id: str
       {rep && !crawler && (
         <>
           <Part title={aiCopy.assistants}>
-            {assistants.length ? <Bars label={aiCopy.assistants} rows={assistants.map((a) => ({ key: a.name, label: assistantOf(a.referrer), n: a.visitors }))} /> : <p className="faint">{aiCopy.noAssistants}</p>}
+            {assistants.length ? <Bars label={aiCopy.assistants} rows={assistants.map((a) => ({ key: a.name, label: a.name, n: a.visitors }))} /> : <p className="faint">{aiCopy.noAssistants}</p>}
           </Part>
           {landed.length > 0 && (
             <Part title={t.landed}>

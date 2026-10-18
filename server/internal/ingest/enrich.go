@@ -152,6 +152,17 @@ func isLocalAddr(host string) bool {
 	return false
 }
 
+// ChannelOf is the channel of a visit known only by its referrer and its
+// utm_source and utm_medium (a row brought in by `trckabled import`): the same
+// rules as a live visit, so a site's history and its present agree.
+func ChannelOf(referrer, source, medium string) string {
+	if referrer != "" && !strings.Contains(referrer, "://") {
+		referrer = "https://" + referrer // a bare host, as a file writes it
+	}
+	host, clean := parseReferrer(referrer, "")
+	return classify(parsedURL{UTMSource: clip(source, 128), UTMMedium: clip(strings.ToLower(medium), 128)}, host, clean)
+}
+
 // classify assigns the marketing channel, in priority order.
 func classify(p parsedURL, refHost, refURL string) string {
 	med := p.UTMMedium
