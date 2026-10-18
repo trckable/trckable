@@ -1,5 +1,7 @@
 package answers
 
+import "strings"
+
 // Prices as listed on 2026-10-18:
 //   https://developers.openai.com/api/docs/pricing (gpt-4.1-mini $0.40/$1.60 per 1M tokens, web search $10 per 1,000 calls)
 //   https://platform.claude.com/docs/en/about-claude/pricing (Haiku 5.5 from $0.10/$0.50 per 1M tokens, web search $10 per 1,000)
@@ -28,7 +30,7 @@ var prices = map[Engine]map[string]Price{
 // Cost estimates a call in micro-USD. A model not in the table costs what the
 // engine's most expensive row costs, never nothing.
 func Cost(e Engine, model string, u Usage) int64 {
-	p, ok := prices[e][model]
+	p, ok := price(e, model)
 	if !ok {
 		for _, x := range prices[e] {
 			p.InPerM = max(p.InPerM, x.InPerM)
@@ -45,4 +47,20 @@ func Cost(e Engine, model string, u Usage) int64 {
 // starts: about 3 searches and a few thousand tokens.
 func Typical(e Engine, model string) int64 {
 	return Cost(e, model, Usage{InputTokens: 8000, OutputTokens: 700, Searches: 3})
+}
+
+// price finds a model's row: the exact name, or the longest row name it starts
+// with before a dash (a provider's dated name, "gpt-4.1-mini-2025-04-14", is
+// its undated model).
+func price(e Engine, model string) (Price, bool) {
+	if p, ok := prices[e][model]; ok {
+		return p, true
+	}
+	best, found := "", false
+	for name := range prices[e] {
+		if strings.HasPrefix(model, name+"-") && len(name) > len(best) {
+			best, found = name, true
+		}
+	}
+	return prices[e][best], found
 }

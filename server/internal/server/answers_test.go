@@ -20,11 +20,15 @@ type fakeAsker struct {
 	fail   []error // errors for the next calls, in order; nil entries answer
 	names  bool    // whether the answer names the site
 	cites  string
+	hook   func() // called at the start of every ask
 }
 
 func (f *fakeAsker) Engine() answers.Engine { return f.engine }
 func (f *fakeAsker) Model() string          { return "m" }
 func (f *fakeAsker) Ask(_ context.Context, r answers.Request) (answers.Answer, error) {
+	if f.hook != nil {
+		f.hook()
+	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.calls++
@@ -322,5 +326,145 @@ func TestAnswersWeeklyLine(t *testing.T) {
 	}
 	if got := s.answersWeekLine(ctx, r.site, from.AddDate(0, 0, 7), from.AddDate(0, 0, 14)); got != "" {
 		t.Fatalf("a line for a week with no round: %q", got)
+	}
+}
+
+// (2) A save made while a round runs applies from the next round.
+func TestAnswersARoundKeepsItsQuestionsFrozen(t *testing.T) {
+	r := newAnswerRig(t, 0)
+	ctx := context.Background()
+	added := false
+	r.fakes[answers.OpenAI].hook = func() {
+		if added {
+			return
+		}
+		added = true
+		qs, _ := r.st.AnswerQuestionsOf(ctx, r.site)
+		qs = append(qs, sqlite.AnswerQuestion{Text: "a question added mid round", Active: true})
+		if err := r.st.SetAnswerQuestions(ctx, r.site, qs, r.now.Unix()); err != nil {
+			t.Error(err)
+		}
+	}
+	r.f.tick(ctx)
+	if r.calls() != 12 || r.runs(t, r.site) != 12 {
+		t.Fatalf("the new question joined the round: %d calls, %d runs", r.calls(), r.runs(t, r.site))
+	}
+	r.now = r.now.Add(8 * 24 * time.Hour)
+	r.f.tick(ctx)
+	if r.calls() != 12+18 {
+		t.Fatalf("the next round asks all three: %d calls", r.calls())
+	}
+}
+
+// (3) The month's pause is told once, however many sites the budget refuses.
+func TestAnswersThePauseIsToldOncePerMonth(t *testing.T) {
+	r := newAnswerRig(t, 0)
+	ctx := context.Background()
+	est := int64(0)
+	for _, a := range r.f.askers {
+		est += answers.Typical(a.Engine(), "m")
+	}
+	small := r.addSite(t, "small.example", 1)
+	r.f.budget = est * 3
+	// The two-question site needs 4 est and is refused; the one-question site needs 2 and runs.
+	r.f.tick(ctx)
+	if r.runs(t, small) != 6 || r.runs(t, r.site) != 0 {
+		t.Fatalf("small %d, big %d", r.runs(t, small), r.runs(t, r.site))
+	}
+	if len(r.told) == 0 {
+		t.Fatal("nobody was told")
+	}
+	n := len(r.told)
+	third := r.addSite(t, "third.example", 2) // refused too
+	r.now = r.now.Add(time.Hour)
+	r.f.tick(ctx)
+	if r.runs(t, third) != 0 || len(r.told) != n {
+		t.Fatalf("told again: %d then %d", n, len(r.told))
+	}
+}
+
+// (4) A site the budget refuses waits for next month and frees its place.
+func TestAnswersARefusedSiteDoesNotBlockTheOthers(t *testing.T) {
+	r := newAnswerRig(t, 0)
+	ctx := context.Background()
+	r.f.budget = 100_000
+	r.f.tick(ctx)
+	as, _ := r.st.AnswerSiteOf(ctx, r.site)
+	if as.NextAt != time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC).Unix() {
+		t.Fatalf("next round %d", as.NextAt)
+	}
+	if due, _ := r.st.AnswerSitesDue(ctx, r.now.Unix(), 3); len(due) != 0 {
+		t.Fatalf("the refused site still takes a place: %v", due)
+	}
+	r.now = time.Date(2026, 11, 1, 0, 1, 0, 0, time.UTC)
+	r.f.budget = 0
+	r.f.tick(ctx)
+	if r.runs(t, r.site) != 12 {
+		t.Fatalf("not asked when the month began: %d", r.runs(t, r.site))
+	}
+}
+
+// (5) What a running round holds survives a restart.
+func TestAnswersAReservationSurvivesARestart(t *testing.T) {
+	r := newAnswerRig(t, 0)
+	ctx := context.Background()
+	est := int64(0)
+	for _, a := range r.f.askers {
+		est += answers.Typical(a.Engine(), "m")
+	}
+	est *= 4
+	other := r.addSite(t, "other.example", 2)
+	r.f.budget = est * 3 / 2
+	as, _ := r.st.AnswerSiteOf(ctx, r.site)
+	if _, ok := r.f.start(ctx, as); !ok { // started, then the process "dies" before asking anything
+		t.Fatal("first round refused")
+	}
+	again := &answerAsker{st: r.st, askers: r.f.askers, every: r.f.every, runs: r.f.runs, budget: r.f.budget, now: r.f.now, sleep: r.f.sleep}
+	oas, _ := r.st.AnswerSiteOf(ctx, other)
+	if _, ok := again.start(ctx, oas); ok {
+		t.Fatal("a restarted server forgot what the running round holds")
+	}
+}
+
+// (6) Dated model names have a price, and a timed-out call is not free.
+func TestAnswersAFailedCallStillCosts(t *testing.T) {
+	r := newAnswerRig(t, 0)
+	ctx := context.Background()
+	r.fakes[answers.OpenAI].fail = []error{context.DeadlineExceeded}
+	r.f.tick(ctx)
+	var cost int64
+	var msg string
+	_ = r.st.DB.QueryRow(`SELECT cost_micros, error FROM answer_runs WHERE ok = 0`).Scan(&cost, &msg)
+	if cost != answers.Typical(answers.OpenAI, "m") || msg != answerFailMsg {
+		t.Fatalf("cost %d message %q", cost, msg)
+	}
+	if spend, _ := r.st.AnswerSpend(ctx, "2026-10"); spend < cost {
+		t.Fatalf("spend %d", spend)
+	}
+}
+
+// (7) A run that cannot be kept still counts, and is not asked again.
+func TestAnswersAnUnsavableRunIsNotAPaidLoop(t *testing.T) {
+	r := newAnswerRig(t, 0)
+	ctx := context.Background()
+	if err := r.st.SetAnswerCompetitors(ctx, r.site, []sqlite.AnswerCompetitor{{Name: "Plausible"}}, 1); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.st.DB.Exec(`DROP TABLE answer_rivals`); err != nil { // every save now fails
+		t.Fatal(err)
+	}
+	r.f.tick(ctx)
+	first := r.calls()
+	if first == 0 || first > 3*2 {
+		t.Fatalf("one ask per question and engine may be lost, not more: %d calls", first)
+	}
+	spend, _ := r.st.AnswerSpend(ctx, "2026-10")
+	if spend == 0 {
+		t.Fatal("paid asks that could not be kept are not counted")
+	}
+	r.f.tick(ctx)
+	r.f.tick(ctx)
+	if r.calls() != first {
+		t.Fatalf("asked again: %d then %d", first, r.calls())
 	}
 }

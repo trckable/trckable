@@ -326,10 +326,8 @@ func (a *API) answerSuggestions(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusNotFound, "site not found")
 		return
 	}
-	out := map[string]any{"questions": []string{}, "competitors": []answers.Rival{}}
 	if !a.AnswersOn() {
-		out = map[string]any{"engines": []any{}}
-		writeJSON(w, http.StatusOK, out)
+		writeJSON(w, http.StatusOK, map[string]any{"engines": []any{}})
 		return
 	}
 	words, _ := a.Ctl.SearchWords(r.Context(), sqlite.SiteRow{ID: si.ID, Domain: si.Domain, Name: si.Name})

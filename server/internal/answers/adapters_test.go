@@ -165,3 +165,22 @@ func TestCostNeverZeroForUnknown(t *testing.T) {
 		t.Error("typical is zero")
 	}
 }
+
+func TestCostKnowsDatedModelNames(t *testing.T) {
+	u := Usage{InputTokens: 10000, OutputTokens: 1000, Searches: 2}
+	for _, c := range []struct {
+		e            Engine
+		dated, plain string
+	}{
+		{OpenAI, "gpt-4.1-mini-2025-04-14", "gpt-4.1-mini"},
+		{OpenAI, "gpt-4.1-2025-04-14", "gpt-4.1"},
+		{Anthropic, "claude-haiku-5-5-20261001", "claude-haiku-5-5"},
+	} {
+		if Cost(c.e, c.dated, u) != Cost(c.e, c.plain, u) {
+			t.Errorf("%s costs %d, want the price of %s (%d)", c.dated, Cost(c.e, c.dated, u), c.plain, Cost(c.e, c.plain, u))
+		}
+	}
+	if Cost(OpenAI, "gpt-4.1-mini-2025-04-14", u) >= Cost(OpenAI, "something-new", u) {
+		t.Error("a known dated model costs as much as an unknown one")
+	}
+}

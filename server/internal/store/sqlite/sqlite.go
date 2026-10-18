@@ -910,7 +910,7 @@ var migrations = []string{
 		PRIMARY KEY (site_id, kind, value)
 	) WITHOUT ROWID;`,
 	// 71: Answers. Questions an owner asks AI assistants, the sites to compare
-	// with, one row per answer (ok = 0 for a failed ask, with our own short
+	// with, the questions a running round froze at its start and the budget it holds, one row per answer (ok = 0 for a failed ask, with our own short
 	// message), the other sites each answer named or linked, the changes a
 	// finished round made (seen, dropped) for moments, the bell and alerts, and
 	// the estimated spend per month for the server-wide budget.
@@ -920,6 +920,8 @@ var migrations = []string{
 		next_at    INTEGER NOT NULL DEFAULT 0,
 		round      INTEGER NOT NULL DEFAULT 0,
 		asked_at   INTEGER NOT NULL DEFAULT 0,
+		frozen     TEXT NOT NULL DEFAULT '',
+		reserved   INTEGER NOT NULL DEFAULT 0,
 		updated_at INTEGER NOT NULL
 	) WITHOUT ROWID;
 	CREATE TABLE IF NOT EXISTS answer_questions (

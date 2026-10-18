@@ -14,6 +14,9 @@ type AnswerSite struct {
 	NextAt  int64 // 0 = due now
 	Round   int64 // the round in progress (unix seconds it began); 0 = none
 	AskedAt int64 // last "Ask now"
+	// Frozen are the question ids the running round asks: fixed when it began,
+	// so a save made during a round applies from the next one.
+	Frozen []int64
 }
 
 // AnswerQuestion is one question a site asks.
@@ -73,11 +76,13 @@ const AnswerPausedKey = "answers_paused_until"
 // AnswerSiteOf reads a site's schedule; a site that never had one is due now.
 func (s *Store) AnswerSiteOf(ctx context.Context, site string) (AnswerSite, error) {
 	a := AnswerSite{SiteID: site}
-	err := s.DB.QueryRowContext(ctx, `SELECT country, next_at, round, asked_at FROM answer_sites WHERE site_id = ?`, site).
-		Scan(&a.Country, &a.NextAt, &a.Round, &a.AskedAt)
+	var frozen string
+	err := s.DB.QueryRowContext(ctx, `SELECT country, next_at, round, asked_at, frozen FROM answer_sites WHERE site_id = ?`, site).
+		Scan(&a.Country, &a.NextAt, &a.Round, &a.AskedAt, &frozen)
 	if err == sql.ErrNoRows {
 		return a, nil
 	}
+	a.Frozen = parseIDs(frozen)
 	return a, err
 }
 
@@ -210,14 +215,14 @@ func (s *Store) SetAnswerCompetitors(ctx context.Context, site string, list []An
 
 // AnswerSitesInProgress lists the sites with a round still asking.
 func (s *Store) AnswerSitesInProgress(ctx context.Context) ([]AnswerSite, error) {
-	return s.answerSites(ctx, `SELECT site_id, country, next_at, round, asked_at FROM answer_sites a WHERE round != 0
+	return s.answerSites(ctx, `SELECT site_id, country, next_at, round, asked_at, frozen FROM answer_sites a WHERE round != 0
 		AND EXISTS (SELECT 1 FROM answer_questions q WHERE q.site_id = a.site_id) ORDER BY round`, nil)
 }
 
 // AnswerSitesDue lists the sites with an active question whose next round is
 // due and none running, the longest waiting first.
 func (s *Store) AnswerSitesDue(ctx context.Context, now int64, limit int) ([]AnswerSite, error) {
-	return s.answerSites(ctx, `SELECT q.site_id, coalesce(a.country, ''), coalesce(a.next_at, 0), coalesce(a.round, 0), coalesce(a.asked_at, 0)
+	return s.answerSites(ctx, `SELECT q.site_id, coalesce(a.country, ''), coalesce(a.next_at, 0), coalesce(a.round, 0), coalesce(a.asked_at, 0), coalesce(a.frozen, '')
 		FROM (SELECT DISTINCT site_id FROM answer_questions WHERE active = 1) q LEFT JOIN answer_sites a ON a.site_id = q.site_id
 		WHERE coalesce(a.round, 0) = 0 AND coalesce(a.next_at, 0) <= ? ORDER BY coalesce(a.next_at, 0), q.site_id LIMIT ?`, []any{now, limit})
 }
@@ -231,9 +236,11 @@ func (s *Store) answerSites(ctx context.Context, query string, args []any) ([]An
 	var out []AnswerSite
 	for rows.Next() {
 		var a AnswerSite
-		if err := rows.Scan(&a.SiteID, &a.Country, &a.NextAt, &a.Round, &a.AskedAt); err != nil {
+		var frozen string
+		if err := rows.Scan(&a.SiteID, &a.Country, &a.NextAt, &a.Round, &a.AskedAt, &frozen); err != nil {
 			return nil, err
 		}
+		a.Frozen = parseIDs(frozen)
 		out = append(out, a)
 	}
 	return out, rows.Err()
@@ -245,12 +252,57 @@ func (s *Store) AnswerSitesWithQuestions(ctx context.Context) (n int, err error)
 	return n, err
 }
 
-// StartAnswerRound marks a round as running.
-func (s *Store) StartAnswerRound(ctx context.Context, site string, round, now int64) error {
+// StartAnswerRound marks a round as running, with the questions it asks and
+// the budget it holds (micro-USD), both kept so a restart resumes the same round.
+func (s *Store) StartAnswerRound(ctx context.Context, site string, round int64, questions []int64, reserved, now int64) error {
 	if err := s.ensureAnswerSite(ctx, site, now); err != nil {
 		return err
 	}
-	_, err := s.DB.ExecContext(ctx, `UPDATE answer_sites SET round = ?, updated_at = ? WHERE site_id = ?`, round, now, site)
+	ids := make([]string, len(questions))
+	for i, q := range questions {
+		ids[i] = strconv.FormatInt(q, 10)
+	}
+	_, err := s.DB.ExecContext(ctx, `UPDATE answer_sites SET round = ?, frozen = ?, reserved = ?, updated_at = ? WHERE site_id = ?`, round, strings.Join(ids, ","), reserved, now, site)
+	return err
+}
+
+func parseIDs(s string) []int64 {
+	var out []int64
+	for _, p := range strings.Split(s, ",") {
+		if n, err := strconv.ParseInt(p, 10, 64); err == nil {
+			out = append(out, n)
+		}
+	}
+	return out
+}
+
+// AnswerReserved is the budget every running round still holds, in micro-USD.
+func (s *Store) AnswerReserved(ctx context.Context) (n int64, err error) {
+	err = s.DB.QueryRowContext(ctx, `SELECT coalesce(sum(reserved), 0) FROM answer_sites WHERE round != 0`).Scan(&n)
+	return n, err
+}
+
+// ReleaseAnswerReserve lowers what a running round holds, as its asks are paid for.
+func (s *Store) ReleaseAnswerReserve(ctx context.Context, site string, n int64) error {
+	_, err := s.DB.ExecContext(ctx, `UPDATE answer_sites SET reserved = max(reserved - ?, 0) WHERE site_id = ?`, n, site)
+	return err
+}
+
+// DelayAnswers moves a site's next round to the given time (a site the budget
+// refused waits for next month instead of being looked at every tick).
+func (s *Store) DelayAnswers(ctx context.Context, site string, until, now int64) error {
+	if err := s.ensureAnswerSite(ctx, site, now); err != nil {
+		return err
+	}
+	_, err := s.DB.ExecContext(ctx, `UPDATE answer_sites SET next_at = ?, updated_at = ? WHERE site_id = ?`, until, now, site)
+	return err
+}
+
+// AddAnswerSpend adds to a month's estimated spend: the cost of a call whose
+// answer could not be kept.
+func (s *Store) AddAnswerSpend(ctx context.Context, month string, micros int64) error {
+	_, err := s.DB.ExecContext(ctx, `INSERT INTO answer_spend (month, cost_micros) VALUES (?, ?)
+		ON CONFLICT(month) DO UPDATE SET cost_micros = cost_micros + excluded.cost_micros`, month, micros)
 	return err
 }
 
@@ -412,7 +464,7 @@ func (s *Store) FinishAnswerRound(ctx context.Context, site string, round, nextA
 		}
 		out = append(out, ch)
 	}
-	if _, err := tx.ExecContext(ctx, `UPDATE answer_sites SET round = 0, next_at = ?, updated_at = ? WHERE site_id = ?`, nextAt, now, site); err != nil {
+	if _, err := tx.ExecContext(ctx, `UPDATE answer_sites SET round = 0, frozen = '', reserved = 0, next_at = ?, updated_at = ? WHERE site_id = ?`, nextAt, now, site); err != nil {
 		return nil, err
 	}
 	return out, tx.Commit()
@@ -420,7 +472,7 @@ func (s *Store) FinishAnswerRound(ctx context.Context, site string, round, nextA
 
 // AnswerDropsToTell lists dropped changes not yet alerted.
 func (s *Store) AnswerDropsToTell(ctx context.Context, site string) ([]AnswerChange, error) {
-	return s.answerChanges(ctx, `WHERE c.site_id = ? AND c.kind = 'dropped' AND c.alerted = 0 ORDER BY c.round`, []any{site}, 0)
+	return s.answerChanges(ctx, site, true, 0, 0)
 }
 
 // MarkAnswerAlerted notes that a change was told.
@@ -431,18 +483,20 @@ func (s *Store) MarkAnswerAlerted(ctx context.Context, c AnswerChange) error {
 
 // AnswerChangesIn lists the changes of rounds that began since the given time, newest first.
 func (s *Store) AnswerChangesIn(ctx context.Context, site string, since int64, limit int) ([]AnswerChange, error) {
-	return s.answerChanges(ctx, `WHERE c.site_id = ? AND c.round >= ? ORDER BY c.round DESC, c.question_id, c.engine`, []any{site, since}, limit)
+	return s.answerChanges(ctx, site, false, since, limit)
 }
 
-func (s *Store) answerChanges(ctx context.Context, where string, args []any, limit int) ([]AnswerChange, error) {
-	q := `SELECT c.site_id, c.question_id, qs.text, c.engine, c.round, c.kind, c.first_ever, c.alerted,
-		coalesce((SELECT max(r.asked_at) FROM answer_runs r WHERE r.question_id = c.question_id AND r.round = c.round AND r.engine = c.engine), c.round)
-		FROM answer_changes c JOIN answer_questions qs ON qs.id = c.question_id ` + where
-	if limit > 0 {
-		q += " LIMIT ?"
-		args = append(args, limit)
+// answerChanges reads a site's changes: the dropped ones not yet told, or all
+// of those from `since` on, newest first (limit 0 is no limit).
+func (s *Store) answerChanges(ctx context.Context, site string, untold bool, since int64, limit int) ([]AnswerChange, error) {
+	if limit <= 0 {
+		limit = -1
 	}
-	rows, err := s.DB.QueryContext(ctx, q, args...)
+	rows, err := s.DB.QueryContext(ctx, `SELECT c.site_id, c.question_id, qs.text, c.engine, c.round, c.kind, c.first_ever, c.alerted,
+		coalesce((SELECT max(r.asked_at) FROM answer_runs r WHERE r.question_id = c.question_id AND r.round = c.round AND r.engine = c.engine), c.round)
+		FROM answer_changes c JOIN answer_questions qs ON qs.id = c.question_id
+		WHERE c.site_id = ? AND (CASE WHEN ? THEN c.kind = 'dropped' AND c.alerted = 0 ELSE c.round >= ? END)
+		ORDER BY CASE WHEN ? THEN c.round ELSE -c.round END, c.question_id, c.engine LIMIT ?`, site, untold, since, untold, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -477,26 +531,25 @@ func (s *Store) AnswerRounds(ctx context.Context, site string) ([]AnswerRound, e
 	return out, rows.Err()
 }
 
-// AnswerRunsOf lists a round's runs, with their rivals but without the long
-// text. Pass question 0 for every question.
+// AnswerRunsOf lists a round's runs, with their rivals but without the long text.
 func (s *Store) AnswerRunsOf(ctx context.Context, site string, round int64) ([]AnswerRun, error) {
-	return s.answerRuns(ctx, `r.site_id = ? AND r.round = ?`, []any{site, round}, false)
+	return s.answerRuns(ctx, site, round, 0, 0, false)
 }
 
 // AnswerQuestionRuns lists the runs of one question over its last `rounds` rounds, newest first, with text.
 func (s *Store) AnswerQuestionRuns(ctx context.Context, site string, question int64, rounds int) ([]AnswerRun, error) {
-	return s.answerRuns(ctx, `r.site_id = ? AND r.question_id = ? AND r.round IN (SELECT DISTINCT round FROM answer_runs WHERE question_id = ? ORDER BY round DESC LIMIT ?)`,
-		[]any{site, question, question, rounds}, true)
+	return s.answerRuns(ctx, site, 0, question, rounds, true)
 }
 
-func (s *Store) answerRuns(ctx context.Context, where string, args []any, withText bool) ([]AnswerRun, error) {
-	text := "''"
-	if withText {
-		text = "r.text"
-	}
-	rows, err := s.DB.QueryContext(ctx, `SELECT r.id, r.site_id, r.question_id, r.round, r.engine, r.model, r.run, r.asked_at, r.ok, r.error, `+text+`,
-		r.citations, `+map[bool]string{true: "r.sources", false: "'[]'"}[withText]+`, r.named, r.cited, r.position, r.cited_paths, r.cost_micros
-		FROM answer_runs r WHERE `+where+` ORDER BY r.round DESC, r.question_id, r.engine, r.run`, args...)
+// answerRuns reads runs of one round (round != 0) or of one question's last
+// `rounds` rounds (question != 0).
+func (s *Store) answerRuns(ctx context.Context, site string, round, question int64, rounds int, withText bool) ([]AnswerRun, error) {
+	const where = `r.site_id = ? AND (? = 0 OR r.round = ?) AND (? = 0 OR r.question_id = ?)
+		AND (? = 0 OR r.round IN (SELECT DISTINCT round FROM answer_runs WHERE question_id = ? ORDER BY round DESC LIMIT ?))`
+	args := []any{site, round, round, question, question, rounds, question, max(rounds, 1)}
+	rows, err := s.DB.QueryContext(ctx, `SELECT r.id, r.site_id, r.question_id, r.round, r.engine, r.model, r.run, r.asked_at, r.ok, r.error,
+		CASE WHEN ? THEN r.text ELSE '' END, r.citations, CASE WHEN ? THEN r.sources ELSE '[]' END, r.named, r.cited, r.position, r.cited_paths, r.cost_micros
+		FROM answer_runs r WHERE `+where+` ORDER BY r.round DESC, r.question_id, r.engine, r.run`, append([]any{withText, withText}, args...)...)
 	if err != nil {
 		return nil, err
 	}

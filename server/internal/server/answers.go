@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"log/slog"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -55,10 +56,11 @@ type answerAsker struct {
 	// told sends an alert of kind "answer" to one site's people; it says whether anyone was told.
 	told func(ctx context.Context, site, title, msg string) bool
 
-	mu       sync.Mutex
-	reserved map[string]int64 // micro-USD still reserved for each site's running round
-	broken   map[answers.Engine]bool
-	stalls   map[string]int
+	mu      sync.Mutex
+	broken  map[answers.Engine]bool
+	stalls  map[string]int
+	blocked map[string]bool  // "site/round/question": an ask was paid for and could not be kept, so it is not asked again this round
+	unsaved map[string]int64 // month -> micro-USD paid for asks that could not be kept (counted when even the spend could not be written)
 }
 
 // newAnswerAsker builds the scheduler from the keys this server has.
@@ -166,16 +168,18 @@ func (f *answerAsker) tick(ctx context.Context) {
 	}
 }
 
-// start reserves a whole round against the budget and marks it running.
+// start reserves a whole round against the budget and marks it running. The
+// round asks the questions active now, and only those: a save made while it
+// runs applies from the next round. A site the budget refuses waits for next month.
 func (f *answerAsker) start(ctx context.Context, site sqlite.AnswerSite) (sqlite.AnswerSite, bool) {
 	qs, err := f.st.AnswerQuestionsOf(ctx, site.SiteID)
 	if err != nil {
 		return site, false
 	}
-	active := 0
+	var ids []int64
 	for _, q := range qs {
 		if q.Active {
-			active++
+			ids = append(ids, q.ID)
 		}
 	}
 	var perCall int64
@@ -183,45 +187,43 @@ func (f *answerAsker) start(ctx context.Context, site sqlite.AnswerSite) (sqlite
 	for _, a := range engines {
 		perCall += answers.Typical(a.Engine(), f.model(a))
 	}
-	est := int64(active*f.runs) * perCall
+	est := int64(len(ids)*f.runs) * perCall
 	now := f.now()
-	if active == 0 || len(engines) == 0 {
+	if len(ids) == 0 || len(engines) == 0 {
 		return site, false
 	}
 	if f.budget > 0 {
 		f.mu.Lock()
 		defer f.mu.Unlock()
 		spent, err := f.st.AnswerSpend(ctx, month(now))
-		if err != nil {
+		held, err2 := f.st.AnswerReserved(ctx)
+		if err != nil || err2 != nil {
 			return site, false
 		}
-		var held int64
-		for _, v := range f.reserved {
-			held += v
-		}
+		spent += f.unsaved[month(now)]
 		share := f.budget
 		if n, err := f.st.AnswerSitesWithQuestions(ctx); err == nil && n > 1 {
 			share = f.budget / int64(n)
 		}
 		mine, _ := f.st.AnswerSiteSpend(ctx, site.SiteID, monthStart(now).Unix())
+		nextMonth := monthStart(now).AddDate(0, 1, 0).Unix()
 		switch {
 		case spent+held+est > f.budget:
 			f.holdBack(ctx, now)
+			_ = f.st.DelayAnswers(ctx, site.SiteID, nextMonth, now.Unix())
 			return site, false
 		case mine > 0 && mine+est > share:
-			return site, false // a fair share is spent; the next month starts afresh
+			// A fair share is spent: this site waits for next month, so it
+			// does not keep a place that other sites could have.
+			_ = f.st.DelayAnswers(ctx, site.SiteID, nextMonth, now.Unix())
+			return site, false
 		}
-		_ = f.st.DeleteMeta(ctx, sqlite.AnswerPausedKey) // room again (the cap was raised, or a month began)
-		if f.reserved == nil {
-			f.reserved = map[string]int64{}
-		}
-		f.reserved[site.SiteID] = est
 	}
 	round := now.Unix()
-	if err := f.st.StartAnswerRound(ctx, site.SiteID, round, round); err != nil {
+	if err := f.st.StartAnswerRound(ctx, site.SiteID, round, ids, est, round); err != nil {
 		return site, false
 	}
-	site.Round = round
+	site.Round, site.Frozen = round, ids
 	return site, true
 }
 
@@ -255,15 +257,9 @@ func (f *answerAsker) runRound(ctx context.Context, site sqlite.AnswerSite) {
 	if err != nil {
 		return
 	}
-	qs, err := f.st.AnswerQuestionsOf(ctx, site.SiteID)
+	active, err := f.roundQuestions(ctx, site)
 	if err != nil {
 		return
-	}
-	var active []sqlite.AnswerQuestion
-	for _, q := range qs {
-		if q.Active {
-			active = append(active, q)
-		}
 	}
 	words, err := f.st.SearchWords(ctx, sqlite.SiteRow{ID: row.ID, Domain: row.Domain, Name: row.Name})
 	if err != nil {
@@ -286,7 +282,7 @@ func (f *answerAsker) runRound(ctx context.Context, site sqlite.AnswerSite) {
 		var todo []askSlot
 		for _, q := range active {
 			for r := 1; r <= f.runs; r++ {
-				if !done[sqlite.DoneKey(q.ID, string(a.Engine()), r)] {
+				if !done[sqlite.DoneKey(q.ID, string(a.Engine()), r)] && !f.isBlocked(site, q.ID) {
 					todo = append(todo, askSlot{q, r})
 				}
 			}
@@ -341,6 +337,9 @@ func (f *answerAsker) askEngine(ctx context.Context, a answers.Asker, site sqlit
 		if ctx.Err() != nil {
 			return stored, false
 		}
+		if f.isBlocked(site, slot.q.ID) {
+			continue
+		}
 		if f.pause.blocked(string(engine), f.now()) {
 			return stored, true
 		}
@@ -388,36 +387,29 @@ func (f *answerAsker) askEngine(ctx context.Context, a answers.Asker, site sqlit
 		case ctx.Err() != nil:
 			return stored, false
 		default:
-			run.Error = answerFailMsg
+			// A call that timed out or came back unreadable may still be billed.
+			run.Error, run.CostMicros = answerFailMsg, answers.Typical(engine, f.model(a))
 		}
 		if err := f.st.SaveAnswerRun(ctx, run, month(f.now())); err != nil {
 			slog.Warn("answers: a run was not kept", "err", err)
-			return stored, false
+			f.lose(ctx, site, slot.q.ID, run.CostMicros)
+			continue
 		}
 		stored++
-		f.release(site.SiteID, answers.Typical(engine, f.model(a)))
+		f.release(ctx, site.SiteID, answers.Typical(engine, f.model(a)))
 	}
 	return stored, false
 }
 
-func (f *answerAsker) release(site string, n int64) {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	if f.reserved != nil {
-		f.reserved[site] = max(f.reserved[site]-n, 0)
-	}
+func (f *answerAsker) release(ctx context.Context, site string, n int64) {
+	_ = f.st.ReleaseAnswerReserve(ctx, site, n)
 }
 
 // failRest stores a failed run, with a fixed message, for every ask of the
 // engine still missing in the round, so the round can end.
 func (f *answerAsker) failRest(ctx context.Context, a answers.Asker, site sqlite.AnswerSite, active []sqlite.AnswerQuestion, msg string) {
 	if active == nil {
-		qs, _ := f.st.AnswerQuestionsOf(ctx, site.SiteID)
-		for _, q := range qs {
-			if q.Active {
-				active = append(active, q)
-			}
-		}
+		active, _ = f.roundQuestions(ctx, site)
 	}
 	done, err := f.st.AnswerDone(ctx, site.SiteID, site.Round)
 	if err != nil {
@@ -425,7 +417,7 @@ func (f *answerAsker) failRest(ctx context.Context, a answers.Asker, site sqlite
 	}
 	for _, q := range active {
 		for r := 1; r <= f.runs; r++ {
-			if done[sqlite.DoneKey(q.ID, string(a.Engine()), r)] {
+			if done[sqlite.DoneKey(q.ID, string(a.Engine()), r)] || f.isBlocked(site, q.ID) {
 				continue
 			}
 			_ = f.st.SaveAnswerRun(ctx, sqlite.AnswerRun{SiteID: site.SiteID, QuestionID: q.ID, Round: site.Round, Engine: string(a.Engine()),
@@ -449,7 +441,7 @@ func (f *answerAsker) finish(ctx context.Context, site sqlite.AnswerSite, active
 	for _, q := range active {
 		for _, a := range f.askers {
 			for r := 1; r <= f.runs; r++ {
-				if !done[sqlite.DoneKey(q.ID, string(a.Engine()), r)] {
+				if !done[sqlite.DoneKey(q.ID, string(a.Engine()), r)] && !f.isBlocked(site, q.ID) {
 					return
 				}
 			}
@@ -462,9 +454,6 @@ func (f *answerAsker) finish(ctx context.Context, site sqlite.AnswerSite, active
 		slog.Warn("answers: a round was not closed", "err", err)
 		return
 	}
-	f.mu.Lock()
-	delete(f.reserved, site.SiteID)
-	f.mu.Unlock()
 	for _, c := range changes {
 		if c.Kind != "dropped" || f.told == nil {
 			continue
@@ -473,6 +462,53 @@ func (f *answerAsker) finish(ctx context.Context, site sqlite.AnswerSite, active
 		if f.told(ctx, site.SiteID, who+" stopped naming you", fmt.Sprintf("For the question %q, %s named or linked your site in the last two rounds and did not this time.", c.Question, who)) {
 			_ = f.st.MarkAnswerAlerted(ctx, c)
 		}
+	}
+}
+
+// roundQuestions are the questions a running round asks: the ones it froze at
+// its start that still exist.
+func (f *answerAsker) roundQuestions(ctx context.Context, site sqlite.AnswerSite) ([]sqlite.AnswerQuestion, error) {
+	qs, err := f.st.AnswerQuestionsOf(ctx, site.SiteID)
+	if err != nil {
+		return nil, err
+	}
+	var out []sqlite.AnswerQuestion
+	for _, q := range qs {
+		if slices.Contains(site.Frozen, q.ID) {
+			out = append(out, q)
+		}
+	}
+	return out, nil
+}
+
+func blockKey(site sqlite.AnswerSite, q int64) string {
+	return site.SiteID + "/" + strconv.FormatInt(site.Round, 10) + "/" + strconv.FormatInt(q, 10)
+}
+
+func (f *answerAsker) isBlocked(site sqlite.AnswerSite, q int64) bool {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.blocked[blockKey(site, q)]
+}
+
+// lose is an ask that was paid for and could not be kept: its cost still counts
+// against the budget, and the question is not asked again in this round, so a
+// failing store is not a paid loop.
+func (f *answerAsker) lose(ctx context.Context, site sqlite.AnswerSite, q, cost int64) {
+	f.mu.Lock()
+	if f.blocked == nil {
+		f.blocked = map[string]bool{}
+	}
+	f.blocked[blockKey(site, q)] = true
+	f.mu.Unlock()
+	m := month(f.now())
+	if cost > 0 && f.st.AddAnswerSpend(ctx, m, cost) != nil {
+		f.mu.Lock()
+		if f.unsaved == nil {
+			f.unsaved = map[string]int64{}
+		}
+		f.unsaved[m] += cost
+		f.mu.Unlock()
 	}
 }
 

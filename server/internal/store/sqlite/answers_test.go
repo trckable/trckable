@@ -39,7 +39,7 @@ func TestAnswerRoundChanges(t *testing.T) {
 	q := qs[0].ID
 	round := func(r int64, seen bool) []AnswerChange {
 		t.Helper()
-		if err := st.StartAnswerRound(ctx, site, r, r); err != nil {
+		if err := st.StartAnswerRound(ctx, site, r, []int64{q}, 0, r); err != nil {
 			t.Fatal(err)
 		}
 		for run := 1; run <= 2; run++ {
@@ -117,7 +117,7 @@ func TestAnswerDueAndPrune(t *testing.T) {
 	if due, _ := st.AnswerSitesDue(ctx, 100, 3); len(due) != 1 {
 		t.Fatal("a site with a question and no schedule is due")
 	}
-	_ = st.StartAnswerRound(ctx, site, 100, 100)
+	_ = st.StartAnswerRound(ctx, site, 100, []int64{1}, 500, 100)
 	if due, _ := st.AnswerSitesDue(ctx, 200, 3); len(due) != 0 {
 		t.Fatal("a running round is not due again")
 	}
@@ -149,5 +149,28 @@ func TestAnswerDueAndPrune(t *testing.T) {
 	a, _ := st.AnswerSiteOf(ctx, site)
 	if a.NextAt != 0 || a.AskedAt != 5 {
 		t.Fatalf("%+v", a)
+	}
+}
+
+func TestAnswerRoundKeepsItsQuestionsAndBudget(t *testing.T) {
+	ctx := context.Background()
+	st, site := openIncidents(t)
+	_ = st.SetAnswerQuestions(ctx, site, []AnswerQuestion{{Text: "best open analytics", Active: true}}, 1)
+	_ = st.StartAnswerRound(ctx, site, 100, []int64{7, 9}, 500, 100)
+	as, _ := st.AnswerSiteOf(ctx, site)
+	if len(as.Frozen) != 2 || as.Frozen[1] != 9 {
+		t.Fatalf("%v", as.Frozen)
+	}
+	_ = st.ReleaseAnswerReserve(ctx, site, 200)
+	if n, _ := st.AnswerReserved(ctx); n != 300 {
+		t.Fatalf("held %d", n)
+	}
+	_ = st.ReleaseAnswerReserve(ctx, site, 900)
+	if n, _ := st.AnswerReserved(ctx); n != 0 {
+		t.Fatalf("held %d", n)
+	}
+	_ = st.DelayAnswers(ctx, site, 5000, 101)
+	if due, _ := st.AnswerSitesDue(ctx, 200, 3); len(due) != 0 {
+		t.Fatal("a delayed site is due")
 	}
 }
