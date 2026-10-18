@@ -47,8 +47,6 @@
   width: 100%;
   padding: 0 14px 0 38px;
   border-radius: 10px;
-  border: 1px solid var(--border-2);
-  background: var(--bg);
   color: var(--text);
 }
 .feat-none {
