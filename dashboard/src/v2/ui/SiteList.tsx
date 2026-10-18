@@ -8,13 +8,14 @@ import type { Site } from '../../lib/api'
 import { useV2Extras } from '../slots'
 import { useDomainControl } from '../../lib/domainControl'
 import { isViewer } from '../../lib/me'
+import { openSettings } from '../../lib/settings'
 import { prefetchSite } from '../../lib/dashQuery'
 import { EMPTY, flat, placeKey, sectionsOf, type Place } from '../../features/sites/layout'
 import { saveLayout, useSiteLayout } from '../../features/sites/useSiteLayout'
 import { useReorder } from '../../features/sites/useReorder'
 import { useFolded } from '../../features/sites/useFolded'
 import { useToday } from '../../features/sites/useToday'
-import { clashes, clashing, hasFinder, teamTotal } from '../../features/sites/menuLogic'
+import { clashes, clashing, hasFinder, problemCounts, teamTotal } from '../../features/sites/menuLogic'
 import { digitIndex, stepFocus, typing } from '../../features/sites/nav'
 import { copy as menu } from '../../features/sites/menuCopy'
 import { AllRow } from './AllRow'
@@ -97,7 +98,7 @@ export function SiteList(p: SiteListProps) {
         },
       }
   const item = (s: Site, place: Place) => (
-    <SiteRow key={s.id} clash={clashes(twice, s)} move={moves?.(s.id, s.name || s.domain)} site={s} place={place} on={s.id === current?.id} arrange={found ? null : arrange} today={numbers?.get(s.id)?.visitors} onPick={() => pick(s)} />
+    <SiteRow key={s.id} clash={clashes(twice, s)} move={moves?.(s.id, s.name || s.domain)} site={s} place={place} on={s.id === current?.id} arrange={found ? null : arrange} today={numbers?.get(s.id)?.visitors} settings={isViewer() ? undefined : (tab) => { p.close(); openSettings(s, tab) }} onPick={() => pick(s)} />
   )
   const onKeys = (e: KeyboardEvent) => {
     const box = root.current
@@ -148,7 +149,7 @@ export function SiteList(p: SiteListProps) {
         </div>
       )}
       <div id="siteList" ref={list}>
-        {!found && <AllRow on={!current} total={teamTotal(numbers, sites)} all={p.all} onPick={() => { p.close(); p.onPick('*') }} />}
+        {!found && <AllRow on={!current} total={teamTotal(numbers, sites)} problems={problemCounts(sites)} all={p.all} onPick={() => { p.close(); p.onPick('*') }} />}
         {domains && current && !found && <DomainRows c={domains} close={p.close} />}
         {found && <ul className="site-group">{found.map((s) => item(s, { kind: 'rest' }))}</ul>}
         {found?.length === 0 && <p className="mk-quiet sites-none">{menu.noMatch(q)}</p>}

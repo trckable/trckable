@@ -17,10 +17,18 @@ export const copy = defineCopy('sites.menu', {
 
   // A site's state, where its number would be, when the dot alone can't say it.
   setup: 'setup',
+  notVerified: 'Not verified',
+  notVerifiedTip: 'No visit has arrived yet. Open Install to finish and check it.',
+  installHelp: 'Install help',
   downTip: (span: string) => `Not reachable for ${span}. Open the site to see what’s wrong.`,
   downShort: (span: string) => `down ${span}`,
   quietShort: (span: string) => `quiet ${span}`,
   quietTip: (span: string) => `No visits for ${span}. Nothing looks wrong with the page.`,
+
+  // All sites: how many of the listed sites are not fine, under its name.
+  downCount: (n: number) => `${n} down`,
+  quietCount: (n: number) => `${n} quiet`,
+  unverifiedCount: (n: number) => `${n} not verified`,
 
   // The numbers: today's visitors per site, and both totals beside All sites.
   today: (n: string) => `${n} today`,
@@ -29,7 +37,7 @@ export const copy = defineCopy('sites.menu', {
   openSite: (domain: string) => `Open ${domain}`,
 
   // Arranging.
-  options: (name: string) => `${name}: arrange`,
+  options: (name: string) => `${name}: options`,
   up: 'Move up',
   down: 'Move down',
   pin: 'Pin to top',

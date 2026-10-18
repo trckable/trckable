@@ -22,6 +22,7 @@ export const copy = defineCopy('items', {
   theme: 'Theme',
   themes: { system: 'Auto', dark: 'Dark', light: 'Light' },
   account: 'Profile',
+  siteSettings: 'Site settings',
   signOut: 'Sign out',
   owner: 'Owner',
   viewer: 'Viewer',

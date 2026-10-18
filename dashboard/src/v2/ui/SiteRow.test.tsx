@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Site } from '../../lib/api'
 import { OpenSite } from '../../features/sites/OpenSite'
-import { Moves, SiteRow } from './SiteRow'
+import { RowMenu, SiteRow } from './SiteRow'
 
 const NOW = Math.floor(Date.now() / 1000)
 const site = (o: Partial<Site> = {}): Site => ({ id: 's1', domain: 'example.com', name: 'Example', timezone: 'UTC', currency: 'USD', proxy_key: '', last_event_at: NOW - 60, ...o })
@@ -33,7 +33,7 @@ describe('a site in the list', () => {
   })
 
   it('says setup, or how long it has been down or quiet, in the number’s place', () => {
-    expect(row(site({ last_event_at: undefined }), 0)).toContain('setup')
+    expect(row(site({ last_event_at: undefined }), 0)).toContain('Not verified')
     const gone = row(site({ last_event_at: NOW - 3 * 86400, check: { at: NOW - 3600, error: 'example.com could not be reached over https' } }))
     expect(gone).toContain('state-word down')
     expect(gone).toContain('down 3d')
@@ -114,7 +114,7 @@ describe('the arrange menu at the edges of a list', () => {
   const sites = [site({ id: 'a' }), site({ id: 'b' }), site({ id: 'c' })]
   const arrange = { sites, layout: { pinned: [], groups: [], order: ['a', 'b', 'c'] }, save: noop, drag: null, grab: noop } as never
   const items = (id: string) => {
-    const menu = Moves({ site: sites.find((s) => s.id === id) as Site, place: { kind: 'rest' }, a: arrange, step: noop }) as ReactElement<{ children: (c: () => void) => ReactNode }>
+    const menu = RowMenu({ site: sites.find((s) => s.id === id) as Site, place: { kind: 'rest' }, a: arrange, step: noop }) as ReactElement<{ children: (c: () => void) => ReactNode }>
     return renderToStaticMarkup(<>{menu.props.children(noop)}</>)
   }
   it('offers no Move up on the first site and no Move down on the last', () => {

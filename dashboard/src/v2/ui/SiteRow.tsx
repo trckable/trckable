@@ -23,8 +23,8 @@ function Tail({ s, today }: { s: Site; today?: number }) {
   const state = dotState(s)
   if (state === 'new') {
     return (
-      <span className="now" title={first.dot.new}>
-        {copy.setup}
+      <span className="now unverified" title={copy.notVerifiedTip}>
+        {copy.notVerified}
       </span>
     )
   }
@@ -52,7 +52,7 @@ function refocus(id: string) {
   requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-site="${CSS.escape(id)}"] .site`)?.focus())
 }
 
-export function SiteRow({ site, place, on, arrange: a, today, onPick, move, clash }: { clash?: boolean; move?: SiteMove; site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; onPick: () => void }) {
+export function SiteRow({ site, place, on, arrange: a, today, onPick, move, clash, settings }: { settings?: (tab: 'site' | 'install') => void; clash?: boolean; move?: SiteMove; site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; onPick: () => void }) {
   const name = site.name || site.domain
   // The domain says which is which only when two names are alike.
   const note = clash && site.domain !== name ? site.domain : undefined
@@ -98,25 +98,30 @@ export function SiteRow({ site, place, on, arrange: a, today, onPick, move, clas
           {move.stopWord}
         </button>
       )}
-      <OpenSite domain={site.domain} />
-      {a && <Moves site={site} place={place} a={a} step={moveStep} />}
+      <div className="site-acts">
+        <OpenSite domain={site.domain} />
+        <RowMenu site={site} place={place} a={a} step={moveStep} settings={settings} />
+      </div>
     </li>
   )
 }
 
-export function Moves({ site, place, a, step: moveStep }: { site: Site; place: Place; a: Arrange; step: (dir: -1 | 1) => void }) {
+/** The row's ⋯: Site settings first (and Install help while nothing is verified), Open site (the ↗ is hidden on touch), then the ways to arrange. */
+export function RowMenu({ site, place, a, step: moveStep, settings }: { site: Site; place: Place; a: Arrange | null; step: (dir: -1 | 1) => void; settings?: (tab: 'site' | 'install') => void }) {
   const here = placeKey(place)
-  const sec = sectionsOf(a.sites, a.layout).find((x) => x.sites.some((s) => s.id === site.id))
+  const sec = a ? sectionsOf(a.sites, a.layout).find((x) => x.sites.some((s) => s.id === site.id)) : undefined
   const at = sec ? sec.sites.findIndex((s) => s.id === site.id) : -1
   const canUp = at > 0
   const canDown = sec ? at >= 0 && at < sec.sites.length - 1 : true
-  const go = (to: Place, said: string) => a.save(moveTo(a.sites, a.layout, site.id, to), said)
+  const go = (to: Place, said: string) => a?.save(moveTo(a.sites, a.layout, site.id, to), said)
   const newGroup = async () => {
+    if (!a) return
     const name = (await confirmWith({ title: copy.newGroupTitle, body: copy.newGroupBody, confirmLabel: copy.create, field: { label: copy.groupName, type: 'text' } }))?.trim()
     if (!name) return
     const l = addGroup(a.layout, name)
     a.save(moveTo(a.sites, l, site.id, { kind: 'group', name }), copy.toGroup(name))
   }
+  if (!settings && !site.domain && !a) return null
   return (
     <Menu label={copy.options(site.name || site.domain)}>
       {(close) => {
@@ -127,7 +132,16 @@ export function Moves({ site, place, a, step: moveStep }: { site: Site; place: P
         )
         return (
           <>
-            {canUp && item(copy.up, () => moveStep(-1))}
+            {settings && item(copy.siteSettings, () => settings('site'))}
+            {settings && dotState(site) === 'new' && item(copy.installHelp, () => settings('install'))}
+            {site.domain && (
+              <button type="button" role="menuitem" className="open-touch" onClick={() => { close(); openSiteTab(site.domain) }}>
+                {copy.openSite(site.domain)}
+              </button>
+            )}
+            {a && (
+              <>
+                {canUp && item(copy.up, () => moveStep(-1))}
             {canDown && item(copy.down, () => moveStep(1))}
             {place.kind === 'pinned' ? item(copy.unpin, () => a.save(unpin(a.sites, a.layout, site.id), copy.unpin)) : item(copy.pin, () => a.save(pin(a.sites, a.layout, site.id), copy.pin))}
             {a.layout.groups
@@ -135,6 +149,8 @@ export function Moves({ site, place, a, step: moveStep }: { site: Site; place: P
               .map((g) => item(copy.toGroup(g.name), () => go({ kind: 'group', name: g.name }, copy.toGroup(g.name))))}
             {place.kind === 'group' && item(copy.noGroup, () => go({ kind: 'rest' }, copy.noGroup))}
             {item(copy.newGroup, () => void newGroup())}
+              </>
+            )}
           </>
         )
       }}
