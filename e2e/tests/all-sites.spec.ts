@@ -70,12 +70,10 @@ test('All sites: totals are the rows, sorts, states and the ⋯ menu', async ({ 
   ids = await order()
   expect(ids.indexOf(busy.id)).toBeLessThan(ids.indexOf(empty.id))
 
-  // A site not installed yet opens its install card, which leads back to Sites.
+  // A site not installed yet opens its setup screen.
   await row(empty).locator('.tm-name').click()
-  const back = page.getByRole('link', { name: '← Sites' })
-  await expect(back).toBeVisible({ timeout: 20_000 })
-  await back.click()
-  await expect(page).toHaveURL(/\/sites$/)
+  await expect(page.locator('.setup-status')).toBeVisible({ timeout: 20_000 })
+  await page.goto(`${API}/sites`)
   await row(busy).waitFor()
 
   // The ⋯ menu opens the site's settings over its dashboard.
