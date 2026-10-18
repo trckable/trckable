@@ -20,8 +20,6 @@ export const copy = defineCopy('install', {
   label: 'Install trckable',
   titleCard: (domain: string) => `Add trckable to ${domain}`,
   titleSettings: (domain: string) => `Install on ${domain}`,
-  titleLive: 'Peekaboo! Your first visit just arrived.',
-  liveFrom: (path: string, country?: string) => (country ? `Someone opened ${path} from ${country}.` : `Someone opened ${path}.`),
   chipWaiting: 'Waiting for the first visit…',
   chipLive: 'Receiving visits',
 
@@ -84,19 +82,6 @@ export const copy = defineCopy('install', {
   },
   waiting: (domain: string) => `Waiting for the first visit. Open ${domain} in a browser tab: this updates by itself.`,
   live: (path: string) => `Live: a visit to ${path} just arrived.`,
-})
-
-/** The new-site card on the dashboard: one calm card, nothing behind it. */
-export const waitCard = defineCopy('install.wait', {
-  title: 'Waiting for the first visit',
-  back: '← Sites',
-  subScript: ['Add this to the', '<head>', (domain: string) => `of ${domain}, then open the site once.`] as const,
-  subOther: (where: string) => `${where} Then open the site once.`,
-  check: 'Check my site',
-  prompt: 'Copy a prompt for your AI editor',
-  promptCopied: 'Prompt copied',
-  foot: 'Your dashboard opens here by itself the moment a visit arrives.',
-  dev: ['Testing on localhost? Add', 'data-dev', 'to the script tag.'] as const,
 })
 
 /** The add-site wizard: Your site → Install → Revenue (optional). */

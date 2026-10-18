@@ -12,7 +12,7 @@ import { signOut } from '../../lib/signOut'
 import { navigate } from '../../lib/url'
 import { useFocusTrap } from '../install/useFocusTrap'
 import { FirstCards } from '../install/FirstCards'
-import { Install } from '../install/Install'
+import { SetupInstall } from '../install/SetupInstall'
 import { AddAnother } from './AddAnother'
 import { copy } from './copy'
 import { Dots } from './Dots'
@@ -159,12 +159,10 @@ export default function Onboarding({ onClose, onSites, required = false, resume 
         {step === 'install' && site ? (
           <div className="ob-install">
             {sites.length > 1 && <SiteTabs sites={sites} active={active} seen={seen} onPick={setActive} />}
-            <Install
+            <SetupInstall
               key={site.id}
               site={site}
               visits={visits}
-              variant="card"
-              setup
               after={
                 <div className="ob-after">
                   <AddAnother sites={sites} onAdded={added} />

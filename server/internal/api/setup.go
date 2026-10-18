@@ -148,7 +148,7 @@ func buildSetup(in setupIn) setupOut {
 		out.Items = append(out.Items, it)
 	}
 
-	add("verified", setupCore, in.Paths >= 2, map[string]any{"pages": in.Paths})
+	add("verified", setupCore, in.Paths >= 1, map[string]any{"pages": in.Paths})
 	add("own_visits", setupMore, in.OwnIPs > 0, nil) // optional: never counted
 	locale := in.Timezone != "UTC" || in.Currency != "USD" || in.Stored.LocaleConfirmedAt > 0
 	add("locale", setupCore, locale, map[string]any{"timezone": in.Timezone, "currency": in.Currency})

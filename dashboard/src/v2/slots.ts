@@ -24,6 +24,8 @@ export interface Teams {
 }
 
 export interface V2Extras {
+  /** Where "Support" points on the setup screen: a build's own help page. The public product points at its issues. */
+  supportUrl?: string
   /** Rendered in the header, after the person and before the bell (a plan chip). */
   headerExtra?: ReactNode
   /** The first row of the person's menu. */

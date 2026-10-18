@@ -16,10 +16,9 @@ import { MethodTabs } from './MethodTabs'
 import { methodOf } from './snippet'
 import { useCookieless } from './useCookieless'
 import type { InstallCheckHandle } from './useInstallCheck'
-import { WaitingCard } from './WaitingCard'
 import './install.css'
 
-export type Variant = 'card' | 'wizard' | 'settings' | 'setup'
+export type Variant = 'wizard' | 'settings' | 'setup'
 
 /** ?method=wordpress opens on that platform: the docs link straight to it. */
 function firstMethod(): string {
@@ -32,7 +31,7 @@ function Head({ site, variant }: { site: Site; variant: Variant }) {
   return <h2 className="inst-title-small">{copy.titleSettings(site.domain)}</h2>
 }
 
-export function Install({ site, visits, variant = 'card', setup, after, check }: { site: Site; visits: Visit[]; variant?: Variant; setup?: boolean; after?: ReactNode; check?: InstallCheckHandle }) {
+export function Install({ site, visits, variant = 'wizard', after, check }: { site: Site; visits: Visit[]; variant?: Variant; after?: ReactNode; check?: InstallCheckHandle }) {
   const [pick, setPick] = useState(firstMethod)
   const cookieless = useCookieless(site.id)
   const first = visits[0]
@@ -40,10 +39,9 @@ export function Install({ site, visits, variant = 'card', setup, after, check }:
   // A viewer still sees the recipe, with the key named rather than spelled out.
   const ctx: Ctx = { host: location.origin, site: site.id, domain: site.domain, proxyKey: site.proxy_key || 'your-proxy-key', cookieless: cookieless.on === true }
   const method = methodOf(pick)
-  if (variant === 'card') return <WaitingCard site={site} visits={visits} ctx={ctx} pick={pick} onPick={setPick} setup={setup} after={after} />
 
   return (
-    <div className={'inst inst-compact inst-' + variant} aria-label={copy.label}>
+    <section className={'inst inst-compact inst-' + variant} aria-label={copy.label}>
       <Head site={site} variant={variant} />
       <MethodTabs value={method.id} onChange={setPick} />
       <MethodPanel method={method} ctx={ctx} />
@@ -53,7 +51,7 @@ export function Install({ site, visits, variant = 'card', setup, after, check }:
       </div>
       {check && check.state.phase !== 'idle' && <CheckPanel state={check.state} domain={site.domain} first={first} onAgain={check.start} />}
       {after}
-    </div>
+    </section>
   )
 }
 

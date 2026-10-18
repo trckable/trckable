@@ -307,167 +307,12 @@
 @media (max-width: 520px) {
   /* On a phone the code wraps: half a script tag behind a scrollbar is the
      worst way to show it. */
-  .inst pre.code,
-  .wait-card pre.code {
+  .inst pre.code {
     white-space: pre-wrap;
     word-break: break-all; /* keep an attribute on its own indented line */
   }
   .inst-tab {
     padding: 0 10px;
-  }
-}
-
-/* ---- The new-site card ------------------------------------------------------
-   One calm card, centred, with nothing behind it. */
-.wait-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 22px;
-  width: min(640px, 100%);
-  margin: 48px auto 24px;
-  text-align: center;
-}
-.wait-back {
-  align-self: flex-start;
-  margin-bottom: -6px;
-  font-size: 13px;
-  text-decoration: none;
-}
-.wait-back:hover {
-  color: var(--text);
-}
-.wait-card > .inst-tabs-row,
-.wait-card > .inst-panel,
-.wait-card > .inst-check {
-  align-self: stretch;
-  text-align: left;
-}
-.wait-mark {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 84px;
-  height: 84px;
-}
-.wait-mark .ring {
-  position: absolute;
-  inset: 0;
-  border: 1.5px solid var(--accent);
-  border-radius: 50%;
-  animation: wait-ring 2.4s ease-out infinite;
-}
-.wait-mark .ring.b {
-  animation-delay: 1.2s;
-}
-.wait-mark.live .ring {
-  animation: none;
-  opacity: 0;
-}
-@keyframes wait-ring {
-  0% {
-    transform: scale(0.6);
-    opacity: 0.55;
-  }
-  100% {
-    transform: scale(1.6);
-    opacity: 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .wait-mark .ring {
-    animation: none;
-    opacity: 0.25;
-  }
-}
-.wait-text {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.wait-text h2 {
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-.wait-sub {
-  margin: 0;
-  font-size: 15.5px;
-}
-.wait-sub code {
-  font-family: var(--mono);
-  color: var(--text);
-}
-/* Four small tabs, centred, like pills; More… sits with them. */
-.wait-card .inst-tabs-row {
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-  padding: 0;
-  border: 0;
-  background: none;
-}
-.wait-card .inst-tabs {
-  flex: 0 1 auto;
-}
-.wait-card .inst-tab {
-  flex: none;
-  height: 34px;
-  border-radius: 999px;
-  font-size: 14px;
-}
-.wait-card .inst-tab svg {
-  display: none;
-}
-.wait-card .inst-tab.on {
-  box-shadow: none;
-}
-.wait-card .inst-tabs-row > .picker > .btn.picker-btn {
-  min-height: 34px;
-  height: 34px;
-  padding: 0 14px;
-  border-color: transparent;
-  border-radius: 999px;
-  background: none;
-  color: var(--text-2);
-}
-.wait-card .inst-where,
-.wait-card .inst-docs {
-  display: none;
-}
-.wait-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-}
-.wait-btn {
-  background: none;
-  height: 40px;
-  padding: 0 16px;
-  border: 1px solid var(--border-2);
-  border-radius: 999px;
-}
-.wait-foot {
-  margin: 0;
-  font-size: 13px;
-}
-@media (max-width: 520px) {
-  .wait-card {
-    margin-top: 24px;
-    gap: 18px;
-  }
-  .wait-text h2 {
-    font-size: 23px;
-  }
-  .wait-card .inst-tabs-row,
-  .wait-card .inst-tabs {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .wait-btn {
-    width: 100%;
-    justify-content: center;
   }
 }
 
@@ -495,12 +340,6 @@
     min-height: var(--ph-hit);
   }
 }
-
-.wait-dev {
-  margin: -8px 0 0;
-  font-size: 13px;
-}
-
 /* ---- A site with no verified install ----------------------------------------
    One centred screen: the install, the live line, and where to get help. */
 .setup-screen {
