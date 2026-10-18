@@ -3301,4 +3301,6 @@ export default {
   'mentionsTrust.addAnyway': 'Trotzdem hinzufügen',
   'mentionsTrust.excludedFull': (n: number) => `Das würde die Grenze von ${n} ausgeschlossenen Wörtern überschreiten. Entferne zuerst eines.`,
   'address.noSite': (name: string) => `Keine Website namens ${name}`,
+  'waiting.title': 'Warten auf den ersten Besuch',
+  'waiting.hint': 'Die Zahlen erscheinen hier, sobald jemand vorbeikommt.',
 } satisfies Messages

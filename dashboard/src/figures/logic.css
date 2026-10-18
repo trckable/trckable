@@ -34,16 +34,29 @@
 .tkf.tk-restart *, .tkf.tk-restart { animation: none !important; }
 
 /* done: every check stays lit, and the check badge sits on the board's corner */
-:where([data-figure="logic"][data-done]) { position: relative; }
-[data-done] .tkf[data-fig="logic"] .ledg[class*="tk-s"],
-[data-done] .tkf[data-fig="logic"] .ledg[class*="tk-s"] .face,
-[data-done] .tkf[data-fig="logic"] .bit[class*="tk-s"],
-[data-done] .tkf[data-fig="logic"] .gname[class*="tk-s"],
-[data-done] .tkf[data-fig="logic"] .tk-w { animation: none; }
-[data-done] .tkf[data-fig="logic"] .ledg[class*="tk-s"] { filter: url(#tkf-glow); }
-[data-done] .tkf[data-fig="logic"] .ledg[class*="tk-s"] .face { fill: var(--f-accent); stroke: var(--f-accent-hi); }
-[data-done] .tkf[data-fig="logic"] .ledg[class*="tk-s"] .face.top { fill: var(--f-accent-hi); }
-[data-done] .tkf[data-fig="logic"] .bit[class*="tk-s"],
-[data-done] .tkf[data-fig="logic"] .gname[class*="tk-s"] { fill: var(--f-accent-hi); }
-[data-done] .tkf[data-fig="logic"] .tk-w { stroke: var(--f-accent); }
+:where([data-figure="logic"][data-state="done"]) { position: relative; }
+[data-state="done"] .tkf[data-fig="logic"] .ledg[class*="tk-s"],
+[data-state="done"] .tkf[data-fig="logic"] .ledg[class*="tk-s"] .face,
+[data-state="done"] .tkf[data-fig="logic"] .bit[class*="tk-s"],
+[data-state="done"] .tkf[data-fig="logic"] .gname[class*="tk-s"],
+[data-state="done"] .tkf[data-fig="logic"] .tk-w { animation: none; }
+[data-state="done"] .tkf[data-fig="logic"] .ledg[class*="tk-s"] { filter: url(#tkf-glow); }
+[data-state="done"] .tkf[data-fig="logic"] .ledg[class*="tk-s"] .face { fill: var(--f-accent); stroke: var(--f-accent-hi); }
+[data-state="done"] .tkf[data-fig="logic"] .ledg[class*="tk-s"] .face.top { fill: var(--f-accent-hi); }
+[data-state="done"] .tkf[data-fig="logic"] .bit[class*="tk-s"],
+[data-state="done"] .tkf[data-fig="logic"] .gname[class*="tk-s"] { fill: var(--f-accent-hi); }
+[data-state="done"] .tkf[data-fig="logic"] .tk-w { stroke: var(--f-accent); }
 .tkf-done { position: absolute; right: -4px; top: -4px; padding: 3px; border-radius: 50%; color: var(--accent-ink); background: var(--accent); box-sizing: content-box; }
+
+/* fail: the checks stop; the first holds green, the second is red, the rest stay dark */
+[data-state="fail"] .tkf[data-fig="logic"] .ledg[class*="tk-s"],
+[data-state="fail"] .tkf[data-fig="logic"] .ledg[class*="tk-s"] .face,
+[data-state="fail"] .tkf[data-fig="logic"] .bit[class*="tk-s"],
+[data-state="fail"] .tkf[data-fig="logic"] .gname[class*="tk-s"],
+[data-state="fail"] .tkf[data-fig="logic"] .tk-w { animation: none; }
+[data-state="fail"] .tkf[data-fig="logic"] .ledg.tk-s1 { filter: url(#tkf-glow); }
+[data-state="fail"] .tkf[data-fig="logic"] .ledg.tk-s1 .face { fill: var(--f-accent); stroke: var(--f-accent-hi); }
+[data-state="fail"] .tkf[data-fig="logic"] .ledg.tk-s1 .face.top, [data-state="fail"] .tkf[data-fig="logic"] .bit.tk-s1, [data-state="fail"] .tkf[data-fig="logic"] .gname.tk-s1 { fill: var(--f-accent-hi); }
+[data-state="fail"] .tkf[data-fig="logic"] .ledg.tk-s2 { filter: url(#tkf-glow); }
+[data-state="fail"] .tkf[data-fig="logic"] .ledg.tk-s2 .face { fill: var(--f-down); stroke: var(--f-down-hi); }
+[data-state="fail"] .tkf[data-fig="logic"] .ledg.tk-s2 .face.top, [data-state="fail"] .tkf[data-fig="logic"] .bit.tk-s2, [data-state="fail"] .tkf[data-fig="logic"] .gname.tk-s2 { fill: var(--f-down-hi); }

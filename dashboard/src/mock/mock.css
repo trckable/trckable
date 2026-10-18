@@ -1778,3 +1778,6 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 }
 @media (max-width:600px){.menu-list .open-touch{display:flex}}
 @media (max-width:520px){.mk .hd .mk-chip .nv{font-size:0;padding:0;width:8px;height:8px;background:var(--mk-amber)}}
+.mk .mk-waiting{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 0;text-align:center}
+.mk .mk-waiting b{font-size:15px;font-weight:600}
+.mk .mk-waiting-fig{width:clamp(140px,18vw,200px);margin-bottom:6px}

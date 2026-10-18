@@ -3304,4 +3304,6 @@ export default {
   'mentionsTrust.addAnyway': 'Añadir de todos modos',
   'mentionsTrust.excludedFull': (n: number) => `Eso superaría el límite de ${n} palabras excluidas. Quita una primero.`,
   'address.noSite': (name: string) => `No hay ningún sitio llamado ${name}`,
+  'waiting.title': 'Esperando la primera visita',
+  'waiting.hint': 'Los números aparecen aquí en cuanto alguien visite el sitio.',
 } satisfies Messages
