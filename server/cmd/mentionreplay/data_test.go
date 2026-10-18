@@ -20,7 +20,7 @@ func fingerprint(t *testing.T, dir string) map[string][32]byte {
 		if err != nil || d.IsDir() {
 			return err
 		}
-		b, err := os.ReadFile(p)
+		b, err := os.ReadFile(p) //nolint:gosec // the test's own temp directory
 		out[p] = sha256.Sum256(b)
 		return err
 	})
