@@ -124,8 +124,10 @@ test('full width has the section list beside it, and F, Tab and Escape keep to t
   await expect(page.locator('#xp.full .xrail .xri')).toHaveCount(11)
   await page.locator('#xp .xrail').getByRole('button', { name: /^Speed/ }).click()
   await expect(page.locator('#xp .kcs.k3 .kc')).toHaveCount(3)
-  await page.getByRole('button', { name: 'Collapse the section list' }).click()
-  await expect(page.locator('#xp .xrail.c')).toBeVisible()
+  // Plenty of room: the list is always whole, with no control to fold it.
+  await expect(page.locator('#xp .xrail')).toBeVisible()
+  await expect(page.locator('#xp .xrail .nm').first()).toBeVisible()
+  await expect(page.locator('#xp .xrail').getByRole('button', { name: /section list/i })).toHaveCount(0)
   await page.keyboard.press('f')
   await expect(page.locator('#xp.full')).toHaveCount(0)
   for (let i = 0; i < 30; i++) await page.keyboard.press('Tab')

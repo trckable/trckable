@@ -1264,19 +1264,8 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .xmx:hover{background:var(--mk-hov);color:var(--mk-red)}
 .mk .xgrab{display:none}
 .mk .xmi[role=menuitemradio].on::after{content:"\2713";margin-left:auto;color:var(--mk-lime);font-size:13px}
-.mk .xlay.rc{grid-template-columns:52px minmax(0,1fr)}
-.mk .xrc{width:36px;height:32px;border-radius:10px;color:var(--mk-muted);display:grid;place-items:center;margin:0 0 var(--mk-s1) auto}
-.mk .xrc:hover{background:var(--mk-hov);color:var(--mk-text)}
 .mk .xri{position:relative}
 .mk .xri.on::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:2px;border-radius:2px;background:var(--mk-lime)}
-.mk .xrail.c{align-items:center}
-.mk .xrail.c .xrc{margin:0 0 var(--mk-s1)}
-.mk .xrail.c .xgl{height:1px;width:24px;background:var(--mk-line);padding:0;margin:var(--mk-s2) 0}
-.mk .xrail.c .xgl:first-of-type{display:none}
-.mk .xrail.c .xri{width:40px;min-height:40px;justify-content:center;padding:0}
-.mk .xrail.c .xri .nm,.mk .xrail.c .xri .xtag{display:none}
-.mk .xrail.c .xri .xi{margin:0}
-.mk .xrail.c .xri.on::before{top:11px;bottom:11px}
 .mk .xsk{display:flex;flex-direction:column;gap:var(--mk-s2);margin-top:var(--mk-s3)}
 .mk .xsk .kcs{margin:0 0 var(--mk-s3)}
 .mk .sk{display:block;border-radius:10px;background:linear-gradient(90deg,var(--mk-sk3) 25%,var(--mk-sel) 50%,var(--mk-sk3) 75%);background-size:300% 100%;animation:mk-skm 1.2s linear infinite}

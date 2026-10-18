@@ -70,12 +70,3 @@ export function XIco({ name, className = 'xi', style }: { name: string; classNam
     </svg>
   )
 }
-
-/** The little chevron of the rail's collapse button. */
-export function XChev({ right }: { right: boolean }) {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d={right ? 'M6 3.5 10.5 8 6 12.5' : 'M10 3.5 5.5 8l4.5 4.5'} />
-    </svg>
-  )
-}
