@@ -7,6 +7,7 @@ import { addDays, todayIn, type ISODate } from '../../lib/dates'
 import type { ViewState } from '../../lib/url'
 import { times } from '../../lib/times'
 import { signals } from './copy'
+import { dateFmt } from '../../lib/format'
 
 export interface Surge {
   id: string
@@ -91,9 +92,9 @@ export function surgeNotice(s: Surge, domain: string): { title: string; body: st
 /** A time of day in the site's own zone: "18:40". */
 export function clock(unix: number, tz: string): string {
   try {
-    return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: tz }).format(unix * 1000)
+    return dateFmt('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: tz }).format(unix * 1000)
   } catch {
-    return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' }).format(unix * 1000)
+    return dateFmt('en-GB', { hour: '2-digit', minute: '2-digit' }).format(unix * 1000)
   }
 }
 
@@ -154,7 +155,7 @@ const HALF_HOUR = 30 * 60
 export function localHour(unix: number, tz: string): { day: ISODate; hour: string } {
   let parts: Record<string, string>
   try {
-    parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }).formatToParts(unix * 1000).map((p) => [p.type, p.value]))
+    parts = Object.fromEntries(dateFmt('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }).formatToParts(unix * 1000).map((p) => [p.type, p.value]))
   } catch {
     return localHour(unix, 'UTC')
   }

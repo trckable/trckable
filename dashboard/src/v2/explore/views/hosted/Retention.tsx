@@ -4,13 +4,13 @@ import { XEmpty, XError } from '../../../ui/XBits'
 import { useLoad } from '../../data/useLoad'
 import { Loading } from '../../../../components/loading/Loading'
 import { type ReportQuery, more } from '../../../../lib/apiMore'
-import { fmtInt, fmtPct } from '../../../../lib/format'
+import { fmtInt, fmtPct, dateFmt } from '../../../../lib/format'
 import { tag } from '../../../../i18n'
 import { deepCopy } from '../../../../features/cards/deepCopy'
 import { retentionOf, shade } from '../../../../features/cards/retentionModel'
 import type { XCtx } from '../../ctx'
 
-const weekLabel = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString(tag, { day: 'numeric', month: 'short' })
+const weekLabel = (iso: string) => dateFmt(tag, { day: 'numeric', month: 'short' }).format(new Date(iso + 'T00:00:00'))
 
 export function XRetention({ x, query }: { x: XCtx; query: ReportQuery }) {
   const c = deepCopy.retention

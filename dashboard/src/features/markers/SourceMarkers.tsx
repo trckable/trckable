@@ -22,6 +22,7 @@ import { useMentions } from '../mentions/useMentions'
 import { useNow } from '../incidents/useIncidents'
 import { useJumps } from './useJumps'
 import './markers.css'
+import { dateFmt } from '../../lib/format'
 
 const POP_W = 270
 /** Pixels above the baseline the pills sit at (the mentions' pins sit under them). */
@@ -68,7 +69,7 @@ export default function SourceMarkers(p: SourceMarkersProps) {
   const mentions = useMentions(p.site.id, periodFor(p.labels, now), 0, !!p.site.mentions)
   const tag = useMemo(() => {
     if (!lead || mentions.state !== 'ready') return null
-    const day = (t: number) => new Intl.DateTimeFormat('en-CA', { timeZone: p.site.timezone }).format(new Date(t * 1000))
+    const day = (t: number) => dateFmt('en-CA', { timeZone: p.site.timezone }).format(new Date(t * 1000))
     const best = mentions.data.mentions.filter((m) => day(m.posted_at) === lead.day && m.visitors * 10 >= lead.added * 3).sort((a, b) => b.visitors - a.visitors)[0]
     return best ? mentionCopy.jumpTag(mentionCopy.name[best.source], best.visitors) : null
   }, [lead, mentions, p.site.timezone])

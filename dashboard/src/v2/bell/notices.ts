@@ -8,6 +8,7 @@ import { answersCopy } from '../../features/answers/copy'
 import type { AnswersReport } from '../../features/answers/api'
 import { STALE_DAYS } from '../../features/install/journey'
 import { sourceName } from '../briefing/model'
+import { isDown } from '../../features/incidents/model'
 import { copy } from './copy'
 
 export type NoticeKind = 'down' | 'up' | 'spike' | 'sale' | 'mention' | 'answer' | 'milestone' | 'weekly' | 'failed' | 'plan' | 'team' | 'setup'
@@ -46,7 +47,7 @@ export function fromIncidents(list: Incident[], domain: (id: string) => string |
   const out: Notice[] = []
   for (const i of list) {
     const d = domain(i.site)
-    if (!d || i.kind !== 'down') continue
+    if (!d || !isDown(i)) continue
     out.push({ id: `down:${i.id}`, kind: 'down', site: d, title: copy.stopped(d), sub: copy.noAnswerSince(i.started_at), at: i.started_at })
     if (i.ended_at !== null && i.ended_at <= now) out.push({ id: `up:${i.id}`, kind: 'up', site: d, title: copy.backUp(d), sub: copy.wasDown(mins(i.ended_at - i.started_at)), at: i.ended_at })
   }

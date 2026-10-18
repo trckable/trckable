@@ -2,6 +2,7 @@
 import { tag } from '../../i18n'
 import { copy } from './copy'
 import type { Mention, Source } from './api'
+import { dateFmt } from '../../lib/format'
 
 /** "Hacker News, Product Hunt and News & blogs": the places the server searches. */
 export function placesOf(sources: Source[]): string {
@@ -46,4 +47,4 @@ export const safeURL = (u: string) => (/^https?:\/\//i.test(u) ? u : undefined)
 export const jumpOf = (factor: number) => `${Math.round((factor - 1) * 100)}%`
 
 /** A short date for a mention's row: "Oct 14". */
-export const dateOf = (unix: number) => new Date(unix * 1000).toLocaleDateString(tag ?? 'en', { month: 'short', day: 'numeric' })
+export const dateOf = (unix: number) => dateFmt(tag ?? 'en', { month: 'short', day: 'numeric' }).format(new Date(unix * 1000))

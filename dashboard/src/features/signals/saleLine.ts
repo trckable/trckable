@@ -2,10 +2,10 @@
 // · $42 · via Google"), with its own time when it was found late; an older
 // server's sale is the amount.
 import type { Sale } from '../../lib/api'
-import { fmtMoney } from '../../lib/format'
+import { fmtMoney, dateFmt } from '../../lib/format'
 import { signals } from './copy'
 
-const time = (ms: number) => new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(ms)
+const time = (ms: number) => dateFmt(undefined, { hour: '2-digit', minute: '2-digit' }).format(ms)
 
 export function saleLine(s: Sale): string {
   if (!s.text) return signals.sale('+' + fmtMoney(s.amount, s.currency, s.exponent))

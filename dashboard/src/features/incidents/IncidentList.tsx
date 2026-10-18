@@ -7,7 +7,7 @@ import { fmtInt } from '../../lib/format'
 import { when } from '../sitestatus/time'
 import { incidents, type Incident } from './api'
 import { copy } from './copy'
-import { duration, lasted } from './model'
+import { duration, isDown, lasted } from './model'
 
 function Note({ site, x, onSaved }: { site: string; x: Incident; onSaved: (x: Incident) => void }) {
   const [editing, setEditing] = useState(false)
@@ -55,11 +55,11 @@ function Note({ site, x, onSaved }: { site: string; x: Incident; onSaved: (x: In
 const seenOf = (x: Incident) => (x.cause.endsWith('page answered') ? `${copy.seenQuiet} ${copy.seenAnswered}` : copy.seenQuiet)
 
 function Row({ x, now, domain, onSaved }: { x: Incident; now: number; domain?: string; onSaved: (x: Incident) => void }) {
-  const kind = x.kind === 'down' ? copy.down : copy.quiet
+  const kind = isDown(x) ? copy.down : copy.quiet
   const span = duration(lasted(x, now))
   const range = x.ended_at ? copy.from(when(x.started_at), when(x.ended_at)) : copy.ongoing(when(x.started_at))
   const title = (x.ended_at ? copy.row : copy.rowOpen)(kind, span)
-  const saw = x.kind === 'down' ? x.cause : seenOf(x)
+  const saw = isDown(x) ? x.cause : seenOf(x)
   return (
     <li className={'inc-row ' + x.kind}>
       <div className="inc-row-head">

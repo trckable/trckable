@@ -109,6 +109,7 @@ export default {
 
   // toast
   'toast.dismiss': 'Chiudi',
+  'toast.offline': "Sei offline: ultimi dati mostrati",
 
   // cards
   'records.title': 'Cosa registra lo script',

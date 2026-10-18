@@ -7,7 +7,7 @@ import { isShared } from '../../lib/me'
 import { can } from '../../lib/permissions'
 import { openSettings } from '../../lib/settings'
 import { tag } from '../../i18n'
-import { fmtMoney } from '../../lib/format'
+import { fmtMoney, dateFmt } from '../../lib/format'
 import { channelColor } from '../../lib/palette'
 import type { Site } from '../../lib/api'
 import { BusyLine } from '../ui/BusyLine'
@@ -92,7 +92,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   const src = sourceParts(data.sources)
   const down = downSince !== undefined
   const pulseClass = down || !stream.connected ? 'off' : (beat && 'ev') || ''
-  const at = (ms: number) => new Date(ms).toLocaleTimeString(tag ?? [], { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone })
+  const at = (ms: number) => dateFmt(tag, { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone }).format(new Date(ms))
   const colorOf = (channel: string) => colors?.[channel] ?? channelColor(channel)
   return (
     <>

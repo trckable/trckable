@@ -2,6 +2,7 @@
 // timezone; we do arithmetic on UTC midnights so DST never shifts a day.
 
 import { defineCopy, intl } from '../i18n'
+import { dateFmt } from './format'
 
 export type ISODate = string
 
@@ -43,7 +44,7 @@ export const startOfWeek = (d: ISODate) => addDays(d, -weekday(d))
 /** Today's date in a timezone. */
 export function todayIn(tz: string, now = new Date()): ISODate {
   try {
-    return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now)
+    return dateFmt('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now)
   } catch {
     return fromDate(now)
   }
@@ -199,15 +200,6 @@ export function fmtRange(r: Range, today: ISODate): string {
     return `${fmtDay(r.from)} – ${toDate(r.to).getUTCDate()}${showYear ? ', ' + r.to.slice(0, 4) : ''}`
   }
   return `${fmtDay(r.from, { year: !sameYear })} – ${fmtDay(r.to, { year: showYear })}`
-}
-
-/** The browser's own timezone, or UTC when it will not say. */
-export const browserZone = () => {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
-  } catch {
-    return 'UTC'
-  }
 }
 
 /** Which granularities make sense for a period this long (undefined = auto); none when there is only the choice of auto. */

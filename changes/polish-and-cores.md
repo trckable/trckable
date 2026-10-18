@@ -1,0 +1,1 @@
+The dashboard stays on its first picture until the page's skeleton is there instead of going blank on a slow connection, the Live count is not clipped by its rolling digits on a phone, Explore's sub-tabs fade at the edge where more lie beyond it, the French period button reads with its space, and going offline says so with "You're offline: showing the last data".

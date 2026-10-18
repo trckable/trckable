@@ -13,6 +13,7 @@ import { EmptyState } from '../components/EmptyState'
 import { WeeklyNow } from './WeeklyNow'
 import { KINDS, shownKinds } from './alertKinds'
 import { advice, ago, kindOf, SEND_LABEL, SendIcon, shown, stored, whereOf } from './alertsParts'
+import { dateFmt } from '../lib/format'
 
 export function AlertsSettings({ site }: { site: Site }) {
   const [list, setList] = useState<Alert[] | null>(null)
@@ -74,7 +75,7 @@ export function AlertsSettings({ site }: { site: Site }) {
       .testAlert(site.id, stored(target))
       .then(async () => {
         await seen
-        setTest({ state: 'ok', text: `Delivered at ${new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}. Check the other end: a message saying it is a test.` })
+        setTest({ state: 'ok', text: `Delivered at ${dateFmt(undefined, { hour: '2-digit', minute: '2-digit' }).format(new Date())}. Check the other end: a message saying it is a test.` })
       })
       .catch(async (e: unknown) => {
         await seen

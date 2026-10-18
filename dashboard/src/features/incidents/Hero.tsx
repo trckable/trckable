@@ -3,7 +3,7 @@
 import { Figure } from '../../figures/Figure'
 import { fmtInt } from '../../lib/format'
 import { copy } from './copy'
-import { duration, tooShort, uptimeOf, type Standing } from './model'
+import { duration, isDown, tooShort, uptimeOf, type Standing } from './model'
 import { PageStats } from '../../v2/ui/PageStats'
 import { Tip } from './Tip'
 
@@ -29,7 +29,7 @@ function State({ now, at }: { now: Standing; at: number }) {
   if (now.kind === 'unknown') return null
   if (now.kind === 'up') return <b className="inc-state up">{copy.stateUp}</b>
   const span = duration(at - now.since)
-  return now.kind === 'down' ? <b className="inc-state down">{copy.stateDown(span)}</b> : <b className="inc-state quiet"><Tip word={copy.stateQuiet(span)} text={copy.quietNote} /></b>
+  return isDown(now) ? <b className="inc-state down">{copy.stateDown(span)}</b> : <b className="inc-state quiet"><Tip word={copy.stateQuiet(span)} text={copy.quietNote} /></b>
 }
 
 /** The uptime as the page says it: the share, or why there is none. */
@@ -58,7 +58,7 @@ export function Hero({ now, at, f, w, over }: { now: Standing; at: number; f: Fi
   const uptimeTip = [w.quietTracked === false ? copy.downOnlyNote : copy.uptimeNote, w.since && copy.watchedSince(w.since)].filter(Boolean).join(' · ')
   return (
     <section className="inc-hero" aria-label={copy.title}>
-      {now.kind === 'down' && <Figure name="rack" minWidth={641} className="inc-fig" />}
+      {isDown(now) && <Figure name="rack" minWidth={641} className="inc-fig" />}
       <p className="inc-big">
         <State now={now} at={at} />
         <span className="inc-pct">{u.value}</span>

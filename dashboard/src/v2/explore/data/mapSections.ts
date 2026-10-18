@@ -2,7 +2,7 @@
 import { MIN_VITALS } from '../../../lib/api'
 import type { CrawlerReport, FunnelResult, FunnelStep, Money, PaidStep, Report, SearchReport, SearchRow as ApiSearchRow, WebVitals } from '../../../lib/api'
 import { fmtDay } from '../../../lib/dates'
-import { fmtFixed, fmtInt } from '../../../lib/format'
+import { fmtFixed, fmtInt, dateFmt } from '../../../lib/format'
 import { averagePosition } from '../../../lib/searchPosition'
 import type { Mention as ApiMention } from '../../../features/mentions/api'
 import { baseEnough } from '../../../lib/thin'
@@ -166,7 +166,7 @@ const SOURCES: Record<string, string> = { hn: copy.sourceNames.hn, ph: copy.sour
 
 /** The time of a mention in the site's own day: just the clock today, the day and the clock before. */
 function whenOf(unix: number, tz: string, today: string): string {
-  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(unix * 1000))
+  const parts = dateFmt('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(unix * 1000))
   const at = (t: string) => parts.find((p) => p.type === t)?.value ?? ''
   const day = `${at('year')}-${at('month')}-${at('day')}`
   const clock = `${at('hour')}:${at('minute')}`

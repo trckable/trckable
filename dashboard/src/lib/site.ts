@@ -1,3 +1,4 @@
+import { dateFmt } from './format'
 // The two lists every place that edits a site needs, kept out of any one view
 // so the Sites list and the Settings page cannot drift apart.
 
@@ -25,8 +26,8 @@ export const withCurrent = (list: string[], current: string, label = (v: string)
 /** The time of day as the app writes it everywhere (24 hours, no seconds), in the site's own zone. */
 export function clock(at: Date, zone: string) {
   try {
-    return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: zone || undefined }).format(at)
+    return dateFmt('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: zone || undefined }).format(at)
   } catch {
-    return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(at)
+    return dateFmt('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(at)
   }
 }

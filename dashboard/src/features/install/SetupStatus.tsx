@@ -9,10 +9,11 @@ import { useV2Extras } from '../../v2/slots'
 import { journey as t } from './journeyCopy'
 import { lastOf, stageOf, staleDays, whyOf, type Stage } from './journey'
 import type { InstallCheckHandle } from './useInstallCheck'
+import { dateFmt } from '../../lib/format'
 
 const SUPPORT_DEFAULT = 'https://github.com/trckable/trckable/issues'
 
-const clock = (tz: string, at: number): string => new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: tz }).format(at)
+const clock = (tz: string, at: number): string => dateFmt(undefined, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: tz }).format(at)
 
 /** The headline and the line of a stage. A site that has waited for days says so, in place of the first two. */
 function wordsOf(stage: Stage, check: InstallCheckHandle, days: number): { head: string; line: string } {

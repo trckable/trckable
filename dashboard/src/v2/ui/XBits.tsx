@@ -54,6 +54,25 @@ export function XSub<T extends string>({ items, value, label, attr, onPick }: { 
     const on = el?.querySelector<HTMLElement>('[aria-selected="true"]')
     if (el && on && el.scrollWidth > el.clientWidth) el.scrollTo({ left: on.offsetLeft - (el.clientWidth - on.offsetWidth) / 2 })
   }, [value])
+  // A strip wider than its place fades where more tabs lie beyond the edge, so it reads as scrollable, not cut off.
+  useEffect(() => {
+    const el = strip.current
+    if (!el) return
+    const edges = () => {
+      const past = el.scrollLeft > 1
+      const beyond = el.scrollLeft + el.clientWidth < el.scrollWidth - 1
+      if (past) el.dataset.more = beyond ? 'both' : 'start'
+      else el.dataset.more = beyond ? 'end' : ''
+    }
+    edges()
+    el.addEventListener('scroll', edges, { passive: true })
+    const ro = new ResizeObserver(edges)
+    ro.observe(el)
+    return () => {
+      el.removeEventListener('scroll', edges)
+      ro.disconnect()
+    }
+  }, [items.length])
   return (
     <div ref={strip} className="xsub" role="tablist" aria-label={label} style={{ '--n': items.length } as React.CSSProperties}>
       {items.map((x) => (

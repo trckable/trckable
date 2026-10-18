@@ -22,6 +22,7 @@ import { guessOf } from './kind'
 import { KindStep } from './KindStep'
 import { useInstallCheck } from './useInstallCheck'
 import './wizard.css'
+import { browserZone } from '../../lib/format'
 
 // The wizard has no report to refresh: it only watches for the first visit.
 const noRefetch = () => {}
@@ -98,7 +99,7 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
     }
     setBusy(true)
     setRefusal('')
-    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const zone = browserZone()
     more
       .createSite(clean)
       .then((s) => more.updateSite(s.id, { timezone: zone }).catch(() => s))

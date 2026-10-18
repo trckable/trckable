@@ -7,6 +7,7 @@ import { wizard } from '../install/copy'
 import { checkDomain, cleanDomain, isAdded } from '../install/domain'
 import { domainWords } from '../install/domainWords'
 import { copy } from './copy'
+import { browserZone } from '../../lib/format'
 
 /** "+ Add another site" under the install card: the same domain rules as Add a
  *  site, the site created on Add. The server's refusal (a plan's site limit)
@@ -36,7 +37,7 @@ export function AddAnother({ sites, onAdded }: { sites: Site[]; onAdded: (s: Sit
     }
     setBusy(true)
     setProblem('')
-    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const zone = browserZone()
     more
       .createSite(clean)
       .then((s) => more.updateSite(s.id, { timezone: zone }).catch(() => s))

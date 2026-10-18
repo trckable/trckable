@@ -14,6 +14,7 @@ import { hasAnswers } from '../../lib/me'
 import { copy } from './copy'
 import { buildReport, type Report } from './report'
 import './ReportSheet.css'
+import { dateFmt } from '../../lib/format'
 
 const t = copy.sheet
 
@@ -86,7 +87,7 @@ export default function ReportSheet({ site, print, onClose }: { site: Site; prin
 
   return (
     <Modal label={t.title(site.domain)} className="pr-modal" onClose={onClose} keepSize={false}>
-      <DialogHead heading={t.title(site.domain)} hint={t.made(new Date().toLocaleDateString(tag))} />
+      <DialogHead heading={t.title(site.domain)} hint={t.made(dateFmt(tag, {}).format(new Date()))} />
       {r === null && <Loading height={200} />}
       {r === 'failed' && <p className="muted">{t.failed}</p>}
       {ready && <Body r={r} />}

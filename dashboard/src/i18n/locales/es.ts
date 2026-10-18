@@ -115,6 +115,7 @@ export default {
 
   // toast
   'toast.dismiss': 'Cerrar',
+  'toast.offline': "Sin conexión: se muestran los últimos datos",
 
   // cards
   'records.title': 'Lo que registra el script',

@@ -67,6 +67,10 @@ async function sweep(page: Page, width: number, query: string, seen: Set<string>
   await page.setViewportSize({ width, height: 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/${HISTORY_DOMAIN}${query}${query ? '&' : '?'}v=`)
+  // Count the buttons only once the page has settled: the loading shapes are gone and the first Why? is there.
+  await page.waitForLoadState('networkidle')
+  await expect(page.locator('article.icard.sk')).toHaveCount(0, { timeout: 15000 })
+  await expect(page.locator(Object.values(KINDS).join(', ')).first()).toBeVisible({ timeout: 15000 })
   await page.waitForTimeout(1500)
   for (const [kind, sel] of Object.entries(KINDS)) {
     const all = page.locator(sel)

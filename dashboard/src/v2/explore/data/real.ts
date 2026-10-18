@@ -23,6 +23,7 @@ import { scaled, withSourceUsuals } from './scaled'
 import { mapOverview, mapTable, optionsOf, type Uptime } from './mapReport'
 import { mapBots, mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed } from './mapSections'
 import type { DataCtx, Meta, TabData } from './useExplore'
+import { dateFmt } from '../../../lib/format'
 
 /** Explore asks for the deep report: the breakdowns of regions, cities, exit pages and the rest ride in the same read. */
 const query = (c: DataCtx, filters: Filter[] = c.filters): ReportQuery => ({ ...queryOf({ ...c.view, filters }, c.range), deep: true, limit: EXPLORE_ROWS })
@@ -31,7 +32,7 @@ const query = (c: DataCtx, filters: Filter[] = c.filters): ReportQuery => ({ ...
 const before = (r: Report): Range => ({ from: r.previous_from ?? r.from, to: r.previous_to ?? r.to })
 
 const clock = (unix: number, tz: string, today: string): string => {
-  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(unix * 1000))
+  const parts = dateFmt('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(unix * 1000))
   const at = (t: string) => parts.find((p) => p.type === t)?.value ?? ''
   const day = `${at('year')}-${at('month')}-${at('day')}`
   return day === today ? `${at('hour')}:${at('minute')}` : `${day.slice(5)} ${at('hour')}:${at('minute')}`
