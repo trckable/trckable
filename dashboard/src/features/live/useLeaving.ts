@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
-import { reducedMotion } from '../../lib/motion'
 
 /** How long a row takes to fade out and fold away (Live.css, .live-row.leaving). */
 export const LEAVE_MS = 600
 
 /**
  * A list whose removed items stay a moment, marked leaving, so they can fade
- * out instead of vanishing. With reduced motion they go at once.
+ * out instead of vanishing (reduced motion fades them without sliding).
  */
 export function useLeaving<T extends { key: string }>(items: T[]): (T & { leaving?: boolean })[] {
   const [gone, setGone] = useState<(T & { index: number })[]>([])
@@ -15,11 +14,9 @@ export function useLeaving<T extends { key: string }>(items: T[]): (T & { leavin
   // so a leaving row never flickers out for a frame.
   if (prev !== items) {
     setPrev(items)
-    if (!reducedMotion()) {
-      const keep = new Set(items.map((i) => i.key))
-      const left = prev.flatMap((p, index) => (keep.has(p.key) ? [] : [{ ...p, index }]))
-      if (left.length) setGone((g) => [...g.filter((x) => !keep.has(x.key) && !left.some((l) => l.key === x.key)), ...left])
-    }
+    const keep = new Set(items.map((i) => i.key))
+    const left = prev.flatMap((p, index) => (keep.has(p.key) ? [] : [{ ...p, index }]))
+    if (left.length) setGone((g) => [...g.filter((x) => !keep.has(x.key) && !left.some((l) => l.key === x.key)), ...left])
   }
   // Once they have faded, they go. (A later leaver restarts the wait, which
   // only keeps an already invisible row a moment longer.)

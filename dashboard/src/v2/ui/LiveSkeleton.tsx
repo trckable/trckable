@@ -15,11 +15,11 @@ export function LiveSkeleton() {
         </div>
         <div className="lfig">
           <div className="lmain">
-            <span className="ll">{copy.visitors30}</span>
+            <span className="ll">{copy.onlineNow}</span>
             {bone(88, 48)}
           </div>
           <div className="lside">
-            <span className="ll">{copy.onlineNow}</span>
+            <span className="ll">{copy.visitors30}</span>
             {bone(48, 28)}
           </div>
         </div>
