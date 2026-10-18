@@ -3043,8 +3043,6 @@ export default {
   'v2.live.still': 'Ancora sul sito',
   'v2.live.replay': 'Replay',
   'v2.live.replayTitle': 'Guarda il replay',
-  'v2.live.seeLess': 'Mostra meno',
-  'v2.live.seeAll': (n: number) => `Vedi tutti (${int(n)})`,
   'v2.live.today': 'Oggi',
   'v2.live.above': 'sopra il solito',
   'v2.live.below': 'sotto il solito',

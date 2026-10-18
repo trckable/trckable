@@ -111,12 +111,6 @@ test('on a phone the tabs are the bar at the bottom, and nothing runs off the si
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })
 
-test('Live shows eight people at most, with no scroll inside the card', async ({ page }) => {
-  await open(page, 1280, '?view=live')
-  await expect(page.locator('.lon')).toBeVisible()
-  expect(await page.locator('.lfeed .lv').count()).toBeLessThanOrEqual(8)
-})
-
 test('the page that Google Analytics sends people back to opens the import, and test payments say so with a way out', async ({ page }) => {
   await open(page, 1440, '?view=briefing&import=ga')
   await expect(page.getByRole('dialog').filter({ has: page.locator('.fa-import') })).toBeVisible({ timeout: 20_000 })
