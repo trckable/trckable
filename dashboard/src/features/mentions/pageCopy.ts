@@ -4,7 +4,6 @@ import { count } from '../../i18n/helpers'
 
 export const page = defineCopy('mentionsPage', {
   menu: 'Mentions',
-  back: 'Back to the dashboard',
   failed: 'Could not read the mentions. Try again.',
   // Hero
   nowTitle: 'Talked about now',

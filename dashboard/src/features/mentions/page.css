@@ -1,24 +1,15 @@
 /* The Mentions page (MentionsPage.tsx), the chart's pins and the sites list chip: loaded with their chunks. */
 .mp-page {
-  padding: 8px 0 60px;
+  padding: 18px 0 60px;
   display: grid;
   gap: 16px;
   min-width: 0;
 }
-.mp-head h1 {
-  margin: 4px 0 2px;
-  font-size: 26px;
-  letter-spacing: -0.03em;
-}
-.mp-head p {
+.mp-title {
   margin: 0;
-}
-.mp-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--text-3);
-  font-size: 13px;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
 }
 .mp-page h2,
 .mp-page h3 {

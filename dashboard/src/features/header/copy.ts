@@ -11,7 +11,6 @@ export const copy = defineCopy('header', {
   shareTitle: 'Share these numbers as a picture',
   previous: 'Previous period',
   next: 'Next period',
-  noComparison: 'no comparison',
   /** The tag inside the period control while a comparison is on, after the ±. */
   cmpTag: { previous: 'vs before', year: 'vs last year', custom: 'vs custom' },
   collapse: 'Collapse',

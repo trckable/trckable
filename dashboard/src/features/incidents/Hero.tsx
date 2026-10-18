@@ -3,6 +3,7 @@
 import { fmtInt } from '../../lib/format'
 import { copy } from './copy'
 import { duration, tooShort, uptimeOf, type Standing } from './model'
+import { PageStats } from '../../v2/ui/PageStats'
 import { Tip } from './Tip'
 
 export interface Figures {
@@ -62,32 +63,16 @@ export function Hero({ now, at, f, w, over }: { now: Standing; at: number; f: Fi
         {!w.silent && !u.short && u.value.endsWith('%') && <span className="inc-over">{copy.over(over)}</span>}
       </p>
       {(u.short || line) && <p className="inc-line">{u.short || line}</p>}
-      <dl className="inc-stats">
-        <div>
-          <dt>
-            {copy.statUptime} <Tip text={uptimeTip} />
-          </dt>
-          <dd>{u.value}</dd>
-        </div>
-        <div>
-          <dt>{copy.statIncidents}</dt>
-          <dd>{fmtInt(f.count)}</dd>
-        </div>
-        <div>
-          <dt>
-            {copy.statAffected} <Tip text={copy.affectedNote} />
-          </dt>
-          <dd>{f.seconds > 0 ? duration(f.seconds) : '0m'}</dd>
-        </div>
-        {f.lostSome && (
-          <div>
-            <dt>
-              {copy.statLost} <Tip text={copy.lostNote} align="right" />
-            </dt>
-            <dd>{copy.lostStat(fmtInt(f.lost))}</dd>
-          </div>
-        )}
-      </dl>
+      <div className="inc-figs">
+        <PageStats
+          items={[
+            { label: <>{copy.statUptime} <Tip text={uptimeTip} /></>, value: u.value },
+            { label: copy.statIncidents, value: fmtInt(f.count) },
+            { label: <>{copy.statAffected} <Tip text={copy.affectedNote} /></>, value: f.seconds > 0 ? duration(f.seconds) : '0m' },
+            ...(f.lostSome ? [{ label: <>{copy.statLost} <Tip text={copy.lostNote} align="right" /></>, value: copy.lostStat(fmtInt(f.lost)) }] : []),
+          ]}
+        />
+      </div>
     </section>
   )
 }

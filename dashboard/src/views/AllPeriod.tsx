@@ -4,8 +4,7 @@
 // really are compared: the table's visitors against the days just before (the
 // overview compares today with the same weekday, not the period).
 import { Calendar, Check, ChevronDown } from 'lucide-react'
-import { compareWords } from '../components/DatePicker'
-import { addDays } from '../lib/dates'
+import { addDays, compareLabel } from '../lib/dates'
 import { Popover } from '../kit'
 import { copy } from './allSitesCopy'
 import { PERIOD_DAYS, type View } from './allView'
@@ -16,7 +15,7 @@ export const periodsFor = (view: Pick<View, 'layout' | 'lens'>) => PERIOD_DAYS.f
 /** What the numbers are against, as the site dashboard words it ("vs the 30 days before"). */
 function against(days: number): string {
   const to = '2000-01-01'
-  return compareWords({ period: `${days}d`, range: { from: addDays(to, 1 - days), to }, compare: 'previous' })
+  return `vs ${compareLabel(`${days}d`, 'previous', { from: addDays(to, 1 - days), to })}`
 }
 
 /** `charts`: the numbers are today's and the period only draws the charts, so the button says so. */
