@@ -24,9 +24,17 @@ export function useLocation() {
   return { path: location.pathname, params: new URLSearchParams(location.search), hash: location.hash }
 }
 
+// How many entries this app has pushed on the way here (kept in each entry's state, so it survives a reload and Back).
+const stepOf = () => (history.state as { d?: number } | null)?.d ?? 0
+let steps = typeof history === 'undefined' ? 0 : stepOf()
+if (typeof window !== 'undefined') window.addEventListener('popstate', () => (steps = stepOf()))
+/** Entries pushed by this app so far: a later number minus an earlier one is how far Back goes between two moments. */
+export const historySteps = () => steps
+
 export function navigate(to: string, opts: { replace?: boolean } = {}) {
   if (to === snapshot()) return
-  history[opts.replace ? 'replaceState' : 'pushState'](null, '', to)
+  if (opts.replace) history.replaceState(history.state, '', to)
+  else history.pushState({ d: ++steps }, '', to)
   window.dispatchEvent(new Event(EVENT))
 }
 
@@ -194,7 +202,7 @@ export function wantsLive(view: ViewState, site: { last_event_at?: number }): bo
 }
 
 /** Update part of the view; scrub moves replace history, everything else pushes. */
-export function setView(patch: Partial<ViewState>) {
+export function setView(patch: Partial<ViewState>, opts: { replace?: boolean } = {}) {
   const cur = readView(new URLSearchParams(location.search))
   // An address with a period, filters and so on is Data; if this change takes
   // the last of them out, it keeps saying Data.
@@ -207,7 +215,7 @@ export function setView(patch: Partial<ViewState>) {
   // An open settings section stays in the address (lib/settings.ts).
   const settings = new URLSearchParams(location.search).get('settings')
   const view = writeView(next)
-  navigate(location.pathname + (settings ? view + (view ? '&' : '?') + 'settings=' + encodeURIComponent(settings) : view), { replace: Object.keys(patch).every((k) => k === 'day') })
+  navigate(location.pathname + (settings ? view + (view ? '&' : '?') + 'settings=' + encodeURIComponent(settings) : view), { replace: opts.replace || Object.keys(patch).every((k) => k === 'day') })
 }
 
 /** The period, comparison, filters and panel put back to what a fresh page has: what Live is shown with, since it has none of them. */

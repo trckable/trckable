@@ -46,3 +46,74 @@ test('a theme chosen in one tab reaches the other', async ({ page, context }) =>
   await other.evaluate(() => localStorage.setItem('trckable:theme', 'dark'))
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
 })
+
+test('closing Explore leaves it behind: Back does not open it again', async ({ page }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: await session('edge-gaps'), url: API }])
+  await page.goto(`${API}/history.example?view=briefing&period=7d`)
+  await page.getByRole('button', { name: /^Explore all data/ }).first().click()
+  await expect(page).toHaveURL(/x=overview/)
+  await expect(page.getByRole('tab', { name: 'Highlights' })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page).not.toHaveURL(/x=/)
+  await page.goBack()
+  await expect(page).not.toHaveURL(/x=/)
+})
+
+test('an address with a stray ending is the site, and an unknown site says so', async ({ page }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: await session('edge-gaps'), url: API }])
+  await page.goto(`${API}/example.com/nope?period=7d`)
+  await expect(page).toHaveURL(`${API}/example.com?period=7d`)
+  await page.goto(`${API}/nosuch.site`)
+  await expect(page.getByText('No site called nosuch.site')).toBeVisible()
+  await expect(page).not.toHaveURL(/nosuch/)
+})
+
+test('a language chosen in one tab restarts the other in it', async ({ page, context }) => {
+  await context.addCookies([{ name: 'trckable_session', value: await session('edge-gaps'), url: API }])
+  await page.goto(`${API}/example.com`)
+  const other = await context.newPage()
+  await other.goto(`${API}/example.com`)
+  const reloaded = page.waitForEvent('load')
+  await other.evaluate(() => localStorage.setItem('trckable:lang', 'de'))
+  await reloaded
+  await expect(page.locator('html')).toHaveAttribute('lang', 'de')
+})
+
+test('a viewer opening a settings address is told, not left on nothing', async ({ page }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: await session('edge-gaps'), url: API }])
+  await page.route(/\/api\/v1\/me(\?|$)/, async (route) => {
+    const me = await (await route.fetch()).json()
+    await route.fulfill({ json: { ...me, role: 'viewer' } })
+  })
+  await page.goto(`${API}/example.com?settings=sharing`)
+  await expect(page.getByText('Not allowed')).toBeVisible()
+  await expect(page).not.toHaveURL(/settings=/)
+})
+
+test('a period that cannot be read does not keep the last period\'s numbers under its name', async ({ page }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: await session('edge-gaps'), url: API }])
+  await page.goto(`${API}/history.example?view=briefing&period=7d`)
+  await expect(page.locator('.brief')).toBeVisible()
+  let fail = false
+  await page.route(/\/api\/v1\/sites\/[^/]+\/report/, (route) => (fail ? route.abort() : route.continue()))
+  fail = true
+  await page.evaluate(() => {
+    history.pushState({ d: 99 }, '', location.pathname + '?view=briefing&period=90d')
+    window.dispatchEvent(new Event('trckable:navigate'))
+  })
+  await expect(page.getByRole('alert').filter({ hasText: /load/i })).toBeVisible()
+  await expect(page.locator('.brief')).toHaveCount(0)
+})
+
+test.describe('a longer language on a phone', () => {
+  test.use({ viewport: { width: 390, height: 844 } })
+  test('the incident page does not run past the screen in German', async ({ page }) => {
+    await page.context().addCookies([{ name: 'trckable_session', value: await session('edge-gaps'), url: API }])
+    await page.addInitScript(() => localStorage.setItem('trckable:lang', 'de'))
+    await page.goto(`${API}/history.example/incidents`)
+    const foot = page.locator('.inc-foot')
+    await expect(foot).toBeVisible()
+    const right = await foot.evaluate((e) => e.getBoundingClientRect().right)
+    expect(right).toBeLessThanOrEqual(390)
+  })
+})

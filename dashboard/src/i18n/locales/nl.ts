@@ -3330,4 +3330,5 @@ export default {
   'mentionsTrust.uncheckedTitle': (w: string) => `Het nieuws kon nu niet worden gecontroleerd voor “${w}”`,
   'mentionsTrust.addAnyway': 'Toch toevoegen',
   'mentionsTrust.excludedFull': (n: number) => `Dat zou de grens van ${n} uitgesloten woorden overschrijden. Verwijder er eerst een.`,
+  'address.noSite': (name: string) => `Geen site met de naam ${name}`,
 } satisfies Messages

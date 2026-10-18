@@ -3320,4 +3320,5 @@ export default {
   'mentionsTrust.uncheckedTitle': (w: string) => `Die News konnten für „${w}“ gerade nicht geprüft werden`,
   'mentionsTrust.addAnyway': 'Trotzdem hinzufügen',
   'mentionsTrust.excludedFull': (n: number) => `Das würde die Grenze von ${n} ausgeschlossenen Wörtern überschreiten. Entferne zuerst eines.`,
+  'address.noSite': (name: string) => `Keine Website namens ${name}`,
 } satisfies Messages

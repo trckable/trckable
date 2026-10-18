@@ -2,6 +2,7 @@
 .inc-page {
   padding: 8px 0 60px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr); /* one column that may be narrower than its widest line: a longer language's words wrap instead of widening the page */
   gap: 16px;
   min-width: 0;
 }
