@@ -81,9 +81,10 @@
     },
     "peek.ask": {
       "roles": [
-        "owner"
+        "owner",
+        "viewer"
       ],
-      "server": "instance.change"
+      "server": "peek.ask"
     },
     "setup.run": {
       "roles": [

@@ -43,6 +43,8 @@ const (
 	ActSiteDelete Action = "site.delete"
 	// ActTeamManage is the team's own settings: its name and icon.
 	ActTeamManage Action = "team.manage"
+	// ActPeekAsk is asking Peek and Answers about the data: a read, so a viewer may.
+	ActPeekAsk Action = "peek.ask"
 	// ActDataErase is erasing a visitor's data from a site.
 	ActDataErase Action = "data.erase"
 )
@@ -50,14 +52,14 @@ const (
 var ownerActions = []Action{
 	ActChange, ActAccountOwn, ActSitesAll, ActMemberManage, ActKeyRead, ActFeedbackRead,
 	ActSearchConnect, ActImportGoogle, ActSecretRead, ActProxyKey, ActAlertTarget, ActUpdateCheck,
-	ActSiteDelete, ActTeamManage, ActDataErase,
+	ActSiteDelete, ActTeamManage, ActDataErase, ActPeekAsk,
 }
 
 // permissions is the one role to actions table. An unknown role has no row
 // and may do nothing.
 var permissions = map[string]map[Action]bool{
 	"owner":  actionSet(ownerActions...),
-	"viewer": actionSet(ActAccountOwn),
+	"viewer": actionSet(ActAccountOwn, ActPeekAsk),
 }
 
 func actionSet(a ...Action) map[Action]bool {

@@ -8,7 +8,8 @@ export interface LockCardProps {
   size?: 'card' | 'big' | 'mini'
   /** The button (what the feature asks for: "Connect", "Turn on"). */
   go: string
-  onGo: () => void
+  /** Missing for someone who may not set it up: the card then asks them to turn to an Owner or Admin. */
+  onGo?: () => void
   onHow: () => void
 }
 
@@ -27,9 +28,13 @@ export function LockCard({ kind, size = 'card', go, onGo, onHow }: LockCardProps
           {text.line}
         </p>
         <p className="lt2">{text.sub}</p>
-        <button type="button" className="lkgo" onClick={onGo}>
-          {go}
-        </button>
+        {onGo ? (
+          <button type="button" className="lkgo" onClick={onGo}>
+            {go}
+          </button>
+        ) : (
+          <p className="lt2 lkask">{c.ask}</p>
+        )}
         <button type="button" className="lk3 how" onClick={onHow}>
           {c.how}
         </button>

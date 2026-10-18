@@ -2459,6 +2459,7 @@ export default {
   'briefing.cards.topicNames.pages': 'Seiten',
   'briefing.cards.topicNames.goals': 'Ziele',
   'v2.lock.how': 'So funktioniert es',
+  'v2.lock.ask': 'Bitte einen Owner oder Admin, eines hinzuzufügen',
   'v2.lock.revLine': 'Sieh, was jede Quelle einbringt',
   'v2.lock.revSub': 'Verbinde Stripe, Paddle oder Lemon Squeezy',
   'v2.lock.searchLine': 'Sieh die Suchanfragen, die Leute bringen',

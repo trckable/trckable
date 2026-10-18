@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import type { Annotation } from '../../lib/api'
 import { copy } from '../briefing/copy'
 import { dayWords } from '../dayWords'
+import { lockCopy } from './lockCopy'
 import { InfoRow, InfoSheet } from './InfoSheet'
 
 export function NotesSheet({ site, siteId, notes, onClose, onAdd, onChanged }: { site: string; siteId: string; notes: Annotation[]; onClose: () => void; onAdd?: () => void; onChanged: () => void }) {
@@ -21,7 +22,10 @@ export function NotesSheet({ site, siteId, notes, onClose, onAdd, onChanged }: {
         )
       }
     >
-      {notes.length ? [...notes].reverse().map((n) => (onAdd ? <NoteLine key={n.id} n={n} site={siteId} onChanged={onChanged} /> : <InfoRow key={n.id} t={n.text} d={`${dayWords(n.day)}${n.author ? ` · ${n.author}` : ''}`} />)) : <div className="mk-quiet">{copy.noNotes}</div>}
+      {notes.length ? [...notes].reverse().map((n) => (onAdd ? <NoteLine key={n.id} n={n} site={siteId} onChanged={onChanged} /> : <InfoRow key={n.id} t={n.text} d={`${dayWords(n.day)}${n.author ? ` · ${n.author}` : ''}`} />)) : <div className="mk-quiet">
+          {copy.noNotes}
+          {!onAdd && <div>{lockCopy.ask}</div>}
+        </div>}
     </InfoSheet>
   )
 }
