@@ -1,0 +1,1 @@
+- Explore's Bots tab shows its empty state instead of "We could not load this" on a site that no robot visited in the period.

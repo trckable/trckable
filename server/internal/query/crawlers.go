@@ -45,7 +45,7 @@ func (q Q) Crawlers(ctx context.Context, p Params) (*CrawlerReport, error) {
 	if err != nil {
 		loc = time.UTC
 	}
-	out := &CrawlerReport{Kinds: map[string]int64{}}
+	out := &CrawlerReport{Kinds: map[string]int64{}, Series: []CrawlerSeries{}, Pages: []Row{}, Buckets: []string{}, Reads: []CrawlerRead{}}
 
 	// Counters are kept per day in the site's timezone (the writer's
 	// SiteZone), so the buckets are the period's days as it names them.
