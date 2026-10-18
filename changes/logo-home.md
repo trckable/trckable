@@ -1,0 +1,1 @@
+The ghost in the header is Home: one click goes to the current site's Live (its setup screen while the site is not verified), or to All sites when no site is in view, closes any open sheet, panel or settings and clears the filters; its tooltip says "Home".

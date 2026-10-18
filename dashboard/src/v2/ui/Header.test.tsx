@@ -6,18 +6,18 @@ import { Logo } from './Header'
 
 describe('the header’s logo', () => {
   it('is the brand’s ghost, not a drawing of its own', () => {
-    const html = renderToStaticMarkup(<Logo title="All sites" onClick={() => {}} />)
+    const html = renderToStaticMarkup(<Logo title="Home" onClick={() => {}} />)
     expect(html).toContain('tkb-logo')
     expect(html).toContain('tkb-ghost')
     expect(html).toContain('tkb-body')
-    expect(html).toContain('aria-label="All sites"')
+    expect(html).toContain('aria-label="Home"')
   })
 })
 
 describe('the ghost', () => {
-  it('opens Peek: a click and Enter call what the header gives it', () => {
+  it('goes where the header sends it: a click and Enter call what it is given', () => {
     const calls: string[] = []
-    const el = Logo({ title: 'Ask Peek', onClick: () => calls.push('open') }) as { props: { onClick: () => void; onKeyDown: (e: { key: string }) => void } }
+    const el = Logo({ title: 'Home', onClick: () => calls.push('open') }) as { props: { onClick: () => void; onKeyDown: (e: { key: string }) => void } }
     el.props.onClick()
     el.props.onKeyDown({ key: 'Enter' })
     el.props.onKeyDown({ key: 'a' })
