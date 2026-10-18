@@ -18,6 +18,7 @@ import type { Lens } from './allLens'
 import { useAllView, type ViewLens } from './allView'
 import { useOverview } from './useOverview'
 import { useSurges } from './useSurges'
+import { TeamHome } from './team/TeamHome'
 import '../mock/mock.css'
 import '../mock/theme.css'
 import './AllSites.css'
@@ -29,7 +30,7 @@ function numbersLens(l: ViewLens, money: boolean): Lens {
   return l === 'revenue' && money ? 'revenue' : 'visitors'
 }
 
-export function AllSites({ sites, header }: { sites: Site[]; header: React.ReactNode }) {
+function AllSitesPage({ sites, header }: { sites: Site[]; header: React.ReactNode }) {
   const [view, change, reset] = useAllView()
   // The overview reads the day from the daily series, so it has no 12 months (weekly) period.
   const days = view.layout === 'overview' && view.lens !== 'uptime' && view.days === 365 ? 30 : view.days
@@ -81,4 +82,10 @@ export function AllSites({ sites, header }: { sites: Site[]; header: React.React
       </div>
     </>
   )
+}
+
+/** ?tv=a|b (a development build) opens the team overview prototype in place of this page. */
+export function AllSites(props: { sites: Site[]; header: React.ReactNode }) {
+  const proto = import.meta.env.DEV && (new URLSearchParams(location.search).has('tv') || sessionStorage.getItem('trckable:tv'))
+  return proto ? <TeamHome {...props} /> : <AllSitesPage {...props} />
 }

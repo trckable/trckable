@@ -10,7 +10,7 @@ import { online, siteOf, type Conn, type Ctx } from './report'
 const KEY = 'trckable:fixture'
 
 /** A name Live's own sample used (its `down` is the mock's `outage`, a scenario of its own), for a link that still has it. */
-const ALIAS: Record<string, string> = { empty: 'newsite' }
+const ALIAS: Record<string, string> = { empty: 'newsite', team: 'sunday' }
 
 const SRC_COLOR: Record<string, string> = { google: '#7f9cf5', direct: '#8b8e94', hn: '#ff9a4a', reddit: '#ff6b4a', x: '#d7dadf', newsletter: '#c6ff3a', chatgpt: '#3fd0b0', github: '#b58cff', badge: '#f0c64a' }
 
