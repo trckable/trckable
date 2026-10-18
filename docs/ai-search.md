@@ -216,5 +216,5 @@ curl -X POST https://stats.example.com/api/crawl \
 - **In the weekly report.** One line: "AI assistants sent 128 visitors; crawlers read
   2,340 pages." It leaves out the half that is zero, and the whole line in a quiet week.
 - **In the API.** `GET /api/v1/sites/{site}/report/ai-search`, with the report's own
-  `from`, `to` and `f` parameters, answers with the visitors and referrers, the robots,
+  `from`, `to` and `f` parameters, answers with the visitors by assistant (`assistants`, only ones we know; `visitors` is their sum) and by referrer, the robots,
   and the pages with their `read`, `sent` and `flag`.

@@ -195,3 +195,57 @@ func TestPageFlagFloors(t *testing.T) {
 	eq(t, "at the clicks floor", PageFlag(0, 0, FlagMinClicks, true), FlagUnread)
 	eq(t, "read once is not ignored", PageFlag(1, 0, 100, true), "")
 }
+
+// The assistants list names only assistants: a referrer that is none (google.com
+// behind a utm_source, an app that sends no referrer) is told by its utm_source,
+// non-AI traffic never appears, and the header is the sum of the rows.
+func TestAISearchAssistantsAreKnownAndAddUp(t *testing.T) {
+	q := aiRig(t)
+	add := func(id, visitor int, channel, ref, utm string) {
+		t.Helper()
+		_, err := q.DB.Exec(`INSERT INTO sessions (site_id, session_id, visitor_id, start, last, channel, referrer, utm_source, entry_page, pvs, goals, engaged_ms, dur)
+			VALUES ('s1', ` + itoa(id) + `, ` + itoa(visitor) + `, TIMESTAMP '2026-09-10 11:00:00', TIMESTAMP '2026-09-10 11:05:00', '` + channel + `', '` + ref + `', '` + utm + `', '/x', 1, 0, 0, 0)`)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	add(20, 20, "AI", "", "chatgpt.com")           // the app sends no referrer
+	add(21, 21, "AI", "google.com", "chatgpt.com") // a referrer that is no assistant, tagged by the app
+	add(22, 22, "AI", "l.instagram.com", "gemini") // likewise
+	add(23, 23, "Direct", "", "")                  // not AI
+	add(24, 24, "Social", "l.instagram.com", "")   // not AI
+	add(25, 25, "AI", "www.perplexity.ai", "")     // www is dropped
+	r, err := q.AISearch(context.Background(), week, AIOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var sum int64
+	got := map[string]int64{}
+	for _, a := range r.Assistants {
+		sum += a.Visitors
+		got[a.Name] = a.Visitors
+		switch a.Name {
+		case "ChatGPT", "Claude", "Perplexity", "Gemini", "Copilot":
+		default:
+			t.Errorf("%q is listed and is no assistant we know", a.Name)
+		}
+	}
+	eq(t, "header is the sum of the rows", r.Visitors, sum)
+	eq(t, "ChatGPT: referrer, app and tagged link", got["ChatGPT"], int64(3))
+	eq(t, "Gemini by its utm_source", got["Gemini"], int64(1))
+	eq(t, "Perplexity: two visitors", got["Perplexity"], int64(2))
+	eq(t, "Claude", got["Claude"], int64(1))
+	eq(t, "all of them", sum, int64(7))
+	eq(t, "busiest first", r.Assistants[0].Name, "ChatGPT")
+	eq(t, "its top referrer", r.Assistants[0].Referrer, "chatgpt.com")
+
+	// Nothing from AI: an empty list, and a header of zero.
+	none := week
+	none.Site = "s2"
+	e, err := q.AISearch(context.Background(), none, AIOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	eq(t, "no assistants", len(e.Assistants), 0)
+	eq(t, "no header", e.Visitors, int64(0))
+}

@@ -322,7 +322,7 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
       return ok(funnelOf(c, id, parseQuery(sp), JSON.parse(sp.get('steps') ?? '[]') as FunnelStep[]))
     case 'report/ai-search': {
       const bots = crawlersOf(c, id, parseQuery(sp)).series.filter((s) => s.kind === 'train')
-      return ok({ visitors: 12, referrers: [{ value: 'chatgpt.com', visitors: 9 }, { value: 'perplexity.ai', visitors: 3 }], crawled: bots.reduce((n, s) => n + s.total, 0), bots: bots.map((s) => ({ name: s.name, kind: s.kind, hits: s.total })), pages: [], google: c.conn.search })
+      return ok({ visitors: 12, assistants: [{ name: 'ChatGPT', visitors: 9, referrer: 'chatgpt.com' }, { name: 'Perplexity', visitors: 3, referrer: 'perplexity.ai' }], referrers: [{ value: 'chatgpt.com', visitors: 9 }, { value: 'perplexity.ai', visitors: 3 }], crawled: bots.reduce((n, s) => n + s.total, 0), bots: bots.map((s) => ({ name: s.name, kind: s.kind, hits: s.total })), pages: [], google: c.conn.search })
     }
     case 'report/crawlers':
       return ok(crawlersOf(c, id, parseQuery(sp)))

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -38,12 +39,56 @@ const (
 // the visitors AI assistants sent, the robots that read the site, and for
 // each page how often it was read against how many people it was sent.
 type AISearch struct {
-	Visitors  int64    `json:"visitors"`  // distinct visitors from the AI channel
-	Referrers []Row    `json:"referrers"` // the AI channel by referrer
-	Crawled   int64    `json:"crawled"`   // hits by AI crawlers (answering and training)
-	Bots      []AIBot  `json:"bots"`      // busiest first
-	Pages     []AIPage `json:"pages"`     // read, sent and flags, busiest first
+	Visitors   int64         `json:"visitors"`   // the assistants' visitors added up: always the sum of Assistants
+	Assistants []AIAssistant `json:"assistants"` // the AI channel by assistant, busiest first; only assistants we know
+	Referrers  []Row         `json:"referrers"`  // the AI channel by referrer
+	Crawled    int64         `json:"crawled"`    // hits by AI crawlers (answering and training)
+	Bots       []AIBot       `json:"bots"`       // busiest first
+	Pages      []AIPage      `json:"pages"`      // read, sent and flags, busiest first
 }
+
+// AIAssistant is one assistant's distinct visitors, and the referrer host that
+// sent most of them (empty when none did: an app that sends no referrer).
+type AIAssistant struct {
+	Name     string `json:"name"`
+	Visitors int64  `json:"visitors"`
+	Referrer string `json:"referrer,omitempty"`
+}
+
+// aiNames maps a referrer host (itself or any subdomain) to the product people
+// know it by. The same hosts the channel rules put in the AI channel.
+var aiNames = [][2]string{
+	{"chatgpt.com", "ChatGPT"}, {"chat.openai.com", "ChatGPT"}, {"openai.com", "ChatGPT"},
+	{"perplexity.ai", "Perplexity"}, {"claude.ai", "Claude"},
+	{"gemini.google.com", "Gemini"}, {"bard.google.com", "Gemini"},
+	{"copilot.microsoft.com", "Copilot"}, {"bing.com", "Copilot"},
+	{"deepseek.com", "DeepSeek"}, {"grok.com", "Grok"}, {"meta.ai", "Meta AI"}, {"mistral.ai", "Mistral"},
+	{"you.com", "You.com"}, {"phind.com", "Phind"}, {"poe.com", "Poe"}, {"kagi.com", "Kagi"},
+}
+
+// aiSources maps a utm_source (lower case) to its assistant: an app that sends
+// no referrer tags its links instead (?utm_source=chatgpt.com).
+var aiSources = [][2]string{
+	{"chatgpt", "ChatGPT"}, {"chatgpt.com", "ChatGPT"}, {"openai", "ChatGPT"}, {"perplexity", "Perplexity"},
+	{"claude", "Claude"}, {"gemini", "Gemini"}, {"copilot", "Copilot"}, {"deepseek", "DeepSeek"}, {"grok", "Grok"},
+}
+
+// aiAssistantSQL names the assistant of a session in the AI channel: by the
+// referrer's host first, then by utm_source; null when neither is one we know.
+// It is built only from the constants above.
+var aiAssistantSQL = func() string {
+	var b strings.Builder
+	b.WriteString("CASE")
+	host := `regexp_replace(lower(coalesce(referrer, '')), '^www\.', '')`
+	for _, n := range aiNames {
+		b.WriteString(" WHEN " + host + " = '" + n[0] + "' OR " + host + " LIKE '%." + n[0] + "' THEN '" + n[1] + "'")
+	}
+	for _, n := range aiSources {
+		b.WriteString(" WHEN lower(coalesce(utm_source, '')) = '" + n[0] + "' THEN '" + n[1] + "'")
+	}
+	b.WriteString(" END")
+	return b.String()
+}()
 
 // AIBot is one crawler on one errand.
 type AIBot struct {
@@ -94,31 +139,72 @@ func (q Q) AISearch(ctx context.Context, p Params, o AIOptions) (*AISearch, erro
 	// Counters are kept per day in the site's own zone.
 	from := p.From.In(loc).Format(time.DateOnly)
 	to := p.To.In(loc).Add(-time.Nanosecond).AddDate(0, 0, 1).Format(time.DateOnly)
-	out := &AISearch{Referrers: []Row{}, Bots: []AIBot{}, Pages: []AIPage{}}
+	out := &AISearch{Assistants: []AIAssistant{}, Referrers: []Row{}, Bots: []AIBot{}, Pages: []AIPage{}}
 
-	// Who AI sent, and from where: the total and the rows in one scan.
+	// Who AI sent, by assistant: only the ones we can name, so the header is
+	// the sum of the rows and a referrer that is no assistant never appears.
+	//nolint:gosec // aiAssistantSQL is built from constants in this file; every value is bound
 	rows, err := conn.QueryContext(ctx, cte+`
-		SELECT GROUPING(r) AS g, coalesce(r, ''), count(DISTINCT visitor_id)
-		FROM (SELECT referrer AS r, visitor_id FROM s WHERE channel = ?)
-		GROUP BY GROUPING SETS ((r), ())
-		ORDER BY g DESC, 3 DESC, 2 LIMIT ?`, append(append([]any{}, args...), channelAI, aiMaxReferrer+1)...)
+		SELECT GROUPING(r) AS g, a, coalesce(r, ''), count(DISTINCT visitor_id)
+		FROM (SELECT `+aiAssistantSQL+` AS a, referrer AS r, visitor_id FROM s WHERE channel = ?)
+		WHERE a IS NOT NULL
+		GROUP BY GROUPING SETS ((a, r), (a))`, append(append([]any{}, args...), channelAI)...)
 	if err != nil {
-		return nil, fmt.Errorf("ai visitors: %w", err)
+		return nil, fmt.Errorf("ai assistants: %w", err)
 	}
 	defer rows.Close()
+	named := map[string]*AIAssistant{}
+	top := map[string]int64{}
 	for rows.Next() {
 		var g, n int64
-		var ref string
-		if err := rows.Scan(&g, &ref, &n); err != nil {
+		var name, ref string
+		if err := rows.Scan(&g, &name, &ref, &n); err != nil {
 			return nil, err
 		}
+		a := named[name]
+		if a == nil {
+			a = &AIAssistant{Name: name}
+			named[name] = a
+		}
 		if g == 1 {
-			out.Visitors = n
-		} else {
-			out.Referrers = append(out.Referrers, Row{Value: ref, Visitors: n})
+			a.Visitors = n
+		} else if ref != "" && n > top[name] {
+			a.Referrer, top[name] = ref, n
 		}
 	}
 	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	for _, a := range named {
+		out.Assistants = append(out.Assistants, *a)
+		out.Visitors += a.Visitors
+	}
+	sort.Slice(out.Assistants, func(i, j int) bool {
+		a, b := out.Assistants[i], out.Assistants[j]
+		if a.Visitors != b.Visitors {
+			return a.Visitors > b.Visitors
+		}
+		return a.Name < b.Name
+	})
+
+	// And by referrer, for the ones who want the hosts.
+	refs, err := conn.QueryContext(ctx, cte+`
+		SELECT coalesce(r, ''), count(DISTINCT visitor_id)
+		FROM (SELECT referrer AS r, visitor_id FROM s WHERE channel = ?)
+		GROUP BY r ORDER BY 2 DESC, 1 LIMIT ?`, append(append([]any{}, args...), channelAI, aiMaxReferrer)...)
+	if err != nil {
+		return nil, fmt.Errorf("ai referrers: %w", err)
+	}
+	defer refs.Close()
+	for refs.Next() {
+		var ref string
+		var n int64
+		if err := refs.Scan(&ref, &n); err != nil {
+			return nil, err
+		}
+		out.Referrers = append(out.Referrers, Row{Value: ref, Visitors: n})
+	}
+	if err := refs.Err(); err != nil {
 		return nil, err
 	}
 

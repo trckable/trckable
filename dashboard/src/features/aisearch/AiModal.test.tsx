@@ -17,6 +17,11 @@ const rep = {
   visitors: 20,
   crawled: 140,
   google: false,
+  assistants: [
+    { name: 'ChatGPT', visitors: 12, referrer: 'chatgpt.com' },
+    { name: 'Perplexity', visitors: 5, referrer: 'perplexity.ai' },
+    { name: 'Claude', visitors: 3, referrer: 'claude.ai' },
+  ],
   referrers: [
     { value: 'chatgpt.com', visitors: 12 },
     { value: 'perplexity.ai', visitors: 5 },
