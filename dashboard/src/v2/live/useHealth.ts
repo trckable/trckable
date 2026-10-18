@@ -9,6 +9,7 @@ import { hasAnswers, hasMentions } from '../../lib/me'
 import { answersApi } from '../../features/answers/api'
 import { incidents } from '../../features/incidents/api'
 import { mentionsApi } from '../../features/mentions/api'
+import { whenQuiet } from '../../features/extras/quiet'
 import { moduleOn } from '../briefing/moduleOn'
 import { aiOf, mentionsOf, speedOf, uptimeFigure, UPTIME_DAYS, type AiFigure, type MentionsFigure, type UptimeFigure } from './health'
 
@@ -22,17 +23,6 @@ export interface Health {
   answers?: { seen: number; total: number } | null
 }
 
-/** Runs `fn` when the browser is idle, or shortly after the first paint where it has no idle time. Returns the way to cancel. */
-function later(fn: () => void): () => void {
-  const w = window as Window & { requestIdleCallback?: (f: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void }
-  if (w.requestIdleCallback) {
-    const id = w.requestIdleCallback(fn, { timeout: 2000 })
-    return () => w.cancelIdleCallback?.(id)
-  }
-  const t = setTimeout(fn, 400)
-  return () => clearTimeout(t)
-}
-
 export function useHealth(site: Site | undefined, on: boolean): Health {
   const [got, setGot] = useState<{ id: string; h: Health } | null>(null)
   const id = site?.id
@@ -43,7 +33,7 @@ export function useHealth(site: Site | undefined, on: boolean): Health {
   useEffect(() => {
     if (!on || !id || !tz) return
     let live = true
-    const cancel = later(() => {
+    const cancel = whenQuiet(() => {
       const today = todayIn(tz)
       const now = Math.floor(Date.now() / 1000)
       const speed = moduleOn(id, 'vitals').then((v) => (v ? more.vitals(id, { from: addDays(today, -6), to: today }) : null)).then(speedOf, () => null)

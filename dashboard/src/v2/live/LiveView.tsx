@@ -66,7 +66,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   const { data, failed, got, clock, skew, busier, downSince, colors } = feed
   const now = useTicking(clock, skew)
   const { ref, fit } = useFit<HTMLElement>()
-  const [cardsRef, cardsNear] = useNear<HTMLDivElement>()
+  const [cardsRef, cardsNear] = useNear()
   useEffect(() => {
     liveLink.set(stream.connected)
     return () => liveLink.set(true)

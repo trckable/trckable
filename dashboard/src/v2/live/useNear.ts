@@ -2,12 +2,12 @@
 // visit that stays on the top of Live never asks for them.
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-export function useNear<T extends Element>(margin = 200): [(el: T | null) => void, boolean] {
+export function useNear(margin = 200): [(el: Element | null) => void, boolean] {
   const [near, setNear] = useState(() => typeof IntersectionObserver === 'undefined')
   const watch = useRef<IntersectionObserver | null>(null)
   useEffect(() => () => watch.current?.disconnect(), [])
   const ref = useCallback(
-    (el: T | null) => {
+    (el: Element | null) => {
       watch.current?.disconnect()
       if (!el || near || typeof IntersectionObserver === 'undefined') return
       watch.current = new IntersectionObserver(
