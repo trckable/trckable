@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react'
 import { navigate } from './url'
 
-export const SETTINGS_TABS = ['site', 'install', 'sharing', 'widgets', 'notes', 'payments', 'search', 'mentions', 'privacy', 'alerts', 'health'] as const
+export const SETTINGS_TABS = ['site', 'install', 'sharing', 'widgets', 'notes', 'payments', 'search', 'mentions', 'answers', 'privacy', 'alerts', 'health'] as const
 export type SettingsTab = (typeof SETTINGS_TABS)[number]
 
 /** Where an old or mistyped ?tab= goes: a section that exists opens as named; any other (the Modules tab that is gone, say) opens General, scrolled to What the script records. */

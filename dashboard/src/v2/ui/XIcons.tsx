@@ -2,6 +2,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 
 const PATHS: Record<string, ReactNode> = {
+  answers: <path d="M12 3a7 7 0 0 0-7 7v10l2.5-1.8 2.2 1.8 2.3-1.8 2.3 1.8 2.2-1.8 2.5 1.8V10a7 7 0 0 0-7-7z" />,
   ai: <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18 16l.8 2.2L21 19l-2.2.8L18 22l-.8-2.2L15 19l2.2-.8z" />,
   overview: <path d="M4 19V5M4 19h16M8 15l3-4 3 2 5-6" />,
   pages: (

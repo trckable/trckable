@@ -68,7 +68,7 @@ function App() {
         setBoot({ state: "login" });
         return;
       }
-      setRole(me.role, me.mentions);
+      setRole(me.role, me.mentions, me.answers);
       loadKeymap(me.keys);
       // Before choosing their own password a person may do nothing else (the server refuses /sites).
       const { sites } = me.must_change ? { sites: [] } : ((await early.sites) ?? (await api.sites()));

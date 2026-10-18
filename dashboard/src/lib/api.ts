@@ -145,6 +145,8 @@ export interface Site {
   down_since?: number
   /** At least one mention was found, so a screen asks for them only then. */
   mentions?: boolean
+  /** The server asks the AI assistants (an engine key is set), so a screen offers Answers. */
+  answers?: boolean
   down_cause?: string
   /** Set while the site's firewall blocks the server's uptime look (unix seconds): we cannot check it, its visitors are not affected. */
   probe_blocked_since?: number
@@ -934,7 +936,7 @@ export const api = {
    *  only means "not signed in yet" (or "set up first"), which /setup and /me
    *  already say, so it must not trigger the sign-in screen on its own. */
   early: () => ({
-    me: call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean; mentions?: boolean }>('GET', '/me', undefined, undefined, true).catch(() => null),
+    me: call<{ kind: string; email?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean; mentions?: boolean; answers?: boolean }>('GET', '/me', undefined, undefined, true).catch(() => null),
     sites: call<{ sites: Site[] }>('GET', '/sites', undefined, undefined, true).catch(() => null),
   }),
   sites: () => call<{ sites: Site[] }>('GET', '/sites'),
