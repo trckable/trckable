@@ -140,7 +140,7 @@ test('the overview cards and its two lists equal the hand count', async ({ page 
   await expect(pages.nth(0).locator('.sh')).toHaveText('65%')
   await expect(pages.nth(2).locator('.mk-n')).toHaveText('4')
   const sources = lists.nth(1).locator('.xrw')
-  await expect(sources.nth(0).locator('.mk-bar > span')).toHaveText('Google')
+  await expect(sources.nth(0).locator('.mk-bar > span')).toHaveText('Search')
   await expect(sources.nth(0).locator('.mk-n')).toHaveText('18')
   await expect(sources.nth(0).locator('.sh')).toHaveText('49%')
 })
