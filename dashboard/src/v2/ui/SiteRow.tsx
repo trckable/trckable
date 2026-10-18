@@ -1,17 +1,15 @@
-// One site in the list that opens from the header: its mark with the state dot on it (green while visits come, amber when quiet, red when down, hollow
-// when not installed), its name with what its state needs said in words, and today's visitors. Anyone who may arrange can drag the row, move it with Alt + ↑/↓ or its ⋯ menu (pin, a group).
-import { CircleAlert, GripVertical, Moon } from 'lucide-react'
+// One site in the list that opens from the header: its mark with the state dot on it (green while visits come, grey when quiet, red when down, hollow
+// when not installed), its name (its domain too, when another site has the same name), and today's visitors, or how long it has been quiet or down. Anyone who may arrange can drag the row, move it with Alt + ↑/↓ or its ⋯ menu (pin, a group).
+import { GripVertical } from 'lucide-react'
 import type { Site } from '../../lib/api'
 import { Menu } from '../../components/Menu'
 import { confirmWith } from '../../components/Confirm'
-import { Tooltip } from '../../kit/Tooltip'
 import { fmtCompact, fmtInt } from '../../lib/format'
 import { prefetchSite } from '../../lib/dashQuery'
 import { copy } from '../../features/sites/menuCopy'
 import { copy as first } from '../../features/sites/copy'
 import { addGroup, moveTo, pin, placeKey, sectionsOf, step, unpin, type Place } from '../../features/sites/layout'
 import { dotState } from '../../features/sites/StateDot'
-import { stateLine } from '../../features/sites/stateLine'
 import { OpenSite, openSiteTab } from '../../features/sites/OpenSite'
 import { silence } from '../../features/sitestatus/time'
 import type { Arrange } from '../../features/sites/arrange'
@@ -20,7 +18,7 @@ import type { SiteMove } from '../slots'
 
 const DOT = { now: 'now', live: '', quiet: 'quiet', stopped: 'down', new: 'off' } as const
 
-/** What stands where the people on it would: "setup", a moon (quiet) or an alert (down) when the dot alone cannot say it. */
+/** What stands where the people on it would: "setup", or in words how long it has been down or quiet (a quiet one's dot is grey, a down one's red); else today's visitors. */
 function Tail({ s, today }: { s: Site; today?: number }) {
   const state = dotState(s)
   if (state === 'new') {
@@ -32,17 +30,10 @@ function Tail({ s, today }: { s: Site; today?: number }) {
   }
   if (state === 'stopped' || state === 'quiet') {
     const down = state === 'stopped'
-    const tip = down ? copy.downTip(silence(s)) : copy.quietTip(silence(s))
-    const Icon = down ? CircleAlert : Moon
     return (
-      <Tooltip text={tip}>
-        {(p) => (
-          // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- a tap shows the tip; the state is also in words under the name, and a key reaches the row itself
-          <span {...p} role="img" aria-label={tip} className={`now state-icon ${down ? 'down' : 'quiet'}`} onClick={(e) => { e.stopPropagation(); p.onClick() }}>
-            <Icon size={16} strokeWidth={2} aria-hidden="true" />
-          </span>
-        )}
-      </Tooltip>
+      <span className={`now state-word ${down ? 'down' : 'quiet'}`} title={down ? copy.downTip(silence(s)) : copy.quietTip(silence(s))}>
+        {down ? copy.downShort(silence(s)) : copy.quietShort(silence(s))}
+      </span>
     )
   }
   if (today === undefined) return null
@@ -53,15 +44,18 @@ function Tail({ s, today }: { s: Site; today?: number }) {
   )
 }
 
+/** The dot's class: only a real problem is coloured, so a quiet site's is grey. */
+const dot = (s: Site) => (dotState(s) === 'quiet' ? 'idle' : DOT[dotState(s)])
+
 /** After a move React may re-insert the row, which drops focus: put it back. */
 function refocus(id: string) {
   requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-site="${CSS.escape(id)}"] .site`)?.focus())
 }
 
-export function SiteRow({ site, place, on, arrange: a, today, onPick, move }: { move?: SiteMove; site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; onPick: () => void }) {
+export function SiteRow({ site, place, on, arrange: a, today, onPick, move, clash }: { clash?: boolean; move?: SiteMove; site: Site; place: Place; on: boolean; arrange: Arrange | null; today?: number; onPick: () => void }) {
   const name = site.name || site.domain
-  const line = stateLine(site)
-  const note = line ?? (site.domain === name ? undefined : site.domain)
+  // The domain says which is which only when two names are alike.
+  const note = clash && site.domain !== name ? site.domain : undefined
   const moveStep = (dir: -1 | 1) => {
     if (!a) return
     a.save(step(a.sites, a.layout, site.id, dir), dir < 0 ? copy.up : copy.down)
@@ -91,11 +85,11 @@ export function SiteRow({ site, place, on, arrange: a, today, onPick, move }: { 
       >
         <span className="mkwrap">
           <SiteMark site={site} size={22} />
-          <span className={`mk-dot ${move ? 'quiet' : DOT[dotState(site)]}`} title={move?.title ?? first.dot[dotState(site)]} />
+          <span className={`mk-dot ${move ? 'quiet' : dot(site)}`} title={move?.title ?? first.dot[dotState(site)]} />
         </span>
         <span className="mt2">
           <div className="nm">{name}</div>
-          {move ? <div className="d state-line quiet moving" title={move.title}>{move.text}</div> : note && <div className={`d${line ? ` state-line ${dotState(site)}` : ''}`}>{note}</div>}
+          {move ? <div className="d state-line quiet moving" title={move.title}>{move.text}</div> : note && <div className="d">{note}</div>}
         </span>
         <Tail s={site} today={today} />
       </button>

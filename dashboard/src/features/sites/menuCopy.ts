@@ -18,24 +18,15 @@ export const copy = defineCopy('sites.menu', {
   // A site's state, where its number would be, when the dot alone can't say it.
   setup: 'setup',
   downTip: (span: string) => `Not reachable for ${span}. Open the site to see what’s wrong.`,
-  downLine: (span: string) => `Not reachable · ${span}`,
-  quietLine: (span: string) => `Quiet · ${span}`,
+  downShort: (span: string) => `down ${span}`,
+  quietShort: (span: string) => `quiet ${span}`,
   quietTip: (span: string) => `No visits for ${span}. Nothing looks wrong with the page.`,
 
   // The numbers: today's visitors per site, and both totals beside All sites.
   today: (n: string) => `${n} today`,
   todayAll: 'Visitors today, all sites',
-  onlineAll: 'Online now, all sites',
-  todayShort: 'today',
-  liveShort: 'live',
 
-  // The keys, said once at the foot (desktop only): move, open, close.
-  keyMove: ['↑', '↓'],
-  keyOpen: '↵',
-  keyClose: 'esc',
-  keyOpenSite: '⇧↵',
   openSite: (domain: string) => `Open ${domain}`,
-  openSiteKey: 'Shift + Enter opens the site',
 
   // Arranging.
   options: (name: string) => `${name}: arrange`,
@@ -61,6 +52,5 @@ export const copy = defineCopy('sites.menu', {
   removeGroupTitle: (g: string) => `Remove the group “${g}”?`,
   removeGroupBody: 'Its sites stay: they go back to the list. Only the heading goes.',
   remove: 'Remove',
-  keys: 'Alt + ↑ / ↓ moves the focused site. Drag to reorder.',
   dragged: (name: string, where: string) => `${name} moved to ${where}`,
 })

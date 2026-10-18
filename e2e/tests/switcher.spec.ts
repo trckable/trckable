@@ -217,7 +217,7 @@ test('the keys work in the list: ↑/↓ move, a number opens that site, and the
 })
 
 for (const [name, width, height, scheme] of [['desktop', 1440, 900, 'light'], ['desktop-dark', 1440, 900, 'dark'], ['phone', 390, 844, 'dark']] as const) {
-    test(`a site with a state says it in a line under its name, and the keys hint stays on screen (${name})`, async ({ page, browserName }) => {
+  test(`a site with a state says it in words where its number would be, and no key hints crowd the foot (${name})`, async ({ page, browserName }) => {
     await page.setViewportSize({ width, height })
     await page.emulateMedia({ colorScheme: scheme })
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
@@ -234,26 +234,11 @@ for (const [name, width, height, scheme] of [['desktop', 1440, 900, 'light'], ['
     })
     await page.goto(`${API}/example.com`)
     const menu = await open(page)
-    const line = menu.locator('.state-line').first()
-    await expect(line).toHaveText('Not reachable · 2d')
-    await expect(menu.locator('.state-icon').first()).toHaveAttribute('aria-label', /Not reachable for 2d/)
-    if (width > 640) {
-      await menu.locator('.state-icon').first().hover()
-      const state = page.getByRole('tooltip')
-      await expect(state).toContainText('Not reachable for 2d')
-      const at = (await state.boundingBox())!
-      expect(at.x).toBeGreaterThanOrEqual(8)
-      await page.mouse.move(0, 0)
-    }
-    if (width > 640) {
-      await menu.locator('.foot-keys').hover()
-      const tip = page.getByRole('tooltip')
-      await expect(tip).toContainText('Alt + ↑ / ↓ moves the focused site. Drag to reorder.')
-      const box = (await tip.boundingBox())!
-      expect(box.x).toBeGreaterThanOrEqual(8)
-      expect(box.x + box.width).toBeLessThanOrEqual(width - 8)
-      expect(box.y).toBeGreaterThanOrEqual(0)
-    }
+    const word = menu.locator('.state-word').first()
+    await expect(word).toHaveText('down 2d')
+    await expect(word).toHaveAttribute('title', /Not reachable for 2d/)
+    await expect(menu.locator('.foot-keys')).toHaveCount(0)
+    await expect(menu.getByRole('button', { name: /Add a site/ })).toBeVisible()
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/switcher-state-${name}-${browserName}.png` })
   })
 }
