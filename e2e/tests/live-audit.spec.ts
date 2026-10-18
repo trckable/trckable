@@ -88,10 +88,9 @@ for (const width of [1440, 390]) {
     await page.waitForTimeout(800)
     const m = await page.evaluate(() => {
       const hd = getComputedStyle(document.querySelector('.hd')!).backgroundColor
-      const body = getComputedStyle(document.body).backgroundColor
-      return { hd, body, hint: document.querySelectorAll('#siteBtn .mk-kbd').length }
+      return { hd, hint: document.querySelectorAll('#siteBtn .mk-kbd').length }
     })
-    expect(m.hd, 'no band: the header is the page colour').toBe(m.body)
+    expect(m.hd, 'no band: the header is clear at the top of the page').toBe('rgba(0, 0, 0, 0)')
     expect(m.hint).toBe(0)
     await expect(page.locator('.all-head p')).toContainText('charts: last 7 days')
     await shot(page, `sites-${width}`)
