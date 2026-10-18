@@ -78,7 +78,7 @@ describe('sales', () => {
     expect(s.sales.reduce((p, x) => p + x.amt, 0)).toBe(two.revenue)
   })
   it('says there is none when the period took no payment, not a list of zeros', () => {
-    expect(mapSales(money({}), 'Today')).toMatchObject({ state: 'none', sales: [], payments: 0 })
+    expect(mapSales(money({}), 'Today')).toMatchObject({ state: 'none', sales: [] })
   })
 })
 

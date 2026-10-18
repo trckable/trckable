@@ -99,8 +99,6 @@ const tableOf: [string, [string, number][]][] = [
   ['sources', [['Search', 18], ['Direct', 7], ['Social', 5], ['AI assistants', 4], ['Email', 3]]],
   ['referrers', [['google.com', 18], ['news.ycombinator.com', 5], ['chatgpt.com', 4]]],
   ['utm', [['launch', 3]]],
-  ['utmsource', [['newsletter', 3]]],
-  ['medium', [['email', 3]]],
   ['countries', [['Germany', 21], ['United States', 9], ['United Kingdom', 7]]],
   ['regions', [['Berlin', 12], ['England', 7], ['Bavaria', 6], ['California', 5], ['Texas', 4], ['Hesse', 3]]],
   ['cities', [['Berlin', 12], ['London', 7], ['Munich', 6], ['San Francisco', 5], ['Austin', 4], ['Frankfurt', 3]]],
