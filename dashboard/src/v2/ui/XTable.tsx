@@ -31,7 +31,7 @@ function delta(r: Row): { text: string; tone: string } {
   if (r.st === 'up') return { text: `▲ ${ratio || copy.fresh}`, tone: 'up' }
   if (r.st === 'dn') return { text: `▼ ${ratio || copy.below}`, tone: 'dn' }
   // Inside its usual it says so; with nothing to count from it says that, never a blank.
-  return { text: r.c > 0.5 ? copy.asUsual : '–', tone: '' }
+  return { text: r.c > 0.5 ? copy.asUsual : copy.noUsual, tone: '' }
 }
 
 export interface XTableProps {
