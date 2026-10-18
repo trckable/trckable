@@ -4,10 +4,12 @@
 // refuse.
 let role = ''
 let mentionsOn = false // set with the role, from /me: whether the server has Mentions switched on
+let answersOn = false // and whether it asks the AI assistants (an engine key is set)
 
-export const setRole = (r?: string, withMentions?: boolean) => {
+export const setRole = (r?: string, withMentions?: boolean, withAnswers?: boolean) => {
   role = r ?? ''
   mentionsOn = withMentions === true
+  answersOn = withAnswers === true
 }
 
 /** The role to ask the table about: a shared link reads, whoever opens it. */
@@ -28,6 +30,9 @@ export const isShared = () => shared
 
 // Mentions is switched on by the server (TRCKABLE_MENTIONS); off, nothing of it is offered.
 export const hasMentions = () => mentionsOn
+
+// Answers is on when the server holds a key for at least one AI assistant; off, nothing of it is offered.
+export const hasAnswers = () => answersOn
 
 /** Which modules the shared site has on: they travel with the link, because a
  *  shared page cannot ask for them itself. */

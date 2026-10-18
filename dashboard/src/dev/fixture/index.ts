@@ -10,7 +10,7 @@ import { online, siteOf, type Conn, type Ctx } from './report'
 const KEY = 'trckable:fixture'
 
 /** A name Live's own sample used (its `down` is the mock's `outage`, a scenario of its own), for a link that still has it. */
-const ALIAS: Record<string, string> = { empty: 'newsite' }
+const ALIAS: Record<string, string> = { empty: 'newsite', answers: 'hn' }
 
 const SRC_COLOR: Record<string, string> = { google: '#7f9cf5', direct: '#8b8e94', hn: '#ff9a4a', reddit: '#ff6b4a', x: '#d7dadf', newsletter: '#c6ff3a', chatgpt: '#3fd0b0', github: '#b58cff', badge: '#f0c64a' }
 
@@ -35,7 +35,7 @@ function chosen(): { name: string; conn: ConnName; hold: boolean; lag: number } 
   if (!raw) return null
   const [asked0, suffix, kept] = raw.split(':')
   const name = ALIAS[asked0] ?? asked0
-  const asked = sp.get('conn') ?? suffix ?? 'none'
+  const asked = sp.get('conn') ?? suffix ?? (asked0 === 'answers' ? 'both' : 'none')
   const hold = sp.has('fixture') ? sp.has('hold') : kept === 'hold'
   const conn = (CONNS as readonly string[]).includes(asked) ? (asked as ConnName) : 'none'
   if (!(name in SCN)) {
@@ -43,10 +43,11 @@ function chosen(): { name: string; conn: ConnName; hold: boolean; lag: number } 
     return null
   }
   try {
-    sessionStorage.setItem(KEY, `${name}:${conn}${hold ? ':hold' : ''}`)
+    sessionStorage.setItem(KEY, `${asked0}:${conn}${hold ? ':hold' : ''}`)
   } catch {
     /* only the reload forgets it */
   }
+  if (asked0 === 'answers') Object.assign(globalThis, { trckableFixture: { answers: true } })
   const lag = Number(sp.get('lag') ?? 0) || 0
   return { name, conn, hold, lag }
 }
@@ -79,7 +80,7 @@ export function installFixture() {
   const ctx: Ctx = { w, nowAbs: END * 1440 + w.sc.now, conn: connOf(pick.conn) }
   freezeClock(w.start + ctx.nowAbs * 60000)
   // Live draws the mock's named sources in the mock's colours, and adds nothing to its blocks.
-  Object.assign(globalThis, { trckableFixture: { sample: true, colors: Object.fromEntries(SRCS.map((x) => [x.name, SRC_COLOR[x.id]])) } })
+  Object.assign(globalThis, { trckableFixture: { ...(globalThis as { trckableFixture?: object }).trckableFixture, sample: true, colors: Object.fromEntries(SRCS.map((x) => [x.name, SRC_COLOR[x.id]])) } })
   const real = window.fetch.bind(window)
   window.fetch = (input, init) => {
     const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url, location.origin)

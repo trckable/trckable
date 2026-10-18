@@ -15,6 +15,7 @@ import {
   siteOf,
   type Ctx,
 } from './report'
+import { answersChange, answersReport, answersSetup, answersState } from './answers'
 import { busierOf, nowOf } from './live'
 import { crawlersOf, funnelOf, heatOf, linksOf, scrollOf, segments } from './sections'
 import { hash, mulberry, pick } from './rand'
@@ -240,13 +241,16 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
   }
   // The install check finds no script: the setup card shows its first stage.
   if (method === 'POST' && /\/install\/check$/.test(path)) return ok({ url: 'https://' + decodeURIComponent(path.split('/')[2]), status: 200, found: 'none', scripts: 3 })
+  const an = /^\/sites\/[^/]+\/answers\/([a-z]+)(?:\/(\d+))?$/.exec(path)
+  const change = an && answersChange(method, an[1], an[2], body)
+  if (change) return change
   if (method !== 'GET') return none()
   const sites = SITES
   switch (path) {
     case '/setup':
       return ok({ email_codes: false, needs_setup: false, sso: [] })
     case '/me':
-      return ok({ kind: 'user', email: 'albi@example.com', role: roleOf(), ip: '203.0.113.7', operator: true, version: '0.7.23', keys: {}, update_check: false, must_change: false, mentions: true })
+      return ok({ kind: 'user', email: 'albi@example.com', role: roleOf(), ip: '203.0.113.7', operator: true, version: '0.7.23', keys: {}, update_check: false, must_change: false, mentions: true, answers: !!(globalThis as { trckableFixture?: { answers?: boolean } }).trckableFixture?.answers && answersState() !== 'noengine' })
     case '/account':
       return ok({ email: 'albi@example.com', name: 'Albi', has_avatar: false })
     case '/sites':
@@ -349,6 +353,12 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
       const bots = crawlersOf(c, id, parseQuery(sp)).series.filter((s) => s.kind === 'train')
       return ok({ visitors: 12, assistants: [{ name: 'ChatGPT', visitors: 9, referrer: 'chatgpt.com' }, { name: 'Perplexity', visitors: 3, referrer: 'perplexity.ai' }], referrers: [{ value: 'chatgpt.com', visitors: 9 }, { value: 'perplexity.ai', visitors: 3 }], crawled: bots.reduce((n, s) => n + s.total, 0), bots: bots.map((s) => ({ name: s.name, kind: s.kind, hits: s.total })), pages: [], google: c.conn.search })
     }
+    case 'report/answers':
+      return ok(answersReport(answersState(), Math.floor(Date.now() / 1000)))
+    case 'answers/setup':
+      return ok(answersSetup(answersState(), Math.floor(Date.now() / 1000)))
+    case 'answers/suggestions':
+      return ok({ questions: ['simple alternative to Plausible for a small blog', 'does analytics need a cookie banner in Germany', 'web analytics that tells me which blog post sold'], competitors: [{ name: 'Simple Analytics', domain: 'simpleanalytics.com' }] })
     case 'report/crawlers':
       return ok(crawlersOf(c, id, parseQuery(sp)))
     case 'report/scroll': {
