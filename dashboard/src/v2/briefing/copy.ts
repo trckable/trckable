@@ -66,9 +66,6 @@ export const copy = defineCopy('briefing', {
   aRenewal: (a: string) => `a renewal · ${a}`,
   anotherSale: (a: string) => `another sale · ${a}`,
   beforeFirst: 'Before the first visit',
-  replayBar: 'Replay of the day',
-  replayList: 'The day, moment by moment',
-  closeReplay: 'Close replay (Esc)',
   // Sheets, the quiet states.
   allNotes: 'All notes',
   addNote: 'Add a note',

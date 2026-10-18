@@ -18,9 +18,11 @@ import { CardList } from '../ui/StoryCard'
 import { Hero } from '../ui/HeroCard'
 import { whyRows } from './scoreWhy'
 import { chartNote } from '../ui/DayChart'
-import { ChartBlock, warmStory } from './ChartBlock'
-import { fmtInt as fmtN } from '../../lib/format'
-import { useStoryReplay } from './useStoryReplay'
+import { ChartBlock } from './ChartBlock'
+import { replayInOf } from '../replay/storyIn'
+import { useReplay } from '../replay/useReplay'
+import { queryOf } from '../../lib/dashQuery'
+import { readView } from '../../lib/url'
 import { BounceNote } from './BounceNote'
 import { PaceFoot } from './PaceFoot'
 import { KeyHint } from '../ui/KeyHint'
@@ -30,12 +32,12 @@ import { WatchCard } from '../ui/WatchCard'
 import { Act, Calm, Setups } from '../ui/ConnectPlaceholder'
 import { Overlays } from './Overlays'
 import { whyUsual } from './why'
-import { ReplayBar } from '../ui/ReplayBar'
-import { useReplayView } from '../replay/useReplayView'
+import { useMoments } from '../replay/useMoments'
 import { startOfDay } from '../../features/incidents/model'
 import { siteNow } from './chart'
 import { nextStep, setupRows } from './steps'
 import { copy } from './copy'
+import { chartLine, heroSub } from './lines'
 import { LOOKED_AT, sinceOf } from './since'
 import { goExplore, seeScorePart } from './deeper'
 import { useSetup, useSinceCount, useUptime, useUsual } from './hooks'
@@ -68,16 +70,6 @@ export interface BriefingProps {
   onGoal: () => void
   /** The latest visits on the site, for "meet one of them". */
   visits: Visit[]
-}
-
-const heroSub = (meet: string | null, low: boolean, fallback: string, own?: boolean): string => {
-  if (meet && !own) return meet
-  return low ? copy.fewVisitors : fallback
-}
-
-const chartLine = (learning: boolean, low: boolean, hd: number, note: () => string): string => {
-  if (learning) return copy.learningNormal(hd + 1)
-  return low ? copy.quietSite : note()
 }
 
 /** An empty period has no series at all (the server sends null): an empty list, so nothing below has to ask. */
@@ -119,7 +111,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const dayStart = startOfDay(today, site.timezone)
   const clock = siteNow(site.timezone, new Date(nowSec * 1000))
   const end = Number(clock.slice(11, 13)) * 60 + Number(clock.slice(14, 16))
-  const rv = useReplayView({ site, today, cur, end, dayStart, slices, extras, incidents: up.list, money: money })
+  const moments = useMoments({ site, today, until: end, slices, total: cur?.kpis.visitors ?? 0, extras, incidents: up.list, dayStart, sales: [], money })
   // The page is whole when everything it is told by has been read for this period (or two seconds on, whatever is missing).
   const sig = [site.id, period, range.from, range.to].join('|')
   const [late, setLate] = useState('')
@@ -133,7 +125,7 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const lock = useCardLock([site.id, period, range.from, range.to].join('|'), parts?.stories ?? [])
   const keyed = lock.known
   useBriefingKeys({ cards: (ui.all ? keyed : keyed.slice(0, 4)).map((s) => s.key), ui, open: (k) => ui.setOpen(keyed.find((s) => s.key === k) ?? null) })
-  const storyR = useStoryReplay(cur?.series.length ?? 0)
+  const rp = useReplay(sig)
   if (!cur || !parts) return loading || !data ? <BriefingSkeleton site={site.id} label={copy.loading} /> : null
   const label = unit === 'today' ? `${presetById('today')?.label ?? 'Today'} · ${dayWords(range.to)}` : (presetById(period)?.label ?? fmtRange(range, today))
   const before = copy.before[unit]
@@ -183,11 +175,10 @@ export default function Briefing({ site, data: page, loading, period, range, mon
   const headline = `${say.lead} ${say.long.map((p) => p.t).join('')}`
   const watchRows = watchRowsOf(site.id, wset, stories)
   const canNote = !isViewer() && !isShared()
-  const replaying = unit === 'today' ? rv.r.playing : storyR.playing
-  const replayStory = /* any period but today plays as a story */ pts.length > 1 && v > 0 ? stopOrGo(storyR.playing, storyR.stop, storyR.start) : undefined
-  const replayToday = end >= 60 && v > 0 ? stopOrGo(rv.r.playing, rv.r.close, rv.r.open) : undefined
+  const replayIn = replayInOf({ replay: rp, site, query: queryOf(readView(new URLSearchParams(location.search)), range), bucket: data?.bucket ?? 'day', chart, series: cur.series.slice(0, pts.length), total: v, today: unit === 'today', end, clock: clock.slice(11, 16), moments, period: label, source: top?.value, money: isShared() ? undefined : money, onShare: () => openSettings(site, 'sharing') })
+  const onReplay = replayIn ? stopOrGo(rp.playing, rp.stop, rp.start) : undefined
 
-  const chartBlock = { site, range, chart, at, onAt: setAt, story: storyR, series: cur.series.slice(0, pts.length), bucket: data?.bucket ?? 'day', money, total: fmtN(v), source: top?.value, note: chartLine(learning, low, parts.hd, () => chartNote(chart, at, downNow, window.matchMedia('(max-width: 500px)').matches)), down: uptime.verdict === 'down', notes: notes.notes.length, onNotes: () => ui.setSheet('notes') }
+  const chartBlock = { site, range, chart, at, onAt: setAt, series: cur.series.slice(0, pts.length), bucket: data?.bucket ?? 'day', money, replay: replayIn ?? undefined, note: chartLine(learning, low, parts.hd, () => chartNote(chart, at, downNow, window.matchMedia('(max-width: 500px)').matches)), down: uptime.verdict === 'down', notes: notes.notes.length, onNotes: () => ui.setSheet('notes') }
   const body = (
 
     <div className="mk mk-body">
@@ -204,9 +195,8 @@ export default function Briefing({ site, data: page, loading, period, range, mon
           onPeriod={() => document.querySelector<HTMLElement>('.mk-pill, .range-picker, .btn.range')?.click()}
           moments={mo}
           why={heroWhy}
-          onReplay={unit === 'today' ? replayToday : replayStory}
-          replaying={replaying}
-          onWarm={warmStory}
+          onReplay={onReplay}
+          replaying={rp.playing}
           chart={
             empty ? null : (
               <ChartBlock {...chartBlock} />
@@ -236,7 +226,6 @@ export default function Briefing({ site, data: page, loading, period, range, mon
         {!empty && canNote && <MailRow on={ui.mail} headline={headline} onPreview={() => ui.setSheet('mail')} onManage={() => openSettings(site, 'alerts')} onToggle={ui.toggleMail} />}
         {ui.hint && <KeyHint onHide={ui.hideHint} />}
       </div>
-      <ReplayBar r={rv.r} moments={rv.moments} phone={window.matchMedia('(max-width: 600px)').matches} />
       <Overlays ui={ui} site={site} range={range} today={today} notes={notes} ctx={ctx} headline={headline} kcs={kcs} shown={shown} canNote={canNote} />
     </div>
   )

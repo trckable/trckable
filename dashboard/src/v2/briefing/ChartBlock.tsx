@@ -1,8 +1,7 @@
 // The chart of the hero with what lives over and under it: the line of words and the Notes button on top, the moments'
-// markers, the sources' pills and the busy band over the plot, and, while a period plays as a story, its rail under it.
+// markers, the sources' pills and the busy band over the plot, and the replay's stage around the chart.
 import { Suspense } from 'react'
 import { lazyLoad } from '../../lib/lazyLoad'
-import { openSettings } from '../../lib/settings'
 import { queryOf } from '../../lib/dashQuery'
 import { isShared } from '../../lib/me'
 import { readView } from '../../lib/url'
@@ -10,12 +9,9 @@ import type { Bucket, Point, Site } from '../../lib/api'
 import type { Range } from '../../lib/dates'
 import { copy } from './copy'
 import { HeroChart, type ChartIn } from '../ui/DayChart'
-import type { StoryReplay } from './useStoryReplay'
+import { ReplayStage, type ReplayIn } from '../ui/ReplayStage'
+import { ReplayBar } from '../ui/ReplayBar'
 
-// Replay as a story, for the periods that are not today: its own chunk, fetched when it starts.
-const Story = lazyLoad(() => import('../../features/story/Story'))
-/** Pointing at Replay fetches the story's chunk, so the click finds it here. */
-export const warmStory = () => Story.preload()
 // The moments, the sources' pills and the busy band over the chart: their own chunk, drawn when the chart is.
 const MentionsChip = lazyLoad(() => import('../../features/mentions/MentionsChip'))
 const MomentLayer = lazyLoad(() => import('../../features/moments/MomentLayer'))
@@ -26,23 +22,38 @@ export interface ChartBlockProps {
   chart: ChartIn
   at: number | null
   onAt: (i: number | null) => void
-  story: StoryReplay
   series: readonly Point[]
   bucket: Bucket
   money?: (minor: number) => string
-  total: string
-  source?: string
   note: string
   down: boolean
   notes: number
   onNotes: () => void
+  /** The replay tells the period as a story; absent when there is not enough to tell. */
+  replay?: ReplayIn
 }
 
 export function ChartBlock(p: ChartBlockProps) {
   const query = queryOf(readView(new URLSearchParams(location.search)), p.range)
   const labels = p.series.map((x) => x.t)
+  const hero = (
+    <HeroChart
+      c={p.chart}
+      at={p.at}
+      onAt={p.onAt}
+      layer={
+        isShared()
+          ? undefined
+          : (g) => (
+              <Suspense fallback={null}>
+                <MomentLayer g={g} site={p.site} query={query} labels={labels} series={p.series} bucket={p.bucket} money={p.money ?? (() => '')} />
+              </Suspense>
+            )
+      }
+    />
+  )
   return (
-    <div className="chwrap">
+    <div className="chwrap" data-rp={p.replay?.replay.phase}>
       <div className="ch-top">
         <span className="mk-quiet" id="chNote" style={p.down ? { color: 'var(--mk-red)' } : undefined}>
           {p.note}
@@ -54,44 +65,9 @@ export function ChartBlock(p: ChartBlockProps) {
         <button type="button" className="gh nbtn" data-info="notes" onClick={p.onNotes}>
           {copy.noteBtn(p.notes)}
         </button>
+        {p.replay && <ReplayBar r={p.replay} />}
       </div>
-      <HeroChart
-        c={p.chart}
-        at={p.at}
-        onAt={p.onAt}
-        layer={
-          isShared()
-            ? undefined
-            : (g) => (
-                <Suspense fallback={null}>
-                  <MomentLayer g={g} site={p.site} query={query} labels={labels} series={p.series} bucket={p.bucket} money={p.money ?? (() => '')} />
-                </Suspense>
-              )
-        }
-      />
-      {p.story.phase !== 'off' && (
-        <Suspense fallback={null}>
-          <Story
-            site={p.site.id}
-            query={query}
-            bucket={p.bucket}
-            labels={labels}
-            visitors={p.series.map((x) => x.visitors)}
-            playing={p.story.playing}
-            phase={p.story.phase}
-            money={isShared() ? undefined : p.money}
-            total={p.total}
-            source={p.source}
-            period={[p.series[0]?.t.slice(0, 10) ?? p.range.from, p.range.to]}
-            onReady={p.story.ready}
-            onJump={p.story.jump}
-            onStops={() => undefined}
-            onStop={p.story.stop}
-            onAgain={p.story.start}
-            onShare={() => openSettings(p.site, 'sharing')}
-          />
-        </Suspense>
-      )}
+      {p.replay ? <ReplayStage r={p.replay}>{hero}</ReplayStage> : hero}
     </div>
   )
 }
