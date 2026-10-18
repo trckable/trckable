@@ -1,6 +1,6 @@
 // What is in the open panel: its header, the toolbar, and the section the person is on (with the list of sections beside
 // it when it is full width). It owns what the person has chosen (usePanelState) and reads the numbers for it.
-import { useEffect, useRef, type KeyboardEvent, type MouseEvent } from 'react'
+import { useEffect, useRef, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react'
 import type { Site } from '../../lib/api'
 import { fmtMoney } from '../../lib/format'
 import { addDays, type Range } from '../../lib/dates'
@@ -29,6 +29,8 @@ export interface ContentProps {
   view: ViewState
   /** The period in words, for the header ("Today · Fri 16 Oct"). */
   label: string
+  /** The period's own chip, with its menu: at full width it stands where the period's words are (the header behind is covered). */
+  period?: ReactNode
   /** Writes an amount in the site's currency; absent where revenue is not shown. */
   money?: (minor: number) => string
   onGoal: () => void
@@ -159,8 +161,10 @@ export default function PanelContent(p: ContentProps) {
       <div className="xph">
         <b>{copy.title}</b>
         <span className="mk-quiet" id="xpSub">
-          {x.siteName} {'·'} {p.label}
+          {x.siteName}
+          {p.full && p.period ? '' : ` · ${p.label}`}
         </span>
+        {p.full && p.period}
         <FullButton full={p.full} onClick={p.onFull} />
         <button type="button" className="ib x" id="xpClose" title={copy.close} onClick={p.close}>
           {'×'}

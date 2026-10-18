@@ -130,7 +130,9 @@ function siteJson(c: Ctx, s: SiteDef): Site {
   const first = sc.since?.[s.id] != null ? sc.since[s.id] * 1440 : 0
   const ongoing = c.w.data[s.id].inc.find((i) => c.nowAbs >= i.a && c.nowAbs < i.b)
   const since = secs(c, first) - (sc.since?.[s.id] != null && v.n === 0 ? -(c.nowAbs - 30) * 60 : 86400 * 12)
+  // The first day of data is the site's first day: it was added a few hours ago.
   const created = v.n === 0 ? secs(c, c.nowAbs - 25) : since
+  const addedAt = c.w.key === 'firstday' ? secs(c, c.nowAbs - 300) : created
   const lastAt = v.n ? secs(c, v.t[v.n - 1]) : undefined
   const verified: VerifiedSource[] = [{ kind: 'snippet', ok: true, since: created, checked: secs(c, c.nowAbs), detail: 'the snippet is on the homepage' }]
   if (c.conn.rev && s.money) verified.push({ kind: 'payments', ok: true, since: created, checked: secs(c, c.nowAbs), detail: 'payments are flowing' })
@@ -142,7 +144,7 @@ function siteJson(c: Ctx, s: SiteDef): Site {
     timezone: 'UTC',
     currency: 'USD',
     proxy_key: `tkb_px_${s.id}`,
-    created_at: created,
+    created_at: addedAt,
     watched_since: created,
     mentions: mentionsOf(c, s.id).length > 0,
     week_start: 1,
@@ -296,7 +298,7 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     case 'report/search':
       return ok(searchReport(c, id, sp))
     case 'search-console':
-      return ok(c.conn.search ? { connected: true, connection: { client_email: 'trckable@fixture.iam.gserviceaccount.com', property: `sc-domain:${site.name}`, created_at: secs(c, c.nowAbs - 9000) } } : { connected: false })
+      return ok(c.conn.search ? { connected: true, connection: { client_email: 'trckable@fixture.iam.gserviceaccount.com', property: `sc-domain:${site.name}`, created_at: secs(c, c.nowAbs - 9000), last_ok_at: secs(c, c.nowAbs) } } : { connected: false })
     case 'insights': {
       // What moved: the sources that sent clearly more or fewer people than the period before.
       const r = reportOf(c, id, { ...parseQuery(sp), compare: 'previous', filters: [] })
@@ -318,6 +320,10 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
       return ok(segments.list(id))
     case 'report/funnel':
       return ok(funnelOf(c, id, parseQuery(sp), JSON.parse(sp.get('steps') ?? '[]') as FunnelStep[]))
+    case 'report/ai-search': {
+      const bots = crawlersOf(c, id, parseQuery(sp)).series.filter((s) => s.kind === 'train')
+      return ok({ visitors: 12, referrers: [{ value: 'chatgpt.com', visitors: 9 }, { value: 'perplexity.ai', visitors: 3 }], crawled: bots.reduce((n, s) => n + s.total, 0), bots: bots.map((s) => ({ name: s.name, kind: s.kind, hits: s.total })), pages: [], google: c.conn.search })
+    }
     case 'report/crawlers':
       return ok(crawlersOf(c, id, parseQuery(sp)))
     case 'report/scroll': {
@@ -342,9 +348,11 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     case 'annotations':
       return ok({ annotations: notesOf(c, id).map((n) => ({ id: `note_${n.min}`, day: dateOf(c, Math.floor(n.min / 1440)), text: n.text, created_at: secs(c, n.min), author: 'albi@example.com' })) })
     case 'milestones': {
-      const m = closed.has(id) ? null : milestone(c, site)
-      const moment = m ? { kind: 'visitors', step: String(m), value: m, day: dateOf(c, END), created_at: secs(c, c.nowAbs), new: true, shared: false } : null
-      return ok({ enabled: true, milestones: moment ? [moment] : [], moment })
+      // Told once, then kept in the list (as the server does): a milestone that was seen is still one, no longer new.
+      const m = milestone(c, site)
+      const fresh = !closed.has(id)
+      const row = m ? { kind: 'visitors', step: String(m), value: m, day: dateOf(c, END), created_at: secs(c, c.nowAbs), new: fresh, shared: false } : null
+      return ok({ enabled: true, milestones: row ? [row] : [], moment: row && fresh ? row : null })
     }
     case 'mentions': {
       const list = mentionsOf(c, id).map((x, i) => ({

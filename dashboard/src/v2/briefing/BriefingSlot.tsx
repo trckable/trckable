@@ -2,6 +2,7 @@
 // small piece is in the first load; the Briefing itself is one lazy chunk.
 import { Suspense } from 'react'
 import { lazyLoad } from '../../lib/lazyLoad'
+import { PageHold } from '../../lib/pageLoading'
 import { BriefingSkeleton } from '../ui/BriefingSkeleton'
 import { copy } from '../copy'
 import type { BriefingProps } from './Briefing'
@@ -11,7 +12,14 @@ export const Briefing = lazyLoad(() => import('./Briefing'))
 
 export function BriefingSlot(p: BriefingProps) {
   return (
-    <Suspense fallback={<BriefingSkeleton site={p.site.id} label={copy.loading} />}>
+    <Suspense
+      fallback={
+        <>
+          <PageHold />
+          <BriefingSkeleton site={p.site.id} label={copy.loading} />
+        </>
+      }
+    >
       <Briefing {...p} />
     </Suspense>
   )

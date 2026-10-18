@@ -13,11 +13,12 @@ import { mentionsApi, type Period } from '../../../features/mentions/api'
 import { siteNow } from '../../briefing/chart'
 import { read as readHistory } from '../../briefing/useHistory'
 import { hourTable, stretchBand } from '../../briefing/usual'
+import { usualBand } from '../../briefing/useSlices'
 import type { Usual } from '../../briefing/model'
 import { funnelBuilt } from '../../setup/funnelBuilt'
 import type { Down, SavedView, Tab } from '../types'
 import { basisOf, type Basis } from './basis'
-import { scaled } from './scaled'
+import { scaled, withSourceUsuals } from './scaled'
 import { mapOverview, mapTable, optionsOf, type Uptime } from './mapReport'
 import { mapBots, mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed } from './mapSections'
 import type { DataCtx, Meta, TabData } from './useExplore'
@@ -68,7 +69,16 @@ async function toBasis(c: DataCtx, r: Report): Promise<{ report: Report; basis: 
   // The hours of the weeks before come first, as in the Briefing; the server's usual for the day is the other way to it.
   const usual = hours ?? (u && u.average >= 5 ? u.average : null)
   if (!r.previous || usual === null || was <= 0) return { report: r, basis: usual === null ? 'previous' : 'usual' }
-  return { report: { ...r, previous: scaled(r.previous, usual / was, got?.money) }, basis: 'usual' }
+  const scaledPrev = scaled(r.previous, usual / was, got?.money)
+  // The sources the Briefing tells apart are told against the same usual here (the top six, as there).
+  const top = (r.current.dims.referrer ?? []).filter((x) => x.value && x.value.replace(/^www\./, '') !== c.site.domain.replace(/^www\./, '')).slice(0, 6)
+  const bands = await Promise.all(top.map((x) => usualBand(c.site.id, c.range.to, [{ dim: 'referrer', value: x.value }])))
+  const usuals = new Map<string, number>()
+  top.forEach((x, i) => {
+    const b = bands[i]
+    if (b) usuals.set(x.value, b.c)
+  })
+  return { report: { ...r, previous: withSourceUsuals(scaledPrev, usuals) }, basis: 'usual' }
 }
 
 /** What the same hours of the last eight weeks brought, the part of the day that has happened (as the Briefing counts it). */

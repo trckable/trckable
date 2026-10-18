@@ -212,12 +212,16 @@ for (const scheme of ['dark', 'light'] as const) {
     await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
     const { row, sites, pill } = await open(page)
     const scan = async (where: string) => {
+      // The foot is drawn once the page has settled (it flips from hidden while the page is read): a scan that spans the flip sees a button without its words.
+      await expect(page.locator('footer.app-footer:not(.app-footer-wait)')).toBeVisible()
       await page.waitForTimeout(300)
       const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).exclude('.tkb-able').analyze() // the logotype is exempt (1.4.3)
       expect(violations.flatMap((v) => v.nodes.map((n) => `${where}: ${v.id} ${n.html.slice(0, 120)}`))).toEqual([])
     }
     await scan('rows')
     await sites.click()
+    // The rows are named once the popover is placed (it is drawn hidden until then): scan after that, not while it appears.
+    await expect(page.locator('.sites-pop').getByRole('menuitemcheckbox', { name: /\S/ }).first()).toBeVisible()
     await scan('sites popover')
     await page.keyboard.press('Escape')
     await pill.click()

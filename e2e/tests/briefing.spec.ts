@@ -128,7 +128,7 @@ test('the page that Google Analytics sends people back to opens the import, and 
 })
 
 test('the chart can be cut by week from the period menu, and Refresh is in the palette', async ({ page }) => {
-  await open(page, 1440, '?view=briefing')
+  await open(page, 1440, '?view=briefing&period=30d')
   await page.locator('#perBtn').click()
   await page.locator('#perMenu .mk-lseg button', { hasText: 'Week' }).click()
   await expect(page).toHaveURL(/bucket=week/)

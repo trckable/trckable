@@ -71,6 +71,8 @@ test('the mentions page shows who is talking now, filters the feed and opens one
   expect(page.url()).toContain('?m=3')
   await expect(panel.getByRole('button', { name: 'Close' })).toBeFocused()
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/mentions-detail-dark-1440.png` })
+  // The foot is drawn once the page has settled: scan after it, not while it flips from hidden.
+  await expect(page.locator('footer.app-footer:not(.app-footer-wait)')).toBeVisible()
   const found = (await new AxeBuilder({ page }).exclude('.brand').analyze()).violations
   expect(found.map((v) => `${v.id} ${v.nodes.map((n) => n.target.join()).join(' | ')}`)).toEqual([])
   await page.keyboard.press('Escape')
@@ -94,6 +96,7 @@ test('a phone gets the page and the detail as a sheet; with nothing found the pa
   await page.unroute('**/api/v1/sites/*/mentions?*')
   let saved: string[] | null = null
   await page.route('**/api/v1/sites/*/mentions?*', (r) => r.fulfill({ json: answer([]) }))
+  await page.route('**/api/v1/sites/*/mentions/lookalike*', (r) => r.fulfill({ json: { word: 'acmemetrics', checked: true, elsewhere: 0, examples: [], suggest_exclude: [] } }))
   await page.route('**/api/v1/sites/*/mentions/keywords', async (r) => {
     saved = (r.request().postDataJSON() as { keywords: string[] }).keywords
     await r.fulfill({ json: { ...words, added: saved } })

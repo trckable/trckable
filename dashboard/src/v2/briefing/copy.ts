@@ -8,7 +8,8 @@ const people = (n: number) => (n === 1 ? '1 person' : `${fmtInt(n)} people`)
 
 export const copy = defineCopy('briefing', {
   // The last step of the signup path, when payments are connected.
-  paidStep: 'Paid',
+  /** The last funnel step counts people the shop could tie to the steps before it, which is not every sale of the period. */
+  paidStep: (after: string) => (after ? `Paid after ${after}` : 'Paid'),
   // The sentence.
   busy: 'A busy',
   slow: 'A slow',
@@ -69,7 +70,7 @@ export const copy = defineCopy('briefing', {
   replayList: 'The day, moment by moment',
   closeReplay: 'Close replay (Esc)',
   // Sheets, the quiet states.
-  notes: 'Notes',
+  allNotes: 'All notes',
   addNote: 'Add a note',
   noNotes: 'No notes yet. A note shows as a marker on the chart.',
   mailPreview: 'Email preview',
@@ -211,7 +212,9 @@ export const copy = defineCopy('briefing', {
   newCards: (n: number) => `${n} new`,
   hideMore: (n: number) => `Hide (${n} smaller ${n === 1 ? 'change' : 'changes'})`,
   wasNormal: 'Everything was normal',
+  stillLearning: 'Still learning what is normal here',
   allNormal: 'Everything else was normal',
+  oneNormal: (topic: string) => `${topic} looked normal`,
   paused: 'The other numbers are paused',
   pausedRest: 'until the site answers again.',
   nothingElse: 'Nothing else needs a look',

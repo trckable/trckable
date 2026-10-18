@@ -16,7 +16,8 @@ import { openAddSite, useAccountTab, useAddSite } from "./lib/account";
 import { AddSiteHost } from "./features/onboarding/AddSiteHost";
 import { routeOf, SubRoute } from "./features/subpage";
 import { landing, namesSite } from "./lib/landing";
-import { openSettings, settingsTarget, useSettings } from "./lib/settings";
+import { openSettings, settingsTarget } from "./lib/settings";
+import { useSettingsAddress } from "./features/settingsAddress";
 import { useLatest } from "./lib/update";
 import { setRole } from "./lib/me";
 import { NoneShared, useGate } from "./features/onboarding/Gate";
@@ -28,7 +29,6 @@ whenIdle(PageBar.preload);
 const Setup = lazy(() => import("./views/Auth").then((m) => ({ default: m.Setup })));
 const Login = lazy(() => import("./views/Auth").then((m) => ({ default: m.Login })));
 const FirstPassword = lazy(() => import("./views/FirstPassword").then((m) => ({ default: m.FirstPassword })));
-const Footer = lazy(() => import("./components/Footer").then((m) => ({ default: m.Footer })));
 const UpdateDialog = lazy(() => import("./components/UpdateDialog"));
 // Only people with more than one site open it, so it loads when asked.
 const AllSites = lazy(() => import("./views/AllSites").then((m) => ({ default: m.AllSites })));
@@ -38,9 +38,9 @@ import { ShortcutsHost } from "./components/ShortcutsHost";
 const SharedSite = lazy(() => import("./views/SharedSite"));
 import { Toasts } from "./components/Toast"; import { Hints } from "./features/hints/HintsDoor"; import { Boundary } from "./components/Boundary"; import "./lib/pwa";
 import "./phone.css"; // last: what it sets on a phone wins over the styles imported before it
+import { Footer } from "./components/Footer";
 void import("./kit/glass").then((m) => m.startGlass()); // the glass: its own small chunk, asked for at once, so the first load keeps its weight
 applySavedTheme();
-
 type Boot =
   | { state: "loading" }
   | { state: "setup" }
@@ -93,7 +93,7 @@ function App() {
   usePreloadDialogs(boot.state === "ready");
   const adding = useAddSite();
   const { gated, pass } = useGate(boot.state === "ready" ? boot.sites : null, boot.state === "ready" && !!boot.mustChange, path);
-  const settingsOpen = useSettings();
+  const settingsOpen = useSettingsAddress(boot.state === "ready" && !gated ? boot.sites : null, path, params); // the dialog, and the address that names a section of it
   // A newer release, if this owner's dashboard may look (lib/update.ts).
   const latest = useLatest(boot.state === "ready" ? boot.version : undefined, boot.state === "ready" ? boot.updateCheck : false);
   const [showUpdate, setShowUpdate] = useState(false);
@@ -206,7 +206,7 @@ function App() {
   return (
     <div className="app">
       {page}
-      <Suspense fallback={null}><Footer version={boot.version} newer={latest?.v} onNewer={() => setShowUpdate(true)} site={site?.id} sites={boot.sites} /></Suspense>
+      <Footer version={boot.version} newer={latest?.v} onNewer={() => setShowUpdate(true)} site={site?.id} sites={boot.sites} />
       {showUpdate && latest && boot.version && (
         <Suspense fallback={null}>
           <UpdateDialog latest={latest} current={boot.version} onClose={() => setShowUpdate(false)} />

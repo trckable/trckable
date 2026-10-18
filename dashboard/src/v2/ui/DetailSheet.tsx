@@ -1,6 +1,7 @@
 // One card opened in place: its sentence, its picture, why, how we know, and the way into Explore. A drawer on a wide
 // screen, a sheet from the bottom on a phone; Escape and the scrim close it.
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
+import { useSheet } from './useSheet'
 import { Ico } from './icons'
 import { MkPortal } from './Portal'
 import { Visual, type CardCtx } from './StoryCard'
@@ -10,12 +11,7 @@ import type { Story } from '../briefing/cards'
 
 export function Detail({ s, site, c, onClose }: { s: Story; site: string; c: CardCtx; onClose: () => void }) {
   const box = useRef<HTMLElement>(null)
-  useEffect(() => {
-    const key = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', key)
-    box.current?.focus()
-    return () => window.removeEventListener('keydown', key)
-  }, [onClose])
+  useSheet(box, onClose)
   const w = c.watched(s)
   const dn = c.done(s)
   return (

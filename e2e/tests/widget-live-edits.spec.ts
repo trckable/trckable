@@ -5,6 +5,7 @@
 import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
+import { PORT, origin } from '../ports'
 
 const H = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
 
@@ -28,7 +29,7 @@ test('a theme, mode, corner and words changed in Settings reach pages that alrea
 
   const corner = page.locator('iframe[title="People online"]')
   const cornerFrame = page.frameLocator('iframe[title="People online"]')
-  await page.goto(`http://127.0.0.1:18301/online/${id}`)
+  await page.goto(`${origin(PORT.site)}/online/${id}`)
   await expect(cornerFrame.locator('html')).toHaveAttribute('data-theme', 'dark')
   await expect(cornerFrame.locator('.pill')).toHaveCount(1)
   let box = (await corner.boundingBox())!
@@ -38,27 +39,27 @@ test('a theme, mode, corner and words changed in Settings reach pages that alrea
   // The plain frame, on its own customer page.
   const plain = await context.newPage()
   const plainFrame = plain.frameLocator('iframe[title="Widget"]')
-  await plain.goto(`http://127.0.0.1:18301/frame/${id}`)
+  await plain.goto(`${origin(PORT.site)}/frame/${id}`)
   await expect(plainFrame.locator('html')).toHaveAttribute('data-theme', 'dark')
 
   // One edit, then the pages are opened again as a returning visitor opens them
   // (the same browser, the same cache): everything is the new look.
   await edit({ theme: 'light', accent: '#fb923c', radius: 4, texts: { online: 'here now' }, shows: ['card', 'pages', 'left'] })
-  await page.goto(`http://127.0.0.1:18301/online/${id}`)
+  await page.goto(`${origin(PORT.site)}/online/${id}`)
   await expect(cornerFrame.locator('html')).toHaveAttribute('data-theme', 'light')
   await expect(cornerFrame.locator('.pill')).toHaveCount(0)
   await expect(cornerFrame.getByText('Online now')).toBeVisible()
   box = (await corner.boundingBox())!
   expect(box.width).toBe(280)
   expect(box.x).toBeLessThan(40)
-  await plain.goto(`http://127.0.0.1:18301/frame/${id}`)
+  await plain.goto(`${origin(PORT.site)}/frame/${id}`)
   await expect(plainFrame.locator('html')).toHaveAttribute('data-theme', 'light')
   await expect(plainFrame.getByText('Online now')).toBeVisible()
   expect(await plainFrame.locator('.card').evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe('4px')
 
   // And back: dark, a pill, the right-hand corner.
   await edit({ theme: 'dark', shows: ['right'] })
-  await page.goto(`http://127.0.0.1:18301/online/${id}`)
+  await page.goto(`${origin(PORT.site)}/online/${id}`)
   await expect(cornerFrame.locator('html')).toHaveAttribute('data-theme', 'dark')
   await expect(cornerFrame.locator('.pill')).toHaveCount(1)
   box = (await corner.boundingBox())!

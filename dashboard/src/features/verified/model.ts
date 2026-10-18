@@ -25,7 +25,8 @@ export function working(v?: Verified): VerifiedSource[] {
   const seen = new Set<Kind>()
   return (v?.sources ?? []).filter((s) => {
     const kind = SOURCE_KIND[s.kind]
-    if (!s.ok || !kind || seen.has(kind)) return false
+    // A source that never answered (checked 0) vouches for nothing, whatever else it says.
+    if (!s.ok || !s.checked || !kind || seen.has(kind)) return false
     seen.add(kind)
     return true
   })

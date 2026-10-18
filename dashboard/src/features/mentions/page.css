@@ -140,6 +140,10 @@
   margin-right: auto;
   font-size: 16px;
 }
+/* The heading is for screen readers (the page's own title says it); the filters start the row. */
+.mp-feed-head h2.sr + .mp-seg {
+  margin-right: auto;
+}
 .mp-seg {
   display: inline-flex;
   flex-wrap: wrap;

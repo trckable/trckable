@@ -6,11 +6,12 @@
 import { createHmac } from 'node:crypto'
 import { expect, test, type APIRequestContext } from './fixtures'
 import { API, TOKEN } from '../playwright.config'
+import { PORT, origin } from '../ports'
 
 type Ev = { seq: number; kind: string; path: string; visitor: string; session: string; channel?: string }
 
 const auth = { Authorization: `Bearer ${TOKEN}` }
-const PROXY = 'http://127.0.0.1:18302'
+const PROXY = origin(PORT.proxy)
 
 let site = ''
 test.beforeAll(async ({ request }) => {

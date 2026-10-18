@@ -5,6 +5,7 @@
 import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
+import { PORT, origin } from '../ports'
 
 const H = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36'
@@ -40,7 +41,7 @@ test('the corner pill renders on a customer page, follows the count, and can be 
 
   // The customer's own page, with the one line the settings gave (the suite's
   // test site writes it, as it does the install snippet).
-  await page.goto(`http://127.0.0.1:18301/online/${id}`)
+  await page.goto(`${origin(PORT.site)}/online/${id}`)
   const frame = page.frameLocator('iframe[title="People online"]')
   // One person: never a number, so a lone visitor cannot be picked out.
   await expect(frame.getByText('A few online')).toBeVisible({ timeout: 20_000 })

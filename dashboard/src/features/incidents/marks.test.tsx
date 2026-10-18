@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import type { Incident } from './api'
 import { bucketFor, lineOf } from './IncidentMarks'
 import { routeOf } from '../subpage'
@@ -31,10 +31,14 @@ describe('the incident marks on the chart', () => {
 })
 
 describe('the incident page', () => {
+  afterEach(() => setRole())
   it('reads its address as the site and the page', () => {
     const sites = [site('a.example'), site('b.example')]
     setRole('owner', true) // the Mentions page exists only where the server switched it on
     expect(routeOf(sites, '/b.example/incidents')).toMatchObject({ sub: 'incidents', site: { id: 'b.example' } })
+    // The Mentions page is an address only where the server has Mentions on.
+    expect(routeOf(sites, '/b.example/mentions')).toMatchObject({ sub: null })
+    setRole('owner', true)
     expect(routeOf(sites, '/b.example/mentions')).toMatchObject({ sub: 'mentions', site: { id: 'b.example' } })
     expect(routeOf(sites, '/b.example')).toMatchObject({ sub: null, site: { id: 'b.example' } })
     expect(routeOf(sites, '/nope.example/incidents')).toEqual({ site: null, sub: null })

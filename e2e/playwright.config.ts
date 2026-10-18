@@ -5,6 +5,7 @@ import { existsSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { PORT, origin } from './ports'
 
 // Created once in the main process; workers inherit it through the env.
 const DATA = (process.env.TRCKABLE_DATA_DIR ??= mkdtempSync(join(tmpdir(), 'trckable-e2e-')))
@@ -47,7 +48,7 @@ if (!existsSync(LABELS)) {
   )
   writeFileSync(LABELS, rows.join('\n') + '\n')
 }
-export const API = 'http://127.0.0.1:18300'
+export const API = origin(PORT.api)
 export const TOKEN = 'e2e-token'
 
 export default defineConfig({
@@ -65,7 +66,7 @@ export default defineConfig({
   reporter: [['list'], ['./slowest.mjs']],
   reportSlowTests: null,
   use: {
-    baseURL: 'http://127.0.0.1:18301',
+    baseURL: origin(PORT.site),
     trace: 'retain-on-failure',
     acceptDownloads: true,
     // The dashboard registers a worker (app-install.spec.ts turns it back on). One that
@@ -87,7 +88,7 @@ export default defineConfig({
       reuseExistingServer: false,
       env: {
         TRCKABLE_DATA_DIR: DATA,
-        TRCKABLE_ADDR: '127.0.0.1:18300',
+        TRCKABLE_ADDR: `127.0.0.1:${PORT.api}`,
         TRCKABLE_SITES: 'example.com',
         TRCKABLE_API_TOKEN: TOKEN,
         TRCKABLE_GEO: 'off',
@@ -98,9 +99,9 @@ export default defineConfig({
     },
     {
       command: 'node serve.mjs',
-      url: 'http://127.0.0.1:18301/_site',
+      url: `${origin(PORT.site)}/_site`,
       reuseExistingServer: false,
-      env: { TRCKABLE_BIN: BIN, TRCKABLE_DATA_DIR: DATA, TRCKABLE_URL: API, SITE_PORT: '18301' },
+      env: { TRCKABLE_BIN: BIN, TRCKABLE_DATA_DIR: DATA, TRCKABLE_URL: API, SITE_PORT: String(PORT.site), PROXY_PORT: String(PORT.proxy) },
     },
   ],
 })

@@ -5,9 +5,13 @@ import { DOCS } from '../../components/footerLinks'
 import { LockCard } from './LockCard'
 import type { LockKind } from './lockCopy'
 
-const lead = (cards: boolean, some: boolean): string => {
+const lead = (cards: boolean, names: string[], learning: boolean): string => {
+  // Nothing is called normal before the site has a normal to be told against.
+  if (learning) return copy.stillLearning
   if (!cards) return copy.wasNormal
-  return some ? copy.allNormal : copy.nothingElse
+  // One topic left is said on its own ("Search looked normal"), not as "everything else: search".
+  if (names.length === 1) return copy.oneNormal(names[0].charAt(0).toUpperCase() + names[0].slice(1))
+  return names.length ? copy.allNormal : copy.nothingElse
 }
 
 export function Calm({ cards, names, paused, learning, onExplore }: { cards: boolean; names: string[]; paused: boolean; learning: boolean; onExplore: () => void }) {
@@ -21,8 +25,8 @@ export function Calm({ cards, names, paused, learning, onExplore }: { cards: boo
           </>
         ) : (
           <>
-            <b>{lead(cards, names.length > 0)}</b>
-            {names.length && !learning ? `: ${names.join(', ')}` : ''}.
+            <b>{lead(cards, names, learning)}</b>
+            {names.length > (cards ? 1 : 0) && !learning ? `: ${names.join(', ')}` : ''}.
           </>
         )}
       </span>

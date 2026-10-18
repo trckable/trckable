@@ -9,6 +9,7 @@ import { useHealth } from './useHealth'
 import { fmtInt } from '../lib/format'
 import './Health.css'
 import { Loading } from '../components/loading/Loading'
+import { LoadFailed } from '../components/LoadFailed'
 
 const bytes = (n: number) => {
   if (n <= 0) return '—'
@@ -20,7 +21,6 @@ const bytes = (n: number) => {
   }
   return `${n.toFixed(n < 10 && i > 0 ? 1 : 0)} ${units[i]}`
 }
-
 /** Seconds since a unix time. */
 const ageOf = (unix: number) => Date.now() / 1000 - unix
 
@@ -132,8 +132,8 @@ function Item({ icon: Icon, label, hint, children }: { icon: typeof Cpu; label: 
 }
 
 export function HealthSettings() {
-  const { h, at, err } = useHealth()
-  if (err && !h) return <div className="banner">{err}</div>
+  const { h, at, err, retry } = useHealth()
+  if (err && !h) return <LoadFailed reason={err} onRetry={retry} />
   if (!h) return <Loading height={320} />
   const lagTone: Tone = h.events.lag > 5000 ? 'warn' : 'ok'
   const backupTone = backupToneOf(h.backup)

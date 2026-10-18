@@ -31,6 +31,13 @@ func TestReportCompareSoFar(t *testing.T) {
 	if v := visitors("&sofar=1"); v != 1 {
 		t.Fatalf("day before, so far: %v", v)
 	}
+	// The range it says it compared with is the day before in both cases, never one that ends before it starts.
+	for _, q := range []string{"", "&sofar=1"} {
+		_, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/report?from=2026-09-21&to=2026-09-21&compare=previous"+q, "")
+		if out["previous_from"] != "2026-09-20" || out["previous_to"] != "2026-09-20" {
+			t.Fatalf("previous range%s: %v..%v", q, out["previous_from"], out["previous_to"])
+		}
+	}
 }
 
 // People since an hour are counted as people: one visitor seen in two hours is one.

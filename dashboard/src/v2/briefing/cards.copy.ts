@@ -126,11 +126,11 @@ export const copy = defineCopy('briefing.cards', {
   speedPromptText: (site: string, now: string, usual: string) => `On ${site}, loading (LCP) rose to ${now} from ${usual}. Find the heaviest image or script on the top pages and shrink or defer it.`,
   // The signup path, and a first customer.
   leakHead: (to: string, from: string, a: string, b: string) => `Only ${to} of ${from} people made it from ${a} to ${b}`,
-  leakRest: (usual: string) => `, usually about ${usual}`,
+  leakRest: (usual: string, from: string) => `, usually about ${usual} of ${from}`,
   leakAlt: (page: string) => `Many go to ${page} instead.`,
   leakUsualRange: 'Compared with the usual range for this step.',
   leakHow: 'Each step counts the people who reached it in the same visit.',
-  leakEv: (to: string, from: string, usual: string) => `${to} of ${from} went on; usually about ${usual}.`,
+  leakEv: (to: string, from: string, usual: string) => `${to} of ${from} went on; usually about ${usual} of ${from}.`,
   leakGoOn: (r: string, u: string) => `${r} go on here, usually ${u}`,
   leakPrompt: (site: string, r: string, a: string, b: string, u: string, alt?: string) =>
     `On ${site}, only ${r} of visitors go from "${a}" to "${b}" (usually ${u}). Review the "${a}" step and make the next one obvious.${alt ? ` Many go to ${alt} instead: check what they look for there.` : ''}`,

@@ -3,6 +3,7 @@
 // tab left and come back to) is shown at once as it was, and refreshed behind. With nothing seen yet, `first` (the loading
 // shape) stands in until the page is whole, so it does not build up piece by piece.
 import { useEffect, useState, type ReactNode } from 'react'
+import { usePageLoading } from '../../lib/pageLoading'
 
 type Kept = { id: string; node: ReactNode }
 
@@ -23,6 +24,8 @@ export function Hold({ ready, id, first, children }: { ready: boolean; id: strin
   }, [ready, id, last, children])
   // One wrapper whether held or not, so the page that follows is the same elements as the one it replaces: its ring, its
   // numbers and its line move from what they showed instead of being drawn anew.
+  // While the first shape of the page stands in, the page is loading: the foot waits for its height.
+  usePageLoading(!ready && !last)
   if (!ready && !last) return <>{first}</>
   const held = !ready && !!last
   // The same address read again is not dimmed: it is the page as it was, being refreshed.

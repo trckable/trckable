@@ -6,6 +6,7 @@ import { cachedReport, type ReportQuery } from '../../lib/api'
 import { fmtCompact } from '../../lib/format'
 import { extrasCopy } from './copy'
 import { monthSoFar, paceOf } from './pace'
+import { PaceHold } from './PaceHold'
 import { whenQuiet } from './quiet'
 import './pace.css'
 
@@ -27,9 +28,11 @@ export default function PaceLine({ site, today, filters, test }: { site: string;
       cancel()
     }
   }, [key]) // eslint-disable-line react-hooks/exhaustive-deps -- keyed by content
-  if (!span || !sum || sum.key !== key) return null
+  if (!span) return null
+  // Its line is kept from the start, so the tile does not grow when the figure arrives (or stays as tall when there is none).
+  if (!sum || sum.key !== key) return <PaceHold />
   const p = paceOf(sum.visitors, today)
-  if (!p) return null
+  if (!p) return <PaceHold />
   const total = fmtCompact(p.total)
   return (
     <span className="kpi-pace num" title={extrasCopy.pace(total)}>

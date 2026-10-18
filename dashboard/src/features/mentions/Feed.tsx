@@ -25,8 +25,8 @@ export function Feed({ list, curves, filter, period, onFilter, onPeriod, onOpen,
   return (
     <section className="mp-feed" aria-labelledby="mp-feed-h">
       <div className="mp-feed-head">
-        <h2 id="mp-feed-h">{page.feedTitle}</h2>
-        <Choice label={page.filters} value={filter} options={FILTERS} name={(f) => (f === 'all' ? page.all : copy.name[f])} onPick={onFilter} />
+        <h2 id="mp-feed-h" className="sr">{page.feedTitle}</h2>
+        <Choice label={page.filters} value={filter} options={FILTERS.filter((f) => f === 'all' || f === filter || list.some((m) => m.source === f))} name={(f) => (f === 'all' ? page.all : copy.name[f])} onPick={onFilter} />
         <Choice label={page.period} value={period} options={PERIODS} name={(p) => page.periods[p]} onPick={onPeriod} />
       </div>
       {shown.length > 0 ? (

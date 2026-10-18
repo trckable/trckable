@@ -90,6 +90,27 @@ export function V2View(p: V2Props) {
   }, [p.waiting])
   const exploreOpen = () => goExplore()
   const setTab = (t: 'live' | 'briefing') => void switchTab(t, here)
+  const periodChip = (idBase?: string) => (
+    <PeriodChip
+      idBase={idBase}
+      label={label}
+      vs={vs}
+      options={options}
+      more={more}
+      value={p.view.period}
+      compare={day ? 'none' : p.view.compare}
+      yearOk={false}
+      today={today}
+      customRange={p.range}
+      grain={grain}
+      onReset={p.view.period === 'today' ? undefined : () => setView({ period: 'today', from: undefined, to: undefined, bucket: undefined, day: undefined })}
+      onPick={(id) => setView({ period: id, from: undefined, to: undefined, bucket: undefined, day: undefined })}
+      onCompare={(c) => setView({ compare: c })}
+      bucket={p.view.bucket}
+      onBucket={(b) => setView({ bucket: b })}
+      onRange={(from, to) => setView({ period: 'custom', from, to, bucket: undefined, day: undefined })}
+    />
+  )
   const brief = <BriefingSlot site={p.site} data={p.data} loading={p.loading} period={p.view.period} range={p.range} money={p.money} onGoal={p.onGoal} visits={p.live.stream.visits} />
   const screen = here === 'briefing' ? brief : <Live {...p.live} />
   return (
@@ -102,34 +123,13 @@ export function V2View(p: V2Props) {
         onAsk={p.onAsk}
         identity={p.identity}
         onGoal={p.onGoal}
-        period={
-          here === 'briefing' && !p.waiting ? (
-            <PeriodChip
-              label={label}
-              vs={vs}
-              options={options}
-              more={more}
-              value={p.view.period}
-              compare={day ? 'none' : p.view.compare}
-              yearOk={false}
-              today={today}
-              customRange={p.range}
-              grain={grain}
-              onReset={p.view.period === 'today' ? undefined : () => setView({ period: 'today', from: undefined, to: undefined, bucket: undefined, day: undefined })}
-              onPick={(id) => setView({ period: id, from: undefined, to: undefined, bucket: undefined, day: undefined })}
-              onCompare={(c) => setView({ compare: c })}
-              bucket={p.view.bucket}
-              onBucket={(b) => setView({ bucket: b })}
-              onRange={(from, to) => setView({ period: 'custom', from, to, bucket: undefined, day: undefined })}
-            />
-          ) : null
-        }
+        period={here === 'briefing' && !p.waiting ? periodChip() : null}
       />
       <main id="main" className="vfade">
         {p.top}
         {p.waiting ? <FreshSlot site={p.site} visits={p.live.stream.visits} /> : screen}
       </main>
-      {opened && <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} money={p.money} onGoal={p.onGoal} />}
+      {opened && <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} period={periodChip('xper')} money={p.money} onGoal={p.onGoal} />}
       <AiHost site={p.site} />
       <MkToastHost />
       <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: copy.exploreTab }} hide={p.identity ? ['live'] : undefined} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />

@@ -6,6 +6,7 @@
 import { expect, test, type Page } from './fixtures'
 import { session } from './session'
 import { API } from '../playwright.config'
+import { PORT, origin } from '../ports'
 
 let cookie = ''
 test.beforeAll(async () => {
@@ -54,7 +55,7 @@ const story = (visitor: string) => ({
 
 async function openJourney(page: Page) {
   // A real visitor, so Live's list has a row to open.
-  const ctx = await page.context().browser()!.newContext({ baseURL: 'http://127.0.0.1:18301' })
+  const ctx = await page.context().browser()!.newContext({ baseURL: origin(PORT.site) })
   const p = await ctx.newPage()
   await p.goto(`/r/journey-${Date.now()}-${Math.random().toString(36).slice(2, 8)}/index.html`)
   await p.waitForTimeout(1500) // the pageview leaves

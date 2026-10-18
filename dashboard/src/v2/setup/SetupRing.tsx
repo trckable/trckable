@@ -17,7 +17,7 @@ const ringWords = (mode: string, done: number, counted: number) => (mode === 'ch
 
 export function SetupRing({ site, onGoal }: { site: Site | null; onGoal: () => void }) {
   const on = !!site && !isShared()
-  const { state, waiting, run } = useSetup(site, on)
+  const { state, run } = useSetup(site, on)
   const { hidden, hide } = useHidden(on)
   const since = useDoneSince(site?.id ?? null, state ? state.all_set : null)
   const [now] = useState(Date.now)
@@ -35,16 +35,6 @@ export function SetupRing({ site, onGoal }: { site: Site | null; onGoal: () => v
   }, [said])
   // The site menu's own line for the ring, where the header has no room for it.
   useEffect(() => onSetupOpen(() => setOpen(true)), [setOpen])
-  if (site && waiting) {
-    return (
-      <div className="ringw" aria-hidden="true">
-        <span className="ringb ringph">
-          <svg viewBox="0 0 36 36" />
-          <span className="rtext">{copy.ring(0, 0)}</span>
-        </span>
-      </div>
-    )
-  }
   if (!site || !state) return null
   if (mode === 'none') return null
   const words = said ?? ''
