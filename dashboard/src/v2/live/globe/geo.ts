@@ -8,19 +8,17 @@ import { PLACES } from './globeData'
 const RAD = Math.PI / 180
 
 export interface Pin {
-  /** The spot: country and city. */
+  /** The visitor's row key: one pin each. */
   key: string
   cc: string
   city: string
-  /** The newest page or event at the spot. */
+  /** Their newest page or event. */
   path: string
-  /** People at the spot. */
-  n: number
   lat: number
   lon: number
-  /** The newest activity here, unix ms. */
+  /** Their last activity, unix ms. */
   last: number
-  /** Changes whenever someone arrives here: the pulse keys on it. */
+  /** Changes whenever they move on or act: the pulse keys on it. */
   sig: string
 }
 
@@ -40,30 +38,36 @@ export function placeOf(cc: string, city: string): [number, number] | null {
   return [Math.max(-80, Math.min(80, c[0] + Math.sin(a) * r)), c[1] + (Math.cos(a) * r) / Math.max(0.3, Math.cos(c[0] * RAD))]
 }
 
+const GOLDEN = 2.399963229728653
+/** The widest a crowd at one spot spreads, in degrees. */
+const SPREAD_MAX = 2.4
+
+/** Where one visitor sits around their spot: a golden-angle spiral position fixed by their id, wider as more share the spot (never past SPREAD_MAX). */
+export function spreadOf(id: string, crowd: number): [number, number] {
+  const i = Math.floor(hash(id) * 997)
+  const reach = Math.min(SPREAD_MAX, 0.5 + 0.3 * Math.sqrt(crowd))
+  const r = crowd > 1 ? reach * Math.sqrt(((i % 61) + 1) / 61) : 0
+  return [Math.sin(i * GOLDEN) * r, Math.cos(i * GOLDEN) * r]
+}
+
 const what = (r: Row): string => (r.kind === 'goal' ? r.label || r.goal || '' : (r.path ?? '/'))
 
-/** The spot a visit belongs to: its pin's key. */
-export const pinKeyOf = (r: Pick<Row, 'country' | 'city'>): string => `${r.country?.toUpperCase() ?? ''}/${r.city ?? ''}`
+/** The spot a visit belongs to: its country and city. */
+export const spotOf = (r: Pick<Row, 'country' | 'city'>): string => `${r.country?.toUpperCase() ?? ''}/${r.city ?? ''}`
 
-/** The people at one spot, newest first. */
-export const rowsAt = (rows: readonly Row[], key: string): Row[] => rows.filter((r) => pinKeyOf(r) === key)
-
-/** The people on the site, as pins: one per country and city, the same people the "On the site now" list holds. Rows are newest first. */
+/** The people on the site, as pins: one each, the same people the "On the site now" list holds. Rows are newest first. */
 export function pinsOf(rows: readonly Row[]): Pin[] {
-  const by = new Map<string, Pin>()
+  const crowd = new Map<string, number>()
+  for (const r of rows) crowd.set(spotOf(r), (crowd.get(spotOf(r)) ?? 0) + 1)
+  const out: Pin[] = []
   for (const r of rows) {
     const cc = r.country?.toUpperCase() ?? ''
     const at = placeOf(cc, r.city ?? '')
     if (!at) continue
-    const key = pinKeyOf(r)
-    const p = by.get(key)
-    if (p) {
-      p.n++
-      continue
-    }
-    by.set(key, { key, cc, city: r.city ?? '', path: what(r), n: 1, lat: at[0], lon: at[1], last: r.last, sig: `${key}@${r.last}` })
+    const [dy, dx] = spreadOf(r.key, crowd.get(spotOf(r)) ?? 1)
+    out.push({ key: r.key, cc, city: r.city ?? '', path: what(r), lat: Math.max(-80, Math.min(80, at[0] + dy)), lon: at[1] + dx / Math.max(0.3, Math.cos(at[0] * RAD)), last: r.last, sig: `${r.key}@${r.last}` })
   }
-  return [...by.values()]
+  return out
 }
 
 export const wrap = (lon: number): number => ((((lon + 180) % 360) + 360) % 360) - 180

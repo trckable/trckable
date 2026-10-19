@@ -242,10 +242,16 @@ export class Globe {
     this.wake()
   }
 
+  /** The size of a pin, by how many there are: whole up to 60, then smaller down to a third. */
+  private density(): number {
+    return Math.max(0.35, Math.min(1, Math.sqrt(60 / Math.max(1, this.states.length))))
+  }
+
   /** The pin whose tap target holds the point, the nearest if several. */
   hit(px: number, py: number): string | null {
     let best: string | null = null
-    let bd = (HIT / 2) * (HIT / 2)
+    const reach = Math.max(10, (HIT / 2) * this.density())
+    let bd = reach * reach
     for (let i = 0; i < this.states.length; i++) {
       const s = this.states[i]
       if (s.a < 0.3 || s.gone) continue
@@ -356,10 +362,9 @@ export class Globe {
     return this.ink
   }
 
-  /** A pin's picture, made once per country and count: a disc with the flag, and a badge when several share the spot. */
-  private sprite(cc: string, n: number): HTMLCanvasElement {
-    const key = `${cc}/${n > 1 ? n : 1}`
-    let c = this.sprites.get(key)
+  /** A pin's picture, made once per country: a disc with the flag. */
+  private sprite(cc: string): HTMLCanvasElement {
+    let c = this.sprites.get(cc)
     if (c) return c
     c = document.createElement('canvas')
     c.width = c.height = Math.round(CARD * this.dpr)
@@ -378,19 +383,8 @@ export class Globe {
       x.textBaseline = 'middle'
       x.fillStyle = this.ink.dot
       x.fillText(flag(cc), CARD / 2, CARD / 2 + 1)
-      if (n > 1) {
-        const t = String(n)
-        const bw = Math.max(16, t.length * 7 + 6)
-        x.fillStyle = this.ink.lime
-        x.beginPath()
-        x.roundRect(CARD - bw + 1, 0, bw, 14, 7)
-        x.fill()
-        x.fillStyle = this.ink.bg
-        x.font = '700 10px system-ui, sans-serif'
-        x.fillText(t, CARD - bw / 2 + 1, 7.5)
-      }
     }
-    this.sprites.set(key, c)
+    this.sprites.set(cc, c)
     return c
   }
 
@@ -430,6 +424,8 @@ export class Globe {
     }
     c.globalAlpha = 1
     let animating = false
+    // A crowd draws smaller dots, one each, so they can sit close without hiding one another.
+    const dense = this.density()
     for (let i = this.states.length - 1; i >= 0; i--) {
       const s = this.states[i]
       if (s.gone && now - s.gone > LEAVE_MS) {
@@ -463,7 +459,7 @@ export class Globe {
         c.globalAlpha = a * 0.7 * (1 - pulse)
         c.fillStyle = ink.ring
         c.beginPath()
-        c.arc(s.x, s.y, 12 + pulse * 22, 0, Math.PI * 2)
+        c.arc(s.x, s.y, (12 + pulse * 22) * dense, 0, Math.PI * 2)
         c.fill()
         animating = true
       }
@@ -472,11 +468,11 @@ export class Globe {
         c.lineWidth = 2
         c.strokeStyle = ink.lime
         c.beginPath()
-        c.arc(s.x, s.y, 15, 0, Math.PI * 2)
+        c.arc(s.x, s.y, 15 * dense, 0, Math.PI * 2)
         c.stroke()
       }
-      const half = (CARD / 2) * sc
-      c.drawImage(this.sprite(s.pin.cc, s.pin.n), s.x - half, s.y - half, CARD * sc, CARD * sc)
+      const half = (CARD / 2) * sc * dense
+      c.drawImage(this.sprite(s.pin.cc), s.x - half, s.y - half, CARD * sc * dense, CARD * sc * dense)
     }
     c.globalAlpha = 1
     this.follow(this.pop, R, cx, cy, sp, cp)
