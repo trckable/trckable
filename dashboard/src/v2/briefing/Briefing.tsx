@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FunnelStep, PaidStep, Report, Result, Site, Visit } from '../../lib/api'
 import { PAID_STEP } from '../explore/data/mapSections'
-import { fmtRange, presetById, todayIn, type Range } from '../../lib/dates'
+import { fmtRange, presetById, todayIn, type CompareMode, type Range } from '../../lib/dates'
 import { dayWords } from '../dayWords'
 import { fmtInt } from '../../lib/format'
 import { isShared } from '../../lib/me'
@@ -68,6 +68,10 @@ export interface BriefingProps {
   data: Report | null
   loading: boolean
   period: string
+  /** What the numbers are set against; 'none' says no change figures. */
+  compare?: CompareMode
+  /** How the chart is cut when the person chose (absent = trckable picks). */
+  bucket?: 'hour' | 'day' | 'week' | 'month'
   range: Range
   /** Writes an amount in the site's currency; absent where revenue is not shown. */
   money?: (minor: number) => string
@@ -84,19 +88,19 @@ const normal = (r?: Result): Result | undefined => (r ? { ...r, series: r.series
 /** Replay's button: it stops what plays, and starts it when it does not. */
 const stopOrGo = (playing: boolean, stop: () => void, go: () => void) => (playing ? stop : go)
 
-export default function Briefing({ site, data: page, loading, period, range, money, onGoal, visits, active = true }: BriefingProps) {
+export default function Briefing({ site, data: page, loading, period, compare = 'previous', bucket, range, money, onGoal, visits, active = true }: BriefingProps) {
   const ui = useBriefingState(site.id)
   const [at, setAt] = useState<number | null>(null)
   const up = useUptime(site, range)
   const nowSec = useNow()
   const setupState = useSetup(site)
   const wset = watched.use()
-  const hours = useHourly(site, range, !!page && page.bucket !== 'hour' && wantsHours(period, range))
+  const hours = useHourly(site, range, !!page && page.bucket !== 'hour' && !bucket && wantsHours(period, range))
   const data = useMemo(() => (page && hours ? { ...page, bucket: hours.bucket, current: hours.current } : page), [page, hours])
   const current = data?.current
   const previous = data?.previous
   const cur = useMemo(() => normal(current), [current])
-  const prev = useMemo(() => normal(previous), [previous])
+  const prev = useMemo(() => (compare === 'none' ? undefined : normal(previous)), [previous, compare])
   const unit = unitOf(period)
   const today = todayIn(site.timezone)
   const sinceCount = useSinceCount(site.id, today, LOOKED_AT, range.to === today)
