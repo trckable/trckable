@@ -28,12 +28,12 @@ export function useSheet(box: RefObject<HTMLElement | null>, onClose: () => void
       close.current()
     }
     const other = (e: Event) => (e as CustomEvent).detail !== me && close.current()
-    window.addEventListener('keydown', key, true)
+    window.addEventListener('keydown', key)
     window.addEventListener(OPENED, other)
     window.dispatchEvent(new CustomEvent(OPENED, { detail: me }))
     box.current?.focus()
     return () => {
-      window.removeEventListener('keydown', key, true)
+      window.removeEventListener('keydown', key)
       window.removeEventListener(OPENED, other)
       el?.removeEventListener('keydown', tab)
       if (portal?.classList.contains('mk-portal')) leave(portal)

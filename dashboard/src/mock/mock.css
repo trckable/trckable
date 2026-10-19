@@ -1758,12 +1758,16 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 body[data-modal] .mk .xscrim,
 body[data-modal] .mk .xscrim.on,
 body[data-modal] .mk .xp,
-body[data-modal] .mk .xp.on,
-body[data-modal] .mk .cd {
+body[data-modal] .mk .xp.on {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   transition: opacity 0.16s ease, visibility 0s 0.16s;
+}
+/* A sheet is put away at once (a dialog takes its place; the sheet is back when it closes). */
+body[data-modal] .mk .cd {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* Fields have no border: a soft fill, the full width of their row, 36 to 40 px tall; focus is a ring. */
