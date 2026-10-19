@@ -278,7 +278,8 @@ test('a long list scrolls inside its card with a fade and the cards keep one hei
   await feed.evaluate((el) => (el.scrollTop = el.scrollHeight))
   await expect(feed).not.toHaveAttribute('data-below', 'true')
   expect(await equal()).toBe(true)
-  await expect(page.locator('.lfeed .lv')).toHaveCount(19)
+  // Visits from other tests on the shared site can arrive on top of the 19.
+  await expect.poll(() => page.locator('.lfeed .lv').count()).toBeGreaterThanOrEqual(19)
 })
 
 test('scrolling the people list leaves its head where it is, and the page does not scroll', async ({ page, browserName }) => {
@@ -294,6 +295,9 @@ test('scrolling the people list leaves its head where it is, and the page does n
   await signIn(page, '/example.com?view=live')
   await expect(online(page)).toBeVisible({ timeout: 15_000 })
   const box = async (sel: string) => (await page.locator(sel).boundingBox())!
+  // The list is in and the cards have taken their height before it is measured.
+  await expect(page.locator('.lfeed .lv')).not.toHaveCount(0)
+  await page.waitForTimeout(1500)
   const before = { head: await box('.lon .lhead'), card: await box('.lon') }
   const feed = page.locator('.lon .lfeed')
   const still = async () => {
