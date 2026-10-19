@@ -306,8 +306,7 @@ test('scrolling the people list leaves its head where it is, and the page does n
   await feed.evaluate((el) => (el.scrollTop = 100))
   await expect(feed).toHaveAttribute('data-above', 'true')
   await page.mouse.wheel(0, 150)
-  await page.waitForTimeout(200)
-  expect(await feed.evaluate((el) => el.scrollTop)).toBeGreaterThan(100)
+  await expect.poll(() => feed.evaluate((el) => el.scrollTop), { timeout: 3_000 }).toBeGreaterThan(100)
   await still()
   // At the list's end the page behind stays too. Firefox's scripted wheel does not honour overscroll-behavior, so only Chromium can tell.
   if (browserName === 'chromium') {

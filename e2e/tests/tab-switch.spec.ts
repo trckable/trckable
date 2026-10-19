@@ -139,6 +139,8 @@ for (const width of [1280, 390]) {
     // Live is built when the page is idle, out of sight.
     await expect(page.locator('.liveview')).toBeAttached({ timeout: 20_000 })
     await expect(page.locator('.liveview')).toBeHidden()
+    // And its cards have their answers: on a slow machine the click would otherwise land on Live's loading shape.
+    await page.waitForFunction(() => !document.querySelector('.liveview .sk, .liveview .skl'), undefined, { timeout: 20_000 })
     await page.waitForTimeout(2800) // the Briefing's reading is done
     await slow(page)
     const go = (name: string) => (width < 600 ? page.locator('.tabbar').getByRole('button', { name }) : tab(page, name))
