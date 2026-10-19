@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FunnelStep, PaidStep, Report, Result, Site, Visit } from '../../lib/api'
 import { PAID_STEP } from '../explore/data/mapSections'
-import { fmtRange, presetById, todayIn, type CompareMode, type Range } from '../../lib/dates'
+import { addDays, fmtRange, presetById, todayIn, type CompareMode, type Range } from '../../lib/dates'
 import { dayWords } from '../dayWords'
 import { fmtInt } from '../../lib/format'
 import { isShared } from '../../lib/me'
@@ -14,7 +14,6 @@ import { openSettings } from '../../lib/settings'
 import { toggleWatch, watched } from '../../lib/watch'
 import { useNow } from '../../features/incidents/useIncidents'
 import { useNotes } from '../../features/notes/useNotes'
-import { addDays } from '../../lib/dates'
 import { CardList } from '../ui/StoryCard'
 import { Hero } from '../ui/HeroCard'
 import { whyRows } from './scoreWhy'
@@ -68,10 +67,8 @@ export interface BriefingProps {
   data: Report | null
   loading: boolean
   period: string
-  /** What the numbers are set against; 'none' says no change figures. */
-  compare?: CompareMode
-  /** How the chart is cut when the person chose (absent = trckable picks). */
-  bucket?: 'hour' | 'day' | 'week' | 'month'
+  compare?: CompareMode // what the numbers are set against; 'none' says no change figures
+  bucket?: 'hour' | 'day' | 'week' | 'month' // how the chart is cut when the person chose (absent = trckable picks)
   range: Range
   /** Writes an amount in the site's currency; absent where revenue is not shown. */
   money?: (minor: number) => string
@@ -85,8 +82,7 @@ export interface BriefingProps {
 /** An empty period has no series at all (the server sends null): an empty list, so nothing below has to ask. */
 const normal = (r?: Result): Result | undefined => (r ? { ...r, series: r.series ?? [] } : undefined)
 
-/** Replay's button: it stops what plays, and starts it when it does not. */
-const stopOrGo = (playing: boolean, stop: () => void, go: () => void) => (playing ? stop : go)
+const stopOrGo = (playing: boolean, stop: () => void, go: () => void) => (playing ? stop : go) // Replay's button: stops what plays, starts it when it does not
 
 export default function Briefing({ site, data: page, loading, period, compare = 'previous', bucket, range, money, onGoal, visits, active = true }: BriefingProps) {
   const ui = useBriefingState(site.id)
