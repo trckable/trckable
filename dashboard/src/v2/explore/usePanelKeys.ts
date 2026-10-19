@@ -15,8 +15,8 @@ export function usePanelKeys(box: RefObject<HTMLElement | null>, on: boolean, to
     if (!on) return
     const key = (e: KeyboardEvent) => {
       const el = box.current
-      // A dialog opened from the panel has its own keys (Escape, Tab) while it is up.
-      if (!el || document.querySelector('.modal-back:not(.leaving)')) return
+      // A dialog or a sheet opened from the panel has its own keys (Escape, Tab) while it is up.
+      if (!el || document.querySelector('.modal-back:not(.leaving), .mk-portal:not(.leaving) > .cd.on')) return
       if (e.key === 'Escape') {
         const menu = el.querySelector<HTMLElement>('.xm.on')
         e.stopImmediatePropagation()

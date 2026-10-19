@@ -142,8 +142,8 @@ export default function PageDetails({ site, range, view }: { site: Site; range: 
   const close = () => pageDetails.set(null)
   return (
     <MkPortal>
-      <div className="xscrim on" onClick={close} aria-hidden="true" style={{ zIndex: 72 }} />
-      <aside ref={box} className="cd on" aria-label={copy.pageDetails} tabIndex={-1} style={{ zIndex: 73 }}>
+      <div className="xscrim on" onClick={close} aria-hidden="true" />
+      <aside ref={box} className="cd on" aria-label={copy.pageDetails} tabIndex={-1}>
         <div className="cdh">
           <b>{copy.pageDetails}</b>
           <span className="mk-quiet">{site.name || site.domain}</span>

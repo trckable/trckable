@@ -6,6 +6,7 @@ import { useEffect } from 'react'
 
 let depth = 0
 let savedY = 0
+let savedOverflow = ''
 
 export function useLockScroll(active = true) {
   useEffect(() => {
@@ -21,6 +22,7 @@ export function useLockScroll(active = true) {
       const gap = window.innerWidth - html.clientWidth
       savedY = window.scrollY
       body.dataset.prevPad = body.style.paddingRight
+      savedOverflow = html.style.overflow
       html.style.overflow = 'hidden'
       if (gap > 0) body.style.paddingRight = `${gap}px`
     }
@@ -28,7 +30,7 @@ export function useLockScroll(active = true) {
     return () => {
       depth = Math.max(0, depth - 1)
       if (depth === 0) {
-        html.style.overflow = ''
+        html.style.overflow = savedOverflow
         body.style.paddingRight = body.dataset.prevPad ?? ''
         delete body.dataset.prevPad
         // Safari moves the page when the scrollbar's width goes back; put it where it was.

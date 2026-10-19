@@ -1041,6 +1041,27 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 }
 .mk .cd{position:fixed;z-index:var(--z-drawer);left:50%;top:12vh;width:560px;max-width:calc(100vw - 32px);margin-left:-280px;max-height:76vh;background:var(--mk-card);border:1px solid var(--mk-line);border-radius:20px;display:none;flex-direction:column;box-shadow:0 30px 80px var(--mk-shc2)}
 .mk .cd.on{display:flex}
+/* A sheet always sits above the Explore panel (71) and its dimming (70): it is the thing in front, with its own dimming
+   (72) over the panel, which is dimmed once, not twice. It rises in (and, through useSheet's copy, out) in 180 ms. */
+.mk .cd{z-index:73}
+.mk .xscrim:has(+ .cd){z-index:72}
+body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--mk-scrim) 55%,transparent)}
+.mk .cd.on{animation:cd-in .18s cubic-bezier(.2,.8,.2,1) both}
+.mk .xscrim:has(+ .cd.on){animation:cd-fade .15s ease-out both}
+.mk-portal.leaving{pointer-events:none}
+.mk-portal.leaving .cd{animation:cd-out .16s ease-in both}
+.mk-portal.leaving .xscrim{animation:cd-fade .16s ease-in reverse both}
+@keyframes cd-in{from{opacity:0;transform:scale(.97)}}
+@keyframes cd-out{to{opacity:0;transform:scale(.97)}}
+@keyframes cd-fade{from{opacity:0}}
+@media (--xs){
+.mk .cd.on{animation-name:cd-rise}
+.mk-portal.leaving .cd{animation-name:cd-sink}
+}
+@keyframes cd-rise{from{opacity:0;transform:translateY(28px)}}
+@keyframes cd-sink{to{opacity:0;transform:translateY(28px)}}
+@media (prefers-reduced-motion:reduce){.mk .cd.on,.mk .xscrim:has(+ .cd.on),.mk-portal.leaving .cd,.mk-portal.leaving .xscrim{animation:none}}
+[data-motion='off'] .mk .cd.on,[data-motion='off'] .mk .xscrim:has(+ .cd.on),[data-motion='off'] .mk-portal.leaving .cd,[data-motion='off'] .mk-portal.leaving .xscrim{animation:none}
 .mk #cdscrim{z-index:var(--z-scrim)}
 .mk .cdh{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s4) var(--mk-s5);border-bottom:1px solid var(--mk-line);flex:none}
 .mk .cdh b{font-size:15px}
@@ -1729,11 +1750,20 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .mi.team>svg{margin-left:auto;color:var(--mk-lime)}
 .mk .mk-menu.teams{width:260px}
 /* A dialog opened from a sheet takes its place: the sheet is back when the dialog closes. */
+/* They fade away over the dialog's own 160 ms fade in (and back, when it closes), never a cut: a cut showed the bare
+   page through the dialog's half-grown backdrop for a frame. */
+.mk .cd {
+  transition: opacity 0.16s ease, visibility 0s;
+}
 body[data-modal] .mk .xscrim,
+body[data-modal] .mk .xscrim.on,
 body[data-modal] .mk .xp,
+body[data-modal] .mk .xp.on,
 body[data-modal] .mk .cd {
+  opacity: 0;
   visibility: hidden;
   pointer-events: none;
+  transition: opacity 0.16s ease, visibility 0s 0.16s;
 }
 
 /* Fields have no border: a soft fill, the full width of their row, 36 to 40 px tall; focus is a ring. */
