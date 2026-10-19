@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { addDays, addMonths, diffDays, type ISODate } from '../../lib/dates'
 import { copy } from '../copy'
 import type { PeriodChipProps } from './PeriodChip'
+import { QUERY } from '../../kit/breakpoints'
 
 const MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const DOW = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
@@ -104,7 +105,7 @@ export function Calendar({ p, onBack, onApply }: { p: PeriodChipProps; onBack: (
   // A phone shows one month: the one the dates end in. Wider, two: the last of them is the end's month.
   const [cursor, setCursor] = useState<ISODate>(() => {
     const end = `${(p.customRange.to < p.today ? p.customRange.to : p.today).slice(0, 8)}01`
-    const one = typeof window !== 'undefined' && window.matchMedia('(max-width: 600px)').matches
+    const one = typeof window !== 'undefined' && window.matchMedia(QUERY.xs).matches
     return one ? end : addMonths(end, -1)
   })
   const [focus, setFocus] = useState<ISODate>(p.customRange.to < p.today ? p.customRange.to : p.today)

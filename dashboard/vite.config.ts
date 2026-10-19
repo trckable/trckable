@@ -4,6 +4,7 @@ import { copy } from './src/components/loading/copy'
 import { bootHtml } from './src/components/loading/markup'
 import { dashHtml } from './src/components/skeleton/dashMarkup'
 import { wordmarkFont } from './wordmarkFont'
+import { breakpointsPlugin } from './breakpointsPlugin'
 
 // The first paint, before any JavaScript, is never a blank page: the dashboard's own boxes where this
 // browser kept its site list (public/theme.js says so on <html>), the loading ghost anywhere else. The
@@ -35,6 +36,8 @@ const split = {
 // `pnpm dev` proxies the API to a local trckabled (TRCKABLE_DEV_API, default :8080).
 export default defineConfig({
   plugins: [react(), bootGhost, wordmarkFont()],
+  // The width tokens of src/kit/breakpoints.ts become numbers in every stylesheet.
+  css: { postcss: { plugins: [breakpointsPlugin] } },
   build: {
     outDir: '../server/internal/web/dist',
     emptyOutDir: true,

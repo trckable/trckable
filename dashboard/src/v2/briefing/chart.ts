@@ -63,15 +63,15 @@ export function chartOf(a: ChartArgs): ChartIn {
   const live = !!a.nowT && a.cur.series.some((p) => p.t.slice(0, 10) === nowDay)
   let pts: Point[] = a.cur.series
   let e = 0
-  let span = pts.length
+  // A day is drawn whole: its axis runs to the end of the site's day, the hours still to come shaded (a site whose clock
+  // is at 00:12 would otherwise show a chart that ends at 05:00). A longer stretch shows all of its buckets too.
+  const span = a.cur.series.length
   if (live && a.nowT) {
     const nowHour = Number(a.nowT.slice(11, 13)) + Number(a.nowT.slice(14, 16)) / 60
     const key = a.nowT.slice(0, hourly ? 13 : 10)
     const idx = a.cur.series.findIndex((p) => p.t.slice(0, key.length) === key)
     e = (idx < 0 ? 0 : idx) + (hourly ? nowHour - Math.floor(nowHour) : nowHour / 24)
     pts = pts.filter((p) => p.t.slice(0, key.length) <= key)
-    // A day is drawn up to the hour after next; a longer stretch shows all of its days.
-    if (hourly && a.cur.series.length <= 24) span = Math.min(a.cur.series.length, Math.max(6, Math.ceil(e) + 2))
   }
   const was = (a.prev?.series ?? []).map((p) => p.visitors)
   const band = (a.bands ? a.bands.filter(Boolean).length >= a.cur.series.length / 2 : was.length >= pts.length / 2) && pts.length > 1

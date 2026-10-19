@@ -15,6 +15,7 @@ import { sorted, teamSite, tone, totals, type Sort, type TeamSite } from './mode
 import { TeamTable } from './TeamTable'
 import { useTeam } from './useTeam'
 import '../../mock/mock.css'
+import '../../kit/layout.css'
 import '../../mock/theme.css'
 import './team.css'
 

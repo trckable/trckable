@@ -42,7 +42,7 @@
 .mk .rp-btn.ic{width:28px;padding:0;justify-content:center}
 /* While a caption is pinned, the chart's own label over its rise steps aside. */
 .mk .rp-stage[data-pinned] [data-rise]{opacity:0;transition:opacity .2s}
-@media (max-width:600px){
+@media (--xs){
   .mk .rp-hud{left:8px;top:2px;padding:4px 10px;gap:8px}
   .mk .rp-n{font-size:21px}
   .mk .rp-bar{left:0}

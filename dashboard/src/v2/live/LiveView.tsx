@@ -33,6 +33,7 @@ import { RevenueLock } from './RevenueLock'
 import { SourceRows } from './SourceRows'
 import { copy } from './copy'
 import type { LiveStream } from './Live'
+import { QUERY } from '../../kit/breakpoints'
 
 const MentionChip = lazyLoad(() => import('../../features/mentions/MentionChip'))
 
@@ -87,7 +88,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   if (!data) return <div className="liveview" role="region" aria-label={copy.live}><p className="mk-quiet">{failed ? copy.failed : copy.loading}</p></div>
   const n = online ?? 0
   const bars = barsOf(seriesAt(data, stream.visits, now))
-  const phone = window.matchMedia('(max-width: 600px)').matches // a thumb taps the bar; it is no target to tab to
+  const phone = window.matchMedia(QUERY.xs).matches // a thumb taps the bar; it is no target to tab to
   const ch = changeOf(data.visitors, data.previous)
   const src = sourceParts(data.sources)
   const down = downSince !== undefined

@@ -109,7 +109,8 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
   const L = ph ? 8 : 36
   const Rr = ph ? 8 : 10
   // With a layer over the plot, its markers have a lane of their own above it, and the period's label another under that.
-  const T = (ph ? 18 : 30) + (layer ? LAYER_TOP + 6 + LABEL_LANE : 0)
+  // On a phone the plot is short, so the lanes above it are tight: the markers' lane only (the label over a rise sits in it).
+  const T = ph ? 14 + (layer ? LAYER_TOP + 4 : 0) : 30 + (layer ? LAYER_TOP + 6 + LABEL_LANE : 0)
   const B = H - 22
   const span = Math.max(1, ph ? c.full : c.span)
   const X = (i: number) => L + ((W - L - Rr) * (i + 0.5)) / span

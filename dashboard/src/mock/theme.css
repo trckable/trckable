@@ -225,13 +225,13 @@
   display: none;
 }
 /* The page's own top padding on a phone is the walkthrough's header to fill: it sits at the very top. */
-@media (max-width: 600px) {
+@media (--xs) {
   .app:has(> #app.mk) {
     padding-top: 0;
   }
 }
 /* The cards that slide up from the bottom (a busy moment) stop at the bar of the three places, not behind it. */
-@media (max-width: 600px) {
+@media (--xs) {
   body:has(#app.mk) .side-deck {
     bottom: calc(76px + env(safe-area-inset-bottom));
   }

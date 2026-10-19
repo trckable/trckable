@@ -5,12 +5,12 @@
   display: none;
 }
 /* The panel is a full sheet on a phone: nothing to widen. */
-@media (max-width: 767px) {
+@media (--md-down) {
   .mk .xph .xfull {
     display: none;
   }
 }
-@media (max-width: 600px) {
+@media (--xs) {
   .mk .onlyph {
     display: block;
   }
@@ -44,7 +44,7 @@
 .mk .xrt .xrcell.open{color:var(--mk-faint)}
 .mk .xrt .xrw.avg{border-top:1px solid var(--mk-line);margin-top:6px;padding-top:9px;color:var(--mk-muted)}
 .mk .xrt .xrw.avg .xrcell{height:auto}
-@media (max-width:600px){.mk .xrt .xth,.mk .xrt .xrw{grid-template-columns:52px 52px repeat(var(--weeks),minmax(0,1fr));min-height:0}.mk .xrt .xrcell{font-size:11px}}
+@media (--xs){.mk .xrt .xth,.mk .xrt .xrw{grid-template-columns:52px 52px repeat(var(--weeks),minmax(0,1fr));min-height:0}.mk .xrt .xrcell{font-size:11px}}
 .mk .xchb .kit-chart{margin:0}
 /* Opening and closing: the scrim fades (150 ms), the panel glides in with an ease-out (220 ms) and out faster with an
    ease-in (180 ms), and what is in it comes up once the panel is there. Panel.tsx unmounts after the exit (OUT). */
