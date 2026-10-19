@@ -299,6 +299,8 @@ test('scrolling the people list leaves its head where it is, and the page does n
   const feed = page.locator('.lon .lfeed')
   await feed.evaluate((el) => (el.scrollTop = el.scrollHeight))
   await expect(feed).toHaveAttribute('data-above', 'true')
+  // The wheel turns where the pointer is: over the list, at its end, the page behind must stay (the page is taller than the screen now, with the sections under the half hour).
+  await feed.hover()
   await page.mouse.wheel(0, 400)
   await page.waitForTimeout(200)
   expect(await box('.lon .lhead')).toEqual(before.head)
