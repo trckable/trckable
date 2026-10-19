@@ -65,8 +65,8 @@ async function writeControls(page: Page): Promise<string[]> {
     const shown = (el: Element) => el.checkVisibility()
     const enabled = (el: Element) => !(el as HTMLButtonElement).disabled && el.getAttribute('aria-disabled') !== 'true' && !el.closest('fieldset:disabled')
     const found: string[] = []
-    // This browser's own choices (the tab's count, the sale chime, notices, the language) are kept in the browser, not on the server: a viewer has them too.
-    const local = /^(Live count in the tab|Sale sound|Browser notices|Language)$/
+    // This browser's own choices (the tab's count, the sale chime, notices, the language, Live's globe view) are kept in the browser, not on the server: a viewer has them too.
+    const local = /^(Live count in the tab|Sale sound|Browser notices|Language|Show the globe)$/
     // A funnel's steps live in the address, not the database: taking one out
     // changes what the viewer looks at, nothing anyone else sees.
     for (const el of document.querySelectorAll('button:not(.funnel-steps *), [role="switch"], [role="menuitem"], a.btn')) {
