@@ -147,3 +147,13 @@ html[data-motion='off'] .mk .gnv { animation: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .mk .gnv.arriving { animation: mk-fade 0.3s ease-out backwards; }
 }
+
+/* Zoom: two small buttons at the foot right of the globe. A full-screen globe takes every gesture. */
+.mk .gzoom { position: absolute; z-index: 3; right: var(--mk-s3); bottom: var(--mk-s3); display: flex; flex-direction: column; gap: var(--mk-s1); }
+.mk .gzoom button { width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 10px; background: var(--mk-fill); color: var(--mk-muted); }
+.mk .gzoom button:hover { color: var(--mk-text); }
+@media (--xs) {
+  .mk .gzoom button { width: 44px; height: 44px; }
+}
+.mk .gwrap.fill .gstage { touch-action: none; }
+.mk .gwrap.fill .gzoom { right: max(var(--mk-s4), env(safe-area-inset-right)); bottom: max(var(--mk-s4), env(safe-area-inset-bottom)); }

@@ -165,3 +165,51 @@ test('a phone stacks the globe above the list; a laptop puts them side by side',
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   }
 })
+
+test('zoom: the buttons and Ctrl + wheel, the spin waits while zoomed in and comes back, and a crowd at 6x stays in budget', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('trckable.live.globe', 'on'))
+  await open(page)
+  const canvas = page.locator('.gstage canvas')
+  await expect(canvas).toBeVisible({ timeout: 10_000 })
+  await page.evaluate(() => delete document.documentElement.dataset.motion)
+  await page.setViewportSize({ width: 1281, height: 800 }) // wakes the loop, which had stopped at rest
+  type G = { __globe: { zoomT: number; zoom: number; lon: number; setPins: (p: unknown[]) => void; zoomTo: (z: number) => void; stats: { frames: number; ms: number } } }
+  const get = <T,>(f: (g: G['__globe']) => T) => canvas.evaluate((c, src) => new Function('g', `return (${src})(g)`)((c as unknown as G).__globe), f.toString()) as Promise<T>
+  expect(await get((g) => g.zoomT)).toBe(1)
+  await page.getByRole('button', { name: 'Zoom in' }).click()
+  expect(await get((g) => g.zoomT)).toBeCloseTo(1.6)
+  await canvas.hover()
+  await page.keyboard.down('Control')
+  await page.mouse.wheel(0, -500)
+  await page.keyboard.up('Control')
+  await expect.poll(() => get((g) => g.zoomT)).toBeGreaterThan(1.6)
+  // Zoomed in, the globe does not spin.
+  await page.waitForTimeout(2500) // the move to the cursor settles
+  const a = await get((g) => g.lon)
+  await page.waitForTimeout(2500)
+  expect(Math.abs((await get((g) => g.lon)) - a)).toBeLessThan(0.05)
+  // Back at 1x it spins again.
+  for (let i = 0; i < 6; i++) await page.getByRole('button', { name: 'Zoom out' }).click()
+  await expect.poll(() => get((g) => g.zoom)).toBeLessThan(1.02)
+  const b = await get((g) => g.lon)
+  await page.waitForTimeout(5000)
+  expect(Math.abs((await get((g) => g.lon)) - b)).toBeGreaterThan(0.2)
+  // 300 visitors at the closest zoom.
+  await page.evaluate(() => {
+    const g = (document.querySelector('.gstage canvas') as unknown as G).__globe
+    const ccs = ['DE', 'US', 'GB', 'IN', 'FR', 'BR', 'JP', 'AU']
+    g.setPins(Array.from({ length: 300 }, (_, i) => ({ key: `k${i}`, cc: ccs[i % 8], city: 'X', path: '/', lat: ((i * 37) % 100) - 40, lon: ((i * 73) % 340) - 170, last: 0, sig: `k${i}`, ux: Math.sin(i), uy: Math.cos(i), crowd: 300 })))
+    g.zoomTo(6)
+  })
+  await page.waitForTimeout(1500)
+  const ms = await page.evaluate(
+    () =>
+      new Promise<number>((res) => {
+        const g = (document.querySelector('.gstage canvas') as unknown as G).__globe
+        g.stats.frames = 0
+        g.stats.ms = 0
+        setTimeout(() => res(g.stats.ms / Math.max(1, g.stats.frames)), 3000)
+      }),
+  )
+  expect(ms).toBeLessThan(test.info().project.name === 'chromium' ? 4 : 12)
+})

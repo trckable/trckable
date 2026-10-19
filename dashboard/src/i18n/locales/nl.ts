@@ -2959,6 +2959,8 @@ export default {
   'v2.live.recent': 'Recente activiteit',
   'v2.live.fullscreen': 'Volledig scherm',
   'v2.live.exitFullscreen': 'Volledig scherm sluiten',
+  'v2.live.zoomIn': 'Inzoomen',
+  'v2.live.zoomOut': 'Uitzoomen',
   'v2.live.close': 'Sluiten',
   'v2.live.openExplore': 'Openen in Explore',
   'v2.live.leftNow': 'Zojuist vertrokken',

@@ -11,6 +11,7 @@ import GlobePanel from './GlobePanel'
 const row = (i: number, o: Partial<Row> = {}): Row => ({ kind: 'pageview', ts: 90_000, last: 99_000 - i, path: `/p${i}`, key: `k${i}`, country: 'de', city: 'Berlin', device: 'desktop', ...o })
 
 beforeAll(() => {
+  Element.prototype.hasPointerCapture = () => true
   const still = class {
     observe() {}
     disconnect() {}
@@ -82,5 +83,76 @@ describe('the globe popover', () => {
     act(() => (box.querySelector('.gclose') as HTMLElement).click())
     expect(box.querySelector('.gnew')).toBeNull()
     act(() => root.unmount())
+  })
+
+  describe('zoom', () => {
+    const stage = (box: HTMLElement) => box.querySelector('.gstage') as HTMLElement
+    const wheel = (el: HTMLElement, o: WheelEventInit) => {
+      const e = new WheelEvent('wheel', { bubbles: true, cancelable: true, ...o })
+      // The test DOM leaves the modifier keys out of the event: set them as a browser would.
+      for (const k of ['ctrlKey', 'metaKey'] as const) Object.defineProperty(e, k, { value: !!o[k] })
+      act(() => void el.dispatchEvent(e))
+      return e
+    }
+    const ptr = (el: HTMLElement, type: string, id: number, x: number, y: number) => act(() => void el.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: id, pointerType: 'touch', clientX: x, clientY: y })))
+
+    it('zooms with Ctrl or Cmd and the wheel, leaves a plain wheel to the page, and stays between 1x and 6x', () => {
+      const { box, globe, root } = mount([row(1)])
+      const plain = wheel(stage(box), { deltaY: -300, clientX: 10, clientY: 10 })
+      expect(plain.defaultPrevented).toBe(false)
+      expect(globe().zoomT).toBe(1)
+      const pinch = wheel(stage(box), { deltaY: -300, ctrlKey: true, clientX: 10, clientY: 10 })
+      expect(globe().zoomT).toBeGreaterThan(1)
+      expect(pinch.defaultPrevented).toBe(true)
+      for (let i = 0; i < 40; i++) wheel(stage(box), { deltaY: -400, metaKey: true })
+      expect(globe().zoomT).toBe(6)
+      for (let i = 0; i < 80; i++) wheel(stage(box), { deltaY: 400, metaKey: true })
+      expect(globe().zoomT).toBe(1)
+      act(() => root.unmount())
+    })
+
+    it('zooms with a plain wheel once the globe has focus or is full screen', () => {
+      const { box, globe, root } = mount([row(1)])
+      act(() => stage(box).focus())
+      wheel(stage(box), { deltaY: -300 })
+      expect(globe().zoomT).toBeGreaterThan(1)
+      act(() => (box.querySelector('.gzoom button:nth-child(2)') as HTMLElement).click())
+      act(() => stage(box).blur())
+      act(() => (box.querySelector('.gfs') as HTMLElement).click())
+      const before = globe().zoomT
+      wheel(stage(box), { deltaY: -300 })
+      expect(globe().zoomT).toBeGreaterThan(before)
+      // Leaving full screen puts it back.
+      act(() => (box.querySelector('.gclose') as HTMLElement).click())
+      expect(globe().zoomT).toBe(1)
+      act(() => root.unmount())
+    })
+
+    it('has plus and minus buttons and keys', () => {
+      const { box, globe, root } = mount([row(1)])
+      act(() => (box.querySelector('[aria-label="Zoom in"]') as HTMLElement).click())
+      expect(globe().zoomT).toBeCloseTo(1.6)
+      act(() => (box.querySelector('[aria-label="Zoom out"]') as HTMLElement).click())
+      expect(globe().zoomT).toBe(1)
+      act(() => void stage(box).dispatchEvent(new KeyboardEvent('keydown', { key: '+', bubbles: true })))
+      expect(globe().zoomT).toBeCloseTo(1.5)
+      act(() => void stage(box).dispatchEvent(new KeyboardEvent('keydown', { key: '0', bubbles: true })))
+      expect(globe().zoomT).toBe(1)
+      act(() => root.unmount())
+    })
+
+    it('pinches: two fingers moving apart zoom in, together zoom out', () => {
+      const { box, globe, root } = mount([row(1)])
+      const el = stage(box)
+      ptr(el, 'pointerdown', 1, 100, 100)
+      ptr(el, 'pointerdown', 2, 200, 100)
+      ptr(el, 'pointermove', 2, 300, 100) // 100 apart became 200
+      expect(globe().zoomT).toBeCloseTo(2)
+      ptr(el, 'pointermove', 2, 150, 100) // 50 apart: half of the start
+      expect(globe().zoomT).toBe(1)
+      ptr(el, 'pointerup', 2, 150, 100)
+      ptr(el, 'pointerup', 1, 100, 100)
+      act(() => root.unmount())
+    })
   })
 })

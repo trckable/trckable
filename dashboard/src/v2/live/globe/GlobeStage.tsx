@@ -16,16 +16,16 @@ export interface Pick {
 const HIDDEN = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' } as const
 const nameOf = (p: Pin) => `${p.city || countryName(p.cc)} · ${p.path}`
 
-export function GlobeStage({ pins, people, sel, onPick, children }: { pins: Pin[]; people: number; sel: Pick | null; onPick: (key: string) => void; children: ReactNode }) {
+export function GlobeStage({ pins, people, sel, full, onPick, children }: { pins: Pin[]; people: number; sel: Pick | null; full: boolean; onPick: (key: string) => void; children: ReactNode }) {
   const box = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
   const globe = useRef<Globe | null>(null)
   const [tip, setTip] = useState<string | null>(null)
   const [kb, setKb] = useState<string | null>(null)
   const [sheet, setSheet] = useState(false)
-  const latest = useRef({ pins, onPick })
+  const latest = useRef({ pins, onPick, full })
   useEffect(() => {
-    latest.current = { pins, onPick }
+    latest.current = { pins, onPick, full }
   })
   useEffect(() => {
     const el = box.current
@@ -41,8 +41,19 @@ export function GlobeStage({ pins, people, sel, onPick, children }: { pins: Pin[
     const rect = () => el.getBoundingClientRect()
     const down = (e: PointerEvent) => {
       if (e.pointerType === 'mouse' && e.button !== 0) return
-      g.down(e)
+      if ((e.target as Element).closest('.gzoom, .gpop')) return // the buttons and the card are theirs
+      g.down(e, rect())
     }
+    // The wheel zooms where the pointer is: always in full screen, otherwise only with Ctrl or Cmd held (a trackpad pinch) or once the globe has focus, so the page still scrolls past it.
+    const wheel = (e: WheelEvent) => {
+      if ((e.target as Element).closest('.gpop')) return
+      if (!(latest.current.full || e.ctrlKey || e.metaKey || document.activeElement === el)) return
+      e.preventDefault()
+      const px = e.deltaMode === 1 ? 33 : 1
+      const r = rect()
+      g.zoomBy(Math.exp(-e.deltaY * px * (e.ctrlKey ? 0.012 : 0.0018)), e.clientX - r.left, e.clientY - r.top)
+    }
+    el.addEventListener('wheel', wheel, { passive: false })
     // The pointer is held only once the press has become a drag, so a tap still reaches the page.
     const move = (e: PointerEvent) => {
       if (g.move(e, rect()) && !el.hasPointerCapture(e.pointerId)) el.setPointerCapture(e.pointerId)
@@ -58,6 +69,7 @@ export function GlobeStage({ pins, people, sel, onPick, children }: { pins: Pin[
       size.disconnect()
       seen.disconnect()
       el.removeEventListener('pointerdown', down)
+      el.removeEventListener('wheel', wheel)
       el.removeEventListener('pointermove', move)
       el.removeEventListener('pointerup', up)
       el.removeEventListener('pointercancel', up)
@@ -68,6 +80,10 @@ export function GlobeStage({ pins, people, sel, onPick, children }: { pins: Pin[
   }, [])
   // The people changed: the engine pops, pulses or shrinks the pins itself.
   useEffect(() => globe.current?.setPins(pins), [pins])
+  // Leaving full screen puts the zoom back.
+  useEffect(() => {
+    if (!full) globe.current?.zoomTo(1)
+  }, [full])
   // A pin is open: the globe stops and eases it to the middle; closed, it spins again after about a second.
   useEffect(() => {
     const g = globe.current
@@ -88,6 +104,20 @@ export function GlobeStage({ pins, people, sel, onPick, children }: { pins: Pin[
   }, [tip])
   const keys = (e: KeyboardEvent) => {
     const list = pins
+    if (e.key === '+' || e.key === '=') {
+      e.preventDefault()
+      globe.current?.zoomBy(1.5)
+      return
+    }
+    if (e.key === '-' || e.key === '_') {
+      e.preventDefault()
+      globe.current?.zoomBy(1 / 1.5)
+      return
+    }
+    if (e.key === '0') {
+      globe.current?.zoomTo(1)
+      return
+    }
     if (!list.length) return
     const at = list.findIndex((p) => p.key === kb)
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
@@ -116,6 +146,18 @@ export function GlobeStage({ pins, people, sel, onPick, children }: { pins: Pin[
         </div>
       )}
       {children}
+      <div className="gzoom">
+        <button type="button" aria-label={copy.zoomIn} title={copy.zoomIn} onClick={() => globe.current?.zoomBy(1.6)}>
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+            <path d="M8 3v10M3 8h10" />
+          </svg>
+        </button>
+        <button type="button" aria-label={copy.zoomOut} title={copy.zoomOut} onClick={() => globe.current?.zoomBy(1 / 1.6)}>
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+            <path d="M3 8h10" />
+          </svg>
+        </button>
+      </div>
     </div>
   )
 }

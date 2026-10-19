@@ -19,6 +19,9 @@ const LEAVE_MS = 600
 /** A pin's tap target, in CSS pixels across. */
 const HIT = 44
 const CARD = 32
+/** How far in the globe zooms. */
+const ZOOM_MIN = 1
+const ZOOM_MAX = 6
 /** Under this stage width the popover is a sheet over the foot of the globe, not beside the pin. */
 const SHEET_W = 700
 /** Room the open popover takes beside its pin. */
@@ -99,6 +102,12 @@ export class Globe {
   private sheet = false
   private cx = 0
   private cy = 0
+  /** The zoom now, and where it is heading: it eases between the two. */
+  zoom = 1
+  zoomT = 1
+  private ptrs = new Map<number, { x: number; y: number }>()
+  private pinch = { on: false, d0: 1, z0: 1 }
+  private tap = { t: 0, x: 0, y: 0 }
   private moved = false
   private first = true
   private target = { on: false, lat: 0, lon: 0 }
@@ -171,7 +180,7 @@ export class Globe {
     this.raf = requestAnimationFrame(this.tick)
   }
 
-  private radius = () => Math.min(this.w, this.h) * 0.46
+  private radius = () => Math.min(this.w, this.h) * 0.46 * this.zoom
 
   /** Brings a point to the middle of the view. */
   focus(lat: number, lon: number) {
@@ -182,6 +191,35 @@ export class Globe {
     this.wake()
   }
 
+  /** The point of the sphere under a screen point (CSS pixels from the stage's corner), or null off the globe. */
+  private under(px: number, py: number): { lat: number; lon: number } | null {
+    const R = this.radius()
+    const x = (px - this.cx) / R
+    const y = -(py - this.cy) / R
+    const rho = Math.hypot(x, y)
+    if (rho > 1) return null
+    if (rho < 1e-6) return { lat: this.lat, lon: this.lon }
+    const c = Math.asin(rho)
+    const p0 = this.lat * RAD
+    return { lat: Math.asin(Math.cos(c) * Math.sin(p0) + (y * Math.sin(c) * Math.cos(p0)) / rho) / RAD, lon: this.lon + Math.atan2(x * Math.sin(c), rho * Math.cos(p0) * Math.cos(c) - y * Math.sin(p0) * Math.sin(c)) / RAD }
+  }
+
+  /** Zooms to a level (kept within 1x to 6x), easing; zooming in with a point brings the place under it to the middle. Zoomed in, the globe does not spin; back at 1x it does after a second. */
+  zoomTo(z: number, px?: number, py?: number) {
+    const nz = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z))
+    if (px !== undefined && py !== undefined && nz > this.zoomT) {
+      const at = this.under(px, py)
+      if (at) this.focus(at.lat, at.lon)
+    }
+    this.zoomT = nz
+    if (nz <= 1.02) this.still = performance.now() - REST_MS + 1000
+    this.wake()
+  }
+
+  zoomBy(f: number, px?: number, py?: number) {
+    this.zoomTo(this.zoomT * f, px, py)
+  }
+
   /** While held the globe does not spin; letting go starts it again after about a second. */
   hold(on: boolean) {
     this.held = on
@@ -189,8 +227,21 @@ export class Globe {
     this.wake()
   }
 
-  down(e: PointerEvent) {
-    if (this.drag.on) return
+  down(e: PointerEvent, rect: DOMRect) {
+    this.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    if (this.ptrs.size === 2) {
+      // A second finger: a pinch. The drag stops, and the press is no tap.
+      const [a, b] = [...this.ptrs.values()]
+      this.drag.on = false
+      this.moved = true
+      this.pinch.on = true
+      this.pinch.d0 = Math.max(10, Math.hypot(a.x - b.x, a.y - b.y))
+      this.pinch.z0 = this.zoomT
+      const at = this.under((a.x + b.x) / 2 - rect.left, (a.y + b.y) / 2 - rect.top)
+      if (at) this.focus(at.lat, at.lon)
+      return
+    }
+    if (this.drag.on || this.pinch.on) return
     this.moved = false
     this.target.on = false
     this.drag.on = true
@@ -204,6 +255,16 @@ export class Globe {
 
   /** Returns true once the press has become a drag (far enough to not be a tap). */
   move(e: PointerEvent, rect: DOMRect): boolean {
+    const known = this.ptrs.get(e.pointerId)
+    if (known) {
+      known.x = e.clientX
+      known.y = e.clientY
+    }
+    if (this.pinch.on && this.ptrs.size >= 2) {
+      const [a, b] = [...this.ptrs.values()]
+      this.zoomTo((this.pinch.z0 * Math.hypot(a.x - b.x, a.y - b.y)) / this.pinch.d0)
+      return true
+    }
     const d = this.drag
     if (!d.on) {
       if (e.pointerType === 'mouse') this.look(e.clientX - rect.left, e.clientY - rect.top)
@@ -230,12 +291,28 @@ export class Globe {
 
   /** The press ended: a tap on a pin picks it; a drag glides on. */
   up(e: PointerEvent, rect: DOMRect) {
+    this.ptrs.delete(e.pointerId)
+    if (this.pinch.on) {
+      if (this.ptrs.size < 2) this.pinch.on = false
+      return
+    }
     const d = this.drag
     if (!d.on || d.id !== e.pointerId) return
     d.on = false
     if (!this.moved) {
-      const k = this.hit(e.clientX - rect.left, e.clientY - rect.top)
-      if (k) this.hooks.onPick(k)
+      const px = e.clientX - rect.left
+      const py = e.clientY - rect.top
+      // Two taps close together zoom in on the spot; one picks a pin.
+      if (e.timeStamp - this.tap.t < 320 && Math.hypot(px - this.tap.x, py - this.tap.y) < 30) {
+        this.tap.t = 0
+        this.zoomBy(2.2, px, py)
+      } else {
+        this.tap.t = e.timeStamp
+        this.tap.x = px
+        this.tap.y = py
+        const k = this.hit(px, py)
+        if (k) this.hooks.onPick(k)
+      }
       this.vx = this.vy = 0
     } else if (e.timeStamp - d.t > 80) this.vx = this.vy = 0
     this.still = performance.now()
@@ -283,16 +360,19 @@ export class Globe {
       f.x = -1
     }
     if (!f.el) return
+    let seen: State | null = null
     for (let i = 0; i < this.states.length; i++) {
       if (this.states[i].pin.key === f.key) {
         f.lat = this.states[i].pin.lat
         f.lon = this.states[i].pin.lon
+        if (!this.states[i].gone) seen = this.states[i]
       }
     }
     const p = f.lat * RAD
     const dl = (f.lon - this.lon) * RAD
-    const x = cx + R * Math.cos(p) * Math.sin(dl)
-    const y = cy - R * (cp * Math.sin(p) - sp * Math.cos(p) * Math.cos(dl))
+    // On the screen where its pin was drawn (spread included), else where its place is.
+    const x = seen ? seen.x : cx + R * Math.cos(p) * Math.sin(dl)
+    const y = seen ? seen.y : cy - R * (cp * Math.sin(p) - sp * Math.cos(p) * Math.cos(dl))
     if (Math.abs(x - f.x) < 0.25 && Math.abs(y - f.y) < 0.25) return
     f.x = x
     f.y = y
@@ -327,9 +407,14 @@ export class Globe {
       this.lon = wrap(this.lon + dl * k)
       if (Math.abs(dl) + Math.abs(t.lat - this.lat) < 0.1) t.on = false
       moving = true
-    } else if (!reduced && !this.held) {
+    } else if (!reduced && !this.held && this.zoomT <= 1.02) {
       const k = Math.max(0, Math.min(1, (now - this.still - REST_MS) / EASE_MS))
       if (k > 0) this.lon = wrap(this.lon + SPIN * dt * k * k * (3 - 2 * k))
+      moving = true
+    }
+    if (Math.abs(this.zoomT - this.zoom) > 0.002) {
+      this.zoom = reduced ? this.zoomT : this.zoom + (this.zoomT - this.zoom) * (1 - Math.exp(-dt / 110))
+      if (Math.abs(this.zoomT - this.zoom) <= 0.002) this.zoom = this.zoomT
       moving = true
     }
     // An open popover takes room beside its pin (or under it, as a sheet): the globe slides aside to make it.
@@ -407,7 +492,7 @@ export class Globe {
     c.stroke()
     const sp = Math.sin(this.lat * RAD)
     const cp = Math.cos(this.lat * RAD)
-    const size = Math.max(1.4, R / 150) * (this.thin === 2 ? 1.35 : 1)
+    const size = Math.max(1.4, R / this.zoom / 150) * Math.min(this.zoom, 3.5) * (this.thin === 2 ? 1.35 : 1)
     c.fillStyle = ink.dot
     // Two passes by facing: the rim fainter than the middle, so the sphere reads as round.
     for (let pass = 0; pass < 2; pass++) {
@@ -419,7 +504,10 @@ export class Globe {
         const cd = Math.cos(dl)
         const z = sp * DOTS[i + 1] + cp * DOTS[i] * cd
         if (z < lo || z >= hi) continue
-        c.fillRect(cx + R * DOTS[i] * Math.sin(dl) - size / 2, cy - R * (cp * DOTS[i + 1] - sp * DOTS[i] * cd) - size / 2, size, size)
+        const x = cx + R * DOTS[i] * Math.sin(dl) - size / 2
+        const y = cy - R * (cp * DOTS[i + 1] - sp * DOTS[i] * cd) - size / 2
+        if (x < -size || x > this.w || y < -size || y > this.h) continue
+        c.fillRect(x, y, size, size)
       }
     }
     c.globalAlpha = 1
@@ -437,8 +525,10 @@ export class Globe {
       const dl = (s.pin.lon - this.lon) * RAD
       const cd = Math.cos(dl)
       const z = sp * Math.sin(p) + cp * Math.cos(p) * cd
-      s.x = cx + R * Math.cos(p) * Math.sin(dl)
-      s.y = cy - R * (cp * Math.sin(p) - sp * Math.cos(p) * cd)
+      // Zoomed in, a crowd at one spot also spreads on the screen, each by their own place around it.
+      const open = (Math.min(80, 7 * Math.sqrt(s.pin.crowd)) * (this.zoom - 1)) / 5
+      s.x = cx + R * Math.cos(p) * Math.sin(dl) + (s.pin.crowd > 1 ? s.pin.ux * open : 0)
+      s.y = cy - R * (cp * Math.sin(p) - sp * Math.cos(p) * cd) + (s.pin.crowd > 1 ? s.pin.uy * open : 0)
       let a = z > 0.05 ? Math.min(1, z * 4) : 0
       let sc = 1
       const born = reduced ? 1 : (now - s.born) / POP_MS
@@ -453,7 +543,7 @@ export class Globe {
         animating = true
       }
       s.a = a
-      if (a <= 0.01) continue
+      if (a <= 0.01 || s.x < -CARD || s.x > this.w + CARD || s.y < -CARD || s.y > this.h + CARD) continue
       const pulse = (now - s.pulse) / PULSE_MS
       if (!reduced && pulse < 1 && !s.gone) {
         c.globalAlpha = a * 0.7 * (1 - pulse)

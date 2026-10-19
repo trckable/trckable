@@ -47,7 +47,7 @@ export default function GlobePanel({ rows, clock, online, bar, pulse, site, onVi
             </svg>
           </button>
         </div>
-        <GlobeStage pins={pins} people={online} sel={sel} onPick={at}>
+        <GlobeStage pins={pins} people={online} sel={sel} full={full.on} onPick={at}>
           {open && <GlobePopover open={open} row={here} clock={clock} site={site} onVisitor={onVisitor} onClose={close} />}
         </GlobeStage>
         <button type="button" className="gclose" aria-label={copy.exitFullscreen} title={copy.exitFullscreen} onClick={full.toggle}>

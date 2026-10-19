@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { feedOf, IDLE_MS, type Row } from '../../../features/live/model'
 import type { NowVisit } from '../../../features/live/api'
-import { agoOf, placeOf, pinsOf, spreadOf, thinning, wrap } from './geo'
+import { agoOf, placeOf, pinsOf, spreadOf, thinning, unitOf, wrap } from './geo'
 
 const at = (i: number, o: Partial<NowVisit> = {}): NowVisit => ({ kind: 'pageview', ts: 1000, last: 1000, path: `/p${i}`, visitor: `v${i}`, country: 'de', city: 'Berlin', ...o })
 const row = (i: number, o: Partial<Row> = {}): Row => ({ ...at(i), key: `v${i}`, ...o })
@@ -35,6 +35,14 @@ describe('globe pins', () => {
     expect(pinsOf(crowd.slice(5, 12)).find((p) => p.key === 'v7')).toMatchObject({ key: 'v7' })
     expect(spreadOf('v7', 10)).toEqual(spreadOf('v7', 10))
     expect(spreadOf('v7', 1)).toEqual([0, 0])
+  })
+  it('gives each pin its place in a unit disc and the size of its crowd, for the spread a zoom opens', () => {
+    const pins = pinsOf(Array.from({ length: 12 }, (_, i) => row(i)))
+    for (const p of pins) {
+      expect(Math.hypot(p.ux, p.uy)).toBeLessThanOrEqual(1)
+      expect(p.crowd).toBe(12)
+    }
+    expect(unitOf('v7')).toEqual(unitOf('v7'))
   })
   it('shows the newest page and a new action changes the pin signature', () => {
     const a = pinsOf([row(1, { last: 1000, path: '/old' })])
