@@ -170,26 +170,25 @@ test('a visit that arrives later is marked as arriving, then settles; the first 
   await expect(row).not.toHaveClass(/arriving/, { timeout: 6_000 })
 })
 
-test('the chart switch keeps bars or line across a reload and both draw the same minutes', async ({ page }) => {
+test('Live starts as a line, the chart switch keeps bars across a reload and both draw the same minutes', async ({ page }) => {
   await signIn(page, '/example.com?view=live')
   await expect(online(page)).toBeVisible({ timeout: 15_000 })
   const style = page.getByRole('group', { name: 'Chart style' })
-  await expect(style.getByRole('button', { name: 'Bars' })).toHaveAttribute('aria-pressed', 'true')
-  await style.getByRole('button', { name: 'Line' }).click()
-  await page.reload()
-  await expect(online(page)).toBeVisible({ timeout: 15_000 })
   await expect(style.getByRole('button', { name: 'Line' })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.locator('.lchart')).toHaveAttribute('data-mode', 'line')
   const read = (sel: string) =>
     page.locator(sel).evaluate((el) => ({ label: el.getAttribute('aria-label'), titles: [...el.querySelectorAll('i[title]')].map((i) => i.getAttribute('title')) }))
-  const bars = await read('.lnow .mins')
   const line = await read('.lnow .mline')
-  expect(line.label).toBe(bars.label)
-  expect(line.titles.length).toBe(30)
-  expect(line.titles).toEqual(bars.titles)
   await expect(page.locator('.lnow .mline-dot')).toBeVisible()
   await style.getByRole('button', { name: 'Bars' }).click()
   await expect(page.locator('.lchart')).toHaveAttribute('data-mode', 'bars')
+  await page.reload()
+  await expect(online(page)).toBeVisible({ timeout: 15_000 })
+  await expect(style.getByRole('button', { name: 'Bars' })).toHaveAttribute('aria-pressed', 'true')
+  const bars = await read('.lnow .mins')
+  expect(line.label).toBe(bars.label)
+  expect(line.titles.length).toBe(30)
+  expect(line.titles).toEqual(bars.titles)
 })
 
 test('the sample revenue card on Live is never clipped: Connect sits fully inside the card', async ({ page }) => {
