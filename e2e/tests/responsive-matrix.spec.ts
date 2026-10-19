@@ -113,6 +113,8 @@ async function audit(page: Page, chart: { min: number; max: number } | null): Pr
       const s = getComputedStyle(el)
       if (s.display === 'inline' || s.whiteSpace === 'nowrap' || s.whiteSpace === 'pre' || el.closest('svg,button,a,select,input,textarea,code,pre,kbd,[role=tab]')) continue
       if (el.getBoundingClientRect().width === 0) continue
+      // One long unbroken string (an address, an id) is cut off by its box whatever the width.
+      if (!/\s/.test(own) && own.length > 14) continue
       // A name cut off with an ellipsis by the box around it is cut on purpose.
       let cut = false
       for (let p: Element | null = el, k = 0; p && k < 4; p = p.parentElement, k++) if (getComputedStyle(p).textOverflow === 'ellipsis') cut = true
@@ -183,8 +185,11 @@ const at = (url: () => string, ready: string): Go => async (page) => {
 const explore = (n: number): Go => async (page) => {
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
   await expect(page.locator('.brief')).toBeVisible()
-  await page.keyboard.press('e')
-  await expect(page.locator('#xp.on .xtb')).toBeVisible()
+  // The key can land before the page listens for it: press again until the panel is open.
+  await expect(async () => {
+    if (!(await page.locator('#xp.on .xtb').isVisible())) await page.keyboard.press('e')
+    await expect(page.locator('#xp.on .xtb')).toBeVisible({ timeout: 1500 })
+  }).toPass({ timeout: 15_000 })
   await page.keyboard.press('f')
   const items = page.locator('#xp.full .xrail .xri')
   if ((await items.count()) > n) await items.nth(n).click()

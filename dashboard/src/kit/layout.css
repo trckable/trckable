@@ -172,3 +172,11 @@
     gap: var(--mk-s2);
   }
 }
+
+/* The header's row on a small phone: the site, the setup pill, the bell and the account need the room the gaps take, or the account
+   button is pushed past the screen's edge. */
+@media (--narrow) {
+  .mk .hd {
+    gap: var(--mk-s2);
+  }
+}

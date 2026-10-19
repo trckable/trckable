@@ -12,6 +12,9 @@ export const BP = { xs: 0, sm: 600, md: 840, lg: 1040, xl: 1440 } as const
 export type Step = keyof typeof BP
 export const STEPS = Object.keys(BP) as Step[]
 
+/** A small phone's width (a 360 px screen is under it, a 390 px one is not): inside `xs`, for the few rows that do not fit it. */
+export const NARROW = 375
+
 // A query's upper end sits a hair under the next step's start, so a fractional width (a zoomed page) belongs to exactly one step.
 const under = (px: number) => `(max-width: ${px - 0.02}px)`
 const from = (px: number) => `(min-width: ${px}px)`
@@ -23,6 +26,7 @@ export const QUERY = {
   md: `${from(BP.md)} and ${under(BP.lg)}`,
   lg: `${from(BP.lg)} and ${under(BP.xl)}`,
   xl: from(BP.xl),
+  narrow: under(NARROW),
   'sm-up': from(BP.sm),
   'md-up': from(BP.md),
   'lg-up': from(BP.lg),
