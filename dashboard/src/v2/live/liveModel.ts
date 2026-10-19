@@ -67,6 +67,9 @@ export function deviceSplit(rows: Row[]): { phone: number; computer: number } | 
   return { phone, computer: 1 - phone }
 }
 
+/** The pages and countries the Analytics card lists. */
+export type Lists = { pages: { label: string; n: number }[]; countries: { label: string; key: string; n: number }[] }
+
 export function listsOf(rows: Row[]) {
   return {
     pages: topFive(rows.map((r) => r.path)).map(([label, n]) => ({ label, n })),

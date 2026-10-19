@@ -17,10 +17,6 @@ interface Props {
   action?: { label: string; setup: LiveSetup }
   /** Switched on, only waiting for visits: the ghost shimmers, no button. */
   collecting?: boolean
-  /** True while the figure is still being read: nothing is said yet. */
-  waiting: boolean
-  /** The height (px) kept while it is read, so what lands does not move what is beside it. */
-  reserve?: number
 }
 
 const DAYS = 30
@@ -51,8 +47,7 @@ function GhostPiece({ kind }: { kind: Ghost }) {
   )
 }
 
-export function EmptyBlock({ site, line, ghost, action, collecting, waiting, reserve = 0 }: Props) {
-  if (waiting) return <div className="lhempty" aria-busy="true" style={{ minHeight: reserve }} />
+export function EmptyBlock({ site, line, ghost, action, collecting }: Props) {
   return (
     <div className={`lhempty${collecting ? ' collecting' : ''}`}>
       <div className="lhghost" aria-hidden="true">

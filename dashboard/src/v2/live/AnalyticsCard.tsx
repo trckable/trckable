@@ -3,14 +3,16 @@
 import { useState } from 'react'
 import { countryName, fmtInt, flag } from '../../lib/format'
 import { copy } from './copy'
-import { todayBand, type listsOf } from './liveModel'
+import { CardSkeleton } from './CardSkeleton'
+import { todayBand, type Lists } from './liveModel'
 import type { LiveNow } from '../../features/live/api'
 
 type Mode = 'pages' | 'countries'
 
 interface Props {
   today: LiveNow['today']
-  lists: ReturnType<typeof listsOf>
+  /** undefined while the day's own lists are read. */
+  lists?: Lists
 }
 
 interface Bar {
@@ -21,10 +23,15 @@ interface Bar {
   flag?: string
 }
 
+function barsOf(lists: Lists, mode: Mode): Bar[] {
+  if (mode === 'pages') return lists.pages.map((p) => ({ key: p.label, label: p.label, n: p.n, mono: true }))
+  return lists.countries.map((c) => ({ key: c.key, label: c.label || countryName(c.key), n: c.n, mono: false, flag: flag(c.key) }))
+}
+
 export function AnalyticsCard({ today, lists }: Props) {
   const [mode, setMode] = useState<Mode>('pages')
   const tb = today ? todayBand(today.visitors, today.before, today.compare) : null
-  const rows: Bar[] = mode === 'pages' ? lists.pages.map((p) => ({ key: p.label, label: p.label, n: p.n, mono: true })) : lists.countries.map((c) => ({ key: c.key, label: c.label || countryName(c.key), n: c.n, mono: false, flag: flag(c.key) }))
+  const rows = lists ? barsOf(lists, mode) : []
   const max = Math.max(1, ...rows.map((r) => r.n))
   return (
     <section className="mk-card lcard lan">
@@ -46,6 +53,7 @@ export function AnalyticsCard({ today, lists }: Props) {
             {tb && <span className="mk-tag new lhword">{tb.word === 'usual' ? copy.usualWord : copy[tb.word]}</span>}
           </div>
         )}
+        {!lists && <CardSkeleton kind="rows" />}
         <div className="lbars">
           {rows.map((r, i) => (
             <div className={`lbar${i === 0 ? ' top' : ''}`} key={r.key}>
