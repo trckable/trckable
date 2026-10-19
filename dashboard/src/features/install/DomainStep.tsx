@@ -48,7 +48,7 @@ function Status({ verdict, clean, shown, refusal }: { verdict: Verdict; clean: s
   )
 }
 
-export function DomainStep(p: { domain: string; setDomain: (d: string) => void; clean: string; verdict: Verdict; refusal: string; locked: boolean; onSubmit: () => void }) {
+export function DomainStep(p: { domain: string; setDomain: (d: string) => void; clean: string; verdict: Verdict; refusal: string; note?: string; locked: boolean; onSubmit: () => void }) {
   const [left, setLeft] = useState(false)
   const [tried, setTried] = useState(false)
   const shown = left || tried
@@ -90,6 +90,7 @@ export function DomainStep(p: { domain: string; setDomain: (d: string) => void; 
       {!p.locked && (
         <div aria-live="polite">
           <Status verdict={p.verdict} clean={p.clean} shown={shown} refusal={p.refusal} />
+          {p.note && <span className="wiz-status faint">{p.note}</span>}
         </div>
       )}
     </form>

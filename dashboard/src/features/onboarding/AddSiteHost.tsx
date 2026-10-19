@@ -4,13 +4,16 @@
 // Both load on demand.
 import { lazy, Suspense, useState } from 'react'
 import type { Site } from '../../lib/api'
-import { closeAddSite } from '../../lib/account'
+import { addSitePrefill, closeAddSite } from '../../lib/account'
 
 const AddWizard = lazy(() => import('../install/AddWizard').then((m) => ({ default: m.AddWizard })))
 const Onboarding = lazy(() => import('./Onboarding'))
 
 export function AddSiteHost({ open, required = false, onPassed, sites, onSites }: { open: boolean; required?: boolean; onPassed?: () => void; sites: Site[]; onSites: () => Promise<unknown> }) {
   const [firstRun, setFirstRun] = useState<boolean | null>(null)
+  const [prefill, setPrefill] = useState(addSitePrefill)
+  if (open && prefill === null && addSitePrefill() !== null) setPrefill(addSitePrefill())
+  if (!open && prefill !== null) setPrefill(null)
   if (open && firstRun === null) setFirstRun(required || sites.length === 0)
   if (!open && firstRun !== null) setFirstRun(null)
   if (!open) return null
@@ -18,13 +21,14 @@ export function AddSiteHost({ open, required = false, onPassed, sites, onSites }
     <Suspense fallback={null}>
       {firstRun ? <Onboarding
           required={required}
+          prefill={prefill}
           resume={required ? sites : undefined}
           onClose={() => {
             closeAddSite()
             if (required) onPassed?.()
           }}
           onSites={onSites}
-        /> : <AddWizard onClose={closeAddSite} onSites={onSites} sites={sites} />}
+        /> : <AddWizard prefill={prefill} onClose={closeAddSite} onSites={onSites} sites={sites} />}
     </Suspense>
   )
 }

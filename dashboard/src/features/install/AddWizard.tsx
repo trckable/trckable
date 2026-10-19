@@ -2,7 +2,7 @@
 // the same component a new site's dashboard shows, and it listens to the live
 // stream, so the first visit turns it live here too.
 import { ArrowRight, Banknote, Globe } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { DialogActions } from '../../components/DialogActions'
 import { DialogHead } from '../../components/DialogHead'
 import { Name } from '../../components/Logo'
@@ -11,6 +11,7 @@ import { StepBody } from '../../components/StepBody'
 import { Steps } from '../../components/Steps'
 import { type Site, type SiteKind, more } from '../../lib/apiMore'
 import { formWords } from '../../lib/formWords'
+import type { SitePrefill } from '../../lib/addSiteLink'
 import { openSettings } from '../../lib/settings'
 import { navigate } from '../../lib/url'
 import { useLive } from '../../lib/useLive'
@@ -45,9 +46,14 @@ function Title({ step, site, live }: { step: number; site: Site | null; live: bo
   return <>{t.title[step - 1]}</>
 }
 
-export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => void; onSites: () => void; sites?: Site[] }) {
+export function AddWizard({ onClose, onSites, sites = [], prefill = null }: { onClose: () => void; onSites: () => void; sites?: Site[]; prefill?: SitePrefill | null }) {
   const [step, setStep] = useState(1)
-  const [domain, setDomain] = useState('')
+  const [domain, setDomain] = useState(prefill?.domain ?? '')
+  const next = useRef<HTMLButtonElement>(null)
+  // A domain that came with the link is already there: the one thing left is Continue.
+  useEffect(() => {
+    if (prefill) next.current?.focus()
+  }, [prefill])
   const [site, setSite] = useState<Site | null>(null)
   const [busy, setBusy] = useState(false)
   const [refusal, setRefusal] = useState('')
@@ -138,7 +144,7 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
       <Steps compact labels={t.steps} at={step - 1} done={live && step === 3 ? 2 : undefined} onGo={(i) => setStep(i + 1)} />
 
       <StepBody step={step} className="wiz-step" fit>
-        {step === 1 && <DomainStep domain={site ? site.domain : domain} setDomain={(d) => { setDomain(d); setRefusal('') }} refusal={refusal} clean={clean} verdict={verdict} locked={site !== null} onSubmit={create} />}
+        {step === 1 && <DomainStep domain={site ? site.domain : domain} setDomain={(d) => { setDomain(d); setRefusal('') }} refusal={refusal} note={prefill?.taken && clean === prefill.domain ? t.taken : ''} clean={clean} verdict={verdict} locked={site !== null} onSubmit={create} />}
         {step === 2 && <KindStep reading={reading} guess={guess} value={kind} onPick={setKind} />}
         {step === 3 && site && <Install site={site} visits={stream.visits} variant="wizard" check={check} />}
         {step === 4 && <p className="muted wiz-revenue">{t.revenueBody}</p>}
@@ -152,7 +158,7 @@ export function AddWizard({ onClose, onSites, sites = [] }: { onClose: () => voi
             </button>
           }
         >
-          <button type="submit" form="wiz-domain" className="btn primary big" disabled={busy || !valid} title={reason || undefined} aria-describedby={reason ? 'wiz-status' : undefined}>
+          <button ref={next} type="submit" form="wiz-domain" className="btn primary big" disabled={busy || !valid} title={reason || undefined} aria-describedby={reason ? 'wiz-status' : undefined}>
             {busy && <span className="btn-spin" aria-hidden="true" />}
             {busy ? t.adding : t.add}
           </button>

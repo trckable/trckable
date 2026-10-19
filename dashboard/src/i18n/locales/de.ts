@@ -1456,6 +1456,7 @@ export default {
   'install.wizard.invalid': 'Das sieht nicht nach einer Domain aus. Nimm eine wie example.com.',
   'install.wizard.placeholderDomain': (d: string) => `${d} ist ein Platzhalter. Gib die Adresse deiner eigenen Website ein.`,
   'install.wizard.added': (d: string) => `Du hast ${d} schon.`,
+  'install.wizard.taken': 'Diese Domain ist schon einem anderen Konto hinzugefügt. Bitte den Inhaber, dich einzuladen, oder nimm eine andere Domain.',
   'payments.key.refused': (n: string) => `${n} hat den Schlüssel nicht akzeptiert. Füge den eingeschränkten Schlüssel noch einmal ein, von der unten verlinkten Seite.`,
   'payments.key.notConnected': (n: string) => `${n} nicht verbunden`,
   'payments.picker.search': 'Anbieter suchen, oder Apple Pay',

@@ -1453,6 +1453,7 @@ export default {
   'install.wizard.invalid': 'Dat lijkt niet op een domein. Gebruik er een zoals example.com.',
   'install.wizard.placeholderDomain': (d: string) => `${d} is een voorbeeld. Vul het adres van je eigen site in.`,
   'install.wizard.added': (d: string) => `Je hebt ${d} al.`,
+  'install.wizard.taken': 'Dit domein is al toegevoegd aan een ander account. Vraag de eigenaar je uit te nodigen, of gebruik een ander domein.',
   'payments.key.refused': (n: string) => `${n} accepteerde die sleutel niet. Plak de beperkte sleutel opnieuw, van de pagina hieronder.`,
   'payments.key.notConnected': (n: string) => `${n} niet verbonden`,
   'payments.picker.search': 'Zoek een aanbieder, of Apple Pay',

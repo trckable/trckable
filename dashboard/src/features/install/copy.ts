@@ -113,6 +113,7 @@ export const wizard = defineCopy('install.wizard', {
   invalid: 'That doesn’t look like a domain. Use one like example.com.',
   placeholderDomain: (domain: string) => `${domain} is a placeholder. Enter your own site’s address.`,
   added: (domain: string) => `You already have ${domain}.`,
+  taken: 'This domain is already added to another account. Ask its owner to invite you, or use a different domain.',
   failed: 'Couldn’t add the site. Try again in a moment.',
   needs: {
     empty: 'Enter a domain like example.com to continue.',

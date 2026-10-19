@@ -26,13 +26,14 @@ import '../../kit/layout.css'
 import '../../mock/theme.css'
 import './onboarding.css'
 import '../../kit/Modal.css'
+import type { SitePrefill } from '../../lib/addSiteLink'
 import { browserZone } from '../../lib/format'
 
 /** required: nothing else may be reached until the first visit or "Skip for
  *  now" (Esc does nothing); resume: sites already added that have not had one. */
-export default function Onboarding({ onClose, onSites, required = false, resume }: { onClose: () => void; onSites: () => Promise<unknown>; required?: boolean; resume?: Site[] }) {
+export default function Onboarding({ onClose, onSites, required = false, resume, prefill = null }: { onClose: () => void; onSites: () => Promise<unknown>; required?: boolean; resume?: Site[]; prefill?: SitePrefill | null }) {
   const [step, setStep] = useState<Step>(resume?.length ? 'install' : 'site')
-  const [domain, setDomain] = useState('')
+  const [domain, setDomain] = useState(prefill?.domain ?? '')
   const [sites, setSites] = useState<Site[]>(resume ?? [])
   const [active, setActive] = useState(resume?.[0]?.id ?? '')
   const [seen, setSeen] = useState<Record<string, Visit[] | undefined>>({})
@@ -140,7 +141,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume 
               <p className="muted">{subs[step]}</p>
             </>
           )}
-          {step === 'site' && <SiteStep domain={domain} onDomain={setDomain} busy={busy} ready={!!clean} onSubmit={create} />}
+          {step === 'site' && <SiteStep taken={!!prefill?.taken && clean === prefill.domain} focusGo={!!prefill} domain={domain} onDomain={setDomain} busy={busy} ready={!!clean} onSubmit={create} />}
           {step === 'here' && site && <FirstCards site={site} quiet />}
           {step === 'here' && (
             <div className="ob-actions">

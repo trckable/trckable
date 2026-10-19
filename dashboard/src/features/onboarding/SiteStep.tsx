@@ -1,6 +1,7 @@
+import { wizard } from '../install/copy'
 import { copy } from './copy'
 
-export function SiteStep(p: { domain: string; onDomain: (d: string) => void; busy: boolean; ready: boolean; onSubmit: () => void }) {
+export function SiteStep(p: { taken?: boolean; focusGo?: boolean; domain: string; onDomain: (d: string) => void; busy: boolean; ready: boolean; onSubmit: () => void }) {
   return (
     <form
       className="ob-form"
@@ -18,15 +19,16 @@ export function SiteStep(p: { domain: string; onDomain: (d: string) => void; bus
         value={p.domain}
         onChange={(e) => p.onDomain(e.target.value)}
         placeholder={copy.site.placeholder}
-        autoFocus
+        autoFocus={!p.focusGo}
         required
         spellCheck={false}
         autoCapitalize="none"
         autoComplete="url"
         inputMode="url"
       />
+      {p.taken && <p className="faint">{wizard.taken}</p>}
       <div className="ob-actions">
-        <button type="submit" className="btn primary big" disabled={!p.ready || p.busy}>
+        <button type="submit" className="btn primary big" autoFocus={p.focusGo} disabled={!p.ready || p.busy}>
           {p.busy && <span className="btn-spin" aria-hidden="true" />}
           {p.busy ? copy.site.busy : copy.site.go}
         </button>
