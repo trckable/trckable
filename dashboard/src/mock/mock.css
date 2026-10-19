@@ -82,7 +82,7 @@
 .mk .mk-toast .ic{width:34px;height:34px;border-radius:10px;background:var(--mk-limeD);color:var(--mk-lime);display:grid;place-items:center;font-weight:800}
 .mk .mk-toast b{display:block}
 .mk .mk-toast span{color:var(--mk-muted);font-size:13px}
-@media (--compact){
+@container (--pane-max-700){
 .mk .hd .data, .mk .hd .ib.bell{display:none}
 .mk .strip{grid-template-columns:1fr 1fr}
 .mk .st:nth-child(2){border-right:0}
@@ -139,7 +139,7 @@
 .mk .downbox{margin:14px 20px 0;padding:12px 16px;border-radius:12px;background:var(--mk-redD);color:var(--mk-red);font-weight:600;font-size:13px}
 .mk .mk-toast.r{border-color:var(--mk-redM)}
 .mk .mk-toast.r .ic{background:var(--mk-redD);color:var(--mk-red)}
-@media (--compact){
+@container (--pane-max-700){
 .mk .hd .mk-chip{max-width:190px}
 .mk #views{order:9;width:100%}
 .mk #views button{flex:1;justify-content:center;padding:0 6px}
@@ -318,7 +318,7 @@
 .mk .lr{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--mk-line);font-size:13px;gap:10px}
 .mk .lr:first-child{border-top:0}
 .mk .lr span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media (--compact){
+@container (--pane-max-700){
 .mk .liveview{grid-template-columns:1fr}
 .mk .lcards{grid-template-columns:1fr;order:-1;margin:0 0 16px}
 .mk .lbottom.money{grid-template-columns:1fr}
@@ -468,7 +468,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .mk-toast{left:var(--mk-s4);right:var(--mk-s4);bottom:76px}
 .mk .hd .mk-chip{max-width:none}
 }
-@media (--compact){
+@container (--pane-max-700){
 .mk .hd{gap:var(--mk-s2)}
 .mk .hd .mk-chip{max-width:none;flex:0 1 auto;min-width:0}
 
@@ -520,11 +520,11 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .xp{padding-bottom:env(safe-area-inset-bottom)}
 .mk .mk-toast{bottom:calc(76px + env(safe-area-inset-bottom))}
 }
-@media (--compact){
+@container (--pane-max-700){
 .mk #chart, .mk .hero .chart, .mk .chart{height:210px}
 }
 .mk .tabbar{display:none}
-@media (--xs){
+@container (--pane-max-600){
 .mk .hd .exb, .mk #views{display:none!important}
 .mk .hd{gap:var(--mk-s3)}
 .mk .hd .mk-chip{flex:1 1 auto;max-width:none}
@@ -613,7 +613,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .lkc.mini .lkc-o{flex-direction:row;flex-wrap:wrap;gap:var(--mk-s2);padding:var(--mk-s2)}
 .mk .lkc.mini .lkc-o .lt2,.mk .lkc.mini .lkc-o svg{display:none}
 .mk .lkc.mini .lkc-o .lt1{font-size:13px}
-@media (--xs){.mk .lkc{min-height:176px}.mk .lkc .lkgo,.mk .lkc-o .how{min-height:44px;height:44px}.mk .lkc.mini{min-height:96px}}
+@container (--pane-max-600){.mk .lkc{min-height:176px}.mk .lkc .lkgo,.mk .lkc-o .how{min-height:44px;height:44px}.mk .lkc.mini{min-height:96px}}
 .mk.phone .lkcs{grid-template-columns:1fr}
 .mk.phone .lkc{min-height:176px}
 .mk.phone .lkc .lkgo,.mk.phone .lkc-o .how{height:44px}
@@ -629,7 +629,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .lk3{color:var(--mk-muted)}
 .mk .lk3:hover{color:var(--mk-text)}
 
-@media (--xs){
+@container (--pane-max-600){
 
 .mk .mailrow{flex-wrap:wrap}
 .mk .mailrow .gh{height:44px}
@@ -642,7 +642,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .lv .mk-rp{color:var(--mk-faint);font-size:12px;flex:none;width:64px;text-align:right}
 .mk .lv:hover .mk-rp{color:var(--mk-lime)}
 .mk .lv .mk-rp em{font-style:normal}
-@media (--xs){
+@container (--pane-max-600){
 .mk .lv .mk-rp em{display:none}
 .mk .lv .mk-rp{width:24px}
 }
@@ -686,7 +686,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .plm{display:flex;justify-content:space-between;font-size:12px;color:var(--mk-muted)}
 .mk .pln{margin:0;font-size:13px;color:var(--mk-muted)}
 .mk .pla{display:flex;gap:var(--mk-s2);align-items:center;margin-top:var(--mk-s2)}
-@media (--md-down){
+@container (--pane-max-900){
 .mk .hd>div:has(#siteBtn) .mk-chip{max-width:150px}
 .mk .hd .pill{max-width:170px}
 .mk .hd .pill #perTxt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
@@ -771,7 +771,7 @@ html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-
 .mk .kcs.xk{margin:var(--mk-s3) 0}
 .mk .kcs.xk{grid-template-columns:repeat(2,minmax(0,1fr))}
 .mk .xp.full .kcs.xk{grid-template-columns:repeat(4,minmax(0,1fr))}
-@media (--xs){
+@container (--pane-max-600){
 .mk .kcs{grid-template-columns:1fr 1fr;gap:var(--mk-s3)}
 .mk .kc{padding:var(--mk-s3) var(--mk-s3) 0;border-radius:16px}
 .mk .kc .kt{flex-wrap:wrap;row-gap:2px}
@@ -836,7 +836,7 @@ html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-
 .mk .mk-day.today:not(.mk-edge)::after{content:"";position:absolute;left:50%;bottom:4px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--mk-lime)}
 .mk .mk-day:disabled{color:var(--mk-faint);opacity:.45;cursor:default}
 .mk .mk-day.out{pointer-events:none}
-@media (--xs){
+@container (--pane-max-600){
 .mk .mk-cm{grid-template-columns:1fr}
 .mk .mk-cm .month:nth-child(2){display:none}
 .mk .mk-cm .month:first-child .next{visibility:visible}
@@ -869,25 +869,25 @@ html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-
 .mk .cdf{flex-direction:column}
 .mk .cdf .xb{width:100%;height:44px;justify-content:center}
 }
-@media (--xs){
+@container (--pane-max-600){
 .mk .fact .m{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
 
 }
-@media (--md-down){
+@container (--pane-max-900){
 .mk .hd .exb .t2, .mk .hd .exb .mk-kbd, .mk .hd .pill .vs{display:none}
 }
-@media (--xs){
+@container (--pane-max-600){
 .mk .fact small{margin-left:0!important}
 }
 .mk .mk-menu .mi .mt2{display:block;min-width:0}
-@media (--xs){
+@container (--pane-max-600){
 .mk .hd .mk-chip, .mk .hd .ib, .mk .hd .ringb{height:44px}
 .mk .tline, .mk .contrib button, .mk .ft a{position:relative}
 .mk .tline::after, .mk .contrib button::after, .mk .ft a::after{content:"";position:absolute;inset:-12px -6px}
 
 }
 body:has(.mk-menu.on) .tabbar{visibility:hidden}
-@media (--xs){
+@container (--pane-max-600){
 .mk .mk-menu.on{z-index:96;box-shadow:0 0 0 100vmax var(--mk-scrim2)}
 .mk .mk-menu{padding-bottom:calc(var(--mk-s4) + env(safe-area-inset-bottom))}
 .mk .pmenu .mi{min-height:48px}
@@ -895,7 +895,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 @media (--xs){
 .mk .mk-menu.on{z-index:96;box-shadow:0 0 0 100vmax var(--mk-scrim2)}
 }
-@media (--sm-up){
+@container (--pane-min-601){
 .mk .hd{margin-bottom:var(--mk-s4)}
 
 }
@@ -914,11 +914,11 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .hd .pill{height:var(--mk-h)}
 .mk .lv .src{min-width:0;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mk .xs{margin-top:var(--mk-s3)}
-@media (--md-down){
+@container (--pane-max-1100){
 .mk .hd .pill .vs{display:none}
 .mk .icard.wide{display:block!important}
 }
-@media (--xs){
+@container (--pane-max-600){
 .mk .hd .pwrap{position:static}
 .mk .hd .pwrap .pill{display:none}
 }
@@ -946,7 +946,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .ldots i{flex:1;height:8px;border-radius:4px;background:var(--mk-fill)}
 .mk .ldots i.on{background:var(--mk-lime)}
 .mk .sidecol .dots{max-height:112px;overflow:hidden}
-@media (--md-up){
+@container (--pane-min-761){
 .mk .htop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--mk-s6);align-items:center}
 .mk .htop .pulsewrap, .mk .htop .sidecol{margin-top:0}
 .mk .pulsewrap{gap:var(--mk-s5);flex-wrap:nowrap}
@@ -958,7 +958,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .hero .mk-hl{margin-top:var(--mk-s3)}
 .mk .hl-col .hsub{max-width:34em}
 }
-@media (--sm-up){
+@container (--pane-min-601){
 .mk .chwrap{position:relative;margin-top:var(--mk-s2)}
 .mk .chwrap .ch-top{justify-content:space-between;align-items:center;gap:var(--mk-s3);margin:0 0 var(--mk-s1);min-height:28px;padding-left:44px}
 .mk .chwrap #chCall{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;font-weight:500;color:var(--mk-muted)}
@@ -995,7 +995,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 @keyframes mk-shim{to{background-position:-220% 0}}
 .mk .icard.sk .ic-h h3 .skl{height:16px}
 .mk .icard.sk .ic-w .skl{height:12px}
-@media (--md-up){
+@container (--pane-min-761){
 .mk .icard.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-rows:auto auto 1fr auto;column-gap:var(--mk-s6);row-gap:var(--mk-s3);align-items:start}
 .mk .icard.wide .ic-h{grid-column:1;grid-row:1}
 .mk .icard.wide .ic-w{grid-column:1;grid-row:2;border-top:0;padding-top:0;margin:0}
@@ -1062,7 +1062,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .shp .sv{flex:1;min-width:0}
 .mk .shp svg{display:block;width:100%;height:130px}
 .mk .shp .xl{display:flex;justify-content:space-between;font-size:12px;color:var(--mk-faint);padding-top:4px}
-@media (--xs){
+@container (--pane-max-600){
 .mk .hd{gap:var(--mk-s3)}
 .mk .hd>div:has(#siteBtn){flex:1 1 auto;min-width:0}
 .mk .hd .mk-chip{max-width:100%}
@@ -1154,7 +1154,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .rpb svg{width:11px;height:11px}
 .mk .rpl{display:inline-block;text-align:center}
 .mk .rpl::after{content:attr(data-ghost);display:block;height:0;overflow:hidden;visibility:hidden}
-@media (--xs){
+@container (--pane-max-600){
 .mk .hd .ib.bell{display:inline-grid!important}
 .mk .hd .bellw{display:block;margin-left:auto}
 .mk .hd .bellw .bdot{top:2px;right:2px;min-width:9px;width:9px;height:9px;padding:0;font-size:0;border:2px solid var(--mk-bg);box-sizing:content-box}
@@ -1317,7 +1317,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 }
 /* Round 11: the phone hero and the chart header, as the walkthrough has them. */
 .mk .whyb{display:none}
-@media (--xs){
+@container (--pane-max-600){
  .mk .hl-col{display:flex;flex-wrap:wrap;align-items:center;gap:var(--mk-s2)}
  .mk .hl-col>*{flex:0 0 100%;min-width:0}
  .mk .hl-col>.tline{flex:0 0 auto;white-space:nowrap;margin:0}
@@ -1351,7 +1351,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 
 /* Round 12: the phone Briefing on one full-width grid, as the walkthrough has it. */
 .mk .sincem{display:none}
-@media (--xs){
+@container (--pane-max-600){
  .mk .hd .bellw{order:1;margin-left:auto!important}
  .mk .hd .account-menu{order:2;margin-left:0!important}
  .mk .hd .account-btn{margin-left:0}
@@ -1395,15 +1395,15 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .hd .account-menu .more-menu{right:0;left:auto;top:calc(100% + var(--mk-s2));width:280px;min-width:0;max-width:calc(100vw - 16px);background:var(--mk-card2);border:1px solid var(--mk-line);border-radius:12px;box-shadow:0 20px 50px var(--mk-shc);z-index:var(--z-menu)}
 /* "Why?" beside "Replay": two buttons in a line, aligned at the top so the line is as tall as the walkthrough's one. */
 .mk .hl-col .rpb{vertical-align:top}
-@media (--sm-up){.mk .hl-col .rpb+.rpb{margin-left:var(--mk-s2)}}
+@container (--pane-min-601){.mk .hl-col .rpb+.rpb{margin-left:var(--mk-s2)}}
 /* A period being read: the page of the last one stays, dimmed, until the new one is whole. */
 .mk-hold{display:contents}
 .mk-held{opacity:.55;transition:opacity .2s;pointer-events:none}
-@media (--sm-up){.mk .hd .account-menu .account-btn{width:32px;height:32px}}
+@container (--pane-min-601){.mk .hd .account-menu .account-btn{width:32px;height:32px}}
 /* "Why?" is kept on every width, beside Replay: the walkthrough hides it on a desktop. */
 .mk .whyb.rpb{display:inline-flex}
 /* A phone's ghost is a 44 px target as the rest are, in the room of the walkthrough's 34 px. */
-@media (--xs){.mk .hd .logo{box-sizing:content-box;padding:6px;margin:-6px}}
+@container (--pane-max-600){.mk .hd .logo{box-sizing:content-box;padding:6px;margin:-6px}}
 .mk .mfd{margin-left:102px;font-size:12px;color:var(--mk-red);background:var(--mk-redD);border-radius:8px;padding:2px 9px;align-self:flex-start}
 .mk .mk-ring circle:last-of-type{transition:stroke-dasharray .45s ease,stroke .3s}
 @media (prefers-reduced-motion:reduce){.mk .mk-ring circle:last-of-type{transition:none}}
@@ -1497,12 +1497,24 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .mfoot.sfoot{flex-direction:row;align-items:center;gap:var(--mk-s1);padding:var(--mk-s2) 0 0}
 .mk .mfoot.sfoot .mi{width:auto;font-size:14px;min-height:var(--mk-h)}
 /* 600 to 839 px (the sm step): no phone bar, but too narrow for one row: the header wraps, the views take a row of their own below, and the bell stays. */
-@media (--hold){
+@container (--pane-min-601) and (--pane-max-700){
 .mk .hd{flex-wrap:wrap;height:auto;min-height:0;position:static;margin:0;padding:0;box-sizing:border-box;row-gap:var(--mk-s2)}
 .mk #views{order:9;flex:0 0 100%;width:100%}
 .mk .mk-seg{height:var(--mk-h);padding:2px}
 .mk .mk-seg button{height:calc(var(--mk-h) - 6px);font-size:13px}
 .mk .hd .bellw .ib.bell{display:grid}
+}
+/* Where the page is narrow (its own width, which is the screen's less its padding) but the screen is 601 px or more: the bar at the bottom names Live, the Briefing and Explore, as on a phone. */
+@media (--hold){
+@container (--pane-max-600){
+.mk .tabbar{display:flex}
+.mk{padding-bottom:calc(168px + env(safe-area-inset-bottom))}
+.mk .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:55;padding:var(--mk-s2) var(--mk-s2) calc(var(--mk-s2) + env(safe-area-inset-bottom));background:var(--mk-bar);border-top:1px solid var(--mk-line);gap:var(--mk-s1)}
+.mk .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:48px;border-radius:12px;color:var(--mk-muted);font-size:12px;font-weight:600;transition:transform .12s,background .15s,color .15s}
+.mk .tabbar button svg{width:22px;height:22px}
+.mk .tabbar button.on{color:var(--mk-lime)}
+.mk .tabbar button:active,.mk .icard:active,.mk .deep:active,.mk .mk-chip:active,.mk .pill:active,.mk .mi:active,.mk .pi:active,.mk .xrw:active{transform:scale(.97);background:var(--mk-hov2)}
+}
 }
 /* The site list, the period and the bell are the same frosted pane as the account menu (styles.css, "Menus"). */
 .mk .mk-menu{background:var(--pane);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);border-color:var(--pane-hair)}
@@ -1603,7 +1615,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
    row's, 40 px once the page is 700 px or narrower) with the same border, fill and corners; one gap between them; the site's name
    gives way first. A build's own chip (the plan) takes its height from --hc as well. */
 .mk .hd{--hc:var(--mk-h);gap:var(--mk-s3)}
-@media (--compact){.mk .hd{--hc:40px}}
+@container (--pane-max-700){.mk .hd{--hc:40px}}
 .mk .hd .mk-chip,.mk .hd .ib,.mk .hd .bellw .ib.bell,.mk .hd .account-menu .account-btn{box-sizing:border-box;height:var(--hc);min-height:var(--hc)}
 .mk .hd .ib,.mk .hd .bellw .ib.bell,.mk .hd .account-menu .account-btn{width:var(--hc);flex:none;border:1px solid var(--mk-line);background:var(--mk-card);border-radius:var(--mk-rc);color:var(--mk-muted)}
 .mk .hd .ib:hover,.mk .hd .bellw .ib.bell:hover,.mk .hd .account-menu .account-btn:hover{background:var(--mk-hovbg);border-color:var(--mk-bord2)}
@@ -1611,8 +1623,8 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .hd .logo{align-self:center}
 .mk .hd>div:has(#siteBtn){min-width:0}
 .mk .hd #siteBtn .nmx{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media (--md-down){.mk .hd .exb{width:var(--hc);padding:0;justify-content:center}}
-@media (--xs){
+@container (--pane-max-900){.mk .hd .exb{width:var(--hc);padding:0;justify-content:center}}
+@container (--pane-max-600){
 .mk .hd>div:has(#siteBtn) .sitechip{width:100%}
 .mk .hd>div:has(#siteBtn) #siteBtn{max-width:100%;flex:1 1 auto;min-width:0}
 }
@@ -1624,7 +1636,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .mk-pulse.ev{animation:mk-beat 1s ease-out 1,mk-pl 2s infinite}
 
 /* Two columns: the list scrolls inside its card, which is as tall as the Live card beside it; a soft fade at the top and bottom edge shows there is more past it. */
-@media (--roomy){
+@container (--pane-min-701){
 .mk .liveview>.lon{contain:size}
 .mk .liveview .lon .lfeed{flex:1 1 0;min-height:0;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain}
 .mk .liveview .lon .lfeed[data-below],.mk .liveview .lon .lfeed[data-above]{--fa:0px;--fb:0px;-webkit-mask-image:linear-gradient(to bottom,transparent,var(--mk-text) var(--fa),var(--mk-text) calc(100% - var(--fb)),transparent);mask-image:linear-gradient(to bottom,transparent,var(--mk-text) var(--fa),var(--mk-text) calc(100% - var(--fb)),transparent)}
@@ -1652,13 +1664,13 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 /* Design round 2: Replay and Why? sit apart, the Briefing's keys strip hides with a word, the mail line stacks on a phone. */
 .mk .rpb+.rpb{margin-left:var(--mk-s2)}
 .mk .khint .gh{height:24px;padding:0 var(--mk-s2);border:1px solid var(--mk-line);font-size:12px}
-@media (--xs){.mk .mailrow .mt{flex:1 1 100%}.mk .mailrow .gh{flex:1}}
+@container (--pane-max-600){.mk .mailrow .mt{flex:1 1 100%}.mk .mailrow .gh{flex:1}}
 .mk .cards{align-items:start}
 
 /* The header is a bar of its own: a band of room under the controls, so the page moves under it and never touches them. The room
    is taken back from the gap below, so nothing moves down. */
 .mk .hd{--hpb:var(--mk-s3);padding-bottom:var(--hpb);margin-bottom:calc(var(--hpb) * -1)}
-@media (--sm-up){.mk .hd{margin-bottom:calc(var(--mk-s4) - var(--hpb))}}
+@container (--pane-min-601){.mk .hd{margin-bottom:calc(var(--mk-s4) - var(--hpb))}}
 /* The person is the last thing on the right, whatever a build puts before them; the bell comes just before (the view switch, order 9, wraps below them). */
 .mk .hd>.bellw{order:7}
 .mk .hd>.account-menu{order:8}
@@ -1667,23 +1679,23 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
    in the site menu), the period says only its first word (the whole in its tooltip), the search is a square like the bell and the
    person, and a build's plan chip is in the person's menu. Nothing overlaps at any width. */
 .mk .setupline{display:none}
-@media (--roomy) and (--md-down){
+@container (--pane-min-701) and (--pane-max-1100){
 .mk .hd .sitechip .mk-kbd,.mk .hd .pill .pl-rest,.mk .hd .pill .vs{display:none}
 .mk .hd .ringw{width:0;margin-left:calc(var(--mk-s3) * -1);flex:none}
 .mk .hd .ringw .ringb{display:none}
 .mk .setupline{display:flex}
 }
-@media (--md-down){
+@container (--pane-max-1100){
 .mk .hd .exb{width:var(--hc);padding:0;justify-content:center}
 .mk .hd .exb .t2,.mk .hd .exb .mk-kbd{display:none}
 }
-@media (--md-down){
+@container (--pane-max-1200){
 .mk .hd .planw{display:none}
 }
 
 /* Live audit, phone: the sticky header's band no longer covers the first row (the room it takes is given back below it), the site's
    name keeps a place in the header whatever else sits beside it, and the last line of a page clears the bar at the bottom. */
-@media (--xs){
+@container (--pane-max-600){
 .mk .hd{margin-bottom:0}
 .mk .hd>div:has(#siteBtn){min-width:104px}
 .mk .hd>div:has(#siteBtn) #siteBtn{min-width:104px}
@@ -1693,7 +1705,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .app:has(.mk .tabbar){padding-bottom:calc(96px + env(safe-area-inset-bottom))}
 }
 /* Under 1000 px a card's note sits on a line of its own, so its label keeps the width. */
-@media (--md-down){
+@container (--pane-max-1000){
 .mk .kc .kt{flex-wrap:wrap;row-gap:2px}
 .mk .kc .kn{margin-left:0;flex-basis:100%;order:3}
 }
@@ -1746,7 +1758,7 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 @media (prefers-reduced-transparency:reduce){.mk .hd::before{background:var(--mk-bg);-webkit-backdrop-filter:none;backdrop-filter:none}}
 }
 @media (prefers-reduced-motion:reduce){.mk .hd::before{transition:none}}
-@media (--hold){.mk .hd::before{display:none}}
+@container (--pane-min-601) and (--pane-max-700){.mk .hd::before{display:none}}
 
 /* The site chip carries the site's mark; its dot shows only for a site that is down (red) or not receiving data (amber), never green. Live keeps the one pulsing dot, still when motion is reduced. */
 .mk .sitechip .mkwrap{position:relative;display:inline-flex;flex:none}
@@ -1837,6 +1849,6 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 .mk .lhc button.lhgo{color:var(--mk-lime);font-weight:600;font-size:13px}
 .mk .lhc button.lhgo:hover{text-decoration:underline}
 .mk .lhquiet{color:var(--mk-faint)}
-@media (--compact){
+@container (--pane-max-700){
 .mk .lcards{order:0;grid-template-columns:1fr;margin:var(--mk-s4) 0 0}
 }

@@ -41,6 +41,17 @@ export const QUERY = {
   'lg-down': under(BP.xl),
 } as const
 
+/**
+ * The page's own width, for `@container`: the screen's less the page's side padding (the page is the container). These are the numbers the
+ * header's and the page's sets were drawn on; `@container (--pane-max-700)` is the page at 700 px or under, `--pane-min-701` from 701 up.
+ */
+const PANE_MAX = [600, 700, 900, 1000, 1100, 1200] as const
+const PANE_MIN = [601, 701, 761] as const
+export const PANE: Record<string, string> = {
+  ...Object.fromEntries(PANE_MAX.map((n) => [`pane-max-${n}`, `(max-width: ${n}px)`])),
+  ...Object.fromEntries(PANE_MIN.map((n) => [`pane-min-${n}`, `(min-width: ${n}px)`])),
+}
+
 export type Token = keyof typeof QUERY
 
 /** The step a width in CSS pixels falls in. */

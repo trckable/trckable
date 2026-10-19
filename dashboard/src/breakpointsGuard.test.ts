@@ -5,7 +5,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import legacy from './kit/legacyQueries.json'
-import { BP, QUERY, STEPS } from './kit/breakpoints'
+import { BP, PANE, QUERY, STEPS } from './kit/breakpoints'
 
 const SRC = import.meta.dirname
 const STRICT = /^(v2|mock)\//
@@ -39,8 +39,8 @@ describe('widths are written once', () => {
     expect(more, 'use a width token (kit/breakpoints.ts); if you took one out, lower kit/legacyQueries.json').toEqual([])
   })
   it('every token a stylesheet uses is one the module defines', () => {
-    const used = files.filter((f) => f.path.endsWith('.css')).flatMap((f) => [...noComments(f.text).matchAll(/@(?:media|container)[^{]*\(--([a-z-]+)\)/g)].map((m) => `${f.path}: --${m[1]}`))
-    const unknown = used.filter((u) => !(u.split('--')[1] in QUERY))
+    const used = files.filter((f) => f.path.endsWith('.css')).flatMap((f) => [...noComments(f.text).matchAll(/@(?:media|container)[^{]*\(--([a-z0-9-]+)\)/g)].map((m) => `${f.path}: --${m[1]}`))
+    const unknown = used.filter((u) => !(u.split('--')[1] in QUERY || u.split('--')[1] in PANE))
     expect(unknown).toEqual([])
   })
   it('the steps run in order and the queries meet without a gap', () => {

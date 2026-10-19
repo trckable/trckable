@@ -62,7 +62,7 @@ html[data-motion='off'] .mk .setupmenu .sfold svg{transition:none}
 @media (--compact){.mk .mk-menu.setupmenu{padding:var(--mk-s5) var(--mk-s4) calc(var(--mk-s4) + env(safe-area-inset-bottom))}.mk .ringw{position:static}.mk .setupmenu .sgo,.mk .setupmenu .snf,.mk .setupmenu .sfold{min-height:36px}.mk .setupmenu .sdots{width:36px;height:36px}.mk .setupmenu .sprow.click:not(:has(.spop)){padding-right:36px}}
 /* The verified seal takes the ring's place once setup is done: one indicator at a time, in a slot as wide as the ring's own square. */
 .mk .hd .ringw.seal-slot{display:grid;place-items:center;width:var(--hc,40px);margin-left:0;flex:none}
-@container (--xs){.mk .hd .ringw.seal-slot{width:20px;margin-left:calc(var(--mk-s2) * -1)}}
+@container (--pane-max-600){.mk .hd .ringw.seal-slot{width:20px;margin-left:calc(var(--mk-s2) * -1)}}
 
 .mk .setupmenu .sprow.locked{opacity:.55}
 .mk .setupmenu .sprow.locked .stick{color:var(--mk-muted)}

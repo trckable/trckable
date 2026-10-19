@@ -1,7 +1,7 @@
 // The build's half of src/kit/breakpoints.ts: a PostCSS step that turns a width token in a media or container query,
 // `@media (--sm-up)`, into its numbers, and `@bp-vars;` (once, in src/kit/breakpoints.css) into the custom properties
 // every step sets (--chart-h, --fit-min). Nothing else in the CSS writes a width by hand.
-import { BP, CHART_H, FIT_MIN, QUERY, STEPS, type Step } from './src/kit/breakpoints'
+import { BP, CHART_H, FIT_MIN, PANE, QUERY, STEPS, type Step } from './src/kit/breakpoints'
 
 // PostCSS's own node types are not importable from here, so these are the parts of them this file uses.
 type Node = {
@@ -35,9 +35,10 @@ export const breakpointsPlugin = {
 
 function resolve(node: Node) {
   if (!node.params.includes('(--')) return
-  node.params = node.params.replace(/\(--([a-z-]+)\)/g, (_m, name: string) => {
-    const q = (QUERY as Record<string, string>)[name]
+  node.params = node.params.replace(/\(--([a-z0-9-]+)\)/g, (_m, name: string) => {
+    const q = (QUERY as Record<string, string>)[name] ?? PANE[name]
     if (!q) throw node.error(`unknown width token --${name}; the steps are in src/kit/breakpoints.ts`)
     return q
   })
+  if (node.params.includes('(--')) throw node.error('a width token was left unresolved')
 }

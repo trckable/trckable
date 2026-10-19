@@ -46,6 +46,7 @@ export default function ServerStatus({ sites }: { sites: Site[] }) {
             type="button"
             className="footer-status"
             data-status={state}
+            aria-label={label} // the words are in a clipped span: WebKit's scan sometimes reads it as empty
             {...p}
             {...(affected.length > 0 ? { 'aria-haspopup': 'dialog' as const, 'aria-expanded': open } : {})}
             onClick={() => {

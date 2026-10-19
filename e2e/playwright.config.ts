@@ -114,6 +114,7 @@ export default defineConfig({
         TRCKABLE_MENTIONS: 'on', // the specs fake the answers; the search itself stays off
         TRCKABLE_MENTIONS_EVERY: '0',
         TRCKABLE_LOG_LEVEL: 'warn',
+        TRCKABLE_UPTIME_EVERY: '0', // the test sites cannot be reached: a probe five minutes into a long run would mark them down under the specs that expect them up
       },
     },
     {
