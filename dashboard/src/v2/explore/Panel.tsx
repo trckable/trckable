@@ -22,7 +22,7 @@ const OUT = 240
 
 const sameAsk = (a: Ask | null, b: Ask | null): boolean => (a === null || b === null ? a === b : a.tab === b.tab && keyOf(a.filters) === keyOf(b.filters))
 
-const wide = () => matchMedia(QUERY['sm-up']).matches
+const wide = () => matchMedia(QUERY.roomy).matches
 
 type PanelProps = Omit<ContentProps, 'ask' | 'full' | 'onFull' | 'close'>
 

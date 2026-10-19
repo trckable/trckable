@@ -82,7 +82,7 @@
 .mk .mk-toast .ic{width:34px;height:34px;border-radius:10px;background:var(--mk-limeD);color:var(--mk-lime);display:grid;place-items:center;font-weight:800}
 .mk .mk-toast b{display:block}
 .mk .mk-toast span{color:var(--mk-muted);font-size:13px}
-@media (--xs){
+@media (--compact){
 .mk .hd .data, .mk .hd .ib.bell{display:none}
 .mk .strip{grid-template-columns:1fr 1fr}
 .mk .st:nth-child(2){border-right:0}
@@ -139,14 +139,14 @@
 .mk .downbox{margin:14px 20px 0;padding:12px 16px;border-radius:12px;background:var(--mk-redD);color:var(--mk-red);font-weight:600;font-size:13px}
 .mk .mk-toast.r{border-color:var(--mk-redM)}
 .mk .mk-toast.r .ic{background:var(--mk-redD);color:var(--mk-red)}
-@media (--xs){
+@media (--compact){
 .mk .hd .mk-chip{max-width:190px}
 .mk #views{order:9;width:100%}
 .mk #views button{flex:1;justify-content:center;padding:0 6px}
 .mk .chart{height:200px}
 .mk .lv .dv{display:none}
 }
-@media (--xs){
+@media (--compact){
 .mk{padding:16px 16px 110px}
 .mk .mk-toast{left:16px;right:16px;bottom:70px}
 }
@@ -264,7 +264,7 @@
 .mk .exb .t2{font-weight:600;font-size:13px}
 .mk .hd .exb{border-color:transparent;background:var(--mk-field)}
 .mk .hd .exb:hover{border-color:transparent;background:var(--mk-hovbg)}
-@media (--xs){
+@media (--compact){
 .mk .xp{top:auto;left:0;width:100%;height:94vh;border-radius:24px 24px 0 0;border-left:0;transform:translateY(104%)}
 .mk .xp.on{transform:none}
 }
@@ -318,7 +318,7 @@
 .mk .lr{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--mk-line);font-size:13px;gap:10px}
 .mk .lr:first-child{border-top:0}
 .mk .lr span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media (--xs){
+@media (--compact){
 .mk .liveview{grid-template-columns:1fr}
 .mk .lcards{grid-template-columns:1fr;order:-1;margin:0 0 16px}
 .mk .lbottom.money{grid-template-columns:1fr}
@@ -346,7 +346,7 @@
 }
 .mk{--mk-s1:4px;--mk-s2:8px;--mk-s3:12px;--mk-s4:16px;--mk-s5:24px;--mk-s6:32px;--mk-h:32px;--mk-rc:10px;--mk-hov:rgba(255,255,255,.06);--mk-hov2:rgba(255,255,255,.1);--mk-chipH:28px;
  --z-menu:30;--z-toast:90;--z-dev:60;--z-scrim:70;--z-drawer:71;--z-pal:80}
-@media (--xs),(pointer:coarse){
+@media (--compact),(pointer:coarse){
 .mk{--mk-h:44px}
 }
 .mk{-webkit-text-size-adjust:100%}
@@ -354,7 +354,7 @@
 /* Nothing runs off the side of the page, but a menu may reach past the box it hangs from (the page's own padding) */
 html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk{padding:var(--mk-s5) var(--mk-s6) var(--mk-s6)}
-@media (--xs){
+@media (--compact){
 .mk{padding:var(--mk-s4) var(--mk-s4) 104px}
 }
 .mk .mk-chip,.mk .pill,.mk .xb,.mk .morebtn,.mk .kinds button,.mk .xp select,.mk .xp input[type=text],.mk .pmenu .dates input,.mk .pmenu .dates button,.mk .mk-menu input{height:var(--mk-h);border-radius:var(--mk-rc);font-size:13px;line-height:1;white-space:nowrap}
@@ -458,7 +458,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .pi>*{min-width:0}
 .mk .pi .s{white-space:nowrap;flex:none}
 .mk .xp::before{content:none}
-@media (--xs){
+@media (--compact){
 .mk .xp{height:auto;max-height:85dvh;min-height:60dvh;top:auto;bottom:0;left:0;width:100%;border-radius:20px 20px 0 0;border-top:1px solid var(--mk-line)}
 .mk .xph{padding-top:var(--mk-s5);position:relative}
 .mk .xp::before{content:"";position:absolute;top:var(--mk-s2);left:50%;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:var(--mk-grab);z-index:3}
@@ -468,7 +468,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .mk-toast{left:var(--mk-s4);right:var(--mk-s4);bottom:76px}
 .mk .hd .mk-chip{max-width:none}
 }
-@media (--xs){
+@media (--compact){
 .mk .hd{gap:var(--mk-s2)}
 .mk .hd .mk-chip{max-width:none;flex:0 1 auto;min-width:0}
 
@@ -493,7 +493,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 @media (prefers-reduced-motion:reduce){
 .mk *,.mk *::before,.mk *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
-@media (--xs){
+@media (--compact){
 .mk{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 .mk{padding:0 var(--mk-s4) calc(104px + env(safe-area-inset-bottom))}
 .mk .hd{position:sticky;top:0;z-index:20;height:52px;min-height:52px;margin:0 calc(var(--mk-s4) * -1);padding:env(safe-area-inset-top) var(--mk-s4) 0;background:var(--mk-bg);box-sizing:content-box;border-bottom:1px solid transparent}
@@ -520,7 +520,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .xp{padding-bottom:env(safe-area-inset-bottom)}
 .mk .mk-toast{bottom:calc(76px + env(safe-area-inset-bottom))}
 }
-@media (--xs){
+@media (--compact){
 .mk #chart, .mk .hero .chart, .mk .chart{height:210px}
 }
 .mk .tabbar{display:none}
@@ -740,12 +740,12 @@ html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-
 .mk .xp{transition:transform .32s cubic-bezier(.2,.8,.2,1),width .3s cubic-bezier(.2,.8,.2,1),top .3s cubic-bezier(.2,.8,.2,1),border-radius .3s}
 .mk .xph .xfull{margin-left:auto}
 .mk .xph .xfull+.x{margin-left:0}
-@media (--xs){
+@media (--compact){
 .mk #xpFull{display:none!important}
 }
 .mk .x2{display:block}
 .mk .xrw .sh,.mk .xth .shh{display:none}
-@media (--sm-up){
+@media (--roomy){
 .mk .xp.full{width:100vw;max-width:100vw;top:76px;border-left:0;border-top:1px solid var(--mk-line);border-radius:20px 20px 0 0}
 .mk body.xfull .xscrim{display:none!important}
 .mk .xp.full #xpBody{padding:0 var(--mk-s6) var(--mk-s6)}
@@ -781,7 +781,7 @@ html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-
 .mk .kc .ksp{height:40px;width:calc(100% + var(--mk-s3) * 2);margin:auto calc(var(--mk-s3) * -1) 0}
 
 }
-@media (--xs){
+@media (--compact){
 .mk .kcs.xk{grid-template-columns:1fr 1fr}
 }
 .mk .hero{padding-bottom:var(--mk-s4)}
@@ -1054,7 +1054,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 @media (--xs){
 .mk .cd{left:0;right:0;bottom:0;top:auto;width:auto;max-width:none;margin:0;max-height:85dvh;border-radius:20px 20px 0 0;border-width:1px 0 0;padding-bottom:env(safe-area-inset-bottom)}
 }
-@media (--sm-up){
+@media (--roomy){
 .mk .xp{width:560px}
 }
 .mk .shp{display:flex;gap:var(--mk-s2);align-items:stretch;margin:var(--mk-s2) 0}
@@ -1497,7 +1497,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .mfoot.sfoot{flex-direction:row;align-items:center;gap:var(--mk-s1);padding:var(--mk-s2) 0 0}
 .mk .mfoot.sfoot .mi{width:auto;font-size:14px;min-height:var(--mk-h)}
 /* 600 to 839 px (the sm step): no phone bar, but too narrow for one row: the header wraps, the views take a row of their own below, and the bell stays. */
-@media (--sm){
+@media (--hold){
 .mk .hd{flex-wrap:wrap;height:auto;min-height:0;position:static;margin:0;padding:0;box-sizing:border-box;row-gap:var(--mk-s2)}
 .mk #views{order:9;flex:0 0 100%;width:100%}
 .mk .mk-seg{height:var(--mk-h);padding:2px}
@@ -1544,7 +1544,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .lv.leaving{animation:mk-fadeout .4s ease-out forwards!important}
 @keyframes mk-fadeout{to{opacity:0}}
 }
-@media (--xs){
+@media (--compact){
 .mk .lchart{flex:none}
 }
 
@@ -1555,7 +1555,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 
 /* The people on the site now: bigger than the old Live's 86 px, and its changed digits roll. */
 .mk .lfig>div:first-child .lbign{font-size:96px;line-height:1;font-weight:700;letter-spacing:-.05em}
-@media (--xs){
+@media (--compact){
 .mk .lfig>div:first-child .lbign{font-size:76px}
 }
 
@@ -1603,7 +1603,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
    row's, 40 px once the page is 700 px or narrower) with the same border, fill and corners; one gap between them; the site's name
    gives way first. A build's own chip (the plan) takes its height from --hc as well. */
 .mk .hd{--hc:var(--mk-h);gap:var(--mk-s3)}
-@media (--xs){.mk .hd{--hc:40px}}
+@media (--compact){.mk .hd{--hc:40px}}
 .mk .hd .mk-chip,.mk .hd .ib,.mk .hd .bellw .ib.bell,.mk .hd .account-menu .account-btn{box-sizing:border-box;height:var(--hc);min-height:var(--hc)}
 .mk .hd .ib,.mk .hd .bellw .ib.bell,.mk .hd .account-menu .account-btn{width:var(--hc);flex:none;border:1px solid var(--mk-line);background:var(--mk-card);border-radius:var(--mk-rc);color:var(--mk-muted)}
 .mk .hd .ib:hover,.mk .hd .bellw .ib.bell:hover,.mk .hd .account-menu .account-btn:hover{background:var(--mk-hovbg);border-color:var(--mk-bord2)}
@@ -1624,7 +1624,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .mk-pulse.ev{animation:mk-beat 1s ease-out 1,mk-pl 2s infinite}
 
 /* Two columns: the list scrolls inside its card, which is as tall as the Live card beside it; a soft fade at the top and bottom edge shows there is more past it. */
-@media (--sm-up){
+@media (--roomy){
 .mk .liveview>.lon{contain:size}
 .mk .liveview .lon .lfeed{flex:1 1 0;min-height:0;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain}
 .mk .liveview .lon .lfeed[data-below],.mk .liveview .lon .lfeed[data-above]{--fa:0px;--fb:0px;-webkit-mask-image:linear-gradient(to bottom,transparent,var(--mk-text) var(--fa),var(--mk-text) calc(100% - var(--fb)),transparent);mask-image:linear-gradient(to bottom,transparent,var(--mk-text) var(--fa),var(--mk-text) calc(100% - var(--fb)),transparent)}
@@ -1667,7 +1667,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
    in the site menu), the period says only its first word (the whole in its tooltip), the search is a square like the bell and the
    person, and a build's plan chip is in the person's menu. Nothing overlaps at any width. */
 .mk .setupline{display:none}
-@media (--sm-up) and (--md-down){
+@media (--roomy) and (--md-down){
 .mk .hd .sitechip .mk-kbd,.mk .hd .pill .pl-rest,.mk .hd .pill .vs{display:none}
 .mk .hd .ringw{width:0;margin-left:calc(var(--mk-s3) * -1);flex:none}
 .mk .hd .ringw .ringb{display:none}
@@ -1689,7 +1689,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .hd>div:has(#siteBtn) #siteBtn{min-width:104px}
 .mk .hd .planw,.mk .hd .update-pill{display:none}
 }
-@media (--xs){
+@media (--compact){
 .app:has(.mk .tabbar){padding-bottom:calc(96px + env(safe-area-inset-bottom))}
 }
 /* Under 1000 px a card's note sits on a line of its own, so its label keeps the width. */
@@ -1746,7 +1746,7 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 @media (prefers-reduced-transparency:reduce){.mk .hd::before{background:var(--mk-bg);-webkit-backdrop-filter:none;backdrop-filter:none}}
 }
 @media (prefers-reduced-motion:reduce){.mk .hd::before{transition:none}}
-@media (--sm){.mk .hd::before{display:none}}
+@media (--hold){.mk .hd::before{display:none}}
 
 /* The site chip carries the site's mark; its dot shows only for a site that is down (red) or not receiving data (amber), never green. Live keeps the one pulsing dot, still when motion is reduced. */
 .mk .sitechip .mkwrap{position:relative;display:inline-flex;flex:none}
@@ -1837,6 +1837,6 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 .mk .lhc button.lhgo{color:var(--mk-lime);font-weight:600;font-size:13px}
 .mk .lhc button.lhgo:hover{text-decoration:underline}
 .mk .lhquiet{color:var(--mk-faint)}
-@media (--xs){
+@media (--compact){
 .mk .lcards{order:0;grid-template-columns:1fr;margin:var(--mk-s4) 0 0}
 }

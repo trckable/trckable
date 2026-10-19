@@ -1,13 +1,13 @@
 // The one place the dashboard's widths are decided. A step starts at its width and runs to the next one:
-//   xs  under 600   a phone
-//   sm  600 to 839  a small tablet, a folding phone's outer or portrait screen
+//   xs  600 and under   a phone
+//   sm  601 to 839  a small tablet, a folding phone's outer or portrait screen
 //   md  840 to 1039 a tablet, a folding phone opened
 //   lg  1040 to 1439 a laptop
 //   xl  1440 and up
 // CSS names a step in a media or container query with its token, `@media (--sm-up)`, and a PostCSS step in the build
 // (breakpointsPlugin.ts) writes the numbers from here. A script asks `matchMedia(QUERY['sm-up'])`, or `stepOf(width)`.
 // breakpointsGuard.test.ts fails on a width written by hand in the v2 pages' CSS.
-export const BP = { xs: 0, sm: 600, md: 840, lg: 1040, xl: 1440 } as const
+export const BP = { xs: 0, sm: 601, md: 840, lg: 1040, xl: 1440 } as const
 
 export type Step = keyof typeof BP
 export const STEPS = Object.keys(BP) as Step[]
@@ -27,6 +27,10 @@ export const QUERY = {
   lg: `${from(BP.lg)} and ${under(BP.xl)}`,
   xl: from(BP.xl),
   narrow: under(NARROW),
+  // The page's compact header and chrome (bottom bar, 16 px sides) run to 700 px, with a band of 601 to 700 inside it that keeps the desktop header on one wrapped row.
+  compact: '(max-width: 700px)',
+  roomy: '(min-width: 701px)',
+  hold: '(min-width: 601px) and (max-width: 700px)',
   'sm-up': from(BP.sm),
   'md-up': from(BP.md),
   'lg-up': from(BP.lg),
