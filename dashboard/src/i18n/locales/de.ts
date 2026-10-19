@@ -3078,7 +3078,7 @@ export default {
   'v2.live.health.empty.speed': 'Noch keine Tempodaten',
   'v2.live.health.empty.both': 'Noch keine Tempo- oder Verfügbarkeitsdaten',
   'v2.live.health.empty.collecting': (n: number) => `Wird gesammelt: erscheint nach etwa ${n} Besuchen`,
-  'v2.live.health.empty.uptime': 'Noch nicht überwacht',
+  'v2.live.health.empty.uptime': 'Wird gesammelt: die erste Prüfung läuft in wenigen Minuten',
   'v2.live.health.empty.ai': 'Noch keine KI-Crawler',
   'v2.live.health.turnOnSpeed': 'Tempo einschalten',
   'v2.live.health.connectCrawlers': 'KI-Crawler verbinden',

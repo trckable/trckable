@@ -7,6 +7,7 @@ import { openSettings, type SettingsTab } from '../../lib/settings'
 import { openExplore } from '../explore/open'
 import type { Tab } from '../explore/sections'
 
+// Uptime has no entry: the server probes every site on its own, so "no uptime yet" only means the first check has not run.
 export type LiveSetup = 'speed' | 'crawlers'
 
 type Link = { kind: 'settings'; tab: SettingsTab; focus: string; want?: string } | { kind: 'explore'; tab: Tab }

@@ -72,7 +72,7 @@ function SpeedEmpty({ site, recorded, waiting, both }: { site: Site; recorded?: 
 }
 
 function SpeedBlock({ site, speed, recorded }: { site: Site; speed?: number | null; recorded?: boolean }) {
-  // Switched on but too few visits: nothing to set up, only to wait for.
+  // Switched on but too few visits: nothing to set up, only to wait for. (Uptime has no switch: every site is probed.)
   if (speed == null) return <SpeedEmpty site={site} recorded={recorded} waiting={speed === undefined} />
   const grade = gradeOf(0, speed)
   return (
@@ -86,7 +86,7 @@ function SpeedBlock({ site, speed, recorded }: { site: Site; speed?: number | nu
 
 function UptimeBlock({ site, up, down }: { site: Site; up?: Health['uptime']; down: boolean }) {
   const days = up ? up.days.map((d, i) => (down && i === up.days.length - 1 ? ('down' as const) : d)) : undefined
-  if (!days || (!down && up?.pct == null)) return down ? null : <EmptyBlock site={site} line={h.empty.uptime} ghost={['strip']} waiting={up === undefined} reserve={64} />
+  if (!days || (!down && up?.pct == null)) return down ? null : <EmptyBlock site={site} line={h.empty.uptime} ghost={['strip']} collecting waiting={up === undefined} reserve={64} />
   return (
     <button type="button" className="lhup" onClick={() => incidents(site)}>
       <Strip days={days} />

@@ -3088,7 +3088,7 @@ export default {
   'v2.live.health.empty.speed': 'Nog geen snelheidsgegevens',
   'v2.live.health.empty.both': 'Nog geen snelheids- of uptimegegevens',
   'v2.live.health.empty.collecting': (n: number) => `Verzamelen: verschijnt na ongeveer ${n} bezoeken`,
-  'v2.live.health.empty.uptime': 'Nog niet bewaakt',
+  'v2.live.health.empty.uptime': 'Verzamelen: de eerste controle volgt binnen enkele minuten',
   'v2.live.health.empty.ai': 'Nog geen AI-crawlers',
   'v2.live.health.turnOnSpeed': 'Snelheid aanzetten',
   'v2.live.health.connectCrawlers': 'AI-crawlers koppelen',

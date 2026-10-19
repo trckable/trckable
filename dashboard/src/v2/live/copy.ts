@@ -57,7 +57,7 @@ export const copy = defineCopy('v2.live', {
     noMentions: 'No new mentions',
     thisWeek: 'this week',
     sources: { hn: 'Hacker News', ph: 'Product Hunt', news: 'News', ref: 'Link' },
-    empty: { speed: 'No speed data yet', both: 'No speed or uptime data yet', collecting: (n: number) => `Collecting: shows after about ${n} visits`, uptime: 'Not watched yet', ai: 'No AI crawlers yet' },
+    empty: { speed: 'No speed data yet', both: 'No speed or uptime data yet', collecting: (n: number) => `Collecting: shows after about ${n} visits`, uptime: 'Collecting: the first check runs within minutes', ai: 'No AI crawlers yet' },
     turnOnSpeed: 'Turn on speed',
     connectCrawlers: 'Connect AI crawlers',
   },

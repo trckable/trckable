@@ -14,6 +14,8 @@ interface Fake {
   empty?: boolean
   /** The site records no speed, so the speed card can be set up. */
   noVitals?: boolean
+  /** The site has not been probed yet. */
+  unwatched?: boolean
   role?: string
 }
 
@@ -23,7 +25,7 @@ async function fake(page: Page, o: Fake = {}) {
     if (r.request().method() !== 'GET') return r.continue()
     const res = await r.fetch()
     const body = (await res.json()) as { sites: Record<string, unknown>[] }
-    for (const s of body.sites) if (s.domain === 'example.com') Object.assign(s, { mentions: true, watched_since: o.empty ? undefined : NOW - 5 * 86400, down_since: o.down ? NOW - 12 * 60 : undefined, check: undefined })
+    for (const s of body.sites) if (s.domain === 'example.com') Object.assign(s, { mentions: true, watched_since: o.empty || o.unwatched ? undefined : NOW - 5 * 86400, down_since: o.down ? NOW - 12 * 60 : undefined, check: undefined })
     await r.fulfill({ response: res, json: body })
   })
   if (o.role) {
@@ -91,6 +93,15 @@ test('a speed that is recorded but has too few visits says so, with no button', 
   await fake(page, { empty: true })
   await expect(cards(page).locator('.lhempty').first()).toContainText('Collecting')
   await expect(cards(page).locator('.lhempty').first().getByRole('button')).toHaveCount(0)
+})
+
+test('uptime that has not been probed yet only waits: no button, a collecting line', async ({ page }) => {
+  await fake(page, { unwatched: true })
+  const empty = cards(page).locator('.lhempty')
+  await expect(empty).toHaveCount(1)
+  await expect(empty).toContainText('Collecting')
+  await expect(empty.getByRole('button')).toHaveCount(0)
+  await expect(cards(page).locator('.lhspeed')).toContainText('1.8 s')
 })
 
 test('Analytics keeps the pages and the countries behind one switch', async ({ page }) => {

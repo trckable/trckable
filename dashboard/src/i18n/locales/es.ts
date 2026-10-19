@@ -3081,7 +3081,7 @@ export default {
   'v2.live.health.empty.speed': 'Aún sin datos de velocidad',
   'v2.live.health.empty.both': 'Aún sin datos de velocidad ni de disponibilidad',
   'v2.live.health.empty.collecting': (n: number) => `Recopilando: aparece tras unas ${n} visitas`,
-  'v2.live.health.empty.uptime': 'Aún sin vigilar',
+  'v2.live.health.empty.uptime': 'Recopilando: la primera comprobación llega en unos minutos',
   'v2.live.health.empty.ai': 'Aún sin rastreadores IA',
   'v2.live.health.turnOnSpeed': 'Activar velocidad',
   'v2.live.health.connectCrawlers': 'Conectar rastreadores IA',

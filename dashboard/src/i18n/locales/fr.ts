@@ -3076,7 +3076,7 @@ export default {
   'v2.live.health.empty.speed': 'Pas encore de données de vitesse',
   'v2.live.health.empty.both': 'Pas encore de données de vitesse ni de disponibilité',
   'v2.live.health.empty.collecting': (n: number) => `Collecte en cours : s’affiche après environ ${n} visites`,
-  'v2.live.health.empty.uptime': 'Pas encore surveillé',
+  'v2.live.health.empty.uptime': 'Collecte en cours : la première vérification a lieu d’ici quelques minutes',
   'v2.live.health.empty.ai': 'Aucun robot IA pour l’instant',
   'v2.live.health.turnOnSpeed': 'Activer la vitesse',
   'v2.live.health.connectCrawlers': 'Connecter les robots IA',
