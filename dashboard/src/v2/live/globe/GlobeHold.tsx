@@ -2,9 +2,9 @@ import type { ReactNode } from 'react'
 import { copy } from '../copy'
 
 /** What stands in for the globe while its chunk loads: the same two cards at their final size. */
-export function GlobeHold({ bar, height }: { bar: ReactNode; height?: number }) {
+export function GlobeHold({ bar }: { bar: ReactNode }) {
   return (
-    <div className="liveview gwrap" style={height ? ({ '--gh': `${height}px` } as React.CSSProperties) : undefined}>
+    <div className="liveview gwrap">
       <section className="mk-card gcard">
         <div className="lhead">
           <span className="lt">{copy.live}</span>

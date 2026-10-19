@@ -3,7 +3,7 @@
 /* The globe card above the list; side by side from a tablet up, where the list keeps its 320 px or more. */
 .mk .gwrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--mk-s4); align-items: stretch; }
 @media (--md-up) {
-  .mk .gwrap { grid-template-columns: minmax(0, 1fr) minmax(320px, 380px); grid-template-rows: var(--gh, 460px); }
+  .mk .gwrap { grid-template-columns: minmax(0, 1fr) minmax(320px, 380px); grid-template-rows: clamp(460px, calc(100svh - 168px), 900px); }
   .mk .gside { min-height: 0; overflow: hidden; }
 }
 .mk .gcard, .mk .gside { display: flex; flex-direction: column; }
@@ -102,10 +102,14 @@
 
 /* Full screen: the browser's own, or a fixed cover where it has none. */
 .mk .gwrap:fullscreen, .mk .gwrap.fill { background: var(--mk-bg); padding: var(--mk-s4); box-sizing: border-box; overflow: auto; }
-.mk .gwrap.fill { position: fixed; inset: 0; z-index: 70; }
+.mk .gwrap.fill { position: fixed; inset: 0; z-index: 100; }
 .mk .gwrap:fullscreen .gstage, .mk .gwrap.fill .gstage { height: auto; }
 @media (--md-up) {
   .mk .gwrap:fullscreen, .mk .gwrap.fill { grid-template-rows: 100%; }
+}
+@media (--sm-down) {
+  .mk .gwrap:fullscreen, .mk .gwrap.fill { grid-template-rows: minmax(0, 62%) minmax(0, 38%); }
+  .mk .gwrap.fill .gside { overflow: hidden; }
 }
 
 html[data-motion='off'] .mk :is(.gpop-in, .gcardv) { animation: none !important; }

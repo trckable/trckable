@@ -56,11 +56,14 @@ test('the globe is off by default, switches on and off, and remembers the choice
   await globeSwitch(page).click()
   await expect(page.locator('.gstage canvas')).toBeVisible({ timeout: 10_000 })
   await expect(page.locator('.lnow')).toHaveCount(0)
+  // The globe and its list are the whole page: the cards row is gone, and it comes back with the overview.
+  await expect(page.locator('.lcards')).toHaveCount(0)
   await page.reload()
   await expect(globeSwitch(page)).toHaveAttribute('aria-checked', 'true')
   await expect(page.locator('.gstage canvas')).toBeVisible({ timeout: 10_000 })
   await globeSwitch(page).click()
   await expect(page.locator('.lnow')).toBeVisible()
+  await expect(page.locator('.lcards')).toHaveCount(1)
   expect(await page.evaluate(() => localStorage.getItem('trckable.live.globe'))).toBe('off')
 })
 
@@ -116,7 +119,9 @@ test('the globe draws, spins by itself, holds still with reduced motion, and a f
 
 test('full screen goes on and off, with a cover where the browser has none', async ({ page }) => {
   await page.addInitScript(() => {
-    Object.defineProperty(document, 'fullscreenEnabled', { value: false, configurable: true })
+    // A frame where the browser says yes and does nothing.
+    Object.defineProperty(document, 'fullscreenEnabled', { value: true, configurable: true })
+    HTMLElement.prototype.requestFullscreen = () => Promise.resolve()
     localStorage.setItem('trckable.live.globe', 'on')
   })
   await open(page)

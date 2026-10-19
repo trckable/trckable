@@ -1,6 +1,6 @@
 // Live, in the walkthrough's own layout: the half hour as bars with who is here now, the people on the site, and under
 // them Analytics, Speed & uptime, and AI & mentions. The numbers are the server's last half hour and the stream's newer visits.
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { onlineNow } from '../../lib/live'
 import { isShared } from '../../lib/me'
@@ -86,11 +86,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
     keepChartMode(m)
   }
   const [globe, setGlobe] = useState(() => readGlobe() && !isShared())
-  const swap = useRef<HTMLDivElement>(null)
-  // The overview's height when it was last on screen: the globe takes the same room, so what lies below does not move.
-  const [room, setRoom] = useState<number>()
   const showGlobe = (on: boolean) => {
-    setRoom(swap.current?.offsetHeight)
     setGlobe(on)
     keepGlobe(on)
   }
@@ -111,10 +107,10 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   const bar = isShared() ? null : <GlobeSwitch on={globe} onChange={showGlobe} warm={warm(GlobePanel.preload)} />
   return (
     <>
-      <div className="lswap" ref={swap} key={String(globe)}>
+      <div className="lswap" key={String(globe)}>
       {globe ? (
-        <Suspense fallback={<GlobeHold bar={bar} height={room} />}>
-          <GlobePanel rows={rows} clock={now} online={n} bar={bar} pulse={pulseClass} height={room} site={site} onVisitor={onVisitor} />
+        <Suspense fallback={<GlobeHold bar={bar} />}>
+          <GlobePanel rows={rows} clock={now} online={n} bar={bar} pulse={pulseClass} site={site} onVisitor={onVisitor} />
         </Suspense>
       ) : (
       <div className="liveview" role="region" aria-label={copy.live}>
@@ -187,10 +183,12 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
       </div>
       )}
       </div>
-      <div className="lcards" ref={cardsRef}>
-        <AnalyticsCard today={data.today} lists={lists} />
-        {whole && !feed.sample && !isShared() && <HealthCards site={whole} now={now} downSince={downSince} near={cardsNear} />}
-      </div>
+      {!globe && (
+        <div className="lcards" ref={cardsRef}>
+          <AnalyticsCard today={data.today} lists={lists} />
+          {whole && !feed.sample && !isShared() && <HealthCards site={whole} now={now} downSince={downSince} near={cardsNear} />}
+        </div>
+      )}
     </>
   )
 }

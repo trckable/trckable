@@ -43,21 +43,21 @@ const HAIRS = [
 ]
 
 const EYES = [
-  <g key="a" fill={INK}>
+  <g fill={INK}>
     <circle cx="26" cy="31" r="1.9" />
     <circle cx="38" cy="31" r="1.9" />
   </g>,
-  <path key="b" d="M23.5 32q2.5-3.5 5 0M35.5 32q2.5-3.5 5 0" fill="none" stroke={INK} strokeWidth="1.8" strokeLinecap="round" />,
-  <g key="c" fill={INK}>
+  <path d="M23.5 32q2.5-3.5 5 0M35.5 32q2.5-3.5 5 0" fill="none" stroke={INK} strokeWidth="1.8" strokeLinecap="round" />,
+  <g fill={INK}>
     <circle cx="26" cy="31" r="2.5" />
     <circle cx="38" cy="31" r="2.5" />
   </g>,
 ]
 
 const MOUTHS = [
-  <path key="a" d="M26 38.5q6 5 12 0" fill="none" stroke={INK} strokeWidth="1.8" strokeLinecap="round" />,
-  <path key="b" d="M25.5 37.5h13q-1 6.5-6.500 6.500t-6.500-6.500z" fill="#fff" stroke={INK} strokeWidth="1.4" strokeLinejoin="round" />,
-  <path key="c" d="M28 40h8" fill="none" stroke={INK} strokeWidth="1.8" strokeLinecap="round" />,
+  <path d="M26 38.5q6 5 12 0" fill="none" stroke={INK} strokeWidth="1.8" strokeLinecap="round" />,
+  <path d="M25.5 37.5h13q-1 6.5-6.500 6.500t-6.500-6.500z" fill="#fff" stroke={INK} strokeWidth="1.4" strokeLinejoin="round" />,
+  <path d="M28 40h8" fill="none" stroke={INK} strokeWidth="1.8" strokeLinecap="round" />,
 ]
 
 const cache = new Map<string, ReactElement>()

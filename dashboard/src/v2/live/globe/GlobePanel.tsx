@@ -1,7 +1,7 @@
 // Live's globe view, the one lazy chunk: the globe with its pins in one card, the recent activity beside it in another.
 // Both cards sit where the overview's two cards sit, so switching moves nothing below them. A pin, or a row of the
 // list, opens the same popover; while it is open the globe holds still.
-import { useCallback, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useFullscreen } from '../../../lib/fullscreen'
 import type { Row } from '../../../features/live/model'
 import { copy } from '../copy'
@@ -14,7 +14,7 @@ import './globe.css'
 const FULL = 'M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4'
 const LEAVE = 'M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4'
 
-export default function GlobePanel({ rows, clock, online, bar, pulse, height, site, onVisitor }: { rows: Row[]; clock: number; online: number; bar: ReactNode; pulse: string; height?: number; site: string; onVisitor?: (v: string) => void }) {
+export default function GlobePanel({ rows, clock, online, bar, pulse, site, onVisitor }: { rows: Row[]; clock: number; online: number; bar: ReactNode; pulse: string; site: string; onVisitor?: (v: string) => void }) {
   const root = useRef<HTMLDivElement>(null)
   const full = useFullscreen(root)
   const [open, setOpen] = useState<Open | null>(null)
@@ -33,7 +33,7 @@ export default function GlobePanel({ rows, clock, online, bar, pulse, height, si
   }
   const label = full.on ? copy.exitFullscreen : copy.fullscreen
   return (
-    <div className="liveview gwrap" ref={root} style={height ? ({ '--gh': `${height}px` } as CSSProperties) : undefined}>
+    <div className="liveview gwrap" ref={root}>
       <section className="mk-card gcard">
         <div className="lhead">
           <span className={`mk-pulse ${pulse}`} />
