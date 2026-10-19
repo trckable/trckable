@@ -1,0 +1,118 @@
+/* Live's globe view. Loaded with its chunk. Colours are theme tokens only; widths are the breakpoint tokens. */
+
+/* The globe card above the list; side by side from a tablet up, where the list keeps its 320 px or more. */
+.mk .gwrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--mk-s4); align-items: stretch; }
+@media (--md-up) {
+  .mk .gwrap { grid-template-columns: minmax(0, 1fr) minmax(320px, 380px); grid-template-rows: clamp(460px, calc(100svh - 168px), 900px); }
+  .mk .gside { min-height: 0; overflow: hidden; }
+}
+.mk .gcard, .mk .gside { display: flex; flex-direction: column; }
+/* The overview's list card sizes by its grid row alone; here it takes its own height when stacked. */
+.mk .liveview > .gside { contain: none; }
+@media (--md-up) {
+  .mk .liveview > .gside { contain: size; }
+}
+.mk .gside .lhead { padding-bottom: var(--mk-s2); }
+
+.mk .gstage {
+  position: relative;
+  flex: 1;
+  min-height: 240px;
+  height: min(55vh, calc(100vw - 32px));
+  overflow: hidden;
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  outline-offset: -2px;
+}
+.mk .gstage:active { cursor: grabbing; }
+.mk .gstage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+@media (--md-up) {
+  .mk .gstage { height: auto; }
+}
+
+/* The full-screen button in the card's head. (The switch itself is in mock.css: it shows before this chunk is here.) */
+.mk .gfs { width: 36px; height: 36px; margin: -6px -8px -6px 0; display: grid; place-items: center; border: 0; border-radius: 10px; background: none; color: var(--mk-muted); }
+.mk .gfs:hover { background: var(--mk-fill); color: var(--mk-text); }
+@media (--xs) {
+  .mk .gfs { width: 44px; height: 44px; }
+}
+
+/* The tip on a hovered pin, and the visitor card on an opened one: both are moved to their pin by the engine. */
+.mk .gtip, .mk .gpop { position: absolute; left: 0; top: 0; will-change: transform; }
+.mk .gtip {
+  z-index: 2; margin: -44px 0 0; translate: -50% 0; max-width: 60vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none;
+  padding: 4px 8px; border-radius: 8px; background: var(--mk-card); color: var(--mk-text); font-size: 12px; box-shadow: 0 2px 10px var(--mk-band);
+}
+.mk .gpop { z-index: 3; cursor: auto; }
+.mk .gpop:focus { outline: none; }
+.mk .gpop-in {
+  position: absolute; left: 26px; top: 0; translate: 0 -50%; width: min(380px, calc(100vw - 32px)); display: flex; flex-direction: column;
+  padding: 20px; border-radius: 18px; background: var(--mk-card); box-shadow: 0 12px 40px var(--mk-band); animation: mk-pop 0.18s ease-out; font-size: 13px;
+}
+.mk .gcardv { display: flex; flex-direction: column; gap: var(--mk-s4); animation: g-slide 0.2s ease-out; }
+.mk .gpop-top { display: flex; align-items: flex-start; gap: var(--mk-s4); }
+.mk .gpop-flag { font-size: 30px; line-height: 1; width: 48px; text-align: center; padding-top: 8px; }
+.mk .gwho { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--mk-s2); padding-top: 4px; }
+.mk .gwho b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk .gwho > span { font-size: 12px; }
+.mk .gpop-x, .mk .gpop-back { width: 32px; height: 32px; border: 0; border-radius: 10px; background: none; color: var(--mk-muted); display: grid; place-items: center; flex: none; }
+.mk .gpop-x { margin: -6px -8px 0 0; font-size: 22px; line-height: 1; }
+.mk .gpop-back { margin: 0 -8px 0 -8px; }
+.mk .gpop-x:hover, .mk .gpop-back:hover { background: var(--mk-fill); color: var(--mk-text); }
+.mk .gfacts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--mk-s2) var(--mk-s4); font-size: 12px; color: var(--mk-muted); }
+.mk .gfacts li { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.mk .grows { margin: 0; padding: var(--mk-s4) 0 0; border-top: 1px solid var(--mk-line); display: flex; flex-direction: column; gap: var(--mk-s3); }
+.mk .grows > div { display: flex; align-items: center; justify-content: space-between; gap: var(--mk-s3); }
+.mk .grows dt { color: var(--mk-muted); }
+.mk .grows dd { margin: 0; display: flex; align-items: center; gap: 6px; min-width: 0; text-align: right; }
+.mk .grows code { padding: 2px 8px; border-radius: 6px; background: var(--mk-fill); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk .gacts { display: flex; gap: var(--mk-s2); padding-top: var(--mk-s4); border-top: 1px solid var(--mk-line); }
+.mk .gacts button { flex: 1; height: 38px; border: 0; border-radius: 10px; font-weight: 600; font-size: 13px; background: var(--mk-fill); color: var(--mk-text); }
+.mk .gacts .gpop-go { background: var(--mk-limeD); color: var(--mk-lime); }
+.mk .gpick { display: flex; flex-direction: column; max-height: 260px; overflow: auto; }
+.mk .gpick .lv { gap: var(--mk-s3); }
+.mk .gpick .lv:first-child { border-top: 0; }
+.mk .gpn { font-weight: 600; flex: none; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@keyframes g-slide { from { transform: translateX(20px); opacity: 0; } }
+/* Narrow: the card is a sheet over the foot of the globe, and on a phone over the foot of the screen. */
+.mk .gs-sheet .gpop { inset: auto 8px 8px 8px; transform: none !important; }
+.mk .gs-sheet .gpop-in { position: static; translate: none; width: auto; }
+@media (--xs) {
+  .mk .gs-sheet .gpop, .mk .gpop { position: fixed; inset: auto 0 0 0; transform: none !important; z-index: 130; }
+  .mk .gpop-in { position: static; translate: none; width: auto; max-height: 85vh; overflow: auto; border-radius: 20px 20px 0 0; padding: var(--mk-s5) var(--mk-s4) calc(var(--mk-s4) + env(safe-area-inset-bottom)); animation: g-sheet 0.22s ease-out; }
+  .mk .gpop-x, .mk .gpop-back { width: 44px; height: 44px; }
+  .mk .gacts button { height: 44px; }
+}
+@keyframes g-sheet { from { transform: translateY(100%); } }
+
+/* The list: a row is the overview's row; older ones fade by their place; the open pin's rows are lit. */
+.mk .gfeed { flex: 1 1 auto; min-height: 0; overflow: hidden; padding: 0 var(--mk-s5); }
+.mk .gfeed .lv:first-child { border-top: 0; }
+.mk .gfeed .lv.on { background: var(--mk-limeD); }
+.mk .gcc { width: 22px; flex: none; font-size: 14px; line-height: 1; }
+.mk .gempty { padding: var(--mk-s4) 0; margin: 0; }
+@media (--xs) {
+  .mk .gfeed { padding: 0 var(--mk-s4) var(--mk-s2); }
+}
+@media (--sm-down) {
+  .mk .gfeed { max-height: calc(8 * 48px); }
+}
+
+/* Full screen: the browser's own, or a fixed cover where it has none. */
+.mk .gwrap:fullscreen, .mk .gwrap.fill { background: var(--mk-bg); padding: var(--mk-s4); box-sizing: border-box; overflow: auto; }
+.mk .gwrap.fill { position: fixed; inset: 0; z-index: 100; }
+.mk .gwrap:fullscreen .gstage, .mk .gwrap.fill .gstage { height: auto; }
+@media (--md-up) {
+  .mk .gwrap:fullscreen, .mk .gwrap.fill { grid-template-rows: 100%; }
+}
+@media (--sm-down) {
+  .mk .gwrap:fullscreen, .mk .gwrap.fill { grid-template-rows: minmax(0, 62%) minmax(0, 38%); }
+  .mk .gwrap.fill .gside { overflow: hidden; }
+}
+
+html[data-motion='off'] .mk :is(.gpop-in, .gcardv) { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .mk .gpop-in, .mk .gcardv { animation: none; }
+}
