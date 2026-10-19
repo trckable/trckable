@@ -1,5 +1,5 @@
-import { Activity, Check, ChevronRight, CircleCheck, Info as InfoIcon, RefreshCw, TriangleAlert } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Activity, Check, ChevronRight, CircleCheck, Info as InfoIcon, RefreshCw, TriangleAlert, X } from 'lucide-react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { api, type InstallCheck, type Site, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { Install } from '../features/install/Install'
@@ -18,6 +18,13 @@ export function InstallSection({ site }: { site: Site }) {
   const [at, setAt] = useState<Date | null>(null)
   const [code, setCode] = useState<boolean | null>(null) // null: open when not verified
   const checking = pend.page || pend.visits
+  // "Checked 2 min ago" keeps counting while the tab stays open.
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    if (!at) return
+    const t = setInterval(() => setTick((n) => n + 1), 30_000)
+    return () => clearInterval(t)
+  }, [at])
   const latest = () =>
     api
       .events(site.id, 1)
@@ -57,7 +64,7 @@ export function InstallSection({ site }: { site: Site }) {
   // the install: this site's own id, found where a browser would load it.
   const reachStep = (): Step => {
     if (!page || pend.page) return { tone: 'wait', title: 'Your homepage', text: `Loading https://${site.domain}/…` }
-    if (page.error) return { tone: 'warn', title: 'Your homepage', text: `${page.error}.` }
+    if (page.error) return { tone: 'fail', title: 'Your homepage', text: `${page.error}.` }
     return { tone: 'ok', title: 'Your homepage', text: `${where} answered (${page.status}).` }
   }
   const snippetStep = (): Step => {
@@ -69,8 +76,8 @@ export function InstallSection({ site }: { site: Site }) {
         title: "This site's snippet",
         text: page.via === 'page' ? `Found in the page, with this site's id.` : `Found in a script the page loads: ${page.via?.replace(/^https?:\/\//, '')}`,
       }
-    if (page.found === 'other' || page.found === 'nosite') return { tone: 'warn', title: "This site's snippet", text: `trckable is on ${where}, but ${page.found === 'other' ? "with another site's id" : 'without any site id'}. Copy the code below again.` }
-    return { tone: 'warn', title: "This site's snippet", text: `Not in the page or in the ${scripts} it loads. Add the code below to your homepage's <head>.` }
+    if (page.found === 'other' || page.found === 'nosite') return { tone: 'fail', title: "This site's snippet", text: `trckable is on ${where}, but ${page.found === 'other' ? "with another site's id" : 'without any site id'}. Copy the code below again.` }
+    return { tone: 'fail', title: "This site's snippet", text: `Not in the page or in the ${scripts} it loads. Add the code below to your homepage's <head>.` }
   }
   const visitsStep = (): Step => {
     if (pend.visits) return { tone: 'wait', title: 'Visits arriving', text: 'Asking for the latest visit…' }
@@ -98,30 +105,33 @@ export function InstallSection({ site }: { site: Site }) {
   }
   const head = headText()
   const sub = subText()
-  // The mark beside the heading: done, working on it, or needs a look.
-  const markIcon = () => {
-    if (verified) return <CircleCheck size={18} strokeWidth={1.75} />
-    if (checking) return <Activity size={18} strokeWidth={1.75} />
-    return <TriangleAlert size={18} strokeWidth={1.75} />
+  // The mark beside the heading: done, working on it, or needs a look (red when the snippet is not there).
+  const heroTone = (): Step['tone'] => {
+    if (checking) return 'wait'
+    if (verified) return fresh ? 'ok' : 'warn'
+    return 'fail'
   }
-  const markTone = () => {
-    if (verified && fresh) return ' accent'
-    return checking ? '' : ' warn'
+  const hero = heroTone()
+  const heroIcon = () => {
+    if (hero === 'ok') return <CircleCheck size={26} strokeWidth={1.6} />
+    if (hero === 'wait') return <Activity size={26} strokeWidth={1.6} />
+    if (hero === 'warn') return <TriangleAlert size={26} strokeWidth={1.6} />
+    return <X size={26} strokeWidth={1.6} />
   }
 
   return (
     <>
       <section className="card install-check" aria-busy={checking}>
         <div className="install-check-head">
-          <span className={'icon-tile' + markTone()} aria-hidden="true">
-            {markIcon()}
+          <span className={'install-seal ' + hero} aria-hidden="true">
+            {heroIcon()}
           </span>
           <div>
             <h3>{head}</h3>
             <p className="muted">{sub}</p>
             {at && !checking && (
-              <span className="install-at faint" key={at.getTime()}>
-                Checked at {clock(at, site.timezone)}
+              <span className="install-at faint" key={at.getTime()} title={`Checked at ${clock(at, site.timezone)}`}>
+                {`Checked ${agoText(at.getTime())}`}
               </span>
             )}
           </div>
@@ -130,19 +140,21 @@ export function InstallSection({ site }: { site: Site }) {
             {checking ? 'Checking…' : 'Verify again'}
           </button>
         </div>
-        <ul className="install-steps">
-          {[reach, snippet, visits].map((s) => (
-            <li key={s.title} className={'install-step ' + s.tone}>
+        <ol className="install-steps">
+          {[reach, snippet, visits].map((s, i) => (
+            <li key={s.title} className={'install-step ' + s.tone} style={{ '--i': i } as CSSProperties}>
               <span className="install-step-mark" aria-hidden="true" key={s.tone}>
                 <StepMark tone={s.tone} />
               </span>
-              <span>
+              <span className="install-step-text">
                 <b>{s.title}</b>
-                <span className="faint">{s.text}</span>
+                <span className="faint" title={s.text}>
+                  {s.text}
+                </span>
               </span>
             </li>
           ))}
-        </ul>
+        </ol>
       </section>
       <button type="button" className="btn ghost install-more" aria-expanded={showCode} onClick={() => setCode(!showCode)}>
         <ChevronRight size={15} strokeWidth={1.75} style={{ transform: showCode ? 'rotate(90deg)' : undefined, transition: 'transform .15s' }} aria-hidden="true" />
@@ -153,12 +165,13 @@ export function InstallSection({ site }: { site: Site }) {
   )
 }
 
-type Step = { tone: 'ok' | 'warn' | 'info' | 'wait'; title: string; text: string }
+type Step = { tone: 'ok' | 'warn' | 'fail' | 'info' | 'wait'; title: string; text: string }
 
 function StepMark({ tone }: { tone: Step['tone'] }) {
   if (tone === 'ok') return <Check size={14} strokeWidth={2.25} />
   if (tone === 'wait') return <span className="btn-spin" />
   if (tone === 'info') return <InfoIcon size={14} strokeWidth={2} />
+  if (tone === 'fail') return <X size={14} strokeWidth={2.25} />
   return <TriangleAlert size={14} strokeWidth={2} />
 }
 
