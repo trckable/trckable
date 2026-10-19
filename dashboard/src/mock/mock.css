@@ -1848,7 +1848,6 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 .mk .lhtext{display:flex;flex-direction:column;align-items:flex-start;gap:var(--mk-s1)}
 .mk .lhc button.lhgo{color:var(--mk-lime);font-weight:600;font-size:13px}
 .mk .lhc button.lhgo:hover{text-decoration:underline}
-.mk .lhquiet{color:var(--mk-faint)}
 @container (--pane-max-700){
 .mk .lcards{order:0;grid-template-columns:1fr;margin:var(--mk-s4) 0 0}
 }

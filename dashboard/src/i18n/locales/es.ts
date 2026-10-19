@@ -3079,6 +3079,7 @@ export default {
   'v2.live.health.sources.news': 'Noticias',
   'v2.live.health.sources.ref': 'Enlace',
   'v2.live.health.empty.speed': 'Aún sin datos de velocidad',
+  'v2.live.health.empty.speedFew': 'La velocidad aparece tras unas visitas más',
   'v2.live.health.empty.uptime': 'Aún sin vigilar',
   'v2.live.health.empty.ai': 'Aún sin rastreadores IA',
   'v2.live.health.setUp': 'Configurar',

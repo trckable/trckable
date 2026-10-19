@@ -16,6 +16,8 @@ import { aiOf, mentionsOf, speedOf, uptimeFigure, UPTIME_DAYS, type AiFigure, ty
 /** Each figure is undefined while it is read, null when there is nothing to say, else the figure. */
 export interface Health {
   speed?: number | null
+  /** Whether the site records speed at all: off, "Set up" turns it on; on, there are only too few visits. */
+  vitalsOn?: boolean
   uptime?: UptimeFigure | null
   ai?: AiFigure | null
   mentions?: MentionsFigure | null
@@ -36,12 +38,12 @@ export function useHealth(site: Site | undefined, on: boolean): Health {
     const cancel = whenQuiet(() => {
       const today = todayIn(tz)
       const now = Math.floor(Date.now() / 1000)
-      const speed = moduleOn(id, 'vitals').then((v) => (v ? more.vitals(id, { from: addDays(today, -6), to: today }) : null)).then(speedOf, () => null)
+      const speed = moduleOn(id, 'vitals').then(async (recorded) => ({ s: recorded ? await more.vitals(id, { from: addDays(today, -6), to: today }).then(speedOf, () => null) : null, on: recorded }))
       const uptime = watched ? incidents.period(id, Math.max(now - UPTIME_DAYS * 86400, watched), now).then((r) => uptimeFigure(r.incidents, today, tz, now, watched), () => null) : Promise.resolve(null)
       const ai = more.crawlers(id, { from: addDays(today, -6), to: today }).then(aiOf, () => null)
       const mentions = withMentions ? mentionsApi.list(id, '7d').then((r) => mentionsOf(r.mentions), () => null) : Promise.resolve(null)
       const answers = withAnswers ? answersApi.report(id, { from: addDays(today, -6), to: today }).then((r) => (r.latest ? { seen: r.latest.seen, total: r.latest.total } : null), () => null) : Promise.resolve(null)
-      void Promise.all([speed, uptime, ai, mentions, answers]).then(([s, u, a, m, an]) => live && setGot({ id, h: { speed: s, uptime: u, ai: a, mentions: m, answers: an } }))
+      void Promise.all([speed, uptime, ai, mentions, answers]).then(([s, u, a, m, an]) => live && setGot({ id, h: { speed: s.s, vitalsOn: s.on, uptime: u, ai: a, mentions: m, answers: an } }))
     })
     return () => {
       live = false

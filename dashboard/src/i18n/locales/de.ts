@@ -3076,6 +3076,7 @@ export default {
   'v2.live.health.sources.news': 'Nachrichten',
   'v2.live.health.sources.ref': 'Verweis',
   'v2.live.health.empty.speed': 'Noch keine Tempodaten',
+  'v2.live.health.empty.speedFew': 'Tempo erscheint nach ein paar weiteren Besuchen',
   'v2.live.health.empty.uptime': 'Noch nicht überwacht',
   'v2.live.health.empty.ai': 'Noch keine KI-Crawler',
   'v2.live.health.setUp': 'Einrichten',

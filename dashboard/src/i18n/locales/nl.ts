@@ -3086,6 +3086,7 @@ export default {
   'v2.live.health.sources.news': 'Nieuws',
   'v2.live.health.sources.ref': 'Link',
   'v2.live.health.empty.speed': 'Nog geen snelheidsgegevens',
+  'v2.live.health.empty.speedFew': 'Snelheid verschijnt na nog een paar bezoeken',
   'v2.live.health.empty.uptime': 'Nog niet bewaakt',
   'v2.live.health.empty.ai': 'Nog geen AI-crawlers',
   'v2.live.health.setUp': 'Instellen',
