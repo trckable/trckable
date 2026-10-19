@@ -35,7 +35,10 @@ export function ScriptRecords({ site }: { site: Site }) {
 
   // An old link to the Modules tab lands here.
   useEffect(() => {
-    if (mods && settingsParam('focus') === 'script-records') document.getElementById('script-records')?.scrollIntoView({ block: 'start' })
+    if (!mods || settingsParam('focus') !== 'script-records') return
+    document.getElementById('script-records')?.scrollIntoView({ block: 'start' })
+    // Live's speed "Set up" lands on the switch it is about.
+    if (settingsParam('want') === 'vitals') document.getElementById('rec-vitals')?.focus()
   }, [mods])
   const get = (id: string) => mods?.find((m) => m.id === id)
   // Turning one off loses what it would have recorded from now on: say so first.
@@ -71,7 +74,7 @@ export function ScriptRecords({ site }: { site: Site }) {
     return (
       <>
         <Row label={recordsCopy[id].name} hint={`${recordsCopy[id].hint} ${cost(m)}`}>
-          <Switch on={!!m?.enabled} disabled={busy === id || !can('site.settings')} onChange={() => void change(id, !m?.enabled)} />
+          <Switch id={`rec-${id}`} on={!!m?.enabled} disabled={busy === id || !can('site.settings')} onChange={() => void change(id, !m?.enabled)} />
         </Row>
         {children}
       </>
