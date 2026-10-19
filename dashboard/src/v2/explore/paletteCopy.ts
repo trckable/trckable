@@ -25,7 +25,7 @@ export const copy = defineCopy('palette', {
   theme: (name: string) => `Theme · ${name}`,
   profile: 'Profile',
   language: (name: string) => `Language · ${name}`,
-  features: 'Features',
+  features: 'Tracking options',
   shortcuts: 'Shortcuts',
   signOut: 'Sign out',
   source: 'source',

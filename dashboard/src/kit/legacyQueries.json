@@ -33,7 +33,7 @@
  "features/header/DomainSwitch.css": 2,
  "features/header/Header.css": 6,
  "features/heatmap/heatmap.css": 1,
- "features/hub/hub.css": 2,
+ "features/hub/hub.css": 1,
  "features/incidents/incidentsPage.css": 1,
  "features/install/CookielessDialog.css": 1,
  "features/install/install.css": 4,

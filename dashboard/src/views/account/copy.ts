@@ -10,7 +10,7 @@ export const copy = defineCopy('account', {
   /** The lines that came from the avatar menu. */
   lines: {
     languageHint: 'The dashboard language',
-    featuresHint: 'What trckable can do',
+    featuresHint: 'What the script records',
     open: 'Open',
     new: 'New',
     installHint: 'Open it like an app',

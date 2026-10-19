@@ -75,14 +75,14 @@ test('the avatar menu holds six rows; the rest is in the account window and ⌘K
   const menu = page.getByRole('menu', { name: 'Account' })
   const rows = menu.locator('[role="menuitem"], [role="menuitemradio"]')
   await expect(rows).toHaveCount(6) // Profile, the three themes, Shortcuts, Sign out
-  for (const gone of ['Language', 'Features', 'Install app', 'Exclude this browser']) await expect(menu.getByRole('menuitem', { name: gone })).toHaveCount(0)
+  for (const gone of ['Language', 'Tracking options', 'Install app', 'Exclude this browser']) await expect(menu.getByRole('menuitem', { name: gone })).toHaveCount(0)
   await page.keyboard.press('Escape')
 
   // The window has them as lines.
   await page.goto(API + '/example.com?view=briefing&account=profile')
   const win = page.getByRole('dialog', { name: 'Profile, your account' })
   await expect(win.getByRole('combobox', { name: 'Language' })).toBeVisible()
-  await expect(win.getByRole('button', { name: /^Features/ })).toBeVisible()
+  await expect(win.getByRole('button', { name: /^Tracking options/ })).toBeVisible()
   await expect(win.getByRole('button', { name: 'Exclude' })).toBeVisible()
   await page.keyboard.press('Escape')
 
@@ -91,7 +91,7 @@ test('the avatar menu holds six rows; the rest is in the account window and ⌘K
   await page.keyboard.press('ControlOrMeta+k')
   const input = page.locator('.pal.on .palbox input')
   await expect(input).toBeVisible() // the list is its own chunk
-  for (const word of ['Language · Deutsch', 'Features', 'Shortcuts', 'Profile', 'Exclude this browser']) {
+  for (const word of ['Language · Deutsch', 'Tracking options', 'Shortcuts', 'Profile', 'Exclude this browser']) {
     await input.fill(word)
     await expect(page.locator('.pal.on .pi', { hasText: word }).first()).toBeVisible()
   }
