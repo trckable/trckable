@@ -1904,3 +1904,8 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 .mk .gsw .switch.on span { transform: translateX(14px); background: var(--mk-lime); }
 .mk .lswap{animation:mk-fade .2s ease-out}
 html[data-motion='off'] .mk .lswap{animation:none}
+/* A person in the "On the site right now" list: their drawn face and name, before the page. */
+.mk .lv .vn{flex:none;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mk-muted);font-size:12px}
+@container (--pane-max-700){
+.mk .lv .vn{display:none}
+}
