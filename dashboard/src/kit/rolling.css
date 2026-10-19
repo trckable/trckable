@@ -25,7 +25,7 @@
   display: inline-block;
   height: 1em;
   overflow: clip;
-  overflow-clip-margin: 0.15em;
+  overflow-clip-margin: 0.02em;
 }
 .rn-col {
   display: block;
