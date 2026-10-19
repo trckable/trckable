@@ -69,27 +69,27 @@ test('a site that is down shows red with how long, as the header does, and the c
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 
-test('with nothing behind a figure an owner is offered Set up only where there is something to set up, and each goes to its own place', async ({ page }) => {
+test('with nothing behind a figure an owner is offered a button only where there is something to set up, and each goes to its own place', async ({ page }) => {
   await fake(page, { empty: true, noVitals: true })
-  await expect(cards(page).locator('.lhempty')).toHaveCount(3)
+  await expect(cards(page).locator('.lhempty')).toHaveCount(2) // speed and uptime say it once
   await expect(cards(page).locator('.lhment')).toContainText('No new mentions') // a site that looks for mentions and has none is a real zero
-  await expect(cards(page).getByRole('button', { name: 'Set up' })).toHaveCount(2) // uptime is watched on its own: no button
-  await cards(page).locator('.lhempty').first().getByRole('button', { name: 'Set up' }).click()
+  await expect(cards(page).getByRole('button', { name: /^(Turn on speed|Connect AI crawlers)$/ })).toHaveCount(2) // uptime is watched on its own: no button of its own
+  await cards(page).locator('.lhempty').first().getByRole('button', { name: 'Turn on speed' }).click()
   await expect(page).toHaveURL(/settings=site/)
   await expect(page.locator('#script-records')).toBeVisible()
   await expect(page.locator('#rec-vitals')).toBeFocused()
 })
 
-test('Set up on AI crawlers opens the connect sheet in AI & Search', async ({ page }) => {
+test('Connect AI crawlers opens the connect sheet in AI & Search', async ({ page }) => {
   await fake(page, { empty: true, noVitals: true })
-  await cards(page).locator('.lhempty').nth(2).getByRole('button', { name: 'Set up' }).click()
+  await cards(page).locator('.lhempty').nth(1).getByRole('button', { name: 'Connect AI crawlers' }).click()
   await expect(page).toHaveURL(/x=ai/)
   await expect(page.getByRole('dialog', { name: 'Connect crawler data' })).toBeVisible()
 })
 
-test('a speed that is recorded but has too few visits says so, with no Set up', async ({ page }) => {
+test('a speed that is recorded but has too few visits says so, with no button', async ({ page }) => {
   await fake(page, { empty: true })
-  await expect(cards(page).locator('.lhempty').first()).toContainText('after a few more visits')
+  await expect(cards(page).locator('.lhempty').first()).toContainText('Collecting')
   await expect(cards(page).locator('.lhempty').first().getByRole('button')).toHaveCount(0)
 })
 
@@ -101,8 +101,8 @@ test('Analytics keeps the pages and the countries behind one switch', async ({ p
   await expect(card.getByRole('button', { name: 'Pages' })).toHaveAttribute('aria-pressed', 'false')
 })
 
-test('a viewer sees the empty lines and no Set up', async ({ page }) => {
+test('a viewer sees the empty lines and no button', async ({ page }) => {
   await fake(page, { empty: true, noVitals: true, role: 'viewer' })
-  await expect(cards(page).locator('.lhempty')).toHaveCount(3)
-  await expect(cards(page).getByRole('button', { name: 'Set up' })).toHaveCount(0)
+  await expect(cards(page).locator('.lhempty')).toHaveCount(2)
+  await expect(cards(page).locator('.lhempty button')).toHaveCount(0)
 })
