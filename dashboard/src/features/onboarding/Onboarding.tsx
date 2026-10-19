@@ -26,16 +26,17 @@ import '../../kit/layout.css'
 import '../../mock/theme.css'
 import './onboarding.css'
 import '../../kit/Modal.css'
-import type { SitePrefill } from '../../lib/addSiteLink'
+import { firstStep, type SitePrefill } from '../../lib/addSiteLink'
 import { browserZone } from '../../lib/format'
 
 /** required: nothing else may be reached until the first visit or "Skip for
  *  now" (Esc does nothing); resume: sites already added that have not had one. */
 export default function Onboarding({ onClose, onSites, required = false, resume, prefill = null }: { onClose: () => void; onSites: () => Promise<unknown>; required?: boolean; resume?: Site[]; prefill?: SitePrefill | null }) {
-  const [step, setStep] = useState<Step>(resume?.length ? 'install' : 'site')
+  const [start] = useState(() => firstStep(resume, prefill))
+  const [step, setStep] = useState<Step>(start.step)
   const [domain, setDomain] = useState(prefill?.domain ?? '')
   const [sites, setSites] = useState<Site[]>(resume ?? [])
-  const [active, setActive] = useState(resume?.[0]?.id ?? '')
+  const [active, setActive] = useState(start.active)
   const [seen, setSeen] = useState<Record<string, Visit[] | undefined>>({})
   const [busy, setBusy] = useState(false)
   const site = sites.find((s) => s.id === active) ?? null
@@ -68,7 +69,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
       .createSite(clean)
       .then((s) => more.updateSite(s.id, { timezone: zone }).catch(() => s))
       .then((s) => {
-        setSites([s])
+        setSites((all) => [...all, s])
         setActive(s.id)
         setStep('install')
       })

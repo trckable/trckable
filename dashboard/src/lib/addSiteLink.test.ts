@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { prefillFrom } from './addSiteLink'
+import { firstStep, prefillFrom } from './addSiteLink'
 
 const from = (qs: string) => prefillFrom(new URLSearchParams(qs))
 
@@ -16,5 +16,21 @@ describe('prefillFrom', () => {
     expect(from('domain=not a domain')).toBeNull()
     expect(from('domain=nodots')).toBeNull()
     expect(from('domain=example.com')).toBeNull()
+  })
+})
+
+describe('firstStep', () => {
+  const waiting = [{ id: 'a', domain: 'old.io' }, { id: 'b', domain: 'mysite.io' }]
+  it('asks for the domain when there is nothing to resume', () => {
+    expect(firstStep(undefined, null)).toEqual({ step: 'site', active: '' })
+  })
+  it('resumes the install without a link', () => {
+    expect(firstStep(waiting, null)).toEqual({ step: 'install', active: 'a' })
+  })
+  it('keeps a claimed domain that is not one of the waiting sites', () => {
+    expect(firstStep(waiting, { domain: 'new.io', taken: false })).toEqual({ step: 'site', active: '' })
+  })
+  it('opens the install of the claimed domain when it is already added', () => {
+    expect(firstStep(waiting, { domain: 'mysite.io', taken: false })).toEqual({ step: 'install', active: 'b' })
   })
 })

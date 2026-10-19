@@ -12,3 +12,14 @@ export function prefillFrom(p: URLSearchParams): SitePrefill | null {
   const domain = cleanDomain(raw)
   return checkDomain(domain, raw) === 'ok' ? { domain, taken: p.get('taken') === '1' } : null
 }
+
+/** Where the first-run steps open: a link naming a domain not yet among the
+ *  sites still waiting for their first visit asks for that domain first (so
+ *  a claimed site is not lost under them); otherwise the install step, on the
+ *  named site when it is one of them. */
+export function firstStep(resume: { id: string; domain: string }[] | undefined, prefill: SitePrefill | null): { step: 'site' | 'install'; active: string } {
+  if (!resume?.length) return { step: 'site', active: '' }
+  if (!prefill) return { step: 'install', active: resume[0].id }
+  const named = resume.find((s) => s.domain === prefill.domain)
+  return named ? { step: 'install', active: named.id } : { step: 'site', active: '' }
+}
