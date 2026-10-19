@@ -7,7 +7,7 @@ import { copy as liveCopy } from '../../../features/live/copy'
 import { useLeaving } from '../../../features/live/useLeaving'
 import { useArrivals } from '../useArrivals'
 import { copy } from '../copy'
-import { agoOf, pinKeyOf } from './geo'
+import { agoOf } from './geo'
 
 const SHOWN = 14
 
@@ -26,7 +26,7 @@ export function GlobeFeed({ rows, clock, active, onPick }: { rows: Row[]; clock:
       {list.map((r, i) => {
         const a = agoOf(clock - r.last)
         return (
-          <button key={r.key} type="button" className={`lv ${r.leaving ? 'leaving' : (marks.get(r.key) ?? '')}${active && active === pinKeyOf(r) ? ' on' : ''}`.trim()} style={{ opacity: Math.max(0.3, 1 - i * 0.055) }} disabled={r.leaving} onClick={() => onPick(r)}>
+          <button key={r.key} type="button" className={`lv ${r.leaving ? 'leaving' : (marks.get(r.key) ?? '')}${active === r.key ? ' on' : ''}`.trim()} style={{ opacity: Math.max(0.3, 1 - i * 0.055) }} disabled={r.leaving} onClick={() => onPick(r)}>
             <span className="gcc" aria-hidden="true">{flag(r.country ?? '')}</span>
             <span className="pg mono" title={textOf(r)}>{textOf(r)}</span>
             <span className="src">{a.unit === 's' ? copy.agoSec(a.n) : copy.agoMin(a.n)}</span>
