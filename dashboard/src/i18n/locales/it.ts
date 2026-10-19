@@ -1453,6 +1453,7 @@ export default {
   'install.wizard.invalid': 'Non sembra un dominio. Usane uno come example.com.',
   'install.wizard.placeholderDomain': (d: string) => `${d} è un segnaposto. Inserisci l’indirizzo del tuo sito.`,
   'install.wizard.added': (d: string) => `Hai già ${d}.`,
+  'install.wizard.taken': 'Questo dominio è già stato aggiunto a un altro account. Chiedi al proprietario di invitarti, oppure usa un altro dominio.',
   'payments.key.refused': (n: string) => `${n} non ha accettato quella chiave. Incolla di nuovo la chiave limitata, dalla pagina collegata qui sotto.`,
   'payments.key.notConnected': (n: string) => `${n} non collegato`,
   'payments.picker.search': 'Cerca un fornitore, o Apple Pay',

@@ -109,3 +109,25 @@ test('the Install step fits 1440x900 without scrolling, with one primary action'
   await wizard.getByRole('button', { name: /Continue anyway/ }).click({ timeout: 20_000 })
   await expect(wizard.getByRole('heading', { name: 'Attribute revenue' })).toBeVisible()
 })
+
+// A link from the site scan on the landing page opens the wizard with the domain filled in and
+// Continue ready; a domain owned elsewhere gets one calm line. The link's extras leave the address.
+test('?add=site&domain= opens the wizard with the domain filled in and focus on Continue', async ({ page }) => {
+  await signIn(page)
+  await page.goto(`${API}/?add=site&domain=https://www.Scanned-Site.test/pricing&taken=1`)
+  const wizard = page.getByRole('dialog', { name: 'Add a site' })
+  await expect(wizard.getByLabel('Domain')).toHaveValue('scanned-site.test', { timeout: 15_000 })
+  await expect(wizard.getByRole('button', { name: 'Continue' })).toBeFocused()
+  await expect(wizard.getByText(/already added to another account/)).toBeVisible()
+  expect(new URL(page.url()).search).toBe('')
+  await wizard.getByLabel('Domain').fill('other-site.test')
+  await expect(wizard.getByText(/already added to another account/)).toHaveCount(0)
+})
+
+test('?add=site&domain= with a domain that cannot be added opens the wizard empty', async ({ page }) => {
+  await signIn(page)
+  await page.goto(`${API}/example.com?add=site&domain=not%20a%20domain`)
+  const wizard = page.getByRole('dialog', { name: 'Add a site' })
+  await expect(wizard.getByLabel('Domain')).toHaveValue('', { timeout: 15_000 })
+  expect(new URL(page.url()).search).toBe('')
+})

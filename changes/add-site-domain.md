@@ -1,0 +1,1 @@
+A link into the add-a-site wizard can carry the domain (?add=site&domain=…): the wizard opens with it filled in and Continue ready, and says so calmly when the domain is already added to another account.

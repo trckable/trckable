@@ -1454,6 +1454,7 @@ export default {
   'install.wizard.invalid': 'Ce n’est pas un domaine. Utilisez-en un comme example.com.',
   'install.wizard.placeholderDomain': (d: string) => `${d} est un exemple. Saisissez l’adresse de votre propre site.`,
   'install.wizard.added': (d: string) => `Vous avez déjà ${d}.`,
+  'install.wizard.taken': 'Ce domaine est déjà ajouté à un autre compte. Demandez à son propriétaire de vous inviter, ou utilisez un autre domaine.',
   'payments.key.refused': (n: string) => `${n} n’a pas accepté cette clé. Collez de nouveau la clé restreinte, depuis la page liée ci-dessous.`,
   'payments.key.notConnected': (n: string) => `${n} non connecté`,
   'payments.picker.search': 'Cherchez un prestataire, ou Apple Pay',
