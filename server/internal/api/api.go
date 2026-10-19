@@ -113,8 +113,9 @@ type API struct {
 	// GSCHTTP replaces the HTTP client used to reach Google; tests only.
 	GSCHTTP    *http.Client
 	cache      *reportCache
-	nowCache   nowCache   // Live mode's answers, two seconds each
-	surges     surge.Book // each site's busy spell, if it has one
+	nowCache   nowCache     // Live mode's answers, two seconds each
+	suggested  suggestCache // Answers' suggested questions, ten minutes each
+	surges     surge.Book   // each site's busy spell, if it has one
 	storyMu    sync.Mutex
 	stories    map[string]storyEntry // how each site's surge went, kept half a minute
 	busier     busierCache           // each site's "busier than usual" answer, kept half a minute

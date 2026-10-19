@@ -137,10 +137,16 @@ func clip(s string, max int) string {
 	return s
 }
 
+// An answer keeps at most this many citations, each URL cut to this many bytes.
+const (
+	maxCites   = 50
+	maxCiteURL = 2048
+)
+
 // addCite appends c unless its URL is empty or already listed.
 func addCite(list []Citation, c Citation) []Citation {
-	c.URL = strings.TrimSpace(c.URL)
-	if c.URL == "" {
+	c.URL = clip(strings.TrimSpace(c.URL), maxCiteURL)
+	if c.URL == "" || len(list) >= maxCites {
 		return list
 	}
 	for _, x := range list {

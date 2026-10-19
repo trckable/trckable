@@ -1,0 +1,1 @@
+Answers now holds each site to its fair share of the monthly budget even after its questions are edited, skips sites of suspended accounts, stops a round when the month passes its budget, and shows an Owner their own site's spend while the server total stays with the operator.

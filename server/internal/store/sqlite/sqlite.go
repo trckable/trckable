@@ -997,6 +997,18 @@ var migrations = []string{
 	) WITHOUT ROWID;
 	ALTER TABLE sites ADD COLUMN setup_mail_at INTEGER NOT NULL DEFAULT 0;
 	UPDATE sites SET setup_mail_at = CAST(strftime('%s', 'now') AS INTEGER) WHERE created_at < CAST(strftime('%s', 'now') AS INTEGER) - 259200;`,
+	// 73: what each site's Answers cost in a month, kept apart from the runs so
+	// that editing a question (which deletes its runs) does not give the site a
+	// fresh share. Seeded from the runs that exist now.
+	`CREATE TABLE IF NOT EXISTS answer_site_spend (
+		site_id TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		month   TEXT NOT NULL,
+		micros  INTEGER NOT NULL DEFAULT 0,
+		PRIMARY KEY (site_id, month)
+	) WITHOUT ROWID;
+	INSERT INTO answer_site_spend (site_id, month, micros)
+	SELECT r.site_id, strftime('%Y-%m', r.asked_at, 'unixepoch'), sum(r.cost_micros) FROM answer_runs r
+	WHERE r.cost_micros > 0 AND r.site_id IN (SELECT id FROM sites) GROUP BY r.site_id, strftime('%Y-%m', r.asked_at, 'unixepoch');`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
