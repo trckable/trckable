@@ -1782,9 +1782,9 @@ body[data-modal] .mk .cd {
 .mk .tabbar{z-index:25}
 body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.pmenu.on,.xm.on,.pal.on) .mk .tabbar{pointer-events:none}
 
-/* The stuck header (data-stuck, Header.tsx): clear at the top; once the page has moved under it, a frosted layer of its own (::before, so the header never becomes the box a fixed menu is placed in) that fades out along its lower edge instead of ending in a line. Solid without blur support or with reduced transparency. */
+/* The stuck header (data-stuck, Header.tsx): clear at the top; once the page has moved under it, a frosted layer of its own (::before, so the header never becomes the box a fixed menu is placed in) shaped as a pill with rounded ends, inset from the window's edge, so no page content shows at its ends and no hard rectangle shows beyond it. Solid without blur support or with reduced transparency. */
 .mk .hd{background:transparent;border-bottom:0}
-.mk .hd::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--mk-bg);opacity:0;pointer-events:none;-webkit-mask-image:linear-gradient(var(--mk-bg) calc(100% - 14px),transparent);mask-image:linear-gradient(var(--mk-bg) calc(100% - 14px),transparent);transition:opacity .15s}
+.mk .hd::before{content:"";position:absolute;inset:var(--mk-s2) var(--mk-s3) calc(var(--mk-s2) * -1);z-index:-1;border-radius:999px;background:var(--mk-bg);opacity:0;pointer-events:none;transition:opacity .15s}
 .mk .hd[data-stuck=true]::before{opacity:1}
 @supports (backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px)){
 .mk .hd::before{background:color-mix(in srgb,var(--mk-bg) 72%,transparent);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%)}
