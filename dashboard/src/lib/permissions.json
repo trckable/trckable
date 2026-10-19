@@ -104,6 +104,12 @@
       ],
       "server": "search.connect"
     },
+    "channels.connect": {
+      "roles": [
+        "owner"
+      ],
+      "server": "channels.connect"
+    },
     "import.google": {
       "roles": [
         "owner"

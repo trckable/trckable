@@ -45,6 +45,9 @@ const (
 	ActTeamManage Action = "team.manage"
 	// ActPeekAsk is asking Peek and Answers about the data: a read, so a viewer may.
 	ActPeekAsk Action = "peek.ask"
+	// ActChannelsConnect is connecting and disconnecting the team's own social
+	// accounts (Channels). Reading their numbers is for everyone who sees the team.
+	ActChannelsConnect Action = "channels.connect"
 	// ActDataErase is erasing a visitor's data from a site.
 	ActDataErase Action = "data.erase"
 )
@@ -52,7 +55,7 @@ const (
 var ownerActions = []Action{
 	ActChange, ActAccountOwn, ActSitesAll, ActMemberManage, ActKeyRead, ActFeedbackRead,
 	ActSearchConnect, ActImportGoogle, ActSecretRead, ActProxyKey, ActAlertTarget, ActUpdateCheck,
-	ActSiteDelete, ActTeamManage, ActDataErase, ActPeekAsk,
+	ActSiteDelete, ActTeamManage, ActDataErase, ActPeekAsk, ActChannelsConnect,
 }
 
 // permissions is the one role to actions table. An unknown role has no row

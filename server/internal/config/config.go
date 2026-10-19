@@ -98,6 +98,17 @@ type Config struct {
 	// import a site's history from Google Analytics with one sign-in. Both,
 	// or the import stays the command line's.
 	GAClientID, GAClientSecret string
+	// Channels shows the team's own YouTube, Instagram and Threads views. Each
+	// platform needs the app keys of an app the operator registered with it
+	// (TRCKABLE_YOUTUBE_CLIENT_ID/_SECRET, TRCKABLE_INSTAGRAM_APP_ID/_SECRET,
+	// TRCKABLE_THREADS_APP_ID/_SECRET, each secret also as _FILE); a platform
+	// without them shows a disabled Connect. ChannelsEvery is how often the
+	// accounts are read (TRCKABLE_CHANNELS_EVERY, default 24h, 0 turns the
+	// reading off).
+	YouTubeID, YouTubeSecret     string
+	InstagramID, InstagramSecret string
+	ThreadsID, ThreadsSecret     string
+	ChannelsEvery                time.Duration
 }
 
 // Load resolves the configuration from the environment.
@@ -148,6 +159,10 @@ func Load() Config {
 	c.OIDCSignup = envBool("OIDC_ALLOW_SIGNUP")
 	c.GAClientID = strings.TrimSpace(os.Getenv("GA_OAUTH_CLIENT_ID"))
 	c.GAClientSecret = strings.TrimSpace(envFile("GA_OAUTH_CLIENT_SECRET"))
+	c.YouTubeID, c.YouTubeSecret = strings.TrimSpace(os.Getenv("TRCKABLE_YOUTUBE_CLIENT_ID")), strings.TrimSpace(envFile("TRCKABLE_YOUTUBE_CLIENT_SECRET"))
+	c.InstagramID, c.InstagramSecret = strings.TrimSpace(os.Getenv("TRCKABLE_INSTAGRAM_APP_ID")), strings.TrimSpace(envFile("TRCKABLE_INSTAGRAM_APP_SECRET"))
+	c.ThreadsID, c.ThreadsSecret = strings.TrimSpace(os.Getenv("TRCKABLE_THREADS_APP_ID")), strings.TrimSpace(envFile("TRCKABLE_THREADS_APP_SECRET"))
+	c.ChannelsEvery = envDuration("TRCKABLE_CHANNELS_EVERY", 24*time.Hour)
 	var err error
 	if c.OIDC, err = parseOIDC(os.Environ(), envFile); err != nil {
 		fileErrs = append(fileErrs, err)
