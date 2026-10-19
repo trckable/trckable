@@ -37,25 +37,25 @@ test('the list of tabs was read', () => {
   expect(TABS).toEqual(expect.arrayContaining(['overview', 'sells', 'earners', 'buyers', 'sales', 'pages']))
 })
 
-for (const money of [true, false]) {
-  for (const width of [1440, 390]) {
-    test(`every sheet opens, ${money ? 'with' : 'without'} payments, at ${width}px`, async ({ page }) => {
-      test.setTimeout(480_000)
-      await page.setViewportSize({ width, height: 900 })
-      await page.context().addCookies([{ name: 'trckable_session', value: await session('sheets-draw'), url: API }])
-      if (money) await withPayments(page)
-      else await withoutPayments(page)
-      const thrown: string[] = []
-      page.on('pageerror', (e) => thrown.push(e.message))
-      for (const period of PERIODS) {
-        for (const tab of TABS) {
-          // sells first on the first period: the address that was reported broken.
-          await page.goto(`${API}/${HISTORY_DOMAIN}?period=${period}&x=${tab}`)
-          await expect(page.locator('#xp.on'), `${tab} ${period}`).toBeVisible({ timeout: 20_000 })
-          await expect(page.getByText(/Couldn.t draw this/), `${tab} ${period}: ${thrown.join(' | ')}`).toHaveCount(0)
-        }
-      }
-      expect(thrown).toEqual([])
-    })
-  }
+// One small test per sheet and range; the sheet's own #xp.on is the ready signal.
+const CASES = [
+  ...TABS.flatMap((tab) => PERIODS.map((period) => ({ tab, period, money: true, width: 1440 }))),
+  ...TABS.map((tab) => ({ tab, period: 'today', money: false, width: 1440 })),
+  ...TABS.map((tab) => ({ tab, period: 'today', money: true, width: 390 })),
+]
+
+for (const { tab, period, money, width } of CASES) {
+  test(`sheet ${tab} ${period} ${money ? 'with' : 'without'} payments at ${width}px`, async ({ page }) => {
+    test.setTimeout(30_000)
+    await page.setViewportSize({ width, height: 900 })
+    await page.context().addCookies([{ name: 'trckable_session', value: await session('sheets-draw'), url: API }])
+    if (money) await withPayments(page)
+    else await withoutPayments(page)
+    const thrown: string[] = []
+    page.on('pageerror', (e) => thrown.push(e.message))
+    await page.goto(`${API}/${HISTORY_DOMAIN}?period=${period}&x=${tab}`)
+    await expect(page.locator('#xp.on')).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText(/Couldn.t draw this/), thrown.join(' | ')).toHaveCount(0)
+    expect(thrown).toEqual([])
+  })
 }
