@@ -281,7 +281,7 @@ test('a long list scrolls inside its card with a fade and the cards keep one hei
   await expect(page.locator('.lfeed .lv')).toHaveCount(19)
 })
 
-test('scrolling the people list leaves its head where it is, and the page does not scroll', async ({ page }) => {
+test('scrolling the people list leaves its head where it is, and the page does not scroll', async ({ page, browserName }) => {
   await page.route('**/api/v1/sites/*/now*', async (route) => {
     const res = await route.fetch()
     const body = await res.json()
@@ -296,13 +296,26 @@ test('scrolling the people list leaves its head where it is, and the page does n
   const box = async (sel: string) => (await page.locator(sel).boundingBox())!
   const before = { head: await box('.lon .lhead'), card: await box('.lon') }
   const feed = page.locator('.lon .lfeed')
-  await feed.evaluate((el) => (el.scrollTop = el.scrollHeight))
+  const still = async () => {
+    expect(await box('.lon .lhead')).toEqual(before.head)
+    expect(await box('.lon')).toEqual(before.card)
+    expect(await page.evaluate(() => scrollY)).toBe(0)
+  }
+  // The wheel turns where the pointer is (the page is taller than the screen now, with the sections under the half hour).
+  await feed.hover()
+  await feed.evaluate((el) => (el.scrollTop = 100))
   await expect(feed).toHaveAttribute('data-above', 'true')
-  await page.mouse.wheel(0, 400)
+  await page.mouse.wheel(0, 150)
   await page.waitForTimeout(200)
-  expect(await box('.lon .lhead')).toEqual(before.head)
-  expect(await box('.lon')).toEqual(before.card)
-  expect(await page.evaluate(() => scrollY)).toBe(0)
+  expect(await feed.evaluate((el) => el.scrollTop)).toBeGreaterThan(100)
+  await still()
+  // At the list's end the page behind stays too. Firefox's scripted wheel does not honour overscroll-behavior, so only Chromium can tell.
+  if (browserName === 'chromium') {
+    await feed.evaluate((el) => (el.scrollTop = el.scrollHeight))
+    await page.mouse.wheel(0, 400)
+    await page.waitForTimeout(200)
+    await still()
+  }
 })
 
 test('online is never more than the visitors of the half hour', async ({ page }) => {

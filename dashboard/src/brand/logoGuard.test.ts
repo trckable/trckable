@@ -5,7 +5,8 @@ import { GHOST } from './logo'
 
 const sources = import.meta.glob<string>(['/src/**/*.tsx', '/src/**/*.ts'], { query: '?raw', import: 'default', eager: true })
 
-const drawn = Object.entries(sources).filter(([f]) => !f.includes('/brand/') && !/\.test\.tsx?$/.test(f) && !f.includes('/i18n/locales/'))
+// figures/ghost.art.ts is the baked isometric scene of the ghost with the lamp (a picture where a page waits, not a mark in a header), so its copy of the path is expected.
+const drawn = Object.entries(sources).filter(([f]) => !f.includes('/brand/') && !f.endsWith('/figures/ghost.art.ts') && !/\.test\.tsx?$/.test(f) && !f.includes('/i18n/locales/'))
 
 describe('the logo', () => {
   it('is found in the sources it is guarded over', () => {
