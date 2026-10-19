@@ -9,25 +9,23 @@ import { goDeeper } from './deeper'
 import type { Top } from './model'
 
 /** One thing that is not set up yet, as a locked preview: the button that sets it up. */
-function setupOf(key: 'rev' | 'search' | 'goals' | 'uptime' | 'alerts', site: Site, onGoal: () => void): Setup {
+function setupOf(key: 'rev' | 'search' | 'goals' | 'alerts', site: Site, onGoal: () => void): Setup {
   const rows: Record<typeof key, Setup> = {
     rev: { key: 'rev', b: copy.connect, act: () => openSettings(site, 'payments') },
     search: { key: 'search', b: copy.connect, act: () => openSettings(site, 'search') },
     goals: { key: 'goals', b: copy.setUp, act: onGoal },
-    uptime: { key: 'uptime', b: copy.turnOn, act: () => openSettings(site, 'health') },
     alerts: { key: 'alerts', b: copy.turnOn, act: () => openSettings(site, 'alerts') },
   }
   return rows[key]
 }
 
-/** What is not set up yet: revenue, search, goals, uptime checks, alerts. */
+/** What is not set up yet: revenue, search, goals, alerts (uptime is watched on its own). */
 export function setupRows(o: { site: Site; cur: Result; can: boolean; shared: boolean; noSearch: boolean; noAlerts: boolean; onGoal: () => void }): Setup[] {
   if (o.shared) return []
-  const want: ('rev' | 'search' | 'goals' | 'uptime' | 'alerts')[] = []
+  const want: ('rev' | 'search' | 'goals' | 'alerts')[] = []
   if (!o.cur.money) want.push('rev')
   if (o.noSearch) want.push('search')
   if ((o.cur.goals ?? []).length === 0) want.push('goals')
-  if (!o.site.watched_since) want.push('uptime')
   if (o.noAlerts) want.push('alerts')
   // Someone who may not set it up sees the same card and is asked to turn to an Owner or Admin.
   return want.map((k) => (o.can ? setupOf(k, o.site, o.onGoal) : { ...setupOf(k, o.site, o.onGoal), act: undefined }))

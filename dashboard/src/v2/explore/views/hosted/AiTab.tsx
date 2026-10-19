@@ -8,6 +8,8 @@ import { fmtInt } from '../../../../lib/format'
 import { messageOf, more, type SearchReport } from '../../../../lib/apiMore'
 import { aiCopy } from '../../../../features/aisearch/copy'
 import { useAiSearch } from '../../../../features/aisearch/useAiSearch'
+import { takeCrawlerSetupAsk } from '../../../../features/crawlers/ask'
+import { can } from '../../../../lib/permissions'
 import { hasAnswers } from '../../../../lib/me'
 import { copy } from '../../copy'
 import type { XCtx } from '../../ctx'
@@ -50,6 +52,11 @@ function GoogleLines({ x }: { x: XCtx }) {
 export default function AiTab({ x }: { x: XCtx }) {
   const { rep, reload } = useAiSearch(x.site.id, x.query, ROWS)
   const [setup, setSetup] = useState(false)
+  // Live's "Set up" asks for the connect sheet; a mount that is kept takes the ask (one that React drops does not).
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reading a one-time ask from outside React
+    if (takeCrawlerSetupAsk() && can('site.settings')) setSetup(true)
+  }, [])
   if (rep === undefined) return <Loading height={180} />
   if (rep === null) return <XError title={aiCopy.failed} onRetry={reload} />
   const people = rep.assistants.slice(0, ROWS)

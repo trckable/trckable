@@ -18,18 +18,17 @@ beforeEach(() => {
 })
 
 describe('what the Briefing offers to connect', () => {
-  it('a new site gets revenue, search, goals, uptime and alerts, in that order', () => {
-    expect(rows().map((r) => r.key)).toEqual(['rev', 'search', 'goals', 'uptime', 'alerts'])
+  it('a new site gets revenue, search, goals and alerts, in that order', () => {
+    expect(rows().map((r) => r.key)).toEqual(['rev', 'search', 'goals', 'alerts'])
   })
 
   it('each button opens the right place', () => {
     const by = Object.fromEntries(rows().map((r) => [r.key, r]))
     by.rev.act?.()
     by.search.act?.()
-    by.uptime.act?.()
     by.alerts.act?.()
     by.goals.act?.()
-    expect(openSettings.mock.calls.map((c) => c[1])).toEqual(['payments', 'search', 'health', 'alerts'])
+    expect(openSettings.mock.calls.map((c) => c[1])).toEqual(['payments', 'search', 'alerts'])
     expect(onGoal).toHaveBeenCalledTimes(1)
   })
 

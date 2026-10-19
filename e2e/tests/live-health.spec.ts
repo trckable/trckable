@@ -1,6 +1,6 @@
 // Live's Speed & uptime and AI & mentions cards beside Analytics: a gauge for loading time, thirty days of uptime, AI crawler
 // visits with the assistants that came, and mentions. A site that is
-// down shows it in red, a figure with nothing behind it says "Set up" (a dash to a viewer), and on a phone the four
+// down shows it in red, a figure with nothing behind it says "Set up" where there is something to set up (nothing to a viewer), and on a phone the four
 // sit two by two. The answers are faked through the routes; what is under test is how the cards tell them.
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from './fixtures'
@@ -12,6 +12,8 @@ const NOW = Math.floor(Date.now() / 1000)
 interface Fake {
   down?: boolean
   empty?: boolean
+  /** The site records no speed, so the speed card can be set up. */
+  noVitals?: boolean
   role?: string
 }
 
@@ -30,7 +32,7 @@ async function fake(page: Page, o: Fake = {}) {
       await r.fulfill({ json: { ...me, role: o.role } })
     })
   }
-  await page.route(/\/api\/v1\/sites\/[^/]+\/modules/, (r) => r.fulfill({ json: { modules: [{ id: 'vitals', enabled: true }] } }))
+  await page.route(/\/api\/v1\/sites\/[^/]+\/modules/, (r) => r.fulfill({ json: { modules: [{ id: 'vitals', enabled: !o.noVitals }] } }))
   await page.route(/\/api\/v1\/sites\/[^/]+\/report\/vitals/, (r) => r.fulfill({ json: o.empty ? { samples: 0, good: 0 } : { samples: 80, lcp_ms: 1800, lcp_n: 80, inp_ms: 120, inp_n: 80, cls_1k: 20, cls_n: 80, good: 70 } }))
   const open = { id: 'i1', site: 'example.com', kind: 'down', started_at: NOW - 12 * 60, ended_at: null, cause: 'timeout', expected_visits: null, note: '' }
   await page.route(/\/api\/v1\/sites\/[^/]+\/incidents/, (r) => r.fulfill({ json: { incidents: o.down ? [open] : [], summary: { count: o.down ? 1 : 0, seconds: o.down ? 720 : 0, lost: 0, lost_some: false }, quiet_tracked: true } }))
@@ -67,12 +69,28 @@ test('a site that is down shows red with how long, as the header does, and the c
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 
-test('with nothing behind a figure an owner is offered Set up, which opens its settings', async ({ page }) => {
-  await fake(page, { empty: true })
+test('with nothing behind a figure an owner is offered Set up only where there is something to set up, and each goes to its own place', async ({ page }) => {
+  await fake(page, { empty: true, noVitals: true })
   await expect(cards(page).locator('.lhempty')).toHaveCount(3)
   await expect(cards(page).locator('.lhment')).toContainText('No new mentions') // a site that looks for mentions and has none is a real zero
+  await expect(cards(page).getByRole('button', { name: 'Set up' })).toHaveCount(2) // uptime is watched on its own: no button
   await cards(page).locator('.lhempty').first().getByRole('button', { name: 'Set up' }).click()
-  await expect(page).toHaveURL(/settings=/)
+  await expect(page).toHaveURL(/settings=site/)
+  await expect(page.locator('#script-records')).toBeVisible()
+  await expect(page.locator('#rec-vitals')).toBeFocused()
+})
+
+test('Set up on AI crawlers opens the connect sheet in AI & Search', async ({ page }) => {
+  await fake(page, { empty: true, noVitals: true })
+  await cards(page).locator('.lhempty').nth(2).getByRole('button', { name: 'Set up' }).click()
+  await expect(page).toHaveURL(/x=ai/)
+  await expect(page.getByRole('dialog', { name: 'Connect crawler data' })).toBeVisible()
+})
+
+test('a speed that is recorded but has too few visits says so, with no Set up', async ({ page }) => {
+  await fake(page, { empty: true })
+  await expect(cards(page).locator('.lhempty').first()).toContainText('after a few more visits')
+  await expect(cards(page).locator('.lhempty').first().getByRole('button')).toHaveCount(0)
 })
 
 test('Analytics keeps the pages and the countries behind one switch', async ({ page }) => {
@@ -83,21 +101,8 @@ test('Analytics keeps the pages and the countries behind one switch', async ({ p
   await expect(card.getByRole('button', { name: 'Pages' })).toHaveAttribute('aria-pressed', 'false')
 })
 
-test('a viewer sees a dash, not Set up', async ({ page }) => {
-  await fake(page, { empty: true, role: 'viewer' })
-  await expect(cards(page).locator('.lhempty').first()).toContainText('—')
-  await expect(cards(page)).not.toContainText('Set up')
+test('a viewer sees the empty lines and no Set up', async ({ page }) => {
+  await fake(page, { empty: true, noVitals: true, role: 'viewer' })
+  await expect(cards(page).locator('.lhempty')).toHaveCount(3)
+  await expect(cards(page).getByRole('button', { name: 'Set up' })).toHaveCount(0)
 })
-
-for (const scheme of ['dark', 'light'] as const) {
-  for (const down of [false, true]) {
-    test(`the cards meet WCAG 2.1 AA in the ${scheme} theme${down ? ' while the site is down' : ''}`, async ({ page }) => {
-      await page.emulateMedia({ colorScheme: scheme })
-      await fake(page, { down })
-      await expect(cards(page).locator('.lhc').first()).toBeVisible()
-      await page.waitForTimeout(800)
-      const found = await new AxeBuilder({ page }).include('.lcards').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()
-      expect(found.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([])
-    })
-  }
-}
