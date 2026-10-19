@@ -6,6 +6,8 @@ import { copy as off } from '../../features/cookieless/copy'
 import { why } from '../../features/cookieless/why'
 import { useLeaving } from '../../features/live/useLeaving'
 import { channelLabel } from '../../lib/palette'
+import { Avatar } from '../../components/visitor/Avatar'
+import { nameOf } from '../../lib/visitor'
 import { copy as liveCopy } from '../../features/live/copy'
 import { copy } from '../live/copy'
 import { useArrivals } from '../live/useArrivals'
@@ -41,6 +43,12 @@ export function FeedList({ rows, up, clock, empty, onVisitor, cookieless }: { ro
         return (
           <button key={r.key} type="button" className={`lv ${r.leaving ? 'leaving' : (marks.get(r.key) ?? '')}`.trim()} onClick={() => r.visitor && onVisitor?.(r.visitor)} disabled={r.leaving || !r.visitor || !onVisitor}>
             <span className={`mk-dot ${hot ? '' : 'off'}`} />
+            {r.visitor && (
+              <>
+                <Avatar id={r.visitor} size={20} />
+                <span className="vn">{nameOf(r.visitor)}</span>
+              </>
+            )}
             <span className="pg mono" title={page.title}>{page.text}</span>
             <span className="src" style={hot ? { color: 'var(--mk-lime)' } : undefined}>
               {src}

@@ -16,6 +16,13 @@ const team = () => [
   teamSite(site('d'), { ...row('d'), error: 'took too long to load' }, NOW),
 ]
 
+describe('a team site mark', () => {
+  it('carries the site icon so the row can draw it', () => {
+    expect(teamSite(site('a', { icon_url: '/i/a.png' }), undefined, NOW).icon_url).toBe('/i/a.png')
+    expect(teamSite(site('b'), undefined, NOW).icon_url).toBeUndefined()
+  })
+})
+
 describe('the team strip', () => {
   it('adds up the rows beside it and nothing else', () => {
     const t = totals(team())

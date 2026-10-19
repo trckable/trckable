@@ -7,7 +7,6 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 
 export const copy = defineCopy('journey', {
   dialog: 'Visitor journey',
-  title: (id: string) => `Visitor ${id}`,
   loading: 'Loading this visitor’s journey…',
   failed: (why: string) => `Couldn’t load this journey: ${why}`,
   retry: 'Try again',

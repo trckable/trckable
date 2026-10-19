@@ -85,3 +85,43 @@ test('All sites: totals are the rows, sorts, states and the ⋯ menu', async ({ 
   await page.unrouteAll({ behavior: 'ignoreErrors' })
   for (const s of [busy, small, empty]) await page.request.delete(`${API}/api/v1/sites/${s.id}`, { headers: H, data: { domain: s.domain } })
 })
+
+test('All sites: a site with an icon shows it, a site without shows its letter', async ({ page }) => {
+  const SHOTS = process.env.TRCKABLE_SHOTS // a folder: screenshots, for review
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.context().addCookies([{ name: 'trckable_session', value: await session('all-sites'), url: API }])
+  await page.addInitScript(() => localStorage.setItem('trckable.onboarding.skipped', '1'))
+  const tag = Date.now()
+  const mk = async (name: string) => {
+    const made = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain: `${name}-${tag}.logos.example.org` } })
+    expect(made.ok()).toBe(true)
+    return (await made.json()) as { id: string; domain: string }
+  }
+  const [logo, plain] = [await mk('logo'), await mk('plain')]
+  await page.goto(`${API}/sites`)
+  const sample = await page.evaluate(() => {
+    const c = document.createElement('canvas')
+    c.width = c.height = 64
+    const ctx = c.getContext('2d')!
+    ctx.fillStyle = '#e11'
+    ctx.fillRect(0, 0, 64, 64)
+    return c.toDataURL('image/png')
+  })
+  const put = await page.request.put(`${API}/api/v1/sites/${logo.id}/icon`, { headers: { 'X-Trckable-Request': '1', 'Content-Type': 'image/png' }, data: Buffer.from(sample.split(',')[1], 'base64') })
+  expect(put.ok()).toBe(true)
+
+  await page.reload()
+  const row = (s: { id: string }) => page.locator(`.tm-row[data-site="${s.id}"]`)
+  await expect(row(logo)).toBeVisible({ timeout: 30_000 })
+  await expect(row(logo).locator('img.site-mark')).toBeVisible()
+  await expect(row(plain).locator('.site-mark.letter')).toBeVisible()
+  await expect(row(plain).locator('img.site-mark')).toHaveCount(0)
+
+  if (SHOTS) {
+    await page.emulateMedia({ colorScheme: 'dark' })
+    await page.screenshot({ path: `${SHOTS}/site-logos-1440-dark.png` })
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.screenshot({ path: `${SHOTS}/site-logos-390-dark.png` })
+  }
+  for (const s of [logo, plain]) await page.request.delete(`${API}/api/v1/sites/${s.id}`, { headers: H, data: { domain: s.domain } })
+})
