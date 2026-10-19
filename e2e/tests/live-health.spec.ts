@@ -17,6 +17,8 @@ interface Fake {
   /** The site has not been probed yet. */
   unwatched?: boolean
   role?: string
+  /** The crawler answer waits for this, so the cards are seen while their figures are on the way. */
+  hold?: Promise<void>
 }
 
 async function fake(page: Page, o: Fake = {}) {
@@ -38,7 +40,10 @@ async function fake(page: Page, o: Fake = {}) {
   await page.route(/\/api\/v1\/sites\/[^/]+\/report\/vitals/, (r) => r.fulfill({ json: o.empty ? { samples: 0, good: 0 } : { samples: 80, lcp_ms: 1800, lcp_n: 80, inp_ms: 120, inp_n: 80, cls_1k: 20, cls_n: 80, good: 70 } }))
   const open = { id: 'i1', site: 'example.com', kind: 'down', started_at: NOW - 12 * 60, ended_at: null, cause: 'timeout', expected_visits: null, note: '' }
   await page.route(/\/api\/v1\/sites\/[^/]+\/incidents/, (r) => r.fulfill({ json: { incidents: o.down ? [open] : [], summary: { count: o.down ? 1 : 0, seconds: o.down ? 720 : 0, lost: 0, lost_some: false }, quiet_tracked: true } }))
-  await page.route(/\/api\/v1\/sites\/[^/]+\/report\/crawlers/, (r) => r.fulfill({ json: { kinds: o.empty ? {} : { answer: 14, train: 200 }, series: o.empty ? [] : [{ name: 'OpenAI', kind: 'train', total: 200, values: [] }, { name: 'Anthropic', kind: 'answer', total: 14, values: [] }], pages: [], total: 0, errors: 0, buckets: [] } }))
+  await page.route(/\/api\/v1\/sites\/[^/]+\/report\/crawlers/, async (r) => {
+    await o.hold
+    await r.fulfill({ json: { kinds: o.empty ? {} : { answer: 14, train: 200 }, series: o.empty ? [] : [{ name: 'OpenAI', kind: 'train', total: 200, values: [] }, { name: 'Anthropic', kind: 'answer', total: 14, values: [] }], pages: [], total: 0, errors: 0, buckets: [] } })
+  })
   await page.route(/\/api\/v1\/sites\/[^/]+\/mentions/, (r) => r.fulfill({ json: { mentions: o.empty ? [] : [{ id: 1, source: 'hn', url: 'https://example.org', title: 'x', host: 'example.org', posted_at: NOW - 3600, found_at: NOW - 3000, visitors: 0 }] } }))
   await page.goto(`${API}/example.com?view=live`)
   await expect(page.locator('.lnow .lfig .lbign').first()).toBeVisible({ timeout: 15_000 })
@@ -116,4 +121,15 @@ test('a viewer sees the empty lines and no button', async ({ page }) => {
   await fake(page, { empty: true, noVitals: true, role: 'viewer' })
   await expect(cards(page).locator('.lhempty')).toHaveCount(2)
   await expect(cards(page).locator('.lhempty button')).toHaveCount(0)
+})
+
+test('the cards hold the shape of their figures while those are read, and nothing is left behind when they land', async ({ page }) => {
+  let release = () => {}
+  const hold = new Promise<void>((r) => (release = r))
+  await fake(page, { hold })
+  await expect(cards(page).locator('.lsk')).toHaveCount(2) // speed and AI, same cards as when they land
+  await expect(cards(page).locator('.lhc')).toHaveCount(2)
+  release()
+  await expect(cards(page).locator('.lhcount')).toContainText('214')
+  await expect(cards(page).locator('.lsk')).toHaveCount(0)
 })

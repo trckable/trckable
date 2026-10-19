@@ -8,7 +8,8 @@ import { gradeOf } from '../explore/data/mapSections'
 import { openExplore } from '../explore/open'
 import { copy } from './copy'
 import { EmptyBlock } from './EmptyBlock'
-import type { Health } from './useHealth'
+import { CardSkeleton } from './CardSkeleton'
+import { loading, type Health } from './useHealth'
 import type { DayState } from '../../features/incidents/model'
 
 const h = copy.health
@@ -65,15 +66,15 @@ function incidents(site: Site) {
 const speedAction = { label: h.turnOnSpeed, setup: 'speed' as const }
 
 /** Speed with no figure: off, one button turns it on; on, it is only waiting for visits. */
-function SpeedEmpty({ site, recorded, waiting, both }: { site: Site; recorded?: boolean; waiting: boolean; both?: boolean }) {
+function SpeedEmpty({ site, recorded, both }: { site: Site; recorded?: boolean; both?: boolean }) {
   const off = both ? h.empty.both : h.empty.speed
   const line = recorded ? h.empty.collecting(MIN_VITALS) : off
-  return <EmptyBlock site={site} line={line} ghost={both ? ['gauge', 'strip'] : ['gauge']} action={recorded ? undefined : speedAction} collecting={recorded} waiting={waiting} reserve={132} />
+  return <EmptyBlock site={site} line={line} ghost={both ? ['gauge', 'strip'] : ['gauge']} action={recorded ? undefined : speedAction} collecting={recorded} />
 }
 
 function SpeedBlock({ site, speed, recorded }: { site: Site; speed?: number | null; recorded?: boolean }) {
   // Switched on but too few visits: nothing to set up, only to wait for. (Uptime has no switch: every site is probed.)
-  if (speed == null) return <SpeedEmpty site={site} recorded={recorded} waiting={speed === undefined} />
+  if (speed == null) return <SpeedEmpty site={site} recorded={recorded} />
   const grade = gradeOf(0, speed)
   return (
     <button type="button" className="lhspeed" onClick={() => openExplore('speed')}>
@@ -86,7 +87,7 @@ function SpeedBlock({ site, speed, recorded }: { site: Site; speed?: number | nu
 
 function UptimeBlock({ site, up, down }: { site: Site; up?: Health['uptime']; down: boolean }) {
   const days = up ? up.days.map((d, i) => (down && i === up.days.length - 1 ? ('down' as const) : d)) : undefined
-  if (!days || (!down && up?.pct == null)) return down ? null : <EmptyBlock site={site} line={h.empty.uptime} ghost={['strip']} collecting waiting={up === undefined} reserve={64} />
+  if (!days || (!down && up?.pct == null)) return down ? null : <EmptyBlock site={site} line={h.empty.uptime} ghost={['strip']} collecting />
   return (
     <button type="button" className="lhup" onClick={() => incidents(site)}>
       <Strip days={days} />
@@ -113,7 +114,7 @@ function DownBody({ site, since, health }: { site: Site; since: number; health: 
 function UpBody({ site, health }: { site: Site; health: Health }) {
   // Neither half has a figure: one message and one button for the card, not two stacked.
   if (health.speed == null && (health.uptime?.pct ?? null) === null) {
-    return <SpeedEmpty site={site} recorded={health.vitalsOn} waiting={health.speed === undefined || health.uptime === undefined} both />
+    return <SpeedEmpty site={site} recorded={health.vitalsOn} both />
   }
   return (
     <>
@@ -121,6 +122,11 @@ function UpBody({ site, health }: { site: Site; health: Health }) {
       <UptimeBlock site={site} up={health.uptime} down={false} />
     </>
   )
+}
+
+function body(site: Site, health: Health, downSince?: number) {
+  if (downSince !== undefined) return <DownBody site={site} since={downSince} health={health} />
+  return loading(health) ? <CardSkeleton kind="speed" /> : <UpBody site={site} health={health} />
 }
 
 export function SpeedUptimeCard({ site, health, now, downSince }: Props) {
@@ -131,7 +137,7 @@ export function SpeedUptimeCard({ site, health, now, downSince }: Props) {
       <div className="ph">
         <span className={down ? 'lhdown' : 't'}>{down ? h.downFor(minutes) : h.speedUptime}</span>
       </div>
-      <div className="pb lhbody">{down ? <DownBody site={site} since={downSince} health={health} /> : <UpBody site={site} health={health} />}</div>
+      <div className="pb lhbody">{body(site, health, downSince)}</div>
     </section>
   )
 }

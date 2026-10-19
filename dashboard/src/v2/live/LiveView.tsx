@@ -18,6 +18,7 @@ import { feedOf, seriesAt } from '../../features/live/model'
 import type { Busier, LiveNow } from '../../features/live/api'
 import { useTicking } from '../../features/live/useTicking'
 import { AnalyticsCard } from './AnalyticsCard'
+import { useTodayLists } from './useTodayLists'
 import { HealthCards } from './HealthCards'
 import { useNear } from './useNear'
 import { Announce } from '../ui/Announce'
@@ -76,6 +77,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   useEffect(() => liveCount.set(online), [online])
   const rows = useMemo(() => (data ? feedOf(data.recent, stream.visits, data.at, now) : []), [data, stream.visits, now])
   const lists = useMemo(() => listsOf(rows), [rows])
+  const day = useTodayLists(site, timezone, data?.today?.visitors ?? 0)
   const [mode, setMode] = useState<ChartMode>(readChartMode)
   const pick = (m: ChartMode) => {
     setMode(m)
@@ -165,7 +167,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
         </section>
       </div>
       <div className="lcards" ref={cardsRef}>
-        <AnalyticsCard today={data.today} lists={lists} />
+        <AnalyticsCard today={data.today} lists={day === null ? lists : day} />
         {whole && !feed.sample && !isShared() && <HealthCards site={whole} now={now} downSince={downSince} near={cardsNear} />}
       </div>
     </>

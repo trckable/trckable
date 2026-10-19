@@ -25,6 +25,9 @@ export interface Health {
   answers?: { seen: number; total: number } | null
 }
 
+/** True until the first read has landed: every figure is then at least null, never undefined. */
+export const loading = (h: Health): boolean => h.ai === undefined
+
 export function useHealth(site: Site | undefined, on: boolean): Health {
   const [got, setGot] = useState<{ id: string; h: Health } | null>(null)
   const id = site?.id
