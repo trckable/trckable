@@ -22,7 +22,7 @@ export default function FeaturesDialog({ site, user, onClose }: { site: Site | n
           <X size={16} strokeWidth={1.75} aria-hidden="true" />
         </button>
       </div>
-      <div className="feat-body">{site && <ScriptRecords site={site} />}</div>
+      <div className="feat-body">{site && <ScriptRecords site={site} titled={false} />}</div>
     </Modal>
   )
 }

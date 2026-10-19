@@ -20,7 +20,8 @@ const bytes = (n: number) => (n >= 1024 ? `${(n / 1024).toFixed(2)} KB` : `${n} 
 const nameOf = (id: string): string => (id === 'outbound' || id === 'forms' ? recordsCopy[id] : recordsCopy[id as 'goals' | 'vitals' | 'heatmaps'].name)
 const cost = (m: ModuleInfo | undefined) => (m?.tracker_bytes ? recordsCopy.adds(bytes(m.tracker_bytes)) : recordsCopy.free)
 
-export function ScriptRecords({ site }: { site: Site }) {
+/** `titled` is off where a heading of its own already says it (the Tracking options pop-up). */
+export function ScriptRecords({ site, titled = true }: { site: Site; titled?: boolean }) {
   const [mods, setMods] = useState<ModuleInfo[] | null>(null)
   const [script, setScript] = useState<ScriptInfo | null>(null)
   const [busy, setBusy] = useState('')
@@ -84,7 +85,7 @@ export function ScriptRecords({ site }: { site: Site }) {
   return (
     <section className="card" id="script-records" style={{ gap: 0 }}>
       <div className="card-head">
-        <h2>{recordsCopy.title}</h2>
+        {titled && <h2>{recordsCopy.title}</h2>}
         {script && <span className="faint num">{recordsCopy.total(bytes(script.bytes))}</span>}
       </div>
       <p className="faint rec-lead">{recordsCopy.lead}</p>
