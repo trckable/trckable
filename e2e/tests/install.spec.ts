@@ -114,7 +114,7 @@ test('the Install step fits 1440x900 without scrolling, with one primary action'
 // Continue ready; a domain owned elsewhere gets one calm line. The link's extras leave the address.
 test('?add=site&domain= opens the wizard with the domain filled in and focus on Continue', async ({ page }) => {
   await signIn(page)
-  await page.goto(`${API}/example.com?add=site&domain=https://www.Scanned-Site.test/pricing&taken=1`)
+  await page.goto(`${API}/?add=site&domain=https://www.Scanned-Site.test/pricing&taken=1`)
   const wizard = page.getByRole('dialog', { name: 'Add a site' })
   await expect(wizard.getByLabel('Domain')).toHaveValue('scanned-site.test', { timeout: 15_000 })
   await expect(wizard.getByRole('button', { name: 'Continue' })).toBeFocused()
