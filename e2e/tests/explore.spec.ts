@@ -1,4 +1,4 @@
-// Explore as a panel over the Briefing: opened from the chip and the keyboard (E; a card's "Go deeper" is in briefing.spec.ts); its sections and
+// Explore as a panel over the Briefing: opened from the keyboard (E; the header chip reads Ask or search and opens the palette) (E; a card's "Go deeper" is in briefing.spec.ts); its sections and
 // the picker, a filter from a tapped row, full width with the section list, Escape and focus, and the phone's sheet.
 // Chromium only (it runs against the site with a few days behind it).
 import { expect, test, type Page } from './fixtures'
@@ -58,7 +58,7 @@ const pick = async (page: Page, name: RegExp) => {
   await page.locator('#xm-pick').getByRole('menuitem', { name }).click()
 }
 
-test('the chip opens it over the Briefing, and Escape, the cross and the dim shut it', async ({ page }) => {
+test('E opens it over the Briefing, and Escape, the cross and the dim shut it', async ({ page }) => {
   await open(page, 1440)
   await page.locator('.mk-chip.exb').click()
   await expect(panel(page)).toBeVisible()
@@ -75,6 +75,20 @@ test('the chip opens it over the Briefing, and Escape, the cross and the dim shu
   await expect(panel(page)).toHaveCount(0)
   await page.locator('.mk-chip.exb').click()
   await page.mouse.click(100, 400)
+  await expect(panel(page)).toHaveCount(0)
+})
+
+test('the header chip is the Ask or search palette where the build has Peek, and ⌘K opens it everywhere', async ({ page }) => {
+  await open(page, 1440)
+  await page.keyboard.press('Control+k')
+  await expect(page.locator('.palbox[role="dialog"] input')).toBeVisible()
+  await expect(panel(page)).toHaveCount(0)
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.palbox')).toHaveCount(0)
+  const chip = page.locator('.mk-chip.exb')
+  if (!/Ask or search/.test((await chip.textContent()) ?? '')) return // without Peek the chip is Explore and opens the panel (covered by E above)
+  await chip.click()
+  await expect(page.locator('.palbox[role="dialog"] input')).toBeVisible()
   await expect(panel(page)).toHaveCount(0)
 })
 

@@ -42,8 +42,11 @@ for (const width of [1440, 390]) {
 
 test('Explore at full width has the period, and its menu changes it', async ({ page }) => {
   await open(page, 1440, '?view=briefing')
-  await page.locator('.mk-chip.exb').click()
-  await page.locator('.xfull').click()
+  await expect(page.locator('.brief')).toBeVisible()
+  await page.keyboard.press('e')
+  await expect(page.locator('#xp.on .xtb')).toBeVisible()
+  await page.keyboard.press('f')
+  await expect(page.locator('#xp.full')).toBeVisible()
   const chip = page.locator('#xp #xperBtn')
   await expect(chip).toBeVisible()
   await chip.click()

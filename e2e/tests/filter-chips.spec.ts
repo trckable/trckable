@@ -102,7 +102,7 @@ for (const width of [1440, 390]) {
       await page.keyboard.press('Escape')
       await expect(panel(page)).toHaveCount(0)
       await expect(page).not.toHaveURL(/[?&](f|xf)=/)
-      await (width < 700 ? page.locator('.tabbar').getByRole('button', { name: 'Explore' }) : page.locator('.mk-chip.exb')).click()
+      await (width < 700 ? page.locator('.tabbar').getByRole('button', { name: 'Explore' }).click() : page.keyboard.press('e'))
       await expect(panel(page)).toBeVisible()
       await expect(chips(page)).toHaveCount(0)
     })
