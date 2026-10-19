@@ -1857,7 +1857,7 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 @media (prefers-reduced-motion:reduce){
 .mk .lhempty.collecting :is(.lhgs i,.lhgr i){animation:none}
 }
-.mk .lhc button.lhgo{color:var(--mk-lime);font-weight:600;font-size:13px;padding:var(--mk-s1) var(--mk-s3);border-radius:8px;background:var(--mk-fill)}
+.mk .lhc button.lhgo{color:var(--mk-text);font-weight:600;font-size:13px;padding:var(--mk-s1) var(--mk-s3);border-radius:8px;background:var(--mk-fill)}
 .mk .lhc button.lhgo:hover{text-decoration:underline}
 @container (--pane-max-700){
 .mk .lcards{order:0;margin:var(--mk-s4) 0 0}
