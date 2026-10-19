@@ -251,3 +251,99 @@ func TestAnswersSetupItemAndMoments(t *testing.T) {
 		t.Fatalf("no answer moment: %v", out["moments"])
 	}
 }
+
+// Ask now twice within six hours: the second is a 429 with a Retry-After.
+func TestAnswersAskNowTwiceIsRefused(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	answersOn(g)
+	base := g.srv.URL + "/api/v1/sites/" + g.site
+	do(t, c, "PUT", base+"/answers/questions", `{"questions":[{"text":"best open analytics","active":true}]}`, csrf, "1")
+	if code, out := do(t, c, "POST", base+"/answers/run", "", csrf, "1"); code != http.StatusOK {
+		t.Fatalf("first ask: %d %v", code, out)
+	}
+	if code, out := do(t, c, "POST", base+"/answers/run", "", csrf, "1"); code != http.StatusTooManyRequests {
+		t.Fatalf("second ask: %d %v", code, out)
+	}
+}
+
+// A question id of another site of the same account is not found on this one.
+func TestAnswersQuestionOfAnotherSiteIsNotFound(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	answersOn(g)
+	ctx := context.Background()
+	other, err := g.ctl.CreateSite(ctx, sqlite.DefaultAccount, "second.example", "Second")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := g.ctl.SetAnswerQuestions(ctx, other, []sqlite.AnswerQuestion{{Text: "best open analytics", Active: true}}, 1); err != nil {
+		t.Fatal(err)
+	}
+	qs, _ := g.ctl.AnswerQuestionsOf(ctx, other)
+	id := strconv.FormatInt(qs[0].ID, 10)
+	if code, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+other+"/answers/questions/"+id, ""); code != http.StatusOK {
+		t.Fatalf("on its own site: %d %v", code, out)
+	}
+	if code, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/answers/questions/"+id, ""); code != http.StatusNotFound {
+		t.Fatalf("through another site of the account: %d %v", code, out)
+	}
+}
+
+// An Owner sees this site's spend against its share; only the operator sees
+// the server's total and cap.
+func TestAnswersSetupBudgetIsThisSitesUnlessOperator(t *testing.T) {
+	g := newRig(t)
+	op := client()
+	g.setup(t, op)
+	answersOn(g)
+	ctx := context.Background()
+	if err := g.ctl.SetAnswerQuestions(ctx, g.site, []sqlite.AnswerQuestion{{Text: "best open analytics", Active: true}}, 1); err != nil {
+		t.Fatal(err)
+	}
+	month := g.now.UTC().Format("2006-01")
+	if err := g.ctl.AddAnswerSpend(ctx, g.site, month, 3_000_000); err != nil {
+		t.Fatal(err)
+	}
+	acc, err := g.ctl.CreateAccount(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := g.ctl.AddUser(ctx, acc, "owner@other.com", "correct horse battery B", sqlite.RoleOwner); err != nil {
+		t.Fatal(err)
+	}
+	theirs, err := g.ctl.CreateSite(ctx, acc, "other.com", "Other")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := g.ctl.SetAnswerQuestions(ctx, theirs, []sqlite.AnswerQuestion{{Text: "best open analytics", Active: true}}, 1); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.ctl.AddAnswerSpend(ctx, theirs, month, 1_000_000); err != nil {
+		t.Fatal(err)
+	}
+	b := client()
+	if code, out := do(t, b, "POST", g.srv.URL+"/api/v1/login", `{"email":"owner@other.com","password":"correct horse battery B"}`); code != http.StatusOK {
+		t.Fatalf("sign in: %d %v", code, out)
+	}
+	budget := func(c *http.Client, site string) map[string]any {
+		t.Helper()
+		_, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+site+"/answers/setup", "")
+		m, _ := out["budget"].(map[string]any)
+		if m == nil {
+			t.Fatalf("no budget: %v", out)
+		}
+		return m
+	}
+	mine := budget(b, theirs)
+	if mine["used"] != float64(1) || mine["cap"] != float64(10) || mine["server"] != nil {
+		t.Fatalf("an Owner of another account sees %v, want 1 of a share of 10 and no server totals", mine)
+	}
+	ops := budget(op, g.site)
+	srv, _ := ops["server"].(map[string]any)
+	if ops["used"] != float64(3) || srv["used"] != float64(4) || srv["cap"] != float64(20) {
+		t.Fatalf("the operator sees %v", ops)
+	}
+}

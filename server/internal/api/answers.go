@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/answers"
@@ -98,8 +99,20 @@ func (a *API) answersSetup(w http.ResponseWriter, r *http.Request) {
 		out["round"] = answerRoundOut{Done: len(done), Total: active * len(a.AnswerEngines) * max(a.AnswerRuns, 1)}
 	}
 	if p := principalOf(r); canUser(p.user, permissions.ActChange) {
-		spent, _ := a.Ctl.AnswerSpend(r.Context(), a.Now().UTC().Format("2006-01"))
-		out["budget"] = map[string]any{"used": float64(spent) / 1e6, "cap": a.AnswerBudget, "paused": a.answersPaused(r)}
+		// This site's spend against its fair share. The server's total and
+		// cap are the operator's business, not every Owner's.
+		m := a.Now().UTC().Format("2006-01")
+		mine, _ := a.Ctl.AnswerSiteSpend(r.Context(), site, m)
+		var share int64
+		if a.AnswerBudget > 0 {
+			share = a.Ctl.AnswerShare(r.Context(), int64(a.AnswerBudget)*1_000_000)
+		}
+		b := map[string]any{"used": float64(mine) / 1e6, "cap": float64(share) / 1e6, "paused": a.answersPaused(r)}
+		if p.operator() {
+			spent, _ := a.Ctl.AnswerSpend(r.Context(), m)
+			b["server"] = map[string]any{"used": float64(spent) / 1e6, "cap": a.AnswerBudget}
+		}
+		out["budget"] = b
 	}
 	writeJSON(w, http.StatusOK, out)
 }
@@ -330,6 +343,32 @@ func (a *API) answerSuggestions(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{"engines": []any{}})
 		return
 	}
+	questions, rivals, ok := a.suggested.get(site, a.Now())
+	if !ok {
+		questions, rivals = a.suggestFor(r, si)
+		a.suggested.put(site, a.Now(), questions, rivals)
+	}
+	have, _ := a.Ctl.AnswerCompetitorsOf(r.Context(), site)
+	skip := map[string]bool{}
+	for _, c := range have {
+		skip[c.Domain] = true
+	}
+	list := []map[string]string{}
+	for _, v := range rivals {
+		if !skip[v.Domain] {
+			list = append(list, map[string]string{"name": v.Name, "domain": v.Domain})
+		}
+	}
+	if questions == nil {
+		questions = []string{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"questions": questions, "competitors": list})
+}
+
+// suggestFor reads the homepage and the site's own answers for the questions
+// and rivals to offer. It makes a request to the site, so the caller caches it.
+func (a *API) suggestFor(r *http.Request, si sqlite.SiteInfo) ([]string, []answers.Rival) {
+	site := si.ID
 	words, _ := a.Ctl.SearchWords(r.Context(), sqlite.SiteRow{ID: si.ID, Domain: si.Domain, Name: si.Name})
 	setup, _ := a.Ctl.SetupOf(r.Context(), site)
 	var title, desc string
@@ -352,22 +391,52 @@ func (a *API) answerSuggestions(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	rivals := answers.SuggestRivals(cited, si.Domain)
-	have, _ := a.Ctl.AnswerCompetitorsOf(r.Context(), site)
-	skip := map[string]bool{}
-	for _, c := range have {
-		skip[c.Domain] = true
+	return questions, answers.SuggestRivals(cited, si.Domain)
+}
+
+// suggestCache keeps each site's suggestions for ten minutes: building them
+// fetches the site's homepage, and the page asks again on every visit.
+type suggestCache struct {
+	mu sync.Mutex
+	m  map[string]suggestEntry
+}
+
+type suggestEntry struct {
+	at        time.Time
+	questions []string
+	rivals    []answers.Rival
+}
+
+const (
+	suggestTTL = 10 * time.Minute
+	suggestMax = 256
+)
+
+func (c *suggestCache) get(site string, now time.Time) ([]string, []answers.Rival, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	e, ok := c.m[site]
+	if !ok || now.Sub(e.at) >= suggestTTL || now.Before(e.at) {
+		return nil, nil, false
 	}
-	list := []map[string]string{}
-	for _, v := range rivals {
-		if !skip[v.Domain] {
-			list = append(list, map[string]string{"name": v.Name, "domain": v.Domain})
+	return e.questions, e.rivals, true
+}
+
+func (c *suggestCache) put(site string, now time.Time, questions []string, rivals []answers.Rival) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.m == nil {
+		c.m = map[string]suggestEntry{}
+	}
+	for k, e := range c.m {
+		if len(c.m) < suggestMax {
+			break
+		}
+		if now.Sub(e.at) >= suggestTTL || len(c.m) >= suggestMax {
+			delete(c.m, k)
 		}
 	}
-	if questions == nil {
-		questions = []string{}
-	}
-	writeJSON(w, http.StatusOK, map[string]any{"questions": questions, "competitors": list})
+	c.m[site] = suggestEntry{at: now, questions: questions, rivals: rivals}
 }
 
 // searchQueries are what people searched on Google in the last 90 days, when

@@ -365,8 +365,12 @@ func TestAnswersThePauseIsToldOncePerMonth(t *testing.T) {
 		est += answers.Typical(a.Engine(), "m")
 	}
 	small := r.addSite(t, "small.example", 1)
-	r.f.budget = est * 3
-	// The two-question site needs 4 est and is refused; the one-question site needs 2 and runs.
+	r.f.budget = est * 8
+	// Other spend of the month leaves 3 est: the two-question site needs 4 est
+	// and is refused; the one-question site needs 2, fits its share, and runs.
+	if _, err := r.st.DB.Exec(`INSERT INTO answer_spend (month, cost_micros) VALUES ('2026-10', ?)`, est*5); err != nil {
+		t.Fatal(err)
+	}
 	r.f.tick(ctx)
 	if r.runs(t, small) != 6 || r.runs(t, r.site) != 0 {
 		t.Fatalf("small %d, big %d", r.runs(t, small), r.runs(t, r.site))
@@ -414,7 +418,10 @@ func TestAnswersAReservationSurvivesARestart(t *testing.T) {
 	}
 	est *= 4
 	other := r.addSite(t, "other.example", 2)
-	r.f.budget = est * 3 / 2
+	r.f.budget = est * 2 // each site's share holds a round; the month holds one more only if nothing is reserved
+	if _, err := r.st.DB.Exec(`INSERT INTO answer_spend (month, cost_micros) VALUES ('2026-10', ?)`, est/2); err != nil {
+		t.Fatal(err)
+	}
 	as, _ := r.st.AnswerSiteOf(ctx, r.site)
 	if _, ok := r.f.start(ctx, as); !ok { // started, then the process "dies" before asking anything
 		t.Fatal("first round refused")
@@ -466,5 +473,132 @@ func TestAnswersAnUnsavableRunIsNotAPaidLoop(t *testing.T) {
 	r.f.tick(ctx)
 	if r.calls() != first {
 		t.Fatalf("asked again: %d then %d", first, r.calls())
+	}
+}
+
+// roundCost is what one round of the rig's site is reserved at: two questions,
+// two runs, three engines.
+func roundCost(r *answerRig) int64 {
+	est := int64(0)
+	for _, a := range r.f.askers {
+		est += answers.Typical(a.Engine(), "m")
+	}
+	return est * 2 * 2
+}
+
+// Editing a question deletes its runs; the site's spend, and so its fair
+// share, stays.
+func TestAnswersEditingAQuestionDoesNotResetTheShare(t *testing.T) {
+	ctx := context.Background()
+	r := newAnswerRig(t, 0)
+	est := roundCost(r)
+	r.f.budget = 4 * est
+	other := r.addSite(t, "other.example", 2)
+	r.f.tick(ctx)
+	for range 2 { // the second round still fits a share of 2*est
+		r.now = r.now.Add(time.Hour)
+		_ = r.st.AskAnswersNow(ctx, r.site, r.now.Unix())
+		r.f.tick(ctx)
+	}
+	if r.runs(t, r.site) != 24 || r.runs(t, other) != 12 {
+		t.Fatalf("runs %d and %d", r.runs(t, r.site), r.runs(t, other))
+	}
+	edited := []sqlite.AnswerQuestion{{Text: "something else to ask", Active: true}, {Text: "yet another question", Active: true}}
+	if err := r.st.SetAnswerQuestions(ctx, r.site, edited, r.now.Unix()); err != nil {
+		t.Fatal(err)
+	}
+	if r.runs(t, r.site) != 0 {
+		t.Fatal("the runs should be gone with their questions")
+	}
+	r.now = r.now.Add(time.Hour)
+	_ = r.st.AskAnswersNow(ctx, r.site, r.now.Unix())
+	before := r.calls()
+	r.f.tick(ctx)
+	if r.calls() != before || r.runs(t, r.site) != 0 {
+		t.Fatalf("a site that used its share asked again after editing its questions: %d calls", r.calls()-before)
+	}
+}
+
+// The first round is held to the share too.
+func TestAnswersAFirstRoundBiggerThanTheShareWaits(t *testing.T) {
+	ctx := context.Background()
+	r := newAnswerRig(t, 0)
+	r.f.budget = roundCost(r) // the whole budget fits one round, half of it is each site's share
+	r.addSite(t, "other.example", 2)
+	r.f.tick(ctx)
+	if r.calls() != 0 {
+		t.Fatalf("asked %d times past a fair share", r.calls())
+	}
+}
+
+// A site whose account the gate refuses starts nothing, and does not take the
+// place of one that may.
+func TestAnswersASuspendedAccountDoesNotRun(t *testing.T) {
+	ctx := context.Background()
+	r := newAnswerRig(t, 0)
+	gone, err := r.st.CreateAccount(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stopped []string
+	for _, d := range []string{"a.example", "b.example", "c.example", "d.example"} {
+		site, err := r.st.CreateSite(ctx, gone, d, d)
+		if err != nil {
+			t.Fatal(err)
+		}
+		stopped = append(stopped, site)
+		if err := r.st.SetAnswerQuestions(ctx, site, []sqlite.AnswerQuestion{{Text: "best open analytics for shops", Active: true}}, 1); err != nil {
+			t.Fatal(err)
+		}
+	}
+	r.f.allowed = func(_ context.Context, account string) bool { return account != gone }
+	r.f.tick(ctx)
+	if r.runs(t, r.site) != 12 {
+		t.Fatalf("the allowed site asked %d times, want 12", r.runs(t, r.site))
+	}
+	for _, s := range stopped {
+		if r.runs(t, s) != 0 {
+			t.Fatalf("a suspended account's site asked: %s", s)
+		}
+	}
+	// A round already running stops too, and goes on when the gate opens.
+	if err := r.st.StartAnswerRound(ctx, stopped[0], r.now.Unix(), nil, 0, r.now.Unix()); err != nil {
+		t.Fatal(err)
+	}
+	r.f.tick(ctx)
+	if r.runs(t, stopped[0]) != 0 {
+		t.Fatal("a running round of a suspended account went on")
+	}
+	r.f.allowed = nil
+	r.f.tick(ctx)
+	if r.runs(t, stopped[1]) == 0 {
+		t.Fatal("nothing ran once the gate allowed it")
+	}
+}
+
+// A round stops at the call that takes the month past its budget.
+func TestAnswersARoundStopsWhenTheBudgetIsPassed(t *testing.T) {
+	ctx := context.Background()
+	r := newAnswerRig(t, 0)
+	est := roundCost(r)
+	r.f.budget = est
+	for _, fk := range r.fakes {
+		var once sync.Once
+		fk.hook = func() { // another site's spend lands while this round runs
+			once.Do(func() { _ = r.st.AddAnswerSpend(ctx, r.site, "2026-10", est) })
+		}
+	}
+	r.f.tick(ctx)
+	if r.calls() == 0 || r.calls() > 3 {
+		t.Fatalf("%d calls, want at most one per engine", r.calls())
+	}
+	as, _ := r.st.AnswerSiteOf(ctx, r.site)
+	if as.Round != 0 {
+		t.Fatal("the round should have ended")
+	}
+	var skipped int
+	_ = r.st.DB.QueryRow(`SELECT count(*) FROM answer_runs WHERE error = ?`, answerCapMsg).Scan(&skipped)
+	if skipped != 12-r.calls() || r.runs(t, r.site) != 12 {
+		t.Fatalf("%d asks marked as skipped after %d calls, runs %d", skipped, r.calls(), r.runs(t, r.site))
 	}
 }

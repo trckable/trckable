@@ -10,6 +10,7 @@ import (
 // AnswerSite is the schedule of one site's Answers.
 type AnswerSite struct {
 	SiteID  string
+	Account string // the account the site belongs to
 	Country string
 	NextAt  int64 // 0 = due now
 	Round   int64 // the round in progress (unix seconds it began); 0 = none
@@ -215,14 +216,15 @@ func (s *Store) SetAnswerCompetitors(ctx context.Context, site string, list []An
 
 // AnswerSitesInProgress lists the sites with a round still asking.
 func (s *Store) AnswerSitesInProgress(ctx context.Context) ([]AnswerSite, error) {
-	return s.answerSites(ctx, `SELECT site_id, country, next_at, round, asked_at, frozen FROM answer_sites a WHERE round != 0
-		AND EXISTS (SELECT 1 FROM answer_questions q WHERE q.site_id = a.site_id) ORDER BY round`, nil)
+	return s.answerSites(ctx, `SELECT a.site_id, coalesce((SELECT account_id FROM sites WHERE id = a.site_id), ''), a.country, a.next_at, a.round, a.asked_at, a.frozen
+		FROM answer_sites a WHERE a.round != 0
+		AND EXISTS (SELECT 1 FROM answer_questions q WHERE q.site_id = a.site_id) ORDER BY a.round`, nil)
 }
 
 // AnswerSitesDue lists the sites with an active question whose next round is
 // due and none running, the longest waiting first.
 func (s *Store) AnswerSitesDue(ctx context.Context, now int64, limit int) ([]AnswerSite, error) {
-	return s.answerSites(ctx, `SELECT q.site_id, coalesce(a.country, ''), coalesce(a.next_at, 0), coalesce(a.round, 0), coalesce(a.asked_at, 0), coalesce(a.frozen, '')
+	return s.answerSites(ctx, `SELECT q.site_id, coalesce((SELECT account_id FROM sites WHERE id = q.site_id), ''), coalesce(a.country, ''), coalesce(a.next_at, 0), coalesce(a.round, 0), coalesce(a.asked_at, 0), coalesce(a.frozen, '')
 		FROM (SELECT DISTINCT site_id FROM answer_questions WHERE active = 1) q LEFT JOIN answer_sites a ON a.site_id = q.site_id
 		WHERE coalesce(a.round, 0) = 0 AND coalesce(a.next_at, 0) <= ? ORDER BY coalesce(a.next_at, 0), q.site_id LIMIT ?`, []any{now, limit})
 }
@@ -237,7 +239,7 @@ func (s *Store) answerSites(ctx context.Context, query string, args []any) ([]An
 	for rows.Next() {
 		var a AnswerSite
 		var frozen string
-		if err := rows.Scan(&a.SiteID, &a.Country, &a.NextAt, &a.Round, &a.AskedAt, &frozen); err != nil {
+		if err := rows.Scan(&a.SiteID, &a.Account, &a.Country, &a.NextAt, &a.Round, &a.AskedAt, &frozen); err != nil {
 			return nil, err
 		}
 		a.Frozen = parseIDs(frozen)
@@ -298,11 +300,27 @@ func (s *Store) DelayAnswers(ctx context.Context, site string, until, now int64)
 	return err
 }
 
-// AddAnswerSpend adds to a month's estimated spend: the cost of a call whose
-// answer could not be kept.
-func (s *Store) AddAnswerSpend(ctx context.Context, month string, micros int64) error {
-	_, err := s.DB.ExecContext(ctx, `INSERT INTO answer_spend (month, cost_micros) VALUES (?, ?)
-		ON CONFLICT(month) DO UPDATE SET cost_micros = cost_micros + excluded.cost_micros`, month, micros)
+// AddAnswerSpend adds to a month's estimated spend, and to the site's own: the
+// cost of a call whose answer could not be kept.
+func (s *Store) AddAnswerSpend(ctx context.Context, site, month string, micros int64) error {
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback() //nolint:errcheck // a rollback after commit is a no-op
+	if _, err := tx.ExecContext(ctx, `INSERT INTO answer_spend (month, cost_micros) VALUES (?, ?)
+		ON CONFLICT(month) DO UPDATE SET cost_micros = cost_micros + excluded.cost_micros`, month, micros); err != nil {
+		return err
+	}
+	if err := addSiteSpend(ctx, tx, site, month, micros); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func addSiteSpend(ctx context.Context, tx *sql.Tx, site, month string, micros int64) error {
+	_, err := tx.ExecContext(ctx, `INSERT INTO answer_site_spend (site_id, month, micros) VALUES (?, ?, ?)
+		ON CONFLICT(site_id, month) DO UPDATE SET micros = micros + excluded.micros`, site, month, micros)
 	return err
 }
 
@@ -371,6 +389,9 @@ func (s *Store) SaveAnswerRun(ctx context.Context, r AnswerRun, month string) er
 	if r.CostMicros > 0 {
 		if _, err := tx.ExecContext(ctx, `INSERT INTO answer_spend (month, cost_micros) VALUES (?, ?)
 			ON CONFLICT(month) DO UPDATE SET cost_micros = cost_micros + excluded.cost_micros`, month, r.CostMicros); err != nil {
+			return err
+		}
+		if err := addSiteSpend(ctx, tx, r.SiteID, month, r.CostMicros); err != nil {
 			return err
 		}
 	}
@@ -664,8 +685,18 @@ func (s *Store) AnswerSiteIDs(ctx context.Context) ([]string, error) {
 	return out, rows.Err()
 }
 
-// AnswerSiteSpend is what a site's runs cost since the given time (unix seconds), in micro-USD.
-func (s *Store) AnswerSiteSpend(ctx context.Context, site string, since int64) (n int64, err error) {
-	err = s.DB.QueryRowContext(ctx, `SELECT coalesce(sum(cost_micros), 0) FROM answer_runs WHERE site_id = ? AND asked_at >= ?`, site, since).Scan(&n)
+// AnswerSiteSpend is what a site's Answers cost in a month ("2026-10"), in
+// micro-USD. It is kept apart from the runs, so deleting a question does not reset it.
+func (s *Store) AnswerSiteSpend(ctx context.Context, site, month string) (n int64, err error) {
+	err = s.DB.QueryRowContext(ctx, `SELECT coalesce(sum(micros), 0) FROM answer_site_spend WHERE site_id = ? AND month = ?`, site, month).Scan(&n)
 	return n, err
+}
+
+// AnswerShare is one site's fair share of a monthly budget in micro-USD: the
+// budget split between the sites that ask something.
+func (s *Store) AnswerShare(ctx context.Context, budget int64) int64 {
+	if n, err := s.AnswerSitesWithQuestions(ctx); err == nil && n > 1 {
+		return budget / int64(n)
+	}
+	return budget
 }

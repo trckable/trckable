@@ -40,6 +40,7 @@ func (o *openAI) Ask(ctx context.Context, r Request) (Answer, error) {
 	body, _ := json.Marshal(map[string]any{
 		"model": o.model, "input": r.Question, "store": false,
 		"tools": []any{tool}, "include": []string{"web_search_call.action.sources"},
+		"max_output_tokens": 1024, "max_tool_calls": 3,
 	})
 	raw, _, err := do(ctx, o.d, o.url, map[string]string{"Authorization": "Bearer " + o.key}, body)
 	if err != nil {

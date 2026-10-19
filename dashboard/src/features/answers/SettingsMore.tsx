@@ -131,6 +131,7 @@ export function SettingsFoot({ setup }: { setup: AnswersSetup }) {
               <i style={{ width: `${Math.min(100, (b.used / b.cap) * 100)}%` }} />
             </span>
           )}
+          {b.server && <span className="an-help">{c.settings.budget(usd(b.server.used), b.server.cap ? usd(b.server.cap) : '∞')}</span>}
         </div>
       )}
     </div>
