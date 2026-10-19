@@ -107,7 +107,7 @@ test('the globe draws, spins by itself, holds still with reduced motion, and a f
   )
   // Local runs go through the machine's low-power queue, so the rate is held to a floor; the frame's own cost is the real budget.
   if (test.info().project.name === 'chromium') expect(sample.fps).toBeGreaterThan(15) // Firefox here draws in software, far slower than a real screen
-  expect(sample.ms).toBeLessThan(4) // a frame's own work, in milliseconds
+  expect(sample.ms).toBeLessThan(test.info().project.name === 'chromium' ? 4 : 12) // a frame's own work, in milliseconds (Firefox draws on the CPU here)
   await page.evaluate(() => (document.documentElement.dataset.motion = 'off'))
   const b = await lon()
   await page.waitForTimeout(2000)
