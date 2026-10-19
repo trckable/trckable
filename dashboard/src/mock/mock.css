@@ -666,8 +666,8 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .vg.good{background:var(--mk-green)}
 .mk .vg.mid{background:var(--mk-amber)}
 .mk .vg.poor{background:var(--mk-red)}
-.mk .mk-lseg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
-.mk .mk-lseg button{height:var(--mk-h);border:1px solid var(--mk-line);border-radius:var(--mk-rc);font-size:13px;color:var(--mk-muted)}
+.mk .mk-lseg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px}
+.mk .mk-lseg button{white-space:nowrap;padding:0 var(--mk-s2);height:var(--mk-h);border:1px solid var(--mk-line);border-radius:var(--mk-rc);font-size:13px;color:var(--mk-muted)}
 .mk .mk-lseg button.on{background:var(--mk-limeD);color:var(--mk-lime);border-color:var(--mk-limeL)}
 .mk .mk-lseg button:disabled{opacity:.4;cursor:default}
 .mk .pmenu .mk-lopt{display:flex;flex-direction:column;gap:6px;padding:var(--mk-s2) var(--mk-s3)}

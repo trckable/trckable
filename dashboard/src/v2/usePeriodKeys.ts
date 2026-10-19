@@ -14,8 +14,8 @@ function stepOf(e: KeyboardEvent): -1 | 0 | 1 {
   return pressed(e, 'forward') ? 1 : 0
 }
 
-export function usePeriodKeys(o: { on: boolean; today: ISODate; range: Range; view: ViewState; day: boolean }) {
-  const { on, today, range, view, day } = o
+export function usePeriodKeys(o: { on: boolean; today: ISODate; range: Range; view: ViewState }) {
+  const { on, today, range, view } = o
   useEffect(() => {
     if (!on) return
     const key = (e: KeyboardEvent) => {
@@ -28,11 +28,11 @@ export function usePeriodKeys(o: { on: boolean; today: ISODate; range: Range; vi
         const next = shiftRange(range, step)
         if (next.to > today) return
         setView({ period: 'custom', from: next.from, to: next.to, bucket: undefined, day: undefined })
-      } else if (pressed(e, 'compare') && !day) setView({ compare: view.compare === 'none' ? 'previous' : 'none' })
+      } else if (pressed(e, 'compare')) setView({ compare: view.compare === 'none' ? 'previous' : 'none' })
       else return
       e.preventDefault()
     }
     window.addEventListener('keydown', key)
     return () => window.removeEventListener('keydown', key)
-  }, [on, today, range, view.compare, day])
+  }, [on, today, range, view.compare])
 }
