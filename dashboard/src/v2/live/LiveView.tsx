@@ -1,7 +1,7 @@
 // Live, in the walkthrough's own layout: the half hour as bars with who is here now, the people on the site, and under
 // them Analytics, Speed & uptime, and AI & mentions. The numbers are the server's last half hour and the stream's newer visits.
-import { Suspense, useEffect, useMemo, useState } from 'react'
-import { lazyLoad } from '../../lib/lazyLoad'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { onlineNow } from '../../lib/live'
 import { isShared } from '../../lib/me'
 import { can } from '../../lib/permissions'
@@ -25,6 +25,9 @@ import { FeedList } from '../ui/FeedList'
 import { barsOf, changeOf, listsOf, sourceParts, visitors30 } from './liveModel'
 import { ChartSwitch } from './ChartSwitch'
 import { keepChartMode, readChartMode, type ChartMode } from './chartMode'
+import { GlobeSwitch } from './GlobeSwitch'
+import { GlobeHold } from './globe/GlobeHold'
+import { keepGlobe, readGlobe } from './viewMode'
 import { MinuteChart } from './MinuteChart'
 import { Tick } from './Tick'
 import { useFit } from './cardWidth'
@@ -36,6 +39,7 @@ import type { LiveStream } from './Live'
 import { QUERY } from '../../kit/breakpoints'
 
 const MentionChip = lazyLoad(() => import('../../features/mentions/MentionChip'))
+const GlobePanel = lazyLoad(() => import('./globe/GlobePanel'))
 
 /** What the view is drawn from: the server's answer, the clock it ran by, and the few things read beside it. */
 export interface LiveFeed {
@@ -81,6 +85,15 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
     setMode(m)
     keepChartMode(m)
   }
+  const [globe, setGlobe] = useState(() => readGlobe() && !isShared())
+  const swap = useRef<HTMLDivElement>(null)
+  // The overview's height when it was last on screen: the globe takes the same room, so what lies below does not move.
+  const [room, setRoom] = useState<number>()
+  const showGlobe = (on: boolean) => {
+    setRoom(swap.current?.offsetHeight)
+    setGlobe(on)
+    keepGlobe(on)
+  }
   // Counts the visits that came in after the first look, for the line's end dot to beat once for each.
   const [first] = useState(() => stream.visits[0]?.id ?? 0)
   const beat = (stream.visits[0]?.id ?? 0) > first ? stream.visits[0].id : 0
@@ -95,8 +108,15 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   const pulseClass = down || !stream.connected ? 'off' : (beat && 'ev') || ''
   const at = (ms: number) => dateFmt(tag, { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone }).format(new Date(ms))
   const colorOf = (channel: string) => colors?.[channel] ?? channelColor(channel)
+  const bar = isShared() ? null : <GlobeSwitch on={globe} onChange={showGlobe} warm={warm(GlobePanel.preload)} />
   return (
     <>
+      <div className="lswap" ref={swap} key={String(globe)}>
+      {globe ? (
+        <Suspense fallback={<GlobeHold bar={bar} height={room} />}>
+          <GlobePanel rows={rows} clock={now} online={n} bar={bar} pulse={pulseClass} height={room} site={site} onVisitor={onVisitor} />
+        </Suspense>
+      ) : (
       <div className="liveview" role="region" aria-label={copy.live}>
         <Announce visits={stream.visits} />
         <section className="mk-card lnow" ref={ref} data-fit={fit}>
@@ -105,6 +125,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
             <span className="lt">{copy.live}</span>
             <span className="mk-quiet lm">{copy.window(at(now))}</span>
             <ChartSwitch mode={mode} onChange={pick} />
+            {bar}
           </div>
           <div className="lfig">
             <div className="lmain">
@@ -163,6 +184,8 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
           </div>
           <FeedList key={site} rows={rows} up={upSources} clock={now} empty={down ? copy.nobodyDown : copy.nobody} onVisitor={onVisitor} cookieless={whole?.cookieless} />
         </section>
+      </div>
+      )}
       </div>
       <div className="lcards" ref={cardsRef}>
         <AnalyticsCard today={data.today} lists={lists} />

@@ -7,6 +7,9 @@ import { hash, mulberry, pick } from './rand'
 
 const MINUTE = 60000
 
+/** Two cities a country, for the globe's pins. */
+const CITIES: Record<string, string[]> = { US: ['New York', 'Austin'], DE: ['Berlin', 'Munich'], GB: ['London', 'Leeds'], IN: ['Mumbai', 'Pune'], FR: ['Paris', 'Lyon'], NL: ['Amsterdam', 'Utrecht'], CA: ['Toronto', 'Montreal'], AL: ['Tirana', 'Durres'] }
+
 /** People a minute, as the mock draws them: the hour's share of that minute, a little uneven. */
 function perMin(c: Ctx, site: SiteDef, m: number): number {
   const d = c.w.data[site.id]
@@ -46,7 +49,7 @@ export function nowOf(c: Ctx, id: string): LiveNow {
       const dv = pick(r, site.dv[s])
       const ct = pick(r, site.ct[s])
       const ts = at - (4 + i * 5) * 1000
-      recent.push({ kind: 'pageview', ts, last: ts, visitor: `lv${i}`, path: site.pages[pick(r, site.pg[s])][0], channel: SRCS[s].name, country: CTYS[ct].id, device: DEVS[dv].name })
+      recent.push({ kind: 'pageview', ts, last: ts, visitor: `lv${i}`, path: site.pages[pick(r, site.pg[s])][0], channel: SRCS[s].name, country: CTYS[ct].id, city: CITIES[CTYS[ct].id]?.[i % 2], device: DEVS[dv].name })
     }
   const today = countIn(c, id, END * 1440, c.nowAbs + 1, [])
   const out: LiveNow = {

@@ -1896,3 +1896,11 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 @container (--pane-max-700){
 .mk .lcards{order:0;margin:var(--mk-s4) 0 0}
 }
+/* Live's globe switch (an icon, its name, the app's switch) and the fade between the overview and the globe. */
+.mk .gsw { display: flex; align-items: center; gap: var(--mk-s2); margin-left: var(--mk-s3); padding: var(--mk-s1) 0; color: var(--mk-muted); font-size: 12px; cursor: pointer; }
+.mk .gsw .switch { width: 34px; height: 20px; border: 0; padding: 2px; background: var(--mk-fill); }
+.mk .gsw .switch span { width: 16px; height: 16px; background: var(--mk-muted); }
+.mk .gsw .switch.on { background: var(--mk-limeD); }
+.mk .gsw .switch.on span { transform: translateX(14px); background: var(--mk-lime); }
+.mk .lswap{animation:mk-fade .2s ease-out}
+html[data-motion='off'] .mk .lswap{animation:none}

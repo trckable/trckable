@@ -3,6 +3,7 @@
 // paid, and the visit it is credited to, when they bought.
 import { Avatar } from '../../components/visitor/Avatar'
 import { DeviceIcon } from '../../components/visitor/DeviceIcon'
+import { nameOf } from '../../lib/visitor'
 import { countryName, flag, fmtDuration, fmtInt, fmtMoney } from '../../lib/format'
 import { copy } from './copy'
 import type { Identity } from './model'
@@ -42,7 +43,7 @@ export function IdentityHead({ who, titleId }: { who: Identity; titleId: string 
     <div className="jr-who">
       <Avatar id={who.visitor} size={52} live={who.live} />
       <div className="jr-who-text">
-        <h2 id={titleId}>{copy.title(who.visitor)}</h2>
+        <h2 id={titleId}>{nameOf(who.visitor)}</h2>
         <p className="jr-who-line faint">
           <Place who={who} />
           <Tech who={who} />

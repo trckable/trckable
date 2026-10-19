@@ -46,6 +46,17 @@
   font-weight: 750;
   font-family: ui-sans-serif, system-ui, sans-serif;
 }
+/* The drawn face fills its circle on a soft tint of the visitor's colour. */
+.v-avatar.face {
+  overflow: hidden;
+  background: hsl(var(--v-hue) 55% 86%);
+  box-shadow: none;
+}
+.v-avatar.face svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
 @media (prefers-reduced-motion: reduce) {
   .v-avatar.live::after {
     animation: none;
