@@ -11,6 +11,17 @@ export function hueOf(id: string): number {
   return (h >>> 0) % 360
 }
 
+const FIRST = ['Calm', 'Brave', 'Quick', 'Quiet', 'Bright', 'Gentle', 'Lucky', 'Merry', 'Noble', 'Plucky', 'Proud', 'Sunny', 'Swift', 'Witty', 'Zesty', 'Cosy', 'Eager', 'Jolly', 'Kind', 'Lively', 'Mellow', 'Nimble', 'Polite', 'Steady']
+const SECOND = ['Otter', 'Fox', 'Heron', 'Panda', 'Falcon', 'Koala', 'Lynx', 'Badger', 'Finch', 'Gecko', 'Hare', 'Ibis', 'Koi', 'Lemur', 'Marten', 'Newt', 'Owl', 'Puffin', 'Quail', 'Robin', 'Seal', 'Tern', 'Vole', 'Wren']
+
+/** A friendly two-word name for an id ("Calm Otter"): chosen only by the id, so the same visitor has the same name everywhere. */
+export function nameOf(id: string): string {
+  const h = hueOf(id)
+  let g = 2166136261
+  for (let i = id.length - 1; i >= 0; i--) g = Math.imul(g ^ id.charCodeAt(i), 16777619)
+  return `${FIRST[h % FIRST.length]} ${SECOND[(g >>> 0) % SECOND.length]}`
+}
+
 /** Shortens a long path in the middle, keeping where it starts and ends. */
 export function truncateMiddle(text: string, max = 44): string {
   if (text.length <= max) return text

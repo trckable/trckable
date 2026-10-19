@@ -10,12 +10,23 @@
 // made every first open of a dialog feel slow.
 import { createElement, lazy, useState, type ComponentProps, type ComponentType } from 'react'
 
+/** A chunk that fails to arrive (a dropped connection, a server restarting) is asked for twice more before it counts as failed. */
+async function withRetry<T>(fetchChunk: () => Promise<T>, tries = 3): Promise<T> {
+  try {
+    return await fetchChunk()
+  } catch (e) {
+    if (tries <= 1) throw e
+    await new Promise((r) => setTimeout(r, 400))
+    return withRetry(fetchChunk, tries - 1)
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the same bound React's own lazy() uses
 export function lazyLoad<T extends ComponentType<any>>(fetchChunk: () => Promise<{ default: T }>) {
   let once: Promise<{ default: T }> | null = null
   let ready: T | null = null
   const get = () =>
-    (once ??= fetchChunk().then((m) => {
+    (once ??= withRetry(fetchChunk).then((m) => {
       ready = m.default
       return m
     }))

@@ -71,7 +71,7 @@ async function openJourney(page: Page) {
   await row.focus()
   await page.keyboard.press('Enter')
   const dialog = page.getByRole('dialog', { name: 'Visitor journey' })
-  await expect(dialog.getByRole('heading', { level: 2 })).toHaveText(/^Visitor /)
+  await expect(dialog.getByRole('heading', { level: 2 })).toHaveText(/^[A-Z][a-z]+ [A-Z][a-z]+$/) // the visitor's generated two-word name
   return dialog
 }
 
