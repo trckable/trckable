@@ -8,7 +8,8 @@ import { hasAnswers, hasMentions } from '../../lib/me'
 import { openExplore } from '../explore/open'
 import { copy } from './copy'
 import { EmptyBlock } from './EmptyBlock'
-import type { Health } from './useHealth'
+import { CardSkeleton } from './CardSkeleton'
+import { loading, type Health } from './useHealth'
 
 const h = copy.health
 const MARK: Record<Source, string> = { hn: 'Y', ph: 'P', news: 'N', ref: 'R' }
@@ -18,12 +19,14 @@ function Ring({ seen, total }: { seen: number; total: number }) {
   const c = 2 * Math.PI * r
   return (
     <button type="button" className="lhring" onClick={() => openExplore('answers')} title={answersCopy.seen(seen, total)} aria-label={answersCopy.seen(seen, total)}>
-      <svg viewBox="0 0 84 84" aria-hidden="true">
-        <circle className="lhtrack" cx="42" cy="42" r={r} />
-        <circle className="lhfill" cx="42" cy="42" r={r} strokeDasharray={`${c * (total > 0 ? Math.min(seen / total, 1) : 0)} ${c}`} transform="rotate(-90 42 42)" />
-      </svg>
-      <b>{`${seen}/${total}`}</b>
-      <span>{h.answersWord}</span>
+      <span className="lhrg">
+        <svg viewBox="0 0 84 84" aria-hidden="true">
+          <circle className="lhtrack" cx="42" cy="42" r={r} />
+          <circle className="lhfill" cx="42" cy="42" r={r} strokeDasharray={`${c * (total > 0 ? Math.min(seen / total, 1) : 0)} ${c}`} transform="rotate(-90 42 42)" />
+        </svg>
+        <b>{`${seen}/${total}`}</b>
+      </span>
+      <span className="lhrl">{h.answersWord}</span>
     </button>
   )
 }
@@ -76,15 +79,20 @@ interface Props {
 
 export function AiMentionsCard({ site, health }: Props) {
   const { ai, answers, mentions } = health
-  const waiting = ai === undefined && answers === undefined
   return (
     <section className="mk-card lcard lhc" aria-label={h.aiMentions}>
       <div className="ph">
         <span className="t">{h.aiMentions}</span>
       </div>
       <div className="pb lhbody">
-        {ai || answers ? <Crawlers ai={ai} answers={answers} /> : <EmptyBlock site={site} line={h.empty.ai} ghost={['rows']} action={{ label: h.connectCrawlers, setup: 'crawlers' }} waiting={waiting} reserve={96} />}
-        {hasMentions() && site.mentions && mentions && <Mentions m={mentions} />}
+        {loading(health) ? (
+          <CardSkeleton kind="ai" />
+        ) : (
+          <>
+            {ai || answers ? <Crawlers ai={ai} answers={answers} /> : <EmptyBlock site={site} line={h.empty.ai} ghost={['rows']} action={{ label: h.connectCrawlers, setup: 'crawlers' }} />}
+            {hasMentions() && site.mentions && mentions && <Mentions m={mentions} />}
+          </>
+        )}
       </div>
     </section>
   )

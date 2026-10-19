@@ -6,9 +6,10 @@ import { useFullscreen } from '../../../lib/fullscreen'
 import type { Row } from '../../../features/live/model'
 import { copy } from '../copy'
 import { GlobeFeed } from './GlobeFeed'
+import { GlobeNew } from './GlobeNew'
 import { GlobePopover, type Open } from './GlobePopover'
 import { GlobeStage, type Pick } from './GlobeStage'
-import { pinKeyOf, pinsOf, rowsAt, type Pin } from './geo'
+import { pinsOf, type Pin } from './geo'
 import './globe.css'
 
 const FULL = 'M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4'
@@ -20,16 +21,16 @@ export default function GlobePanel({ rows, clock, online, bar, pulse, site, onVi
   const [open, setOpen] = useState<Open | null>(null)
   // The pins change only when someone arrives, leaves or moves on, not with every tick of the clock.
   const found = pinsOf(rows)
-  const sig = found.map((p) => `${p.sig}#${p.n}`).join()
+  const sig = found.map((p) => p.sig).join()
   // eslint-disable-next-line react-hooks/exhaustive-deps -- sig is the pins' content
   const pins = useMemo<Pin[]>(() => found, [sig])
   // Where the spot is is kept in `open`, so the popover stays on it after the last person has left.
   const sel = useMemo<Pick | null>(() => (open ? { key: open.key, lat: open.lat, lon: open.lon } : null), [open])
-  const here = useMemo(() => (open ? rowsAt(rows, open.key) : []), [rows, open])
+  const here = open ? rows.find((r) => r.key === open.key) : undefined
   const close = useCallback(() => setOpen(null), [])
-  const at = (key: string, row: string | null) => {
+  const at = (key: string) => {
     const p = pins.find((x) => x.key === key)
-    if (p) setOpen({ key, row, cc: p.cc, city: p.city, lat: p.lat, lon: p.lon })
+    if (p) setOpen({ key, cc: p.cc, city: p.city, lat: p.lat, lon: p.lon })
   }
   const label = full.on ? copy.exitFullscreen : copy.fullscreen
   return (
@@ -46,15 +47,21 @@ export default function GlobePanel({ rows, clock, online, bar, pulse, site, onVi
             </svg>
           </button>
         </div>
-        <GlobeStage pins={pins} people={online} sel={sel} onPick={(k) => at(k, null)}>
-          {open && <GlobePopover open={open} rows={here} clock={clock} site={site} onVisitor={onVisitor} onRow={(k) => setOpen({ ...open, row: k })} onClose={close} />}
+        <GlobeStage pins={pins} people={online} sel={sel} onPick={at}>
+          {open && <GlobePopover open={open} row={here} clock={clock} site={site} onVisitor={onVisitor} onClose={close} />}
         </GlobeStage>
+        <button type="button" className="gclose" aria-label={copy.exitFullscreen} title={copy.exitFullscreen} onClick={full.toggle}>
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+            <path d="M3 3l10 10M13 3L3 13" />
+          </svg>
+        </button>
+        {full.on && <GlobeNew rows={rows} clock={clock} onPick={(r) => at(r.key)} />}
       </section>
       <section className="mk-card lon gside">
         <div className="lhead">
           <span className="lt">{copy.recent}</span>
         </div>
-        <GlobeFeed rows={rows} clock={clock} active={open?.key ?? null} onPick={(r) => at(pinKeyOf(r), r.key)} />
+        <GlobeFeed rows={rows} clock={clock} active={open?.key ?? null} onPick={(r) => at(r.key)} />
       </section>
     </div>
   )

@@ -1,8 +1,7 @@
 // What one pin holds, as a visitor card: their drawn face and name (the same module the journey uses), where they are and
-// on what, where they came from, the page, how long, how many visits, and Replay. A pin with several people lists them
-// first and slides to the card of the one picked. Only fields we have are shown. On a phone the card is a bottom sheet;
+// on what, where they came from, the page, how long, how many visits, and Replay. Only fields we have are shown. On a phone the card is a bottom sheet;
 // it stays attached when the visitor leaves ("Left just now") and then closes.
-import { ChevronLeft, Cpu, Globe } from 'lucide-react'
+import { Cpu, Globe } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Avatar } from '../../../components/visitor/Avatar'
 import { DeviceIcon } from '../../../components/visitor/DeviceIcon'
@@ -41,7 +40,6 @@ interface CardProps {
   clock: number
   gone: boolean
   extra: Extra
-  onBack?: () => void
   onClose: () => void
   onVisitor?: (v: string) => void
 }
@@ -57,16 +55,11 @@ function Head({ children, onClose }: { children: React.ReactNode; onClose: () =>
   )
 }
 
-function Card({ row, clock, gone, extra, onBack, onClose, onVisitor }: CardProps) {
+function Card({ row, clock, gone, extra, onClose, onVisitor }: CardProps) {
   const place = [row.city, row.country ? countryName(row.country) : ''].filter(Boolean).join(', ')
   return (
     <div className="gcardv">
       <Head onClose={onClose}>
-        {onBack && (
-          <button type="button" className="gpop-back" aria-label={copy.back} title={copy.back} onClick={onBack}>
-            <ChevronLeft size={18} aria-hidden="true" />
-          </button>
-        )}
         {row.visitor ? <Avatar id={row.visitor} size={64} live={!gone} /> : <span className="gpop-flag" aria-hidden="true">{flag(row.country ?? '')}</span>}
         <div className="gwho">
           <b>{row.visitor ? nameOf(row.visitor) : place}</b>
@@ -136,70 +129,51 @@ function Journeyed({ site, ...p }: Omit<CardProps, 'extra'> & { site: string }) 
 }
 
 export interface Open {
+  /** The visitor's row key. */
   key: string
-  /** The row picked from a list of several, or null while the list shows. */
-  row: string | null
   cc: string
   city: string
   lat: number
   lon: number
 }
 
-export function GlobePopover({ open, rows, clock, site, onVisitor, onRow, onClose }: { open: Open; rows: Row[]; clock: number; site: string; onVisitor?: (v: string) => void; onRow: (k: string | null) => void; onClose: () => void }) {
+export function GlobePopover({ open, row, clock, site, onVisitor, onClose }: { open: Open; row: Row | undefined; clock: number; site: string; onVisitor?: (v: string) => void; onClose: () => void }) {
   const box = useRef<HTMLDivElement | null>(null)
-  // The last people seen here: kept when they have all left, so the popover can say so before it goes.
-  const [kept, setKept] = useState(rows)
-  if (rows.length && rows !== kept) setKept(rows)
-  const gone = rows.length === 0
-  const list = gone ? kept : rows
+  // The visitor as last seen: kept when they have left, so the card can say so before it goes.
+  const [kept, setKept] = useState(row)
+  if (row && row !== kept) setKept(row)
+  const gone = !row
+  const shown = row ?? kept
   useEffect(() => {
     if (!gone) return
     const t = setTimeout(onClose, 2200)
     return () => clearTimeout(t)
   }, [gone, onClose])
   useEffect(() => {
-    const esc = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    // First in line (capture): Esc closes the card before it leaves full screen.
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      e.stopImmediatePropagation()
+      onClose()
+    }
     const outside = (e: PointerEvent) => {
       if (box.current && !box.current.contains(e.target as Node)) onClose()
     }
-    window.addEventListener('keydown', esc)
+    window.addEventListener('keydown', esc, true)
     document.addEventListener('pointerdown', outside)
     box.current?.focus()
     return () => {
-      window.removeEventListener('keydown', esc)
+      window.removeEventListener('keydown', esc, true)
       document.removeEventListener('pointerdown', outside)
     }
   }, [onClose])
-  const one = list.length === 1 ? list[0] : (list.find((r) => r.key === open.row) ?? null)
   const title = [open.city, countryName(open.cc)].filter(Boolean).join(', ')
-  const card = { clock, gone, onClose, onVisitor, onBack: list.length > 1 ? () => onRow(null) : undefined }
-  const withJourney = one && onVisitor && one.visitor
+  const withJourney = shown && onVisitor && shown.visitor
   return (
     <div className="gpop" ref={box} role="dialog" aria-label={title} tabIndex={-1}>
       <div className="gpop-in">
-        {one && withJourney && <Journeyed key={one.key} row={one} site={site} {...card} />}
-        {one && !withJourney && <Card key={one.key} row={one} extra={{}} {...card} />}
-        {!one && (
-          <div className="gcardv">
-            <Head onClose={onClose}>
-              <span className="gpop-flag" aria-hidden="true">{flag(open.cc)}</span>
-              <div className="gwho">
-                <b>{title}</b>
-                <span className="mk-quiet">{copy.here(list.length)}</span>
-              </div>
-            </Head>
-            <div className="gpick">
-              {list.map((r) => (
-                <button key={r.key} type="button" className="lv" onClick={() => onRow(r.key)}>
-                  {r.visitor ? <Avatar id={r.visitor} size={28} /> : <span aria-hidden="true">{flag(r.country ?? '')}</span>}
-                  <span className="gpn">{r.visitor ? nameOf(r.visitor) : title}</span>
-                  <span className="pg mono">{pageOf(r)}</span>
-                  <span className="src">{ago(clock - r.last)}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {shown && withJourney && <Journeyed key={shown.key} row={shown} site={site} clock={clock} gone={gone} onClose={onClose} onVisitor={onVisitor} />}
+        {shown && !withJourney && <Card key={shown.key} row={shown} extra={{}} clock={clock} gone={gone} onClose={onClose} onVisitor={onVisitor} />}
       </div>
     </div>
   )

@@ -33,13 +33,13 @@ const mount = (rows: Row[]) => {
 }
 
 describe('the globe popover', () => {
-  it('opens from the list, holds the globe still, and closing lets it spin again', () => {
-    const { box, globe, root } = mount([row(1)])
+  it('opens a visitor from the list, holds the globe still, and closing lets it spin again', () => {
+    const { box, globe, root } = mount([row(1), row(2)])
     expect(box.querySelector('[role=dialog]')).toBeNull()
     expect(globe().held).toBe(false)
-    act(() => (box.querySelector('.gfeed button') as HTMLElement).click())
+    act(() => (box.querySelectorAll('.gfeed .lv')[1] as HTMLElement).click())
     const dialog = box.querySelector('[role=dialog]')
-    expect(dialog?.textContent).toContain('/p1')
+    expect(dialog?.textContent).toContain('/p2') // that visitor's card, with no list in between
     expect(dialog?.getAttribute('aria-label')).toContain('Berlin')
     expect(globe().held).toBe(true)
     act(() => {
@@ -47,24 +47,17 @@ describe('the globe popover', () => {
     })
     expect(box.querySelector('[role=dialog]')).toBeNull()
     expect(globe().held).toBe(false)
-    act(() => (box.querySelector('.gfeed button') as HTMLElement).click())
+    act(() => (box.querySelector('.gfeed .lv') as HTMLElement).click())
     expect(globe().held).toBe(true)
     act(() => (box.querySelector('.gpop-x') as HTMLElement).click())
     expect(globe().held).toBe(false)
     act(() => root.unmount())
   })
 
-  it('lists several people at one spot, shows one on pick, and says so when they have left', () => {
+  it('says so when the visitor has left, and then closes', () => {
     vi.useFakeTimers()
-    const rows = [row(1), row(2)]
-    const { box, show, globe, root } = mount(rows)
-    act(() => (box.querySelector('.gfeed button') as HTMLElement).click())
-    expect(box.querySelector('.grows')?.textContent).toContain('/p1')
-    act(() => (box.querySelector('.gpop-back') as HTMLElement).click())
-    expect(box.querySelectorAll('.gpick .lv')).toHaveLength(2)
-    act(() => (box.querySelectorAll('.gpick .lv')[1] as HTMLElement).click())
-    expect(box.querySelector('.gwho')?.textContent).toBeTruthy()
-    expect(box.querySelector('.grows')?.textContent).toContain('/p2')
+    const { box, show, globe, root } = mount([row(1)])
+    act(() => (box.querySelector('.gfeed .lv') as HTMLElement).click())
     act(() => show([]))
     expect(box.querySelector('.gwho')?.textContent).toContain('Left just now')
     expect(box.querySelector('[role=dialog]')).not.toBeNull()
@@ -75,5 +68,19 @@ describe('the globe popover', () => {
     expect(globe().held).toBe(false)
     act(() => root.unmount())
     vi.useRealTimers()
+  })
+
+  it('full screen shows the new visitors, newest first, and a click opens that visitor', () => {
+    const { box, root } = mount([row(1), row(2), row(3)])
+    expect(box.querySelector('.gnew')).toBeNull()
+    act(() => (box.querySelector('.gfs') as HTMLElement).click())
+    const items = [...box.querySelectorAll('.gnew .gnv')]
+    expect(items).toHaveLength(3)
+    expect(items[0].textContent).toContain('/p1')
+    act(() => (items[2] as HTMLElement).click())
+    expect(box.querySelector('[role=dialog]')?.textContent).toContain('/p3')
+    act(() => (box.querySelector('.gclose') as HTMLElement).click())
+    expect(box.querySelector('.gnew')).toBeNull()
+    act(() => root.unmount())
   })
 })

@@ -23,7 +23,7 @@ describe('the globe feed', () => {
     expect(items[1].textContent).toContain('Signup')
     act(() => (items[0] as HTMLElement).click())
     expect(pick).toHaveBeenCalledWith(rows[0])
-    act(() => root.render(<GlobeFeed rows={[row(3, { last: 114_000 }), ...rows]} clock={115_000} active="DE/" onPick={pick} />))
+    act(() => root.render(<GlobeFeed rows={[row(3, { last: 114_000 }), ...rows]} clock={115_000} active="v3" onPick={pick} />))
     const next = box.querySelectorAll('.gfeed .lv')
     expect(next).toHaveLength(3)
     expect(next[0].className).toContain('arriving')

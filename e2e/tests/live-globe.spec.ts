@@ -111,6 +111,22 @@ test('the globe draws, spins by itself, holds still with reduced motion, and a f
   // Local runs go through the machine's low-power queue, so the rate is held to a floor; the frame's own cost is the real budget.
   if (test.info().project.name === 'chromium') expect(sample.fps).toBeGreaterThan(15) // Firefox here draws in software, far slower than a real screen
   expect(sample.ms).toBeLessThan(test.info().project.name === 'chromium' ? 4 : 12) // a frame's own work, in milliseconds (Firefox draws on the CPU here)
+  // A crowd: 300 visitors, one pin each, spinning: a frame still stays inside its budget.
+  await page.evaluate(() => {
+    const g = (document.querySelector('.gstage canvas') as unknown as { __globe: { setPins: (p: unknown[]) => void } }).__globe
+    const ccs = ['DE', 'US', 'GB', 'IN', 'FR', 'BR', 'JP', 'AU']
+    g.setPins(Array.from({ length: 300 }, (_, i) => ({ key: `k${i}`, cc: ccs[i % 8], city: '', path: '/', lat: ((i * 37) % 100) - 40, lon: ((i * 73) % 340) - 170, last: 0, sig: `k${i}` })))
+  })
+  const crowd = await page.evaluate(
+    () =>
+      new Promise<number>((res) => {
+        const g = (document.querySelector('.gstage canvas') as unknown as { __globe: { stats: { frames: number; ms: number } } }).__globe
+        g.stats.frames = 0
+        g.stats.ms = 0
+        setTimeout(() => res(g.stats.ms / Math.max(1, g.stats.frames)), 3000)
+      }),
+  )
+  expect(crowd).toBeLessThan(test.info().project.name === 'chromium' ? 4 : 12)
   await page.evaluate(() => (document.documentElement.dataset.motion = 'off'))
   const b = await lon()
   await page.waitForTimeout(2000)
@@ -128,6 +144,9 @@ test('full screen goes on and off, with a cover where the browser has none', asy
   const wrap = page.locator('.gwrap')
   await page.getByRole('button', { name: 'Full screen' }).click()
   await expect(wrap).toHaveClass(/fill/)
+  // Full screen is the globe alone: no head, no list, one close button, and the new visitors card.
+  await expect(page.locator('.gside')).toBeHidden()
+  await expect(page.locator('.gcard .lhead')).toBeHidden()
   await expect(page.getByRole('button', { name: 'Leave full screen' })).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(wrap).not.toHaveClass(/fill/)

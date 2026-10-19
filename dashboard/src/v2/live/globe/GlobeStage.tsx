@@ -14,7 +14,7 @@ export interface Pick {
 }
 
 const HIDDEN = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' } as const
-const nameOf = (p: Pin) => `${p.city || countryName(p.cc)} · ${p.path}${p.n > 1 ? ` · ${copy.here(p.n)}` : ''}`
+const nameOf = (p: Pin) => `${p.city || countryName(p.cc)} · ${p.path}`
 
 export function GlobeStage({ pins, people, sel, onPick, children }: { pins: Pin[]; people: number; sel: Pick | null; onPick: (key: string) => void; children: ReactNode }) {
   const box = useRef<HTMLDivElement>(null)
