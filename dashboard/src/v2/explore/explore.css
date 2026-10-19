@@ -50,8 +50,8 @@
    ease-in (180 ms), and what is in it comes up once the panel is there. Panel.tsx unmounts after the exit (OUT). */
 .mk .xscrim{display:block;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s ease-in,visibility 0s .15s}
 .mk .xscrim.on{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .15s ease-out,visibility 0s}
-.mk .xp{transition:transform .18s cubic-bezier(.4,0,1,1),width .3s cubic-bezier(.2,.8,.2,1),top .3s cubic-bezier(.2,.8,.2,1),border-radius .3s}
-.mk .xp.on{transition:transform .22s cubic-bezier(.2,.8,.2,1),width .3s cubic-bezier(.2,.8,.2,1),top .3s cubic-bezier(.2,.8,.2,1),border-radius .3s}
+.mk .xp{transition:opacity .16s ease,transform .18s cubic-bezier(.4,0,1,1),width .3s cubic-bezier(.2,.8,.2,1),top .3s cubic-bezier(.2,.8,.2,1),border-radius .3s}
+.mk .xp.on{transition:opacity .16s ease,transform .22s cubic-bezier(.2,.8,.2,1),width .3s cubic-bezier(.2,.8,.2,1),top .3s cubic-bezier(.2,.8,.2,1),border-radius .3s}
 .mk .xp.on>*{animation:xp-in .2s .06s ease-out backwards}
 @keyframes xp-in{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){.mk .xscrim,.mk .xscrim.on,.mk .xp,.mk .xp.on{transition:none}.mk .xp.on>*{animation:none}}
