@@ -4,6 +4,10 @@ import { ALL_TABS } from '../explore/sections'
 import { SETUP_LINKS } from './setupLinks'
 
 describe('Live setup links', () => {
+  it('has no uptime entry: uptime is always on, so its empty state only waits', () => {
+    expect(Object.keys(SETUP_LINKS)).not.toContain('uptime')
+  })
+
   it('every link resolves to a known settings section or Explore table', () => {
     for (const [id, link] of Object.entries(SETUP_LINKS)) {
       const known = link.kind === 'settings' ? (SETTINGS_TABS as readonly string[]).includes(link.tab) : (ALL_TABS as string[]).includes(link.tab)

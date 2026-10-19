@@ -1,7 +1,7 @@
 // Live's Speed & uptime card: how fast the pages load as a gauge, and the last thirty days as a strip of days. A site
 // that is down says so in red here as it does in the header and the incident record.
 import { tag } from '../../i18n'
-import type { Site } from '../../lib/api'
+import { MIN_VITALS, type Site } from '../../lib/api'
 import { dateFmt, fmtFixed } from '../../lib/format'
 import { navigate } from '../../lib/url'
 import { gradeOf } from '../explore/data/mapSections'
@@ -62,9 +62,18 @@ function incidents(site: Site) {
   navigate(`/${encodeURIComponent(site.domain)}/incidents`)
 }
 
+const speedAction = { label: h.turnOnSpeed, setup: 'speed' as const }
+
+/** Speed with no figure: off, one button turns it on; on, it is only waiting for visits. */
+function SpeedEmpty({ site, recorded, waiting, both }: { site: Site; recorded?: boolean; waiting: boolean; both?: boolean }) {
+  const off = both ? h.empty.both : h.empty.speed
+  const line = recorded ? h.empty.collecting(MIN_VITALS) : off
+  return <EmptyBlock site={site} line={line} ghost={both ? ['gauge', 'strip'] : ['gauge']} action={recorded ? undefined : speedAction} collecting={recorded} waiting={waiting} reserve={132} />
+}
+
 function SpeedBlock({ site, speed, recorded }: { site: Site; speed?: number | null; recorded?: boolean }) {
-  // Switched on but too few visits: nothing to set up, only to wait for.
-  if (speed == null) return <EmptyBlock site={site} line={recorded ? h.empty.speedFew : h.empty.speed} setup={recorded ? undefined : 'speed'} waiting={speed === undefined} reserve={132} />
+  // Switched on but too few visits: nothing to set up, only to wait for. (Uptime has no switch: every site is probed.)
+  if (speed == null) return <SpeedEmpty site={site} recorded={recorded} waiting={speed === undefined} />
   const grade = gradeOf(0, speed)
   return (
     <button type="button" className="lhspeed" onClick={() => openExplore('speed')}>
@@ -77,7 +86,7 @@ function SpeedBlock({ site, speed, recorded }: { site: Site; speed?: number | nu
 
 function UptimeBlock({ site, up, down }: { site: Site; up?: Health['uptime']; down: boolean }) {
   const days = up ? up.days.map((d, i) => (down && i === up.days.length - 1 ? ('down' as const) : d)) : undefined
-  if (!days || (!down && up?.pct == null)) return down ? null : <EmptyBlock site={site} line={h.empty.uptime} waiting={up === undefined} reserve={64} />
+  if (!days || (!down && up?.pct == null)) return down ? null : <EmptyBlock site={site} line={h.empty.uptime} ghost={['strip']} collecting waiting={up === undefined} reserve={64} />
   return (
     <button type="button" className="lhup" onClick={() => incidents(site)}>
       <Strip days={days} />
@@ -89,6 +98,31 @@ function UptimeBlock({ site, up, down }: { site: Site; up?: Health['uptime']; do
   )
 }
 
+function DownBody({ site, since, health }: { site: Site; since: number; health: Health }) {
+  return (
+    <>
+      <button type="button" className="lhbig bad" onClick={() => incidents(site)}>
+        <b>{h.down}</b>
+        <span>{h.downSince(clock(since * 1000, site.timezone), site.down_cause ?? '')}</span>
+      </button>
+      <UptimeBlock site={site} up={health.uptime} down />
+    </>
+  )
+}
+
+function UpBody({ site, health }: { site: Site; health: Health }) {
+  // Neither half has a figure: one message and one button for the card, not two stacked.
+  if (health.speed == null && (health.uptime?.pct ?? null) === null) {
+    return <SpeedEmpty site={site} recorded={health.vitalsOn} waiting={health.speed === undefined || health.uptime === undefined} both />
+  }
+  return (
+    <>
+      <SpeedBlock site={site} speed={health.speed} recorded={health.vitalsOn} />
+      <UptimeBlock site={site} up={health.uptime} down={false} />
+    </>
+  )
+}
+
 export function SpeedUptimeCard({ site, health, now, downSince }: Props) {
   const down = downSince !== undefined
   const minutes = down ? Math.max(0, Math.round((now - downSince * 1000) / 60_000)) : 0
@@ -97,17 +131,7 @@ export function SpeedUptimeCard({ site, health, now, downSince }: Props) {
       <div className="ph">
         <span className={down ? 'lhdown' : 't'}>{down ? h.downFor(minutes) : h.speedUptime}</span>
       </div>
-      <div className="pb lhbody">
-        {down ? (
-          <button type="button" className="lhbig bad" onClick={() => incidents(site)}>
-            <b>{h.down}</b>
-            <span>{h.downSince(clock(downSince * 1000, site.timezone), site.down_cause ?? '')}</span>
-          </button>
-        ) : (
-          <SpeedBlock site={site} speed={health.speed} recorded={health.vitalsOn} />
-        )}
-        <UptimeBlock site={site} up={health.uptime} down={down} />
-      </div>
+      <div className="pb lhbody">{down ? <DownBody site={site} since={downSince} health={health} /> : <UpBody site={site} health={health} />}</div>
     </section>
   )
 }

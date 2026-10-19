@@ -311,7 +311,7 @@
 .mk .lfeed{padding:6px 22px 0;max-height:520px;overflow:auto}
 .mk .lon .lv:first-child{border-top:0}
 .mk .lon{display:flex;flex-direction:column}
-.mk .lcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:16px}
+.mk .lcards{gap:16px;margin-top:16px}
 .mk .lbig{font-size:30px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-bottom:8px}
 .mk .lbig small{font-size:13px;color:var(--mk-muted);font-weight:500;margin-left:6px}
 .mk .lcard .mk-n{font-size:12px;color:var(--mk-faint);margin-top:6px}
@@ -320,7 +320,7 @@
 .mk .lr span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @container (--pane-max-700){
 .mk .liveview{grid-template-columns:1fr}
-.mk .lcards{grid-template-columns:1fr;order:-1;margin:0 0 16px}
+.mk .lcards{order:-1;margin:0 0 16px}
 .mk .lbottom.money{grid-template-columns:1fr}
 .mk .lbign{font-size:40px}
 .mk .lfig{gap:28px}
@@ -575,7 +575,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .lon .lhead{padding:var(--mk-s4) var(--mk-s4) var(--mk-s1)}
 .mk .lfeed{max-height:none;padding:0 var(--mk-s4) var(--mk-s2)}
 .mk .lv{min-height:48px;padding:var(--mk-s2) 0}
-.mk .lcards{display:flex;flex-direction:column;margin:var(--mk-s3) 0 0}
+.mk .lcards{margin:var(--mk-s3) 0 0}
 .mk .lcard .lr{min-height:44px;align-items:center}
 
 }
@@ -850,7 +850,6 @@ html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-
 }
 .mk .lfeed{max-height:none!important;overflow:visible!important}
 .mk .lcards{align-items:stretch}
-.mk .lcards>.mk-card{height:100%}
 .mk .pgh{padding:var(--mk-s3) var(--mk-s3) var(--mk-s1);font-size:12px;color:var(--mk-muted);text-transform:uppercase;letter-spacing:.06em}
 .mk #palList{max-height:min(56vh,480px)}
 .mk .cdb .dots{padding:var(--mk-s2) 0}
@@ -1877,11 +1876,23 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 .mk .lhchips{display:flex;flex-wrap:wrap;gap:6px}
 .mk .lhchip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:3px 9px 3px 4px;border-radius:99px;background:var(--mk-sel);color:var(--mk-muted)}
 .mk .lhchip i{width:16px;height:16px;border-radius:5px;display:grid;place-items:center;font-style:normal;font-size:9px;font-weight:700;background:var(--mk-sel2);color:var(--mk-text)}
-.mk .lhempty{display:flex;align-items:center;gap:var(--mk-s3);color:var(--mk-faint);font-size:13px;margin:auto 0;min-height:64px}
-.mk .lhart{width:64px;height:64px;flex:none;opacity:.8}
-.mk .lhtext{display:flex;flex-direction:column;align-items:flex-start;gap:var(--mk-s1)}
-.mk .lhc button.lhgo{color:var(--mk-lime);font-weight:600;font-size:13px}
+.mk .lhempty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--mk-s3);flex:1;min-height:64px;text-align:center;color:var(--mk-faint);font-size:13px}
+/* A faint preview of what will appear: the gauge, the thirty days, rows of a list. Waiting for visits (collecting) it shimmers. */
+.mk .lhghost{display:flex;flex-direction:column;align-items:center;gap:var(--mk-s3);width:100%;opacity:.5}
+.mk .lhc .lhghost svg.lhgg{width:160px;height:86px;margin:0;fill:none;stroke:var(--mk-sel2);stroke-width:12;stroke-linecap:round}
+.mk .lhgs{width:100%}
+.mk .lhgs i{height:var(--mk-s5)}
+.mk .lhgs i:last-child{outline:0}
+.mk .lhgr{display:flex;flex-direction:column;gap:var(--mk-s2);width:100%}
+.mk .lhgr i{display:block;height:var(--mk-s5);border-radius:8px;background:var(--mk-sel)}
+.mk .lhgr i:nth-child(2){width:72%}
+.mk .lhgr i:nth-child(3){width:48%}
+.mk .lhempty.collecting :is(.lhgs i,.lhgr i){background:linear-gradient(90deg,var(--mk-sk1),var(--mk-sk2),var(--mk-sk1));background-size:220% 100%;animation:mk-shim 1.5s linear infinite}
+@media (prefers-reduced-motion:reduce){
+.mk .lhempty.collecting :is(.lhgs i,.lhgr i){animation:none}
+}
+.mk .lhc button.lhgo{color:var(--mk-text);font-weight:600;font-size:13px;padding:var(--mk-s1) var(--mk-s3);border-radius:8px;background:var(--mk-fill)}
 .mk .lhc button.lhgo:hover{text-decoration:underline}
 @container (--pane-max-700){
-.mk .lcards{order:0;grid-template-columns:1fr;margin:var(--mk-s4) 0 0}
+.mk .lcards{order:0;margin:var(--mk-s4) 0 0}
 }
