@@ -14,7 +14,7 @@ import { change, tone, type TeamSite } from './model'
 
 const SPARK = { stopped: 'var(--down)', quiet: 'var(--warn)', new: 'var(--warn)', now: 'var(--accent)', live: 'var(--accent)' }
 
-export const mark = (s: TeamSite) => <SiteMark site={{ domain: s.domain, color: s.color }} size={24} />
+export const mark = (s: TeamSite) => <SiteMark site={{ domain: s.domain, color: s.color, icon_url: s.icon_url }} size={24} />
 
 export const openSite = (s: TeamSite) => navigate('/' + encodeURIComponent(s.domain))
 
