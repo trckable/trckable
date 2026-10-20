@@ -317,4 +317,23 @@ func TestMutingAlertsNeedsWriteAndShowsOnTheSite(t *testing.T) {
 	if _, still := list["sites"].([]any)[0].(map[string]any)["alerts_muted_until"]; still {
 		t.Fatal("undone")
 	}
+	// A body gives the hours, one to a week; none keeps the day.
+	code, out = do(t, owner, "POST", mute, `{"hours":3}`, csrf, "1")
+	until, _ = out["alerts_muted_until"].(float64)
+	if code != http.StatusOK || int64(until) != g.advance(0).Add(3*time.Hour).Unix() {
+		t.Fatalf("three hours: %d %v", code, out)
+	}
+	code, out = do(t, owner, "POST", mute, `{"hours":168}`, csrf, "1")
+	until, _ = out["alerts_muted_until"].(float64)
+	if code != http.StatusOK || int64(until) != g.advance(0).Add(168*time.Hour).Unix() {
+		t.Fatalf("a week: %d %v", code, out)
+	}
+	for _, bad := range []string{`{"hours":0}`, `{"hours":169}`, `{"hours":-2}`, `{"hours":"x"}`, `{`} {
+		if code, _ := do(t, owner, "POST", mute, bad, csrf, "1"); code != http.StatusBadRequest {
+			t.Fatalf("%s: %d", bad, code)
+		}
+	}
+	if code, _ := do(t, viewer, "POST", mute, `{"hours":3}`, csrf, "1"); code != http.StatusForbidden {
+		t.Fatalf("a viewer mutes for hours: %d", code)
+	}
 }
