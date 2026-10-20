@@ -3,8 +3,10 @@ package query
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/trckable/trckable/server/internal/event"
+	"github.com/trckable/trckable/server/internal/ledger"
 )
 
 func linkOf(ls []Link, dim, value string) *Link {
@@ -88,4 +90,51 @@ func TestLinksFoldARefAndAUtmSourceOfTheSameName(t *testing.T) {
 	}
 	eq(t, "all visitors counted once", sum, int64(len(refs)))
 	eq(t, "spark adds up", spark, int64(len(refs)))
+}
+
+func TestLinksTapAndRevenueFoldBothSpellings(t *testing.T) {
+	refs := []string{"newsletter", "", "newsletter", "other"}
+	srcs := []string{"", "Newsletter", "", ""}
+	q := visitsQ(t, len(refs), func(i int, e *event.Event) { e.RefHost, e.UTMSource = refs[i], srcs[i] })
+	base := time.Date(2026, 9, 10, 15, 0, 0, 0, time.UTC)
+	facts := []ledger.Fact{
+		{Provider: "stripe", ID: "p1", PaidAt: base, Amount: 5000, Visitor: 1, Customer: "c1", Kind: "one_time", Converted: true},
+		{Provider: "stripe", ID: "p2", PaidAt: base.Add(time.Minute), Amount: 2000, Visitor: 2, Customer: "c2", Kind: "one_time", Converted: true},
+		{Provider: "stripe", ID: "p4", PaidAt: base.Add(2 * time.Minute), Amount: 900, Visitor: 4, Customer: "c4", Kind: "one_time", Converted: true},
+	}
+	q.Payments = func(context.Context, string, string, time.Time, time.Time, bool) ([]ledger.Fact, bool, error) {
+		return facts, true, nil
+	}
+	ctx := context.Background()
+	ls, err := q.Links(ctx, sep10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	row := linkOf(ls, "referrer", "newsletter")
+	if row == nil || row.Visitors != 3 || row.Key != "newsletter" {
+		t.Fatalf("one newsletter row of 3, got %+v", ls)
+	}
+	// The tap: the row's own filter finds the same visitors.
+	p := sep10
+	p.Filters = []Filter{{Dim: "link", Value: row.Key}}
+	tapped, err := q.Links(ctx, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if l := linkOf(tapped, "referrer", "newsletter"); len(tapped) != 1 || l == nil || l.Visitors != row.Visitors {
+		t.Fatalf("tapped filter must show the row's %d visitors, got %+v", row.Visitors, tapped)
+	}
+	// The revenue: both spellings summed.
+	p = sep10
+	p.Bucket, p.Currency, p.Revenue, p.LinkRevenue = "hour", "USD", true, true
+	res, err := q.Report(ctx, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]int64{}
+	for _, d := range res.RevenueDims["link"] {
+		got[d.Value] = *d.Revenue
+	}
+	eq(t, "newsletter revenue is both spellings", got["newsletter"], int64(7000))
+	eq(t, "other revenue", got["other"], int64(900))
 }

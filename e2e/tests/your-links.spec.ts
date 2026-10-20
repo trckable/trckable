@@ -9,7 +9,7 @@ const SHOTS = process.env.POLISH_SHOTS
 const NOW = Math.floor(Date.now() / 1000)
 const days = (n: number[]) => [...Array(30 - n.length).fill(0), ...n]
 
-const link = (o: Record<string, unknown>) => ({ dim: 'referrer', value: '', visitors: 0, goals: 0, last: NOW - 7200, spark: days([]), ...o })
+const link = (o: Record<string, unknown>) => ({ dim: 'referrer', value: '', key: '', visitors: 0, goals: 0, last: NOW - 7200, spark: days([]), ...o })
 
 test('each link shows what it brought, and a tap opens the dashboard for it', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: await session('your-links'), url: API }])
@@ -20,9 +20,9 @@ test('each link shows what it brought, and a tap opens the dashboard for it', as
         currency: 'USD',
         exponent: 2,
         links: [
-          link({ value: 'trustmrr.com', visitors: 412, goals: 18, revenue: 54000, spark: days([2, 5, 9, 14, 30, 22, 40, 31, 12]) }),
-          link({ dim: 'source', value: 'newsletter', visitors: 96, goals: 3, last: NOW - 86400 * 2, spark: days([0, 4, 8, 3]) }),
-          link({ value: 'friend', visitors: 7, spark: days([1, 0, 2]) }),
+          link({ value: 'trustmrr.com', key: 'trustmrr', visitors: 412, goals: 18, revenue: 54000, spark: days([2, 5, 9, 14, 30, 22, 40, 31, 12]) }),
+          link({ dim: 'source', value: 'newsletter', key: 'newsletter', visitors: 96, goals: 3, last: NOW - 86400 * 2, spark: days([0, 4, 8, 3]) }),
+          link({ value: 'friend', key: 'friend', visitors: 7, spark: days([1, 0, 2]) }),
         ],
       },
     }),
@@ -56,7 +56,7 @@ test('each link shows what it brought, and a tap opens the dashboard for it', as
   }
 
   await rows.nth(1).click()
-  await expect(page).toHaveURL(/\/example\.com\?.*f=source(%3A|:)newsletter/)
+  await expect(page).toHaveURL(/\/example\.com\?.*f=link(%3A|:)newsletter/)
 })
 
 test('before any tagged visit, a sample link to copy', async ({ page }) => {

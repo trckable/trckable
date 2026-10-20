@@ -12,9 +12,9 @@ describe('barPct', () => {
 })
 
 describe('filterOf', () => {
-  it('names the dimension and value the row was found by', () => {
-    expect(filterOf({ dim: 'referrer', value: 'trustmrr.com' })).toEqual({ dim: 'referrer', value: 'trustmrr.com' })
-    expect(filterOf({ dim: 'source', value: 'newsletter' })).toEqual({ dim: 'source', value: 'newsletter' })
+  it('is the link filter on the row\'s key, so a tap shows what the row counted', () => {
+    expect(filterOf({ key: 'trustmrr' })).toEqual({ dim: 'link', value: 'trustmrr' })
+    expect(filterOf({ key: 'newsletter' })).toEqual({ dim: 'link', value: 'newsletter' })
   })
 })
 

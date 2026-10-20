@@ -3,6 +3,7 @@ package query
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -12,11 +13,26 @@ import (
 type Link struct {
 	Dim      string  `json:"dim"` // referrer | source
 	Value    string  `json:"value"`
+	Key      string  `json:"key"` // the "link" filter value that finds every visit of this row, both spellings of the tag
 	Visitors int64   `json:"visitors"`
 	Goals    int64   `json:"goals"`             // visitors who reached a goal
 	Revenue  *int64  `json:"revenue,omitempty"` // set by the caller, from the report's referrer rows
 	Last     int64   `json:"last"`              // unix seconds of the latest visit in the period
 	Spark    []int64 `json:"spark"`             // visitors per day over the 30 days up to the period's end
+}
+
+// linkKey is the "link" filter: a visit's tag, whether it came as ?ref (or the
+// site that tag names) or as a utm_source, so a row of Your links and the
+// filter its tap applies count the same visits.
+const linkKey = `CASE WHEN referrer <> '' AND (position('.' IN referrer) = 0 OR ` + siteHost + `)
+		THEN lower(split_part(referrer, '.', 1)) ELSE lower(utm_source) END`
+
+// linkTag is the linkKey of a row, worked out from its dimension and value.
+func linkTag(dim, value string) string {
+	if dim == "referrer" {
+		value, _, _ = strings.Cut(value, ".")
+	}
+	return strings.ToLower(value)
 }
 
 // linkSparkDays is how many days the little chart of a link covers.
@@ -92,6 +108,7 @@ func (q Q) Links(ctx context.Context, p Params) ([]Link, error) {
 		if err := rows.Scan(&l.Dim, &l.Value, &l.Visitors, &l.Goals, &l.Last); err != nil {
 			return nil, err
 		}
+		l.Key = linkTag(l.Dim, l.Value)
 		l.Spark = make([]int64, linkSparkDays)
 		at[[2]string{l.Dim, l.Value}] = len(out)
 		out = append(out, l)
