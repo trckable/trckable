@@ -64,6 +64,6 @@ export function channelsAnswer(c: Ctx, method: string, path: string, sp: URLSear
   if (path !== '/channels' || method !== 'GET') return null
   const days = [7, 30, 90].includes(Number(sp.get('days'))) ? Number(sp.get('days')) : 30
   const mode = modeOf()
-  const body: Channels = { days, through: dateOf(c, END), platforms: (['youtube', 'instagram', 'threads'] as const).map((p) => card(c, p, days, mode)) }
+  const body: Channels = { days, setup_docs: true, through: dateOf(c, END), platforms: (['youtube', 'instagram', 'threads'] as const).map((p) => card(c, p, days, mode)) }
   return { status: 200, body }
 }

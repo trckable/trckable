@@ -50,6 +50,16 @@ export function cardView(c: ChannelCard, through: string): CardView {
   return { ...base, state: 'ready', views: c.views, previous: c.previous, values: valuesOf(c.series, through) }
 }
 
+/** "an owner or admin": the roles that may connect, from the permission table, so a build with more roles says so. */
+export function whoCan(roles: string[]): string {
+  if (roles.length === 0) return 'someone with access'
+  const named = roles.length === 1 ? roles[0] : `${roles.slice(0, -1).join(', ')} or ${roles[roles.length - 1]}`
+  return `${/^[aeiou]/i.test(named) ? 'an' : 'a'} ${named}`
+}
+
+/** Whether Channels has nothing to offer: no platform can be connected here, no account is connected, and no setup is to be shown. */
+export const channelsHidden = (cards: CardView[], setupDocs: boolean): boolean => !setupDocs && cards.every((c) => !c.ready && c.accounts.length === 0)
+
 export const cardsOf = (data: Channels): CardView[] => PLATFORMS.map((p) => data.platforms.find((c) => c.platform === p)).filter((c): c is ChannelCard => !!c).map((c) => cardView(c, data.through))
 
 /** The header row: each platform's own views, and how many accounts are connected. No total across platforms. */

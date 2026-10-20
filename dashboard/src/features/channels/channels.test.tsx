@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ChannelCard } from './api'
 import { copy } from './copy'
-import { cardView, type CardView } from './model'
+import { cardView, channelsHidden, type CardView } from './model'
 
 // Who is signed in is module state: each test starts afresh.
 async function fresh(role: string) {
@@ -34,7 +34,25 @@ describe('connecting', () => {
     const html = renderToStaticMarkup(<t.Empty cards={three} />)
     expect(html).not.toContain('<a')
     expect(html).not.toContain('<button')
-    expect(html).toContain(copy.viewOnly)
+    expect(html).toContain(copy.viewOnly('an owner'))
+  })
+})
+
+describe('with no platform set up', () => {
+  const none = [view(raw('youtube', { ready: false })), view(raw('instagram', { ready: false })), view(raw('threads', { ready: false }))]
+
+  it('shows an owner one setup link instead of three disabled buttons', async () => {
+    const t = await fresh('owner')
+    const html = renderToStaticMarkup(<t.Empty cards={none} />)
+    expect(html).not.toContain('<button')
+    expect(html).toContain(copy.docs)
+  })
+
+  it('hides the section where there is nothing to set up or connect', () => {
+    expect(channelsHidden(none, false)).toBe(true)
+    expect(channelsHidden(none, true)).toBe(false)
+    expect(channelsHidden(three, false)).toBe(false)
+    expect(channelsHidden([view(raw('youtube', { ready: false, accounts: [acct('youtube', '@a')] }))], false)).toBe(false)
   })
 })
 

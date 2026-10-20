@@ -36,6 +36,8 @@ export interface ChannelCard {
 }
 
 export interface Channels {
+  /** The instance is self-hosted, so its owner can set the app keys: show how. Managed, there is nothing to set up. */
+  setup_docs: boolean
   days: number
   /** The newest day counted (YYYY-MM-DD). */
   through: string
