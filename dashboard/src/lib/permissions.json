@@ -79,6 +79,12 @@
       ],
       "server": "data.erase"
     },
+    "data.export": {
+      "roles": [
+        "owner"
+      ],
+      "server": "data.export"
+    },
     "peek.ask": {
       "roles": [
         "owner",

@@ -2406,6 +2406,7 @@ export default {
   'v2explore.pageDetailsHint': 'Heatmap, scrolldiepte, snelheid',
   'v2explore.exportCsv': 'CSV exporteren',
   'v2explore.exportHint': 'Deze tabel, met je filters',
+  'v2explore.exportDenied': 'Kijkers kunnen geen gegevens exporteren. Vraag het een eigenaar.',
   'v2explore.copyLink': 'Link kopiëren',
   'v2explore.linkCopied': 'Link gekopieerd',
   'v2explore.removeFilter': (dim: string) => `Filter ${dim} verwijderen`,

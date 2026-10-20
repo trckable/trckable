@@ -25,6 +25,7 @@ export const copy = defineCopy('v2explore', {
   pageDetailsHint: 'Heatmap, scroll depth, speed',
   exportCsv: 'Export CSV',
   exportHint: 'This table, with your filters',
+  exportDenied: 'Viewers cannot export data. Ask an owner.',
   copyLink: 'Copy link',
   linkCopied: 'Link copied',
   removeFilter: (dim: string) => `Remove ${dim} filter`,

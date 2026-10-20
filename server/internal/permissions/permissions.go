@@ -53,12 +53,17 @@ const (
 	ActChannelsDisconnect Action = "channels.disconnect"
 	// ActDataErase is erasing a visitor's data from a site.
 	ActDataErase Action = "data.erase"
+	// ActDataExport is taking the data out as a file (the CSV export, and
+	// Peek's export through the same route). A viewer reads; they do not export.
+	// An API key has no person, so it is not asked: a key reads reports and may
+	// export them, as it always could.
+	ActDataExport Action = "data.export"
 )
 
 var ownerActions = []Action{
 	ActChange, ActAccountOwn, ActSitesAll, ActMemberManage, ActKeyRead, ActFeedbackRead,
 	ActSearchConnect, ActImportGoogle, ActSecretRead, ActProxyKey, ActAlertTarget, ActUpdateCheck,
-	ActSiteDelete, ActTeamManage, ActDataErase, ActPeekAsk, ActChannelsConnect, ActChannelsDisconnect,
+	ActSiteDelete, ActTeamManage, ActDataErase, ActPeekAsk, ActDataExport, ActChannelsConnect, ActChannelsDisconnect,
 }
 
 // permissions is the one role to actions table. An unknown role has no row
