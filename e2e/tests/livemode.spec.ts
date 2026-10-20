@@ -171,6 +171,13 @@ test('a visit that arrives later is marked as arriving, then settles; the first 
 })
 
 test('Live starts as a line, the chart switch keeps bars across a reload and both draw the same minutes', async ({ page }) => {
+  // One reading of the site for the whole test: other tests' visits (or a minute rolling over) must not move the numbers between the two looks.
+  let frozen: unknown
+  await page.route('**/api/v1/sites/*/now*', async (route) => {
+    const res = await route.fetch()
+    frozen ??= await res.json()
+    await route.fulfill({ response: res, json: frozen })
+  })
   await signIn(page, '/example.com?view=live')
   await expect(online(page)).toBeVisible({ timeout: 15_000 })
   const style = page.getByRole('group', { name: 'Chart style' })
