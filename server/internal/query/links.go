@@ -12,12 +12,30 @@ import (
 type Link struct {
 	Dim      string  `json:"dim"` // referrer | source
 	Value    string  `json:"value"`
+	Key      string  `json:"key"` // the "link" filter value that finds every visit of this row, both spellings of the tag
 	Visitors int64   `json:"visitors"`
 	Goals    int64   `json:"goals"`             // visitors who reached a goal
 	Revenue  *int64  `json:"revenue,omitempty"` // set by the caller, from the report's referrer rows
 	Last     int64   `json:"last"`              // unix seconds of the latest visit in the period
 	Spark    []int64 `json:"spark"`             // visitors per day over the 30 days up to the period's end
 }
+
+// linkRef is the tag of a visit that came by ?ref: the tag itself, or the
+// label of the site a tag names (trustmrr.com) when that tag was seen in the
+// period. NULL for any other visit. The tags are the bare referrers of the
+// period's raw sessions, so a plain site with no tag seen is not a link.
+const linkRef = `CASE WHEN referrer <> '' AND position('.' IN referrer) = 0 THEN lower(referrer)
+		WHEN ` + siteHost + ` AND lower(split_part(referrer, '.', 1)) IN
+			(SELECT DISTINCT lower(referrer) FROM raw WHERE referrer <> '' AND position('.' IN referrer) = 0)
+		THEN lower(split_part(referrer, '.', 1)) END`
+
+// linkUTM is the tag of a visit that carried a utm_source.
+const linkUTM = `nullif(lower(utm_source), '')`
+
+// linkKey is the "link" filter and the key of a row of Your links: the ?ref
+// tag, else the utm_source, so a row and the filter its tap applies are the
+// same predicate and count the same visits.
+const linkKey = `coalesce(` + linkRef + `, ` + linkUTM + `)`
 
 // linkSparkDays is how many days the little chart of a link covers.
 const linkSparkDays = 30
@@ -54,25 +72,27 @@ func (q Q) Links(ctx context.Context, p Params) ([]Link, error) {
 	if err != nil {
 		return nil, err
 	}
-	// k: every visit of a link, with the filter that finds it.
+	// k0: every visit of a link, by the same key the "link" filter uses. k
+	// shows a utm_source under the ?ref row of the same name, so
+	// ?ref=newsletter and ?utm_source=newsletter are one link.
 	//nolint:gosec // only constant fragments; values are bound as parameters
-	k := cte + `, tags AS (
-			SELECT DISTINCT rawref AS tag FROM s WHERE rawref <> '' AND position('.' IN rawref) = 0
+	k := cte + `, k0 AS (
+			SELECT key, CASE WHEN rk IS NOT NULL THEN 'referrer' ELSE 'source' END AS dim,
+			       CASE WHEN rk IS NOT NULL THEN referrer ELSE key END AS val, visitor_id, goals, start, last, lstart
+			FROM (SELECT *, ` + linkRef + ` AS rk, ` + linkKey + ` AS key FROM s)
+			WHERE key IS NOT NULL
+		), refname AS (
+			SELECT key, min(val) AS val FROM k0 WHERE dim = 'referrer' GROUP BY 1
 		), k AS (
-			SELECT dim, CASE WHEN dim = 'referrer' THEN referrer ELSE utm_source END AS val, visitor_id, goals, start, last, lstart
-			FROM (
-				SELECT *, CASE
-					WHEN rawref <> '' AND position('.' IN rawref) = 0 THEN 'referrer'
-					WHEN ` + siteHost + ` AND split_part(rawref, '.', 1) IN (SELECT tag FROM tags) THEN 'referrer'
-					WHEN utm_source <> '' THEN 'source' END AS dim
-				FROM s)
-			WHERE dim IS NOT NULL
+			SELECT k0.key, CASE WHEN r.val IS NULL THEN k0.dim ELSE 'referrer' END AS dim, coalesce(r.val, k0.val) AS val,
+			       visitor_id, goals, start, last, lstart
+			FROM k0 LEFT JOIN refname r ON r.key = k0.key
 		)`
 	rows, err := conn.QueryContext(ctx, k+`
-		SELECT dim, val, count(DISTINCT visitor_id), count(DISTINCT visitor_id) FILTER (goals > 0),
+		SELECT dim, val, any_value(key), count(DISTINCT visitor_id), count(DISTINCT visitor_id) FILTER (goals > 0),
 		       epoch(max(last))::BIGINT
 		FROM k WHERE start >= ? AND start < ?
-		GROUP BY 1, 2 ORDER BY 3 DESC, 2 LIMIT ?`, append(append([]any{}, args...), p.From, p.To, limit)...)
+		GROUP BY 1, 2 ORDER BY 4 DESC, 2 LIMIT ?`, append(append([]any{}, args...), p.From, p.To, limit)...)
 	if err != nil {
 		return nil, fmt.Errorf("links: %w", err)
 	}
@@ -81,7 +101,7 @@ func (q Q) Links(ctx context.Context, p Params) ([]Link, error) {
 	at := map[[2]string]int{}
 	for rows.Next() {
 		var l Link
-		if err := rows.Scan(&l.Dim, &l.Value, &l.Visitors, &l.Goals, &l.Last); err != nil {
+		if err := rows.Scan(&l.Dim, &l.Value, &l.Key, &l.Visitors, &l.Goals, &l.Last); err != nil {
 			return nil, err
 		}
 		l.Spark = make([]int64, linkSparkDays)

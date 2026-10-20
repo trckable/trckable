@@ -5,10 +5,12 @@ export interface Link {
   /** The filter that finds this link's visits: a referrer (a ?ref tag and its site) or a utm_source. */
   dim: 'referrer' | 'source'
   value: string
+  /** The link filter's value: finds every visit of this row, whichever way the tag was spelled. */
+  key: string
   visitors: number
   /** Visitors who reached a goal. */
   goals: number
-  /** Revenue credited to it, in minor units; absent while revenue is off or the row is a utm_source. */
+  /** Revenue credited to it, in minor units; absent while revenue is off. */
   revenue?: number
   /** Unix seconds of the latest visit in the period. */
   last: number

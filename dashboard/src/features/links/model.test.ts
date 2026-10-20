@@ -12,9 +12,9 @@ describe('barPct', () => {
 })
 
 describe('filterOf', () => {
-  it('names the dimension and value the row was found by', () => {
-    expect(filterOf({ dim: 'referrer', value: 'trustmrr.com' })).toEqual({ dim: 'referrer', value: 'trustmrr.com' })
-    expect(filterOf({ dim: 'source', value: 'newsletter' })).toEqual({ dim: 'source', value: 'newsletter' })
+  it('is the link filter on the row\'s key, so a tap shows what the row counted', () => {
+    expect(filterOf({ key: 'trustmrr' })).toEqual({ dim: 'link', value: 'trustmrr' })
+    expect(filterOf({ key: 'newsletter' })).toEqual({ dim: 'link', value: 'newsletter' })
   })
 })
 
@@ -66,5 +66,15 @@ describe('timesUsual', () => {
     expect(timesUsual({ visitors: 120, goals: 6 }, 0.045)).toBeUndefined()
     expect(timesUsual({ visitors: 120, goals: 0 }, 0.025)).toBeUndefined()
     expect(timesUsual({ visitors: 120, goals: 6 }, undefined)).toBeUndefined()
+  })
+})
+
+describe('bestLinks with a ref and a utm_source of one name', () => {
+  it('reads the folded row (both spellings counted in it) as one link, never a runner-up of itself', () => {
+    const merged = { value: 'newsletter', visitors: 30, goals: 0 } // ?ref=newsletter 20 + ?utm_source=newsletter 10, one row from the server
+    const r = bestLinks([merged, { value: 'friend', visitors: 5, goals: 0 }], false)
+    expect(r?.best.value).toBe('newsletter')
+    expect(r?.best.visitors).toBe(30)
+    expect(r?.runner?.value).toBe('friend')
   })
 })
