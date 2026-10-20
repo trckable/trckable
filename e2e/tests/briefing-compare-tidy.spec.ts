@@ -14,6 +14,8 @@ async function open(page: Page, width: number, scheme: 'dark' | 'light') {
   await page.emulateMedia({ colorScheme: scheme })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/${STEADY_DOMAIN}?view=briefing&period=30d&v=`)
+  // Measured only once the fonts are in: their arrival re-wraps text and moves every box.
+  await page.evaluate(() => document.fonts.ready)
 }
 
 let cookie = ''
@@ -61,9 +63,12 @@ for (const [name, base, tone, sign] of [
     await expect(note(page)).toHaveText(new RegExp(`^\\${sign}\\d+% vs last month$`))
     await expect(note(page)).toHaveAttribute('data-tone', tone)
     // The hover: the point, the one before it from the same report, and the change between them.
-    const box = (await page.locator('svg#chart').boundingBox())!
+    const HOVER = /^.+ · [\d,]+ visitors · last month [\d,]+ · [+-]?\d+%$/
     for (const at of [0.2, 0.5, 0.8]) {
+      // The chart's box is read again for each move (it can still settle), and the hover is waited for, not read at once.
+      const box = (await page.locator('svg#chart').boundingBox())!
       await page.mouse.move(box.x + box.width * at, box.y + box.height * 0.6)
+      await expect(note(page)).toHaveText(HOVER)
       const read = (await note(page).innerText()).replace(/,/g, '')
       const m = /^.+ · (\d+) visitors · last month (\d+) · ([+-]?\d+)%$/.exec(read)
       expect(m, read).not.toBeNull()
@@ -107,8 +112,11 @@ for (const width of [360, 768, 1440] as const) {
     await withIncidents(page)
     await open(page, width, 'light')
     await expect(page.locator('.lkcs .lkc.row').first()).toBeVisible()
-    const rows = await page.locator('.lkcs .lkc.row').evaluateAll((els) => els.map((e) => ({ ...e.getBoundingClientRect().toJSON(), go: getComputedStyle(e.querySelector('.lkgo')!).backgroundColor })))
-    expect(rows.length).toBeGreaterThanOrEqual(2)
+    const measure = () => page.locator('.lkcs .lkc.row').evaluateAll((els) => els.map((e) => ({ ...e.getBoundingClientRect().toJSON(), go: getComputedStyle(e.querySelector('.lkgo')!).backgroundColor })))
+    await expect.poll(async () => (await measure()).length).toBeGreaterThanOrEqual(2)
+    // Two reads that agree: the layout has stopped moving.
+    await expect.poll(async () => JSON.stringify(await measure()), { intervals: [100, 200, 400] }).toBe(JSON.stringify(await measure()))
+    const rows = await measure()
     for (const r of rows) {
       expect(r.height).toBeLessThanOrEqual(width < 500 ? 100 : 84)
       expect(r.go).toBe('rgba(0, 0, 0, 0)')

@@ -1,9 +1,14 @@
 // Weight gate: the Core first load (entry JS + CSS) must stay ≤ 130 KB gzip.
-import { readdirSync } from 'node:fs'
+import { existsSync, readdirSync } from 'node:fs'
 import { distGzipSize, readDist } from '../../scripts/gzip-size.mjs'
 import { join } from 'node:path'
 
 const dir = new URL('../../server/internal/web/dist/', import.meta.url).pathname
+// The Go embed needs the tracked placeholder to survive the build (vite.config.ts puts it back).
+if (!existsSync(join(dir, '.keep'))) {
+  console.error('server/internal/web/dist/.keep is gone after the build')
+  process.exit(1)
+}
 const html = readDist(join(dir, 'index.html')).toString('utf8')
 const entry = [...html.matchAll(/(?:src|href)="\/(assets\/[^"]+\.(?:js|css))"/g)].map((m) => m[1])
 const gz = (f) => distGzipSize(join(dir, f))
