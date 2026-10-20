@@ -54,7 +54,7 @@ func scanSocial(row interface{ Scan(...any) error }) (SocialAccount, error) {
 }
 
 func (s *Store) socialList(ctx context.Context, where string, args ...any) ([]SocialAccount, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT `+socialCols+` FROM social_accounts `+where+` ORDER BY platform, created_at, id`, args...)
+	rows, err := s.DB.QueryContext(ctx, `SELECT `+socialCols+` FROM social_accounts `+where+` ORDER BY platform, created_at, id`, args...) //nolint:gosec // where is built from constant clauses in this file; values are bound
 	if err != nil {
 		return nil, err
 	}
@@ -186,10 +186,10 @@ func (s *Store) socialDrop(ctx context.Context, where string, args ...any) (bool
 		return false, err
 	}
 	defer func() { _ = tx.Rollback() }()
-	if _, err := tx.ExecContext(ctx, `DELETE FROM social_daily WHERE social_id IN (SELECT id FROM social_accounts WHERE `+where+`)`, args...); err != nil {
+	if _, err := tx.ExecContext(ctx, `DELETE FROM social_daily WHERE social_id IN (SELECT id FROM social_accounts WHERE `+where+`)`, args...); err != nil { //nolint:gosec // where is built from constant clauses in this file; values are bound
 		return false, err
 	}
-	res, err := tx.ExecContext(ctx, `DELETE FROM social_accounts WHERE `+where, args...)
+	res, err := tx.ExecContext(ctx, `DELETE FROM social_accounts WHERE `+where, args...) //nolint:gosec // where is built from constant clauses in this file; values are bound
 	if err != nil {
 		return false, err
 	}

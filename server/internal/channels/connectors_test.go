@@ -141,13 +141,13 @@ func TestYouTubeSignsInAndReadsViewsPerDay(t *testing.T) {
 	if who.ID != "UCmakerchannel0001" || who.Handle != "@makerstudio" {
 		t.Errorf("identity %+v", who)
 	}
-	if tok.Access.Reveal() != "ya29.YT-ACCESS-FAKE" || tok.Refresh.Reveal() != "1//YT-REFRESH-FAKE" || tok.Expires.IsZero() {
+	if tok.Access.Reveal() != "ya29.YT-ACCESS-FAKE" || tok.Refresh.Reveal() != "1//YT-REFRESH-FAKE" || tok.Expires.IsZero() { //nolint:gosec // fake tokens of the test platform
 		t.Errorf("token %+v", tok)
 	}
 	if v := p.last("/token").PostForm.Get("code_verifier"); v == "" {
 		t.Error("the code was exchanged without the PKCE verifier")
 	}
-	if got := p.last("/youtube/v3/channels").Header.Get("Authorization"); got != "Bearer ya29.YT-ACCESS-FAKE" {
+	if got := p.last("/youtube/v3/channels").Header.Get("Authorization"); got != "Bearer ya29.YT-ACCESS-FAKE" { //nolint:gosec // fake tokens of the test platform
 		t.Errorf("the channel was asked with %q", got)
 	}
 
@@ -178,7 +178,7 @@ func TestYouTubeRefreshesAndReportsARevokedGrant(t *testing.T) {
 	c := youtube(t, p)
 	old := channels.Token{Access: secrets.NewSecret("old"), Refresh: secrets.NewSecret("r-1")}
 	nt, err := c.Refresh(context.Background(), old)
-	if err != nil || nt.Access.Reveal() != "ya29.NEW-ACCESS" || nt.Refresh.Reveal() != "r-1" {
+	if err != nil || nt.Access.Reveal() != "ya29.NEW-ACCESS" || nt.Refresh.Reveal() != "r-1" { //nolint:gosec // fake tokens of the test platform
 		t.Fatalf("refresh: %+v %v", nt, err)
 	}
 	p.fail["/token"] = []fakeAnswer{{Status: 400, Body: googleGrant}}

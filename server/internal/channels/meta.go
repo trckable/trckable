@@ -187,7 +187,7 @@ type InstagramConnector struct{ metaConnector }
 
 // NewInstagram returns the connector for the Instagram app's id and secret.
 func NewInstagram(id string, secret secrets.Secret) *InstagramConnector {
-	return &InstagramConnector{metaConnector{
+	return &InstagramConnector{metaConnector{ //nolint:gosec // endpoint addresses and grant names, not credentials
 		ID: id, Secret: secret, name: Instagram,
 		authBase: "https://www.instagram.com/oauth/authorize", tokenBase: "https://api.instagram.com/oauth/access_token",
 		graphBase: "https://graph.instagram.com/v21.0",
@@ -245,7 +245,7 @@ type ThreadsConnector struct{ metaConnector }
 
 // NewThreads returns the connector for the Threads app's id and secret.
 func NewThreads(id string, secret secrets.Secret) *ThreadsConnector {
-	return &ThreadsConnector{metaConnector{
+	return &ThreadsConnector{metaConnector{ //nolint:gosec // endpoint addresses and grant names, not credentials
 		ID: id, Secret: secret, name: Threads,
 		authBase: "https://threads.net/oauth/authorize", tokenBase: "https://graph.threads.net/oauth/access_token",
 		graphBase: "https://graph.threads.net/v1.0",
