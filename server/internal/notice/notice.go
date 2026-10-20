@@ -236,6 +236,9 @@ func (h *Hub) Queue(ctx context.Context, r sqlite.OutboxRow) error {
 // not set up) is ErrNoMail; any other failure of the delivery is retried, and
 // any other error means the alert could not be kept.
 func (h *Hub) Alert(ctx context.Context, account, key, kind, target string, e alerts.Event) error {
+	if err := h.tellBell(ctx, account, key, kind, e); err != nil {
+		return err
+	}
 	row := sqlite.OutboxRow{Key: key, Account: account, Kind: kind}
 	if addr, ok := strings.CutPrefix(strings.TrimSpace(target), "mailto:"); ok {
 		if !h.mailOn() {
@@ -259,6 +262,45 @@ func (h *Hub) Alert(ctx context.Context, account, key, kind, target string, e al
 	}
 	h.later(ctx, row)
 	return nil
+}
+
+// bellKinds are the alerts about a site's numbers that also reach the bell, by
+// the notice kind that tells them. The others have a place there already
+// (a site that went down is read from its incidents) or are not for it.
+var bellKinds = map[string]string{"stopped": AlertStopped, "spike": AlertSpike, "threshold": AlertThreshold}
+
+// tellBell puts an alert in the bell of the account's owners and admins, in a
+// build that has one. The alert's key is the bell entry's, so a retried alert
+// is told once. A build without a bell, and an alert with no entry there, do
+// nothing.
+func (h *Hub) tellBell(ctx context.Context, account, key, kind string, e alerts.Event) error {
+	notice, ok := bellKinds[kind]
+	if !ok || h.Bell == nil {
+		return nil
+	}
+	people, err := h.Store.NoticePeople(ctx, account)
+	if err != nil {
+		return err
+	}
+	var users []string
+	for _, p := range resolve(people, []Audience{Managers()}, "") {
+		if p.User != "" {
+			users = append(users, p.User)
+		}
+	}
+	if len(users) == 0 {
+		return nil
+	}
+	vars := Vars{"domain": e.Domain}
+	for k, v := range e.Data {
+		switch k {
+		case "metric", "period", "amount":
+			if s, ok := v.(string); ok {
+				vars[k] = s
+			}
+		}
+	}
+	return h.Bell.Tell(ctx, BellEntry{Key: key, Kind: notice, Account: account, Site: e.Site, Users: users, Vars: vars, At: h.now()})
 }
 
 // later delivers a row that is written, without holding up whoever wrote it:

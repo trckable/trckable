@@ -136,7 +136,7 @@ func thresholdEvent(a sqlite.Alert, info sqlite.SiteInfo, value float64, now tim
 	return alerts.Event{
 		Kind: a.Kind, Site: a.SiteID, Domain: info.Domain, At: now,
 		Title: words, Message: info.Domain + " reached " + words + ".", Subject: words + " · " + info.Domain,
-		Data: map[string]any{"metric": a.Metric, "period": a.Period, "threshold": a.Threshold, "value": value},
+		Data: map[string]any{"metric": a.Metric, "period": a.Period, "threshold": a.Threshold, "value": value, "amount": num},
 	}
 }
 

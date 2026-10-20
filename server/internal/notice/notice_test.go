@@ -409,3 +409,41 @@ func TestEveryRowKnowsWhoseItIs(t *testing.T) {
 		t.Fatalf("%d rows, %d with the account: %v", n, own, err)
 	}
 }
+
+// An alert about a site's numbers is in the bell of the people who run the
+// account's sites, under its own key (so a retry is the same entry); a viewer is not
+// told, and neither is an alert the bell has no place for.
+func TestAnAlertReachesTheBellOfTheTeamThatRunsTheSite(t *testing.T) {
+	r := newRig(t)
+	r.tell(r.hub)
+	ctx := context.Background()
+	ev := alerts.Event{Kind: "threshold", Site: "tkb_site", Domain: "example.com", Title: "10 sales today", Message: "example.com reached 10 sales today.",
+		Data: map[string]any{"metric": "sales", "period": "day", "amount": "10", "value": 12.0}}
+	for range 2 {
+		if err := r.hub.Alert(ctx, sqlite.DefaultAccount, "alert:a1:2026-10-20", "threshold", "mailto:me@example.com", ev); err != nil {
+			t.Fatal(err)
+		}
+		r.hub.Wait()
+	}
+	if len(r.bells) != 2 {
+		t.Fatalf("the bell was told %d times for a retried alert, want the same entry twice", len(r.bells))
+	}
+	b := r.bells[0]
+	if b.Kind != AlertThreshold || b.Key != "alert:a1:2026-10-20" || b.Site != "tkb_site" || b.Vars["domain"] != "example.com" || b.Vars["metric"] != "sales" || b.Vars["period"] != "day" || b.Vars["amount"] != "10" {
+		t.Fatalf("the entry: %+v", b)
+	}
+	got := map[string]bool{}
+	for _, u := range b.Users {
+		got[u] = true
+	}
+	if len(got) != 2 || !got[r.owner.ID] || !got[r.owner2.ID] || got[r.viewer.ID] {
+		t.Fatalf("told: %v", b.Users)
+	}
+	if err := r.hub.Alert(ctx, sqlite.DefaultAccount, "uptime:1", "down", "mailto:me@example.com", alerts.Event{Kind: "down", Domain: "example.com"}); err != nil {
+		t.Fatal(err)
+	}
+	r.hub.Wait()
+	if len(r.bells) != 2 {
+		t.Fatalf("an alert the bell has no place for was told: %d", len(r.bells))
+	}
+}
