@@ -45,8 +45,8 @@ const (
 	ActTeamManage Action = "team.manage"
 	// ActPeekAsk is asking Peek and Answers about the data: a read, so a viewer may.
 	ActPeekAsk Action = "peek.ask"
-	// ActChannelsConnect is connecting and disconnecting the team's own social
-	// accounts (Channels). Reading their numbers is for everyone who sees the team.
+	// ActChannelsConnect is connecting the team's own social
+	// accounts (Channels); disconnecting is ActChannelsDisconnect. Reading their numbers is for everyone who sees the team.
 	ActChannelsConnect Action = "channels.connect"
 	// ActChannelsDisconnect is disconnecting one: it deletes the numbers stored
 	// for the account, so it is an owner's, as other deletes are.

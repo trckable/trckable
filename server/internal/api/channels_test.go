@@ -254,6 +254,14 @@ func TestChannelsWithoutKeysOfferNothingToConnect(t *testing.T) {
 			t.Errorf("offered without keys: %v", p)
 		}
 	}
+	if out["setup_docs"] != true {
+		t.Errorf("a self-hosted instance points at its setup docs: %v", out["setup_docs"])
+	}
+	g.api.Managed = true
+	_, out = do(t, owner, "GET", g.srv.URL+"/api/v1/channels", "")
+	if out["setup_docs"] != false {
+		t.Errorf("a managed instance has no setup docs to show: %v", out["setup_docs"])
+	}
 }
 
 func TestADeauthorizationFromAnythingButMetaIsRefused(t *testing.T) {

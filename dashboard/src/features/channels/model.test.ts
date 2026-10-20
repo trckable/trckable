@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ChannelCard, Channels } from './api'
-import { cardsOf, cardView, flashOf, header, valuesOf, waiting } from './model'
+import { cardsOf, cardView, flashOf, header, valuesOf, waiting, whoCan } from './model'
 
 const acct = (platform: ChannelCard['platform'], handle: string, extra = {}) => ({ id: handle, platform, handle, created_at: 1, last_ok_at: 2, ...extra })
 const card = (platform: ChannelCard['platform'], extra: Partial<ChannelCard> = {}): ChannelCard => ({ platform, ready: true, accounts: [], monitoring: 0, series: [], ...extra })
@@ -42,6 +42,7 @@ describe('what a card shows', () => {
 
 describe('the header row', () => {
   const data: Channels = {
+    setup_docs: true,
     days: 30,
     through: '2026-10-18',
     platforms: [card('youtube', { accounts: [acct('youtube', '@a'), acct('youtube', '@b')], views: 12000 }), card('instagram', { accounts: [acct('instagram', '@c')], views: 3000 }), card('threads')],
@@ -88,6 +89,16 @@ describe('an account that must be connected again', () => {
   it('shows no number rather than a zero', () => {
     const c = card('youtube', { accounts: [acct('youtube', '@a', { error: 'expired' })] })
     expect(cardView(c, '2026-10-18').state).toBe('unknown')
-    expect(waiting(cardsOf({ days: 30, through: '2026-10-18', platforms: [c] }))).toBe(false)
+    expect(waiting(cardsOf({ days: 30, setup_docs: true, through: '2026-10-18', platforms: [c] }))).toBe(false)
+  })
+})
+
+describe('who may connect', () => {
+  it('is said from the roles that hold the action', () => {
+    expect(whoCan(['owner'])).toBe('an owner')
+    expect(whoCan(['owner', 'admin'])).toBe('an owner or admin')
+    expect(whoCan(['owner', 'admin', 'editor'])).toBe('an owner, admin or editor')
+    expect(whoCan(['member'])).toBe('a member')
+    expect(whoCan([])).toBe('someone with access')
   })
 })

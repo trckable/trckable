@@ -114,6 +114,10 @@ type API struct {
 	// Channels reads the team's own YouTube, Instagram and Threads views
 	// (channels.go); a platform without app keys shows a disabled Connect.
 	Channels *channels.Manager
+	// Managed is set by a build that runs the instance for its customers: there the
+	// person using it cannot set app keys, so Channels offers nothing without them
+	// instead of pointing at self-host setup docs.
+	Managed bool
 	// GSCHTTP replaces the HTTP client used to reach Google; tests only.
 	GSCHTTP    *http.Client
 	cache      *reportCache

@@ -5,12 +5,12 @@ import { Loading } from '../../components/loading/Loading'
 import { toast } from '../../components/Toast'
 import { Segmented } from '../../kit'
 import { fmtCompact, fmtInt } from '../../lib/format'
-import { can } from '../../lib/permissions'
+import { can, rolesOf } from '../../lib/permissions'
 import { PERIODS, type Days } from './api'
 import { ChannelCardView, Mark } from './ChannelCard'
 import { Connect } from './Connect'
 import { copy } from './copy'
-import { cardsOf, flashOf, header, type CardView } from './model'
+import { cardsOf, channelsHidden, flashOf, header, whoCan, type CardView } from './model'
 import { useChannels } from './useChannels'
 import './channels.css'
 
@@ -53,12 +53,18 @@ export function Empty({ cards }: { cards: CardView[] }) {
   return (
     <div className="ch-empty">
       <h3>{copy.emptyTitle}</h3>
-      <p className="muted">{mayConnect ? copy.emptySub : copy.viewOnly}</p>
-      <div className="ch-connects">
-        {cards.map((c) => (
-          <Connect key={c.platform} platform={c.platform} ready={c.ready} />
-        ))}
-      </div>
+      <p className="muted">{mayConnect ? copy.emptySub : copy.viewOnly(whoCan(rolesOf('channels.connect')))}</p>
+      {mayConnect && cards.every((c) => !c.ready) ? (
+        <a href={copy.docs} target="_blank" rel="noreferrer" className="ch-doc">
+          {copy.setUp}
+        </a>
+      ) : (
+        <div className="ch-connects">
+          {cards.map((c) => (
+            <Connect key={c.platform} platform={c.platform} ready={c.ready} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -80,6 +86,8 @@ export function ChannelsSection() {
   useFlash()
   const cards = data ? cardsOf(data) : null
   const connected = cards?.filter((c) => c.accounts.length > 0) ?? []
+  // Nothing can be connected here and nothing is: a managed instance, or someone who could not set it up, has no use for the section.
+  if (cards && channelsHidden(cards, !!data?.setup_docs && can('channels.connect'))) return null
   return (
     <section className="ch-sec" aria-labelledby="ch-title">
       <div className="ch-head">
