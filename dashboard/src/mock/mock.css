@@ -1922,8 +1922,6 @@ html[data-motion='off'] .mk .lswap{animation:none}
 .mk .sitelist.reordering .mi:hover,.mk .team-rows.reordering .mi:hover{background:transparent}
 /* the selected row is a soft fill only */
 .mk .sitelist .mi.on,.mk .sitelist .mi.on:hover{background:var(--mk-hov)}
-.mk .sitelist .site-row:has(.mi.site.on){background:var(--mk-hov)}
-.mk .sitelist .site-row .mi.site.on,.mk .sitelist .site-row .mi.site.on:hover{background:transparent}
 .mk .sitelist .mi.on .nm,.mk .sitelist .dom-row[aria-checked="true"] .nm{color:var(--mk-text)}
 /* one quiet status at the right of every row; the dot on the logo stays but muted */
 .mk .sitelist .mi .now,.mk .sitelist .mi .now.state-word,.mk .sitelist .mi .now.state-word.down,.mk .sitelist .mi .now.unverified{color:var(--mk-faint);font-weight:400;font-size:12px}
