@@ -138,3 +138,35 @@ func TestLinksTapAndRevenueFoldBothSpellings(t *testing.T) {
 	eq(t, "newsletter revenue is both spellings", got["newsletter"], int64(7000))
 	eq(t, "other revenue", got["other"], int64(900))
 }
+
+// Every row and the filter its tap applies are one predicate: the tapped count
+// is the row's, including a site that sent plain visits with no ?ref tag seen.
+func TestLinksTapCountsEqualRowCounts(t *testing.T) {
+	refs := []string{"trustmrr.com", "trustmrr.com", "", "tagged", "tagged.com", "", "news.ycombinator.com"}
+	srcs := []string{"", "", "TrustMRR", "", "", "tagged", "hn"}
+	q := visitsQ(t, len(refs), func(i int, e *event.Event) { e.RefHost, e.UTMSource = refs[i], srcs[i] })
+	ctx := context.Background()
+	ls, err := q.Links(ctx, sep10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	eq(t, "rows", len(ls), 3)
+	for _, l := range ls {
+		p := sep10
+		p.Filters = []Filter{{Dim: "link", Value: l.Key}}
+		tapped, err := q.Links(ctx, p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var sum int64
+		for _, x := range tapped {
+			sum += x.Visitors
+		}
+		if len(tapped) != 1 || sum != l.Visitors {
+			t.Fatalf("row %s/%s counts %d, its tap shows %+v", l.Dim, l.Value, l.Visitors, tapped)
+		}
+	}
+	if l := linkOf(ls, "source", "trustmrr"); l == nil || l.Visitors != 1 {
+		t.Fatalf("utm_source trustmrr is 1 visitor; the plain trustmrr.com visits are no link, got %+v", ls)
+	}
+}
