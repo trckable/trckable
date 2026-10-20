@@ -22,7 +22,7 @@ Self-host it for free, or let [trckable Cloud](https://cloud.trckable.com) run i
 
 <br>
 
-<img src=".github/images/gallery/tour.webp" alt="A tour of the trckable dashboard on the demo site: the last 30 days against the 30 before, a pointer across the chart showing each day's visitors and revenue, the Share dialog with a card for a post, the money trail of visitors from Search, Full mode, then Replay playing the period day by day" width="960">
+<img src=".github/images/gallery/tour.webp" alt="A tour of the trckable dashboard on a demo site: the Briefing with a pointer across its chart, Live with the people on the site right now, the globe with each visitor's country, then Explore and Explore across the whole width" width="960">
 
 <sub>The demo site, recorded from the real dashboard: the comparison, the day under the pointer, Share, the money trail from Search, Full (<kbd>F</kbd>) and Replay.</sub>
 
@@ -96,18 +96,18 @@ Nothing is paid, limited or held back. The complete list: [features](https://doc
 ## Gallery
 
 <p align="center">
-  <img src=".github/images/gallery/full.png" width="880" alt="Full mode: moments marked on the chart, then two tabbed cards under it, who came and what they did, with revenue and conversion on every row">
+  <img src=".github/images/gallery/full.png" width="880" alt="Explore across the whole width: the overview with its key numbers, the shape of the period, and the top pages and top sources beside each other">
 </p>
 <p align="center">
-  <img src=".github/images/gallery/money-trail.png" width="410" alt="Hovering a channel highlights where those visitors went and what they paid">
-  <img src=".github/images/gallery/modules.png" width="410" alt="Settings, Modules: every module priced in bytes before you turn it on">
+  <img src=".github/images/gallery/money-trail.png" width="410" alt="Explore, Sources that pay: for each channel, its customers, the revenue and the revenue per visitor">
+  <img src=".github/images/gallery/script-records.png" width="410" alt="Settings, General: What the script records, each module with what it adds to the script in bytes">
 </p>
 <p align="center">
-  <img src=".github/images/gallery/share-card.png" width="410" alt="The Share dialog: the last 30 days as a picture, with visitors, revenue and the change against a year before">
-  <img src=".github/images/gallery/core-light.png" width="410" alt="Core mode in the light theme">
+  <img src=".github/images/gallery/share-card.png" width="410" alt="Settings, Sharing: the links to this dashboard, one of them named Investors, with what each one shows">
+  <img src=".github/images/gallery/core-light.png" width="410" alt="The Briefing in the light theme: the day's headline and score, the chart against its usual band, and the key numbers">
 </p>
 <p align="center">
-  <sub>Full mode, the money trail, modules priced in bytes, the share card and the light theme. <a href="docs/screenshots.md">More screenshots</a></sub>
+  <sub>Explore across the whole width, the sources that pay, what the script records, the sharing links and the light theme. <a href="docs/screenshots.md">More screenshots</a></sub>
 </p>
 
 ## How it's built
