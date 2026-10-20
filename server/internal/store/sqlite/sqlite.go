@@ -30,6 +30,9 @@ type Store struct {
 	// never check a code) keeps new secrets as they are, refuses sealed ones,
 	// and keeps no share token to copy again.
 	Sealer Sealer
+	// RecoveryUsed, when set, is told that a person signed in with one of their
+	// recovery codes (twostep.go), so they can be told it was used.
+	RecoveryUsed func(ctx context.Context, user string)
 
 	mu         sync.RWMutex
 	sites      map[string]ingest.Site
@@ -1034,6 +1037,27 @@ var migrations = []string{
 		views     INTEGER NOT NULL,
 		PRIMARY KEY (social_id, day)
 	) WITHOUT ROWID;`,
+	// 75: the outbox of messages that must not be lost (notice_outbox.go): an
+	// alert or a notice is written here before it is sent, so a failed send is
+	// tried again later instead of dropped. key makes one event one row; account is whose it is (an account that goes takes its rows); form
+	// says what body holds; state is pending until it is delivered (sent), or
+	// failed once it has been tried for a day.
+	`CREATE TABLE IF NOT EXISTS notice_outbox (
+		id         TEXT PRIMARY KEY,
+		key        TEXT NOT NULL UNIQUE,
+		account    TEXT NOT NULL DEFAULT '',
+		kind       TEXT NOT NULL,
+		form       TEXT NOT NULL,
+		target     TEXT NOT NULL DEFAULT '',
+		body       TEXT NOT NULL DEFAULT '',
+		state      TEXT NOT NULL DEFAULT 'pending',
+		tries      INTEGER NOT NULL DEFAULT 0,
+		next_at    INTEGER NOT NULL,
+		created_at INTEGER NOT NULL,
+		last_error TEXT NOT NULL DEFAULT ''
+	);
+	CREATE INDEX IF NOT EXISTS notice_outbox_due ON notice_outbox (state, next_at);
+	CREATE INDEX IF NOT EXISTS notice_outbox_account ON notice_outbox (account);`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

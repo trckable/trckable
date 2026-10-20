@@ -293,6 +293,9 @@ func (s *Store) CheckSecondStep(ctx context.Context, id, code string, now func()
 			if n, _ := res.RowsAffected(); n != 1 {
 				return auth.ErrBadLogin
 			}
+			if s.RecoveryUsed != nil {
+				s.RecoveryUsed(ctx, id)
+			}
 			return nil
 		}
 	}

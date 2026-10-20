@@ -257,10 +257,14 @@ func (a *API) loginCodeVerify(w http.ResponseWriter, r *http.Request) {
 func (a *API) signedIn(w http.ResponseWriter, r *http.Request, u sqlite.User, d *deviceIn) {
 	user := map[string]string{"email": u.Email}
 	if d != nil {
+		had, _ := a.Ctl.SignedInBefore(r.Context(), u.ID)
 		tok, dev, err := a.Ctl.CreateDevice(r.Context(), u.ID, d.Name, d.Platform)
 		if err != nil {
 			fail(w, http.StatusInternalServerError, err.Error())
 			return
+		}
+		if had {
+			a.tellNewDevice(r, u.ID, dev.Name)
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"user": user, "token": tok, "device": dev})
 		return
