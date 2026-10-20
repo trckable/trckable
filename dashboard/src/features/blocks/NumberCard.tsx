@@ -11,7 +11,7 @@ export function NumberCard({ b }: { b: NumberBlock }) {
   return (
     <Frame title={b.title} period={b.period} explore={b.explore}>
       <p className="blk-num">
-        <strong>{amountText(d.value, d)}</strong>
+        <span className="blk-value">{amountText(d.value, d)}</span>
         {ch && (
           <span className="blk-delta" data-tone={toneOf(ch)} title={ch.label}>
             {ch.text}
