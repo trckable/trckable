@@ -2407,7 +2407,7 @@ export default {
   'v2explore.pageDetailsHint': 'Heatmap, profondeur de défilement, vitesse',
   'v2explore.exportCsv': 'Exporter en CSV',
   'v2explore.exportHint': 'Ce tableau, avec vos filtres',
-  'v2explore.exportDenied': 'Les lecteurs ne peuvent pas exporter les données. Demandez à un propriétaire.',
+  'v2explore.exportDenied': 'Votre rôle ne peut pas exporter de données.',
   'v2explore.copyLink': 'Copier le lien',
   'v2explore.linkCopied': 'Lien copié',
   'v2explore.removeFilter': (dim: string) => `Retirer le filtre ${dim}`,

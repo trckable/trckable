@@ -56,7 +56,7 @@ func (a *API) export(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !mayExport(principalOf(r)) {
-		fail(w, http.StatusForbidden, "only an owner can export data")
+		fail(w, http.StatusForbidden, "your role cannot export data")
 		return
 	}
 	siteID := r.PathValue("site")
