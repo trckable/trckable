@@ -151,13 +151,18 @@ export const copy = defineCopy('briefing', {
   withinBand: 'All normal · inside the usual band',
   hours: 'hours',
   days: 'days',
-  usualDay: (weekday: string) => `usual ${weekday}`,
-  usualWord: 'usual',
-  chartRead: (when: string, v: string, lo: string, hi: string) => `${when} · ${v} visitors · usual ${lo}–${hi}`,
+  chartRead: (when: string, v: string) => `${when} · ${v} visitors`,
+  /** The point under the pointer against the same one before: "Oct 6 · 2,480 visitors · last month 1,910 · +30%" (the change is left out when there is none to tell). */
+  chartReadVs: (when: string, v: string, name: string, was: string, pct: string) => `${when} · ${v} visitors · ${name} ${was}${pct ? ` · ${pct}` : ''}`,
+  /** The line over the chart: how the period stands against the one before. */
+  vsLine: (pct: string, name: string) => `${pct} vs ${name}`,
+  compareStarts: (date: string, needs: string) => `Comparison starts ${date}, once there's ${needs} of data`,
+  needs: { today: 'a day', yesterday: 'a day', week: 'a week', month: 'a month', range: 'a full period' },
   downRightNow: 'down right now',
   normalOverall: (n: number, of: number) => `Normal overall · ${n} of ${of} days outside the usual band`,
   downShort: (min: number, now: boolean) => (now ? 'down now' : `down ${min}m`),
   downLabel: (min: number, now: boolean) => (now ? `down now · ${min} min` : `down ${min} min`),
+  downMany: (n: number, min: number) => `down ${n}× · ${min} min`,
   noteBtn: (n: number) => (n > 0 ? `Notes (${n})` : 'Notes'),
   // The four numbers.
   people: 'People',

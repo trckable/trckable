@@ -598,7 +598,6 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 }
 .mk .tabbar button.on{color:var(--mk-lime)}
 /* The locked preview cards (round 10), where the walkthrough has them. */
-.mk .lkcs{margin-top:var(--mk-s4)}
 .mk .lkc{position:relative;overflow:hidden;background:var(--mk-card);border:1px solid var(--mk-line);border-radius:var(--mk-r,16px);min-height:230px;display:grid;container-type:inline-size}
 .mk .lkc.big{margin:var(--mk-s3) 0}
 .mk .lkc-o{grid-area:1/1;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:var(--mk-s2);padding:var(--mk-s4)}
@@ -609,16 +608,9 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .lkc-o .lkgo:hover{filter:brightness(1.08)}
 .mk .lkc-o .how{color:var(--mk-muted);font-size:13px;height:var(--mk-h);padding:0 var(--mk-s2);border-radius:var(--mk-rc)}
 .mk .lkc-o .how:hover{color:var(--mk-text);background:var(--mk-hov)}
-.mk .lkc.mini{min-height:96px;border-radius:12px;margin-top:var(--mk-s2)}
-.mk .lkc.mini .lkc-o{flex-direction:row;flex-wrap:wrap;gap:var(--mk-s2);padding:var(--mk-s2)}
-.mk .lkc.mini .lkc-o .lt2,.mk .lkc.mini .lkc-o svg{display:none}
-.mk .lkc.mini .lkc-o .lt1{font-size:13px}
-@container (--pane-max-600){.mk .lkc{min-height:176px}.mk .lkc .lkgo,.mk .lkc-o .how{min-height:44px;height:44px}.mk .lkc.mini{min-height:96px}}
-.mk.phone .lkcs{grid-template-columns:1fr}
-.mk.phone .lkc{min-height:176px}
+@container (--pane-max-600){.mk .lkc{min-height:176px}.mk .lkc .lkgo,.mk .lkc-o .how{min-height:44px;height:44px}}
+.mk.phone .lkc.big{min-height:176px}
 .mk.phone .lkc .lkgo,.mk.phone .lkc-o .how{height:44px}
-/* The walkthrough's general .mini rule also lands on this card, which gives it its gap. */
-.mk .lkc.mini{gap:6px 18px}
 /* The "Why?" in the down notice sits in the line, so the notice is as tall as the walkthrough's. */
 .mk .downbox .lk3{padding:0;line-height:inherit;height:auto;vertical-align:baseline;font:inherit}
 .mk .ck2{color:var(--mk-lime);flex:none}
@@ -1011,7 +1003,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .wrow .wl b{color:var(--mk-text)}
 .mk .wrow .wv{flex:1;min-width:0}
 .mk .wrow .wv b{color:var(--mk-lime)}
-.mk .mailrow{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s2) var(--mk-s4);border:1px dashed var(--mk-fill);border-radius:16px;font-size:13px;color:var(--mk-muted);min-height:48px}
+.mk .mailrow{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s2) var(--mk-s4);border:1px solid var(--mk-line);background:var(--mk-card);border-radius:16px;font-size:13px;color:var(--mk-muted);min-height:48px}
 .mk .mailrow .mt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mk .mailrow i{font-style:normal;color:var(--mk-text)}
 .mk .mailrow b{color:var(--mk-muted);font-weight:600}
@@ -1140,7 +1132,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .calm2{border:0;padding:var(--mk-s3) 0;min-height:0;border-radius:0;flex-direction:row;align-items:center}
 .mk .calm2 button{width:auto;border:0;min-height:0;padding:0;margin-left:auto}
 .mk .act{border:0;background:none;padding:var(--mk-s2) 0}
-.mk .mailrow{border:0;padding:0;min-height:0;font-size:12px;align-items:flex-start}
+.mk .mailrow{padding:var(--mk-s3) var(--mk-s4);min-height:0;font-size:12px;align-items:flex-start}
 .mk .mailrow .mt{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .mk .watchc{background:none;border:0;padding:0}
 .mk .wrow{flex-wrap:wrap;gap:var(--mk-s1) var(--mk-s3)}

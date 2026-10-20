@@ -14,9 +14,17 @@ const lead = (cards: boolean, names: string[], learning: boolean): string => {
   return names.length ? copy.allNormal : copy.nothingElse
 }
 
-export function Calm({ cards, names, paused, learning, onExplore }: { cards: boolean; names: string[]; paused: boolean; learning: boolean; onExplore: () => void }) {
+export interface CalmIn {
+  cards: boolean
+  names: string[]
+  paused: boolean
+  learning: boolean
+}
+
+/** What else was normal, as a line: a tick and the words. The incident card ends with it; without an incident it stands as a row of its own. */
+export function CalmLine({ cards, names, paused, learning }: CalmIn) {
   return (
-    <div className="calm2">
+    <>
       <span className="ck">&#10003;</span>
       <span>
         {paused ? (
@@ -30,6 +38,14 @@ export function Calm({ cards, names, paused, learning, onExplore }: { cards: boo
           </>
         )}
       </span>
+    </>
+  )
+}
+
+export function Calm({ onExplore, ...says }: CalmIn & { onExplore: () => void }) {
+  return (
+    <div className="calm2">
+      <CalmLine {...says} />
       <button type="button" onClick={onExplore}>
         {copy.exploreAll} {'\u203A'}
       </button>
@@ -57,14 +73,14 @@ export interface Setup {
 }
 
 /** One thing not set up yet, as the locked preview of what it would show. */
-function SetupLock({ s, size }: { s: Setup; size?: 'card' | 'big' | 'mini' }) {
-  return <LockCard kind={s.key as LockKind} size={size} go={s.b} onGo={s.act} onHow={() => window.open(DOCS, '_blank', 'noopener')} />
+function SetupLock({ s }: { s: Setup }) {
+  return <LockCard kind={s.key as LockKind} go={s.b} onGo={s.act} onHow={() => window.open(DOCS, '_blank', 'noopener')} />
 }
 
 export function Setups({ rows }: { rows: Setup[] }): ReactNode {
   if (rows.length === 0) return null
   return (
-    <div className="cards lkcs">
+    <div className="lkcs">
       {rows.map((r) => (
         <SetupLock key={r.key} s={r} />
       ))}

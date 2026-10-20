@@ -1,135 +1,19 @@
 // What stood out, as cards: a sentence that says it, the picture that proves it, one line of why, and the buttons.
 // A phone sees them as flat rows (icon, sentence, number, arrow) that open the detail. Markup and classes are the
 // walkthrough's own.
-import { Fragment, type ReactNode } from 'react'
-import { fmtInt } from '../../lib/format'
+import type { ReactNode } from 'react'
 import { isShared } from '../../lib/me'
 import type { Verified } from '../../lib/api'
 import { CardSeal } from '../../features/verified/SourceChip'
 import { Ico } from './icons'
 import { Spark } from './KpiCard'
-import { Rng } from './RangeBar'
 import { copy } from '../briefing/copy'
 import { WhyBody } from './WhyBody'
-import type { Act, Story, Vis } from '../briefing/cards'
+import './incidentCard.css'
+import { Visual } from './StoryVisual'
+import type { Act, Story } from '../briefing/cards'
 
 const CHEV = <Ico name="chev" className="ic-ch" strokeWidth={1.8} />
-
-function Dots({ v }: { v: Extract<Vis, { k: 'dots' }> }) {
-  return (
-    <div>
-      <div className="dots">
-        {Array.from({ length: v.n }, (_, i) => (
-          <i key={i} style={i >= v.grey ? { background: 'var(--mk-lime)' } : undefined} />
-        ))}
-      </div>
-      <div className="dotn">
-        {copy.dotsNote(v.per, v.name)}
-        {copy.dotsExtra}.
-      </div>
-    </div>
-  )
-}
-
-/** Usual and now as two bars: the usual's band in the first, the number in the second. */
-function Ba({ v }: { v: Extract<Vis, { k: 'ba' }> }) {
-  const mx = Math.max(v.hi, v.v, 1) * 1.08
-  return (
-    <div className="ba">
-      <div className="mk-bl">
-        <span>{copy.usualBar}</span>
-        <div className="bt">
-          <i style={{ width: `${(v.c / mx) * 100}%` }} />
-          <u style={{ left: `${(v.lo / mx) * 100}%`, width: `${Math.max(0.6, ((v.hi - v.lo) / mx) * 100)}%` }} />
-        </div>
-        <b>
-          {fmtInt(v.lo)}–{fmtInt(v.hi)}
-        </b>
-      </div>
-      <div className="mk-bl">
-        <span>{copy.nowWord}</span>
-        <div className="bt">
-          <i className={`f${v.red ? ' red' : ''}`} style={{ width: `${(v.v / mx) * 100}%` }} />
-        </div>
-        <b>{fmtInt(v.v)}</b>
-      </div>
-    </div>
-  )
-}
-
-/** The stretch of the period the site did not answer, on a line from the start to now. */
-function Outage({ v }: { v: Extract<Vis, { k: 'outage' }> }) {
-  return (
-    <div className="mk-ob">
-      <div className="obt">
-        <i style={{ left: `${v.a * 100}%`, width: `${Math.max(0.5, (v.b - v.a) * 100)}%` }} />
-        <s style={{ left: `${v.nowAt * 100}%` }} />
-      </div>
-      <div className="obl">
-        <span>{v.from}</span>
-        <span>
-          {copy.nowWord} · {v.now}
-        </span>
-      </div>
-    </div>
-  )
-}
-
-/** The signup path as bars, the step that leaks in red with what usually goes on there. */
-function Steps({ v }: { v: Extract<Vis, { k: 'funnel' }> }) {
-  return (
-    <div className="mf">
-      {v.rows.map((r) => (
-        <Fragment key={r.name}>
-          {r.hot && <div className="mfd">{r.hot}</div>}
-          <div className="mfr">
-            <span>{r.name}</span>
-            <div className="mb">
-              <i className={r.hot ? 'red' : ''} style={{ width: `${r.w}%` }} />
-            </div>
-            <b>{fmtInt(r.v)}</b>
-          </div>
-        </Fragment>
-      ))}
-    </div>
-  )
-}
-
-export function Visual({ s }: { s: Story }) {
-  const v = s.vis
-  if (!v) return null
-  return <div className="ic-v">{pictureOf(v)}</div>
-}
-
-function pictureOf(v: Vis): ReactNode {
-  if (v.k === 'dots') return <Dots v={v} />
-  if (v.k === 'ba') return <Ba v={v} />
-  if (v.k === 'outage') return <Outage v={v} />
-  if (v.k === 'funnel') return <Steps v={v} />
-  if (v.k === 'goals') {
-    return v.rows.map((g) => (
-      <div className={`mk-goal ${g.st}`} key={g.name}>
-        <span className="gn">{g.name}</span>
-        <Rng v={g.v} lo={g.lo} hi={g.hi} max={Math.max(g.v, g.hi, 1) * 1.3} />
-        <span className="gv" style={g.st === 'dn' ? { color: 'var(--mk-red)' } : undefined}>
-          {fmtInt(g.v)}
-        </span>
-      </div>
-    ))
-  }
-  return (
-      <div className="rcpt">
-        {v.rows.map((r, n) => (
-          <div className={`rr${r.more ? ' more' : ''}${r.tot ? ' tot' : ''}`} key={`${n}${r.l}`}>
-            <span className={`fl${r.mark ? ` ${r.mark}m` : ''}`}>{r.flag}</span>
-            <span className="rl">{r.l}</span>
-            <span className="mk-rt">{r.t}</span>
-            <span className={`ra${r.neg ? ' neg' : ''}`}>{r.a}</span>
-          </div>
-        ))}
-      </div>
-  )
-}
 
 export interface CardCtx {
   /** What is said under "How we know". */
@@ -143,6 +27,8 @@ export interface CardCtx {
   done: (s: Story) => boolean
   how: (s: Story) => boolean
   onHow: (s: Story) => void
+  /** The last line of the incident card: what else was normal. */
+  calm?: ReactNode
   /** The card the keyboard is on. */
   focused: string | null
   /** What proves the site's numbers: the card that rests on a source says so, in a small mark. */
@@ -154,21 +40,36 @@ const doneLabel: Record<Act['k'], string> = { set: copy.alertSet, copy: copy.cop
 function Foot({ s, c }: { s: Story; c: CardCtx }) {
   const w = c.watched(s)
   const dn = c.done(s)
+  const watch = !isShared() && (
+    <button type="button" className={`gh${w ? ' on' : ''}`} data-watch="1" title={copy.watchTitle} onClick={() => c.onWatch(s)}>
+      {w ? copy.watching : copy.watch}
+    </button>
+  )
+  const act = s.act && !isShared() && (
+    <button type="button" className={`xb cact${dn ? ' done' : ''}`} data-ca="1" onClick={() => c.onAct(s)}>
+      {dn ? doneLabel[s.act.k] || copy.doneMark : s.act.t}
+    </button>
+  )
+  const how = (
+    <button type="button" className="gh" data-hw="1" aria-expanded={c.how(s)} onClick={() => c.onHow(s)}>
+      {s.cause ? copy.whyQ : copy.how}
+    </button>
+  )
+  // The incident card leads with its one action, Watch and Why? stay quiet beside it, and there is no way deeper: opening the incident is it.
+  if (s.key === 'uptime') {
+    return (
+      <div className="ic-f">
+        {act}
+        {watch}
+        {how}
+      </div>
+    )
+  }
   return (
     <div className="ic-f">
-      {!isShared() && (
-        <button type="button" className={`gh${w ? ' on' : ''}`} data-watch="1" title={copy.watchTitle} onClick={() => c.onWatch(s)}>
-          {w ? copy.watching : copy.watch}
-        </button>
-      )}
-      {s.act && !isShared() && (
-        <button type="button" className={`xb cact${dn ? ' done' : ''}`} data-ca="1" onClick={() => c.onAct(s)}>
-          {dn ? doneLabel[s.act.k] || copy.doneMark : s.act.t}
-        </button>
-      )}
-      <button type="button" className="gh" data-hw="1" aria-expanded={c.how(s)} onClick={() => c.onHow(s)}>
-        {s.cause ? copy.whyQ : copy.how}
-      </button>
+      {watch}
+      {act}
+      {how}
       <button type="button" className="deep" data-deeper="1" onClick={() => c.onDeeper(s)}>
         {copy.deeper} {'›'}
       </button>
@@ -186,7 +87,7 @@ function How({ s }: { s: Story }) {
 }
 
 export function Card({ s, wide, c }: { s: Story; wide: boolean; c: CardCtx }) {
-  const cls = `${s.bad ? ' r' : ''}${wide ? ' wide' : ''}${c.focused === s.key ? ' kf' : ''}${c.how(s) ? ' open' : ''}`
+  const cls = `${s.bad ? ' r' : ''}${wide ? ' wide' : ''}${s.key === 'uptime' ? ' inc' : ''}${c.focused === s.key ? ' kf' : ''}${c.how(s) ? ' open' : ''}`
   const open = () => c.onOpen(s)
   if (s.kc) {
     return (
@@ -229,6 +130,7 @@ export function Card({ s, wide, c }: { s: Story; wide: boolean; c: CardCtx }) {
       </div>
       <Foot s={s} c={c} />
       <How s={s} />
+      {s.key === 'uptime' && c.calm}
     </article>
   )
 }

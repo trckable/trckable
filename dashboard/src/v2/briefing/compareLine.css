@@ -1,0 +1,5 @@
+/* The line over the chart that says how the period stands against the one before is the sentence of the chart: on a
+   phone it wraps onto a second line rather than being cut short by the buttons beside it. */
+@container (--pane-max-600) {
+  .mk .chwrap #chNote[data-tone] { flex: 0 1 auto; white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.2; }
+}
