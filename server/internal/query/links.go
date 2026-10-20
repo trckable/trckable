@@ -54,11 +54,13 @@ func (q Q) Links(ctx context.Context, p Params) ([]Link, error) {
 	if err != nil {
 		return nil, err
 	}
-	// k: every visit of a link, with the filter that finds it.
+	// k0: every visit of a link, with the filter that finds it. k folds a
+	// utm_source into the ?ref row of the same name, so ?ref=newsletter and
+	// ?utm_source=newsletter are one link and its counts add up.
 	//nolint:gosec // only constant fragments; values are bound as parameters
 	k := cte + `, tags AS (
 			SELECT DISTINCT rawref AS tag FROM s WHERE rawref <> '' AND position('.' IN rawref) = 0
-		), k AS (
+		), k0 AS (
 			SELECT dim, CASE WHEN dim = 'referrer' THEN referrer ELSE utm_source END AS val, visitor_id, goals, start, last, lstart
 			FROM (
 				SELECT *, CASE
@@ -67,6 +69,12 @@ func (q Q) Links(ctx context.Context, p Params) ([]Link, error) {
 					WHEN utm_source <> '' THEN 'source' END AS dim
 				FROM s)
 			WHERE dim IS NOT NULL
+		), refname AS (
+			SELECT lower(split_part(val, '.', 1)) AS tag, min(val) AS val FROM k0 WHERE dim = 'referrer' GROUP BY 1
+		), k AS (
+			SELECT CASE WHEN r.val IS NULL THEN k0.dim ELSE 'referrer' END AS dim, coalesce(r.val, k0.val) AS val,
+			       visitor_id, goals, start, last, lstart
+			FROM k0 LEFT JOIN refname r ON k0.dim = 'source' AND r.tag = lower(k0.val)
 		)`
 	rows, err := conn.QueryContext(ctx, k+`
 		SELECT dim, val, count(DISTINCT visitor_id), count(DISTINCT visitor_id) FILTER (goals > 0),

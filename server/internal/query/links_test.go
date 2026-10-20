@@ -61,3 +61,31 @@ func TestLinksFollowTheFilter(t *testing.T) {
 		t.Fatalf("only the German visit counts, got %+v", ls)
 	}
 }
+
+func TestLinksFoldARefAndAUtmSourceOfTheSameName(t *testing.T) {
+	refs := []string{"newsletter", "newsletter", "", "", "", "other"}
+	srcs := []string{"", "", "newsletter", "Newsletter", "solo", ""}
+	q := visitsQ(t, len(refs), func(i int, e *event.Event) { e.RefHost, e.UTMSource = refs[i], srcs[i] })
+	ls, err := q.Links(context.Background(), sep10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if l := linkOf(ls, "referrer", "newsletter"); l == nil || l.Visitors != 4 {
+		t.Fatalf("?ref and ?utm_source newsletter are one link of 4, got %+v", ls)
+	}
+	if linkOf(ls, "source", "newsletter") != nil || linkOf(ls, "source", "Newsletter") != nil {
+		t.Fatalf("no second newsletter row, got %+v", ls)
+	}
+	if l := linkOf(ls, "source", "solo"); l == nil || l.Visitors != 1 {
+		t.Fatalf("a utm_source with no ref of its name stays itself, got %+v", ls)
+	}
+	var sum, spark int64
+	for _, l := range ls {
+		sum += l.Visitors
+		for _, n := range l.Spark {
+			spark += n
+		}
+	}
+	eq(t, "all visitors counted once", sum, int64(len(refs)))
+	eq(t, "spark adds up", spark, int64(len(refs)))
+}
