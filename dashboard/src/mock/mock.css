@@ -1785,6 +1785,17 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 @media (prefers-reduced-motion:reduce){.mk .hd::before{transition:none}}
 @container (--pane-min-601) and (--pane-max-700){.mk .hd::before{display:none}}
 
+/* Once the page has moved, from a 701 px page up: the bar stretches to the window's edges (its frosted layer reaches past the page's own width, which stops at 1440 px) with a hairline under it, and gets shorter, its controls a little smaller and its content a little wider, inside a 16 px gutter (more where the screen has a notch). The room the bar gives up goes into the margin below it, so the page under it never moves; the changes share one timing, so that holds all through the transition. A phone keeps its own compact bar. */
+@container (--pane-min-701){
+.mk .hd::before{border-radius:0;top:0;bottom:0;left:calc(50% - 50vw);right:calc(50% - 50vw);-webkit-mask-image:none;mask-image:none;border-bottom:1px solid var(--mk-line)}
+.mk .hd{transition:padding .18s ease,margin-bottom .18s ease}
+.mk .hd .logo,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:height .18s ease,width .18s ease}
+.mk .hd[data-stuck=true]{--mk-h:28px;--hpb:10px;padding-top:10px;padding-left:max(var(--mk-s4),env(safe-area-inset-left));padding-right:max(var(--mk-s4),env(safe-area-inset-right));margin-bottom:22px}
+.mk .hd[data-stuck=true] .logo{width:28px;height:28px}
+@media (pointer:coarse){.mk .hd[data-stuck=true]{--mk-h:40px}}
+}
+@media (prefers-reduced-motion:reduce){.mk .hd,.mk .hd .logo,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:none}}
+
 /* The site chip carries the site's mark; its dot shows only for a site that is down (red) or not receiving data (amber), never green. Live keeps the one pulsing dot, still when motion is reduced. */
 .mk .sitechip .mkwrap{position:relative;display:inline-flex;flex:none}
 .mk .sitechip .mkwrap .mk-dot{position:absolute;right:-3px;bottom:-3px;box-sizing:content-box;border:2px solid var(--mk-bg);box-shadow:none}

@@ -1,0 +1,1 @@
+Once the page is scrolled, the top bar stretches to the full width of the window with a hairline under it and gets shorter, with slightly smaller controls and a little more room at the sides, and eases back at the top; a phone keeps its compact bar.
