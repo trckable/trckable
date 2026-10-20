@@ -75,6 +75,7 @@ func (a *API) export(w http.ResponseWriter, r *http.Request) {
 
 	from := ask.From.Format("2006-01-02")
 	to := ask.To.AddDate(0, 0, -1).Format("2006-01-02")
+	a.tellExport(r, siteID, "the report as a CSV file")
 	name := fmt.Sprintf("%s-%s-to-%s.csv", safeName(siteID), from, to)
 	h := w.Header()
 	h.Set("Content-Type", "text/csv; charset=utf-8")

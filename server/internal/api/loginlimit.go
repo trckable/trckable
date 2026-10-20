@@ -132,9 +132,15 @@ func (a *API) rememberDevice(w http.ResponseWriter, r *http.Request, userID, ema
 	if a.Box == nil || a.knownDevice(r, normEmail(email)) {
 		return
 	}
+	// A first sign-in is nobody's news; a browser added to a person who has
+	// signed in before is.
+	had, _ := a.Ctl.SignedInBefore(r.Context(), userID)
 	id, err := a.Ctl.NewKnownDevice(r.Context(), userID)
 	if err != nil {
 		return // only the extra protection is lost
+	}
+	if had {
+		a.tellNewDevice(r, userID, browserOf(r))
 	}
 	//nolint:gosec // Secure whenever the request came over https; plain http is for localhost and private networks, where a Secure cookie would never be sent
 	http.SetCookie(w, &http.Cookie{

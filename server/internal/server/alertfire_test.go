@@ -16,6 +16,7 @@ import (
 	"github.com/trckable/trckable/server/internal/alerts"
 	"github.com/trckable/trckable/server/internal/config"
 	"github.com/trckable/trckable/server/internal/ingest"
+	"github.com/trckable/trckable/server/internal/notice"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 	"github.com/trckable/trckable/server/internal/wal"
 )
@@ -127,7 +128,7 @@ func TestStoppedAlertReachesTheMailbox(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer lg.Close()
-	s := &Server{cfg: config.Config{DataDir: dir}, ctl: ctl, log: lg, ingest: &ingest.Handler{}, started: time.Now()}
+	s := &Server{cfg: config.Config{DataDir: dir}, ctl: ctl, log: lg, ingest: &ingest.Handler{}, started: time.Now(), notices: &notice.Hub{Store: ctl}}
 	box := fakeMailServer(t)
 
 	quiet := func(domain string, silentFor time.Duration) string {
@@ -164,6 +165,7 @@ func TestStoppedAlertReachesTheMailbox(t *testing.T) {
 	if err := s.checkAlerts(ctx); err != nil {
 		t.Fatal(err)
 	}
+	s.notices.Wait()
 	got := box.all()
 	if len(got) != 1 {
 		t.Fatalf("want one message, for late.example only; got %d", len(got))
@@ -177,6 +179,7 @@ func TestStoppedAlertReachesTheMailbox(t *testing.T) {
 	if err := s.checkAlerts(ctx); err != nil {
 		t.Fatal(err)
 	}
+	s.notices.Wait()
 	if n := len(box.all()); n != 1 {
 		t.Fatalf("told again inside the quiet period: %d messages", n)
 	}
@@ -186,6 +189,7 @@ func TestStoppedAlertReachesTheMailbox(t *testing.T) {
 	if err := s.checkAlerts(ctx); err != nil {
 		t.Fatal(err)
 	}
+	s.notices.Wait()
 	got = box.all()
 	if len(got) != 2 {
 		t.Fatalf("after lowering the hours: %d messages, want 2", len(got))

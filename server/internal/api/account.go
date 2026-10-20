@@ -11,6 +11,7 @@ import (
 
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/ipfilter"
+	"github.com/trckable/trckable/server/internal/notice"
 	"github.com/trckable/trckable/server/internal/permissions"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 	"github.com/trckable/trckable/server/internal/weburl"
@@ -66,6 +67,7 @@ func (a *API) deleteSite(w http.ResponseWriter, r *http.Request) {
 	}
 	gone.Payments, gone.Connections = rest.Payments, rest.Connections
 	a.loadShareHosts(r) // the site's share domain is no longer anyone's
+	a.tellOwners(r, notice.SiteRemoved, "", notice.Vars{"domain": info.Domain})
 	a.sweepAnalytics(r.Context(), site, &gone)
 	slog.Info("site deleted", "site", site, "domain", info.Domain, "events", gone.Events, "sessions", gone.Sessions, "payments", gone.Payments)
 	writeJSON(w, http.StatusOK, gone)
@@ -135,6 +137,7 @@ func (a *API) changePassword(w http.ResponseWriter, r *http.Request) {
 	if err := a.Ctl.SetMustChange(r.Context(), u.ID, false); err != nil {
 		slog.Warn("could not clear the must-change flag", "user", u.ID, "err", err)
 	}
+	a.tell(r.Context(), notice.New(notice.PasswordChanged, principalOf(r).account, []notice.Audience{notice.Person(u.ID)}, notice.Vars{"when": a.stamp()}))
 	// A phone keeps its own sign-in and needs no cookie.
 	if device != "" {
 		w.WriteHeader(http.StatusNoContent)
@@ -210,6 +213,11 @@ func (a *API) setSiteConfig(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, "keep data for at least 7 days")
 		return
 	}
+	was, err := a.Ctl.SiteConfig(r.Context(), r.PathValue("site"))
+	if err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	// A page goal is a name and a path, like a content group.
 	for _, g := range in.PageGoals {
 		if strings.TrimSpace(g.Name) == "" || !strings.HasPrefix(strings.TrimSpace(g.Path), "/") {
@@ -231,6 +239,7 @@ func (a *API) setSiteConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.cache.purgeSite(r.PathValue("site"))
+	a.tellRetention(r, was.RetentionDays, in.RetentionDays)
 	a.siteConfig(w, r)
 }
 
