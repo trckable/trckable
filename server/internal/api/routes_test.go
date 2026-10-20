@@ -38,6 +38,11 @@ var routeRules = map[string]string{
 	"GET /api/v1/oidc/{provider}/start":                          "public",
 	"GET /api/v1/oidc/{provider}/callback":                       "public",
 	"POST /api/v1/oidc/code":                                     "public",
+	"GET /api/v1/channels":                                       "read",
+	"GET /api/v1/channels/{platform}/start":                      "owner",
+	"GET /api/v1/channels/{platform}/callback":                   "owner",
+	"DELETE /api/v1/channels/accounts/{id}":                      "write",
+	"POST /api/v1/channels/{platform}/deauth":                    "public",
 	"GET /api/v1/sites/{site}/ga":                                "owner",
 	"GET /api/v1/sites/{site}/ga/start":                          "owner",
 	"GET /api/v1/ga/callback":                                    "owner",
@@ -327,7 +332,7 @@ func TestEveryRouteChecksWhoIsAsking(t *testing.T) {
 		return res.StatusCode, string(raw)
 	}
 
-	fill := strings.NewReplacer("{site}", g.site, "{provider}", "x", "{id}", "x", "{module}", "goals", "{visitor}", "1", "{item}", "payments")
+	fill := strings.NewReplacer("{site}", g.site, "{provider}", "x", "{platform}", "x", "{id}", "x", "{module}", "goals", "{visitor}", "1", "{item}", "payments")
 	seen := map[string]bool{}
 	for _, pattern := range g.api.patterns {
 		seen[pattern] = true

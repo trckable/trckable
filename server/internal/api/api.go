@@ -26,6 +26,7 @@ import (
 
 	"github.com/trckable/trckable/server/internal/alerts"
 	"github.com/trckable/trckable/server/internal/auth"
+	"github.com/trckable/trckable/server/internal/channels"
 	"github.com/trckable/trckable/server/internal/ga"
 	"github.com/trckable/trckable/server/internal/mentions"
 	"github.com/trckable/trckable/server/internal/query"
@@ -110,6 +111,9 @@ type API struct {
 	// GA imports a site's history from Google Analytics (ga.go); nil, or
 	// without an OAuth client, it is off.
 	GA *ga.Manager
+	// Channels reads the team's own YouTube, Instagram and Threads views
+	// (channels.go); a platform without app keys shows a disabled Connect.
+	Channels *channels.Manager
 	// GSCHTTP replaces the HTTP client used to reach Google; tests only.
 	GSCHTTP    *http.Client
 	cache      *reportCache
@@ -200,6 +204,11 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("GET /api/v1/oidc/{provider}/callback", a.ssoCallback)
 	handleFunc("POST /api/v1/oidc/code", a.ssoCode)
 	handle("GET /api/v1/sites/{site}/ga", a.authed(a.gaStatus))
+	handle("GET /api/v1/channels", a.authed(a.channelsList))
+	handle("GET /api/v1/channels/{platform}/start", a.authed(a.channelsStart))
+	handle("GET /api/v1/channels/{platform}/callback", a.authed(a.channelsCallback))
+	handle("DELETE /api/v1/channels/accounts/{id}", a.authed(a.channelsDisconnect))
+	handleFunc("POST /api/v1/channels/{platform}/deauth", a.channelsDeauth)
 	handle("GET /api/v1/sites/{site}/ga/start", a.authed(a.gaStart))
 	handle("GET /api/v1/ga/callback", a.authed(a.gaCallback))
 	handle("GET /api/v1/sites/{site}/ga/properties", a.authed(a.gaProperties))
