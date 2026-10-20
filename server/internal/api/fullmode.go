@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/trckable/trckable/server/internal/permissions"
+	"io"
 	"net/http"
 	"net/url"
 	"slices"
@@ -496,8 +497,12 @@ func (a *API) saveAlert(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, saved)
 }
 
-// muteFor is how long "mute alerts" snoozes them.
-const muteFor = 24 * time.Hour
+// muteFor is how long "mute alerts" snoozes them when it is not told; a body
+// {"hours": n} sets it, from one hour to a week.
+const (
+	muteFor      = 24 * time.Hour
+	muteMaxHours = 168
+)
 
 // mutedUntil is when a site's snooze ends, or 0 when it is over or never was.
 func (a *API) mutedUntil(r *http.Request, site string) int64 {
@@ -507,13 +512,29 @@ func (a *API) mutedUntil(r *http.Request, site string) int64 {
 	return 0
 }
 
-// muteAlerts snoozes every alert of a site for a day: nothing is sent, nothing
-// is deleted, and it lifts by itself.
+// muteAlerts snoozes every alert of a site, for a day unless the body gives
+// hours: nothing is sent, nothing is deleted, and it lifts by itself.
 func (a *API) muteAlerts(w http.ResponseWriter, r *http.Request) {
 	if !a.siteExists(w, r) {
 		return
 	}
-	until := a.Now().Add(muteFor).Unix()
+	var in struct {
+		Hours *int `json:"hours"`
+	}
+	// The body is optional: none means a day.
+	if err := decode(r, &in); err != nil && !errors.Is(err, io.EOF) {
+		fail(w, http.StatusBadRequest, "bad request")
+		return
+	}
+	d := muteFor
+	if in.Hours != nil {
+		if *in.Hours < 1 || *in.Hours > muteMaxHours {
+			fail(w, http.StatusBadRequest, "hours is 1 to 168")
+			return
+		}
+		d = time.Duration(*in.Hours) * time.Hour
+	}
+	until := a.Now().Add(d).Unix()
 	if err := a.Ctl.MuteAlerts(r.Context(), r.PathValue("site"), until); err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return

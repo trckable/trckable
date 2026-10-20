@@ -241,7 +241,7 @@ export const more = {
   setSiteConfig: (site: string, c: SiteConfig) => call<SiteConfig>('PUT', `/sites/${site}/config`, c),
   alerts: (site: string) => call<{ alerts: Alert[]; kinds: string[]; mail?: boolean }>('GET', `/sites/${site}/alerts`),
   saveAlert: (site: string, a: Partial<Alert>) => call<Alert>('PUT', `/sites/${site}/alerts`, a),
-  muteAlerts: (site: string) => call<{ alerts_muted_until: number }>('POST', `/sites/${site}/alerts/mute`),
+  muteAlerts: (site: string, hours?: number) => call<{ alerts_muted_until: number }>('POST', `/sites/${site}/alerts/mute`, hours === undefined ? undefined : { hours }),
   unmuteAlerts: (site: string) => act('DELETE', `/sites/${site}/alerts/mute`),
   testAlert: (site: string, target: string) => act('POST', `/sites/${site}/alerts/test`, { target }),
   saveSegment: (site: string, name: string, query: string) => call<Segment>('POST', `/sites/${site}/segments`, { name, query }),
