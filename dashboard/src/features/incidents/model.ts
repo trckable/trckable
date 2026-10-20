@@ -41,7 +41,7 @@ export const isDown = (x: { kind: string }): boolean => x.kind === 'down'
 export type DayState = 'ok' | 'quiet' | 'down' | 'unwatched'
 
 /** How long it lasted; an open one lasts until now. */
-export const lasted = (x: Incident, now: number): number => (x.ended_at ?? now) - x.started_at
+export const lasted = (x: Pick<Incident, 'started_at' | 'ended_at'>, now: number): number => (x.ended_at ?? now) - x.started_at
 
 /** The days of a period (YYYY-MM-DD, oldest first), each coloured by the worst incident that touched it: down over quiet over none. Days before `watchedSince` (unix seconds, when the site's incidents began to be recorded) are unknown, not clear, unless an incident says otherwise. */
 export function dayStates(list: Incident[], days: string[], tz: string, now: number, watchedSince = 0): Map<string, DayState> {
