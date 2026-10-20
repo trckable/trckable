@@ -90,6 +90,7 @@
 }
 .al-kinds {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
 }
 /* Until there is somewhere to send them, the alerts wait: dashed edges and a
@@ -103,6 +104,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  min-width: 0;
   padding: 14px 16px;
   border: 1px solid var(--border);
   border-radius: 14px;

@@ -3342,7 +3342,7 @@ export default {
   'channels.connected': (name: string) => `${name} connecté`,
   'channels.flash.denied': 'La plateforme n’a pas donné l’accès.',
   'channels.flash.failed': 'La connexion n’a pas fonctionné. Réessayez.',
-  'channels.viewOnly': 'Seul un Owner peut connecter des comptes.',
+  'channels.viewOnly': (who: string) => `Demandez à ${who} de connecter les comptes.`,
   'blocks.explore': 'Ouvrir dans Explore',
   'blocks.uptime': (pct: string) => `${pct} disponible`,
   'blocks.noIncidents': 'Aucune indisponibilité sur cette période.',

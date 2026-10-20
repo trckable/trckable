@@ -3354,7 +3354,7 @@ export default {
   'channels.connected': (name: string) => `${name} gekoppeld`,
   'channels.flash.denied': 'Het platform gaf geen toegang.',
   'channels.flash.failed': 'Koppelen is niet gelukt. Probeer het opnieuw.',
-  'channels.viewOnly': 'Alleen een Owner kan accounts koppelen.',
+  'channels.viewOnly': (who: string) => `Vraag ${who} om accounts te koppelen.`,
   'blocks.explore': 'Open in Explore',
   'blocks.uptime': (pct: string) => `${pct} online`,
   'blocks.noIncidents': 'Geen downtime in deze periode.',
