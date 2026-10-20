@@ -1,0 +1,1 @@
+Channels on All sites shows the views of your own YouTube, Instagram and Threads accounts, each platform on its own card and never added together; connect with your own app keys, read-only, and disconnecting deletes what was stored.

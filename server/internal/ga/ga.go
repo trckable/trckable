@@ -15,7 +15,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -25,32 +24,19 @@ import (
 	"time"
 
 	"golang.org/x/oauth2"
+
+	"github.com/trckable/trckable/server/internal/secrets"
 )
 
 // Scope is read-only: trckable never asks for anything it could change.
 const Scope = "https://www.googleapis.com/auth/analytics.readonly"
 
-// Secret holds a token or a client secret. It prints, logs and marshals as
-// a placeholder, so a careless log line or error response cannot leak it; the
-// value is read only with Reveal, where it is sent to Google.
-type Secret struct{ v string }
+// Secret is the token and client secret type shared with the other connectors
+// (secrets.Secret): it never prints, logs or marshals its value.
+type Secret = secrets.Secret
 
 // NewSecret wraps s.
-func NewSecret(s string) Secret { return Secret{v: s} }
-
-// Reveal is the value. Use it only to send it to Google.
-func (s Secret) Reveal() string { return s.v }
-
-// Empty says whether there is no value.
-func (s Secret) Empty() bool { return s.v == "" }
-
-func (Secret) String() string               { return "[redacted]" }
-func (Secret) GoString() string             { return "[redacted]" }
-func (Secret) MarshalJSON() ([]byte, error) { return []byte(`"[redacted]"`), nil }
-func (Secret) MarshalText() ([]byte, error) { return []byte("[redacted]"), nil }
-
-// LogValue keeps slog from printing the value.
-func (Secret) LogValue() slog.Value { return slog.StringValue("[redacted]") }
+func NewSecret(s string) Secret { return secrets.NewSecret(s) }
 
 // Where the requests go. Fields of Client so tests can stand in for Google;
 // production never changes them.
