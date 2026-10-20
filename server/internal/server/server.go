@@ -31,6 +31,7 @@ import (
 	"github.com/trckable/trckable/server/internal/api"
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/backup"
+	"github.com/trckable/trckable/server/internal/channels"
 	"github.com/trckable/trckable/server/internal/config"
 	"github.com/trckable/trckable/server/internal/ga"
 	"github.com/trckable/trckable/server/internal/geo"
@@ -309,6 +310,10 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 			slog.Info("importing from Google Analytics is on", "callback", strings.TrimSuffix(cfg.BaseURL, "/")+"/api/v1/ga/callback")
 		}
 	}
+	a.Channels = channels.New(ctl, box,
+		&channels.YouTubeConnector{ID: cfg.YouTubeID, Secret: secrets.NewSecret(cfg.YouTubeSecret)},
+		channels.NewInstagram(cfg.InstagramID, secrets.NewSecret(cfg.InstagramSecret)),
+		channels.NewThreads(cfg.ThreadsID, secrets.NewSecret(cfg.ThreadsSecret)))
 	a.SendReport = s.sendReportNow
 	a.ReportsReady = s.reportsReady
 	s.api = a
@@ -495,7 +500,9 @@ func (s *Server) Run(ctx context.Context) error {
 	s.goGuarded("uptime", func() { s.runUptime(wctx) })              // each homepage answers? looked at every few minutes
 	s.goGuarded("answers", func() { s.runAnswers(wctx) })            // AI assistants asked the owner's questions, once a week
 	s.goGuarded("mentions", func() { s.runMentions(wctx) })          // where each site is talked about, searched every 20 minutes
-	s.goGuarded("log retry", func() { s.runLogRetry(wctx) })         // events again once a full disk has room
+	// The team's social accounts, read once a day.
+	s.goGuarded("channels", func() { s.api.Channels.Run(wctx, s.cfg.ChannelsEvery) })
+	s.goGuarded("log retry", func() { s.runLogRetry(wctx) }) // events again once a full disk has room
 
 	select {
 	case <-ctx.Done():
