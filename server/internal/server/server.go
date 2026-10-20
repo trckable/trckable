@@ -38,6 +38,7 @@ import (
 	"github.com/trckable/trckable/server/internal/ingest"
 	"github.com/trckable/trckable/server/internal/ledger"
 	"github.com/trckable/trckable/server/internal/modules"
+	"github.com/trckable/trckable/server/internal/notice"
 	"github.com/trckable/trckable/server/internal/query"
 	"github.com/trckable/trckable/server/internal/realtime"
 	"github.com/trckable/trckable/server/internal/revenue"
@@ -60,7 +61,8 @@ type Server struct {
 	judge   atomic.Pointer[mentionJudge] // the optional yes/no check on a mention (SetMentionJudge)
 	answers *answerAsker                 // nil when Answers is off (no key, or TRCKABLE_ANSWERS_EVERY=0)
 	ctl     *sqlite.Store
-	held    heldAlerts // alerts sent whose mark failed (alerts.go)
+	held    heldAlerts  // alerts sent whose mark failed (alerts.go)
+	notices *notice.Hub // every notice and alert that must reach someone (notices.go)
 	log     *wal.Log
 	ingest  *ingest.Handler
 	http    *http.Server
@@ -244,8 +246,10 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 		lg.Close()
 		return nil, fmt.Errorf("payments: %w", err)
 	}
+	s.notices = &notice.Hub{Store: ctl, BaseURL: cfg.BaseURL}
+	s.notices.Register(probeForm, s.deliverProbe)
 	a := &api.API{
-		Ctl: ctl, Hub: s.hub, Token: cfg.APIToken, SetupEnv: cfg.SetupToken, ClientIP: s.ingest.ClientIP,
+		Ctl: ctl, Notices: s.notices, Hub: s.hub, Token: cfg.APIToken, SetupEnv: cfg.SetupToken, ClientIP: s.ingest.ClientIP,
 		Locate:  s.place,
 		Revenue: s.revenue, BaseURL: cfg.BaseURL, ReservedHosts: cfg.ReservedHosts, ShareDomainSkipVerify: cfg.ShareDomainSkipVerify, ShareDomainAskOpen: cfg.ShareDomainAskOpen, Box: box, Version: Version, UpdateCheck: cfg.UpdateCheck,
 		Query: func() *query.Q {
@@ -287,6 +291,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 			a.AnswersWake, a.AnswerBudget, a.AnswerMax, a.AnswerRuns = f.Wake, cfg.AnswersBudget, cfg.AnswersQuestions, cfg.AnswersRuns
 		}
 	}
+	ctl.RecoveryUsed = a.TellRecovery
 	a.SendWeekly = s.sendWeeklyNow
 	a.OnSurge = s.tellSurge
 	if len(cfg.OIDC) > 0 {
@@ -495,6 +500,7 @@ func (s *Server) Run(ctx context.Context) error {
 	s.goGuarded("backups", func() { s.runBackups(wctx) })            // one encrypted copy a day, kept on the volume
 	s.goGuarded("login resets", func() { s.runLoginResets(wctx) })   // sign-in limits cleared when an owner resets a password
 	s.goGuarded("alerts", func() { s.runAlerts(wctx) })              // the four things worth being told about
+	s.goGuarded("notices", func() { s.runNotices(wctx) })            // what could not be delivered, tried again
 	s.goGuarded("health alerts", func() { s.runHealthAlerts(wctx) }) // the installation's own problems, sent as they start and clear
 	s.goGuarded("checks", func() { s.runChecks(wctx) })              // each site's snippet, looked for once a day
 	s.goGuarded("uptime", func() { s.runUptime(wctx) })              // each homepage answers? looked at every few minutes

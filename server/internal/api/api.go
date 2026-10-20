@@ -29,6 +29,7 @@ import (
 	"github.com/trckable/trckable/server/internal/channels"
 	"github.com/trckable/trckable/server/internal/ga"
 	"github.com/trckable/trckable/server/internal/mentions"
+	"github.com/trckable/trckable/server/internal/notice"
 	"github.com/trckable/trckable/server/internal/query"
 	"github.com/trckable/trckable/server/internal/realtime"
 	"github.com/trckable/trckable/server/internal/revenue"
@@ -100,6 +101,8 @@ type API struct {
 	Version      string // this build's version, shown in the dashboard's footer
 	// Box seals the keys trckable stores for other services (Search Console).
 	Box *secrets.Box
+	// Notices tells people what happened (internal/notice); nil in a test that does not care.
+	Notices *notice.Hub
 	// SSO: the identity providers people may sign in with (sso.go); nil, none.
 	// It works only with BaseURL (the address the provider sends people back
 	// to) and Box (which seals the flow's cookie).
@@ -1193,6 +1196,7 @@ func (a *API) createSite(w http.ResponseWriter, r *http.Request) {
 	}
 	a.defaultAlerts(r.Context(), principalOf(r).account, id)
 	si, _ := a.Ctl.SiteInfo(r.Context(), id)
+	a.tellOwners(r, notice.SiteAdded, id, notice.Vars{"domain": si.Domain})
 	writeJSON(w, http.StatusCreated, si)
 }
 
@@ -1247,14 +1251,17 @@ func (a *API) createKey(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	a.tellOwners(r, notice.KeyCreated, "", notice.Vars{"name": keyName(k.Name)})
 	writeJSON(w, http.StatusCreated, map[string]any{"key": k, "secret": secret})
 }
 
 func (a *API) revokeKey(w http.ResponseWriter, r *http.Request) {
+	name := a.keyNamed(r)
 	if err := a.Ctl.RevokeAPIKey(r.Context(), principalOf(r).account, r.PathValue("id")); err != nil {
 		fail(w, http.StatusNotFound, "key not found")
 		return
 	}
+	a.tellOwners(r, notice.KeyRevoked, "", notice.Vars{"name": name})
 	w.WriteHeader(http.StatusNoContent)
 }
 

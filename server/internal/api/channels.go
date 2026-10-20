@@ -26,6 +26,7 @@ import (
 
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/channels"
+	"github.com/trckable/trckable/server/internal/notice"
 	"github.com/trckable/trckable/server/internal/permissions"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
@@ -252,6 +253,7 @@ func (a *API) channelsCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.Channels.Soon(acct)
+	a.tellOwners(r, notice.ChannelConnected, "", notice.Vars{"platform": platform, "handle": acct.Handle})
 	channelsBack(w, platform, "")
 }
 
@@ -265,6 +267,7 @@ func (a *API) channelsDisconnect(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusNotFound, "no such account")
 		return
 	}
+	was, _ := a.Ctl.SocialAccountOf(r.Context(), principalOf(r).account, r.PathValue("id"))
 	gone, err := a.Channels.Disconnect(r.Context(), principalOf(r).account, r.PathValue("id"))
 	switch {
 	case err != nil && !errors.Is(err, auth.ErrNotFound):
@@ -272,6 +275,7 @@ func (a *API) channelsDisconnect(w http.ResponseWriter, r *http.Request) {
 	case !gone:
 		fail(w, http.StatusNotFound, "no such account")
 	default:
+		a.tellOwners(r, notice.ChannelGone, "", notice.Vars{"platform": was.Platform, "handle": was.Handle})
 		w.WriteHeader(http.StatusNoContent)
 	}
 }

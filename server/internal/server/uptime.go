@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"hash/fnv"
@@ -16,6 +17,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/alerts"
+	"github.com/trckable/trckable/server/internal/notice"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -264,6 +266,19 @@ func isTimeout(err error) bool {
 // "tracking stopped" alerts the moment the site goes down or comes back:
 // once each, since only the change is told.
 func (s *Server) probed(ctx context.Context, site sqlite.SiteRow, before, after sqlite.SiteProbe) {
+	// The incident is the dashboard's record; the alert is the person's news.
+	// One failing never keeps the other from happening.
+	s.stepSiteIncident(ctx, site, after)
+	switch {
+	case !before.Down() && after.Down():
+		s.tellProbe(ctx, site, "down", "Your site isn't answering our checks", downMessage(site.Timezone, after), before, after)
+	case before.Down() && after.Failures == 0:
+		s.tellProbe(ctx, site, "up", "Your site is back", fmt.Sprintf("%s answers again after %s.", site.Domain, plainDuration(after.At-before.DownSince)), before, after)
+	}
+}
+
+// stepSiteIncident brings the site's incident up to date after a probe.
+func (s *Server) stepSiteIncident(ctx context.Context, site sqlite.SiteRow, after sqlite.SiteProbe) {
 	c, err := s.ctl.CheckOf(ctx, site.ID)
 	if err != nil {
 		slog.Warn("incident check failed", "site", site.ID, "err", err)
@@ -278,37 +293,65 @@ func (s *Server) probed(ctx context.Context, site sqlite.SiteRow, before, after 
 	if err := stepIncident(siteCtx, s.ctl, h, site.ID, site.LastEventAt, c, after, after.At); err != nil {
 		slog.Warn("incident check failed", "site", site.ID, "err", err)
 	}
-	switch {
-	case !before.Down() && after.Down():
-		s.tellProbe(ctx, site, "down", "Your site isn't answering our checks", downMessage(site.Timezone, after), before, after)
-	case before.Down() && after.Failures == 0:
-		s.tellProbe(ctx, site, "up", "Your site is back", fmt.Sprintf("%s answers again after %s.", site.Domain, plainDuration(after.At-before.DownSince)), before, after)
+}
+
+// probeForm is the outbox row of a site going down or coming back. Who is told
+// is looked up when it is delivered, and a lookup that fails makes the row be
+// tried again, so the change is not lost: the site will not go down twice.
+const probeForm = "probe"
+
+// probeNotice is what a probe row keeps.
+type probeNotice struct {
+	Site    sqlite.SiteRow   `json:"site"`
+	Kind    string           `json:"kind"`
+	Title   string           `json:"title"`
+	Message string           `json:"message"`
+	Before  sqlite.SiteProbe `json:"before"`
+	After   sqlite.SiteProbe `json:"after"`
+}
+
+// tellProbe tells the site's "tracking stopped" alerts, by the same mail or
+// webhook as a site that went quiet, that it went down or is back. It does
+// not mark them as fired: their own cadence is theirs.
+func (s *Server) tellProbe(ctx context.Context, site sqlite.SiteRow, kind, title, message string, before, p sqlite.SiteProbe) {
+	body, err := json.Marshal(probeNotice{Site: site, Kind: kind, Title: title, Message: message, Before: before, After: p})
+	if err == nil {
+		err = s.notices.Queue(ctx, sqlite.OutboxRow{Key: fmt.Sprintf("probe:%s:%s:%d", site.ID, kind, p.At), Kind: kind, Form: probeForm, Body: string(body)})
+	}
+	if err != nil {
+		slog.Warn("alert not kept", "kind", kind, "site", site.ID, "err", err)
 	}
 }
 
-// tellProbe sends one message to the site's "tracking stopped" alerts, the
-// same mail or webhook as a site that went quiet. It does not mark them as
-// fired: their own cadence is theirs.
-func (s *Server) tellProbe(ctx context.Context, site sqlite.SiteRow, kind, title, message string, before, p sqlite.SiteProbe) {
+// deliverProbe writes the message for each of the site's "tracking stopped"
+// alerts. Each goes out and is retried on its own; this row is done once they
+// are all written.
+func (s *Server) deliverProbe(ctx context.Context, r sqlite.OutboxRow) error {
+	var n probeNotice
+	if err := json.Unmarshal([]byte(r.Body), &n); err != nil {
+		return err
+	}
 	list, err := s.ctl.LiveAlerts(ctx)
 	if err != nil {
-		return
+		return err
 	}
 	for _, a := range list {
-		if a.SiteID != site.ID || a.Kind != "stopped" {
+		if a.SiteID != n.Site.ID || a.Kind != "stopped" {
 			continue
 		}
-		ev := alerts.Event{Kind: kind, Site: site.ID, Domain: site.Domain, At: time.Unix(p.At, 0), Title: title, Message: message,
-			Data: map[string]any{"status": p.Status, "down_since": p.DownSince}}
-		s.probeWords(&ev, site, before, p)
+		ev := alerts.Event{Kind: n.Kind, Site: n.Site.ID, Domain: n.Site.Domain, At: time.Unix(n.After.At, 0), Title: n.Title, Message: n.Message,
+			Data: map[string]any{"status": n.After.Status, "down_since": n.After.DownSince}}
+		s.probeWords(&ev, n.Site, n.Before, n.After)
 		ev.Unsubscribe = s.stopLink(a.ID)
-		ev.Settings = s.settingsLink(site.ID)
-		if err := alerts.Send(ctx, a.Target, ev); err != nil {
-			slog.Warn("alert not delivered", "kind", kind, "err", err)
-			continue
+		ev.Settings = s.settingsLink(n.Site.ID)
+		if err := s.notices.Alert(ctx, r.Key+"/"+a.ID, n.Kind, a.Target, ev); err != nil {
+			if !errors.Is(err, notice.ErrNoMail) {
+				return err // not kept: this row is tried again, and the ones already kept are not written twice
+			}
+			slog.Warn("alert not delivered", "kind", n.Kind, "err", err) // never deliverable: the others still go
 		}
-		slog.Info("alert sent", "kind", kind, "site", site.ID)
 	}
+	return nil
 }
 
 // downMessage is the down alert's text: the same words as the bar on the
