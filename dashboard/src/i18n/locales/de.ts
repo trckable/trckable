@@ -923,6 +923,7 @@ export default {
   'sites.menu.removeGroupBody': 'Ihre Websites bleiben: Sie gehen zurück in die Liste. Nur die Überschrift verschwindet.',
   'sites.menu.remove': 'Entfernen',
   'sites.menu.dragged': (name: string, where: string) => `${name} nach ${where} verschoben`,
+  'sites.menu.movedTo': (name: string, n: number) => `${name} auf Position ${n} verschoben`,
 
   // full
   'full.day': 'Tag',
@@ -2174,6 +2175,7 @@ export default {
   'v2.team': 'Team',
   'v2.teams': 'Teams',
   'v2.manageTeams': 'Teams verwalten',
+  'v2.teamMoved': (name: string, n: number) => `${name} auf Position ${n} verschoben`,
   'v2.api': 'API-Schlüssel & MCP',
   'v2.profile': 'Profil',
   'v2.shortcuts': 'Tastenkürzel',

@@ -926,6 +926,7 @@ export default {
   'sites.menu.removeGroupBody': 'Sus sitios se quedan: vuelven a la lista. Solo desaparece el encabezado.',
   'sites.menu.remove': 'Quitar',
   'sites.menu.dragged': (name: string, where: string) => `${name} movido a ${where}`,
+  'sites.menu.movedTo': (name: string, n: number) => `${name} movido a la posición ${n}`,
 
   // full
   'full.day': 'Día',
@@ -2177,6 +2178,7 @@ export default {
   'v2.team': 'Equipo',
   'v2.teams': 'Equipos',
   'v2.manageTeams': 'Gestionar equipos',
+  'v2.teamMoved': (name: string, n: number) => `${name} movido a la posición ${n}`,
   'v2.api': 'Claves de API y MCP',
   'v2.profile': 'Perfil',
   'v2.shortcuts': 'Atajos de teclado',

@@ -33,6 +33,7 @@ export const copy = defineCopy('v2', {
   team: 'Team',
   teams: 'Teams',
   manageTeams: 'Manage teams',
+  teamMoved: (name: string, n: number) => `Moved ${name} to position ${n}`,
   api: 'API keys & MCP',
   profile: 'Profile',
   shortcuts: 'Keyboard shortcuts',

@@ -920,6 +920,7 @@ export default {
   'sites.menu.removeGroupBody': 'I suoi siti restano: tornano nell’elenco. Sparisce solo l’intestazione.',
   'sites.menu.remove': 'Rimuovi',
   'sites.menu.dragged': (name: string, where: string) => `${name} spostato in ${where}`,
+  'sites.menu.movedTo': (name: string, n: number) => `${name} spostato in posizione ${n}`,
 
   // full
   'full.day': 'Giorno',
@@ -2171,6 +2172,7 @@ export default {
   'v2.team': 'Team',
   'v2.teams': 'Team',
   'v2.manageTeams': 'Gestisci i team',
+  'v2.teamMoved': (name: string, n: number) => `${name} spostato in posizione ${n}`,
   'v2.api': 'Chiavi API e MCP',
   'v2.profile': 'Profilo',
   'v2.shortcuts': 'Scorciatoie da tastiera',

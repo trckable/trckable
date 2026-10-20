@@ -22,6 +22,8 @@ export interface Teams {
   current: string
   onPick: (id: string) => void
   onManage: () => void
+  /** The ids in the order the person arranged them (drag, or Alt + ↑/↓). Without it the list cannot be arranged and shows no grips. */
+  onReorder?: (ids: string[]) => void
 }
 
 export interface V2Extras {
