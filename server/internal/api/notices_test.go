@@ -306,6 +306,13 @@ func TestShorteningRetentionIsMailedAndLengtheningIsOnlyTheBell(t *testing.T) {
 	if b := n.bell(notice.RetentionShorter); len(b) != 1 {
 		t.Fatalf("the bell for a shorter time: %v", b)
 	}
+	n.mu.Lock()
+	for _, e := range n.bells {
+		if e.Kind == notice.RetentionShorter && (e.Vars["from_days"] != "0" || e.Vars["to_days"] != "365") {
+			t.Errorf("the days the bell is told: %v", e.Vars)
+		}
+	}
+	n.mu.Unlock()
 	set("30")
 	if got := n.told("me@site.com"); len(got) != 2 {
 		t.Fatalf("shortened again: %v", got)
@@ -374,6 +381,11 @@ func TestAnInstallThatStoppedWorkingIsToldToTheManagersOncePerDay(t *testing.T) 
 	if got := n.told("me@site.com"); len(got) != 1 || !strings.Contains(got[0], "cannot see site.com") {
 		t.Fatalf("the snippet disappeared: %v", got)
 	}
+	n.mu.Lock()
+	if len(n.bells) == 0 || n.bells[len(n.bells)-1].Vars["found"] != "none" {
+		t.Errorf("what the bell is told: %+v", n.bells)
+	}
+	n.mu.Unlock()
 	if got := n.told("view@site.com"); len(got) != 0 {
 		t.Fatalf("a viewer was told: %v", got)
 	}

@@ -132,7 +132,7 @@ func (a *API) tellRetention(r *http.Request, was, now int) {
 	if si, err := a.Ctl.SiteInfo(r.Context(), r.PathValue("site")); err == nil {
 		domain = si.Domain
 	}
-	a.tellOwners(r, kind, r.PathValue("site"), notice.Vars{"domain": domain, "from": keepWords(was), "to": keepWords(now)})
+	a.tellOwners(r, kind, r.PathValue("site"), notice.Vars{"domain": domain, "from": keepWords(was), "to": keepWords(now), "from_days": strconv.Itoa(was), "to_days": strconv.Itoa(now)})
 }
 
 // keepWords says how long data is kept.
@@ -177,7 +177,7 @@ func (a *API) tellVerify(ctx context.Context, site, domain string, was sqlite.Si
 		slog.Warn("install check not told", "site", site, "err", err)
 		return
 	}
-	n := notice.New(notice.VerifyFailed, account, []notice.Audience{notice.Managers()}, notice.Vars{"domain": domain, "reason": reason})
+	n := notice.New(notice.VerifyFailed, account, []notice.Audience{notice.Managers()}, notice.Vars{"domain": domain, "reason": reason, "found": now.Found})
 	n.Site, n.Key = site, "verify:"+site+":"+a.Now().UTC().Format("2006-01-02")
 	a.tell(ctx, n)
 }
