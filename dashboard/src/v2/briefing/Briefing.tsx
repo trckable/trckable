@@ -17,7 +17,7 @@ import { useNotes } from '../../features/notes/useNotes'
 import { CardList } from '../ui/StoryCard'
 import { Hero } from '../ui/HeroCard'
 import { whyRows } from './scoreWhy'
-import { chartNote } from '../ui/DayChart'
+import { chartNote, chartTone } from '../ui/chartNote'
 import { ChartBlock } from './ChartBlock'
 import { replayInOf } from '../replay/storyIn'
 import { useReplay } from '../replay/useReplay'
@@ -30,7 +30,7 @@ import { KeyHint } from '../ui/KeyHint'
 import { Kcs } from '../ui/KpiCard'
 import { MailRow } from '../ui/MailRow'
 import { WatchCard } from '../ui/WatchCard'
-import { Act, Calm, Setups } from '../ui/ConnectPlaceholder'
+import { Act, Calm, CalmLine, Setups } from '../ui/ConnectPlaceholder'
 import { Overlays } from './Overlays'
 import { whyUsual } from './why'
 import { useMoments } from '../replay/useMoments'
@@ -39,6 +39,7 @@ import { siteNow } from './chart'
 import { nextStep, setupRows } from './steps'
 import { copy } from './copy'
 import { chartLine, heroSub } from './lines'
+import { againstName } from './compare'
 import { LOOKED_AT, sinceOf } from './since'
 import { goExplore, seeScorePart } from './deeper'
 import { useSetup, useSinceCount, useUptime, useUsual } from './hooks'
@@ -126,17 +127,12 @@ export default function Briefing({ site, data: page, loading, period, compare = 
     return () => clearTimeout(t)
   }, [sig])
   const ready = late === sig || (!loading && !!hist.daily && slices.fresh === true && extras.fresh === true && (unit !== 'today' && unit !== 'yesterday' ? true : usual !== null))
-  const parts = useParts({ site, cur, prev, usual, unit, range, today, bucket: data?.bucket, hist, up, downMin, nowSec, notes: notes.notes, slices, extras, money })
+  const parts = useParts({ site, cur, prev, against: compare === 'none' ? undefined : againstName(period, compare, range), usual, unit, range, today, bucket: data?.bucket, hist, up, downMin, nowSec, notes: notes.notes, slices, extras, money })
   // The cards keep the order the page opened with; what is new waits behind the pill.
   const lock = useCardLock([site.id, period, range.from, range.to].join('|'), parts?.stories ?? [])
   const keyed = lock.known
   useBriefingKeys({ on: active, cards: (ui.all ? keyed : keyed.slice(0, 4)).map((s) => s.key), ui, open: (k) => ui.setOpen(keyed.find((s) => s.key === k) ?? null) })
-  const rp = useReplay(sig)
-  // A run does not play out of sight: leaving for Live ends it, and the chart is as it was when the Briefing is back.
-  const { stop: stopReplay, playing: replaying } = rp
-  useEffect(() => {
-    if (!active && replaying) stopReplay()
-  }, [active, replaying, stopReplay])
+  const rp = useReplay(sig, active)
   if (!cur || !parts) return loading || !data ? <BriefingSkeleton site={site.id} label={copy.loading} /> : null
   const label = unit === 'today' ? `${presetById('today')?.label ?? 'Today'} · ${dayWords(range.to)}` : (presetById(period)?.label ?? fmtRange(range, today))
   const before = copy.before[unit]
@@ -171,7 +167,11 @@ export default function Briefing({ site, data: page, loading, period, compare = 
   rememberCards(site.id, shown.map((x) => x.key))
   const rest = lock.known.slice(4)
   const quiet = site.last_event_at ? <p className="mk-quiet">{copy.empty}</p> : <Waiting />
-  const cards = empty ? quiet : <CardList list={shown} c={ctx} />
+  // What else was normal ends the incident card when there is one on the page; only without it does it stand as a row of its own.
+  const calmIn = { cards: stories.length > 0, paused: downNow, learning, names: calmTopics(stories, !setupState.noSearch && setupState.can) }
+  const incidentOn = [...shown, ...(ui.all ? rest : [])].some((s) => s.key === 'uptime')
+  const listCtx = incidentOn ? { ...ctx, calm: <div className="ic-calm"><CalmLine {...calmIn} /></div> } : ctx
+  const cards = empty ? quiet : <CardList list={shown} c={listCtx} />
   const act = isShared() ? null : nextStep({ site, cur, stories, top, downNow })
   const setups = setupRows({ site, cur, can: setupState.can, shared: isShared(), noSearch: setupState.noSearch, noAlerts: setupState.noAlerts, onGoal })
   const heroWhy = stories.find((x) => x.key === 'uptime')?.cause ?? stories.find((x) => x.key === 'sources')?.cause ?? (usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : null)
@@ -191,7 +191,7 @@ export default function Briefing({ site, data: page, loading, period, compare = 
   const replayIn = replayInOf({ replay: rp, site, query: queryOf(readView(new URLSearchParams(location.search)), range), bucket: data?.bucket ?? 'day', chart, series: cur.series.slice(0, pts.length), total: v, today: unit === 'today', end, clock: clock.slice(11, 16), moments, period: label, source: top?.value, money: isShared() ? undefined : money, onShare: () => openSettings(site, 'sharing') })
   const onReplay = replayIn ? stopOrGo(rp.playing, rp.stop, rp.start) : undefined
 
-  const chartBlock = { site, range, chart, at, onAt: setAt, series: cur.series.slice(0, pts.length), bucket: data?.bucket ?? 'day', money, replay: replayIn ?? undefined, note: chartLine(learning, low, parts.hd, () => chartNote(chart, at, downNow, window.matchMedia(QUERY.xs).matches)), down: uptime.verdict === 'down', notes: notes.notes.length, onNotes: () => ui.setSheet('notes') }
+  const chartBlock = { site, range, chart, at, onAt: setAt, series: cur.series.slice(0, pts.length), bucket: data?.bucket ?? 'day', money, replay: replayIn ?? undefined, note: chartLine(learning, low, parts.hd, () => chartNote(chart, at, downNow, window.matchMedia(QUERY.xs).matches)), tone: learning || low ? undefined : chartTone(chart, at, downNow), down: uptime.verdict === 'down', notes: notes.notes.length, onNotes: () => ui.setSheet('notes') }
   const body = (
     <div className="mk mk-body">
       <div className="brief" aria-busy={loading}>
@@ -231,8 +231,8 @@ export default function Briefing({ site, data: page, loading, period, compare = 
             {ui.all ? copy.hideMore(rest.length) : copy.more(rest.length)}
           </button>
         )}
-        {ui.all && rest.length > 0 && <CardList list={rest} c={ctx} first={false} />}
-        {!empty && <Calm cards={stories.length > 0} paused={downNow} learning={learning} names={calmTopics(stories, !setupState.noSearch && setupState.can)} onExplore={() => goExplore()} />}
+        {ui.all && rest.length > 0 && <CardList list={rest} c={listCtx} first={false} />}
+        {!empty && !incidentOn && <Calm {...calmIn} onExplore={() => goExplore()} />}
         <Setups rows={setups} />
         {act && <Act text={act.text} rest={act.rest} label={act.label} onAct={act.run} />}
         <BounceNote site={site} range={range} />

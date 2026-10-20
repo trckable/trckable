@@ -34,7 +34,7 @@ describe('the same multiple on every screen', () => {
 
   it('the chart label over the rise says it, not the whole site hour', () => {
     // The hour doubles for the whole site (2.5x a usual hour), but the label names the source: it carries the source's figure.
-    const c = chartOf({ cur: res([5, 5, 40, 5]), prev: res([5, 5, 16, 5]), bucket: 'hour', unit: 'today', weekday: 'Friday', riseName: 'Hacker News', riseTimes: times as number, riseVs: 'your usual' })
+    const c = chartOf({ cur: res([5, 5, 40, 5]), prev: res([5, 5, 16, 5]), bucket: 'hour', unit: 'today', riseName: 'Hacker News', riseTimes: times as number, riseVs: 'your usual' })
     expect(c.rise?.text).toBe(`Hacker News · ${said} your usual`)
     expect(c.rise?.short).toContain(said)
   })
