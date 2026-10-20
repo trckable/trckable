@@ -104,7 +104,7 @@ Nothing is paid, limited or held back. The complete list: [features](https://doc
 </p>
 <p align="center">
   <img src=".github/images/gallery/share-card.png" width="410" alt="Settings, Sharing: the links to this dashboard, one of them named Investors, with what each one shows">
-  <img src=".github/images/gallery/core-light.png" width="410" alt="The Briefing in the light theme: the day's headline and score, the chart against its usual band, and the key numbers">
+  <img src=".github/images/gallery/core-light.png" width="410" alt="The Briefing in the light theme: the day's headline and score, the chart against the period before as a dashed line, and the key numbers">
 </p>
 <p align="center">
   <sub>Explore across the whole width, the sources that pay, what the script records, the sharing links and the light theme. <a href="docs/screenshots.md">More screenshots</a></sub>

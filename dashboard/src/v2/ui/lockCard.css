@@ -1,0 +1,40 @@
+/* A locked feature as a slim row: the lock, what it would show with a hint of how, and a small way in. The rows sit two
+   to a line where there is room and one under the other where there is not, with the gap of the cards above them. */
+.mk .lkcs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--mk-s4); }
+@container (--pane-max-700) {
+  .mk .lkcs { grid-template-columns: minmax(0, 1fr); gap: var(--mk-s3); }
+}
+.mk .lkc.row { min-height: 0; border-radius: var(--mk-rc, 14px); }
+.mk .lkc.row .lkc-o {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  column-gap: var(--mk-s3);
+  row-gap: 0;
+  align-items: center;
+  justify-content: stretch;
+  text-align: left;
+  padding: var(--mk-s3) var(--mk-s4);
+}
+.mk .lkc.row .lkc-o svg { grid-row: 1 / span 2; width: 20px; height: 20px; }
+.mk .lkc.row .lkc-o .lt1,
+.mk .lkc.row .lkc-o .lt2 { grid-column: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk .lkc.row .lkc-o .lt1 { font-size: 14px; }
+.mk .lkc.row .lkc-o .lkgo {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  height: var(--mk-h);
+  padding: 0 var(--mk-s2);
+  margin: 0;
+  border-radius: var(--mk-rc);
+  background: none;
+  color: var(--mk-lime);
+  font-size: 13px;
+  font-weight: 600;
+}
+.mk .lkc.row .lkc-o .lkgo:hover { background: var(--mk-hov); filter: none; }
+.mk .lkc.row .lkc-o .lkask { grid-column: 3; grid-row: 1 / span 2; max-width: 12em; text-align: right; }
+@container (--pane-max-600) {
+  .mk .lkc.row { min-height: 0; }
+  .mk .lkc.row .lkc-o .lkgo { min-height: 44px; height: 44px; }
+}

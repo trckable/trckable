@@ -3,7 +3,7 @@ title: "Screenshots"
 description: "More of the dashboard: the Briefing, the filter menu, cookie consent and widgets."
 ---
 
-![The Briefing in the dark theme: the day's headline and score, the chart against its usual band, and the key numbers](../.github/images/gallery/core.png)
+![The Briefing in the dark theme: the day's headline and score, the chart against the period before as a dashed line, and the key numbers](../.github/images/gallery/core.png)
 
 ![The Filter menu in Explore: Source, Page, Country and Device, each opening its own list](../.github/images/gallery/filter-menu.png)
 

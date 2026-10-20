@@ -2,6 +2,7 @@
 // usual of that slice, never against nothing), written as one claim with the picture that proves it, a line of why, and
 // one thing to do. The cards are ranked by how much they matter and how bad the news is. Pure: cards.test.ts.
 import type { Result, Row } from '../../lib/api'
+import type { Span } from './outage'
 import { countryName, flag, fmtFixed, fmtInt } from '../../lib/format'
 import { assistantOf } from '../../features/extras/assistants'
 import { copy } from './cards.copy'
@@ -25,7 +26,7 @@ export type Vis =
   | { k: 'rcpt'; rows: { l: string; t?: string; a?: string; flag?: string; neg?: boolean; more?: boolean; tot?: boolean; mark?: 'up' | 'dn' }[] }
   | { k: 'dots'; n: number; per: number; grey: number; name: string }
   | { k: 'ba'; lo: number; hi: number; c: number; v: number; red: boolean }
-  | { k: 'outage'; a: number; b: number; nowAt: number; from: string; now: string }
+  | { k: 'outage'; spans: Span[]; nowAt: number; from: string; now: string }
   | { k: 'funnel'; rows: { name: string; v: number; w: number; hot: string }[] }
   | { k: 'goals'; rows: { name: string; v: number; lo: number; hi: number; st: Judged }[] }
 
@@ -72,10 +73,11 @@ export interface UptimeIn {
   /** Visitors a usual stretch of that length brings. */
   lost: number
   cause?: string
-  /** Where the outage lies in the period, 0 to 1, and where now is. */
-  a: number
+  /** Where each outage lies in the period, 0 to 1, and where now is. */
+  spans: Span[]
   nowAt: number
-  b: number
+  /** What the line starts and ends at, as words: "00:00" for a day, the first date for longer, and the clock now. */
+  from: string
   now: string
 }
 
@@ -140,7 +142,7 @@ function uptimeCard(u: UptimeIn, domain: string): Story {
     bad: true,
     head,
     rest,
-    vis: { k: 'outage', a: u.a, b: u.b, nowAt: u.nowAt, from: '00:00', now: u.now },
+    vis: { k: 'outage', spans: u.spans, nowAt: u.nowAt, from: u.from, now: u.now },
     why: u.lost > 0 ? copy.noAnswer(people(Math.round(u.lost))) : copy.noAnswerBare,
     val: `${dur} min`,
     m: dur,

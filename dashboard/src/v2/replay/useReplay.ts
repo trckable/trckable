@@ -18,7 +18,8 @@ export interface Replay {
 
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
-export function useReplay(key: string): Replay {
+/** `visible` false (the page is behind another): a run does not play out of sight, it ends and the chart is as it was when the page is back. */
+export function useReplay(key: string, visible = true): Replay {
   const [phase, setPhase] = useState<Replay['phase']>('off')
   const halt = useRef<(() => void) | undefined>(undefined)
   const quit = useCallback(() => {
@@ -46,6 +47,10 @@ export function useReplay(key: string): Replay {
     quit()
     setPhase('off')
   }, [quit])
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- a run ends when its page goes out of sight, which is an outside change
+    if (!visible && phase === 'on') stop()
+  }, [visible, phase, stop])
   useEffect(() => {
     if (phase === 'off') return
     const onKey = (e: KeyboardEvent) => {

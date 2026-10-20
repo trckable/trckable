@@ -701,6 +701,8 @@ export interface ShareInfo {
   accent?: string
   logo_url?: string
   hide_brand?: boolean
+  /** The page carries the small "Powered by trckable" link. */
+  powered_by?: boolean
   /** What stands behind the numbers this link shows. */
   verified?: Verified
   /** Only for an embedded link: the session the page sends as a header,
