@@ -135,6 +135,8 @@ func TestProviderCallsRetryOnlyWhatIsSafe(t *testing.T) {
 // https://docs.stripe.com/api/events/list (newest first, starting_after).
 func TestStripeRemote(t *testing.T) {
 	noWait(t)
+	// Stripe's Sync clamps to the last 30 days, so a fixed date would age out.
+	stripeSince := time.Now().Add(-48 * time.Hour).Truncate(time.Second)
 	evt := func(id string) string {
 		return fmt.Sprintf(`{"id":%q,"object":"event","type":"payment_intent.succeeded","created":1758600000,"livemode":false,"data":{"object":{"id":"pi_%s","object":"payment_intent","amount_received":100,"currency":"usd"}}}`, id, id)
 	}
@@ -155,7 +157,7 @@ func TestStripeRemote(t *testing.T) {
 			jsonAnswer(w, 200, `{"object":"list","has_more":false,"data":[{"id":"we_b","url":"https://other.example/hook"}]}`)
 		case r.URL.Path == "/v1/events":
 			q := r.URL.Query()
-			if q.Get("created[gte]") != fmt.Sprint(since.Unix()) || len(q["types[]"]) > 20 {
+			if q.Get("created[gte]") != fmt.Sprint(stripeSince.Unix()) || len(q["types[]"]) > 20 {
 				t.Errorf("events query: %v", q)
 			}
 			switch {
@@ -188,7 +190,7 @@ func TestStripeRemote(t *testing.T) {
 	if err != nil || len(hooks) != 2 || hooks[0].URL != "https://stats.example/webhooks/stripe/pc_old" {
 		t.Fatalf("hooks over two pages: %+v %v", hooks, err)
 	}
-	raws, err := api.Sync(ctx, "sk_test_ok", false, s, since)
+	raws, err := api.Sync(ctx, "sk_test_ok", false, s, stripeSince)
 	if err != nil || len(raws) != 4 {
 		t.Fatalf("sync: %d raws, %v", len(raws), err)
 	}
