@@ -94,18 +94,24 @@ func (a *API) fetchFavicon(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusNotFound, "site not found")
 		return
 	}
-	client := alerts.SafeClient(6 * time.Second)
+	client := a.IconGet
+	if client == nil {
+		client = alerts.SafeClient(6 * time.Second)
+	}
+	// All the fetches together, so a slow site cannot hold the request.
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
 	home := "https://" + si.Domain + "/"
 	// The icons the homepage names come first (most sites point at a PNG
 	// there), then the two places browsers look by themselves.
-	named, reached := declaredIcons(r.Context(), client, home)
+	named, reached := declaredIcons(ctx, client, home)
 	if !reached {
 		fail(w, http.StatusNotFound, si.Domain+" could not be reached over https, so its favicon cannot be fetched. Upload a picture instead.")
 		return
 	}
 	tries := append(named, home+"apple-touch-icon.png", home+"favicon.ico")
 	for _, u := range tries {
-		if data, ok := getIcon(r.Context(), client, u); ok {
+		if data, ok := getIcon(ctx, client, u); ok {
 			a.storeIcon(w, r, data)
 			return
 		}

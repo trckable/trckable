@@ -66,6 +66,9 @@ type API struct {
 	// MentionGet fetches the news for the look-alike check on a name word; nil
 	// leaves that check off (it then says it checked nothing).
 	MentionGet mentions.Doer
+	// IconGet fetches a site's own icon; nil uses the guarded client that
+	// reaches public hosts only. Tests set a fake so none touches the network.
+	IconGet *http.Client
 	// AnswerEngines are the engines Answers has a key for (openai, perplexity,
 	// anthropic); none, or AnswersEvery 0, and Answers does not exist: its
 	// routes answer an empty set-up and nothing is asked. AnswersWake asks the
