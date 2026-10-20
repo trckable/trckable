@@ -9,8 +9,8 @@ export function barPct(visitors: number, max: number): number {
   return Math.max(3, Math.round((visitors / max) * 100))
 }
 
-/** The dashboard filter that shows only this link's visits. */
-export const filterOf = (l: Pick<Link, 'dim' | 'value'>): Filter => ({ dim: l.dim, value: l.value })
+/** The dashboard filter that shows only this link's visits: a ?ref and a utm_source of one name together, as the row counts them. */
+export const filterOf = (l: Pick<Link, 'key'>): Filter => ({ dim: 'link', value: l.key })
 
 /** "2 hr. ago", "now": how long ago the latest visit was, in the reader's language. */
 export function sinceLast(last: number, now: number): string {

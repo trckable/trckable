@@ -3,7 +3,7 @@ package api
 // Channels: the team's own YouTube, Instagram and Threads accounts and their
 // views per day (package channels).
 //
-//   - connecting is an owner's job (permissions.ActChannelsConnect); anyone who
+//   - connecting is for the roles that hold permissions.ActChannelsConnect; anyone who
 //     sees the team reads the numbers;
 //   - the sign-in's state, and the PKCE verifier where the platform takes one,
 //     travel in one short-lived sealed cookie, and the way back is a fixed
@@ -169,7 +169,7 @@ func (a *API) channelsList(w http.ResponseWriter, r *http.Request) {
 		}
 		cards = append(cards, card)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"days": days, "through": fmtDay(end), "platforms": cards})
+	writeJSON(w, http.StatusOK, map[string]any{"days": days, "through": fmtDay(end), "setup_docs": !a.Managed, "platforms": cards})
 }
 
 // channelsOwner is the signed-in person who may connect accounts, or nil

@@ -15,6 +15,7 @@ export const DIM_LABEL: Record<string, string> = {
   screen: 'Screen',
   os: 'OS',
   goal: 'Goal',
+  link: 'Link',
   utm_source: 'utm_source',
   utm_medium: 'utm_medium',
 }

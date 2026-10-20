@@ -38,5 +38,5 @@ export const copy = defineCopy('channels', {
     denied: 'The platform did not give access.',
     failed: 'Connecting did not work. Try again.',
   },
-  viewOnly: 'Only an owner can connect accounts.',
+  viewOnly: (who: string) => `Ask ${who} to connect accounts.`,
 })

@@ -233,10 +233,14 @@ func (q Q) revenue(ctx context.Context, conn *sql.Conn, p Params, cte string, ct
 	}
 
 	// Revenue by every breakdown dimension, from the attributed session.
-	cols := make([]string, len(DefaultDims))
-	sets := make([]string, len(DefaultDims))
-	gcols := make([]string, len(DefaultDims))
-	for i, d := range DefaultDims {
+	dims := DefaultDims
+	if p.LinkRevenue {
+		dims = append(append([]string{}, DefaultDims...), "link")
+	}
+	cols := make([]string, len(dims))
+	sets := make([]string, len(dims))
+	gcols := make([]string, len(dims))
+	for i, d := range dims {
 		g := fmt.Sprintf("d%d", i)
 		cols[i] = sessionDims[d] + " AS " + g
 		sets[i] = "(" + g + ")"
@@ -257,7 +261,7 @@ func (q Q) revenue(ctx context.Context, conn *sql.Conn, p Params, cte string, ct
 	}
 	type rv struct{ rev, payers int64 }
 	byDim := map[string]map[string]rv{}
-	gid := gidFor(DefaultDims)
+	gid := gidFor(dims)
 	for rows.Next() {
 		var g, rev, payers int64
 		var v string
@@ -274,7 +278,7 @@ func (q Q) revenue(ctx context.Context, conn *sql.Conn, p Params, cte string, ct
 	}
 	rows.Close()
 	res.RevenueDims = map[string][]Row{}
-	for _, d := range DefaultDims {
+	for _, d := range dims {
 		zero := int64(0)
 		for i := range res.Dims[d] {
 			r := &res.Dims[d][i]
