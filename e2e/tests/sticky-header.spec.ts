@@ -87,3 +87,78 @@ for (const width of [1440, 390]) {
     })
   }
 }
+
+// Once the page has moved, the bar stretches to the window's edges and gets shorter (a phone keeps its compact bar), and the page under it does not move.
+async function measure(page: Page) {
+  return page.evaluate(() => {
+    const hd = document.querySelector('.hd')!
+    const chip = hd.querySelector('.mk-chip')!
+    const before = getComputedStyle(hd, '::before')
+    return {
+      bar: hd.getBoundingClientRect().height,
+      chip: chip.getBoundingClientRect().height,
+      bleed: parseFloat(before.width),
+      line: before.borderBottomWidth,
+      opacity: before.opacity,
+      padLeft: parseFloat(getComputedStyle(hd).paddingLeft),
+      content: document.querySelector('#main')!.getBoundingClientRect().top + scrollY,
+      across: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+      window: document.documentElement.clientWidth,
+    }
+  })
+}
+
+for (const width of [1920, 1440, 390]) {
+  test(`${width}px: scrolled, the bar ${width > 700 ? 'goes full width and gets shorter' : 'keeps its compact bar'}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+    await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
+    await expect(page.locator('.hd')).toBeVisible()
+    await page.waitForTimeout(800)
+    await page.evaluate(() => {
+      const pad = document.createElement('div')
+      pad.style.height = '3000px'
+      document.querySelector('#main')?.appendChild(pad)
+    })
+    const top = await measure(page)
+    await page.mouse.move(width / 2, 500)
+    await page.evaluate(() => window.scrollTo(0, 1500))
+    await expect(page.locator('.hd')).toHaveAttribute('data-stuck', 'true')
+    await page.waitForTimeout(500)
+    const low = await measure(page)
+    expect(low.across, 'no sideways scroll').toBe(true)
+    if (width > 700) {
+      expect(low.opacity).toBe('1')
+      expect(low.bleed, 'the frosted layer reaches both edges of the window').toBeGreaterThanOrEqual(low.window)
+      expect(low.line, 'a hairline under it').toBe('1px')
+      expect(low.bar, 'shorter').toBeLessThan(top.bar)
+      expect(low.chip, 'smaller controls').toBeLessThan(top.chip)
+      expect(low.padLeft, 'a wider row, inside the 16 px gutter').toBeGreaterThanOrEqual(16)
+      expect(low.padLeft).toBeLessThan(top.padLeft)
+      expect(low.content, 'the page under it has not moved').toBeCloseTo(top.content, 0)
+    } else {
+      expect(low.bar, 'the compact bar keeps its height').toBeCloseTo(top.bar, 0)
+      expect(low.chip).toBeCloseTo(top.chip, 0)
+    }
+    // Back at the top, the bar is as it was.
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await expect(page.locator('.hd')).toHaveAttribute('data-stuck', 'false')
+    await page.waitForTimeout(500)
+    const back = await measure(page)
+    expect(back.bar).toBeCloseTo(top.bar, 0)
+    expect(back.chip).toBeCloseTo(top.chip, 0)
+  })
+}
+
+test('1440px: the change is not animated when motion is reduced', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
+  await expect(page.locator('.hd')).toBeVisible()
+  const t = await page.evaluate(() => {
+    const hd = document.querySelector('.hd')!
+    return [getComputedStyle(hd).transitionDuration, getComputedStyle(hd, '::before').transitionDuration, getComputedStyle(hd.querySelector('.mk-chip')!).transitionDuration]
+  })
+  expect(t.every((d) => d.split(',').every((x) => parseFloat(x) === 0))).toBe(true)
+})
