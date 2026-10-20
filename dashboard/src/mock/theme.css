@@ -45,7 +45,6 @@
   --mk-amber: #f0c64a;
   --mk-green: #3ddc84;
   --mk-blue: #7f9cf5;
-  --mk-bandfill: rgba(255,255,255,.055);
   --mk-scrim2: rgba(0,0,0,.55);
   --mk-heroL: rgba(198,255,58,.055);
   --mk-heroR: rgba(255,107,107,.08);
@@ -119,7 +118,6 @@
     --mk-amber: #8a5a00;
     --mk-green: #1f8a4c;
     --mk-blue: #3156c4;
-    --mk-bandfill: rgba(0,0,0,.05);
     --mk-scrim2: rgba(20,24,30,.4);
     --mk-heroL: rgba(67,120,0,.06);
     --mk-heroR: rgba(198,40,40,.06);
@@ -188,7 +186,6 @@
   --mk-amber: #8a5a00;
   --mk-green: #1f8a4c;
   --mk-blue: #3156c4;
-  --mk-bandfill: rgba(0,0,0,.05);
   --mk-scrim2: rgba(20,24,30,.4);
   --mk-heroL: rgba(67,120,0,.06);
   --mk-heroR: rgba(198,40,40,.06);
