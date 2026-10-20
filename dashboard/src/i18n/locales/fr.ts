@@ -914,6 +914,7 @@ export default {
   'sites.menu.removeGroupBody': 'Ses sites restent : ils retournent dans la liste. Seul le titre disparaît.',
   'sites.menu.remove': 'Supprimer',
   'sites.menu.dragged': (name: string, where: string) => `${name} déplacé vers ${where}`,
+  'sites.menu.movedTo': (name: string, n: number) => `${name} déplacé à la position ${n}`,
 
   // full
   'full.day': 'Jour',
@@ -2172,6 +2173,7 @@ export default {
   'v2.team': 'Équipe',
   'v2.teams': 'Équipes',
   'v2.manageTeams': 'Gérer les équipes',
+  'v2.teamMoved': (name: string, n: number) => `${name} déplacé à la position ${n}`,
   'v2.api': 'Clés d’API et MCP',
   'v2.profile': 'Profil',
   'v2.shortcuts': 'Raccourcis clavier',

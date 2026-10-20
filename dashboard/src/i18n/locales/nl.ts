@@ -913,6 +913,7 @@ export default {
   'sites.menu.removeGroupBody': 'De sites blijven: ze gaan terug naar de lijst. Alleen het kopje verdwijnt.',
   'sites.menu.remove': 'Verwijderen',
   'sites.menu.dragged': (name: string, where: string) => `${name} verplaatst naar ${where}`,
+  'sites.menu.movedTo': (name: string, n: number) => `${name} verplaatst naar positie ${n}`,
 
   // full
   'full.day': 'Dag',
@@ -2171,6 +2172,7 @@ export default {
   'v2.team': 'Team',
   'v2.teams': 'Teams',
   'v2.manageTeams': 'Teams beheren',
+  'v2.teamMoved': (name: string, n: number) => `${name} verplaatst naar positie ${n}`,
   'v2.api': 'API-sleutels en MCP',
   'v2.profile': 'Profiel',
   'v2.shortcuts': 'Sneltoetsen',

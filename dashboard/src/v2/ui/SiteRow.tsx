@@ -66,7 +66,10 @@ export function SiteRow({ site, place, on, arrange: a, today, onPick, move, clas
   const note = clash && site.domain !== name ? site.domain : undefined
   const moveStep = (dir: -1 | 1) => {
     if (!a) return
-    a.save(step(a.sites, a.layout, site.id, dir), dir < 0 ? copy.up : copy.down)
+    const next = step(a.sites, a.layout, site.id, dir)
+    if (next === a.layout) return
+    const at = sectionsOf(a.sites, next).find((x) => x.sites.some((y) => y.id === site.id))?.sites.findIndex((y) => y.id === site.id) ?? -1
+    a.save(next, at < 0 ? undefined : copy.movedTo(name, at + 1))
     refocus(site.id)
   }
   return (
@@ -102,7 +105,7 @@ export function SiteRow({ site, place, on, arrange: a, today, onPick, move, clas
         <Tail s={site} today={today} />
       </button>
       {move && (
-        <button type="button" data-stop className="btn sw-stop" aria-label={move.stopLabel} onClick={move.stop}>
+        <button type="button" data-stop data-nodrag className="btn sw-stop" aria-label={move.stopLabel} onClick={move.stop}>
           {move.stopWord}
         </button>
       )}

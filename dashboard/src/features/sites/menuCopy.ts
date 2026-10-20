@@ -64,5 +64,6 @@ export const copy = defineCopy('sites.menu', {
   removeGroupTitle: (g: string) => `Remove the group “${g}”?`,
   removeGroupBody: 'Its sites stay: they go back to the list. Only the heading goes.',
   remove: 'Remove',
+  movedTo: (name: string, n: number) => `Moved ${name} to position ${n}`,
   dragged: (name: string, where: string) => `${name} moved to ${where}`,
 })

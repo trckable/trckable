@@ -62,6 +62,7 @@ export function useMenuNav(open: boolean, root: RefObject<HTMLElement | null>, b
         close()
         return
       }
+      if (e.altKey) return // Alt + ↑/↓ moves a row where the menu can be arranged
       const list = items()
       const to = nextItem(e.key, list.indexOf(document.activeElement as HTMLElement), list.length)
       if (to === null || !root.current?.contains(document.activeElement)) return
