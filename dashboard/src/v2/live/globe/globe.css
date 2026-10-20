@@ -157,3 +157,21 @@ html[data-motion='off'] .mk .gnv { animation: none !important; }
 }
 .mk .gwrap.fill .gstage { touch-action: none; }
 .mk .gwrap.fill .gzoom { right: max(var(--mk-s4), env(safe-area-inset-right)); bottom: max(var(--mk-s4), env(safe-area-inset-bottom)); }
+
+/* The list's head: the count online now, big, and the half hour as Live's line, 56 px tall. */
+.mk .ghead { padding: var(--mk-s4) var(--mk-s5) 0; }
+.mk .gnow { display: flex; align-items: baseline; gap: var(--mk-s2); }
+.mk .gbig { font-size: 34px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em; }
+.mk .gspark { position: relative; height: 56px; margin-top: var(--mk-s2); }
+.mk .gspark .mline-in { position: absolute; inset: 0; min-height: 0; }
+@media (--xs) {
+  .mk .ghead { padding: var(--mk-s4) var(--mk-s4) 0; }
+}
+.mk .gwrap.fill .ghead { display: none; }
+.mk .gfloat { display: none; }
+.mk .gwrap.fill .gfloat {
+  display: block; position: absolute; z-index: 4; width: min(240px, calc(100vw - 96px)); padding-bottom: var(--mk-s3); border-radius: 16px; background: var(--mk-card); box-shadow: 0 8px 30px var(--mk-band);
+  left: max(var(--mk-s4), env(safe-area-inset-left)); top: max(var(--mk-s3), env(safe-area-inset-top));
+}
+.mk .gwrap.fill .gfloat .ghead { display: block; padding: var(--mk-s3) var(--mk-s4) 0; }
+.mk .gwrap.fill .gfloat .gbig { font-size: 28px; }

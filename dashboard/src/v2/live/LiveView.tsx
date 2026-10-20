@@ -112,7 +112,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
       <div className="lswap" key={String(globe)}>
       {globe ? (
         <Suspense fallback={<GlobeHold bar={bar} />}>
-          <GlobePanel rows={rows} clock={now} online={n} bar={bar} pulse={pulseClass} site={site} onVisitor={onVisitor} />
+          <GlobePanel rows={rows} clock={now} online={n} bar={bar} pulse={pulseClass} minutes={seriesAt(data, stream.visits, now)} beat={beat} site={site} onVisitor={onVisitor} />
         </Suspense>
       ) : (
       <div className="liveview" role="region" aria-label={copy.live}>

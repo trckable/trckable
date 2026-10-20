@@ -6,6 +6,7 @@ import { useFullscreen } from '../../../lib/fullscreen'
 import type { Row } from '../../../features/live/model'
 import { copy } from '../copy'
 import { GlobeFeed } from './GlobeFeed'
+import { GlobeHead } from './GlobeHead'
 import { GlobeNew } from './GlobeNew'
 import { GlobePopover, type Open } from './GlobePopover'
 import { GlobeStage, type Pick } from './GlobeStage'
@@ -15,7 +16,7 @@ import './globe.css'
 const FULL = 'M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4'
 const LEAVE = 'M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4'
 
-export default function GlobePanel({ rows, clock, online, bar, pulse, site, onVisitor }: { rows: Row[]; clock: number; online: number; bar: ReactNode; pulse: string; site: string; onVisitor?: (v: string) => void }) {
+export default function GlobePanel({ rows, clock, online, bar, pulse, minutes, beat, site, onVisitor }: { rows: Row[]; clock: number; online: number; bar: ReactNode; pulse: string; minutes: number[]; beat: number; site: string; onVisitor?: (v: string) => void }) {
   const root = useRef<HTMLDivElement>(null)
   const full = useFullscreen(root)
   const [open, setOpen] = useState<Open | null>(null)
@@ -55,9 +56,17 @@ export default function GlobePanel({ rows, clock, online, bar, pulse, site, onVi
             <path d="M3 3l10 10M13 3L3 13" />
           </svg>
         </button>
-        {full.on && <GlobeNew rows={rows} clock={clock} onPick={(r) => at(r.key)} />}
+        {full.on && (
+          <>
+            <div className="gfloat">
+              <GlobeHead online={online} minutes={minutes} beat={beat} />
+            </div>
+            <GlobeNew rows={rows} clock={clock} onPick={(r) => at(r.key)} />
+          </>
+        )}
       </section>
       <section className="mk-card lon gside">
+        <GlobeHead online={online} minutes={minutes} beat={beat} />
         <div className="lhead">
           <span className="lt">{copy.recent}</span>
         </div>

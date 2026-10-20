@@ -1,0 +1,1 @@
+Live's globe view shows the people online now, big, with the last half hour as a small line above the recent activity (and floating over the full-screen globe), and crowded pins open out at the default zoom.

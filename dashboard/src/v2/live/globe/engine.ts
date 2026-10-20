@@ -526,7 +526,8 @@ export class Globe {
       const cd = Math.cos(dl)
       const z = sp * Math.sin(p) + cp * Math.cos(p) * cd
       // Zoomed in, a crowd at one spot also spreads on the screen, each by their own place around it.
-      const open = (Math.min(80, 7 * Math.sqrt(s.pin.crowd)) * (this.zoom - 1)) / 5
+      // At 1x a crowd already opens out enough that each flag can be seen and tapped (14 px a head, to 70); zooming in opens it further.
+      const open = Math.min(70, 14 * Math.sqrt(Math.max(0, s.pin.crowd - 1))) * (1 + (this.zoom - 1) / 2.5)
       s.x = cx + R * Math.cos(p) * Math.sin(dl) + (s.pin.crowd > 1 ? s.pin.ux * open : 0)
       s.y = cy - R * (cp * Math.sin(p) - sp * Math.cos(p) * cd) + (s.pin.crowd > 1 ? s.pin.uy * open : 0)
       let a = z > 0.05 ? Math.min(1, z * 4) : 0
