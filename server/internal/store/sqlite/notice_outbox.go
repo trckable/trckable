@@ -27,6 +27,7 @@ const (
 type OutboxRow struct {
 	ID        string
 	Key       string
+	Account   string
 	Kind      string
 	Form      string
 	Target    string
@@ -46,8 +47,8 @@ const noticeClaim = 2 * time.Minute
 func (s *Store) QueueNotice(ctx context.Context, r OutboxRow, now time.Time) (OutboxRow, bool, error) {
 	r.ID = auth.Token("ntx_", 10)
 	r.CreatedAt = now.Unix()
-	res, err := s.DB.ExecContext(ctx, `INSERT OR IGNORE INTO notice_outbox (id, key, kind, form, target, body, state, next_at, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, r.ID, r.Key, r.Kind, r.Form, r.Target, r.Body, NoticePending, now.Add(noticeClaim).Unix(), now.Unix())
+	res, err := s.DB.ExecContext(ctx, `INSERT OR IGNORE INTO notice_outbox (id, key, account, kind, form, target, body, state, next_at, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, r.ID, r.Key, r.Account, r.Kind, r.Form, r.Target, r.Body, NoticePending, now.Add(noticeClaim).Unix(), now.Unix())
 	if err != nil {
 		return r, false, err
 	}
@@ -57,7 +58,7 @@ func (s *Store) QueueNotice(ctx context.Context, r OutboxRow, now time.Time) (Ou
 
 // DueNotices lists up to limit pending messages whose time has come, oldest first.
 func (s *Store) DueNotices(ctx context.Context, now time.Time, limit int) ([]OutboxRow, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT id, key, kind, form, target, body, tries, created_at, last_error FROM notice_outbox
+	rows, err := s.DB.QueryContext(ctx, `SELECT id, key, account, kind, form, target, body, tries, created_at, last_error FROM notice_outbox
 		WHERE state = ? AND next_at <= ? ORDER BY next_at, rowid LIMIT ?`, NoticePending, now.Unix(), limit)
 	if err != nil {
 		return nil, err
@@ -66,7 +67,7 @@ func (s *Store) DueNotices(ctx context.Context, now time.Time, limit int) ([]Out
 	var out []OutboxRow
 	for rows.Next() {
 		var r OutboxRow
-		if err := rows.Scan(&r.ID, &r.Key, &r.Kind, &r.Form, &r.Target, &r.Body, &r.Tries, &r.CreatedAt, &r.LastError); err != nil {
+		if err := rows.Scan(&r.ID, &r.Key, &r.Account, &r.Kind, &r.Form, &r.Target, &r.Body, &r.Tries, &r.CreatedAt, &r.LastError); err != nil {
 			return nil, err
 		}
 		out = append(out, r)

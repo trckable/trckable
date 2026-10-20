@@ -61,7 +61,6 @@ type Server struct {
 	judge   atomic.Pointer[mentionJudge] // the optional yes/no check on a mention (SetMentionJudge)
 	answers *answerAsker                 // nil when Answers is off (no key, or TRCKABLE_ANSWERS_EVERY=0)
 	ctl     *sqlite.Store
-	held    heldAlerts  // alerts sent whose mark failed (alerts.go)
 	notices *notice.Hub // every notice and alert that must reach someone (notices.go)
 	log     *wal.Log
 	ingest  *ingest.Handler

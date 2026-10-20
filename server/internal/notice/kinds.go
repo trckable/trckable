@@ -57,7 +57,7 @@ const (
 	RetentionChanged = "retention.changed"
 	RetentionShorter = "retention.shortened"
 	securityNote     = "You get this because it is about your sign-in and your data. It cannot be switched off."
-	teamNote         = "You get this because you are on this team."
+	teamNote         = "You get this because it concerns your team."
 	ownersNote       = "You get this because you are an owner."
 	siteSettingsPath = "/settings"
 	securitySettings = "/settings"

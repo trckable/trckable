@@ -192,7 +192,7 @@ func TestEveryDueAlertFiresEvenWhenAnEarlierOneFails(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer lg.Close()
-	s := &Server{cfg: config.Config{DataDir: dir}, ctl: ctl, log: lg, ingest: &ingest.Handler{}, started: time.Now()}
+	s := &Server{cfg: config.Config{DataDir: dir}, ctl: ctl, log: lg, ingest: &ingest.Handler{}, started: time.Now(), notices: &notice.Hub{Store: ctl}}
 	box := fakeMailServer(t)
 
 	var wantSubjects []string
@@ -215,20 +215,35 @@ func TestEveryDueAlertFiresEvenWhenAnEarlierOneFails(t *testing.T) {
 	if err := s.checkAlerts(ctx); err != nil {
 		t.Fatal(err)
 	}
+	s.notices.Wait()
 	got := box.all()
 	if len(got) != 3 {
 		t.Fatalf("%d messages, want the 3 alerts after the failing one", len(got))
 	}
-	// The failing one was not marked as told: it is tried again at the next check.
+	// The failing one is the outbox's now: marked as told, and kept to be tried again.
 	list, err := ctl.LiveAlerts(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, a := range list {
-		told := a.LastFired != 0
-		if told != (a.Target != "https://localhost/never") {
-			t.Fatalf("%s: last fired %d", a.Target, a.LastFired)
+		if a.LastFired == 0 {
+			t.Fatalf("%s: not marked after it was kept", a.Target)
 		}
+	}
+	due, err := ctl.DueNotices(ctx, time.Now().Add(time.Hour), 10)
+	if err != nil || len(due) != 1 || due[0].Target != "https://localhost/never" || due[0].Account != sqlite.DefaultAccount || strings.Contains(due[0].LastError, "localhost") {
+		t.Fatalf("kept for another try: %+v %v", due, err)
+	}
+	// A mark that did not stick makes the next check find the alert due again; it is not sent twice.
+	if _, err := ctl.DB.ExecContext(ctx, `UPDATE alerts SET last_fired = 0`); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.checkAlerts(ctx); err != nil {
+		t.Fatal(err)
+	}
+	s.notices.Wait()
+	if n := len(box.all()); n != 3 {
+		t.Fatalf("sent again after an unsaved mark: %d messages", n)
 	}
 	for i, raw := range got {
 		if _, subject := subjectOf(t, raw); !strings.HasPrefix(subject, strings.TrimSuffix(wantSubjects[i], " ")) {

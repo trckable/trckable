@@ -43,18 +43,3 @@ func TestStoppedDueSendsOnceThenAgainThenNever(t *testing.T) {
 		t.Fatal("did not fire again after visits returned and stopped")
 	}
 }
-
-func TestHeldAlertWaitsOutTheQuietWindow(t *testing.T) {
-	var h heldAlerts
-	now := time.Now()
-	if h.holding("a", now) {
-		t.Fatal("held before anything failed")
-	}
-	h.hold("a", now)
-	if !h.holding("a", now.Add(time.Hour)) {
-		t.Fatal("not held inside the window")
-	}
-	if h.holding("a", now.Add(alertQuiet)) {
-		t.Fatal("still held after the window")
-	}
-}

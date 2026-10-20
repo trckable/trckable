@@ -319,10 +319,10 @@ func TestAnAlertThatFailsIsRetriedUntilItGoesThrough(t *testing.T) {
 	ev := alerts.Event{Kind: "down", Site: "tkb_1", Domain: "example.com", Title: "Your site isn't answering our checks", Message: "Down since 09:00.", At: r.clock}
 	r.postFail = errors.New("the webhook answered 500")
 	r.mailFail = errors.New("mail server down")
-	if err := r.hub.Alert(ctx, "probe:tkb_1:down:1", "down", "https://hooks.example.com/x", ev); err != nil {
+	if err := r.hub.Alert(ctx, sqlite.DefaultAccount, "probe:tkb_1:down:1", "down", "https://hooks.example.com/x", ev); err != nil {
 		t.Fatal(err)
 	}
-	if err := r.hub.Alert(ctx, "probe:tkb_1:down:1#mail", "down", "mailto:me@example.com", ev); err != nil {
+	if err := r.hub.Alert(ctx, sqlite.DefaultAccount, "probe:tkb_1:down:1#mail", "down", "mailto:me@example.com", ev); err != nil {
 		t.Fatal(err)
 	}
 	r.hub.Wait()
@@ -345,7 +345,7 @@ func TestAnAlertThatFailsIsRetriedUntilItGoesThrough(t *testing.T) {
 func TestAnEmailAlertWithoutAMailServerIsRefusedNotQueued(t *testing.T) {
 	r := newRig(t)
 	r.hub.Mail = nil // and alerts.Mail is nil in a test
-	if err := r.hub.Alert(context.Background(), "k", "down", "mailto:me@example.com", alerts.Event{}); err == nil {
+	if err := r.hub.Alert(context.Background(), "", "k", "down", "mailto:me@example.com", alerts.Event{}); err == nil {
 		t.Fatal("an alert that can never be delivered was accepted")
 	}
 }
@@ -368,5 +368,44 @@ func TestTheOneWhoMadeTheChangeIsLeftOut(t *testing.T) {
 	r.hub.Wait()
 	if len(r.bells) != 1 || len(r.bells[0].Users) != 1 || r.bells[0].Users[0] != r.owner2.ID {
 		t.Fatalf("the bell: %+v", r.bells)
+	}
+}
+
+// A mail server's words can carry an address or a secret path: only the class
+// of a failure is kept in the outbox.
+func TestOnlyTheClassOfAFailureIsKept(t *testing.T) {
+	r := newRig(t)
+	ctx := context.Background()
+	r.mailFail = errors.New("the webhook answered 502 for https://hooks.example.com/secret-path to ana@example.com")
+	if err := r.hub.Notify(ctx, New(PasswordChanged, sqlite.DefaultAccount, []Audience{Person(r.owner.ID)}, sample)); err != nil {
+		t.Fatal(err)
+	}
+	r.hub.Wait()
+	var kept []string
+	rows, err := r.st.DB.QueryContext(ctx, `SELECT last_error FROM notice_outbox WHERE last_error <> ''`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var e string
+		_ = rows.Scan(&e)
+		kept = append(kept, e)
+	}
+	if len(kept) != 1 || kept[0] != "refused (502)" {
+		t.Fatalf("kept: %q", kept)
+	}
+}
+
+func TestEveryRowKnowsWhoseItIs(t *testing.T) {
+	r := newRig(t)
+	ctx := context.Background()
+	if err := r.hub.Notify(ctx, New(MemberRemoved, sqlite.DefaultAccount, []Audience{Address("gone@example.com"), Owners()}, sample)); err != nil {
+		t.Fatal(err)
+	}
+	r.hub.Wait()
+	var n, own int
+	if err := r.st.DB.QueryRowContext(ctx, `SELECT count(*), count(CASE WHEN account = ? THEN 1 END) FROM notice_outbox`, sqlite.DefaultAccount).Scan(&n, &own); err != nil || n != 4 || own != n {
+		t.Fatalf("%d rows, %d with the account: %v", n, own, err)
 	}
 }

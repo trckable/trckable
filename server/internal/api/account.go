@@ -213,7 +213,11 @@ func (a *API) setSiteConfig(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, "keep data for at least 7 days")
 		return
 	}
-	was, _ := a.Ctl.SiteConfig(r.Context(), r.PathValue("site"))
+	was, err := a.Ctl.SiteConfig(r.Context(), r.PathValue("site"))
+	if err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	// A page goal is a name and a path, like a content group.
 	for _, g := range in.PageGoals {
 		if strings.TrimSpace(g.Name) == "" || !strings.HasPrefix(strings.TrimSpace(g.Path), "/") {

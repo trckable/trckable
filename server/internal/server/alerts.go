@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
+	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/alerts"
@@ -42,34 +42,6 @@ func stoppedDue(last, lastFired int64, hours float64, now time.Time) bool {
 	// Told once already: the second time is three days into the silence, and
 	// a fire at or past that mark was the second.
 	return quiet >= second && lastFired-last < second
-}
-
-// heldAlerts remembers the alerts whose "sent" mark could not be saved, until the
-// quiet window is over, so a failing database never turns into a mail every
-// ten minutes.
-type heldAlerts struct {
-	mu sync.Mutex
-	at map[string]time.Time
-}
-
-func (h *heldAlerts) holding(id string, now time.Time) bool {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	t, ok := h.at[id]
-	if ok && now.Sub(t) >= alertQuiet {
-		delete(h.at, id)
-		return false
-	}
-	return ok
-}
-
-func (h *heldAlerts) hold(id string, now time.Time) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	if h.at == nil {
-		h.at = map[string]time.Time{}
-	}
-	h.at[id] = now
 }
 
 // runAlerts checks the four conditions every ten minutes. Nothing runs while
@@ -111,7 +83,7 @@ func (s *Server) checkAlerts(ctx context.Context) error {
 	now := time.Now()
 	health := s.health(ctx)
 	for _, a := range list {
-		if now.Unix()-a.LastFired < int64(alertQuiet.Seconds()) || s.held.holding(a.ID, now) {
+		if now.Unix()-a.LastFired < int64(alertQuiet.Seconds()) {
 			continue
 		}
 		ev, fire := s.evaluate(ctx, a, health, now)
@@ -120,15 +92,23 @@ func (s *Server) checkAlerts(ctx context.Context) error {
 		}
 		ev.Unsubscribe = s.stopLink(a.ID)
 		ev.Settings = s.settingsLink(a.SiteID)
-		if err := alerts.Send(ctx, a.Target, ev); err != nil {
-			slog.Warn("alert not delivered", "kind", a.Kind, "err", err)
+		// The outbox owns the delivery from here: a failed send is retried for a
+		// day without waiting for the next check. The key names this firing (the
+		// alert and when it last fired), so a check that finds the mark was not
+		// saved queues the same message again, which the outbox ignores.
+		account, err := s.ctl.SiteAccount(ctx, a.SiteID)
+		if err != nil {
+			slog.Warn("alert not kept", "kind", a.Kind, "site", a.SiteID)
+			continue
+		}
+		key := "alert:" + a.ID + ":" + strconv.FormatInt(a.LastFired, 10)
+		if err := s.notices.Alert(ctx, account, key, a.Kind, a.Target, ev); err != nil {
+			slog.Warn("alert not kept", "kind", a.Kind, "site", a.SiteID)
 			continue
 		}
 		if err := s.ctl.MarkFired(ctx, a.ID, now.Unix()); err != nil {
-			slog.Warn("alert sent but not marked", "kind", a.Kind, "site", a.SiteID, "err", err)
-			s.held.hold(a.ID, now)
+			slog.Warn("alert kept but not marked", "kind", a.Kind, "site", a.SiteID)
 		}
-		slog.Info("alert sent", "kind", a.Kind, "site", a.SiteID)
 	}
 	return nil
 }

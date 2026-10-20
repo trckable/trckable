@@ -300,9 +300,17 @@ func (s *Server) stepSiteIncident(ctx context.Context, site sqlite.SiteRow, afte
 // tried again, so the change is not lost: the site will not go down twice.
 const probeForm = "probe"
 
+// probeSite is the part of a site a probe row keeps: what the words need, and
+// nothing that opens the site (not its proxy key).
+type probeSite struct {
+	ID       string `json:"id"`
+	Domain   string `json:"domain"`
+	Timezone string `json:"timezone"`
+}
+
 // probeNotice is what a probe row keeps.
 type probeNotice struct {
-	Site    sqlite.SiteRow   `json:"site"`
+	Site    probeSite        `json:"site"`
 	Kind    string           `json:"kind"`
 	Title   string           `json:"title"`
 	Message string           `json:"message"`
@@ -314,12 +322,13 @@ type probeNotice struct {
 // webhook as a site that went quiet, that it went down or is back. It does
 // not mark them as fired: their own cadence is theirs.
 func (s *Server) tellProbe(ctx context.Context, site sqlite.SiteRow, kind, title, message string, before, p sqlite.SiteProbe) {
-	body, err := json.Marshal(probeNotice{Site: site, Kind: kind, Title: title, Message: message, Before: before, After: p})
+	body, err := json.Marshal(probeNotice{Site: probeSite{ID: site.ID, Domain: site.Domain, Timezone: site.Timezone}, Kind: kind, Title: title, Message: message, Before: before, After: p})
 	if err == nil {
-		err = s.notices.Queue(ctx, sqlite.OutboxRow{Key: fmt.Sprintf("probe:%s:%s:%d", site.ID, kind, p.At), Kind: kind, Form: probeForm, Body: string(body)})
+		account, _ := s.ctl.SiteAccount(ctx, site.ID) // without one, the row is just not tied to an account
+		err = s.notices.Queue(ctx, sqlite.OutboxRow{Key: fmt.Sprintf("probe:%s:%s:%d", site.ID, kind, p.At), Account: account, Kind: kind, Form: probeForm, Body: string(body)})
 	}
 	if err != nil {
-		slog.Warn("alert not kept", "kind", kind, "site", site.ID, "err", err)
+		slog.Warn("alert not kept", "kind", kind, "site", site.ID)
 	}
 }
 
@@ -341,10 +350,10 @@ func (s *Server) deliverProbe(ctx context.Context, r sqlite.OutboxRow) error {
 		}
 		ev := alerts.Event{Kind: n.Kind, Site: n.Site.ID, Domain: n.Site.Domain, At: time.Unix(n.After.At, 0), Title: n.Title, Message: n.Message,
 			Data: map[string]any{"status": n.After.Status, "down_since": n.After.DownSince}}
-		s.probeWords(&ev, n.Site, n.Before, n.After)
+		s.probeWords(&ev, sqlite.SiteRow{ID: n.Site.ID, Domain: n.Site.Domain, Timezone: n.Site.Timezone}, n.Before, n.After)
 		ev.Unsubscribe = s.stopLink(a.ID)
 		ev.Settings = s.settingsLink(n.Site.ID)
-		if err := s.notices.Alert(ctx, r.Key+"/"+a.ID, n.Kind, a.Target, ev); err != nil {
+		if err := s.notices.Alert(ctx, r.Account, r.Key+"/"+a.ID, n.Kind, a.Target, ev); err != nil {
 			if !errors.Is(err, notice.ErrNoMail) {
 				return err // not kept: this row is tried again, and the ones already kept are not written twice
 			}

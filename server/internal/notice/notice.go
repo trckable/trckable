@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -39,6 +40,26 @@ const (
 	// formWebhook is an alert's payload for a webhook.
 	formWebhook = "webhook"
 )
+
+// answered finds the status a mail service or webhook answered with.
+var answered = regexp.MustCompile(`answered (\d{3})`)
+
+// errClass is the short class of a failure, the only thing kept or logged of it.
+func errClass(err error) string {
+	code := ""
+	if m := answered.FindStringSubmatch(err.Error()); m != nil {
+		code = " (" + m[1] + ")"
+	}
+	switch {
+	case errors.Is(err, context.DeadlineExceeded):
+		return "timed out"
+	case errors.Is(err, context.Canceled):
+		return "interrupted"
+	case code != "":
+		return "refused" + code
+	}
+	return "send failed"
+}
 
 // ErrNoMail is the refusal of an email alert on a server that cannot send
 // email: it can never be delivered, so it is not kept.
@@ -66,6 +87,8 @@ type Bell interface {
 
 // BellEntry is a notice as the bell keeps it for each person in Users.
 type BellEntry struct {
+	// Key is the notice's: the same key is told to a person once.
+	Key     string
 	Kind    string
 	Account string
 	Site    string
@@ -173,7 +196,7 @@ func (h *Hub) Notify(ctx context.Context, n Notice) error {
 	if err != nil {
 		return err
 	}
-	row, fresh, err := h.Store.QueueNotice(ctx, sqlite.OutboxRow{Key: n.Key, Kind: n.Kind, Form: formNotice, Body: string(body)}, h.now())
+	row, fresh, err := h.Store.QueueNotice(ctx, sqlite.OutboxRow{Key: n.Key, Account: n.Account, Kind: n.Kind, Form: formNotice, Body: string(body)}, h.now())
 	if err != nil || !fresh {
 		return err
 	}
@@ -212,8 +235,8 @@ func (h *Hub) Queue(ctx context.Context, r sqlite.OutboxRow) error {
 // same event is never sent twice. A target that can never be reached (email
 // not set up) is ErrNoMail; any other failure of the delivery is retried, and
 // any other error means the alert could not be kept.
-func (h *Hub) Alert(ctx context.Context, key, kind, target string, e alerts.Event) error {
-	row := sqlite.OutboxRow{Key: key, Kind: kind}
+func (h *Hub) Alert(ctx context.Context, account, key, kind, target string, e alerts.Event) error {
+	row := sqlite.OutboxRow{Key: key, Account: account, Kind: kind}
 	if addr, ok := strings.CutPrefix(strings.TrimSpace(target), "mailto:"); ok {
 		if !h.mailOn() {
 			return ErrNoMail
@@ -261,7 +284,7 @@ func (h *Hub) Drain(ctx context.Context) {
 	now := h.now()
 	rows, err := h.Store.DueNotices(ctx, now, 100)
 	if err != nil {
-		slog.Warn("notices: could not read the outbox", "err", err)
+		slog.Warn("notices: could not read the outbox", "why", errClass(err))
 		return
 	}
 	for _, r := range rows {
@@ -273,7 +296,7 @@ func (h *Hub) Drain(ctx context.Context) {
 	if now.Sub(h.pruned) > time.Hour {
 		h.pruned = now
 		if err := h.Store.PruneNotices(ctx, now); err != nil {
-			slog.Warn("notices: could not clear the old ones", "err", err)
+			slog.Warn("notices: could not clear the old ones", "why", errClass(err))
 		}
 	}
 }
@@ -286,22 +309,26 @@ func (h *Hub) settle(ctx context.Context, r sqlite.OutboxRow) {
 		if r.Form == formReport || r.Form == formWebhook {
 			slog.Info("alert sent", "kind", r.Kind, "tries", r.Tries+1)
 		}
-		if err := h.Store.NoticeDelivered(ctx, r.ID); err != nil {
-			slog.Warn("notices: delivered but not marked", "kind", r.Kind, "err", err)
+		if err := h.Store.NoticeDelivered(context.WithoutCancel(ctx), r.ID); err != nil {
+			slog.Warn("notices: delivered but not marked", "kind", r.Kind)
 		}
 		return
 	}
-	now, tries := h.now(), r.Tries+1
-	slog.Warn("notice not delivered yet", "kind", r.Kind, "form", r.Form, "tries", tries, "err", err)
+	// Only the class of the failure is kept or logged: the words of a mail
+	// server or a webhook can echo an address or a secret path.
+	now, tries, why := h.now(), r.Tries+1, errClass(err)
+	slog.Warn("notice not delivered yet", "kind", r.Kind, "form", r.Form, "tries", tries, "why", why)
+	// The outcome is kept even when the try was cut short by a shutdown.
+	ctx = context.WithoutCancel(ctx)
 	var mark error
 	if now.Sub(time.Unix(r.CreatedAt, 0)) >= sqlite.NoticeGiveUp {
-		slog.Error("notice given up on after a day", "kind", r.Kind, "form", r.Form, "err", err)
-		mark = h.Store.NoticeGaveUp(ctx, r.ID, tries, err.Error())
+		slog.Error("notice given up on after a day", "kind", r.Kind, "form", r.Form, "why", why)
+		mark = h.Store.NoticeGaveUp(ctx, r.ID, tries, why)
 	} else {
-		mark = h.Store.NoticeRetry(ctx, r.ID, tries, now.Add(backoff[min(tries, len(backoff))-1]), err.Error())
+		mark = h.Store.NoticeRetry(ctx, r.ID, tries, now.Add(backoff[min(tries, len(backoff))-1]), why)
 	}
 	if mark != nil {
-		slog.Warn("notices: could not keep the outcome of a try", "kind", r.Kind, "err", mark)
+		slog.Warn("notices: could not keep the outcome of a try", "kind", r.Kind)
 	}
 }
 
@@ -394,7 +421,7 @@ func (h *Hub) fanOut(ctx context.Context, r sqlite.OutboxRow) error {
 			return err
 		}
 		for _, p := range rs {
-			row, isNew, err := h.Store.QueueNotice(ctx, sqlite.OutboxRow{Key: n.Key + "/" + strings.ToLower(p.Email), Kind: n.Kind, Form: formMail, Target: p.Email, Body: string(body)}, h.now())
+			row, isNew, err := h.Store.QueueNotice(ctx, sqlite.OutboxRow{Key: n.Key + "/" + strings.ToLower(p.Email), Account: n.Account, Kind: n.Kind, Form: formMail, Target: p.Email, Body: string(body)}, h.now())
 			if err != nil {
 				return err
 			}
@@ -411,7 +438,7 @@ func (h *Hub) fanOut(ctx context.Context, r sqlite.OutboxRow) error {
 			}
 		}
 		if len(users) > 0 {
-			if err := h.Bell.Tell(ctx, BellEntry{Kind: n.Kind, Account: n.Account, Site: n.Site, Users: users, Vars: n.Vars, At: time.Unix(n.At, 0)}); err != nil {
+			if err := h.Bell.Tell(ctx, BellEntry{Key: n.Key, Kind: n.Kind, Account: n.Account, Site: n.Site, Users: users, Vars: n.Vars, At: time.Unix(n.At, 0)}); err != nil {
 				return err
 			}
 		}
