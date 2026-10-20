@@ -30,7 +30,7 @@ export function agoOf(unix: number, now = Date.now() / 1000): string {
 }
 
 /** The line under a title: who wrote it, how it did, and when. */
-export function factsOf(m: Mention, now?: number): string[] {
+export function factsOf(m: Pick<Mention, 'kind' | 'front' | 'author' | 'points' | 'source' | 'posted_at'>, now?: number): string[] {
   const out: string[] = []
   if (m.kind === 'comment') out.push(copy.comment)
   if (m.front) out.push(copy.front)

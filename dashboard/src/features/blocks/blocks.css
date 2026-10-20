@@ -1,0 +1,209 @@
+/* The blocks an answer draws: kit tokens, no borders, one soft fill. */
+.blk {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--raised-well);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.blk figcaption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.blk figcaption span,
+.blk-sub,
+.blk-axis {
+  color: var(--text-3);
+  font-size: 12px;
+  margin: 0;
+}
+.blk-num {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+}
+.blk-num strong {
+  font-size: 32px;
+  line-height: 1.1;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.blk-delta,
+.blk-rows em {
+  font-size: 12px;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+  margin: 0;
+}
+[data-tone='up'].blk-delta,
+.blk-delta[data-tone='up'],
+.blk-rows em[data-tone='up'] {
+  color: var(--up);
+}
+.blk-delta[data-tone='down'],
+.blk-rows em[data-tone='down'] {
+  color: var(--down);
+}
+.blk-link {
+  align-self: flex-start;
+  color: var(--text-2);
+  font-size: 12px;
+  text-decoration: underline;
+}
+.blk-chart.mk {
+  min-height: 0;
+  height: 96px;
+  display: flex;
+  padding: 0;
+  margin: 0;
+  max-width: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  color-scheme: inherit;
+}
+.blk-chart .mline-in {
+  min-height: 0;
+}
+.blk-axis {
+  display: flex;
+  justify-content: space-between;
+}
+.blk-rows,
+.blk-men,
+.blk-inc,
+.blk-cmp {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.blk-rows li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  font-size: 13px;
+  min-width: 0;
+}
+.blk-rows li i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 6px;
+  background: var(--accent-soft);
+}
+.blk-rows li span {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.blk-rows li b,
+.blk-rows li em {
+  position: relative;
+  font-variant-numeric: tabular-nums;
+}
+.blk-rows li em {
+  min-width: 52px;
+  text-align: right;
+}
+.blk-men li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+}
+.blk-men li > span {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.blk-men a {
+  color: inherit;
+  text-decoration: none;
+}
+.blk-men a:hover {
+  text-decoration: underline;
+}
+.blk-men small,
+.blk-inc small {
+  color: var(--text-3);
+  font-size: 12px;
+}
+.blk-men li > b {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.blk-inc li {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  column-gap: 10px;
+  align-items: baseline;
+  font-size: 13px;
+}
+.blk-inc li i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warn);
+  align-self: center;
+}
+.blk-inc li[data-kind='down'] i {
+  background: var(--down);
+}
+.blk-inc li em {
+  margin-left: 8px;
+  font-style: normal;
+  color: var(--text-3);
+  font-size: 12px;
+}
+.blk-inc time {
+  color: var(--text-3);
+  font-size: 12px;
+}
+.blk-inc small {
+  grid-column: 2 / -1;
+}
+.blk-cmp li {
+  display: grid;
+  grid-template-columns: minmax(70px, auto) 1fr auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.blk-cmp u {
+  display: block;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--band-fill);
+  text-decoration: none;
+}
+.blk-cmp u i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--text-3);
+}
+.blk-cmp li[data-now='true'] u i {
+  background: var(--accent);
+}
+.blk-cmp b {
+  font-variant-numeric: tabular-nums;
+}
