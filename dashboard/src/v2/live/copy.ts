@@ -44,6 +44,8 @@ export const copy = defineCopy('v2.live', {
   fullscreen: 'Full screen',
   exitFullscreen: 'Leave full screen',
   close: 'Close',
+  zoomIn: 'Zoom in',
+  zoomOut: 'Zoom out',
   openExplore: 'Open in Explore',
   leftNow: 'Left just now',
   from: 'From',

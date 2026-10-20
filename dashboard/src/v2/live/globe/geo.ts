@@ -20,6 +20,10 @@ export interface Pin {
   last: number
   /** Changes whenever they move on or act: the pulse keys on it. */
   sig: string
+  /** Their place in a unit disc around the spot, and how many share it: zoomed in, the pins spread by it on the screen. */
+  ux: number
+  uy: number
+  crowd: number
 }
 
 function hash(s: string): number {
@@ -50,6 +54,13 @@ export function spreadOf(id: string, crowd: number): [number, number] {
   return [Math.sin(i * GOLDEN) * r, Math.cos(i * GOLDEN) * r]
 }
 
+/** The unit-disc place of an id (the same spiral, before it is scaled to a distance). */
+export function unitOf(id: string): [number, number] {
+  const i = Math.floor(hash(id) * 997)
+  const k = Math.sqrt(((i % 61) + 1) / 61)
+  return [Math.sin(i * GOLDEN) * k, Math.cos(i * GOLDEN) * k]
+}
+
 const what = (r: Row): string => (r.kind === 'goal' ? r.label || r.goal || '' : (r.path ?? '/'))
 
 /** The spot a visit belongs to: its country and city. */
@@ -64,8 +75,10 @@ export function pinsOf(rows: readonly Row[]): Pin[] {
     const cc = r.country?.toUpperCase() ?? ''
     const at = placeOf(cc, r.city ?? '')
     if (!at) continue
-    const [dy, dx] = spreadOf(r.key, crowd.get(spotOf(r)) ?? 1)
-    out.push({ key: r.key, cc, city: r.city ?? '', path: what(r), lat: Math.max(-80, Math.min(80, at[0] + dy)), lon: at[1] + dx / Math.max(0.3, Math.cos(at[0] * RAD)), last: r.last, sig: `${r.key}@${r.last}` })
+    const n = crowd.get(spotOf(r)) ?? 1
+    const [dy, dx] = spreadOf(r.key, n)
+    const [ux, uy] = unitOf(r.key)
+    out.push({ key: r.key, cc, city: r.city ?? '', path: what(r), lat: Math.max(-80, Math.min(80, at[0] + dy)), lon: at[1] + dx / Math.max(0.3, Math.cos(at[0] * RAD)), last: r.last, sig: `${r.key}@${r.last}`, ux, uy, crowd: n })
   }
   return out
 }

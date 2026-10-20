@@ -2952,6 +2952,8 @@ export default {
   'v2.live.recent': 'Actividad reciente',
   'v2.live.fullscreen': 'Pantalla completa',
   'v2.live.exitFullscreen': 'Salir de pantalla completa',
+  'v2.live.zoomIn': 'Acercar',
+  'v2.live.zoomOut': 'Alejar',
   'v2.live.close': 'Cerrar',
   'v2.live.openExplore': 'Abrir en Explore',
   'v2.live.leftNow': 'Se acaba de ir',
