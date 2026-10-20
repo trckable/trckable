@@ -193,9 +193,12 @@ test('Live starts as a line, the chart switch keeps bars across a reload and bot
   await expect(online(page)).toBeVisible({ timeout: 15_000 })
   await expect(style.getByRole('button', { name: 'Bars' })).toHaveAttribute('aria-pressed', 'true')
   const bars = await read('.lnow .mins')
-  expect(line.label).toBe(bars.label)
+  // Other specs' visits land on the shared site between the two reads, so compare the minutes, not the counts.
+  const shape = (s: string | null) => (s ?? '').replace(/\d+ in all/, 'N in all')
+  const minute = (s: string | null) => (s ?? '').match(/\d{1,2}:\d{2}/)?.[0] ?? s
+  expect(shape(line.label)).toBe(shape(bars.label))
   expect(line.titles.length).toBe(30)
-  expect(line.titles).toEqual(bars.titles)
+  expect(line.titles.map(minute)).toEqual(bars.titles.map(minute))
 })
 
 test('the sample revenue card on Live is never clipped: Connect sits fully inside the card', async ({ page }) => {
