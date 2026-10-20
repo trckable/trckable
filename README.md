@@ -6,6 +6,7 @@
 
 **The only analytics you need. Private, free and open source.**
 
+Privacy-first, cookieless web analytics: a Google Analytics alternative you can self-host.<br>
 **Free and open source (AGPL-3.0)**, self-hosted web analytics that also shows you **which traffic pays**.<br>
 One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy, Polar, Paddle and Dodo.<br>
 Self-host it for free, or let [trckable Cloud](https://cloud.trckable.com) run it for you.
@@ -15,7 +16,7 @@ Self-host it for free, or let [trckable Cloud](https://cloud.trckable.com) run i
 [![Tracker: MIT](https://img.shields.io/badge/tracker-MIT-0b0d10?style=flat-square)](packages/trckable/LICENSE)
 [![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/tracker-2091_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2091 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-59_MB-b8ff3c?style=flat-square" alt="Idle memory: 59 MB"></a><!--/f-->
 
-[Quick start](#quick-start) · [How it compares](#how-it-compares) · [What it does](#what-it-does) · [Gallery](#gallery) · [Docs](https://docs.trckable.com/) · [Changelog](CHANGELOG.md)
+[Website](https://trckable.com) · [Cloud](https://cloud.trckable.com) · [Quick start](#quick-start) · [How it compares](#how-it-compares) · [What it does](#what-it-does) · [Gallery](#gallery) · [Docs](https://docs.trckable.com/) · [Changelog](CHANGELOG.md)
 
 <a href="#quick-start"><img alt="Self-host it: free, every feature" src="https://img.shields.io/badge/Self--host_it-free,_every_feature-b8ff3c?style=for-the-badge"></a>
 
