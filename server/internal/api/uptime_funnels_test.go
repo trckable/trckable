@@ -54,12 +54,12 @@ func TestUptimeSettings(t *testing.T) {
 
 	// Paths of this domain only.
 	for _, bad := range []string{"https://evil.com/", "//evil.com/x", "pricing", "", `/a b`, "/x#y", `/\evil.com`, "http://a.com/x"} {
-		if code, out = do(t, c, "POST", base+"/paths", `{"path":`+jsonString(bad)+`}`, csrf, "1"); code != http.StatusBadRequest {
+		if code, out = do(t, c, "POST", base+"/paths", `{"path":`+quotedPath(bad)+`}`, csrf, "1"); code != http.StatusBadRequest {
 			t.Errorf("%q: %d %v", bad, code, out)
 		}
 	}
 	for _, p := range []string{"/pricing", "/blog?x=1", "/a", "/b", "/c"} {
-		if code, out = do(t, c, "POST", base+"/paths", `{"path":`+jsonString(p)+`}`, csrf, "1"); code != 200 {
+		if code, out = do(t, c, "POST", base+"/paths", `{"path":`+quotedPath(p)+`}`, csrf, "1"); code != 200 {
 			t.Fatalf("%s: %d %v", p, code, out)
 		}
 	}
@@ -157,8 +157,8 @@ func TestSavedFunnels(t *testing.T) {
 	}
 }
 
-// jsonString writes s as a JSON string.
-func jsonString(s string) string {
+// quotedPath writes s as a JSON string.
+func quotedPath(s string) string {
 	b, _ := json.Marshal(s)
 	return string(b)
 }
