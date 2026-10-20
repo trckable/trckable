@@ -2951,6 +2951,7 @@ export default {
   'v2.live.exitFullscreen': 'Vollbild verlassen',
   'v2.live.zoomIn': 'Vergrößern',
   'v2.live.zoomOut': 'Verkleinern',
+  'v2.live.onlineWord': 'jetzt online',
   'v2.live.close': 'Schließen',
   'v2.live.openExplore': 'In Explore öffnen',
   'v2.live.leftNow': 'Gerade gegangen',

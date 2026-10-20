@@ -26,7 +26,7 @@ const mount = (rows: Row[]) => {
   document.body.append(box)
   const root = createRoot(box)
   const show = (r: Row[]) => {
-    act(() => root.render(<GlobePanel rows={r} clock={100_000} online={r.length} bar={null} pulse="" site="s" />))
+    act(() => root.render(<GlobePanel rows={r} clock={100_000} online={r.length} bar={null} pulse="" minutes={[0, 2, 5, 3]} beat={0} site="s" />))
   }
   show(rows)
   const globe = () => (box.querySelector('canvas') as HTMLCanvasElement & { __globe: Globe }).__globe
@@ -74,7 +74,12 @@ describe('the globe popover', () => {
   it('full screen shows the new visitors, newest first, and a click opens that visitor', () => {
     const { box, root } = mount([row(1), row(2), row(3)])
     expect(box.querySelector('.gnew')).toBeNull()
+    // The count online now above the list is the number the pill shows, and in full screen the same block floats over the globe.
+    expect(box.querySelector('.gside .gbig')?.textContent).toContain('3')
+    expect(box.querySelector('.gcard .lm')?.textContent).toContain('3')
+    expect(box.querySelector('.gfloat')).toBeNull()
     act(() => (box.querySelector('.gfs') as HTMLElement).click())
+    expect(box.querySelector('.gfloat .gbig')?.textContent).toContain('3')
     const items = [...box.querySelectorAll('.gnew .gnv')]
     expect(items).toHaveLength(3)
     expect(items[0].textContent).toContain('/p1')
