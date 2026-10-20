@@ -151,6 +151,9 @@ type API struct {
 	// ShareDomainAskOpen lets any caller, not only a proxy on this machine,
 	// ask which domains are served (TRCKABLE_SHARE_DOMAIN_ASK_OPEN).
 	ShareDomainAskOpen bool
+	// PoweredBy says whether a site's shared pages carry the small "Powered by
+	// trckable" link. Nil means never.
+	PoweredBy func(ctx context.Context, site string) bool
 	// LookupTXT reads a name's TXT records: the system's resolver, except in tests.
 	LookupTXT func(ctx context.Context, name string) ([]string, error)
 

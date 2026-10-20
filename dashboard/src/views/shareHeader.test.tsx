@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { ShareInfo } from '../lib/api'
-import { EmbedHeader, ShareHeader } from './Share'
+import { EmbedHeader, PoweredBy, POWERED_BY_HREF, ShareHeader } from './Share'
 import { accentVars } from './shareAccent'
 
 const info: ShareInfo = { name: 'Test', revenue: false, domain: 'example.org', site: 'example', timezone: 'UTC', currency: 'USD', modules: {} }
@@ -52,5 +52,19 @@ describe('the owner\'s colour as the page\'s accent', () => {
   })
   it('ignores anything that is not #rrggbb', () => {
     for (const bad of [undefined, '', 'red', '#fff', 'url(x)', '#12345g']) expect(accentVars(bad)).toBeUndefined()
+  })
+})
+
+describe('the credit at the foot of a shared page', () => {
+  const foot = (p: Partial<ShareInfo>) => renderToStaticMarkup(<PoweredBy info={{ ...info, ...p }} />)
+  it('is not there unless the server asks for it', () => {
+    expect(foot({})).toBe('')
+    expect(foot({ powered_by: false })).toBe('')
+  })
+  it('is one plain link to trckable, with no tracking beyond the ref', () => {
+    const html = foot({ powered_by: true })
+    expect(html).toContain(`href="${POWERED_BY_HREF}"`)
+    expect(POWERED_BY_HREF).toBe('https://trckable.com/?ref=shared')
+    expect(html).toContain('Powered by')
   })
 })
