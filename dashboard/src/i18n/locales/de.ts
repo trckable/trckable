@@ -3312,6 +3312,7 @@ export default {
   'channels.versus': 'zur Zeit davor',
   'channels.since': (day: string) => `Gezählt ab ${day}`,
   'channels.waiting': 'Die ersten Zahlen werden gelesen …',
+  'channels.unknown': 'Gerade keine Zahlen',
   'channels.problem.denied': 'Die Plattform erlaubt den Zugriff nicht mehr. Verbinde das Konto erneut.',
   'channels.problem.expired': 'Zu lange nicht gelesen, deshalb wurden die Zahlen gelöscht, wie die Plattform es verlangt. Verbinde es erneut.',
   'channels.problem.limited': 'Die Plattform hat uns gebeten, langsamer zu sein. Beim nächsten Lesen klappt es erneut.',

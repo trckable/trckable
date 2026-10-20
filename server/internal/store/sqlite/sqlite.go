@@ -1017,6 +1017,7 @@ var migrations = []string{
 		account_id  TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
 		platform    TEXT NOT NULL,
 		external_id TEXT NOT NULL,
+		app_user_id TEXT NOT NULL DEFAULT '', -- the id a platform's removal call names (not Instagram's insights id)
 		handle      TEXT NOT NULL DEFAULT '',
 		access_enc  TEXT NOT NULL DEFAULT '',
 		refresh_enc TEXT NOT NULL DEFAULT '',

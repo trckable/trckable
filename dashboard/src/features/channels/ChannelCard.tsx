@@ -33,7 +33,7 @@ function disconnect(a: ChannelAccount, done: () => void) {
 }
 
 function Menu({ card, done }: { card: CardView; done: () => void }) {
-  if (!can('channels.connect')) return null
+  if (!can('channels.disconnect')) return null
   return (
     <Popover
       label={copy.more(card.name)}
@@ -77,8 +77,8 @@ export function ChannelCardView({ card, reload }: { card: CardView; reload: () =
         <h3>{card.name}</h3>
         <Menu card={card} done={reload} />
       </header>
-      {card.state === 'waiting' ? (
-        <p className="ch-wait muted">{copy.waiting}</p>
+      {card.state === 'waiting' || card.state === 'unknown' ? (
+        <p className="ch-wait muted">{card.state === 'waiting' ? copy.waiting : copy.unknown}</p>
       ) : (
         <>
           <div className="ch-num">

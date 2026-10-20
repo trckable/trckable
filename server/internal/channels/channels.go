@@ -51,7 +51,11 @@ type Token struct {
 
 // Identity is who signed in: the platform's id (what its API is asked about)
 // and the name to show.
-type Identity struct{ ID, Handle string }
+type Identity struct {
+	ID, Handle string
+	// AppID is the id the platform's removal call names, where it is not ID.
+	AppID string
+}
 
 // Connector is one platform.
 type Connector interface {

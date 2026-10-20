@@ -3322,6 +3322,7 @@ export default {
   'channels.versus': 'ten opzichte van de periode ervoor',
   'channels.since': (day: string) => `Geteld vanaf ${day}`,
   'channels.waiting': 'De eerste cijfers worden gelezen…',
+  'channels.unknown': 'Even geen cijfers',
   'channels.problem.denied': 'Het platform staat toegang niet meer toe. Koppel het account opnieuw.',
   'channels.problem.expired': 'Te lang niet gelezen, dus de cijfers zijn verwijderd zoals het platform eist. Koppel het opnieuw.',
   'channels.problem.limited': 'Het platform vroeg ons langzamer te gaan. De volgende keer proberen we het opnieuw.',

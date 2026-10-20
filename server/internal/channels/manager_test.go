@@ -152,8 +152,8 @@ func TestTheFirstPullReachesBackAndLaterOnesReadTheLastWeek(t *testing.T) {
 	if err := r.m.Pull(context.Background(), a); err != nil {
 		t.Fatal(err)
 	}
-	if r.yt.from != r.ago(7) {
-		t.Errorf("a later pull starts %s", r.yt.from)
+	if r.yt.from != r.ago(90) {
+		t.Errorf("YouTube is read over its whole kept window every time: %s", r.yt.from)
 	}
 	rows, _ := r.st.SocialDaysOf(context.Background(), r.team, r.ago(100), r.ago(0))
 	if len(rows) != 2 || rows[1].Views != 9 || rows[0].Views != 5 {
@@ -220,7 +220,7 @@ func TestYouTubeDataNotRefreshedInTimeIsDeletedAndTheAccountAsksToConnectAgain(t
 	r.now = r.now.AddDate(0, 0, 29)
 	r.m.Round(ctx)
 	a, _ = r.st.SocialAccountOf(ctx, r.team, a.ID)
-	if a.LastError != channels.CodeExpired || a.AccessEnc != "" || a.RefreshEnc != "" {
+	if a.LastError != channels.CodeExpired || a.AccessEnc != "" || a.RefreshEnc != "" || a.LastOK != 0 {
 		t.Errorf("after the deadline: %+v", a)
 	}
 	if r.count(t, "social_daily") != 0 {
@@ -338,5 +338,53 @@ func TestNoTokenIsEverLogged(t *testing.T) {
 	slog.Info("x", "token", tok, "access", tok.Access)
 	if strings.Contains(buf.String(), "must-never") {
 		t.Errorf("a Token logged itself: %s", buf.String())
+	}
+}
+
+// Google's rule: nothing is kept that was not refreshed in the last 30 days.
+func TestAfterAMonthOfPullsNoYouTubeDayIsOlderThanItsLastRefresh(t *testing.T) {
+	r := newRig(t)
+	ctx := context.Background()
+	a := r.connect(t, channels.YouTube, "UC1", time.Hour)
+	start := r.now
+	if err := r.st.SocialSaveDays(ctx, a.ID, channels.YouTube, []channels.Day{{Day: r.ago(120), Views: 1}}); err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < 31; i++ {
+		r.yt.days = []channels.Day{{Day: r.ago(1), Views: int64(i + 1)}, {Day: r.ago(60), Views: 3}}
+		a, _ = r.st.SocialAccountOf(ctx, r.team, a.ID)
+		if err := r.m.Pull(ctx, a); err != nil {
+			t.Fatal(err)
+		}
+		if r.yt.from != r.ago(90) {
+			t.Fatalf("pull %d reads from %s, not the whole window", i, r.yt.from)
+		}
+		r.now = r.now.AddDate(0, 0, 1)
+	}
+	// Each day kept was in the last window read (90 days before the last pull).
+	last := r.now.AddDate(0, 0, -1)
+	rows, _ := r.st.SocialDaysOf(ctx, r.team, "2000-01-01", "2100-01-01")
+	for _, row := range rows {
+		if row.Day < last.AddDate(0, 0, -90).Format(time.DateOnly) {
+			t.Errorf("day %s is older than the window of the last pull (%s)", row.Day, last.Format(time.DateOnly))
+		}
+	}
+	if len(rows) == 0 || start.After(r.now) {
+		t.Error("nothing kept")
+	}
+}
+
+func TestARemovalCallNamingTheAppScopedIDDeletesTheAccount(t *testing.T) {
+	r := newRig(t)
+	ctx := context.Background()
+	a, err := r.m.Connect(ctx, r.team, channels.Threads, channels.Token{Access: secrets.NewSecret("x"), Expires: r.now.Add(time.Hour)}, channels.Identity{ID: "IG-PRO-1", AppID: "APP-SCOPED-9", Handle: "@m"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := r.st.SocialAccountOf(ctx, r.team, a.ID); got.AppUserID != "APP-SCOPED-9" {
+		t.Fatalf("app id %q", got.AppUserID)
+	}
+	if _, err := r.st.SocialDeleteExternal(ctx, channels.Threads, "APP-SCOPED-9"); err != nil || r.count(t, "social_accounts") != 0 {
+		t.Errorf("the app-scoped id did not match: %v", err)
 	}
 }

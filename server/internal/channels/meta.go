@@ -130,11 +130,12 @@ func (c *metaConnector) me(ctx context.Context, t Token) (Identity, error) {
 	if id == "" {
 		return Identity{}, errors.New("channels: the platform did not say who signed in")
 	}
+	app := scalar(res["id"])
 	handle := scalar(res["username"])
 	if handle != "" {
 		handle = "@" + strings.TrimPrefix(handle, "@")
 	}
-	return Identity{ID: id, Handle: handle}, nil
+	return Identity{ID: id, Handle: handle, AppID: app}, nil
 }
 
 func scalar(v any) string {
@@ -169,9 +170,10 @@ func (c *metaConnector) Deauth(signed string) (string, error) {
 		return "", ErrBadSignedRequest
 	}
 	var p struct {
-		UserID json.Number `json:"user_id"`
+		Algorithm string      `json:"algorithm"`
+		UserID    json.Number `json:"user_id"`
 	}
-	if json.Unmarshal(raw, &p) != nil || p.UserID.String() == "" {
+	if json.Unmarshal(raw, &p) != nil || p.UserID.String() == "" || !strings.EqualFold(p.Algorithm, "HMAC-SHA256") {
 		return "", ErrBadSignedRequest
 	}
 	return p.UserID.String(), nil

@@ -177,7 +177,7 @@ func (a *API) channelsList(w http.ResponseWriter, r *http.Request) {
 func (a *API) channelsOwner(w http.ResponseWriter, r *http.Request) *sqlite.User {
 	u := principalOf(r).user
 	if !canUser(u, permissions.ActChannelsConnect) {
-		fail(w, http.StatusForbidden, "only an owner can connect social accounts")
+		fail(w, http.StatusForbidden, "only an owner or an admin can connect social accounts")
 		return nil
 	}
 	return u
@@ -255,9 +255,10 @@ func (a *API) channelsCallback(w http.ResponseWriter, r *http.Request) {
 	channelsBack(w, platform, "")
 }
 
-// channelsDisconnect removes one account: its tokens and its days.
+// channelsDisconnect removes one account: its tokens and its days. It deletes
+// data, so it is an owner's alone, where connecting may be an admin's.
 func (a *API) channelsDisconnect(w http.ResponseWriter, r *http.Request) {
-	if a.channelsOwner(w, r) == nil {
+	if !requireAct(w, r, permissions.ActChannelsDisconnect, "only an owner can disconnect social accounts") {
 		return
 	}
 	if a.Channels == nil {

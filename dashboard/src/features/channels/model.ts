@@ -4,7 +4,8 @@ import type { ChannelCard, ChannelAccount, Channels, Platform } from './api'
 import { PLATFORMS } from './api'
 import { copy } from './copy'
 
-export type CardState = 'empty' | 'waiting' | 'ready'
+/** `unknown`: nothing is held and the account needs connecting again, so no number is shown, not even a zero. */
+export type CardState = 'empty' | 'waiting' | 'unknown' | 'ready'
 
 export interface CardView {
   platform: Platform
@@ -45,7 +46,7 @@ export function valuesOf(series: ChannelCard['series'], through: string): number
 export function cardView(c: ChannelCard, through: string): CardView {
   const base = { platform: c.platform, name: copy.platform[c.platform], ready: c.ready, accounts: c.accounts, problem: worst(c.accounts), from: c.from }
   if (c.accounts.length === 0) return { ...base, state: 'empty', values: [] }
-  if (c.views === undefined) return { ...base, state: 'waiting', values: [] }
+  if (c.views === undefined) return { ...base, state: base.problem === 'denied' || base.problem === 'expired' ? 'unknown' : 'waiting', values: [] }
   return { ...base, state: 'ready', views: c.views, previous: c.previous, values: valuesOf(c.series, through) }
 }
 

@@ -17,6 +17,8 @@ type SocialAccount struct {
 	AccountID  string `json:"-"`
 	Platform   string `json:"platform"`
 	ExternalID string `json:"-"`
+	// AppUserID is the app-scoped id a platform's removal call carries.
+	AppUserID  string `json:"-"`
 	Handle     string `json:"handle"`
 	AccessEnc  string `json:"-"`
 	RefreshEnc string `json:"-"`
@@ -41,12 +43,12 @@ type SocialDayRow struct {
 	SocialDay
 }
 
-const socialCols = `id, account_id, platform, external_id, handle, access_enc, refresh_enc, expires_at, created_at, last_ok_at, last_error`
+const socialCols = `id, account_id, platform, external_id, app_user_id, handle, access_enc, refresh_enc, expires_at, created_at, last_ok_at, last_error`
 
 func scanSocial(row interface{ Scan(...any) error }) (SocialAccount, error) {
 	var a SocialAccount
 	var ok sql.NullInt64
-	err := row.Scan(&a.ID, &a.AccountID, &a.Platform, &a.ExternalID, &a.Handle, &a.AccessEnc, &a.RefreshEnc, &a.Expires, &a.Created, &ok, &a.LastError)
+	err := row.Scan(&a.ID, &a.AccountID, &a.Platform, &a.ExternalID, &a.AppUserID, &a.Handle, &a.AccessEnc, &a.RefreshEnc, &a.Expires, &a.Created, &ok, &a.LastError)
 	a.LastOK = ok.Int64
 	return a, err
 }
@@ -99,11 +101,17 @@ func (s *Store) SocialIDOf(ctx context.Context, account, platform, external stri
 // with this id, and clears whatever error it had.
 func (s *Store) SocialSave(ctx context.Context, a SocialAccount) error {
 	_, err := s.DB.ExecContext(ctx, `
-		INSERT INTO social_accounts (id, account_id, platform, external_id, handle, access_enc, refresh_enc, expires_at, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-		ON CONFLICT(id) DO UPDATE SET handle = excluded.handle, access_enc = excluded.access_enc,
+		INSERT INTO social_accounts (id, account_id, platform, external_id, app_user_id, handle, access_enc, refresh_enc, expires_at, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(id) DO UPDATE SET handle = excluded.handle, app_user_id = excluded.app_user_id, access_enc = excluded.access_enc,
 			refresh_enc = excluded.refresh_enc, expires_at = excluded.expires_at, last_error = ''`,
-		a.ID, a.AccountID, a.Platform, a.ExternalID, a.Handle, a.AccessEnc, a.RefreshEnc, a.Expires, time.Now().Unix())
+		a.ID, a.AccountID, a.Platform, a.ExternalID, a.AppUserID, a.Handle, a.AccessEnc, a.RefreshEnc, a.Expires, time.Now().Unix())
+	return err
+}
+
+// SocialPruneBefore deletes an account's days older than day.
+func (s *Store) SocialPruneBefore(ctx context.Context, id, day string) error {
+	_, err := s.DB.ExecContext(ctx, `DELETE FROM social_daily WHERE social_id = ? AND day < ?`, id, day)
 	return err
 }
 
@@ -169,7 +177,7 @@ func (s *Store) SocialDelete(ctx context.Context, account, id string) (bool, err
 // SocialDeleteExternal disconnects every account that is this platform user's,
 // whichever team holds it: a platform telling us the person removed the app.
 func (s *Store) SocialDeleteExternal(ctx context.Context, platform, external string) (bool, error) {
-	return s.socialDrop(ctx, `platform = ? AND external_id = ?`, platform, external)
+	return s.socialDrop(ctx, `platform = ? AND (external_id = ? OR app_user_id = ?)`, platform, external, external)
 }
 
 func (s *Store) socialDrop(ctx context.Context, where string, args ...any) (bool, error) {
@@ -201,7 +209,7 @@ func (s *Store) SocialForget(ctx context.Context, id, code string) error {
 	if _, err := tx.ExecContext(ctx, `DELETE FROM social_daily WHERE social_id = ?`, id); err != nil {
 		return err
 	}
-	if _, err := tx.ExecContext(ctx, `UPDATE social_accounts SET access_enc = '', refresh_enc = '', expires_at = 0, last_error = ? WHERE id = ?`, code, id); err != nil {
+	if _, err := tx.ExecContext(ctx, `UPDATE social_accounts SET access_enc = '', refresh_enc = '', expires_at = 0, last_ok_at = NULL, last_error = ? WHERE id = ?`, code, id); err != nil {
 		return err
 	}
 	return tx.Commit()

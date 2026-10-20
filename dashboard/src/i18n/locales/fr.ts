@@ -3310,6 +3310,7 @@ export default {
   'channels.versus': 'par rapport à la période précédente',
   'channels.since': (day: string) => `Compté depuis le ${day}`,
   'channels.waiting': 'Lecture des premiers chiffres…',
+  'channels.unknown': 'Pas de chiffres pour le moment',
   'channels.problem.denied': 'La plateforme n’autorise plus l’accès. Reconnectez le compte.',
   'channels.problem.expired': 'Pas lu depuis trop longtemps : ses chiffres ont été supprimés, comme l’exige la plateforme. Reconnectez-le.',
   'channels.problem.limited': 'La plateforme nous a demandé de ralentir. La prochaine lecture réessaiera.',

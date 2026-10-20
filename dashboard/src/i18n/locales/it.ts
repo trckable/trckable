@@ -3322,6 +3322,7 @@ export default {
   'channels.versus': 'rispetto al periodo precedente',
   'channels.since': (day: string) => `Conteggiato dal ${day}`,
   'channels.waiting': 'Lettura dei primi numeri…',
+  'channels.unknown': 'Nessun numero al momento',
   'channels.problem.denied': 'La piattaforma non consente più l’accesso. Ricollega l’account.',
   'channels.problem.expired': 'Non letto da troppo tempo, quindi i suoi numeri sono stati eliminati come richiede la piattaforma. Ricollegalo.',
   'channels.problem.limited': 'La piattaforma ci ha chiesto di rallentare. La prossima lettura riproverà.',

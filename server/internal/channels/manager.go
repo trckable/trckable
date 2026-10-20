@@ -79,7 +79,7 @@ func (m *Manager) Connect(ctx context.Context, team, platform string, t Token, w
 	if err != nil {
 		return sqlite.SocialAccount{}, err
 	}
-	a := sqlite.SocialAccount{ID: id, AccountID: team, Platform: platform, ExternalID: who.ID, Handle: who.Handle, AccessEnc: access, RefreshEnc: refresh, Expires: t.Expires.Unix()}
+	a := sqlite.SocialAccount{ID: id, AccountID: team, Platform: platform, ExternalID: who.ID, AppUserID: who.AppID, Handle: who.Handle, AccessEnc: access, RefreshEnc: refresh, Expires: t.Expires.Unix()}
 	if err := m.Store.SocialSave(ctx, a); err != nil {
 		return a, err
 	}
@@ -184,8 +184,10 @@ func (m *Manager) pull(ctx context.Context, a sqlite.SocialAccount) error {
 			}
 		}
 	}
+	// A platform that makes us refresh or delete (YouTube) is read over its whole
+	// kept window every round, so nothing kept is older than its last refresh.
 	back := 7
-	if a.LastOK == 0 {
+	if a.LastOK == 0 || c.MaxStale() > 0 {
 		back = c.Backfill()
 	}
 	from, to := day(now.AddDate(0, 0, -back)), day(now.AddDate(0, 0, -1))
@@ -197,6 +199,11 @@ func (m *Manager) pull(ctx context.Context, a sqlite.SocialAccount) error {
 	}
 	if err != nil {
 		return m.fail(ctx, a, err)
+	}
+	if c.MaxStale() > 0 {
+		if err := m.Store.SocialPruneBefore(ctx, a.ID, from); err != nil {
+			return err
+		}
 	}
 	return m.Store.SocialStatus(ctx, a.ID, "")
 }

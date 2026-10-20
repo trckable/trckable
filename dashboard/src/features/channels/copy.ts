@@ -14,6 +14,7 @@ export const copy = defineCopy('channels', {
   versus: 'vs the period before',
   since: (day: string) => `Counted from ${day}`,
   waiting: 'Reading the first numbers…',
+  unknown: 'No numbers right now',
   problem: {
     denied: 'The platform no longer allows access. Connect the account again.',
     expired: 'Not read for too long, so its numbers were deleted as the platform requires. Connect it again.',

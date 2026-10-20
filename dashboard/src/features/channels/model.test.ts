@@ -83,3 +83,11 @@ describe('coming back from a platform', () => {
     expect(flashOf('')).toBeNull()
   })
 })
+
+describe('an account that must be connected again', () => {
+  it('shows no number rather than a zero', () => {
+    const c = card('youtube', { accounts: [acct('youtube', '@a', { error: 'expired' })] })
+    expect(cardView(c, '2026-10-18').state).toBe('unknown')
+    expect(waiting(cardsOf({ days: 30, through: '2026-10-18', platforms: [c] }))).toBe(false)
+  })
+})

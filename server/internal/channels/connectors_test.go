@@ -206,7 +206,7 @@ func TestInstagramSignsInWithALongLivedTokenAndReadsEachDay(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if who.ID != "17841400000000001" || who.Handle != "@maker.studio" {
+	if who.ID != "17841400000000001" || who.Handle != "@maker.studio" || who.AppID != "9988776655" {
 		t.Errorf("identity %+v", who)
 	}
 	if tok.Access.Reveal() != "IGAA-LONG-LIVED-FAKE" || time.Until(tok.Expires) < 50*24*time.Hour {
@@ -354,15 +354,17 @@ func signed(secret string, payload string) string {
 func TestADeauthorizationIsBelievedOnlyWhenSignedWithTheAppSecret(t *testing.T) {
 	c := channels.NewInstagram("id", secrets.NewSecret("ig-app-secret-FAKE"))
 	deauth := func(s string) (string, error) { return c.Deauth(s) }
-	if id, err := deauth(signed("ig-app-secret-FAKE", `{"algorithm":"HMAC-SHA256","user_id":"17841400000000001","issued_at":1}`)); err != nil || id != "17841400000000001" {
+	if id, err := deauth(signed("ig-app-secret-FAKE", `{"algorithm":"HMAC-SHA256","user_id":"9988776655","issued_at":1}`)); err != nil || id != "9988776655" {
 		t.Errorf("a good request: %q %v", id, err)
 	}
 	for name, s := range map[string]string{
-		"another secret": signed("not-the-secret", `{"user_id":"1"}`),
-		"no signature":   "e30",
-		"empty":          "",
-		"no user":        signed("ig-app-secret-FAKE", `{"issued_at":1}`),
-		"garbage":        "!!!.???",
+		"another secret":  signed("not-the-secret", `{"user_id":"1"}`),
+		"no signature":    "e30",
+		"empty":           "",
+		"no user":         signed("ig-app-secret-FAKE", `{"algorithm":"HMAC-SHA256","issued_at":1}`),
+		"other algorithm": signed("ig-app-secret-FAKE", `{"algorithm":"HMAC-SHA1","user_id":"1"}`),
+		"no algorithm":    signed("ig-app-secret-FAKE", `{"user_id":"1"}`),
+		"garbage":         "!!!.???",
 	} {
 		if _, err := deauth(s); !errors.Is(err, channels.ErrBadSignedRequest) {
 			t.Errorf("%s: %v", name, err)

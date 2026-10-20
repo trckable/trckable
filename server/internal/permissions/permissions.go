@@ -48,6 +48,9 @@ const (
 	// ActChannelsConnect is connecting and disconnecting the team's own social
 	// accounts (Channels). Reading their numbers is for everyone who sees the team.
 	ActChannelsConnect Action = "channels.connect"
+	// ActChannelsDisconnect is disconnecting one: it deletes the numbers stored
+	// for the account, so it is an owner's, as other deletes are.
+	ActChannelsDisconnect Action = "channels.disconnect"
 	// ActDataErase is erasing a visitor's data from a site.
 	ActDataErase Action = "data.erase"
 )
@@ -55,7 +58,7 @@ const (
 var ownerActions = []Action{
 	ActChange, ActAccountOwn, ActSitesAll, ActMemberManage, ActKeyRead, ActFeedbackRead,
 	ActSearchConnect, ActImportGoogle, ActSecretRead, ActProxyKey, ActAlertTarget, ActUpdateCheck,
-	ActSiteDelete, ActTeamManage, ActDataErase, ActPeekAsk, ActChannelsConnect,
+	ActSiteDelete, ActTeamManage, ActDataErase, ActPeekAsk, ActChannelsConnect, ActChannelsDisconnect,
 }
 
 // permissions is the one role to actions table. An unknown role has no row

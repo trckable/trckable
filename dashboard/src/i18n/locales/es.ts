@@ -3315,6 +3315,7 @@ export default {
   'channels.versus': 'frente al periodo anterior',
   'channels.since': (day: string) => `Contado desde el ${day}`,
   'channels.waiting': 'Leyendo las primeras cifras…',
+  'channels.unknown': 'Sin cifras por ahora',
   'channels.problem.denied': 'La plataforma ya no permite el acceso. Vuelve a conectar la cuenta.',
   'channels.problem.expired': 'Llevaba demasiado sin leerse, así que sus cifras se borraron, como exige la plataforma. Vuelve a conectarla.',
   'channels.problem.limited': 'La plataforma nos pidió ir más despacio. La próxima lectura lo intentará de nuevo.',
