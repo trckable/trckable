@@ -19,7 +19,7 @@
   padding: 0 8px;
   font-size: 12.5px;
 }
-@media (max-width: 640px) {
+@media (--xs-down) {
   :root .input.th-num,
   :root .input.th-pick {
     min-height: var(--ph-hit);
