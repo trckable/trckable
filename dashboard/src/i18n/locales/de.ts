@@ -3344,7 +3344,7 @@ export default {
   'channels.connected': (name: string) => `${name} verbunden`,
   'channels.flash.denied': 'Die Plattform hat den Zugriff nicht erlaubt.',
   'channels.flash.failed': 'Das Verbinden hat nicht geklappt. Versuche es erneut.',
-  'channels.viewOnly': 'Nur ein Owner kann Konten verbinden.',
+  'channels.viewOnly': (who: string) => `Bitte ${who}, Konten zu verbinden.`,
   'blocks.explore': 'In Explore öffnen',
   'blocks.uptime': (pct: string) => `${pct} online`,
   'blocks.noIncidents': 'Keine Ausfälle in diesem Zeitraum.',
