@@ -20,7 +20,7 @@ export function MentionsList({ b }: { b: MentionsBlock }) {
             return (
               <li key={m.id}>
                 <SourceMark source={m.source} />
-                <span>
+                <span className="blk-men-text">
                   {href ? (
                     <a href={href} target="_blank" rel="noopener noreferrer">
                       {title}
