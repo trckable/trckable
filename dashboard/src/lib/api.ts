@@ -220,10 +220,13 @@ export interface Visit {
 export interface Alert {
   id: string
   site_id: string
-  kind: 'stopped' | 'spike' | 'customer' | 'disk' | 'weekly' | 'milestone' | 'surge' | 'mention' | 'answer'
+  kind: 'stopped' | 'spike' | 'customer' | 'disk' | 'weekly' | 'milestone' | 'surge' | 'mention' | 'answer' | 'threshold'
   enabled: boolean
   target: string
   threshold: number
+  /** A target alert's rule: what it counts and over which period (threshold is the number). */
+  metric?: string
+  period?: string
   last_fired: number
   created_at: number
 }

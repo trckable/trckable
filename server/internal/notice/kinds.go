@@ -56,6 +56,9 @@ const (
 	DataExported     = "data.exported"
 	RetentionChanged = "retention.changed"
 	RetentionShorter = "retention.shortened"
+	AlertStopped     = "alert.stopped"
+	AlertSpike       = "alert.spike"
+	AlertThreshold   = "alert.threshold"
 	securityNote     = "You get this because it is about your sign-in and your data. It cannot be switched off."
 	teamNote         = "You get this because it concerns your team."
 	ownersNote       = "You get this because you are an owner."
@@ -144,6 +147,10 @@ var Kinds = map[string]Spec{
 	ChannelGone:      {Bell: true},
 	DataExported:     {Bell: true},
 	RetentionChanged: {Bell: true},
+	// The alerts about a site's numbers, told to the bell as they are sent (Hub.Alert).
+	AlertStopped:   {Bell: true},
+	AlertSpike:     {Bell: true},
+	AlertThreshold: {Bell: true},
 	RetentionShorter: {Bell: true, Email: func(v Vars) Message {
 		return Message{
 			Subject: "Data retention was shortened for " + v["domain"], Eyebrow: "Your data", Title: "Older data will be deleted",

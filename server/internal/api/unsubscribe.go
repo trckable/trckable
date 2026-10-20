@@ -31,7 +31,7 @@ func (a *API) defaultAlertsForAccount(ctx context.Context, account string) {
 // whatItIs names an alert the way the page says it.
 var whatItIs = map[string]string{
 	"weekly": "The weekly email", "stopped": "The tracking-stopped email", "spike": "The busy-day email",
-	"customer": "The payment email", "disk": "The disk email", "milestone": "The milestone email",
+	"customer": "The payment email", "disk": "The disk email", "milestone": "The milestone email", "threshold": "The target-reached email",
 }
 
 type stopView struct {

@@ -83,6 +83,11 @@ func (s *Server) checkAlerts(ctx context.Context) error {
 	now := time.Now()
 	health := s.health(ctx)
 	for _, a := range list {
+		// A threshold has its own rhythm: once for each day, week or month.
+		if a.Kind == "threshold" {
+			s.checkThreshold(ctx, a, now)
+			continue
+		}
 		if now.Unix()-a.LastFired < int64(alertQuiet.Seconds()) {
 			continue
 		}
