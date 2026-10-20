@@ -9,7 +9,7 @@ export function LineBlock({ b }: { b: Line }) {
   const top = Math.max(1, ...points)
   return (
     <Frame title={b.title} period={b.period} explore={b.explore}>
-      <div className="mk blk-chart" role="img" aria-label={copy.chart(b.title, labels?.[0] ?? '', labels?.[1] ?? '')}>
+      <div className="mk blk-chart" role="img" aria-label={labels ? copy.chart(b.title, labels[0], labels[1]) : b.title}>
         <LiveLineChart heights={points.map((p) => (p / top) * 100)} beat={0} />
       </div>
       {labels && (

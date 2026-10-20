@@ -3,7 +3,6 @@ import { fmtInt } from '../../lib/format'
 
 export const copy = defineCopy('blocks', {
   explore: 'Open in Explore',
-  vs: (label: string) => `vs ${label}`,
   uptime: (pct: string) => `${pct} up`,
   noIncidents: 'No downtime in this period.',
   ongoing: 'Still going',
@@ -15,5 +14,4 @@ export const copy = defineCopy('blocks', {
   visitors: (n: number) => `${fmtInt(n)} ${n === 1 ? 'visitor' : 'visitors'}`,
   was: (v: string) => `was ${v}`,
   chart: (title: string, from: string, to: string) => `${title}, from ${from} to ${to}`,
-  missing: 'Not available',
 })
