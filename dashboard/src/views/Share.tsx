@@ -112,13 +112,14 @@ export function EmbedHeader({ info }: { info: ShareInfo }) {
 }
 
 /** The small credit at the foot of a shared page, only when the server says this page carries it. */
+const POWERED_BY = 'Powered by'
 export const POWERED_BY_HREF = 'https://trckable.com/?ref=shared'
 export function PoweredBy({ info }: { info: ShareInfo }) {
   if (!info.powered_by) return null
   return (
     <footer className="share-powered">
       <a href={POWERED_BY_HREF} target="_blank" rel="noopener">
-        Powered by <Name />
+        {POWERED_BY} <Name />
       </a>
     </footer>
   )
