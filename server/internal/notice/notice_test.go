@@ -356,3 +356,17 @@ func TestAnUnknownKindIsRefused(t *testing.T) {
 		t.Fatal("accepted")
 	}
 }
+
+func TestTheOneWhoMadeTheChangeIsLeftOut(t *testing.T) {
+	r := newRig(t)
+	n := New(SiteAdded, sqlite.DefaultAccount, []Audience{Owners()}, sample)
+	n.Skip = r.owner.ID
+	r.tell(r.hub)
+	if err := r.hub.Notify(context.Background(), n); err != nil {
+		t.Fatal(err)
+	}
+	r.hub.Wait()
+	if len(r.bells) != 1 || len(r.bells[0].Users) != 1 || r.bells[0].Users[0] != r.owner2.ID {
+		t.Fatalf("the bell: %+v", r.bells)
+	}
+}

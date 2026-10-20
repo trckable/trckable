@@ -1251,7 +1251,7 @@ func (a *API) createKey(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	a.tellOwners(r, notice.KeyCreated, "", notice.Vars{"name": keyName(k.Name)})
+	a.tellAllOwners(r, notice.KeyCreated, notice.Vars{"name": keyName(k.Name)})
 	writeJSON(w, http.StatusCreated, map[string]any{"key": k, "secret": secret})
 }
 
@@ -1261,7 +1261,7 @@ func (a *API) revokeKey(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusNotFound, "key not found")
 		return
 	}
-	a.tellOwners(r, notice.KeyRevoked, "", notice.Vars{"name": name})
+	a.tellAllOwners(r, notice.KeyRevoked, notice.Vars{"name": name})
 	w.WriteHeader(http.StatusNoContent)
 }
 

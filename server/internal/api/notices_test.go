@@ -242,22 +242,28 @@ func TestTeamChangesAreToldToThePersonAndTheOwners(t *testing.T) {
 	if code, _ := do(t, n.owner, "PATCH", n.srv.URL+"/api/v1/people/"+view.ID, `{"role":"owner"}`, csrf, "1"); code != 200 {
 		t.Fatalf("promote: %d", code)
 	}
-	for _, to := range []string{"view@site.com", "two@site.com", "me@site.com"} {
+	for _, to := range []string{"view@site.com", "two@site.com"} {
 		if got := n.told(to); !hasSubject(got, "role on the team changed") {
 			t.Fatalf("%s after the role change: %v", to, got)
 		}
 	}
-	if b := n.bell(notice.RoleChanged); len(b) != 1 || len(b[0]) != 3 {
+	if got := n.told("me@site.com"); len(got) != 0 {
+		t.Fatalf("the person who made the change was told of it: %v", got)
+	}
+	if b := n.bell(notice.RoleChanged); len(b) != 1 || len(b[0]) != 2 {
 		t.Fatalf("the bell: %v", b)
 	}
 
 	if code, _ := do(t, n.owner, "DELETE", n.srv.URL+"/api/v1/people/"+two.ID, "", csrf, "1"); code != http.StatusNoContent {
 		t.Fatalf("remove: %d", code)
 	}
-	for _, to := range []string{"two@site.com", "view@site.com", "me@site.com"} {
+	for _, to := range []string{"two@site.com", "view@site.com"} {
 		if got := n.told(to); !hasSubject(got, "two@site.com was removed") {
 			t.Fatalf("%s after the removal: %v", to, got)
 		}
+	}
+	if got := n.told("me@site.com"); hasSubject(got, "was removed") {
+		t.Fatalf("the person who removed them was told: %v", got)
 	}
 }
 
@@ -269,13 +275,13 @@ func TestSitesAndDataChangesAreToldToTheOwnersByTheBell(t *testing.T) {
 		t.Fatalf("add: %d %v", code, out)
 	}
 	site := out["id"].(string)
-	if b := n.bell(notice.SiteAdded); len(b) != 1 || len(b[0]) != 2 {
+	if b := n.bell(notice.SiteAdded); len(b) != 1 || len(b[0]) != 1 {
 		t.Fatalf("site added: %v", b)
 	}
 	if code, out := do(t, n.owner, "DELETE", n.srv.URL+"/api/v1/sites/"+site, `{"domain":"blog.acme-shop.dev"}`, csrf, "1"); code != http.StatusOK {
 		t.Fatalf("delete: %d %v", code, out)
 	}
-	if b := n.bell(notice.SiteRemoved); len(b) != 1 || len(b[0]) != 2 {
+	if b := n.bell(notice.SiteRemoved); len(b) != 1 || len(b[0]) != 1 {
 		t.Fatalf("site removed: %v", b)
 	}
 	if got := n.told("me@site.com"); len(got) != 0 {
@@ -285,6 +291,7 @@ func TestSitesAndDataChangesAreToldToTheOwnersByTheBell(t *testing.T) {
 
 func TestShorteningRetentionIsMailedAndLengtheningIsOnlyTheBell(t *testing.T) {
 	n := newNoticeRig(t)
+	n.user(t, "two@site.com", sqlite.RoleOwner)
 	set := func(days string) {
 		t.Helper()
 		if code, out := do(t, n.owner, "PUT", n.srv.URL+"/api/v1/sites/"+n.site+"/config", `{"retention_days":`+days+`}`, csrf, "1"); code != 200 {
@@ -292,12 +299,15 @@ func TestShorteningRetentionIsMailedAndLengtheningIsOnlyTheBell(t *testing.T) {
 		}
 	}
 	set("365") // from keeping everything: a shorter time
-	if got := n.told("me@site.com"); !hasSubject(got, "retention was shortened") {
+	if got := n.told("me@site.com"); len(got) != 0 {
+		t.Fatalf("the person who changed it was mailed: %v", got)
+	}
+	if got := n.told("two@site.com"); !hasSubject(got, "retention was shortened") {
 		t.Fatalf("shortened: %v", got)
 	}
 	set("365") // unchanged
 	set("730") // longer
-	if got := n.told("me@site.com"); len(got) != 1 {
+	if got := n.told("two@site.com"); len(got) != 1 {
 		t.Fatalf("a longer time was mailed: %v", got)
 	}
 	if b := n.bell(notice.RetentionChanged); len(b) != 1 {
@@ -314,13 +324,14 @@ func TestShorteningRetentionIsMailedAndLengtheningIsOnlyTheBell(t *testing.T) {
 	}
 	n.mu.Unlock()
 	set("30")
-	if got := n.told("me@site.com"); len(got) != 2 {
+	if got := n.told("two@site.com"); len(got) != 2 {
 		t.Fatalf("shortened again: %v", got)
 	}
 }
 
-func TestAnExportIsToldToTheOwners(t *testing.T) {
+func TestAnExportIsToldToTheOtherOwners(t *testing.T) {
 	n := newNoticeRig(t)
+	n.user(t, "two@site.com", sqlite.RoleOwner)
 	resp, err := n.owner.Get(n.srv.URL + "/api/v1/sites/" + n.site + "/export.csv?from=2026-09-14&to=2026-09-20")
 	if err != nil {
 		t.Fatal(err)
@@ -337,6 +348,9 @@ func TestAnExportIsToldToTheOwners(t *testing.T) {
 func TestChannelsConnectedAndDisconnectedAreToldToTheOwners(t *testing.T) {
 	r := newChannels(t)
 	n := &nrig{rig: r.rig, mails: map[string][]string{}}
+	if _, err := r.ctl.AddUser(context.Background(), sqlite.DefaultAccount, "two@site.com", "correct horse battery 2", sqlite.RoleOwner); err != nil {
+		t.Fatal(err)
+	}
 	r.api.Notices = &notice.Hub{Store: r.ctl, Now: r.api.Now, Bell: bellRecorder(func(e notice.BellEntry) {
 		n.mu.Lock()
 		defer n.mu.Unlock()
@@ -403,5 +417,22 @@ func TestAnInstallThatStoppedWorkingIsToldToTheManagersOncePerDay(t *testing.T) 
 	n.api.remember(ctx, n.site, "site.com", gone)
 	if got := n.told("me@site.com"); len(got) != 2 {
 		t.Fatalf("the next day: %v", got)
+	}
+}
+
+func TestAnOwnerWhoIsAloneIsNotToldOfTheirOwnSiteAndKeyChanges(t *testing.T) {
+	n := newNoticeRig(t)
+	if code, _ := do(t, n.owner, "POST", n.srv.URL+"/api/v1/sites", `{"domain":"solo.acme-shop.dev"}`, csrf, "1"); code != http.StatusCreated {
+		t.Fatal("add")
+	}
+	if b := n.bell(notice.SiteAdded); len(b) != 0 {
+		t.Fatalf("told of their own action: %v", b)
+	}
+	// A security change is theirs to hear, always.
+	if code, _ := do(t, n.owner, "POST", n.srv.URL+"/api/v1/keys", `{"name":"k"}`, csrf, "1"); code != http.StatusCreated {
+		t.Fatal("key")
+	}
+	if got := n.told("me@site.com"); !hasSubject(got, "API key was created") {
+		t.Fatalf("security: %v", got)
 	}
 }

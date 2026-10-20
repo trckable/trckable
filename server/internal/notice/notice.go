@@ -124,6 +124,9 @@ type Notice struct {
 	To      []Audience `json:"to"`
 	Vars    Vars       `json:"vars,omitempty"`
 	At      int64      `json:"at"`
+	// Skip is a person who is left out of every audience: whoever made the
+	// change is not told of it, the others are. Security notices leave it empty.
+	Skip string `json:"skip,omitempty"`
 }
 
 // New starts a notice of a kind with a key of its own: every call is a new event.
@@ -332,7 +335,7 @@ type recipient struct{ User, Email string }
 
 // resolve turns the audiences into people, once each. Someone who is no longer
 // on the account is skipped: they are named by Address when they must hear it.
-func resolve(people []sqlite.NoticePerson, to []Audience) []recipient {
+func resolve(people []sqlite.NoticePerson, to []Audience, skip string) []recipient {
 	var out []recipient
 	seen := map[string]bool{}
 	add := func(user, email string) {
@@ -349,6 +352,9 @@ func resolve(people []sqlite.NoticePerson, to []Audience) []recipient {
 			continue
 		}
 		for _, p := range people {
+			if skip != "" && p.ID == skip {
+				continue
+			}
 			switch a.Who {
 			case "owners":
 				if p.Role == sqlite.RoleOwner {
@@ -380,7 +386,7 @@ func (h *Hub) fanOut(ctx context.Context, r sqlite.OutboxRow) error {
 	if err != nil {
 		return err
 	}
-	rs := resolve(people, n.To)
+	rs := resolve(people, n.To, n.Skip)
 	var fresh []sqlite.OutboxRow
 	if spec.Email != nil && h.mailOn() {
 		body, err := json.Marshal(mailBody{Kind: n.Kind, Vars: n.Vars, At: n.At})

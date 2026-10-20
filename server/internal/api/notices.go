@@ -37,11 +37,33 @@ func actor(r *http.Request) string {
 	return "an API key"
 }
 
-// tellOwners tells the owners of the request's account what its person did.
+// skipOf is the person making the request, who is not told of what they did.
+func skipOf(r *http.Request) string {
+	if u := principalOf(r).user; u != nil {
+		return u.ID
+	}
+	return ""
+}
+
+// tellOwners tells the other owners of the request's account what its person
+// did: the person themselves knows.
 func (a *API) tellOwners(r *http.Request, kind, site string, v notice.Vars) {
+	a.tellOwnersAs(r, kind, site, v, true)
+}
+
+// tellAllOwners is tellOwners for a security notice, which the person who made
+// the change is told of too.
+func (a *API) tellAllOwners(r *http.Request, kind string, v notice.Vars) {
+	a.tellOwnersAs(r, kind, "", v, false)
+}
+
+func (a *API) tellOwnersAs(r *http.Request, kind, site string, v notice.Vars, skipActor bool) {
 	v["by"], v["when"] = actor(r), a.stamp()
 	n := notice.New(kind, principalOf(r).account, []notice.Audience{notice.Owners()}, v)
 	n.Site = site
+	if u := principalOf(r).user; skipActor && u != nil {
+		n.Skip = u.ID
+	}
 	a.tell(r.Context(), n)
 }
 
@@ -82,7 +104,9 @@ func (a *API) tellRole(r *http.Request, was sqlite.Person, role string) {
 		return
 	}
 	v := notice.Vars{"who": was.Email, "role": role, "by": actor(r), "when": a.stamp()}
-	a.tell(r.Context(), notice.New(notice.RoleChanged, principalOf(r).account, []notice.Audience{notice.Person(was.ID), notice.Owners()}, v))
+	n := notice.New(notice.RoleChanged, principalOf(r).account, []notice.Audience{notice.Person(was.ID), notice.Owners()}, v)
+	n.Skip = skipOf(r)
+	a.tell(r.Context(), n)
 }
 
 // tellRemoved tells the owners, and the person who was removed (by address:
@@ -92,7 +116,9 @@ func (a *API) tellRemoved(r *http.Request, gone sqlite.Person) {
 		return
 	}
 	v := notice.Vars{"who": gone.Email, "by": actor(r), "when": a.stamp()}
-	a.tell(r.Context(), notice.New(notice.MemberRemoved, principalOf(r).account, []notice.Audience{notice.Address(gone.Email), notice.Owners()}, v))
+	n := notice.New(notice.MemberRemoved, principalOf(r).account, []notice.Audience{notice.Address(gone.Email), notice.Owners()}, v)
+	n.Skip = skipOf(r)
+	a.tell(r.Context(), n)
 }
 
 // keyName is what a key is called in a notice: its name, or that it has none.
