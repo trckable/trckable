@@ -89,3 +89,25 @@
     flex-wrap: wrap;
   }
 }
+
+/* The credit at the foot of a free account's shared page: quiet, centred, below the numbers. */
+.share-powered {
+  margin-top: auto;
+  padding: 16px 0 24px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.share-powered a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  color: var(--text-3);
+  text-decoration: none;
+}
+
+.share-powered a:hover {
+  color: var(--text-2);
+  text-decoration: underline;
+}
