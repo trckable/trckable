@@ -28,8 +28,8 @@ describe('the shared page header', () => {
 })
 
 describe('a link with its owner\'s own look', () => {
-  it('shows trckable\'s wordmark by default and the owner\'s logo in its place', () => {
-    expect(header({})).toContain('class="tkb-logo')
+  it('leaves trckable\'s wordmark out of the header and shows the owner\'s logo', () => {
+    expect(header({})).not.toContain('class="tkb-logo')
     const html = header({ logo_url: '/api/v1/share/logo?v=3' })
     expect(html).toContain('class="share-logo"')
     expect(html).toContain('src="/api/v1/share/logo?v=3"')

@@ -129,7 +129,6 @@ export function ShareHeader({ info }: { info: ShareInfo }) {
     <>
       <span className="brand">
         {info.logo_url && <img className="share-logo" src={info.logo_url} alt={info.site || info.domain} />}
-        {!info.logo_url && !info.hide_brand && <Wordmark />}
       </span>
       <span className="share-id">
         <SiteMark site={{ domain: info.domain, color: info.color, icon_url: info.icon_url }} size={20} />
