@@ -1058,6 +1058,12 @@ var migrations = []string{
 	);
 	CREATE INDEX IF NOT EXISTS notice_outbox_due ON notice_outbox (state, next_at);
 	CREATE INDEX IF NOT EXISTS notice_outbox_account ON notice_outbox (account);`,
+	// 76: the threshold alert (alerts.go): what it counts (metric), over which
+	// stretch (period), and the stretch it last fired for (fired_period), so a
+	// crossed threshold is told once for each day, week or month.
+	`ALTER TABLE alerts ADD COLUMN metric TEXT NOT NULL DEFAULT '';
+	ALTER TABLE alerts ADD COLUMN period TEXT NOT NULL DEFAULT '';
+	ALTER TABLE alerts ADD COLUMN fired_period TEXT NOT NULL DEFAULT '';`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

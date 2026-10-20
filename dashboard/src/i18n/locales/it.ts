@@ -3367,4 +3367,18 @@ export default {
   'blocks.visitors': (n: number) => count(n, 'visitatore', 'visitatori'),
   'blocks.was': (v: string) => `era ${v}`,
   'blocks.chart': (title: string, from: string, to: string) => `${title}, dal ${from} al ${to}`,
+  // thresholds
+  'thresholds.label': 'Obiettivo raggiunto',
+  'thresholds.lead': 'Avvisami a',
+  'thresholds.hint': 'Una volta per ogni periodo in cui viene raggiunto',
+  'thresholds.numberLabel': 'Il numero da raggiungere',
+  'thresholds.metricLabel': 'Cosa contare',
+  'thresholds.periodLabel': 'In quale periodo',
+  'thresholds.metric.sales': 'vendite',
+  'thresholds.metric.revenue': 'di ricavi',
+  'thresholds.metric.visitors': 'visitatori',
+  'thresholds.period.day': 'in un giorno',
+  'thresholds.period.week': 'in una settimana',
+  'thresholds.period.month': 'in un mese',
+  'thresholds.period.all': 'in totale',
 } satisfies Messages

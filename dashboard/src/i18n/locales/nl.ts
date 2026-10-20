@@ -3367,4 +3367,18 @@ export default {
   'blocks.visitors': (n: number) => count(n, 'bezoeker', 'bezoekers'),
   'blocks.was': (v: string) => `was ${v}`,
   'blocks.chart': (title: string, from: string, to: string) => `${title}, van ${from} tot ${to}`,
+  // thresholds
+  'thresholds.label': 'Doel bereikt',
+  'thresholds.lead': 'Meld me bij',
+  'thresholds.hint': 'Eén keer per periode waarin het wordt bereikt',
+  'thresholds.numberLabel': 'Het getal dat bereikt moet worden',
+  'thresholds.metricLabel': 'Wat er geteld wordt',
+  'thresholds.periodLabel': 'Over welke periode',
+  'thresholds.metric.sales': 'verkopen',
+  'thresholds.metric.revenue': 'omzet',
+  'thresholds.metric.visitors': 'bezoekers',
+  'thresholds.period.day': 'op één dag',
+  'thresholds.period.week': 'in een week',
+  'thresholds.period.month': 'in een maand',
+  'thresholds.period.all': 'in totaal',
 } satisfies Messages

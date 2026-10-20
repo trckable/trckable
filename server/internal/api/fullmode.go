@@ -485,6 +485,10 @@ func (a *API) saveAlert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	saved, err := a.Ctl.SaveAlert(r.Context(), in)
+	if errors.Is(err, sqlite.ErrThreshold) {
+		fail(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	if err != nil {
 		fail(w, http.StatusBadRequest, "that alert needs a kind and a webhook URL")
 		return

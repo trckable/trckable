@@ -14,6 +14,8 @@ import { WeeklyNow } from './WeeklyNow'
 import { KINDS, shownKinds } from './alertKinds'
 import { advice, ago, kindOf, SEND_LABEL, SendIcon, shown, stored, whereOf } from './alertsParts'
 import { dateFmt } from '../lib/format'
+import { ThresholdRule } from '../features/thresholds/Rule'
+import { ruleOf } from '../features/thresholds/model'
 
 export function AlertsSettings({ site }: { site: Site }) {
   const [list, setList] = useState<Alert[] | null>(null)
@@ -38,7 +40,7 @@ export function AlertsSettings({ site }: { site: Site }) {
 
   const save = (kind: Alert['kind'], patch: Partial<Alert>, to = target) => {
     const current = find(kind)
-    const next = { id: current?.id, kind, enabled: current?.enabled ?? true, target: stored(to), threshold: current?.threshold ?? 0, ...patch }
+    const next = { id: current?.id, kind, enabled: current?.enabled ?? true, target: stored(to), threshold: current?.threshold ?? 0, ...(kind === 'threshold' ? ruleOf(current) : {}), ...patch }
     if (!next.target) {
       toast(mail ? 'Add a webhook URL or an email address first' : 'Add a webhook URL first', 'error')
       return
@@ -81,6 +83,23 @@ export function AlertsSettings({ site }: { site: Site }) {
         await seen
         setTest({ state: 'bad', text: words(e) })
       })
+  }
+  // The sentence under a kind: its number inside it, its rule as fields, or just its hint.
+  const ruleLine = (k: (typeof KINDS)[number], a: Alert | undefined, isOn: boolean) => {
+    if (k.id === 'threshold')
+      return (
+        <>
+          <ThresholdRule alert={a} onSave={(rule) => save(k.id, { ...rule, enabled: isOn })} />
+          <span className="faint al-last">{k.hint(site)}</span>
+        </>
+      )
+    if (!k.unit) return k.hint(site)
+    return (
+      <>
+        {k.before}{' '}
+        <Threshold value={a?.threshold || k.fallback} label={`${k.label} threshold in ${k.unit}`} onSave={(v) => save(k.id, { threshold: v || k.fallback, enabled: isOn })} /> {k.unit}, {k.hint(site)}
+      </>
+    )
   }
   if (!list) return <div className="skeleton" style={{ height: 240 }} />
   const on = list.filter((a) => a.enabled).length
@@ -185,15 +204,7 @@ export function AlertsSettings({ site }: { site: Site }) {
               <span className="al-kind-text">
                 <b>{k.label}</b>
                 <span className="al-rule">
-                  {k.unit ? (
-                    <>
-                      {k.before}{' '}
-                      <Threshold value={a?.threshold || k.fallback} label={`${k.label} threshold in ${k.unit}`} onSave={(v) => save(k.id, { threshold: v || k.fallback, enabled: isOn })} />{' '}
-                      {k.unit}, {k.hint(site)}
-                    </>
-                  ) : (
-                    k.hint(site)
-                  )}
+                  {ruleLine(k, a, isOn)}
                 </span>
                 {a?.last_fired ? <span className="faint al-last">Last sent {ago(a.last_fired)}</span> : null}
                 {k.id === 'weekly' && mail && <WeeklyNow site={site.id} />}

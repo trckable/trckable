@@ -62,10 +62,12 @@ type Server struct {
 	answers *answerAsker                 // nil when Answers is off (no key, or TRCKABLE_ANSWERS_EVERY=0)
 	ctl     *sqlite.Store
 	notices *notice.Hub // every notice and alert that must reach someone (notices.go)
-	log     *wal.Log
-	ingest  *ingest.Handler
-	http    *http.Server
-	geo     *geo.DB
+	// thresholdCount is what a threshold alert counts; nil reads the stores (threshold.go). Tests replace it.
+	thresholdCount func(ctx context.Context, a sqlite.Alert, info sqlite.SiteInfo, from, now time.Time) (float64, error)
+	log            *wal.Log
+	ingest         *ingest.Handler
+	http           *http.Server
+	geo            *geo.DB
 	// asn is the network database behind stricter bot filtering. It is only
 	// downloaded once a site that uses it gets a visit.
 	asn        *geo.DB
