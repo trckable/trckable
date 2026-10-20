@@ -1790,7 +1790,7 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 .mk .hd::before{border-radius:0;top:0;bottom:0;left:calc(50% - 50vw);right:calc(50% - 50vw);-webkit-mask-image:none;mask-image:none;border-bottom:1px solid var(--mk-line)}
 .mk .hd{transition:padding .18s ease,margin-bottom .18s ease}
 .mk .hd .logo,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:height .18s ease,width .18s ease}
-.mk .hd[data-stuck=true]{--mk-h:28px;--hpb:8px;padding-top:10px;padding-left:max(var(--mk-s4),env(safe-area-inset-left));padding-right:max(var(--mk-s4),env(safe-area-inset-right));margin-bottom:24px}
+.mk .hd[data-stuck=true]{--mk-h:28px;--hpb:10px;padding-top:10px;padding-left:max(var(--mk-s4),env(safe-area-inset-left));padding-right:max(var(--mk-s4),env(safe-area-inset-right));margin-bottom:22px}
 .mk .hd[data-stuck=true] .logo{width:28px;height:28px}
 @media (pointer:coarse){.mk .hd[data-stuck=true]{--mk-h:40px}}
 }
