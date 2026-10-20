@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/trckable/trckable/server/internal/permissions"
 	"github.com/trckable/trckable/server/internal/query"
 )
 
@@ -52,6 +53,10 @@ func (a *API) export(w http.ResponseWriter, r *http.Request) {
 	if q == nil {
 		w.Header().Set("Retry-After", "2")
 		fail(w, http.StatusServiceUnavailable, "analytics store warming up")
+		return
+	}
+	if !mayExport(principalOf(r)) {
+		fail(w, http.StatusForbidden, "only an owner can export data")
 		return
 	}
 	siteID := r.PathValue("site")
@@ -203,4 +208,10 @@ func safeName(s string) string {
 		return "trckable"
 	}
 	return s
+}
+
+// mayExport says whether the request may take data out as a file: a person
+// needs the export action, an API key (no person) keeps the read access it had.
+func mayExport(p principal) bool {
+	return p.user == nil || canUser(p.user, permissions.ActDataExport)
 }

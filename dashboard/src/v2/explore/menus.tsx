@@ -7,6 +7,7 @@ import { copy } from './copy'
 import { chipName, dimWord, valueOf } from './filters'
 import { FILTER_DIMS, groups } from './sections'
 import type { Filter } from '../../lib/api'
+import { can } from '../../lib/permissions'
 import type { Connected, FilterDim, Option, SavedView, Section } from './types'
 
 export function PickMenu({ section, conn, onPick }: { section: Section; conn: Connected; onPick: (s: Section) => void }) {
@@ -112,7 +113,7 @@ export function MoreMenu({ views, details, onDetails, onCsv, onCopy }: { views: 
         <XSep />
       </div>
       {details && <XMi data={{ 'data-pgd': '1' }} name={copy.pageDetails} desc={copy.pageDetailsHint} onClick={onDetails} />}
-      <XMi id="xCsv" name={copy.exportCsv} desc={copy.exportHint} onClick={onCsv} />
+      <XMi id="xCsv" name={copy.exportCsv} desc={copy.exportHint} disabled={!can('data.export')} title={can('data.export') ? undefined : copy.exportDenied} onClick={onCsv} />
       <XMi data={{ 'data-copy': '1' }} name={copy.copyLink} onClick={onCopy} />
     </>
   )

@@ -24,6 +24,7 @@ import (
 //	read    anyone of the account: owner, viewer, API key
 //	self    a signed-in person's own account (viewer too), never a key
 //	selfW   the same, a change: viewers may, keys may not
+//	export  taking data out as a file: owner and API key, never a viewer
 //	owner   read, but only an owner (settings that hold secrets or people)
 //	write   a change: owners only (and the automation token)
 var routeRules = map[string]string{
@@ -176,7 +177,7 @@ var routeRules = map[string]string{
 	"GET /api/v1/referrer-icons/{host}":                          "self",
 	"GET /api/v1/sites/{site}/buyers":                            "read",
 	"GET /api/v1/sites/{site}/refunds":                           "read",
-	"GET /api/v1/sites/{site}/export.csv":                        "read",
+	"GET /api/v1/sites/{site}/export.csv":                        "export",
 	"GET /api/v1/sites/{site}/events":                            "read",
 	"GET /api/v1/sites/{site}/live":                              "read",
 	"GET /api/v1/sites/{site}/now":                               "read",
@@ -405,6 +406,9 @@ func TestEveryRouteChecksWhoIsAsking(t *testing.T) {
 			case "read":
 				expectAllowed(asViewer)
 				expectAllowed(asKey)
+			case "export":
+				unchanged(func() { expectRefused(asViewer, http.StatusForbidden) })
+				expectAllowed(asKey)
 			case "self":
 				expectAllowed(asViewer)
 				expectRefused(asKey, http.StatusForbidden, http.StatusNotFound)
@@ -464,4 +468,19 @@ func ownerOrder(patterns []string) []string {
 		}
 	}
 	return out
+}
+
+// A route that takes data out as a file (its path says export, csv or
+// download) is decided as one: the export rule, or an owner's. "read" would
+// hand it to every viewer.
+func TestExportRoutesAreNotPlainReads(t *testing.T) {
+	for pattern, rule := range routeRules {
+		low := strings.ToLower(pattern)
+		if !strings.Contains(low, "export") && !strings.Contains(low, ".csv") && !strings.Contains(low, "download") {
+			continue
+		}
+		if rule != "export" && rule != "owner" {
+			t.Errorf("%s is %q: a route that exports data is \"export\" or \"owner\"", pattern, rule)
+		}
+	}
 }

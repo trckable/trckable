@@ -2412,6 +2412,7 @@ export default {
   'v2explore.pageDetailsHint': 'Mapa de calor, profundidad de scroll, velocidad',
   'v2explore.exportCsv': 'Exportar CSV',
   'v2explore.exportHint': 'Esta tabla, con tus filtros',
+  'v2explore.exportDenied': 'Los lectores no pueden exportar datos. Pídelo a un propietario.',
   'v2explore.copyLink': 'Copiar enlace',
   'v2explore.linkCopied': 'Enlace copiado',
   'v2explore.removeFilter': (dim: string) => `Quitar el filtro de ${dim}`,
