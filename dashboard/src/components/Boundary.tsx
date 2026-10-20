@@ -10,7 +10,8 @@ import { reloadOnce, staleChunk } from '../lib/stale'
 export class Boundary extends Component<{ reset?: unknown; children: ReactNode }, { bad: boolean; up: boolean }> {
   state = { bad: false, up: false }
   static getDerivedStateFromError = () => ({ bad: true })
-  componentDidCatch(err: unknown) {
+  componentDidCatch(err: unknown, info?: { componentStack?: string | null }) {
+    if (import.meta.env.DEV) console.error('Boundary caught', err, info?.componentStack)
     if (staleChunk(err)) void reloadOnce().then((up) => this.setState({ up }))
   }
   componentDidUpdate(prev: { reset?: unknown }) {

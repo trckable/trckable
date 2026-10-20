@@ -27,7 +27,14 @@ docker volume create "$V" >/dev/null
 # The old image, as root, the way it always ran.
 docker run -d --name "$N" --user 0 -e TRCKABLE_GEO=off -p "127.0.0.1:$PORT:8080" -v "$V":/data "$OLD" >/dev/null
 ready "the old image"
-site=$(docker exec "$N" trckabled site add rootvol.example)
+# The command opens the store beside the running server, which can still hold it for a moment after it is ready: ask again.
+site=""
+for _ in $(seq 1 25); do
+  site=$(docker exec "$N" trckabled site add rootvol.example 2>/dev/null) && break
+  site=""
+  sleep 0.4
+done
+[ -n "$site" ] || fail "the old image would not add a site"
 code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "127.0.0.1:$PORT/api/e" \
   -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36' \
   -d "{\"s\":\"$site\",\"k\":\"pv\",\"u\":\"https://rootvol.example/\"}")

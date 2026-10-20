@@ -1009,6 +1009,31 @@ var migrations = []string{
 	INSERT INTO answer_site_spend (site_id, month, micros)
 	SELECT r.site_id, strftime('%Y-%m', r.asked_at, 'unixepoch'), sum(r.cost_micros) FROM answer_runs r
 	WHERE r.cost_micros > 0 AND r.site_id IN (SELECT id FROM sites) GROUP BY r.site_id, strftime('%Y-%m', r.asked_at, 'unixepoch');`,
+	// 74: the team's own social accounts (Channels, social.go) and their views
+	// per day. The tokens are sealed; disconnecting deletes the account, its
+	// tokens and every day it holds (the platforms require it).
+	`CREATE TABLE IF NOT EXISTS social_accounts (
+		id          TEXT PRIMARY KEY,
+		account_id  TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+		platform    TEXT NOT NULL,
+		external_id TEXT NOT NULL,
+		app_user_id TEXT NOT NULL DEFAULT '', -- the id a platform's removal call names (not Instagram's insights id)
+		handle      TEXT NOT NULL DEFAULT '',
+		access_enc  TEXT NOT NULL DEFAULT '',
+		refresh_enc TEXT NOT NULL DEFAULT '',
+		expires_at  INTEGER NOT NULL DEFAULT 0,
+		created_at  INTEGER NOT NULL,
+		last_ok_at  INTEGER,
+		last_error  TEXT NOT NULL DEFAULT '',
+		UNIQUE (account_id, platform, external_id)
+	);
+	CREATE TABLE IF NOT EXISTS social_daily (
+		social_id TEXT NOT NULL REFERENCES social_accounts(id) ON DELETE CASCADE,
+		platform  TEXT NOT NULL,
+		day       TEXT NOT NULL,
+		views     INTEGER NOT NULL,
+		PRIMARY KEY (social_id, day)
+	) WITHOUT ROWID;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

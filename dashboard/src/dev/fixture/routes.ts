@@ -15,6 +15,7 @@ import {
   siteOf,
   type Ctx,
 } from './report'
+import { channelsAnswer } from './channels'
 import { answersChange, answersReport, answersSetup, answersState } from './answers'
 import { busierOf, nowOf } from './live'
 import { crawlersOf, funnelOf, heatOf, linksOf, scrollOf, segments } from './sections'
@@ -244,6 +245,8 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
   const an = /^\/sites\/[^/]+\/answers\/([a-z]+)(?:\/(\d+))?$/.exec(path)
   const change = an && answersChange(method, an[1], an[2], body)
   if (change) return change
+  const chan = channelsAnswer(c, method, path, sp)
+  if (chan) return chan
   if (method !== 'GET') return none()
   const sites = SITES
   switch (path) {
