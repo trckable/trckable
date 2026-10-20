@@ -6,6 +6,7 @@ import { flushSync } from 'react-dom'
 import type { Bucket } from '../../lib/api'
 import { copy } from '../briefing/copy'
 import { capital, type Compare } from '../briefing/compare'
+import { downLabel } from './chartNote'
 import { niceStep } from '../briefing/geometry'
 import type { Judged } from '../briefing/usual'
 import type { ChartGeo } from '../../features/moments/marks'
@@ -159,15 +160,17 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
           </text>
         </>
       )}
-      {c.downs.map((d) => {
+      {c.downs.map((d, k) => {
         const x1 = edge(d.a)
         const w = Math.max(3, edge(d.b) - x1)
         return (
           <g key={d.a}>
             <rect x={x1} y={T} width={w} height={B - T} fill="var(--mk-redB)" />
-            <text x={Math.min(x1 + w + 5, W - 120)} y={T + 14} fill="var(--mk-red)" fontSize="12" fontWeight="600">
-              {ph ? copy.downShort(d.min, d.now) : copy.downLabel(d.min, d.now)}
-            </text>
+            {k === c.downs.length - 1 && (
+              <text x={Math.min(x1 + w + 5, W - 120)} y={T + 14} fill="var(--mk-red)" fontSize="12" fontWeight="600">
+                {downLabel(c.downs, ph)}
+              </text>
+            )}
           </g>
         )
       })}

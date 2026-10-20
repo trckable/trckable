@@ -162,6 +162,7 @@ export const copy = defineCopy('briefing', {
   normalOverall: (n: number, of: number) => `Normal overall · ${n} of ${of} days outside the usual band`,
   downShort: (min: number, now: boolean) => (now ? 'down now' : `down ${min}m`),
   downLabel: (min: number, now: boolean) => (now ? `down now · ${min} min` : `down ${min} min`),
+  downMany: (n: number, min: number) => `down ${n}× · ${min} min`,
   noteBtn: (n: number) => (n > 0 ? `Notes (${n})` : 'Notes'),
   // The four numbers.
   people: 'People',

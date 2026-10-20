@@ -2811,6 +2811,7 @@ export default {
   'briefing.normalOverall': (n: number, of: number) => `Normale nel complesso · ${n} giorni su ${of} fuori dall’intervallo abituale`,
   'briefing.downShort': (min: number, now: boolean) => (now ? 'offline ora' : `offline ${min}m`),
   'briefing.downLabel': (min: number, now: boolean) => (now ? `offline ora · ${min} min` : `offline ${min} min`),
+  'briefing.downMany': (n: number, min: number) => `${n} interruzioni · ${min} min`,
   'briefing.noteBtn': (n: number) => (n > 0 ? `Note (${n})` : 'Note'),
   'briefing.people': 'Persone',
   'briefing.views': 'Visualizzazioni',

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Point, Result } from '../../lib/api'
 import { chartOf, siteNow } from './chart'
-import { chartNote, chartTone } from '../ui/chartNote'
+import { chartNote, chartTone, downLabel } from '../ui/chartNote'
 
 const pts = (xs: number[]): Point[] => xs.map((visitors, h) => ({ t: `2026-10-16T${String(h).padStart(2, '0')}:00`, visitors, pageviews: visitors }))
 const res = (xs: number[]): Result => ({ approximate: false, kpis: { visitors: 0, sessions: 0, pageviews: 0, bounce_rate: 0, avg_session_s: 0, views_per_session: 0, new_visitor_share: 0 }, series: pts(xs), dims: {}, goals: null })
@@ -89,5 +89,12 @@ describe('the period before on the chart', () => {
     const c = chartOf({ cur: result(cur), prev: result(before), bucket: 'day', unit: 'month' })
     expect(c.compare).toBeNull()
     expect(c.noCompare).toBeNull()
+  })
+})
+
+describe('the label of the down stretches', () => {
+  it('says one stretch by itself and several as one line, so labels never meet', () => {
+    expect(downLabel([{ a: 1, b: 2, min: 23, now: false }], false)).toBe('down 23 min')
+    expect(downLabel([{ a: 1, b: 2, min: 23, now: false }, { a: 5, b: 6, min: 23, now: false }], true)).toBe('down 2× · 46 min')
   })
 })

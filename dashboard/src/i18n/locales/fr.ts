@@ -2799,6 +2799,7 @@ export default {
   'briefing.normalOverall': (n: number, of: number) => `Normal dans l’ensemble · ${n} jours sur ${of} hors de la bande habituelle`,
   'briefing.downShort': (min: number, now: boolean) => now ? 'en panne' : `en panne ${min} min`,
   'briefing.downLabel': (min: number, now: boolean) => now ? `en panne · ${min} min` : `en panne ${min} min`,
+  'briefing.downMany': (n: number, min: number) => `${n} pannes · ${min} min`,
   'briefing.noteBtn': (n: number) => n > 0 ? `Notes (${n})` : 'Notes',
   'briefing.people': 'Personnes',
   'briefing.views': 'Pages vues',

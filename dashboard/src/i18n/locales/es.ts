@@ -2804,6 +2804,7 @@ export default {
   'briefing.normalOverall': (n: number, of: number) => `Normal en conjunto · ${n} de ${of} días fuera de la banda habitual`,
   'briefing.downShort': (min: number, now: boolean) => now ? 'caído ahora' : `caído ${min} min`,
   'briefing.downLabel': (min: number, now: boolean) => now ? `caído ahora · ${min} min` : `caído ${min} min`,
+  'briefing.downMany': (n: number, min: number) => `${n} caídas · ${min} min`,
   'briefing.noteBtn': (n: number) => n > 0 ? `Notas (${n})` : 'Notas',
   'briefing.people': 'Personas',
   'briefing.views': 'Páginas vistas',

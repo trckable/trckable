@@ -2811,6 +2811,7 @@ export default {
   'briefing.normalOverall': (n: number, of: number) => `Over het geheel normaal · ${n} van de ${of} dagen buiten de gebruikelijke band`,
   'briefing.downShort': (min: number, now: boolean) => (now ? 'nu offline' : `${min} m offline`),
   'briefing.downLabel': (min: number, now: boolean) => (now ? `nu offline · ${min} min` : `${min} min offline`),
+  'briefing.downMany': (n: number, min: number) => `${n}× offline · ${min} min`,
   'briefing.noteBtn': (n: number) => (n > 0 ? `Notities (${n})` : 'Notities'),
   'briefing.people': 'Mensen',
   'briefing.views': 'Paginaweergaven',
