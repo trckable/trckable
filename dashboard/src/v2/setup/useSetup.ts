@@ -21,6 +21,7 @@ export function useSetup(site: Site | null, on: boolean, fresh = false) {
     if (!id || !on) return
     readSetup(id, maxAge)
       .then((state) => {
+        remember(id, state)
         // A site not known before waits until the tab is looked at again: a ring arriving late would push the header's other controls.
         if (known || reveal || fresh) setGot({ site: id, state })
       })

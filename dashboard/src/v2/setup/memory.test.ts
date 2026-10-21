@@ -25,7 +25,6 @@ test('a site\'s checklist is read once for whoever asks while it is on its way, 
   await Promise.all([readSetup('r'), readSetup('r')])
   await readSetup('r', 30_000)
   expect(get).toHaveBeenCalledTimes(1)
-  expect(lastState('r')).toEqual(read)
   await readSetup('r')
   expect(get).toHaveBeenCalledTimes(2)
   get.mockRestore()

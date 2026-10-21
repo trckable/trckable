@@ -124,7 +124,7 @@ export function onState(f: () => void): () => void {
   return () => void listeners.delete(f)
 }
 
-// The one read of a site's checklist, for the ring and for every prompt that asks whether it is wanted: a read already on its way is
+// The one read of a site's checklist, for the ring and for every prompt that asks whether it is wanted (each keeps the answer with `remember`, as it did when it read for itself): a read already on its way is
 // the answer to whoever asks next, and so is one that came back less than `maxAge` ms ago (0: only a read still on its way).
 /** How long a read stays the answer to a second asker that does not need it fresh (the ring's first read, after a prompt's). */
 export const SHARED_MS = 30_000
@@ -137,7 +137,6 @@ export function readSetup(site: string, maxAge = 0): Promise<SetupState> {
     p: more.setup(site).then(
       (state) => {
         entry.at = Date.now()
-        remember(site, state)
         return state
       },
       (e: unknown) => {
