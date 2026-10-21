@@ -47,6 +47,8 @@ export interface Story {
   how: string
   ev: string
   act?: Act
+  /** A second action, for the ⋯ menu (a prompt to copy). */
+  extra?: Act
   /** What else moved, in the same group of cards (sources, countries, devices, pages): named under the card, with a way to all of it. */
   also?: { key: Topic; name: string }[]
   /** The card's subject in a word or two, for the line that names the others. */
@@ -393,7 +395,9 @@ export function cardsOf(i: CardsIn): Story[] {
       u: 's',
       how: `${copy.vitalsHow} ${i.rule}`,
       ev: copy.speedEv(speedWords(c[0], 0), speedWords(w[0], 0)),
-      act: { k: 'copy', t: copy.speedPrompt, text: copy.speedPromptText(i.domain, speedWords(c[0], 0), speedWords(w[0], 0)), done: copy.speedCopied },
+      act: { k: 'set', t: copy.alertMe, msg: copy.alertSlow },
+      extra: { k: 'copy', t: copy.speedPrompt, text: copy.speedPromptText(i.domain, speedWords(c[0], 0), speedWords(w[0], 0)), done: copy.speedCopied },
+      ask: copy.speedAsk(speedWords(c[0], 0), speedWords(w[0], 0)),
       deeper: { kind: 'speed' },
     })
   }

@@ -31,6 +31,9 @@ export function cardCtx(o: { site: Site; ui: ReturnType<typeof useBriefingState>
     },
     spark: () => o.spark,
     onAct: (s) => runAct(s, { site, onGoal: o.onGoal }) && ui.markDone(own(s)),
+    onExtra: (s) => {
+      runAct({ ...s, act: s.extra }, { site, onGoal: o.onGoal })
+    },
     done: (s) => ui.done.has(own(s)),
     how: (s) => ui.how.has(own(s)),
     onHow: (s) => ui.toggleHow(own(s)),
