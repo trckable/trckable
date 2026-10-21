@@ -120,7 +120,29 @@ export function salesCards(i: SalesIn): Story[] {
       deeper: { kind: 'table', tab: 'sales' },
     })
   }
+  // What was sold and what went back are one story: one card, the receipt of both, and the net.
+  if (out.length === 2) return [soldAndBack(out[1], out[0], i)]
   return out
+}
+
+type Receipt = Extract<NonNullable<Story['vis']>, { k: 'rcpt' }>
+const rowsOf = (s: Story, total: boolean): Receipt['rows'] => (s.vis?.k === 'rcpt' ? s.vis.rows.filter((r) => !r.tot || total) : [])
+
+/** The sales card with the refunds in it: sold, refunded and what was kept, in one receipt. */
+function soldAndBack(sold: Story, back: Story, i: SalesIn): Story {
+  const { money, fmt } = i
+  return {
+    ...sold,
+    score: back.score,
+    bad: true,
+    head: copy.soldGross(fmt(money.revenue + money.refunds)),
+    rest: copy.soldBack(fmt(money.refunds), fmt(money.revenue)),
+    // The listed sales are already net of what went back, so the rows add up to the net.
+    vis: { k: 'rcpt', rows: [...rowsOf(sold, false), { l: copy.rowNet, t: '', a: fmt(money.revenue), flag: '', tot: true }] },
+    why: `${sold.why} ${back.why}`.trim(),
+    how: `${sold.how} ${back.how}`,
+    ev: `${sold.ev} ${back.ev}`.trim(),
+  }
 }
 
 interface SearchIn {
