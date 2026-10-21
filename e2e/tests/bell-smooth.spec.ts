@@ -97,7 +97,10 @@ for (const width of [1440, 390]) {
     // Reading one changes its mark, not the list.
     const order = await menu.locator('.nft b').allTextContents()
     await menu.locator('.nf').nth(1).click()
-    await page.keyboard.press('Escape') // the milestone it opens
+    // The milestone it opens (a chunk loaded on demand): wait for it, then shut it.
+    await expect(page.getByRole('dialog', { name: 'Milestone' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog', { name: 'Milestone' })).toHaveCount(0)
     await page.locator('#bellBtn').click()
     await expect(menu.locator('.nf')).toHaveCount(3)
     expect(await menu.locator('.nft b').allTextContents()).toEqual(order)
@@ -117,7 +120,7 @@ for (const width of [1440, 390]) {
       document.dispatchEvent(new Event('visibilitychange'))
     })
     await expect(menu.locator('.nf')).toHaveCount(4)
-    await expect(menu.locator('.nf').first()).toContainText('stopped answering')
+    await expect(menu.locator('.nf').first()).toContainText('down since')
     await page.waitForTimeout(600)
     expect((await menu.locator('.nft b').allTextContents()).slice(1)).toEqual(order)
     const cls = await page.evaluate(() => (window as unknown as { __p: Probe }).__p.cls)
@@ -166,7 +169,9 @@ for (const width of [1440, 390]) {
     release()
     await expect(menu.locator('.nf')).toHaveCount(3)
     await menu.locator('.nf').first().click()
+    await expect(page.getByRole('dialog', { name: 'Milestone' })).toBeVisible()
     await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog', { name: 'Milestone' })).toHaveCount(0)
     await page.locator('#bellBtn').click()
     await expect(menu.locator('.nf')).toHaveCount(3)
     await page.waitForTimeout(1000)

@@ -15,6 +15,7 @@ import { useNotices } from './useNotices'
 const site = { id: 's1', domain: 'a.com' } as Site
 const now = Math.floor(Date.now() / 1000)
 const hosted = (id: string, at: number, extra: Partial<Notice> = {}): Notice => ({ id, kind: 'plan', site: '', title: id, sub: 's', at, ...extra })
+const DOWN = /^a\.com down since \d\d:\d\d$/
 const flush = () => act(() => new Promise((r) => setTimeout(r, 20)))
 
 function Harness({ sites }: { extras: V2Extras; sites: Site[] }) {
@@ -53,7 +54,7 @@ describe('the bell after a row is opened', () => {
     vi.spyOn(incidents, 'account').mockResolvedValue({ incidents: [{ id: 'i1', site: 's1', kind: 'down', started_at: now - 100, ended_at: null, cause: '', expected_visits: null, note: '' }] })
     vi.spyOn(api, 'milestones').mockResolvedValue({ enabled: true, milestones: [], moment: null })
     vi.spyOn(more, 'bellRead').mockResolvedValue({ read: [] })
-    const base = { readAll: () => undefined, dismiss: () => undefined, archive: { items: [], load: () => undefined, loading: false, words: { dismiss: 'd', archive: 'a', fresh: 'f', none: 'n' } } }
+    const base = { readAll: () => undefined, dismiss: () => undefined, archive: { items: [], load: () => undefined, loading: false, words: { none: 'n' } } }
     const m = mount({ bell: [hosted('plan', now - 50)], bellMore: { ...base, ready: false } }, [site])
     open()
     await flush()
@@ -61,7 +62,7 @@ describe('the bell after a row is opened', () => {
     expect(rows(m.host)).toEqual([])
     m.draw({ bell: [hosted('plan', now - 50)], bellMore: { ...base, ready: true } })
     await flush()
-    expect(rows(m.host)).toEqual(['plan', 'a.com stopped answering'])
+    expect(rows(m.host)).toEqual(['plan', expect.stringMatching(DOWN)])
     m.stop()
   })
 
@@ -78,17 +79,17 @@ describe('the bell after a row is opened', () => {
     await flush()
     answer({ read: [] })
     await flush()
-    expect(rows(first.host)).toEqual(['plan', 'a.com stopped answering'])
+    expect(rows(first.host)).toEqual(['plan', expect.stringMatching(DOWN)])
     // Open the hosted row: the build marks it read and takes it out of its list; the page moves on and mounts the bell again, before the sites are known.
     act(() => document.querySelectorAll<HTMLButtonElement>('.nf')[0].click())
     expect(opened).toHaveBeenCalled()
     first.stop()
     const again = mount({ bell: [] }, [])
     open()
-    expect(rows(again.host)).toEqual(['a.com stopped answering']) // the list of the last read, in the first frame
+    expect(rows(again.host)).toEqual([expect.stringMatching(DOWN)]) // the list of the last read, in the first frame
     expect(again.host.querySelector('.xnone')).toBeNull()
     await flush()
-    expect(rows(again.host)).toEqual(['a.com stopped answering'])
+    expect(rows(again.host)).toEqual([expect.stringMatching(DOWN)])
     again.stop()
   })
 })
