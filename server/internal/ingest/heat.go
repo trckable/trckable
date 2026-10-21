@@ -69,7 +69,7 @@ func (h *Handler) Heat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	u, ok := parsePageURL(p.URL, site.HashMode)
-	if !ok || !hostAllowed(u.Host, site, p.Dev == 1) {
+	if !ok || !hostAllowed(u.Host, site, p.Dev == 1, h.Now()) {
 		h.reject(w, http.StatusBadRequest, errHost)
 		return
 	}

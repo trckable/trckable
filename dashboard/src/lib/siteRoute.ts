@@ -3,6 +3,7 @@
 // not matter. An address that names none of them goes to their main
 // dashboard instead, never to Settings.
 import type { Site } from './api'
+import { movedTo } from './moved'
 
 /** A domain as it is compared: lower case and in its ASCII (punycode) form,
  *  so "Café.example", "caf%C3%A9.example" and "xn--caf-dma.example" meet.
@@ -19,7 +20,9 @@ export function canonDomain(raw: string): string {
 export function siteForSegment(sites: Site[], segment: string): Site | null {
   if (!segment) return null
   const want = canonDomain(segment)
-  return sites.find((s) => canonDomain(s.domain) === want) ?? null
+  const named = (domain: string) => sites.find((s) => canonDomain(s.domain) === canonDomain(domain)) ?? null
+  // A domain changed in this page's lifetime: its old address still names the site, until the address is tidied to the new one.
+  return named(want) ?? (movedTo(want) ? named(movedTo(want) ?? '') : null)
 }
 
 /** Where an address that names none of the person's sites goes: the first

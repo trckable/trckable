@@ -2,6 +2,8 @@ package query
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 )
 
 // MilestoneDay is one finished day of a site, in its own time: what the
@@ -47,4 +49,21 @@ func (q Q) MilestoneDays(ctx context.Context, site, tz, before string) ([]Milest
 		out = append(out, d)
 	}
 	return out, rows.Err()
+}
+
+// FirstGoal is the goal a site reached first on a day (YYYY-MM-DD, the site's time): the earliest goal event of that day,
+// by the goal's own name. Empty when none is told.
+func (q Q) FirstGoal(ctx context.Context, site, tz, day string) (string, error) {
+	tz, err := safeTZ(tz)
+	if err != nil {
+		return "", err
+	}
+	local := `CAST(((ts AT TIME ZONE 'UTC') AT TIME ZONE '` + tz + `') AS DATE)`
+	var goal string
+	//nolint:gosec // the zone was checked against the zone database by safeTZ; every value is bound as a parameter
+	err = q.DB.QueryRowContext(ctx, `SELECT goal FROM events WHERE site_id = ? AND kind = 2 AND goal IS NOT NULL AND `+local+` = CAST(? AS DATE) ORDER BY ts, seq LIMIT 1`, site, day).Scan(&goal)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", nil
+	}
+	return goal, err
 }

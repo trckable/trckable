@@ -688,11 +688,21 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .hero .ch-top{display:flex;align-items:center;justify-content:space-between}
 .mk .bdot{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:var(--mk-lime);color:var(--mk-on-lime);font-size:12px;font-style:normal;font-weight:700;display:grid;place-items:center;padding:0 4px;line-height:1}
 .mk .ib.bell{position:relative}
-/* A notice that can be put away: a small × at its right (a build with its own list) */
+/* A row's ⋯ at its right: shown on hover or focus, always where there is no hover (a phone). Its choices open right under the row. */
 .mk .nfw{position:relative}
-.mk .nfw .nfx{position:absolute;top:8px;right:8px;width:24px;height:24px;border:0;border-radius:50%;background:none;color:var(--mk-muted);font-size:16px;line-height:1;cursor:pointer;opacity:0}
-.mk .nfw:hover .nfx,.mk .nfw .nfx:focus-visible{opacity:1}
+.mk .nfw .nf{padding-right:44px}
+.mk .nfw .nfx{position:absolute;top:8px;right:8px;display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:10px;background:none;color:var(--mk-muted);cursor:pointer;opacity:0}
+.mk .nfw:hover .nfx,.mk .nfw .nfx:focus-visible,.mk .nfw .nfx[aria-expanded='true']{opacity:1}
+.mk .nfw .nfx:hover,.mk .nfw .nfx:focus-visible,.mk .nfw .nfx[aria-expanded='true']{background:color-mix(in srgb,var(--mk-text) 7%,transparent);color:var(--mk-text);outline:none}
 @media (hover:none){.mk .nfw .nfx{opacity:1}}
+/* The day a run of rows belongs to, and a row that is still going. */
+.mk .nfdy{margin:0;padding:var(--mk-s2) var(--mk-s3) 0;font-size:12px;font-weight:600;color:var(--mk-muted)}
+/* Several in one row: the sites listed under the title, each its own button. */
+.mk .nf.grp{cursor:default}
+.mk .nfn{text-align:left;font-size:13px;color:var(--mk-text);padding:2px 0;min-height:28px}
+.mk .nfn:hover{text-decoration:underline}
+@media (--xs){.mk .nfn{min-height:44px;display:flex;align-items:center}}
+.mk .nfar{align-self:flex-start;margin:var(--mk-s2) var(--mk-s3)}
 /* A short wiggle for what is new (useBellAlert): the glyph turns about the top of the bell; not with reduced motion. */
 .mk .ib.bell.shake svg{transform-origin:50% 12%;animation:mk-bell-shake .6s ease-in-out}
 @keyframes mk-bell-shake{0%,100%{transform:rotate(0)}15%{transform:rotate(16deg)}30%{transform:rotate(-14deg)}45%{transform:rotate(10deg)}60%{transform:rotate(-8deg)}75%{transform:rotate(4deg)}}
@@ -708,13 +718,13 @@ html[data-motion='off'] .mk .ib.bell.shake svg{animation:none}
 .mk .nfi{width:22px;height:22px;flex:none;color:var(--mk-muted)}
 .mk .nfi.k-down,.mk .nfi.k-failed,.mk .nfi.k-refund{color:var(--mk-red)}
 .mk .nfi.k-up,.mk .nfi.k-sale,.mk .nfi.k-spike,.mk .nfi.k-goal,.mk .nfi.k-milestone{color:var(--mk-lime)}
-.mk .cdb .nfh b{display:none}
-.mk .cdb .nfh{justify-content:flex-end}
 .mk .cdb .nfl{max-height:none}
 .mk .nft{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .mk .nft b{font-weight:600;font-size:13px;color:var(--mk-muted)}
 .mk .nft small{font-size:12px;color:var(--mk-muted)}
 .mk .nf.unread .nft b{color:var(--mk-text)}
+/* Still going: its title says so in red, read or not. */
+.mk .nf.bad .nft b{color:var(--mk-red)}
 .mk .nfd{width:8px;height:8px;border-radius:50%;background:var(--mk-lime);flex:none}
 /* The one placeholder row while the list is being read for the first time: a row's own height, so nothing below it moves when the rows replace it. */
 .mk .nfs{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s3);min-height:56px;box-sizing:border-box}
@@ -1464,7 +1474,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .mi .now{text-align:right;font-variant-numeric:tabular-nums}
 .mk .mi.all .all-problems{font-size:12px;color:var(--mk-faint)}
 .mk .mi.all .all-problems .down{color:var(--mk-red);font-weight:600}
-.open-touch{display:none}
+.pop.menu .open-touch{display:none}
 .mk .site-head .btn.icon.ghost{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--mk-faint)}
 .mk .mi .state-line.quiet{color:var(--mk-amber)}
 .mk .sites-domains{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--mk-line);padding-bottom:var(--mk-s2);margin-bottom:var(--mk-s2)}
@@ -1817,9 +1827,9 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
  .mk .sitelist{--acts:44px}
  .mk .site-row .site-open{display:none}
  .mk .site-row .site-acts{opacity:1}
- .menu-list .open-touch{display:flex}
+ .pop.menu .open-touch{display:flex}
 }
-@media (--xs){.menu-list .open-touch{display:flex}}
+@media (--xs){.pop.menu .open-touch{display:flex}}
 @media (--xs){.mk .hd .mk-chip .nv{font-size:0;padding:0;width:8px;height:8px;background:var(--mk-amber)}}
 .mk .mk-waiting{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 0;text-align:center}
 .mk .mk-waiting b{font-size:15px;font-weight:600}
@@ -1837,7 +1847,7 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 .mk .lbar.top i{background:var(--mk-limeL)}
 .mk .lbar span,.mk .lbar b{position:relative;min-width:0}
 .mk .lbar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mk .lbar b{font-weight:600;font-variant-numeric:tabular-nums}
+.mk .lbar b{flex:none;font-weight:600;font-variant-numeric:tabular-nums}
 .mk .lflag{margin-right:6px}
 .mk .lhbody{display:flex;flex-direction:column;gap:var(--mk-s4);flex:1}
 .mk .lhc button{border:0;background:none;color:var(--mk-text);font:inherit;text-align:left;cursor:pointer;padding:0}
@@ -1957,3 +1967,14 @@ html[data-motion='off'] .mk .lswap{animation:none}
  .mk .site-row .mi.site,.mk .team-row .mi.team{min-height:52px}
 }
 @media (prefers-reduced-motion:reduce){.mk .site-row .grip,.mk .team-row .grip{transition:none}}
+/* The panel's header row holds the filter and Mark all read; the filter is one quiet icon with a dot while the list is narrowed. */
+.mk .nftools{display:inline-flex;align-items:center;gap:var(--mk-s2)}
+.mk .cdh .nftools{margin-left:auto}
+.mk .nfq{position:relative;display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:10px;background:none;color:var(--mk-muted);cursor:pointer;flex:none}
+.mk .nfq:hover,.mk .nfq[aria-expanded='true'],.mk .nfq:focus-visible{background:color-mix(in srgb,var(--mk-text) 7%,transparent);color:var(--mk-text);outline:none}
+.mk .nfq .nfd{position:absolute;top:5px;right:5px}
+.mk .nfq.sm{width:24px;height:24px;border-radius:8px}
+@media (--xs){.mk .nfq{width:44px;height:44px}.mk .nfq.sm{width:36px;height:36px}}
+.mk .nfd.sm{width:6px;height:6px}
+/* While the list is narrowed, one quiet line above it says how, with a way to clear it. */
+.mk .nfact{display:flex;align-items:center;justify-content:space-between;gap:var(--mk-s2);padding:var(--mk-s1) var(--mk-s3) 0;font-size:12px;color:var(--mk-muted)}
