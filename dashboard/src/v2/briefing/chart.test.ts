@@ -98,3 +98,26 @@ describe('the label of the down stretches', () => {
     expect(downLabel([{ a: 1, b: 2, min: 23, now: false }, { a: 5, b: 6, min: 23, now: false }], true)).toBe('down 2× · 46 min')
   })
 })
+
+describe('a week by the hour against a week by the day', () => {
+  const hourly = (n: number, v: number): Point[] => Array.from({ length: n }, (_, i) => ({ t: `2026-10-${String(10 + Math.floor(i / 24)).padStart(2, '0')}T${String(i % 24).padStart(2, '0')}:00`, visitors: v, pageviews: v }))
+  const daily = (n: number, v: number): Point[] => Array.from({ length: n }, (_, i) => ({ t: `2026-10-${String(3 + i).padStart(2, '0')}T00:00`, visitors: v, pageviews: v }))
+  const result = (series: Point[]): Result => ({ ...res([]), series })
+  it('draws no dashed line, no change and no band from mixed buckets', () => {
+    const c = chartOf({ cur: result(hourly(168, 100)), prev: result(daily(7, 1800)), against: 'last week', bucket: 'hour', unit: 'week' })
+    expect(c.compare).toBeNull()
+    expect(c.band).toBe(false)
+    expect(c.points.every((p) => p.was === null && p.delta === null)).toBe(true)
+  })
+  it('draws both from the same buckets, with a true change', () => {
+    const c = chartOf({ cur: result(hourly(168, 120)), prev: result(hourly(168, 100)), against: 'last week', bucket: 'hour', unit: 'week' })
+    expect(c.compare?.vals).toHaveLength(168)
+    expect(c.compare?.pct).toBe(20)
+    expect(c.points[5].was).toBe(100)
+  })
+  it('a month by the day against a month by the day lines up', () => {
+    const c = chartOf({ cur: result(daily(30, 90)), prev: result(daily(30, 100)), against: 'last month', bucket: 'day', unit: 'month' })
+    expect(c.compare?.vals).toHaveLength(30)
+    expect(c.compare?.pct).toBe(-10)
+  })
+})

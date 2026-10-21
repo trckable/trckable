@@ -8,7 +8,7 @@ import type { ChartIn, Down } from '../ui/DayChart'
 import { mult, sourceShort, type Unit } from './model'
 import { judge, type Band, type Judged } from './usual'
 import { dateFmt } from '../../lib/format'
-import { changeOf, compareOf, startsOn } from './compare'
+import { changeOf, compareOf, sameGrain, startsOn } from './compare'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -75,7 +75,7 @@ export function chartOf(a: ChartArgs): ChartIn {
     e = (idx < 0 ? 0 : idx) + (hourly ? nowHour - Math.floor(nowHour) : nowHour / 24)
     pts = pts.filter((p) => p.t.slice(0, key.length) <= key)
   }
-  const was = (a.prev?.series ?? []).map((p) => p.visitors)
+  const was = sameGrain(a.cur.series, a.prev?.series) ? (a.prev?.series ?? []).map((p) => p.visitors) : []
   const band = (a.bands ? a.bands.filter(Boolean).length >= a.cur.series.length / 2 : was.length >= pts.length / 2) && pts.length > 1
   const bandAt = (i: number): Band => a.bands?.[i] ?? bandFrom(was, i)
   const unitWord = hourly ? copy.hours : copy.days

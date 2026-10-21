@@ -37,9 +37,17 @@ export const hasBefore = (prev: readonly Point[] | undefined): boolean => {
   return first >= 0 && first < (prev ?? []).length / 2
 }
 
+const minutes = (t: string) => Date.parse(t.length > 10 ? `${t.slice(0, 16)}:00Z` : `${t}T00:00:00Z`)
+
+/** The size of one bucket, in minutes: the gap between the first two points (none for a single point). */
+export const grainOf = (xs: readonly Point[]): number | null => (xs.length > 1 ? (minutes(xs[1].t) - minutes(xs[0].t)) / 60000 : null)
+
+/** Two series can stand side by side only when they have no more buckets (a period still running is told against the start of the one before) and buckets of the same size (a day's total is never set against an hour's). */
+export const sameGrain = (cur: readonly Point[], prev: readonly Point[] | undefined): boolean => !!prev && prev.length <= cur.length && grainOf(cur) === grainOf(prev)
+
 /** The comparison of a chart: the period before's line and how the buckets that are over stand against it (`done` of them). None without enough before. */
 export function compareOf(cur: readonly Point[], prev: readonly Point[] | undefined, done: number, name: string): Compare | null {
-  if (!prev || !hasBefore(prev)) return null
+  if (!prev || !sameGrain(cur, prev) || !hasBefore(prev)) return null
   const vals = prev.map((p) => p.visitors)
   const n = Math.min(done, cur.length, vals.length)
   const sum = (xs: number[]) => xs.slice(0, n).reduce((a, b) => a + b, 0)
