@@ -1516,8 +1516,9 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .pill-x:focus-visible{outline:2px solid var(--mk-lime);outline-offset:1px}
 @media (--xs){.mk .pill-x{width:44px}}
 /* the list's rows: a mark with the state dot on it; the foot is one row, the rest under More */
-.mk .site-row .mkwrap{position:relative;display:inline-flex;flex:none}
-.mk .site-row .mkwrap .mk-dot{position:absolute;right:-3px;bottom:-3px;box-sizing:content-box;border:2px solid var(--pane,var(--mk-card2));box-shadow:none}
+.mk .mkwrap{position:relative;display:inline-flex;flex:none}
+.mk .mk-chip .mkwrap .mk-dot{border-color:var(--mk-card)}
+.mk .mkwrap .mk-dot{position:absolute;right:-3px;bottom:-3px;box-sizing:content-box;border:2px solid var(--pane,var(--mk-card2));box-shadow:none}
 .mk .mfoot.sfoot{flex-direction:row;align-items:center;gap:var(--mk-s1);padding:var(--mk-s2) 0 0}
 .mk .mfoot.sfoot .mi{width:auto;font-size:14px;min-height:var(--mk-h)}
 /* 600 to 839 px (the sm step): no phone bar, but too narrow for one row: the header wraps, the views take a row of their own below, and the bell stays. */
@@ -1817,7 +1818,6 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 .mk .sitechip .mkwrap{position:relative;display:inline-flex;flex:none}
 .mk .sitechip .mkwrap .mk-dot{position:absolute;right:-3px;bottom:-3px;box-sizing:content-box;border:2px solid var(--mk-bg);box-shadow:none}
 @media (prefers-reduced-motion:reduce){.mk #views .mk-dot{animation:none}}
-.mk .hd .mk-chip .nv{flex:none;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--mk-amber) 16%,transparent);color:var(--mk-amber);font-size:11.5px;font-weight:600;line-height:1.3}
 .mk .nfi.k-setup{color:var(--mk-amber)}
 /* A screen kept built while it is not the one shown (v2/V2View): it takes no place of its own. */
 .mk .view-pane{display:contents}
@@ -1830,7 +1830,6 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
  .pop.menu .open-touch{display:flex}
 }
 @media (--xs){.pop.menu .open-touch{display:flex}}
-@media (--xs){.mk .hd .mk-chip .nv{font-size:0;padding:0;width:8px;height:8px;background:var(--mk-amber)}}
 .mk .mk-waiting{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 0;text-align:center}
 .mk .mk-waiting b{font-size:15px;font-weight:600}
 .mk .mk-waiting-fig{width:clamp(140px,18vw,200px);margin-bottom:6px}
@@ -1978,3 +1977,7 @@ html[data-motion='off'] .mk .lswap{animation:none}
 .mk .nfd.sm{width:6px;height:6px}
 /* While the list is narrowed, one quiet line above it says how, with a way to clear it. */
 .mk .nfact{display:flex;align-items:center;justify-content:space-between;gap:var(--mk-s2);padding:var(--mk-s1) var(--mk-s3) 0;font-size:12px;color:var(--mk-muted)}
+/* the button is as wide as its name (up to the cap), not stretched to the bar; the not-installed dot is amber here, where no pill says it; a phone: the mark and its state dot only, the name stays in the button's label */
+.mk .hd>div:has(#siteBtn) #siteBtn{flex:0 1 auto}
+.mk .mk-chip .mk-dot.off{background:var(--mk-amber)}
+@media (--xs){.mk .hd>div:has(#siteBtn) #siteBtn:not(.all){min-width:0;gap:var(--mk-s1)}.mk .hd #siteBtn:not(.all) :is(.nmx,.dom){display:none}}

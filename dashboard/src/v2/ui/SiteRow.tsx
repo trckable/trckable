@@ -8,16 +8,13 @@ import { confirmWith } from '../../components/Confirm'
 import { fmtCompact, fmtInt } from '../../lib/format'
 import { prefetchSite } from '../../lib/dashQuery'
 import { copy } from '../../features/sites/menuCopy'
-import { copy as first } from '../../features/sites/copy'
 import { addGroup, moveTo, pin, placeKey, sectionsOf, step, unpin, type Place } from '../../features/sites/layout'
 import { dotState } from '../../features/sites/StateDot'
 import { OpenSite, openSiteTab } from '../../features/sites/OpenSite'
 import { silence } from '../../features/sitestatus/time'
 import type { Arrange } from '../../features/sites/arrange'
-import { SiteMark } from '../../components/SiteMark'
+import { MarkDot } from '../../features/sites/MarkDot'
 import type { SiteMove } from '../slots'
-
-const DOT = { now: 'now', live: '', quiet: 'quiet', stopped: 'down', new: 'off' } as const
 
 /** The short word and the tip of a down or quiet site; a quiet one with no visit on record (imported history, a script seen) has no span to tell. */
 function stateWords(s: Site, down: boolean): [string, string | undefined] {
@@ -52,9 +49,6 @@ function Tail({ s, today }: { s: Site; today?: number }) {
     </span>
   )
 }
-
-/** The dot's class: only a real problem is coloured, so a quiet site's is grey. */
-const dot = (s: Site) => (dotState(s) === 'quiet' ? 'idle' : DOT[dotState(s)])
 
 /** After a move React may re-insert the row, which drops focus: put it back. */
 function refocus(id: string) {
@@ -95,10 +89,7 @@ export function SiteRow({ site, place, on, arrange: a, today, onPick, move, clas
           moveStep(e.key === 'ArrowUp' ? -1 : 1)
         }}
       >
-        <span className="mkwrap">
-          <SiteMark site={site} size={22} />
-          <span className={`mk-dot ${move ? 'quiet' : dot(site)}`} title={move?.title ?? first.dot[dotState(site)]} />
-        </span>
+        <MarkDot site={site} size={22} className={move ? 'quiet' : undefined} title={move?.title} />
         <span className="mt2">
           <div className="nm">{name}</div>
           {move ? <div className="d state-line quiet moving" title={move.title}>{move.text}</div> : note && <div className="d">{note}</div>}

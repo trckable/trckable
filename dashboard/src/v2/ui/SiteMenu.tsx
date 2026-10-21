@@ -4,7 +4,7 @@ import { Suspense, useCallback, useRef, type ReactNode } from 'react'
 import type { Site } from '../../lib/api'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { layoutReady, preloadLayout } from '../../features/sites/useSiteLayout'
-import { dotState } from '../../features/sites/StateDot'
+import { dotState, type DotState } from '../../features/sites/StateDot'
 import { useDomainControl } from '../../lib/domainControl'
 import { copy } from '../copy'
 import { domainLabel } from './DomainRows'
@@ -13,7 +13,7 @@ import { useMenu } from './useMenu'
 import { useOnlyOpen } from '../../lib/headerMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
 import { midEllipsis } from '../../lib/midEllipsis'
-import { SiteMark } from '../../components/SiteMark'
+import { MarkDot } from '../../features/sites/MarkDot'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
 const warmUp = () => {
@@ -23,12 +23,10 @@ const warmUp = () => {
 /** The list opens whole and in its final order: its chunk is waited for, and the layout (300 ms at most), rather than shown late. */
 const LAYOUT_WAIT = 300
 
-const DOT: Record<string, string> = { stopped: 'down', quiet: 'quiet' }
-
 interface SiteMenuProps {
   sites: Site[]
   current: Site | null
-  /** No verified install yet: the chip says so, in amber, and shows no dot. */
+  /** No verified install yet: the chip's dot is the not-installed one, and its name says so. */
   unverified?: boolean
   /** The teams' square, before the site, when the build has teams. */
   team?: ReactNode
@@ -36,6 +34,12 @@ interface SiteMenuProps {
   footer: FootItem[]
   find: string
   all: string
+}
+
+/** The button's name for a screen reader and its tooltip: the site, and its state when it is not fine ("drivemymac.app · Not verified"). */
+export function siteLabel(name: string, state: DotState): string {
+  const word = { stopped: copy.stateDown, quiet: copy.stateQuiet, new: copy.notVerified }[state as 'stopped' | 'quiet' | 'new']
+  return word ? `${name} · ${word}` : name
 }
 
 /** The site's name, cut in the middle when it is long: the whole name stays in the tooltip and for a screen reader. */
@@ -52,6 +56,12 @@ function NameText({ cur, all }: { cur: Site | null; all: string }) {
   )
 }
 
+/** The button's state: the not-installed one while nothing is verified, else the site's own. */
+const stateOf = (cur: Site | null, unverified?: boolean): DotState => {
+  if (!cur) return 'live'
+  return unverified ? 'new' : dotState(cur)
+}
+
 export function SiteChip({ p }: { p: SiteMenuProps }) {
   const { open, setOpen, attach, close } = useMenu()
   useOnlyOpen('sites', open, close)
@@ -60,7 +70,8 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
   const cur = p.current
   const domains = useDomainControl()
   const picked = cur && domains ? domainLabel(domains) : null
-  const state = cur ? dotState(cur) : 'live'
+  const state = stateOf(cur, p.unverified)
+  const label = cur ? siteLabel(cur.name || cur.domain, state) : undefined
   const toggle = () => {
     if (open) setOpen(false)
     else void Promise.all([layoutReady(LAYOUT_WAIT), SiteList.load()]).then(() => setOpen(true))
@@ -70,16 +81,10 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
   return (
     <div ref={attach} style={{ position: 'relative' }} className="sitechip">
       {p.team}
-      <button type="button" id="siteBtn" className="mk-chip" aria-haspopup="menu" aria-expanded={open} data-key="site" {...warm(warmUp)} onClick={toggle}>
-        {cur && (
-          <span className="mkwrap">
-            <SiteMark site={cur} size={18} />
-            {DOT[state] && !p.unverified && <span className={`mk-dot ${DOT[state]}`} />}
-          </span>
-        )}
+      <button type="button" id="siteBtn" className={cur ? 'mk-chip' : 'mk-chip all'} aria-label={label} title={label} aria-haspopup="menu" aria-expanded={open} data-key="site" {...warm(warmUp)} onClick={toggle}>
+        {cur && <MarkDot site={cur} size={18} state={state} />}
         <NameText cur={cur} all={p.all} />
         {picked && <span className="dom">{`/ ${picked}`}</span>}
-        {cur && p.unverified && <span className="nv">{copy.notVerified}</span>}
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
           <path d="M3 4.5 6 7.5 9 4.5" stroke="var(--mk-muted)" fill="none" strokeWidth="1.5" />
         </svg>

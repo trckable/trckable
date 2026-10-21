@@ -22,9 +22,9 @@ test('before the first visit: the setup screen, Not verified, a locked ring, no 
   await expect(screen.getByRole('button', { name: 'Copy prompt' })).toBeVisible()
   // Help is behind a small link, not shown up front.
   await expect(screen.getByRole('link', { name: 'Support' })).toBeHidden()
-  // The header: amber Not verified, no Live | Briefing, no Explore, no phone bar.
-  await expect(page.locator('#siteBtn')).toContainText('Not verified')
-  await expect(page.locator('#siteBtn .mk-dot')).toHaveCount(0)
+  // The header: the not-installed dot on the site's icon (Not verified in its label), no Live | Briefing, no Explore, no phone bar.
+  await expect(page.locator('#siteBtn')).toHaveAttribute('aria-label', /Not verified/)
+  await expect(page.locator('#siteBtn .mk-dot.off')).toHaveCount(1)
   await expect(page.locator('#views')).toHaveCount(0)
   await expect(page.locator('.exb')).toHaveCount(0)
   await expect(page.locator('nav.tabbar')).toHaveCount(0)
@@ -45,7 +45,7 @@ test('before the first visit: the setup screen, Not verified, a locked ring, no 
   // A real pageview: the line turns green, then Live opens with no reload.
   await visit(page.request, site, '/first')
   await expect(screen.locator('.setup-status.ok')).toContainText('First visit received', { timeout: 30_000 })
-  await expect(page.locator('#siteBtn')).not.toContainText('Not verified')
+  await expect(page.locator('#siteBtn')).not.toHaveAttribute('aria-label', /Not verified/)
   await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible({ timeout: 30_000 })
   await expect(page.locator('#views')).toBeVisible()
   await expect(page.locator('.setup-title')).toHaveCount(0)
