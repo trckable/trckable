@@ -22,9 +22,9 @@ describe('a paused check', () => {
     expect(fig?.days.filter((d) => d === 'paused')).toHaveLength(2)
   })
 
-  it('keeps a day that was only partly paused as it was, not paused', () => {
+  it('paints only the days the pause covered whole, the edges stay as they were', () => {
     const fig = uptimeFigure([], '2026-10-20', 'UTC', now, watched, 2 * DAY, [{ from: now - 3 * DAY, to: now - 1 * DAY }])
-    expect(fig?.days.slice(-5)).toEqual(['ok', 'ok', 'ok', 'ok', 'ok'])
+    expect(fig?.days.slice(-5)).toEqual(['ok', 'ok', 'paused', 'ok', 'ok'])
   })
 
   it('leaves the paused time out of the share, and says nothing when all of it was paused', () => {
