@@ -10,6 +10,8 @@ import { Spark } from './KpiCard'
 import { copy } from '../briefing/copy'
 import { WhyBody } from './WhyBody'
 import { useV2Extras } from '../slots'
+import { CardMenu, type CardMenuItem } from './CardMenu'
+import { copy as cardCopy } from '../briefing/cards.copy'
 import './incidentCard.css'
 import { Visual } from './StoryVisual'
 import type { Act, Story } from '../briefing/cards'
@@ -47,6 +49,7 @@ function Foot({ s, c }: { s: Story; c: CardCtx }) {
       {w ? copy.watching : copy.watch}
     </button>
   )
+  const items: CardMenuItem[] = [...(isShared() ? [] : [{ key: 'watch', label: w ? copy.watching : copy.watch, onClick: () => c.onWatch(s), hook: 'data-watch' }]), { key: 'deeper', label: copy.deeper, onClick: () => c.onDeeper(s), hook: 'data-deeper' }]
   const act = s.act && !isShared() && (
     <button type="button" className={`xb cact${dn ? ' done' : ''}`} data-ca="1" onClick={() => c.onAct(s)}>
       {dn ? doneLabel[s.act.k] || copy.doneMark : s.act.t}
@@ -76,13 +79,24 @@ function Foot({ s, c }: { s: Story; c: CardCtx }) {
   }
   return (
     <div className="ic-f">
-      {watch}
       {act}
       {how}
-      <button type="button" className="deep" data-deeper="1" onClick={() => c.onDeeper(s)}>
-        {copy.deeper} {'›'}
-      </button>
+      <CardMenu id={s.key} items={items} />
     </div>
+  )
+}
+
+/** What else moved in the same group, named under the card, with the way to all of it. */
+function Also({ s, c }: { s: Story; c: CardCtx }) {
+  if (!s.also?.length) return null
+  return (
+    <p className="ic-also">
+      {cardCopy.alsoChanged(s.also.map((a) => a.name).join(', '))}
+      {' · '}
+      <button type="button" className="lk3" data-also="1" onClick={() => c.onDeeper({ ...s, deeper: { kind: 'all' } })}>
+        {cardCopy.seeAll}
+      </button>
+    </p>
   )
 }
 
@@ -115,6 +129,7 @@ export function Card({ s, wide, c }: { s: Story; wide: boolean; c: CardCtx }) {
           <small>{s.u}</small>
         </div>
         <div className="kcw">{s.why}</div>
+        <Also s={s} c={c} />
         <Foot s={s} c={c} />
         <How s={s} />
         <Spark vals={c.spark(s)} h={64} />
@@ -137,6 +152,7 @@ export function Card({ s, wide, c }: { s: Story; wide: boolean; c: CardCtx }) {
         <span>{s.why}</span>
         <CardSeal verified={c.verified} topic={s.key} />
       </div>
+      <Also s={s} c={c} />
       <Foot s={s} c={c} />
       <How s={s} />
       {s.key === 'uptime' && c.calm}

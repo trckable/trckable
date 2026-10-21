@@ -47,6 +47,10 @@ export interface Story {
   how: string
   ev: string
   act?: Act
+  /** What else moved, in the same group of cards (sources, countries, devices, pages): named under the card, with a way to all of it. */
+  also?: { key: Topic; name: string }[]
+  /** The card's subject in a word or two, for the line that names the others. */
+  tag?: string
   /** The question "Why?" asks Peek, where there is Peek: this card's claim, as a question. */
   ask?: string
   /** Why it happened, as far as can be known: shown as "Why?" with the evidence. */
@@ -182,6 +186,7 @@ function sourceCard(s: Slice & { st: Judged }, i: CardsIn, total: number, topPag
   const leave = s.bounce !== undefined ? Math.round(s.bounce * 100) : null
   return {
     key: 'sources',
+    tag: name,
     score: (up ? 80 : 77) + Math.min(9, Math.log2(1 + (Math.abs(s.v - b.c) / Math.max(1, total)) * 20)),
     bad: !up,
     head: up ? copy.sent(name, people(Math.round(s.v))) : copy.sentOnly(name, people(Math.round(s.v))),
@@ -205,6 +210,7 @@ function countryCard(s: Slice & { st: Judged }, i: CardsIn, total: number, src?:
   const name = countryName(s.value)
   return {
     key: 'countries',
+    tag: name,
     score: 55 + Math.min(8, (Math.abs(s.v - b.c) / Math.max(1, total)) * 40),
     bad: !up,
     head: `${flag(s.value)} ${people(Math.round(s.v))} from ${name}`,
@@ -227,6 +233,7 @@ function deviceCard(s: Slice & { st: Judged }, i: CardsIn, total: number): Story
   const b = s.band as Band
   return {
     key: 'devices',
+    tag: s.name,
     score: 50,
     bad: !up,
     head: copy.devicesAre(s.name, up),
@@ -250,6 +257,7 @@ function pageCard(s: Slice & { st: Judged }, i: CardsIn): Story {
   const b = s.band as Band
   return {
     key: 'pages',
+    tag: s.name,
     score: 52,
     bad: !up,
     head: `${s.name} ${up ? 'is getting more readers' : 'lost readers'}`,
@@ -317,6 +325,18 @@ function speedWords(n: number, i: number): string {
   return i === 1 ? `${Math.round(n)} ms` : fmtFixed(n, 2)
 }
 
+/** Who changed: the one source, country, device or page that moved most, with the others that moved named under it (not a card each). */
+function whoChanged(i: CardsIn, total: number): Story | null {
+  const src = leadSource(i.slices.referrer, total, i.domain)
+  const cty = movers(i.slices.country, total)[0]
+  const dev = movers(i.slices.device, total)[0]
+  const page = movers(i.slices.entry_page, total)[0]
+  const moved = [src && sourceCard(src, i, total, i.topPageOf?.(src.value)), cty && countryCard(cty, i, total, i.topSourceOf?.(cty.value)), dev && deviceCard(dev, i, total), page && pageCard(page, i)].flatMap((s) => (s ? [s] : []))
+  if (!moved.length) return null
+  const [lead, ...rest] = moved.sort((a, b) => b.score - a.score)
+  return rest.length ? { ...lead, also: rest.map((s) => ({ key: s.key, name: s.tag ?? s.head })) } : lead
+}
+
 /** The cards of the period, most worth reading first. A site that is not answering has one card only. */
 export function cardsOf(i: CardsIn): Story[] {
   const out: Story[] = []
@@ -325,14 +345,8 @@ export function cardsOf(i: CardsIn): Story[] {
   if (u.downNow || u.minutes > 0) out.push(uptimeCard(u, i.domain))
   if (u.downNow) return out
   if (!i.learning) {
-    const src = leadSource(i.slices.referrer, total, i.domain)
-    if (src) out.push(sourceCard(src, i, total, i.topPageOf?.(src.value)))
-    const cty = movers(i.slices.country, total)[0]
-    if (cty) out.push(countryCard(cty, i, total, i.topSourceOf?.(cty.value)))
-    const dev = movers(i.slices.device, total)[0]
-    if (dev) out.push(deviceCard(dev, i, total))
-    const page = movers(i.slices.entry_page, total)[0]
-    if (page) out.push(pageCard(page, i))
+    const lead = whoChanged(i, total)
+    if (lead) out.push(lead)
     const goal = goalCard(i)
     if (goal) out.push(goal)
     if (i.sales) out.push(...salesCards(i.sales))
@@ -386,7 +400,7 @@ export function cardsOf(i: CardsIn): Story[] {
 
 /** The topics a card does not cover, said as "everything else was normal: devices, pages". */
 export function calmTopics(cards: Story[], search: boolean): string[] {
-  const has = (t: Topic) => cards.some((c) => c.key === t)
+  const has = (t: Topic) => cards.some((c) => c.key === t || c.also?.some((a) => a.key === t))
   return (['sources', 'search', 'devices', 'countries', 'pages', 'goals'] as const).filter((t) => (t !== 'search' || search) && !(t !== 'search' && has(t))).map((t) => copy.topicNames[t])
 }
 
