@@ -34,6 +34,7 @@ import { Tick } from './Tick'
 import { useFit } from './cardWidth'
 import { DOCS } from '../../components/footerLinks'
 import { RevenueLock } from './RevenueLock'
+import { useWanted } from '../setup/useWanted'
 import { SourceRows } from './SourceRows'
 import { copy } from './copy'
 import type { LiveStream } from './Live'
@@ -72,6 +73,8 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   const { data, failed, got, clock, skew, busier, downSince, colors } = feed
   const now = useTicking(clock, skew)
   const { ref, fit } = useFit<HTMLElement>()
+  const want = useWanted(whole?.id ?? null)
+  const askRevenue = !!whole && can('payment.manage') && !isShared() && want('rev')
   const [cardsRef, cardsNear] = useNear()
   useEffect(() => {
     liveLink.set(stream.connected)
@@ -153,7 +156,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
             <span>{copy.ago30}</span>
             <span>{copy.nowWord}</span>
           </div>
-          <div className={`lbottom${data.revenue || can('payment.manage') ? ' money' : ''}`}>
+          <div className={`lbottom${data.revenue || askRevenue ? ' money' : ''}`}>
             <div className="lsrc">
               <span className="ll">{copy.topSources}</span>
               <SourceRows parts={src.parts} color={colorOf} />
@@ -164,9 +167,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
                 <b className="lmoney">{fmtMoney(data.revenue.amount, data.revenue.currency, data.revenue.exponent)}</b>
               </div>
             ) : (
-              whole &&
-              can('payment.manage') &&
-              !isShared() && (
+              askRevenue && whole && (
                 <div className="lrev">
                   <span className="ll">{copy.revenueToday}</span>
                   <RevenueLock go={copy.connect} onGo={() => openSettings(whole, 'payments')} onHow={() => window.open(DOCS, '_blank', 'noopener')} />

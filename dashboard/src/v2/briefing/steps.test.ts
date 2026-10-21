@@ -10,7 +10,7 @@ import { setupRows } from './steps'
 const site = { id: 's1', domain: 'site.com' } as Site
 const bare = { goals: [] } as unknown as Result
 const onGoal = vi.fn()
-const rows = (o: Partial<Parameters<typeof setupRows>[0]> = {}) => setupRows({ site, cur: bare, can: true, shared: false, noSearch: true, noAlerts: true, onGoal, ...o })
+const rows = (o: Partial<Parameters<typeof setupRows>[0]> = {}) => setupRows({ site, cur: bare, can: true, shared: false, noSearch: true, noAlerts: true, want: () => true, onGoal, ...o })
 
 beforeEach(() => {
   openSettings.mockReset()

@@ -8,6 +8,7 @@ import { startOfDay, uptimeOf } from '../../features/incidents/model'
 import { useNow, usePeriodIncidents } from '../../features/incidents/useIncidents'
 import { isShared } from '../../lib/me'
 import { can } from '../../lib/permissions'
+import { useWanted } from '../setup/useWanted'
 import type { Usual } from './model'
 
 /** What the server calls usual for the day (the same weekday, up to the same time), for today and yesterday. */
@@ -45,6 +46,7 @@ export function useSetup(site: Site) {
   const [alerts, setAlerts] = useState(false)
   const [search, setSearch] = useState(false)
   const allowed = !isShared() && can('note.write')
+  const want = useWanted(site.id)
   useEffect(() => {
     if (!allowed) return
     let live = true
@@ -54,7 +56,7 @@ export function useSetup(site: Site) {
       live = false
     }
   }, [site.id, allowed])
-  return { can: allowed, noAlerts: alerts, noSearch: search }
+  return { can: allowed, noAlerts: alerts, noSearch: search, want }
 }
 
 /** The people seen today since the hour the day is taken to start for someone looking in: one count of people, never a sum of hours. */
