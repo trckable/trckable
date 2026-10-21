@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -85,14 +86,20 @@ func TestExtraPathsAreLookedAt(t *testing.T) {
 	if _, err := st.AddUptimePath(ctx, site, "/blog?x=1"); err != nil {
 		t.Fatal(err)
 	}
-	var got []string
+	var (
+		mu  sync.Mutex
+		got []string
+	)
 	status := map[string]int{"https://a.com/": 200, "https://a.com/pricing": 200, "https://a.com/blog?x=1": 200}
 	p, clock := fakeProber(st, func(u string) (int, error) {
+		mu.Lock()
 		got = append(got, u)
+		mu.Unlock()
 		return status[u], nil
 	})
 	row := sqlite.SiteRow{ID: site, Domain: "a.com"}
 	p.probe(ctx, row)
+	slices.Sort(got) // extra pages are looked at side by side, in any order
 	if len(got) != 3 || got[0] != "https://a.com/" || got[1] != "https://a.com/blog?x=1" || got[2] != "https://a.com/pricing" {
 		t.Fatalf("looked at %v", got)
 	}
