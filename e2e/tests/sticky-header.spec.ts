@@ -1,4 +1,5 @@
-// The header stays on top of the window while a page is scrolled, on Live, the Briefing and with Explore open, wide and on a phone.
+// The header stays on top of the window while a page is scrolled, on Live, the Briefing and with Explore open, wide; a phone's bar goes out of the way
+// while the page scrolls down and comes back when it scrolls up.
 import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
@@ -57,7 +58,7 @@ const PAGES = [
   ['Explore open', '?view=briefing&period=7d&xp=overview'],
 ] as const
 
-for (const width of [1440, 390]) {
+for (const width of [1440]) {
   for (const [name, query] of PAGES) {
     test(`${width}px: the header stays at the top of ${name} after a scroll`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 })
@@ -173,4 +174,63 @@ test('1440px: the change is not animated when motion is reduced', async ({ page 
     return [getComputedStyle(hd).transitionDuration, getComputedStyle(hd, '::before').transitionDuration, getComputedStyle(hd.querySelector('.mk-chip')!).transitionDuration]
   })
   expect(t.every((d) => d.split(',').every((x) => parseFloat(x) === 0))).toBe(true)
+})
+
+// A phone (a compact bar, 700 px and under): out of the way on the way down, back after a little scroll up, always there at the top.
+async function phone(page: Page, width: number) {
+  await page.setViewportSize({ width, height: 844 })
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
+  await expect(page.locator('.hd')).toBeVisible()
+  await page.waitForTimeout(800)
+  await page.evaluate(() => {
+    const pad = document.createElement('div')
+    pad.style.height = '3000px'
+    document.querySelector('#main')?.appendChild(pad)
+  })
+}
+const scrollTo = async (page: Page, y: number) => {
+  await page.evaluate((v) => window.scrollTo(0, v), y)
+  await page.waitForTimeout(450)
+}
+const barBottom = (page: Page) => page.locator('.hd').evaluate((el) => el.getBoundingClientRect().bottom)
+
+for (const width of [390, 360]) {
+  test(`${width}px: the top bar hides on the way down, returns on a little scroll up and is there at the top`, async ({ page }) => {
+    await phone(page, width)
+    expect(await barBottom(page), 'shown at the top').toBeGreaterThan(40)
+    await scrollTo(page, 600)
+    await scrollTo(page, 1200)
+    await expect(page.locator('.hd')).toHaveAttribute('data-hidden', 'true')
+    expect(await barBottom(page), 'out of the window').toBeLessThanOrEqual(0)
+    // 4 px up is not enough, 12 px is.
+    await scrollTo(page, 1196)
+    expect(await barBottom(page)).toBeLessThanOrEqual(0)
+    await scrollTo(page, 1184)
+    await expect(page.locator('.hd')).toHaveAttribute('data-hidden', 'false')
+    await page.waitForTimeout(400)
+    expect(await barBottom(page), 'back in').toBeGreaterThan(40)
+    expect((await page.locator('.hd').boundingBox())!.y).toBeCloseTo(0, 0)
+    await scrollTo(page, 1500)
+    await expect(page.locator('.hd')).toHaveAttribute('data-hidden', 'true')
+    await scrollTo(page, 0)
+    await expect(page.locator('.hd')).toHaveAttribute('data-hidden', 'false')
+    expect(await barBottom(page), 'always shown at the top').toBeGreaterThan(40)
+  })
+}
+
+test('390px: no empty pill sits between the site and the bell', async ({ page }) => {
+  await phone(page, 390)
+  const kids = await page.locator('.hd > *').evaluateAll((els) => els.filter((e) => e.getBoundingClientRect().width > 0 && !e.classList.contains('sr')).map((e) => ({ w: e.getBoundingClientRect().width, text: e.textContent, box: e.matches('.mk-chip, .pill-x') })))
+  expect(kids.some((k) => k.box && k.w > 0 && !k.text?.trim() && k.w !== 44 && k.w !== 40)).toBe(false)
+  await expect(page.locator('.hd .pill-x')).toBeHidden()
+})
+
+test('390px: motion reduced, the bar goes without a transition', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await phone(page, 390)
+  const t = await page.locator('.hd').evaluate((el) => getComputedStyle(el).transitionDuration)
+  expect(t.split(',').every((x) => parseFloat(x) === 0)).toBe(true)
+  await scrollTo(page, 1200)
+  await expect(page.locator('.hd')).toHaveAttribute('data-hidden', 'true')
 })
