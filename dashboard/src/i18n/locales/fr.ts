@@ -2165,6 +2165,8 @@ export default {
   // the walkthrough screens (v2)
   'v2.today': 'Aujourd’hui',
   'v2.notVerified': 'Non vérifié',
+  'v2.stateDown': 'Hors service',
+  'v2.stateQuiet': 'Calme',
   'v2.yesterday': 'Hier',
   'v2.todayWord': 'aujourd’hui',
   'v2.vsUsual': (weekday: string) => `par rapport à un ${weekday} habituel`,
