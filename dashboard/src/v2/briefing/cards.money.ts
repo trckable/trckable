@@ -184,7 +184,7 @@ export function searchCard(i: SearchIn): Story | null {
       return { l: `“${r.key}”`, t: copy.pos(fmtFixed(r.position, 1)), a: fmtInt(r.clicks), flag: m.flag, mark: m.cls }
     })
   const tot = { l: copy.clicksTot(fmtInt(cur.clicks), fmtInt(cur.impressions)), t: `${copy.ctr(pct1(cur.impressions ? cur.clicks / cur.impressions : 0))} · ${copy.avgPos(fmtFixed(averagePosition(cur.rows), 1))}`, a: '', flag: '', tot: true }
-  const base = { key: 'search' as const, vis: { k: 'rcpt' as const, rows: [...list, tot] }, deeper: { kind: 'table' as const, tab: 'search' as const }, how: `${copy.searchKnow} ${i.rule}`, u: 'clicks' }
+  const base = { key: 'search' as const, vis: { k: 'rcpt' as const, rows: [...list, tot] }, deeper: { kind: 'table' as const, tab: 'search' as const }, how: `${copy.searchKnow} ${copy.searchRule}`, u: 'clicks' }
   if (fresh) {
     return { ...base, score: 74, head: copy.rankNew(fresh.key), rest: copy.onGoogle, why: copy.newWhy(copy.clicks(fresh.clicks), fmtFixed(fresh.position, 1)), val: 'new', m: fresh.clicks, ev: '', act: { k: 'set', t: copy.alertNewSearch, msg: copy.alertNewSearchMsg } }
   }
@@ -196,19 +196,19 @@ export function searchCard(i: SearchIn): Story | null {
     score: up ? 76 : 79,
     bad: !up,
     head: up ? copy.searchSent(moved.r.key, copy.clicks(moved.r.clicks)) : copy.searchLost(moved.r.key, copy.clicks(moved.r.clicks)),
-    rest: `${copy.fromGoogle}${movedWords(up, x)}`,
-    why: `${copy.usuallyClicks(fmtInt(Math.max(0, moved.b.lo)), fmtInt(moved.b.hi))}${copy.positionNow(fmtFixed(moved.r.position, 1), fmtFixed(moved.w.position, 1))}`,
+    rest: `${copy.fromGoogle}${searchMoved(up, x)}`,
+    why: `${copy.searchWas(fmtInt(moved.w.clicks))}${copy.positionNow(fmtFixed(moved.r.position, 1), fmtFixed(moved.w.position, 1))}`,
     val: fmtInt(moved.r.clicks),
     m: moved.r.clicks,
-    ev: copy.searchEv(fmtInt(moved.r.clicks), fmtInt(Math.max(0, moved.b.lo)), fmtInt(moved.b.hi)),
+    ev: copy.searchEv(fmtInt(moved.r.clicks), fmtInt(moved.w.clicks)),
     act: up ? { k: 'copy', t: copy.copyContent, text: copy.contentPrompt(i.domain, moved.r.key, fmtFixed(moved.r.position, 1)), done: copy.contentCopied } : { k: 'set', t: copy.setAlert, msg: copy.alertLeaves(moved.r.key) },
   }
 }
 
-/** How the move is put: how many times the usual, nothing for a small rise, far below for a fall. */
-function movedWords(up: boolean, x: number): string {
-  if (!up) return copy.farBelow
-  return x >= 1.5 ? copy.yourUsual(`${fmtFixed(x, 1)}×`) : ''
+/** How the move is put, against what Google sent the period before (Search Console has no usual of its own): how many times that, nothing for a small rise, far below for a fall. */
+function searchMoved(up: boolean, x: number): string {
+  if (!up) return copy.searchFarBelow
+  return x >= 1.5 ? copy.searchTimes(`${fmtFixed(x, 1)}×`) : ''
 }
 
 /** A page where the same thing was pressed again and again: someone, somewhere, is stuck. */
