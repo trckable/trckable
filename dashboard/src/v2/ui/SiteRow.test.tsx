@@ -126,3 +126,25 @@ describe('the arrange menu at the edges of a list', () => {
     expect(items('b')).toContain('Move down')
   })
 })
+
+describe('the ⋯ menu in groups', () => {
+  const sites = [site({ id: 'a' }), site({ id: 'b' }), site({ id: 'c' })]
+  const arrange = { sites, layout: { pinned: [], groups: [], order: ['a', 'b', 'c'] }, save: noop, drag: null, grab: noop } as never
+  const html = (o: { settings?: () => void; status?: () => void; a?: unknown }) => {
+    const menu = RowMenu({ site: sites[1], place: { kind: 'rest' }, a: (o.a ?? null) as never, step: noop, settings: o.settings, status: o.status }) as ReactElement<{ children: (c: () => void) => ReactNode }>
+    return renderToStaticMarkup(<>{menu.props.children(noop)}</>)
+  }
+  const order = (h: string) => h.replace(/<div role="separator"[^>]*><\/div>/g, '|').replace(/<[^>]+>/g, '\n').split('\n').filter(Boolean).join(',')
+
+  it('sets settings and Open apart from sharing, and both from arranging, with a thin line between', () => {
+    const h = html({ settings: noop, status: noop, a: arrange })
+    expect(order(h)).toBe('Site settings,Open example.com,|,Share,Status page,Widgets,|,Pin to top,Move up,Move down,New group…')
+    expect((h.match(/role="separator"/g) ?? []).length).toBe(2)
+  })
+
+  it('drops a line when its group is empty for the role', () => {
+    expect(order(html({ settings: noop, status: noop }))).toBe('Site settings,Open example.com,|,Share,Status page,Widgets')
+    expect(order(html({ a: arrange }))).toBe('Open example.com,|,Pin to top,Move up,Move down,New group…')
+  })
+})
+
