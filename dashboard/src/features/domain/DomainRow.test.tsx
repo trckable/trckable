@@ -122,7 +122,7 @@ describe('the domain row', () => {
     act(() => root.render(<DomainRow site={site} onSaved={vi.fn()} />))
     await settle()
     act(() => button('Change')?.click())
-    siteDomain.mockRejectedValue(new APIError(429, 'a site’s domain can change once a day', false, 'domain_too_soon'))
+    siteDomain.mockRejectedValue(Object.assign(new APIError(429, 'a site’s domain can change once a day'), { code: 'domain_too_soon' }))
     act(() => type(document.body.querySelector<HTMLInputElement>('input.input'), 'next.com'))
     act(() => button('Continue')?.click())
     await settle()
