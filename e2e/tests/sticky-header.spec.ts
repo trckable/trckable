@@ -80,15 +80,15 @@ for (const width of [1440, 390]) {
       expect(hd!.y, 'header top').toBeCloseTo(0, 0)
       const hit = await page.evaluate(() => document.elementFromPoint(40, 20)?.closest('.hd') !== null)
       expect(hit, 'header is what is at the top of the window').toBe(true)
-      // Its bottom edge shows once the page has moved under it.
+      // Its bar shows once the page has moved under it.
       await expect(page.locator('.hd')).toHaveAttribute('data-stuck', 'true')
-      const border = await page.locator('.hd').evaluate((el) => getComputedStyle(el).borderBottomColor)
-      expect(border).not.toBe('rgba(0, 0, 0, 0)')
+      const bar = await page.locator('.hd').evaluate((el) => getComputedStyle(el, '::before').backgroundColor)
+      expect(bar).not.toBe('rgba(0, 0, 0, 0)')
     })
   }
 }
 
-// Once the page has moved, the bar stretches to the window's edges and gets shorter (a phone keeps its compact bar), and the page under it does not move.
+// Once the page has moved, the bar sits inset from the window's sides, as on the landing page, and gets shorter (a phone keeps its compact bar), and the page under it does not move.
 async function measure(page: Page) {
   return page.evaluate(() => {
     const hd = document.querySelector('.hd')!
@@ -97,9 +97,15 @@ async function measure(page: Page) {
     return {
       bar: hd.getBoundingClientRect().height,
       chip: chip.getBoundingClientRect().height,
-      bleed: parseFloat(before.width),
-      line: before.borderBottomWidth,
+      barW: parseFloat(before.width),
+      inset: hd.getBoundingClientRect().left + parseFloat(before.left),
+      radius: before.borderBottomLeftRadius,
+      topRadius: before.borderTopLeftRadius,
+      line: before.borderTopWidth,
+      blur: before.backdropFilter,
       opacity: before.opacity,
+      limeOn: getComputedStyle(hd.querySelector('#views .spill')!, '::after').opacity,
+      limeH: getComputedStyle(hd.querySelector('#views .spill')!, '::after').height,
       padLeft: parseFloat(getComputedStyle(hd).paddingLeft),
       content: document.querySelector('#main')!.getBoundingClientRect().top + scrollY,
       across: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
@@ -109,7 +115,7 @@ async function measure(page: Page) {
 }
 
 for (const width of [1920, 1440, 390]) {
-  test(`${width}px: scrolled, the bar ${width > 700 ? 'goes full width and gets shorter' : 'keeps its compact bar'}`, async ({ page }) => {
+  test(`${width}px: scrolled, the bar ${width > 700 ? 'sits inset on the top edge and gets shorter' : 'keeps its compact bar'}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
     await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
@@ -129,16 +135,22 @@ for (const width of [1920, 1440, 390]) {
     expect(low.across, 'no sideways scroll').toBe(true)
     if (width > 700) {
       expect(low.opacity).toBe('1')
-      expect(low.bleed, 'the frosted layer reaches both edges of the window').toBeGreaterThanOrEqual(low.window)
-      expect(low.line, 'a hairline under it').toBe('1px')
+      expect(low.inset, 'inset from the window edge').toBeGreaterThanOrEqual(16)
+      expect(low.barW, 'narrower than the window').toBeLessThan(low.window - 32)
+      expect(low.radius, 'the landing bar radius').toBe('20px')
+      expect(low.topRadius, 'square on top, like the landing bar').toBe('0px')
+      expect(low.line, 'a hairline all round').toBe('1px')
+      expect(low.blur, 'the landing blur').toContain('blur(22px)')
+      expect(low.limeOn, 'the active view is underlined').toBe('1')
+      expect(low.limeH).toBe('2px')
       expect(low.bar, 'shorter').toBeLessThan(top.bar)
       expect(low.chip, 'smaller controls').toBeLessThan(top.chip)
-      expect(low.padLeft, 'a wider row, inside the 16 px gutter').toBeGreaterThanOrEqual(16)
-      expect(low.padLeft).toBeLessThan(top.padLeft)
+      expect(low.padLeft, 'the controls stay where they are').toBe(top.padLeft)
       expect(low.content, 'the page under it has not moved').toBeCloseTo(top.content, 0)
     } else {
       expect(low.bar, 'the compact bar keeps its height').toBeCloseTo(top.bar, 0)
       expect(low.chip).toBeCloseTo(top.chip, 0)
+      expect(low.radius).toBe('20px')
     }
     // Back at the top, the bar is as it was.
     await page.evaluate(() => window.scrollTo(0, 0))
