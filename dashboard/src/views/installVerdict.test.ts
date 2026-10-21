@@ -6,8 +6,9 @@ describe('the Verify verdict', () => {
     expect(verdictOf({ checking: false, snippetOk: false, seen: true, fresh: true })).toBe('working')
     expect(verdictOf({ checking: false, snippetOk: true, seen: true, fresh: true })).toBe('working')
   })
-  it('is quiet when the last visit is old, never missing once a visit was seen', () => {
-    expect(verdictOf({ checking: false, snippetOk: false, seen: true, fresh: false })).toBe('quiet')
+  it('is quiet when the last visit is old but the snippet is there, missing when it is not', () => {
+    expect(verdictOf({ checking: false, snippetOk: true, seen: true, fresh: false })).toBe('quiet')
+    expect(verdictOf({ checking: false, snippetOk: false, seen: true, fresh: false })).toBe('missing')
   })
   it('is missing only with no visit and no snippet', () => {
     expect(verdictOf({ checking: false, snippetOk: false, seen: false, fresh: false })).toBe('missing')

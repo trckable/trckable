@@ -78,7 +78,7 @@ export function InstallSection({ site }: { site: Site }) {
   // the install: this site's own id, found where a browser would load it.
   const reachStep = (): Step => {
     if (!page || pend.page) return { tone: 'wait', title: 'Your homepage', text: `Loading https://${site.domain}/…` }
-    if (page.error) return { tone: 'info', title: 'Your homepage', text: `${page.error}. Visits are arriving, so this does not change the install.` }
+    if (page.error) return { tone: fresh ? 'info' : 'fail', title: 'Your homepage', text: fresh ? `${page.error}. Visits are arriving, so this does not change the install.` : `${page.error}.` }
     return { tone: 'ok', title: 'Your homepage', text: `${where} answered (${page.status}).` }
   }
   const snippetStep = (): Step => {
@@ -90,9 +90,9 @@ export function InstallSection({ site }: { site: Site }) {
         title: "This site's snippet",
         text: page.via === 'page' ? `Found in the page, with this site's id.` : `Found in a script the page loads: ${page.via?.replace(/^https?:\/\//, '')}`,
       }
-    // A visit has arrived (this tab is only shown then): what the homepage read missed is a note, never a failure.
-    if (page.found === 'other' || page.found === 'nosite') return { tone: 'info', title: "This site's snippet", text: `trckable is on ${where}, but ${page.found === 'other' ? "with another site's id" : 'without any site id'}. Copy the code below again.` }
-    return { tone: 'info', title: "This site's snippet", text: `Not in the page or in the ${scripts} it loads. Add the code below to your homepage's <head>.` }
+    // While visits arrive, what the homepage read missed is a note, never a failure.
+    if (page.found === 'other' || page.found === 'nosite') return { tone: fresh ? 'info' : 'fail', title: "This site's snippet", text: `trckable is on ${where}, but ${page.found === 'other' ? "with another site's id" : 'without any site id'}. Copy the code below again.` }
+    return { tone: fresh ? 'info' : 'fail', title: "This site's snippet", text: `Not in the page or in the ${scripts} it loads. Add the code below to your homepage's <head>.` }
   }
   const visitsStep = (): Step => {
     if (pend.visits) return { tone: 'wait', title: 'Visits arriving', text: 'Asking for the latest visit…' }
@@ -104,22 +104,30 @@ export function InstallSection({ site }: { site: Site }) {
   const visits = visitsStep()
   // Visits arriving with this site's key are the proof; the snippet step only adds to it.
   const verdict = verdictOf({ checking, snippetOk: snippet.tone === 'ok', seen: true, fresh })
-  const showCode = code ?? false
+  const showCode = code ?? verdict === 'missing'
   const headText = () => {
     if (verdict === 'checking') return `Checking ${site.domain}…`
-    return verdict === 'working' ? `Connected and verified` : `No visits in the last day`
+    if (verdict === 'working') return `Connected and verified`
+    if (verdict === 'quiet') return `Snippet found, but no visits in the last day`
+    // Say what was checked: the snippet, on the homepage.
+    if (page?.found === 'other') return `Snippet seen, but it is another site's`
+    if (page?.found === 'nosite') return `Snippet seen, but without a site id`
+    return `Snippet not seen`
   }
   const subText = () => {
     if (verdict === 'checking') return 'This server fetches your homepage and up to 20 scripts it links to, looks for this site\'s id in them, then asks for the latest visit it recorded.'
-    if (verdict === 'quiet') return 'The install worked: visits arrived before. They show up here within seconds of someone opening a page.'
-    return snippet.tone === 'ok' ? `This site's snippet is on ${site.domain} and visits are arriving from it.` : `Visits are arriving from ${site.domain}, so the install works.`
+    if (verdict === 'working') return snippet.tone === 'ok' ? `This site's snippet is on ${site.domain} and visits are arriving from it.` : `Visits are arriving from ${site.domain}, so the install works.`
+    if (verdict === 'quiet') return 'The snippet is in place. Visits show up here within seconds of someone opening a page.'
+    if (page?.error) return `${site.domain} could not be read, so the snippet could not be found. Until it can, the install is not verified.`
+    return `This site's id is not on ${site.domain}'s homepage.`
   }
   const head = headText()
   const sub = subText()
   // The mark beside the heading: done, working on it, or needs a look.
   const heroTone = (): Step['tone'] => {
     if (verdict === 'checking') return 'wait'
-    return verdict === 'working' ? 'ok' : 'warn'
+    if (verdict === 'working') return 'ok'
+    return verdict === 'quiet' ? 'warn' : 'fail'
   }
   const hero = heroTone()
   const heroIcon = () => {
