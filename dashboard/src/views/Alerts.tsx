@@ -3,7 +3,7 @@
 // go to a webhook, because every tool already takes one, or to an email
 // address once the server has a mail server to use (TRCKABLE_SMTP_URL).
 import { Bell, Send, TriangleAlert } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './Alerts.css'
 import { Switch } from '../components/Switch'
 import { fail, type Alert, type Site, more } from '../lib/apiMore'
@@ -13,8 +13,10 @@ import { EmptyState } from '../components/EmptyState'
 import { WeeklyNow } from './WeeklyNow'
 import { KINDS, shownKinds } from './alertKinds'
 import { advice, ago, kindOf, SEND_LABEL, SendIcon, shown, stored, whereOf } from './alertsParts'
-import { dateFmt } from '../lib/format'
+import { currencyDigits, dateFmt } from '../lib/format'
+import { settingsParam } from '../lib/settings'
 import { ThresholdRule } from '../features/thresholds/Rule'
+import { Threshold } from './AlertThreshold'
 import { ruleOf } from '../features/thresholds/model'
 
 export function AlertsSettings({ site }: { site: Site }) {
@@ -35,6 +37,16 @@ export function AlertsSettings({ site }: { site: Site }) {
     void load()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load is a new function every render; refetch only when the site changes
   }, [site.id])
+
+  // The bell's "Change this alert" opens here at that alert (focus=alert:<kind>): it is scrolled to and its control focused, once the list is there.
+  const wanted = useRef(settingsParam('focus')?.replace(/^alert:/, '') ?? '')
+  useEffect(() => {
+    if (!list || !wanted.current || !settingsParam('focus')?.startsWith('alert:')) return
+    const row = document.querySelector<HTMLElement>(`.al-kind[data-kind="${CSS.escape(wanted.current)}"]`)
+    wanted.current = ''
+    row?.scrollIntoView({ block: 'center' })
+    row?.querySelector<HTMLElement>('button, input')?.focus({ preventScroll: true })
+  }, [list])
 
   const find = (kind: Alert['kind']) => list?.find((a) => a.kind === kind)
 
@@ -89,7 +101,7 @@ export function AlertsSettings({ site }: { site: Site }) {
     if (k.id === 'threshold')
       return (
         <>
-          <ThresholdRule alert={a} onSave={(rule) => save(k.id, { ...rule, enabled: isOn })} />
+          <ThresholdRule alert={a} digits={currencyDigits(site.currency)} onSave={(rule) => save(k.id, { ...rule, enabled: isOn })} />
           <span className="faint al-last">{k.hint(site)}</span>
         </>
       )
@@ -197,7 +209,7 @@ export function AlertsSettings({ site }: { site: Site }) {
           const a = find(k.id)
           const isOn = !!a?.enabled
           return (
-            <div key={k.id} className={'al-kind' + (isOn ? ' on' : '')}>
+            <div key={k.id} data-kind={k.id} className={'al-kind' + (isOn ? ' on' : '')}>
               <span className={'icon-tile' + (isOn ? ' accent' : '')} aria-hidden="true">
                 <k.Icon size={17} strokeWidth={1.75} />
               </span>
@@ -216,35 +228,5 @@ export function AlertsSettings({ site }: { site: Site }) {
       </div>
       <span className="faint al-foot">Checked every ten minutes. After an alert is sent, the same one stays quiet for six hours.</span>
     </section>
-  )
-}
-
-/** A number that saves when you finish typing it, not on every keystroke:
- *  typing "30" used to save 3 first, and say so twice. */
-function Threshold({ value, label, onSave }: { value: number; label: string; onSave: (v: number) => void }) {
-  const [text, setText] = useState(String(value))
-  const [editing, setEditing] = useState(false)
-  // A new value from outside shows unless it is being typed over.
-  const [seen, setSeen] = useState({ value, editing })
-  if (seen.value !== value || seen.editing !== editing) {
-    setSeen({ value, editing })
-    if (!editing) setText(String(value))
-  }
-  return (
-    <input
-      className="input num al-num"
-      value={text}
-      inputMode="numeric"
-      aria-label={label}
-      onFocus={() => setEditing(true)}
-      onChange={(e) => setText(e.target.value)}
-      onBlur={() => {
-        setEditing(false)
-        const v = Number(text)
-        if (Number.isFinite(v) && v !== value) onSave(v)
-        else setText(String(value))
-      }}
-      onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-    />
   )
 }

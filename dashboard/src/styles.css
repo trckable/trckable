@@ -1122,6 +1122,19 @@ table.t td {
   display: flex;
   flex-direction: column;
 }
+.menu-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--border);
+  flex: none;
+}
+.menu-label {
+  min-width: 0;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .pop.menu svg {
   color: var(--text-2);
   flex: none;
