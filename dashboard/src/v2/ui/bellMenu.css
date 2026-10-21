@@ -24,7 +24,7 @@
   background: color-mix(in srgb, var(--text) 7%, transparent);
   outline: none;
 }
-@media (max-width: 640px) {
+@media (--xs) {
   .nfpop .nfpi {
     min-height: 44px;
   }
