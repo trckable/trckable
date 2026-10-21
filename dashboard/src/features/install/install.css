@@ -507,3 +507,11 @@
 .setup-fig:has(.tkf) {
   pointer-events: auto;
 }
+
+/* What the site runs: one quiet line above the tabs. */
+.inst-stack {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
