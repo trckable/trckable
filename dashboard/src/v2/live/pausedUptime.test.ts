@@ -14,11 +14,17 @@ describe('a paused check', () => {
   })
 
   it('paints its days paused in Live’s strip, and a day with an incident stays an incident', () => {
-    const paused = [{ from: now - 3 * DAY, to: now - 1 * DAY }]
+    const day = (d: string) => Date.parse(`${d}T00:00:00Z`) / 1000
+    const paused = [{ from: day('2026-10-17'), to: day('2026-10-20') }]
     const down = [{ id: 'i', site: 's', kind: 'down' as const, started_at: now - 2 * DAY, ended_at: now - 2 * DAY + 600, cause: '', note: '', expected_visits: null }]
     const fig = uptimeFigure(down, '2026-10-20', 'UTC', now, watched, 2 * DAY, paused)
     expect(fig?.days.slice(-5)).toEqual(['ok', 'paused', 'down', 'paused', 'ok'])
     expect(fig?.days.filter((d) => d === 'paused')).toHaveLength(2)
+  })
+
+  it('keeps a day that was only partly paused as it was, not paused', () => {
+    const fig = uptimeFigure([], '2026-10-20', 'UTC', now, watched, 2 * DAY, [{ from: now - 3 * DAY, to: now - 1 * DAY }])
+    expect(fig?.days.slice(-5)).toEqual(['ok', 'ok', 'ok', 'ok', 'ok'])
   })
 
   it('leaves the paused time out of the share, and says nothing when all of it was paused', () => {
@@ -26,7 +32,7 @@ describe('a paused check', () => {
   })
 
   it('is the incidents strip’s state too: one function paints both', () => {
-    const states = dayStates([], ['2026-10-18', '2026-10-19'], 'UTC', now, watched, [{ from: Date.parse('2026-10-19T03:00:00Z') / 1000, to: now }])
+    const states = dayStates([], ['2026-10-18', '2026-10-19'], 'UTC', now, watched, [{ from: Date.parse('2026-10-19T00:00:00Z') / 1000, to: now }])
     expect([...states.values()]).toEqual(['ok', 'paused'])
   })
 })
