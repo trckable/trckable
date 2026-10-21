@@ -1952,6 +1952,7 @@ export default {
   'incidents.year': 'Ogni giorno dell’anno',
   'incidents.dayOk': (day: string) => `${day}: nessun incidente`,
   'incidents.dayPaused': (day: string) => `${day}: controllo in pausa`,
+  'incidents.dayPausedPart': (text: string, span: string) => `${text} · in pausa ${span}`,
   'incidents.legendPaused': 'In pausa',
   'incidents.dayQuiet': (day: string, span: string) => `${day}: silenzioso · ${span}`,
   'incidents.dayDown': (day: string, span: string) => `${day}: non risponde · ${span}`,
