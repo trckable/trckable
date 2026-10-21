@@ -1381,6 +1381,8 @@ export default {
   'install.step': (n: number) => `Étape ${n}`,
   'install.copyStep': (title: string) => `Copier : ${title}`,
   'install.copyCode': 'Copier le code',
+  'install.optionalTitle': 'Compter aussi les visiteurs avec un bloqueur de publicités',
+  'install.optionalHint': 'Facultatif. Les événements passent alors par ton propre domaine : utilise <Analytics> sans host.',
   'install.cookieless.label': 'Sans cookie',
   'install.cookieless.onServer': 'Aucun cookie, rien de stocké. Le script le reprend en moins d’une heure : rien à recoller.',
   'install.cookieless.onBundled': 'Le code ci-dessus a cookieless: true. Reconstruisez et redéployez votre appli.',

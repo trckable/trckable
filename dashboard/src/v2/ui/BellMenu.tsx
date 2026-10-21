@@ -1,15 +1,15 @@
 // The bell at the end of the header: a dot with how many are unread, and the list under it (a sheet on a phone).
 // Markup and classes are the walkthrough's own.
-import { Check, ListFilter, MoreHorizontal, X } from 'lucide-react'
-import { Fragment, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
-import { reducedMotion } from '../../lib/motion'
-import { Popover } from '../../kit/Popover'
+import { X } from 'lucide-react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { MkPortal } from './Portal'
 import { useMenu } from './useMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
 import { BELL_PATH } from './bellIcons'
 import { byDay } from '../bell/days'
 import { copy } from '../bell/copy'
+import { useArrival } from './useBellArrival'
+import { FilterMenu, RowMenu } from './BellPopovers'
 import './bellMenu.css'
 
 /** What a row's ⋯ offers: mute it for the site, change its alert, put it away. */
@@ -37,65 +37,7 @@ export interface BellRow {
   actions?: RowAction[]
 }
 
-const SLIDE_MS = 260
-
-/** The box that scrolls the rows: the sheet's body on a phone, the list itself under the bell. */
-const scroller = (list: HTMLElement): HTMLElement => list.closest<HTMLElement>('.cdb') ?? list
-
-/** The first row in view, and how far from the top of the box it sits. */
-function anchorOf(list: HTMLElement): { id: string; top: number } | null {
-  const box = scroller(list).getBoundingClientRect()
-  for (const w of list.querySelectorAll<HTMLElement>('.nfw')) {
-    const r = w.getBoundingClientRect()
-    if (r.bottom > box.top) return { id: w.dataset.id ?? '', top: r.top - box.top }
-  }
-  return null
-}
-
-/**
- * New rows arriving in an open list never move what is being read. Scrolled down, the list is scrolled by what came in
- * above, so the same row stays under the finger. At the top, the rows slide down into place on the compositor (the
- * layout has already moved; the transform puts every old row back where it was drawn, then lets go), and the new ones
- * fade in. With reduced motion there is the fade only.
- */
-function useArrival(list: RefObject<HTMLDivElement | null>, fresh: ReadonlySet<string>, rows: readonly BellRow[]) {
-  const seen = useRef<{ id: string; top: number; scrolled: number } | null>(null)
-  useLayoutEffect(() => {
-    const el = list.current
-    if (!el) return
-    const box = scroller(el)
-    const was = seen.current
-    const items = [...el.querySelectorAll<HTMLElement>('.nfw')]
-    const fresher = items.filter((w) => fresh.has(w.dataset.id ?? ''))
-    if (fresher.length && was) {
-      if (was.scrolled > 0) {
-        const a = items.find((w) => w.dataset.id === was.id)
-        if (a) box.scrollTop += a.getBoundingClientRect().top - box.getBoundingClientRect().top - was.top
-      } else if (!reducedMotion() && typeof el.animate === 'function') {
-        const first = items.find((w) => !fresh.has(w.dataset.id ?? ''))
-        const lift = first ? first.offsetTop - items[0].offsetTop : 0
-        if (lift > 0) for (const w of items) w.animate([{ transform: `translateY(${-lift}px)` }, { transform: 'none' }], { duration: SLIDE_MS, easing: 'cubic-bezier(.2,.7,.2,1)' })
-      }
-    }
-    if (typeof el.animate === 'function') for (const w of fresher) w.animate([{ opacity: 0 }, { opacity: 1 }], { duration: SLIDE_MS, easing: 'ease-out' })
-    const a = anchorOf(el)
-    seen.current = a && { ...a, scrolled: box.scrollTop }
-  }, [list, fresh, rows])
-  // Scrolling by hand moves the mark the next arrival is measured from.
-  useEffect(() => {
-    const el = list.current
-    if (!el) return
-    const box = scroller(el)
-    const f = () => {
-      const a = anchorOf(el)
-      seen.current = a && { ...a, scrolled: box.scrollTop }
-    }
-    box.addEventListener('scroll', f, { passive: true })
-    return () => box.removeEventListener('scroll', f)
-  }, [list])
-}
-
-interface BellProps {
+export interface BellProps {
   /** The bell is mid-wiggle for something new (useBellAlert). */
   shaking?: boolean
   /** Told when the list opens or shuts. */
@@ -134,43 +76,6 @@ interface BellProps {
 }
 
 const EMPTY: ReadonlySet<string> = new Set()
-
-/** The ⋯ of a row and what it offers: the kit's popover under the button (a sheet on a phone), over the list, so no row moves. */
-function RowMenu({ row, close }: { row: BellRow; close: () => void }) {
-  const actions = row.actions ?? []
-  if (actions.length === 0) return null
-  return (
-    <Popover
-      label={copy.more}
-      className="nfpop"
-      trigger={(t) => (
-        <button type="button" className="nfx" aria-label={copy.more} title={copy.more} {...t}>
-          <MoreHorizontal size={18} aria-hidden="true" />
-        </button>
-      )}
-    >
-      {(shut) => (
-        <div role="menu">
-          {actions.map((a) => (
-            <button
-              key={a.key}
-              type="button"
-              role="menuitem"
-              className="nfpi"
-              onClick={() => {
-                shut()
-                a.run()
-                if (a.key === 'change') close()
-              }}
-            >
-              {a.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </Popover>
-  )
-}
 
 function Icon({ kind }: { kind: string }) {
   return (
@@ -214,51 +119,6 @@ function Row({ n, p, close }: { n: BellRow; p: BellProps; close: () => void }) {
       )}
       <RowMenu row={n} close={close} />
     </div>
-  )
-}
-
-/** The one filter button: a quiet icon with a dot while the list is narrowed, and the kit's popover (a sheet on a phone) with the kinds and the sites. */
-function FilterMenu({ f }: { f: NonNullable<BellProps['filter']> }) {
-  const group = (label: string, items: { id: string; label: string; on: boolean; dot?: boolean; pick: () => void }[], shut: () => void) => (
-    <div role="group" aria-label={label} className="nfg">
-      <h4>{label}</h4>
-      {items.map((o) => (
-        <button
-          key={o.id}
-          type="button"
-          role="menuitemradio"
-          aria-checked={o.on}
-          className="nfpi"
-          onClick={() => {
-            o.pick()
-            shut()
-          }}
-        >
-          <span className="nfpl">{o.label}</span>
-          {o.dot && <i className="nfd sm" aria-hidden="true" />}
-          {o.on && <Check size={16} aria-hidden="true" />}
-        </button>
-      ))}
-    </div>
-  )
-  return (
-    <Popover
-      label={copy.filter}
-      className="nfpop"
-      trigger={(t) => (
-        <button type="button" className="nfq" aria-label={f.active ? `${copy.filter}: ${f.active}` : copy.filter} title={copy.filter} {...t}>
-          <ListFilter size={18} aria-hidden="true" />
-          {f.active && <i className="nfd sm" aria-hidden="true" />}
-        </button>
-      )}
-    >
-      {(shut) => (
-        <div role="menu">
-          {group(copy.filterLabel, f.groups.map((g) => ({ id: g.id, label: g.label, on: g.on, dot: g.dot, pick: () => f.onGroup(g.id) })), shut)}
-          {f.sites && group(copy.siteLabel, f.sites.map((o) => ({ id: o.value || 'all', label: o.label, on: o.on, pick: () => f.onSite(o.value) })), shut)}
-        </div>
-      )}
-    </Popover>
   )
 }
 
@@ -356,7 +216,7 @@ export function BellMenu(p: BellProps) {
       {p.sheet && open && (
         <MkPortal>
           <div className="xscrim on" onClick={close} aria-hidden="true" />
-          <aside className="cd on" role="dialog" aria-modal="true" aria-label={p.title} tabIndex={-1}>
+          <aside className="cd on nfsheet" role="dialog" aria-modal="true" aria-label={p.title} tabIndex={-1}>
             <div className="cdh">
               <b>{p.title}</b>
               <Tools {...p} />
