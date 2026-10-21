@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { SetupItem, SetupState } from '../../lib/apiMore'
-import { CHECK_FOR, splitOf, hiddenBy, hideId, left, offset, percent, ringMode, rowsOf } from './model'
+import { CHECK_FOR, wanted, splitOf, hiddenBy, hideId, left, offset, percent, ringMode, rowsOf } from './model'
 
 const item = (id: string, group: SetupItem['group'], o: Partial<SetupItem> = {}): SetupItem => ({ id, group, done: false, counted: group !== 'more', skipped: false, skippable: group === 'optional', ...o })
 const state = (done: number, counted: number): SetupState => ({ kind: { value: 'shop', chosen: false }, goal_suggestion: '', done, counted, all_set: counted > 0 && done === counted, items: [] })
@@ -88,5 +88,22 @@ describe('the folded panel', () => {
     expect(s.todo.map((i) => i.id)).toEqual(['locale', 'funnel'])
     expect(s.done.map((i) => i.id)).toEqual(['verified', 'search'])
     expect(s.more.map((i) => i.id)).toEqual(['payments', 'vitals'])
+  })
+})
+
+describe('a setup prompt is wanted', () => {
+  const withPayments = (o: Partial<SetupItem>): SetupState => ({ ...state(0, 1), items: [item('payments', 'optional', o), item('search', 'optional')] })
+  it('is wanted when the step is chosen and not skipped', () => {
+    expect(wanted(withPayments({}), 'rev')).toBe(true)
+    expect(wanted(withPayments({}), 'search')).toBe(true)
+  })
+  it('is not wanted once the step is skipped or not chosen, and wanted again when brought back', () => {
+    expect(wanted(withPayments({ skipped: true, group: 'more', counted: false }), 'rev')).toBe(false)
+    expect(wanted(withPayments({ skipped: false }), 'rev')).toBe(true)
+  })
+  it('waits while the checklist is not known, and always asks for a prompt with no step', () => {
+    expect(wanted(null, 'rev')).toBe(false)
+    expect(wanted(null, 'goals')).toBe(true)
+    expect(wanted(withPayments({ skipped: true }), 'alerts')).toBe(true)
   })
 })

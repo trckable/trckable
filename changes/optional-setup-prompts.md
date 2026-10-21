@@ -1,0 +1,1 @@
+Setup prompts are optional: the Revenue and Search Console prompts on Live and the Briefing show only while their step is wanted in the setup progress. Skipping a step, or never choosing it, hides the prompt and its space at once; bringing it back shows it again, with no reload.
