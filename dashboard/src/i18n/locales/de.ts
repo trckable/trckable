@@ -1954,6 +1954,7 @@ export default {
   'incidents.year': 'Jeder Tag des Jahres',
   'incidents.dayOk': (day: string) => `${day}: kein Vorfall`,
   'incidents.dayPaused': (day: string) => `${day}: Verfügbarkeitsprüfung pausiert`,
+  'incidents.dayPausedPart': (text: string, span: string) => `${text} · pausiert ${span}`,
   'incidents.legendPaused': 'Pausiert',
   'incidents.dayQuiet': (day: string, span: string) => `${day}: still · ${span}`,
   'incidents.dayDown': (day: string, span: string) => `${day}: offline · ${span}`,
