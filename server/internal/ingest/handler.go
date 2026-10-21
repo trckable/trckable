@@ -40,6 +40,11 @@ type Site struct {
 	ID       string
 	Domain   string   // root domain; subdomains are allowed automatically
 	Allowed  []string // extra allowed hostnames (cross-domain)
+	// Former are the site's earlier domains, each accepted until its end
+	// time: a site that moved keeps counting the visits still arriving from
+	// the old address. Judged against the clock on every visit, so nothing
+	// needs reloading when one ends.
+	Former []FormerHost
 	HashMode bool
 	ProxyKey string // secret sent by same-origin proxies (X-Trckable-Proxy-Key)
 	// Location is the site's own time zone, for what is kept per day (the
@@ -60,6 +65,12 @@ type Site struct {
 	// dropped before the address is hashed or looked up, so it is never counted,
 	// billed or stored. Only this list is kept, never who matched it.
 	ExcludeIPs []netip.Prefix
+}
+
+// FormerHost is a domain a site had and still accepts visits from, until Until.
+type FormerHost struct {
+	Host  string
+	Until time.Time
 }
 
 // Skip reports whether a path is excluded for this site. A trailing * matches
@@ -354,7 +365,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 	if !ok {
 		return nil, "", nil, errBadPayload
 	}
-	if !hostAllowed(u.Host, site, p.Dev == 1) {
+	if !hostAllowed(u.Host, site, p.Dev == 1, h.Now()) {
 		h.Hosts.Add(p.Site, u.Host, h.Now())
 		return nil, "", nil, errHost
 	}
@@ -582,7 +593,7 @@ func isLocalHost(host string) bool {
 	return host == "localhost" || host == "127.0.0.1" || host == "0.0.0.0" || host == "[::1]" || host == "::1"
 }
 
-func hostAllowed(host string, s Site, dev bool) bool {
+func hostAllowed(host string, s Site, dev bool, now time.Time) bool {
 	if isLocalHost(host) {
 		return dev // the tracker opts in with data-dev
 	}
@@ -591,6 +602,11 @@ func hostAllowed(host string, s Site, dev bool) bool {
 	}
 	for _, a := range s.Allowed {
 		if host == a || strings.HasSuffix(host, "."+a) {
+			return true
+		}
+	}
+	for _, f := range s.Former {
+		if now.Before(f.Until) && (host == f.Host || strings.HasSuffix(host, "."+f.Host)) {
 			return true
 		}
 	}
