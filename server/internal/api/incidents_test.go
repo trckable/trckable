@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
@@ -123,6 +124,14 @@ func TestAccountIncidentsAndSiteDeletion(t *testing.T) {
 	}
 	if _, out = do(t, c, "GET", g.srv.URL+"/api/v1/incidents?days=0", ""); len(out["incidents"].([]any)) != 3 {
 		t.Fatal("the default period is a month")
+	}
+	// A paused check is told per site on the all-sites list, out of its share.
+	if err := g.ctl.SetUptimePaused(context.Background(), g.site, true, time.Now().Unix()); err != nil {
+		t.Fatal(err)
+	}
+	g.advance(400 * 24 * time.Hour)
+	if _, out = do(t, c, "GET", g.srv.URL+"/api/v1/incidents", ""); out["paused"].(map[string]any)[g.site] == nil {
+		t.Fatalf("a paused site is not told as paused: %v", out["paused"])
 	}
 	if _, err := g.ctl.DeleteSite(context.Background(), g.site); err != nil {
 		t.Fatal(err)

@@ -51,7 +51,8 @@ export function mapFunnel(o: { cur: FunnelResult[]; prev?: FunnelResult[]; repor
   const steps: Step[] = cur.map((s, i) => ({ name: stepName(s, i), v: s.visitors, c: prev?.[i]?.visitors ?? 0 }))
   const goals: Goal[] = (report.current.goals ?? []).map((g) => ({ name: g.label || g.value, ...statOf(g.visitors, report.previous?.goals?.find((p) => p.value === g.value)?.visitors, base) }))
   const pages = (report.current.dims.page ?? []).map((r) => ({ name: r.value, ...statOf(r.visitors, report.previous?.dims.page?.find((p) => p.value === r.value)?.visitors, base) }))
-  return { steps, leak: leakOf(steps), goals, vs: copy.vsUsual, ghost: o.ghost, goalsOn: goals.length > 0, pages }
+  const spec = cur.flatMap((s) => (s.kind === 'page' || s.kind === 'goal' ? [{ kind: s.kind, value: s.value }] : []))
+  return { steps, spec, leak: leakOf(steps), goals, vs: copy.vsUsual, ghost: o.ghost, goalsOn: goals.length > 0, pages }
 }
 
 // ---- sales ----

@@ -125,6 +125,7 @@ export const copy = defineCopy('briefing', {
   usual: 'as usual',
   leaveEarly: 'more leave early',
   checksOff: 'checks off',
+  checksPaused: 'Uptime check paused',
   // The sheet behind the score.
   whySheet: 'How the score is worked out',
   whySheetSub: 'Each part against the usual, then added up',

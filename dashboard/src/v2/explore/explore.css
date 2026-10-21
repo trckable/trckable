@@ -57,3 +57,38 @@
 @media (prefers-reduced-motion:reduce){.mk .xscrim,.mk .xscrim.on,.mk .xp,.mk .xp.on{transition:none}.mk .xp.on>*{animation:none}}
 [data-motion='off'] .mk .xscrim,[data-motion='off'] .mk .xscrim.on,[data-motion='off'] .mk .xp,[data-motion='off'] .mk .xp.on{transition:none}
 [data-motion='off'] .mk .xp.on>*{animation:none}
+
+/* The funnels a site keeps by name: the picker, and the little forms to name, rename and delete. */
+.mk .xsvf,
+.mk .xsvn {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mk-s2);
+}
+.mk .xsvf {
+  margin: 0 0 var(--mk-s3);
+}
+.mk .xsvf select {
+  flex: 1 1 160px;
+  min-width: 0;
+  max-width: 280px;
+}
+.mk .xsvn {
+  flex: 1 1 100%;
+}
+.mk .xsvn input[type='text'] {
+  flex: 1 1 160px;
+  min-width: 0;
+  max-width: 280px;
+}
+.mk .xsvn > span {
+  font-size: 13px;
+  color: var(--mk-muted);
+}
+@media (--xs) {
+  .mk .xsvf select,
+  .mk .xsvn input[type='text'] {
+    max-width: none;
+  }
+}

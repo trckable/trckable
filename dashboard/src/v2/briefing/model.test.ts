@@ -96,6 +96,8 @@ describe('scores', () => {
     expect(uptimeScore({ pct: 99.9, downNow: false, downMin: 2, off: false })).toMatchObject({ value: 94, verdict: 'lost', words: 'down 2 min' })
     expect(uptimeScore({ pct: 100, downNow: false, downMin: 0, off: false })).toMatchObject({ verdict: 'clear', words: 'no downtime' })
     expect(uptimeScore({ pct: null, downNow: false, downMin: 0, off: false }).value).toBeNull()
+    // A paused check is neither clear nor lost, whatever the share says.
+    expect(uptimeScore({ pct: 100, downNow: false, downMin: 0, off: false, paused: true })).toMatchObject({ value: null, verdict: 'paused', words: 'Uptime check paused' })
     expect(uptimeScore({ pct: 100, downNow: false, downMin: 0, off: true })).toMatchObject({ value: null, words: 'checks off' })
   })
   it('the ring weighs traffic 40, engagement 25 and uptime 35, is empty while down, and when nothing is known', () => {

@@ -3,7 +3,7 @@
 // and the account's for All sites. A failed read leaves the screen as it was:
 // no markers, no list, never an error over a page that is otherwise fine.
 import { useCallback, useEffect, useState } from 'react'
-import { incidents, type Incident, type Summary } from './api'
+import { incidents, type Incident, type PausedSpan, type Summary } from './api'
 
 type State<T> = { key: string; data: T | null; failed: boolean }
 
@@ -26,14 +26,14 @@ function useLoaded<T>(key: string, load: () => Promise<T>): { data: T | null; fa
 
 /** The incidents that overlap [from, to] (unix seconds) of a site, with the period's totals. */
 export function usePeriodIncidents(site: string, from: number, to: number, enabled = true) {
-  const r = useLoaded<{ incidents: Incident[]; summary: Summary; quiet_tracked?: boolean }>(`${enabled}:${site}:${from}:${to}`, () => (enabled ? incidents.period(site, from, to) : Promise.reject(new Error('off'))))
-  return { list: r.data?.incidents ?? [], summary: r.data?.summary ?? null, quietTracked: r.data?.quiet_tracked, ready: r.ready, failed: r.failed && enabled, reload: r.reload }
+  const r = useLoaded<{ incidents: Incident[]; summary: Summary; paused_spans?: PausedSpan[]; quiet_tracked?: boolean }>(`${enabled}:${site}:${from}:${to}`, () => (enabled ? incidents.period(site, from, to) : Promise.reject(new Error('off'))))
+  return { list: r.data?.incidents ?? [], summary: r.data?.summary ?? null, quietTracked: r.data?.quiet_tracked, pausedSpans: r.data?.paused_spans ?? [], ready: r.ready, failed: r.failed && enabled, reload: r.reload }
 }
 
 /** The account's incidents of the last `days` days, for All sites. */
 export function useAccountIncidents(days: number) {
-  const r = useLoaded<{ incidents: Incident[]; quiet_tracked?: Record<string, boolean> }>(`all:${days}`, () => incidents.account(days))
-  return { list: r.data?.incidents ?? [], quiet: r.data?.quiet_tracked ?? {}, ready: r.ready, failed: r.failed }
+  const r = useLoaded<{ incidents: Incident[]; quiet_tracked?: Record<string, boolean>; paused?: Record<string, number> }>(`all:${days}`, () => incidents.account(days))
+  return { list: r.data?.incidents ?? [], quiet: r.data?.quiet_tracked ?? {}, paused: r.data?.paused ?? {}, ready: r.ready, failed: r.failed }
 }
 
 /** The incident still going on at a site, if any (undefined until known), read again every half minute so the page's state is live. */

@@ -28,6 +28,9 @@ type incidentSummary struct {
 	Seconds  int64 `json:"seconds"`   // time spent in incidents inside the period
 	Lost     int64 `json:"lost"`      // the estimated visits of those that have an estimate
 	LostSome bool  `json:"lost_some"` // at least one has
+	// Paused is the time of the period the uptime check was paused: not looked
+	// at, so neither up nor down, and out of the uptime share.
+	Paused int64 `json:"paused,omitempty"`
 }
 
 func summarize(list []sqlite.Incident, from, to int64) incidentSummary {
@@ -104,7 +107,16 @@ func (a *API) incidents(w http.ResponseWriter, r *http.Request) {
 			fail(w, http.StatusInternalServerError, "could not read the incidents")
 			return
 		}
-		out["summary"] = summarize(list, from, to)
+		sum := summarize(list, from, to)
+		if sum.Paused, err = a.Ctl.PausedSeconds(r.Context(), site, from, to); err != nil {
+			fail(w, http.StatusInternalServerError, "could not read the incidents")
+			return
+		}
+		out["summary"] = sum
+		if out["paused_spans"], err = a.Ctl.PauseSpans(r.Context(), site, from, to); err != nil {
+			fail(w, http.StatusInternalServerError, "could not read the incidents")
+			return
+		}
 		out["incidents"] = list
 		if t := a.quietTracked(r.Context(), site, a.Now()); t != nil {
 			out["quiet_tracked"] = *t
@@ -161,8 +173,19 @@ func (a *API) accountIncidents(w http.ResponseWriter, r *http.Request) {
 			quiet[s.ID] = *t
 		}
 	}
+	// The time each site's check was paused in the window, out of its uptime share.
+	paused := map[string]int64{}
+	now := a.Now().Unix()
+	for _, s := range sites {
+		if !p.sees(s.ID) {
+			continue
+		}
+		if n, err := a.Ctl.PausedSeconds(r.Context(), s.ID, max(from, s.WatchedSince), now); err == nil && n > 0 {
+			paused[s.ID] = n
+		}
+	}
 	w.Header().Set("Cache-Control", "private, no-store")
-	writeJSON(w, http.StatusOK, map[string]any{"incidents": out, "quiet_tracked": quiet})
+	writeJSON(w, http.StatusOK, map[string]any{"incidents": out, "quiet_tracked": quiet, "paused": paused})
 }
 
 // incidentNote is PATCH /api/v1/sites/{site}/incidents/{id}: the note that

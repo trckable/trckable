@@ -344,6 +344,14 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}/busier", a.authed(a.busierNow))
 	handle("GET /api/v1/sites/{site}/incidents", a.authed(a.incidents))
 	handle("GET /api/v1/sites/{site}/probes", a.authed(a.probes))
+	handle("GET /api/v1/sites/{site}/uptime", a.authed(a.uptime))
+	handle("PUT /api/v1/sites/{site}/uptime", a.authed(a.setUptime))
+	handle("POST /api/v1/sites/{site}/uptime/paths", a.authed(a.addUptimePath))
+	handle("DELETE /api/v1/sites/{site}/uptime/paths", a.authed(a.removeUptimePath))
+	handle("GET /api/v1/sites/{site}/funnels", a.authed(a.funnels))
+	handle("POST /api/v1/sites/{site}/funnels", a.authed(a.createFunnel))
+	handle("PATCH /api/v1/sites/{site}/funnels/{id}", a.authed(a.updateFunnel))
+	handle("DELETE /api/v1/sites/{site}/funnels/{id}", a.authed(a.deleteFunnel))
 	handle("GET /api/v1/sites/{site}/answers/setup", a.authed(a.answersSetup))
 	handle("PUT /api/v1/sites/{site}/answers/questions", a.authed(a.setAnswerQuestions))
 	handle("PUT /api/v1/sites/{site}/answers/competitors", a.authed(a.setAnswerCompetitors))
@@ -1118,6 +1126,7 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 	checks, _ := a.Ctl.Checks(r.Context(), principalOf(r).account)
 	downs, _ := a.Ctl.DownProbes(r.Context(), principalOf(r).account)
 	blocked, _ := a.Ctl.BlockedProbes(r.Context(), principalOf(r).account)
+	paused, _ := a.Ctl.PausedUptime(r.Context())
 	talked := map[string]bool{}
 	if a.MentionsOn {
 		talked, _ = a.Ctl.SitesWithMentions(r.Context())
@@ -1142,6 +1151,7 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 			out[len(out)-1].DownSince, out[len(out)-1].DownCause = p.DownSince, p.Error
 		}
 		out[len(out)-1].ProbeBlockedSince = blocked[s.ID]
+		out[len(out)-1].UptimePaused = paused[s.ID]
 		out[len(out)-1].Mentions = talked[s.ID]
 		out[len(out)-1].Answers = a.AnswersOn()
 	}
@@ -1172,6 +1182,9 @@ func (a *API) site(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	si.ProxyKey = a.proxyKeyFor(r, si.ProxyKey)
+	if u, err := a.Ctl.UptimeOf(r.Context(), si.ID); err == nil {
+		si.UptimePaused = u.Paused
+	}
 	if p, err := a.Ctl.ProbeOf(r.Context(), si.ID); err == nil {
 		si.ProbeBlockedSince = p.BlockedSince
 		if p.Down() {
