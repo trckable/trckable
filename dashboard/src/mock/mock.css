@@ -8,7 +8,7 @@
 .mk .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .mk{width:100%;max-width:1440px;padding:22px 32px 40px;container-type:inline-size}
 .mk .hd{display:flex;align-items:center;gap:14px}
-/* The header stays at the top of the window; a frosted layer shows under it once the page has moved (data-stuck, Header.tsx; see the end of this file). */
+/* The header stays at the top of the window; a floating bar shows under it once the page has moved (data-stuck, Header.tsx; see the end of this file). */
 .mk .hd{position:sticky;top:0;z-index:20;margin:-22px -32px 0;padding:22px 32px 0;box-sizing:content-box;background:var(--mk-bg);border-bottom:1px solid transparent;transition:border-color .15s}
 .mk .logo{width:34px;height:34px}
 .mk .mk-chip{display:flex;align-items:center;gap:8px;border:1px solid var(--mk-line);background:var(--mk-card);border-radius:12px;height:36px;padding:0 12px;font-weight:600}
@@ -1774,27 +1774,32 @@ body[data-modal] .mk .cd {
 .mk .tabbar{z-index:25}
 body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.pmenu.on,.xm.on,.pal.on) .mk .tabbar{pointer-events:none}
 
-/* The stuck header (data-stuck, Header.tsx): clear at the top; once the page has moved under it, a frosted layer of its own (::before, so the header never becomes the box a fixed menu is placed in) shaped as a pill with rounded ends, inset from the window's edge, so no page content shows at its ends and no hard rectangle shows beyond it. Solid without blur support or with reduced transparency. */
+/* The stuck header (data-stuck, Header.tsx), the website's floating bar: clear at the top; once the page has moved under it, a bar of its own (::before, so the header never becomes the box a fixed menu is placed in): rounded below, inset from the window's side, a soft translucent fill with the landing's blur, a hairline all round and a lit top edge. The active view is marked by a thin lime line on the bar's bottom edge. Solid without blur support or with reduced transparency. */
+.mk{--mk-bar-r:20px;--mk-bar-blur:blur(22px) saturate(180%);--mk-bar-fill:color-mix(in srgb,var(--mk-card) 60%,transparent);--mk-bar-line:color-mix(in srgb,var(--mk-text) 8%,transparent);--mk-bar-hi:color-mix(in srgb,var(--mk-text) 7%,transparent);--mk-bar-drop:rgba(0,0,0,.25)}
 .mk .hd{background:transparent;border-bottom:0}
-.mk .hd::before{content:"";position:absolute;inset:0 var(--mk-s3) calc(var(--mk-s2) * -1);z-index:-1;border-radius:999px;background:var(--mk-bg);opacity:0;pointer-events:none;transition:opacity .15s}
+.mk .hd::before{content:"";position:absolute;inset:0 var(--mk-s3) calc(var(--mk-s2) * -1);z-index:-1;border:1px solid var(--mk-bar-line);border-radius:var(--mk-bar-r);background:var(--mk-card);box-shadow:inset 0 1px 0 var(--mk-bar-hi),0 8px 32px var(--mk-bar-drop);opacity:0;pointer-events:none;transition:opacity .25s ease}
 .mk .hd[data-stuck=true]::before{opacity:1}
 @supports (backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px)){
-.mk .hd::before{background:color-mix(in srgb,var(--mk-bg) 72%,transparent);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%)}
-@media (prefers-reduced-transparency:reduce){.mk .hd::before{background:var(--mk-bg);-webkit-backdrop-filter:none;backdrop-filter:none}}
+.mk .hd::before{background:var(--mk-bar-fill);-webkit-backdrop-filter:var(--mk-bar-blur);backdrop-filter:var(--mk-bar-blur)}
+@media (prefers-reduced-transparency:reduce){.mk .hd::before{background:var(--mk-card);-webkit-backdrop-filter:none;backdrop-filter:none}}
 }
 @media (prefers-reduced-motion:reduce){.mk .hd::before{transition:none}}
 @container (--pane-min-601) and (--pane-max-700){.mk .hd::before{display:none}}
 
-/* Once the page has moved, from a 701 px page up: the bar stretches to the window's edges (its frosted layer reaches past the page's own width, which stops at 1440 px) with a hairline under it, and gets shorter, its controls a little smaller and its content a little wider, inside a 16 px gutter (more where the screen has a notch). The room the bar gives up goes into the margin below it, so the page under it never moves; the changes share one timing, so that holds all through the transition. A phone keeps its own compact bar. */
+/* Once the page has moved, from a 701 px page up: the bar sits on the window's top edge with square top corners as the landing's does, a hand shorter, its controls a little smaller, inside the page's own width (the controls stay where they are, 16 px inside the bar). The room the bar gives up goes into the margin below it, so the page under it never moves; the changes share one timing, so that holds all through the transition. A phone keeps its own compact bar. */
 @container (--pane-min-701){
-.mk .hd::before{border-radius:0;top:0;bottom:0;left:calc(50% - 50vw);right:calc(50% - 50vw);-webkit-mask-image:none;mask-image:none;border-bottom:1px solid var(--mk-line)}
-.mk .hd{transition:padding .18s ease,margin-bottom .18s ease}
-.mk .hd .logo,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:height .18s ease,width .18s ease}
-.mk .hd[data-stuck=true]{--mk-h:28px;--hpb:10px;padding-top:10px;padding-left:max(var(--mk-s4),env(safe-area-inset-left));padding-right:max(var(--mk-s4),env(safe-area-inset-right));margin-bottom:22px}
+/* The active view: a thin lime line along the bar's bottom edge, under the chosen one (the gliding pill of the switch carries it; the switch lets it out of its box). */
+.mk .hd #views{overflow:visible}
+.mk .hd #views .spill::after{content:"";position:absolute;left:var(--mk-s3);right:var(--mk-s3);bottom:calc(-1 * (var(--hpb) + 3px));height:2px;border-radius:2px;background:var(--mk-lime);opacity:0;transition:opacity .25s ease}
+.mk .hd[data-stuck=true] #views .spill::after{opacity:1}
+.mk .hd::before{inset:0 var(--mk-s4);border-top-color:transparent;border-top-left-radius:0;border-top-right-radius:0}
+.mk .hd{transition:padding .25s ease,margin-bottom .25s ease}
+.mk .hd .logo,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:height .25s ease,width .25s ease}
+.mk .hd[data-stuck=true]{--mk-h:28px;--hpb:10px;padding-top:var(--hpb);margin-bottom:22px}
 .mk .hd[data-stuck=true] .logo{width:28px;height:28px}
 @media (pointer:coarse){.mk .hd[data-stuck=true]{--mk-h:40px}}
 }
-@media (prefers-reduced-motion:reduce){.mk .hd,.mk .hd .logo,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:none}}
+@media (prefers-reduced-motion:reduce){.mk .hd #views .spill::after,.mk .hd,.mk .hd .logo,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:none}}
 
 /* The site chip carries the site's mark; its dot shows only for a site that is down (red) or not receiving data (amber), never green. Live keeps the one pulsing dot, still when motion is reduced. */
 .mk .sitechip .mkwrap{position:relative;display:inline-flex;flex:none}
