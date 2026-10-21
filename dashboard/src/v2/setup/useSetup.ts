@@ -1,9 +1,9 @@
 // The checklist of the selected site: shown from the last read of this browser, and read when the site changes, when the panel opens, when settings close (a step
 // may have been done there) and when the tab is looked at again; every change answers with the new checklist.
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { more, type SetupState, type Site } from '../../lib/apiMore'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { type SetupState, type Site } from '../../lib/apiMore'
 import { useSettings } from '../../lib/settings'
-import { lastState, remember } from './memory'
+import { lastState, readSetup, remember, SHARED_MS } from './memory'
 
 const FIRST = 2500
 
@@ -15,10 +15,11 @@ export function useSetup(site: Site | null, on: boolean, fresh = false) {
   const settingsOpen = useSettings() !== null
   // What this browser last knew of the site: shown at once, and refreshed behind it.
   const known = useMemo(() => (id && on ? lastState(id) : null), [id, on])
-  const load = useCallback((reveal = false) => {
+  // Whether the first read of this page is still to come: a prompt may have made it already, and then it is the answer (readSetup).
+  const first = useRef(true)
+  const load = useCallback((reveal = false, maxAge = 0) => {
     if (!id || !on) return
-    more
-      .setup(id)
+    readSetup(id, maxAge)
       .then((state) => {
         remember(id, state)
         // A site not known before waits until the tab is looked at again: a ring arriving late would push the header's other controls.
@@ -28,7 +29,9 @@ export function useSetup(site: Site | null, on: boolean, fresh = false) {
   }, [id, on, known, fresh])
   // The first read waits a little: the ring is not what the page is waiting for.
   useEffect(() => {
-    const t = setTimeout(() => load(), fresh ? 0 : FIRST)
+    const age = first.current ? SHARED_MS : 0
+    first.current = false
+    const t = setTimeout(() => load(false, age), fresh ? 0 : FIRST)
     return () => clearTimeout(t)
   }, [load, settingsOpen, fresh])
   useEffect(() => {
