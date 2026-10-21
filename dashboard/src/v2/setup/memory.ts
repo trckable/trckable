@@ -88,11 +88,38 @@ export function useDoneSince(site: string | null, allSet: boolean | null): numbe
 }
 
 const STATE_KEY = 'trckable:ring:state:'
+// The parsed checklist per site beside the text it came from, so a read gives the same object until the store changes.
+const held = new Map<string, { raw: string | null; state: SetupState | null }>()
+const listeners = new Set<() => void>()
+
+const raw = (site: string): string | null => {
+  try {
+    return localStorage.getItem(STATE_KEY + site)
+  } catch {
+    return null
+  }
+}
 
 /** The site's checklist as this browser last read it, so the ring shows at once (null when it was never read). */
 export function lastState(site: string): SetupState | null {
+  const r = raw(site)
+  const had = held.get(site)
+  // A blocked store keeps what was told in this page.
+  if (had && (had.raw === r || r === null)) return had.state
   const v = get(STATE_KEY + site) as SetupState | null
-  return v && typeof v.done === 'number' && typeof v.counted === 'number' && Array.isArray(v.items) ? v : null
+  const state = v && typeof v.done === 'number' && typeof v.counted === 'number' && Array.isArray(v.items) ? v : null
+  held.set(site, { raw: r, state })
+  return state
 }
 
-export const remember = (site: string, state: SetupState) => put(STATE_KEY + site, state)
+/** Keeps the checklist and tells everything that shows a setup prompt, so a skip or a re-enable shows at once. */
+export function remember(site: string, state: SetupState) {
+  put(STATE_KEY + site, state)
+  held.set(site, { raw: raw(site), state })
+  listeners.forEach((f) => f())
+}
+
+export function onState(f: () => void): () => void {
+  listeners.add(f)
+  return () => void listeners.delete(f)
+}
