@@ -4,19 +4,18 @@
 
 # trckable
 
-**The only analytics you need. Private, free and open source.**
+**Web analytics that shows which traffic pays.**
 
-Privacy-first, cookieless web analytics: a Google Analytics alternative you can self-host.<br>
-**Free and open source (AGPL-3.0)**, self-hosted web analytics that also shows you **which traffic pays**.<br>
-One container, a 2 KB script, and revenue attribution for Stripe, Lemon Squeezy, Polar, Paddle and Dodo.<br>
-Self-host it for free, or let [trckable Cloud](https://cloud.trckable.com) run it for you.
+Cookieless, open source (AGPL-3.0) and self-hosted in one container.<br>
+Connects Stripe, Lemon Squeezy, Polar, Paddle and Dodo, and credits each sale to the visit that earned it.<br>
+Self-host it free with every feature, or let [trckable Cloud](https://cloud.trckable.com) run it.
 
 [![Version](https://img.shields.io/badge/version-0.7.25-b8ff3c?style=flat-square)](CHANGELOG.md)
 [![License: AGPL-3.0](https://img.shields.io/badge/server-AGPL--3.0-0b0d10?style=flat-square)](LICENSE)
 [![Tracker: MIT](https://img.shields.io/badge/tracker-MIT-0b0d10?style=flat-square)](packages/trckable/LICENSE)
 [![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/tracker-2091_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2091 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-59_MB-b8ff3c?style=flat-square" alt="Idle memory: 59 MB"></a><!--/f-->
 
-[Website](https://trckable.com) · [Cloud](https://cloud.trckable.com) · [Quick start](#quick-start) · [How it compares](#how-it-compares) · [What it does](#what-it-does) · [Gallery](#gallery) · [Docs](https://docs.trckable.com/) · [Changelog](CHANGELOG.md)
+[Website](https://trckable.com) · [Live demo](https://trckable.com/#demo) · [Cloud](https://cloud.trckable.com) · [Quick start](#quick-start) · [How it compares](#how-it-compares) · [What it does](#what-it-does) · [Gallery](#gallery) · [Docs](https://docs.trckable.com/) · [Changelog](CHANGELOG.md)
 
 <a href="#quick-start"><img alt="Self-host it: free, every feature" src="https://img.shields.io/badge/Self--host_it-free,_every_feature-b8ff3c?style=for-the-badge"></a>
 
@@ -57,6 +56,10 @@ Then add the script tag from Settings → Install to your site's `<head>`; most 
 ```
 
 Or `npm i trckable` for React and Next.js, or the [WordPress plugin](integrations/wordpress). The image runs as an unprivileged user and works on x86-64 and arm64; details and upgrades are in the [install guide](https://docs.trckable.com/install/).
+
+## Early users wanted
+
+trckable is new, and I'm looking for the first 50 people to run it. If you install it, I'll help you set it up, and I want to hear what's confusing or missing: [open a discussion](https://github.com/trckable/trckable/discussions) or email hello@trckable.com. If it's useful to you, a ⭐ helps other people find it.
 
 ## Deploy
 
