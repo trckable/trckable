@@ -9,7 +9,7 @@ import { copy } from './cards.copy'
 import { mult, sourceName, type Deeper, type Unit } from './model'
 import { judge, type Band, type Judged } from './usual'
 import { whyDown, whyJump, type Why } from './why'
-import { firstCard, leakCard, salesCards, searchCard, stuckCard, type SalesIn } from './cards.money'
+import { firstCard, leakCard, salesCards, searchCard, stuckCard, withStuck, type SalesIn } from './cards.money'
 import type { FirstFrom, FunnelStory, SearchStory, Stuck } from './useExtras'
 
 export type Topic = 'uptime' | 'sales' | 'sources' | 'countries' | 'devices' | 'search' | 'pages' | 'goals' | 'peek' | 'mentions' | 'speed' | 'milestone' | 'funnel'
@@ -353,10 +353,12 @@ export function cardsOf(i: CardsIn): Story[] {
     const first = i.first && i.sales ? firstCard({ first: i.first, band: i.slices.country.find((x) => x.value === i.first?.country)?.band ?? null, fmt: i.sales.fmt, clock: i.sales.clock, rule: i.rule }) : null
     if (first) out.push(first)
     const leak = i.funnel && !i.low ? leakCard({ f: i.funnel, domain: i.domain, rule: i.rule }) : null
-    if (leak) out.push(leak)
+    const stuck = i.stuck && !i.low ? stuckCard(i.stuck, i.rule) : null
+    // A page people are stuck on is part of where the path leaks: one card, the steps with the page named under them.
+    if (leak) out.push(stuck && i.stuck ? withStuck(leak, i.stuck) : leak)
     const found = i.search ? searchCard({ story: i.search, domain: i.domain, rule: i.rule }) : null
     if (found) out.push(found)
-    if (i.stuck && !i.low) out.push(stuckCard(i.stuck, i.rule))
+    if (stuck && !leak) out.push(stuck)
   }
   if (i.mention) {
     const m = i.mention

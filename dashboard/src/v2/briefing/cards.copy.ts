@@ -75,6 +75,8 @@ export const copy = defineCopy('briefing.cards', {
   via: (who: string) => ` · via ${who}`,
   more: (n: number) => `+ ${n} more`,
   rowIn: 'Total in',
+  leakStuck: (page: string, el: string, n: number) => `People also pressed ${el} on ${page} ${n} times in a row.`,
+  leakAsk: (from: string, to: string) => `Why do fewer people go from ${from} to ${to} than usual?`,
   rowNet: 'Net',
   soldGross: (gross: string) => `Sold ${gross}`,
   soldBack: (back: string, net: string) => `, ${back} refunded, ${net} net`,
