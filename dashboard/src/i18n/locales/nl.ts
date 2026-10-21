@@ -1429,6 +1429,7 @@ export default {
   'install.found.nosite': (where: string) => `trckable staat op ${where}, maar zonder de id van deze site. Kopieer de code hierboven opnieuw: behoud data-site.`,
   'install.found.other': (where: string) => `trckable staat op ${where}, maar met de id van een andere site. Kopieer de code hierboven opnieuw.`,
   'install.found.unreachable': (why: string) => `De homepage kon niet worden gelezen: ${why}.`,
+  'install.runs': (domain: string, stack: string) => `${domain} draait op ${stack}`,
   'install.waiting': (domain: string) => `Wachten op het eerste bezoek. Open ${domain} in een browsertabblad: dit wordt vanzelf bijgewerkt.`,
   'install.live': (path: string) => `Live: een bezoek aan ${path} is net binnengekomen.`,
   'install.wizard.label': 'Een site toevoegen',

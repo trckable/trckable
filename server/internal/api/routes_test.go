@@ -98,6 +98,7 @@ var routeRules = map[string]string{
 	"DELETE /api/v1/sites/{site}/widgets/{id}":                   "write",
 	"GET /w/{id}":                                                "public",
 	"POST /api/v1/sites/{site}/install/check":                    "write",
+	"POST /api/v1/sites/{site}/install/stack":                    "write",
 	"GET /api/v1/sites/{site}/setup":                             "read",
 	"PUT /api/v1/sites/{site}/setup/skip/{item}":                 "write",
 	"DELETE /api/v1/sites/{site}/setup/skip/{item}":              "write",
