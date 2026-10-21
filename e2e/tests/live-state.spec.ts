@@ -29,14 +29,17 @@ test('a visit clears the Quiet badge and turns the switcher dot to now, with no 
   await page.goto(`${API}/${HISTORY_DOMAIN}?period=7d`)
   const badge = page.locator('.footer-status[data-status="quiet"]') // the foot says it, nothing floats
   await expect(badge).toBeVisible({ timeout: 20_000 })
-  await expect(page.locator('#siteBtn .mk-dot.quiet')).toBeVisible() // the chip's dot is amber while it is quiet
+  await expect(page.locator('#siteBtn .mk-dot.idle')).toBeVisible() // the button's dot is grey while it is quiet
+  await expect(page.locator('#siteBtn')).toHaveAttribute('aria-label', /quiet/i)
   await page.locator('#siteBtn').click() // the switcher stays open while the visit arrives
   await expect(page.locator('#siteMenu .state-word.quiet')).toContainText('quiet 14h')
   await page.evaluate(() => ((window as unknown as { __kept?: boolean }).__kept = true))
   seen.at = Math.floor(Date.now() / 1000) - 5
   await expect(badge).toHaveCount(0, WAIT)
   await expect(page.locator('#siteMenu .site .mk-dot.now').first()).toBeVisible(WAIT)
-  await expect(page.locator('#siteBtn .mk-dot.quiet')).toHaveCount(0)
+  await expect(page.locator('#siteBtn .mk-dot.idle')).toHaveCount(0)
+  await expect(page.locator('#siteBtn .mk-dot.now')).toBeVisible(WAIT)
+  await expect(page.locator('#siteBtn')).not.toHaveAttribute('aria-label', /quiet/i)
   await expect(page.locator('#siteMenu .state-word')).toHaveCount(0)
   expect(await page.evaluate(() => (window as unknown as { __kept?: boolean }).__kept)).toBe(true) // the same page: nothing reloaded
 })

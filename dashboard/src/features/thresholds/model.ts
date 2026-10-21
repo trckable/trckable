@@ -21,5 +21,11 @@ export function ruleOf(a?: Pick<Alert, 'metric' | 'period' | 'threshold'>): Rule
   return { metric: metricOf(a?.metric) ?? START.metric, period: periodOf(a?.period) ?? START.period, threshold: a?.threshold && a.threshold > 0 ? a.threshold : START.threshold }
 }
 
-/** Whether a typed number is a rule that can be met: above zero, and whole for what is counted whole. */
-export const reachable = (metric: Metric, n: number) => Number.isFinite(n) && n > 0 && (metric === 'revenue' || Number.isInteger(n))
+/** Whether a typed number is a rule that can be met: above zero, whole for what is counted whole, and an amount of money
+ *  with no more decimals than the currency has (`digits`: 2 for dollars, 0 for yen; the server holds it to the same). */
+export const reachable = (metric: Metric, n: number, digits = 2) =>
+  Number.isFinite(n) && n > 0 && (metric === 'revenue' ? Math.abs(n * 10 ** digits - Math.round(n * 10 ** digits)) < 1e-6 : Number.isInteger(n))
+
+/** The number as it reads: an amount with cents shows both (49.90), anything else as it is. */
+export const shown = (metric: Metric, n: number, digits = 2) =>
+  metric === 'revenue' && !Number.isInteger(n) ? n.toFixed(Math.max(Math.min(digits, 2), String(n).split('.')[1]?.length ?? 0)) : String(n)

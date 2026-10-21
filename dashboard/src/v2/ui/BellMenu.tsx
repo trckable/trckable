@@ -1,81 +1,43 @@
 // The bell at the end of the header: a dot with how many are unread, and the list under it (a sheet on a phone).
 // Markup and classes are the walkthrough's own.
-import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
-import { reducedMotion } from '../../lib/motion'
+import { X } from 'lucide-react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { MkPortal } from './Portal'
 import { useMenu } from './useMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
 import { BELL_PATH } from './bellIcons'
+import { byDay } from '../bell/days'
+import { copy } from '../bell/copy'
+import { useArrival } from './useBellArrival'
+import { FilterMenu, RowMenu } from './BellPopovers'
 import './bellMenu.css'
+
+/** What a row's ⋯ offers: mute it for the site, change its alert, put it away. */
+export interface RowAction {
+  key: 'mute' | 'change' | 'archive'
+  label: string
+  run: () => void
+}
 
 export interface BellRow {
   id: string
   kind: string
+  /** Unix seconds: the day it is listed under. */
+  at: number
   title: string
+  /** What else is said under the title. */
   sub: string
+  /** The row's time ('' for none). */
+  time: string
   unread: boolean
-  dismissable?: boolean
+  /** Still going: drawn red. */
+  bad?: boolean
+  /** Several in one row: each listed under the title, and opens on its own. */
+  lines?: { id: string; text: string }[]
+  actions?: RowAction[]
 }
 
-const SLIDE_MS = 260
-
-/** The box that scrolls the rows: the sheet's body on a phone, the list itself under the bell. */
-const scroller = (list: HTMLElement): HTMLElement => list.closest<HTMLElement>('.cdb') ?? list
-
-/** The first row in view, and how far from the top of the box it sits. */
-function anchorOf(list: HTMLElement): { id: string; top: number } | null {
-  const box = scroller(list).getBoundingClientRect()
-  for (const w of list.querySelectorAll<HTMLElement>('.nfw')) {
-    const r = w.getBoundingClientRect()
-    if (r.bottom > box.top) return { id: w.dataset.id ?? '', top: r.top - box.top }
-  }
-  return null
-}
-
-/**
- * New rows arriving in an open list never move what is being read. Scrolled down, the list is scrolled by what came in
- * above, so the same row stays under the finger. At the top, the rows slide down into place on the compositor (the
- * layout has already moved; the transform puts every old row back where it was drawn, then lets go), and the new ones
- * fade in. With reduced motion there is the fade only.
- */
-function useArrival(list: RefObject<HTMLDivElement | null>, fresh: ReadonlySet<string>, rows: readonly BellRow[]) {
-  const seen = useRef<{ id: string; top: number; scrolled: number } | null>(null)
-  useLayoutEffect(() => {
-    const el = list.current
-    if (!el) return
-    const box = scroller(el)
-    const was = seen.current
-    const items = [...el.querySelectorAll<HTMLElement>('.nfw')]
-    const fresher = items.filter((w) => fresh.has(w.dataset.id ?? ''))
-    if (fresher.length && was) {
-      if (was.scrolled > 0) {
-        const a = items.find((w) => w.dataset.id === was.id)
-        if (a) box.scrollTop += a.getBoundingClientRect().top - box.getBoundingClientRect().top - was.top
-      } else if (!reducedMotion() && typeof el.animate === 'function') {
-        const first = items.find((w) => !fresh.has(w.dataset.id ?? ''))
-        const lift = first ? first.offsetTop - items[0].offsetTop : 0
-        if (lift > 0) for (const w of items) w.animate([{ transform: `translateY(${-lift}px)` }, { transform: 'none' }], { duration: SLIDE_MS, easing: 'cubic-bezier(.2,.7,.2,1)' })
-      }
-    }
-    if (typeof el.animate === 'function') for (const w of fresher) w.animate([{ opacity: 0 }, { opacity: 1 }], { duration: SLIDE_MS, easing: 'ease-out' })
-    const a = anchorOf(el)
-    seen.current = a && { ...a, scrolled: box.scrollTop }
-  }, [list, fresh, rows])
-  // Scrolling by hand moves the mark the next arrival is measured from.
-  useEffect(() => {
-    const el = list.current
-    if (!el) return
-    const box = scroller(el)
-    const f = () => {
-      const a = anchorOf(el)
-      seen.current = a && { ...a, scrolled: box.scrollTop }
-    }
-    box.addEventListener('scroll', f, { passive: true })
-    return () => box.removeEventListener('scroll', f)
-  }, [list])
-}
-
-interface BellProps {
+export interface BellProps {
   /** The bell is mid-wiggle for something new (useBellAlert). */
   shaking?: boolean
   /** Told when the list opens or shuts. */
@@ -99,28 +61,103 @@ interface BellProps {
   onPick: (id: string) => void
   onAll: () => void
   onSettings: () => void
-  /** A build with its own list: a row can be put away, and the archive is a second view. */
-  onDismiss?: (id: string) => void
-  archive?: { rows: BellRow[]; load: () => void; loading: boolean; words: { dismiss: string; archive: string; fresh: string; none: string } }
+  /** The kinds the list can be narrowed to, and (with several sites) the site; a dot says there is something unread under it. */
+  filter?: {
+    groups: { id: string; label: string; on: boolean; dot: boolean }[]
+    onGroup: (id: string) => void
+    sites?: { value: string; label: string; on: boolean }[]
+    onSite: (site: string) => void
+    /** The choice in words ("Down · history.example"); '' when the list is not narrowed. */
+    active: string
+    onClear: () => void
+  }
+  /** A build with its own list: the archive is a second view of it. */
+  archive?: { rows: BellRow[]; load: () => void; loading: boolean; none: string }
 }
 
 const EMPTY: ReadonlySet<string> = new Set()
 
-function List(p: BellProps & { close: () => void }) {
+function Icon({ kind }: { kind: string }) {
+  return (
+    <svg className={`nfi k-${kind}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {BELL_PATH[kind] ?? BELL_PATH.weekly}
+    </svg>
+  )
+}
+
+function Row({ n, p, close }: { n: BellRow; p: BellProps; close: () => void }) {
+  const pick = (id: string) => {
+    p.onPick(id)
+    close()
+  }
+  const under = [n.sub, n.time].filter(Boolean).join(' · ')
+  return (
+    <div className="nfw" data-id={n.id}>
+      {n.lines ? (
+        <div className={`nf grp ${n.unread ? 'unread' : ''}`}>
+          <Icon kind={n.kind} />
+          <span className="nft">
+            <b>{n.title}</b>
+            {n.lines.map((l) => (
+              <button key={l.id} type="button" className="nfn" onClick={() => pick(l.id)}>
+                {l.text}
+              </button>
+            ))}
+            {under && <small>{under}</small>}
+          </span>
+          {n.unread && <i className="nfd" />}
+        </div>
+      ) : (
+        <button type="button" className={`nf ${n.unread ? 'unread' : ''}${n.bad ? ' bad' : ''}`} onClick={() => pick(n.id)}>
+          <Icon kind={n.kind} />
+          <span className="nft">
+            <b>{n.title}</b>
+            {under && <small>{under}</small>}
+          </span>
+          {n.unread && <i className="nfd" />}
+        </button>
+      )}
+      <RowMenu row={n} close={close} />
+    </div>
+  )
+}
+
+/** What sits in the panel's header row: the filter and Mark all read. */
+function Tools(p: BellProps) {
+  return (
+    <span className="nftools">
+      {p.filter && <FilterMenu f={p.filter} />}
+      <button type="button" className="lk3" disabled={p.loading || !p.rows.some((r) => r.unread)} onClick={p.onAll}>
+        {p.markAll}
+      </button>
+    </span>
+  )
+}
+
+function List(p: BellProps & { close: () => void; bare?: boolean }) {
   const [old, setOld] = useState(false)
   const rows = old && p.archive ? p.archive.rows : p.rows
   const list = useRef<HTMLDivElement>(null)
   useArrival(list, p.fresh ?? EMPTY, rows)
+  const waiting = p.loading && !old
   return (
     <>
-      <div className="nfh">
-        <b>{p.title}</b>
-        <button type="button" className="lk3" disabled={p.loading || !p.rows.some((r) => r.unread)} onClick={p.onAll}>
-          {p.markAll}
-        </button>
-      </div>
+      {!p.bare && (
+        <div className="nfh">
+          <b>{p.title}</b>
+          <Tools {...p} />
+        </div>
+      )}
+      {p.filter?.active && !old && (
+        <div className="nfact">
+          <span>{p.filter.active}</span>
+          <button type="button" className="nfq sm" aria-label={copy.clearFilter} title={copy.clearFilter} onClick={p.filter.onClear}>
+            <X size={14} aria-hidden="true" />
+          </button>
+        </div>
+      )}
       <div className="nfl" ref={list} aria-busy={p.loading || undefined}>
-        {p.loading && !old && (
+        {waiting && (
           <div className="nfs" aria-hidden="true">
             <i />
             <span>
@@ -129,41 +166,23 @@ function List(p: BellProps & { close: () => void }) {
             </span>
           </div>
         )}
-        {rows.length === 0 && !(p.loading && !old) && <div className="xnone">{old && p.archive ? p.archive.words.none : p.none}</div>}
-        {!(p.loading && !old) &&
-          rows.map((n) => (
-          <div key={n.id} className="nfw" data-id={n.id}>
-          <button
-            type="button"
-            className={`nf ${n.unread ? 'unread' : ''}`}
-            onClick={() => {
-              p.onPick(n.id)
-              p.close()
-            }}
-          >
-            <svg className={`nfi k-${n.kind}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              {BELL_PATH[n.kind] ?? BELL_PATH.weekly}
-            </svg>
-            <span className="nft">
-              <b>{n.title}</b>
-              <small>{n.sub}</small>
-            </span>
-            {n.unread && <i className="nfd" />}
-          </button>
-          {n.dismissable && !old && p.onDismiss && (
-            <button type="button" className="nfx" aria-label={p.archive?.words.dismiss} title={p.archive?.words.dismiss} onClick={() => p.onDismiss?.(n.id)}>
-              ×
-            </button>
-          )}
-          </div>
-        ))}
-      </div>
-      <div className="nff">
-        {p.archive && (
-          <button type="button" className="lk3" aria-pressed={old} onClick={() => { if (!old) p.archive?.load(); setOld(!old) }}>
-            {old ? p.archive.words.fresh : p.archive.words.archive}
+        {rows.length === 0 && !waiting && <div className="xnone">{old && p.archive ? p.archive.none : p.none}</div>}
+        {!waiting &&
+          byDay(rows).map((d) => (
+            <Fragment key={d.day}>
+              <h3 className="nfdy">{d.label}</h3>
+              {d.rows.map((n) => (
+                <Row key={n.id} n={n} p={p} close={p.close} />
+              ))}
+            </Fragment>
+          ))}
+        {p.archive && !waiting && (
+          <button type="button" className="lk3 nfar" aria-pressed={old} onClick={() => { if (!old) p.archive?.load(); setOld(!old) }}>
+            {old ? copy.showNew : copy.showArchived}
           </button>
         )}
+      </div>
+      <div className="nff">
         <button type="button" className="lk3" onClick={() => { p.onSettings(); p.close() }}>
           {p.settings}
         </button>
@@ -197,15 +216,16 @@ export function BellMenu(p: BellProps) {
       {p.sheet && open && (
         <MkPortal>
           <div className="xscrim on" onClick={close} aria-hidden="true" />
-          <aside className="cd on" role="dialog" aria-modal="true" aria-label={p.title} tabIndex={-1}>
+          <aside className="cd on nfsheet" role="dialog" aria-modal="true" aria-label={p.title} tabIndex={-1}>
             <div className="cdh">
               <b>{p.title}</b>
-              <button type="button" className="ib x" title="Close" onClick={close}>
-                ×
+              <Tools {...p} />
+              <button type="button" className="nfq" aria-label={copy.close} title={copy.close} onClick={close}>
+                <X size={18} aria-hidden="true" />
               </button>
             </div>
             <div className="cdb">
-              <List {...p} close={close} />
+              <List {...p} close={close} bare />
             </div>
           </aside>
         </MkPortal>

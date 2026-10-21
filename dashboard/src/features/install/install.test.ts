@@ -3,6 +3,7 @@ import { METHODS, type Ctx } from '../../lib/install'
 import { aiPrompt } from './copy'
 import { outcomeOf } from './outcome'
 import { docsFor, methodOf, stepsFor, TABS, tagFor } from './snippet'
+import { stackMethod, tabToShow } from './stack'
 import { keyTarget, moreItems, tabsFor } from './tabs'
 import { BACKOFF_MS, nextLook, RECHECK_MS } from './useInstallCheck'
 
@@ -34,7 +35,7 @@ describe('snippets', () => {
 
   it('writes cookieless into bundled installs, which never load the server script', () => {
     expect(all('react', on)).toContain('<Analytics site="tkb_abcdefghijkl" host="https://stats.example.com" cookieless />')
-    expect(all('next', on)).toContain('<Analytics site="tkb_abcdefghijkl" cookieless />')
+    expect(all('next', on)).toContain('<Analytics site="tkb_abcdefghijkl" host="https://stats.example.com" cookieless />')
     for (const id of ['vue', 'svelte', 'app']) expect(all(id, on), id).toContain("cookieless: true")
     for (const m of METHODS.filter((x) => x.bundled)) expect(all(m.id, off), m.id).not.toContain('cookieless')
   })
@@ -42,8 +43,21 @@ describe('snippets', () => {
   it('numbers the steps where there are several: npm is install, then initialise', () => {
     const steps = stepsFor(methodOf('react'), ctx)
     expect(steps.map((s) => s.code.split('\n')[0])).toEqual(['npm i trckable', "import { Analytics } from 'trckable/react'"])
-    expect(stepsFor(methodOf('next'), ctx)).toHaveLength(4)
+    const next = stepsFor(methodOf('next'), ctx)
+    expect(next.filter((x) => !x.optional).map((x) => x.code.split('\n')[0])).toEqual(['npm i trckable', "import { Analytics } from 'trckable/next'"])
+    expect(next.filter((x) => x.optional)).toHaveLength(2)
     expect(stepsFor(methodOf('script'), ctx)).toHaveLength(1)
+  })
+
+  it('counts with install + layout alone: the Next.js component names the server, the proxy route is optional', () => {
+    const required = stepsFor(methodOf('next'), ctx).filter((x) => !x.optional).map((x) => x.code).join('\n')
+    expect(required).toContain('<Analytics site="tkb_abcdefghijkl" host="https://stats.example.com" />')
+    expect(required).not.toContain('TRCKABLE')
+    expect(required).not.toContain('api/e')
+    const opt = stepsFor(methodOf('next'), ctx).filter((x) => x.optional).map((x) => x.code).join('\n')
+    expect(opt).toContain('TRCKABLE_PROXY_KEY=pk_secret')
+    expect(opt).toContain('remove host=')
+    expect(stepsFor(methodOf('landing'), ctx).filter((x) => x.optional)).toHaveLength(2)
   })
 
   it('links every method to a docs page', () => {
@@ -120,5 +134,22 @@ describe('the check', () => {
     expect(nextLook({ phase: 'failed' }, false)).toBe(RECHECK_MS)
     expect(nextLook({ phase: 'done', result: { ...base, found: 'none' } }, true)).toBeNull()
     expect(nextLook({ phase: 'idle' }, false)).toBeNull()
+  })
+})
+
+describe('the stack the site runs', () => {
+  it('names an install method only when the dialog has one', () => {
+    expect(stackMethod('next')).toBe('next')
+    expect(stackMethod('wordpress')).toBe('wordpress')
+    expect(stackMethod('')).toBeNull()
+    expect(stackMethod(undefined)).toBeNull()
+    expect(stackMethod('cobol')).toBeNull()
+  })
+
+  it('opens on the stack, until a tab is picked by hand', () => {
+    expect(tabToShow('script', false, 'next')).toBe('next')
+    expect(tabToShow('script', false, null)).toBe('script')
+    expect(tabToShow('react', true, 'next')).toBe('react')
+    expect(tabToShow('wordpress', false, 'wordpress')).toBe('wordpress')
   })
 })
