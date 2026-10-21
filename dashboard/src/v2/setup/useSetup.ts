@@ -4,14 +4,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { type SetupState, type Site } from '../../lib/apiMore'
 import { useSettings } from '../../lib/settings'
 import { lastState, readSetup, remember, SHARED_MS } from './memory'
+import { isStale, visitMissed } from './model'
 
 const FIRST = 2500
 
-export function useSetup(site: Site | null, on: boolean, fresh = false) {
+export function useSetup(site: Site | null, on: boolean, fresh = false, visited = false) {
   const [got, setGot] = useState<{ site: string; state: SetupState } | null>(null)
   // The checklist could not be had (a viewer's, an offline server): the header's slot then has nothing to wait for.
   const [failed, setFailed] = useState<string | null>(null)
   const id = site?.id ?? null
+  const readAt = useRef(0)
   const settingsOpen = useSettings() !== null
   // What this browser last knew of the site: shown at once, and refreshed behind it.
   const known = useMemo(() => (id && on ? lastState(id) : null), [id, on])
@@ -22,6 +24,7 @@ export function useSetup(site: Site | null, on: boolean, fresh = false) {
     readSetup(id, maxAge)
       .then((state) => {
         remember(id, state)
+        readAt.current = Date.now()
         // A site not known before waits until the tab is looked at again: a ring arriving late would push the header's other controls.
         if (known || reveal || fresh) setGot({ site: id, state })
       })
@@ -45,12 +48,23 @@ export function useSetup(site: Site | null, on: boolean, fresh = false) {
       return change(id)
         .then((state) => {
           remember(id, state)
+          readAt.current = Date.now()
           setGot({ site: id, state })
         })
         .catch(() => undefined)
     },
     [id],
   )
+  // Looked at again when something the checklist reads has changed (a first visit landed) or the panel opens on an old read.
+  const refresh = useCallback(() => load(true), [load])
+  const refreshIfOld = useCallback(() => {
+    if (isStale(readAt.current, Date.now())) load(true)
+  }, [load])
   const state = got && got.site === id ? got.state : known
-  return { state, run, failed: failed === id }
+  // The first visit has landed while the checklist still says the install waits: read again, once (the answer settles it either way).
+  const missed = visitMissed(visited, state)
+  useEffect(() => {
+    if (missed) refresh()
+  }, [missed, refresh])
+  return { state, run, refreshIfOld, failed: failed === id }
 }
