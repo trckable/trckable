@@ -234,3 +234,12 @@ test('390px: motion reduced, the bar goes without a transition', async ({ page }
   await scrollTo(page, 1200)
   await expect(page.locator('.hd')).toHaveAttribute('data-hidden', 'true')
 })
+
+test('390px: from another period, the in-page period and one tap on Today go back to today', async ({ page }) => {
+  await phone(page, 390)
+  await expect(page.locator('.tline')).toContainText(/7 days/i)
+  await page.locator('.tline').click()
+  await page.locator('.pmenu.on .mi', { hasText: /^\s*Today/ }).first().click()
+  await expect(page.locator('.tline')).toContainText(/today/i)
+  await expect(page).not.toHaveURL(/period=7d/)
+})
