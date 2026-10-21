@@ -1,0 +1,1 @@
+The Briefing shows one "who changed" card, for the source, country, device or page that moved most, with the others that moved named under it ("Also changed: United States · See all") instead of a card each; the card keeps its one action beside Why?, and Watch and Go deeper sit behind a "⋯".
