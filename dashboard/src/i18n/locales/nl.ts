@@ -2799,6 +2799,7 @@ export default {
   'goalname.outbound': 'Klikken op uitgaande links',
   'goalname.form': 'Formulierverzendingen',
   'briefing.checksOff': 'controles uit',
+  'briefing.checksPaused': 'Bereikbaarheidscontrole gepauzeerd',
   'briefing.whySheet': 'Hoe de score ontstaat',
   'briefing.whySheetSub': 'Elk deel tegenover het gebruikelijke, dan opgeteld',
   'briefing.whyWeights': (t: string, e: string, u: string) => `Verkeer telt voor ${t} %, betrokkenheid ${e} %, bereikbaarheid ${u} %. Een deel dat nog niet te bepalen is, blijft buiten beschouwing en de rest telt volledig.`,

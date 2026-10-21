@@ -83,7 +83,7 @@ export function useParts(a: PartsIn) {
     const avg = hd ? totals.slice(0, -1).reduce((x, y) => x + y, 0) / Math.max(1, totals.length - 1) : 0
     const low = !!hist.daily && !learning && avg < 20
     const weekday = weekdayOf(range.to)
-    const uptime = uptimeScore({ pct: up.pct, downNow, downMin, off: !site.watched_since })
+    const uptime = uptimeScore({ pct: up.pct, downNow, downMin, off: !site.watched_since, paused: !!site.uptime_paused })
     const table = hourly && hist.hourly ? hourTable(hist.hourly, today) : null
     const long = cur.series.length > 8
     const bands = bandsOf(cur.series, table, hourly || !hist.daily ? null : { totals, days, long })

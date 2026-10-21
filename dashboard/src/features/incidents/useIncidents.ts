@@ -32,8 +32,8 @@ export function usePeriodIncidents(site: string, from: number, to: number, enabl
 
 /** The account's incidents of the last `days` days, for All sites. */
 export function useAccountIncidents(days: number) {
-  const r = useLoaded<{ incidents: Incident[]; quiet_tracked?: Record<string, boolean> }>(`all:${days}`, () => incidents.account(days))
-  return { list: r.data?.incidents ?? [], quiet: r.data?.quiet_tracked ?? {}, ready: r.ready, failed: r.failed }
+  const r = useLoaded<{ incidents: Incident[]; quiet_tracked?: Record<string, boolean>; paused?: Record<string, number> }>(`all:${days}`, () => incidents.account(days))
+  return { list: r.data?.incidents ?? [], quiet: r.data?.quiet_tracked ?? {}, paused: r.data?.paused ?? {}, ready: r.ready, failed: r.failed }
 }
 
 /** The incident still going on at a site, if any (undefined until known), read again every half minute so the page's state is live. */

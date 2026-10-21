@@ -2789,6 +2789,7 @@ export default {
   'goalname.outbound': 'Klicks auf externe Links',
   'goalname.form': 'Formularübermittlungen',
   'briefing.checksOff': 'Prüfungen aus',
+  'briefing.checksPaused': 'Verfügbarkeitsprüfung pausiert',
   'briefing.whySheet': 'Wie die Punktzahl entsteht',
   'briefing.whySheetSub': 'Jeder Teil gegen das Übliche, dann addiert',
   'briefing.whyWeights': (t: string, e: string, u: string) => `Verkehr zählt ${t} %, Interaktion ${e} %, Verfügbarkeit ${u} %. Ein Teil, der noch nicht bestimmt werden kann, bleibt draußen, die übrigen zählen voll.`,

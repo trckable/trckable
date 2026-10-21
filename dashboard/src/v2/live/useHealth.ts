@@ -42,7 +42,7 @@ export function useHealth(site: Site | undefined, on: boolean): Health {
       const today = todayIn(tz)
       const now = Math.floor(Date.now() / 1000)
       const speed = moduleOn(id, 'vitals').then(async (recorded) => ({ s: recorded ? await more.vitals(id, { from: addDays(today, -6), to: today }).then(speedOf, () => null) : null, on: recorded }))
-      const uptime = watched ? incidents.period(id, Math.max(now - UPTIME_DAYS * 86400, watched), now).then((r) => uptimeFigure(r.incidents, today, tz, now, watched), () => null) : Promise.resolve(null)
+      const uptime = watched ? incidents.period(id, Math.max(now - UPTIME_DAYS * 86400, watched), now).then((r) => uptimeFigure(r.incidents, today, tz, now, watched, r.summary.paused), () => null) : Promise.resolve(null)
       const ai = more.crawlers(id, { from: addDays(today, -6), to: today }).then(aiOf, () => null)
       const mentions = withMentions ? mentionsApi.list(id, '7d').then((r) => mentionsOf(r.mentions), () => null) : Promise.resolve(null)
       const answers = withAnswers ? answersApi.report(id, { from: addDays(today, -6), to: today }).then((r) => (r.latest ? { seen: r.latest.seen, total: r.latest.total } : null), () => null) : Promise.resolve(null)

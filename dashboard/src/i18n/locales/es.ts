@@ -2792,6 +2792,7 @@ export default {
   'goalname.outbound': 'Clics en enlaces externos',
   'goalname.form': 'Envíos de formularios',
   'briefing.checksOff': 'comprobaciones desactivadas',
+  'briefing.checksPaused': 'Comprobación de disponibilidad en pausa',
   'briefing.whySheet': 'Cómo se calcula la puntuación',
   'briefing.whySheetSub': 'Cada parte frente a lo habitual, y luego sumadas',
   'briefing.whyWeights': (t: string, e: string, u: string) => `El tráfico cuenta ${t} %, la interacción ${e} %, la disponibilidad ${u} %. Una parte que aún no se puede medir se deja fuera y el resto cuenta entero.`,

@@ -23,11 +23,11 @@ export interface UptimeFigure {
 }
 
 /** The last thirty days of the incident record, as the share up and a colour for each day. */
-export function uptimeFigure(list: Incident[], today: ISODate, tz: string, now: number, watchedSince: number): UptimeFigure | null {
+export function uptimeFigure(list: Incident[], today: ISODate, tz: string, now: number, watchedSince: number, paused = 0): UptimeFigure | null {
   if (!watchedSince) return null
   const days = daysBetween(addDays(today, -(UPTIME_DAYS - 1)), today)
   const states = dayStates(list, days, tz, now, watchedSince)
-  const t = rowTotals(list, UPTIME_DAYS, now, watchedSince)
+  const t = rowTotals(list, UPTIME_DAYS, now, watchedSince, paused)
   const up = uptimeOf(t.span, t.seconds)
   return { pct: up?.pct ?? null, days: days.map((d) => states.get(d) ?? 'ok') }
 }

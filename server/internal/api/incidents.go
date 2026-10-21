@@ -169,8 +169,19 @@ func (a *API) accountIncidents(w http.ResponseWriter, r *http.Request) {
 			quiet[s.ID] = *t
 		}
 	}
+	// The time each site's check was paused in the window, out of its uptime share.
+	paused := map[string]int64{}
+	now := a.Now().Unix()
+	for _, s := range sites {
+		if !p.sees(s.ID) {
+			continue
+		}
+		if n, err := a.Ctl.PausedSeconds(r.Context(), s.ID, max(from, s.WatchedSince), now); err == nil && n > 0 {
+			paused[s.ID] = n
+		}
+	}
 	w.Header().Set("Cache-Control", "private, no-store")
-	writeJSON(w, http.StatusOK, map[string]any{"incidents": out, "quiet_tracked": quiet})
+	writeJSON(w, http.StatusOK, map[string]any{"incidents": out, "quiet_tracked": quiet, "paused": paused})
 }
 
 // incidentNote is PATCH /api/v1/sites/{site}/incidents/{id}: the note that

@@ -2799,6 +2799,7 @@ export default {
   'goalname.outbound': 'Clic sui link in uscita',
   'goalname.form': 'Invii di moduli',
   'briefing.checksOff': 'controlli spenti',
+  'briefing.checksPaused': 'Controllo di disponibilità in pausa',
   'briefing.whySheet': 'Come si calcola il punteggio',
   'briefing.whySheetSub': 'Ogni parte rispetto al solito, poi sommate',
   'briefing.whyWeights': (t: string, e: string, u: string) => `Il traffico conta il ${t} %, il coinvolgimento il ${e} %, la disponibilità il ${u} %. Una parte non ancora misurabile resta fuori e le altre contano per intero.`,

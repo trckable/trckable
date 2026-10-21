@@ -63,6 +63,9 @@ describe('incident words and figures', () => {
     expect(t.count).toBeGreaterThanOrEqual(t.down.length)
     expect(t.pct).toBeCloseTo(100 - ((3 * 3600 + 600) / (3 * 7 * 86400)) * 100, 5)
     expect(accountTotals([{ id: 'z' }], [], 7, now)).toEqual({ count: 0, pct: 100, down: [], watched: true })
+    // Paused time is out of every site's span: a site paused the whole window has no watched time, and half of it halves the span.
+    expect(accountTotals([{ id: 'z' }], [], 7, now, { z: 7 * 86400 }).watched).toBe(false)
+    expect(rowTotals([], 7, now, 0, 3 * 86400).span).toBe(4 * 86400)
     expect(accountTotals([{ id: 'z', watched_since: now + 60 }], [], 7, now).watched).toBe(false)
   })
 

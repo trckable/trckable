@@ -122,12 +122,13 @@ export function startOfDay(day: string, tz: string): number {
   return utc - offset
 }
 
-/** The incident figure for a whole All sites row: its totals over the last `days` days, of the time since `watchedSince` only (`span` is those seconds; none when nothing was watched). */
-export function rowTotals(list: Incident[], days: number, now: number, watchedSince = 0): { count: number; seconds: number; pct: number; span: number } {
+/** The incident figure for a whole All sites row: its totals over the last `days` days, of the time since `watchedSince` only (`span` is those seconds, less the time the check was paused, `paused`; none when nothing was watched). */
+export function rowTotals(list: Incident[], days: number, now: number, watchedSince = 0, paused = 0): { count: number; seconds: number; pct: number; span: number } {
   const from = Math.max(now - days * DAY, watchedSince)
   const mine = list.filter((x) => (x.ended_at ?? now) > from)
   const seconds = affectedSeconds(mine, from, now, now)
-  const span = Math.max(0, now - from)
+  // Time the check was paused was not looked at: neither up nor down, so it is not part of the span.
+  const span = Math.max(0, now - from - paused)
   return { count: mine.length, seconds, pct: uptimePct(span, seconds), span }
 }
 
@@ -135,7 +136,7 @@ export function rowTotals(list: Incident[], days: number, now: number, watchedSi
 export const silentAllPeriod = (list: Incident[], from: number): boolean => list.some((x) => x.ended_at === null && x.started_at < from)
 
 /** All sites' totals over `days` days: the incidents, the time-weighted uptime (`watched` is false when no site has any watched time, and the percentage then says nothing), and the sites down right now. Every incident counts; a silent site stays out of the uptime average only. */
-export function accountTotals(sites: { id: string; watched_since?: number }[], list: Incident[], days: number, now: number): { count: number; pct: number; down: string[]; watched: boolean } {
+export function accountTotals(sites: { id: string; watched_since?: number }[], list: Incident[], days: number, now: number, paused: Record<string, number> = {}): { count: number; pct: number; down: string[]; watched: boolean } {
   const from = now - days * DAY
   let count = 0
   let seconds = 0
@@ -144,7 +145,7 @@ export function accountTotals(sites: { id: string; watched_since?: number }[], l
   for (const s of sites) {
     const mine = list.filter((x) => x.site === s.id)
     if (mine.some((x) => isDown(x) && x.ended_at === null)) down.push(s.id)
-    const t = rowTotals(mine, days, now, s.watched_since)
+    const t = rowTotals(mine, days, now, s.watched_since, paused[s.id])
     count += t.count
     if (silentAllPeriod(mine, from) || t.span <= 0) continue
     seconds += t.seconds

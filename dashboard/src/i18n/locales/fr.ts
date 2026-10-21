@@ -2787,6 +2787,7 @@ export default {
   'goalname.outbound': 'Clics sur liens sortants',
   'goalname.form': 'Envois de formulaires',
   'briefing.checksOff': 'vérifications désactivées',
+  'briefing.checksPaused': 'Vérification de disponibilité en pause',
   'briefing.whySheet': 'Comment le score est calculé',
   'briefing.whySheetSub': 'Chaque partie face à l’habituel, puis additionnées',
   'briefing.whyWeights': (t: string, e: string, u: string) => `Le trafic compte ${t} %, l’engagement ${e} %, la disponibilité ${u} %. Une partie qu’on ne peut pas encore mesurer est laissée de côté, les autres comptent en entier.`,
