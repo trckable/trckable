@@ -28,7 +28,7 @@ export type Vis =
   | { k: 'ba'; lo: number; hi: number; c: number; v: number; red: boolean }
   | { k: 'outage'; spans: Span[]; nowAt: number; from: string; now: string }
   | { k: 'funnel'; rows: { name: string; v: number; w: number; hot: string }[] }
-  | { k: 'goals'; rows: { name: string; v: number; lo: number; hi: number; st: Judged }[] }
+  | { k: 'goals'; rows: { name: string; v: number; lo: number; hi: number; st: Judged; pct: number | null }[] }
 
 export interface Story {
   key: Topic
@@ -264,30 +264,43 @@ function pageCard(s: Slice & { st: Judged }, i: CardsIn): Story {
   }
 }
 
+/** How far a goal stands from the middle of its usual, in whole percent; none when that middle is too small to say. */
+const goalPct = (v: number, c: number): number | null => (c >= 1 ? Math.round(((v - c) / c) * 100) : null)
+
+const goalWhen = (unit: Unit): string => ({ today: copy.goalToday, yesterday: copy.goalYesterday, week: copy.goalPeriod, month: copy.goalPeriod, range: copy.goalPeriod })[unit]
+
+function goalHead(name: string, up: boolean, pct: number | null): string {
+  if (pct === null) return up ? copy.goalAbove(name) : copy.goalBelow(name)
+  return up ? copy.goalUp(name, Math.abs(pct)) : copy.goalDown(name, Math.abs(pct))
+}
+
 function goalCard(i: CardsIn): Story | null {
-  const goals = i.goals.flatMap((g) => {
-    const band = g.band
-    if (!band) return []
-    const st = judge(g.v, band)
-    return st ? [{ name: g.name.replace(/^./, (x) => x.toUpperCase()), v: g.v, lo: band.lo, hi: band.hi, st }] : []
-  })
-  if (!goals.length) return null
-  const g = goals[0]
+  const rows = i.goals
+    .flatMap((g) => {
+      const band = g.band
+      const st = band ? judge(g.v, band) : ''
+      return band && st ? [{ row: { name: g.name.replace(/^./, (x) => x.toUpperCase()), v: g.v, lo: band.lo, hi: band.hi, st, pct: goalPct(g.v, band.c) }, far: Math.abs(g.v - band.c) / Math.max(1, band.c) }] : []
+    })
+    .sort((a, b) => b.far - a.far)
+    .map((x) => x.row)
+  if (!rows.length) return null
+  const g = rows[0]
+  const up = g.st === 'up'
+  const range = `${fmtInt(Math.max(0, Math.round(g.lo)))}–${fmtInt(Math.round(g.hi))}`
   return {
     key: 'goals',
     score: 45,
-    bad: goals.some((x) => x.st === 'dn'),
-    head: `${g.name} is ${g.st === 'up' ? 'up' : 'down'}`,
-    rest: `: ${people(Math.round(g.v))}${goals.length > 1 ? `, and ${goals.length - 1} more goal${goals.length > 2 ? 's' : ''}` : ''}`,
-    vis: { k: 'goals', rows: goals },
-    why: copy.goalsWhy,
+    bad: rows.some((x) => x.st === 'dn'),
+    head: goalHead(g.name, up, g.pct),
+    vis: { k: 'goals', rows },
+    why: copy.goalSub(fmtInt(Math.round(g.v)), goalWhen(i.unit), range),
     val: fmtInt(Math.round(g.v)),
     m: g.v,
     u: 'people',
     how: `${i.rule} ${copy.goalKnow}`,
     ev: evidence(g.v, { c: 0, lo: g.lo, hi: g.hi }),
-    act: { k: 'set', t: copy.setAlert, msg: copy.alertLeaves(g.name) },
-    deeper: { kind: 'explore', filter: { dim: 'goal', value: (i.cur.goals ?? [])[0]?.value ?? '' } },
+    act: { k: 'set', t: copy.alertNext, msg: copy.alertLeaves(g.name) },
+    deeper: { kind: 'explore', filter: { dim: 'goal', value: i.goals.find((x) => x.name === g.name)?.value ?? '' } },
   }
 }
 

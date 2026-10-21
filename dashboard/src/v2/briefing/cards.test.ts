@@ -80,3 +80,25 @@ describe('the quiet line', () => {
     expect(down?.bad).toBe(true)
   })
 })
+
+describe('the goals card', () => {
+  const signups = { ...slice('signup', 672, 455), name: 'Form submissions', band: { c: 455, lo: 420, hi: 490 } }
+  it('says the change in percent with the number and its usual range, and has no riddle', () => {
+    const g = cardsOf(base({ goals: [signups] })).find((x) => x.key === 'goals')
+    expect(g?.head).toBe('Form submissions up 48%')
+    expect(g?.rest).toBeUndefined()
+    expect(g?.why).toBe('672 today · usually 420–490')
+    expect(g?.act?.t).toBe('Alert me next time')
+  })
+  it('has one row per goal, the biggest mover first, with its percent', () => {
+    const calm = { ...slice('outbound', 120, 100), name: 'Outbound clicks', band: { c: 100, lo: 95, hi: 105 } }
+    const g = cardsOf(base({ goals: [calm, signups] })).find((x) => x.key === 'goals')
+    const rows = g?.vis?.k === 'goals' ? g.vis.rows : []
+    expect(rows.map((r) => [r.name, r.pct])).toEqual([['Form submissions', 48], ['Outbound clicks', 20]])
+    expect(g?.head).toBe('Form submissions up 48%')
+  })
+  it('says above or below usual when the usual is too small for a percent', () => {
+    const tiny = { ...slice('signup', 6, 0.4), name: 'Signed up', band: { c: 0.4, lo: 0, hi: 1 } }
+    expect(cardsOf(base({ goals: [tiny] })).find((x) => x.key === 'goals')?.head).toBe('Signed up above usual')
+  })
+})
