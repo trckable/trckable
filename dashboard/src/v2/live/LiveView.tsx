@@ -73,8 +73,11 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   const { data, failed, got, clock, skew, busier, downSince, colors } = feed
   const now = useTicking(clock, skew)
   const { ref, fit } = useFit<HTMLElement>()
-  const want = useWanted(whole?.id ?? null)
-  const askRevenue = !!whole && can('payment.manage') && !isShared() && want('rev')
+  const mayAsk = !!whole && can('payment.manage') && !isShared()
+  const want = useWanted(whole?.id ?? null, mayAsk)
+  // Until the checklist is read the prompt's space is held (unseen), so nothing moves when it shows or goes.
+  const holdRevenue = mayAsk && !want.known
+  const askRevenue = mayAsk && want('rev')
   const [cardsRef, cardsNear] = useNear()
   useEffect(() => {
     liveLink.set(stream.connected)
@@ -156,7 +159,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
             <span>{copy.ago30}</span>
             <span>{copy.nowWord}</span>
           </div>
-          <div className={`lbottom${data.revenue || askRevenue ? ' money' : ''}`}>
+          <div className={`lbottom${data.revenue || askRevenue || holdRevenue ? ' money' : ''}`}>
             <div className="lsrc">
               <span className="ll">{copy.topSources}</span>
               <SourceRows parts={src.parts} color={colorOf} />
@@ -167,8 +170,8 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
                 <b className="lmoney">{fmtMoney(data.revenue.amount, data.revenue.currency, data.revenue.exponent)}</b>
               </div>
             ) : (
-              askRevenue && whole && (
-                <div className="lrev">
+              (askRevenue || holdRevenue) && whole && (
+                <div className="lrev" style={holdRevenue ? { visibility: 'hidden' } : undefined} aria-hidden={holdRevenue || undefined}>
                   <span className="ll">{copy.revenueToday}</span>
                   <RevenueLock go={copy.connect} onGo={() => openSettings(whole, 'payments')} onHow={() => window.open(DOCS, '_blank', 'noopener')} />
                 </div>

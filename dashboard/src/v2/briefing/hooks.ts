@@ -46,7 +46,7 @@ export function useSetup(site: Site) {
   const [alerts, setAlerts] = useState(false)
   const [search, setSearch] = useState(false)
   const allowed = !isShared() && can('note.write')
-  const want = useWanted(site.id)
+  const want = useWanted(site.id, allowed)
   useEffect(() => {
     if (!allowed) return
     let live = true
@@ -56,7 +56,8 @@ export function useSetup(site: Site) {
       live = false
     }
   }, [site.id, allowed])
-  return { can: allowed, noAlerts: alerts, noSearch: search, want }
+  // The rows come together once the checklist is read (none before), so a row never lands among rows already shown.
+  return { can: allowed, noAlerts: alerts, noSearch: search, want: (kind: string) => want.known && want(kind) }
 }
 
 /** The people seen today since the hour the day is taken to start for someone looking in: one count of people, never a sum of hours. */

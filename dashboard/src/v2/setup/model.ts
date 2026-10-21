@@ -90,7 +90,8 @@ export const PROMPT_STEP: Record<string, string | undefined> = { rev: 'payments'
 /**
  * Is this prompt wanted? One answer for every card: the person chose the step and has not skipped it. A step that is
  * skipped or not chosen (`skipped`: the server's reading of both) is not wanted; a prompt with no step behind it always is.
- * While the checklist is not known yet nothing is wanted, so a card never shows and then collapses.
+ * While the checklist is not known yet nothing is wanted; the prompt's view asks for it as it opens (useWanted), so it
+ * arrives with the page's own data and the prompt neither flashes nor moves.
  */
 export function wanted(state: SetupState | null, kind: string): boolean {
   const id = PROMPT_STEP[kind]
