@@ -42,13 +42,16 @@ test.beforeAll(async () => {
   cookie = await session()
 })
 
+// One account serves every test, and what it has read stays read: each run, repeat and retry names its own milestones.
+const run = () => `${test.info().repeatEachIndex}${test.info().retry}`
+
 type Probe = { counts: number[]; cls: number; vis: string; skew: number }
 
 for (const width of [1440, 390]) {
   test(`at ${width} px the bell opens complete, the number is the unread rows, and a new notice slides in without a jump`, async ({ page }) => {
     test.setTimeout(90_000)
     const now = Math.floor(Date.now() / 1000)
-    const mile = (step: string, ago: number) => ({ kind: 'visitors', step: `smooth${width}-${step}`, value: 100, day: '2026-01-01', created_at: now - ago, new: false, shared: false })
+    const mile = (step: string, ago: number) => ({ kind: 'visitors', step: `smooth${width}-${run()}-${step}`, value: 100, day: '2026-01-01', created_at: now - ago, new: false, shared: false })
     const siteIds = new Set<string>()
     let arrived = false
     await page.route(/\/api\/v1\/sites\/[^/]+\/milestones(\?|$)/, (route) => {
@@ -132,7 +135,7 @@ for (const width of [1440, 390]) {
   test(`at ${width} px opening a row, and the read marks answering after it, never empty the list`, async ({ page }) => {
     test.setTimeout(90_000)
     const now = Math.floor(Date.now() / 1000)
-    const mile = (step: string, ago: number) => ({ kind: 'visitors', step: `keep${width}-${step}`, value: 100, day: '2026-01-01', created_at: now - ago, new: false, shared: false })
+    const mile = (step: string, ago: number) => ({ kind: 'visitors', step: `keep${width}-${run()}-${step}`, value: 100, day: '2026-01-01', created_at: now - ago, new: false, shared: false })
     await page.route(/\/api\/v1\/sites\/[^/]+\/milestones(\?|$)/, (route) => route.fulfill({ json: { enabled: true, milestones: [mile('a', 7200), mile('b', 3600), mile('c', 1800)], moment: null } }))
     await page.route(/\/api\/v1\/incidents(\?|$)/, (route) => route.fulfill({ json: { incidents: [] } }))
     await page.route(/\/api\/v1\/sites\/[^/]+\/mentions(\?|$)/, (route) => route.fulfill({ json: { mentions: [] } }))

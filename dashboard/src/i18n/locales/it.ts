@@ -1385,6 +1385,8 @@ export default {
   'install.step': (n: number) => `Passaggio ${n}`,
   'install.copyStep': (title: string) => `Copia: ${title}`,
   'install.copyCode': 'Copia il codice',
+  'install.optionalTitle': 'Conta anche i visitatori con il blocco degli annunci',
+  'install.optionalHint': 'Facoltativo. Gli eventi passano allora dal tuo dominio, quindi usa <Analytics> senza host.',
   'install.cookieless.label': 'Senza cookie',
   'install.cookieless.onServer': 'Nessun cookie, niente memorizzato. Lo script lo recepisce entro un’ora: niente da reincollare.',
   'install.cookieless.onBundled': 'Il codice qui sopra ha cookieless: true. Ricompila e rilascia la tua app.',
