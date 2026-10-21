@@ -178,6 +178,16 @@
   color: var(--accent-ink);
   font-size: 11.5px;
 }
+.inst-optional > summary {
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.inst-optional > p {
+  margin: 6px 0 8px;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
 .inst-docs {
   display: inline-flex;
   align-items: center;
@@ -347,7 +357,21 @@
   flex-direction: column;
   gap: 14px;
   width: min(620px, 100%);
-  margin: 40px auto 24px;
+  margin: auto;
+}
+/* The screen sits in the middle of the room under the header; taller than that, it starts at the top and the page scrolls. */
+.app > #app:has(.mk-fresh),
+.app > #app:has(.mk-fresh) > #main,
+.mk-fresh {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.app > #app:has(.mk-fresh) > #main {
+  min-height: 0;
+}
+.mk-fresh {
+  padding: 8px 0;
 }
 .setup-title {
   margin: 0;
@@ -364,14 +388,17 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 4px;
-  padding: 14px 16px;
+  padding: 20px 16px 16px;
   border-radius: 12px;
   background: var(--sunken);
+  text-align: center;
 }
 .setup-head {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
 }
 .setup-head h2 {
@@ -393,7 +420,6 @@
 }
 .setup-says {
   margin: 0;
-  padding-left: 28px;
   color: var(--text-2);
   font-size: 13.5px;
 }
@@ -401,8 +427,9 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 8px 12px;
-  margin: 8px 0 0 28px;
+  margin-top: 8px;
 }
 .setup-act .btn {
   height: 34px;
@@ -412,13 +439,11 @@
   font-size: 12px;
 }
 .setup-why {
-  margin-left: auto;
   font-size: 12.5px;
   color: var(--text-2);
 }
 .setup-why summary {
   cursor: pointer;
-  text-align: right;
 }
 .setup-why ul {
   margin: 8px 0 0;
@@ -429,6 +454,7 @@
 }
 .setup-why p {
   display: flex;
+  justify-content: center;
   gap: 14px;
   margin: 8px 0 0;
 }
@@ -440,9 +466,8 @@
 }
 .setup-why[open] {
   flex-basis: 100%;
-  margin-left: 0;
 }
-.setup-why[open] summary {
+.setup-why[open] :is(ul, p) {
   text-align: left;
 }
 .setup-code > summary {
@@ -483,17 +508,20 @@
   max-width: 100%;
 }
 
-/* The logic board in the card's corner while the first visit is awaited; every check lit when it has come (a phone does not draw it). */
+/* The logic board big and centred above the words, like an empty state; every check lit when the first visit has come. */
 .setup-fig {
-  position: absolute;
-  top: 10px;
-  right: 14px;
-  width: 84px;
+  width: min(100%, 300px);
+  margin-bottom: 8px;
   pointer-events: none;
-}
-.setup-status:has(.setup-fig) {
-  padding-right: 120px;
 }
 .setup-fig:has(.tkf) {
   pointer-events: auto;
+}
+
+/* What the site runs: one quiet line above the tabs. */
+.inst-stack {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
 }
