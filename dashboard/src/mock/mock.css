@@ -1474,7 +1474,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .mi .now{text-align:right;font-variant-numeric:tabular-nums}
 .mk .mi.all .all-problems{font-size:12px;color:var(--mk-faint)}
 .mk .mi.all .all-problems .down{color:var(--mk-red);font-weight:600}
-.open-touch{display:none}
+.pop.menu .open-touch{display:none}
 .mk .site-head .btn.icon.ghost{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--mk-faint)}
 .mk .mi .state-line.quiet{color:var(--mk-amber)}
 .mk .sites-domains{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--mk-line);padding-bottom:var(--mk-s2);margin-bottom:var(--mk-s2)}
@@ -1827,9 +1827,9 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
  .mk .sitelist{--acts:44px}
  .mk .site-row .site-open{display:none}
  .mk .site-row .site-acts{opacity:1}
- .menu-list .open-touch{display:flex}
+ .pop.menu .open-touch{display:flex}
 }
-@media (--xs){.menu-list .open-touch{display:flex}}
+@media (--xs){.pop.menu .open-touch{display:flex}}
 @media (--xs){.mk .hd .mk-chip .nv{font-size:0;padding:0;width:8px;height:8px;background:var(--mk-amber)}}
 .mk .mk-waiting{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 0;text-align:center}
 .mk .mk-waiting b{font-size:15px;font-weight:600}

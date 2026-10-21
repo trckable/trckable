@@ -32,6 +32,8 @@ export const copy = defineCopy('install', {
   step: (n: number) => `Step ${n}`,
   copyStep: (title: string) => `Copy: ${title}`,
   copyCode: 'Copy the code',
+  optionalTitle: 'Count visitors with ad blockers too',
+  optionalHint: 'Optional. Events then go through your own domain, so use <Analytics> without host.',
 
   // Cookieless.
   cookieless: {
@@ -155,7 +157,7 @@ ${tagFor(ctx)}
 
 Where it goes, depending on the stack:
 - Plain HTML, Hugo, Jekyll, Eleventy, Astro, SvelteKit, Angular, Laravel, Rails, Django: inside <head> of the layout every page uses.
-- Next.js (App Router): run \`npm i trckable\`, then in app/layout.tsx add \`import { Analytics } from 'trckable/next'\` and render \`${nextComponent(ctx)}\` inside <body>. Add app/api/e/route.ts with \`export { POST } from 'trckable/next'\`, and set TRCKABLE_HOST=${ctx.host} and TRCKABLE_PROXY_KEY in .env (ask me for the key; never commit it).
+- Next.js (App Router): run \`npm i trckable\`, then in app/layout.tsx add \`import { Analytics } from 'trckable/next'\` and render \`${nextComponent(ctx)}\` inside <body>. That is enough to start counting. Only if I ask for counting behind ad blockers too: add app/api/e/route.ts with \`export { POST } from 'trckable/next'\`, set TRCKABLE_HOST=${ctx.host} and TRCKABLE_PROXY_KEY in .env (ask me for the key; never commit it), and remove host from <Analytics>.
 - React, Vite, Vue, Svelte, any bundled app: run \`npm i trckable\`, then once at startup \`import { init } from 'trckable'\` and \`${initCall(ctx)}\`. Use this instead of the script tag, not as well.
 - WordPress: add the script tag through a header-scripts plugin (WPCode) or the child theme's wp_head hook, not header.php of a theme that updates.
 - I picked "${method.name}" in the dashboard: ${method.where}

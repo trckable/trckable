@@ -82,10 +82,9 @@ for (const [name, width, height] of [['desktop', 1440, 900], ['phone', 390, 844]
       const box = await more.boundingBox()
       expect(box && box.width >= 32 && box.height >= 32).toBe(true)
       await more.click()
-      await expect(page.getByRole('menuitem').first()).toHaveText('Site settings')
-      await expect(page.getByRole('menuitem').nth(1)).toHaveText('Share')
-      await expect(page.getByRole('menuitem').nth(2)).toHaveText('Status page')
-      await expect(page.getByRole('menuitem').nth(3)).toHaveText('Widgets')
+      // On a phone Open site belongs to the first group (the ↗ is hidden there); on desktop it is hidden.
+      const order = name === 'phone' ? ['Site settings', 'Open down.test', 'Share', 'Status page', 'Widgets'] : ['Site settings', 'Share', 'Status page', 'Widgets']
+      for (const [i, label] of order.entries()) await expect(page.getByRole('menuitem').nth(i)).toHaveText(label)
       await page.getByRole('menuitem').first().click()
       await expect(page).toHaveURL(/settings=site/)
     })
