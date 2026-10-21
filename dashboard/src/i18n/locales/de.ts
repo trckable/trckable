@@ -2423,7 +2423,7 @@ export default {
   'v2explore.pageDetailsHint': 'Heatmap, Scrolltiefe, Tempo',
   'v2explore.exportCsv': 'CSV exportieren',
   'v2explore.exportHint': 'Diese Tabelle, mit deinen Filtern',
-  'v2explore.exportDenied': 'Viewer können keine Daten exportieren. Frag einen Owner.',
+  'v2explore.exportDenied': 'Deine Rolle darf keine Daten exportieren.',
   'v2explore.copyLink': 'Link kopieren',
   'v2explore.linkCopied': 'Link kopiert',
   'v2explore.removeFilter': (dim: string) => `Filter ${dim} entfernen`,
