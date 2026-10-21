@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Money, SearchReport } from '../../lib/api'
-import { firstCard, leakCard, salesCards, searchCard, stuckCard } from './cards.money'
+import { firstCard, leakCard, salesCards, searchCard, stuckCard, withStuck } from './cards.money'
 
 const money = (o: Partial<Money> = {}): Money => ({ currency: 'USD', exponent: 2, revenue: 30500, refunds: 0, payments: 2, customers: 1, paying_visitors: 2, conversion: 0, revenue_per_visitor: 0, new_revenue: 8700, renewal_revenue: 0, new_gross: 0, upgrade_gross: 0, renewal_gross: 0, unattributed: 0, unconverted: 0, ...o })
 const usd = (m: number) => `$${Math.round(m / 100)}`
@@ -84,7 +84,7 @@ describe('the search card', () => {
   it('names the query that rose furthest from what it sent before', () => {
     const c = searchCard({ story: { cur: sr([{ key: 'a', clicks: 60 }, { key: 'b', clicks: 30 }]), prev: sr([{ key: 'a', clicks: 20 }, { key: 'b', clicks: 30 }]) }, domain: 'x.com', rule: '' })
     expect(c?.head).toBe('“a” sent 60 clicks')
-    expect(c?.rest).toContain('3.0× your usual')
+    expect(c?.rest).toContain('3.0× the period before')
   })
   it('says nothing when nothing changed', () => {
     expect(searchCard({ story: { cur: sr([{ key: 'a', clicks: 30 }]), prev: sr([{ key: 'a', clicks: 30 }]) }, domain: 'x.com', rule: '' })).toBeNull()
@@ -121,5 +121,16 @@ describe('the signup path and a first customer', () => {
     expect(c.head).toBe('Your first customer from Germany')
     expect(c.kc).toMatchObject({ note: 'first customer', tone: 'up' })
     expect(c.why).toContain('$29 via')
+  })
+})
+
+describe('the leak with a stuck page', () => {
+  it('is the leak card with the page people pressed again and again named in its line, and asks Peek its question', () => {
+    const leak = leakCard({ f: { steps: [{ name: '/', v: 100, c: 0 }, { name: '/pricing', v: 60, c: 0 }, { name: 'Paid', v: 3, c: 0 }], leak: { at: 2, r: 0.05, ur: 0.2 } }, domain: 'x.com', rule: '' })
+    expect(leak).not.toBeNull()
+    const c = withStuck(leak as NonNullable<typeof leak>, { page: '/pricing', views: 400, rage: [{ el: 'button.plan', n: 4 }] })
+    expect(c.key).toBe('funnel')
+    expect(c.why).toContain('People also pressed button.plan on /pricing 4 times in a row.')
+    expect(c.ask).toBe('Why do fewer people go from /pricing to Paid than usual?')
   })
 })

@@ -1,0 +1,1 @@
+Where the Briefing's leaking signup path and a page people got stuck on are one story, it is one card: the steps with the page people pressed again and again named in its line, and a Why? that asks Peek where there is Peek.

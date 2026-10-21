@@ -119,3 +119,13 @@ describe('the goals card', () => {
     expect(cardsOf(base({ goals: [tiny] })).find((x) => x.key === 'goals')?.head).toBe('Signed up above usual')
   })
 })
+
+describe('the slower card', () => {
+  it('has Alert me as its action and the prompt as the extra', () => {
+    const c = cardsOf(base({ speed: { cur: [3.2, 100, 0.1], usual: [2, 100, 0.1] } })).find((x) => x.key === 'speed')
+    expect(c?.act?.t).toBe('Alert me')
+    expect(c?.act?.k).toBe('set')
+    expect(c?.extra?.k).toBe('copy')
+    expect(c?.ask).toBe('Why did loading slow to 3.2 s from 2.0 s?')
+  })
+})

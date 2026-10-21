@@ -27,6 +27,8 @@ export interface CardCtx {
   onWatch: (s: Story) => void
   spark: (s: Story) => number[]
   onAct: (s: Story) => void
+  /** The card's other action, from its ⋯ menu: it does not mark the card done. */
+  onExtra: (s: Story) => void
   done: (s: Story) => boolean
   how: (s: Story) => boolean
   onHow: (s: Story) => void
@@ -49,7 +51,8 @@ function Foot({ s, c }: { s: Story; c: CardCtx }) {
       {w ? copy.watching : copy.watch}
     </button>
   )
-  const items: CardMenuItem[] = [...(isShared() ? [] : [{ key: 'watch', label: w ? copy.watching : copy.watch, onClick: () => c.onWatch(s), hook: 'data-watch' }]), { key: 'deeper', label: copy.deeper, onClick: () => c.onDeeper(s), hook: 'data-deeper' }]
+  const extra = s.extra && !isShared() ? [{ key: 'extra', label: s.extra.t, onClick: () => c.onExtra(s), hook: 'data-extra' }] : []
+  const items: CardMenuItem[] = [...(isShared() ? [] : [{ key: 'watch', label: w ? copy.watching : copy.watch, onClick: () => c.onWatch(s), hook: 'data-watch' }]), ...extra, { key: 'deeper', label: copy.deeper, onClick: () => c.onDeeper(s), hook: 'data-deeper' }]
   const act = s.act && !isShared() && (
     <button type="button" className={`xb cact${dn ? ' done' : ''}`} data-ca="1" onClick={() => c.onAct(s)}>
       {dn ? doneLabel[s.act.k] || copy.doneMark : s.act.t}
