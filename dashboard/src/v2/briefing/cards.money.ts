@@ -231,6 +231,12 @@ export function stuckCard(s: Stuck, rule: string): Story {
   }
 }
 
+/** The leak card with the page people are stuck on named under its steps (what they pressed again and again). */
+export function withStuck(leak: Story, s: Stuck): Story {
+  const top = s.rage[0]
+  return { ...leak, why: top ? `${leak.why} ${copy.leakStuck(s.page, top.el, top.n)}` : leak.why }
+}
+
 const pct0 = (x: number) => `${Math.round(x * 100)}%`
 
 /** The signup path where fewer go on than usual: the steps as bars, the step that leaks in red, and what to ask an editor. */
@@ -256,6 +262,7 @@ export function leakCard(i: { f: FunnelStory; domain: string; rule: string }): S
     u: 'people',
     how: `${i.rule} ${copy.leakHow}`,
     ev: copy.leakEv(fmtInt(b.v), fmtInt(a.v), fmtInt(usual)),
+    ask: copy.leakAsk(a.name, b.name),
     act: { k: 'copy', t: copy.fixPrompt, text: copy.leakPrompt(i.domain, pct0(leak.r), a.name, b.name, pct0(leak.ur), alt), done: copy.leakCopied },
     deeper: { kind: 'table', tab: 'funnels' },
   }
