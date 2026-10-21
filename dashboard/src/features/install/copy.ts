@@ -66,6 +66,9 @@ export const copy = defineCopy('install', {
     copied: 'Copied',
   },
 
+  // What the site's homepage runs, said once above the tabs.
+  runs: (domain: string, stack: string) => `${domain} runs ${stack}`,
+
   // The check.
   checkAgain: 'Look again',
   checking: (domain: string) => `Looking for the script on ${domain}…`,

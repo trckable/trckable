@@ -14,6 +14,7 @@ import { copy } from './copy'
 import { MethodPanel } from './MethodPanel'
 import { MethodTabs } from './MethodTabs'
 import { methodOf } from './snippet'
+import { tabToShow, useStack } from './stack'
 import { useCookieless } from './useCookieless'
 import type { InstallCheckHandle } from './useInstallCheck'
 import './install.css'
@@ -33,17 +34,29 @@ function Head({ site, variant }: { site: Site; variant: Variant }) {
 
 export function Install({ site, visits, variant = 'wizard', check }: { site: Site; visits: Visit[]; variant?: Variant; check?: InstallCheckHandle }) {
   const [pick, setPick] = useState(firstMethod)
+  // A tab chosen by hand, or named in the address, is never moved by what the site turns out to run.
+  const [chosen, setChosen] = useState(() => new URLSearchParams(location.search).has('method'))
+  const stack = useStack(site.id)
   const cookieless = useCookieless(site.id)
   const first = visits[0]
   // The proxy key is a credential, so the server sends it to owners only.
   // A viewer still sees the recipe, with the key named rather than spelled out.
   const ctx: Ctx = { host: location.origin, site: site.id, domain: site.domain, proxyKey: site.proxy_key || 'your-proxy-key', cookieless: cookieless.on === true }
-  const method = methodOf(pick)
+  const method = methodOf(tabToShow(pick, chosen, stack))
+  const choose = (id: string) => {
+    setChosen(true)
+    setPick(id)
+  }
 
   return (
     <section className={'inst inst-compact inst-' + variant} aria-label={copy.label}>
       <Head site={site} variant={variant} />
-      <MethodTabs value={method.id} onChange={setPick} />
+      {stack && (
+        <p className="inst-stack" role="status">
+          {copy.runs(site.domain, methodOf(stack).name)}
+        </p>
+      )}
+      <MethodTabs value={method.id} onChange={choose} />
       <MethodPanel method={method} ctx={ctx} />
       <div className="inst-extras">
         <CookielessSwitch state={cookieless} bundled={!!method.bundled} />

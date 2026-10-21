@@ -255,6 +255,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("DELETE /api/v1/sites/{site}/widgets/{id}", a.authed(a.deleteWidget))
 	handleFunc("GET /w/{id}", a.widgetPage)
 	handle("POST /api/v1/sites/{site}/install/check", a.authed(a.checkInstall))
+	handle("GET /api/v1/sites/{site}/install/stack", a.authed(a.installStack))
 	handle("GET /api/v1/sites/{site}/setup", a.authed(a.checklist))
 	handle("PUT /api/v1/sites/{site}/setup/skip/{item}", a.authed(a.setupSkip(true)))
 	handle("DELETE /api/v1/sites/{site}/setup/skip/{item}", a.authed(a.setupSkip(false)))

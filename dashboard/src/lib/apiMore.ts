@@ -245,6 +245,8 @@ export const more = {
   clearAvatar: () => act('DELETE', '/account/avatar'),
   /** This server reads the site's homepage and looks for the snippet. */
   checkInstall: (site: string) => call<InstallCheck>('POST', `/sites/${encodeURIComponent(site)}/install/check`),
+  /** What the site is built with, read from its homepage: an install method's id, or empty when it is not clear. */
+  installStack: (site: string) => call<{ stack: string }>('GET', `/sites/${encodeURIComponent(site)}/install/stack`),
   /** What stands behind the site's numbers, read now. */
   verified: (site: string) => call<Verified>('GET', `/sites/${encodeURIComponent(site)}/verified`),
   /** The uptime probe's last few looks at the site's homepage, newest first. */

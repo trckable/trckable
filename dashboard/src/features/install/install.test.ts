@@ -3,6 +3,7 @@ import { METHODS, type Ctx } from '../../lib/install'
 import { aiPrompt } from './copy'
 import { outcomeOf } from './outcome'
 import { docsFor, methodOf, stepsFor, TABS, tagFor } from './snippet'
+import { stackMethod, tabToShow } from './stack'
 import { keyTarget, moreItems, tabsFor } from './tabs'
 import { BACKOFF_MS, nextLook, RECHECK_MS } from './useInstallCheck'
 
@@ -120,5 +121,22 @@ describe('the check', () => {
     expect(nextLook({ phase: 'failed' }, false)).toBe(RECHECK_MS)
     expect(nextLook({ phase: 'done', result: { ...base, found: 'none' } }, true)).toBeNull()
     expect(nextLook({ phase: 'idle' }, false)).toBeNull()
+  })
+})
+
+describe('the stack the site runs', () => {
+  it('names an install method only when the dialog has one', () => {
+    expect(stackMethod('next')).toBe('next')
+    expect(stackMethod('wordpress')).toBe('wordpress')
+    expect(stackMethod('')).toBeNull()
+    expect(stackMethod(undefined)).toBeNull()
+    expect(stackMethod('cobol')).toBeNull()
+  })
+
+  it('opens on the stack, until a tab is picked by hand', () => {
+    expect(tabToShow('script', false, 'next')).toBe('next')
+    expect(tabToShow('script', false, null)).toBe('script')
+    expect(tabToShow('react', true, 'next')).toBe('react')
+    expect(tabToShow('wordpress', false, 'wordpress')).toBe('wordpress')
   })
 })
