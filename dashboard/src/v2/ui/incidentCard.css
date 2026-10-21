@@ -18,9 +18,3 @@
 }
 .mk .ic-calm .ck { color: var(--mk-lime); flex: none; }
 .mk .ic-calm b { color: var(--mk-text); font-weight: 600; }
-
-/* On a phone the cards are one flat list; its gap above is the one the cards above have (the pill's slot between them
-   takes 8px off each side, so the list's own margin makes up the rest). */
-@container (--pane-max-600) {
-  .mk .brief > .cards { margin-top: calc(16px - var(--mk-s3)); }
-}
