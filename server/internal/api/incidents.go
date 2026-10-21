@@ -28,6 +28,9 @@ type incidentSummary struct {
 	Seconds  int64 `json:"seconds"`   // time spent in incidents inside the period
 	Lost     int64 `json:"lost"`      // the estimated visits of those that have an estimate
 	LostSome bool  `json:"lost_some"` // at least one has
+	// Paused is the time of the period the uptime check was paused: not looked
+	// at, so neither up nor down, and out of the uptime share.
+	Paused int64 `json:"paused,omitempty"`
 }
 
 func summarize(list []sqlite.Incident, from, to int64) incidentSummary {
@@ -104,7 +107,12 @@ func (a *API) incidents(w http.ResponseWriter, r *http.Request) {
 			fail(w, http.StatusInternalServerError, "could not read the incidents")
 			return
 		}
-		out["summary"] = summarize(list, from, to)
+		sum := summarize(list, from, to)
+		if sum.Paused, err = a.Ctl.PausedSeconds(r.Context(), site, from, to); err != nil {
+			fail(w, http.StatusInternalServerError, "could not read the incidents")
+			return
+		}
+		out["summary"] = sum
 		out["incidents"] = list
 		if t := a.quietTracked(r.Context(), site, a.Now()); t != nil {
 			out["quiet_tracked"] = *t

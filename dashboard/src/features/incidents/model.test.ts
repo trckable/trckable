@@ -86,6 +86,9 @@ describe('incident words and figures', () => {
     expect(t).toMatchObject({ count: 0, seconds: 0, span: 2 * 86400 })
     expect(rowTotals([], 7, now, now + 60).span).toBe(0)
     expect(uptimeOf(0, 0)).toBeNull()
+    // Paused time is neither up nor down: out of the span, so a fully paused period has no figure and a part of one is not a 100 % it did not earn.
+    expect(uptimeOf(86400, 0, undefined, 86400)).toBeNull()
+    expect(uptimeOf(86400, 4320, undefined, 43200)).toEqual({ pct: 90, downOnly: false })
     expect(uptimeOf(86400, 0, false)).toEqual({ pct: 100, downOnly: true })
     expect(uptimeOf(86400, 0, true)?.downOnly).toBe(false)
   })

@@ -107,3 +107,28 @@ func TestFunnelsAreNamedCheckedAndKeptPerSite(t *testing.T) {
 		t.Fatal("deleted twice")
 	}
 }
+
+// A paused stretch is counted as paused, clipped to the period asked about; one still going runs to the end of it.
+func TestPausedSecondsAreClippedToThePeriod(t *testing.T) {
+	ctx := context.Background()
+	st, site := openWithSite(t)
+	for _, step := range []struct {
+		paused bool
+		at     int64
+	}{{true, 1000}, {true, 1100}, {false, 2000}, {true, 5000}} {
+		if err := st.SetUptimePaused(ctx, site, step.paused, step.at); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, c := range []struct{ from, to, want int64 }{
+		{0, 10000, 1000 + 5000},
+		{1500, 1800, 300},
+		{1900, 6000, 100 + 1000},
+		{2000, 5000, 0},
+		{7000, 8000, 1000},
+	} {
+		if got, err := st.PausedSeconds(ctx, site, c.from, c.to); err != nil || got != c.want {
+			t.Errorf("%d..%d: %d %v, want %d", c.from, c.to, got, err, c.want)
+		}
+	}
+}

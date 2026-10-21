@@ -1943,6 +1943,7 @@ export default {
   'incidents.watchedSince': (day: string) => `überwacht seit ${day}`,
   'incidents.checkedFor': (span: string, down: string) => (down ? `Geprüft seit ${span}, offline seit ${down}` : `Geprüft seit ${span}, keine Ausfallzeit`),
   'incidents.tooEarly': 'Zu früh',
+  'incidents.pausedFor': (span: string) => `Pausiert für ${span}: weder als online noch als offline gezählt`,
   'incidents.notWatched': 'Noch nicht überwacht',
   'incidents.notWatchedNote': (day: string) => `Vorfälle werden ab ${day} erfasst.`,
   'incidents.lostNote': 'Summe der Vorfälle mit Schätzung, jeweils aus denselben Stunden von bis zu vier früheren Wochen ohne Vorfall.',

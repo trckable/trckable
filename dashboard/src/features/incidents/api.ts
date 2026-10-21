@@ -21,6 +21,8 @@ export interface Summary {
   seconds: number
   lost: number
   lost_some: boolean
+  /** Seconds of the period the uptime check was paused: neither up nor down. */
+  paused?: number
 }
 
 export const incidents = {

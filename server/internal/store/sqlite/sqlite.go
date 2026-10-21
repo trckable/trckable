@@ -1088,6 +1088,15 @@ var migrations = []string{
 		updated_at INTEGER NOT NULL
 	) WITHOUT ROWID;
 	CREATE INDEX IF NOT EXISTS funnels_site ON funnels(site_id, created_at);`,
+	// 78: when the uptime check was paused, so a paused stretch is told as
+	// paused (uptime.go): neither up nor down, and out of the uptime share.
+	// An open pause has to_at 0.
+	`CREATE TABLE IF NOT EXISTS site_uptime_pauses (
+		site_id TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		from_at INTEGER NOT NULL,
+		to_at   INTEGER NOT NULL DEFAULT 0,
+		PRIMARY KEY (site_id, from_at)
+	) WITHOUT ROWID;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

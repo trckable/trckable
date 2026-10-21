@@ -1946,6 +1946,7 @@ export default {
   'incidents.watchedSince': (day: string) => `vigilado desde ${day}`,
   'incidents.checkedFor': (span: string, down: string) => (down ? `Comprobado durante ${span}, caído durante ${down}` : `Comprobado durante ${span}, sin caídas`),
   'incidents.tooEarly': 'Demasiado pronto',
+  'incidents.pausedFor': (span: string) => `En pausa durante ${span}: no cuenta como activo ni caído`,
   'incidents.notWatched': 'Aún sin vigilar',
   'incidents.notWatchedNote': (day: string) => `Los incidentes se registran desde el ${day}.`,
   'incidents.lostNote': 'Suma de los incidentes que tienen estimación, cada una a partir de las mismas horas de hasta cuatro semanas anteriores sin incidentes.',

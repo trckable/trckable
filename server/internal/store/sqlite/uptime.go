@@ -115,11 +115,29 @@ func (s *Store) SetUptimePaused(ctx context.Context, site string, paused bool, n
 		return err
 	}
 	if paused {
+		if _, err := tx.ExecContext(ctx, `INSERT INTO site_uptime_pauses (site_id, from_at) SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM site_uptime_pauses WHERE site_id = ? AND to_at = 0)`, site, now, site); err != nil {
+			return err
+		}
 		if _, err := tx.ExecContext(ctx, `UPDATE site_probe SET failures = 0, down_since = 0, blocked_since = 0, error = '', probed_at = ? WHERE site_id = ?`, now, site); err != nil {
 			return err
 		}
 	}
+	if !paused {
+		if _, err := tx.ExecContext(ctx, `UPDATE site_uptime_pauses SET to_at = ? WHERE site_id = ? AND to_at = 0`, now, site); err != nil {
+			return err
+		}
+	}
 	return tx.Commit()
+}
+
+// PausedSeconds is how much of [from, to] (unix seconds) the site's check was
+// paused: that time was not looked at, so it is neither up nor down. A pause
+// still going counts up to `to`.
+func (s *Store) PausedSeconds(ctx context.Context, site string, from, to int64) (int64, error) {
+	var n int64
+	err := s.DB.QueryRowContext(ctx, `SELECT coalesce(sum(max(0, min(CASE WHEN to_at = 0 THEN ? ELSE to_at END, ?) - max(from_at, ?))), 0)
+		FROM site_uptime_pauses WHERE site_id = ?`, to, to, from, site).Scan(&n)
+	return n, err
 }
 
 // AddUptimePath adds a path to a site's check and returns the settings. A

@@ -1941,6 +1941,7 @@ export default {
   'incidents.watchedSince': (day: string) => `suivi depuis le ${day}`,
   'incidents.checkedFor': (span: string, down: string) => (down ? `Vérifié pendant ${span}, hors service pendant ${down}` : `Vérifié pendant ${span}, aucune interruption`),
   'incidents.tooEarly': 'Trop tôt',
+  'incidents.pausedFor': (span: string) => `En pause pendant ${span} : ni en ligne ni hors ligne`,
   'incidents.notWatched': 'Pas encore suivi',
   'incidents.notWatchedNote': (day: string) => `Les incidents sont enregistrés à partir du ${day}.`,
   'incidents.lostNote': 'Somme des incidents qui ont une estimation, chacune d’après les mêmes heures de quatre semaines précédentes au plus, sans incident.',

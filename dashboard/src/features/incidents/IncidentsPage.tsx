@@ -75,7 +75,7 @@ export default function IncidentsPage({ site, header }: { site: Site; header: Re
               now={standingOf(site.down_since, open)}
               at={clock}
               f={figuresOf(list, from, to, now)}
-              w={{ span, since, quietTracked: period.quietTracked, silent: silentAllPeriod(list, from) }}
+              w={{ span, paused: period.summary?.paused, since, quietTracked: period.quietTracked, silent: silentAllPeriod(list, from) }}
               over={overWords(view.period, range, today)}
             />
             <Timeline list={list} from={range.from} to={range.to} tz={site.timezone} now={now} watchedSince={site.watched_since} since={since} />

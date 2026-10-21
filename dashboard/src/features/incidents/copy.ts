@@ -30,6 +30,7 @@ export const copy = defineCopy('incidents', {
   watchedSince: (day: string) => `watched since ${day}`,
   checkedFor: (span: string, down: string) => (down ? `Checked for ${span}, down for ${down}` : `Checked for ${span}, no downtime`),
   tooEarly: 'Too early',
+  pausedFor: (span: string) => `Paused for ${span}: not counted as up or down`,
   notWatched: 'Not watched yet',
   notWatchedNote: (day: string) => `Incidents are recorded from ${day} on.`,
   downOnly: 'down checks only',

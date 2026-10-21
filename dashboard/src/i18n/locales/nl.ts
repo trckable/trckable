@@ -1940,6 +1940,7 @@ export default {
   'incidents.watchedSince': (day: string) => `bewaakt sinds ${day}`,
   'incidents.checkedFor': (span: string, down: string) => (down ? `Gecontroleerd gedurende ${span}, offline gedurende ${down}` : `Gecontroleerd gedurende ${span}, geen downtime`),
   'incidents.tooEarly': 'Te vroeg',
+  'incidents.pausedFor': (span: string) => `Gepauzeerd voor ${span}: telt niet als online of offline`,
   'incidents.notWatched': 'Nog niet bewaakt',
   'incidents.notWatchedNote': (day: string) => `Incidenten worden vanaf ${day} bijgehouden.`,
   'incidents.lostNote': 'Som van de incidenten met een schatting, elk uit dezelfde uren van maximaal vier eerdere weken zonder incident.',

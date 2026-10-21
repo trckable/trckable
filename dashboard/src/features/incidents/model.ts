@@ -72,9 +72,11 @@ export const MIN_WATCH = 3600
 /** Whether the watch is still too short for a share, though there is some. */
 export const tooShort = (span: number): boolean => span > 0 && span < MIN_WATCH
 
-/** The uptime a period earns, said once for the page and for All sites: nothing when none of it was watched (span <= 0), else the share and whether only down checks stood behind it (a site too quiet for quiet spells to be recorded). */
-export function uptimeOf(span: number, affected: number, quietTracked?: boolean): { pct: number; downOnly: boolean } | null {
-  return span >= MIN_WATCH ? { pct: uptimePct(span, affected), downOnly: quietTracked === false } : null
+/** The uptime a period earns, said once for the page and for All sites, with the time the check was paused left out: nothing when none of it was watched (span <= 0), else the share and whether only down checks stood behind it (a site too quiet for quiet spells to be recorded). */
+export function uptimeOf(span: number, affected: number, quietTracked?: boolean, paused = 0): { pct: number; downOnly: boolean } | null {
+  // Time the check was paused was not looked at: neither up nor down, so it is not part of the span.
+  const watched = span - paused
+  return watched >= MIN_WATCH ? { pct: uptimePct(watched, affected), downOnly: quietTracked === false } : null
 }
 
 /** Time spent in incidents inside [from, to]; overlapping ones are counted once. */
