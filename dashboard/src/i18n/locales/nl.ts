@@ -1380,6 +1380,8 @@ export default {
   'install.step': (n: number) => `Stap ${n}`,
   'install.copyStep': (title: string) => `Kopiëren: ${title}`,
   'install.copyCode': 'Kopieer de code',
+  'install.optionalTitle': 'Tel ook bezoekers met een adblocker',
+  'install.optionalHint': 'Optioneel. Gebeurtenissen lopen dan via je eigen domein, gebruik <Analytics> dus zonder host.',
   'install.cookieless.label': 'Zonder cookies',
   'install.cookieless.onServer': 'Geen cookie, niets opgeslagen. Het script pakt het binnen een uur op: niets opnieuw te plakken.',
   'install.cookieless.onBundled': 'De code hierboven heeft cookieless: true. Bouw je app opnieuw en zet hem live.',
