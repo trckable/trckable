@@ -305,6 +305,8 @@ func TestEveryRouteChecksWhoIsAsking(t *testing.T) {
 	asKey := caller{"an API key", client(), key, true}
 	noCSRF := caller{"the owner without the CSRF header", owner, "", false}
 
+	// lastFile is the Content-Disposition of the answer send returned last.
+	var lastFile string
 	send := func(who caller, method, path string) (int, string) {
 		t.Helper()
 		var body io.Reader
@@ -326,6 +328,7 @@ func TestEveryRouteChecksWhoIsAsking(t *testing.T) {
 			t.Fatalf("%s %s as %s: %v", method, path, who.name, err)
 		}
 		defer res.Body.Close()
+		lastFile = res.Header.Get("Content-Disposition")
 		if strings.HasPrefix(res.Header.Get("Content-Type"), "text/event-stream") {
 			return res.StatusCode, "" // a live stream: the status is the answer
 		}
@@ -405,6 +408,9 @@ func TestEveryRouteChecksWhoIsAsking(t *testing.T) {
 			switch rule {
 			case "read":
 				expectAllowed(asViewer)
+				if strings.HasPrefix(strings.ToLower(lastFile), "attachment") && !viewerMayDownload[pattern] {
+					t.Errorf("%s answers a viewer with a file (%s): a download is the \"export\" rule", pattern, lastFile)
+				}
 				expectAllowed(asKey)
 			case "export":
 				unchanged(func() { expectRefused(asViewer, http.StatusForbidden) })
@@ -468,6 +474,14 @@ func ownerOrder(patterns []string) []string {
 		}
 	}
 	return out
+}
+
+// viewerMayDownload lists the routes a viewer may call that answer with a file
+// on purpose. Anything else that answers with Content-Disposition: attachment
+// takes data out and needs the export action, whatever its path is called.
+var viewerMayDownload = map[string]bool{
+	// The share-card PNG is a picture made to be posted, not the site's data.
+	"GET /api/v1/sites/{site}/milestones/{kind}/{step}/card": true,
 }
 
 // A route that takes data out as a file (its path says export, csv or
