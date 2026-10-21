@@ -137,3 +137,21 @@ for (const width of [360, 768, 1440] as const) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0)
   })
 }
+
+test('a week by the hour is set against the week before by the hour: the dashed line runs the whole chart, on the same scale, with a legend', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  await page.goto(`${API}/${STEADY_DOMAIN}?view=briefing&period=7d&v=`)
+  await expect(page.locator('svg#chart')).toBeVisible()
+  const dash = page.locator('svg#chart .chbefore')
+  await expect(dash).toHaveCount(1)
+  // Its buckets are the line's own: the first to the last point cover (nearly) the width of the plot, not a stretch at its start.
+  // The week is drawn by the hour once that report is in: wait for it, not for the first (daily) drawing.
+  await expect.poll(async () => ((await dash.getAttribute('points')) ?? '').split(' ').length).toBeGreaterThan(24)
+  const xs = ((await dash.getAttribute('points')) ?? '').split(' ').map((p) => Number(p.split(',')[0]))
+  const line = ((await page.locator('svg#chart polyline').first().getAttribute('points')) ?? '').split(' ').map((p) => Number(p.split(',')[0]))
+  expect(xs.length).toBeGreaterThan(24)
+  expect(xs[xs.length - 1] - xs[0]).toBeGreaterThan((line[line.length - 1] - line[0]) * 0.9)
+  await expect(page.locator('.chkey')).toContainText('This period')
+  await expect(page.locator('.chkey')).toContainText('Previous')
+})

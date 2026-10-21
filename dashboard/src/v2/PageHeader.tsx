@@ -104,10 +104,10 @@ export function PageHeader(p: PageHeaderProps) {
   }
   const here = p.tab
   // Peek is there only where the build gives one: a page's own, or the slot. The public product has none, so no row or button asks for it.
-  const ask = peekAction(p.onAsk, slots.askPeek)
+  const ask = peekAction(p.onAsk, slots.askPeekNow)
   // A page with a site opens Explore; a page without one has nothing to open it on, so ⌘K's list opens instead.
-  // Where the build provides Peek, a question typed into ⌘K goes to it, with the question as the draft.
-  const question = slots.askPeek
+  // Where the build provides Peek, a question typed into ⌘K is asked at once.
+  const question = slots.askPeekNow
   const exploreOpen = () => (site ? goExplore() : setFind(true))
   return (
     <>

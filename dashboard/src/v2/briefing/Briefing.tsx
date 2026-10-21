@@ -92,8 +92,8 @@ export default function Briefing({ site, data: page, loading, period, compare = 
   const nowSec = useNow()
   const setupState = useSetup(site)
   const wset = watched.use()
-  const hours = useHourly(site, range, !!page && page.bucket !== 'hour' && !bucket && wantsHours(period, range))
-  const data = useMemo(() => (page && hours ? { ...page, bucket: hours.bucket, current: hours.current } : page), [page, hours])
+  const hours = useHourly(site, range, !!page && page.bucket !== 'hour' && !bucket && wantsHours(period, range), queryOf(readView(new URLSearchParams(location.search)), range))
+  const data = useMemo(() => (page && hours ? { ...page, bucket: hours.bucket, current: hours.current, previous: hours.previous } : page), [page, hours]) // the period before comes by the hour too, like the line over it
   const current = data?.current
   const previous = data?.previous
   const cur = useMemo(() => normal(current), [current])
