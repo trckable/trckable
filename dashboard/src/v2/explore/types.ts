@@ -134,6 +134,9 @@ export interface Goal extends Stat {
 
 export interface Funnel {
   steps: Step[]
+  /** The pages and goals the funnel counts, in order (the payment step left out): what saving it keeps. */
+  spec: { kind: 'page' | 'goal'; value: string }[]
+
   /** Where people leave more than usual: the step's index (-1 for none), the share who go on, and the usual share. */
   leak: { at: number; r: number; ur: number }
   goals: Goal[]

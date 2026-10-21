@@ -1,10 +1,38 @@
 import { describe, expect, it } from 'vitest'
 import type { Point } from '../../lib/api'
-import { againstName, capital, changeOf, compareOf, hasBefore, signed, startsOn } from './compare'
+import { againstName, capital, changeOf, compareOf, grainOf, hasBefore, sameGrain, signed, startsOn } from './compare'
 
 const pts = (xs: number[], from = 1): Point[] => xs.map((visitors, d) => ({ t: `2026-10-${String(d + from).padStart(2, '0')}T00:00`, visitors, pageviews: visitors }))
 
+const hours = (xs: number[], day = '2026-10-10'): Point[] => xs.map((visitors, h) => ({ t: `${day}T${String(h % 24).padStart(2, '0')}:00`, visitors, pageviews: visitors }))
+
 describe('the comparison', () => {
+  it('only sets a series against one of the same bucket size', () => {
+    expect(grainOf(pts([1, 2]))).toBe(1440)
+    expect(grainOf(hours([1, 2]))).toBe(60)
+    expect(sameGrain(pts([1, 2, 3]), pts([4, 5, 6]))).toBe(true)
+    expect(sameGrain(hours([1, 2, 3]), pts([4, 5, 6]))).toBe(false)
+  })
+  it('a week by the hour against a week by the day gives no comparison, never a short line', () => {
+    const week = hours(Array.from({ length: 168 }, () => 100))
+    const daily = pts([1500, 1700, 2000, 1800, 1600, 1500, 1400])
+    expect(compareOf(week, daily, 168, 'last week')).toBeNull()
+  })
+  it('a week by the hour against a week by the hour has equal lengths and a true change', () => {
+    const now = hours(Array.from({ length: 168 }, () => 120))
+    const before = hours(Array.from({ length: 168 }, () => 100), '2026-10-03')
+    const c = compareOf(now, before, 168, 'last week')
+    expect(c?.vals).toHaveLength(168)
+    expect(c?.pct).toBe(20)
+  })
+  it('a month by the day against a month by the day has equal lengths and a true change', () => {
+    const c = compareOf(pts(Array.from({ length: 30 }, () => 90)), pts(Array.from({ length: 30 }, () => 100)), 30, 'last month')
+    expect(c?.vals).toHaveLength(30)
+    expect(c?.pct).toBe(-10)
+  })
+  it('a day still going is told against the start of the day before', () => {
+    expect(compareOf(hours(Array.from({ length: 24 }, () => 5)), hours([5, 5, 5, 5]), 4, 'yesterday')?.pct).toBe(0)
+  })
   it('names the period before the way a person says it', () => {
     const r = { from: '2026-10-01', to: '2026-10-30' }
     expect(againstName('30d', 'previous', r)).toBe('last month')

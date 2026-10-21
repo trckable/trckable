@@ -1,0 +1,1 @@
+Funnels can be saved by name for a site: Explore's funnel view opens a saved one in a click, and saves, renames or deletes them. The steps are pages or goals, and the numbers are counted when one is opened.

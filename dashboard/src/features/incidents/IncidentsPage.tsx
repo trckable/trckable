@@ -75,10 +75,10 @@ export default function IncidentsPage({ site, header }: { site: Site; header: Re
               now={standingOf(site.down_since, open)}
               at={clock}
               f={figuresOf(list, from, to, now)}
-              w={{ span, since, quietTracked: period.quietTracked, silent: silentAllPeriod(list, from) }}
+              w={{ span, paused: period.summary?.paused, since, quietTracked: period.quietTracked, silent: silentAllPeriod(list, from) }}
               over={overWords(view.period, range, today)}
             />
-            <Timeline list={list} from={range.from} to={range.to} tz={site.timezone} now={now} watchedSince={site.watched_since} since={since} />
+            <Timeline list={list} from={range.from} to={range.to} tz={site.timezone} now={now} watchedSince={site.watched_since} paused={period.pausedSpans} since={since} />
             {list.length > 0 && <IncidentList domain={site.domain} list={list} now={now} edit={(x) => setEdited((e) => ({ ...e, [x.id]: x }))} />}
             {list.length === 0 && span > 0 && (
               <p className="inc-empty">

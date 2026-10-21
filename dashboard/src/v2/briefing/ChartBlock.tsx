@@ -64,6 +64,12 @@ export function ChartBlock(p: ChartBlockProps) {
           {p.note}
         </span>
         <span className="mk-quiet" id="chCall" />
+        {p.chart.compare && (
+          <span className="chkey" aria-hidden="true">
+            <span data-line="now">{copy.legendNow}</span>
+            <span data-line="before">{copy.legendBefore}</span>
+          </span>
+        )}
         <Suspense fallback={null}>
           <MentionsChip site={p.site} labels={labels} from={p.series[0]?.t.slice(0, 10) ?? p.range.from} to={p.range.to} />
         </Suspense>

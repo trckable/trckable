@@ -89,7 +89,7 @@ export function kpiCards(a: KpiIn): Kc[] {
     return thin ? '–' : fmtPct(cur.kpis.bounce_rate)
   }
   // An uptime nobody measured (a past day with no monitor data) is not a card with a dash: the card is left out.
-  const unmeasured = a.uptime.value === null && !down
+  const unmeasured = a.uptime.value === null && !down && a.uptime.verdict !== 'paused'
   const cards: Kc[] = [
     { key: 'people', icon: 'people', label: copy.people, val: fmtInt(cur.kpis.visitors), note: say(a.peopleVerdict ? rangeNote(a.peopleVerdict.now, a.peopleVerdict.band, ` ${copy.peopleWord}`) : learning, learning, a.people.note), vals: a.people.vals, dn: false },
     goal

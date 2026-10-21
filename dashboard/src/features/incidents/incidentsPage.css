@@ -120,6 +120,10 @@
   --tone: var(--mk-red, var(--down));
   background: var(--tone);
 }
+.inc-days i.paused {
+  --tone: var(--text-3);
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--tone) 30%, transparent) 0 3px, transparent 3px 6px);
+}
 .inc-days i.blank {
   background: none;
 }
@@ -192,6 +196,9 @@
 }
 .inc-legend .unwatched {
   --tone: color-mix(in srgb, var(--text-3) 22%, transparent);
+}
+.inc-legend .paused {
+  --tone: color-mix(in srgb, var(--text-3) 45%, transparent);
 }
 .inc-legend .down {
   --tone: var(--mk-red, var(--down));

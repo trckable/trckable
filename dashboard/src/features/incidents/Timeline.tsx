@@ -4,20 +4,20 @@
 import { useMemo } from 'react'
 import { Tooltip } from '../../kit'
 import { fmtDay } from '../../lib/dates'
-import type { Incident } from './api'
+import type { Incident, PausedSpan } from './api'
 import { copy } from './copy'
 import { dayLasted, dayStates, daysBetween, duration, type DayState } from './model'
 
 /** From this many days on, the strip becomes the year's grid. */
 export const GRID_FROM = 120
 
-const say: Record<Exclude<DayState, 'unwatched'>, (day: string, span: string) => string> = { ok: copy.dayOk, quiet: copy.dayQuiet, down: copy.dayDown }
+const say: Record<Exclude<DayState, 'unwatched'>, (day: string, span: string) => string> = { ok: copy.dayOk, quiet: copy.dayQuiet, down: copy.dayDown, paused: copy.dayPaused }
 
-export function Timeline({ list, from, to, tz, now, watchedSince = 0, since }: { list: Incident[]; from: string; to: string; tz: string; now: number; watchedSince?: number; since?: string }) {
+export function Timeline({ list, from, to, tz, now, watchedSince = 0, paused = [], since }: { list: Incident[]; from: string; to: string; tz: string; now: number; watchedSince?: number; paused?: PausedSpan[]; since?: string }) {
   const watched = useMemo(() => {
-    const states = dayStates(list, daysBetween(from, to), tz, now, watchedSince)
+    const states = dayStates(list, daysBetween(from, to), tz, now, watchedSince, paused)
     return [...states].filter(([, s]) => s !== 'unwatched')
-  }, [list, from, to, tz, now, watchedSince])
+  }, [list, from, to, tz, now, watchedSince, paused])
   if (watched.length === 0) return null
   const grid = watched.length >= GRID_FROM
   // The grid starts on a Monday: blank cells fill the first week.
@@ -30,7 +30,7 @@ export function Timeline({ list, from, to, tz, now, watchedSince = 0, since }: {
         ))}
         {watched.map(([d, state], n) => {
           const k = state as Exclude<DayState, 'unwatched'>
-          const text = say[k](fmtDay(d, { year: true }), k === 'ok' ? '' : duration(dayLasted(list, d, tz, now)))
+          const text = say[k](fmtDay(d, { year: true }), k === 'ok' || k === 'paused' ? '' : duration(dayLasted(list, d, tz, now)))
           return (
             <Tooltip key={d} text={text} align={n > watched.length / 2 ? 'right' : 'left'}>
               {(p) => <i className={state} {...p} />}
@@ -43,6 +43,7 @@ export function Timeline({ list, from, to, tz, now, watchedSince = 0, since }: {
           <li className="ok">{copy.legendOk}</li>
           <li className="quiet">{copy.legendQuiet}</li>
           <li className="down">{copy.legendDown}</li>
+          {watched.some(([, s]) => s === 'paused') && <li className="paused">{copy.legendPaused}</li>}
         </ul>
         {since && <small>{copy.since(since)}</small>}
       </div>

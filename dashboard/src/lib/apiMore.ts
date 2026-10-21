@@ -32,6 +32,22 @@ export interface ProbeLook {
   blocked?: boolean
 }
 
+/** What a site's people steer in the uptime check: a pause, and up to `max` more paths of the same domain. */
+export interface Uptime {
+  paused: boolean
+  paths: string[]
+  max: number
+}
+
+/** A funnel a site keeps by name: the steps, not the numbers. */
+export interface SavedFunnel {
+  id: string
+  name: string
+  steps: { kind: 'page' | 'goal'; value: string }[]
+  created_at: number
+  updated_at: number
+}
+
 export * from './api'
 export { siteState, type SiteState } from '../features/sitestatus/status'
 import type { APIKey, Added, Alert, Annotation, Brand, Cohorts, CrawlerReport, FunnelResult, FunnelStep, Health, Heatmap, InstallCheck, JourneyResult, ModuleInfo, PaidStep, PayConnection, Person, PersonFound, PersonPayment, Profile, Provider, ReportQuery, ReportSchedule, ReportSchedules, ScriptInfo, ScrollReport, SearchConnection, SearchProperty, SearchReport, Segment, Share, ShareLook, Site, SiteAccessList, SiteConfig, SiteRow, TwoStep, Verified, WebVitals, Widget, WidgetLook } from './api'
@@ -233,6 +249,14 @@ export const more = {
   verified: (site: string) => call<Verified>('GET', `/sites/${encodeURIComponent(site)}/verified`),
   /** The uptime probe's last few looks at the site's homepage, newest first. */
   probes: (site: string) => call<{ probes: ProbeLook[] }>('GET', `/sites/${encodeURIComponent(site)}/probes`),
+  uptime: (site: string) => call<Uptime>('GET', `/sites/${encodeURIComponent(site)}/uptime`),
+  setUptimePaused: (site: string, paused: boolean) => call<Uptime>('PUT', `/sites/${encodeURIComponent(site)}/uptime`, { paused }),
+  addUptimePath: (site: string, path: string) => call<Uptime>('POST', `/sites/${encodeURIComponent(site)}/uptime/paths`, { path }),
+  removeUptimePath: (site: string, path: string) => call<Uptime>('DELETE', `/sites/${encodeURIComponent(site)}/uptime/paths?path=${encodeURIComponent(path)}`),
+  funnels: (site: string) => call<{ funnels: SavedFunnel[]; max: number }>('GET', `/sites/${encodeURIComponent(site)}/funnels`),
+  saveFunnel: (site: string, name: string, steps: SavedFunnel['steps']) => call<SavedFunnel>('POST', `/sites/${encodeURIComponent(site)}/funnels`, { name, steps }),
+  updateFunnel: (site: string, id: string, change: { name?: string; steps?: SavedFunnel['steps'] }) => call<SavedFunnel>('PATCH', `/sites/${encodeURIComponent(site)}/funnels/${encodeURIComponent(id)}`, change),
+  deleteFunnel: (site: string, id: string) => act('DELETE', `/sites/${encodeURIComponent(site)}/funnels/${encodeURIComponent(id)}`),
   keys: () => call<{ keys: APIKey[] }>('GET', '/keys'),
   heatmap: (site: string, q: ReportQuery) => call<Heatmap>('GET', `/sites/${site}/report/heatmap` + rangeQS(q)),
   funnel: (site: string, q: ReportQuery, steps: (FunnelStep | PaidStep)[]) => call<{ steps: FunnelResult[] }>('GET', `/sites/${site}/report/funnel` + rangeQS(q) + '&steps=' + encodeURIComponent(JSON.stringify(steps))),
