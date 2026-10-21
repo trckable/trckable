@@ -132,3 +132,17 @@ func TestPausedSecondsAreClippedToThePeriod(t *testing.T) {
 		}
 	}
 }
+
+// Pausing, resuming and pausing again within one second is a pause, not an error.
+func TestPauseResumePauseInOneSecond(t *testing.T) {
+	ctx := context.Background()
+	st, site := openWithSite(t)
+	for _, paused := range []bool{true, false, true} {
+		if err := st.SetUptimePaused(ctx, site, paused, 100); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got, err := st.PausedSeconds(ctx, site, 0, 200); err != nil || got != 100 {
+		t.Fatalf("%d %v, want an open pause from 100", got, err)
+	}
+}
