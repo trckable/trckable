@@ -2,7 +2,7 @@
 // this browser when everything counted was first seen done, which starts the seven days of the check.
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { more, type SetupState } from '../../lib/apiMore'
-import { hideId, hiddenBy } from './model'
+import { hideId, hiddenBy, STALE } from './model'
 
 const HIDE_KEY = 'trckable:ring:hide'
 const DONE_KEY = 'trckable:ring:done'
@@ -119,6 +119,18 @@ export function remember(site: string, state: SetupState) {
   listeners.forEach((f) => f())
 }
 
+// A change made here (a skip, a kind) answers with the checklist as it now is. A read that began before it is older than that answer:
+// it resolves to the answer instead, so no asker is handed (and remembers) the state from before the change.
+const changedAt = new Map<string, number>()
+const latest = new Map<string, SetupState>()
+
+export function changed(site: string, state: SetupState) {
+  changedAt.set(site, (changedAt.get(site) ?? 0) + 1)
+  latest.set(site, state)
+  reads.delete(site) // a read kept for a second asker is from before the change
+  remember(site, state)
+}
+
 export function onState(f: () => void): () => void {
   listeners.add(f)
   return () => void listeners.delete(f)
@@ -127,17 +139,18 @@ export function onState(f: () => void): () => void {
 // The one read of a site's checklist, for the ring and for every prompt that asks whether it is wanted (each keeps the answer with `remember`, as it did when it read for itself): a read already on its way is
 // the answer to whoever asks next, and so is one that came back less than `maxAge` ms ago (0: only a read still on its way).
 /** How long a read stays the answer to a second asker that does not need it fresh (the ring's first read, after a prompt's). */
-export const SHARED_MS = 30_000
+export const SHARED_MS = STALE
 const reads = new Map<string, { p: Promise<SetupState>; at: number | null }>()
 
 export function readSetup(site: string, maxAge = 0): Promise<SetupState> {
   const r = reads.get(site)
   if (r && (r.at === null || Date.now() - r.at < maxAge)) return r.p
+  const began = changedAt.get(site) ?? 0
   const entry: { p: Promise<SetupState>; at: number | null } = {
     p: more.setup(site).then(
       (state) => {
         entry.at = Date.now()
-        return state
+        return (changedAt.get(site) ?? 0) !== began ? (latest.get(site) ?? state) : state
       },
       (e: unknown) => {
         if (reads.get(site) === entry) reads.delete(site)
