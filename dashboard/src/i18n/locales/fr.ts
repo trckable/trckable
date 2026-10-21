@@ -3460,4 +3460,5 @@ export default {
   'domainChange.confirm': 'Changer de domaine',
   'domainChange.done': (to: string) => `Domaine changé en ${to}`,
   'domainChange.checking': 'Vérification…',
+  'domainChange.tooSoon': "Le domaine d'un site ne peut changer qu'une fois par jour. Réessayez demain.",
 } satisfies Messages

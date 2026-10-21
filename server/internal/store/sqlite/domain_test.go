@@ -121,10 +121,11 @@ func TestFormerHostsEndWithTheGraceOrNow(t *testing.T) {
 		t.Fatal("ending an address that is not waiting")
 	}
 	// Moving back ends the wait of the address it returns to.
-	if _, err := st.ChangeDomain(ctx, id, "old.com", "", now); err != nil {
+	later := now.Add(25 * time.Hour)
+	if _, err := st.ChangeDomain(ctx, id, "old.com", "", later); err != nil {
 		t.Fatal(err)
 	}
-	got, _ := st.FormerHostsOf(ctx, id, now)
+	got, _ := st.FormerHostsOf(ctx, id, later)
 	if len(got) != 1 || got[0].Host != "new.com" {
 		t.Fatalf("after moving back: %+v", got)
 	}
@@ -134,7 +135,7 @@ func TestFormerHostsEndWithTheGraceOrNow(t *testing.T) {
 func TestFormerHostsMigration(t *testing.T) {
 	st, ctx, id := domainSite(t)
 	// Its migration is the last one: the database is put back to just before it.
-	if _, err := st.DB.ExecContext(ctx, `DROP TABLE site_former_hosts; PRAGMA user_version = `+strconv.Itoa(len(migrations)-1)); err != nil {
+	if _, err := st.DB.ExecContext(ctx, `DROP TABLE site_former_hosts; DROP TABLE site_domain_changes; PRAGMA user_version = `+strconv.Itoa(len(migrations)-1)); err != nil {
 		t.Fatal(err)
 	}
 	if err := st.MigrateTo(ctx, len(migrations)); err != nil {
@@ -145,5 +146,48 @@ func TestFormerHostsMigration(t *testing.T) {
 	}
 	if _, err := st.ChangeDomain(ctx, id, "new.com", "", time.Now()); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// A domain changes once a day: a chain of changes would keep a string of old
+// addresses open, and Cloud's one-trial-per-domain rule would be a flip away.
+func TestDomainChangesOnceADay(t *testing.T) {
+	st, ctx, id := domainSite(t)
+	now := time.Date(2026, 10, 21, 10, 0, 0, 0, time.UTC)
+	if _, err := st.ChangeDomain(ctx, id, "new.com", "", now); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.ChangeDomain(ctx, id, "newer.com", "", now.Add(23*time.Hour)); !errors.Is(err, ErrDomainTooSoon) {
+		t.Fatalf("a second change in a day: %v", err)
+	}
+	if got, _ := st.SiteInfo(ctx, id); got.Domain != "new.com" {
+		t.Fatalf("domain %q", got.Domain)
+	}
+	// Stopping the old address does not reset the clock.
+	if err := st.EndFormerHost(ctx, id, "old.com"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := st.ChangeDomain(ctx, id, "newer.com", "", now.Add(23*time.Hour)); !errors.Is(err, ErrDomainTooSoon) {
+		t.Fatalf("after stopping: %v", err)
+	}
+	if _, err := st.ChangeDomain(ctx, id, "newer.com", "", now.Add(24*time.Hour)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// The former addresses ride with the account's sites, so whoever counts an
+// account's domains sees the ones still accepted.
+func TestFormerHostsByAccount(t *testing.T) {
+	st, ctx, id := domainSite(t)
+	now := time.Now()
+	if _, err := st.ChangeDomain(ctx, id, "new.com", "", now); err != nil {
+		t.Fatal(err)
+	}
+	got, err := st.FormerHostsByAccount(ctx, DefaultAccount, now)
+	if err != nil || len(got[id]) != 1 || got[id][0] != "old.com" {
+		t.Fatalf("%v %v", got, err)
+	}
+	if got, _ := st.FormerHostsByAccount(ctx, DefaultAccount, now.Add(31*24*time.Hour)); len(got) != 0 {
+		t.Fatalf("after the grace: %v", got)
 	}
 }

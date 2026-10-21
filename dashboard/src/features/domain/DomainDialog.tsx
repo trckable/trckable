@@ -6,12 +6,16 @@ import { DialogHead } from '../../components/DialogHead'
 import { Field } from '../../components/Field'
 import { toast } from '../../components/Toast'
 import { Modal } from '../../kit/Modal'
+import { APIError } from '../../lib/api'
 import { more, type DomainState, type Site } from '../../lib/apiMore'
 import { fmtDay } from '../../lib/dates'
 import { copy } from './copy'
 
 const day = (unix: number) => fmtDay(new Date(unix * 1000).toISOString().slice(0, 10), { year: true })
-const message = (e: unknown) => (e instanceof Error ? e.message : String(e))
+function message(e: unknown): string {
+  if (e instanceof APIError && e.code === 'domain_too_soon') return copy.tooSoon
+  return e instanceof Error ? e.message : String(e)
+}
 
 export function DomainDialog({ site, grace, onClose, onChanged }: { site: Site; grace: number; onClose: () => void; onChanged: (s: DomainState) => void }) {
   const [typed, setTyped] = useState('')

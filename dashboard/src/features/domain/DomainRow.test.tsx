@@ -15,6 +15,7 @@ vi.mock('../../lib/apiMore', async (orig) => ({
 let allowed = true
 vi.mock('../../lib/permissions', () => ({ can: () => allowed }))
 
+import { APIError } from '../../lib/api'
 import { DomainRow } from './DomainRow'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -47,7 +48,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount())
   host.remove()
-  document.body.querySelectorAll('[role=dialog]').forEach((d) => d.remove())
+  document.body.replaceChildren() // the dialogs a test left in the page
 })
 
 describe('the domain row', () => {
@@ -115,5 +116,16 @@ describe('the domain row', () => {
     await settle()
     expect(document.body.textContent).toContain('you already have that site')
     expect(changeDomain).not.toHaveBeenCalled()
+  })
+
+  it('words the once-a-day limit itself', async () => {
+    act(() => root.render(<DomainRow site={site} onSaved={vi.fn()} />))
+    await settle()
+    act(() => button('Change')?.click())
+    siteDomain.mockRejectedValue(new APIError(429, 'a site’s domain can change once a day', false, 'domain_too_soon'))
+    act(() => type(document.body.querySelector<HTMLInputElement>('input.input'), 'next.com'))
+    act(() => button('Continue')?.click())
+    await settle()
+    expect(document.body.textContent).toContain('A site’s domain can change once a day. Try again tomorrow.')
   })
 })

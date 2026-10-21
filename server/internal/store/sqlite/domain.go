@@ -15,6 +15,14 @@ import (
 // domain it left, so pages still carrying the old address lose nothing.
 const FormerHostGrace = 30 * 24 * time.Hour
 
+// DomainChangeEvery is the least time between two changes of a site's domain:
+// the old address is kept for a month, and a chain of changes would keep a
+// string of them open.
+const DomainChangeEvery = 24 * time.Hour
+
+// ErrDomainTooSoon is a second change of a site's domain within DomainChangeEvery.
+var ErrDomainTooSoon = errors.New("a site's domain can change once a day")
+
 // ErrSameDomain is a change to the domain the site already has.
 var ErrSameDomain = errors.New("that is already this site's address")
 
@@ -56,7 +64,8 @@ func (s *Store) ChangeDomain(ctx context.Context, site, domain, author string, n
 	}
 	defer tx.Rollback()
 	var name, zone string
-	err = tx.QueryRowContext(ctx, `SELECT domain, name, timezone FROM sites WHERE id = ?`, site).Scan(&out.Old, &name, &zone)
+	var last int64
+	err = tx.QueryRowContext(ctx, `SELECT domain, name, timezone, coalesce((SELECT changed_at FROM site_domain_changes WHERE site_id = sites.id), 0) FROM sites WHERE id = ?`, site).Scan(&out.Old, &name, &zone, &last)
 	if errors.Is(err, sql.ErrNoRows) {
 		return out, auth.ErrNotFound
 	}
@@ -65,6 +74,9 @@ func (s *Store) ChangeDomain(ctx context.Context, site, domain, author string, n
 	}
 	if domain == out.Old {
 		return out, ErrSameDomain
+	}
+	if now.Unix()-last < int64(DomainChangeEvery/time.Second) {
+		return out, ErrDomainTooSoon
 	}
 	out.New, out.Until = domain, now.Add(FormerHostGrace).Unix()
 	newName := name
@@ -75,6 +87,10 @@ func (s *Store) ChangeDomain(ctx context.Context, site, domain, author string, n
 		if strings.Contains(err.Error(), "UNIQUE") {
 			return out, ErrExists
 		}
+		return out, err
+	}
+	if _, err := tx.ExecContext(ctx, `INSERT INTO site_domain_changes (site_id, changed_at) VALUES (?, ?)
+		ON CONFLICT(site_id) DO UPDATE SET changed_at = excluded.changed_at`, site, now.Unix()); err != nil {
 		return out, err
 	}
 	// Going back to a former address ends its waiting; the one just left starts.
@@ -162,4 +178,42 @@ func (s *Store) AccountHasDomain(ctx context.Context, account, domain, except st
 	var n int
 	err := s.DB.QueryRowContext(ctx, `SELECT count(*) FROM sites WHERE account_id = ? AND domain = ? AND id <> ?`, account, domain, except).Scan(&n)
 	return n > 0, err
+}
+
+// FormerHostsByAccount lists, per site, the former addresses of an account's
+// sites that still count visits: they are the account's domains as much as
+// the current ones.
+func (s *Store) FormerHostsByAccount(ctx context.Context, account string, now time.Time) (map[string][]string, error) {
+	rows, err := s.DB.QueryContext(ctx, `SELECT f.site_id, f.host FROM site_former_hosts f JOIN sites s ON s.id = f.site_id
+		WHERE s.account_id = ? AND f.until > ? ORDER BY f.site_id, f.host`, account, now.Unix())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[string][]string{}
+	for rows.Next() {
+		var id, host string
+		if err := rows.Scan(&id, &host); err != nil {
+			return nil, err
+		}
+		out[id] = append(out[id], host)
+	}
+	return out, rows.Err()
+}
+
+// DomainChangedAt is when a site's domain last changed (unix seconds, 0 never).
+func (s *Store) DomainChangedAt(ctx context.Context, site string) (int64, error) {
+	var at int64
+	var n int
+	if err := s.DB.QueryRowContext(ctx, `SELECT count(*) FROM sites WHERE id = ?`, site).Scan(&n); err != nil {
+		return 0, err
+	}
+	if n == 0 {
+		return 0, auth.ErrNotFound
+	}
+	err := s.DB.QueryRowContext(ctx, `SELECT changed_at FROM site_domain_changes WHERE site_id = ?`, site).Scan(&at)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, nil
+	}
+	return at, err
 }

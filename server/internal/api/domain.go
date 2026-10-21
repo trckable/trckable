@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/auth"
+	"github.com/trckable/trckable/server/internal/notice"
+	"github.com/trckable/trckable/server/internal/permissions"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -75,6 +77,8 @@ func failDomain(w http.ResponseWriter, err error) {
 		fail(w, http.StatusConflict, "you already have that site")
 	case errors.Is(err, sqlite.ErrSameDomain):
 		fail(w, http.StatusBadRequest, err.Error())
+	case errors.Is(err, sqlite.ErrDomainTooSoon):
+		writeJSON(w, http.StatusTooManyRequests, apiError{Error: err.Error(), Code: "domain_too_soon"})
 	default:
 		fail(w, http.StatusBadRequest, err.Error())
 	}
@@ -97,6 +101,11 @@ func (a *API) validNewDomain(r *http.Request, site, typed string) (string, error
 	if domain == si.Domain {
 		return "", sqlite.ErrSameDomain
 	}
+	if at, err := a.Ctl.DomainChangedAt(r.Context(), site); err != nil {
+		return "", err
+	} else if a.Now().Unix()-at < int64(sqlite.DomainChangeEvery/time.Second) {
+		return "", sqlite.ErrDomainTooSoon
+	}
 	if taken, err := a.Ctl.AccountHasDomain(r.Context(), principalOf(r).account, domain, site); err != nil {
 		return "", err
 	} else if taken {
@@ -116,6 +125,10 @@ func (a *API) siteDomain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if to := r.URL.Query().Get("to"); to != "" {
+		// What a domain would do tells whether it is free in the account: only those who may change it ask.
+		if !requireAct(w, r, permissions.ActChange, "only someone who can change this site's settings can check a new domain") {
+			return
+		}
 		domain, err := a.validNewDomain(r, site, to)
 		if err != nil {
 			failDomain(w, err)
@@ -140,10 +153,12 @@ func (a *API) changeDomain(w http.ResponseWriter, r *http.Request) {
 		failDomain(w, err)
 		return
 	}
-	if _, err := a.Ctl.ChangeDomain(r.Context(), site, domain, authorOf(r), a.Now()); err != nil {
+	ch, err := a.Ctl.ChangeDomain(r.Context(), site, domain, authorOf(r), a.Now())
+	if err != nil {
 		failDomain(w, err)
 		return
 	}
+	a.tellOwners(r, notice.DomainChanged, site, notice.Vars{"old": ch.Old, "domain": ch.New})
 	a.cache.purgeSite(site)
 	st, err := a.domainStateOf(r, site)
 	if err != nil {

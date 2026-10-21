@@ -3472,4 +3472,5 @@ export default {
   'domainChange.confirm': 'Domein wijzigen',
   'domainChange.done': (to: string) => `Domein gewijzigd naar ${to}`,
   'domainChange.checking': 'Controleren…',
+  'domainChange.tooSoon': "Het domein van een site kan één keer per dag veranderen. Probeer het morgen opnieuw.",
 } satisfies Messages

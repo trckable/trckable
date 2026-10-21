@@ -27,4 +27,5 @@ export const copy = defineCopy('domainChange', {
   confirm: 'Change domain',
   done: (to: string) => `Domain changed to ${to}`,
   checking: 'Checking…',
+  tooSoon: 'A site’s domain can change once a day. Try again tomorrow.',
 })

@@ -436,3 +436,18 @@ func TestAnOwnerWhoIsAloneIsNotToldOfTheirOwnSiteAndKeyChanges(t *testing.T) {
 		t.Fatalf("security: %v", got)
 	}
 }
+
+// A change of domain is told to the other owners only, never to a viewer: the
+// billing-email rule (owners) applies to everything about a site's address.
+func TestChangingADomainIsToldToTheOtherOwnersOnly(t *testing.T) {
+	n := newNoticeRig(t)
+	n.user(t, "two@site.com", sqlite.RoleOwner)
+	n.user(t, "view@site.com", sqlite.RoleViewer)
+	if code, out := do(t, n.owner, "PUT", n.srv.URL+"/api/v1/sites/"+n.site+"/domain", `{"domain":"moved-shop.dev"}`, csrf, "1"); code != http.StatusOK {
+		t.Fatalf("change: %d %v", code, out)
+	}
+	b := n.bell(notice.DomainChanged)
+	if len(b) != 1 || len(b[0]) != 1 {
+		t.Fatalf("domain changed: %v", b)
+	}
+}

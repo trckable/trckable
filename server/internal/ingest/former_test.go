@@ -37,3 +37,26 @@ func TestFormerHostIsAcceptedUntilItEnds(t *testing.T) {
 		t.Fatalf("new address after the grace: %d", w.Code)
 	}
 }
+
+// A visit coming from the site's old domain is the site itself, not a referral;
+// the cookie's domain is the old domain's root there, so www. and the bare name share one.
+func TestFormerHostIsInternalAndKeepsOneCookie(t *testing.T) {
+	s := Site{ID: "tkb_test", Domain: "new.com", Former: []FormerHost{{Host: "site.com", Until: time.Now().Add(time.Hour)}}}
+	if host, clean := parseReferrer("https://www.site.com/pricing", "new.com", s.OwnHosts()...); host != "" || clean != "" {
+		t.Fatalf("old domain is a referral: %q %q", host, clean)
+	}
+	if host, _ := parseReferrer("https://blog.site.com/x", "new.com", s.OwnHosts()...); host != "" {
+		t.Fatalf("a subdomain of the old domain is a referral: %q", host)
+	}
+	if host, _ := parseReferrer("https://other.com/x", "new.com", s.OwnHosts()...); host != "other.com" {
+		t.Fatalf("a real referral lost: %q", host)
+	}
+	for _, h := range []string{"site.com", "www.site.com", "app.site.com"} {
+		if c := visitorCookieFor("v", parsedURL{Host: h}, s); c.Domain != "site.com" {
+			t.Errorf("%s: cookie domain %q", h, c.Domain)
+		}
+	}
+	if c := visitorCookieFor("v", parsedURL{Host: "www.new.com"}, s); c.Domain != "new.com" {
+		t.Errorf("main: cookie domain %q", c.Domain)
+	}
+}

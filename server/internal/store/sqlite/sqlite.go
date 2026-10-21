@@ -1102,13 +1102,18 @@ var migrations = []string{
 	`ALTER TABLE milestones ADD COLUMN detail TEXT NOT NULL DEFAULT '';`,
 	// 80: a site that changed its domain keeps accepting visits from the old
 	// one for a while (domain.go): the old hostname and when that ends, unix
-	// seconds.
+	// seconds; site_domain_changes is when the domain last changed, so it
+	// can change only once a day.
 	`CREATE TABLE IF NOT EXISTS site_former_hosts (
 		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
 		host       TEXT NOT NULL,
 		until      INTEGER NOT NULL,
 		changed_at INTEGER NOT NULL,
 		PRIMARY KEY (site_id, host)
+	) WITHOUT ROWID;
+	CREATE TABLE IF NOT EXISTS site_domain_changes (
+		site_id    TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
+		changed_at INTEGER NOT NULL
 	) WITHOUT ROWID;`,
 }
 

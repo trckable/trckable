@@ -15,6 +15,10 @@ func TestChangeDomainThroughTheAPI(t *testing.T) {
 	viewer := viewerClient(t, g)
 	base := g.srv.URL + "/api/v1/sites/" + g.site + "/domain"
 
+	// A viewer may not ask what a domain would do: whether it is free in the account is not theirs to probe.
+	if code, _ := do(t, viewer, "GET", base+"?to=taken.com", ""); code != http.StatusForbidden {
+		t.Fatalf("viewer previews: %d", code)
+	}
 	// A viewer reads the state and changes nothing.
 	if code, out := do(t, viewer, "GET", base, ""); code != http.StatusOK || out["domain"] != "site.com" {
 		t.Fatalf("viewer reads: %d %v", code, out)
@@ -71,6 +75,28 @@ func TestChangeDomainThroughTheAPI(t *testing.T) {
 	}
 	if code, out := do(t, owner, "GET", g.srv.URL+"/api/v1/sites/"+g.site, ""); code != http.StatusOK || out["domain"] != "new.com" || out["name"] != "new.com" {
 		t.Fatalf("site: %d %v", code, out)
+	}
+
+	// The list of sites carries the address still accepted, for whoever counts an account's domains.
+	if code, out := do(t, owner, "GET", g.srv.URL+"/api/v1/sites", ""); code != http.StatusOK {
+		t.Fatalf("sites: %d", code)
+	} else if rows, _ := out["sites"].([]any); len(rows) == 0 {
+		t.Fatal("no sites")
+	} else {
+		var found bool
+		for _, r := range rows {
+			if m := r.(map[string]any); m["id"] == g.site {
+				fh, _ := m["former_hosts"].([]any)
+				found = len(fh) == 1 && fh[0] == "site.com"
+			}
+		}
+		if !found {
+			t.Fatalf("former_hosts missing: %v", rows)
+		}
+	}
+	// Once a day, and the reason is a code the dashboard words itself.
+	if code, out := do(t, owner, "PUT", base, `{"domain":"again.com"}`, csrf, "1"); code != http.StatusTooManyRequests || out["code"] != "domain_too_soon" {
+		t.Fatalf("second change: %d %v", code, out)
 	}
 
 	// Stop now.

@@ -105,7 +105,7 @@ func parsePageURL(raw string, hashMode bool) (parsedURL, bool) {
 
 // referrer returns the normalized referrer host and a privacy-safe URL
 // (scheme+host+path, no query). Empty when there is no external referrer.
-func parseReferrer(raw, pageHost string) (host, clean string) {
+func parseReferrer(raw, pageHost string, own ...string) (host, clean string) {
 	if raw == "" {
 		return "", ""
 	}
@@ -119,6 +119,11 @@ func parseReferrer(raw, pageHost string) (host, clean string) {
 	}
 	if host == pageHost || strings.HasSuffix(host, "."+pageHost) || strings.HasSuffix(pageHost, "."+host) {
 		return "", "" // internal navigation / own subdomain
+	}
+	for _, o := range own { // the site's other domains (an old one it moved from) are the site too
+		if o != "" && (host == o || strings.HasSuffix(host, "."+o) || strings.HasSuffix(o, "."+host)) {
+			return "", ""
+		}
 	}
 	for _, c := range checkoutHosts {
 		if host == c || strings.HasSuffix(host, "."+c) {
