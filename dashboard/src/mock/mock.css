@@ -1977,6 +1977,5 @@ html[data-motion='off'] .mk .lswap{animation:none}
 .mk .nfd.sm{width:6px;height:6px}
 /* While the list is narrowed, one quiet line above it says how, with a way to clear it. */
 .mk .nfact{display:flex;align-items:center;justify-content:space-between;gap:var(--mk-s2);padding:var(--mk-s1) var(--mk-s3) 0;font-size:12px;color:var(--mk-muted)}
-/* the not-installed dot is amber here, where no pill says it; a phone: the mark and its state dot only, the name stays in the button's label */
+/* the not-installed dot is amber here, where no pill says it; on a phone the name stays (cut with an ellipsis), with the mark and its dot */
 .mk .mk-chip .mk-dot.off{background:var(--mk-amber)}
-@media (--xs){.mk .hd>div:has(#siteBtn) #siteBtn:not(.all){flex:0 0 auto;min-width:0;gap:var(--mk-s1)}.mk .hd #siteBtn:not(.all) :is(.nmx,.dom){display:none}}
