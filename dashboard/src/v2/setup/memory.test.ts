@@ -28,6 +28,7 @@ test('a site\'s checklist is read once for whoever asks while it is on its way, 
   await readSetup('r')
   expect(get).toHaveBeenCalledTimes(2)
   get.mockRestore()
+  get.mockRestore()
 })
 
 test('a change wins over a read that began before it', async () => {
@@ -37,4 +38,13 @@ test('a change wins over a read that began before it', async () => {
   changed('s-race', { ...read, done: 4 })
   release(read)
   expect((await pending).done).toBe(4)
+})
+
+test('a read kept for a second asker is dropped by a change', async () => {
+  const get = vi.spyOn(more, 'setup').mockResolvedValue(read)
+  await readSetup('s-kept')
+  changed('s-kept', { ...read, done: 4 })
+  await readSetup('s-kept', 60_000)
+  expect(get).toHaveBeenCalledTimes(2)
+  get.mockRestore()
 })

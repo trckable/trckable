@@ -127,6 +127,7 @@ const latest = new Map<string, SetupState>()
 export function changed(site: string, state: SetupState) {
   changedAt.set(site, (changedAt.get(site) ?? 0) + 1)
   latest.set(site, state)
+  reads.delete(site) // a read kept for a second asker is from before the change
   remember(site, state)
 }
 
