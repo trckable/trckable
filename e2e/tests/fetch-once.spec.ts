@@ -83,7 +83,7 @@ for (const [name, query] of [['Live', 'view=live'], ['Briefing', 'view=briefing'
       const again = minute.filter((u) => /\/(report|mentions|milestones|incidents|busier)(\?|$)/.test(u.replace(/\/sites\/[^/?]+/, '')))
       expect(again, 'asked again within 45 s').toEqual([])
       for (const [url, n] of Object.entries(tally(minute))) expect(n, `${url} in 45 s`).toBeLessThanOrEqual(/\/now$/.test(url) ? 5 : 1)
-      expect(first.length).toBeLessThanOrEqual(BUDGET[name])
+      expect(first.length).toBeLessThanOrEqual(BUDGET[name] + (turn ? 1 : 0)) // the same one more /now when the minute turned during the load
       expect(first.filter((u) => /health$/.test(u))).toEqual([])
     })
 

@@ -2829,6 +2829,8 @@ export default {
   'briefing.chartRead': (when: string, v: string) => `${when} · ${v} bezoekers`,
   'briefing.chartReadVs': (when: string, v: string, name: string, was: string, pct: string) => `${when} · ${v} bezoekers · ${name} ${was}${pct ? ` · ${pct}` : ''}`,
   'briefing.vsLine': (pct: string, name: string) => `${pct} t.o.v. ${name}`,
+  'briefing.legendNow': 'Deze periode',
+  'briefing.legendBefore': 'Vorige',
   'briefing.compareStarts': (date: string, needs: string) => `De vergelijking begint op ${date}, zodra er gegevens zijn van ${needs}`,
   'briefing.needs.today': 'een dag',
   'briefing.needs.yesterday': 'een dag',

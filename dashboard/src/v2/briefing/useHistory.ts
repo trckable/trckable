@@ -1,7 +1,7 @@
 // The site's own past, read once a day for the "usual" it is told against: ninety days by day (the day chart, the
 // record day, the run of days above usual) and, when the chart is by hour, the eight weeks before by hour.
 import { useEffect, useState } from 'react'
-import { api, type Point, type Report, type Site } from '../../lib/api'
+import { api, reportURL, type Point, type Report, type ReportQuery, type Site } from '../../lib/api'
 import { addDays, type ISODate, type Range } from '../../lib/dates'
 
 export interface History {
@@ -41,15 +41,16 @@ export function useHistory(site: Site, today: ISODate, hourly: boolean, on: bool
 const hours = new Map<string, Promise<Report>>()
 
 /** The period by the hour, for the stretches the walkthrough draws by the hour (a week, a day or two) when the page read it by the day. */
-export function useHourly(site: Site, range: Range, on: boolean): Report | null {
+export function useHourly(site: Site, range: Range, on: boolean, ask: ReportQuery): Report | null {
   const [got, setGot] = useState<{ key: string; r: Report } | null>(null)
-  const key = `${site.id}|${range.from}|${range.to}`
+  // The period before is read by the hour too, so the two lines are drawn from buckets of the same size.
+  const key = `${site.id}|${reportURL(site.id, { ...ask, bucket: 'hour' })}`
   useEffect(() => {
     if (!on) return
     let live = true
     let p = hours.get(key)
     if (!p) {
-      p = api.report(site.id, { from: range.from, to: range.to, bucket: 'hour' })
+      p = api.report(site.id, { ...ask, from: range.from, to: range.to, bucket: 'hour' })
       p.catch(() => hours.delete(key))
       hours.set(key, p)
     }
@@ -60,7 +61,7 @@ export function useHourly(site: Site, range: Range, on: boolean): Report | null 
     return () => {
       live = false
     }
-  }, [key, on, site.id, range.from, range.to])
+  }, [key, on, site.id, range.from, range.to]) // eslint-disable-line react-hooks/exhaustive-deps -- `ask` is in the key
   return on && got && got.key === key ? got.r : null
 }
 
