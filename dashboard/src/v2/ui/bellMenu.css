@@ -53,3 +53,8 @@
   display: inline-block;
   flex: none;
 }
+
+/* The phone's sheet keeps one height while notices come in: it is fixed to the bottom, so a taller sheet would move its top edge (and every row with it) up. */
+.mk .cd.nfsheet {
+  min-height: min(50dvh, 26rem);
+}
