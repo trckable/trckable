@@ -119,6 +119,17 @@ export function remember(site: string, state: SetupState) {
   listeners.forEach((f) => f())
 }
 
+// A change made here (a skip, a kind) answers with the checklist as it now is. A read that began before it is older than that answer:
+// it resolves to the answer instead, so no asker is handed (and remembers) the state from before the change.
+const changedAt = new Map<string, number>()
+const latest = new Map<string, SetupState>()
+
+export function changed(site: string, state: SetupState) {
+  changedAt.set(site, (changedAt.get(site) ?? 0) + 1)
+  latest.set(site, state)
+  remember(site, state)
+}
+
 export function onState(f: () => void): () => void {
   listeners.add(f)
   return () => void listeners.delete(f)
@@ -133,11 +144,12 @@ const reads = new Map<string, { p: Promise<SetupState>; at: number | null }>()
 export function readSetup(site: string, maxAge = 0): Promise<SetupState> {
   const r = reads.get(site)
   if (r && (r.at === null || Date.now() - r.at < maxAge)) return r.p
+  const began = changedAt.get(site) ?? 0
   const entry: { p: Promise<SetupState>; at: number | null } = {
     p: more.setup(site).then(
       (state) => {
         entry.at = Date.now()
-        return state
+        return (changedAt.get(site) ?? 0) !== began ? (latest.get(site) ?? state) : state
       },
       (e: unknown) => {
         if (reads.get(site) === entry) reads.delete(site)

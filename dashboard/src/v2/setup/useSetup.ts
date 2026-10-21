@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { type SetupState, type Site } from '../../lib/apiMore'
 import { useSettings } from '../../lib/settings'
-import { lastState, readSetup, remember, SHARED_MS } from './memory'
+import { changed, lastState, readSetup, remember, SHARED_MS } from './memory'
 import { isStale, visitMissed } from './model'
 
 const FIRST = 2500
@@ -47,7 +47,7 @@ export function useSetup(site: Site | null, on: boolean, fresh = false, visited 
       if (!id) return Promise.resolve()
       return change(id)
         .then((state) => {
-          remember(id, state)
+          changed(id, state)
           readAt.current = Date.now()
           setGot({ site: id, state })
         })
