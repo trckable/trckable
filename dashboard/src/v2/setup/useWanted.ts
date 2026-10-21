@@ -1,8 +1,7 @@
 // What every setup prompt asks: is this one wanted? Read from the same checklist as the ring, so a step skipped or brought
 // back there changes the prompts at once.
 import { useCallback, useEffect, useSyncExternalStore } from 'react'
-import { more } from '../../lib/apiMore'
-import { lastState, onState, remember } from './memory'
+import { lastState, onState, readSetup, SHARED_MS } from './memory'
 import { wanted } from './model'
 
 const asked = new Set<string>()
@@ -17,7 +16,7 @@ export function useWanted(site: string | null, ask: boolean): ((kind: string) =>
   useEffect(() => {
     if (!site || !ask || state || asked.has(site)) return
     asked.add(site)
-    more.setup(site).then((s) => remember(site, s), () => asked.delete(site))
+    readSetup(site, SHARED_MS).catch(() => asked.delete(site))
   }, [site, ask, state])
   const want = useCallback((kind: string) => wanted(state, kind), [state])
   return Object.assign(want, { known: !!state })
