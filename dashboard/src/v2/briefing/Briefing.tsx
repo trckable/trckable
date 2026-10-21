@@ -36,7 +36,7 @@ import { whyUsual } from './why'
 import { useMoments } from '../replay/useMoments'
 import { startOfDay } from '../../features/incidents/model'
 import { siteNow } from './chart'
-import { nextStep, setupRows } from './steps'
+import { nudge } from './steps'
 import { copy } from './copy'
 import { chartLine, heroSub } from './lines'
 import { againstName } from './compare'
@@ -172,8 +172,7 @@ export default function Briefing({ site, data: page, loading, period, compare = 
   const incidentOn = [...shown, ...(ui.all ? rest : [])].some((s) => s.key === 'uptime')
   const listCtx = incidentOn ? { ...ctx, calm: <div className="ic-calm"><CalmLine {...calmIn} /></div> } : ctx
   const cards = empty ? quiet : <CardList list={shown} c={listCtx} />
-  const act = isShared() ? null : nextStep({ site, cur, stories, top, downNow })
-  const setups = setupRows({ site, cur, can: setupState.can, shared: isShared(), noSearch: setupState.noSearch, noAlerts: setupState.noAlerts, want: setupState.want, onGoal })
+  const { act, setups } = nudge({ site, cur, stories, top, downNow, can: setupState.can, shared: isShared(), noSearch: setupState.noSearch, noAlerts: setupState.noAlerts, want: setupState.want, onGoal })
   const heroWhy = stories.find((x) => x.key === 'uptime')?.cause ?? stories.find((x) => x.key === 'sources')?.cause ?? (usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : null)
   if (kcs[0] && heroWhy && !stories.find((x) => x.key === 'uptime')) kcs[0].why = usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : undefined
   const sales = cur.money?.payments ?? 0

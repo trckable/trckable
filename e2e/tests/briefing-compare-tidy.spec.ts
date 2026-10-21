@@ -113,7 +113,7 @@ for (const width of [360, 768, 1440] as const) {
     await open(page, width, 'light')
     await expect(page.locator('.lkcs .lkc.row').first()).toBeVisible()
     const measure = () => page.locator('.lkcs .lkc.row').evaluateAll((els) => els.map((e) => ({ ...e.getBoundingClientRect().toJSON(), go: getComputedStyle(e.querySelector('.lkgo')!).backgroundColor })))
-    await expect.poll(async () => (await measure()).length).toBeGreaterThanOrEqual(2)
+    await expect.poll(async () => (await measure()).length).toBeGreaterThanOrEqual(1)
     // Two reads that agree: the layout has stopped moving.
     await expect.poll(async () => JSON.stringify(await measure()), { intervals: [100, 200, 400] }).toBe(JSON.stringify(await measure()))
     const rows = await measure()
@@ -121,9 +121,9 @@ for (const width of [360, 768, 1440] as const) {
       expect(r.height).toBeLessThanOrEqual(width < 500 ? 100 : 84)
       expect(r.go).toBe('rgba(0, 0, 0, 0)')
     }
-    // Side by side where there is room, one under the other on a phone.
-    if (width < 500) expect(rows[1].top).toBeGreaterThan(rows[0].bottom - 1)
-    else expect(Math.abs(rows[1].top - rows[0].top)).toBeLessThan(2)
+    // One nudge at a time: a row, or two when setup shows more. Side by side where there is room, one under the other on a phone.
+    if (rows.length > 1 && width < 500) expect(rows[1].top).toBeGreaterThan(rows[0].bottom - 1)
+    else if (rows.length > 1) expect(Math.abs(rows[1].top - rows[0].top)).toBeLessThan(2)
     await expect(page.locator('.lkcs .how')).toHaveCount(0)
     const mail = await page.locator('.mailrow').evaluate((el) => getComputedStyle(el).borderTopStyle)
     expect(mail).toBe('solid')
