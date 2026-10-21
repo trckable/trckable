@@ -62,10 +62,17 @@ describe('the sales rows add up to the headline', () => {
     expect(lines.reduce((n, r) => n + num(r.a), 0)).toBe(num(rows.find((r) => r.tot)?.a))
   })
   it('totals what was kept: a refunded sale is listed net, and the total is the net too', () => {
-    const [, c] = salesCards({ ...base, money: money({ revenue: 7000, refunds: 5000, payments: 2, customers: 2 }), band: null, buyers: [{ id: 'a', at: '2026-10-16T15:20:00Z', amount: 2000, kind: 'new' }, { id: 'b', at: '2026-10-16T16:20:00Z', amount: 5000, kind: 'new' }] })
+    const [c] = salesCards({ ...base, money: money({ revenue: 7000, refunds: 5000, payments: 2, customers: 2 }), band: null, buyers: [{ id: 'a', at: '2026-10-16T15:20:00Z', amount: 2000, kind: 'new' }, { id: 'b', at: '2026-10-16T16:20:00Z', amount: 5000, kind: 'new' }] })
     const rows = rowsOf(c)
     expect(rows.filter((r) => !r.tot).reduce((n, r) => n + num(r.a), 0)).toBe(num(rows.find((r) => r.tot)?.a))
-    expect(c.rest).toBe(': $70 in')
+    expect(rows.find((r) => r.tot)?.l).toBe('Net')
+  })
+  it('is one card for what was sold and what went back, with the gross, the refunds and the net', () => {
+    const list = salesCards({ ...base, money: money({ revenue: 7000, refunds: 5000, payments: 2, customers: 2 }), band: null, buyers: [{ id: 'a', at: '2026-10-16T15:20:00Z', amount: 2000, kind: 'new' }, { id: 'b', at: '2026-10-16T16:20:00Z', amount: 5000, kind: 'new' }] })
+    expect(list).toHaveLength(1)
+    expect(list[0].head).toBe('Sold $120')
+    expect(list[0].rest).toBe(', $50 refunded, $70 net')
+    expect(list[0].bad).toBe(true)
   })
 })
 
