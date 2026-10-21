@@ -35,10 +35,9 @@ describe('the quiet line under the cards', () => {
     expect(renderToStaticMarkup(<Calm cards={false} names={[]} paused={false} learning={false} onExplore={() => {}} />)).toContain('Everything was normal')
   })
 
-  it('says a single calm topic on its own, and lists several', () => {
+  it('names what was calm in plain words', () => {
     const calm = (names: string[]) => renderToStaticMarkup(<Calm cards names={names} paused={false} learning={false} onExplore={() => {}} />)
-    expect(calm(['search'])).toContain('Search looked normal</b>.')
-    expect(calm(['search'])).not.toContain('Everything else')
-    expect(calm(['devices', 'pages'])).toContain('Everything else was normal</b>: devices, pages.')
+    expect(calm(['search'])).toContain('No other unusual changes in search</b>')
+    expect(calm(['devices', 'pages'])).toContain('No other unusual changes in devices or pages</b>')
   })
 })

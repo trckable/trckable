@@ -98,7 +98,7 @@ test('one incident card: the down stretches in red, everything else was normal a
   const marks = card.locator('.obt i')
   await expect(marks).toHaveCount(2)
   for (const m of await marks.all()) expect((await m.boundingBox())!.width).toBeGreaterThanOrEqual(3)
-  await expect(card.locator('.ic-calm')).toContainText('Everything else was normal')
+  await expect(card.locator('.ic-calm')).toContainText('No other unusual changes in')
   expect(await card.evaluate((el) => el.lastElementChild?.className)).toContain('ic-calm')
   await expect(page.locator('.calm2')).toHaveCount(0)
   await expect(card.getByRole('button', { name: 'Open the incident' })).toBeVisible()
@@ -108,12 +108,12 @@ test('one incident card: the down stretches in red, everything else was normal a
 })
 
 for (const width of [360, 768, 1440] as const) {
-  test(`locked features are a slim row, the email row is a card, and every gap is the cards' gap, ${width}px`, async ({ page }) => {
+  test(`locked features are a slim row, the email is one quiet line, and every gap is the cards' gap, ${width}px`, async ({ page }) => {
     await withIncidents(page)
     await open(page, width, 'light')
     await expect(page.locator('.lkcs .lkc.row').first()).toBeVisible()
     const measure = () => page.locator('.lkcs .lkc.row').evaluateAll((els) => els.map((e) => ({ ...e.getBoundingClientRect().toJSON(), go: getComputedStyle(e.querySelector('.lkgo')!).backgroundColor })))
-    await expect.poll(async () => (await measure()).length).toBeGreaterThanOrEqual(2)
+    await expect.poll(async () => (await measure()).length).toBeGreaterThanOrEqual(1)
     // Two reads that agree: the layout has stopped moving.
     await expect.poll(async () => JSON.stringify(await measure()), { intervals: [100, 200, 400] }).toBe(JSON.stringify(await measure()))
     const rows = await measure()
@@ -121,16 +121,15 @@ for (const width of [360, 768, 1440] as const) {
       expect(r.height).toBeLessThanOrEqual(width < 500 ? 100 : 84)
       expect(r.go).toBe('rgba(0, 0, 0, 0)')
     }
-    // Side by side where there is room, one under the other on a phone.
-    if (width < 500) expect(rows[1].top).toBeGreaterThan(rows[0].bottom - 1)
-    else expect(Math.abs(rows[1].top - rows[0].top)).toBeLessThan(2)
+    // One nudge at a time: the first thing not set up is the one slim row.
+    expect(rows).toHaveLength(1)
     await expect(page.locator('.lkcs .how')).toHaveCount(0)
-    const mail = await page.locator('.mailrow').evaluate((el) => getComputedStyle(el).borderTopStyle)
-    expect(mail).toBe('solid')
-    await expect(page.locator('.mailrow').getByRole('button')).toHaveCount(3)
+    // The email is one quiet line over the Briefing, no box, with one Change.
+    await expect(page.locator('.mailline')).toContainText('Emailed daily at 08:00')
+    await expect(page.locator('.mailline').getByRole('button')).toHaveCount(1)
     const gaps = await page.evaluate(() => {
       const top = (s: string) => document.querySelector(s)!.getBoundingClientRect()
-      const seq = ['.kcs', '.brief > .cards', '.lkcs', '.mailrow']
+      const seq = ['.kcs', '.brief > .cards', '.lkcs']
       return { kcs: parseFloat(getComputedStyle(document.querySelector('.kcs')!).rowGap), between: seq.slice(1).map((s, i) => Math.round(top(s).top - top(seq[i]).bottom)) }
     })
     for (const g of gaps.between) expect(g).toBe(gaps.kcs)

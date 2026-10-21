@@ -3,6 +3,7 @@
 import { lazy, Suspense, useEffect } from 'react'
 import type { Site } from '../../lib/api'
 import type { Range } from '../../lib/dates'
+import { openSettings } from '../../lib/settings'
 import { useNotes } from '../../features/notes/useNotes'
 import { Detail } from '../ui/DetailSheet'
 import { MailSheet, NotesSheet } from '../ui/BriefingSheets'
@@ -43,6 +44,9 @@ export function Overlays({ ui, site, range, today, notes, ctx, headline, kcs, sh
           headline={headline}
           facts={kcs.map((k) => ({ n: k.val, u: k.label.toLowerCase(), t: k.note.t }))}
           claims={shown.slice(0, 3).map((s) => `${s.head}${s.rest ?? ''}`)}
+          on={ui.mail}
+          onTime={() => openSettings(site, 'alerts')}
+          onToggle={ui.toggleMail}
           onClose={() => ui.setSheet(null)}
         />
       )}

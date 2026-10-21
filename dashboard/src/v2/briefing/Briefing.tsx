@@ -194,6 +194,7 @@ export default function Briefing({ site, data: page, loading, period, compare = 
   const body = (
     <div className="mk mk-body">
       <div className="brief" aria-busy={loading}>
+        {!empty && canNote && <MailRow on={ui.mail} onChange={() => ui.setSheet('mail')} />}
         <Hero
           say={{ ...say, sub }}
           scores={scores}
@@ -235,7 +236,6 @@ export default function Briefing({ site, data: page, loading, period, compare = 
         <Setups rows={setups} />
         {act && <Act text={act.text} rest={act.rest} label={act.label} onAct={act.run} />}
         <BounceNote site={site} range={range} />
-        {!empty && canNote && <MailRow on={ui.mail} onPreview={() => ui.setSheet('mail')} onManage={() => openSettings(site, 'alerts')} onToggle={ui.toggleMail} />}
         {ui.hint && <KeyHint onHide={ui.hideHint} />}
       </div>
       <Overlays ui={ui} site={site} range={range} today={today} notes={notes} ctx={ctx} headline={headline} kcs={kcs} shown={shown} canNote={canNote} />

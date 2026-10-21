@@ -49,7 +49,7 @@ for (const size of SIZES) {
       await lastIsReachable(page, '.cd.on')
       await page.keyboard.press('Escape')
       await expect(page.locator('.cd.on')).toHaveCount(0) // put away before the next one opens, whatever the runner's speed
-      await page.getByRole('button', { name: /^Preview/ }).click()
+      await page.getByRole('button', { name: /^Change$/ }).click()
       await expect(page.locator('.cd.on')).toBeVisible()
       await lastIsReachable(page, '.cd.on')
       await page.keyboard.press('Escape')
