@@ -10,6 +10,7 @@ import { answersApi } from '../../features/answers/api'
 import { incidents } from '../../features/incidents/api'
 import { mentionsApi } from '../../features/mentions/api'
 import { whenQuiet } from '../../features/extras/quiet'
+import { onSiteWrite } from '../../lib/siteWrites'
 import { moduleOn } from '../briefing/moduleOn'
 import { aiOf, mentionsOf, speedOf, uptimeFigure, UPTIME_DAYS, type AiFigure, type MentionsFigure, type UptimeFigure } from './health'
 
@@ -30,7 +31,10 @@ export const loading = (h: Health): boolean => h.ai === undefined
 
 export function useHealth(site: Site | undefined, on: boolean): Health {
   const [got, setGot] = useState<{ id: string; h: Health } | null>(null)
+  // A write to this site's modules, Answers or Mentions (switching something on) reads every figure again.
+  const [round, setRound] = useState(0)
   const id = site?.id
+  useEffect(() => onSiteWrite((_, written) => written === id && setRound((n) => n + 1)), [id])
   const tz = site?.timezone
   const watched = site?.watched_since ?? 0
   const withMentions = !!site?.mentions && hasMentions()
@@ -52,6 +56,6 @@ export function useHealth(site: Site | undefined, on: boolean): Health {
       live = false
       cancel()
     }
-  }, [id, tz, watched, withMentions, withAnswers, on])
+  }, [id, tz, watched, withMentions, withAnswers, on, round])
   return got && got.id === id ? got.h : {}
 }

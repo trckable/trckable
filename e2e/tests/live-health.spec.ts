@@ -19,6 +19,8 @@ interface Fake {
   role?: string
   /** The crawler answer waits for this, so the cards are seen while their figures are on the way. */
   hold?: Promise<void>
+  /** The speed switch is a real one: the modules answer follows what a write sets, as the server does. */
+  switchable?: boolean
 }
 
 async function fake(page: Page, o: Fake = {}) {
@@ -36,7 +38,18 @@ async function fake(page: Page, o: Fake = {}) {
       await r.fulfill({ json: { ...me, role: o.role } })
     })
   }
-  await page.route(/\/api\/v1\/sites\/[^/]+\/modules/, (r) => r.fulfill({ json: { modules: [{ id: 'vitals', enabled: !o.noVitals }] } }))
+  let vitals = !o.noVitals
+  if (o.switchable) {
+    await page.route(/\/api\/v1\/sites\/[^/]+\/modules/, async (r) => {
+      if (r.request().method() === 'PUT') vitals = (r.request().postDataJSON() as { enabled: boolean }).enabled
+      const res = await r.fetch({ url: r.request().url().replace(/\/modules\/.*$/, '/modules'), method: 'GET', postData: undefined })
+      const body = (await res.json()) as { modules: { id: string; enabled: boolean }[] }
+      for (const m of body.modules) if (m.id === 'vitals') m.enabled = vitals
+      await r.fulfill({ response: res, json: body })
+    })
+  } else {
+    await page.route(/\/api\/v1\/sites\/[^/]+\/modules/, (r) => r.fulfill({ json: { modules: [{ id: 'vitals', enabled: !o.noVitals }] } }))
+  }
   await page.route(/\/api\/v1\/sites\/[^/]+\/report\/vitals/, (r) => r.fulfill({ json: o.empty ? { samples: 0, good: 0 } : { samples: 80, lcp_ms: 1800, lcp_n: 80, inp_ms: 120, inp_n: 80, cls_1k: 20, cls_n: 80, good: 70 } }))
   const open = { id: 'i1', site: 'example.com', kind: 'down', started_at: NOW - 12 * 60, ended_at: null, cause: 'timeout', expected_visits: null, note: '' }
   await page.route(/\/api\/v1\/sites\/[^/]+\/incidents/, (r) => r.fulfill({ json: { incidents: o.down ? [open] : [], summary: { count: o.down ? 1 : 0, seconds: o.down ? 720 : 0, lost: 0, lost_some: false }, quiet_tracked: true } }))
@@ -87,6 +100,16 @@ test('with nothing behind a figure an owner is offered a button only where there
   await expect(page.locator('#rec-vitals')).toBeFocused()
 })
 
+test('switching speed on updates the card at once, with no reload', async ({ page }) => {
+  await fake(page, { empty: true, noVitals: true, switchable: true })
+  const speed = cards(page).locator('.lhempty').first()
+  await expect(speed).toContainText('No speed or uptime data yet')
+  await speed.getByRole('button', { name: 'Turn on speed' }).click()
+  await page.locator('#rec-vitals').click()
+  await expect(speed).toContainText('Collecting')
+  await expect(speed.getByRole('button')).toHaveCount(0)
+})
+
 test('Connect AI crawlers opens the connect sheet in AI & Search', async ({ page }) => {
   await fake(page, { empty: true, noVitals: true })
   await cards(page).locator('.lhempty').nth(1).getByRole('button', { name: 'Connect AI crawlers' }).click()
@@ -121,6 +144,12 @@ test('a viewer sees the empty lines and no button', async ({ page }) => {
   await fake(page, { empty: true, noVitals: true, role: 'viewer' })
   await expect(cards(page).locator('.lhempty')).toHaveCount(2)
   await expect(cards(page).locator('.lhempty button')).toHaveCount(0)
+})
+
+test('the public product has no Peek, so no Why? link sits beside the buttons', async ({ page }) => {
+  await fake(page, { empty: true, noVitals: true })
+  await expect(cards(page).getByRole('button', { name: 'Turn on speed' })).toBeVisible()
+  await expect(cards(page).getByRole('button', { name: 'Why?' })).toHaveCount(0)
 })
 
 test('the cards hold the shape of their figures while those are read, and nothing is left behind when they land', async ({ page }) => {

@@ -3,6 +3,7 @@
 // `fail` is said once, from where every caller already imports the client: it tells a person that something failed.
 export { fail } from '../components/toastBus'
 import { filterParam } from './filterSet'
+import { announceSiteWrite } from './siteWrites'
 
 export interface KPIs {
   visitors: number
@@ -521,7 +522,10 @@ export async function call<T>(method: string, path: string, body?: unknown, sign
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
-  if (res.ok && method !== 'GET') dropAfterWrite(path)
+  if (res.ok && method !== 'GET') {
+    dropAfterWrite(path)
+    announceSiteWrite(path)
+  }
   if (res.status === 204) return undefined as T
   const data: unknown = await res.json().catch(() => ({}))
   if (!res.ok) {
@@ -538,6 +542,7 @@ export async function call<T>(method: string, path: string, body?: unknown, sign
 function dropAfterWrite(path: string) {
   const site = /^\/sites\/([^/?]+)/.exec(path)
   dropReports(site ? decodeURIComponent(site[1]) : undefined)
+  if (site && /^\/sites\/[^/?]+\/modules\b/.test(path)) heldModules.delete(decodeURIComponent(site[1])) // the switches changed: the next ask reads them
 }
 
 /** A request whose answer has nothing to read: a 204, or a body nobody needs. */
