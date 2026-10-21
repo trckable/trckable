@@ -9,7 +9,9 @@ import { panelId, tabId } from './MethodTabs'
 import { docsFor, stepsFor } from './snippet'
 
 export function MethodPanel({ method, ctx }: { method: Method; ctx: Ctx }) {
-  const steps = stepsFor(method, ctx)
+  const all = stepsFor(method, ctx)
+  const steps = all.filter((s) => !s.optional)
+  const extra = all.filter((s) => s.optional)
   const many = steps.length > 1
   return (
     <div key={method.id} id={panelId} role="tabpanel" aria-labelledby={tabId(method.id)} className="inst-panel rise">
@@ -39,6 +41,20 @@ export function MethodPanel({ method, ctx }: { method: Method; ctx: Ctx }) {
         </ol>
       ) : (
         <CodeBlock code={steps[0].code} copyLabel={copy.copyCode} compact />
+      )}
+      {extra.length > 0 && (
+        <details className="inst-optional">
+          <summary>{copy.optionalTitle}</summary>
+          <p>{copy.optionalHint}</p>
+          <ul className="inst-steps">
+            {extra.map((s) => (
+              <li key={s.title}>
+                <span className="inst-step-title">{s.title}</span>
+                <CodeBlock code={s.code} copyLabel={copy.copyStep(s.title)} compact />
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
     </div>
   )

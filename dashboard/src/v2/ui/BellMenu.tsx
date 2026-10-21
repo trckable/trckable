@@ -216,7 +216,7 @@ export function BellMenu(p: BellProps) {
       {p.sheet && open && (
         <MkPortal>
           <div className="xscrim on" onClick={close} aria-hidden="true" />
-          <aside className="cd on" role="dialog" aria-modal="true" aria-label={p.title} tabIndex={-1}>
+          <aside className="cd on nfsheet" role="dialog" aria-modal="true" aria-label={p.title} tabIndex={-1}>
             <div className="cdh">
               <b>{p.title}</b>
               <Tools {...p} />

@@ -328,4 +328,4 @@ export function bandOf(cur: Point[], prev: Point[] | undefined): Band {
 
 // ---- where a card goes deeper ----
 
-export type Deeper = { kind: 'explore'; filter: Filter } | { kind: 'table'; tab: 'sales' | 'search' | 'pages' | 'funnels' } | { kind: 'incidents' } | { kind: 'mentions' } | { kind: 'speed' } | { kind: 'ai' }
+export type Deeper = { kind: 'explore'; filter: Filter } | { kind: 'table'; tab: 'sales' | 'search' | 'pages' | 'funnels' } | { kind: 'incidents' } | { kind: 'mentions' } | { kind: 'speed' } | { kind: 'ai' } | { kind: 'all' }

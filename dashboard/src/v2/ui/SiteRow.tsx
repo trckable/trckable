@@ -1,22 +1,20 @@
 // One site in the list that opens from the header: its mark with the state dot on it (green while visits come, grey when quiet, red when down, hollow
 // when not installed), its name (its domain too, when another site has the same name), and today's visitors, or how long it has been quiet or down. Anyone who may arrange can drag the row, move it with Alt + ↑/↓ or its ⋯ menu (pin, a group).
-import { GripVertical } from 'lucide-react'
+import { Fragment } from 'react'
+import { ExternalLink, GripVertical } from 'lucide-react'
 import type { Site } from '../../lib/api'
 import { Menu } from '../../components/Menu'
 import { confirmWith } from '../../components/Confirm'
 import { fmtCompact, fmtInt } from '../../lib/format'
 import { prefetchSite } from '../../lib/dashQuery'
 import { copy } from '../../features/sites/menuCopy'
-import { copy as first } from '../../features/sites/copy'
 import { addGroup, moveTo, pin, placeKey, sectionsOf, step, unpin, type Place } from '../../features/sites/layout'
 import { dotState } from '../../features/sites/StateDot'
 import { OpenSite, openSiteTab } from '../../features/sites/OpenSite'
 import { silence } from '../../features/sitestatus/time'
 import type { Arrange } from '../../features/sites/arrange'
-import { SiteMark } from '../../components/SiteMark'
+import { MarkDot } from '../../features/sites/MarkDot'
 import type { SiteMove } from '../slots'
-
-const DOT = { now: 'now', live: '', quiet: 'quiet', stopped: 'down', new: 'off' } as const
 
 /** The short word and the tip of a down or quiet site; a quiet one with no visit on record (imported history, a script seen) has no span to tell. */
 function stateWords(s: Site, down: boolean): [string, string | undefined] {
@@ -51,9 +49,6 @@ function Tail({ s, today }: { s: Site; today?: number }) {
     </span>
   )
 }
-
-/** The dot's class: only a real problem is coloured, so a quiet site's is grey. */
-const dot = (s: Site) => (dotState(s) === 'quiet' ? 'idle' : DOT[dotState(s)])
 
 /** After a move React may re-insert the row, which drops focus: put it back. */
 function refocus(id: string) {
@@ -94,10 +89,7 @@ export function SiteRow({ site, place, on, arrange: a, today, onPick, move, clas
           moveStep(e.key === 'ArrowUp' ? -1 : 1)
         }}
       >
-        <span className="mkwrap">
-          <SiteMark site={site} size={22} />
-          <span className={`mk-dot ${move ? 'quiet' : dot(site)}`} title={move?.title ?? first.dot[dotState(site)]} />
-        </span>
+        <MarkDot site={site} size={22} className={move ? 'quiet' : undefined} title={move?.title} />
         <span className="mt2">
           <div className="nm">{name}</div>
           {move ? <div className="d state-line quiet moving" title={move.title}>{move.text}</div> : note && <div className="d">{note}</div>}
@@ -117,7 +109,7 @@ export function SiteRow({ site, place, on, arrange: a, today, onPick, move, clas
   )
 }
 
-/** The row's ⋯: Site settings first (and Install help while nothing is verified), Open site (the ↗ is hidden on touch), then the ways to arrange. */
+/** The row's ⋯ in three groups with a thin line between: Site settings (Install help while nothing is verified) and Open site (the ↗ is hidden on touch); Share, Status page, Widgets; then the ways to arrange. */
 export function RowMenu({ site, place, a, step: moveStep, settings, status }: { site: Site; place: Place; a: Arrange | null; step: (dir: -1 | 1) => void; settings?: (tab: 'site' | 'install' | 'sharing' | 'widgets') => void; status?: () => void }) {
   const here = placeKey(place)
   const sec = a ? sectionsOf(a.sites, a.layout).find((x) => x.sites.some((s) => s.id === site.id)) : undefined
@@ -141,30 +133,41 @@ export function RowMenu({ site, place, a, step: moveStep, settings, status }: { 
             {label}
           </button>
         )
+        const groups = [
+          [
+            settings && item(copy.siteSettings, () => settings('site')),
+            settings && dotState(site) === 'new' && item(copy.installHelp, () => settings('install')),
+            site.domain && (
+              <button type="button" role="menuitem" className="open-touch" onClick={() => { close(); openSiteTab(site.domain) }}>
+                <ExternalLink size={14} strokeWidth={1.75} aria-hidden="true" />
+                <span className="menu-label">{copy.openSite(site.domain)}</span>
+              </button>
+            ),
+          ],
+          [settings && item(copy.share, () => settings('sharing')), status && item(copy.statusPage, status), settings && item(copy.widgets, () => settings('widgets'))],
+          a && [
+            place.kind === 'pinned' ? item(copy.unpin, () => a.save(unpin(a.sites, a.layout, site.id), copy.unpin)) : item(copy.pin, () => a.save(pin(a.sites, a.layout, site.id), copy.pin)),
+            canUp && item(copy.up, () => moveStep(-1)),
+            canDown && item(copy.down, () => moveStep(1)),
+            ...a.layout.groups
+              .filter((g) => placeKey({ kind: 'group', name: g.name }) !== here)
+              .map((g) => item(copy.toGroup(g.name), () => go({ kind: 'group', name: g.name }, copy.toGroup(g.name)))),
+            place.kind === 'group' && item(copy.noGroup, () => go({ kind: 'rest' }, copy.noGroup)),
+            item(copy.newGroup, () => void newGroup()),
+          ],
+        ]
+        // Three groups with a thin line between; a group the role leaves empty takes its line with it.
         return (
           <>
-            {settings && item(copy.siteSettings, () => settings('site'))}
-            {settings && dotState(site) === 'new' && item(copy.installHelp, () => settings('install'))}
-            {settings && item(copy.share, () => settings('sharing'))}
-            {status && item(copy.statusPage, status)}
-            {settings && item(copy.widgets, () => settings('widgets'))}
-            {site.domain && (
-              <button type="button" role="menuitem" className="open-touch" onClick={() => { close(); openSiteTab(site.domain) }}>
-                {copy.openSite(site.domain)}
-              </button>
-            )}
-            {a && (
-              <>
-                {canUp && item(copy.up, () => moveStep(-1))}
-            {canDown && item(copy.down, () => moveStep(1))}
-            {place.kind === 'pinned' ? item(copy.unpin, () => a.save(unpin(a.sites, a.layout, site.id), copy.unpin)) : item(copy.pin, () => a.save(pin(a.sites, a.layout, site.id), copy.pin))}
-            {a.layout.groups
-              .filter((g) => placeKey({ kind: 'group', name: g.name }) !== here)
-              .map((g) => item(copy.toGroup(g.name), () => go({ kind: 'group', name: g.name }, copy.toGroup(g.name))))}
-            {place.kind === 'group' && item(copy.noGroup, () => go({ kind: 'rest' }, copy.noGroup))}
-            {item(copy.newGroup, () => void newGroup())}
-              </>
-            )}
+            {groups
+              .map((g) => (g || []).filter(Boolean))
+              .filter((g) => g.length > 0)
+              .map((g, i) => (
+                <Fragment key={i}>
+                  {i > 0 && <div role="separator" className="menu-sep" />}
+                  {g}
+                </Fragment>
+              ))}
           </>
         )
       }}
