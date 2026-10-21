@@ -2,8 +2,10 @@
 // vitals are recorded and for Search Console numbers only where it is connected, so no site is met with a stream of 404s.
 // Features with no switch are never asked about.
 import { api } from '../../lib/api'
+import { onSiteWrite } from '../../lib/siteWrites'
 
 const kept = new Map<string, { at: number; on: Promise<Set<string> | null> }>()
+onSiteWrite((area, site) => area === 'modules' && kept.delete(site)) // a switch was thrown: read them again
 
 export function moduleOn(site: string, id: string): Promise<boolean> {
   let k = kept.get(site)

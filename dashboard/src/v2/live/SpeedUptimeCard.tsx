@@ -63,7 +63,7 @@ function incidents(site: Site) {
   navigate(`/${encodeURIComponent(site.domain)}/incidents`)
 }
 
-const speedAction = { label: h.turnOnSpeed, setup: 'speed' as const }
+const speedAction = { label: h.turnOnSpeed, setup: 'speed' as const, ask: h.askSpeed }
 
 /** Speed with no figure: off, one button turns it on; on, it is only waiting for visits. */
 function SpeedEmpty({ site, recorded, both }: { site: Site; recorded?: boolean; both?: boolean }) {

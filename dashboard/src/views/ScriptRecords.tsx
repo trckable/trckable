@@ -11,7 +11,6 @@ import { api, fail, more, type ModuleInfo, type ScriptInfo, type Site } from '..
 import { words } from '../lib/errors'
 import { can } from '../lib/permissions'
 import { settingsParam } from '../lib/settings'
-import { modulesChanged } from '../lib/useMods'
 import { recordsCopy } from './recordsCopy'
 import './ScriptRecords.css'
 
@@ -54,7 +53,6 @@ export function ScriptRecords({ site, titled = true }: { site: Site; titled?: bo
       .setModule(site.id, id, enabled)
       .then((d) => {
         take(d)
-        modulesChanged() // the dashboard behind reads them again
       })
       .catch((e: unknown) => fail(e))
       .finally(() => setBusy(''))
