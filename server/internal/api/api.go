@@ -244,6 +244,9 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}", a.authed(a.site))
 	handle("PATCH /api/v1/sites/{site}", a.authed(a.updateSite))
 	handle("GET /api/v1/sites/{site}/icon", a.authed(a.siteIcon))
+	handle("GET /api/v1/sites/{site}/domain", a.authed(a.siteDomain))
+	handle("PUT /api/v1/sites/{site}/domain", a.authed(a.changeDomain))
+	handle("DELETE /api/v1/sites/{site}/domain/former/{host}", a.authed(a.endFormerDomain))
 	handle("PUT /api/v1/sites/{site}/icon", a.authed(a.setSiteIcon))
 	handle("DELETE /api/v1/sites/{site}/icon", a.authed(a.clearSiteIcon))
 	handle("POST /api/v1/sites/{site}/icon/favicon", a.authed(a.fetchFavicon))
@@ -255,6 +258,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("DELETE /api/v1/sites/{site}/widgets/{id}", a.authed(a.deleteWidget))
 	handleFunc("GET /w/{id}", a.widgetPage)
 	handle("POST /api/v1/sites/{site}/install/check", a.authed(a.checkInstall))
+	handle("POST /api/v1/sites/{site}/install/stack", a.authed(a.installStack))
 	handle("GET /api/v1/sites/{site}/setup", a.authed(a.checklist))
 	handle("PUT /api/v1/sites/{site}/setup/skip/{item}", a.authed(a.setupSkip(true)))
 	handle("DELETE /api/v1/sites/{site}/setup/skip/{item}", a.authed(a.setupSkip(false)))
@@ -1127,6 +1131,11 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 	downs, _ := a.Ctl.DownProbes(r.Context(), principalOf(r).account)
 	blocked, _ := a.Ctl.BlockedProbes(r.Context(), principalOf(r).account)
 	paused, _ := a.Ctl.PausedUptime(r.Context())
+	former, err := a.Ctl.FormerHostsByAccount(r.Context(), principalOf(r).account, a.Now())
+	if err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	talked := map[string]bool{}
 	if a.MentionsOn {
 		talked, _ = a.Ctl.SitesWithMentions(r.Context())
@@ -1154,6 +1163,7 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 		out[len(out)-1].UptimePaused = paused[s.ID]
 		out[len(out)-1].Mentions = talked[s.ID]
 		out[len(out)-1].Answers = a.AnswersOn()
+		out[len(out)-1].FormerHosts = former[s.ID]
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"sites": out})
 }

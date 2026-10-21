@@ -227,7 +227,7 @@ func (a *API) setupOf(r *http.Request, si sqlite.SiteInfo) (setupOut, error) {
 	if in.Stored, err = a.Ctl.SetupOf(ctx, si.ID); err != nil {
 		return setupOut{}, err
 	}
-	a.setupFacts(ctx, si.ID, &in)
+	a.setupFacts(ctx, si.ID, si.LastEventAt, &in)
 	if cfg, err := a.Ctl.SiteConfig(ctx, si.ID); err == nil {
 		in.OwnIPs = len(cfg.ExcludeIPs)
 		in.Goals = len(cfg.PageGoals) > 0
@@ -357,8 +357,8 @@ type factsEntry struct {
 
 // setupFacts fills in what the analytics store knows. Three paths is final
 // (kept with the site's setup row, never read again); a smaller count is kept
-// in memory for a minute.
-func (a *API) setupFacts(ctx context.Context, site string, in *setupIn) {
+// in memory for a minute, unless it was empty and the site has sent events.
+func (a *API) setupFacts(ctx context.Context, site string, lastEvent int64, in *setupIn) {
 	if in.Stored.PathsSeen >= 3 {
 		in.Known, in.Paths = true, in.Stored.PathsSeen
 	}
@@ -369,7 +369,9 @@ func (a *API) setupFacts(ctx context.Context, site string, in *setupIn) {
 	a.factsMu.Lock()
 	e, ok := a.facts[site]
 	a.factsMu.Unlock()
-	if !ok || in.Now.Sub(e.at) >= factsFor {
+	// An empty count is reused only while the site has sent nothing: the first visit shows at once.
+	arrived := ok && e.f.Paths == 0 && lastEvent > 0
+	if !ok || arrived || in.Now.Sub(e.at) >= factsFor {
 		f, err := q.Setup(ctx, site, in.Stored.PathsSeen >= 3)
 		if err != nil {
 			return

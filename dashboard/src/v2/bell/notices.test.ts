@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { arrange, badge, fromAnswers, othersOf, OTHERS, rowsOf, settle, unreadCount, withFeed, type Notice } from './notices'
+import { arrange, badge, fromAnswers, fromIncidents, othersOf, OTHERS, rowsOf, settle, unreadCount, withFeed, type Notice } from './notices'
 
 const n = (id: string, at: number, kind: Notice['kind'] = 'down'): Notice => ({ id, kind, site: 'a.com', title: id, sub: '', at })
 
@@ -99,5 +99,56 @@ describe('the bell and Answers', () => {
 
   it('is nothing when nothing changed', () => {
     expect(fromAnswers({}, 'a.com', 9000, () => undefined)).toEqual([])
+  })
+})
+
+describe('an incident is one row', () => {
+  const inc = (id: string, started_at: number, ended_at: number | null, kind: 'down' | 'quiet' = 'down') => ({ id, site: 's1', kind, started_at, ended_at, cause: '', expected_visits: null, note: '' })
+  const dom = (id: string) => (id === 's1' ? 'a.com' : undefined)
+  const now = 1_000_000
+
+  it('is red and “down since” while it goes on, with no row for a back-up it has not had', () => {
+    const out = fromIncidents([inc('i1', now - 600, null)], dom, now)
+    expect(out).toHaveLength(1)
+    expect(out[0]).toMatchObject({ id: 'down:i1', kind: 'down', bad: true, at: now - 600, when: '' })
+    expect(out[0].title).toMatch(/^a\.com down since \d\d:\d\d$/)
+  })
+
+  it('is one calm row with its span once the server has closed it, paired by its id', () => {
+    const out = fromIncidents([inc('i1', now - 900, now - 300)], dom, now)
+    expect(out).toHaveLength(1)
+    expect(out[0]).toMatchObject({ id: 'up:i1', kind: 'up', at: now - 300 })
+    expect(out[0].bad).toBeUndefined()
+    expect(out[0].title).toBe('a.com was down 10m')
+    expect(out[0].when).toMatch(/^\d\d:\d\d–\d\d:\d\d$/)
+  })
+
+  it('treats an end in the future as still going, and leaves out quiet spells and unknown sites', () => {
+    expect(fromIncidents([inc('i1', now - 60, now + 60)], dom, now)[0].kind).toBe('down')
+    expect(fromIncidents([inc('i2', now - 60, null, 'quiet'), { ...inc('i3', now - 60, null), site: 'zz' }], dom, now)).toEqual([])
+  })
+})
+
+describe('busy moments of several sites at the same time', () => {
+  const busy = (id: string, site: string, at: number): Notice => ({ id, kind: 'spike', site, title: id, sub: '', at })
+
+  it('are one row naming how many, newest first, unread while any of them is', () => {
+    const rows = rowsOf([busy('a', 'a.com', 1000), busy('b', 'b.com', 900), n('d', 800)], new Set(['a']))
+    expect(rows.map((r) => r.id)).toEqual(['busy:a', 'd'])
+    expect(rows[0].title).toBe('2 sites are busy')
+    expect(rows[0].members?.map((m) => m.site)).toEqual(['a.com', 'b.com'])
+    expect(rows[0].unread).toBe(true)
+    expect(rowsOf([busy('a', 'a.com', 1000), busy('b', 'b.com', 900)], new Set(['a', 'b']))[0].unread).toBe(false)
+  })
+
+  it('stay apart when far apart in time, or when it is one site twice', () => {
+    expect(rowsOf([busy('a', 'a.com', 5000), busy('b', 'b.com', 1000)], new Set()).map((r) => r.id)).toEqual(['a', 'b'])
+    expect(rowsOf([busy('a', 'a.com', 1000), busy('b', 'a.com', 900)], new Set()).map((r) => r.id)).toEqual(['a', 'b'])
+  })
+
+  it('keep a site to its newest in the row and the order of every other row', () => {
+    const rows = rowsOf([busy('a', 'a.com', 1000), busy('a2', 'a.com', 950), busy('b', 'b.com', 900), n('x', 990)], new Set())
+    expect(rows.map((r) => r.id)).toEqual(['busy:a', 'x', 'a2'])
+    expect(rows[0].members?.map((m) => m.id)).toEqual(['a', 'b'])
   })
 })

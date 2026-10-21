@@ -3,23 +3,23 @@
 import { useState } from 'react'
 import type { Alert } from '../../lib/api'
 import { copy } from './copy'
-import { METRICS, PERIODS, reachable, ruleOf, type Metric, type Period, type Rule as RuleValue } from './model'
+import { METRICS, PERIODS, reachable, ruleOf, shown, type Metric, type Period, type Rule as RuleValue } from './model'
 import './Rule.css'
 
-export function ThresholdRule({ alert, onSave }: { alert?: Alert; onSave: (rule: RuleValue) => void }) {
+export function ThresholdRule({ alert, digits, onSave }: { alert?: Alert; digits?: number; onSave: (rule: RuleValue) => void }) {
   const rule = ruleOf(alert)
-  const [text, setText] = useState(String(rule.threshold))
+  const [text, setText] = useState(shown(rule.metric, rule.threshold, digits))
   const [seen, setSeen] = useState(rule.threshold)
   if (seen !== rule.threshold) {
     setSeen(rule.threshold)
-    setText(String(rule.threshold))
+    setText(shown(rule.metric, rule.threshold, digits))
   }
   const finish = () => {
     const n = Number(text)
-    if (n !== rule.threshold && reachable(rule.metric, n)) onSave({ ...rule, threshold: n })
-    else setText(String(rule.threshold))
+    if (n !== rule.threshold && reachable(rule.metric, n, digits)) onSave({ ...rule, threshold: n })
+    else setText(shown(rule.metric, rule.threshold, digits))
   }
-  const metric = (m: Metric) => onSave({ ...rule, metric: m, threshold: reachable(m, rule.threshold) ? rule.threshold : Math.ceil(rule.threshold) })
+  const metric = (m: Metric) => onSave({ ...rule, metric: m, threshold: reachable(m, rule.threshold, digits) ? rule.threshold : Math.ceil(rule.threshold) })
   return (
     <span className="th-rule">
       {copy.lead}

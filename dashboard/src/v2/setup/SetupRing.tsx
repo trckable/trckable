@@ -22,7 +22,7 @@ const ringWords = (mode: string, done: number, counted: number) => (mode === 'ch
 /** fresh: the site has no verified install yet and the page is its setup screen; visited: its first visit has landed (Install is then done). */
 export function SetupRing({ site, onGoal, fresh = false, visited = false }: { site: Site | null; onGoal: () => void; fresh?: boolean; visited?: boolean }) {
   const on = !!site && !isShared() && can('setup.run')
-  const { state, run, failed } = useSetup(site, on, fresh)
+  const { state, run, failed, refreshIfOld } = useSetup(site, on, fresh, visited)
   const { hidden, hide } = useHidden(on)
   const since = useDoneSince(site?.id ?? null, state ? state.all_set : null)
   const [now] = useState(Date.now)
@@ -32,6 +32,10 @@ export function SetupRing({ site, onGoal, fresh = false, visited = false }: { si
   // Another site: the panel of the last one is shut.
   const id = site?.id
   useEffect(close, [id, close])
+  const onRing = () => {
+    if (!open) refreshIfOld()
+    toggle()
+  }
   const mode = site && state ? ringMode({ state, hidden: hidden(site.id, left(state)), doneSince: since, now }) : 'none'
   const said = site && state && mode !== 'none' ? ringWords(mode, state.done, state.counted) : null
   useEffect(() => {
@@ -48,7 +52,7 @@ export function SetupRing({ site, onGoal, fresh = false, visited = false }: { si
   const words = said ?? ''
   return (
     <div className="ringw" ref={attach}>
-      <button type="button" className="ringb" data-ring={mode} aria-haspopup="dialog" aria-expanded={open} aria-label={copy.ringLabel(state.done, state.counted)} title={words} onClick={toggle}>
+      <button type="button" className="ringb" data-ring={mode} aria-haspopup="dialog" aria-expanded={open} aria-label={copy.ringLabel(state.done, state.counted)} title={words} onClick={onRing}>
         <RingMark done={state.done} counted={state.counted} check={mode === 'check'} />
         <span className="rtext">{words}</span>
       </button>
