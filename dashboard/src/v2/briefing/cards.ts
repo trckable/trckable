@@ -401,7 +401,8 @@ export function cardsOf(i: CardsIn): Story[] {
       deeper: { kind: 'speed' },
     })
   }
-  return out.sort((a, b) => b.score - a.score)
+  // Problems before wins, then the bigger change.
+  return out.sort((a, b) => Number(!!b.bad) - Number(!!a.bad) || b.score - a.score)
 }
 
 /** The topics a card does not cover, said as "everything else was normal: devices, pages". */
