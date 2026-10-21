@@ -30,16 +30,16 @@ describe('a Why? text', () => {
   })
 
   it('offers Ask Peek with the question and its numbers when the build has Peek', () => {
-    const askPeek = vi.fn()
+    const askPeekNow = vi.fn()
     act(() =>
       root.render(
-        <V2ExtrasContext.Provider value={{ askPeek }}>
+        <V2ExtrasContext.Provider value={{ askPeekNow }}>
           <WhyBody why={why} />
         </V2ExtrasContext.Provider>,
       ),
     )
     expect(button()?.textContent).toBe('Ask Peek')
     act(() => button()?.click())
-    expect(askPeek).toHaveBeenCalledWith(`Why is this? ${why.cause}`)
+    expect(askPeekNow).toHaveBeenCalledWith(`Why is this? ${why.cause}`)
   })
 })
