@@ -48,7 +48,7 @@ func (h *Handler) Crawl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	u, ok := parsePageURL(p.URL, site.HashMode)
-	if !ok || !hostAllowed(u.Host, site, false) {
+	if !ok || !hostAllowed(u.Host, site, false, h.Now()) {
 		h.reject(w, http.StatusBadRequest, errHost)
 		return
 	}

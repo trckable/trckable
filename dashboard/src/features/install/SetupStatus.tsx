@@ -85,7 +85,7 @@ export function SetupStatus({ site, check, arrived }: { site: Site; check: Insta
   const tone = toneOf(stage)
   return (
     <div className={'setup-status ' + tone} aria-live="polite" data-stage={stage}>
-      <Figure name="logic" minWidth={641} state={boardOf[tone]} className="setup-fig" />
+      <Figure name="logic" state={boardOf[tone]} className="setup-fig" />
       <div className="setup-head">
         {tone === 'ok' && <Check size={18} strokeWidth={2.25} aria-hidden="true" />}
         {tone === 'warn' && <TriangleAlert size={18} strokeWidth={1.75} aria-hidden="true" />}
