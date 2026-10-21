@@ -2,35 +2,26 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import type { Milestone, Site } from '../../lib/api'
 import { lazyLoad } from '../../lib/lazyLoad'
-import { dayWords } from '../dayWords'
 import { mentionsPath } from '../../features/mentions/route'
 import { navigate } from '../../lib/url'
 import { openSettings } from '../../lib/settings'
-import { BellMenu, type BellRow } from '../ui/BellMenu'
+import { toast } from '../../components/Toast'
+import { can as allowed } from '../../lib/permissions'
+import { BellMenu, type BellRow, type RowAction } from '../ui/BellMenu'
+import { alertOf, setAlertOn } from './alertState'
 import { copy } from './copy'
+import { timeOf } from './days'
 import { badge, rowsOf, settle, unreadCount, type Notice, type NoticeRow } from './notices'
 import { useBellAlert } from './useBellAlert'
 import { OPEN_GAP_MS, type useNotices } from './useNotices'
-import { dateFmt } from '../../lib/format'
 import { QUERY } from '../../kit/breakpoints'
 
 const MilestoneSheet = lazyLoad(() => import('./MilestoneSheet'))
 
-/** A moment's date ("2026-10-18") and clock ("09:10") in a zone (the viewer's own when none is given). */
-function parts(at: number, zone?: string): { day: string; time: string } {
-  const p = Object.fromEntries(dateFmt('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: zone }).formatToParts(new Date(at * 1000)).map((x) => [x.type, x.value]))
-  return { day: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}` }
-}
-
-/** "16:05" for today, "Thu 15 Oct 16:05" for another day: the viewer's day and clock, not UTC. `now` and `zone` are for tests. */
-export function when(at: number, now = Date.now() / 1000, zone?: string): string {
-  const d = parts(at, zone)
-  return d.day === parts(now, zone).day ? d.time : `${dayWords(d.day)} ${d.time}`
-}
-
 function go(n: Notice) {
   const base = '/' + encodeURIComponent(n.site)
   if (n.kind === 'down' || n.kind === 'up') navigate(`${base}/incidents`)
+  else if (n.kind === 'spike') navigate(`${base}?view=live`)
   else if (n.kind === 'mention') navigate(mentionsPath(n.site))
   else navigate(`${base}?view=briefing&period=${n.kind === 'weekly' ? '7d' : 'today'}`)
 }
@@ -79,8 +70,45 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
     return () => q.removeEventListener('change', f)
   }, [])
   if (!can) return null
-  const rows: BellRow[] = listed.map((n) => ({ id: n.id, kind: n.kind, title: n.title, sub: `${n.sub} · ${when(n.at)}`, unread: n.unread, dismissable: n.dismissable }))
-  const old: BellRow[] = (archive?.items ?? []).map((n) => ({ id: n.id, kind: n.kind, title: n.title, sub: `${n.sub} · ${when(n.at)}`, unread: false }))
+  const { sites } = notices
+  /** Every notice put away at once (a row of several puts all of them away). */
+  const away = (n: Notice) => {
+    const all = n.members ?? [n]
+    setGone((g) => new Set([...g, n.id, ...all.map((m) => m.id)]))
+    all.forEach((m) => dismiss?.(m.id))
+  }
+  const mute = async (s: Site, kind: NonNullable<ReturnType<typeof alertOf>>) => {
+    try {
+      toast((await setAlertOn(s.id, kind, false)) === 'done' ? copy.muted(s.domain) : copy.mutedAlready(s.domain))
+    } catch {
+      toast(copy.mutedFailed, 'error')
+    }
+  }
+  /** What the row's ⋯ offers. Mute and change are the alert's own settings, for whoever may change alerts; a row of several sites has none (it names no one site). */
+  const actionsOf = (n: Notice, archived: boolean): RowAction[] => {
+    const out: RowAction[] = []
+    const s = n.members ? undefined : sites.find((x) => (n.siteId ? x.id === n.siteId : x.domain === n.site))
+    const kind = alertOf(n)
+    if (s && kind && allowed('alert.manage')) {
+      out.push({ key: 'mute', label: copy.mute, run: () => void mute(s, kind) }, { key: 'change', label: copy.change, run: () => openSettings(s, 'alerts') })
+    }
+    if (n.dismissable && !archived && dismiss) out.push({ key: 'archive', label: copy.archive, run: () => away(n) })
+    return out
+  }
+  const rowOf = (n: Notice & { unread: boolean }, archived: boolean): BellRow => ({
+    id: n.id,
+    kind: n.kind,
+    at: n.at,
+    title: n.title,
+    sub: n.sub,
+    time: n.members ? '' : (n.when ?? timeOf(n.at)),
+    unread: n.unread,
+    bad: n.bad,
+    lines: n.members?.map((m) => ({ id: m.id, text: `${m.site} · ${timeOf(m.at)}` })),
+    actions: actionsOf(n, archived),
+  })
+  const rows: BellRow[] = listed.map((n) => rowOf(n, false))
+  const old: BellRow[] = (archive?.items ?? []).map((n) => rowOf({ ...n, unread: false }, true))
   return (
     <>
     <BellMenu
@@ -98,22 +126,17 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
       none={copy.none}
       sheet={sheet}
       onPick={(id) => {
-        mark(id)
-        const n = listed.find((x) => x.id === id) ?? archive?.items.find((x) => x.id === id)
-        n?.read?.()
+        // A row of several is read as one: opening any of its sites reads them all.
+        const group = listed.find((x) => x.members?.some((m) => m.id === id))
+        const n = (group?.members ?? [...listed, ...(archive?.items ?? [])]).find((x) => x.id === id)
+        mark(group?.members ? group.members.map((m) => m.id) : id)
+        for (const m of group?.members ?? [n]) m?.read?.()
         if (n?.milestone && site && n.site === site.domain) setTold(n.milestone)
         else if (n?.open) n.open()
         else if (n) go(n)
       }}
       onAll={markAll}
-      onDismiss={
-        dismiss &&
-        ((id) => {
-          setGone((g) => new Set(g).add(id))
-          dismiss(id)
-        })
-      }
-      archive={archive && { rows: old, load: archive.load, loading: archive.loading, words: archive.words }}
+      archive={archive && { rows: old, load: archive.load, loading: archive.loading, none: archive.words.none }}
       onSettings={() => site && openSettings(site, 'alerts')}
     />
     {told && site && (

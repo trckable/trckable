@@ -1,0 +1,1 @@
+The notifications panel lists rows under Today, Yesterday and the date with only their time, tells each time a site was down as one row (red while it goes on), merges busy moments of several sites into one, and gives every alert row a ⋯ to mute that alert for the site or change it.

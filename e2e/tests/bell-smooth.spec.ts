@@ -117,7 +117,7 @@ for (const width of [1440, 390]) {
       document.dispatchEvent(new Event('visibilitychange'))
     })
     await expect(menu.locator('.nf')).toHaveCount(4)
-    await expect(menu.locator('.nf').first()).toContainText('stopped answering')
+    await expect(menu.locator('.nf').first()).toContainText('down since')
     await page.waitForTimeout(600)
     expect((await menu.locator('.nft b').allTextContents()).slice(1)).toEqual(order)
     const cls = await page.evaluate(() => (window as unknown as { __p: Probe }).__p.cls)

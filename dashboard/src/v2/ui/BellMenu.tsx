@@ -1,23 +1,42 @@
 // The bell at the end of the header: a dot with how many are unread, and the list under it (a sheet on a phone).
 // Markup and classes are the walkthrough's own.
-import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { reducedMotion } from '../../lib/motion'
 import { MkPortal } from './Portal'
 import { useMenu } from './useMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
 import { BELL_PATH } from './bellIcons'
+import { byDay } from '../bell/days'
+import { copy } from '../bell/copy'
 import './bellMenu.css'
+
+/** What a row's ⋯ offers: mute it for the site, change its alert, put it away. */
+export interface RowAction {
+  key: 'mute' | 'change' | 'archive'
+  label: string
+  run: () => void
+}
 
 export interface BellRow {
   id: string
   kind: string
+  /** Unix seconds: the day it is listed under. */
+  at: number
   title: string
+  /** What else is said under the title. */
   sub: string
+  /** The row's time ('' for none). */
+  time: string
   unread: boolean
-  dismissable?: boolean
+  /** Still going: drawn red. */
+  bad?: boolean
+  /** Several in one row: each listed under the title, and opens on its own. */
+  lines?: { id: string; text: string }[]
+  actions?: RowAction[]
 }
 
 const SLIDE_MS = 260
+const MORE = '⋯'
 
 /** The box that scrolls the rows: the sheet's body on a phone, the list itself under the bell. */
 const scroller = (list: HTMLElement): HTMLElement => list.closest<HTMLElement>('.cdb') ?? list
@@ -99,18 +118,108 @@ interface BellProps {
   onPick: (id: string) => void
   onAll: () => void
   onSettings: () => void
-  /** A build with its own list: a row can be put away, and the archive is a second view. */
-  onDismiss?: (id: string) => void
-  archive?: { rows: BellRow[]; load: () => void; loading: boolean; words: { dismiss: string; archive: string; fresh: string; none: string } }
+  /** A build with its own list: the archive is a second view of it. */
+  archive?: { rows: BellRow[]; load: () => void; loading: boolean; none: string }
 }
 
 const EMPTY: ReadonlySet<string> = new Set()
+
+/** The ⋯ of a row and what it offers, listed right under the row (no popover to place inside a list that scrolls). */
+function RowMenu({ row, close }: { row: BellRow; close: () => void }) {
+  const [on, setOn] = useState(false)
+  const button = useRef<HTMLButtonElement>(null)
+  const actions = row.actions ?? []
+  // Escape shuts the choices first (before the bell's own Escape, which would shut the whole list) and gives the focus back to the ⋯.
+  useEffect(() => {
+    if (!on) return
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      e.stopPropagation()
+      setOn(false)
+      button.current?.focus()
+    }
+    window.addEventListener('keydown', esc, true)
+    return () => window.removeEventListener('keydown', esc, true)
+  }, [on])
+  if (actions.length === 0) return null
+  return (
+    <div className="nfm">
+      <button ref={button} type="button" className="nfx" aria-label={copy.more} title={copy.more} aria-haspopup="menu" aria-expanded={on} onClick={() => setOn(!on)}>
+        {MORE}
+      </button>
+      {on && (
+        <div className="nfa" role="menu">
+          {actions.map((a) => (
+            <button
+              key={a.key}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOn(false)
+                a.run()
+                if (a.key === 'change') close()
+              }}
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Icon({ kind }: { kind: string }) {
+  return (
+    <svg className={`nfi k-${kind}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {BELL_PATH[kind] ?? BELL_PATH.weekly}
+    </svg>
+  )
+}
+
+function Row({ n, p, close }: { n: BellRow; p: BellProps; close: () => void }) {
+  const pick = (id: string) => {
+    p.onPick(id)
+    close()
+  }
+  const under = [n.sub, n.time].filter(Boolean).join(' · ')
+  return (
+    <div className="nfw" data-id={n.id}>
+      {n.lines ? (
+        <div className={`nf grp ${n.unread ? 'unread' : ''}`}>
+          <Icon kind={n.kind} />
+          <span className="nft">
+            <b>{n.title}</b>
+            {n.lines.map((l) => (
+              <button key={l.id} type="button" className="nfn" onClick={() => pick(l.id)}>
+                {l.text}
+              </button>
+            ))}
+            {under && <small>{under}</small>}
+          </span>
+          {n.unread && <i className="nfd" />}
+        </div>
+      ) : (
+        <button type="button" className={`nf ${n.unread ? 'unread' : ''}${n.bad ? ' bad' : ''}`} onClick={() => pick(n.id)}>
+          <Icon kind={n.kind} />
+          <span className="nft">
+            <b>{n.title}</b>
+            {under && <small>{under}</small>}
+          </span>
+          {n.unread && <i className="nfd" />}
+        </button>
+      )}
+      <RowMenu row={n} close={close} />
+    </div>
+  )
+}
 
 function List(p: BellProps & { close: () => void }) {
   const [old, setOld] = useState(false)
   const rows = old && p.archive ? p.archive.rows : p.rows
   const list = useRef<HTMLDivElement>(null)
   useArrival(list, p.fresh ?? EMPTY, rows)
+  const waiting = p.loading && !old
   return (
     <>
       <div className="nfh">
@@ -120,7 +229,7 @@ function List(p: BellProps & { close: () => void }) {
         </button>
       </div>
       <div className="nfl" ref={list} aria-busy={p.loading || undefined}>
-        {p.loading && !old && (
+        {waiting && (
           <div className="nfs" aria-hidden="true">
             <i />
             <span>
@@ -129,41 +238,23 @@ function List(p: BellProps & { close: () => void }) {
             </span>
           </div>
         )}
-        {rows.length === 0 && !(p.loading && !old) && <div className="xnone">{old && p.archive ? p.archive.words.none : p.none}</div>}
-        {!(p.loading && !old) &&
-          rows.map((n) => (
-          <div key={n.id} className="nfw" data-id={n.id}>
-          <button
-            type="button"
-            className={`nf ${n.unread ? 'unread' : ''}`}
-            onClick={() => {
-              p.onPick(n.id)
-              p.close()
-            }}
-          >
-            <svg className={`nfi k-${n.kind}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              {BELL_PATH[n.kind] ?? BELL_PATH.weekly}
-            </svg>
-            <span className="nft">
-              <b>{n.title}</b>
-              <small>{n.sub}</small>
-            </span>
-            {n.unread && <i className="nfd" />}
-          </button>
-          {n.dismissable && !old && p.onDismiss && (
-            <button type="button" className="nfx" aria-label={p.archive?.words.dismiss} title={p.archive?.words.dismiss} onClick={() => p.onDismiss?.(n.id)}>
-              ×
-            </button>
-          )}
-          </div>
-        ))}
-      </div>
-      <div className="nff">
-        {p.archive && (
-          <button type="button" className="lk3" aria-pressed={old} onClick={() => { if (!old) p.archive?.load(); setOld(!old) }}>
-            {old ? p.archive.words.fresh : p.archive.words.archive}
+        {rows.length === 0 && !waiting && <div className="xnone">{old && p.archive ? p.archive.none : p.none}</div>}
+        {!waiting &&
+          byDay(rows).map((d) => (
+            <Fragment key={d.day}>
+              <h3 className="nfdy">{d.label}</h3>
+              {d.rows.map((n) => (
+                <Row key={n.id} n={n} p={p} close={p.close} />
+              ))}
+            </Fragment>
+          ))}
+        {p.archive && !waiting && (
+          <button type="button" className="lk3 nfar" aria-pressed={old} onClick={() => { if (!old) p.archive?.load(); setOld(!old) }}>
+            {old ? copy.showNew : copy.showArchived}
           </button>
         )}
+      </div>
+      <div className="nff">
         <button type="button" className="lk3" onClick={() => { p.onSettings(); p.close() }}>
           {p.settings}
         </button>
