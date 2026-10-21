@@ -2278,6 +2278,7 @@ export default {
   'briefing.cards.goalYesterday': 'ieri',
   'briefing.cards.goalPeriod': 'in questo periodo',
   'briefing.cards.goalSub': (n: string, w: string, r: string) => `${n} ${w} · di solito ${r}`,
+  'briefing.cards.goalSubBare': (n: string, w: string) => `${n} ${w}`,
   'briefing.cards.goalUsually': (r: string) => `di solito ${r}`,
   'briefing.cards.goalUsualTag': 'solito',
   'briefing.cards.goalAskUp': (n: string, p: number, w: string) => `Perché ${n} è salito del ${p}% ${w}?`,

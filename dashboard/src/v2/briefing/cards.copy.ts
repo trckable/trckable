@@ -52,6 +52,7 @@ export const copy = defineCopy('briefing.cards', {
   goalYesterday: 'yesterday',
   goalPeriod: 'in this period',
   goalSub: (n: string, when: string, range: string) => `${n} ${when} · usually ${range}`,
+  goalSubBare: (n: string, when: string) => `${n} ${when}`,
   goalUsually: (range: string) => `usually ${range}`,
   goalUsualTag: 'usual',
   goalAskUp: (name: string, pct: number, when: string) => `Why did ${name} go up ${pct}% ${when}?`,

@@ -314,7 +314,7 @@ function goalCard(i: CardsIn): Story | null {
     bad: rows.some((x) => x.st === 'dn'),
     head: goalHead(g.name, up, g.pct),
     vis: { k: 'goals', rows },
-    why: copy.goalSub(fmtInt(Math.round(g.v)), goalWhen(i.unit), range),
+    why: g.hi >= 1 ? copy.goalSub(fmtInt(Math.round(g.v)), goalWhen(i.unit), range) : copy.goalSubBare(fmtInt(Math.round(g.v)), goalWhen(i.unit)),
     ask: goalAsk(g.name, up, g.pct, goalWhen(i.unit)),
     val: fmtInt(Math.round(g.v)),
     m: g.v,

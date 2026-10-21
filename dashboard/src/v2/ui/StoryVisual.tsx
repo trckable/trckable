@@ -106,7 +106,7 @@ function pictureOf(v: Vis): ReactNode {
       <div className={`mk-goal ${g.st}`} key={g.name}>
         <span className="gn">
           {g.name}
-          <small>{cardCopy.goalUsually(`${fmtInt(Math.max(0, Math.round(g.lo)))}–${fmtInt(Math.round(g.hi))}`)}</small>
+          {g.hi >= 1 && <small>{cardCopy.goalUsually(`${fmtInt(Math.max(0, Math.round(g.lo)))}–${fmtInt(Math.round(g.hi))}`)}</small>}
         </span>
         <span className="gr">
           <Rng v={g.v} lo={g.lo} hi={g.hi} max={Math.max(g.v, g.hi, 1) * 1.3} />

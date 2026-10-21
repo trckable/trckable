@@ -2281,6 +2281,7 @@ export default {
   'briefing.cards.goalYesterday': 'gestern',
   'briefing.cards.goalPeriod': 'in diesem Zeitraum',
   'briefing.cards.goalSub': (n: string, w: string, r: string) => `${n} ${w} · üblich ${r}`,
+  'briefing.cards.goalSubBare': (n: string, w: string) => `${n} ${w}`,
   'briefing.cards.goalUsually': (r: string) => `üblich ${r}`,
   'briefing.cards.goalUsualTag': 'üblich',
   'briefing.cards.goalAskUp': (n: string, p: number, w: string) => `Warum ist ${n} ${w} um ${p} % gestiegen?`,

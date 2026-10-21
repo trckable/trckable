@@ -2278,6 +2278,7 @@ export default {
   'briefing.cards.goalYesterday': 'gisteren',
   'briefing.cards.goalPeriod': 'in deze periode',
   'briefing.cards.goalSub': (n: string, w: string, r: string) => `${n} ${w} · gebruikelijk ${r}`,
+  'briefing.cards.goalSubBare': (n: string, w: string) => `${n} ${w}`,
   'briefing.cards.goalUsually': (r: string) => `gebruikelijk ${r}`,
   'briefing.cards.goalUsualTag': 'gebruikelijk',
   'briefing.cards.goalAskUp': (n: string, p: number, w: string) => `Waarom is ${n} ${w} met ${p}% gestegen?`,
