@@ -306,7 +306,9 @@ test('Next.js: <Analytics />, the route and the two variables count, through you
   }
   expect(process.env.TRCKABLE_PROXY_KEY).toBe(key)
   const { POST } = await import(join(PKG, 'dist', 'next.js'))
-  const js = await bundle(component(layout))
+  // The route is the optional extra: its snippet says to drop host, and then events go to the page's own /api/e.
+  expect(route).toContain('remove host=')
+  const js = await bundle(component(layout.replace(/ host="[^"]*"/, '')))
   const context = await visitorContext(browser)
   const page = await context.newPage()
   await page.route('http://example.com/**', async (r) => {
