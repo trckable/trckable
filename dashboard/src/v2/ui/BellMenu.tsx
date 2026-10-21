@@ -1,20 +1,40 @@
 // The bell at the end of the header: a dot with how many are unread, and the list under it (a sheet on a phone).
 // Markup and classes are the walkthrough's own.
-import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
+import { Check, ListFilter, MoreHorizontal, X } from 'lucide-react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { reducedMotion } from '../../lib/motion'
+import { Popover } from '../../kit/Popover'
 import { MkPortal } from './Portal'
 import { useMenu } from './useMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
 import { BELL_PATH } from './bellIcons'
+import { byDay } from '../bell/days'
+import { copy } from '../bell/copy'
 import './bellMenu.css'
+
+/** What a row's ⋯ offers: mute it for the site, change its alert, put it away. */
+export interface RowAction {
+  key: 'mute' | 'change' | 'archive'
+  label: string
+  run: () => void
+}
 
 export interface BellRow {
   id: string
   kind: string
+  /** Unix seconds: the day it is listed under. */
+  at: number
   title: string
+  /** What else is said under the title. */
   sub: string
+  /** The row's time ('' for none). */
+  time: string
   unread: boolean
-  dismissable?: boolean
+  /** Still going: drawn red. */
+  bad?: boolean
+  /** Several in one row: each listed under the title, and opens on its own. */
+  lines?: { id: string; text: string }[]
+  actions?: RowAction[]
 }
 
 const SLIDE_MS = 260
@@ -99,28 +119,185 @@ interface BellProps {
   onPick: (id: string) => void
   onAll: () => void
   onSettings: () => void
-  /** A build with its own list: a row can be put away, and the archive is a second view. */
-  onDismiss?: (id: string) => void
-  archive?: { rows: BellRow[]; load: () => void; loading: boolean; words: { dismiss: string; archive: string; fresh: string; none: string } }
+  /** The kinds the list can be narrowed to, and (with several sites) the site; a dot says there is something unread under it. */
+  filter?: {
+    groups: { id: string; label: string; on: boolean; dot: boolean }[]
+    onGroup: (id: string) => void
+    sites?: { value: string; label: string; on: boolean }[]
+    onSite: (site: string) => void
+    /** The choice in words ("Down · history.example"); '' when the list is not narrowed. */
+    active: string
+    onClear: () => void
+  }
+  /** A build with its own list: the archive is a second view of it. */
+  archive?: { rows: BellRow[]; load: () => void; loading: boolean; none: string }
 }
 
 const EMPTY: ReadonlySet<string> = new Set()
 
-function List(p: BellProps & { close: () => void }) {
+/** The ⋯ of a row and what it offers: the kit's popover under the button (a sheet on a phone), over the list, so no row moves. */
+function RowMenu({ row, close }: { row: BellRow; close: () => void }) {
+  const actions = row.actions ?? []
+  if (actions.length === 0) return null
+  return (
+    <Popover
+      label={copy.more}
+      className="nfpop"
+      trigger={(t) => (
+        <button type="button" className="nfx" aria-label={copy.more} title={copy.more} {...t}>
+          <MoreHorizontal size={18} aria-hidden="true" />
+        </button>
+      )}
+    >
+      {(shut) => (
+        <div role="menu">
+          {actions.map((a) => (
+            <button
+              key={a.key}
+              type="button"
+              role="menuitem"
+              className="nfpi"
+              onClick={() => {
+                shut()
+                a.run()
+                if (a.key === 'change') close()
+              }}
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </Popover>
+  )
+}
+
+function Icon({ kind }: { kind: string }) {
+  return (
+    <svg className={`nfi k-${kind}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {BELL_PATH[kind] ?? BELL_PATH.weekly}
+    </svg>
+  )
+}
+
+function Row({ n, p, close }: { n: BellRow; p: BellProps; close: () => void }) {
+  const pick = (id: string) => {
+    p.onPick(id)
+    close()
+  }
+  const under = [n.sub, n.time].filter(Boolean).join(' · ')
+  return (
+    <div className="nfw" data-id={n.id}>
+      {n.lines ? (
+        <div className={`nf grp ${n.unread ? 'unread' : ''}`}>
+          <Icon kind={n.kind} />
+          <span className="nft">
+            <b>{n.title}</b>
+            {n.lines.map((l) => (
+              <button key={l.id} type="button" className="nfn" onClick={() => pick(l.id)}>
+                {l.text}
+              </button>
+            ))}
+            {under && <small>{under}</small>}
+          </span>
+          {n.unread && <i className="nfd" />}
+        </div>
+      ) : (
+        <button type="button" className={`nf ${n.unread ? 'unread' : ''}${n.bad ? ' bad' : ''}`} onClick={() => pick(n.id)}>
+          <Icon kind={n.kind} />
+          <span className="nft">
+            <b>{n.title}</b>
+            {under && <small>{under}</small>}
+          </span>
+          {n.unread && <i className="nfd" />}
+        </button>
+      )}
+      <RowMenu row={n} close={close} />
+    </div>
+  )
+}
+
+/** The one filter button: a quiet icon with a dot while the list is narrowed, and the kit's popover (a sheet on a phone) with the kinds and the sites. */
+function FilterMenu({ f }: { f: NonNullable<BellProps['filter']> }) {
+  const group = (label: string, items: { id: string; label: string; on: boolean; dot?: boolean; pick: () => void }[], shut: () => void) => (
+    <div role="group" aria-label={label} className="nfg">
+      <h4>{label}</h4>
+      {items.map((o) => (
+        <button
+          key={o.id}
+          type="button"
+          role="menuitemradio"
+          aria-checked={o.on}
+          className="nfpi"
+          onClick={() => {
+            o.pick()
+            shut()
+          }}
+        >
+          <span className="nfpl">{o.label}</span>
+          {o.dot && <i className="nfd sm" aria-hidden="true" />}
+          {o.on && <Check size={16} aria-hidden="true" />}
+        </button>
+      ))}
+    </div>
+  )
+  return (
+    <Popover
+      label={copy.filter}
+      className="nfpop"
+      trigger={(t) => (
+        <button type="button" className="nfq" aria-label={f.active ? `${copy.filter}: ${f.active}` : copy.filter} title={copy.filter} {...t}>
+          <ListFilter size={18} aria-hidden="true" />
+          {f.active && <i className="nfd sm" aria-hidden="true" />}
+        </button>
+      )}
+    >
+      {(shut) => (
+        <div role="menu">
+          {group(copy.filterLabel, f.groups.map((g) => ({ id: g.id, label: g.label, on: g.on, dot: g.dot, pick: () => f.onGroup(g.id) })), shut)}
+          {f.sites && group(copy.siteLabel, f.sites.map((o) => ({ id: o.value || 'all', label: o.label, on: o.on, pick: () => f.onSite(o.value) })), shut)}
+        </div>
+      )}
+    </Popover>
+  )
+}
+
+/** What sits in the panel's header row: the filter and Mark all read. */
+function Tools(p: BellProps) {
+  return (
+    <span className="nftools">
+      {p.filter && <FilterMenu f={p.filter} />}
+      <button type="button" className="lk3" disabled={p.loading || !p.rows.some((r) => r.unread)} onClick={p.onAll}>
+        {p.markAll}
+      </button>
+    </span>
+  )
+}
+
+function List(p: BellProps & { close: () => void; bare?: boolean }) {
   const [old, setOld] = useState(false)
   const rows = old && p.archive ? p.archive.rows : p.rows
   const list = useRef<HTMLDivElement>(null)
   useArrival(list, p.fresh ?? EMPTY, rows)
+  const waiting = p.loading && !old
   return (
     <>
-      <div className="nfh">
-        <b>{p.title}</b>
-        <button type="button" className="lk3" disabled={p.loading || !p.rows.some((r) => r.unread)} onClick={p.onAll}>
-          {p.markAll}
-        </button>
-      </div>
+      {!p.bare && (
+        <div className="nfh">
+          <b>{p.title}</b>
+          <Tools {...p} />
+        </div>
+      )}
+      {p.filter?.active && !old && (
+        <div className="nfact">
+          <span>{p.filter.active}</span>
+          <button type="button" className="nfq sm" aria-label={copy.clearFilter} title={copy.clearFilter} onClick={p.filter.onClear}>
+            <X size={14} aria-hidden="true" />
+          </button>
+        </div>
+      )}
       <div className="nfl" ref={list} aria-busy={p.loading || undefined}>
-        {p.loading && !old && (
+        {waiting && (
           <div className="nfs" aria-hidden="true">
             <i />
             <span>
@@ -129,41 +306,23 @@ function List(p: BellProps & { close: () => void }) {
             </span>
           </div>
         )}
-        {rows.length === 0 && !(p.loading && !old) && <div className="xnone">{old && p.archive ? p.archive.words.none : p.none}</div>}
-        {!(p.loading && !old) &&
-          rows.map((n) => (
-          <div key={n.id} className="nfw" data-id={n.id}>
-          <button
-            type="button"
-            className={`nf ${n.unread ? 'unread' : ''}`}
-            onClick={() => {
-              p.onPick(n.id)
-              p.close()
-            }}
-          >
-            <svg className={`nfi k-${n.kind}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              {BELL_PATH[n.kind] ?? BELL_PATH.weekly}
-            </svg>
-            <span className="nft">
-              <b>{n.title}</b>
-              <small>{n.sub}</small>
-            </span>
-            {n.unread && <i className="nfd" />}
-          </button>
-          {n.dismissable && !old && p.onDismiss && (
-            <button type="button" className="nfx" aria-label={p.archive?.words.dismiss} title={p.archive?.words.dismiss} onClick={() => p.onDismiss?.(n.id)}>
-              ×
-            </button>
-          )}
-          </div>
-        ))}
-      </div>
-      <div className="nff">
-        {p.archive && (
-          <button type="button" className="lk3" aria-pressed={old} onClick={() => { if (!old) p.archive?.load(); setOld(!old) }}>
-            {old ? p.archive.words.fresh : p.archive.words.archive}
+        {rows.length === 0 && !waiting && <div className="xnone">{old && p.archive ? p.archive.none : p.none}</div>}
+        {!waiting &&
+          byDay(rows).map((d) => (
+            <Fragment key={d.day}>
+              <h3 className="nfdy">{d.label}</h3>
+              {d.rows.map((n) => (
+                <Row key={n.id} n={n} p={p} close={p.close} />
+              ))}
+            </Fragment>
+          ))}
+        {p.archive && !waiting && (
+          <button type="button" className="lk3 nfar" aria-pressed={old} onClick={() => { if (!old) p.archive?.load(); setOld(!old) }}>
+            {old ? copy.showNew : copy.showArchived}
           </button>
         )}
+      </div>
+      <div className="nff">
         <button type="button" className="lk3" onClick={() => { p.onSettings(); p.close() }}>
           {p.settings}
         </button>
@@ -200,12 +359,13 @@ export function BellMenu(p: BellProps) {
           <aside className="cd on" role="dialog" aria-modal="true" aria-label={p.title} tabIndex={-1}>
             <div className="cdh">
               <b>{p.title}</b>
-              <button type="button" className="ib x" title="Close" onClick={close}>
-                ×
+              <Tools {...p} />
+              <button type="button" className="nfq" aria-label={copy.close} title={copy.close} onClick={close}>
+                <X size={18} aria-hidden="true" />
               </button>
             </div>
             <div className="cdb">
-              <List {...p} close={close} />
+              <List {...p} close={close} bare />
             </div>
           </aside>
         </MkPortal>
