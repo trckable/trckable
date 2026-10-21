@@ -146,6 +146,8 @@ test('a week by the hour is set against the week before by the hour: the dashed 
   const dash = page.locator('svg#chart .chbefore')
   await expect(dash).toHaveCount(1)
   // Its buckets are the line's own: the first to the last point cover (nearly) the width of the plot, not a stretch at its start.
+  // The week is drawn by the hour once that report is in: wait for it, not for the first (daily) drawing.
+  await expect.poll(async () => ((await dash.getAttribute('points')) ?? '').split(' ').length).toBeGreaterThan(24)
   const xs = ((await dash.getAttribute('points')) ?? '').split(' ').map((p) => Number(p.split(',')[0]))
   const line = ((await page.locator('svg#chart polyline').first().getAttribute('points')) ?? '').split(' ').map((p) => Number(p.split(',')[0]))
   expect(xs.length).toBeGreaterThan(24)
