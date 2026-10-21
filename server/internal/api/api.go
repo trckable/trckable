@@ -1130,7 +1130,11 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 	downs, _ := a.Ctl.DownProbes(r.Context(), principalOf(r).account)
 	blocked, _ := a.Ctl.BlockedProbes(r.Context(), principalOf(r).account)
 	paused, _ := a.Ctl.PausedUptime(r.Context())
-	former, _ := a.Ctl.FormerHostsByAccount(r.Context(), principalOf(r).account, a.Now())
+	former, err := a.Ctl.FormerHostsByAccount(r.Context(), principalOf(r).account, a.Now())
+	if err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	talked := map[string]bool{}
 	if a.MentionsOn {
 		talked, _ = a.Ctl.SitesWithMentions(r.Context())

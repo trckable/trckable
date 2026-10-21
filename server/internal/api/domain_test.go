@@ -127,3 +127,17 @@ func TestPropertyCoversTheDomain(t *testing.T) {
 		}
 	}
 }
+
+// The sites list names the old addresses still accepted; when they cannot be
+// read it fails rather than list sites as if they had none.
+func TestSitesListFailsWhenFormerHostsCannotBeRead(t *testing.T) {
+	g := newRig(t)
+	owner := client()
+	g.setup(t, owner)
+	if _, err := g.ctl.DB.Exec(`DROP TABLE site_former_hosts`); err != nil {
+		t.Fatal(err)
+	}
+	if code, _ := do(t, owner, "GET", g.srv.URL+"/api/v1/sites", ""); code != http.StatusInternalServerError {
+		t.Fatalf("sites list: %d", code)
+	}
+}

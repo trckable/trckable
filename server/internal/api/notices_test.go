@@ -438,7 +438,7 @@ func TestAnOwnerWhoIsAloneIsNotToldOfTheirOwnSiteAndKeyChanges(t *testing.T) {
 }
 
 // A change of domain is told to the other owners only, never to a viewer: the
-// billing-email rule (owners) applies to everything about a site's address.
+// owners-only rule applies to everything about a site's address.
 func TestChangingADomainIsToldToTheOtherOwnersOnly(t *testing.T) {
 	n := newNoticeRig(t)
 	n.user(t, "two@site.com", sqlite.RoleOwner)

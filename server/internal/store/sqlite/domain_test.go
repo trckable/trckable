@@ -150,7 +150,7 @@ func TestFormerHostsMigration(t *testing.T) {
 }
 
 // A domain changes once a day: a chain of changes would keep a string of old
-// addresses open, and Cloud's one-trial-per-domain rule would be a flip away.
+// addresses open, and a flip would hide where visits come from.
 func TestDomainChangesOnceADay(t *testing.T) {
 	st, ctx, id := domainSite(t)
 	now := time.Date(2026, 10, 21, 10, 0, 0, 0, time.UTC)
