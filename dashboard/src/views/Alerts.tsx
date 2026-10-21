@@ -13,7 +13,7 @@ import { EmptyState } from '../components/EmptyState'
 import { WeeklyNow } from './WeeklyNow'
 import { KINDS, shownKinds } from './alertKinds'
 import { advice, ago, kindOf, SEND_LABEL, SendIcon, shown, stored, whereOf } from './alertsParts'
-import { dateFmt } from '../lib/format'
+import { currencyDigits, dateFmt } from '../lib/format'
 import { settingsParam } from '../lib/settings'
 import { ThresholdRule } from '../features/thresholds/Rule'
 import { ruleOf } from '../features/thresholds/model'
@@ -100,7 +100,7 @@ export function AlertsSettings({ site }: { site: Site }) {
     if (k.id === 'threshold')
       return (
         <>
-          <ThresholdRule alert={a} onSave={(rule) => save(k.id, { ...rule, enabled: isOn })} />
+          <ThresholdRule alert={a} digits={currencyDigits(site.currency)} onSave={(rule) => save(k.id, { ...rule, enabled: isOn })} />
           <span className="faint al-last">{k.hint(site)}</span>
         </>
       )
