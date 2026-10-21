@@ -56,11 +56,11 @@ export function dayStates(list: Incident[], days: string[], tz: string, now: num
       if (isDown(x) || out.get(d) === 'ok' || out.get(d) === 'unwatched') out.set(d, x.kind)
     }
   }
-  // A day the check was paused on, with no incident on it, was not looked at: neither green nor red.
-  for (const p of paused) {
-    const first = dayIn(p.from, tz)
-    const last = dayIn(p.to, tz)
-    for (const d of days) if (d >= first && d <= last && out.get(d) === 'ok') out.set(d, 'paused')
+  // A day is paused only when the pause covers all the time of it that was watched; a part of a day paused leaves the rest as it really was.
+  for (const d of days) {
+    if (out.get(d) !== 'ok') continue
+    const [a, b] = dayWindow(d, tz, now, watchedSince)
+    if (b > a && pausedOnDay(paused, d, tz, now, watchedSince) >= b - a) out.set(d, 'paused')
   }
   return out
 }
@@ -105,6 +105,18 @@ export function affectedSeconds(list: Incident[], from: number, to: number, now:
 export function dayLasted(list: Incident[], day: string, tz: string, now: number): number {
   const next = new Date(Date.parse(day + 'T00:00:00Z') + DAY * 1000).toISOString().slice(0, 10)
   return affectedSeconds(list, startOfDay(day, tz), startOfDay(next, tz), now)
+}
+
+/** The part of a calendar day that can have been watched: from its start (or when watching began) to its end (or now). */
+function dayWindow(day: string, tz: string, now: number, watchedSince = 0): [number, number] {
+  const next = new Date(Date.parse(day + 'T00:00:00Z') + DAY * 1000).toISOString().slice(0, 10)
+  return [Math.max(startOfDay(day, tz), watchedSince), Math.min(startOfDay(next, tz), now)]
+}
+
+/** The time of one calendar day the uptime check was paused. */
+export function pausedOnDay(paused: PausedSpan[], day: string, tz: string, now: number, watchedSince = 0): number {
+  const [a, b] = dayWindow(day, tz, now, watchedSince)
+  return affectedSeconds(paused.map((p) => ({ started_at: p.from, ended_at: p.to })) as Incident[], a, b, now)
 }
 
 /** The days from `from` to `to`, oldest first. */
