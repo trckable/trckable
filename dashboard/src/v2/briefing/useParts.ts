@@ -191,5 +191,5 @@ export function useParts(a: PartsIn) {
         ? moments({ totals, days, todayUp: unit === 'today' ? st === 'up' : false, from: Math.max(0, days.indexOf(range.from)), to: Math.max(0, days.indexOf(range.to)), elapsed: Math.round(nowHour * 60), today: unit === 'today', week: unit === 'week', filtered: false })
         : { pills: [], line: '' }
     return { hhmm: clock.slice(11), learning, hd, low, uptime, scores, facts, stories, say, top, chart, weekday, whole, verdict, moneyBand, st, bounceUsual, mo }
-  }, [cur, prev, against, usual, unit, up.pct, up.list, up.from0, downNow, downMin, site.domain, money, site.down_since, site.down_cause, site.timezone, site.watched_since, range.to, range.from, bucket, nowSec, hist, hourly, today, notes, clock, slices, extras])
+  }, [cur, prev, against, usual, unit, up.pct, up.list, up.from0, downNow, downMin, site.domain, money, site.down_since, site.down_cause, site.timezone, site.watched_since, site.uptime_paused, range.to, range.from, bucket, nowSec, hist, hourly, today, notes, clock, slices, extras])
 }
