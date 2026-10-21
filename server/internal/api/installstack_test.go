@@ -14,12 +14,18 @@ func TestStackOf(t *testing.T) {
 		{"wordpress generator", `<meta name="generator" content="WordPress 6.5">`, "wordpress"},
 		{"wordpress path and generator", `<meta name="generator" content="WordPress 6.5"><link href="/wp-content/a.css">`, "wordpress"},
 		{"generator after content", `<meta content="Ghost 5.1" name="generator">`, "ghost"},
-		{"shopify", `<script src="https://cdn.shopify.com/s/x.js"></script>`, "shopify"},
+		{"shopify", `<script src="https://cdn.shopify.com/s/files/x.js"></script>`, "shopify"},
 		{"webflow", `<html data-wf-site="abc">`, "webflow"},
 		{"astro generator", `<meta name="generator" content="Astro v4.0">`, "astro"},
 		{"gatsby", `<div id="___gatsby"></div>`, "gatsby"},
-		{"two stacks is unsure", `<script src="/_next/static/a.js"></script><img src="https://cdn.shopify.com/a.png">`, ""},
+		{"two stacks is unsure", `<script src="/_next/static/a.js"></script><img src="https://cdn.shopify.com/s/files/a.png">`, ""},
 		{"next with wordpress images is unsure", `<script src="/_next/static/a.js"></script><img src="https://cms.x.com/wp-content/a.png">`, ""},
+		{"prose naming PrestaShop", `<p>We moved off PrestaShop last year</p>`, ""},
+		{"prose naming Joomla", `<p>Joomla! vs WordPress</p>`, ""},
+		{"link to a myshopify store", `<a href="https://shop.myshopify.com/">Shop</a>`, ""},
+		{"a generic joomla-looking path", `<script src="/media/system/js/app.js"></script>`, ""},
+		{"a generic page-data path", `<a href="/page-data/">x</a>`, ""},
+		{"prose naming magento", `<p>magento_ was a prefix</p>`, ""},
 		{"plain page", `<h1>Hello</h1>`, ""},
 		{"unknown generator", `<meta name="generator" content="Hugo 0.1">`, ""},
 		{"empty", ``, ""},
@@ -41,10 +47,10 @@ func TestInstallStackSaysNothingWhenUnsure(t *testing.T) {
 	c := client()
 	g.setup(t, c)
 	url := g.srv.URL + "/api/v1/sites/" + g.site + "/install/stack"
-	if code, out := do(t, c, "GET", url, ""); code != http.StatusOK || out["stack"] != "" {
+	if code, out := do(t, c, "POST", url, "", csrf, "1"); code != http.StatusOK || out["stack"] != "" {
 		t.Fatalf("a site that cannot be reached: %d %v", code, out)
 	}
-	if code, _ := do(t, client(), "GET", url, ""); code != http.StatusUnauthorized {
+	if code, _ := do(t, client(), "POST", url, "", csrf, "1"); code != http.StatusUnauthorized {
 		t.Fatalf("signed out: %d", code)
 	}
 }

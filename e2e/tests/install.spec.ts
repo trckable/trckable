@@ -112,6 +112,8 @@ test('the Install step fits 1440x900 without scrolling, with one primary action'
 
 // The dialog says what the site runs and opens on that tab; a tab picked by hand stays; a site the server is unsure of
 // gets no line and the default tab. The server's read is stood in for at the browser (see the note at the top).
+// STACK_SHOTS=1 also saves the dialog as /private/tmp/shots/analyse-<before|after>-<width>.png.
+const SHOTS = process.env.STACK_SHOTS
 for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
   test(`the Install step opens on the stack the site runs at ${size.width}`, async ({ page }) => {
     await page.setViewportSize(size)
@@ -132,14 +134,14 @@ for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) 
     const first = await open()
     await expect(first.wizard.getByText(`${first.domain} runs WordPress`)).toBeVisible()
     await expect(first.wizard.getByRole('tab', { name: 'WordPress' })).toHaveAttribute('aria-selected', 'true')
-    await page.screenshot({ path: `/private/tmp/shots/analyse-after-${size.width}.png` })
+    if (SHOTS) await page.screenshot({ path: `/private/tmp/shots/analyse-after-${size.width}.png` })
     await first.wizard.getByRole('tab', { name: 'Script tag' }).click()
     await expect(first.wizard.getByRole('tab', { name: 'Script tag' })).toHaveAttribute('aria-selected', 'true')
 
     stack = ''
     const second = await open()
     await expect(second.wizard.getByText(/ runs /)).toHaveCount(0)
-    await page.screenshot({ path: `/private/tmp/shots/analyse-before-${size.width}.png` })
+    if (SHOTS) await page.screenshot({ path: `/private/tmp/shots/analyse-before-${size.width}.png` })
     await expect(second.wizard.getByRole('tab', { name: 'Script tag' })).toHaveAttribute('aria-selected', 'true')
     await expect
       .poll(() => second.wizard.evaluate((el) => el.scrollWidth - el.clientWidth), { message: 'the dialog scrolls sideways' })

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -24,20 +25,20 @@ var stackMarks = []struct {
 }{
 	{"next", []string{"/_next/static/", "__next_data__", "id=\"__next\""}},
 	{"wordpress", []string{"/wp-content/", "/wp-includes/", "/wp-json/"}},
-	{"shopify", []string{"cdn.shopify.com", "shopify.theme", "myshopify.com"}},
+	{"shopify", []string{"cdn.shopify.com/s/", "window.shopify.theme"}},
 	{"webflow", []string{"data-wf-site", "assets.website-files.com", "cdn.prod.website-files.com"}},
-	{"framer", []string{"framerusercontent.com", "data-framer-"}},
+	{"framer", []string{"framerusercontent.com/", "data-framer-"}},
 	{"squarespace", []string{"static1.squarespace.com", "static.squarespace.com"}},
 	{"wix", []string{"static.wixstatic.com", "static.parastorage.com"}},
 	{"astro", []string{"astro-island", "/_astro/"}},
-	{"gatsby", []string{"___gatsby", "/page-data/"}},
-	{"docusaurus", []string{"/assets/js/runtime~main", "__docusaurus"}},
-	{"ghost", []string{"/ghost/api/", "ghost-portal"}},
+	{"gatsby", []string{"id=\"___gatsby\"", "/page-data/app-data.json"}},
+	{"docusaurus", []string{"/assets/js/runtime~main"}},
+	{"ghost", []string{"/ghost/api/content/", "data-ghost="}},
 	{"bigcommerce", []string{"cdn11.bigcommerce.com"}},
-	{"magento", []string{"/static/frontend/magento", "mage/cookies", "magento_"}},
+	{"magento", []string{"/static/frontend/magento/", "/mage/cookies.js"}},
 	{"drupal", []string{"/sites/default/files/", "drupal.settings", "/core/misc/drupal.js"}},
-	{"joomla", []string{"/media/jui/", "/media/system/js/", "joomla!"}},
-	{"prestashop", []string{"/modules/ps_", "prestashop"}},
+	{"joomla", []string{"/media/jui/", "/media/system/js/core.js", "/media/system/js/joomla"}},
+	{"prestashop", []string{"/modules/ps_", "/themes/classic/assets/"}},
 	{"weebly", []string{"editmysite.com"}},
 }
 
@@ -96,6 +97,18 @@ func stackSite(parent context.Context, domain string) string {
 	return stackOf(page)
 }
 
+// stackCache keeps each site's answer for an hour, so opening the dialog again
+// reads nothing; an empty answer is kept too.
+var (
+	stackMu    sync.Mutex
+	stackCache = map[string]stackKept{}
+)
+
+type stackKept struct {
+	stack string
+	at    time.Time
+}
+
 func (a *API) installStack(w http.ResponseWriter, r *http.Request) {
 	if !a.loginRate.allow("stack:"+r.PathValue("site"), a.Now(), 10, 10*time.Minute) {
 		fail(w, http.StatusTooManyRequests, "checked many times just now: try again in a few minutes")
@@ -106,5 +119,15 @@ func (a *API) installStack(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusNotFound, "site not found")
 		return
 	}
-	writeJSON(w, http.StatusOK, installStack{Stack: stackSite(r.Context(), si.Domain)})
+	key := si.ID + "|" + si.Domain
+	stackMu.Lock()
+	k, ok := stackCache[key]
+	stackMu.Unlock()
+	if !ok || a.Now().Sub(k.at) > time.Hour {
+		k = stackKept{stack: stackSite(r.Context(), si.Domain), at: a.Now()}
+		stackMu.Lock()
+		stackCache[key] = k
+		stackMu.Unlock()
+	}
+	writeJSON(w, http.StatusOK, installStack{Stack: k.stack})
 }
