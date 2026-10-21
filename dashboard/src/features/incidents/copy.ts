@@ -52,6 +52,7 @@ export const copy = defineCopy('incidents', {
   since: (day: string) => `Watching since ${day}`,
   dayOk: (day: string) => `${day}: no incident`,
   dayPaused: (day: string) => `${day}: uptime check paused`,
+  dayPausedPart: (text: string, span: string) => `${text} · paused ${span}`,
   legendPaused: 'Paused',
   dayQuiet: (day: string, span: string) => `${day}: quiet · ${span}`,
   dayDown: (day: string, span: string) => `${day}: down · ${span}`,

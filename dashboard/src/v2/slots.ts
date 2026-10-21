@@ -49,7 +49,7 @@ export interface V2Extras {
     ready?: boolean
     readAll: () => void
     dismiss: (id: string) => void
-    archive: { items: Notice[]; load: () => void; loading: boolean; words: { dismiss: string; archive: string; fresh: string; none: string } }
+    archive: { items: Notice[]; load: () => void; loading: boolean; words: { none: string } }
   }
   /** The teams the person is in: a small square with the current one's initial before the site, and a list of them that opens from it. A build with a single account leaves it out. */
   teams?: Teams

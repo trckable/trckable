@@ -142,12 +142,12 @@ export function useNotices(site: Site | null, sites: Site[]) {
       document.removeEventListener('visibilitychange', shown)
     }
   }, [site?.id, site?.domain, site?.mentions, site?.answers, sitesKey, can, refresh])
-  const mark = useCallback((id: string) => send([id]), [send])
+  const mark = useCallback((id: string | string[]) => send(Array.isArray(id) ? id : [id]), [send])
   const markAll = useCallback(() => {
     bellMore?.readAll()
     send(items.map((i) => i.id))
   }, [send, items, bellMore])
   // Ready when the whole list can be drawn at once: the site's own rows, what the account has read and the build's own rows.
   const ready = loaded && synced && (bellMore?.ready ?? true)
-  return { items, read, refresh, mark, markAll, can, ready, dismiss: bellMore?.dismiss, archive: bellMore?.archive }
+  return { items, read, refresh, mark, markAll, can, ready, sites, dismiss: bellMore?.dismiss, archive: bellMore?.archive }
 }

@@ -99,3 +99,15 @@ export function wanted(state: SetupState | null, kind: string): boolean {
   const it = state?.items.find((i) => i.id === id)
   return !!it && !it.skipped
 }
+
+/** The checklist still says the install waits for its first visit. */
+export const installWaiting = (state: SetupState | null): boolean => !!state && state.items.some((it) => it.id === 'verified' && !it.done)
+
+/** A read of the checklist older than this is read again when the panel opens. */
+export const STALE = 30_000
+
+/** The checklist is read again when the first visit has landed while it still waits for one. */
+export const visitMissed = (visited: boolean, state: SetupState | null): boolean => visited && installWaiting(state)
+
+/** A read made at `readAt` is old on `now`. */
+export const isStale = (readAt: number, now: number): boolean => now - readAt >= STALE

@@ -1,14 +1,15 @@
 // The bell's list: what happened that a person would want to hear of, put together from what the server already
 // records (incidents, milestones, mentions). Pure; read marks are kept by useNotices.
 import { lineOf } from '../../features/milestones/words'
-import type { Milestone, Site } from '../../lib/api'
+import type { Alert, Milestone, Site } from '../../lib/api'
 import type { Incident } from '../../features/incidents/api'
 import type { Mention } from '../../features/mentions/api'
 import { answersCopy } from '../../features/answers/copy'
 import type { AnswersReport } from '../../features/answers/api'
 import { STALE_DAYS } from '../../features/install/journey'
 import { sourceName } from '../briefing/model'
-import { isDown } from '../../features/incidents/model'
+import { duration, isDown } from '../../features/incidents/model'
+import { clock } from '../../lib/site'
 import { copy } from './copy'
 
 export type NoticeKind = 'down' | 'up' | 'spike' | 'sale' | 'mention' | 'answer' | 'milestone' | 'weekly' | 'failed' | 'plan' | 'team' | 'setup'
@@ -32,7 +33,19 @@ export interface Notice {
   read?: () => void
   /** What a tap does instead of going to the page the notice is about. */
   open?: () => void
+  /** The site's id, when the notice knows it (else it is found by its domain). */
+  siteId?: string
+  /** The alert it came from, when that is not the kind's own (an alert the person can mute or change for the site). */
+  alert?: AlertKind
+  /** Still going: drawn red. */
+  bad?: boolean
+  /** What the row says of the time in place of the clock of `at` ('' for none): "18:39–18:49" for an incident that ended. */
+  when?: string
+  /** Several notices drawn as one row (busy moments of different sites at the same time), newest first. */
+  members?: Notice[]
 }
+
+export type AlertKind = Alert['kind']
 
 /** How many of the account's other sites the bell reads on top of the one in view. */
 export const OTHERS = 6
@@ -40,16 +53,16 @@ export const OTHERS = 6
 /** The sites the bell reads besides the one in view: those that have had a visit, the first few in the account's order. */
 export const othersOf = (sites: Site[], current: Site | null): Site[] => sites.filter((s) => s.id !== current?.id && !!s.last_event_at).slice(0, OTHERS)
 
-const mins = (s: number) => Math.max(1, Math.round(s / 60))
-
-/** A site that stopped answering, and the moment it came back. */
+/** One row for each time a site stopped answering: red and "down since 18:39" while it goes on, "was down 10m" with its span once it is over. The server's incident id pairs the two; no row is made of a guess. */
 export function fromIncidents(list: Incident[], domain: (id: string) => string | undefined, now: number): Notice[] {
   const out: Notice[] = []
+  const at = (t: number) => clock(new Date(t * 1000), '')
   for (const i of list) {
     const d = domain(i.site)
     if (!d || !isDown(i)) continue
-    out.push({ id: `down:${i.id}`, kind: 'down', site: d, title: copy.stopped(d), sub: copy.noAnswerSince(i.started_at), at: i.started_at })
-    if (i.ended_at !== null && i.ended_at <= now) out.push({ id: `up:${i.id}`, kind: 'up', site: d, title: copy.backUp(d), sub: copy.wasDown(mins(i.ended_at - i.started_at)), at: i.ended_at })
+    const over = i.ended_at !== null && i.ended_at <= now
+    if (over) out.push({ id: `up:${i.id}`, kind: 'up', site: d, siteId: i.site, title: copy.wasDownFor(d, duration((i.ended_at ?? now) - i.started_at)), sub: '', when: `${at(i.started_at)}–${at(i.ended_at ?? now)}`, at: i.ended_at ?? now })
+    else out.push({ id: `down:${i.id}`, kind: 'down', site: d, siteId: i.site, title: copy.downSince(d, at(i.started_at)), sub: '', when: '', bad: true, at: i.started_at })
   }
   return out
 }
@@ -109,11 +122,42 @@ export function arrange(all: Notice[], now: number): Notice[] {
 
 export type NoticeRow = Notice & { unread: boolean }
 
-/** Whether a notice counts as unread: the one rule for the dot on its row and for the bell's badge. */
-export const isUnread = (n: Notice, read: ReadonlySet<string>): boolean => !n.seen && !read.has(n.id)
+/** Whether a notice counts as unread: the one rule for the dot on its row and for the bell's badge. A row of several is unread while any of them is. */
+export const isUnread = (n: Notice, read: ReadonlySet<string>): boolean => (n.members ? n.members.some((m) => isUnread(m, read)) : !n.seen && !read.has(n.id))
+
+/** Busy moments of different sites within this long of each other are one row. */
+export const TOGETHER_S = 15 * 60
+
+/**
+ * Busy moments of two or more sites at the same time are one row ("2 sites are busy"); a site is in a row once, with its
+ * newest. The rest of the list is as it was, in the same order.
+ */
+export function mergeBusy(list: Notice[]): Notice[] {
+  const out: Notice[] = []
+  let group: Notice[] = []
+  const close = () => {
+    if (group.length > 1) out.push({ id: `busy:${group[0].id}`, kind: 'spike', site: '', title: copy.busySites(group.length), sub: '', at: group[0].at, members: group })
+    else out.push(...group)
+    group = []
+  }
+  const busy = list.filter((n) => n.kind === 'spike' && !n.members && n.site).sort(byNewest)
+  const taken = new Set<string>()
+  for (const n of busy) {
+    if (taken.has(n.id)) continue
+    group = [n]
+    taken.add(n.id)
+    for (const m of busy) {
+      if (taken.has(m.id) || n.at - m.at > TOGETHER_S || group.some((g) => g.site === m.site)) continue
+      group.push(m)
+      taken.add(m.id)
+    }
+    close()
+  }
+  return [...list.filter((n) => !taken.has(n.id)), ...out].sort(byNewest)
+}
 
 /** The rows the menu lists, newest first, each with its own unread mark (`sub` is left to the caller, which words the time). */
-export const rowsOf = (list: Notice[], read: ReadonlySet<string>): NoticeRow[] => list.map((n) => ({ ...n, unread: isUnread(n, read) }))
+export const rowsOf = (list: Notice[], read: ReadonlySet<string>): NoticeRow[] => mergeBusy(list).map((n) => ({ ...n, unread: isUnread(n, read) }))
 
 /** The badge number: how many of the rows the menu shows are unread, never a count of anything else. */
 export const unreadCount = (rows: readonly { unread: boolean }[]): number => rows.filter((r) => r.unread).length

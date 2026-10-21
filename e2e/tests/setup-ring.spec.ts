@@ -81,9 +81,14 @@ test('Not for me on Payments lowers what counts and moves the row to More', asyn
   // A site that has had events is not on its setup screen, so its steps are open (on it they wait for the first visit).
   await page.route(/\/api\/v1\/sites\/[^/]+\/events/, (route) => route.fulfill({ json: { events: [{}] } }))
   await open(page)
+  const reads: string[] = []
+  page.on('request', (r) => r.method() === 'GET' && /\/setup$/.test(new URL(r.url()).pathname) && reads.push(r.url()))
   await page.locator('.ringb').click({ timeout: 15_000 })
   const panel = page.locator('.setupmenu.on')
   await expect(page.locator('.ringb .rtext')).toHaveText('0/4 set up')
+  // Open for a while, the panel does not ask again and again (one look at most for opening it).
+  await page.waitForTimeout(10_000)
+  expect(reads.length, 'checklist reads while the panel is open').toBeLessThanOrEqual(2)
   await panel.locator('[data-step="payments"]').getByRole('button', { name: 'More' }).click()
   await panel.getByRole('menuitem', { name: 'I don’t sell online' }).click()
   await expect(page.locator('.ringb .rtext')).toHaveText('0/3 set up')

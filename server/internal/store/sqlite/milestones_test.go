@@ -101,3 +101,17 @@ func TestMilestoneLinks(t *testing.T) {
 		t.Fatal("a deleted site's link still opens")
 	}
 }
+
+// The goal the first-goal milestone was reached by is kept with it and listed.
+func TestFirstGoalKeepsItsName(t *testing.T) {
+	s := openT(t)
+	ctx := context.Background()
+	site, _ := s.CreateSite(ctx, DefaultAccount, "a.com", "")
+	if _, err := s.AddMilestones(ctx, site, []Milestone{{Kind: "first_goal", Step: "1", Value: 1, Day: "2026-09-01", Detail: "signup"}}); err != nil {
+		t.Fatal(err)
+	}
+	list, _ := s.Milestones(ctx, site, "u1")
+	if len(list) != 1 || list[0].Detail != "signup" {
+		t.Fatalf("list: %+v", list)
+	}
+}
