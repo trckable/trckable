@@ -6,7 +6,7 @@ import { Tooltip } from '../../kit'
 import { fmtDay } from '../../lib/dates'
 import type { Incident, PausedSpan } from './api'
 import { copy } from './copy'
-import { dayLasted, dayStates, daysBetween, duration, type DayState } from './model'
+import { dayLasted, dayStates, daysBetween, duration, pausedOnDay, type DayState } from './model'
 
 /** From this many days on, the strip becomes the year's grid. */
 export const GRID_FROM = 120
@@ -31,8 +31,9 @@ export function Timeline({ list, from, to, tz, now, watchedSince = 0, paused = [
         {watched.map(([d, state], n) => {
           const k = state as Exclude<DayState, 'unwatched'>
           const text = say[k](fmtDay(d, { year: true }), k === 'ok' || k === 'paused' ? '' : duration(dayLasted(list, d, tz, now)))
+          const part = k === 'paused' ? 0 : pausedOnDay(paused, d, tz, now, watchedSince)
           return (
-            <Tooltip key={d} text={text} align={n > watched.length / 2 ? 'right' : 'left'}>
+            <Tooltip key={d} text={part > 0 ? copy.dayPausedPart(text, duration(part)) : text} align={n > watched.length / 2 ? 'right' : 'left'}>
               {(p) => <i className={state} {...p} />}
             </Tooltip>
           )
