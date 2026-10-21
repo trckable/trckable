@@ -63,7 +63,23 @@ describe('the cards', () => {
   })
   it('ranks the worse news and the bigger change first', () => {
     const list = cardsOf(base({ slices: { referrer: [slice('news.ycombinator.com', 186, 9)], country: [slice('US', 309, 230)], device: [], entry_page: [] }, mention: { host: 'Hacker News', title: 't', at: '14:05', points: 1, comments: 1, page: '/' } }))
-    expect(list.map((c) => c.key)).toEqual(['sources', 'mentions', 'countries'])
+    expect(list.map((c) => c.key)).toEqual(['sources', 'mentions'])
+  })
+})
+
+describe('who changed', () => {
+  const two = base({ slices: { referrer: [slice('news.ycombinator.com', 186, 9)], country: [slice('US', 309, 230)], device: [slice('mobile', 300, 150)], entry_page: [] } })
+  it('is one card, the biggest mover, with the others named under it', () => {
+    const who = cardsOf(two).filter((c) => ['sources', 'countries', 'devices', 'pages'].includes(c.key))
+    expect(who.map((c) => c.key)).toEqual(['sources'])
+    expect(who[0].also?.map((a) => a.key)).toEqual(['countries', 'devices'])
+  })
+  it('has no line under it when nothing else moved', () => {
+    const one = cardsOf(base({ slices: { referrer: [slice('news.ycombinator.com', 186, 9)], country: [], device: [], entry_page: [] } })).find((c) => c.key === 'sources')
+    expect(one?.also).toBeUndefined()
+  })
+  it('does not call what it names calm', () => {
+    expect(calmTopics(cardsOf(two), false)).toEqual(['pages', 'goals'])
   })
 })
 
