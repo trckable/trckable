@@ -1,0 +1,4 @@
+/* Live's 30-day strip: a day the uptime check was paused is neither green nor red. */
+.mk .lhstrip i.paused {
+  background: repeating-linear-gradient(135deg, var(--mk-sel) 0 3px, transparent 3px 6px);
+}
