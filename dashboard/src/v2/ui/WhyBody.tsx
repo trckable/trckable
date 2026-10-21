@@ -6,13 +6,13 @@ import { copy } from '../briefing/copy'
 import type { Why } from '../briefing/why'
 
 export function WhyBody({ why }: { why: Why }) {
-  const { askPeek } = useV2Extras()
+  const { askPeekNow } = useV2Extras()
   return (
     <>
       <b>{copy.whyDot}</b> {why.cause} {why.todo && <span className="ev">{why.todo}</span>}
-      {askPeek && (
+      {askPeekNow && (
         <div style={{ marginTop: 'var(--mk-s2)' }}>
-          <button type="button" className="gh" data-ask-peek="1" onClick={() => askPeek(asks.askWhy(why.cause))}>
+          <button type="button" className="gh" data-ask-peek="1" onClick={() => askPeekNow(asks.askWhy(why.cause))}>
             {top.askPeek}
           </button>
         </div>
