@@ -89,6 +89,7 @@ describe('the goals card', () => {
     expect(g?.rest).toBeUndefined()
     expect(g?.why).toBe('672 today · usually 420–490')
     expect(g?.act?.t).toBe('Alert me next time')
+    expect(g?.ask).toBe('Why did Form submissions go up 48% today?')
   })
   it('has one row per goal, the biggest mover first, with its percent', () => {
     const calm = { ...slice('outbound', 120, 100), name: 'Outbound clicks', band: { c: 100, lo: 95, hi: 105 } }

@@ -47,6 +47,8 @@ export interface Story {
   how: string
   ev: string
   act?: Act
+  /** The question "Why?" asks Peek, where there is Peek: this card's claim, as a question. */
+  ask?: string
   /** Why it happened, as far as can be known: shown as "Why?" with the evidence. */
   cause?: Why
   deeper: Deeper
@@ -274,6 +276,11 @@ function goalHead(name: string, up: boolean, pct: number | null): string {
   return up ? copy.goalUp(name, Math.abs(pct)) : copy.goalDown(name, Math.abs(pct))
 }
 
+function goalAsk(name: string, up: boolean, pct: number | null, when: string): string {
+  if (pct === null) return up ? copy.goalAskAbove(name, when) : copy.goalAskBelow(name, when)
+  return up ? copy.goalAskUp(name, Math.abs(pct), when) : copy.goalAskDown(name, Math.abs(pct), when)
+}
+
 function goalCard(i: CardsIn): Story | null {
   const rows = i.goals
     .flatMap((g) => {
@@ -294,6 +301,7 @@ function goalCard(i: CardsIn): Story | null {
     head: goalHead(g.name, up, g.pct),
     vis: { k: 'goals', rows },
     why: copy.goalSub(fmtInt(Math.round(g.v)), goalWhen(i.unit), range),
+    ask: goalAsk(g.name, up, g.pct, goalWhen(i.unit)),
     val: fmtInt(Math.round(g.v)),
     m: g.v,
     u: 'people',
