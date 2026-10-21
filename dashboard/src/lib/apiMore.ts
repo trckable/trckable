@@ -4,6 +4,15 @@
 // handling (api.ts's call).
 import { act, call, raw, rangeQS } from './api'
 
+/** A site's domain, the earlier ones still accepted and the Search Console match; `preview` is a change asked about. */
+export interface DomainState {
+  domain: string
+  former: { host: string; until: number; changed_at: number }[]
+  search?: { property: string; matches: boolean }
+  preview?: { domain: string; search?: { property: string; matches: boolean } }
+  grace_days: number
+}
+
 // Lazy screens import everything API-shaped from here: the names of lib/api, and `more`.
 /** One site's day for the team overview. A number the server does not have is absent: no usual before two weeks of history, no revenue without a payment today, no source without a visit. */
 export interface TeamRow {
@@ -187,6 +196,9 @@ export const more = {
   setupFunnel: (site: string) => call<SetupState>('POST', `/sites/${site}/setup/funnel`, undefined, undefined, true),
   createSite: (domain: string) => call<Site>('POST', '/sites', { domain }),
   updateSite: (id: string, patch: { name?: string; timezone?: string; currency?: string }) => call<Site>('PATCH', `/sites/${id}`, patch),
+  siteDomain: (id: string, to?: string) => call<DomainState>('GET', `/sites/${id}/domain${to ? `?to=${encodeURIComponent(to)}` : ''}`),
+  changeDomain: (id: string, domain: string) => call<DomainState>('PUT', `/sites/${id}/domain`, { domain }),
+  endFormerDomain: (id: string, host: string) => call<DomainState>('DELETE', `/sites/${id}/domain/former/${encodeURIComponent(host)}`),
   deleteSite: (id: string, domain: string) => call<{ events: number; sessions: number; payments: number; connections: number }>('DELETE', `/sites/${id}`, { domain }),
   findPerson: (site: string, by: 'visitor' | 'email', value: string) =>
     call<{ found: PersonFound; payments: PersonPayment[] }>('GET', `/sites/${site}/privacy/person?${by}=${encodeURIComponent(value)}`),

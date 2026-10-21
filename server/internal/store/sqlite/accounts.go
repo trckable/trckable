@@ -311,6 +311,10 @@ type SiteInfo struct {
 	// AlertsMutedUntil is when the site's snooze of its alerts ends (unix
 	// seconds); absent when they are not snoozed.
 	AlertsMutedUntil int64 `json:"alerts_muted_until,omitempty"`
+	// FormerHosts are the site's earlier domains that still count visits (a
+	// change of domain keeps the old one for a month): they belong to the
+	// site as much as Domain does.
+	FormerHosts []string `json:"former_hosts,omitempty"`
 }
 
 // SiteInfo returns one site.
