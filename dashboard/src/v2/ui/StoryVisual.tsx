@@ -4,6 +4,8 @@ import { Fragment, type ReactNode } from 'react'
 import { fmtInt } from '../../lib/format'
 import { Rng } from './RangeBar'
 import { copy } from '../briefing/copy'
+import { copy as cardCopy } from '../briefing/cards.copy'
+import './goalRows.css'
 import type { Story, Vis } from '../briefing/cards'
 
 function Dots({ v }: { v: Extract<Vis, { k: 'dots' }> }) {
@@ -102,11 +104,18 @@ function pictureOf(v: Vis): ReactNode {
   if (v.k === 'goals') {
     return v.rows.map((g) => (
       <div className={`mk-goal ${g.st}`} key={g.name}>
-        <span className="gn">{g.name}</span>
-        <Rng v={g.v} lo={g.lo} hi={g.hi} max={Math.max(g.v, g.hi, 1) * 1.3} />
-        <span className="gv" style={g.st === 'dn' ? { color: 'var(--mk-red)' } : undefined}>
-          {fmtInt(g.v)}
+        <span className="gn">
+          {g.name}
+          <small>{cardCopy.goalUsually(`${fmtInt(Math.max(0, Math.round(g.lo)))}–${fmtInt(Math.round(g.hi))}`)}</small>
         </span>
+        <span className="gr">
+          <Rng v={g.v} lo={g.lo} hi={g.hi} max={Math.max(g.v, g.hi, 1) * 1.3} />
+          <small>{cardCopy.goalUsualTag}</small>
+        </span>
+        <span className="gv" style={g.st === 'dn' ? { color: 'var(--mk-red)' } : undefined}>
+          {fmtInt(Math.round(g.v))}
+        </span>
+        {g.pct !== null && <span className="gp">{`${g.pct >= 0 ? '↑' : '↓'} ${Math.abs(g.pct)}%`}</span>}
       </div>
     ))
   }

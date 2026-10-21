@@ -9,6 +9,7 @@ import { Ico } from './icons'
 import { Spark } from './KpiCard'
 import { copy } from '../briefing/copy'
 import { WhyBody } from './WhyBody'
+import { useV2Extras } from '../slots'
 import './incidentCard.css'
 import { Visual } from './StoryVisual'
 import type { Act, Story } from '../briefing/cards'
@@ -38,6 +39,7 @@ export interface CardCtx {
 const doneLabel: Record<Act['k'], string> = { set: copy.alertSet, copy: copy.copiedDone, goal: copy.goalDone, x: '' }
 
 function Foot({ s, c }: { s: Story; c: CardCtx }) {
+  const { askPeekNow } = useV2Extras()
   const w = c.watched(s)
   const dn = c.done(s)
   const watch = !isShared() && (
@@ -50,11 +52,18 @@ function Foot({ s, c }: { s: Story; c: CardCtx }) {
       {dn ? doneLabel[s.act.k] || copy.doneMark : s.act.t}
     </button>
   )
-  const how = (
-    <button type="button" className="gh" data-hw="1" aria-expanded={c.how(s)} onClick={() => c.onHow(s)}>
-      {s.cause ? copy.whyQ : copy.how}
-    </button>
-  )
+  const ask = s.ask
+  // Where there is Peek, "Why?" asks it (the question already sent); without Peek the card says how it knows.
+  const how =
+    ask && askPeekNow ? (
+      <button type="button" className="gh" data-ask-peek="1" onClick={() => askPeekNow(ask)}>
+        {copy.whyQ}
+      </button>
+    ) : (
+      <button type="button" className="gh" data-hw="1" aria-expanded={c.how(s)} onClick={() => c.onHow(s)}>
+        {s.cause ? copy.whyQ : copy.how}
+      </button>
+    )
   // The incident card leads with its one action, Watch and Why? stay quiet beside it, and there is no way deeper: opening the incident is it.
   if (s.key === 'uptime') {
     return (
