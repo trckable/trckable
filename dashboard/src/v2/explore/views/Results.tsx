@@ -6,6 +6,7 @@ import { lockCopy } from '../../ui/lockCopy'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
 import { Lock } from './Lock'
+import { SavedFunnels } from './SavedFunnels'
 import type { Funnel, Goal, Step } from '../types'
 
 function Editor({ x, d }: { x: XCtx; d: Funnel }) {
@@ -84,6 +85,7 @@ export function Results({ x, d }: { x: XCtx; d: Funnel }) {
           </button>
         )}
       </div>
+      <SavedFunnels site={x.site.id} spec={d.spec} />
       {x.edit && <Editor x={x} d={d} />}
       {steps.length >= 2 ? <XMiniFunnel steps={steps} leak={d.leak} ghost={d.ghost} onConnect={can('payment.manage') ? () => x.connect('rev') : undefined} /> : (
         <XEmpty title={copy.emptyFunnel} hint={copy.emptyFunnelHint}>

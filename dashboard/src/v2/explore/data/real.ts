@@ -52,7 +52,7 @@ async function periodUptime(c: DataCtx): Promise<Uptime> {
     const end = x.ended_at ?? now
     return { from: clock(x.started_at, site.timezone, today), to: clock(end, site.timezone, today), min: Math.round((end - x.started_at) / 60) }
   })
-  return { pct: uptimeOf(to - from, lost, r.quiet_tracked)?.pct ?? null, down, lost }
+  return { pct: uptimeOf(to - from, lost, r.quiet_tracked, r.summary.paused)?.pct ?? null, down, lost }
 }
 
 /** The usual the Briefing tells a single day against: the same weekday's last weeks, up to the same time of day. */

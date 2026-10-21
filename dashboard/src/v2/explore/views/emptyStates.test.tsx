@@ -6,7 +6,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const retention = vi.fn<(...a: unknown[]) => Promise<unknown>>()
-vi.mock('../../../lib/apiMore', async (orig) => ({ ...(await orig<typeof import('../../../lib/apiMore')>()), more: { retention: (...a: unknown[]) => retention(...a) } }))
+vi.mock('../../../lib/apiMore', async (orig) => ({ ...(await orig<typeof import('../../../lib/apiMore')>()), more: { retention: (...a: unknown[]) => retention(...a), funnels: () => Promise.resolve({ funnels: [], max: 20 }) } }))
 
 import { deepCopy } from '../../../features/cards/deepCopy'
 import type { XCtx } from '../ctx'
@@ -68,7 +68,7 @@ describe('what has no switch says so when nothing is there', () => {
 
   it('funnels: a viewer sees the empty state and the ask line, and no Track a goal button', () => {
     setRole('viewer')
-    const d = { steps: [], leak: { at: -1, r: 0, ur: 0 }, goals: [], vs: '', ghost: false, goalsOn: true, pages: [] }
+    const d = { steps: [], spec: [], leak: { at: -1, r: 0, ur: 0 }, goals: [], vs: '', ghost: false, goalsOn: true, pages: [] }
     const ctx = { ...x, custom: { steps: [], goals: [] }, edit: false, setEdit: vi.fn() } as unknown as XCtx
     act(() => root.render(<Results x={ctx} d={d} />))
     expect(host.textContent).toContain(copy.emptyFunnel)
@@ -78,7 +78,7 @@ describe('what has no switch says so when nothing is there', () => {
 
   it('funnels: a viewer sees the ghost step with no Connect revenue button', () => {
     const steps = [{ n: 'a', v: 10 }, { n: 'b', v: 5 }]
-    const d = { steps, leak: { at: -1, r: 0, ur: 0 }, goals: [], vs: '', ghost: true, goalsOn: true, pages: [] }
+    const d = { steps, spec: [], leak: { at: -1, r: 0, ur: 0 }, goals: [], vs: '', ghost: true, goalsOn: true, pages: [] }
     const ctx = { ...x, custom: { steps: [], goals: [] }, edit: false, setEdit: vi.fn() } as unknown as XCtx
     setRole('owner')
     act(() => root.render(<Results x={ctx} d={d as never} />))
@@ -91,7 +91,7 @@ describe('what has no switch says so when nothing is there', () => {
 
   it('funnels: a line, and goals the one step to set them up', () => {
     setRole('owner')
-    const d = { steps: [], leak: { at: -1, r: 0, ur: 0 }, goals: [], vs: '', ghost: false, goalsOn: false, pages: [] }
+    const d = { steps: [], spec: [], leak: { at: -1, r: 0, ur: 0 }, goals: [], vs: '', ghost: false, goalsOn: false, pages: [] }
     const ctx = { ...x, custom: { steps: [], goals: [] }, edit: false, setEdit: vi.fn() } as unknown as XCtx
     act(() => root.render(<Results x={ctx} d={d} />))
     expect(host.textContent).toContain(copy.emptyFunnel)

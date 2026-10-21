@@ -1,0 +1,68 @@
+/* The uptime check's settings: the pause, and the pages checked with the homepage. */
+.uptime-pages {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 0 14px;
+}
+
+.uptime-pages ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.uptime-pages li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 0 4px 0 12px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--field-fill);
+  font-size: 13px;
+}
+
+.uptime-pages li code {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uptime-pages li button {
+  border: 0;
+  background: transparent;
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: var(--text-2);
+}
+
+.uptime-pages li button:hover {
+  background: var(--field-fill-hover);
+  color: var(--text);
+}
+
+.uptime-pages form {
+  display: flex;
+  gap: 8px;
+}
+
+.uptime-pages form .input {
+  flex: 1;
+  min-width: 0;
+  max-width: 320px;
+  height: 38px;
+}
+
+/* The card's first row sits at its top edge: no rule above it. */
+[data-uptime-check] > .srow:first-child {
+  border-top: 0;
+}

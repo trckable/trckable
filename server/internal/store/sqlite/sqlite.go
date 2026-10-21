@@ -1064,6 +1064,39 @@ var migrations = []string{
 	`ALTER TABLE alerts ADD COLUMN metric TEXT NOT NULL DEFAULT '';
 	ALTER TABLE alerts ADD COLUMN period TEXT NOT NULL DEFAULT '';
 	ALTER TABLE alerts ADD COLUMN fired_period TEXT NOT NULL DEFAULT '';`,
+	// 77: the uptime check a site's people can steer (uptime.go): a pause,
+	// and up to five more paths of the same domain looked at with the
+	// homepage. And the funnels a site keeps by name (funnels.go): the steps
+	// are a JSON list of pages and goals. All three go with the site.
+	`CREATE TABLE IF NOT EXISTS site_uptime (
+		site_id   TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
+		paused    INTEGER NOT NULL DEFAULT 0,
+		paused_at INTEGER NOT NULL DEFAULT 0
+	) WITHOUT ROWID;
+	CREATE TABLE IF NOT EXISTS site_uptime_paths (
+		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		path       TEXT NOT NULL,
+		created_at INTEGER NOT NULL,
+		PRIMARY KEY (site_id, path)
+	) WITHOUT ROWID;
+	CREATE TABLE IF NOT EXISTS funnels (
+		id         TEXT PRIMARY KEY,
+		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		name       TEXT NOT NULL,
+		steps      TEXT NOT NULL,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	) WITHOUT ROWID;
+	CREATE INDEX IF NOT EXISTS funnels_site ON funnels(site_id, created_at);`,
+	// 78: when the uptime check was paused, so a paused stretch is told as
+	// paused (uptime.go): neither up nor down, and out of the uptime share.
+	// An open pause has to_at 0.
+	`CREATE TABLE IF NOT EXISTS site_uptime_pauses (
+		site_id TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		from_at INTEGER NOT NULL,
+		to_at   INTEGER NOT NULL DEFAULT 0,
+		PRIMARY KEY (site_id, from_at)
+	) WITHOUT ROWID;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
