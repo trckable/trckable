@@ -4,7 +4,8 @@ import type { CrawlerReport, WebVitals } from '../../lib/api'
 import { MIN_VITALS } from '../../lib/api'
 import { addDays, type ISODate } from '../../lib/dates'
 import { dayStates, daysBetween, rowTotals, uptimeOf, type DayState } from '../../features/incidents/model'
-import type { Incident } from '../../features/incidents/api'
+import type { Incident, PausedSpan } from '../../features/incidents/api'
+import { copy as briefing } from '../briefing/copy'
 import type { Mention, Source } from '../../features/mentions/api'
 
 export const UPTIME_DAYS = 30
@@ -15,6 +16,9 @@ export function speedOf(v: WebVitals | null): number | null {
   return v.lcp_ms / 1000
 }
 
+/** What Live says while the check is paused: the Briefing's words, so the two never differ. */
+export const pausedWords = briefing.checksPaused
+
 export interface UptimeFigure {
   /** The share of the watched time the site answered; none while too little of it was watched. */
   pct: number | null
@@ -23,10 +27,10 @@ export interface UptimeFigure {
 }
 
 /** The last thirty days of the incident record, as the share up and a colour for each day. */
-export function uptimeFigure(list: Incident[], today: ISODate, tz: string, now: number, watchedSince: number, paused = 0): UptimeFigure | null {
+export function uptimeFigure(list: Incident[], today: ISODate, tz: string, now: number, watchedSince: number, paused = 0, pausedSpans: PausedSpan[] = []): UptimeFigure | null {
   if (!watchedSince) return null
   const days = daysBetween(addDays(today, -(UPTIME_DAYS - 1)), today)
-  const states = dayStates(list, days, tz, now, watchedSince)
+  const states = dayStates(list, days, tz, now, watchedSince, pausedSpans)
   const t = rowTotals(list, UPTIME_DAYS, now, watchedSince, paused)
   const up = uptimeOf(t.span, t.seconds)
   return { pct: up?.pct ?? null, days: days.map((d) => states.get(d) ?? 'ok') }

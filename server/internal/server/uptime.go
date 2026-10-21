@@ -181,25 +181,49 @@ func (p *prober) probe(ctx context.Context, site sqlite.SiteRow) {
 	if p.refused(ctx, home) {
 		return
 	}
+	// The pages are looked at together, three at a time at most, so a site with
+	// extra pages does not make a round take six times as long.
+	paths := append([]string{"/"}, settings.Paths...)
+	looks := make([]seen, len(paths))
+	slots := make(chan struct{}, pathWorkers)
+	var wg sync.WaitGroup
+	for i, path := range paths {
+		wg.Add(1)
+		slots <- struct{}{}
+		go func() {
+			defer wg.Done()
+			defer func() { <-slots }()
+			looks[i] = p.look(ctx, site.Domain, path)
+		}()
+	}
+	wg.Wait()
+	if ctx.Err() != nil || looks[0].skipped {
+		return // stopping, or the homepage led somewhere private
+	}
+	// An extra page that led somewhere private is left out; the rest still count.
 	var first, failed, blocked *seen
-	for i, path := range append([]string{"/"}, settings.Paths...) {
-		l, ok := p.look(ctx, site.Domain, path)
-		if !ok {
-			return // stopping, or redirected somewhere private
+	for i := range looks {
+		l := &looks[i]
+		if l.skipped {
+			continue
 		}
 		if i == 0 {
-			first = &l
+			first = l
 		}
 		switch classify(l.look, l.err) {
 		case outcomeDown:
 			if failed == nil {
-				failed = &l
+				failed = l
 			}
 		case outcomeBlocked:
 			if blocked == nil {
-				blocked = &l
+				blocked = l
 			}
 		}
+	}
+	// A pause made while the looks were out wins: nothing is recorded or told for a check that is paused.
+	if now, err := p.st.UptimeOf(ctx, site.ID); err != nil || now.Paused {
+		return
 	}
 	var before, after sqlite.SiteProbe
 	at := p.now().Unix()
@@ -218,26 +242,26 @@ func (p *prober) probe(ctx context.Context, site sqlite.SiteRow) {
 	p.changed(ctx, site, before, after)
 }
 
+// pathWorkers is how many pages of one site are looked at at the same time.
+const pathWorkers = 3
+
 // seen is one page looked at in a probe.
 type seen struct {
 	look
 	err  error
 	path string
 	ms   int
+	// skipped: the page led somewhere this server will not call, so it says nothing.
+	skipped bool
 }
 
-// look gets one page of the site. It reports false when the probe should stop
-// without a record: the server is shutting down or the page led somewhere private.
-func (p *prober) look(ctx context.Context, domain, path string) (seen, bool) {
+// look gets one page of the site.
+func (p *prober) look(ctx context.Context, domain, path string) seen {
 	pctx, cancel := context.WithTimeout(ctx, probeTimeout)
 	defer cancel()
 	began := time.Now()
 	l, err := p.get(pctx, "https://"+domain+path)
-	s := seen{look: l, err: err, path: path, ms: int(time.Since(began).Milliseconds())}
-	if ctx.Err() != nil || (err != nil && errors.Is(err, alerts.ErrUnsafeTarget)) {
-		return s, false
-	}
-	return s, true
+	return seen{look: l, err: err, path: path, ms: int(time.Since(began).Milliseconds()), skipped: err != nil && errors.Is(err, alerts.ErrUnsafeTarget)}
 }
 
 // failedCause is why a page failed, in plain words: the homepage as ever, a

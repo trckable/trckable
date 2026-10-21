@@ -1949,6 +1949,8 @@ export default {
   'incidents.strip': 'Chaque jour de la période',
   'incidents.year': 'Chaque jour de l’année',
   'incidents.dayOk': (day: string) => `${day} : aucun incident`,
+  'incidents.dayPaused': (day: string) => `${day} : vérification en pause`,
+  'incidents.legendPaused': 'En pause',
   'incidents.dayQuiet': (day: string, span: string) => `${day} : silencieux · ${span}`,
   'incidents.dayDown': (day: string, span: string) => `${day} : hors ligne · ${span}`,
   'incidents.legendOk': 'Aucun incident',

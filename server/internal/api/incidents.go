@@ -113,6 +113,10 @@ func (a *API) incidents(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		out["summary"] = sum
+		if out["paused_spans"], err = a.Ctl.PauseSpans(r.Context(), site, from, to); err != nil {
+			fail(w, http.StatusInternalServerError, "could not read the incidents")
+			return
+		}
 		out["incidents"] = list
 		if t := a.quietTracked(r.Context(), site, a.Now()); t != nil {
 			out["quiet_tracked"] = *t

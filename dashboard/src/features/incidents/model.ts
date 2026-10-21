@@ -2,7 +2,7 @@
 // the days of a period are coloured, how much of it was uptime. Nothing here
 // knows about the browser, so the page, the chart's markers and All sites read
 // it the same way.
-import type { Incident } from './api'
+import type { Incident, PausedSpan } from './api'
 import { dateFmt } from '../../lib/format'
 
 const DAY = 86400
@@ -38,13 +38,14 @@ export function dayIn(unix: number, tz: string): string {
 /** Whether an incident, or a standing, is a site that stopped answering (down), not a quiet spell. The one place that is decided. */
 export const isDown = (x: { kind: string }): boolean => x.kind === 'down'
 
-export type DayState = 'ok' | 'quiet' | 'down' | 'unwatched'
+/** `paused`: the uptime check was paused that day and nothing worse is known; it is neither up nor down. */
+export type DayState = 'ok' | 'quiet' | 'down' | 'unwatched' | 'paused'
 
 /** How long it lasted; an open one lasts until now. */
 export const lasted = (x: Pick<Incident, 'started_at' | 'ended_at'>, now: number): number => (x.ended_at ?? now) - x.started_at
 
-/** The days of a period (YYYY-MM-DD, oldest first), each coloured by the worst incident that touched it: down over quiet over none. Days before `watchedSince` (unix seconds, when the site's incidents began to be recorded) are unknown, not clear, unless an incident says otherwise. */
-export function dayStates(list: Incident[], days: string[], tz: string, now: number, watchedSince = 0): Map<string, DayState> {
+/** The days of a period (YYYY-MM-DD, oldest first), each coloured by the worst incident that touched it: down over quiet over none, and paused where the check was paused and nothing else is known. Days before `watchedSince` (unix seconds, when the site's incidents began to be recorded) are unknown, not clear, unless an incident says otherwise. */
+export function dayStates(list: Incident[], days: string[], tz: string, now: number, watchedSince = 0, paused: PausedSpan[] = []): Map<string, DayState> {
   const first0 = watchedSince > 0 ? dayIn(watchedSince, tz) : ''
   const out = new Map<string, DayState>(days.map((d) => [d, d < first0 ? 'unwatched' : 'ok']))
   for (const x of list) {
@@ -54,6 +55,12 @@ export function dayStates(list: Incident[], days: string[], tz: string, now: num
       if (d < first || d > last) continue
       if (isDown(x) || out.get(d) === 'ok' || out.get(d) === 'unwatched') out.set(d, x.kind)
     }
+  }
+  // A day the check was paused on, with no incident on it, was not looked at: neither green nor red.
+  for (const p of paused) {
+    const first = dayIn(p.from, tz)
+    const last = dayIn(p.to, tz)
+    for (const d of days) if (d >= first && d <= last && out.get(d) === 'ok') out.set(d, 'paused')
   }
   return out
 }

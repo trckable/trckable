@@ -3,8 +3,11 @@ package server
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
+	"github.com/trckable/trckable/server/internal/alerts"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -117,5 +120,82 @@ func TestExtraPathsAreLookedAt(t *testing.T) {
 	p.probe(ctx, row)
 	if pr, _ = st.ProbeOf(ctx, site); pr.Failures != 0 || pr.BlockedSince == 0 {
 		t.Fatalf("blocked: %+v", pr)
+	}
+}
+
+// An extra page that leads somewhere private is left out, not the whole look:
+// a failing homepage still marks the site down.
+func TestAPrivateExtraPageDoesNotDropTheLook(t *testing.T) {
+	ctx := context.Background()
+	st, site := openForIncidents(t)
+	if _, err := st.AddUptimePath(ctx, site, "/go"); err != nil {
+		t.Fatal(err)
+	}
+	p, clock := fakeProber(st, nil)
+	p.get = func(_ context.Context, u string) (look, error) {
+		if u == "https://a.com/go" {
+			return look{}, alerts.ErrUnsafeTarget
+		}
+		return look{Status: 503}, nil
+	}
+	row := sqlite.SiteRow{ID: site, Domain: "a.com"}
+	for range 2 {
+		*clock += 300
+		p.probe(ctx, row)
+	}
+	if pr, _ := st.ProbeOf(ctx, site); !pr.Down() || pr.Error != "Your homepage answered 503" {
+		t.Fatalf("the failing homepage was dropped with the private page: %+v", pr)
+	}
+}
+
+// A probe that began before a pause records and tells nothing.
+func TestAProbeStartedBeforeAPauseTellsNothing(t *testing.T) {
+	ctx := context.Background()
+	st, site := openForIncidents(t)
+	p, clock := fakeProber(st, nil)
+	p.get = func(context.Context, string) (look, error) {
+		if err := st.SetUptimePaused(ctx, site, true, *clock); err != nil { // paused while the look is out
+			t.Error(err)
+		}
+		return look{Status: 503}, nil
+	}
+	told := 0
+	p.changed = func(context.Context, sqlite.SiteRow, sqlite.SiteProbe, sqlite.SiteProbe) { told++ }
+	for range 3 {
+		*clock += 300
+		p.probe(ctx, sqlite.SiteRow{ID: site, Domain: "a.com"})
+	}
+	if pr, _ := st.ProbeOf(ctx, site); pr.Failures != 0 || told != 0 {
+		t.Fatalf("a paused check recorded or told: %+v told %d", pr, told)
+	}
+}
+
+// A site's pages are looked at at most three at a time.
+func TestExtraPagesAreLookedAtThreeAtATime(t *testing.T) {
+	ctx := context.Background()
+	st, site := openForIncidents(t)
+	for _, path := range []string{"/a", "/b", "/c", "/d", "/e"} {
+		if _, err := st.AddUptimePath(ctx, site, path); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var in, most, total atomic.Int32
+	p, _ := fakeProber(st, nil)
+	p.get = func(context.Context, string) (look, error) {
+		n := in.Add(1)
+		for {
+			m := most.Load()
+			if n <= m || most.CompareAndSwap(m, n) {
+				break
+			}
+		}
+		time.Sleep(20 * time.Millisecond)
+		in.Add(-1)
+		total.Add(1)
+		return look{Status: 200}, nil
+	}
+	p.probe(ctx, sqlite.SiteRow{ID: site, Domain: "a.com"})
+	if total.Load() != 6 || most.Load() > 3 || most.Load() < 2 {
+		t.Fatalf("%d looks, %d at once", total.Load(), most.Load())
 	}
 }

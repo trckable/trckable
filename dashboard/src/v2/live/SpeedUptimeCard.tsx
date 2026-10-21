@@ -9,7 +9,9 @@ import { openExplore } from '../explore/open'
 import { copy } from './copy'
 import { EmptyBlock } from './EmptyBlock'
 import { CardSkeleton } from './CardSkeleton'
+import { pausedWords } from './health'
 import { loading, type Health } from './useHealth'
+import './liveUptime.css'
 import type { DayState } from '../../features/incidents/model'
 
 const h = copy.health
@@ -87,12 +89,14 @@ function SpeedBlock({ site, speed, recorded }: { site: Site; speed?: number | nu
 
 function UptimeBlock({ site, up, down }: { site: Site; up?: Health['uptime']; down: boolean }) {
   const days = up ? up.days.map((d, i) => (down && i === up.days.length - 1 ? ('down' as const) : d)) : undefined
-  if (!days || (!down && up?.pct == null)) return down ? null : <EmptyBlock site={site} line={h.empty.uptime} ghost={['strip']} collecting />
+  if (!days || (!down && !site.uptime_paused && up?.pct == null)) return down ? null : <EmptyBlock site={site} line={h.empty.uptime} ghost={['strip']} collecting />
+  const share = up?.pct != null ? h.upIn(h.pct(fmtFixed(up.pct, 1))) : h.days30
+  const axis = site.uptime_paused ? pausedWords : share
   return (
     <button type="button" className="lhup" onClick={() => incidents(site)}>
       <Strip days={days} />
       <span className="lhaxis">
-        <span>{up?.pct != null ? h.upIn(h.pct(fmtFixed(up.pct, 1))) : h.days30}</span>
+        <span>{axis}</span>
         <span>{copy.nowWord}</span>
       </span>
     </button>

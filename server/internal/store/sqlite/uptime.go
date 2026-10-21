@@ -140,6 +140,31 @@ func (s *Store) PausedSeconds(ctx context.Context, site string, from, to int64) 
 	return n, err
 }
 
+// PauseSpan is a stretch of time the check was paused, in unix seconds.
+type PauseSpan struct {
+	From int64 `json:"from"`
+	To   int64 `json:"to"`
+}
+
+// PauseSpans returns the pauses that touch [from, to], each cut to it (one still going ends at `to`), oldest first.
+func (s *Store) PauseSpans(ctx context.Context, site string, from, to int64) ([]PauseSpan, error) {
+	rows, err := s.DB.QueryContext(ctx, `SELECT max(from_at, ?), min(CASE WHEN to_at = 0 THEN ? ELSE to_at END, ?) FROM site_uptime_pauses
+		WHERE site_id = ? AND from_at < ? AND (to_at = 0 OR to_at > ?) ORDER BY from_at`, from, to, to, site, to, from)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []PauseSpan{}
+	for rows.Next() {
+		var p PauseSpan
+		if err := rows.Scan(&p.From, &p.To); err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
+}
+
 // AddUptimePath adds a path to a site's check and returns the settings. A
 // path already there is kept as it is; a sixth is refused.
 func (s *Store) AddUptimePath(ctx context.Context, site, raw string) (Uptime, error) {

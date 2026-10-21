@@ -1951,6 +1951,8 @@ export default {
   'incidents.strip': 'Jeder Tag des Zeitraums',
   'incidents.year': 'Jeder Tag des Jahres',
   'incidents.dayOk': (day: string) => `${day}: kein Vorfall`,
+  'incidents.dayPaused': (day: string) => `${day}: Verfügbarkeitsprüfung pausiert`,
+  'incidents.legendPaused': 'Pausiert',
   'incidents.dayQuiet': (day: string, span: string) => `${day}: still · ${span}`,
   'incidents.dayDown': (day: string, span: string) => `${day}: offline · ${span}`,
   'incidents.legendOk': 'Kein Vorfall',
