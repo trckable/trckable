@@ -2,7 +2,7 @@
 // rest of its query: the site a link asked for (?site=<id>), else siteRoute's answer (the first site, or with
 // no site the first run).
 import type { Site } from './api'
-import { redirectFor } from './siteRoute'
+import { canonDomain, redirectFor } from './siteRoute'
 
 export function landing(
   sites: Site[], params: URLSearchParams,
@@ -22,7 +22,15 @@ export function namesSite(sites: { id: string }[], params: URLSearchParams): boo
   return sites.some((x) => x.id === params.get('site'))
 }
 
-/** The site's own address for one with a stray ending (/my.shop.co/nope), or null. */
+/** The site's own address for one with a stray ending (/my.shop.co/nope) or one named by a domain it had, or null. */
 export function tidyPath(site: Site, path: string): string | null {
-  return path.slice(1).includes('/') ? '/' + encodeURIComponent(site.domain) : null
+  const seg = path.slice(1)
+  const named = (() => {
+    try {
+      return decodeURIComponent(seg)
+    } catch {
+      return seg
+    }
+  })()
+  return seg.includes('/') || canonDomain(named) !== canonDomain(site.domain) ? '/' + encodeURIComponent(site.domain) : null
 }

@@ -50,6 +50,7 @@ const (
 	RoleChanged      = "team.role_changed"
 	SiteAdded        = "site.added"
 	SiteRemoved      = "site.removed"
+	DomainChanged    = "site.domain_changed"
 	VerifyFailed     = "site.verify_failed"
 	ChannelConnected = "channel.connected"
 	ChannelGone      = "channel.disconnected"
@@ -136,6 +137,13 @@ var Kinds = map[string]Spec{
 	}},
 	SiteAdded:   {Bell: true},
 	SiteRemoved: {Bell: true},
+	DomainChanged: {Bell: true, Email: func(v Vars) Message {
+		return Message{
+			Subject: "A site's domain changed", Eyebrow: "Sites", Title: v["old"] + " is now " + v["domain"],
+			Text: who(v, "by") + " changed this site's domain. Visits from the old address still count for 30 days.",
+			Rows: rows(v, "old", "Old domain", "domain", "New domain", "when", "When"), Button: "See the site's settings", Path: siteSettingsPath, Note: teamNote,
+		}
+	}},
 	VerifyFailed: {Bell: true, Email: func(v Vars) Message {
 		return Message{
 			Subject: "trckable cannot see " + v["domain"], Eyebrow: "Install", Title: "The install check failed",
