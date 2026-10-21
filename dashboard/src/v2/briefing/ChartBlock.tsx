@@ -73,6 +73,12 @@ export function ChartBlock(p: ChartBlockProps) {
         {p.replay && <ReplayBar r={p.replay} />}
       </div>
       {p.replay ? <ReplayStage r={p.replay}>{hero}</ReplayStage> : hero}
+      {p.chart.compare && (
+        <p className="chkey" aria-hidden="true">
+          <span data-line="now">{copy.legendNow}</span>
+          <span data-line="before">{copy.legendBefore}</span>
+        </p>
+      )}
     </div>
   )
 }
