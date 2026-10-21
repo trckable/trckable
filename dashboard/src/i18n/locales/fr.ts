@@ -1430,6 +1430,7 @@ export default {
   'install.found.nosite': (where: string) => `trckable est sur ${where}, mais sans l’ID de ce site. Copiez à nouveau le code ci-dessus : gardez data-site.`,
   'install.found.other': (where: string) => `trckable est sur ${where}, mais avec l’ID d’un autre site. Copiez à nouveau le code ci-dessus.`,
   'install.found.unreachable': (why: string) => `Impossible de lire la page d’accueil : ${why}.`,
+  'install.runs': (domain: string, stack: string) => `${domain} fonctionne avec ${stack}`,
   'install.waiting': (domain: string) => `En attente de la première visite. Ouvrez ${domain} dans un onglet du navigateur : cela se met à jour tout seul.`,
   'install.live': (path: string) => `Live : une visite sur ${path} vient d’arriver.`,
   'install.wizard.label': 'Ajouter un site',
