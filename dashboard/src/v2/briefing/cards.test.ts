@@ -138,3 +138,10 @@ describe('the order', () => {
     expect(list.map((c) => c.key)).toEqual(['goals', 'sources'])
   })
 })
+
+describe('the questions Why? asks', () => {
+  it('every card that can be asked about has one', () => {
+    const list = cardsOf(base({ slices: { referrer: [slice('news.ycombinator.com', 186, 9)], country: [], device: [], entry_page: [] } }))
+    expect(list.find((c) => c.key === 'sources')?.ask).toBe('Why did Hacker News send so many people?')
+  })
+})

@@ -66,6 +66,7 @@ export function salesCards(i: SalesIn): Story[] {
       score: 92,
       bad: true,
       head: copy.refunded,
+      ask: copy.askRefund(fmt(money.refunds)),
       rest: copy.refundedRest(fmt(money.refunds)),
       vis: refundVis(i),
       why: i.refunds && i.refunds.count_90d > i.refunds.count ? copy.refunds90(i.refunds.count_90d, i.refunds.count === 1) : copy.refundWhy,
@@ -91,6 +92,7 @@ export function salesCards(i: SalesIn): Story[] {
       key: 'sales',
       score: st === 'up' ? 72 : 62,
       head: who(buyers, money),
+      ask: copy.askSold(fmt(total)),
       rest: copy.paidIn(fmt(total)),
       vis: { k: 'rcpt', rows: [...rows, ...extra, ...renewed, { l: copy.rowIn, t: '', a: fmt(total), flag: '', tot: true }] },
       why: `${range}${top ? copy.broughtOf(sourceName(top[0]), top[1], buyers.length) : ''}`.trim(),
@@ -108,6 +110,7 @@ export function salesCards(i: SalesIn): Story[] {
       score: 70,
       bad: true,
       head: copy.noSales,
+      ask: copy.askNoSales,
       rest: copy.noSalesRest(fmt(Math.max(0, band.lo)), fmt(band.hi), i.today),
       vis: { k: 'rcpt', rows: [{ l: copy.nothingThere, more: true }] },
       why: copy.salesBelow,
@@ -136,6 +139,7 @@ function soldAndBack(sold: Story, back: Story, i: SalesIn): Story {
     score: back.score,
     bad: true,
     head: copy.soldGross(fmt(money.revenue + money.refunds)),
+    ask: copy.askSoldBack(fmt(money.refunds)),
     rest: copy.soldBack(fmt(money.refunds), fmt(money.revenue)),
     // The listed sales are already net of what went back, so the rows add up to the net.
     vis: { k: 'rcpt', rows: [...rowsOf(sold, false), { l: copy.rowNet, t: '', a: fmt(money.revenue), flag: '', tot: true }] },
@@ -186,7 +190,7 @@ export function searchCard(i: SearchIn): Story | null {
   const tot = { l: copy.clicksTot(fmtInt(cur.clicks), fmtInt(cur.impressions)), t: `${copy.ctr(pct1(cur.impressions ? cur.clicks / cur.impressions : 0))} · ${copy.avgPos(fmtFixed(averagePosition(cur.rows), 1))}`, a: '', flag: '', tot: true }
   const base = { key: 'search' as const, vis: { k: 'rcpt' as const, rows: [...list, tot] }, deeper: { kind: 'table' as const, tab: 'search' as const }, how: `${copy.searchKnow} ${copy.searchRule}`, u: 'clicks' }
   if (fresh) {
-    return { ...base, score: 74, head: copy.rankNew(fresh.key), rest: copy.onGoogle, why: copy.newWhy(copy.clicks(fresh.clicks), fmtFixed(fresh.position, 1)), val: 'new', m: fresh.clicks, ev: '', act: { k: 'set', t: copy.alertNewSearch, msg: copy.alertNewSearchMsg } }
+    return { ...base, score: 74, head: copy.rankNew(fresh.key), ask: copy.askRank(fresh.key), rest: copy.onGoogle, why: copy.newWhy(copy.clicks(fresh.clicks), fmtFixed(fresh.position, 1)), val: 'new', m: fresh.clicks, ev: '', act: { k: 'set', t: copy.alertNewSearch, msg: copy.alertNewSearchMsg } }
   }
   if (!moved) return null
   const up = moved.st === 'up'
@@ -196,6 +200,7 @@ export function searchCard(i: SearchIn): Story | null {
     score: up ? 76 : 79,
     bad: !up,
     head: up ? copy.searchSent(moved.r.key, copy.clicks(moved.r.clicks)) : copy.searchLost(moved.r.key, copy.clicks(moved.r.clicks)),
+    ask: copy.askSearch(moved.r.key, up),
     rest: `${copy.fromGoogle}${searchMoved(up, x)}`,
     why: `${copy.searchWas(fmtInt(moved.w.clicks))}${copy.positionNow(fmtFixed(moved.r.position, 1), fmtFixed(moved.w.position, 1))}`,
     val: fmtInt(moved.r.clicks),
