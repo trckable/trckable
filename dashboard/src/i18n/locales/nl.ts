@@ -1949,6 +1949,7 @@ export default {
   'incidents.year': 'Elke dag van het jaar',
   'incidents.dayOk': (day: string) => `${day}: geen incident`,
   'incidents.dayPaused': (day: string) => `${day}: controle gepauzeerd`,
+  'incidents.dayPausedPart': (text: string, span: string) => `${text} · gepauzeerd ${span}`,
   'incidents.legendPaused': 'Gepauzeerd',
   'incidents.dayQuiet': (day: string, span: string) => `${day}: stil · ${span}`,
   'incidents.dayDown': (day: string, span: string) => `${day}: offline · ${span}`,
