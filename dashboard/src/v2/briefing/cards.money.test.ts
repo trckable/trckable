@@ -84,7 +84,7 @@ describe('the search card', () => {
   it('names the query that rose furthest from what it sent before', () => {
     const c = searchCard({ story: { cur: sr([{ key: 'a', clicks: 60 }, { key: 'b', clicks: 30 }]), prev: sr([{ key: 'a', clicks: 20 }, { key: 'b', clicks: 30 }]) }, domain: 'x.com', rule: '' })
     expect(c?.head).toBe('“a” sent 60 clicks')
-    expect(c?.rest).toContain('3.0× your usual')
+    expect(c?.rest).toContain('3.0× the period before')
   })
   it('says nothing when nothing changed', () => {
     expect(searchCard({ story: { cur: sr([{ key: 'a', clicks: 30 }]), prev: sr([{ key: 'a', clicks: 30 }]) }, domain: 'x.com', rule: '' })).toBeNull()
