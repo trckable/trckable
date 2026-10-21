@@ -16,7 +16,7 @@ describe('a paused check', () => {
   it('paints its days paused in Live’s strip, and a day with an incident stays an incident', () => {
     const paused = [{ from: now - 3 * DAY, to: now - 1 * DAY }]
     const down = [{ id: 'i', site: 's', kind: 'down' as const, started_at: now - 2 * DAY, ended_at: now - 2 * DAY + 600, cause: '', note: '', expected_visits: null }]
-    const fig = uptimeFigure(down as never, '2026-10-20', 'UTC', now, watched, 2 * DAY, paused)
+    const fig = uptimeFigure(down, '2026-10-20', 'UTC', now, watched, 2 * DAY, paused)
     expect(fig?.days.slice(-5)).toEqual(['ok', 'paused', 'down', 'paused', 'ok'])
     expect(fig?.days.filter((d) => d === 'paused')).toHaveLength(2)
   })
