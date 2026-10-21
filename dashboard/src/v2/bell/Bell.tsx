@@ -11,7 +11,7 @@ import { BellMenu, type BellRow, type RowAction } from '../ui/BellMenu'
 import { alertOf, setAlertOn } from './alertState'
 import { copy } from './copy'
 import { timeOf } from './days'
-import { ALL, GROUPS, apply, hiddenUnread, readFilter, saveFilter, unreadGroups, type Filter } from './filter'
+import { ALL, GROUPS, apply, readFilter, saveFilter, unreadGroups, type Filter } from './filter'
 import { badge, rowsOf, settle, unreadCount, type Notice, type NoticeRow } from './notices'
 import { useBellAlert } from './useBellAlert'
 import { OPEN_GAP_MS, type useNotices } from './useNotices'
@@ -139,10 +139,10 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
       filter={{
         groups: GROUPS.map((g) => ({ id: g, label: label[g], on: f.group === g, dot: dots.has(g) })),
         onGroup: (g) => choose({ ...f, group: GROUPS.find((x) => x === g) ?? 'all' }),
-        sites: sites.length > 1 ? [{ value: '', label: copy.allSites }, ...sites.map((x) => ({ value: x.domain, label: x.domain }))] : undefined,
-        site: f.site,
+        sites: sites.length > 1 ? [{ value: '', label: copy.allSites, on: !f.site }, ...sites.map((x) => ({ value: x.domain, label: x.domain, on: f.site === x.domain }))] : undefined,
         onSite: (site) => choose({ ...f, site }),
-        siteDot: hiddenUnread(listed, f.site),
+        active: [f.group === 'all' ? '' : label[f.group], f.site].filter(Boolean).join(' · '),
+        onClear: () => choose(ALL),
       }}
       sheet={sheet}
       onPick={(id) => {

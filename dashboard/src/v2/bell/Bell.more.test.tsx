@@ -113,31 +113,42 @@ describe('a row’s ⋯ for an alert', () => {
 describe('the filter', () => {
   const down = n('down:i1', false, { kind: 'down', site: 'a.com', siteId: 's1' })
   const sale = n('m1', false, { kind: 'milestone', site: 'b.com', siteId: 's2' })
-  const chip = (host: HTMLElement, name: string) => [...host.querySelectorAll<HTMLButtonElement>('.nfc')].find((b) => b.textContent === name)
+  const filterBtn = (host: HTMLElement) => host.querySelector<HTMLButtonElement>('.nfh .nfq')
+  const radio = (label: string) => [...document.querySelectorAll<HTMLButtonElement>('[role=menuitemradio]')].find((b) => b.textContent?.startsWith(label))
+  const choose = (host: HTMLElement, label: string) => {
+    act(() => filterBtn(host)?.click())
+    act(() => radio(label)?.click())
+  }
 
-  it('narrows the list to a group, keeps the choice, and says so when nothing is there', () => {
+  it('is one button in the header row; it narrows the list, says how above it, and is cleared from there', () => {
     localStorage.clear()
     const m = mount([down, sale])
-    expect(m.host.querySelectorAll('.nfc-site')).toHaveLength(0) // one site known: no picker
-    act(() => chip(m.host, 'Milestones')?.click())
+    expect(m.host.querySelectorAll('.nfc, select')).toHaveLength(0) // nothing inline
+    expect(filterBtn(m.host)?.querySelector('.nfd')).toBeNull()
+    act(() => filterBtn(m.host)?.click())
+    expect([...document.querySelectorAll('[role=group]')].map((g) => g.getAttribute('aria-label'))).toEqual(['Show']) // one site known: no Site group
+    act(() => radio('Milestones')?.click())
     expect([...m.host.querySelectorAll('.nft b')].map((b) => b.textContent)).toEqual(['m1'])
-    act(() => chip(m.host, 'Busy')?.click())
+    expect(m.host.querySelector('.nfact')?.textContent).toBe('Milestones')
+    expect(filterBtn(m.host)?.querySelector('.nfd')).not.toBeNull()
+    expect(localStorage.getItem('trckable.bell.filter')).toContain('milestones')
+    choose(m.host, 'Busy')
     expect(m.host.querySelector('.xnone')?.textContent).toBe('Nothing here')
-    expect(chip(m.host, 'Busy')?.getAttribute('aria-pressed')).toBe('true')
-    // The unread rows under Down and Milestones are told by a dot while Busy is chosen.
-    expect(chip(m.host, 'Down')?.querySelector('.nfd')).not.toBeNull()
-    expect(chip(m.host, 'Busy')?.querySelector('.nfd')).toBeNull()
-    expect(localStorage.getItem('trckable.bell.filter')).toContain('busy')
+    act(() => m.host.querySelector<HTMLButtonElement>('.nfact .nfq')?.click())
+    expect(m.host.querySelectorAll('.nfact')).toHaveLength(0)
+    expect(m.host.querySelectorAll('.nft b')).toHaveLength(2)
     m.stop()
     localStorage.clear()
   })
 
-  it('has a site picker only with several sites', () => {
+  it('has a Site group only with several sites', () => {
     localStorage.clear()
     const m = mount([down, sale], { sites: [site, { id: 's2', domain: 'b.com' }] })
-    const pick = m.host.querySelector<HTMLSelectElement>('.nfc-site select')
-    expect(pick).not.toBeNull()
-    expect([...(pick?.options ?? [])].map((o) => o.value)).toEqual(['', 'a.com', 'b.com'])
+    act(() => filterBtn(m.host)?.click())
+    expect([...document.querySelectorAll('[role=group]')].map((g) => g.getAttribute('aria-label'))).toEqual(['Show', 'Site'])
+    act(() => radio('b.com')?.click())
+    expect(m.host.querySelector('.nfact')?.textContent).toBe('b.com')
+    expect([...m.host.querySelectorAll('.nft b')]).toHaveLength(1)
     m.stop()
     localStorage.clear()
   })

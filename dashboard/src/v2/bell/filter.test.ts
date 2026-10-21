@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it } from 'vitest'
-import { ALL, apply, groupOf, hiddenUnread, readFilter, saveFilter, unreadGroups } from './filter'
+import { ALL, apply, groupOf, readFilter, saveFilter, unreadGroups } from './filter'
 import type { Notice } from './notices'
 
 const r = (kind: Notice['kind'], site: string, unread = true, extra: Partial<Notice> = {}) => ({ kind, site, unread, ...extra })
@@ -27,12 +27,10 @@ describe('the groups of the panel’s filter', () => {
     expect(apply(rows, { group: 'all', site: 'a.com' })).toEqual([rows[0], merged])
   })
 
-  it('say which chip has unread rows, and when the site picked hides some', () => {
+  it('say which kinds have unread rows', () => {
     const rows = [r('down', 'a.com'), r('milestone', 'b.com', false), r('spike', 'b.com')]
     expect([...unreadGroups(rows, '')].sort()).toEqual(['all', 'busy', 'down'])
     expect([...unreadGroups(rows, 'a.com')].sort()).toEqual(['all', 'down'])
-    expect(hiddenUnread(rows, 'a.com')).toBe(true)
-    expect(hiddenUnread(rows, '')).toBe(false)
   })
 })
 

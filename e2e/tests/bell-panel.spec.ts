@@ -81,7 +81,7 @@ for (const width of [1440, 390, 360]) {
     await page.locator('#bellBtn').click()
     await expect(menu.locator('.nf').first()).toBeVisible()
     await page.waitForTimeout(400)
-    if (SHOTS) await page.screenshot({ path: `/private/tmp/shots/notif-${SHOTS}-${width}.png` })
+    if (SHOTS) await page.screenshot({ path: `/private/tmp/shots/notif-${SHOTS}-${width}-panel.png` })
     await expect(page.locator('#bellDot')).toHaveText('4')
     await expect(menu.locator('.nf')).toHaveCount(4)
 
@@ -103,17 +103,29 @@ for (const width of [1440, 390, 360]) {
     })
     expect(fits).toBe(true)
 
-    // The filter: chips under the header, the site picker is there because the account has several sites; a chip with unread rows has a dot, and a group with none says so.
-    await expect(menu.locator('.nfc')).toHaveText(['All', 'Down', 'Busy', 'Milestones'])
-    await expect(menu.locator('.nfc-site select option').first()).toHaveText('All sites')
-    await expect(menu.locator('.nfc', { hasText: 'Down' }).locator('.nfd')).toHaveCount(1)
-    await expect(menu.locator('.nfc', { hasText: 'Busy' }).locator('.nfd')).toHaveCount(0)
-    await menu.locator('.nfc', { hasText: 'Busy' }).click()
+    // The filter is one quiet button in the header row beside Mark all read, not chips and a select in the list; its popover has Show and Site.
+    await expect(menu.locator('.nfc, select')).toHaveCount(0)
+    const filter = menu.getByRole('button', { name: 'Filter' })
+    await expect(filter).toBeVisible()
+    const head = await Promise.all([filter.boundingBox(), menu.getByRole('button', { name: 'Mark all read' }).boundingBox()])
+    expect(Math.abs((head[0]!.y + head[0]!.height / 2) - (head[1]!.y + head[1]!.height / 2))).toBeLessThan(6)
+    await expect(menu.locator('.nfact')).toHaveCount(0)
+    await filter.click()
+    await expect(page.getByRole('group', { name: 'Show' }).getByRole('menuitemradio')).toHaveText(['All', 'Down', 'Busy', 'Milestones'])
+    await expect(page.getByRole('group', { name: 'Site' }).getByRole('menuitemradio').first()).toHaveText('All sites') // the account has several sites
+    if (SHOTS) {
+      await page.waitForTimeout(500)
+      await page.screenshot({ path: `/private/tmp/shots/notif-${SHOTS}-${width}-filter.png` })
+    }
+    await page.getByRole('menuitemradio', { name: 'Busy', exact: true }).click()
+    await expect(menu.locator('.nfact')).toHaveText('Busy')
     await expect(menu.locator('.xnone')).toHaveText('Nothing here')
     expect(await page.evaluate(() => localStorage.getItem('trckable.bell.filter'))).toContain('busy')
-    await menu.locator('.nfc', { hasText: 'Down' }).click()
+    await menu.getByRole('button', { name: 'Clear filter' }).click()
+    await expect(menu.locator('.nfact')).toHaveCount(0)
     await expect(menu.locator('.nf')).toHaveCount(4)
     await page.evaluate(() => localStorage.removeItem('trckable.bell.filter'))
+    if (width <= 640) await expect(menu.locator('.cdh').getByRole('button', { name: 'Close' })).toBeVisible()
 
     // The ⋯ by keyboard: Enter opens its choices, Escape shuts them and leaves the list open.
     const more = menu.locator('.nfx').first()

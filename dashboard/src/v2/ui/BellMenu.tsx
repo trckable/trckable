@@ -1,6 +1,6 @@
 // The bell at the end of the header: a dot with how many are unread, and the list under it (a sheet on a phone).
 // Markup and classes are the walkthrough's own.
-import { MoreHorizontal } from 'lucide-react'
+import { Check, ListFilter, MoreHorizontal, X } from 'lucide-react'
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { reducedMotion } from '../../lib/motion'
 import { Popover } from '../../kit/Popover'
@@ -123,10 +123,11 @@ interface BellProps {
   filter?: {
     groups: { id: string; label: string; on: boolean; dot: boolean }[]
     onGroup: (id: string) => void
-    sites?: { value: string; label: string }[]
-    site: string
+    sites?: { value: string; label: string; on: boolean }[]
     onSite: (site: string) => void
-    siteDot: boolean
+    /** The choice in words ("Down · history.example"); '' when the list is not narrowed. */
+    active: string
+    onClear: () => void
   }
   /** A build with its own list: the archive is a second view of it. */
   archive?: { rows: BellRow[]; load: () => void; loading: boolean; none: string }
@@ -216,34 +217,64 @@ function Row({ n, p, close }: { n: BellRow; p: BellProps; close: () => void }) {
   )
 }
 
-function Filters({ f }: { f: NonNullable<BellProps['filter']> }) {
-  return (
-    <div className="nfc-row">
-      <div className="nfc-chips" role="group" aria-label={copy.filterLabel}>
-        {f.groups.map((g) => (
-          <button key={g.id} type="button" className="nfc" aria-pressed={g.on} aria-label={g.dot ? `${g.label}, ${copy.unread}` : undefined} onClick={() => f.onGroup(g.id)}>
-            {g.label}
-            {g.dot && <i className="nfd sm" aria-hidden="true" />}
-          </button>
-        ))}
-      </div>
-      {f.sites && (
-        <span className="nfc-site">
-          <select value={f.site} aria-label={f.siteDot ? `${copy.siteLabel}, ${copy.unread}` : copy.siteLabel} onChange={(e) => f.onSite(e.target.value)}>
-            {f.sites.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          {f.siteDot && <i className="nfd sm" aria-hidden="true" />}
-        </span>
-      )}
+/** The one filter button: a quiet icon with a dot while the list is narrowed, and the kit's popover (a sheet on a phone) with the kinds and the sites. */
+function FilterMenu({ f }: { f: NonNullable<BellProps['filter']> }) {
+  const group = (label: string, items: { id: string; label: string; on: boolean; dot?: boolean; pick: () => void }[], shut: () => void) => (
+    <div role="group" aria-label={label} className="nfg">
+      <h4>{label}</h4>
+      {items.map((o) => (
+        <button
+          key={o.id}
+          type="button"
+          role="menuitemradio"
+          aria-checked={o.on}
+          className="nfpi"
+          onClick={() => {
+            o.pick()
+            shut()
+          }}
+        >
+          <span className="nfpl">{o.label}</span>
+          {o.dot && <i className="nfd sm" aria-hidden="true" />}
+          {o.on && <Check size={16} aria-hidden="true" />}
+        </button>
+      ))}
     </div>
+  )
+  return (
+    <Popover
+      label={copy.filter}
+      className="nfpop"
+      trigger={(t) => (
+        <button type="button" className="nfq" aria-label={f.active ? `${copy.filter}: ${f.active}` : copy.filter} title={copy.filter} {...t}>
+          <ListFilter size={18} aria-hidden="true" />
+          {f.active && <i className="nfd sm" aria-hidden="true" />}
+        </button>
+      )}
+    >
+      {(shut) => (
+        <div role="menu">
+          {group(copy.filterLabel, f.groups.map((g) => ({ id: g.id, label: g.label, on: g.on, dot: g.dot, pick: () => f.onGroup(g.id) })), shut)}
+          {f.sites && group(copy.siteLabel, f.sites.map((o) => ({ id: o.value || 'all', label: o.label, on: o.on, pick: () => f.onSite(o.value) })), shut)}
+        </div>
+      )}
+    </Popover>
   )
 }
 
-function List(p: BellProps & { close: () => void }) {
+/** What sits in the panel's header row: the filter and Mark all read. */
+function Tools(p: BellProps) {
+  return (
+    <span className="nftools">
+      {p.filter && <FilterMenu f={p.filter} />}
+      <button type="button" className="lk3" disabled={p.loading || !p.rows.some((r) => r.unread)} onClick={p.onAll}>
+        {p.markAll}
+      </button>
+    </span>
+  )
+}
+
+function List(p: BellProps & { close: () => void; bare?: boolean }) {
   const [old, setOld] = useState(false)
   const rows = old && p.archive ? p.archive.rows : p.rows
   const list = useRef<HTMLDivElement>(null)
@@ -251,13 +282,20 @@ function List(p: BellProps & { close: () => void }) {
   const waiting = p.loading && !old
   return (
     <>
-      <div className="nfh">
-        <b>{p.title}</b>
-        <button type="button" className="lk3" disabled={p.loading || !p.rows.some((r) => r.unread)} onClick={p.onAll}>
-          {p.markAll}
-        </button>
-      </div>
-      {p.filter && !old && <Filters f={p.filter} />}
+      {!p.bare && (
+        <div className="nfh">
+          <b>{p.title}</b>
+          <Tools {...p} />
+        </div>
+      )}
+      {p.filter?.active && !old && (
+        <div className="nfact">
+          <span>{p.filter.active}</span>
+          <button type="button" className="nfq sm" aria-label={copy.clearFilter} title={copy.clearFilter} onClick={p.filter.onClear}>
+            <X size={14} aria-hidden="true" />
+          </button>
+        </div>
+      )}
       <div className="nfl" ref={list} aria-busy={p.loading || undefined}>
         {waiting && (
           <div className="nfs" aria-hidden="true">
@@ -321,12 +359,13 @@ export function BellMenu(p: BellProps) {
           <aside className="cd on" role="dialog" aria-modal="true" aria-label={p.title} tabIndex={-1}>
             <div className="cdh">
               <b>{p.title}</b>
-              <button type="button" className="ib x" title="Close" onClick={close}>
-                ×
+              <Tools {...p} />
+              <button type="button" className="nfq" aria-label={copy.close} title={copy.close} onClick={close}>
+                <X size={18} aria-hidden="true" />
               </button>
             </div>
             <div className="cdb">
-              <List {...p} close={close} />
+              <List {...p} close={close} bare />
             </div>
           </aside>
         </MkPortal>

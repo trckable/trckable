@@ -29,3 +29,27 @@
     min-height: 44px;
   }
 }
+
+/* The filter's two groups, each with its heading; a check marks the choice and a dot an unread kind. */
+.nfpop .nfg h4 {
+  margin: 0;
+  padding: 8px 10px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+.nfpop .nfg + .nfg {
+  margin-top: 4px;
+}
+.nfpop .nfpl {
+  flex: 1;
+}
+.nfpop .nfpi .nfd {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-right: 8px;
+  display: inline-block;
+  flex: none;
+}

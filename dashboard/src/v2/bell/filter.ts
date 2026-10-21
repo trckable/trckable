@@ -61,6 +61,3 @@ export function unreadGroups(rows: readonly Row[], site: string): Set<Group> {
   }
   return out
 }
-
-/** Whether a row that is unread is hidden by the chosen site (the picker says so with a dot). */
-export const hiddenUnread = (rows: readonly Row[], site: string): boolean => !!site && rows.some((n) => n.unread && !onSite(n, site))
