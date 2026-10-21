@@ -178,6 +178,16 @@
   color: var(--accent-ink);
   font-size: 11.5px;
 }
+.inst-optional > summary {
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.inst-optional > p {
+  margin: 6px 0 8px;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
 .inst-docs {
   display: inline-flex;
   align-items: center;
@@ -506,4 +516,12 @@
 }
 .setup-fig:has(.tkf) {
   pointer-events: auto;
+}
+
+/* What the site runs: one quiet line above the tabs. */
+.inst-stack {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
 }
