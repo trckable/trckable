@@ -1117,6 +1117,8 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .fact small{font-size:12px;margin-left:4px}
 .mk .fact .m{display:block;font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mk .cards{display:flex;flex-direction:column;gap:0;margin-top:var(--mk-s2);border-top:1px solid var(--mk-line)}
+/* On a phone the cards are one flat list; its gap above is the one the cards above have (the pill's slot between them takes 8px off each side, so the list's own margin makes up the rest). Here and not with the story card's own styles: those arrive with its chunk, and the list would move when they do. */
+@container (--pane-max-600){.mk .brief > .cards{margin-top:calc(16px - var(--mk-s3))}}
 .mk .icard, .mk .icard:first-child, .mk .icard.wide, .mk .icard.r, .mk .icard.err{display:block;background:none;border:0;border-bottom:1px solid var(--mk-line);border-radius:0;padding:0;min-height:56px;gap:0}
 .mk .ic-h{align-items:center;padding:var(--mk-s3) 0}
 .mk .ic-i{display:block;width:22px;height:22px;flex:none;color:var(--mk-muted)}
