@@ -569,3 +569,19 @@ func TestKindIsKeptOnlyFromTheSitesOwnPage(t *testing.T) {
 		t.Fatalf("a redirect elsewhere set the kind: %v", k)
 	}
 }
+
+// The first visit shows in the checklist at once: an empty page count read just before it is not reused for a minute.
+func TestSetupVerifiedAtTheFirstVisit(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	if apiItem(t, getSetup(t, g, c), "verified")["done"] == true {
+		t.Fatal("verified before any visit")
+	}
+	g.ctl.SeenSite(context.Background(), g.site, g.now.Unix())
+	g.event(t, event.Event{Kind: event.KindPageview, EventID: 1, Visitor: 1, Path: "/", TS: g.now.UnixMilli()})
+	g.waitApplied(t, 1)
+	if apiItem(t, getSetup(t, g, c), "verified")["done"] != true {
+		t.Fatal("the first visit has landed and the install still waits")
+	}
+}

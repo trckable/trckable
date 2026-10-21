@@ -19,7 +19,8 @@ export type Method = {
   keywords?: string
 }
 
-export type Step = { title: string; code: string }
+/** optional: not needed to start counting; shown folded away, after the steps that are. */
+export type Step = { title: string; code: string; optional?: boolean }
 
 /** cookieless only matters to bundled installs: every other method loads
  *  /js/<site id>.js, and the server writes the site's mode into that. */
@@ -33,7 +34,7 @@ export const initCall = (c: Ctx) => `init({ site: '${c.site}', host: '${c.host}'
 const joinSteps = (steps: (c: Ctx) => Step[]) => (c: Ctx) => steps(c).map((x) => x.code).join('\n\n')
 
 /** The component each package install renders, as the snippets write it. */
-export const nextComponent = (c: Ctx) => `<Analytics site="${c.site}"${cookieProp(c)} />`
+export const nextComponent = (c: Ctx) => `<Analytics site="${c.site}" host="${c.host}"${cookieProp(c)} />`
 const reactComponent = (c: Ctx) => `<Analytics site="${c.site}" host="${c.host}"${cookieProp(c)} />`
 
 const nextSteps = (c: Ctx): Step[] => [
@@ -41,9 +42,15 @@ const nextSteps = (c: Ctx): Step[] => [
   { title: 'Add it to app/layout.tsx', code: `import { Analytics } from 'trckable/next'\n${nextComponent(c)}` },
   {
     title: 'Add one route, so events go through your own domain',
-    code: `// app/api/e/route.ts — same-origin: past analytics blocklists, 400-day Safari visitors\nexport { POST } from 'trckable/next'`,
+    code: `// app/api/e/route.ts — same-origin: past analytics blocklists, 400-day Safari visitors\n// With this route, remove host="${c.host}" from <Analytics>\nexport { POST } from 'trckable/next'`,
+    optional: true,
   },
-  { title: 'Set two environment variables', code: `# .env\nTRCKABLE_HOST=${c.host}\nTRCKABLE_PROXY_KEY=${c.proxyKey}` },
+  { title: 'Set two environment variables', code: `# .env\nTRCKABLE_HOST=${c.host}\nTRCKABLE_PROXY_KEY=${c.proxyKey}`, optional: true },
+]
+
+const landingSteps = (c: Ctx): Step[] => [
+  { title: 'Add the tag to the landing page <head>', code: `<!-- landing page, in <head> -->\n${tag(c)}` },
+  ...nextSteps(c),
 ]
 
 const reactSteps = (c: Ctx): Step[] => [
@@ -89,7 +96,7 @@ export const METHODS: Method[] = [
     id: 'next',
     name: 'Next.js',
     group: 'Frameworks',
-    where: 'Edit app/layout.tsx and add one route, so events go through your own domain.',
+    where: 'Install the package and add one line to app/layout.tsx.',
     code: joinSteps(nextSteps),
     steps: nextSteps,
     bundled: true,
@@ -101,10 +108,8 @@ export const METHODS: Method[] = [
     name: 'Landing page and app',
     group: 'Code',
     where: 'The tag on the landing page, trckable/next in the app on a subdomain.',
-    code: (c) => `<!-- landing page, in <head> -->
-${tag(c)}
-
-` + joinSteps(nextSteps)(c),
+    code: joinSteps(landingSteps),
+    steps: landingSteps,
     bundled: true,
     note: 'data-domain shares the cookie with the app: one visitor, one journey, sales included.',
     keywords: 'subdomain saas marketing cross-domain',

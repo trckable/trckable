@@ -108,6 +108,15 @@ export function flag(code: string) {
   return String.fromCodePoint(0x1f1a5 + up.charCodeAt(0), 0x1f1a5 + up.charCodeAt(1))
 }
 
+/** How many decimals a currency has (2 for dollars, 0 for yen, 3 for dinars): what a typed amount is checked against. */
+export function currencyDigits(currency: string): number {
+  try {
+    return new Intl.NumberFormat('en', { style: 'currency', currency }).resolvedOptions().maximumFractionDigits ?? 2
+  } catch {
+    return 2
+  }
+}
+
 const moneyFmt = new Map<string, Intl.NumberFormat>()
 
 /** Formats minor units of a currency by one rule everywhere: whole amounts have no cents ("$87", "$218"), and an amount under 100 that is not whole keeps them ("$87.50"). `cents` forces either. */
