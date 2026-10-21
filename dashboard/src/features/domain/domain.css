@@ -1,0 +1,30 @@
+/* Settings → General → Domain. */
+.dom-now {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.dom-name {
+  overflow-wrap: anywhere;
+  font-weight: 500;
+}
+.dom-note {
+  margin: 0;
+  padding: 0 0 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.dom-warn {
+  color: var(--warn, var(--text-2));
+}
+.dom-stop {
+  margin-left: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
