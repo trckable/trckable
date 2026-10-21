@@ -2299,6 +2299,8 @@ export default {
   'briefing.cards.renewal': 'Verlenging',
   'briefing.cards.via': (who: string) => ` · via ${who}`,
   'briefing.cards.more': (n: number) => `+ ${int(n)} meer`,
+  'briefing.cards.leakStuck': (p: string, e: string, n: number) => `Op ${p} werd ook ${n} keer achter elkaar op ${e} gedrukt.`,
+  'briefing.cards.leakAsk': (a: string, b: string) => `Waarom gaan minder mensen van ${a} naar ${b} dan gebruikelijk?`,
   'briefing.cards.rowNet': 'Netto',
   'briefing.cards.soldGross': (gross: string) => `Verkocht ${gross}`,
   'briefing.cards.soldBack': (back: string, net: string) => `, ${back} terugbetaald, ${net} netto`,

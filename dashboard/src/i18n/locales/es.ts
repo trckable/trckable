@@ -2305,6 +2305,8 @@ export default {
   'briefing.cards.renewal': 'Renovación',
   'briefing.cards.via': (who: string) => ` · vía ${who}`,
   'briefing.cards.more': (n: number) => `+ ${n} más`,
+  'briefing.cards.leakStuck': (p: string, e: string, n: number) => `En ${p} también pulsaron ${e} ${n} veces seguidas.`,
+  'briefing.cards.leakAsk': (a: string, b: string) => `¿Por qué pasan menos personas de ${a} a ${b} de lo habitual?`,
   'briefing.cards.rowNet': 'Neto',
   'briefing.cards.soldGross': (gross: string) => `Vendido ${gross}`,
   'briefing.cards.soldBack': (back: string, net: string) => `, ${back} reembolsados, ${net} netos`,
