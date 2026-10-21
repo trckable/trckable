@@ -1,0 +1,1 @@
+Switching a feature on shows at once: Live's Speed & uptime and AI & mentions cards read their figures again the moment a module or an Answers setting is saved, and show their first state ("Collecting…" until data arrives) with no page refresh.

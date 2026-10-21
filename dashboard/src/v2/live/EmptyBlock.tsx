@@ -4,6 +4,9 @@
 // shimmer and the line alone. The block fills the room its card leaves and centres in it.
 import type { Site } from '../../lib/api'
 import { can } from '../../lib/permissions'
+import { useV2Extras } from '../slots'
+import { copy } from './copy'
+import './empty.css'
 import { runSetup, type LiveSetup } from './setupLinks'
 
 /** The pieces of the ghost: the speed gauge, the thirty days of uptime, rows of a list. */
@@ -13,8 +16,8 @@ interface Props {
   site: Site
   line: string
   ghost: Ghost[]
-  /** The one button: its words and what it opens. None when nothing needs switching on. */
-  action?: { label: string; setup: LiveSetup }
+  /** The one button: its words and what it opens, and the question "Why?" asks Peek beside it. None when nothing needs switching on. */
+  action?: { label: string; setup: LiveSetup; ask: string }
   /** Switched on, only waiting for visits: the ghost shimmers, no button. */
   collecting?: boolean
 }
@@ -47,6 +50,27 @@ function GhostPiece({ kind }: { kind: Ghost }) {
   )
 }
 
+/** The setup button for someone who can change settings, and beside it, where there is Peek, "Why?": it never replaces the button. */
+function Actions({ site, action }: { site: Site; action: NonNullable<Props['action']> }) {
+  const { askPeekNow } = useV2Extras()
+  const setup = can('site.settings')
+  if (!setup && !askPeekNow) return null
+  return (
+    <div className="lhacts">
+      {setup && (
+        <button type="button" className="lhgo" onClick={() => runSetup(site, action.setup)}>
+          {action.label}
+        </button>
+      )}
+      {askPeekNow && (
+        <button type="button" className="lhwhy" data-ask-peek="1" onClick={() => askPeekNow(action.ask)}>
+          {copy.health.why}
+        </button>
+      )}
+    </div>
+  )
+}
+
 export function EmptyBlock({ site, line, ghost, action, collecting }: Props) {
   return (
     <div className={`lhempty${collecting ? ' collecting' : ''}`}>
@@ -56,11 +80,7 @@ export function EmptyBlock({ site, line, ghost, action, collecting }: Props) {
         ))}
       </div>
       <span className="lhline">{line}</span>
-      {action && can('site.settings') && (
-        <button type="button" className="lhgo" onClick={() => runSetup(site, action.setup)}>
-          {action.label}
-        </button>
-      )}
+      {action && <Actions site={site} action={action} />}
     </div>
   )
 }

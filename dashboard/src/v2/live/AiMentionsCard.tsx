@@ -89,7 +89,7 @@ export function AiMentionsCard({ site, health }: Props) {
           <CardSkeleton kind="ai" />
         ) : (
           <>
-            {ai || answers ? <Crawlers ai={ai} answers={answers} /> : <EmptyBlock site={site} line={h.empty.ai} ghost={['rows']} action={{ label: h.connectCrawlers, setup: 'crawlers' }} />}
+            {ai || answers ? <Crawlers ai={ai} answers={answers} /> : <EmptyBlock site={site} line={h.empty.ai} ghost={['rows']} action={{ label: h.connectCrawlers, setup: 'crawlers', ask: h.askAi }} />}
             {hasMentions() && site.mentions && mentions && <Mentions m={mentions} />}
           </>
         )}
