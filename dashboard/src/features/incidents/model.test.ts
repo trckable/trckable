@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Incident } from './api'
-import { accountTotals, affectedSeconds, dayIn, dayLasted, dayStates, daysBetween, duration, rowTotals, startOfDay, uptimeOf, uptimePct } from './model'
+import { accountTotals, affectedSeconds, dayIn, dayLasted, dayStates, daysBetween, duration, pausedOnDay, rowTotals, startOfDay, uptimeOf, uptimePct } from './model'
 
 const at = (iso: string) => Date.parse(iso) / 1000
 const inc = (o: Partial<Incident>): Incident => ({ id: 'i', site: 's', kind: 'quiet', started_at: 0, ended_at: null, cause: 'no visits', expected_visits: null, note: '', ...o })
@@ -80,6 +80,22 @@ describe('incident words and figures', () => {
     const x = inc({ kind: 'down', started_at: at('2026-10-01T10:00:00Z'), ended_at: at('2026-10-01T12:00:00Z') })
     const got = dayStates([x], days, 'UTC', at('2026-10-04T00:00:00Z'), at('2026-10-03T08:00:00Z'))
     expect([...got.values()]).toEqual(['down', 'unwatched', 'ok'])
+  })
+
+  it('marks a day paused only when the pause covers all of it, not for one paused minute', () => {
+    const days = ['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04']
+    const now = at('2026-10-04T12:00:00Z')
+    const paused = [{ from: at('2026-10-01T23:59:00Z'), to: at('2026-10-03T00:00:00Z') }]
+    const got = dayStates([], days, 'UTC', now, 0, paused)
+    expect([...got.values()]).toEqual(['ok', 'paused', 'ok', 'ok'])
+    expect(pausedOnDay(paused, '2026-10-01', 'UTC', now)).toBe(60)
+  })
+
+  it('keeps a down day down when part of it was paused, and treats a pause up to now as the whole watched day', () => {
+    const now = at('2026-10-04T12:00:00Z')
+    const x = inc({ kind: 'down', started_at: at('2026-10-02T01:00:00Z'), ended_at: at('2026-10-02T02:00:00Z') })
+    const got = dayStates([x], ['2026-10-02', '2026-10-04'], 'UTC', now, 0, [{ from: at('2026-10-02T03:00:00Z'), to: now }])
+    expect([...got.values()]).toEqual(['down', 'paused'])
   })
 
   it('counts only watched time in a row, and says nothing when none was watched', () => {
