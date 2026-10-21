@@ -6,7 +6,6 @@ import { confirm } from '../components/Confirm'
 import { Info } from '../components/Info'
 import { fail, more, type Site } from '../lib/apiMore'
 import { can } from '../lib/permissions'
-import { modulesChanged } from '../lib/useMods'
 import { recordsCopy } from './recordsCopy'
 
 export function ConsentOff({ site, onOn }: { site: Site; onOn: () => void }) {
@@ -17,7 +16,6 @@ export function ConsentOff({ site, onOn }: { site: Site; onOn: () => void }) {
     more
       .setModule(site.id, 'consent', true)
       .then(() => {
-        modulesChanged()
         onOn()
       })
       .catch((e: unknown) => fail(e))
