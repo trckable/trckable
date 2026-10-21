@@ -103,27 +103,49 @@ for (const width of [1440, 390, 360]) {
     })
     expect(fits).toBe(true)
 
+    // The filter: chips under the header, the site picker is there because the account has several sites; a chip with unread rows has a dot, and a group with none says so.
+    await expect(menu.locator('.nfc')).toHaveText(['All', 'Down', 'Busy', 'Milestones'])
+    await expect(menu.locator('.nfc-site select option').first()).toHaveText('All sites')
+    await expect(menu.locator('.nfc', { hasText: 'Down' }).locator('.nfd')).toHaveCount(1)
+    await expect(menu.locator('.nfc', { hasText: 'Busy' }).locator('.nfd')).toHaveCount(0)
+    await menu.locator('.nfc', { hasText: 'Busy' }).click()
+    await expect(menu.locator('.xnone')).toHaveText('Nothing here')
+    expect(await page.evaluate(() => localStorage.getItem('trckable.bell.filter'))).toContain('busy')
+    await menu.locator('.nfc', { hasText: 'Down' }).click()
+    await expect(menu.locator('.nf')).toHaveCount(4)
+    await page.evaluate(() => localStorage.removeItem('trckable.bell.filter'))
+
     // The ⋯ by keyboard: Enter opens its choices, Escape shuts them and leaves the list open.
     const more = menu.locator('.nfx').first()
+    const tops = () => menu.locator('.nf').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)))
+    const before = await tops()
     await more.focus()
     await page.keyboard.press('Enter')
-    await expect(menu.getByRole('menuitem')).toHaveText(['Mute this for this site', 'Change this alert'])
+    await expect(page.getByRole('menuitem')).toHaveText(['Mute this for this site', 'Change this alert'])
+    // It floats over the list: no row moves.
+    expect(await tops()).toEqual(before)
     await page.keyboard.press('Escape')
-    await expect(menu.getByRole('menuitem')).toHaveCount(0)
+    await expect(page.getByRole('menuitem')).toHaveCount(0)
     await expect(menu).toBeVisible()
     await expect(more).toBeFocused()
 
     // Mute: the same alert Settings edits is switched off for that site.
     await more.click()
-    if (SHOTS) await page.screenshot({ path: `/private/tmp/shots/notif-${SHOTS}-${width}-menu.png` })
-    await menu.getByRole('menuitem', { name: 'Mute this for this site' }).click()
+    if (SHOTS) {
+      await page.waitForTimeout(500)
+      await page.screenshot({ path: `/private/tmp/shots/notif-${SHOTS}-${width}-menu.png` })
+    }
+    await page.getByRole('menuitem', { name: 'Mute this for this site' }).click()
     await expect.poll(() => saved.length).toBe(1)
     expect(saved[0]).toMatchObject({ id: 'al1', kind: 'stopped', enabled: false })
     await expect(page.getByText(/^Muted for history\.example/)).toBeVisible()
 
     // Change: Settings open on Alerts.
     await more.click()
-    await menu.getByRole('menuitem', { name: 'Change this alert' }).click()
+    await page.getByRole('menuitem', { name: 'Change this alert' }).click()
     await expect(page).toHaveURL(/settings=alerts/)
+    // Settings open at that alert.
+    await expect(page.locator('.al-kind[data-kind="stopped"]')).toBeVisible()
+    await expect(page.locator('.al-kind[data-kind="stopped"] :focus')).toHaveCount(1)
   })
 }

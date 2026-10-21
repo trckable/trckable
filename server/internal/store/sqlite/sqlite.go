@@ -1097,6 +1097,9 @@ var migrations = []string{
 		to_at   INTEGER NOT NULL DEFAULT 0,
 		PRIMARY KEY (site_id, from_at)
 	) WITHOUT ROWID;`,
+	// 79: the goal a site's first-goal milestone was reached by, so the bell can
+	// name it (milestones.go). Empty for the rows made before it was kept.
+	`ALTER TABLE milestones ADD COLUMN detail TEXT NOT NULL DEFAULT '';`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

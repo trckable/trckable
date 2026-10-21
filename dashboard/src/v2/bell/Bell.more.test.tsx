@@ -37,7 +37,9 @@ function mount(items: Notice[], over: Record<string, unknown> = {}) {
   return { host, notices, stop: () => act(() => root.unmount()) }
 }
 const menu = (host: HTMLElement, row: number) => act(() => host.querySelectorAll<HTMLButtonElement>('.nfx')[row].click())
-const item = (host: HTMLElement, label: string) => [...host.querySelectorAll<HTMLButtonElement>('.nfa button')].find((b) => b.textContent === label)
+// The choices are the kit's popover, on the page's body (not inside the list).
+const items = () => [...document.querySelectorAll<HTMLButtonElement>('[role=menuitem]')]
+const item = (_host: HTMLElement, label: string) => items().find((b) => b.textContent === label)
 
 beforeEach(() => setRole('owner'))
 afterEach(() => {
@@ -79,14 +81,14 @@ describe('a row’s ⋯ for an alert', () => {
     const open = vi.spyOn(settings, 'openSettings').mockImplementation(() => undefined)
     const m = mount([stopped])
     menu(m.host, 0)
-    expect([...m.host.querySelectorAll('.nfa button')].map((b) => b.textContent)).toEqual(['Mute this for this site', 'Change this alert'])
+    expect(items().map((b) => b.textContent)).toEqual(['Mute this for this site', 'Change this alert'])
     act(() => item(m.host, 'Mute this for this site')?.click())
     await act(() => new Promise((r) => setTimeout(r, 10)))
     expect(off).toHaveBeenCalledWith('s1')
     expect(save).toHaveBeenCalledWith('s1', expect.objectContaining({ id: 'x', kind: 'stopped', enabled: false }))
     menu(m.host, 0)
     act(() => item(m.host, 'Change this alert')?.click())
-    expect(open).toHaveBeenCalledWith(site, 'alerts')
+    expect(open).toHaveBeenCalledWith(site, 'alerts', { focus: 'alert:stopped' })
     m.stop()
   })
 
@@ -105,5 +107,38 @@ describe('a row’s ⋯ for an alert', () => {
     expect([...m.host.querySelectorAll('.nfn')].map((x) => x.textContent?.replace(/ · .*/, ''))).toEqual(['a.com', 'b.com'])
     expect(m.host.querySelectorAll('.nfx')).toHaveLength(0)
     m.stop()
+  })
+})
+
+describe('the filter', () => {
+  const down = n('down:i1', false, { kind: 'down', site: 'a.com', siteId: 's1' })
+  const sale = n('m1', false, { kind: 'milestone', site: 'b.com', siteId: 's2' })
+  const chip = (host: HTMLElement, name: string) => [...host.querySelectorAll<HTMLButtonElement>('.nfc')].find((b) => b.textContent === name)
+
+  it('narrows the list to a group, keeps the choice, and says so when nothing is there', () => {
+    localStorage.clear()
+    const m = mount([down, sale])
+    expect(m.host.querySelectorAll('.nfc-site')).toHaveLength(0) // one site known: no picker
+    act(() => chip(m.host, 'Milestones')?.click())
+    expect([...m.host.querySelectorAll('.nft b')].map((b) => b.textContent)).toEqual(['m1'])
+    act(() => chip(m.host, 'Busy')?.click())
+    expect(m.host.querySelector('.xnone')?.textContent).toBe('Nothing here')
+    expect(chip(m.host, 'Busy')?.getAttribute('aria-pressed')).toBe('true')
+    // The unread rows under Down and Milestones are told by a dot while Busy is chosen.
+    expect(chip(m.host, 'Down')?.querySelector('.nfd')).not.toBeNull()
+    expect(chip(m.host, 'Busy')?.querySelector('.nfd')).toBeNull()
+    expect(localStorage.getItem('trckable.bell.filter')).toContain('busy')
+    m.stop()
+    localStorage.clear()
+  })
+
+  it('has a site picker only with several sites', () => {
+    localStorage.clear()
+    const m = mount([down, sale], { sites: [site, { id: 's2', domain: 'b.com' }] })
+    const pick = m.host.querySelector<HTMLSelectElement>('.nfc-site select')
+    expect(pick).not.toBeNull()
+    expect([...(pick?.options ?? [])].map((o) => o.value)).toEqual(['', 'a.com', 'b.com'])
+    m.stop()
+    localStorage.clear()
   })
 })

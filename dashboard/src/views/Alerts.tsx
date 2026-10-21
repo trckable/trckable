@@ -3,7 +3,7 @@
 // go to a webhook, because every tool already takes one, or to an email
 // address once the server has a mail server to use (TRCKABLE_SMTP_URL).
 import { Bell, Send, TriangleAlert } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './Alerts.css'
 import { Switch } from '../components/Switch'
 import { fail, type Alert, type Site, more } from '../lib/apiMore'
@@ -14,6 +14,7 @@ import { WeeklyNow } from './WeeklyNow'
 import { KINDS, shownKinds } from './alertKinds'
 import { advice, ago, kindOf, SEND_LABEL, SendIcon, shown, stored, whereOf } from './alertsParts'
 import { dateFmt } from '../lib/format'
+import { settingsParam } from '../lib/settings'
 import { ThresholdRule } from '../features/thresholds/Rule'
 import { ruleOf } from '../features/thresholds/model'
 
@@ -35,6 +36,16 @@ export function AlertsSettings({ site }: { site: Site }) {
     void load()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load is a new function every render; refetch only when the site changes
   }, [site.id])
+
+  // The bell's "Change this alert" opens here at that alert (focus=alert:<kind>): it is scrolled to and its control focused, once the list is there.
+  const wanted = useRef(settingsParam('focus')?.replace(/^alert:/, '') ?? '')
+  useEffect(() => {
+    if (!list || !wanted.current || !settingsParam('focus')?.startsWith('alert:')) return
+    const row = document.querySelector<HTMLElement>(`.al-kind[data-kind="${CSS.escape(wanted.current)}"]`)
+    wanted.current = ''
+    row?.scrollIntoView({ block: 'center' })
+    row?.querySelector<HTMLElement>('button, input')?.focus({ preventScroll: true })
+  }, [list])
 
   const find = (kind: Alert['kind']) => list?.find((a) => a.kind === kind)
 
@@ -197,7 +208,7 @@ export function AlertsSettings({ site }: { site: Site }) {
           const a = find(k.id)
           const isOn = !!a?.enabled
           return (
-            <div key={k.id} className={'al-kind' + (isOn ? ' on' : '')}>
+            <div key={k.id} data-kind={k.id} className={'al-kind' + (isOn ? ' on' : '')}>
               <span className={'icon-tile' + (isOn ? ' accent' : '')} aria-hidden="true">
                 <k.Icon size={17} strokeWidth={1.75} />
               </span>

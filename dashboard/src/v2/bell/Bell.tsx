@@ -11,6 +11,7 @@ import { BellMenu, type BellRow, type RowAction } from '../ui/BellMenu'
 import { alertOf, setAlertOn } from './alertState'
 import { copy } from './copy'
 import { timeOf } from './days'
+import { ALL, GROUPS, apply, hiddenUnread, readFilter, saveFilter, unreadGroups, type Filter } from './filter'
 import { badge, rowsOf, settle, unreadCount, type Notice, type NoticeRow } from './notices'
 import { useBellAlert } from './useBellAlert'
 import { OPEN_GAP_MS, type useNotices } from './useNotices'
@@ -57,6 +58,11 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
   // The rows the menu lists, and the badge counted from those same rows (none counted until the whole list is there).
   const src = useMemo(() => rowsOf(items, read), [items, read])
   const { rows: listed, fresh } = useOpenRows(src, open, gone)
+  const [filter, setFilter] = useState<Filter>(readFilter)
+  const choose = (f: Filter) => {
+    setFilter(f)
+    saveFilter(f)
+  }
   const unread = notices.ready ? unreadCount(listed) : 0
   const shaking = useBellAlert(items, read, unread, open, notices.ready)
   useEffect(() => {
@@ -90,7 +96,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
     const s = n.members ? undefined : sites.find((x) => (n.siteId ? x.id === n.siteId : x.domain === n.site))
     const kind = alertOf(n)
     if (s && kind && allowed('alert.manage')) {
-      out.push({ key: 'mute', label: copy.mute, run: () => void mute(s, kind) }, { key: 'change', label: copy.change, run: () => openSettings(s, 'alerts') })
+      out.push({ key: 'mute', label: copy.mute, run: () => void mute(s, kind) }, { key: 'change', label: copy.change, run: () => openSettings(s, 'alerts', { focus: `alert:${kind}` }) })
     }
     if (n.dismissable && !archived && dismiss) out.push({ key: 'archive', label: copy.archive, run: () => away(n) })
     return out
@@ -107,7 +113,13 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
     lines: n.members?.map((m) => ({ id: m.id, text: `${m.site} · ${timeOf(m.at)}` })),
     actions: actionsOf(n, archived),
   })
-  const rows: BellRow[] = listed.map((n) => rowOf(n, false))
+  // A site the account no longer has is no filter.
+  const siteKnown = !filter.site || sites.some((x) => x.domain === filter.site)
+  const f = siteKnown ? filter : ALL
+  const shown = apply(listed, f)
+  const rows: BellRow[] = shown.map((n) => rowOf(n, false))
+  const label: Record<(typeof GROUPS)[number], string> = { all: copy.filterAll, down: copy.filterDown, busy: copy.filterBusy, milestones: copy.filterMilestones }
+  const dots = unreadGroups(listed, f.site)
   const old: BellRow[] = (archive?.items ?? []).map((n) => rowOf({ ...n, unread: false }, true))
   return (
     <>
@@ -123,7 +135,15 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
       title={copy.title}
       markAll={copy.markAll}
       settings={copy.settings}
-      none={copy.none}
+      none={f.group === 'all' && !f.site ? copy.none : copy.nothingHere}
+      filter={{
+        groups: GROUPS.map((g) => ({ id: g, label: label[g], on: f.group === g, dot: dots.has(g) })),
+        onGroup: (g) => choose({ ...f, group: GROUPS.find((x) => x === g) ?? 'all' }),
+        sites: sites.length > 1 ? [{ value: '', label: copy.allSites }, ...sites.map((x) => ({ value: x.domain, label: x.domain }))] : undefined,
+        site: f.site,
+        onSite: (site) => choose({ ...f, site }),
+        siteDot: hiddenUnread(listed, f.site),
+      }}
       sheet={sheet}
       onPick={(id) => {
         // A row of several is read as one: opening any of its sites reads them all.

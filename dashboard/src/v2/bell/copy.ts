@@ -25,4 +25,13 @@ export const copy = defineCopy('bell', {
   muted: (d: string) => `Muted for ${d}. Turn it back on in Settings, Alerts.`,
   mutedAlready: (d: string) => `That alert is already off for ${d}.`,
   mutedFailed: 'Could not mute it. Try again.',
+  filterLabel: 'Show',
+  filterAll: 'All',
+  filterDown: 'Down',
+  filterBusy: 'Busy',
+  filterMilestones: 'Milestones',
+  siteLabel: 'Site',
+  allSites: 'All sites',
+  nothingHere: 'Nothing here',
+  unread: 'unread',
 })

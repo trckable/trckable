@@ -38,7 +38,7 @@ func TestGoalLabelsMigration(t *testing.T) {
 	ctx := context.Background()
 	st := openT(t)
 	site, _ := st.CreateSite(ctx, DefaultAccount, "a.com", "")
-	if _, err := st.DB.ExecContext(ctx, `DROP TABLE goal_labels; DROP TABLE site_probe; DROP TABLE site_probe_log; DROP TABLE pay_notices; DROP TABLE bell_read; ALTER TABLE pay_hints DROP COLUMN from_plan; ALTER TABLE pay_hints DROP COLUMN to_plan; ALTER TABLE pay_hints DROP COLUMN country; ALTER TABLE pay_payments DROP COLUMN country; ALTER TABLE mentions DROP COLUMN state; ALTER TABLE mentions DROP COLUMN via; ALTER TABLE mentions DROP COLUMN link; DROP TABLE IF EXISTS rejected_hosts; ALTER TABLE sites DROP COLUMN setup_mail_at; ALTER TABLE alerts DROP COLUMN metric; ALTER TABLE alerts DROP COLUMN period; ALTER TABLE alerts DROP COLUMN fired_period; PRAGMA user_version = 53`); err != nil {
+	if _, err := st.DB.ExecContext(ctx, `DROP TABLE goal_labels; DROP TABLE site_probe; DROP TABLE site_probe_log; DROP TABLE pay_notices; DROP TABLE bell_read; ALTER TABLE pay_hints DROP COLUMN from_plan; ALTER TABLE pay_hints DROP COLUMN to_plan; ALTER TABLE pay_hints DROP COLUMN country; ALTER TABLE pay_payments DROP COLUMN country; ALTER TABLE mentions DROP COLUMN state; ALTER TABLE mentions DROP COLUMN via; ALTER TABLE mentions DROP COLUMN link; DROP TABLE IF EXISTS rejected_hosts; ALTER TABLE sites DROP COLUMN setup_mail_at; ALTER TABLE alerts DROP COLUMN metric; ALTER TABLE alerts DROP COLUMN period; ALTER TABLE alerts DROP COLUMN fired_period; ALTER TABLE milestones DROP COLUMN detail; PRAGMA user_version = 53`); err != nil {
 		t.Fatal(err)
 	}
 	if err := st.MigrateTo(ctx, len(migrations)); err != nil {

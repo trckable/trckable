@@ -1,7 +1,9 @@
 // The bell at the end of the header: a dot with how many are unread, and the list under it (a sheet on a phone).
 // Markup and classes are the walkthrough's own.
+import { MoreHorizontal } from 'lucide-react'
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { reducedMotion } from '../../lib/motion'
+import { Popover } from '../../kit/Popover'
 import { MkPortal } from './Portal'
 import { useMenu } from './useMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
@@ -36,7 +38,6 @@ export interface BellRow {
 }
 
 const SLIDE_MS = 260
-const MORE = '⋯'
 
 /** The box that scrolls the rows: the sheet's body on a phone, the list itself under the bell. */
 const scroller = (list: HTMLElement): HTMLElement => list.closest<HTMLElement>('.cdb') ?? list
@@ -118,44 +119,45 @@ interface BellProps {
   onPick: (id: string) => void
   onAll: () => void
   onSettings: () => void
+  /** The kinds the list can be narrowed to, and (with several sites) the site; a dot says there is something unread under it. */
+  filter?: {
+    groups: { id: string; label: string; on: boolean; dot: boolean }[]
+    onGroup: (id: string) => void
+    sites?: { value: string; label: string }[]
+    site: string
+    onSite: (site: string) => void
+    siteDot: boolean
+  }
   /** A build with its own list: the archive is a second view of it. */
   archive?: { rows: BellRow[]; load: () => void; loading: boolean; none: string }
 }
 
 const EMPTY: ReadonlySet<string> = new Set()
 
-/** The ⋯ of a row and what it offers, listed right under the row (no popover to place inside a list that scrolls). */
+/** The ⋯ of a row and what it offers: the kit's popover under the button (a sheet on a phone), over the list, so no row moves. */
 function RowMenu({ row, close }: { row: BellRow; close: () => void }) {
-  const [on, setOn] = useState(false)
-  const button = useRef<HTMLButtonElement>(null)
   const actions = row.actions ?? []
-  // Escape shuts the choices first (before the bell's own Escape, which would shut the whole list) and gives the focus back to the ⋯.
-  useEffect(() => {
-    if (!on) return
-    const esc = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
-      e.stopPropagation()
-      setOn(false)
-      button.current?.focus()
-    }
-    window.addEventListener('keydown', esc, true)
-    return () => window.removeEventListener('keydown', esc, true)
-  }, [on])
   if (actions.length === 0) return null
   return (
-    <div className="nfm">
-      <button ref={button} type="button" className="nfx" aria-label={copy.more} title={copy.more} aria-haspopup="menu" aria-expanded={on} onClick={() => setOn(!on)}>
-        {MORE}
-      </button>
-      {on && (
-        <div className="nfa" role="menu">
+    <Popover
+      label={copy.more}
+      className="nfpop"
+      trigger={(t) => (
+        <button type="button" className="nfx" aria-label={copy.more} title={copy.more} {...t}>
+          <MoreHorizontal size={18} aria-hidden="true" />
+        </button>
+      )}
+    >
+      {(shut) => (
+        <div role="menu">
           {actions.map((a) => (
             <button
               key={a.key}
               type="button"
               role="menuitem"
+              className="nfpi"
               onClick={() => {
-                setOn(false)
+                shut()
                 a.run()
                 if (a.key === 'change') close()
               }}
@@ -165,7 +167,7 @@ function RowMenu({ row, close }: { row: BellRow; close: () => void }) {
           ))}
         </div>
       )}
-    </div>
+    </Popover>
   )
 }
 
@@ -214,6 +216,33 @@ function Row({ n, p, close }: { n: BellRow; p: BellProps; close: () => void }) {
   )
 }
 
+function Filters({ f }: { f: NonNullable<BellProps['filter']> }) {
+  return (
+    <div className="nfc-row">
+      <div className="nfc-chips" role="group" aria-label={copy.filterLabel}>
+        {f.groups.map((g) => (
+          <button key={g.id} type="button" className="nfc" aria-pressed={g.on} aria-label={g.dot ? `${g.label}, ${copy.unread}` : undefined} onClick={() => f.onGroup(g.id)}>
+            {g.label}
+            {g.dot && <i className="nfd sm" aria-hidden="true" />}
+          </button>
+        ))}
+      </div>
+      {f.sites && (
+        <span className="nfc-site">
+          <select value={f.site} aria-label={f.siteDot ? `${copy.siteLabel}, ${copy.unread}` : copy.siteLabel} onChange={(e) => f.onSite(e.target.value)}>
+            {f.sites.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          {f.siteDot && <i className="nfd sm" aria-hidden="true" />}
+        </span>
+      )}
+    </div>
+  )
+}
+
 function List(p: BellProps & { close: () => void }) {
   const [old, setOld] = useState(false)
   const rows = old && p.archive ? p.archive.rows : p.rows
@@ -228,6 +257,7 @@ function List(p: BellProps & { close: () => void }) {
           {p.markAll}
         </button>
       </div>
+      {p.filter && !old && <Filters f={p.filter} />}
       <div className="nfl" ref={list} aria-busy={p.loading || undefined}>
         {waiting && (
           <div className="nfs" aria-hidden="true">

@@ -691,14 +691,10 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 /* A row's ⋯ at its right: shown on hover or focus, always where there is no hover (a phone). Its choices open right under the row. */
 .mk .nfw{position:relative}
 .mk .nfw .nf{padding-right:44px}
-.mk .nfm .nfx{position:absolute;top:8px;right:8px;width:28px;height:28px;border:0;border-radius:50%;background:none;color:var(--mk-muted);font-size:18px;line-height:1;cursor:pointer;opacity:0}
+.mk .nfw .nfx{position:absolute;top:8px;right:8px;display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:10px;background:none;color:var(--mk-muted);cursor:pointer;opacity:0}
 .mk .nfw:hover .nfx,.mk .nfw .nfx:focus-visible,.mk .nfw .nfx[aria-expanded='true']{opacity:1}
+.mk .nfw .nfx:hover,.mk .nfw .nfx:focus-visible,.mk .nfw .nfx[aria-expanded='true']{background:color-mix(in srgb,var(--mk-text) 7%,transparent);color:var(--mk-text);outline:none}
 @media (hover:none){.mk .nfw .nfx{opacity:1}}
-.mk .nfm .nfx:focus-visible,.mk .nfa button:focus-visible{outline:none;background:var(--mk-fill)}
-.mk .nfa{display:flex;flex-direction:column;padding:0 var(--mk-s3) var(--mk-s2) calc(var(--mk-s3) * 2 + 22px)}
-.mk .nfa button{text-align:left;min-height:36px;padding:0 var(--mk-s2);border-radius:var(--mk-rc);color:var(--mk-text);font-size:13px}
-.mk .nfa button:hover,.mk .nfa button:focus-visible{background:var(--mk-fill)}
-@media (--xs){.mk .nfa button{min-height:44px}}
 /* The day a run of rows belongs to, and a row that is still going. */
 .mk .nfdy{margin:0;padding:var(--mk-s2) var(--mk-s3) 0;font-size:12px;font-weight:600;color:var(--mk-muted)}
 /* Several in one row: the sites listed under the title, each its own button. */
@@ -1971,3 +1967,15 @@ html[data-motion='off'] .mk .lswap{animation:none}
  .mk .site-row .mi.site,.mk .team-row .mi.team{min-height:52px}
 }
 @media (prefers-reduced-motion:reduce){.mk .site-row .grip,.mk .team-row .grip{transition:none}}
+/* The panel's filter: quiet chips and a site picker, soft fills, no borders; a small dot says there is something unread under one. */
+.mk .nfc-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--mk-s2);padding:var(--mk-s2) var(--mk-s3) 0}
+.mk .nfc-chips{display:flex;flex-wrap:wrap;gap:var(--mk-s1)}
+.mk .nfc{position:relative;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 var(--mk-s3);border:0;border-radius:14px;background:none;color:var(--mk-muted);font-size:13px;font-weight:600;cursor:pointer}
+.mk .nfc:hover{color:var(--mk-text)}
+.mk .nfc[aria-pressed='true']{background:var(--mk-fill);color:var(--mk-text)}
+.mk .nfc:focus-visible{outline:none;background:color-mix(in srgb,var(--mk-text) 7%,transparent)}
+.mk .nfd.sm{width:6px;height:6px}
+.mk .nfc-site{position:relative;display:inline-flex;align-items:center;gap:6px}
+.mk .nfc-site select{height:28px;max-width:160px;padding:0 var(--mk-s2);border:0;border-radius:var(--mk-rc);background:var(--mk-fill);color:var(--mk-text);font:inherit;font-size:13px}
+.mk .nfc-site select:focus-visible{outline:none;background:color-mix(in srgb,var(--mk-text) 12%,transparent)}
+@media (--xs){.mk .nfc{height:36px}.mk .nfc-site select{height:36px}}
