@@ -45,9 +45,9 @@ test('before the first visit: the setup screen, Not verified, a locked ring, no 
   // A real pageview: the line turns green, then Live opens with no reload.
   await visit(page.request, site, '/first')
   await expect(screen.locator('.setup-status.ok')).toContainText('First visit received', { timeout: 30_000 })
-  await expect(page.locator('#siteBtn')).not.toHaveAttribute('aria-label', /Not verified/)
   await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible({ timeout: 30_000 })
   await expect(page.locator('#views')).toBeVisible()
+  await expect(page.locator('#siteBtn')).not.toHaveAttribute('aria-label', /Not verified/)
   await expect(page.locator('.setup-title')).toHaveCount(0)
 })
 

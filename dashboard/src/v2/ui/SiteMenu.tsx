@@ -56,10 +56,12 @@ function NameText({ cur, all }: { cur: Site | null; all: string }) {
   )
 }
 
-/** The button's state: the not-installed one while nothing is verified, else the site's own. */
+/** The button's state: not installed only while the page itself says nothing is verified (its sites list may still be the old one a moment after the first visit), else the site's own. */
 const stateOf = (cur: Site | null, unverified?: boolean): DotState => {
   if (!cur) return 'live'
-  return unverified ? 'new' : dotState(cur)
+  if (unverified) return 'new'
+  const state = dotState(cur)
+  return state === 'new' ? 'live' : state
 }
 
 export function SiteChip({ p }: { p: SiteMenuProps }) {
