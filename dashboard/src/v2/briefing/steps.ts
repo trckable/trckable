@@ -31,6 +31,13 @@ export function setupRows(o: { site: Site; cur: Result; can: boolean; shared: bo
   return want.filter(o.want).map((k) => (o.can ? setupOf(k, o.site, o.onGoal) : { ...setupOf(k, o.site, o.onGoal), act: undefined }))
 }
 
+/** One nudge at a time: the thing worth doing now (the site stopped, a source to answer) when there is one, else the first thing not set up yet. */
+export function nudge(o: Parameters<typeof setupRows>[0] & { stories: Story[]; top: Top | null; downNow: boolean }): { setups: Setup[]; act: Next | null } {
+  if (o.shared) return { setups: [], act: null }
+  const act = nextStep(o)
+  return act ? { setups: [], act } : { setups: setupRows(o).slice(0, 1), act: null }
+}
+
 export interface Next {
   text: string
   rest?: string
