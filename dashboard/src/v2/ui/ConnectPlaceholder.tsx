@@ -1,6 +1,8 @@
 // The quiet rows under the cards: what else was normal, the next step, and what is not set up yet.
 import type { ReactNode } from 'react'
 import { copy } from '../briefing/copy'
+import { tag } from '../../i18n'
+import './mailLine.css'
 import { DOCS } from '../../components/footerLinks'
 import { LockCard } from './LockCard'
 import type { LockKind } from './lockCopy'
@@ -9,9 +11,7 @@ const lead = (cards: boolean, names: string[], learning: boolean): string => {
   // Nothing is called normal before the site has a normal to be told against.
   if (learning) return copy.stillLearning
   if (!cards) return copy.wasNormal
-  // One topic left is said on its own ("Search looked normal"), not as "everything else: search".
-  if (names.length === 1) return copy.oneNormal(names[0].charAt(0).toUpperCase() + names[0].slice(1))
-  return names.length ? copy.allNormal : copy.nothingElse
+  return names.length ? copy.noOther(new Intl.ListFormat(tag, { type: 'disjunction' }).format(names)) : copy.nothingElse
 }
 
 export interface CalmIn {
@@ -34,7 +34,6 @@ export function CalmLine({ cards, names, paused, learning }: CalmIn) {
         ) : (
           <>
             <b>{lead(cards, names, learning)}</b>
-            {names.length > (cards ? 1 : 0) && !learning ? `: ${names.join(', ')}` : ''}.
           </>
         )}
       </span>
@@ -44,7 +43,7 @@ export function CalmLine({ cards, names, paused, learning }: CalmIn) {
 
 export function Calm({ onExplore, ...says }: CalmIn & { onExplore: () => void }) {
   return (
-    <div className="calm2">
+    <div className="calm2 plain">
       <CalmLine {...says} />
       <button type="button" onClick={onExplore}>
         {copy.exploreAll} {'\u203A'}

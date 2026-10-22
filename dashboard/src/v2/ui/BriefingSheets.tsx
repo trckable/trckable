@@ -36,7 +36,7 @@ interface MailFact {
   t: string
 }
 
-export function MailSheet({ site, headline, facts, claims, onClose }: { site: string; headline: string; facts: MailFact[]; claims: ReactNode[]; onClose: () => void }) {
+export function MailSheet({ site, headline, facts, claims, on, onTime, onToggle, onClose }: { site: string; headline: string; facts: MailFact[]; claims: ReactNode[]; on: boolean; onTime: () => void; onToggle: () => void; onClose: () => void }) {
   return (
     <InfoSheet
       title={copy.mailPreview}
@@ -45,9 +45,17 @@ export function MailSheet({ site, headline, facts, claims, onClose }: { site: st
       close={copy.close}
       className="mailpv"
       foot={
-        <button type="button" className="xb p" onClick={onClose}>
-          {copy.closePreview}
-        </button>
+        <>
+          <button type="button" className="xb" onClick={onTime}>
+            {copy.mailTime}
+          </button>
+          <button type="button" className="xb" data-mail="1" onClick={onToggle}>
+            {on ? copy.turnOffMail : copy.turnOnMail}
+          </button>
+          <button type="button" className="xb p" onClick={onClose}>
+            {copy.closePreview}
+          </button>
+        </>
       }
     >
       <div className="mh">

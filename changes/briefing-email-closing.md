@@ -1,0 +1,1 @@
+The Briefing's daily email is one quiet line under its top ("Emailed daily at 08:00 · Change"), and Change opens the preview with the time and the switch together; the closing line is plain text ("No other unusual changes in sources, devices or pages") with a small Explore all data link.

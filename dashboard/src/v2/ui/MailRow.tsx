@@ -1,22 +1,15 @@
-// The line at the bottom of the Briefing about tomorrow's email: what it will say, a preview, and the switch.
+// The quiet line under the Briefing's top about the daily email, and the one way to change it (preview, time, off).
 import { copy } from '../briefing/copy'
+import './mailLine.css'
 
-export function MailRow({ on, onPreview, onManage, onToggle }: { on: boolean; onPreview: () => void; onManage: () => void; onToggle: () => void }) {
+export function MailRow({ on, onChange }: { on: boolean; onChange: () => void }) {
   return (
-    <div className="mailrow">
-      <span className="mi2">{'\u2709'}</span>
-      <span className="mt">
-        <b>{on ? copy.mailOn : copy.mailOff}</b>
-      </span>
-      <button type="button" className="gh" data-mpv="1" onClick={onPreview}>
-        {copy.preview}
+    <p className="mailline">
+      <span>{on ? copy.mailOn : copy.mailOff}</span>
+      <span aria-hidden="true">{' · '}</span>
+      <button type="button" data-mpv="1" onClick={onChange}>
+        {copy.change}
       </button>
-      <button type="button" className="gh" onClick={onManage}>
-        {copy.manage}
-      </button>
-      <button type="button" className="gh" data-mail="1" onClick={onToggle}>
-        {on ? copy.turnOffMail : copy.turnOnMail}
-      </button>
-    </div>
+    </p>
   )
 }
