@@ -51,7 +51,7 @@ const WITH_OPTIONAL_BUDGET = 2984
 // trckable's own cookie bar carries markup, styles and words, so it has a
 // budget of its own. It replaces a consent manager that costs 30–90 KB, and
 // it is off unless a site asks for it.
-const BANNER_BUDGET = 3690 // 3,400 until 12 Oct 2026, the same 34 bytes; 3,452 since 13 Oct, the same change; 3,690 since 18 Oct, the Web Vitals
+const BANNER_BUDGET = 3692 // 3,400 until 12 Oct 2026, the same 34 bytes; 3,452 since 13 Oct, the same change; 3,690 since 18 Oct, the Web Vitals; 3,692 since 22 Oct, visitor ids without a leading zero
 
 // The heatmaps module is a script of its own, sent after the base script only
 // to a site that turned it on, so none of it counts against BUDGET. It has a

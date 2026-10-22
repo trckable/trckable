@@ -198,7 +198,7 @@ describe('goals', () => {
 
 describe('revenue attribution', () => {
   it('mints visitor ids without a leading zero, the way the server spells them', async () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.0123) // "0.0fwhd…" in base 36
+    vi.spyOn(Math, 'random').mockReturnValue(2 ** -20) // "0.00000…" in base 36
     tracker()
     await flush()
     const vid = /trckable_vid=([^;]+)/.exec(win.document.cookie)![1]
