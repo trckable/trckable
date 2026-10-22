@@ -103,8 +103,11 @@ export function start(c: Config): Tracker {
   let pending: Payload[] = [] // what has not been acknowledged yet, oldest first
 
   // An id is made to be unique, not to be secret: about 52 random bits, the
-  // digits of a random fraction in base 36 (the server reads up to 13).
-  const rid = () => Math.random().toString(36).slice(2)
+  // digits of a random fraction in base 36 (the server reads up to 13). The
+  // server keeps ids as numbers, so a leading zero would come back without it
+  // and the cookie, checkout reference and reports would spell one visitor two
+  // ways: drop it, and fall back to "1" for the all-zero draw.
+  const rid = () => Math.random().toString(36).slice(2).replace(/^0+/, '') || '1'
 
   const cookie = () => /trckable_vid=([^;]+)/.exec(d.cookie)?.[1]
   // Writes the visitor cookie; an empty value with no age deletes it.

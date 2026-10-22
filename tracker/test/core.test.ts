@@ -197,6 +197,14 @@ describe('goals', () => {
 })
 
 describe('revenue attribution', () => {
+  it('mints visitor ids without a leading zero, the way the server spells them', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.0123) // "0.0fwhd…" in base 36
+    tracker()
+    await flush()
+    const vid = /trckable_vid=([^;]+)/.exec(win.document.cookie)![1]
+    expect(vid).toMatch(/^[1-9a-z][0-9a-z]*\.[0-9a-z]+$/)
+  })
+
   it('adds the visitor id to hosted checkout links, keeping existing references', async () => {
     win.document.cookie = 'trckable_vid=abc123.m1a2b3'
     const links = {
