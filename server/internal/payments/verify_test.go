@@ -106,13 +106,15 @@ func TestStripeIgnoresV0(t *testing.T) {
 
 func TestParseVisitor(t *testing.T) {
 	cases := map[string]uint64{
-		"a1b2c3.qx9":          606857619, // base36 "a1b2c3"
-		"a1b2c3":              606857619,
-		"trckable_a1b2c3_qx9": 606857619,
-		"order_123":           0, // someone else's reference
-		"12-34":               0,
-		"":                    0,
-		"zzzzzzzzzzzzzz":      0, // too long for 64 bits
+		"a1b2c3.qx9":           606857619, // base36 "a1b2c3"
+		"a1b2c3":               606857619,
+		"trckable_a1b2c3_qx9":  606857619,
+		"0a1b2c3.qx9":          606857619, // a leading zero is the same visitor
+		"trckable_0a1b2c3_qx9": 606857619,
+		"order_123":            0, // someone else's reference
+		"12-34":                0,
+		"":                     0,
+		"zzzzzzzzzzzzzz":       0, // too long for 64 bits
 	}
 	for in, want := range cases {
 		if got := ParseVisitor(in); got != want {
