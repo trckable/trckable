@@ -1459,7 +1459,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .site-head .fold[aria-expanded="true"] svg{transform:rotate(90deg)}
 .mk .site-row{display:flex;align-items:center;gap:0;position:relative;border-radius:var(--mk-rc)}
 .mk .site-row .mi.site{flex:1;min-width:0}
-.mk .site-row.sortable .mi.site{cursor:grab}
+.mk .site-row.sortable .mi.site{cursor:pointer}
 .mk .site-row .grip{position:absolute;left:-2px;opacity:0;color:var(--mk-faint);pointer-events:none}
 .mk .site-row:hover .grip{opacity:.7}
 .mk .site-row.dragging{background:var(--mk-card);box-shadow:0 10px 30px var(--mk-shc);z-index:2}
@@ -1941,7 +1941,9 @@ html[data-motion='off'] .mk .lswap{animation:none}
 .mk .sitelist{--gut:18px}
 .mk .site-row .grip,.mk .team-row .grip{position:absolute;left:2px;top:50%;width:16px;height:16px;margin-top:-8px;padding:0;color:var(--mk-faint);opacity:0;pointer-events:none;touch-action:none;transition:opacity .12s}
 .mk .site-row.sortable:hover .grip,.mk .site-row.sortable:focus-within .grip,.mk .site-row.dragging .grip,.mk .team-row.sortable:hover .grip,.mk .team-row.sortable:focus-within .grip,.mk .team-row.dragging .grip{opacity:.75}
-.mk .site-row.sortable .mi.site{padding-left:calc(var(--mk-s3) + var(--gut) - 6px);cursor:grab}
+/* The row opens (pointer); the grip is the handle that says it moves (grab) */
+@media (hover:hover){.mk .site-row.sortable .grip,.mk .team-row.sortable .grip{pointer-events:auto;cursor:grab}}
+.mk .site-row.sortable .mi.site{padding-left:calc(var(--mk-s3) + var(--gut) - 6px);cursor:pointer}
 .mk .sitelist:has(.site-row.sortable) .mi.all{padding-left:calc(var(--mk-s3) + var(--gut) - 6px)}
 .mk .site-row.dragging,.mk .team-row.dragging{background:var(--mk-card);box-shadow:0 10px 28px var(--mk-shc);z-index:2}
 .mk .site-row.dragging .mi.site,.mk .team-row.dragging .mi.team{cursor:grabbing;background:transparent}
@@ -1956,7 +1958,7 @@ html[data-motion='off'] .mk .lswap{animation:none}
 .mk .sitelist .site-row .mkwrap .mk-dot{opacity:.65;filter:saturate(.7)}
 .mk .team-row{position:relative;display:flex;align-items:center;border-radius:var(--mk-rc)}
 .mk .team-row .mi.team{flex:1;min-width:0}
-.mk .team-row.sortable .mi.team{padding-left:calc(var(--mk-s3) + 10px);cursor:grab}
+.mk .team-row.sortable .mi.team{padding-left:calc(var(--mk-s3) + 10px);cursor:pointer}
 /* On touch the grip is always there, with a finger-sized target (a drag starts only from it, so the list still scrolls); rows are taller */
 @media (hover:none){
  .mk .site-row.sortable .grip,.mk .team-row.sortable .grip{opacity:.7;pointer-events:auto;left:-8px;padding:10px;margin-top:-18px;box-sizing:content-box}
