@@ -138,3 +138,17 @@ describe('the order', () => {
     expect(list.map((c) => c.key)).toEqual(['goals', 'sources'])
   })
 })
+
+describe('the questions Why? asks', () => {
+  it('every card that can be asked about has one', () => {
+    const list = cardsOf(base({ slices: { referrer: [slice('news.ycombinator.com', 186, 9)], country: [], device: [], entry_page: [] } }))
+    expect(list.find((c) => c.key === 'sources')?.ask).toBe('Why did Hacker News send so many people?')
+  })
+})
+
+describe('a goal with no usual range to say', () => {
+  it('has the number alone, not "usually 0–0"', () => {
+    const tiny = { ...slice('signup', 6, 0.4), name: 'Signed up', band: { c: 0.4, lo: 0, hi: 0.4 } }
+    expect(cardsOf(base({ goals: [tiny] })).find((x) => x.key === 'goals')?.why).toBe('6 today')
+  })
+})
