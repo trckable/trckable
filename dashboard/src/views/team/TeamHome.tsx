@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react'
 import { Loading } from '../../components/loading/Loading'
 import { Segmented } from '../../kit'
 import type { Site } from '../../lib/api'
+import { ChannelsSection } from '../../features/channels/ChannelsSection'
 import { openAddSite } from '../../lib/account'
 import { can } from '../../lib/permissions'
 import { fmtInt, fmtMoney } from '../../lib/format'
@@ -15,6 +16,7 @@ import { sorted, teamSite, tone, totals, type Sort, type TeamSite } from './mode
 import { TeamTable } from './TeamTable'
 import { useTeam } from './useTeam'
 import '../../mock/mock.css'
+import '../../kit/layout.css'
 import '../../mock/theme.css'
 import './team.css'
 
@@ -102,6 +104,7 @@ export function TeamHome({ sites, header }: { sites: Site[]; header: React.React
               <Strip sites={ready} />
               <TeamTable sites={ready} />
               <Add className="tm-addline" />
+              <ChannelsSection />
             </>
           )}
         </main>

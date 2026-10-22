@@ -30,6 +30,9 @@ type Store struct {
 	// never check a code) keeps new secrets as they are, refuses sealed ones,
 	// and keeps no share token to copy again.
 	Sealer Sealer
+	// RecoveryUsed, when set, is told that a person signed in with one of their
+	// recovery codes (twostep.go), so they can be told it was used.
+	RecoveryUsed func(ctx context.Context, user string)
 
 	mu         sync.RWMutex
 	sites      map[string]ingest.Site
@@ -997,6 +1000,121 @@ var migrations = []string{
 	) WITHOUT ROWID;
 	ALTER TABLE sites ADD COLUMN setup_mail_at INTEGER NOT NULL DEFAULT 0;
 	UPDATE sites SET setup_mail_at = CAST(strftime('%s', 'now') AS INTEGER) WHERE created_at < CAST(strftime('%s', 'now') AS INTEGER) - 259200;`,
+	// 73: what each site's Answers cost in a month, kept apart from the runs so
+	// that editing a question (which deletes its runs) does not give the site a
+	// fresh share. Seeded from the runs that exist now.
+	`CREATE TABLE IF NOT EXISTS answer_site_spend (
+		site_id TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		month   TEXT NOT NULL,
+		micros  INTEGER NOT NULL DEFAULT 0,
+		PRIMARY KEY (site_id, month)
+	) WITHOUT ROWID;
+	INSERT INTO answer_site_spend (site_id, month, micros)
+	SELECT r.site_id, strftime('%Y-%m', r.asked_at, 'unixepoch'), sum(r.cost_micros) FROM answer_runs r
+	WHERE r.cost_micros > 0 AND r.site_id IN (SELECT id FROM sites) GROUP BY r.site_id, strftime('%Y-%m', r.asked_at, 'unixepoch');`,
+	// 74: the team's own social accounts (Channels, social.go) and their views
+	// per day. The tokens are sealed; disconnecting deletes the account, its
+	// tokens and every day it holds (the platforms require it).
+	`CREATE TABLE IF NOT EXISTS social_accounts (
+		id          TEXT PRIMARY KEY,
+		account_id  TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+		platform    TEXT NOT NULL,
+		external_id TEXT NOT NULL,
+		app_user_id TEXT NOT NULL DEFAULT '', -- the id a platform's removal call names (not Instagram's insights id)
+		handle      TEXT NOT NULL DEFAULT '',
+		access_enc  TEXT NOT NULL DEFAULT '',
+		refresh_enc TEXT NOT NULL DEFAULT '',
+		expires_at  INTEGER NOT NULL DEFAULT 0,
+		created_at  INTEGER NOT NULL,
+		last_ok_at  INTEGER,
+		last_error  TEXT NOT NULL DEFAULT '',
+		UNIQUE (account_id, platform, external_id)
+	);
+	CREATE TABLE IF NOT EXISTS social_daily (
+		social_id TEXT NOT NULL REFERENCES social_accounts(id) ON DELETE CASCADE,
+		platform  TEXT NOT NULL,
+		day       TEXT NOT NULL,
+		views     INTEGER NOT NULL,
+		PRIMARY KEY (social_id, day)
+	) WITHOUT ROWID;`,
+	// 75: the outbox of messages that must not be lost (notice_outbox.go): an
+	// alert or a notice is written here before it is sent, so a failed send is
+	// tried again later instead of dropped. key makes one event one row; account is whose it is (an account that goes takes its rows); form
+	// says what body holds; state is pending until it is delivered (sent), or
+	// failed once it has been tried for a day.
+	`CREATE TABLE IF NOT EXISTS notice_outbox (
+		id         TEXT PRIMARY KEY,
+		key        TEXT NOT NULL UNIQUE,
+		account    TEXT NOT NULL DEFAULT '',
+		kind       TEXT NOT NULL,
+		form       TEXT NOT NULL,
+		target     TEXT NOT NULL DEFAULT '',
+		body       TEXT NOT NULL DEFAULT '',
+		state      TEXT NOT NULL DEFAULT 'pending',
+		tries      INTEGER NOT NULL DEFAULT 0,
+		next_at    INTEGER NOT NULL,
+		created_at INTEGER NOT NULL,
+		last_error TEXT NOT NULL DEFAULT ''
+	);
+	CREATE INDEX IF NOT EXISTS notice_outbox_due ON notice_outbox (state, next_at);
+	CREATE INDEX IF NOT EXISTS notice_outbox_account ON notice_outbox (account);`,
+	// 76: the threshold alert (alerts.go): what it counts (metric), over which
+	// stretch (period), and the stretch it last fired for (fired_period), so a
+	// crossed threshold is told once for each day, week or month.
+	`ALTER TABLE alerts ADD COLUMN metric TEXT NOT NULL DEFAULT '';
+	ALTER TABLE alerts ADD COLUMN period TEXT NOT NULL DEFAULT '';
+	ALTER TABLE alerts ADD COLUMN fired_period TEXT NOT NULL DEFAULT '';`,
+	// 77: the uptime check a site's people can steer (uptime.go): a pause,
+	// and up to five more paths of the same domain looked at with the
+	// homepage. And the funnels a site keeps by name (funnels.go): the steps
+	// are a JSON list of pages and goals. All three go with the site.
+	`CREATE TABLE IF NOT EXISTS site_uptime (
+		site_id   TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
+		paused    INTEGER NOT NULL DEFAULT 0,
+		paused_at INTEGER NOT NULL DEFAULT 0
+	) WITHOUT ROWID;
+	CREATE TABLE IF NOT EXISTS site_uptime_paths (
+		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		path       TEXT NOT NULL,
+		created_at INTEGER NOT NULL,
+		PRIMARY KEY (site_id, path)
+	) WITHOUT ROWID;
+	CREATE TABLE IF NOT EXISTS funnels (
+		id         TEXT PRIMARY KEY,
+		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		name       TEXT NOT NULL,
+		steps      TEXT NOT NULL,
+		created_at INTEGER NOT NULL,
+		updated_at INTEGER NOT NULL
+	) WITHOUT ROWID;
+	CREATE INDEX IF NOT EXISTS funnels_site ON funnels(site_id, created_at);`,
+	// 78: when the uptime check was paused, so a paused stretch is told as
+	// paused (uptime.go): neither up nor down, and out of the uptime share.
+	// An open pause has to_at 0.
+	`CREATE TABLE IF NOT EXISTS site_uptime_pauses (
+		site_id TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		from_at INTEGER NOT NULL,
+		to_at   INTEGER NOT NULL DEFAULT 0,
+		PRIMARY KEY (site_id, from_at)
+	) WITHOUT ROWID;`,
+	// 79: the goal a site's first-goal milestone was reached by, so the bell can
+	// name it (milestones.go). Empty for the rows made before it was kept.
+	`ALTER TABLE milestones ADD COLUMN detail TEXT NOT NULL DEFAULT '';`,
+	// 80: a site that changed its domain keeps accepting visits from the old
+	// one for a while (domain.go): the old hostname and when that ends, unix
+	// seconds; site_domain_changes is when the domain last changed, so it
+	// can change only once a day.
+	`CREATE TABLE IF NOT EXISTS site_former_hosts (
+		site_id    TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		host       TEXT NOT NULL,
+		until      INTEGER NOT NULL,
+		changed_at INTEGER NOT NULL,
+		PRIMARY KEY (site_id, host)
+	) WITHOUT ROWID;
+	CREATE TABLE IF NOT EXISTS site_domain_changes (
+		site_id    TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
+		changed_at INTEGER NOT NULL
+	) WITHOUT ROWID;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
@@ -1107,6 +1225,9 @@ func (s *Store) reloadSites(ctx context.Context) error {
 	if err := rows.Err(); err != nil {
 		return err
 	}
+	if err := s.loadFormerHosts(ctx, next); err != nil {
+		return err
+	}
 	s.mu.Lock()
 	s.sites = next
 	s.mu.Unlock()
@@ -1132,18 +1253,15 @@ var ErrExists = errors.New("site already exists")
 
 // CreateSite adds a site to an account and returns its id (tkb_…).
 func (s *Store) CreateSite(ctx context.Context, account, domain, name string) (string, error) {
-	domain = normalizeDomain(domain)
-	if domain == "" || strings.ContainsAny(domain, " /") {
-		return "", errors.New("use a domain like example.com")
-	}
-	if strings.ContainsAny(domain, ":@?#") {
-		return "", errors.New("use just the domain, like example.com: no port, login, or ? and # parts")
+	domain, err := CleanDomain(domain)
+	if err != nil {
+		return "", err
 	}
 	if name == "" {
 		name = domain
 	}
 	id := NewSiteID()
-	_, err := s.DB.ExecContext(ctx,
+	_, err = s.DB.ExecContext(ctx,
 		`INSERT INTO sites (id, account_id, domain, name, created_at, proxy_key) VALUES (?, ?, ?, ?, ?, ?)`,
 		id, account, domain, name, time.Now().Unix(), NewProxyKey())
 	if err != nil {
@@ -1153,6 +1271,20 @@ func (s *Store) CreateSite(ctx context.Context, account, domain, name string) (s
 		return "", err
 	}
 	return id, s.reloadSites(ctx)
+}
+
+// CleanDomain is the one rule for a site's domain, for adding a site and for
+// changing it: what people paste, as the bare lower-case hostname events
+// arrive with, or why it cannot be one.
+func CleanDomain(domain string) (string, error) {
+	domain = normalizeDomain(domain)
+	if domain == "" || strings.ContainsAny(domain, " /") {
+		return "", errors.New("use a domain like example.com")
+	}
+	if strings.ContainsAny(domain, ":@?#") {
+		return "", errors.New("use just the domain, like example.com: no port, login, or ? and # parts")
+	}
+	return domain, nil
 }
 
 // DeleteSite removes a site and everything the control plane holds about it:

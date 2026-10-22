@@ -1,9 +1,16 @@
 // Live while its first answer is on the way: the page's own boxes (the same classes, so the same sizes and places), the
 // words that are already known written out, and a quiet shimmer where the numbers will be. Nothing moves when they land.
+import { CardSkeleton, type CardKind } from '../live/CardSkeleton'
 import { copy } from '../live/copy'
+import { Bone } from './Bone'
 
 const BARS = 30
-const bone = (w: number | string, h: number) => <i className="skl" style={{ width: w, height: h }} />
+const bone = (w: number | string, h: number) => <Bone w={w} h={h} />
+const CARDS: [string, CardKind][] = [
+  [copy.analytics, 'analytics'],
+  [copy.health.speedUptime, 'speed'],
+  [copy.health.aiMentions, 'ai'],
+]
 
 export function LiveSkeleton() {
   return (
@@ -53,10 +60,13 @@ export function LiveSkeleton() {
       </section>
     </div>
     <div className="lcards" aria-hidden="true">
-      {[copy.analytics, copy.health.speedUptime, copy.health.aiMentions].map((t) => (
-        <section key={t} className="mk-card lcard">
+      {CARDS.map(([t, kind]) => (
+        <section key={t} className="mk-card lcard lhc">
           <div className="ph">
             <span className="t">{t}</span>
+          </div>
+          <div className="pb lhbody">
+            <CardSkeleton kind={kind} />
           </div>
         </section>
       ))}

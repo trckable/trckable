@@ -5,12 +5,12 @@
   display: none;
 }
 /* The panel is a full sheet on a phone: nothing to widen. */
-@media (max-width: 767px) {
+@media (--md-down) {
   .mk .xph .xfull {
     display: none;
   }
 }
-@media (max-width: 600px) {
+@media (--xs) {
   .mk .onlyph {
     display: block;
   }
@@ -44,16 +44,51 @@
 .mk .xrt .xrcell.open{color:var(--mk-faint)}
 .mk .xrt .xrw.avg{border-top:1px solid var(--mk-line);margin-top:6px;padding-top:9px;color:var(--mk-muted)}
 .mk .xrt .xrw.avg .xrcell{height:auto}
-@media (max-width:600px){.mk .xrt .xth,.mk .xrt .xrw{grid-template-columns:52px 52px repeat(var(--weeks),minmax(0,1fr));min-height:0}.mk .xrt .xrcell{font-size:11px}}
+@media (--xs){.mk .xrt .xth,.mk .xrt .xrw{grid-template-columns:52px 52px repeat(var(--weeks),minmax(0,1fr));min-height:0}.mk .xrt .xrcell{font-size:11px}}
 .mk .xchb .kit-chart{margin:0}
 /* Opening and closing: the scrim fades (150 ms), the panel glides in with an ease-out (220 ms) and out faster with an
    ease-in (180 ms), and what is in it comes up once the panel is there. Panel.tsx unmounts after the exit (OUT). */
 .mk .xscrim{display:block;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s ease-in,visibility 0s .15s}
 .mk .xscrim.on{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .15s ease-out,visibility 0s}
-.mk .xp{transition:transform .18s cubic-bezier(.4,0,1,1),width .3s cubic-bezier(.2,.8,.2,1),top .3s cubic-bezier(.2,.8,.2,1),border-radius .3s}
-.mk .xp.on{transition:transform .22s cubic-bezier(.2,.8,.2,1),width .3s cubic-bezier(.2,.8,.2,1),top .3s cubic-bezier(.2,.8,.2,1),border-radius .3s}
+.mk .xp{transition:opacity .16s ease,transform .18s cubic-bezier(.4,0,1,1),width .3s cubic-bezier(.2,.8,.2,1),top .3s cubic-bezier(.2,.8,.2,1),border-radius .3s}
+.mk .xp.on{transition:opacity .16s ease,transform .22s cubic-bezier(.2,.8,.2,1),width .3s cubic-bezier(.2,.8,.2,1),top .3s cubic-bezier(.2,.8,.2,1),border-radius .3s}
 .mk .xp.on>*{animation:xp-in .2s .06s ease-out backwards}
 @keyframes xp-in{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){.mk .xscrim,.mk .xscrim.on,.mk .xp,.mk .xp.on{transition:none}.mk .xp.on>*{animation:none}}
 [data-motion='off'] .mk .xscrim,[data-motion='off'] .mk .xscrim.on,[data-motion='off'] .mk .xp,[data-motion='off'] .mk .xp.on{transition:none}
 [data-motion='off'] .mk .xp.on>*{animation:none}
+
+/* The funnels a site keeps by name: the picker, and the little forms to name, rename and delete. */
+.mk .xsvf,
+.mk .xsvn {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mk-s2);
+}
+.mk .xsvf {
+  margin: 0 0 var(--mk-s3);
+}
+.mk .xsvf select {
+  flex: 1 1 160px;
+  min-width: 0;
+  max-width: 280px;
+}
+.mk .xsvn {
+  flex: 1 1 100%;
+}
+.mk .xsvn input[type='text'] {
+  flex: 1 1 160px;
+  min-width: 0;
+  max-width: 280px;
+}
+.mk .xsvn > span {
+  font-size: 13px;
+  color: var(--mk-muted);
+}
+@media (--xs) {
+  .mk .xsvf select,
+  .mk .xsvn input[type='text'] {
+    max-width: none;
+  }
+}

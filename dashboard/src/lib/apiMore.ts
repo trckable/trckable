@@ -4,6 +4,15 @@
 // handling (api.ts's call).
 import { act, call, raw, rangeQS } from './api'
 
+/** A site's domain, the earlier ones still accepted and the Search Console match; `preview` is a change asked about. */
+export interface DomainState {
+  domain: string
+  former: { host: string; until: number; changed_at: number }[]
+  search?: { property: string; matches: boolean }
+  preview?: { domain: string; search?: { property: string; matches: boolean } }
+  grace_days: number
+}
+
 // Lazy screens import everything API-shaped from here: the names of lib/api, and `more`.
 /** One site's day for the team overview. A number the server does not have is absent: no usual before two weeks of history, no revenue without a payment today, no source without a visit. */
 export interface TeamRow {
@@ -30,6 +39,22 @@ export interface ProbeLook {
   ms?: number
   error?: string
   blocked?: boolean
+}
+
+/** What a site's people steer in the uptime check: a pause, and up to `max` more paths of the same domain. */
+export interface Uptime {
+  paused: boolean
+  paths: string[]
+  max: number
+}
+
+/** A funnel a site keeps by name: the steps, not the numbers. */
+export interface SavedFunnel {
+  id: string
+  name: string
+  steps: { kind: 'page' | 'goal'; value: string }[]
+  created_at: number
+  updated_at: number
 }
 
 export * from './api'
@@ -171,6 +196,9 @@ export const more = {
   setupFunnel: (site: string) => call<SetupState>('POST', `/sites/${site}/setup/funnel`, undefined, undefined, true),
   createSite: (domain: string) => call<Site>('POST', '/sites', { domain }),
   updateSite: (id: string, patch: { name?: string; timezone?: string; currency?: string }) => call<Site>('PATCH', `/sites/${id}`, patch),
+  siteDomain: (id: string, to?: string) => call<DomainState>('GET', `/sites/${id}/domain${to ? `?to=${encodeURIComponent(to)}` : ''}`),
+  changeDomain: (id: string, domain: string) => call<DomainState>('PUT', `/sites/${id}/domain`, { domain }),
+  endFormerDomain: (id: string, host: string) => call<DomainState>('DELETE', `/sites/${id}/domain/former/${encodeURIComponent(host)}`),
   deleteSite: (id: string, domain: string) => call<{ events: number; sessions: number; payments: number; connections: number }>('DELETE', `/sites/${id}`, { domain }),
   findPerson: (site: string, by: 'visitor' | 'email', value: string) =>
     call<{ found: PersonFound; payments: PersonPayment[] }>('GET', `/sites/${site}/privacy/person?${by}=${encodeURIComponent(value)}`),
@@ -229,10 +257,20 @@ export const more = {
   clearAvatar: () => act('DELETE', '/account/avatar'),
   /** This server reads the site's homepage and looks for the snippet. */
   checkInstall: (site: string) => call<InstallCheck>('POST', `/sites/${encodeURIComponent(site)}/install/check`),
+  /** What the site is built with, read from its homepage: an install method's id, or empty when it is not clear. */
+  installStack: (site: string) => call<{ stack: string }>('POST', `/sites/${encodeURIComponent(site)}/install/stack`),
   /** What stands behind the site's numbers, read now. */
   verified: (site: string) => call<Verified>('GET', `/sites/${encodeURIComponent(site)}/verified`),
   /** The uptime probe's last few looks at the site's homepage, newest first. */
   probes: (site: string) => call<{ probes: ProbeLook[] }>('GET', `/sites/${encodeURIComponent(site)}/probes`),
+  uptime: (site: string) => call<Uptime>('GET', `/sites/${encodeURIComponent(site)}/uptime`),
+  setUptimePaused: (site: string, paused: boolean) => call<Uptime>('PUT', `/sites/${encodeURIComponent(site)}/uptime`, { paused }),
+  addUptimePath: (site: string, path: string) => call<Uptime>('POST', `/sites/${encodeURIComponent(site)}/uptime/paths`, { path }),
+  removeUptimePath: (site: string, path: string) => call<Uptime>('DELETE', `/sites/${encodeURIComponent(site)}/uptime/paths?path=${encodeURIComponent(path)}`),
+  funnels: (site: string) => call<{ funnels: SavedFunnel[]; max: number }>('GET', `/sites/${encodeURIComponent(site)}/funnels`),
+  saveFunnel: (site: string, name: string, steps: SavedFunnel['steps']) => call<SavedFunnel>('POST', `/sites/${encodeURIComponent(site)}/funnels`, { name, steps }),
+  updateFunnel: (site: string, id: string, change: { name?: string; steps?: SavedFunnel['steps'] }) => call<SavedFunnel>('PATCH', `/sites/${encodeURIComponent(site)}/funnels/${encodeURIComponent(id)}`, change),
+  deleteFunnel: (site: string, id: string) => act('DELETE', `/sites/${encodeURIComponent(site)}/funnels/${encodeURIComponent(id)}`),
   keys: () => call<{ keys: APIKey[] }>('GET', '/keys'),
   heatmap: (site: string, q: ReportQuery) => call<Heatmap>('GET', `/sites/${site}/report/heatmap` + rangeQS(q)),
   funnel: (site: string, q: ReportQuery, steps: (FunnelStep | PaidStep)[]) => call<{ steps: FunnelResult[] }>('GET', `/sites/${site}/report/funnel` + rangeQS(q) + '&steps=' + encodeURIComponent(JSON.stringify(steps))),
@@ -241,7 +279,7 @@ export const more = {
   setSiteConfig: (site: string, c: SiteConfig) => call<SiteConfig>('PUT', `/sites/${site}/config`, c),
   alerts: (site: string) => call<{ alerts: Alert[]; kinds: string[]; mail?: boolean }>('GET', `/sites/${site}/alerts`),
   saveAlert: (site: string, a: Partial<Alert>) => call<Alert>('PUT', `/sites/${site}/alerts`, a),
-  muteAlerts: (site: string) => call<{ alerts_muted_until: number }>('POST', `/sites/${site}/alerts/mute`),
+  muteAlerts: (site: string, hours?: number) => call<{ alerts_muted_until: number }>('POST', `/sites/${site}/alerts/mute`, hours === undefined ? undefined : { hours }),
   unmuteAlerts: (site: string) => act('DELETE', `/sites/${site}/alerts/mute`),
   testAlert: (site: string, target: string) => act('POST', `/sites/${site}/alerts/test`, { target }),
   saveSegment: (site: string, name: string, query: string) => call<Segment>('POST', `/sites/${site}/segments`, { name, query }),

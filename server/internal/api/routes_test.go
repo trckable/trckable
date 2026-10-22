@@ -24,6 +24,7 @@ import (
 //	read    anyone of the account: owner, viewer, API key
 //	self    a signed-in person's own account (viewer too), never a key
 //	selfW   the same, a change: viewers may, keys may not
+//	export  taking data out as a file: owner and API key, never a viewer
 //	owner   read, but only an owner (settings that hold secrets or people)
 //	write   a change: owners only (and the automation token)
 var routeRules = map[string]string{
@@ -38,6 +39,11 @@ var routeRules = map[string]string{
 	"GET /api/v1/oidc/{provider}/start":                          "public",
 	"GET /api/v1/oidc/{provider}/callback":                       "public",
 	"POST /api/v1/oidc/code":                                     "public",
+	"GET /api/v1/channels":                                       "read",
+	"GET /api/v1/channels/{platform}/start":                      "owner",
+	"GET /api/v1/channels/{platform}/callback":                   "owner",
+	"DELETE /api/v1/channels/accounts/{id}":                      "write",
+	"POST /api/v1/channels/{platform}/deauth":                    "public",
 	"GET /api/v1/sites/{site}/ga":                                "owner",
 	"GET /api/v1/sites/{site}/ga/start":                          "owner",
 	"GET /api/v1/ga/callback":                                    "owner",
@@ -77,6 +83,9 @@ var routeRules = map[string]string{
 	"POST /api/v1/sites":                                         "write",
 	"GET /api/v1/sites/{site}":                                   "read",
 	"PATCH /api/v1/sites/{site}":                                 "write",
+	"GET /api/v1/sites/{site}/domain":                            "read",
+	"PUT /api/v1/sites/{site}/domain":                            "write",
+	"DELETE /api/v1/sites/{site}/domain/former/{host}":           "write",
 	"GET /api/v1/sites/{site}/icon":                              "read",
 	"PUT /api/v1/sites/{site}/icon":                              "write",
 	"DELETE /api/v1/sites/{site}/icon":                           "write",
@@ -89,6 +98,7 @@ var routeRules = map[string]string{
 	"DELETE /api/v1/sites/{site}/widgets/{id}":                   "write",
 	"GET /w/{id}":                                                "public",
 	"POST /api/v1/sites/{site}/install/check":                    "write",
+	"POST /api/v1/sites/{site}/install/stack":                    "write",
 	"GET /api/v1/sites/{site}/setup":                             "read",
 	"PUT /api/v1/sites/{site}/setup/skip/{item}":                 "write",
 	"DELETE /api/v1/sites/{site}/setup/skip/{item}":              "write",
@@ -171,7 +181,7 @@ var routeRules = map[string]string{
 	"GET /api/v1/referrer-icons/{host}":                          "self",
 	"GET /api/v1/sites/{site}/buyers":                            "read",
 	"GET /api/v1/sites/{site}/refunds":                           "read",
-	"GET /api/v1/sites/{site}/export.csv":                        "read",
+	"GET /api/v1/sites/{site}/export.csv":                        "export",
 	"GET /api/v1/sites/{site}/events":                            "read",
 	"GET /api/v1/sites/{site}/live":                              "read",
 	"GET /api/v1/sites/{site}/now":                               "read",
@@ -214,6 +224,14 @@ var routeRules = map[string]string{
 	"DELETE /api/v1/sites/{site}/segments/{id}":                  "write",
 	"GET /api/v1/sites/{site}/incidents":                         "read",
 	"GET /api/v1/sites/{site}/probes":                            "read",
+	"GET /api/v1/sites/{site}/uptime":                            "read",
+	"PUT /api/v1/sites/{site}/uptime":                            "write",
+	"POST /api/v1/sites/{site}/uptime/paths":                     "write",
+	"DELETE /api/v1/sites/{site}/uptime/paths":                   "write",
+	"GET /api/v1/sites/{site}/funnels":                           "read",
+	"POST /api/v1/sites/{site}/funnels":                          "write",
+	"PATCH /api/v1/sites/{site}/funnels/{id}":                    "write",
+	"DELETE /api/v1/sites/{site}/funnels/{id}":                   "write",
 	"PATCH /api/v1/sites/{site}/incidents/{id}":                  "write",
 	"GET /api/v1/sites/{site}/annotations":                       "read",
 	"POST /api/v1/sites/{site}/annotations":                      "write",
@@ -299,6 +317,8 @@ func TestEveryRouteChecksWhoIsAsking(t *testing.T) {
 	asKey := caller{"an API key", client(), key, true}
 	noCSRF := caller{"the owner without the CSRF header", owner, "", false}
 
+	// lastFile is the Content-Disposition of the answer send returned last.
+	var lastFile string
 	send := func(who caller, method, path string) (int, string) {
 		t.Helper()
 		var body io.Reader
@@ -320,6 +340,7 @@ func TestEveryRouteChecksWhoIsAsking(t *testing.T) {
 			t.Fatalf("%s %s as %s: %v", method, path, who.name, err)
 		}
 		defer res.Body.Close()
+		lastFile = res.Header.Get("Content-Disposition")
 		if strings.HasPrefix(res.Header.Get("Content-Type"), "text/event-stream") {
 			return res.StatusCode, "" // a live stream: the status is the answer
 		}
@@ -327,7 +348,7 @@ func TestEveryRouteChecksWhoIsAsking(t *testing.T) {
 		return res.StatusCode, string(raw)
 	}
 
-	fill := strings.NewReplacer("{site}", g.site, "{provider}", "x", "{id}", "x", "{module}", "goals", "{visitor}", "1", "{item}", "payments")
+	fill := strings.NewReplacer("{site}", g.site, "{provider}", "x", "{platform}", "x", "{id}", "x", "{module}", "goals", "{visitor}", "1", "{item}", "payments")
 	seen := map[string]bool{}
 	for _, pattern := range g.api.patterns {
 		seen[pattern] = true
@@ -399,6 +420,12 @@ func TestEveryRouteChecksWhoIsAsking(t *testing.T) {
 			switch rule {
 			case "read":
 				expectAllowed(asViewer)
+				if strings.HasPrefix(strings.ToLower(lastFile), "attachment") && !viewerMayDownload[pattern] {
+					t.Errorf("%s answers a viewer with a file (%s): a download is the \"export\" rule", pattern, lastFile)
+				}
+				expectAllowed(asKey)
+			case "export":
+				unchanged(func() { expectRefused(asViewer, http.StatusForbidden) })
 				expectAllowed(asKey)
 			case "self":
 				expectAllowed(asViewer)
@@ -459,4 +486,27 @@ func ownerOrder(patterns []string) []string {
 		}
 	}
 	return out
+}
+
+// viewerMayDownload lists the routes a viewer may call that answer with a file
+// on purpose. Anything else that answers with Content-Disposition: attachment
+// takes data out and needs the export action, whatever its path is called.
+var viewerMayDownload = map[string]bool{
+	// The share-card PNG is a picture made to be posted, not the site's data.
+	"GET /api/v1/sites/{site}/milestones/{kind}/{step}/card": true,
+}
+
+// A route that takes data out as a file (its path says export, csv or
+// download) is decided as one: the export rule, or an owner's. "read" would
+// hand it to every viewer.
+func TestExportRoutesAreNotPlainReads(t *testing.T) {
+	for pattern, rule := range routeRules {
+		low := strings.ToLower(pattern)
+		if !strings.Contains(low, "export") && !strings.Contains(low, ".csv") && !strings.Contains(low, "download") {
+			continue
+		}
+		if rule != "export" && rule != "owner" {
+			t.Errorf("%s is %q: a route that exports data is \"export\" or \"owner\"", pattern, rule)
+		}
+	}
 }

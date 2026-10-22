@@ -4,6 +4,8 @@ import { defineCopy } from '../i18n'
 export const copy = defineCopy('v2', {
   today: 'Today',
   notVerified: 'Not verified',
+  stateDown: 'Down',
+  stateQuiet: 'Quiet',
   yesterday: 'Yesterday',
   todayWord: 'today',
   vsUsual: (weekday: string) => `vs usual ${weekday}`,
@@ -33,6 +35,7 @@ export const copy = defineCopy('v2', {
   team: 'Team',
   teams: 'Teams',
   manageTeams: 'Manage teams',
+  teamMoved: (name: string, n: number) => `Moved ${name} to position ${n}`,
   api: 'API keys & MCP',
   profile: 'Profile',
   shortcuts: 'Keyboard shortcuts',

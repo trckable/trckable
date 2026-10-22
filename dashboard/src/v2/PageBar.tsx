@@ -3,6 +3,7 @@
 import type { Site } from '../lib/api'
 import { PageHeader, type PageHeaderProps } from './PageHeader'
 import '../mock/mock.css'
+import '../kit/layout.css'
 import '../mock/theme.css'
 
 export function PageBar(p: Omit<PageHeaderProps, 'tab' | 'period'> & { site: Site | null }) {

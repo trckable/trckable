@@ -1,0 +1,1 @@
+Live's Speed & uptime, AI & mentions and Analytics cards show a placeholder shaped like their figures while they load, the Analytics pages and countries now cover the same day as the visitor count above them, and the answers ring no longer overlaps its label.

@@ -85,6 +85,7 @@ test('pin, group, reorder by keyboard and drag, saved for the account, same orde
       await page.keyboard.press('Alt+ArrowUp')
       await expect.poll(async () => { const l = await layout(page.request); return idx(l, c) < idx(l, b) }).toBe(true)
       await expect(row(page, c).locator('.site')).toBeFocused()
+      await expect(page.locator('#siteMenu [aria-live]')).toContainText(/^Moved .+ to position \d+$/)
 
       // Drag: b dropped on the top of c goes just before it (neighbours, so no
       // list scrolls mid-drag); the rows slide while it moves, and Esc puts

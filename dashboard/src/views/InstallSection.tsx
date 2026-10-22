@@ -1,9 +1,13 @@
-import { Activity, Check, ChevronRight, CircleCheck, Info as InfoIcon, RefreshCw, TriangleAlert } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Activity, Check, ChevronRight, CircleCheck, Info as InfoIcon, RefreshCw, TriangleAlert, X } from 'lucide-react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { api, type InstallCheck, type Site, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { Install } from '../features/install/Install'
 import { clock } from '../lib/site'
+import { REUSE_MS, verdictOf } from './installVerdict'
+
+// The last homepage read per site: opening the tab again reuses it for a short while, so the check's limit is kept for the button.
+const reads = new Map<string, { at: number; page: InstallCheck }>()
 
 /** Once visits arrive, Install becomes a check you can run: this server reads
  *  the homepage and looks for the snippet, and the latest recorded visit says
@@ -18,6 +22,13 @@ export function InstallSection({ site }: { site: Site }) {
   const [at, setAt] = useState<Date | null>(null)
   const [code, setCode] = useState<boolean | null>(null) // null: open when not verified
   const checking = pend.page || pend.visits
+  // "Checked 2 min ago" keeps counting while the tab stays open.
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    if (!at) return
+    const t = setInterval(() => setTick((n) => n + 1), 30_000)
+    return () => clearInterval(t)
+  }, [at])
   const latest = () =>
     api
       .events(site.id, 1)
@@ -27,7 +38,17 @@ export function InstallSection({ site }: { site: Site }) {
     const t0 = Date.now()
     const wait = (ms: number) => new Promise((r) => setTimeout(r, Math.max(0, ms - (Date.now() - t0))))
     setPend({ page: true, visits })
-    const pageP = more.checkInstall(site.id).catch((e: unknown): InstallCheck => ({ url: `https://${site.domain}/`, scripts: 0, error: words(e) }))
+    const kept = reads.get(site.id)
+    const pageP =
+      !visits && kept && Date.now() - kept.at < REUSE_MS
+        ? Promise.resolve(kept.page)
+        : more
+            .checkInstall(site.id)
+            .then((pg) => {
+              reads.set(site.id, { at: Date.now(), page: pg })
+              return pg
+            })
+            .catch((e: unknown): InstallCheck => ({ url: `https://${site.domain}/`, scripts: 0, error: words(e) }))
     const lastP = visits ? latest() : null
     const [pg] = await Promise.all([pageP, wait(750)])
     setPage(pg)
@@ -57,7 +78,7 @@ export function InstallSection({ site }: { site: Site }) {
   // the install: this site's own id, found where a browser would load it.
   const reachStep = (): Step => {
     if (!page || pend.page) return { tone: 'wait', title: 'Your homepage', text: `Loading https://${site.domain}/…` }
-    if (page.error) return { tone: 'warn', title: 'Your homepage', text: `${page.error}.` }
+    if (page.error) return { tone: fresh ? 'info' : 'fail', title: 'Your homepage', text: fresh ? `${page.error}. Visits are arriving, so this does not change the install.` : `${page.error}.` }
     return { tone: 'ok', title: 'Your homepage', text: `${where} answered (${page.status}).` }
   }
   const snippetStep = (): Step => {
@@ -69,8 +90,9 @@ export function InstallSection({ site }: { site: Site }) {
         title: "This site's snippet",
         text: page.via === 'page' ? `Found in the page, with this site's id.` : `Found in a script the page loads: ${page.via?.replace(/^https?:\/\//, '')}`,
       }
-    if (page.found === 'other' || page.found === 'nosite') return { tone: 'warn', title: "This site's snippet", text: `trckable is on ${where}, but ${page.found === 'other' ? "with another site's id" : 'without any site id'}. Copy the code below again.` }
-    return { tone: 'warn', title: "This site's snippet", text: `Not in the page or in the ${scripts} it loads. Add the code below to your homepage's <head>.` }
+    // While visits arrive, what the homepage read missed is a note, never a failure.
+    if (page.found === 'other' || page.found === 'nosite') return { tone: fresh ? 'info' : 'fail', title: "This site's snippet", text: `trckable is on ${where}, but ${page.found === 'other' ? "with another site's id" : 'without any site id'}. Copy the code below again.` }
+    return { tone: fresh ? 'info' : 'fail', title: "This site's snippet", text: `Not in the page or in the ${scripts} it loads. Add the code below to your homepage's <head>.` }
   }
   const visitsStep = (): Step => {
     if (pend.visits) return { tone: 'wait', title: 'Visits arriving', text: 'Asking for the latest visit…' }
@@ -80,48 +102,54 @@ export function InstallSection({ site }: { site: Site }) {
   const reach = reachStep()
   const snippet = snippetStep()
   const visits = visitsStep()
-  const verified = !checking && snippet.tone === 'ok'
-  const showCode = code ?? (!checking && !verified)
+  // Visits arriving with this site's key are the proof; the snippet step only adds to it.
+  const verdict = verdictOf({ checking, snippetOk: snippet.tone === 'ok', seen: true, fresh })
+  const showCode = code ?? verdict === 'missing'
   const headText = () => {
-    if (checking) return `Checking ${site.domain}…`
-    if (verified) return fresh ? `Connected and verified` : `Snippet found, but no visits in the last day`
+    if (verdict === 'checking') return `Checking ${site.domain}…`
+    if (verdict === 'working') return `Connected and verified`
+    if (verdict === 'quiet') return `Snippet found, but no visits in the last day`
     // Say what was checked: the snippet, on the homepage.
     if (page?.found === 'other') return `Snippet seen, but it is another site's`
     if (page?.found === 'nosite') return `Snippet seen, but without a site id`
     return `Snippet not seen`
   }
   const subText = () => {
-    if (checking) return 'This server fetches your homepage and up to 20 scripts it links to, looks for this site\'s id in them, then asks for the latest visit it recorded.'
-    if (verified) return fresh ? `This site's snippet is on ${site.domain} and visits are arriving from it.` : 'The snippet is in place. Visits show up here within seconds of someone opening a page.'
+    if (verdict === 'checking') return 'This server fetches your homepage and up to 20 scripts it links to, looks for this site\'s id in them, then asks for the latest visit it recorded.'
+    if (verdict === 'working') return snippet.tone === 'ok' ? `This site's snippet is on ${site.domain} and visits are arriving from it.` : `Visits are arriving from ${site.domain}, so the install works.`
+    if (verdict === 'quiet') return 'The snippet is in place. Visits show up here within seconds of someone opening a page.'
     if (page?.error) return `${site.domain} could not be read, so the snippet could not be found. Until it can, the install is not verified.`
-    return `This site's id is not on ${site.domain}'s homepage${fresh ? ', though visits did arrive — the snippet may be on some pages only' : ''}.`
+    return `This site's id is not on ${site.domain}'s homepage.`
   }
   const head = headText()
   const sub = subText()
   // The mark beside the heading: done, working on it, or needs a look.
-  const markIcon = () => {
-    if (verified) return <CircleCheck size={18} strokeWidth={1.75} />
-    if (checking) return <Activity size={18} strokeWidth={1.75} />
-    return <TriangleAlert size={18} strokeWidth={1.75} />
+  const heroTone = (): Step['tone'] => {
+    if (verdict === 'checking') return 'wait'
+    if (verdict === 'working') return 'ok'
+    return verdict === 'quiet' ? 'warn' : 'fail'
   }
-  const markTone = () => {
-    if (verified && fresh) return ' accent'
-    return checking ? '' : ' warn'
+  const hero = heroTone()
+  const heroIcon = () => {
+    if (hero === 'ok') return <CircleCheck size={26} strokeWidth={1.6} />
+    if (hero === 'wait') return <Activity size={26} strokeWidth={1.6} />
+    if (hero === 'warn') return <TriangleAlert size={26} strokeWidth={1.6} />
+    return <X size={26} strokeWidth={1.6} />
   }
 
   return (
     <>
       <section className="card install-check" aria-busy={checking}>
         <div className="install-check-head">
-          <span className={'icon-tile' + markTone()} aria-hidden="true">
-            {markIcon()}
+          <span className={'install-seal ' + hero} aria-hidden="true">
+            {heroIcon()}
           </span>
           <div>
             <h3>{head}</h3>
             <p className="muted">{sub}</p>
             {at && !checking && (
-              <span className="install-at faint" key={at.getTime()}>
-                Checked at {clock(at, site.timezone)}
+              <span className="install-at faint" key={at.getTime()} title={`Checked at ${clock(at, site.timezone)}`}>
+                {`Checked ${agoText(at.getTime())}`}
               </span>
             )}
           </div>
@@ -130,19 +158,21 @@ export function InstallSection({ site }: { site: Site }) {
             {checking ? 'Checking…' : 'Verify again'}
           </button>
         </div>
-        <ul className="install-steps">
-          {[reach, snippet, visits].map((s) => (
-            <li key={s.title} className={'install-step ' + s.tone}>
+        <ol className="install-steps">
+          {[reach, snippet, visits].map((s, i) => (
+            <li key={s.title} className={'install-step ' + s.tone} style={{ '--i': i } as CSSProperties}>
               <span className="install-step-mark" aria-hidden="true" key={s.tone}>
                 <StepMark tone={s.tone} />
               </span>
-              <span>
+              <span className="install-step-text">
                 <b>{s.title}</b>
-                <span className="faint">{s.text}</span>
+                <span className="faint" title={s.text}>
+                  {s.text}
+                </span>
               </span>
             </li>
           ))}
-        </ul>
+        </ol>
       </section>
       <button type="button" className="btn ghost install-more" aria-expanded={showCode} onClick={() => setCode(!showCode)}>
         <ChevronRight size={15} strokeWidth={1.75} style={{ transform: showCode ? 'rotate(90deg)' : undefined, transition: 'transform .15s' }} aria-hidden="true" />
@@ -153,12 +183,13 @@ export function InstallSection({ site }: { site: Site }) {
   )
 }
 
-type Step = { tone: 'ok' | 'warn' | 'info' | 'wait'; title: string; text: string }
+type Step = { tone: 'ok' | 'warn' | 'fail' | 'info' | 'wait'; title: string; text: string }
 
 function StepMark({ tone }: { tone: Step['tone'] }) {
   if (tone === 'ok') return <Check size={14} strokeWidth={2.25} />
   if (tone === 'wait') return <span className="btn-spin" />
   if (tone === 'info') return <InfoIcon size={14} strokeWidth={2} />
+  if (tone === 'fail') return <X size={14} strokeWidth={2.25} />
   return <TriangleAlert size={14} strokeWidth={2} />
 }
 

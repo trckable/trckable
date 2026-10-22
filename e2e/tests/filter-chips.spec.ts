@@ -102,7 +102,7 @@ for (const width of [1440, 390]) {
       await page.keyboard.press('Escape')
       await expect(panel(page)).toHaveCount(0)
       await expect(page).not.toHaveURL(/[?&](f|xf)=/)
-      await (width < 700 ? page.locator('.tabbar').getByRole('button', { name: 'Explore' }) : page.locator('.mk-chip.exb')).click()
+      await (width < 700 ? page.locator('.tabbar').getByRole('button', { name: 'Explore' }).click() : page.keyboard.press('e'))
       await expect(panel(page)).toBeVisible()
       await expect(chips(page)).toHaveCount(0)
     })
@@ -120,6 +120,8 @@ test('Live has no period and no filters, and the Briefing gets its own back', as
   await expect(page).not.toHaveURL(/[?&](period|f|xf|x|compare)=/)
   await expect(page.locator('.xchip2')).toHaveCount(0)
   await expect(page.locator('#per, .mk-chip.per')).toHaveCount(0)
+  // Live's keys are on once Live is drawn: a B before that goes nowhere.
+  await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible()
   await page.keyboard.press('b')
   await expect(page).toHaveURL(/period=7d/)
   await expect(page.locator('.brief')).toBeVisible()
@@ -136,6 +138,8 @@ test('the palette takes the open panel to Live with nothing of it left behind, a
   await expect(page).not.toHaveURL(/[?&](period|f|xf|x|compare)=/)
   await expect(panel(page)).toHaveCount(0)
   await expect(page.locator('.xchip2')).toHaveCount(0)
+  // Live's keys are on once Live is drawn: a B before that goes nowhere.
+  await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible()
   await page.keyboard.press('b')
   await expect(page).toHaveURL(/period=7d/)
   await expect(page).toHaveURL(/xf=page/)

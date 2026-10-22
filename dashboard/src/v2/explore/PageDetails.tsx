@@ -5,7 +5,7 @@ import { heatApi } from '../../features/heatmap/api'
 import { markHeatDone } from '../../features/heatmap/guide'
 import { can } from '../../lib/permissions'
 import { isOn } from '../../lib/modules'
-import { modulesChanged, useMods } from '../../lib/useMods'
+import { useMods } from '../../lib/useMods'
 import { glow, pageSize, place, strength, busiest } from '../../features/heatmap/model'
 import { lazyLoad } from '../../lib/lazyLoad'
 import { MIN_VITALS } from '../../lib/api'
@@ -42,7 +42,6 @@ function Clicks({ site, range, page, q }: { site: Site; range: Range; page: stri
       .setModule(site.id, 'heatmaps', true)
       .then(() => {
         markHeatDone(site.id)
-        modulesChanged()
         setAbout(false)
       })
       .catch((e: unknown) => fail(e))
@@ -142,8 +141,8 @@ export default function PageDetails({ site, range, view }: { site: Site; range: 
   const close = () => pageDetails.set(null)
   return (
     <MkPortal>
-      <div className="xscrim on" onClick={close} aria-hidden="true" style={{ zIndex: 72 }} />
-      <aside ref={box} className="cd on" aria-label={copy.pageDetails} tabIndex={-1} style={{ zIndex: 73 }}>
+      <div className="xscrim on" onClick={close} aria-hidden="true" />
+      <aside ref={box} className="cd on" aria-label={copy.pageDetails} tabIndex={-1}>
         <div className="cdh">
           <b>{copy.pageDetails}</b>
           <span className="mk-quiet">{site.name || site.domain}</span>

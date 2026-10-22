@@ -83,3 +83,31 @@ export function ringMode(o: { state: SetupState | null; hidden: boolean; doneSin
   if (!s.all_set) return 'ring'
   return o.doneSince === null || o.now - o.doneSince < CHECK_FOR ? 'check' : 'none'
 }
+
+/** The setup step behind each setup prompt. Goals, alerts and uptime have none that can be skipped: they always show. */
+export const PROMPT_STEP: Record<string, string | undefined> = { rev: 'payments', search: 'search' }
+
+/**
+ * Is this prompt wanted? One answer for every card: the person chose the step and has not skipped it. A step that is
+ * skipped or not chosen (`skipped`: the server's reading of both) is not wanted; a prompt with no step behind it always is.
+ * While the checklist is not known yet nothing is wanted; the prompt's view asks for it as it opens (useWanted), so it
+ * arrives with the page's own data and the prompt neither flashes nor moves.
+ */
+export function wanted(state: SetupState | null, kind: string): boolean {
+  const id = PROMPT_STEP[kind]
+  if (!id) return true
+  const it = state?.items.find((i) => i.id === id)
+  return !!it && !it.skipped
+}
+
+/** The checklist still says the install waits for its first visit. */
+export const installWaiting = (state: SetupState | null): boolean => !!state && state.items.some((it) => it.id === 'verified' && !it.done)
+
+/** A read of the checklist older than this is read again when the panel opens. */
+export const STALE = 30_000
+
+/** The checklist is read again when the first visit has landed while it still waits for one. */
+export const visitMissed = (visited: boolean, state: SetupState | null): boolean => visited && installWaiting(state)
+
+/** A read made at `readAt` is old on `now`. */
+export const isStale = (readAt: number, now: number): boolean => now - readAt >= STALE

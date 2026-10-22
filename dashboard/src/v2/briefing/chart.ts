@@ -8,6 +8,7 @@ import type { ChartIn, Down } from '../ui/DayChart'
 import { mult, sourceShort, type Unit } from './model'
 import { judge, type Band, type Judged } from './usual'
 import { dateFmt } from '../../lib/format'
+import { changeOf, compareOf, sameGrain, startsOn } from './compare'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -35,7 +36,6 @@ interface ChartArgs {
   unit: Unit
   /** The site's clock now, when the period includes it. */
   nowT?: string
-  weekday: string
   /** The one source that jumped, for the label over the rise. */
   riseName?: string
   /** How many times its usual that source sent: the Briefing's own figure, so the label and the headline say the same. */
@@ -46,6 +46,8 @@ interface ChartArgs {
   notes?: { i: number; text: string }[]
   /** The usual band of each bucket of the period, when the site's own history says it (else the period before, a quarter either way). */
   bands?: (Band | null)[]
+  /** What the period before is called ("last month"): the dashed line and the line over the chart. Absent: no comparison is asked for. */
+  against?: string
   /** The whole period against its usual, for the standing note. */
   overall?: Judged
   /** Sales to mark on the line, with when each was (the site's clock) and what it came to as written. */
@@ -63,34 +65,38 @@ export function chartOf(a: ChartArgs): ChartIn {
   const live = !!a.nowT && a.cur.series.some((p) => p.t.slice(0, 10) === nowDay)
   let pts: Point[] = a.cur.series
   let e = 0
-  let span = pts.length
+  // A day is drawn whole: its axis runs to the end of the site's day, the hours still to come shaded (a site whose clock
+  // is at 00:12 would otherwise show a chart that ends at 05:00). A longer stretch shows all of its buckets too.
+  const span = a.cur.series.length
   if (live && a.nowT) {
     const nowHour = Number(a.nowT.slice(11, 13)) + Number(a.nowT.slice(14, 16)) / 60
     const key = a.nowT.slice(0, hourly ? 13 : 10)
     const idx = a.cur.series.findIndex((p) => p.t.slice(0, key.length) === key)
     e = (idx < 0 ? 0 : idx) + (hourly ? nowHour - Math.floor(nowHour) : nowHour / 24)
     pts = pts.filter((p) => p.t.slice(0, key.length) <= key)
-    // A day is drawn up to the hour after next; a longer stretch shows all of its days.
-    if (hourly && a.cur.series.length <= 24) span = Math.min(a.cur.series.length, Math.max(6, Math.ceil(e) + 2))
   }
-  const was = (a.prev?.series ?? []).map((p) => p.visitors)
+  const was = sameGrain(a.cur.series, a.prev?.series) ? (a.prev?.series ?? []).map((p) => p.visitors) : []
   const band = (a.bands ? a.bands.filter(Boolean).length >= a.cur.series.length / 2 : was.length >= pts.length / 2) && pts.length > 1
   const bandAt = (i: number): Band => a.bands?.[i] ?? bandFrom(was, i)
   const unitWord = hourly ? copy.hours : copy.days
+  // The buckets that are over count in the change over the chart; the one still going does not.
+  const done = live && pts.length > 1 ? pts.length - 1 : pts.length
+  const cmp = a.against ? compareOf(a.cur.series, a.prev?.series, done, a.against) : null
   const points = pts.map((p, i) => {
     const h = Number(p.t.slice(11, 13))
     const fr = live && hourly && i === pts.length - 1 ? Math.min(1, Math.max(0, e - i)) : 1
     const full = bandAt(i)
-    const raw = { v: p.visitors, lo: full.lo * fr, hi: full.hi * fr }
+    const sofar = { lo: full.lo * fr, hi: full.hi * fr }
     const v = fr >= 0.25 ? Math.round(p.visitors / fr) : p.visitors
-    const st: Judged = !band || fr < 0.25 ? '' : judge(p.visitors, { c: full.c * fr, lo: raw.lo, hi: raw.hi })
+    const st: Judged = !band || fr < 0.25 ? '' : judge(p.visitors, { c: full.c * fr, ...sofar })
     const day = fmtDay(p.t.slice(0, 10))
     const days = a.cur.series.length > 24
     const name = hourly ? `${days ? `${day} ` : ''}${pad(h)}:00` : day
     const tick = tickOf(hourly, a.cur.series.length, h, p.t.slice(0, 10))
-    return { i, name, tick, v, lo: full.lo, hi: full.hi, st, raw }
+    // The same bucket of the period before, as the report has it; a bucket still going has no change to tell yet.
+    const before = cmp ? (cmp.vals[i] ?? null) : null
+    return { i, name, tick, v, lo: full.lo, hi: full.hi, st, raw: p.visitors, was: before, delta: before !== null && i < done ? changeOf(p.visitors, before) : null }
   })
-  const ladder = Array.from({ length: Math.max(a.cur.series.length, pts.length) }, (_, i) => bandAt(i))
   let best = -1
   let bv = 0
   points.forEach((p, i) => {
@@ -120,6 +126,9 @@ export function chartOf(a: ChartArgs): ChartIn {
           .sort((p, q) => q.size - p.size)
           .map(({ at, text, neg }) => ({ at, text, neg }))
       : []
+  // A comparison that is asked for but has too little before it says when it begins, never a made-up line.
+  const starts = a.against && a.prev && !cmp ? startsOn(a.cur.series, a.prev.series) : null
+  const noCompare = starts ? copy.compareStarts(starts, copy.needs[a.unit]) : null
   return {
     points,
     axis,
@@ -128,10 +137,10 @@ export function chartOf(a: ChartArgs): ChartIn {
     span,
     live,
     band,
-    ladder,
+    compare: cmp,
+    noCompare,
     overall: a.overall ?? '',
     elapsed: live ? e : 0,
-    usualLabel: a.unit === 'today' || a.unit === 'yesterday' ? copy.usualDay(a.weekday) : copy.usualWord,
     unit: unitWord,
     bucket: a.bucket,
     downs: a.downs ?? [],

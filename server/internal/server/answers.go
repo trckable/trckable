@@ -28,6 +28,7 @@ import (
 const (
 	answerTick      = 5 * time.Minute
 	answerStartMax  = 3 // sites started per tick
+	answerDueRead   = 1000
 	answerKeep      = 6 // rounds that keep their text
 	answerStallMax  = 3 // ticks an engine may make no progress before its rest is let go
 	answerPauseMax  = 30 * time.Minute
@@ -40,6 +41,7 @@ const (
 	answerSetupMsg = "Web search is not turned on for this key's account."
 	answerBusyMsg  = "The engine was busy. This ask was skipped."
 	answerFailMsg  = "No answer this time."
+	answerCapMsg   = "The monthly budget ran out. This ask was skipped."
 )
 
 type answerAsker struct {
@@ -55,6 +57,9 @@ type answerAsker struct {
 	wake   chan string
 	// told sends an alert of kind "answer" to one site's people; it says whether anyone was told.
 	told func(ctx context.Context, site, title, msg string) bool
+	// allowed says whether an account may run Answers now; nil allows every
+	// account. A build that suspends or limits accounts sets it (SetAnswerGate).
+	allowed func(ctx context.Context, account string) bool
 
 	mu      sync.Mutex
 	broken  map[answers.Engine]bool
@@ -110,6 +115,30 @@ func (f *answerAsker) Wake(site string) {
 	}
 }
 
+// SetAnswerGate lets a build that suspends or limits accounts stop Answers for
+// them: a site whose account the gate refuses starts no round and has its
+// running round paused until the gate allows it again. nil allows every
+// account. Set it before Run.
+func (s *Server) SetAnswerGate(allowed func(ctx context.Context, account string) bool) {
+	if s.answers != nil {
+		s.answers.allowed = allowed
+	}
+}
+
+// open keeps the sites whose account may run Answers.
+func (f *answerAsker) open(ctx context.Context, list []sqlite.AnswerSite) []sqlite.AnswerSite {
+	if f.allowed == nil {
+		return list
+	}
+	var out []sqlite.AnswerSite
+	for _, s := range list {
+		if f.allowed(ctx, s.Account) {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
 func month(t time.Time) string { return t.UTC().Format("2006-01") }
 
 func monthStart(t time.Time) time.Time {
@@ -146,16 +175,26 @@ func (f *answerAsker) tick(ctx context.Context) {
 		slog.Warn("answers: rounds not read", "err", err)
 		return
 	}
-	for _, site := range running {
+	for _, site := range f.open(ctx, running) {
 		if ctx.Err() != nil {
 			return
 		}
 		f.runRound(ctx, site)
 	}
-	due, err := f.st.AnswerSitesDue(ctx, f.now().Unix(), answerStartMax)
+	// Read more than answerStartMax when a gate may refuse some, so refused
+	// sites do not take the places of the ones that may start.
+	limit := answerStartMax
+	if f.allowed != nil {
+		limit = answerDueRead
+	}
+	due, err := f.st.AnswerSitesDue(ctx, f.now().Unix(), limit)
 	if err != nil {
 		slog.Warn("answers: due sites not read", "err", err)
 		return
+	}
+	due = f.open(ctx, due)
+	if len(due) > answerStartMax {
+		due = due[:answerStartMax]
 	}
 	for _, site := range due {
 		if ctx.Err() != nil {
@@ -201,20 +240,21 @@ func (f *answerAsker) start(ctx context.Context, site sqlite.AnswerSite) (sqlite
 			return site, false
 		}
 		spent += f.unsaved[month(now)]
-		share := f.budget
-		if n, err := f.st.AnswerSitesWithQuestions(ctx); err == nil && n > 1 {
-			share = f.budget / int64(n)
+		share := f.st.AnswerShare(ctx, f.budget)
+		mine, err3 := f.st.AnswerSiteSpend(ctx, site.SiteID, month(now))
+		if err3 != nil {
+			return site, false
 		}
-		mine, _ := f.st.AnswerSiteSpend(ctx, site.SiteID, monthStart(now).Unix())
 		nextMonth := monthStart(now).AddDate(0, 1, 0).Unix()
 		switch {
 		case spent+held+est > f.budget:
 			f.holdBack(ctx, now)
 			_ = f.st.DelayAnswers(ctx, site.SiteID, nextMonth, now.Unix())
 			return site, false
-		case mine > 0 && mine+est > share:
-			// A fair share is spent: this site waits for next month, so it
-			// does not keep a place that other sites could have.
+		case mine+est > share:
+			// A fair share would be passed, by the first round too: this site
+			// waits for next month, so it does not keep a place that other
+			// sites could have.
 			_ = f.st.DelayAnswers(ctx, site.SiteID, nextMonth, now.Unix())
 			return site, false
 		}
@@ -225,6 +265,23 @@ func (f *answerAsker) start(ctx context.Context, site sqlite.AnswerSite) (sqlite
 	}
 	site.Round, site.Frozen = round, ids
 	return site, true
+}
+
+// overBudget says the month's spend, kept asks and lost ones, has passed the
+// budget. Each call is checked after it is stored, so a round stops at the call
+// that crossed the cap instead of the whole round it reserved.
+func (f *answerAsker) overBudget(ctx context.Context) bool {
+	if f.budget <= 0 {
+		return false
+	}
+	m := month(f.now())
+	spent, err := f.st.AnswerSpend(ctx, m)
+	if err != nil {
+		return false
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return spent+f.unsaved[m] > f.budget
 }
 
 // holdBack records that the budget is spent and tells each site's people, once a month.
@@ -242,7 +299,7 @@ func (f *answerAsker) holdBack(ctx context.Context, now time.Time) {
 		return
 	}
 	for _, s := range sites {
-		f.told(ctx, s.SiteID, "Answers is resting this month", "The monthly budget for asking AI assistants is used up, so the next round waits until the first of next month. The budget is TRCKABLE_ANSWERS_BUDGET.")
+		f.told(ctx, s.SiteID, "Answers is resting this month", "The monthly budget for asking AI assistants is used up, so the next round waits until the first of next month.")
 	}
 }
 
@@ -303,6 +360,16 @@ func (f *answerAsker) runRound(ctx context.Context, site sqlite.AnswerSite) {
 	if ctx.Err() != nil {
 		return
 	}
+	if f.overBudget(ctx) {
+		// What was paid for passed the month's budget: the asks left are not
+		// made, and the round ends with them marked as skipped.
+		f.holdBack(ctx, f.now())
+		for _, a := range f.usable() {
+			f.failRest(ctx, a, site, active, answerCapMsg)
+		}
+		f.finish(ctx, site, active)
+		return
+	}
 	// An engine that keeps being refused for three ticks is let go for this round.
 	f.mu.Lock()
 	var giveUp []answers.Asker
@@ -339,6 +406,9 @@ func (f *answerAsker) askEngine(ctx context.Context, a answers.Asker, site sqlit
 		}
 		if f.isBlocked(site, slot.q.ID) {
 			continue
+		}
+		if f.overBudget(ctx) {
+			return stored, false
 		}
 		if f.pause.blocked(string(engine), f.now()) {
 			return stored, true
@@ -502,7 +572,7 @@ func (f *answerAsker) lose(ctx context.Context, site sqlite.AnswerSite, q, cost 
 	f.blocked[blockKey(site, q)] = true
 	f.mu.Unlock()
 	m := month(f.now())
-	if cost > 0 && f.st.AddAnswerSpend(ctx, m, cost) != nil {
+	if cost > 0 && f.st.AddAnswerSpend(ctx, site.SiteID, m, cost) != nil {
 		f.mu.Lock()
 		if f.unsaved == nil {
 			f.unsaved = map[string]int64{}

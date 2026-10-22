@@ -170,26 +170,35 @@ test('a visit that arrives later is marked as arriving, then settles; the first 
   await expect(row).not.toHaveClass(/arriving/, { timeout: 6_000 })
 })
 
-test('the chart switch keeps bars or line across a reload and both draw the same minutes', async ({ page }) => {
+test('Live starts as a line, the chart switch keeps bars across a reload and both draw the same minutes', async ({ page }) => {
+  // One reading of the site for the whole test: other tests' visits (or a minute rolling over) must not move the numbers between the two looks.
+  let frozen: unknown
+  await page.route('**/api/v1/sites/*/now*', async (route) => {
+    const res = await route.fetch()
+    frozen ??= await res.json()
+    await route.fulfill({ response: res, json: frozen })
+  })
   await signIn(page, '/example.com?view=live')
   await expect(online(page)).toBeVisible({ timeout: 15_000 })
   const style = page.getByRole('group', { name: 'Chart style' })
-  await expect(style.getByRole('button', { name: 'Bars' })).toHaveAttribute('aria-pressed', 'true')
-  await style.getByRole('button', { name: 'Line' }).click()
-  await page.reload()
-  await expect(online(page)).toBeVisible({ timeout: 15_000 })
   await expect(style.getByRole('button', { name: 'Line' })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.locator('.lchart')).toHaveAttribute('data-mode', 'line')
   const read = (sel: string) =>
     page.locator(sel).evaluate((el) => ({ label: el.getAttribute('aria-label'), titles: [...el.querySelectorAll('i[title]')].map((i) => i.getAttribute('title')) }))
-  const bars = await read('.lnow .mins')
   const line = await read('.lnow .mline')
-  expect(line.label).toBe(bars.label)
-  expect(line.titles.length).toBe(30)
-  expect(line.titles).toEqual(bars.titles)
   await expect(page.locator('.lnow .mline-dot')).toBeVisible()
   await style.getByRole('button', { name: 'Bars' }).click()
   await expect(page.locator('.lchart')).toHaveAttribute('data-mode', 'bars')
+  await page.reload()
+  await expect(online(page)).toBeVisible({ timeout: 15_000 })
+  await expect(style.getByRole('button', { name: 'Bars' })).toHaveAttribute('aria-pressed', 'true')
+  const bars = await read('.lnow .mins')
+  // Other specs' visits land on the shared site between the two reads, so compare the minutes, not the counts.
+  const shape = (s: string | null) => (s ?? '').replace(/\d+ in all/, 'N in all')
+  const minute = (s: string | null) => (s ?? '').match(/\d{1,2}:\d{2}/)?.[0] ?? s
+  expect(shape(line.label)).toBe(shape(bars.label))
+  expect(line.titles.length).toBe(30)
+  expect(line.titles.map(minute)).toEqual(bars.titles.map(minute))
 })
 
 test('the sample revenue card on Live is never clipped: Connect sits fully inside the card', async ({ page }) => {
@@ -279,10 +288,11 @@ test('a long list scrolls inside its card with a fade and the cards keep one hei
   await feed.evaluate((el) => (el.scrollTop = el.scrollHeight))
   await expect(feed).not.toHaveAttribute('data-below', 'true')
   expect(await equal()).toBe(true)
-  await expect(page.locator('.lfeed .lv')).toHaveCount(19)
+  // Visits from other tests on the shared site can arrive on top of the 19.
+  await expect.poll(() => page.locator('.lfeed .lv').count()).toBeGreaterThanOrEqual(19)
 })
 
-test('scrolling the people list leaves its head where it is, and the page does not scroll', async ({ page }) => {
+test('scrolling the people list leaves its head where it is, and the page does not scroll', async ({ page, browserName }) => {
   await page.route('**/api/v1/sites/*/now*', async (route) => {
     const res = await route.fetch()
     const body = await res.json()
@@ -295,15 +305,30 @@ test('scrolling the people list leaves its head where it is, and the page does n
   await signIn(page, '/example.com?view=live')
   await expect(online(page)).toBeVisible({ timeout: 15_000 })
   const box = async (sel: string) => (await page.locator(sel).boundingBox())!
+  // The list is in and the cards have taken their height before it is measured.
+  await expect(page.locator('.lfeed .lv')).not.toHaveCount(0)
+  await page.waitForTimeout(1500)
   const before = { head: await box('.lon .lhead'), card: await box('.lon') }
   const feed = page.locator('.lon .lfeed')
-  await feed.evaluate((el) => (el.scrollTop = el.scrollHeight))
+  const still = async () => {
+    expect(await box('.lon .lhead')).toEqual(before.head)
+    expect(await box('.lon')).toEqual(before.card)
+    expect(await page.evaluate(() => scrollY)).toBe(0)
+  }
+  // The wheel turns where the pointer is (the page is taller than the screen now, with the sections under the half hour).
+  await feed.hover()
+  await feed.evaluate((el) => (el.scrollTop = 100))
   await expect(feed).toHaveAttribute('data-above', 'true')
-  await page.mouse.wheel(0, 400)
-  await page.waitForTimeout(200)
-  expect(await box('.lon .lhead')).toEqual(before.head)
-  expect(await box('.lon')).toEqual(before.card)
-  expect(await page.evaluate(() => scrollY)).toBe(0)
+  await page.mouse.wheel(0, 150)
+  await expect.poll(() => feed.evaluate((el) => el.scrollTop), { timeout: 3_000 }).toBeGreaterThan(100)
+  await still()
+  // At the list's end the page behind stays too. Firefox's scripted wheel does not honour overscroll-behavior, so only Chromium can tell.
+  if (browserName === 'chromium') {
+    await feed.evaluate((el) => (el.scrollTop = el.scrollHeight))
+    await page.mouse.wheel(0, 400)
+    await page.waitForTimeout(200)
+    await still()
+  }
 })
 
 test('online is never more than the visitors of the half hour', async ({ page }) => {

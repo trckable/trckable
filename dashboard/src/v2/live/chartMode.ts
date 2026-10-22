@@ -5,9 +5,9 @@ export const CHART_KEY = 'trckable.live.chart'
 
 export function readChartMode(): ChartMode {
   try {
-    return localStorage.getItem(CHART_KEY) === 'line' ? 'line' : 'bars'
+    return localStorage.getItem(CHART_KEY) === 'bars' ? 'bars' : 'line'
   } catch {
-    return 'bars'
+    return 'line'
   }
 }
 

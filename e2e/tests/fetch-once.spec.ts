@@ -21,7 +21,7 @@ const LOAD_MS = 10_000
 const WATCH_MS = 45_000
 
 // The most calls a first load may make (Live 19 and the Briefing 31 were measured, with the lazy reads that follow the load and the bell and the setup ring sharing one read of the account's marks).
-const BUDGET = { Live: 20, Briefing: 37 } // (Live's was 19 until its Speed & uptime and AI & mentions cards: crawlers, speed and the uptime record, read once the page is quiet; the Briefing's was 31 until a young site opened on Today, which reads the 30 days behind it as well and the day's own hours; 33 until Live is built behind it when the page is idle, so the first switch to it has its numbers: 4 reads)
+const BUDGET = { Live: 19, Briefing: 35 } // (reads other than /now, counted apart; Live's was 19 until its Speed & uptime and AI & mentions cards: crawlers, speed and the uptime record, read once the page is quiet; the Briefing's was 31 until a young site opened on Today, which reads the 30 days behind it as well and the day's own hours; 33 until Live is built behind it when the page is idle, so the first switch to it has its numbers: 4 reads)
 
 const tally = (urls: string[]) => {
   const out: Record<string, number> = {}
@@ -34,7 +34,6 @@ const kind = (u: string) => u.replace(/^\/api\/v1/, '').replace(/\/sites\/[^/?]+
 for (const [name, query] of [['Live', 'view=live'], ['Briefing', 'view=briefing']] as const) {
   test.describe(name, () => {
     let cookie = ''
-    const turned: boolean[] = []
     test.beforeAll(async () => {
       cookie = await session('fetch-once')
     })
@@ -57,12 +56,9 @@ for (const [name, query] of [['Live', 'view=live'], ['Briefing', 'view=briefing'
         return route.fulfill({ response: res, body: frozen })
       })
       await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-      const from = Date.now()
       await page.goto(`${API}/${HISTORY_DOMAIN}?${query}&v=`)
       await page.waitForLoadState('networkidle')
       await page.waitForTimeout(LOAD_MS) // the lazy reads that follow it (the bell at 3 s, the surge line at 8 s)
-      // Live reads /now again when the server's minute turns (that is its job: the chart moves on), so a load that spans a turn asks for it twice, once.
-      turned.push(Math.floor(from / 60_000) !== Math.floor(Date.now() / 60_000))
       return calls
     }
 
@@ -76,14 +72,15 @@ for (const [name, query] of [['Live', 'view=live'], ['Briefing', 'view=briefing'
       test.info().annotations.push({ type: 'requests', description: line })
 
       // Nothing is asked twice by the load, and the minute after it asks again for none of the numbers (the report, the sites, the mentions, the bell's lists): only /now and the few lines on a longer timer.
-      // (/now is allowed one more read when the minute turned during the load, which the clock says.)
-      const turn = turned.at(-1) ?? false
-      const twice = Object.entries(tally(first)).filter(([u, n]) => n > (turn && /\/now$/.test(kind(u)) ? 2 : 1))
+      // (/now is Live's pulse: the minute's turn and visits that other files of the suite add to this site make it read again, as many times as a slow runner lets them pile up; it is counted apart below.)
+      const isNow = (u: string) => /\/now$/.test(kind(u))
+      const twice = Object.entries(tally(first)).filter(([u, n]) => n > 1 && !isNow(u))
       expect(twice, 'asked twice by the load').toEqual([])
       const again = minute.filter((u) => /\/(report|mentions|milestones|incidents|busier)(\?|$)/.test(u.replace(/\/sites\/[^/?]+/, '')))
       expect(again, 'asked again within 45 s').toEqual([])
       for (const [url, n] of Object.entries(tally(minute))) expect(n, `${url} in 45 s`).toBeLessThanOrEqual(/\/now$/.test(url) ? 5 : 1)
-      expect(first.length).toBeLessThanOrEqual(BUDGET[name])
+      expect(first.filter((u) => !isNow(u)).length).toBeLessThanOrEqual(BUDGET[name])
+      expect(first.filter(isNow).length, '/now in the load').toBeLessThanOrEqual(4)
       expect(first.filter((u) => /health$/.test(u))).toEqual([])
     })
 

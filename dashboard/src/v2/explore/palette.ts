@@ -73,7 +73,7 @@ export function paletteItems(o: { sites: Site[]; site: Site | null; data: Report
     out.push({ ...account, title: pc.profile, also: 'account name picture password two-step sign-in devices', run: () => openAccount('profile') })
     for (const l of LANGUAGES) if (l.code !== chosen()) out.push({ ...account, title: pc.language(l.name), also: 'language idioma sprache langue', run: () => chooseLang(l.code) })
     if (chosen() !== 'auto') out.push({ ...account, title: pc.language(ic.languageAuto), also: 'language browser', run: () => chooseLang('auto') })
-    out.push({ ...account, title: pc.features, also: 'new what is new', run: openFeatures }, { ...account, title: pc.shortcuts, also: 'keys keyboard', run: openShortcuts })
+    out.push({ ...account, title: pc.features, also: 'features new what is new modules', run: openFeatures }, { ...account, title: pc.shortcuts, also: 'keys keyboard', run: openShortcuts })
     const way = wayToInstall({ offered: offer.get() !== null, ios: isIos(navigator.userAgent, navigator.maxTouchPoints), installed: isInstalled() })
     if (way) out.push({ ...account, title: ic.install, also: 'app pwa home screen', run: () => (way === 'ios' ? toast(ic.installHint, 'info') : void install()) })
     if (o.site && canLeaveOut(o.site)) {

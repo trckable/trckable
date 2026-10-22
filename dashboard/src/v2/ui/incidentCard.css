@@ -1,0 +1,20 @@
+/* The incident card: its title, the timeline with the down stretches in red, what happened, the actions, and last of all
+   what else was normal. One column at every width (the other wide cards put their picture beside the words). */
+@container (--pane-min-601) {
+  .mk .icard.wide.inc { display: flex !important; flex-direction: column; align-items: stretch; gap: var(--mk-s3); }
+  .mk .icard.wide.inc .ic-v { align-self: stretch; }
+  .mk .icard.wide.inc .ic-w { border-top: 0; padding-top: 0; }
+  .mk .icard.wide.inc .ic-f { align-self: stretch; }
+}
+.mk .ic-calm {
+  display: flex;
+  align-items: baseline;
+  gap: var(--mk-s2);
+  border-top: 1px solid var(--mk-line);
+  padding: var(--mk-s3) 0;
+  color: var(--mk-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.mk .ic-calm .ck { color: var(--mk-lime); flex: none; }
+.mk .ic-calm b { color: var(--mk-text); font-weight: 600; }

@@ -186,7 +186,9 @@ func scriptStatus(parent context.Context, c installCheck) int {
 // remember keeps a check's outcome, so the site picker and the dashboard can
 // tell a working install from one that stopped.
 func (a *API) remember(ctx context.Context, site, domain string, c installCheck) {
+	was, _ := a.Ctl.CheckOf(ctx, site)
 	_ = a.Ctl.SetCheck(ctx, site, sqlite.SiteCheck{At: time.Now().Unix(), Found: c.Found, Via: c.Via, Error: c.Error})
+	a.tellVerify(ctx, site, domain, was, c)
 	// Only a page that carries this site's own script, served from the site's
 	// own address, says what the site is; a redirect elsewhere says nothing.
 	if u, err := url.Parse(c.URL); err == nil && c.Kind != "" && c.Found == "site" && sameSite(u.Hostname(), domain) {

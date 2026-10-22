@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Incident } from './api'
-import { accountTotals, affectedSeconds, dayIn, dayLasted, dayStates, daysBetween, duration, rowTotals, startOfDay, uptimeOf, uptimePct } from './model'
+import { accountTotals, affectedSeconds, dayIn, dayLasted, dayStates, daysBetween, duration, pausedOnDay, rowTotals, startOfDay, uptimeOf, uptimePct } from './model'
 
 const at = (iso: string) => Date.parse(iso) / 1000
 const inc = (o: Partial<Incident>): Incident => ({ id: 'i', site: 's', kind: 'quiet', started_at: 0, ended_at: null, cause: 'no visits', expected_visits: null, note: '', ...o })
@@ -63,6 +63,9 @@ describe('incident words and figures', () => {
     expect(t.count).toBeGreaterThanOrEqual(t.down.length)
     expect(t.pct).toBeCloseTo(100 - ((3 * 3600 + 600) / (3 * 7 * 86400)) * 100, 5)
     expect(accountTotals([{ id: 'z' }], [], 7, now)).toEqual({ count: 0, pct: 100, down: [], watched: true })
+    // Paused time is out of every site's span: a site paused the whole window has no watched time, and half of it halves the span.
+    expect(accountTotals([{ id: 'z' }], [], 7, now, { z: 7 * 86400 }).watched).toBe(false)
+    expect(rowTotals([], 7, now, 0, 3 * 86400).span).toBe(4 * 86400)
     expect(accountTotals([{ id: 'z', watched_since: now + 60 }], [], 7, now).watched).toBe(false)
   })
 
@@ -79,6 +82,22 @@ describe('incident words and figures', () => {
     expect([...got.values()]).toEqual(['down', 'unwatched', 'ok'])
   })
 
+  it('marks a day paused only when the pause covers all of it, not for one paused minute', () => {
+    const days = ['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04']
+    const now = at('2026-10-04T12:00:00Z')
+    const paused = [{ from: at('2026-10-01T23:59:00Z'), to: at('2026-10-03T00:00:00Z') }]
+    const got = dayStates([], days, 'UTC', now, 0, paused)
+    expect([...got.values()]).toEqual(['ok', 'paused', 'ok', 'ok'])
+    expect(pausedOnDay(paused, '2026-10-01', 'UTC', now)).toBe(60)
+  })
+
+  it('keeps a down day down when part of it was paused, and treats a pause up to now as the whole watched day', () => {
+    const now = at('2026-10-04T12:00:00Z')
+    const x = inc({ kind: 'down', started_at: at('2026-10-02T01:00:00Z'), ended_at: at('2026-10-02T02:00:00Z') })
+    const got = dayStates([x], ['2026-10-02', '2026-10-04'], 'UTC', now, 0, [{ from: at('2026-10-02T03:00:00Z'), to: now }])
+    expect([...got.values()]).toEqual(['down', 'paused'])
+  })
+
   it('counts only watched time in a row, and says nothing when none was watched', () => {
     const now = at('2026-10-10T00:00:00Z')
     const x = inc({ kind: 'down', started_at: now - 3 * 86400, ended_at: now - 3 * 86400 + 3600 })
@@ -86,6 +105,9 @@ describe('incident words and figures', () => {
     expect(t).toMatchObject({ count: 0, seconds: 0, span: 2 * 86400 })
     expect(rowTotals([], 7, now, now + 60).span).toBe(0)
     expect(uptimeOf(0, 0)).toBeNull()
+    // Paused time is neither up nor down: out of the span, so a fully paused period has no figure and a part of one is not a 100 % it did not earn.
+    expect(uptimeOf(86400, 0, undefined, 86400)).toBeNull()
+    expect(uptimeOf(86400, 4320, undefined, 43200)).toEqual({ pct: 90, downOnly: false })
     expect(uptimeOf(86400, 0, false)).toEqual({ pct: 100, downOnly: true })
     expect(uptimeOf(86400, 0, true)?.downOnly).toBe(false)
   })

@@ -48,14 +48,17 @@ for (const size of SIZES) {
       await expect(page.locator('.cd.on')).toBeVisible()
       await lastIsReachable(page, '.cd.on')
       await page.keyboard.press('Escape')
-      await page.getByRole('button', { name: /^Preview/ }).click()
+      await expect(page.locator('.cd.on')).toHaveCount(0) // put away before the next one opens, whatever the runner's speed
+      await page.getByRole('button', { name: /^Change$/ }).click()
       await expect(page.locator('.cd.on')).toBeVisible()
       await lastIsReachable(page, '.cd.on')
       await page.keyboard.press('Escape')
+      await expect(page.locator('.cd.on')).toHaveCount(0) // put away before the next one opens, whatever the runner's speed
       await page.getByRole('button', { name: /^Explore all data/ }).last().click()
       await expect(page.locator('#xp.on button:visible').first()).toBeVisible({ timeout: 20_000 })
       await lastIsReachable(page, '#xp.on')
       await page.keyboard.press('Escape')
+      await expect(page.locator('#xp.on')).toHaveCount(0)
       await go(page, '?view=briefing&settings=alerts')
       await expect(page.getByRole('dialog', { name: /^Settings for/ })).toBeVisible({ timeout: 20_000 })
       await lastIsReachable(page, '.modal-back [role=dialog]')

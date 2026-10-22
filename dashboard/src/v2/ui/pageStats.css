@@ -24,7 +24,7 @@
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
 }
-@media (max-width: 600px) {
+@media (--xs) {
   .ps-stats {
     display: grid;
     grid-template-columns: 1fr 1fr;

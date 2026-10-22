@@ -12,7 +12,6 @@ import { closeSettings, setSettingsTab, type SettingsTab } from '../lib/settings
 import { Picker } from '../components/Picker'
 import { InlineEdit } from '../components/InlineEdit'
 import { Row } from '../components/Row'
-import { Copyable } from '../components/Copyable'
 import { ScriptRecords } from './ScriptRecords'
 import { PaymentsSettings } from './Payments'
 import { PrivacyTab, ReportSettings } from '../features/privacy/PrivacyTab'
@@ -29,6 +28,8 @@ import { DeleteSite } from './Sites'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import { SavedFlag, useSaved } from '../components/SavedFlag'
 import { InstallSection } from './InstallSection'
+import { ForDevelopers } from './ForDevelopers'
+import { DomainRow } from '../features/domain/DomainRow'
 import './Settings.css'
 
 type TabID = SettingsTab
@@ -179,6 +180,8 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
         />
       </Row>
 
+      <DomainRow site={site} onSaved={onSaved} />
+
       <Row label="Timezone" hint="Which day and hour a visit belongs to">
         <Picker
           label="Timezone"
@@ -200,26 +203,7 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
       </Row>
     </section>
 
-    <section className="card" style={{ gap: 0 }}>
-      <div className="card-head" style={{ paddingBottom: 10 }}>
-        <h2>For developers</h2>
-      </div>
-      <Row label="Site id" hint="Used by the snippet and the API">
-        <Copyable value={site.id} />
-      </Row>
-
-      {/* A credential, so the server sends it to owners only. */}
-      {site.proxy_key ? (
-        <Row label="Proxy key" hint="Lets your own server forward a visitor's location" tone="danger">
-          <Copyable value={site.proxy_key} secret />
-        </Row>
-      ) : (
-        <Row label="Proxy key" hint="Lets your own server forward a visitor's location">
-          <span className="faint">Owners only</span>
-        </Row>
-      )}
-
-    </section>
+    <ForDevelopers site={site} />
     </>
   )
 }

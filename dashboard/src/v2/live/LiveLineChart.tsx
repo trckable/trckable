@@ -18,7 +18,7 @@ interface Props {
   heights: number[]
   /** Counts up with each visit that arrives. */
   beat: number
-  hits: ReactNode
+  hits?: ReactNode
 }
 
 export function LiveLineChart({ heights, beat, hits }: Props) {

@@ -26,8 +26,10 @@ import (
 
 	"github.com/trckable/trckable/server/internal/alerts"
 	"github.com/trckable/trckable/server/internal/auth"
+	"github.com/trckable/trckable/server/internal/channels"
 	"github.com/trckable/trckable/server/internal/ga"
 	"github.com/trckable/trckable/server/internal/mentions"
+	"github.com/trckable/trckable/server/internal/notice"
 	"github.com/trckable/trckable/server/internal/query"
 	"github.com/trckable/trckable/server/internal/realtime"
 	"github.com/trckable/trckable/server/internal/revenue"
@@ -65,6 +67,9 @@ type API struct {
 	// MentionGet fetches the news for the look-alike check on a name word; nil
 	// leaves that check off (it then says it checked nothing).
 	MentionGet mentions.Doer
+	// IconGet fetches a site's own icon; nil uses the guarded client that
+	// reaches public hosts only. Tests set a fake so none touches the network.
+	IconGet *http.Client
 	// AnswerEngines are the engines Answers has a key for (openai, perplexity,
 	// anthropic); none, or AnswersEvery 0, and Answers does not exist: its
 	// routes answer an empty set-up and nothing is asked. AnswersWake asks the
@@ -99,6 +104,8 @@ type API struct {
 	Version      string // this build's version, shown in the dashboard's footer
 	// Box seals the keys trckable stores for other services (Search Console).
 	Box *secrets.Box
+	// Notices tells people what happened (internal/notice); nil in a test that does not care.
+	Notices *notice.Hub
 	// SSO: the identity providers people may sign in with (sso.go); nil, none.
 	// It works only with BaseURL (the address the provider sends people back
 	// to) and Box (which seals the flow's cookie).
@@ -110,11 +117,19 @@ type API struct {
 	// GA imports a site's history from Google Analytics (ga.go); nil, or
 	// without an OAuth client, it is off.
 	GA *ga.Manager
+	// Channels reads the team's own YouTube, Instagram and Threads views
+	// (channels.go); a platform without app keys shows a disabled Connect.
+	Channels *channels.Manager
+	// Managed is set by a build that runs the instance for its customers: there the
+	// person using it cannot set app keys, so Channels offers nothing without them
+	// instead of pointing at self-host setup docs.
+	Managed bool
 	// GSCHTTP replaces the HTTP client used to reach Google; tests only.
 	GSCHTTP    *http.Client
 	cache      *reportCache
-	nowCache   nowCache   // Live mode's answers, two seconds each
-	surges     surge.Book // each site's busy spell, if it has one
+	nowCache   nowCache     // Live mode's answers, two seconds each
+	suggested  suggestCache // Answers' suggested questions, ten minutes each
+	surges     surge.Book   // each site's busy spell, if it has one
 	storyMu    sync.Mutex
 	stories    map[string]storyEntry // how each site's surge went, kept half a minute
 	busier     busierCache           // each site's "busier than usual" answer, kept half a minute
@@ -139,6 +154,9 @@ type API struct {
 	// ShareDomainAskOpen lets any caller, not only a proxy on this machine,
 	// ask which domains are served (TRCKABLE_SHARE_DOMAIN_ASK_OPEN).
 	ShareDomainAskOpen bool
+	// PoweredBy says whether a site's shared pages carry the small "Powered by
+	// trckable" link. Nil means never.
+	PoweredBy func(ctx context.Context, site string) bool
 	// LookupTXT reads a name's TXT records: the system's resolver, except in tests.
 	LookupTXT func(ctx context.Context, name string) ([]string, error)
 
@@ -199,6 +217,11 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("GET /api/v1/oidc/{provider}/callback", a.ssoCallback)
 	handleFunc("POST /api/v1/oidc/code", a.ssoCode)
 	handle("GET /api/v1/sites/{site}/ga", a.authed(a.gaStatus))
+	handle("GET /api/v1/channels", a.authed(a.channelsList))
+	handle("GET /api/v1/channels/{platform}/start", a.authed(a.channelsStart))
+	handle("GET /api/v1/channels/{platform}/callback", a.authed(a.channelsCallback))
+	handle("DELETE /api/v1/channels/accounts/{id}", a.authed(a.channelsDisconnect))
+	handleFunc("POST /api/v1/channels/{platform}/deauth", a.channelsDeauth)
 	handle("GET /api/v1/sites/{site}/ga/start", a.authed(a.gaStart))
 	handle("GET /api/v1/ga/callback", a.authed(a.gaCallback))
 	handle("GET /api/v1/sites/{site}/ga/properties", a.authed(a.gaProperties))
@@ -221,6 +244,9 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}", a.authed(a.site))
 	handle("PATCH /api/v1/sites/{site}", a.authed(a.updateSite))
 	handle("GET /api/v1/sites/{site}/icon", a.authed(a.siteIcon))
+	handle("GET /api/v1/sites/{site}/domain", a.authed(a.siteDomain))
+	handle("PUT /api/v1/sites/{site}/domain", a.authed(a.changeDomain))
+	handle("DELETE /api/v1/sites/{site}/domain/former/{host}", a.authed(a.endFormerDomain))
 	handle("PUT /api/v1/sites/{site}/icon", a.authed(a.setSiteIcon))
 	handle("DELETE /api/v1/sites/{site}/icon", a.authed(a.clearSiteIcon))
 	handle("POST /api/v1/sites/{site}/icon/favicon", a.authed(a.fetchFavicon))
@@ -232,6 +258,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("DELETE /api/v1/sites/{site}/widgets/{id}", a.authed(a.deleteWidget))
 	handleFunc("GET /w/{id}", a.widgetPage)
 	handle("POST /api/v1/sites/{site}/install/check", a.authed(a.checkInstall))
+	handle("POST /api/v1/sites/{site}/install/stack", a.authed(a.installStack))
 	handle("GET /api/v1/sites/{site}/setup", a.authed(a.checklist))
 	handle("PUT /api/v1/sites/{site}/setup/skip/{item}", a.authed(a.setupSkip(true)))
 	handle("DELETE /api/v1/sites/{site}/setup/skip/{item}", a.authed(a.setupSkip(false)))
@@ -321,6 +348,14 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}/busier", a.authed(a.busierNow))
 	handle("GET /api/v1/sites/{site}/incidents", a.authed(a.incidents))
 	handle("GET /api/v1/sites/{site}/probes", a.authed(a.probes))
+	handle("GET /api/v1/sites/{site}/uptime", a.authed(a.uptime))
+	handle("PUT /api/v1/sites/{site}/uptime", a.authed(a.setUptime))
+	handle("POST /api/v1/sites/{site}/uptime/paths", a.authed(a.addUptimePath))
+	handle("DELETE /api/v1/sites/{site}/uptime/paths", a.authed(a.removeUptimePath))
+	handle("GET /api/v1/sites/{site}/funnels", a.authed(a.funnels))
+	handle("POST /api/v1/sites/{site}/funnels", a.authed(a.createFunnel))
+	handle("PATCH /api/v1/sites/{site}/funnels/{id}", a.authed(a.updateFunnel))
+	handle("DELETE /api/v1/sites/{site}/funnels/{id}", a.authed(a.deleteFunnel))
 	handle("GET /api/v1/sites/{site}/answers/setup", a.authed(a.answersSetup))
 	handle("PUT /api/v1/sites/{site}/answers/questions", a.authed(a.setAnswerQuestions))
 	handle("PUT /api/v1/sites/{site}/answers/competitors", a.authed(a.setAnswerCompetitors))
@@ -1095,6 +1130,12 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 	checks, _ := a.Ctl.Checks(r.Context(), principalOf(r).account)
 	downs, _ := a.Ctl.DownProbes(r.Context(), principalOf(r).account)
 	blocked, _ := a.Ctl.BlockedProbes(r.Context(), principalOf(r).account)
+	paused, _ := a.Ctl.PausedUptime(r.Context())
+	former, err := a.Ctl.FormerHostsByAccount(r.Context(), principalOf(r).account, a.Now())
+	if err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	talked := map[string]bool{}
 	if a.MentionsOn {
 		talked, _ = a.Ctl.SitesWithMentions(r.Context())
@@ -1119,8 +1160,10 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 			out[len(out)-1].DownSince, out[len(out)-1].DownCause = p.DownSince, p.Error
 		}
 		out[len(out)-1].ProbeBlockedSince = blocked[s.ID]
+		out[len(out)-1].UptimePaused = paused[s.ID]
 		out[len(out)-1].Mentions = talked[s.ID]
 		out[len(out)-1].Answers = a.AnswersOn()
+		out[len(out)-1].FormerHosts = former[s.ID]
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"sites": out})
 }
@@ -1149,6 +1192,9 @@ func (a *API) site(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	si.ProxyKey = a.proxyKeyFor(r, si.ProxyKey)
+	if u, err := a.Ctl.UptimeOf(r.Context(), si.ID); err == nil {
+		si.UptimePaused = u.Paused
+	}
 	if p, err := a.Ctl.ProbeOf(r.Context(), si.ID); err == nil {
 		si.ProbeBlockedSince = p.BlockedSince
 		if p.Down() {
@@ -1179,6 +1225,7 @@ func (a *API) createSite(w http.ResponseWriter, r *http.Request) {
 	}
 	a.defaultAlerts(r.Context(), principalOf(r).account, id)
 	si, _ := a.Ctl.SiteInfo(r.Context(), id)
+	a.tellOwners(r, notice.SiteAdded, id, notice.Vars{"domain": si.Domain})
 	writeJSON(w, http.StatusCreated, si)
 }
 
@@ -1233,14 +1280,17 @@ func (a *API) createKey(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	a.tellAllOwners(r, notice.KeyCreated, notice.Vars{"name": keyName(k.Name)})
 	writeJSON(w, http.StatusCreated, map[string]any{"key": k, "secret": secret})
 }
 
 func (a *API) revokeKey(w http.ResponseWriter, r *http.Request) {
+	name := a.keyNamed(r)
 	if err := a.Ctl.RevokeAPIKey(r.Context(), principalOf(r).account, r.PathValue("id")); err != nil {
 		fail(w, http.StatusNotFound, "key not found")
 		return
 	}
+	a.tellAllOwners(r, notice.KeyRevoked, notice.Vars{"name": name})
 	w.WriteHeader(http.StatusNoContent)
 }
 

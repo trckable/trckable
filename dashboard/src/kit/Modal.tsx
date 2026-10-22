@@ -105,10 +105,10 @@ export function trapTab(e: Pick<KeyboardEvent, 'key' | 'shiftKey' | 'target' | '
   list[(from + step + list.length) % list.length].focus()
 }
 
-/** The dialog's last moment: a copy of what was on screen fades and scales out
+/** The dialog's last moment (a sheet's too, see useSheet): a copy of what was on screen fades and scales out
  *  over 160 ms, then goes. Not while React is only re-running the effect (the
  *  node is still in the page then) and not under reduced motion. */
-function leave(node: HTMLElement) {
+export function leave(node: HTMLElement) {
   if (node.isConnected || typeof window === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
   const ghost = node.cloneNode(true) as HTMLElement
   ghost.classList.add('leaving')

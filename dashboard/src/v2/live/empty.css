@@ -1,0 +1,4 @@
+/* The two small actions under a card's empty line: the setup button and, beside it, "Why?". */
+.mk .lhacts{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:var(--mk-s2)}
+.mk .lhc button.lhwhy{color:var(--mk-muted);font-size:13px;padding:var(--mk-s1) var(--mk-s2);border-radius:8px}
+.mk .lhc button.lhwhy:hover{color:var(--mk-text);text-decoration:underline}

@@ -79,6 +79,12 @@
       ],
       "server": "data.erase"
     },
+    "data.export": {
+      "roles": [
+        "owner"
+      ],
+      "server": "data.export"
+    },
     "peek.ask": {
       "roles": [
         "owner",
@@ -103,6 +109,18 @@
         "owner"
       ],
       "server": "search.connect"
+    },
+    "channels.connect": {
+      "roles": [
+        "owner"
+      ],
+      "server": "channels.connect"
+    },
+    "channels.disconnect": {
+      "roles": [
+        "owner"
+      ],
+      "server": "channels.disconnect"
     },
     "import.google": {
       "roles": [

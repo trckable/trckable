@@ -1,0 +1,1 @@
+Live's globe zooms: the + and − buttons, Ctrl or Cmd with the wheel (the plain wheel in full screen), a pinch, double-click or double-tap, and the +, − and 0 keys. Zoomed in, crowded pins spread apart and the globe stops turning.

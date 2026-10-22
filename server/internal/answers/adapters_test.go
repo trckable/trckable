@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -182,5 +183,18 @@ func TestCostKnowsDatedModelNames(t *testing.T) {
 	}
 	if Cost(OpenAI, "gpt-4.1-mini-2025-04-14", u) >= Cost(OpenAI, "something-new", u) {
 		t.Error("a known dated model costs as much as an unknown one")
+	}
+}
+
+func TestCitationsAreCapped(t *testing.T) {
+	list := addCite(nil, Citation{URL: "https://a.example/" + strings.Repeat("y", 5000)})
+	if len(list) != 1 || len(list[0].URL) > 2048 {
+		t.Fatalf("url not clipped: %d", len(list[0].URL))
+	}
+	for i := 0; i < 80; i++ {
+		list = addCite(list, Citation{URL: "https://b.example/" + strconv.Itoa(i)})
+	}
+	if len(list) != 50 {
+		t.Fatalf("%d citations kept, want 50", len(list))
 	}
 }

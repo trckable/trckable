@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import { SiteHost } from './SiteHost'
 import { Hints } from '../features/hints/HintsDoor'
-import { EmbedHeader, ShareHeader, SharePassword, ShareShell, useShare } from './Share'
+import { EmbedHeader, PoweredBy, ShareHeader, SharePassword, ShareShell, useShare } from './Share'
 import { isEmbed } from '../lib/earlyStart'
 import { accentVars } from './shareAccent'
 import type { ShareInfo, Site } from '../lib/api'
@@ -32,6 +32,7 @@ export default function SharedSite() {
     return (
       <div className={isEmbed() ? 'app shared embed' : 'app shared'} style={accentVars(info.accent)}>
         <SiteHost key={info.domain} site={asSite(info)} sites={[]} identity={isEmbed() ? <EmbedHeader info={info} /> : <ShareHeader info={info} />} />
+        {!isEmbed() && <PoweredBy info={info} />}
         {!isEmbed() && <Hints />}
       </div>
     )

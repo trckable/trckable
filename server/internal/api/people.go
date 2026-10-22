@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/trckable/trckable/server/internal/auth"
+	"github.com/trckable/trckable/server/internal/notice"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -94,10 +95,12 @@ func (a *API) setPersonRole(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, "bad request")
 		return
 	}
+	before, _ := a.Ctl.PersonByID(r.Context(), principalOf(r).account, r.PathValue("id"))
 	err := a.Ctl.SetRole(r.Context(), principalOf(r).account, r.PathValue("id"), in.Role)
 	if failPerson(w, err) {
 		return
 	}
+	a.tellRole(r, before, in.Role)
 	a.people(w, r)
 }
 
@@ -165,6 +168,7 @@ func (a *API) resetPersonPassword(w http.ResponseWriter, r *http.Request) {
 	if err := a.Ctl.SetMustChange(r.Context(), p.ID, true); err != nil {
 		slog.Warn("could not ask a person to change the reset password", "user", p.ID, "err", err)
 	}
+	a.tellPerson(r, notice.PasswordReset, p.ID)
 	writeJSON(w, http.StatusOK, map[string]any{"email": p.Email, "password": password})
 }
 
@@ -177,9 +181,11 @@ func (a *API) removePerson(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, "you cannot remove your own account")
 		return
 	}
+	gone, _ := a.Ctl.PersonByID(r.Context(), principalOf(r).account, r.PathValue("id"))
 	if failPerson(w, a.Ctl.RemoveUser(r.Context(), principalOf(r).account, r.PathValue("id"))) {
 		return
 	}
+	a.tellRemoved(r, gone)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -264,5 +270,6 @@ func (a *API) turnOffTwoStep(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	a.tellPerson(r, notice.TwoStepOff, p.ID)
 	w.WriteHeader(http.StatusNoContent)
 }

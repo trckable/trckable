@@ -37,9 +37,14 @@ const (
 
 // Site is what ingest needs to know about a site.
 type Site struct {
-	ID       string
-	Domain   string   // root domain; subdomains are allowed automatically
-	Allowed  []string // extra allowed hostnames (cross-domain)
+	ID      string
+	Domain  string   // root domain; subdomains are allowed automatically
+	Allowed []string // extra allowed hostnames (cross-domain)
+	// Former are the site's earlier domains, each accepted until its end
+	// time: a site that moved keeps counting the visits still arriving from
+	// the old address. Judged against the clock on every visit, so nothing
+	// needs reloading when one ends.
+	Former   []FormerHost
 	HashMode bool
 	ProxyKey string // secret sent by same-origin proxies (X-Trckable-Proxy-Key)
 	// Location is the site's own time zone, for what is kept per day (the
@@ -60,6 +65,21 @@ type Site struct {
 	// dropped before the address is hashed or looked up, so it is never counted,
 	// billed or stored. Only this list is kept, never who matched it.
 	ExcludeIPs []netip.Prefix
+}
+
+// FormerHost is a domain a site had and still accepts visits from, until Until.
+type FormerHost struct {
+	Host  string
+	Until time.Time
+}
+
+// OwnHosts are the site's domain and the former ones: a visit coming from any is internal navigation.
+func (s Site) OwnHosts() []string {
+	out := []string{s.Domain}
+	for _, f := range s.Former {
+		out = append(out, f.Host)
+	}
+	return out
 }
 
 // Skip reports whether a path is excluded for this site. A trailing * matches
@@ -354,7 +374,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 	if !ok {
 		return nil, "", nil, errBadPayload
 	}
-	if !hostAllowed(u.Host, site, p.Dev == 1) {
+	if !hostAllowed(u.Host, site, p.Dev == 1, h.Now()) {
 		h.Hosts.Add(p.Site, u.Host, h.Now())
 		return nil, "", nil, errHost
 	}
@@ -461,7 +481,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 	switch p.Kind {
 	case "pv", "":
 		e.Kind = event.KindPageview
-		e.RefHost, e.RefURL = parseReferrer(p.Referrer, u.Host)
+		e.RefHost, e.RefURL = parseReferrer(p.Referrer, u.Host, site.OwnHosts()...)
 		// Referrer spam is never a visit, whatever the site's settings.
 		if isSpam(e.RefHost) {
 			return nil, BotOther, nil, nil
@@ -572,8 +592,12 @@ func visitorCookieFor(value string, page parsedURL, s Site) *http.Cookie {
 		Secure:   page.Secure, // Safari drops Secure cookies on http:// (local dev)
 		SameSite: http.SameSiteLaxMode,
 	}
-	if page.Host == s.Domain || strings.HasSuffix(page.Host, "."+s.Domain) {
-		c.Domain = s.Domain
+	// The same on a former domain, so its www. and bare names share one cookie there too.
+	for _, d := range s.OwnHosts() {
+		if page.Host == d || strings.HasSuffix(page.Host, "."+d) {
+			c.Domain = d
+			break
+		}
 	}
 	return c
 }
@@ -582,7 +606,7 @@ func isLocalHost(host string) bool {
 	return host == "localhost" || host == "127.0.0.1" || host == "0.0.0.0" || host == "[::1]" || host == "::1"
 }
 
-func hostAllowed(host string, s Site, dev bool) bool {
+func hostAllowed(host string, s Site, dev bool, now time.Time) bool {
 	if isLocalHost(host) {
 		return dev // the tracker opts in with data-dev
 	}
@@ -591,6 +615,11 @@ func hostAllowed(host string, s Site, dev bool) bool {
 	}
 	for _, a := range s.Allowed {
 		if host == a || strings.HasSuffix(host, "."+a) {
+			return true
+		}
+	}
+	for _, f := range s.Former {
+		if now.Before(f.Until) && (host == f.Host || strings.HasSuffix(host, "."+f.Host)) {
 			return true
 		}
 	}

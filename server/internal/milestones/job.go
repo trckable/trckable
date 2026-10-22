@@ -105,7 +105,14 @@ func Check(ctx context.Context, q query.Q, ctl *sqlite.Store, site sqlite.Milest
 	if err != nil {
 		return nil, err
 	}
-	added, err := ctl.AddMilestones(ctx, site.ID, Plan(Reached(days, site.Currency), site.Day))
+	plan := Plan(Reached(days, site.Currency), site.Day)
+	for i := range plan {
+		// The first goal is told by name: the goal that was reached on that day.
+		if plan[i].Kind == FirstGoal {
+			plan[i].Detail, _ = q.FirstGoal(ctx, site.ID, site.Timezone, plan[i].Day)
+		}
+	}
+	added, err := ctl.AddMilestones(ctx, site.ID, plan)
 	if err != nil {
 		return nil, err
 	}

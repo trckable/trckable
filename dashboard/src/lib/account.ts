@@ -3,6 +3,7 @@
 // as it was. Old links that carried ?account=… or ?add=site still open them
 // once, and the address is put back.
 import { useEffect, useState } from 'react'
+import { prefillFrom, type SitePrefill } from './addSiteLink'
 import { can } from './permissions'
 
 export type AccountTab = 'sites' | 'keys' | 'people' | 'profile'
@@ -17,6 +18,7 @@ const EVENT = 'trckable:dialogs'
 
 let account: AccountTab | null = null
 let adding = false
+let prefill: SitePrefill | null = null
 const emit = () => window.dispatchEvent(new Event(EVENT))
 
 function useDialogs() {
@@ -33,10 +35,12 @@ function useDialogs() {
   const p = new URLSearchParams(location.search)
   const v = p.get('account')
   if (v !== null) account = tabNamed(v) ?? 'sites'
-  if (p.get('add') === 'site') adding = true
+  if (p.get('add') === 'site') {
+    adding = true
+    prefill = prefillFrom(p)
+  }
   if (v !== null || p.has('add')) {
-    p.delete('account')
-    p.delete('add')
+    for (const k of ['account', 'add', 'domain', 'taken']) p.delete(k)
     const q = p.toString()
     history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash)
   }
@@ -69,10 +73,17 @@ export function useAddSite(): boolean {
 export function openAddSite() {
   if (!can('site.add')) return
   adding = true
+  prefill = null
   emit()
 }
 
 export function closeAddSite() {
   adding = false
+  prefill = null
   emit()
+}
+
+/** The domain a link asked the wizard to open with, if any. */
+export function addSitePrefill(): SitePrefill | null {
+  return prefill
 }

@@ -3,6 +3,7 @@
 // `fail` is said once, from where every caller already imports the client: it tells a person that something failed.
 export { fail } from '../components/toastBus'
 import { filterParam } from './filterSet'
+import { announceSiteWrite } from './siteWrites'
 
 export interface KPIs {
   visitors: number
@@ -150,6 +151,8 @@ export interface Site {
   down_cause?: string
   /** Set while the site's firewall blocks the server's uptime look (unix seconds): we cannot check it, its visitors are not affected. */
   probe_blocked_since?: number
+  /** The site's uptime check is paused: nothing is looked at, so no screen calls the site fine because of it. */
+  uptime_paused?: boolean
   /** The last time the server looked for the snippet from the outside. */
   check?: { at: number; found?: 'site' | 'other' | 'nosite' | 'none'; via?: string; error?: string; down_since?: number }
   /** Unix seconds until which the site's alerts are snoozed; absent when they are not. */
@@ -220,10 +223,13 @@ export interface Visit {
 export interface Alert {
   id: string
   site_id: string
-  kind: 'stopped' | 'spike' | 'customer' | 'disk' | 'weekly' | 'milestone' | 'surge' | 'mention' | 'answer'
+  kind: 'stopped' | 'spike' | 'customer' | 'disk' | 'weekly' | 'milestone' | 'surge' | 'mention' | 'answer' | 'threshold'
   enabled: boolean
   target: string
   threshold: number
+  /** A target alert's rule: what it counts and over which period (threshold is the number). */
+  metric?: string
+  period?: string
   last_fired: number
   created_at: number
 }
@@ -516,7 +522,10 @@ export async function call<T>(method: string, path: string, body?: unknown, sign
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
-  if (res.ok && method !== 'GET') dropAfterWrite(path)
+  if (res.ok && method !== 'GET') {
+    dropAfterWrite(path)
+    announceSiteWrite(path)
+  }
   if (res.status === 204) return undefined as T
   const data: unknown = await res.json().catch(() => ({}))
   if (!res.ok) {
@@ -533,6 +542,7 @@ export async function call<T>(method: string, path: string, body?: unknown, sign
 function dropAfterWrite(path: string) {
   const site = /^\/sites\/([^/?]+)/.exec(path)
   dropReports(site ? decodeURIComponent(site[1]) : undefined)
+  if (site && /^\/sites\/[^/?]+\/modules\b/.test(path)) heldModules.delete(decodeURIComponent(site[1])) // the switches changed: the next ask reads them
 }
 
 /** A request whose answer has nothing to read: a 204, or a body nobody needs. */
@@ -701,6 +711,8 @@ export interface ShareInfo {
   accent?: string
   logo_url?: string
   hide_brand?: boolean
+  /** The page carries the small "Powered by trckable" link. */
+  powered_by?: boolean
   /** What stands behind the numbers this link shows. */
   verified?: Verified
   /** Only for an embedded link: the session the page sends as a header,

@@ -60,17 +60,18 @@ test('Verify: the homepage check, the snippet it found and the last visit, each 
   await expect(steps).toContainText('Visits arriving')
   await expect(steps).toContainText('on /first')
 
-  // A page carrying another site's snippet is not this one's install.
+  // A page carrying another site's snippet is said on its step; visits are arriving, so the install still works.
   await page.unroute(`**/api/v1/sites/${site.id}/install/check`)
   await answer({ found: 'other' })
   await dialog.getByRole('button', { name: 'Verify again' }).click()
-  await expect(dialog.getByRole('heading', { name: "Snippet seen, but it is another site's" })).toBeVisible({ timeout: 10_000 })
-  await expect(steps).toContainText("with another site's id")
-  // A homepage nobody could read says so, and the code stays one click away.
+  await expect(steps).toContainText("with another site's id", { timeout: 10_000 })
+  await expect(dialog.getByRole('heading', { name: 'Connected and verified' })).toBeVisible()
+  // A homepage nobody could read is a note on its step: visits are arriving, so the headline stays calm, and the code stays one click away.
   await page.unroute(`**/api/v1/sites/${site.id}/install/check`)
   await page.route(`**/api/v1/sites/${site.id}/install/check`, (r) => r.fulfill({ json: { url: `https://${site.domain}/`, scripts: 0, error: 'the page answered 404' } }))
   await dialog.getByRole('button', { name: 'Verify again' }).click()
-  await expect(dialog.getByRole('heading', { name: 'Snippet not seen' })).toBeVisible({ timeout: 10_000 })
-  await expect(steps).toContainText('the page answered 404')
-  await expect(dialog.getByRole('button', { name: 'Hide the code' })).toBeVisible()
+  await expect(steps).toContainText('the page answered 404', { timeout: 10_000 })
+  await expect(dialog.getByRole('heading', { name: 'Connected and verified' })).toBeVisible()
+  await expect(dialog.getByRole('heading', { name: 'Snippet not seen' })).toHaveCount(0)
+  await expect(dialog.getByRole('button', { name: 'Show the code again' })).toBeVisible()
 })

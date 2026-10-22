@@ -5,12 +5,12 @@ import type { Result, Site } from '../../lib/api'
 const openSettings = vi.fn<(...a: unknown[]) => void>()
 vi.mock('../../lib/settings', () => ({ openSettings: (...a: unknown[]) => openSettings(...a) }))
 
-import { setupRows } from './steps'
+import { nudge, setupRows } from './steps'
 
 const site = { id: 's1', domain: 'site.com' } as Site
 const bare = { goals: [] } as unknown as Result
 const onGoal = vi.fn()
-const rows = (o: Partial<Parameters<typeof setupRows>[0]> = {}) => setupRows({ site, cur: bare, can: true, shared: false, noSearch: true, noAlerts: true, onGoal, ...o })
+const rows = (o: Partial<Parameters<typeof setupRows>[0]> = {}) => setupRows({ site, cur: bare, can: true, shared: false, noSearch: true, noAlerts: true, want: () => true, onGoal, ...o })
 
 beforeEach(() => {
   openSettings.mockReset()
@@ -18,18 +18,17 @@ beforeEach(() => {
 })
 
 describe('what the Briefing offers to connect', () => {
-  it('a new site gets revenue, search, goals, uptime and alerts, in that order', () => {
-    expect(rows().map((r) => r.key)).toEqual(['rev', 'search', 'goals', 'uptime', 'alerts'])
+  it('a new site gets revenue, search, goals and alerts, in that order', () => {
+    expect(rows().map((r) => r.key)).toEqual(['rev', 'search', 'goals', 'alerts'])
   })
 
   it('each button opens the right place', () => {
     const by = Object.fromEntries(rows().map((r) => [r.key, r]))
     by.rev.act?.()
     by.search.act?.()
-    by.uptime.act?.()
     by.alerts.act?.()
     by.goals.act?.()
-    expect(openSettings.mock.calls.map((c) => c[1])).toEqual(['payments', 'search', 'health', 'alerts'])
+    expect(openSettings.mock.calls.map((c) => c[1])).toEqual(['payments', 'search', 'alerts'])
     expect(onGoal).toHaveBeenCalledTimes(1)
   })
 
@@ -47,5 +46,21 @@ describe('what the Briefing offers to connect', () => {
 
   it('a shared link is offered nothing', () => {
     expect(rows({ can: false, shared: true })).toEqual([])
+  })
+})
+
+describe('one nudge at a time', () => {
+  const all = { site, cur: bare, can: true, shared: false, noSearch: true, noAlerts: true, want: () => true, onGoal, stories: [], top: null, downNow: false }
+  it('shows the first thing not set up, and only that', () => {
+    expect(nudge(all).setups).toHaveLength(1)
+    expect(nudge(all).act).toBeNull()
+  })
+  it('puts what is worth doing now before a setup', () => {
+    const n = nudge({ ...all, downNow: true })
+    expect(n.setups).toEqual([])
+    expect(n.act).not.toBeNull()
+  })
+  it('shows nothing on a shared page', () => {
+    expect(nudge({ ...all, shared: true })).toEqual({ setups: [], act: null })
   })
 })

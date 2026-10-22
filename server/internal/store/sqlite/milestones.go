@@ -33,6 +33,8 @@ type Milestone struct {
 	// Shared: a link is live. Amount: it shows the amount of money.
 	Shared bool `json:"shared"`
 	Amount bool `json:"amount,omitempty"`
+	// Detail is what the milestone was reached by when that is a name: the goal that was first reached.
+	Detail string `json:"detail,omitempty"`
 }
 
 // ErrShared says a milestone already has a live link: its token is shown
@@ -53,8 +55,8 @@ func (s *Store) AddMilestones(ctx context.Context, site string, rows []Milestone
 	now := time.Now().Unix()
 	var added []Milestone
 	for _, m := range rows {
-		res, err := tx.ExecContext(ctx, `INSERT OR IGNORE INTO milestones (site_id, kind, step, value, currency, reached_on, seen, created_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, site, m.Kind, m.Step, m.Value, m.Currency, m.Day, m.Quiet, now)
+		res, err := tx.ExecContext(ctx, `INSERT OR IGNORE INTO milestones (site_id, kind, step, value, currency, reached_on, seen, created_at, detail)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, site, m.Kind, m.Step, m.Value, m.Currency, m.Day, m.Quiet, now, m.Detail)
 		if err != nil {
 			return nil, err
 		}
@@ -71,7 +73,7 @@ func (s *Store) AddMilestones(ctx context.Context, site string, rows []Milestone
 func (s *Store) Milestones(ctx context.Context, site, user string) ([]Milestone, error) {
 	rows, err := s.DB.QueryContext(ctx, `SELECT m.kind, m.step, m.value, m.currency, m.reached_on, m.seen, m.created_at,
 			(SELECT count(*) FROM milestone_seen v WHERE v.site_id = m.site_id AND v.kind = m.kind AND v.step = m.step AND v.user_id = ?),
-			coalesce(sh.amount, -1)
+			coalesce(sh.amount, -1), m.detail
 		FROM milestones m LEFT JOIN milestone_shares sh ON sh.site_id = m.site_id AND sh.kind = m.kind AND sh.step = m.step
 		WHERE m.site_id = ? ORDER BY m.reached_on DESC, m.created_at DESC, m.kind`, user, site)
 	if err != nil {
@@ -82,7 +84,7 @@ func (s *Store) Milestones(ctx context.Context, site, user string) ([]Milestone,
 	for rows.Next() {
 		var m Milestone
 		var closed, amount int
-		if err := rows.Scan(&m.Kind, &m.Step, &m.Value, &m.Currency, &m.Day, &m.Quiet, &m.CreatedAt, &closed, &amount); err != nil {
+		if err := rows.Scan(&m.Kind, &m.Step, &m.Value, &m.Currency, &m.Day, &m.Quiet, &m.CreatedAt, &closed, &amount, &m.Detail); err != nil {
 			return nil, err
 		}
 		m.New = user != "" && !m.Quiet && closed == 0

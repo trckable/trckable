@@ -2,6 +2,7 @@
 // their id, with the id's first two characters. The same person always looks
 // the same, in the live list and in their journey.
 import { hueOf } from '../../lib/visitor'
+import { faceOf } from './face'
 import './visitor.css'
 
 // A phone draws them a step larger (--ph-mark in phone.css; 1 elsewhere).
@@ -9,10 +10,10 @@ const scaled = (px: number) => `calc(${px}px * var(--ph-mark, 1))`
 
 export function Avatar({ id, size = 40, live = false }: { id: string; size?: number; live?: boolean }) {
   const hue = hueOf(id)
-  const cls = live ? 'v-avatar live' : 'v-avatar'
+  const cls = live ? 'v-avatar face live' : 'v-avatar face'
   return (
-    <span className={cls} style={{ width: scaled(size), height: scaled(size), fontSize: `max(var(--ph-mark-min, 0px), ${scaled(Math.round(size * 0.36))})`, ['--v-hue' as string]: String(hue) }} aria-hidden="true">
-      {id.slice(0, 2).toUpperCase()}
+    <span className={cls} style={{ width: scaled(size), height: scaled(size), ['--v-hue' as string]: String(hue) }} aria-hidden="true">
+      {faceOf(id)}
     </span>
   )
 }

@@ -8,7 +8,7 @@
 .mk .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .mk{width:100%;max-width:1440px;padding:22px 32px 40px;container-type:inline-size}
 .mk .hd{display:flex;align-items:center;gap:14px}
-/* The header stays at the top of the window; a frosted layer shows under it once the page has moved (data-stuck, Header.tsx; see the end of this file). */
+/* The header stays at the top of the window; a floating bar shows under it once the page has moved (data-stuck, Header.tsx; see the end of this file). */
 .mk .hd{position:sticky;top:0;z-index:20;margin:-22px -32px 0;padding:22px 32px 0;box-sizing:content-box;background:var(--mk-bg);border-bottom:1px solid transparent;transition:border-color .15s}
 .mk .logo{width:34px;height:34px}
 .mk .mk-chip{display:flex;align-items:center;gap:8px;border:1px solid var(--mk-line);background:var(--mk-card);border-radius:12px;height:36px;padding:0 12px;font-weight:600}
@@ -82,7 +82,7 @@
 .mk .mk-toast .ic{width:34px;height:34px;border-radius:10px;background:var(--mk-limeD);color:var(--mk-lime);display:grid;place-items:center;font-weight:800}
 .mk .mk-toast b{display:block}
 .mk .mk-toast span{color:var(--mk-muted);font-size:13px}
-@container (max-width:700px){
+@container (--pane-max-700){
 .mk .hd .data, .mk .hd .ib.bell{display:none}
 .mk .strip{grid-template-columns:1fr 1fr}
 .mk .st:nth-child(2){border-right:0}
@@ -139,14 +139,14 @@
 .mk .downbox{margin:14px 20px 0;padding:12px 16px;border-radius:12px;background:var(--mk-redD);color:var(--mk-red);font-weight:600;font-size:13px}
 .mk .mk-toast.r{border-color:var(--mk-redM)}
 .mk .mk-toast.r .ic{background:var(--mk-redD);color:var(--mk-red)}
-@container (max-width:700px){
+@container (--pane-max-700){
 .mk .hd .mk-chip{max-width:190px}
 .mk #views{order:9;width:100%}
 .mk #views button{flex:1;justify-content:center;padding:0 6px}
 .mk .chart{height:200px}
 .mk .lv .dv{display:none}
 }
-@media (max-width:700px){
+@media (--compact){
 .mk{padding:16px 16px 110px}
 .mk .mk-toast{left:16px;right:16px;bottom:70px}
 }
@@ -264,7 +264,7 @@
 .mk .exb .t2{font-weight:600;font-size:13px}
 .mk .hd .exb{border-color:transparent;background:var(--mk-field)}
 .mk .hd .exb:hover{border-color:transparent;background:var(--mk-hovbg)}
-@media (max-width:700px){
+@media (--compact){
 .mk .xp{top:auto;left:0;width:100%;height:94vh;border-radius:24px 24px 0 0;border-left:0;transform:translateY(104%)}
 .mk .xp.on{transform:none}
 }
@@ -311,16 +311,16 @@
 .mk .lfeed{padding:6px 22px 0;max-height:520px;overflow:auto}
 .mk .lon .lv:first-child{border-top:0}
 .mk .lon{display:flex;flex-direction:column}
-.mk .lcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:16px}
+.mk .lcards{gap:16px;margin-top:16px}
 .mk .lbig{font-size:30px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-bottom:8px}
 .mk .lbig small{font-size:13px;color:var(--mk-muted);font-weight:500;margin-left:6px}
 .mk .lcard .mk-n{font-size:12px;color:var(--mk-faint);margin-top:6px}
 .mk .lr{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--mk-line);font-size:13px;gap:10px}
 .mk .lr:first-child{border-top:0}
 .mk .lr span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@container (max-width:700px){
+@container (--pane-max-700){
 .mk .liveview{grid-template-columns:1fr}
-.mk .lcards{grid-template-columns:1fr;order:-1;margin:0 0 16px}
+.mk .lcards{order:-1;margin:0 0 16px}
 .mk .lbottom.money{grid-template-columns:1fr}
 .mk .lbign{font-size:40px}
 .mk .lfig{gap:28px}
@@ -346,7 +346,7 @@
 }
 .mk{--mk-s1:4px;--mk-s2:8px;--mk-s3:12px;--mk-s4:16px;--mk-s5:24px;--mk-s6:32px;--mk-h:32px;--mk-rc:10px;--mk-hov:rgba(255,255,255,.06);--mk-hov2:rgba(255,255,255,.1);--mk-chipH:28px;
  --z-menu:30;--z-toast:90;--z-dev:60;--z-scrim:70;--z-drawer:71;--z-pal:80}
-@media (max-width:700px),(pointer:coarse){
+@media (--compact),(pointer:coarse){
 .mk{--mk-h:44px}
 }
 .mk{-webkit-text-size-adjust:100%}
@@ -354,7 +354,7 @@
 /* Nothing runs off the side of the page, but a menu may reach past the box it hangs from (the page's own padding) */
 html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk{padding:var(--mk-s5) var(--mk-s6) var(--mk-s6)}
-@media (max-width:700px){
+@media (--compact){
 .mk{padding:var(--mk-s4) var(--mk-s4) 104px}
 }
 .mk .mk-chip,.mk .pill,.mk .xb,.mk .morebtn,.mk .kinds button,.mk .xp select,.mk .xp input[type=text],.mk .pmenu .dates input,.mk .pmenu .dates button,.mk .mk-menu input{height:var(--mk-h);border-radius:var(--mk-rc);font-size:13px;line-height:1;white-space:nowrap}
@@ -458,7 +458,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .pi>*{min-width:0}
 .mk .pi .s{white-space:nowrap;flex:none}
 .mk .xp::before{content:none}
-@media (max-width:700px){
+@media (--compact){
 .mk .xp{height:auto;max-height:85dvh;min-height:60dvh;top:auto;bottom:0;left:0;width:100%;border-radius:20px 20px 0 0;border-top:1px solid var(--mk-line)}
 .mk .xph{padding-top:var(--mk-s5);position:relative}
 .mk .xp::before{content:"";position:absolute;top:var(--mk-s2);left:50%;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:var(--mk-grab);z-index:3}
@@ -468,7 +468,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .mk-toast{left:var(--mk-s4);right:var(--mk-s4);bottom:76px}
 .mk .hd .mk-chip{max-width:none}
 }
-@container (max-width:700px){
+@container (--pane-max-700){
 .mk .hd{gap:var(--mk-s2)}
 .mk .hd .mk-chip{max-width:none;flex:0 1 auto;min-width:0}
 
@@ -493,7 +493,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 @media (prefers-reduced-motion:reduce){
 .mk *,.mk *::before,.mk *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
-@media (max-width:700px){
+@media (--compact){
 .mk{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 .mk{padding:0 var(--mk-s4) calc(104px + env(safe-area-inset-bottom))}
 .mk .hd{position:sticky;top:0;z-index:20;height:52px;min-height:52px;margin:0 calc(var(--mk-s4) * -1);padding:env(safe-area-inset-top) var(--mk-s4) 0;background:var(--mk-bg);box-sizing:content-box;border-bottom:1px solid transparent}
@@ -520,11 +520,11 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .xp{padding-bottom:env(safe-area-inset-bottom)}
 .mk .mk-toast{bottom:calc(76px + env(safe-area-inset-bottom))}
 }
-@container (max-width:700px){
+@container (--pane-max-700){
 .mk #chart, .mk .hero .chart, .mk .chart{height:210px}
 }
 .mk .tabbar{display:none}
-@container (max-width:600px){
+@container (--pane-max-600){
 .mk .hd .exb, .mk #views{display:none!important}
 .mk .hd{gap:var(--mk-s3)}
 .mk .hd .mk-chip{flex:1 1 auto;max-width:none}
@@ -575,11 +575,11 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .lon .lhead{padding:var(--mk-s4) var(--mk-s4) var(--mk-s1)}
 .mk .lfeed{max-height:none;padding:0 var(--mk-s4) var(--mk-s2)}
 .mk .lv{min-height:48px;padding:var(--mk-s2) 0}
-.mk .lcards{display:flex;flex-direction:column;margin:var(--mk-s3) 0 0}
+.mk .lcards{margin:var(--mk-s3) 0 0}
 .mk .lcard .lr{min-height:44px;align-items:center}
 
 }
-@media (max-width:600px){
+@media (--xs){
 .mk .tabbar{display:flex}
 .mk .hd{height:52px}
 .mk{padding-bottom:calc(168px + env(safe-area-inset-bottom))}
@@ -598,7 +598,6 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 }
 .mk .tabbar button.on{color:var(--mk-lime)}
 /* The locked preview cards (round 10), where the walkthrough has them. */
-.mk .lkcs{margin-top:var(--mk-s4)}
 .mk .lkc{position:relative;overflow:hidden;background:var(--mk-card);border:1px solid var(--mk-line);border-radius:var(--mk-r,16px);min-height:230px;display:grid;container-type:inline-size}
 .mk .lkc.big{margin:var(--mk-s3) 0}
 .mk .lkc-o{grid-area:1/1;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:var(--mk-s2);padding:var(--mk-s4)}
@@ -609,16 +608,9 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .lkc-o .lkgo:hover{filter:brightness(1.08)}
 .mk .lkc-o .how{color:var(--mk-muted);font-size:13px;height:var(--mk-h);padding:0 var(--mk-s2);border-radius:var(--mk-rc)}
 .mk .lkc-o .how:hover{color:var(--mk-text);background:var(--mk-hov)}
-.mk .lkc.mini{min-height:96px;border-radius:12px;margin-top:var(--mk-s2)}
-.mk .lkc.mini .lkc-o{flex-direction:row;flex-wrap:wrap;gap:var(--mk-s2);padding:var(--mk-s2)}
-.mk .lkc.mini .lkc-o .lt2,.mk .lkc.mini .lkc-o svg{display:none}
-.mk .lkc.mini .lkc-o .lt1{font-size:13px}
-@container (max-width:600px){.mk .lkc{min-height:176px}.mk .lkc .lkgo,.mk .lkc-o .how{min-height:44px;height:44px}.mk .lkc.mini{min-height:96px}}
-.mk.phone .lkcs{grid-template-columns:1fr}
-.mk.phone .lkc{min-height:176px}
+@container (--pane-max-600){.mk .lkc{min-height:176px}.mk .lkc .lkgo,.mk .lkc-o .how{min-height:44px;height:44px}}
+.mk.phone .lkc.big{min-height:176px}
 .mk.phone .lkc .lkgo,.mk.phone .lkc-o .how{height:44px}
-/* The walkthrough's general .mini rule also lands on this card, which gives it its gap. */
-.mk .lkc.mini{gap:6px 18px}
 /* The "Why?" in the down notice sits in the line, so the notice is as tall as the walkthrough's. */
 .mk .downbox .lk3{padding:0;line-height:inherit;height:auto;vertical-align:baseline;font:inherit}
 .mk .ck2{color:var(--mk-lime);flex:none}
@@ -629,7 +621,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .lk3{color:var(--mk-muted)}
 .mk .lk3:hover{color:var(--mk-text)}
 
-@container (max-width:600px){
+@container (--pane-max-600){
 
 .mk .mailrow{flex-wrap:wrap}
 .mk .mailrow .gh{height:44px}
@@ -642,7 +634,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .lv .mk-rp{color:var(--mk-faint);font-size:12px;flex:none;width:64px;text-align:right}
 .mk .lv:hover .mk-rp{color:var(--mk-lime)}
 .mk .lv .mk-rp em{font-style:normal}
-@container (max-width:600px){
+@container (--pane-max-600){
 .mk .lv .mk-rp em{display:none}
 .mk .lv .mk-rp{width:24px}
 }
@@ -666,8 +658,8 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .vg.good{background:var(--mk-green)}
 .mk .vg.mid{background:var(--mk-amber)}
 .mk .vg.poor{background:var(--mk-red)}
-.mk .mk-lseg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
-.mk .mk-lseg button{height:var(--mk-h);border:1px solid var(--mk-line);border-radius:var(--mk-rc);font-size:13px;color:var(--mk-muted)}
+.mk .mk-lseg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px}
+.mk .mk-lseg button{white-space:nowrap;padding:0 var(--mk-s2);height:var(--mk-h);border:1px solid var(--mk-line);border-radius:var(--mk-rc);font-size:13px;color:var(--mk-muted)}
 .mk .mk-lseg button.on{background:var(--mk-limeD);color:var(--mk-lime);border-color:var(--mk-limeL)}
 .mk .mk-lseg button:disabled{opacity:.4;cursor:default}
 .mk .pmenu .mk-lopt{display:flex;flex-direction:column;gap:6px;padding:var(--mk-s2) var(--mk-s3)}
@@ -686,7 +678,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .plm{display:flex;justify-content:space-between;font-size:12px;color:var(--mk-muted)}
 .mk .pln{margin:0;font-size:13px;color:var(--mk-muted)}
 .mk .pla{display:flex;gap:var(--mk-s2);align-items:center;margin-top:var(--mk-s2)}
-@container (max-width:900px){
+@container (--pane-max-900){
 .mk .hd>div:has(#siteBtn) .mk-chip{max-width:150px}
 .mk .hd .pill{max-width:170px}
 .mk .hd .pill #perTxt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
@@ -696,11 +688,21 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .hero .ch-top{display:flex;align-items:center;justify-content:space-between}
 .mk .bdot{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:var(--mk-lime);color:var(--mk-on-lime);font-size:12px;font-style:normal;font-weight:700;display:grid;place-items:center;padding:0 4px;line-height:1}
 .mk .ib.bell{position:relative}
-/* A notice that can be put away: a small × at its right (a build with its own list) */
+/* A row's ⋯ at its right: shown on hover or focus, always where there is no hover (a phone). Its choices open right under the row. */
 .mk .nfw{position:relative}
-.mk .nfw .nfx{position:absolute;top:8px;right:8px;width:24px;height:24px;border:0;border-radius:50%;background:none;color:var(--mk-muted);font-size:16px;line-height:1;cursor:pointer;opacity:0}
-.mk .nfw:hover .nfx,.mk .nfw .nfx:focus-visible{opacity:1}
+.mk .nfw .nf{padding-right:44px}
+.mk .nfw .nfx{position:absolute;top:8px;right:8px;display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:10px;background:none;color:var(--mk-muted);cursor:pointer;opacity:0}
+.mk .nfw:hover .nfx,.mk .nfw .nfx:focus-visible,.mk .nfw .nfx[aria-expanded='true']{opacity:1}
+.mk .nfw .nfx:hover,.mk .nfw .nfx:focus-visible,.mk .nfw .nfx[aria-expanded='true']{background:color-mix(in srgb,var(--mk-text) 7%,transparent);color:var(--mk-text);outline:none}
 @media (hover:none){.mk .nfw .nfx{opacity:1}}
+/* The day a run of rows belongs to, and a row that is still going. */
+.mk .nfdy{margin:0;padding:var(--mk-s2) var(--mk-s3) 0;font-size:12px;font-weight:600;color:var(--mk-muted)}
+/* Several in one row: the sites listed under the title, each its own button. */
+.mk .nf.grp{cursor:default}
+.mk .nfn{text-align:left;font-size:13px;color:var(--mk-text);padding:2px 0;min-height:28px}
+.mk .nfn:hover{text-decoration:underline}
+@media (--xs){.mk .nfn{min-height:44px;display:flex;align-items:center}}
+.mk .nfar{align-self:flex-start;margin:var(--mk-s2) var(--mk-s3)}
 /* A short wiggle for what is new (useBellAlert): the glyph turns about the top of the bell; not with reduced motion. */
 .mk .ib.bell.shake svg{transform-origin:50% 12%;animation:mk-bell-shake .6s ease-in-out}
 @keyframes mk-bell-shake{0%,100%{transform:rotate(0)}15%{transform:rotate(16deg)}30%{transform:rotate(-14deg)}45%{transform:rotate(10deg)}60%{transform:rotate(-8deg)}75%{transform:rotate(4deg)}}
@@ -716,13 +718,13 @@ html[data-motion='off'] .mk .ib.bell.shake svg{animation:none}
 .mk .nfi{width:22px;height:22px;flex:none;color:var(--mk-muted)}
 .mk .nfi.k-down,.mk .nfi.k-failed,.mk .nfi.k-refund{color:var(--mk-red)}
 .mk .nfi.k-up,.mk .nfi.k-sale,.mk .nfi.k-spike,.mk .nfi.k-goal,.mk .nfi.k-milestone{color:var(--mk-lime)}
-.mk .cdb .nfh b{display:none}
-.mk .cdb .nfh{justify-content:flex-end}
 .mk .cdb .nfl{max-height:none}
 .mk .nft{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .mk .nft b{font-weight:600;font-size:13px;color:var(--mk-muted)}
 .mk .nft small{font-size:12px;color:var(--mk-muted)}
 .mk .nf.unread .nft b{color:var(--mk-text)}
+/* Still going: its title says so in red, read or not. */
+.mk .nf.bad .nft b{color:var(--mk-red)}
 .mk .nfd{width:8px;height:8px;border-radius:50%;background:var(--mk-lime);flex:none}
 /* The one placeholder row while the list is being read for the first time: a row's own height, so nothing below it moves when the rows replace it. */
 .mk .nfs{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s3);min-height:56px;box-sizing:border-box}
@@ -740,12 +742,12 @@ html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-
 .mk .xp{transition:transform .32s cubic-bezier(.2,.8,.2,1),width .3s cubic-bezier(.2,.8,.2,1),top .3s cubic-bezier(.2,.8,.2,1),border-radius .3s}
 .mk .xph .xfull{margin-left:auto}
 .mk .xph .xfull+.x{margin-left:0}
-@media (max-width:700px){
+@media (--compact){
 .mk #xpFull{display:none!important}
 }
 .mk .x2{display:block}
 .mk .xrw .sh,.mk .xth .shh{display:none}
-@media (min-width:701px){
+@media (--roomy){
 .mk .xp.full{width:100vw;max-width:100vw;top:76px;border-left:0;border-top:1px solid var(--mk-line);border-radius:20px 20px 0 0}
 .mk body.xfull .xscrim{display:none!important}
 .mk .xp.full #xpBody{padding:0 var(--mk-s6) var(--mk-s6)}
@@ -771,7 +773,7 @@ html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-
 .mk .kcs.xk{margin:var(--mk-s3) 0}
 .mk .kcs.xk{grid-template-columns:repeat(2,minmax(0,1fr))}
 .mk .xp.full .kcs.xk{grid-template-columns:repeat(4,minmax(0,1fr))}
-@container (max-width:600px){
+@container (--pane-max-600){
 .mk .kcs{grid-template-columns:1fr 1fr;gap:var(--mk-s3)}
 .mk .kc{padding:var(--mk-s3) var(--mk-s3) 0;border-radius:16px}
 .mk .kc .kt{flex-wrap:wrap;row-gap:2px}
@@ -781,12 +783,12 @@ html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-
 .mk .kc .ksp{height:40px;width:calc(100% + var(--mk-s3) * 2);margin:auto calc(var(--mk-s3) * -1) 0}
 
 }
-@media (max-width:700px){
+@media (--compact){
 .mk .kcs.xk{grid-template-columns:1fr 1fr}
 }
 .mk .hero{padding-bottom:var(--mk-s4)}
 .mk .lcard .pb svg{display:block;width:100%;height:56px;margin-top:var(--mk-s2)}
-@media (max-width:600px){
+@media (--xs){
 .mk .cdh .mk-quiet{display:none}
 .mk .cdh b{flex:1;min-width:0}
 }
@@ -836,7 +838,7 @@ html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-
 .mk .mk-day.today:not(.mk-edge)::after{content:"";position:absolute;left:50%;bottom:4px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--mk-lime)}
 .mk .mk-day:disabled{color:var(--mk-faint);opacity:.45;cursor:default}
 .mk .mk-day.out{pointer-events:none}
-@container (max-width:600px){
+@container (--pane-max-600){
 .mk .mk-cm{grid-template-columns:1fr}
 .mk .mk-cm .month:nth-child(2){display:none}
 .mk .mk-cm .month:first-child .next{visibility:visible}
@@ -850,7 +852,6 @@ html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-
 }
 .mk .lfeed{max-height:none!important;overflow:visible!important}
 .mk .lcards{align-items:stretch}
-.mk .lcards>.mk-card{height:100%}
 .mk .pgh{padding:var(--mk-s3) var(--mk-s3) var(--mk-s1);font-size:12px;color:var(--mk-muted);text-transform:uppercase;letter-spacing:.06em}
 .mk #palList{max-height:min(56vh,480px)}
 .mk .cdb .dots{padding:var(--mk-s2) 0}
@@ -864,38 +865,38 @@ html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-
 .mk .mailpv .mfacts .m.dn{color:var(--mk-red)}
 .mk .mcl{margin:0;padding-left:var(--mk-s4);display:flex;flex-direction:column;gap:var(--mk-s2);color:var(--mk-muted)}
 .mk .mcl b{color:var(--mk-text)}
-@media (max-width:600px){
+@media (--xs){
 .mk{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
 .mk .cdf{flex-direction:column}
 .mk .cdf .xb{width:100%;height:44px;justify-content:center}
 }
-@container (max-width:600px){
+@container (--pane-max-600){
 .mk .fact .m{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
 
 }
-@container (max-width:900px){
+@container (--pane-max-900){
 .mk .hd .exb .t2, .mk .hd .exb .mk-kbd, .mk .hd .pill .vs{display:none}
 }
-@container (max-width:600px){
+@container (--pane-max-600){
 .mk .fact small{margin-left:0!important}
 }
 .mk .mk-menu .mi .mt2{display:block;min-width:0}
-@container (max-width:600px){
+@container (--pane-max-600){
 .mk .hd .mk-chip, .mk .hd .ib, .mk .hd .ringb{height:44px}
 .mk .tline, .mk .contrib button, .mk .ft a{position:relative}
 .mk .tline::after, .mk .contrib button::after, .mk .ft a::after{content:"";position:absolute;inset:-12px -6px}
 
 }
 body:has(.mk-menu.on) .tabbar{visibility:hidden}
-@container (max-width:600px){
+@container (--pane-max-600){
 .mk .mk-menu.on{z-index:96;box-shadow:0 0 0 100vmax var(--mk-scrim2)}
 .mk .mk-menu{padding-bottom:calc(var(--mk-s4) + env(safe-area-inset-bottom))}
 .mk .pmenu .mi{min-height:48px}
 }
-@media (max-width:600px){
+@media (--xs){
 .mk .mk-menu.on{z-index:96;box-shadow:0 0 0 100vmax var(--mk-scrim2)}
 }
-@container (min-width:601px){
+@container (--pane-min-601){
 .mk .hd{margin-bottom:var(--mk-s4)}
 
 }
@@ -914,11 +915,11 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .hd .pill{height:var(--mk-h)}
 .mk .lv .src{min-width:0;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mk .xs{margin-top:var(--mk-s3)}
-@container (max-width:1100px){
+@container (--pane-max-1100){
 .mk .hd .pill .vs{display:none}
 .mk .icard.wide{display:block!important}
 }
-@container (max-width:600px){
+@container (--pane-max-600){
 .mk .hd .pwrap{position:static}
 .mk .hd .pwrap .pill{display:none}
 }
@@ -946,7 +947,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .ldots i{flex:1;height:8px;border-radius:4px;background:var(--mk-fill)}
 .mk .ldots i.on{background:var(--mk-lime)}
 .mk .sidecol .dots{max-height:112px;overflow:hidden}
-@container (min-width:761px){
+@container (--pane-min-761){
 .mk .htop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--mk-s6);align-items:center}
 .mk .htop .pulsewrap, .mk .htop .sidecol{margin-top:0}
 .mk .pulsewrap{gap:var(--mk-s5);flex-wrap:nowrap}
@@ -958,7 +959,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .hero .mk-hl{margin-top:var(--mk-s3)}
 .mk .hl-col .hsub{max-width:34em}
 }
-@container (min-width:601px){
+@container (--pane-min-601){
 .mk .chwrap{position:relative;margin-top:var(--mk-s2)}
 .mk .chwrap .ch-top{justify-content:space-between;align-items:center;gap:var(--mk-s3);margin:0 0 var(--mk-s1);min-height:28px;padding-left:44px}
 .mk .chwrap #chCall{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;font-weight:500;color:var(--mk-muted)}
@@ -995,7 +996,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 @keyframes mk-shim{to{background-position:-220% 0}}
 .mk .icard.sk .ic-h h3 .skl{height:16px}
 .mk .icard.sk .ic-w .skl{height:12px}
-@container (min-width:761px){
+@container (--pane-min-761){
 .mk .icard.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-rows:auto auto 1fr auto;column-gap:var(--mk-s6);row-gap:var(--mk-s3);align-items:start}
 .mk .icard.wide .ic-h{grid-column:1;grid-row:1}
 .mk .icard.wide .ic-w{grid-column:1;grid-row:2;border-top:0;padding-top:0;margin:0}
@@ -1012,7 +1013,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .wrow .wl b{color:var(--mk-text)}
 .mk .wrow .wv{flex:1;min-width:0}
 .mk .wrow .wv b{color:var(--mk-lime)}
-.mk .mailrow{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s2) var(--mk-s4);border:1px dashed var(--mk-fill);border-radius:16px;font-size:13px;color:var(--mk-muted);min-height:48px}
+.mk .mailrow{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s2) var(--mk-s4);border:1px solid var(--mk-line);background:var(--mk-card);border-radius:16px;font-size:13px;color:var(--mk-muted);min-height:48px}
 .mk .mailrow .mt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mk .mailrow i{font-style:normal;color:var(--mk-text)}
 .mk .mailrow b{color:var(--mk-muted);font-weight:600}
@@ -1027,7 +1028,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .sk-kc{height:177px}
 .mk .sk-kc .skl{flex:none}
 .mk .sk-sp{width:calc(100% + var(--mk-s4) * 2);height:64px;margin:auto calc(var(--mk-s4) * -1) 0;border-radius:0}
-@media (max-width:600px){
+@media (--xs){
 .mk .sk-hl{height:121px}
 .mk .sk-ring{width:44px;height:44px}
 .mk .sk-c{width:62px;height:14px}
@@ -1037,10 +1038,31 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 }
 .mk .mk-toast{opacity:0;visibility:hidden;transition:transform .45s cubic-bezier(.2,1.3,.4,1),opacity .2s,visibility 0s .45s}
 .mk .mk-toast.on{opacity:1;visibility:visible;transition-delay:0s}
-@media (max-width:600px){
+@media (--xs){
 }
 .mk .cd{position:fixed;z-index:var(--z-drawer);left:50%;top:12vh;width:560px;max-width:calc(100vw - 32px);margin-left:-280px;max-height:76vh;background:var(--mk-card);border:1px solid var(--mk-line);border-radius:20px;display:none;flex-direction:column;box-shadow:0 30px 80px var(--mk-shc2)}
 .mk .cd.on{display:flex}
+/* A sheet always sits above the Explore panel (71) and its dimming (70): it is the thing in front, with its own dimming
+   (72) over the panel, which is dimmed once, not twice. It rises in (and, through useSheet's copy, out) in 180 ms. */
+.mk .cd{z-index:73}
+.mk .xscrim:has(+ .cd){z-index:72}
+body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--mk-scrim) 55%,transparent)}
+.mk .cd.on{animation:cd-in .18s cubic-bezier(.2,.8,.2,1) both}
+.mk .xscrim:has(+ .cd.on){animation:cd-fade .15s ease-out both}
+.mk-portal.leaving{pointer-events:none}
+.mk-portal.leaving .cd{animation:cd-out .16s ease-in both}
+.mk-portal.leaving .xscrim{animation:cd-fade .16s ease-in reverse both}
+@keyframes cd-in{from{opacity:0;transform:scale(.97)}}
+@keyframes cd-out{to{opacity:0;transform:scale(.97)}}
+@keyframes cd-fade{from{opacity:0}}
+@media (--xs){
+.mk .cd.on{animation-name:cd-rise}
+.mk-portal.leaving .cd{animation-name:cd-sink}
+}
+@keyframes cd-rise{from{opacity:0;transform:translateY(28px)}}
+@keyframes cd-sink{to{opacity:0;transform:translateY(28px)}}
+@media (prefers-reduced-motion:reduce){.mk .cd.on,.mk .xscrim:has(+ .cd.on),.mk-portal.leaving .cd,.mk-portal.leaving .xscrim{animation:none}}
+[data-motion='off'] .mk .cd.on,[data-motion='off'] .mk .xscrim:has(+ .cd.on),[data-motion='off'] .mk-portal.leaving .cd,[data-motion='off'] .mk-portal.leaving .xscrim{animation:none}
 .mk #cdscrim{z-index:var(--z-scrim)}
 .mk .cdh{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s4) var(--mk-s5);border-bottom:1px solid var(--mk-line);flex:none}
 .mk .cdh b{font-size:15px}
@@ -1051,10 +1073,10 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .cdb h3 b{color:var(--mk-text);font-weight:650}
 .mk .cdw{margin:0;color:var(--mk-muted);font-size:14px}
 .mk .cdf{display:flex;gap:var(--mk-s2);flex-wrap:wrap;padding:var(--mk-s4) var(--mk-s5) var(--mk-s5);border-top:1px solid var(--mk-line);flex:none}
-@media (max-width:600px){
+@media (--xs){
 .mk .cd{left:0;right:0;bottom:0;top:auto;width:auto;max-width:none;margin:0;max-height:85dvh;border-radius:20px 20px 0 0;border-width:1px 0 0;padding-bottom:env(safe-area-inset-bottom)}
 }
-@media (min-width:701px){
+@media (--roomy){
 .mk .xp{width:560px}
 }
 .mk .shp{display:flex;gap:var(--mk-s2);align-items:stretch;margin:var(--mk-s2) 0}
@@ -1062,7 +1084,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .shp .sv{flex:1;min-width:0}
 .mk .shp svg{display:block;width:100%;height:130px}
 .mk .shp .xl{display:flex;justify-content:space-between;font-size:12px;color:var(--mk-faint);padding-top:4px}
-@container (max-width:600px){
+@container (--pane-max-600){
 .mk .hd{gap:var(--mk-s3)}
 .mk .hd>div:has(#siteBtn){flex:1 1 auto;min-width:0}
 .mk .hd .mk-chip{max-width:100%}
@@ -1105,6 +1127,8 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .fact small{font-size:12px;margin-left:4px}
 .mk .fact .m{display:block;font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mk .cards{display:flex;flex-direction:column;gap:0;margin-top:var(--mk-s2);border-top:1px solid var(--mk-line)}
+/* On a phone the cards are one flat list; its gap above is the one the cards above have (the pill's slot between them takes 8px off each side, so the list's own margin makes up the rest). Here and not with the story card's own styles: those arrive with its chunk, and the list would move when they do. */
+@container (--pane-max-600){.mk .brief > .cards{margin-top:calc(16px - var(--mk-s3))}}
 .mk .icard, .mk .icard:first-child, .mk .icard.wide, .mk .icard.r, .mk .icard.err{display:block;background:none;border:0;border-bottom:1px solid var(--mk-line);border-radius:0;padding:0;min-height:56px;gap:0}
 .mk .ic-h{align-items:center;padding:var(--mk-s3) 0}
 .mk .ic-i{display:block;width:22px;height:22px;flex:none;color:var(--mk-muted)}
@@ -1120,7 +1144,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .calm2{border:0;padding:var(--mk-s3) 0;min-height:0;border-radius:0;flex-direction:row;align-items:center}
 .mk .calm2 button{width:auto;border:0;min-height:0;padding:0;margin-left:auto}
 .mk .act{border:0;background:none;padding:var(--mk-s2) 0}
-.mk .mailrow{border:0;padding:0;min-height:0;font-size:12px;align-items:flex-start}
+.mk .mailrow{padding:var(--mk-s3) var(--mk-s4);min-height:0;font-size:12px;align-items:flex-start}
 .mk .mailrow .mt{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .mk .watchc{background:none;border:0;padding:0}
 .mk .wrow{flex-wrap:wrap;gap:var(--mk-s1) var(--mk-s3)}
@@ -1154,7 +1178,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .rpb svg{width:11px;height:11px}
 .mk .rpl{display:inline-block;text-align:center}
 .mk .rpl::after{content:attr(data-ghost);display:block;height:0;overflow:hidden;visibility:hidden}
-@container (max-width:600px){
+@container (--pane-max-600){
 .mk .hd .ib.bell{display:inline-grid!important}
 .mk .hd .bellw{display:block;margin-left:auto}
 .mk .hd .bellw .bdot{top:2px;right:2px;min-width:9px;width:9px;height:9px;padding:0;font-size:0;border:2px solid var(--mk-bg);box-sizing:content-box}
@@ -1211,7 +1235,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .xri.on{color:var(--mk-text)}
 .mk .xp.full .xpw{display:none}
 .mk .xp.full .xlay .xtb{margin-top:var(--mk-s4)}
-@media (max-width:600px){
+@media (--xs){
 .mk .xtb{gap:var(--mk-s2)}
 .mk .xtb .xvb{display:none}
 .mk .xtb .lb-d{display:none}
@@ -1227,16 +1251,16 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .xm.on::before{content:"";position:fixed;inset:0;background:var(--mk-scrim2);z-index:-1}
 .mk .xmi{min-height:48px}
 }
-@media (max-width:600px){
+@media (--xs){
 .mk .kcs.k3 .kc .ki{display:none}
 }
-@media (max-width:600px){
+@media (--xs){
 .mk .kc.ns .kt{flex-wrap:wrap;row-gap:2px}
 .mk .kc.ns .kn{margin-left:0;flex-basis:100%;order:3}
 .mk .kc.ns .kl{flex:1}
 }
 .mk .xp .mfr>span{width:128px}
-@media (max-width:600px){
+@media (--xs){
 .mk .xp .mfr>span{width:96px}
 }
 .mk .xp :is(button,a,[tabindex],summary):focus-visible{outline:1px solid var(--mk-lime);outline-offset:-1px;box-shadow:none}
@@ -1293,7 +1317,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 @media (prefers-reduced-motion:reduce){
 .mk .sk{animation:none}
 }
-@media (max-width:600px){
+@media (--xs){
 .mk .xsub{display:flex;width:100%;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scroll-padding:0 var(--mk-s3)}
 .mk .xsub button{flex:1 0 auto;height:44px;font-size:13px;overflow:visible;text-overflow:clip;scroll-snap-align:center}
 .mk .xedr .xsub{width:auto;flex:1}
@@ -1317,7 +1341,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 }
 /* Round 11: the phone hero and the chart header, as the walkthrough has them. */
 .mk .whyb{display:none}
-@container (max-width:600px){
+@container (--pane-max-600){
  .mk .hl-col{display:flex;flex-wrap:wrap;align-items:center;gap:var(--mk-s2)}
  .mk .hl-col>*{flex:0 0 100%;min-width:0}
  .mk .hl-col>.tline{flex:0 0 auto;white-space:nowrap;margin:0}
@@ -1351,7 +1375,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 
 /* Round 12: the phone Briefing on one full-width grid, as the walkthrough has it. */
 .mk .sincem{display:none}
-@container (max-width:600px){
+@container (--pane-max-600){
  .mk .hd .bellw{order:1;margin-left:auto!important}
  .mk .hd .account-menu{order:2;margin-left:0!important}
  .mk .hd .account-btn{margin-left:0}
@@ -1395,23 +1419,23 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .hd .account-menu .more-menu{right:0;left:auto;top:calc(100% + var(--mk-s2));width:280px;min-width:0;max-width:calc(100vw - 16px);background:var(--mk-card2);border:1px solid var(--mk-line);border-radius:12px;box-shadow:0 20px 50px var(--mk-shc);z-index:var(--z-menu)}
 /* "Why?" beside "Replay": two buttons in a line, aligned at the top so the line is as tall as the walkthrough's one. */
 .mk .hl-col .rpb{vertical-align:top}
-@container (min-width:601px){.mk .hl-col .rpb+.rpb{margin-left:var(--mk-s2)}}
+@container (--pane-min-601){.mk .hl-col .rpb+.rpb{margin-left:var(--mk-s2)}}
 /* A period being read: the page of the last one stays, dimmed, until the new one is whole. */
 .mk-hold{display:contents}
 .mk-held{opacity:.55;transition:opacity .2s;pointer-events:none}
-@container (min-width:601px){.mk .hd .account-menu .account-btn{width:32px;height:32px}}
+@container (--pane-min-601){.mk .hd .account-menu .account-btn{width:32px;height:32px}}
 /* "Why?" is kept on every width, beside Replay: the walkthrough hides it on a desktop. */
 .mk .whyb.rpb{display:inline-flex}
 /* A phone's ghost is a 44 px target as the rest are, in the room of the walkthrough's 34 px. */
-@container (max-width:600px){.mk .hd .logo{box-sizing:content-box;padding:6px;margin:-6px}}
+@container (--pane-max-600){.mk .hd .logo{box-sizing:content-box;padding:6px;margin:-6px}}
 .mk .mfd{margin-left:102px;font-size:12px;color:var(--mk-red);background:var(--mk-redD);border-radius:8px;padding:2px 9px;align-self:flex-start}
 .mk .mk-ring circle:last-of-type{transition:stroke-dasharray .45s ease,stroke .3s}
 @media (prefers-reduced-motion:reduce){.mk .mk-ring circle:last-of-type{transition:none}}
 /* a site before its first visit */
-@media (max-width:600px){
+@media (--xs){
  .mk .hsub.keep{display:block;-webkit-line-clamp:3}
 }
-@media (min-width:601px){
+@media (--sm-up){
 .mk .facts{margin:var(--mk-s2) calc(var(--mk-s6) * -1) 0}
 .mk .fact{padding:var(--mk-s4) var(--mk-s6);border-right:1px solid var(--mk-line);min-width:0}
 .mk .fact:last-child{border-right:0}
@@ -1435,7 +1459,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .site-head .fold[aria-expanded="true"] svg{transform:rotate(90deg)}
 .mk .site-row{display:flex;align-items:center;gap:0;position:relative;border-radius:var(--mk-rc)}
 .mk .site-row .mi.site{flex:1;min-width:0}
-.mk .site-row.sortable .mi.site{cursor:grab}
+.mk .site-row.sortable .mi.site{cursor:pointer}
 .mk .site-row .grip{position:absolute;left:-2px;opacity:0;color:var(--mk-faint);pointer-events:none}
 .mk .site-row:hover .grip{opacity:.7}
 .mk .site-row.dragging{background:var(--mk-card);box-shadow:0 10px 30px var(--mk-shc);z-index:2}
@@ -1450,7 +1474,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .mi .now{text-align:right;font-variant-numeric:tabular-nums}
 .mk .mi.all .all-problems{font-size:12px;color:var(--mk-faint)}
 .mk .mi.all .all-problems .down{color:var(--mk-red);font-weight:600}
-.open-touch{display:none}
+.pop.menu .open-touch{display:none}
 .mk .site-head .btn.icon.ghost{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--mk-faint)}
 .mk .mi .state-line.quiet{color:var(--mk-amber)}
 .mk .sites-domains{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--mk-line);padding-bottom:var(--mk-s2);margin-bottom:var(--mk-s2)}
@@ -1466,7 +1490,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 /* the header of a page that has its own bottom bar (Data on a phone): its sheets sit above that bar (30), under dialogs (40) */
 .mk.mk-bar{position:relative;z-index:35}
 .header.quiet:has(.mk-bar){z-index:35}
-@media (max-width:600px){
+@media (--xs){
  .mk .sitelist{--acts:44px}
  .mk .site-row .site-open{display:none}
  .mk .site-row .btn.icon.ghost{width:44px;height:44px}
@@ -1479,7 +1503,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .xp.full .xph{padding:calc(var(--mk-s3) + env(safe-area-inset-top)) calc(var(--mk-s6) + env(safe-area-inset-right)) var(--mk-s3) calc(var(--mk-s6) + env(safe-area-inset-left))}
 .mk .xp.full #xpBody{padding-bottom:calc(var(--mk-s6) + env(safe-area-inset-bottom))}
 .mk .xp.full ~ .xscrim,.mk .xscrim:has(~ .xp.full){background:transparent}
-@media (max-width:600px){.mk .downbox .lk3{display:inline-flex;align-items:center;min-height:44px;min-width:44px}}
+@media (--xs){.mk .downbox .lk3{display:inline-flex;align-items:center;min-height:44px;min-width:44px}}
 .mk .sitelist > :not(#siteList){flex:none}
 /* A site waiting to be handed to someone: a Stop on its row, its line readable on both themes */
 .mk .site-row .sw-stop{flex:none;height:28px;margin-left:4px;padding:0 10px;font-size:12px}
@@ -1490,14 +1514,15 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .pill-x{align-self:stretch;width:34px;display:inline-grid;place-items:center;border:1px solid var(--mk-line);border-left:0;border-radius:0 12px 12px 0;background:var(--mk-card);color:var(--mk-muted)}
 .mk .pill-x:hover{color:var(--mk-text);background:var(--mk-hov)}
 .mk .pill-x:focus-visible{outline:2px solid var(--mk-lime);outline-offset:1px}
-@media (max-width:600px){.mk .pill-x{width:44px}}
+@media (--xs){.mk .pill-x{width:44px}}
 /* the list's rows: a mark with the state dot on it; the foot is one row, the rest under More */
-.mk .site-row .mkwrap{position:relative;display:inline-flex;flex:none}
-.mk .site-row .mkwrap .mk-dot{position:absolute;right:-3px;bottom:-3px;box-sizing:content-box;border:2px solid var(--pane,var(--mk-card2));box-shadow:none}
+.mk .mkwrap{position:relative;display:inline-flex;flex:none}
+.mk .mk-chip .mkwrap .mk-dot{border-color:var(--mk-card)}
+.mk .mkwrap .mk-dot{position:absolute;right:-3px;bottom:-3px;box-sizing:content-box;border:2px solid var(--pane,var(--mk-card2));box-shadow:none}
 .mk .mfoot.sfoot{flex-direction:row;align-items:center;gap:var(--mk-s1);padding:var(--mk-s2) 0 0}
 .mk .mfoot.sfoot .mi{width:auto;font-size:14px;min-height:var(--mk-h)}
-/* 601 to 700 px: no phone bar yet, but too narrow for one row: the header wraps, the views take a row of their own below, and the bell stays. */
-@container (min-width:601px) and (max-width:700px){
+/* 600 to 839 px (the sm step): no phone bar, but too narrow for one row: the header wraps, the views take a row of their own below, and the bell stays. */
+@container (--pane-min-601) and (--pane-max-700){
 .mk .hd{flex-wrap:wrap;height:auto;min-height:0;position:static;margin:0;padding:0;box-sizing:border-box;row-gap:var(--mk-s2)}
 .mk #views{order:9;flex:0 0 100%;width:100%}
 .mk .mk-seg{height:var(--mk-h);padding:2px}
@@ -1505,8 +1530,8 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .hd .bellw .ib.bell{display:grid}
 }
 /* Where the page is narrow (its own width, which is the screen's less its padding) but the screen is 601 px or more: the bar at the bottom names Live, the Briefing and Explore, as on a phone. */
-@media (min-width:601px) and (max-width:700px){
-@container (max-width:600px){
+@media (--hold){
+@container (--pane-max-600){
 .mk .tabbar{display:flex}
 .mk{padding-bottom:calc(168px + env(safe-area-inset-bottom))}
 .mk .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:55;padding:var(--mk-s2) var(--mk-s2) calc(var(--mk-s2) + env(safe-area-inset-bottom));background:var(--mk-bar);border-top:1px solid var(--mk-line);gap:var(--mk-s1)}
@@ -1518,7 +1543,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 }
 /* The site list, the period and the bell are the same frosted pane as the account menu (styles.css, "Menus"). */
 .mk .mk-menu{background:var(--pane);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);border-color:var(--pane-hair)}
-@media (min-width:601px){
+@media (--sm-up){
 .mk .mk-menu{border-radius:12px;box-shadow:var(--pane-shadow),inset 0 1px 0 var(--pane-top)}
 }
 /* Live's arrival moment: a new visit slides in at the top, the rows below make room, a lime glow fades and its dot beats once. */
@@ -1556,18 +1581,18 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .lv.leaving{animation:mk-fadeout .4s ease-out forwards!important}
 @keyframes mk-fadeout{to{opacity:0}}
 }
-@media (max-width:700px){
+@media (--compact){
 .mk .lchart{flex:none}
 }
 
 /* Live's sample revenue card sits in an auto-width column and its size containment shrinks it to nothing: give it room so its Connect button is never cut. */
 .mk .lbottom.money .lrev{min-width:240px}
 /* The account menu is a sheet on a phone: its desktop place (below the button) must not win over the sheet's bottom edge whichever stylesheet loaded last. */
-@media (max-width:640px){:root .mk .hd .account-menu .pop.menu.more-menu{top:auto}}
+@media (--xs){:root .mk .hd .account-menu .pop.menu.more-menu{top:auto}}
 
 /* The people on the site now: bigger than the old Live's 86 px, and its changed digits roll. */
 .mk .lfig>div:first-child .lbign{font-size:96px;line-height:1;font-weight:700;letter-spacing:-.05em}
-@media (max-width:700px){
+@media (--compact){
 .mk .lfig>div:first-child .lbign{font-size:76px}
 }
 
@@ -1615,7 +1640,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
    row's, 40 px once the page is 700 px or narrower) with the same border, fill and corners; one gap between them; the site's name
    gives way first. A build's own chip (the plan) takes its height from --hc as well. */
 .mk .hd{--hc:var(--mk-h);gap:var(--mk-s3)}
-@container (max-width:700px){.mk .hd{--hc:40px}}
+@container (--pane-max-700){.mk .hd{--hc:40px}}
 .mk .hd .mk-chip,.mk .hd .ib,.mk .hd .bellw .ib.bell,.mk .hd .account-menu .account-btn{box-sizing:border-box;height:var(--hc);min-height:var(--hc)}
 .mk .hd .ib,.mk .hd .bellw .ib.bell,.mk .hd .account-menu .account-btn{width:var(--hc);flex:none;border:1px solid var(--mk-line);background:var(--mk-card);border-radius:var(--mk-rc);color:var(--mk-muted)}
 .mk .hd .ib:hover,.mk .hd .bellw .ib.bell:hover,.mk .hd .account-menu .account-btn:hover{background:var(--mk-hovbg);border-color:var(--mk-bord2)}
@@ -1623,8 +1648,8 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .hd .logo{align-self:center}
 .mk .hd>div:has(#siteBtn){min-width:0}
 .mk .hd #siteBtn .nmx{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@container (max-width:900px){.mk .hd .exb{width:var(--hc);padding:0;justify-content:center}}
-@container (max-width:600px){
+@container (--pane-max-900){.mk .hd .exb{width:var(--hc);padding:0;justify-content:center}}
+@container (--pane-max-600){
 .mk .hd>div:has(#siteBtn) .sitechip{width:100%}
 .mk .hd>div:has(#siteBtn) #siteBtn{max-width:100%;flex:1 1 auto;min-width:0}
 }
@@ -1636,7 +1661,7 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .mk-pulse.ev{animation:mk-beat 1s ease-out 1,mk-pl 2s infinite}
 
 /* Two columns: the list scrolls inside its card, which is as tall as the Live card beside it; a soft fade at the top and bottom edge shows there is more past it. */
-@container (min-width:701px){
+@container (--pane-min-701){
 .mk .liveview>.lon{contain:size}
 .mk .liveview .lon .lfeed{flex:1 1 0;min-height:0;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain}
 .mk .liveview .lon .lfeed[data-below],.mk .liveview .lon .lfeed[data-above]{--fa:0px;--fb:0px;-webkit-mask-image:linear-gradient(to bottom,transparent,var(--mk-text) var(--fa),var(--mk-text) calc(100% - var(--fb)),transparent);mask-image:linear-gradient(to bottom,transparent,var(--mk-text) var(--fa),var(--mk-text) calc(100% - var(--fb)),transparent)}
@@ -1660,17 +1685,17 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk :is(.mk-menu,.palbox) .pgh:first-child,.mk :is(.mk-menu,.palbox) .xgl:first-child{padding-top:var(--mk-s1)}
 .mk :is(.mk-menu,.palbox) .xgl{padding-top:var(--mk-s3);padding-bottom:var(--mk-s1)}
 .mk .palbox .pgh{padding-top:var(--mk-s3);padding-bottom:var(--mk-s1)}
-@media (max-width:600px){.mk{--mk-row-h:44px}}
+@media (--xs){.mk{--mk-row-h:44px}}
 /* Design round 2: Replay and Why? sit apart, the Briefing's keys strip hides with a word, the mail line stacks on a phone. */
 .mk .rpb+.rpb{margin-left:var(--mk-s2)}
 .mk .khint .gh{height:24px;padding:0 var(--mk-s2);border:1px solid var(--mk-line);font-size:12px}
-@container (max-width:600px){.mk .mailrow .mt{flex:1 1 100%}.mk .mailrow .gh{flex:1}}
+@container (--pane-max-600){.mk .mailrow .mt{flex:1 1 100%}.mk .mailrow .gh{flex:1}}
 .mk .cards{align-items:start}
 
 /* The header is a bar of its own: a band of room under the controls, so the page moves under it and never touches them. The room
    is taken back from the gap below, so nothing moves down. */
 .mk .hd{--hpb:var(--mk-s3);padding-bottom:var(--hpb);margin-bottom:calc(var(--hpb) * -1)}
-@container (min-width:601px){.mk .hd{margin-bottom:calc(var(--mk-s4) - var(--hpb))}}
+@container (--pane-min-601){.mk .hd{margin-bottom:calc(var(--mk-s4) - var(--hpb))}}
 /* The person is the last thing on the right, whatever a build puts before them; the bell comes just before (the view switch, order 9, wraps below them). */
 .mk .hd>.bellw{order:7}
 .mk .hd>.account-menu{order:8}
@@ -1679,33 +1704,33 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
    in the site menu), the period says only its first word (the whole in its tooltip), the search is a square like the bell and the
    person, and a build's plan chip is in the person's menu. Nothing overlaps at any width. */
 .mk .setupline{display:none}
-@container (min-width:701px) and (max-width:1100px){
+@container (--pane-min-701) and (--pane-max-1100){
 .mk .hd .sitechip .mk-kbd,.mk .hd .pill .pl-rest,.mk .hd .pill .vs{display:none}
 .mk .hd .ringw{width:0;margin-left:calc(var(--mk-s3) * -1);flex:none}
 .mk .hd .ringw .ringb{display:none}
 .mk .setupline{display:flex}
 }
-@container (max-width:1100px){
+@container (--pane-max-1100){
 .mk .hd .exb{width:var(--hc);padding:0;justify-content:center}
 .mk .hd .exb .t2,.mk .hd .exb .mk-kbd{display:none}
 }
-@container (max-width:1200px){
+@container (--pane-max-1200){
 .mk .hd .planw{display:none}
 }
 
 /* Live audit, phone: the sticky header's band no longer covers the first row (the room it takes is given back below it), the site's
    name keeps a place in the header whatever else sits beside it, and the last line of a page clears the bar at the bottom. */
-@container (max-width:600px){
+@container (--pane-max-600){
 .mk .hd{margin-bottom:0}
 .mk .hd>div:has(#siteBtn){min-width:104px}
 .mk .hd>div:has(#siteBtn) #siteBtn{min-width:104px}
 .mk .hd .planw,.mk .hd .update-pill{display:none}
 }
-@media (max-width:700px){
+@media (--compact){
 .app:has(.mk .tabbar){padding-bottom:calc(96px + env(safe-area-inset-bottom))}
 }
 /* Under 1000 px a card's note sits on a line of its own, so its label keeps the width. */
-@container (max-width:1000px){
+@container (--pane-max-1000){
 .mk .kc .kt{flex-wrap:wrap;row-gap:2px}
 .mk .kc .kn{margin-left:0;flex-basis:100%;order:3}
 }
@@ -1729,8 +1754,21 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .mi.team>svg{margin-left:auto;color:var(--mk-lime)}
 .mk .mk-menu.teams{width:260px}
 /* A dialog opened from a sheet takes its place: the sheet is back when the dialog closes. */
+/* They fade away over the dialog's own 160 ms fade in (and back, when it closes), never a cut: a cut showed the bare
+   page through the dialog's half-grown backdrop for a frame. */
+.mk .cd {
+  transition: opacity 0.16s ease, visibility 0s;
+}
 body[data-modal] .mk .xscrim,
+body[data-modal] .mk .xscrim.on,
 body[data-modal] .mk .xp,
+body[data-modal] .mk .xp.on {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.16s ease, visibility 0s 0.16s;
+}
+/* A sheet is put away at once (a dialog takes its place; the sheet is back when it closes). */
 body[data-modal] .mk .cd {
   visibility: hidden;
   pointer-events: none;
@@ -1749,22 +1787,37 @@ body[data-modal] .mk .cd {
 .mk .tabbar{z-index:25}
 body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.pmenu.on,.xm.on,.pal.on) .mk .tabbar{pointer-events:none}
 
-/* The stuck header (data-stuck, Header.tsx): clear at the top; once the page has moved under it, a frosted layer of its own (::before, so the header never becomes the box a fixed menu is placed in) that fades out along its lower edge instead of ending in a line. Solid without blur support or with reduced transparency. */
+/* The stuck header (data-stuck, Header.tsx), the website's floating bar: clear at the top; once the page has moved under it, a bar of its own (::before, so the header never becomes the box a fixed menu is placed in): rounded below, inset from the window's side, a soft translucent fill with the landing's blur, a hairline all round and a lit top edge. The active view is marked by a thin lime line on the bar's bottom edge. Solid without blur support or with reduced transparency. */
+.mk{--mk-bar-r:20px;--mk-bar-blur:blur(22px) saturate(180%);--mk-bar-fill:color-mix(in srgb,var(--mk-card) 60%,transparent);--mk-bar-line:color-mix(in srgb,var(--mk-text) 8%,transparent);--mk-bar-hi:color-mix(in srgb,var(--mk-text) 7%,transparent);--mk-bar-drop:rgba(0,0,0,.25)}
 .mk .hd{background:transparent;border-bottom:0}
-.mk .hd::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--mk-bg);opacity:0;pointer-events:none;-webkit-mask-image:linear-gradient(var(--mk-bg) calc(100% - 14px),transparent);mask-image:linear-gradient(var(--mk-bg) calc(100% - 14px),transparent);transition:opacity .15s}
+.mk .hd::before{content:"";position:absolute;inset:0 var(--mk-s3) calc(var(--mk-s2) * -1);z-index:-1;border:1px solid var(--mk-bar-line);border-radius:var(--mk-bar-r);background:var(--mk-card);box-shadow:inset 0 1px 0 var(--mk-bar-hi),0 8px 32px var(--mk-bar-drop);opacity:0;pointer-events:none;transition:opacity .25s ease}
 .mk .hd[data-stuck=true]::before{opacity:1}
 @supports (backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px)){
-.mk .hd::before{background:color-mix(in srgb,var(--mk-bg) 72%,transparent);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%)}
-@media (prefers-reduced-transparency:reduce){.mk .hd::before{background:var(--mk-bg);-webkit-backdrop-filter:none;backdrop-filter:none}}
+.mk .hd::before{background:var(--mk-bar-fill);-webkit-backdrop-filter:var(--mk-bar-blur);backdrop-filter:var(--mk-bar-blur)}
+@media (prefers-reduced-transparency:reduce){.mk .hd::before{background:var(--mk-card);-webkit-backdrop-filter:none;backdrop-filter:none}}
 }
 @media (prefers-reduced-motion:reduce){.mk .hd::before{transition:none}}
-@container (min-width:601px) and (max-width:700px){.mk .hd::before{display:none}}
+@container (--pane-min-601) and (--pane-max-700){.mk .hd::before{display:none}}
+
+/* Once the page has moved, from a 701 px page up: the bar sits on the window's top edge with square top corners as the landing's does, a hand shorter, its controls a little smaller, inside the page's own width (the controls stay where they are, 16 px inside the bar). The room the bar gives up goes into the margin below it, so the page under it never moves; the changes share one timing, so that holds all through the transition. A phone keeps its own compact bar. */
+@container (--pane-min-701){
+/* The active view: a thin lime line along the bar's bottom edge, under the chosen one (the gliding pill of the switch carries it; the switch lets it out of its box). */
+.mk .hd #views{overflow:visible}
+.mk .hd #views .spill::after{content:"";position:absolute;left:var(--mk-s3);right:var(--mk-s3);bottom:calc(-1 * (var(--hpb) + 3px));height:2px;border-radius:2px;background:var(--mk-lime);opacity:0;transition:opacity .25s ease}
+.mk .hd[data-stuck=true] #views .spill::after{opacity:1}
+.mk .hd::before{inset:0 var(--mk-s4);border-top-color:transparent;border-top-left-radius:0;border-top-right-radius:0}
+.mk .hd{transition:padding .25s ease,margin-bottom .25s ease}
+.mk .hd .logo,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:height .25s ease,width .25s ease}
+.mk .hd[data-stuck=true]{--mk-h:28px;--hpb:10px;padding-top:var(--hpb);margin-bottom:22px}
+.mk .hd[data-stuck=true] .logo{width:28px;height:28px}
+@media (pointer:coarse){.mk .hd[data-stuck=true]{--mk-h:40px}}
+}
+@media (prefers-reduced-motion:reduce){.mk .hd #views .spill::after,.mk .hd,.mk .hd .logo,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:none}}
 
 /* The site chip carries the site's mark; its dot shows only for a site that is down (red) or not receiving data (amber), never green. Live keeps the one pulsing dot, still when motion is reduced. */
 .mk .sitechip .mkwrap{position:relative;display:inline-flex;flex:none}
 .mk .sitechip .mkwrap .mk-dot{position:absolute;right:-3px;bottom:-3px;box-sizing:content-box;border:2px solid var(--mk-bg);box-shadow:none}
 @media (prefers-reduced-motion:reduce){.mk #views .mk-dot{animation:none}}
-.mk .hd .mk-chip .nv{flex:none;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--mk-amber) 16%,transparent);color:var(--mk-amber);font-size:11.5px;font-weight:600;line-height:1.3}
 .mk .nfi.k-setup{color:var(--mk-amber)}
 /* A screen kept built while it is not the one shown (v2/V2View): it takes no place of its own. */
 .mk .view-pane{display:contents}
@@ -1774,10 +1827,9 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
  .mk .sitelist{--acts:44px}
  .mk .site-row .site-open{display:none}
  .mk .site-row .site-acts{opacity:1}
- .menu-list .open-touch{display:flex}
+ .pop.menu .open-touch{display:flex}
 }
-@media (max-width:600px){.menu-list .open-touch{display:flex}}
-@media (max-width:520px){.mk .hd .mk-chip .nv{font-size:0;padding:0;width:8px;height:8px;background:var(--mk-amber)}}
+@media (--xs){.pop.menu .open-touch{display:flex}}
 .mk .mk-waiting{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 0;text-align:center}
 .mk .mk-waiting b{font-size:15px;font-weight:600}
 .mk .mk-waiting-fig{width:clamp(140px,18vw,200px);margin-bottom:6px}
@@ -1794,7 +1846,7 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 .mk .lbar.top i{background:var(--mk-limeL)}
 .mk .lbar span,.mk .lbar b{position:relative;min-width:0}
 .mk .lbar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mk .lbar b{font-weight:600;font-variant-numeric:tabular-nums}
+.mk .lbar b{flex:none;font-weight:600;font-variant-numeric:tabular-nums}
 .mk .lflag{margin-right:6px}
 .mk .lhbody{display:flex;flex-direction:column;gap:var(--mk-s4);flex:1}
 .mk .lhc button{border:0;background:none;color:var(--mk-text);font:inherit;text-align:left;cursor:pointer;padding:0}
@@ -1825,30 +1877,107 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 .mk .lhbig{display:flex;flex-direction:column;gap:var(--mk-s2);margin-top:var(--mk-s3)}
 .mk .lhbig b{font-size:56px;font-weight:600;letter-spacing:-.04em;line-height:1;color:var(--mk-red)}
 .mk .lhbig span{font-size:13px;color:var(--mk-muted)}
-.mk .lhai{display:flex;align-items:center;justify-content:space-between;gap:var(--mk-s4)}
+.mk .lhai{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--mk-s4)}
 .mk .lhcount{display:flex;flex-direction:column;gap:var(--mk-s2);min-width:0}
 .mk .lhcount span:not(.lhmarks){font-size:13px;color:var(--mk-muted)}
 .mk .lhmarks{display:flex;gap:4px}
 .mk .lhmarks i{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;background:var(--mk-sel2);color:var(--mk-text)}
-.mk .lhring{position:relative;flex:none;width:84px;height:84px;display:grid;place-items:center;align-content:center}
+.mk .lhring{flex:none;display:flex;flex-direction:column;align-items:center;gap:var(--mk-s2)}
+.mk .lhrg{position:relative;width:84px;height:84px;display:grid;place-items:center}
 .mk .lhc svg{margin:0}
-.mk .lhring svg{position:absolute;inset:0;width:84px;height:84px;display:block}
+.mk .lhrg svg{position:absolute;inset:0;width:84px;height:84px;display:block}
 .mk .lhtrack{fill:none;stroke:var(--mk-sel);stroke-width:9}
 .mk .lhfill{fill:none;stroke:var(--mk-lime);stroke-width:9;stroke-linecap:round}
-.mk .lhring b{position:relative;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
-.mk .lhring span{position:relative;font-size:10px;color:var(--mk-faint)}
+.mk .lhrg b{position:relative;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.mk .lhrl{font-size:13px;color:var(--mk-muted)}
 .mk .lhment{display:flex;flex-direction:column;gap:var(--mk-s2);padding-top:var(--mk-s3)!important;border-top:1px solid var(--mk-line)!important;border-radius:0;margin-top:auto}
 .mk .lhment .lhl{display:flex;align-items:center;gap:var(--mk-s2);font-size:13px;color:var(--mk-muted)}
 .mk .lhment .lhl b{color:var(--mk-text);font-weight:600}
 .mk .lhchips{display:flex;flex-wrap:wrap;gap:6px}
 .mk .lhchip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:3px 9px 3px 4px;border-radius:99px;background:var(--mk-sel);color:var(--mk-muted)}
 .mk .lhchip i{width:16px;height:16px;border-radius:5px;display:grid;place-items:center;font-style:normal;font-size:9px;font-weight:700;background:var(--mk-sel2);color:var(--mk-text)}
-.mk .lhempty{display:flex;align-items:center;gap:var(--mk-s3);color:var(--mk-faint);font-size:13px;margin:auto 0;min-height:64px}
-.mk .lhart{width:64px;height:64px;flex:none;opacity:.8}
-.mk .lhtext{display:flex;flex-direction:column;align-items:flex-start;gap:var(--mk-s1)}
-.mk .lhc button.lhgo{color:var(--mk-lime);font-weight:600;font-size:13px}
-.mk .lhc button.lhgo:hover{text-decoration:underline}
-.mk .lhquiet{color:var(--mk-faint)}
-@container (max-width:700px){
-.mk .lcards{order:0;grid-template-columns:1fr;margin:var(--mk-s4) 0 0}
+.mk .lsk{display:flex;flex-direction:column;align-items:center;gap:var(--mk-s4);flex:1}
+.mk .lsk:is(.analytics,.rows){align-items:stretch;gap:0}
+.mk .lskhead{margin-bottom:8px}
+.mk .lsk.rows .skl{border-radius:8px}
+.mk .lskrow{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--mk-s4);width:100%}
+.mk .lskcol{display:flex;flex-direction:column;gap:var(--mk-s2)}
+.mk .lsk .skl{margin:0;flex:none;max-width:100%}
+.mk .lsk .skl.round{border-radius:50%}
+.mk .lhempty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--mk-s3);flex:1;min-height:64px;text-align:center;color:var(--mk-faint);font-size:13px}
+/* A faint preview of what will appear: the gauge, the thirty days, rows of a list. Waiting for visits (collecting) it shimmers. */
+.mk .lhghost{display:flex;flex-direction:column;align-items:center;gap:var(--mk-s3);width:100%;opacity:.5}
+.mk .lhc .lhghost svg.lhgg{width:160px;height:86px;margin:0;fill:none;stroke:var(--mk-sel2);stroke-width:12;stroke-linecap:round}
+.mk .lhgs{width:100%}
+.mk .lhgs i{height:var(--mk-s5)}
+.mk .lhgs i:last-child{outline:0}
+.mk .lhgr{display:flex;flex-direction:column;gap:var(--mk-s2);width:100%}
+.mk .lhgr i{display:block;height:var(--mk-s5);border-radius:8px;background:var(--mk-sel)}
+.mk .lhgr i:nth-child(2){width:72%}
+.mk .lhgr i:nth-child(3){width:48%}
+.mk .lhempty.collecting :is(.lhgs i,.lhgr i){background:linear-gradient(90deg,var(--mk-sk1),var(--mk-sk2),var(--mk-sk1));background-size:220% 100%;animation:mk-shim 1.5s linear infinite}
+@media (prefers-reduced-motion:reduce){
+.mk .lhempty.collecting :is(.lhgs i,.lhgr i){animation:none}
 }
+.mk .lhc button.lhgo{color:var(--mk-text);font-weight:600;font-size:13px;padding:var(--mk-s1) var(--mk-s3);border-radius:8px;background:var(--mk-fill)}
+.mk .lhc button.lhgo:hover{text-decoration:underline}
+@container (--pane-max-700){
+.mk .lcards{order:0;margin:var(--mk-s4) 0 0}
+}
+/* Live's globe switch (an icon, its name, the app's switch) and the fade between the overview and the globe. */
+.mk .gsw { display: flex; align-items: center; gap: var(--mk-s2); margin-left: var(--mk-s3); padding: var(--mk-s1) 0; color: var(--mk-muted); font-size: 12px; cursor: pointer; }
+.mk .gsw .switch { width: 34px; height: 20px; border: 0; padding: 2px; background: var(--mk-fill); }
+.mk .gsw .switch span { width: 16px; height: 16px; background: var(--mk-muted); }
+.mk .gsw .switch.on { background: var(--mk-limeD); }
+.mk .gsw .switch.on span { transform: translateX(14px); background: var(--mk-lime); }
+.mk .lswap{animation:mk-fade .2s ease-out}
+html[data-motion='off'] .mk .lswap{animation:none}
+/* A person in the "On the site right now" list: their drawn face and name, before the page. */
+.mk .lv .vn{flex:none;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mk-muted);font-size:12px}
+@container (--pane-max-700){
+.mk .lv .vn{display:none}
+}
+/* Arranging a list in a menu (sites, teams): one grip at the row's left, shown on hover or focus (always on touch), the whole row draggable; a lifted row has a soft shadow, the others slide; no coloured accents. */
+.mk .sitelist{--gut:18px}
+.mk .site-row .grip,.mk .team-row .grip{position:absolute;left:2px;top:50%;width:16px;height:16px;margin-top:-8px;padding:0;color:var(--mk-faint);opacity:0;pointer-events:none;touch-action:none;transition:opacity .12s}
+.mk .site-row.sortable:hover .grip,.mk .site-row.sortable:focus-within .grip,.mk .site-row.dragging .grip,.mk .team-row.sortable:hover .grip,.mk .team-row.sortable:focus-within .grip,.mk .team-row.dragging .grip{opacity:.75}
+/* The row opens (pointer); the grip is the handle that says it moves (grab) */
+@media (hover:hover){.mk .site-row.sortable .grip,.mk .team-row.sortable .grip{pointer-events:auto;cursor:grab}}
+.mk .site-row.sortable .mi.site{padding-left:calc(var(--mk-s3) + var(--gut) - 6px);cursor:pointer}
+.mk .sitelist:has(.site-row.sortable) .mi.all{padding-left:calc(var(--mk-s3) + var(--gut) - 6px)}
+.mk .site-row.dragging,.mk .team-row.dragging{background:var(--mk-card);box-shadow:0 10px 28px var(--mk-shc);z-index:2}
+.mk .site-row.dragging .mi.site,.mk .team-row.dragging .mi.team{cursor:grabbing;background:transparent}
+.mk .sitelist.reordering,.mk .sitelist.reordering *,.mk .team-rows.reordering,.mk .team-rows.reordering *{cursor:grabbing;user-select:none;-webkit-user-select:none}
+.mk .sitelist.reordering .mi:hover,.mk .team-rows.reordering .mi:hover{background:transparent}
+/* the selected row is a soft fill only */
+.mk .sitelist .mi.on,.mk .sitelist .mi.on:hover{background:var(--mk-hov)}
+.mk .sitelist .mi.on .nm,.mk .sitelist .dom-row[aria-checked="true"] .nm{color:var(--mk-text)}
+/* one quiet status at the right of every row; the dot on the logo stays but muted */
+.mk .sitelist .mi .now,.mk .sitelist .mi .now.state-word,.mk .sitelist .mi .now.state-word.down,.mk .sitelist .mi .now.unverified{color:var(--mk-faint);font-weight:400;font-size:12px}
+.mk .sitelist .mi .now b{color:var(--mk-muted);font-weight:500}
+.mk .sitelist .site-row .mkwrap .mk-dot{opacity:.65;filter:saturate(.7)}
+.mk .team-row{position:relative;display:flex;align-items:center;border-radius:var(--mk-rc)}
+.mk .team-row .mi.team{flex:1;min-width:0}
+.mk .team-row.sortable .mi.team{padding-left:calc(var(--mk-s3) + 10px);cursor:pointer}
+/* On touch the grip is always there, with a finger-sized target (a drag starts only from it, so the list still scrolls); rows are taller */
+@media (hover:none){
+ .mk .site-row.sortable .grip,.mk .team-row.sortable .grip{opacity:.7;pointer-events:auto;left:-8px;padding:10px;margin-top:-18px;box-sizing:content-box}
+}
+@media (--xs){
+ .mk .site-row.sortable .grip,.mk .team-row.sortable .grip{opacity:.7;pointer-events:auto;left:-8px;padding:10px;margin-top:-18px;box-sizing:content-box}
+ .mk .site-row .mi.site,.mk .team-row .mi.team{min-height:52px}
+}
+@media (prefers-reduced-motion:reduce){.mk .site-row .grip,.mk .team-row .grip{transition:none}}
+/* The panel's header row holds the filter and Mark all read; the filter is one quiet icon with a dot while the list is narrowed. */
+.mk .nftools{display:inline-flex;align-items:center;gap:var(--mk-s2)}
+.mk .cdh .nftools{margin-left:auto}
+.mk .nfq{position:relative;display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:10px;background:none;color:var(--mk-muted);cursor:pointer;flex:none}
+.mk .nfq:hover,.mk .nfq[aria-expanded='true'],.mk .nfq:focus-visible{background:color-mix(in srgb,var(--mk-text) 7%,transparent);color:var(--mk-text);outline:none}
+.mk .nfq .nfd{position:absolute;top:5px;right:5px}
+.mk .nfq.sm{width:24px;height:24px;border-radius:8px}
+@media (--xs){.mk .nfq{width:44px;height:44px}.mk .nfq.sm{width:36px;height:36px}}
+.mk .nfd.sm{width:6px;height:6px}
+/* While the list is narrowed, one quiet line above it says how, with a way to clear it. */
+.mk .nfact{display:flex;align-items:center;justify-content:space-between;gap:var(--mk-s2);padding:var(--mk-s1) var(--mk-s3) 0;font-size:12px;color:var(--mk-muted)}
+/* the not-installed dot is amber here, where no pill says it; on a phone the name stays (cut with an ellipsis), with the mark and its dot */
+.mk .mk-chip .mk-dot.off{background:var(--mk-amber)}

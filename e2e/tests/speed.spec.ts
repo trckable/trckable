@@ -38,6 +38,8 @@ test('first load stays small and the report stays fast', async ({ page, browserN
   // A site with visits opens in Live: its first load is what is counted.
   await page.goto(BASE + '/?view=live')
   await expect(page.locator('.lnow').first()).toBeVisible()
+  // Whatever this first visit still asks for (the checklist of a browser that has none, a report) is its own, not the reload's.
+  await page.waitForLoadState('networkidle', { timeout: 15_000 })
 
   // A cold load of the same dashboard, counted.
   const asked: { path: string; at: number }[] = []

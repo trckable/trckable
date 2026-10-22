@@ -1,14 +1,17 @@
 // Live's Speed & uptime card: how fast the pages load as a gauge, and the last thirty days as a strip of days. A site
 // that is down says so in red here as it does in the header and the incident record.
 import { tag } from '../../i18n'
-import type { Site } from '../../lib/api'
-import { fmtFixed } from '../../lib/format'
+import { MIN_VITALS, type Site } from '../../lib/api'
+import { dateFmt, fmtFixed } from '../../lib/format'
 import { navigate } from '../../lib/url'
 import { gradeOf } from '../explore/data/mapSections'
 import { openExplore } from '../explore/open'
 import { copy } from './copy'
 import { EmptyBlock } from './EmptyBlock'
-import type { Health } from './useHealth'
+import { CardSkeleton } from './CardSkeleton'
+import { pausedWords } from './health'
+import { loading, type Health } from './useHealth'
+import './liveUptime.css'
 import type { DayState } from '../../features/incidents/model'
 
 const h = copy.health
@@ -56,14 +59,24 @@ interface Props {
 }
 
 /** The clock time in the site's own zone. */
-const clock = (ms: number, tz: string) => new Date(ms).toLocaleTimeString(tag ?? [], { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz })
+const clock = (ms: number, tz: string) => dateFmt(tag, { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz }).format(new Date(ms))
 
 function incidents(site: Site) {
   navigate(`/${encodeURIComponent(site.domain)}/incidents`)
 }
 
-function SpeedBlock({ site, speed }: { site: Site; speed?: number | null }) {
-  if (speed == null) return <EmptyBlock site={site} line={h.empty.speed} setup="install" waiting={speed === undefined} reserve={132} />
+const speedAction = { label: h.turnOnSpeed, setup: 'speed' as const, ask: h.askSpeed }
+
+/** Speed with no figure: off, one button turns it on; on, it is only waiting for visits. */
+function SpeedEmpty({ site, recorded, both }: { site: Site; recorded?: boolean; both?: boolean }) {
+  const off = both ? h.empty.both : h.empty.speed
+  const line = recorded ? h.empty.collecting(MIN_VITALS) : off
+  return <EmptyBlock site={site} line={line} ghost={both ? ['gauge', 'strip'] : ['gauge']} action={recorded ? undefined : speedAction} collecting={recorded} />
+}
+
+function SpeedBlock({ site, speed, recorded }: { site: Site; speed?: number | null; recorded?: boolean }) {
+  // Switched on but too few visits: nothing to set up, only to wait for. (Uptime has no switch: every site is probed.)
+  if (speed == null) return <SpeedEmpty site={site} recorded={recorded} />
   const grade = gradeOf(0, speed)
   return (
     <button type="button" className="lhspeed" onClick={() => openExplore('speed')}>
@@ -76,16 +89,48 @@ function SpeedBlock({ site, speed }: { site: Site; speed?: number | null }) {
 
 function UptimeBlock({ site, up, down }: { site: Site; up?: Health['uptime']; down: boolean }) {
   const days = up ? up.days.map((d, i) => (down && i === up.days.length - 1 ? ('down' as const) : d)) : undefined
-  if (!days || (!down && up?.pct == null)) return down ? null : <EmptyBlock site={site} line={h.empty.uptime} setup="health" waiting={up === undefined} reserve={64} />
+  if (!days || (!down && !site.uptime_paused && up?.pct == null)) return down ? null : <EmptyBlock site={site} line={h.empty.uptime} ghost={['strip']} collecting />
+  const share = up?.pct != null ? h.upIn(h.pct(fmtFixed(up.pct, 1))) : h.days30
+  const axis = site.uptime_paused ? pausedWords : share
   return (
     <button type="button" className="lhup" onClick={() => incidents(site)}>
       <Strip days={days} />
       <span className="lhaxis">
-        <span>{up?.pct != null ? h.upIn(h.pct(fmtFixed(up.pct, 1))) : h.days30}</span>
+        <span>{axis}</span>
         <span>{copy.nowWord}</span>
       </span>
     </button>
   )
+}
+
+function DownBody({ site, since, health }: { site: Site; since: number; health: Health }) {
+  return (
+    <>
+      <button type="button" className="lhbig bad" onClick={() => incidents(site)}>
+        <b>{h.down}</b>
+        <span>{h.downSince(clock(since * 1000, site.timezone), site.down_cause ?? '')}</span>
+      </button>
+      <UptimeBlock site={site} up={health.uptime} down />
+    </>
+  )
+}
+
+function UpBody({ site, health }: { site: Site; health: Health }) {
+  // Neither half has a figure: one message and one button for the card, not two stacked.
+  if (health.speed == null && (health.uptime?.pct ?? null) === null) {
+    return <SpeedEmpty site={site} recorded={health.vitalsOn} both />
+  }
+  return (
+    <>
+      <SpeedBlock site={site} speed={health.speed} recorded={health.vitalsOn} />
+      <UptimeBlock site={site} up={health.uptime} down={false} />
+    </>
+  )
+}
+
+function body(site: Site, health: Health, downSince?: number) {
+  if (downSince !== undefined) return <DownBody site={site} since={downSince} health={health} />
+  return loading(health) ? <CardSkeleton kind="speed" /> : <UpBody site={site} health={health} />
 }
 
 export function SpeedUptimeCard({ site, health, now, downSince }: Props) {
@@ -96,17 +141,7 @@ export function SpeedUptimeCard({ site, health, now, downSince }: Props) {
       <div className="ph">
         <span className={down ? 'lhdown' : 't'}>{down ? h.downFor(minutes) : h.speedUptime}</span>
       </div>
-      <div className="pb lhbody">
-        {down ? (
-          <button type="button" className="lhbig bad" onClick={() => incidents(site)}>
-            <b>{h.down}</b>
-            <span>{h.downSince(clock(downSince * 1000, site.timezone), site.down_cause ?? '')}</span>
-          </button>
-        ) : (
-          <SpeedBlock site={site} speed={health.speed} />
-        )}
-        <UptimeBlock site={site} up={health.uptime} down={down} />
-      </div>
+      <div className="pb lhbody">{body(site, health, downSince)}</div>
     </section>
   )
 }

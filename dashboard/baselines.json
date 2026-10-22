@@ -1,5 +1,5 @@
 {
-  "literals": 272,
+  "literals": 271,
   "components": {
     "src/charts/TimeChart.tsx": 264,
     "src/views/Account.tsx": 325,
@@ -7,7 +7,7 @@
     "src/views/Payments.tsx": 358,
     "src/views/Privacy.tsx": 575,
     "src/views/Search.tsx": 352,
-    "src/views/Settings.tsx": 348,
+    "src/views/Settings.tsx": 332,
     "src/views/Sites.tsx": 402,
     "src/views/TwoStepSetup.tsx": 255
   },

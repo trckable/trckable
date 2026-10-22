@@ -109,3 +109,64 @@ test('the Install step fits 1440x900 without scrolling, with one primary action'
   await wizard.getByRole('button', { name: /Continue anyway/ }).click({ timeout: 20_000 })
   await expect(wizard.getByRole('heading', { name: 'Attribute revenue' })).toBeVisible()
 })
+
+// The dialog says what the site runs and opens on that tab; a tab picked by hand stays; a site the server is unsure of
+// gets no line and the default tab. The server's read is stood in for at the browser (see the note at the top).
+// STACK_SHOTS=1 also saves the dialog as /private/tmp/shots/analyse-<before|after>-<width>.png.
+const SHOTS = process.env.STACK_SHOTS
+for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+  test(`the Install step opens on the stack the site runs at ${size.width}`, async ({ page }) => {
+    await page.setViewportSize(size)
+    await signIn(page)
+    let stack = 'wordpress'
+    await page.route('**/install/stack', (route) => route.fulfill({ json: { stack } }))
+    const open = async () => {
+      await page.goto(`${API}/example.com?add=site`)
+      const wizard = page.getByRole('dialog', { name: 'Add a site' })
+      await expect(wizard).toBeVisible({ timeout: 15_000 })
+      const domain = `stack-${Date.now()}.test`
+      await wizard.getByLabel('Domain').fill(domain)
+      await wizard.getByLabel('Domain').press('Enter')
+      await wizard.getByRole('button', { name: 'Skip' }).click()
+      await expect(wizard.getByRole('tablist', { name: 'How to install' })).toBeVisible({ timeout: 15_000 })
+      return { wizard, domain }
+    }
+    const first = await open()
+    await expect(first.wizard.getByText(`${first.domain} runs WordPress`)).toBeVisible()
+    await expect(first.wizard.getByRole('tab', { name: 'WordPress' })).toHaveAttribute('aria-selected', 'true')
+    if (SHOTS) await page.screenshot({ path: `/private/tmp/shots/analyse-after-${size.width}.png` })
+    await first.wizard.getByRole('tab', { name: 'Script tag' }).click()
+    await expect(first.wizard.getByRole('tab', { name: 'Script tag' })).toHaveAttribute('aria-selected', 'true')
+
+    stack = ''
+    const second = await open()
+    await expect(second.wizard.getByText(/ runs /)).toHaveCount(0)
+    if (SHOTS) await page.screenshot({ path: `/private/tmp/shots/analyse-before-${size.width}.png` })
+    await expect(second.wizard.getByRole('tab', { name: 'Script tag' })).toHaveAttribute('aria-selected', 'true')
+    await expect
+      .poll(() => second.wizard.evaluate((el) => el.scrollWidth - el.clientWidth), { message: 'the dialog scrolls sideways' })
+      .toBeLessThanOrEqual(0)
+  })
+}
+
+// A link from the site scan on the landing page opens the wizard with the domain filled in and
+// Continue ready; a domain owned elsewhere gets one calm line. The link's extras leave the address.
+test('?add=site&domain= opens the wizard with the domain filled in and focus on Continue', async ({ page }) => {
+  await signIn(page)
+  await page.goto(`${API}/?add=site&domain=https://www.Scanned-Site.test/pricing&taken=1`)
+  const wizard = page.getByRole('dialog', { name: 'Add a site' })
+  await expect(wizard.getByLabel('Domain')).toHaveValue('scanned-site.test', { timeout: 15_000 })
+  await expect(wizard.getByRole('button', { name: 'Continue' })).toBeFocused()
+  await expect(wizard.getByText(/already added to another account/)).toBeVisible()
+  expect(new URL(page.url()).search).toBe('')
+  await wizard.getByLabel('Domain').fill('other-site.test')
+  await expect(wizard.getByText(/already added to another account/)).toHaveCount(0)
+})
+
+test('?add=site&domain= with a domain that cannot be added opens the wizard empty', async ({ page }) => {
+  await signIn(page)
+  await page.goto(`${API}/example.com?add=site&domain=not%20a%20domain`)
+  const wizard = page.getByRole('dialog', { name: 'Add a site' })
+  await expect(wizard.getByLabel('Domain')).toHaveValue('', { timeout: 15_000 })
+  expect(new URL(page.url()).search).toBe('')
+})

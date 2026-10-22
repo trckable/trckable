@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"hash/fnv"
@@ -10,12 +11,14 @@ import (
 	"net"
 	"net/http"
 	neturl "net/url"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/alerts"
+	"github.com/trckable/trckable/server/internal/notice"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -118,6 +121,15 @@ func (p *prober) round(ctx context.Context) {
 		slog.Warn("uptime probe failed", "err", err)
 		return
 	}
+	// A paused check looks at nothing and tells no one anything; a failure to
+	// read the pauses skips the round rather than look at a site that asked
+	// not to be looked at.
+	paused, err := p.st.PausedUptime(ctx)
+	if err != nil {
+		slog.Warn("uptime probe failed", "err", err)
+		return
+	}
+	sites = slices.DeleteFunc(sites, func(s sqlite.SiteRow) bool { return paused[s.ID] })
 	// Sites come in the order they were made; wait for them in the order of
 	// their moments, or most looks would pile up at the end of the period.
 	sort.SliceStable(sites, func(i, j int) bool {
@@ -152,38 +164,117 @@ func bareHostname(d string) bool {
 	return d != "" && !strings.ContainsAny(d, " /:@?#\\[]%")
 }
 
-// probe looks at one site and records what it found. An address this server
-// will not call (a private one) is not looked at, and is not down.
+// probe looks at one site and records what it found: the homepage, then each
+// extra path the site asked for, as one look. An address this server will not
+// call (a private one) is not looked at, and is not down. The look is down
+// when any page fails (the homepage first, then the paths in their order), blocked when none failed and a firewall turned one away, and
+// up otherwise.
 func (p *prober) probe(ctx context.Context, site sqlite.SiteRow) {
 	if !bareHostname(site.Domain) {
 		return // a port, login or query would aim the look somewhere else
 	}
-	url := (&neturl.URL{Scheme: "https", Host: site.Domain, Path: "/"}).String()
-	if p.refused(ctx, url) {
+	settings, err := p.st.UptimeOf(ctx, site.ID)
+	if err != nil || settings.Paused {
+		return // paused, or not known to be: no look
+	}
+	home := (&neturl.URL{Scheme: "https", Host: site.Domain, Path: "/"}).String()
+	if p.refused(ctx, home) {
 		return
 	}
-	pctx, cancel := context.WithTimeout(ctx, probeTimeout)
-	began := time.Now()
-	l, err := p.get(pctx, url)
-	ms := int(time.Since(began).Milliseconds())
-	cancel()
-	if ctx.Err() != nil {
-		return
+	// The pages are looked at together, three at a time at most, so a site with
+	// extra pages does not make a round take six times as long.
+	paths := append([]string{"/"}, settings.Paths...)
+	looks := make([]seen, len(paths))
+	slots := make(chan struct{}, pathWorkers)
+	var wg sync.WaitGroup
+	for i, path := range paths {
+		wg.Add(1)
+		slots <- struct{}{}
+		go func() {
+			defer wg.Done()
+			defer func() { <-slots }()
+			looks[i] = p.look(ctx, site.Domain, path)
+		}()
 	}
-	if err != nil && errors.Is(err, alerts.ErrUnsafeTarget) {
-		return // redirected somewhere private
+	wg.Wait()
+	if ctx.Err() != nil || looks[0].skipped {
+		return // stopping, or the homepage led somewhere private
+	}
+	// An extra page that led somewhere private is left out; the rest still count.
+	var first, failed, blocked *seen
+	for i := range looks {
+		l := &looks[i]
+		if l.skipped {
+			continue
+		}
+		if i == 0 {
+			first = l
+		}
+		switch classify(l.look, l.err) {
+		case outcomeDown:
+			if failed == nil {
+				failed = l
+			}
+		case outcomeBlocked:
+			if blocked == nil {
+				blocked = l
+			}
+		}
+	}
+	// A pause made while the looks were out wins: nothing is recorded or told for a check that is paused.
+	if now, err := p.st.UptimeOf(ctx, site.ID); err != nil || now.Paused {
+		return
 	}
 	var before, after sqlite.SiteProbe
-	if classify(l, err) == outcomeBlocked {
-		before, after, err = p.st.RecordBlocked(ctx, site.ID, p.now().Unix(), l.Status, ms)
-	} else {
-		before, after, err = p.st.RecordProbe(ctx, site.ID, p.now().Unix(), l.Status, ms, probeCause(l.Status, err))
+	at := p.now().Unix()
+	switch {
+	case failed != nil:
+		before, after, err = p.st.RecordProbe(ctx, site.ID, at, failed.Status, first.ms, failedCause(failed.look, failed.err, failed.path))
+	case blocked != nil:
+		before, after, err = p.st.RecordBlocked(ctx, site.ID, at, blocked.Status, first.ms)
+	default:
+		before, after, err = p.st.RecordProbe(ctx, site.ID, at, first.Status, first.ms, "")
 	}
 	if err != nil {
 		slog.Warn("uptime probe not saved", "site", site.ID, "err", err)
 		return
 	}
 	p.changed(ctx, site, before, after)
+}
+
+// pathWorkers is how many pages of one site are looked at at the same time.
+const pathWorkers = 3
+
+// seen is one page looked at in a probe.
+type seen struct {
+	look
+	err  error
+	path string
+	ms   int
+	// skipped: the page led somewhere this server will not call, so it says nothing.
+	skipped bool
+}
+
+// look gets one page of the site.
+func (p *prober) look(ctx context.Context, domain, path string) seen {
+	pctx, cancel := context.WithTimeout(ctx, probeTimeout)
+	defer cancel()
+	began := time.Now()
+	l, err := p.get(pctx, "https://"+domain+path)
+	return seen{look: l, err: err, path: path, ms: int(time.Since(began).Milliseconds()), skipped: err != nil && errors.Is(err, alerts.ErrUnsafeTarget)}
+}
+
+// failedCause is why a page failed, in plain words: the homepage as ever, a
+// path named by its path.
+func failedCause(l look, err error, path string) string {
+	cause := probeCause(l.Status, err)
+	switch {
+	case path == "/":
+		return cause
+	case err != nil:
+		return path + ": " + cause
+	}
+	return fmt.Sprintf("%s answered %d", path, l.Status)
 }
 
 // look is what one GET of the homepage answered.
@@ -264,6 +355,19 @@ func isTimeout(err error) bool {
 // "tracking stopped" alerts the moment the site goes down or comes back:
 // once each, since only the change is told.
 func (s *Server) probed(ctx context.Context, site sqlite.SiteRow, before, after sqlite.SiteProbe) {
+	// The incident is the dashboard's record; the alert is the person's news.
+	// One failing never keeps the other from happening.
+	s.stepSiteIncident(ctx, site, after)
+	switch {
+	case !before.Down() && after.Down():
+		s.tellProbe(ctx, site, "down", "Your site isn't answering our checks", downMessage(site.Timezone, after), before, after)
+	case before.Down() && after.Failures == 0:
+		s.tellProbe(ctx, site, "up", "Your site is back", fmt.Sprintf("%s answers again after %s.", site.Domain, plainDuration(after.At-before.DownSince)), before, after)
+	}
+}
+
+// stepSiteIncident brings the site's incident up to date after a probe.
+func (s *Server) stepSiteIncident(ctx context.Context, site sqlite.SiteRow, after sqlite.SiteProbe) {
 	c, err := s.ctl.CheckOf(ctx, site.ID)
 	if err != nil {
 		slog.Warn("incident check failed", "site", site.ID, "err", err)
@@ -278,37 +382,74 @@ func (s *Server) probed(ctx context.Context, site sqlite.SiteRow, before, after 
 	if err := stepIncident(siteCtx, s.ctl, h, site.ID, site.LastEventAt, c, after, after.At); err != nil {
 		slog.Warn("incident check failed", "site", site.ID, "err", err)
 	}
-	switch {
-	case !before.Down() && after.Down():
-		s.tellProbe(ctx, site, "down", "Your site isn't answering our checks", downMessage(site.Timezone, after), before, after)
-	case before.Down() && after.Failures == 0:
-		s.tellProbe(ctx, site, "up", "Your site is back", fmt.Sprintf("%s answers again after %s.", site.Domain, plainDuration(after.At-before.DownSince)), before, after)
+}
+
+// probeForm is the outbox row of a site going down or coming back. Who is told
+// is looked up when it is delivered, and a lookup that fails makes the row be
+// tried again, so the change is not lost: the site will not go down twice.
+const probeForm = "probe"
+
+// probeSite is the part of a site a probe row keeps: what the words need, and
+// nothing that opens the site (not its proxy key).
+type probeSite struct {
+	ID       string `json:"id"`
+	Domain   string `json:"domain"`
+	Timezone string `json:"timezone"`
+}
+
+// probeNotice is what a probe row keeps.
+type probeNotice struct {
+	Site    probeSite        `json:"site"`
+	Kind    string           `json:"kind"`
+	Title   string           `json:"title"`
+	Message string           `json:"message"`
+	Before  sqlite.SiteProbe `json:"before"`
+	After   sqlite.SiteProbe `json:"after"`
+}
+
+// tellProbe tells the site's "tracking stopped" alerts, by the same mail or
+// webhook as a site that went quiet, that it went down or is back. It does
+// not mark them as fired: their own cadence is theirs.
+func (s *Server) tellProbe(ctx context.Context, site sqlite.SiteRow, kind, title, message string, before, p sqlite.SiteProbe) {
+	body, err := json.Marshal(probeNotice{Site: probeSite{ID: site.ID, Domain: site.Domain, Timezone: site.Timezone}, Kind: kind, Title: title, Message: message, Before: before, After: p})
+	if err == nil {
+		account, _ := s.ctl.SiteAccount(ctx, site.ID) // without one, the row is just not tied to an account
+		err = s.notices.Queue(ctx, sqlite.OutboxRow{Key: fmt.Sprintf("probe:%s:%s:%d", site.ID, kind, p.At), Account: account, Kind: kind, Form: probeForm, Body: string(body)})
+	}
+	if err != nil {
+		slog.Warn("alert not kept", "kind", kind, "site", site.ID)
 	}
 }
 
-// tellProbe sends one message to the site's "tracking stopped" alerts, the
-// same mail or webhook as a site that went quiet. It does not mark them as
-// fired: their own cadence is theirs.
-func (s *Server) tellProbe(ctx context.Context, site sqlite.SiteRow, kind, title, message string, before, p sqlite.SiteProbe) {
+// deliverProbe writes the message for each of the site's "tracking stopped"
+// alerts. Each goes out and is retried on its own; this row is done once they
+// are all written.
+func (s *Server) deliverProbe(ctx context.Context, r sqlite.OutboxRow) error {
+	var n probeNotice
+	if err := json.Unmarshal([]byte(r.Body), &n); err != nil {
+		return err
+	}
 	list, err := s.ctl.LiveAlerts(ctx)
 	if err != nil {
-		return
+		return err
 	}
 	for _, a := range list {
-		if a.SiteID != site.ID || a.Kind != "stopped" {
+		if a.SiteID != n.Site.ID || a.Kind != "stopped" {
 			continue
 		}
-		ev := alerts.Event{Kind: kind, Site: site.ID, Domain: site.Domain, At: time.Unix(p.At, 0), Title: title, Message: message,
-			Data: map[string]any{"status": p.Status, "down_since": p.DownSince}}
-		s.probeWords(&ev, site, before, p)
+		ev := alerts.Event{Kind: n.Kind, Site: n.Site.ID, Domain: n.Site.Domain, At: time.Unix(n.After.At, 0), Title: n.Title, Message: n.Message,
+			Data: map[string]any{"status": n.After.Status, "down_since": n.After.DownSince}}
+		s.probeWords(&ev, sqlite.SiteRow{ID: n.Site.ID, Domain: n.Site.Domain, Timezone: n.Site.Timezone}, n.Before, n.After)
 		ev.Unsubscribe = s.stopLink(a.ID)
-		ev.Settings = s.settingsLink(site.ID)
-		if err := alerts.Send(ctx, a.Target, ev); err != nil {
-			slog.Warn("alert not delivered", "kind", kind, "err", err)
-			continue
+		ev.Settings = s.settingsLink(n.Site.ID)
+		if err := s.notices.Alert(ctx, r.Account, r.Key+"/"+a.ID, n.Kind, a.Target, ev); err != nil {
+			if !errors.Is(err, notice.ErrNoMail) {
+				return err // not kept: this row is tried again, and the ones already kept are not written twice
+			}
+			slog.Warn("alert not delivered", "kind", n.Kind, "err", err) // never deliverable: the others still go
 		}
-		slog.Info("alert sent", "kind", kind, "site", site.ID)
 	}
+	return nil
 }
 
 // downMessage is the down alert's text: the same words as the bar on the

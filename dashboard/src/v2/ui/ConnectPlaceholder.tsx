@@ -1,6 +1,8 @@
 // The quiet rows under the cards: what else was normal, the next step, and what is not set up yet.
 import type { ReactNode } from 'react'
 import { copy } from '../briefing/copy'
+import { tag } from '../../i18n'
+import './mailLine.css'
 import { DOCS } from '../../components/footerLinks'
 import { LockCard } from './LockCard'
 import type { LockKind } from './lockCopy'
@@ -9,14 +11,20 @@ const lead = (cards: boolean, names: string[], learning: boolean): string => {
   // Nothing is called normal before the site has a normal to be told against.
   if (learning) return copy.stillLearning
   if (!cards) return copy.wasNormal
-  // One topic left is said on its own ("Search looked normal"), not as "everything else: search".
-  if (names.length === 1) return copy.oneNormal(names[0].charAt(0).toUpperCase() + names[0].slice(1))
-  return names.length ? copy.allNormal : copy.nothingElse
+  return names.length ? copy.noOther(new Intl.ListFormat(tag, { type: 'disjunction' }).format(names)) : copy.nothingElse
 }
 
-export function Calm({ cards, names, paused, learning, onExplore }: { cards: boolean; names: string[]; paused: boolean; learning: boolean; onExplore: () => void }) {
+export interface CalmIn {
+  cards: boolean
+  names: string[]
+  paused: boolean
+  learning: boolean
+}
+
+/** What else was normal, as a line: a tick and the words. The incident card ends with it; without an incident it stands as a row of its own. */
+export function CalmLine({ cards, names, paused, learning }: CalmIn) {
   return (
-    <div className="calm2">
+    <>
       <span className="ck">&#10003;</span>
       <span>
         {paused ? (
@@ -26,10 +34,17 @@ export function Calm({ cards, names, paused, learning, onExplore }: { cards: boo
         ) : (
           <>
             <b>{lead(cards, names, learning)}</b>
-            {names.length > (cards ? 1 : 0) && !learning ? `: ${names.join(', ')}` : ''}.
           </>
         )}
       </span>
+    </>
+  )
+}
+
+export function Calm({ onExplore, ...says }: CalmIn & { onExplore: () => void }) {
+  return (
+    <div className="calm2 plain">
+      <CalmLine {...says} />
       <button type="button" onClick={onExplore}>
         {copy.exploreAll} {'\u203A'}
       </button>
@@ -57,14 +72,14 @@ export interface Setup {
 }
 
 /** One thing not set up yet, as the locked preview of what it would show. */
-function SetupLock({ s, size }: { s: Setup; size?: 'card' | 'big' | 'mini' }) {
-  return <LockCard kind={s.key as LockKind} size={size} go={s.b} onGo={s.act} onHow={() => window.open(DOCS, '_blank', 'noopener')} />
+function SetupLock({ s }: { s: Setup }) {
+  return <LockCard kind={s.key as LockKind} go={s.b} onGo={s.act} onHow={() => window.open(DOCS, '_blank', 'noopener')} />
 }
 
 export function Setups({ rows }: { rows: Setup[] }): ReactNode {
   if (rows.length === 0) return null
   return (
-    <div className="cards lkcs">
+    <div className="lkcs">
       {rows.map((r) => (
         <SetupLock key={r.key} s={r} />
       ))}

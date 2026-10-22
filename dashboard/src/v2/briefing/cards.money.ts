@@ -66,6 +66,7 @@ export function salesCards(i: SalesIn): Story[] {
       score: 92,
       bad: true,
       head: copy.refunded,
+      ask: copy.askRefund(fmt(money.refunds)),
       rest: copy.refundedRest(fmt(money.refunds)),
       vis: refundVis(i),
       why: i.refunds && i.refunds.count_90d > i.refunds.count ? copy.refunds90(i.refunds.count_90d, i.refunds.count === 1) : copy.refundWhy,
@@ -91,6 +92,7 @@ export function salesCards(i: SalesIn): Story[] {
       key: 'sales',
       score: st === 'up' ? 72 : 62,
       head: who(buyers, money),
+      ask: copy.askSold(fmt(total)),
       rest: copy.paidIn(fmt(total)),
       vis: { k: 'rcpt', rows: [...rows, ...extra, ...renewed, { l: copy.rowIn, t: '', a: fmt(total), flag: '', tot: true }] },
       why: `${range}${top ? copy.broughtOf(sourceName(top[0]), top[1], buyers.length) : ''}`.trim(),
@@ -108,6 +110,7 @@ export function salesCards(i: SalesIn): Story[] {
       score: 70,
       bad: true,
       head: copy.noSales,
+      ask: copy.askNoSales,
       rest: copy.noSalesRest(fmt(Math.max(0, band.lo)), fmt(band.hi), i.today),
       vis: { k: 'rcpt', rows: [{ l: copy.nothingThere, more: true }] },
       why: copy.salesBelow,
@@ -120,7 +123,30 @@ export function salesCards(i: SalesIn): Story[] {
       deeper: { kind: 'table', tab: 'sales' },
     })
   }
+  // What was sold and what went back are one story: one card, the receipt of both, and the net.
+  if (out.length === 2) return [soldAndBack(out[1], out[0], i)]
   return out
+}
+
+type Receipt = Extract<NonNullable<Story['vis']>, { k: 'rcpt' }>
+const rowsOf = (s: Story, total: boolean): Receipt['rows'] => (s.vis?.k === 'rcpt' ? s.vis.rows.filter((r) => !r.tot || total) : [])
+
+/** The sales card with the refunds in it: sold, refunded and what was kept, in one receipt. */
+function soldAndBack(sold: Story, back: Story, i: SalesIn): Story {
+  const { money, fmt } = i
+  return {
+    ...sold,
+    score: back.score,
+    bad: true,
+    head: copy.soldGross(fmt(money.revenue + money.refunds)),
+    ask: copy.askSoldBack(fmt(money.refunds)),
+    rest: copy.soldBack(fmt(money.refunds), fmt(money.revenue)),
+    // The listed sales are already net of what went back, so the rows add up to the net.
+    vis: { k: 'rcpt', rows: [...rowsOf(sold, false), { l: copy.rowNet, t: '', a: fmt(money.revenue), flag: '', tot: true }] },
+    why: `${sold.why} ${back.why}`.trim(),
+    how: `${sold.how} ${back.how}`,
+    ev: `${sold.ev} ${back.ev}`.trim(),
+  }
 }
 
 interface SearchIn {
@@ -162,9 +188,9 @@ export function searchCard(i: SearchIn): Story | null {
       return { l: `“${r.key}”`, t: copy.pos(fmtFixed(r.position, 1)), a: fmtInt(r.clicks), flag: m.flag, mark: m.cls }
     })
   const tot = { l: copy.clicksTot(fmtInt(cur.clicks), fmtInt(cur.impressions)), t: `${copy.ctr(pct1(cur.impressions ? cur.clicks / cur.impressions : 0))} · ${copy.avgPos(fmtFixed(averagePosition(cur.rows), 1))}`, a: '', flag: '', tot: true }
-  const base = { key: 'search' as const, vis: { k: 'rcpt' as const, rows: [...list, tot] }, deeper: { kind: 'table' as const, tab: 'search' as const }, how: `${copy.searchKnow} ${i.rule}`, u: 'clicks' }
+  const base = { key: 'search' as const, vis: { k: 'rcpt' as const, rows: [...list, tot] }, deeper: { kind: 'table' as const, tab: 'search' as const }, how: `${copy.searchKnow} ${copy.searchRule}`, u: 'clicks' }
   if (fresh) {
-    return { ...base, score: 74, head: copy.rankNew(fresh.key), rest: copy.onGoogle, why: copy.newWhy(copy.clicks(fresh.clicks), fmtFixed(fresh.position, 1)), val: 'new', m: fresh.clicks, ev: '', act: { k: 'set', t: copy.alertNewSearch, msg: copy.alertNewSearchMsg } }
+    return { ...base, score: 74, head: copy.rankNew(fresh.key), ask: copy.askRank(fresh.key), rest: copy.onGoogle, why: copy.newWhy(copy.clicks(fresh.clicks), fmtFixed(fresh.position, 1)), val: 'new', m: fresh.clicks, ev: '', act: { k: 'set', t: copy.alertNewSearch, msg: copy.alertNewSearchMsg } }
   }
   if (!moved) return null
   const up = moved.st === 'up'
@@ -174,19 +200,20 @@ export function searchCard(i: SearchIn): Story | null {
     score: up ? 76 : 79,
     bad: !up,
     head: up ? copy.searchSent(moved.r.key, copy.clicks(moved.r.clicks)) : copy.searchLost(moved.r.key, copy.clicks(moved.r.clicks)),
-    rest: `${copy.fromGoogle}${movedWords(up, x)}`,
-    why: `${copy.usuallyClicks(fmtInt(Math.max(0, moved.b.lo)), fmtInt(moved.b.hi))}${copy.positionNow(fmtFixed(moved.r.position, 1), fmtFixed(moved.w.position, 1))}`,
+    ask: copy.askSearch(moved.r.key, up),
+    rest: `${copy.fromGoogle}${searchMoved(up, x)}`,
+    why: `${copy.searchWas(fmtInt(moved.w.clicks))}${copy.positionNow(fmtFixed(moved.r.position, 1), fmtFixed(moved.w.position, 1))}`,
     val: fmtInt(moved.r.clicks),
     m: moved.r.clicks,
-    ev: copy.searchEv(fmtInt(moved.r.clicks), fmtInt(Math.max(0, moved.b.lo)), fmtInt(moved.b.hi)),
+    ev: copy.searchEv(fmtInt(moved.r.clicks), fmtInt(moved.w.clicks)),
     act: up ? { k: 'copy', t: copy.copyContent, text: copy.contentPrompt(i.domain, moved.r.key, fmtFixed(moved.r.position, 1)), done: copy.contentCopied } : { k: 'set', t: copy.setAlert, msg: copy.alertLeaves(moved.r.key) },
   }
 }
 
-/** How the move is put: how many times the usual, nothing for a small rise, far below for a fall. */
-function movedWords(up: boolean, x: number): string {
-  if (!up) return copy.farBelow
-  return x >= 1.5 ? copy.yourUsual(`${fmtFixed(x, 1)}×`) : ''
+/** How the move is put, against what Google sent the period before (Search Console has no usual of its own): how many times that, nothing for a small rise, far below for a fall. */
+function searchMoved(up: boolean, x: number): string {
+  if (!up) return copy.searchFarBelow
+  return x >= 1.5 ? copy.searchTimes(`${fmtFixed(x, 1)}×`) : ''
 }
 
 /** A page where the same thing was pressed again and again: someone, somewhere, is stuck. */
@@ -207,6 +234,12 @@ export function stuckCard(s: Stuck, rule: string): Story {
     act: { k: 'x', t: copy.stuckAct },
     deeper: { kind: 'explore', filter: { dim: 'entry_page', value: s.page } },
   }
+}
+
+/** The leak card with the page people are stuck on named under its steps (what they pressed again and again). */
+export function withStuck(leak: Story, s: Stuck): Story {
+  const top = s.rage[0]
+  return { ...leak, why: top ? `${leak.why} ${copy.leakStuck(s.page, top.el, top.n)}` : leak.why }
 }
 
 const pct0 = (x: number) => `${Math.round(x * 100)}%`
@@ -234,6 +267,7 @@ export function leakCard(i: { f: FunnelStory; domain: string; rule: string }): S
     u: 'people',
     how: `${i.rule} ${copy.leakHow}`,
     ev: copy.leakEv(fmtInt(b.v), fmtInt(a.v), fmtInt(usual)),
+    ask: copy.leakAsk(a.name, b.name),
     act: { k: 'copy', t: copy.fixPrompt, text: copy.leakPrompt(i.domain, pct0(leak.r), a.name, b.name, pct0(leak.ur), alt), done: copy.leakCopied },
     deeper: { kind: 'table', tab: 'funnels' },
   }

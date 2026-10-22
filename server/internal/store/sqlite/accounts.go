@@ -305,9 +305,16 @@ type SiteInfo struct {
 	// probe (unix seconds of the first blocked look): we cannot tell whether
 	// the site is up, and its visitors are not affected.
 	ProbeBlockedSince int64 `json:"probe_blocked_since,omitempty"`
+	// UptimePaused is set while the site's uptime check is paused: nothing is
+	// looked at, so no screen may call the site fine because of it.
+	UptimePaused bool `json:"uptime_paused,omitempty"`
 	// AlertsMutedUntil is when the site's snooze of its alerts ends (unix
 	// seconds); absent when they are not snoozed.
 	AlertsMutedUntil int64 `json:"alerts_muted_until,omitempty"`
+	// FormerHosts are the site's earlier domains that still count visits (a
+	// change of domain keeps the old one for a month): they belong to the
+	// site as much as Domain does.
+	FormerHosts []string `json:"former_hosts,omitempty"`
 }
 
 // SiteInfo returns one site.

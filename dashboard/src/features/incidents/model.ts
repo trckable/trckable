@@ -2,7 +2,7 @@
 // the days of a period are coloured, how much of it was uptime. Nothing here
 // knows about the browser, so the page, the chart's markers and All sites read
 // it the same way.
-import type { Incident } from './api'
+import type { Incident, PausedSpan } from './api'
 import { dateFmt } from '../../lib/format'
 
 const DAY = 86400
@@ -38,13 +38,14 @@ export function dayIn(unix: number, tz: string): string {
 /** Whether an incident, or a standing, is a site that stopped answering (down), not a quiet spell. The one place that is decided. */
 export const isDown = (x: { kind: string }): boolean => x.kind === 'down'
 
-export type DayState = 'ok' | 'quiet' | 'down' | 'unwatched'
+/** `paused`: the uptime check was paused that day and nothing worse is known; it is neither up nor down. */
+export type DayState = 'ok' | 'quiet' | 'down' | 'unwatched' | 'paused'
 
 /** How long it lasted; an open one lasts until now. */
-export const lasted = (x: Incident, now: number): number => (x.ended_at ?? now) - x.started_at
+export const lasted = (x: Pick<Incident, 'started_at' | 'ended_at'>, now: number): number => (x.ended_at ?? now) - x.started_at
 
-/** The days of a period (YYYY-MM-DD, oldest first), each coloured by the worst incident that touched it: down over quiet over none. Days before `watchedSince` (unix seconds, when the site's incidents began to be recorded) are unknown, not clear, unless an incident says otherwise. */
-export function dayStates(list: Incident[], days: string[], tz: string, now: number, watchedSince = 0): Map<string, DayState> {
+/** The days of a period (YYYY-MM-DD, oldest first), each coloured by the worst incident that touched it: down over quiet over none, and paused where the check was paused and nothing else is known. Days before `watchedSince` (unix seconds, when the site's incidents began to be recorded) are unknown, not clear, unless an incident says otherwise. */
+export function dayStates(list: Incident[], days: string[], tz: string, now: number, watchedSince = 0, paused: PausedSpan[] = []): Map<string, DayState> {
   const first0 = watchedSince > 0 ? dayIn(watchedSince, tz) : ''
   const out = new Map<string, DayState>(days.map((d) => [d, d < first0 ? 'unwatched' : 'ok']))
   for (const x of list) {
@@ -54,6 +55,12 @@ export function dayStates(list: Incident[], days: string[], tz: string, now: num
       if (d < first || d > last) continue
       if (isDown(x) || out.get(d) === 'ok' || out.get(d) === 'unwatched') out.set(d, x.kind)
     }
+  }
+  // A day is paused only when the pause covers all the time of it that was watched; a part of a day paused leaves the rest as it really was.
+  for (const d of days) {
+    if (out.get(d) !== 'ok') continue
+    const [a, b] = dayWindow(d, tz, now, watchedSince)
+    if (b > a && pausedOnDay(paused, d, tz, now, watchedSince) >= b - a) out.set(d, 'paused')
   }
   return out
 }
@@ -72,9 +79,11 @@ export const MIN_WATCH = 3600
 /** Whether the watch is still too short for a share, though there is some. */
 export const tooShort = (span: number): boolean => span > 0 && span < MIN_WATCH
 
-/** The uptime a period earns, said once for the page and for All sites: nothing when none of it was watched (span <= 0), else the share and whether only down checks stood behind it (a site too quiet for quiet spells to be recorded). */
-export function uptimeOf(span: number, affected: number, quietTracked?: boolean): { pct: number; downOnly: boolean } | null {
-  return span >= MIN_WATCH ? { pct: uptimePct(span, affected), downOnly: quietTracked === false } : null
+/** The uptime a period earns, said once for the page and for All sites, with the time the check was paused left out: nothing when none of it was watched (span <= 0), else the share and whether only down checks stood behind it (a site too quiet for quiet spells to be recorded). */
+export function uptimeOf(span: number, affected: number, quietTracked?: boolean, paused = 0): { pct: number; downOnly: boolean } | null {
+  // Time the check was paused was not looked at: neither up nor down, so it is not part of the span.
+  const watched = span - paused
+  return watched >= MIN_WATCH ? { pct: uptimePct(watched, affected), downOnly: quietTracked === false } : null
 }
 
 /** Time spent in incidents inside [from, to]; overlapping ones are counted once. */
@@ -96,6 +105,18 @@ export function affectedSeconds(list: Incident[], from: number, to: number, now:
 export function dayLasted(list: Incident[], day: string, tz: string, now: number): number {
   const next = new Date(Date.parse(day + 'T00:00:00Z') + DAY * 1000).toISOString().slice(0, 10)
   return affectedSeconds(list, startOfDay(day, tz), startOfDay(next, tz), now)
+}
+
+/** The part of a calendar day that can have been watched: from its start (or when watching began) to its end (or now). */
+function dayWindow(day: string, tz: string, now: number, watchedSince = 0): [number, number] {
+  const next = new Date(Date.parse(day + 'T00:00:00Z') + DAY * 1000).toISOString().slice(0, 10)
+  return [Math.max(startOfDay(day, tz), watchedSince), Math.min(startOfDay(next, tz), now)]
+}
+
+/** The time of one calendar day the uptime check was paused. */
+export function pausedOnDay(paused: PausedSpan[], day: string, tz: string, now: number, watchedSince = 0): number {
+  const [a, b] = dayWindow(day, tz, now, watchedSince)
+  return affectedSeconds(paused.map((p) => ({ started_at: p.from, ended_at: p.to })) as Incident[], a, b, now)
 }
 
 /** The days from `from` to `to`, oldest first. */
@@ -120,12 +141,13 @@ export function startOfDay(day: string, tz: string): number {
   return utc - offset
 }
 
-/** The incident figure for a whole All sites row: its totals over the last `days` days, of the time since `watchedSince` only (`span` is those seconds; none when nothing was watched). */
-export function rowTotals(list: Incident[], days: number, now: number, watchedSince = 0): { count: number; seconds: number; pct: number; span: number } {
+/** The incident figure for a whole All sites row: its totals over the last `days` days, of the time since `watchedSince` only (`span` is those seconds, less the time the check was paused, `paused`; none when nothing was watched). */
+export function rowTotals(list: Incident[], days: number, now: number, watchedSince = 0, paused = 0): { count: number; seconds: number; pct: number; span: number } {
   const from = Math.max(now - days * DAY, watchedSince)
   const mine = list.filter((x) => (x.ended_at ?? now) > from)
   const seconds = affectedSeconds(mine, from, now, now)
-  const span = Math.max(0, now - from)
+  // Time the check was paused was not looked at: neither up nor down, so it is not part of the span.
+  const span = Math.max(0, now - from - paused)
   return { count: mine.length, seconds, pct: uptimePct(span, seconds), span }
 }
 
@@ -133,7 +155,7 @@ export function rowTotals(list: Incident[], days: number, now: number, watchedSi
 export const silentAllPeriod = (list: Incident[], from: number): boolean => list.some((x) => x.ended_at === null && x.started_at < from)
 
 /** All sites' totals over `days` days: the incidents, the time-weighted uptime (`watched` is false when no site has any watched time, and the percentage then says nothing), and the sites down right now. Every incident counts; a silent site stays out of the uptime average only. */
-export function accountTotals(sites: { id: string; watched_since?: number }[], list: Incident[], days: number, now: number): { count: number; pct: number; down: string[]; watched: boolean } {
+export function accountTotals(sites: { id: string; watched_since?: number }[], list: Incident[], days: number, now: number, paused: Record<string, number> = {}): { count: number; pct: number; down: string[]; watched: boolean } {
   const from = now - days * DAY
   let count = 0
   let seconds = 0
@@ -142,7 +164,7 @@ export function accountTotals(sites: { id: string; watched_since?: number }[], l
   for (const s of sites) {
     const mine = list.filter((x) => x.site === s.id)
     if (mine.some((x) => isDown(x) && x.ended_at === null)) down.push(s.id)
-    const t = rowTotals(mine, days, now, s.watched_since)
+    const t = rowTotals(mine, days, now, s.watched_since, paused[s.id])
     count += t.count
     if (silentAllPeriod(mine, from) || t.span <= 0) continue
     seconds += t.seconds

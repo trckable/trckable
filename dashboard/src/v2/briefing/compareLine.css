@@ -1,0 +1,13 @@
+/* The line over the chart that says how the period stands against the one before is the sentence of the chart: on a
+   phone it wraps onto a second line rather than being cut short by the buttons beside it. */
+@container (--pane-max-600) {
+  .mk .chwrap #chNote[data-tone] { flex: 0 1 auto; white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.2; }
+}
+/* What the two lines are: this period solid, the one before dashed. It sits in the row over the chart (no height of its own, so nothing under it moves) and gives way on a phone, where the dashed line is named at its end. */
+.mk .chkey { display: flex; gap: var(--mk-s3); font-size: 12px; white-space: nowrap; color: var(--mk-muted); }
+.mk .chkey span { display: inline-flex; align-items: center; gap: 6px; }
+.mk .chkey span::before { content: ''; width: 18px; border-top: 2px solid var(--mk-muted); }
+.mk .chkey span[data-line='before']::before { border-top: 1.5px dashed var(--mk-muted); }
+@container (--pane-max-600) {
+  .mk .chkey { display: none; }
+}

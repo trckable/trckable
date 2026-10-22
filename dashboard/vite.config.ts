@@ -1,9 +1,12 @@
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { copy } from './src/components/loading/copy'
 import { bootHtml } from './src/components/loading/markup'
 import { dashHtml } from './src/components/skeleton/dashMarkup'
 import { wordmarkFont } from './wordmarkFont'
+import { breakpointsPlugin } from './breakpointsPlugin'
 
 // The first paint, before any JavaScript, is never a blank page: the dashboard's own boxes where this
 // browser kept its site list (public/theme.js says so on <html>), the loading ghost anywhere else. The
@@ -12,6 +15,17 @@ import { wordmarkFont } from './wordmarkFont'
 const bootGhost = {
   name: 'boot-ghost',
   transformIndexHtml: (html: string) => html.replace('<div id="root"></div>', `<div id="root"><div class="boot-ghost">${bootHtml(copy.boot)}</div>${dashHtml(copy.boot)}</div>`),
+}
+
+// The build empties its output folder, and Go's `//go:embed all:dist` needs the folder to hold a file even when no
+// build has run: the tracked placeholder is put back once the bundle is written.
+const keepEmbed = {
+  name: 'keep-embed',
+  closeBundle() {
+    const dir = fileURLToPath(new URL(outDir, import.meta.url))
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(`${dir}/.keep`, '')
+  },
 }
 
 // The first load is one script and one stylesheet, and React beside them (it
@@ -31,12 +45,16 @@ const split = {
   ],
 }
 
+const outDir = '../server/internal/web/dist/'
+
 // The build lands inside the Go server, which embeds it: one binary, one deploy.
 // `pnpm dev` proxies the API to a local trckabled (TRCKABLE_DEV_API, default :8080).
 export default defineConfig({
-  plugins: [react(), bootGhost, wordmarkFont()],
+  plugins: [react(), bootGhost, wordmarkFont(), keepEmbed],
+  // The width tokens of src/kit/breakpoints.ts become numbers in every stylesheet.
+  css: { postcss: { plugins: [breakpointsPlugin] } },
   build: {
-    outDir: '../server/internal/web/dist',
+    outDir,
     emptyOutDir: true,
     target: 'es2022',
     // A lazy chunk's styles are fetched with it; its script imports are left to the browser. The list of

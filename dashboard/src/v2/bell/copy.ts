@@ -1,21 +1,39 @@
 // The bell's words.
 import { defineCopy } from '../../i18n'
-import { clock } from '../../lib/site'
-
-const at24 = (at: number) => clock(new Date(at * 1000), '')
 
 export const copy = defineCopy('bell', {
   title: 'Notifications',
   markAll: 'Mark all read',
   settings: 'Alert settings',
   none: 'Nothing yet. Alerts, mentions and milestones land here.',
-  stopped: (d: string) => `${d} stopped answering`,
-  noAnswerSince: (at: number) => `No answer since ${at24(at)}`,
-  backUp: (d: string) => `${d} is back up`,
-  wasDown: (min: number) => `It was down for ${min} minutes`,
+  today: 'Today',
+  yesterday: 'Yesterday',
+  wasDownFor: (d: string, span: string) => `${d} was down ${span}`,
+  downSince: (d: string, at: string) => `${d} down since ${at}`,
+  busySites: (n: number) => `${n} sites are busy`,
   setupTitle: (d: string) => `${d} has no visits yet`,
   setupSub: 'Finish the install',
   mention: (host: string) => `New mention on ${host}`,
   milestoneSub: 'Milestone',
   menu: 'Notifications',
+  more: 'More about this notification',
+  mute: 'Mute this for this site',
+  change: 'Change this alert',
+  archive: 'Archive',
+  showArchived: 'Show archived',
+  showNew: 'Back to new',
+  muted: (d: string) => `Muted for ${d}. Turn it back on in Settings, Alerts.`,
+  mutedAlready: (d: string) => `That alert is already off for ${d}.`,
+  mutedFailed: 'Could not mute it. Try again.',
+  filter: 'Filter',
+  clearFilter: 'Clear filter',
+  close: 'Close',
+  filterLabel: 'Show',
+  filterAll: 'All',
+  filterDown: 'Down',
+  filterBusy: 'Busy',
+  filterMilestones: 'Milestones',
+  siteLabel: 'Site',
+  allSites: 'All sites',
+  nothingHere: 'Nothing here',
 })

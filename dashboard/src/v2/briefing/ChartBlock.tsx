@@ -11,10 +11,13 @@ import { copy } from './copy'
 import { HeroChart, type ChartIn } from '../ui/DayChart'
 import { ReplayStage, type ReplayIn } from '../ui/ReplayStage'
 import { ReplayBar } from '../ui/ReplayBar'
+import './compareLine.css'
 
 // The moments, the sources' pills and the busy band over the chart: their own chunk, drawn when the chart is.
 const MentionsChip = lazyLoad(() => import('../../features/mentions/MentionsChip'))
 const MomentLayer = lazyLoad(() => import('../../features/moments/MomentLayer'))
+
+const TONE = { up: { color: 'var(--mk-green)' }, dn: { color: 'var(--mk-red)' }, none: undefined }
 
 export interface ChartBlockProps {
   site: Site
@@ -26,6 +29,8 @@ export interface ChartBlockProps {
   bucket: Bucket
   money?: (minor: number) => string
   note: string
+  /** Green or red when the line over the chart says how the period stands against the one before. */
+  tone?: 'up' | 'dn'
   down: boolean
   notes: number
   onNotes: () => void
@@ -55,10 +60,16 @@ export function ChartBlock(p: ChartBlockProps) {
   return (
     <div className="chwrap" data-rp={p.replay?.replay.phase}>
       <div className="ch-top">
-        <span className="mk-quiet" id="chNote" style={p.down ? { color: 'var(--mk-red)' } : undefined}>
+        <span className="mk-quiet" id="chNote" data-tone={p.down ? 'dn' : p.tone} style={TONE[p.down ? 'dn' : (p.tone ?? 'none')]}>
           {p.note}
         </span>
         <span className="mk-quiet" id="chCall" />
+        {p.chart.compare && (
+          <span className="chkey" aria-hidden="true">
+            <span data-line="now">{copy.legendNow}</span>
+            <span data-line="before">{copy.legendBefore}</span>
+          </span>
+        )}
         <Suspense fallback={null}>
           <MentionsChip site={p.site} labels={labels} from={p.series[0]?.t.slice(0, 10) ?? p.range.from} to={p.range.to} />
         </Suspense>

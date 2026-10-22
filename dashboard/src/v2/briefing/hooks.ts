@@ -8,6 +8,7 @@ import { startOfDay, uptimeOf } from '../../features/incidents/model'
 import { useNow, usePeriodIncidents } from '../../features/incidents/useIncidents'
 import { isShared } from '../../lib/me'
 import { can } from '../../lib/permissions'
+import { useWanted } from '../setup/useWanted'
 import type { Usual } from './model'
 
 /** What the server calls usual for the day (the same weekday, up to the same time), for today and yesterday. */
@@ -36,7 +37,7 @@ export function useUptime(site: Site, range: Range) {
   const from = Math.min(Math.max(from0, site.watched_since ?? 0), to)
   const { summary, list, ready } = usePeriodIncidents(site.id, from, to, !isShared())
   const lost = summary?.seconds ?? 0
-  const up = summary && ready ? uptimeOf(to - from, lost) : null
+  const up = summary && ready ? uptimeOf(to - from, lost, undefined, summary.paused) : null
   return { pct: up?.pct ?? null, lost, list, from0 }
 }
 
@@ -45,6 +46,7 @@ export function useSetup(site: Site) {
   const [alerts, setAlerts] = useState(false)
   const [search, setSearch] = useState(false)
   const allowed = !isShared() && can('note.write')
+  const want = useWanted(site.id, allowed)
   useEffect(() => {
     if (!allowed) return
     let live = true
@@ -54,7 +56,8 @@ export function useSetup(site: Site) {
       live = false
     }
   }, [site.id, allowed])
-  return { can: allowed, noAlerts: alerts, noSearch: search }
+  // The rows come together once the checklist is read (none before), so a row never lands among rows already shown.
+  return { can: allowed, noAlerts: alerts, noSearch: search, want: (kind: string) => want.known && want(kind) }
 }
 
 /** The people seen today since the hour the day is taken to start for someone looking in: one count of people, never a sum of hours. */

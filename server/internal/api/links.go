@@ -36,24 +36,21 @@ func (a *API) links(w http.ResponseWriter, r *http.Request) {
 		// Revenue is the report's own reading of each referrer, so the figure
 		// is the one Sources shows for the same row.
 		rp := p
-		rp.Limit, rp.Goals = 100, false
+		rp.Limit, rp.Goals, rp.LinkRevenue = 100, false, true
 		res, err := a.cachedReport(r, q, rp)
 		if err != nil {
 			reportFail(w, err)
 			return
 		}
 		if res.Money != nil {
-			byRef := map[string]int64{}
-			for _, d := range res.Dims["referrer"] {
+			byLink := map[string]int64{}
+			for _, d := range res.RevenueDims["link"] {
 				if d.Revenue != nil {
-					byRef[d.Value] = *d.Revenue
+					byLink[d.Value] = *d.Revenue
 				}
 			}
 			for i := range rows {
-				if rows[i].Dim != "referrer" {
-					continue
-				}
-				v := byRef[rows[i].Value]
+				v := byLink[rows[i].Key]
 				rows[i].Revenue = &v
 			}
 			out["currency"], out["exponent"] = res.Money.Currency, res.Money.Exponent

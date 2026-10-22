@@ -122,6 +122,7 @@ func (a *API) exportPerson(w http.ResponseWriter, r *http.Request) {
 		}
 		body["payments"] = pay
 	}
+	a.tellExport(r, site, "one visitor's data")
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Content-Disposition", `attachment; filename="trckable-`+si.Domain+`-`+out.Visitor+`.json"`)
 	enc := json.NewEncoder(w)

@@ -21,6 +21,8 @@ export interface Watch {
   since?: string
   /** False when the site has too few visits for quiet spells to be tracked. */
   quietTracked?: boolean
+  /** Seconds of the period the uptime check was paused: told as paused, never as up. */
+  paused?: number
   /** A site that had no visit the whole period: its uptime says nothing worth a number. */
   silent: boolean
 }
@@ -34,10 +36,11 @@ function State({ now, at }: { now: Standing; at: number }) {
 
 /** The uptime as the page says it: the share, or why there is none. */
 function uptimeText(f: Figures, w: Watch): { value: string; short: string } {
-  const short = tooShort(w.span) ? copy.checkedFor(duration(w.span), f.seconds > 0 ? duration(f.seconds) : '') : ''
+  const watched = w.span - (w.paused ?? 0)
+  const short = tooShort(watched) ? copy.checkedFor(duration(watched), f.seconds > 0 ? duration(f.seconds) : '') : ''
   if (w.silent) return { value: copy.noVisitsAll, short }
   if (short) return { value: copy.tooEarly, short }
-  const up = uptimeOf(w.span, f.seconds)
+  const up = uptimeOf(w.span, f.seconds, undefined, w.paused)
   return { value: up ? up.pct.toFixed(1) + '%' : copy.notWatched, short }
 }
 
@@ -65,6 +68,7 @@ export function Hero({ now, at, f, w, over }: { now: Standing; at: number; f: Fi
         {!w.silent && !u.short && u.value.endsWith('%') && <span className="inc-over">{copy.over(over)}</span>}
       </p>
       {(u.short || line) && <p className="inc-line">{u.short || line}</p>}
+      {!!w.paused && <p className="inc-line">{copy.pausedFor(duration(w.paused))}</p>}
       <div className="inc-figs">
         <PageStats
           items={[

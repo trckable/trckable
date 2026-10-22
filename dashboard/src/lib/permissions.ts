@@ -19,19 +19,22 @@ export type Action =
   | 'mention.manage'
   | 'answers.manage'
   | 'data.erase'
+  | 'data.export'
   | 'peek.ask'
   | 'setup.run'
   | 'member.manage'
   | 'team.manage'
   | 'search.connect'
   | 'import.google'
+  | 'channels.connect'
+  | 'channels.disconnect'
   | 'update.check'
 
 /** Every action, the one list a new role's row is built from. */
 export const ACTIONS: readonly Action[] = [
   'site.add', 'site.settings', 'site.delete', 'goal.create', 'funnel.create', 'note.write',
-  'share.manage', 'widget.manage', 'alert.manage', 'payment.manage', 'mention.manage', 'answers.manage', 'data.erase',
-  'peek.ask', 'setup.run', 'member.manage', 'team.manage', 'search.connect', 'import.google', 'update.check',
+  'share.manage', 'widget.manage', 'alert.manage', 'payment.manage', 'mention.manage', 'answers.manage', 'data.erase', 'data.export',
+  'peek.ask', 'setup.run', 'member.manage', 'team.manage', 'search.connect', 'import.google', 'channels.connect', 'channels.disconnect', 'update.check',
 ]
 
 // A role with no row may do nothing: a missing or new role never shows a

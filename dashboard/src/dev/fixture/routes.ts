@@ -15,6 +15,7 @@ import {
   siteOf,
   type Ctx,
 } from './report'
+import { channelsAnswer } from './channels'
 import { answersChange, answersReport, answersSetup, answersState } from './answers'
 import { busierOf, nowOf } from './live'
 import { crawlersOf, funnelOf, heatOf, linksOf, scrollOf, segments } from './sections'
@@ -244,6 +245,8 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
   const an = /^\/sites\/[^/]+\/answers\/([a-z]+)(?:\/(\d+))?$/.exec(path)
   const change = an && answersChange(method, an[1], an[2], body)
   if (change) return change
+  const chan = channelsAnswer(c, method, path, sp)
+  if (chan) return chan
   if (method !== 'GET') return none()
   const sites = SITES
   switch (path) {
@@ -409,8 +412,13 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     }
     case 'alerts':
       return ok({
-        alerts: c.conn.alerts ? [{ id: 'alert_spike', site_id: id, kind: 'spike', enabled: true, target: 'albi@example.com', threshold: 2, last_fired: 0, created_at: secs(c, 0) }] : [],
-        kinds: ['stopped', 'spike', 'customer', 'disk', 'weekly', 'milestone', 'surge', 'mention'],
+        alerts: c.conn.alerts
+          ? [
+              { id: 'alert_spike', site_id: id, kind: 'spike', enabled: true, target: 'albi@example.com', threshold: 2, last_fired: 0, created_at: secs(c, 0) },
+              { id: 'alert_target', site_id: id, kind: 'threshold', enabled: true, target: 'albi@example.com', threshold: 10, metric: 'sales', period: 'day', last_fired: 0, created_at: secs(c, 0) },
+            ]
+          : [],
+        kinds: ['stopped', 'spike', 'customer', 'disk', 'weekly', 'milestone', 'surge', 'mention', 'threshold'],
         mail: true,
       })
     case 'usual': {

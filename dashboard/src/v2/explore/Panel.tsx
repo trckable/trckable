@@ -11,6 +11,8 @@ import { askOf, closeExplore, type Ask } from './open'
 import { pageDetails } from './pageStore'
 import { keepFull, wasFull } from './persist'
 import { firstFocusable, usePanelKeys } from './usePanelKeys'
+import { QUERY } from '../../kit/breakpoints'
+import { useLockScroll } from '../../components/lockScroll'
 
 // The content is its own chunk: nothing of it is loaded until Explore is first opened.
 const PanelContent = lazy(() => import('./PanelContent'))
@@ -21,7 +23,7 @@ const OUT = 240
 
 const sameAsk = (a: Ask | null, b: Ask | null): boolean => (a === null || b === null ? a === b : a.tab === b.tab && keyOf(a.filters) === keyOf(b.filters))
 
-const wide = () => matchMedia('(min-width:701px)').matches
+const wide = () => matchMedia(QUERY.roomy).matches
 
 type PanelProps = Omit<ContentProps, 'ask' | 'full' | 'onFull' | 'close'>
 
@@ -56,14 +58,9 @@ export function ExplorePanel(p: PanelProps) {
     return () => clearTimeout(t)
   }, [open])
   const on = open && armed
-  // Nothing behind the panel scrolls while it is there.
-  useEffect(() => {
-    if (!shown) return
-    document.documentElement.style.overflow = 'hidden'
-    return () => {
-      document.documentElement.style.overflow = ''
-    }
-  }, [shown])
+  // Nothing behind the panel scrolls while it is there; a dialog opened from it shares the same lock, so closing the
+  // dialog never lets the page behind the panel move or the scrollbar come back.
+  useLockScroll(!!shown)
   useEffect(() => {
     if (!on) return
     const el = box.current

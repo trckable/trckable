@@ -90,7 +90,8 @@ export interface AnswersSetup {
   round?: { done: number; total: number }
   asked_at?: number
   /** Only for someone who can change settings; USD. */
-  budget?: { used: number; cap: number; paused: boolean } | null
+  /** This site's spend against its share; `server` is the whole server's, for the operator only. */
+  budget?: { used: number; cap: number; paused: boolean; server?: { used: number; cap: number } } | null
 }
 
 export interface Cited {

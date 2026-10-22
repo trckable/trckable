@@ -33,43 +33,101 @@
 .install-check-head {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  align-items: start;
-  gap: 14px;
+  align-items: center;
+  gap: 16px;
 }
 .install-check-head h3 {
   margin: 0 0 3px;
-  font-size: 15px;
+  font-size: 16px;
 }
 .install-check-head p {
   margin: 0;
   font-size: 12.5px;
   max-width: 62ch;
 }
+/* The state as one calm mark: a large icon in a soft disc, a glow behind it (no ring). */
+.install-seal {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  color: var(--text-2);
+  transition: background 0.3s, color 0.3s;
+}
+.install-seal::before {
+  content: '';
+  position: absolute;
+  inset: -16px;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--glow, transparent) 30%, transparent), transparent 68%);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.install-seal.ok {
+  --glow: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+}
+.install-seal.warn {
+  --glow: var(--warn);
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+  color: var(--warn);
+}
+.install-seal.fail {
+  --glow: var(--down);
+  background: color-mix(in srgb, var(--down) 14%, transparent);
+  color: var(--down);
+}
+:is(.install-seal.ok, .install-seal.warn, .install-seal.fail)::before {
+  opacity: 1;
+}
+.install-seal > svg {
+  animation: step-in 0.4s var(--ease) backwards;
+}
+.install-at {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  animation: fadein 0.3s var(--ease) backwards;
+}
+/* The three checks as one line of steps: a dot for each, joined by a rule that takes the colour of the step above it. */
 .install-steps {
   display: grid;
-  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 .install-step {
+  position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 12px 14px;
-  border: 1px solid var(--grid);
-  border-radius: 12px;
-  background: var(--sunken);
+  gap: 14px;
+  padding: 0 0 18px;
 }
-.install-step > span:last-child {
-  display: grid;
-  gap: 2px;
-  font-size: 13.5px;
-  min-width: 0;
+.install-step:last-child {
+  padding-bottom: 0;
 }
-.install-step .faint {
-  font-size: 12.5px;
-  overflow-wrap: anywhere;
+.install-step::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 28px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--grid);
+  transition: background 0.4s;
+}
+.install-step:last-child::before {
+  display: none;
+}
+.install-step.ok::before {
+  background: color-mix(in srgb, var(--accent) 45%, var(--grid));
 }
 .install-step-mark {
   display: grid;
@@ -80,6 +138,7 @@
   border-radius: 50%;
   background: color-mix(in srgb, var(--text) 10%, transparent);
   color: var(--text-2);
+  animation: step-in 0.35s var(--ease) calc(var(--i, 0) * 90ms) backwards;
 }
 .install-step.ok .install-step-mark {
   background: color-mix(in srgb, var(--accent) 18%, transparent);
@@ -89,19 +148,28 @@
   background: color-mix(in srgb, var(--warn) 18%, transparent);
   color: var(--warn);
 }
-.install-step.warn {
-  border-color: color-mix(in srgb, var(--warn) 30%, var(--grid));
+.install-step.fail .install-step-mark {
+  background: color-mix(in srgb, var(--down) 16%, transparent);
+  color: var(--down);
 }
-.install-step {
-  transition: border-color 0.25s, background 0.25s;
+.install-step-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding-top: 2px;
+  font-size: 13.5px;
 }
-.install-step.wait {
-  /* The dashed edge and the spinner say "still checking"; the words stay at
-     full contrast (dimming them fell below WCAG AA). */
-  border-style: dashed;
+.install-step .faint {
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
 }
-.install-step-mark {
-  animation: step-in 0.35s var(--ease) backwards;
+/* A check that passed is one line, a long path cut with an ellipsis (the whole text is its title); one that did not
+   keeps its words in full: they are what to act on. */
+.install-step.ok .faint {
+  overflow: hidden;
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 @keyframes step-in {
   from {
@@ -111,8 +179,14 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .card.install-check[aria-busy='true']::before,
-  .install-step-mark {
+  .install-step-mark,
+  .install-seal > svg {
     animation: none;
+  }
+  .install-step::before,
+  .install-seal,
+  .install-seal::before {
+    transition: none;
   }
 }
 .install-step-mark .btn-spin {
@@ -295,7 +369,7 @@
     font-size: var(--ph-text-2);
   }
   :root .install-check-head p,
-  :root .install-step > span:last-child,
+  :root .install-step-text,
   :root .install-step .faint {
     font-size: var(--ph-text-2);
   }

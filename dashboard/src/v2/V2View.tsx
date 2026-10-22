@@ -7,9 +7,11 @@ import { setView, type ViewState } from '../lib/url'
 import { PageHeader } from './PageHeader'
 import '../mock/mock.css'
 import '../mock/theme.css'
+import '../kit/layout.css'
 import type { Report, Site } from '../lib/api'
-import { compareLabel, PRESETS, todayIn, type ISODate, type Range } from '../lib/dates'
+import { PRESETS, todayIn, type ISODate, type Range } from '../lib/dates'
 import { dayWords, rangeWords } from './dayWords'
+import { hasYear, vsWords } from './periodWords'
 import { switchTab } from '../features/live/switchView'
 import { useViewKeys } from './useViewKeys'
 import { usePeriodKeys } from './usePeriodKeys'
@@ -55,11 +57,6 @@ interface V2Props {
   top?: ReactNode
 }
 
-function vsWords(day: boolean, weekday: string, view: ViewState, range: Range): string | undefined {
-  if (day) return copy.vsUsual(weekday)
-  return view.compare === 'none' ? undefined : copy.vsLabel(compareLabel(view.period, view.compare, range))
-}
-
 const grain = (a: ISODate, b: ISODate) => (a === b ? 'by hour' : 'by day')
 
 export function V2View(p: V2Props) {
@@ -79,14 +76,14 @@ export function V2View(p: V2Props) {
   // The other tab's code, fetched on idle: switching to it then has nothing to wait for.
   useEffect(() => whenIdle(Briefing.preload), [])
   useViewKeys(here, !p.waiting)
-  usePeriodKeys({ on: here === 'briefing' && !p.waiting, today, range: p.range, view: p.view, day })
+  usePeriodKeys({ on: here === 'briefing' && !p.waiting, today, range: p.range, view: p.view })
   // An old address with filters lands where the filters can be seen.
   useEffect(() => {
     if (!p.waiting) routeFiltered(p.view)
     // Once, on the address that was opened: shutting the panel clears the filters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [p.waiting])
-  const exploreOpen = () => (slots.askPeek ? window.dispatchEvent(new Event('trckable:find')) : goExplore())
+  const exploreOpen = () => (slots.askPeekNow ? window.dispatchEvent(new Event('trckable:find')) : goExplore())
   const setTab = (t: 'live' | 'briefing') => void switchTab(t, here)
   const periodChip = (idBase?: string) => (
     <PeriodChip
@@ -96,8 +93,8 @@ export function V2View(p: V2Props) {
       options={options}
       more={more}
       value={p.view.period}
-      compare={day ? 'none' : p.view.compare}
-      yearOk={false}
+      compare={p.view.compare}
+      yearOk={hasYear(p.site)}
       today={today}
       customRange={p.range}
       grain={grain}
@@ -117,10 +114,10 @@ export function V2View(p: V2Props) {
   if (here === 'live' && !liveOn) setLiveOn(true)
   if (here === 'briefing' && briefFor !== p.site.id) setBriefFor(p.site.id)
   useEffect(() => (p.identity ? undefined : whenIdle(() => document.visibilityState === 'visible' && setLiveOn(true))), [p.identity])
-  const now = { site: p.site, data: p.data, loading: p.loading, period: p.view.period, range: p.range, money: p.money, onGoal: p.onGoal, visits: p.live.stream.visits }
+  const now = { site: p.site, data: p.data, loading: p.loading, period: p.view.period, compare: p.view.compare, bucket: p.view.bucket, range: p.range, money: p.money, onGoal: p.onGoal, visits: p.live.stream.visits }
   // What the Briefing last had, for while it waits (the functions are taken with the rest, and renewed with it).
   const [kept, setKept] = useState(now)
-  const moved = (['site', 'data', 'loading', 'period', 'range', 'visits'] as const).some((k) => kept[k] !== now[k])
+  const moved = (['site', 'data', 'loading', 'period', 'compare', 'bucket', 'range', 'visits'] as const).some((k) => kept[k] !== now[k])
   if (here === 'briefing' && moved) setKept(now)
   const briefProps = here === 'briefing' ? now : kept
   const screen = (
@@ -159,7 +156,7 @@ export function V2View(p: V2Props) {
       {opened && !p.waiting && <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} period={periodChip('xper')} money={p.money} onGoal={p.onGoal} />}
       <AiHost site={p.site} />
       <MkToastHost />
-      {!p.waiting && <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: slots.askPeek ? copy.askOrSearch : copy.exploreTab }} hide={p.identity ? ['live'] : undefined} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />}
+      {!p.waiting && <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: slots.askPeekNow ? copy.askOrSearch : copy.exploreTab }} hide={p.identity ? ['live'] : undefined} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />}
     </div>
   )
 }

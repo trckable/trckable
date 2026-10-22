@@ -30,6 +30,8 @@ interface XMiProps {
   tag?: string
   on?: boolean
   disabled?: boolean
+  /** Why a disabled line is off, as a tooltip. */
+  title?: string
   back?: boolean
   radio?: boolean
   onClick: () => void
@@ -50,7 +52,7 @@ export function XMi(p: XMiProps) {
       </button>
     )
   return (
-    <button type="button" className={cls} id={p.id} role={p.radio ? 'menuitemradio' : 'menuitem'} aria-checked={p.radio ? !!p.on : undefined} disabled={p.disabled} data-enter={p.enter || undefined} {...p.data} onClick={p.onClick}>
+    <button type="button" className={cls} id={p.id} role={p.radio ? 'menuitemradio' : 'menuitem'} aria-checked={p.radio ? !!p.on : undefined} disabled={p.disabled} title={p.title} data-enter={p.enter || undefined} {...p.data} onClick={p.onClick}>
       {p.icon}
       <span className="mt2">
         <span className="nm">{p.name}</span>

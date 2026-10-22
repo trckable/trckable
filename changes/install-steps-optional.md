@@ -1,0 +1,1 @@
+The Next.js install shows only what is needed to start counting: install the package and add one line to the layout. The same-origin route and its two environment variables moved into a folded "Count visitors with ad blockers too" section, with the same content.

@@ -1,0 +1,28 @@
+/* The target alert's line: words and three small fields that wrap on a narrow screen. */
+.th-rule {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+.input.th-num {
+  width: 72px;
+  height: 28px;
+  padding: 0 8px;
+  text-align: center;
+  font-size: 12.5px;
+}
+.input.th-pick {
+  width: auto;
+  max-width: 100%;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 12.5px;
+}
+@media (--xs-down) {
+  :root .input.th-num,
+  :root .input.th-pick {
+    min-height: var(--ph-hit);
+    font-size: var(--ph-text);
+  }
+}

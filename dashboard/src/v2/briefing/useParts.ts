@@ -3,10 +3,11 @@
 import { useMemo } from 'react'
 import { tag } from '../../i18n'
 import type { Point, Result, Site } from '../../lib/api'
-import type { Range } from '../../lib/dates'
+import { fmtDay, type Range } from '../../lib/dates'
 import { chartOf, siteNow } from './chart'
 import { copy } from './copy'
 import { cardsOf, leadSource, type UptimeIn } from './cards'
+import { outageSpans, periodEnd } from './outage'
 import { moments } from './moments'
 import type { Extras } from './useExtras'
 import type { SliceData } from './useSlices'
@@ -23,6 +24,8 @@ interface PartsIn {
   site: Site
   cur: Result | undefined
   prev: Result | undefined
+  /** What the period before is called, for the line drawn against it; absent without a comparison. */
+  against?: string
   usual: Usual | null
   unit: Unit
   range: Range
@@ -67,7 +70,7 @@ function bandsOf(series: Point[], table: ReturnType<typeof hourTable>, days: { t
 }
 
 export function useParts(a: PartsIn) {
-  const { site, cur, prev, usual, unit, range, today, bucket, hist, up, downMin, nowSec, notes, slices, extras, money } = a
+  const { site, cur, prev, against, usual, unit, range, today, bucket, hist, up, downMin, nowSec, notes, slices, extras, money } = a
   const hourly = bucket === 'hour'
   const downNow = !!site.down_since
   const clock = siteNow(site.timezone, new Date(nowSec * 1000))
@@ -80,7 +83,7 @@ export function useParts(a: PartsIn) {
     const avg = hd ? totals.slice(0, -1).reduce((x, y) => x + y, 0) / Math.max(1, totals.length - 1) : 0
     const low = !!hist.daily && !learning && avg < 20
     const weekday = weekdayOf(range.to)
-    const uptime = uptimeScore({ pct: up.pct, downNow, downMin, off: !site.watched_since })
+    const uptime = uptimeScore({ pct: up.pct, downNow, downMin, off: !site.watched_since, paused: !!site.uptime_paused })
     const table = hourly && hist.hourly ? hourTable(hist.hourly, today) : null
     const long = cur.series.length > 8
     const bands = bandsOf(cur.series, table, hourly || !hist.daily ? null : { totals, days, long })
@@ -128,7 +131,7 @@ export function useParts(a: PartsIn) {
       uptime: up.pct === null ? null : { pct: pctText(up.pct), downMin },
     }
     const clockOf = (t: number) => siteNow(site.timezone, new Date(t * 1000)).slice(11)
-    const periodEnd = Math.max(up.from0 + 1, Math.min(up.from0 + (live ? 86400 : 86400 * Math.max(1, days.indexOf(range.to) - days.indexOf(range.from) + 1)), up.from0 + 86400 * 400))
+    const out = outageSpans(up.list, up.from0, periodEnd(up.from0, range.from, range.to), nowSec)
     const uptimeIn: UptimeIn = {
       downNow,
       since: site.down_since ? clockOf(site.down_since) : '',
@@ -137,9 +140,8 @@ export function useParts(a: PartsIn) {
       incidents: up.list.map((x) => ({ from: clockOf(x.started_at), to: clockOf(x.ended_at ?? nowSec) })),
       minutes: downMin,
       lost: up.list.reduce((x, y) => x + (y.expected_visits ?? 0), 0),
-      a: up.list.length ? Math.max(0, (Math.min(...up.list.map((x) => x.started_at)) - up.from0) / (periodEnd - up.from0)) : 0,
-      nowAt: Math.min(1, Math.max(0, (nowSec - up.from0) / (periodEnd - up.from0))),
-      b: up.list.length ? Math.min(1, (Math.max(...up.list.map((x) => x.ended_at ?? nowSec)) - up.from0) / (periodEnd - up.from0)) : 0,
+      ...out,
+      from: range.from === range.to ? '00:00' : fmtDay(range.from),
       now: clockOf(nowSec),
     }
     const rule = ruleOf(!!usual, unit, weekday, clock.slice(11))
@@ -183,11 +185,11 @@ export function useParts(a: PartsIn) {
       const last = cur.series.reduce((k, p, i) => (p.t.slice(0, 10) === n.day ? i : k), first)
       return [{ i: hourly ? Math.min(first + 12, last) : first, text: n.text }]
     })
-    const chart = chartOf({ cur, prev, bucket: bucket ?? 'day', unit, nowT: live ? clock : undefined, weekday, riseName: top?.times && top.times >= 1.5 ? top.name : undefined, riseTimes: top?.times ?? undefined, riseVs: top?.vs ?? copy.before[unit], downs, notes: marks, bands, overall: st, sales: money && extras.buyers ? extras.buyers.filter((b) => b.amount > 0).map((b) => ({ at: siteNow(site.timezone, new Date(b.at)), text: money(b.amount), size: b.amount })) : undefined })
+    const chart = chartOf({ cur, prev, against, bucket: bucket ?? 'day', unit, nowT: live ? clock : undefined, riseName: top?.times && top.times >= 1.5 ? top.name : undefined, riseTimes: top?.times ?? undefined, riseVs: top?.vs ?? copy.before[unit], downs, notes: marks, bands, overall: st, sales: money && extras.buyers ? extras.buyers.filter((b) => b.amount > 0).map((b) => ({ at: siteNow(site.timezone, new Date(b.at)), text: money(b.amount), size: b.amount })) : undefined })
     const mo =
       hist.daily && !learning && !low
         ? moments({ totals, days, todayUp: unit === 'today' ? st === 'up' : false, from: Math.max(0, days.indexOf(range.from)), to: Math.max(0, days.indexOf(range.to)), elapsed: Math.round(nowHour * 60), today: unit === 'today', week: unit === 'week', filtered: false })
         : { pills: [], line: '' }
     return { hhmm: clock.slice(11), learning, hd, low, uptime, scores, facts, stories, say, top, chart, weekday, whole, verdict, moneyBand, st, bounceUsual, mo }
-  }, [cur, prev, usual, unit, up.pct, up.list, up.from0, downNow, downMin, site.domain, money, site.down_since, site.down_cause, site.timezone, site.watched_since, range.to, range.from, bucket, nowSec, hist, hourly, today, notes, clock, slices, extras])
+  }, [cur, prev, against, usual, unit, up.pct, up.list, up.from0, downNow, downMin, site.domain, money, site.down_since, site.down_cause, site.timezone, site.watched_since, site.uptime_paused, range.to, range.from, bucket, nowSec, hist, hourly, today, notes, clock, slices, extras])
 }

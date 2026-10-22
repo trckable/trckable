@@ -1,0 +1,47 @@
+/* Channels on the team overview (features/channels). Theme tokens only; shares .tm-k, .tm-big, .tm-more, .tm-item with the overview. */
+.ch-sec { display: grid; gap: 14px; margin-top: 14px; }
+.ch-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 24px; }
+.ch-head h2 { margin: 0 0 2px; font-size: 20px; letter-spacing: -0.02em; }
+.ch-head p { margin: 0; max-width: 62ch; font-size: 14px; line-height: 1.45; }
+.ch-strip { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); border: 1px solid var(--border); border-radius: 16px; background: linear-gradient(180deg, color-mix(in srgb, var(--text) 3.5%, var(--surface)), var(--surface)); box-shadow: var(--shadow-soft); }
+.ch-strip > div { display: grid; gap: 2px; align-content: start; padding: 16px 20px; min-width: 0; }
+.ch-strip > * + * { border-left: 1px solid var(--border); }
+.ch-by { display: flex; flex-wrap: wrap; gap: 4px 28px; }
+.ch-one { display: grid; gap: 0; }
+.ch-one small { font-size: 13px; color: var(--text-3); }
+.ch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.ch-card { display: grid; gap: 10px; align-content: start; padding: 16px 16px 14px 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow-soft); min-width: 0; }
+.ch-card header { display: flex; align-items: center; gap: 10px; }
+.ch-card h3 { margin: 0; flex: 1; min-width: 0; font-size: 15px; font-weight: 600; }
+.ch-mark { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: color-mix(in srgb, var(--text) 7%, transparent); color: var(--text-2); flex: none; }
+.ch-num { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; }
+.ch-num b { font-size: 28px; font-weight: 600; letter-spacing: -0.03em; }
+.ch-chip { padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text-3); background: color-mix(in srgb, var(--text-3) 14%, transparent); }
+.ch-chip.up { color: var(--up); background: color-mix(in srgb, var(--up) 14%, transparent); }
+.ch-chip.low { color: var(--warn); background: color-mix(in srgb, var(--warn) 16%, transparent); }
+.ch-trend { min-height: 40px; }
+.ch-wait { margin: 0; min-height: 84px; display: flex; align-items: center; font-size: 14px; }
+.ch-note, .ch-foot { margin: 0; font-size: 13px; }
+.ch-foot { display: flex; flex-wrap: wrap; gap: 2px 8px; }
+.ch-handles { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.ch-problem { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 13px; color: var(--warn); }
+.ch-link { padding: 0; border: 0; background: none; color: var(--text); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.ch-link svg { display: none; }
+.ch-add { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px 12px; min-height: 96px; padding: 12px 16px; border: 1px dashed var(--border-2); border-radius: 16px; }
+.ch-off { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; }
+.ch-off .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.ch-doc { font-size: 13px; color: var(--text-3); text-decoration: underline; }
+.ch-empty { display: grid; justify-items: center; gap: 8px; padding: 40px 16px; text-align: center; border: 1px dashed var(--border-2); border-radius: 16px; }
+.ch-empty h3 { margin: 0; font-size: 18px; }
+.ch-empty p { margin: 0 0 6px; max-width: 56ch; font-size: 14px; }
+.ch-connects { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+@media (--xs) {
+  .ch-sec { gap: 12px; }
+  .ch-head h2 { font-size: 18px; }
+  .ch-strip { grid-template-columns: minmax(0, 1fr); border-radius: 14px; }
+  .ch-strip > div { padding: 12px 14px; }
+  .ch-strip > * + * { border-left: 0; border-top: 1px solid var(--border); }
+  .ch-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .ch-num b { font-size: 24px; }
+}

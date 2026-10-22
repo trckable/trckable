@@ -2,13 +2,14 @@
 // usual of that slice, never against nothing), written as one claim with the picture that proves it, a line of why, and
 // one thing to do. The cards are ranked by how much they matter and how bad the news is. Pure: cards.test.ts.
 import type { Result, Row } from '../../lib/api'
+import type { Span } from './outage'
 import { countryName, flag, fmtFixed, fmtInt } from '../../lib/format'
 import { assistantOf } from '../../features/extras/assistants'
 import { copy } from './cards.copy'
 import { mult, sourceName, type Deeper, type Unit } from './model'
 import { judge, type Band, type Judged } from './usual'
 import { whyDown, whyJump, type Why } from './why'
-import { firstCard, leakCard, salesCards, searchCard, stuckCard, type SalesIn } from './cards.money'
+import { firstCard, leakCard, salesCards, searchCard, stuckCard, withStuck, type SalesIn } from './cards.money'
 import type { FirstFrom, FunnelStory, SearchStory, Stuck } from './useExtras'
 
 export type Topic = 'uptime' | 'sales' | 'sources' | 'countries' | 'devices' | 'search' | 'pages' | 'goals' | 'peek' | 'mentions' | 'speed' | 'milestone' | 'funnel'
@@ -25,9 +26,9 @@ export type Vis =
   | { k: 'rcpt'; rows: { l: string; t?: string; a?: string; flag?: string; neg?: boolean; more?: boolean; tot?: boolean; mark?: 'up' | 'dn' }[] }
   | { k: 'dots'; n: number; per: number; grey: number; name: string }
   | { k: 'ba'; lo: number; hi: number; c: number; v: number; red: boolean }
-  | { k: 'outage'; a: number; b: number; nowAt: number; from: string; now: string }
+  | { k: 'outage'; spans: Span[]; nowAt: number; from: string; now: string }
   | { k: 'funnel'; rows: { name: string; v: number; w: number; hot: string }[] }
-  | { k: 'goals'; rows: { name: string; v: number; lo: number; hi: number; st: Judged }[] }
+  | { k: 'goals'; rows: { name: string; v: number; lo: number; hi: number; st: Judged; pct: number | null }[] }
 
 export interface Story {
   key: Topic
@@ -46,6 +47,14 @@ export interface Story {
   how: string
   ev: string
   act?: Act
+  /** A second action, for the ⋯ menu (a prompt to copy). */
+  extra?: Act
+  /** What else moved, in the same group of cards (sources, countries, devices, pages): named under the card, with a way to all of it. */
+  also?: { key: Topic; name: string }[]
+  /** The card's subject in a word or two, for the line that names the others. */
+  tag?: string
+  /** The question "Why?" asks Peek, where there is Peek: this card's claim, as a question. */
+  ask?: string
   /** Why it happened, as far as can be known: shown as "Why?" with the evidence. */
   cause?: Why
   deeper: Deeper
@@ -72,10 +81,11 @@ export interface UptimeIn {
   /** Visitors a usual stretch of that length brings. */
   lost: number
   cause?: string
-  /** Where the outage lies in the period, 0 to 1, and where now is. */
-  a: number
+  /** Where each outage lies in the period, 0 to 1, and where now is. */
+  spans: Span[]
   nowAt: number
-  b: number
+  /** What the line starts and ends at, as words: "00:00" for a day, the first date for longer, and the clock now. */
+  from: string
   now: string
 }
 
@@ -140,7 +150,7 @@ function uptimeCard(u: UptimeIn, domain: string): Story {
     bad: true,
     head,
     rest,
-    vis: { k: 'outage', a: u.a, b: u.b, nowAt: u.nowAt, from: '00:00', now: u.now },
+    vis: { k: 'outage', spans: u.spans, nowAt: u.nowAt, from: u.from, now: u.now },
     why: u.lost > 0 ? copy.noAnswer(people(Math.round(u.lost))) : copy.noAnswerBare,
     val: `${dur} min`,
     m: dur,
@@ -178,9 +188,11 @@ function sourceCard(s: Slice & { st: Judged }, i: CardsIn, total: number, topPag
   const leave = s.bounce !== undefined ? Math.round(s.bounce * 100) : null
   return {
     key: 'sources',
+    tag: name,
     score: (up ? 80 : 77) + Math.min(9, Math.log2(1 + (Math.abs(s.v - b.c) / Math.max(1, total)) * 20)),
     bad: !up,
     head: up ? copy.sent(name, people(Math.round(s.v))) : copy.sentOnly(name, people(Math.round(s.v))),
+    ask: copy.askSource(name, up),
     rest: sourceRest(up, r, i.low),
     vis: up ? { k: 'dots', n: Math.max(1, Math.round(s.v / per)), per, grey: Math.min(Math.max(1, Math.round(s.v / per)), Math.round(b.c / per)), name } : { k: 'ba', lo: b.lo, hi: b.hi, c: b.c, v: s.v, red: true },
     why: `${copy.usually(rg(b), name)}${topPage ? copy.mostLanded(topPage.name) : ''}${up && !i.low && leave !== null ? copy.leave(leave) : ''}.`,
@@ -201,10 +213,12 @@ function countryCard(s: Slice & { st: Judged }, i: CardsIn, total: number, src?:
   const name = countryName(s.value)
   return {
     key: 'countries',
+    tag: name,
     score: 55 + Math.min(8, (Math.abs(s.v - b.c) / Math.max(1, total)) * 40),
     bad: !up,
     head: `${flag(s.value)} ${people(Math.round(s.v))} from ${name}`,
     rest: `, ${up ? 'more' : 'fewer'} than usual`,
+    ask: copy.askCountry(name, up),
     vis: null,
     why: `${src ? copy.sendsMost(src) : ''}${copy.usuallyFromCountry(rg(b), name)}`,
     val: fmtInt(Math.round(s.v)),
@@ -223,9 +237,11 @@ function deviceCard(s: Slice & { st: Judged }, i: CardsIn, total: number): Story
   const b = s.band as Band
   return {
     key: 'devices',
+    tag: s.name,
     score: 50,
     bad: !up,
     head: copy.devicesAre(s.name, up),
+    ask: copy.askDevice(s.name, up),
     rest: `: ${people(Math.round(s.v))}`,
     vis: { k: 'ba', lo: b.lo, hi: b.hi, c: b.c, v: s.v, red: !up },
     why: `${i.low ? '' : `${Math.round((s.v / Math.max(1, total)) * 100)}% of everyone; `}usually ${rg(b)} people.`,
@@ -246,9 +262,11 @@ function pageCard(s: Slice & { st: Judged }, i: CardsIn): Story {
   const b = s.band as Band
   return {
     key: 'pages',
+    tag: s.name,
     score: 52,
     bad: !up,
     head: `${s.name} ${up ? 'is getting more readers' : 'lost readers'}`,
+    ask: copy.askPage(s.name, up),
     rest: `: ${people(Math.round(s.v))}`,
     vis: { k: 'ba', lo: b.lo, hi: b.hi, c: b.c, v: s.v, red: !up },
     why: copy.usuallyRead(rg(b)),
@@ -262,36 +280,67 @@ function pageCard(s: Slice & { st: Judged }, i: CardsIn): Story {
   }
 }
 
+/** How far a goal stands from the middle of its usual, in whole percent; none when that middle is too small to say. */
+const goalPct = (v: number, c: number): number | null => (c >= 1 ? Math.round(((v - c) / c) * 100) : null)
+
+const goalWhen = (unit: Unit): string => ({ today: copy.goalToday, yesterday: copy.goalYesterday, week: copy.goalPeriod, month: copy.goalPeriod, range: copy.goalPeriod })[unit]
+
+function goalHead(name: string, up: boolean, pct: number | null): string {
+  if (pct === null) return up ? copy.goalAbove(name) : copy.goalBelow(name)
+  return up ? copy.goalUp(name, Math.abs(pct)) : copy.goalDown(name, Math.abs(pct))
+}
+
+function goalAsk(name: string, up: boolean, pct: number | null, when: string): string {
+  if (pct === null) return up ? copy.goalAskAbove(name, when) : copy.goalAskBelow(name, when)
+  return up ? copy.goalAskUp(name, Math.abs(pct), when) : copy.goalAskDown(name, Math.abs(pct), when)
+}
+
 function goalCard(i: CardsIn): Story | null {
-  const goals = i.goals.flatMap((g) => {
-    const band = g.band
-    if (!band) return []
-    const st = judge(g.v, band)
-    return st ? [{ name: g.name.replace(/^./, (x) => x.toUpperCase()), v: g.v, lo: band.lo, hi: band.hi, st }] : []
-  })
-  if (!goals.length) return null
-  const g = goals[0]
+  const rows = i.goals
+    .flatMap((g) => {
+      const band = g.band
+      const st = band ? judge(g.v, band) : ''
+      return band && st ? [{ row: { name: g.name.replace(/^./, (x) => x.toUpperCase()), v: g.v, lo: band.lo, hi: band.hi, st, pct: goalPct(g.v, band.c) }, far: Math.abs(g.v - band.c) / Math.max(1, band.c) }] : []
+    })
+    .sort((a, b) => b.far - a.far)
+    .map((x) => x.row)
+  if (!rows.length) return null
+  const g = rows[0]
+  const up = g.st === 'up'
+  const range = `${fmtInt(Math.max(0, Math.round(g.lo)))}–${fmtInt(Math.round(g.hi))}`
   return {
     key: 'goals',
     score: 45,
-    bad: goals.some((x) => x.st === 'dn'),
-    head: `${g.name} is ${g.st === 'up' ? 'up' : 'down'}`,
-    rest: `: ${people(Math.round(g.v))}${goals.length > 1 ? `, and ${goals.length - 1} more goal${goals.length > 2 ? 's' : ''}` : ''}`,
-    vis: { k: 'goals', rows: goals },
-    why: copy.goalsWhy,
+    bad: rows.some((x) => x.st === 'dn'),
+    head: goalHead(g.name, up, g.pct),
+    vis: { k: 'goals', rows },
+    why: g.hi >= 1 ? copy.goalSub(fmtInt(Math.round(g.v)), goalWhen(i.unit), range) : copy.goalSubBare(fmtInt(Math.round(g.v)), goalWhen(i.unit)),
+    ask: goalAsk(g.name, up, g.pct, goalWhen(i.unit)),
     val: fmtInt(Math.round(g.v)),
     m: g.v,
     u: 'people',
     how: `${i.rule} ${copy.goalKnow}`,
     ev: evidence(g.v, { c: 0, lo: g.lo, hi: g.hi }),
-    act: { k: 'set', t: copy.setAlert, msg: copy.alertLeaves(g.name) },
-    deeper: { kind: 'explore', filter: { dim: 'goal', value: (i.cur.goals ?? [])[0]?.value ?? '' } },
+    act: { k: 'set', t: copy.alertNext, msg: copy.alertLeaves(g.name) },
+    deeper: { kind: 'explore', filter: { dim: 'goal', value: i.goals.find((x) => x.name === g.name)?.value ?? '' } },
   }
 }
 
 function speedWords(n: number, i: number): string {
   if (i === 0) return `${fmtFixed(n, 1)} s`
   return i === 1 ? `${Math.round(n)} ms` : fmtFixed(n, 2)
+}
+
+/** Who changed: the one source, country, device or page that moved most, with the others that moved named under it (not a card each). */
+function whoChanged(i: CardsIn, total: number): Story | null {
+  const src = leadSource(i.slices.referrer, total, i.domain)
+  const cty = movers(i.slices.country, total)[0]
+  const dev = movers(i.slices.device, total)[0]
+  const page = movers(i.slices.entry_page, total)[0]
+  const moved = [src && sourceCard(src, i, total, i.topPageOf?.(src.value)), cty && countryCard(cty, i, total, i.topSourceOf?.(cty.value)), dev && deviceCard(dev, i, total), page && pageCard(page, i)].flatMap((s) => (s ? [s] : []))
+  if (!moved.length) return null
+  const [lead, ...rest] = moved.sort((a, b) => b.score - a.score)
+  return rest.length ? { ...lead, also: rest.map((s) => ({ key: s.key, name: s.tag ?? s.head })) } : lead
 }
 
 /** The cards of the period, most worth reading first. A site that is not answering has one card only. */
@@ -302,24 +351,20 @@ export function cardsOf(i: CardsIn): Story[] {
   if (u.downNow || u.minutes > 0) out.push(uptimeCard(u, i.domain))
   if (u.downNow) return out
   if (!i.learning) {
-    const src = leadSource(i.slices.referrer, total, i.domain)
-    if (src) out.push(sourceCard(src, i, total, i.topPageOf?.(src.value)))
-    const cty = movers(i.slices.country, total)[0]
-    if (cty) out.push(countryCard(cty, i, total, i.topSourceOf?.(cty.value)))
-    const dev = movers(i.slices.device, total)[0]
-    if (dev) out.push(deviceCard(dev, i, total))
-    const page = movers(i.slices.entry_page, total)[0]
-    if (page) out.push(pageCard(page, i))
+    const lead = whoChanged(i, total)
+    if (lead) out.push(lead)
     const goal = goalCard(i)
     if (goal) out.push(goal)
     if (i.sales) out.push(...salesCards(i.sales))
     const first = i.first && i.sales ? firstCard({ first: i.first, band: i.slices.country.find((x) => x.value === i.first?.country)?.band ?? null, fmt: i.sales.fmt, clock: i.sales.clock, rule: i.rule }) : null
     if (first) out.push(first)
     const leak = i.funnel && !i.low ? leakCard({ f: i.funnel, domain: i.domain, rule: i.rule }) : null
-    if (leak) out.push(leak)
+    const stuck = i.stuck && !i.low ? stuckCard(i.stuck, i.rule) : null
+    // A page people are stuck on is part of where the path leaks: one card, the steps with the page named under them.
+    if (leak) out.push(stuck && i.stuck ? withStuck(leak, i.stuck) : leak)
     const found = i.search ? searchCard({ story: i.search, domain: i.domain, rule: i.rule }) : null
     if (found) out.push(found)
-    if (i.stuck && !i.low) out.push(stuckCard(i.stuck, i.rule))
+    if (stuck && !leak) out.push(stuck)
   }
   if (i.mention) {
     const m = i.mention
@@ -354,16 +399,19 @@ export function cardsOf(i: CardsIn): Story[] {
       u: 's',
       how: `${copy.vitalsHow} ${i.rule}`,
       ev: copy.speedEv(speedWords(c[0], 0), speedWords(w[0], 0)),
-      act: { k: 'copy', t: copy.speedPrompt, text: copy.speedPromptText(i.domain, speedWords(c[0], 0), speedWords(w[0], 0)), done: copy.speedCopied },
+      act: { k: 'set', t: copy.alertMe, msg: copy.alertSlow },
+      extra: { k: 'copy', t: copy.speedPrompt, text: copy.speedPromptText(i.domain, speedWords(c[0], 0), speedWords(w[0], 0)), done: copy.speedCopied },
+      ask: copy.speedAsk(speedWords(c[0], 0), speedWords(w[0], 0)),
       deeper: { kind: 'speed' },
     })
   }
-  return out.sort((a, b) => b.score - a.score)
+  // Problems before wins, then the bigger change.
+  return out.sort((a, b) => Number(!!b.bad) - Number(!!a.bad) || b.score - a.score)
 }
 
 /** The topics a card does not cover, said as "everything else was normal: devices, pages". */
 export function calmTopics(cards: Story[], search: boolean): string[] {
-  const has = (t: Topic) => cards.some((c) => c.key === t)
+  const has = (t: Topic) => cards.some((c) => c.key === t || c.also?.some((a) => a.key === t))
   return (['sources', 'search', 'devices', 'countries', 'pages', 'goals'] as const).filter((t) => (t !== 'search' || search) && !(t !== 'search' && has(t))).map((t) => copy.topicNames[t])
 }
 

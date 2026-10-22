@@ -15,7 +15,7 @@ const base = (o: Partial<CardsIn> = {}): CardsIn => ({
   slices: { referrer: [], country: [], device: [], entry_page: [] },
   goals: [],
   rule: 'Compared with the last 4 Fridays, up to 16:30.',
-  uptime: { downNow: false, since: '', minutesNow: 0, incidents: [], minutes: 0, lost: 0, a: 0, nowAt: 0.7, b: 0, now: '16:30' },
+  uptime: { downNow: false, since: '', minutesNow: 0, incidents: [], minutes: 0, lost: 0, spans: [], nowAt: 0.7, from: '00:00', now: '16:30' },
   ...o,
 })
 
@@ -58,12 +58,28 @@ describe('the cards', () => {
   })
   it('a mention of the day and slower pages get their cards', () => {
     const list = cardsOf(base({ mention: { host: 'Hacker News', title: 'Show HN: X', at: '14:05', points: 214, comments: 58, page: '/' }, speed: { cur: [3.4, 243, 0.09], usual: [2.1, 180, 0.05] } }))
-    expect(list.map((c) => c.key)).toEqual(['mentions', 'speed'])
-    expect(list[1]).toMatchObject({ bad: true, head: 'Pages got slower', rest: ': loading takes 3.4 s, usually 2.1 s' })
+    expect(list.map((c) => c.key)).toEqual(['speed', 'mentions'])
+    expect(list[0]).toMatchObject({ bad: true, head: 'Pages got slower', rest: ': loading takes 3.4 s, usually 2.1 s' })
   })
   it('ranks the worse news and the bigger change first', () => {
     const list = cardsOf(base({ slices: { referrer: [slice('news.ycombinator.com', 186, 9)], country: [slice('US', 309, 230)], device: [], entry_page: [] }, mention: { host: 'Hacker News', title: 't', at: '14:05', points: 1, comments: 1, page: '/' } }))
-    expect(list.map((c) => c.key)).toEqual(['sources', 'mentions', 'countries'])
+    expect(list.map((c) => c.key)).toEqual(['sources', 'mentions'])
+  })
+})
+
+describe('who changed', () => {
+  const two = base({ slices: { referrer: [slice('news.ycombinator.com', 186, 9)], country: [slice('US', 309, 230)], device: [slice('mobile', 300, 150)], entry_page: [] } })
+  it('is one card, the biggest mover, with the others named under it', () => {
+    const who = cardsOf(two).filter((c) => ['sources', 'countries', 'devices', 'pages'].includes(c.key))
+    expect(who.map((c) => c.key)).toEqual(['sources'])
+    expect(who[0].also?.map((a) => a.key)).toEqual(['countries', 'devices'])
+  })
+  it('has no line under it when nothing else moved', () => {
+    const one = cardsOf(base({ slices: { referrer: [slice('news.ycombinator.com', 186, 9)], country: [], device: [], entry_page: [] } })).find((c) => c.key === 'sources')
+    expect(one?.also).toBeUndefined()
+  })
+  it('does not call what it names calm', () => {
+    expect(calmTopics(cardsOf(two), false)).toEqual(['pages', 'goals'])
   })
 })
 
@@ -78,5 +94,61 @@ describe('the quiet line', () => {
     expect(g).toBeUndefined()
     const down = cardsOf(base({ goals: [slice('signed-up', 10, 31)] })).find((x) => x.key === 'goals')
     expect(down?.bad).toBe(true)
+  })
+})
+
+describe('the goals card', () => {
+  const signups = { ...slice('signup', 672, 455), name: 'Form submissions', band: { c: 455, lo: 420, hi: 490 } }
+  it('says the change in percent with the number and its usual range, and has no riddle', () => {
+    const g = cardsOf(base({ goals: [signups] })).find((x) => x.key === 'goals')
+    expect(g?.head).toBe('Form submissions up 48%')
+    expect(g?.rest).toBeUndefined()
+    expect(g?.why).toBe('672 today · usually 420–490')
+    expect(g?.act?.t).toBe('Alert me next time')
+    expect(g?.ask).toBe('Why did Form submissions go up 48% today?')
+  })
+  it('has one row per goal, the biggest mover first, with its percent', () => {
+    const calm = { ...slice('outbound', 120, 100), name: 'Outbound clicks', band: { c: 100, lo: 95, hi: 105 } }
+    const g = cardsOf(base({ goals: [calm, signups] })).find((x) => x.key === 'goals')
+    const rows = g?.vis?.k === 'goals' ? g.vis.rows : []
+    expect(rows.map((r) => [r.name, r.pct])).toEqual([['Form submissions', 48], ['Outbound clicks', 20]])
+    expect(g?.head).toBe('Form submissions up 48%')
+  })
+  it('says above or below usual when the usual is too small for a percent', () => {
+    const tiny = { ...slice('signup', 6, 0.4), name: 'Signed up', band: { c: 0.4, lo: 0, hi: 1 } }
+    expect(cardsOf(base({ goals: [tiny] })).find((x) => x.key === 'goals')?.head).toBe('Signed up above usual')
+  })
+})
+
+describe('the slower card', () => {
+  it('has Alert me as its action and the prompt as the extra', () => {
+    const c = cardsOf(base({ speed: { cur: [3.2, 100, 0.1], usual: [2, 100, 0.1] } })).find((x) => x.key === 'speed')
+    expect(c?.act?.t).toBe('Alert me')
+    expect(c?.act?.k).toBe('set')
+    expect(c?.extra?.k).toBe('copy')
+    expect(c?.ask).toBe('Why did loading slow to 3.2 s from 2.0 s?')
+  })
+})
+
+describe('the order', () => {
+  it('puts a problem before a win, whatever the size of the win', () => {
+    const win = { ...slice('news.ycombinator.com', 186, 9) }
+    const problem = { ...slice('signed-up', 10, 31), name: 'Signed up', band: { c: 31, lo: 25, hi: 37 } }
+    const list = cardsOf(base({ slices: { referrer: [win], country: [], device: [], entry_page: [] }, goals: [problem] }))
+    expect(list.map((c) => c.key)).toEqual(['goals', 'sources'])
+  })
+})
+
+describe('the questions Why? asks', () => {
+  it('every card that can be asked about has one', () => {
+    const list = cardsOf(base({ slices: { referrer: [slice('news.ycombinator.com', 186, 9)], country: [], device: [], entry_page: [] } }))
+    expect(list.find((c) => c.key === 'sources')?.ask).toBe('Why did Hacker News send so many people?')
+  })
+})
+
+describe('a goal with no usual range to say', () => {
+  it('has the number alone, not "usually 0–0"', () => {
+    const tiny = { ...slice('signup', 6, 0.4), name: 'Signed up', band: { c: 0.4, lo: 0, hi: 0.4 } }
+    expect(cardsOf(base({ goals: [tiny] })).find((x) => x.key === 'goals')?.why).toBe('6 today')
   })
 })

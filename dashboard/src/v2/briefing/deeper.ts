@@ -15,6 +15,7 @@ export function goDeeper(site: Site, d: Deeper) {
   else if (d.kind === 'mentions') openExplore('mentions')
   else if (d.kind === 'speed') openExplore('speed')
   else if (d.kind === 'ai') openAi()
+  else if (d.kind === 'all') goExplore()
   else if (d.kind === 'table') openExplore(d.tab)
   else openExplore(TAB[d.filter.dim] ?? 'overview', [{ ...d.filter, dim: d.filter.dim === 'entry_page' ? 'page' : d.filter.dim }])
 }

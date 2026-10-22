@@ -41,3 +41,16 @@ test('a shared link is the Briefing and Explore, read only, and its embed is the
   await expect(framed.locator('#views, .bellw, .acctw')).toHaveCount(0)
   await reader.close()
 })
+
+test('a shared page by default carries no "Powered by" link', async ({ page, browser }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: await session('share-page'), url: API }])
+  const site = await newSite(page, 'sharepoweredby')
+  const made = await page.request.post(`${API}/api/v1/sites/${site.id}/shares`, { headers: H, data: { name: 'Team' } })
+  const url = ((await made.json()) as { url: string }).url
+  const reader = await browser.newContext()
+  const tab = await reader.newPage()
+  await tab.goto(url)
+  await expect(tab.locator('.brief')).toBeVisible({ timeout: 20_000 })
+  await expect(tab.locator('.share-powered')).toHaveCount(0)
+  await reader.close()
+})

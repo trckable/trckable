@@ -224,7 +224,7 @@ export function sentence(o: SayIn): Sentence {
 
 // ---- the three scores ----
 
-export type Verdict = 'above' | 'usual' | 'below' | 'none' | 'clear' | 'lost' | 'down' | 'off'
+export type Verdict = 'above' | 'usual' | 'below' | 'none' | 'clear' | 'lost' | 'down' | 'off' | 'paused'
 export interface Score {
   key: 'traffic' | 'engagement' | 'uptime'
   /** 0 to 100, or null when it cannot be told. */
@@ -273,7 +273,9 @@ export function engagementScore(cur: Result, prev?: Result): Score {
 }
 
 /** What the incident record says of the period: three points lost for every minute down (null when it was not watched long enough, or the checks are off), and whether the site is down right now. */
-export function uptimeScore(o: { pct: number | null; downNow: boolean; downMin: number; off: boolean }): Score {
+export function uptimeScore(o: { pct: number | null; downNow: boolean; downMin: number; off: boolean; paused?: boolean }): Score {
+  // A paused check looks at nothing: neither up nor down, never "no downtime".
+  if (o.paused) return { key: 'uptime', value: null, verdict: 'paused', words: copy.checksPaused }
   if (o.off) return { key: 'uptime', value: null, verdict: 'off', words: copy.checksOff }
   const value = clamp(100 - o.downMin * 3)
   if (o.downNow) return { key: 'uptime', value, verdict: 'down', words: copy.downFor(o.downMin) }
@@ -326,4 +328,4 @@ export function bandOf(cur: Point[], prev: Point[] | undefined): Band {
 
 // ---- where a card goes deeper ----
 
-export type Deeper = { kind: 'explore'; filter: Filter } | { kind: 'table'; tab: 'sales' | 'search' | 'pages' | 'funnels' } | { kind: 'incidents' } | { kind: 'mentions' } | { kind: 'speed' } | { kind: 'ai' }
+export type Deeper = { kind: 'explore'; filter: Filter } | { kind: 'table'; tab: 'sales' | 'search' | 'pages' | 'funnels' } | { kind: 'incidents' } | { kind: 'mentions' } | { kind: 'speed' } | { kind: 'ai' } | { kind: 'all' }

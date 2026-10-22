@@ -91,19 +91,20 @@ for (const [name, m] of Object.entries(menus)) {
       if (gap > -1 && boxes[i].left < boxes[i - 1].right && boxes[i].right > boxes[i - 1].left) expect(gap, `rows ${i - 1} and ${i}`).toBeGreaterThanOrEqual(2)
     }
 
-    // One active row: the fill of a row that is not the pointer's or the key's own is clear.
-    const fills = () => rows.evaluateAll((els) => els.map((e) => getComputedStyle(e).backgroundColor).map((c) => (c === 'rgba(0, 0, 0, 0)' || c === 'transparent' ? 0 : 1)))
+    // One active row: the fill of a row that is not the pointer's or the key's own is clear. The row of the page in view (aria-current) keeps its own soft fill, apart from that count.
+    const idle = rows.and(page.locator(':not([aria-current])'))
+    const fills = () => rows.evaluateAll((els) => els.filter((e) => !e.hasAttribute('aria-current')).map((e) => getComputedStyle(e).backgroundColor).map((c) => (c === 'rgba(0, 0, 0, 0)' || c === 'transparent' ? 0 : 1)))
     const painted = async () => {
       await page.waitForTimeout(100)
       return (await fills()).reduce<number>((a, b) => a + b, 0)
     }
     if (WIDTH < 600) return // no pointer on a phone
-    await rows.nth(1).hover()
+    await idle.nth(1).hover()
     expect(await painted(), 'after hover').toBe(1)
     // The keys walk to a row (the account menu's theme switch comes first, and is not a row).
     for (let i = 0; i < 6 && !(await page.evaluate((sel) => !!document.activeElement?.matches(sel), ROW)); i++) await page.keyboard.press('ArrowDown')
     expect(await painted(), 'after hover and arrow keys').toBe(1)
-    await rows.nth(Math.min(3, n - 1)).hover()
+    await idle.nth(Math.min(3, (await idle.count()) - 1)).hover()
     expect(await painted(), 'after hovering another row').toBe(1)
     if (SHOTS) await box.screenshot({ path: `${SHOTS}/${name}-${WIDTH}-${SCHEME}-active.png` })
   })

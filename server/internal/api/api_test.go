@@ -93,7 +93,7 @@ func newRig(t *testing.T) *rig {
 	if err != nil {
 		t.Fatal(err)
 	}
-	a = &API{MentionsOn: true, Ctl: ctl, Hub: hub, Token: "automation-token", SetupEnv: "tkb_setup_test", Now: tick, Revenue: rev, Box: box,
+	a = &API{IconGet: &http.Client{Transport: noNetwork{}}, MentionsOn: true, Ctl: ctl, Hub: hub, Token: "automation-token", SetupEnv: "tkb_setup_test", Now: tick, Revenue: rev, Box: box,
 		PurgeAnalytics: w.PurgeSite,
 		ErasePerson:    w.ErasePerson,
 		Query: func() *query.Q {
@@ -1118,4 +1118,12 @@ func TestBellReadFollowsThePerson(t *testing.T) {
 	if code, out := do(t, c, "GET", g.srv.URL+"/api/v1/me/bell-read", ""); code != 200 || len(out["read"].([]any)) != 2 {
 		t.Fatalf("read list: %d %v", code, out)
 	}
+}
+
+// noNetwork answers every outside fetch as unreachable, so a route test never
+// leaves the machine.
+type noNetwork struct{}
+
+func (noNetwork) RoundTrip(*http.Request) (*http.Response, error) {
+	return nil, errors.New("no network in tests")
 }

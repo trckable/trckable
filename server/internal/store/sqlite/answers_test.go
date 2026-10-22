@@ -174,3 +174,30 @@ func TestAnswerRoundKeepsItsQuestionsAndBudget(t *testing.T) {
 		t.Fatal("a delayed site is due")
 	}
 }
+
+func TestAnswerSiteSpendSurvivesDeletedQuestions(t *testing.T) {
+	ctx := context.Background()
+	st, site := openIncidents(t)
+	if err := st.SetAnswerQuestions(ctx, site, []AnswerQuestion{{Text: "best open analytics", Active: true}}, 1); err != nil {
+		t.Fatal(err)
+	}
+	qs, _ := st.AnswerQuestionsOf(ctx, site)
+	if err := st.SaveAnswerRun(ctx, answerRun(site, qs[0].ID, 1000, "openai", 1, true), "2026-10"); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.AddAnswerSpend(ctx, site, "2026-10", 500); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.SetAnswerQuestions(ctx, site, []AnswerQuestion{{Text: "a different question", Active: true}}, 2); err != nil {
+		t.Fatal(err)
+	}
+	if n, _ := st.AnswerSiteSpend(ctx, site, "2026-10"); n != 1500 {
+		t.Fatalf("site spend %d, want 1500", n)
+	}
+	if n, _ := st.AnswerSiteSpend(ctx, site, "2026-09"); n != 0 {
+		t.Fatalf("another month: %d", n)
+	}
+	if n, _ := st.AnswerSpend(ctx, "2026-10"); n != 1500 {
+		t.Fatalf("server spend %d, want 1500", n)
+	}
+}

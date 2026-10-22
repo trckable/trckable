@@ -347,6 +347,7 @@ func (a *API) shareInfoWith(w http.ResponseWriter, r *http.Request, sh sqlite.Sh
 		mark = look.Color
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
+		"powered_by": a.PoweredBy != nil && a.PoweredBy(r.Context(), sh.SiteID),
 		"color":      mark,
 		"accent":     look.Color, // the page's own colour, only when the owner chose one
 		"logo_url":   shareLogoURL(look),

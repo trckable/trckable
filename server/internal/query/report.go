@@ -75,6 +75,9 @@ type Params struct {
 	// SalePages adds the pages that sold (Result.SalePages): the revenue
 	// credited to visits that read each page. Only with Revenue on.
 	SalePages bool
+	// LinkRevenue adds the "link" breakdown to RevenueDims (Your links reads
+	// each row's revenue from it). Only with Revenue on.
+	LinkRevenue bool
 	// Buyers adds the latest sales with the way to each (Result.Buyers): this
 	// many, newest first. Only with Revenue on.
 	Buyers int
@@ -163,6 +166,7 @@ var sessionDims = map[string]string{
 	"exit_page":  "exit_page",
 	"campaign":   "campaign",
 	"source":     "utm_source",
+	"link":       linkKey,
 	"medium":     "utm_medium",
 	"country":    "country",
 	"region":     "region",

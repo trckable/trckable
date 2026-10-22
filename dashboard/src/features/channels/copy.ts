@@ -1,0 +1,42 @@
+// The words of Channels. A view is not the same thing on every platform, so the numbers are never added across them.
+import { defineCopy } from '../../i18n'
+
+export const copy = defineCopy('channels', {
+  title: 'Channels',
+  sub: 'Views of your own accounts, read from each platform. Counted by that platform, so they are shown apart, never added together.',
+  periodLabel: 'Period',
+  period: { 7: '7 days', 30: '30 days', 90: '90 days' },
+  views: 'Views',
+  accounts: 'Accounts',
+  platform: { youtube: 'YouTube', instagram: 'Instagram', threads: 'Threads' },
+  monitoring: (n: number) => `Monitoring ${n} ${n === 1 ? 'account' : 'accounts'}`,
+  trend: (name: string) => `${name}: views per day`,
+  versus: 'vs the period before',
+  since: (day: string) => `Counted from ${day}`,
+  waiting: 'Reading the first numbers…',
+  unknown: 'No numbers right now',
+  problem: {
+    denied: 'The platform no longer allows access. Connect the account again.',
+    expired: 'Not read for too long, so its numbers were deleted as the platform requires. Connect it again.',
+    limited: 'The platform asked us to slow down. The next read tries again.',
+    failed: 'The last read did not work. The next one tries again.',
+  },
+  emptyTitle: 'Connect your accounts',
+  emptySub: 'See how many views your own YouTube, Instagram and Threads get, beside your sites. Read-only; disconnecting deletes what was stored.',
+  connect: (name: string) => `Connect ${name}`,
+  notSetUp: 'Not set up on this server',
+  setUp: 'How to set it up',
+  docs: 'https://trckable.com/docs/social-accounts/',
+  more: (name: string) => `More for ${name}`,
+  disconnect: (handle: string) => `Disconnect ${handle}`,
+  confirmTitle: (handle: string) => `Disconnect ${handle}?`,
+  confirmBody: 'Its access is removed and every number stored for it is deleted. Connect it again any time.',
+  confirmLabel: 'Disconnect',
+  disconnected: 'Disconnected',
+  connected: (name: string) => `${name} connected`,
+  flash: {
+    denied: 'The platform did not give access.',
+    failed: 'Connecting did not work. Try again.',
+  },
+  viewOnly: (who: string) => `Ask ${who} to connect accounts.`,
+})

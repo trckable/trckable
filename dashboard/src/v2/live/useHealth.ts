@@ -10,12 +10,15 @@ import { answersApi } from '../../features/answers/api'
 import { incidents } from '../../features/incidents/api'
 import { mentionsApi } from '../../features/mentions/api'
 import { whenQuiet } from '../../features/extras/quiet'
+import { onSiteWrite } from '../../lib/siteWrites'
 import { moduleOn } from '../briefing/moduleOn'
 import { aiOf, mentionsOf, speedOf, uptimeFigure, UPTIME_DAYS, type AiFigure, type MentionsFigure, type UptimeFigure } from './health'
 
 /** Each figure is undefined while it is read, null when there is nothing to say, else the figure. */
 export interface Health {
   speed?: number | null
+  /** Whether the site records speed at all: off, "Set up" turns it on; on, there are only too few visits. */
+  vitalsOn?: boolean
   uptime?: UptimeFigure | null
   ai?: AiFigure | null
   mentions?: MentionsFigure | null
@@ -23,9 +26,15 @@ export interface Health {
   answers?: { seen: number; total: number } | null
 }
 
+/** True until the first read has landed: every figure is then at least null, never undefined. */
+export const loading = (h: Health): boolean => h.ai === undefined
+
 export function useHealth(site: Site | undefined, on: boolean): Health {
   const [got, setGot] = useState<{ id: string; h: Health } | null>(null)
+  // A write to this site's modules, Answers or Mentions (switching something on) reads every figure again.
+  const [round, setRound] = useState(0)
   const id = site?.id
+  useEffect(() => onSiteWrite((_, written) => written === id && setRound((n) => n + 1)), [id])
   const tz = site?.timezone
   const watched = site?.watched_since ?? 0
   const withMentions = !!site?.mentions && hasMentions()
@@ -36,17 +45,17 @@ export function useHealth(site: Site | undefined, on: boolean): Health {
     const cancel = whenQuiet(() => {
       const today = todayIn(tz)
       const now = Math.floor(Date.now() / 1000)
-      const speed = moduleOn(id, 'vitals').then((v) => (v ? more.vitals(id, { from: addDays(today, -6), to: today }) : null)).then(speedOf, () => null)
-      const uptime = watched ? incidents.period(id, Math.max(now - UPTIME_DAYS * 86400, watched), now).then((r) => uptimeFigure(r.incidents, today, tz, now, watched), () => null) : Promise.resolve(null)
+      const speed = moduleOn(id, 'vitals').then(async (recorded) => ({ s: recorded ? await more.vitals(id, { from: addDays(today, -6), to: today }).then(speedOf, () => null) : null, on: recorded }))
+      const uptime = watched ? incidents.period(id, Math.max(now - UPTIME_DAYS * 86400, watched), now).then((r) => uptimeFigure(r.incidents, today, tz, now, watched, r.summary.paused, r.paused_spans), () => null) : Promise.resolve(null)
       const ai = more.crawlers(id, { from: addDays(today, -6), to: today }).then(aiOf, () => null)
       const mentions = withMentions ? mentionsApi.list(id, '7d').then((r) => mentionsOf(r.mentions), () => null) : Promise.resolve(null)
       const answers = withAnswers ? answersApi.report(id, { from: addDays(today, -6), to: today }).then((r) => (r.latest ? { seen: r.latest.seen, total: r.latest.total } : null), () => null) : Promise.resolve(null)
-      void Promise.all([speed, uptime, ai, mentions, answers]).then(([s, u, a, m, an]) => live && setGot({ id, h: { speed: s, uptime: u, ai: a, mentions: m, answers: an } }))
+      void Promise.all([speed, uptime, ai, mentions, answers]).then(([s, u, a, m, an]) => live && setGot({ id, h: { speed: s.s, vitalsOn: s.on, uptime: u, ai: a, mentions: m, answers: an } }))
     })
     return () => {
       live = false
       cancel()
     }
-  }, [id, tz, watched, withMentions, withAnswers, on])
+  }, [id, tz, watched, withMentions, withAnswers, on, round])
   return got && got.id === id ? got.h : {}
 }

@@ -22,6 +22,8 @@ export interface Teams {
   current: string
   onPick: (id: string) => void
   onManage: () => void
+  /** The ids in the order the person arranged them (drag, or Alt + ↑/↓). Without it the list cannot be arranged and shows no grips. */
+  onReorder?: (ids: string[]) => void
 }
 
 export interface V2Extras {
@@ -47,7 +49,7 @@ export interface V2Extras {
     ready?: boolean
     readAll: () => void
     dismiss: (id: string) => void
-    archive: { items: Notice[]; load: () => void; loading: boolean; words: { dismiss: string; archive: string; fresh: string; none: string } }
+    archive: { items: Notice[]; load: () => void; loading: boolean; words: { none: string } }
   }
   /** The teams the person is in: a small square with the current one's initial before the site, and a list of them that opens from it. A build with a single account leaves it out. */
   teams?: Teams
@@ -61,8 +63,8 @@ export interface V2Extras {
   menuBeforeProfile?: ReactNode | ((go: (fn: () => void) => () => void) => ReactNode)
   /** What Sign out does, when it is more than ending this session. */
   signOut?: () => void
-  /** Opens Peek with a question ready to send. A build with no Peek leaves it out, and a "Why?" shows its text alone. */
-  askPeek?: (question: string) => void
+  /** Opens Peek and asks the question at once (a "Why?", a question typed into ⌘K): the answer is already coming when the panel is up. A build with no Peek leaves it out, and a "Why?" shows its text alone. */
+  askPeekNow?: (question: string) => void
   /** All sites: one more figure at the end of the team strip (a plan's ring). */
   teamStrip?: ReactNode
   /** All sites: one more line under a site's state in its row (over its plan's limit), by the site's id. */

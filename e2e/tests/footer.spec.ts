@@ -115,8 +115,12 @@ test('a quiet site, none down, turns the dot amber and says how many', async ({ 
   await expect(status).toHaveAttribute('data-status', 'quiet')
   await expect(status).toHaveText('1 site quiet')
   await expect(foot.getByText('All systems normal')).toHaveCount(0)
-  await status.hover()
-  await expect(page.getByRole('tooltip')).toContainText('traffic, not an outage')
+  // The page is still loading under the foot, and the foot can move once after the pointer has arrived (it did on origin/main, in about one run of five under load): the pointer comes again until the tip shows.
+  await expect(async () => {
+    await page.mouse.move(0, 0)
+    await status.hover()
+    await expect(page.getByRole('tooltip')).toContainText('traffic, not an outage', { timeout: 1500 })
+  }).toPass({ timeout: 15_000 })
   if (SHOTS) {
     mkdirSync(SHOTS, { recursive: true })
     for (const scheme of ['dark', 'light'] as const) {

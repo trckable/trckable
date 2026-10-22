@@ -31,12 +31,14 @@ import (
 	"github.com/trckable/trckable/server/internal/api"
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/backup"
+	"github.com/trckable/trckable/server/internal/channels"
 	"github.com/trckable/trckable/server/internal/config"
 	"github.com/trckable/trckable/server/internal/ga"
 	"github.com/trckable/trckable/server/internal/geo"
 	"github.com/trckable/trckable/server/internal/ingest"
 	"github.com/trckable/trckable/server/internal/ledger"
 	"github.com/trckable/trckable/server/internal/modules"
+	"github.com/trckable/trckable/server/internal/notice"
 	"github.com/trckable/trckable/server/internal/query"
 	"github.com/trckable/trckable/server/internal/realtime"
 	"github.com/trckable/trckable/server/internal/revenue"
@@ -59,11 +61,13 @@ type Server struct {
 	judge   atomic.Pointer[mentionJudge] // the optional yes/no check on a mention (SetMentionJudge)
 	answers *answerAsker                 // nil when Answers is off (no key, or TRCKABLE_ANSWERS_EVERY=0)
 	ctl     *sqlite.Store
-	held    heldAlerts // alerts sent whose mark failed (alerts.go)
-	log     *wal.Log
-	ingest  *ingest.Handler
-	http    *http.Server
-	geo     *geo.DB
+	notices *notice.Hub // every notice and alert that must reach someone (notices.go)
+	// thresholdCount is what a threshold alert counts; nil reads the stores (threshold.go). Tests replace it.
+	thresholdCount func(ctx context.Context, a sqlite.Alert, info sqlite.SiteInfo, from, now time.Time) (float64, error)
+	log            *wal.Log
+	ingest         *ingest.Handler
+	http           *http.Server
+	geo            *geo.DB
 	// asn is the network database behind stricter bot filtering. It is only
 	// downloaded once a site that uses it gets a visit.
 	asn        *geo.DB
@@ -243,8 +247,10 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 		lg.Close()
 		return nil, fmt.Errorf("payments: %w", err)
 	}
+	s.notices = &notice.Hub{Store: ctl, BaseURL: cfg.BaseURL}
+	s.notices.Register(probeForm, s.deliverProbe)
 	a := &api.API{
-		Ctl: ctl, Hub: s.hub, Token: cfg.APIToken, SetupEnv: cfg.SetupToken, ClientIP: s.ingest.ClientIP,
+		Ctl: ctl, Notices: s.notices, Hub: s.hub, Token: cfg.APIToken, SetupEnv: cfg.SetupToken, ClientIP: s.ingest.ClientIP,
 		Locate:  s.place,
 		Revenue: s.revenue, BaseURL: cfg.BaseURL, ReservedHosts: cfg.ReservedHosts, ShareDomainSkipVerify: cfg.ShareDomainSkipVerify, ShareDomainAskOpen: cfg.ShareDomainAskOpen, Box: box, Version: Version, UpdateCheck: cfg.UpdateCheck,
 		Query: func() *query.Q {
@@ -286,6 +292,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 			a.AnswersWake, a.AnswerBudget, a.AnswerMax, a.AnswerRuns = f.Wake, cfg.AnswersBudget, cfg.AnswersQuestions, cfg.AnswersRuns
 		}
 	}
+	ctl.RecoveryUsed = a.TellRecovery
 	a.SendWeekly = s.sendWeeklyNow
 	a.OnSurge = s.tellSurge
 	if len(cfg.OIDC) > 0 {
@@ -309,6 +316,10 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 			slog.Info("importing from Google Analytics is on", "callback", strings.TrimSuffix(cfg.BaseURL, "/")+"/api/v1/ga/callback")
 		}
 	}
+	a.Channels = channels.New(ctl, box,
+		&channels.YouTubeConnector{ID: cfg.YouTubeID, Secret: secrets.NewSecret(cfg.YouTubeSecret)},
+		channels.NewInstagram(cfg.InstagramID, secrets.NewSecret(cfg.InstagramSecret)),
+		channels.NewThreads(cfg.ThreadsID, secrets.NewSecret(cfg.ThreadsSecret)))
 	a.SendReport = s.sendReportNow
 	a.ReportsReady = s.reportsReady
 	s.api = a
@@ -490,12 +501,15 @@ func (s *Server) Run(ctx context.Context) error {
 	s.goGuarded("backups", func() { s.runBackups(wctx) })            // one encrypted copy a day, kept on the volume
 	s.goGuarded("login resets", func() { s.runLoginResets(wctx) })   // sign-in limits cleared when an owner resets a password
 	s.goGuarded("alerts", func() { s.runAlerts(wctx) })              // the four things worth being told about
+	s.goGuarded("notices", func() { s.runNotices(wctx) })            // what could not be delivered, tried again
 	s.goGuarded("health alerts", func() { s.runHealthAlerts(wctx) }) // the installation's own problems, sent as they start and clear
 	s.goGuarded("checks", func() { s.runChecks(wctx) })              // each site's snippet, looked for once a day
 	s.goGuarded("uptime", func() { s.runUptime(wctx) })              // each homepage answers? looked at every few minutes
 	s.goGuarded("answers", func() { s.runAnswers(wctx) })            // AI assistants asked the owner's questions, once a week
 	s.goGuarded("mentions", func() { s.runMentions(wctx) })          // where each site is talked about, searched every 20 minutes
-	s.goGuarded("log retry", func() { s.runLogRetry(wctx) })         // events again once a full disk has room
+	// The team's social accounts, read once a day.
+	s.goGuarded("channels", func() { s.api.Channels.Run(wctx, s.cfg.ChannelsEvery) })
+	s.goGuarded("log retry", func() { s.runLogRetry(wctx) }) // events again once a full disk has room
 
 	select {
 	case <-ctx.Done():

@@ -68,7 +68,7 @@ describe('the palette', () => {
     vi.restoreAllMocks()
   })
 
-  it('finds what the avatar menu gave up: Profile, Language, Features, Shortcuts and the own-visits choice', () => {
+  it('finds what the avatar menu gave up: Profile, Language, Tracking options, Shortcuts and the own-visits choice', () => {
     vi.stubGlobal('navigator', { userAgent: 'x', maxTouchPoints: 0 })
     const items = paletteItems({ sites: [site], site, data, here: 'briefing', domainOf: (s) => s.domain })
     vi.unstubAllGlobals()
@@ -77,7 +77,7 @@ describe('the palette', () => {
     expect(account.openAccount).toHaveBeenCalledWith('profile')
     by('Language · Deutsch')?.run()
     expect(lang.chooseLang).toHaveBeenCalledWith('de')
-    by('Features')?.run()
+    by('Tracking options')?.run()
     expect(features.openFeatures).toHaveBeenCalled()
     by('Shortcuts')?.run()
     expect(shortcuts.openShortcuts).toHaveBeenCalled()

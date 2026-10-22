@@ -11,7 +11,6 @@ import { api, fail, more, type ModuleInfo, type ScriptInfo, type Site } from '..
 import { words } from '../lib/errors'
 import { can } from '../lib/permissions'
 import { settingsParam } from '../lib/settings'
-import { modulesChanged } from '../lib/useMods'
 import { recordsCopy } from './recordsCopy'
 import './ScriptRecords.css'
 
@@ -20,7 +19,8 @@ const bytes = (n: number) => (n >= 1024 ? `${(n / 1024).toFixed(2)} KB` : `${n} 
 const nameOf = (id: string): string => (id === 'outbound' || id === 'forms' ? recordsCopy[id] : recordsCopy[id as 'goals' | 'vitals' | 'heatmaps'].name)
 const cost = (m: ModuleInfo | undefined) => (m?.tracker_bytes ? recordsCopy.adds(bytes(m.tracker_bytes)) : recordsCopy.free)
 
-export function ScriptRecords({ site }: { site: Site }) {
+/** `titled` is off where a heading of its own already says it (the Tracking options pop-up). */
+export function ScriptRecords({ site, titled = true }: { site: Site; titled?: boolean }) {
   const [mods, setMods] = useState<ModuleInfo[] | null>(null)
   const [script, setScript] = useState<ScriptInfo | null>(null)
   const [busy, setBusy] = useState('')
@@ -35,7 +35,10 @@ export function ScriptRecords({ site }: { site: Site }) {
 
   // An old link to the Modules tab lands here.
   useEffect(() => {
-    if (mods && settingsParam('focus') === 'script-records') document.getElementById('script-records')?.scrollIntoView({ block: 'start' })
+    if (!mods || settingsParam('focus') !== 'script-records') return
+    document.getElementById('script-records')?.scrollIntoView({ block: 'start' })
+    // Live's speed "Set up" lands on the switch it is about.
+    if (settingsParam('want') === 'vitals') document.getElementById('rec-vitals')?.focus()
   }, [mods])
   const get = (id: string) => mods?.find((m) => m.id === id)
   // Turning one off loses what it would have recorded from now on: say so first.
@@ -50,7 +53,6 @@ export function ScriptRecords({ site }: { site: Site }) {
       .setModule(site.id, id, enabled)
       .then((d) => {
         take(d)
-        modulesChanged() // the dashboard behind reads them again
       })
       .catch((e: unknown) => fail(e))
       .finally(() => setBusy(''))
@@ -71,7 +73,7 @@ export function ScriptRecords({ site }: { site: Site }) {
     return (
       <>
         <Row label={recordsCopy[id].name} hint={`${recordsCopy[id].hint} ${cost(m)}`}>
-          <Switch on={!!m?.enabled} disabled={busy === id || !can('site.settings')} onChange={() => void change(id, !m?.enabled)} />
+          <Switch id={`rec-${id}`} on={!!m?.enabled} disabled={busy === id || !can('site.settings')} onChange={() => void change(id, !m?.enabled)} />
         </Row>
         {children}
       </>
@@ -81,7 +83,7 @@ export function ScriptRecords({ site }: { site: Site }) {
   return (
     <section className="card" id="script-records" style={{ gap: 0 }}>
       <div className="card-head">
-        <h2>{recordsCopy.title}</h2>
+        {titled && <h2>{recordsCopy.title}</h2>}
         {script && <span className="faint num">{recordsCopy.total(bytes(script.bytes))}</span>}
       </div>
       <p className="faint rec-lead">{recordsCopy.lead}</p>
