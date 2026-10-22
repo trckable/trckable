@@ -1328,16 +1328,6 @@ export default {
   },
   'live.active': 'Aktiv in den letzten 30 Sekunden',
   'live.footer': 'Neue Besuche rutschen herein · Besucher, die 5 Minuten untätig sind, gehen',
-  'live.busier': (now: number, usual: number) => `Mehr los als sonst: ${int(now)} vs ~${int(Math.round(usual))}.`,
-  'live.quieter': (now: number, usual: number) => `Weniger los als sonst: ${int(now)} vs ~${int(Math.round(usual))}.`,
-  'live.why': 'Warum?',
-  'live.fromSource': (plus: number, source: string) => `+${int(plus)} von ${source}`,
-  'live.fromCountry': (plus: number, country: string) => `+${int(plus)} aus ${country}`,
-  'live.inCampaign': (plus: number, campaign: string) => `+${int(plus)} aus der Kampagne ${campaign}`,
-  'live.noOne': 'Keine einzelne Quelle sticht heraus.',
-  'live.started': (at: string) => `seit ${at}`,
-  'live.startedBefore': (at: string) => `schon vor ${at}`,
-  'live.going': 'läuft noch',
 
   // install
   'install.first.cards.close': 'Schließen',

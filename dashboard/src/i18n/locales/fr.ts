@@ -1321,16 +1321,6 @@ export default {
   },
   'live.active': 'Actif dans les 30 dernières secondes',
   'live.footer': 'Les nouvelles visites arrivent en glissant · les visiteurs inactifs depuis 5 minutes partent',
-  'live.busier': (now: number, usual: number) => `Plus de monde que d’habitude : ${int(now)} vs ~${int(Math.round(usual))}.`,
-  'live.quieter': (now: number, usual: number) => `Moins de monde que d’habitude : ${int(now)} vs ~${int(Math.round(usual))}.`,
-  'live.why': 'Pourquoi ?',
-  'live.fromSource': (plus: number, source: string) => `+${int(plus)} depuis ${source}`,
-  'live.fromCountry': (plus: number, country: string) => `+${int(plus)} depuis ${country}`,
-  'live.inCampaign': (plus: number, campaign: string) => `+${int(plus)} de la campagne ${campaign}`,
-  'live.noOne': 'Aucune source ne se démarque.',
-  'live.started': (at: string) => `depuis ${at}`,
-  'live.startedBefore': (at: string) => `avant ${at}`,
-  'live.going': 'toujours en cours',
 
   // install
   'install.first.cards.close': 'Fermer',

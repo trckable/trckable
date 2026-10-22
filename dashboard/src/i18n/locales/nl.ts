@@ -1320,16 +1320,6 @@ export default {
   },
   'live.active': 'Actief in de laatste 30 seconden',
   'live.footer': 'Nieuwe bezoeken schuiven binnen · bezoekers die 5 minuten inactief zijn, verdwijnen',
-  'live.busier': (now: number, usual: number) => `Drukker dan normaal: ${int(now)} vs ~${int(Math.round(usual))}.`,
-  'live.quieter': (now: number, usual: number) => `Rustiger dan normaal: ${int(now)} vs ~${int(Math.round(usual))}.`,
-  'live.why': 'Waarom?',
-  'live.fromSource': (plus: number, source: string) => `+${int(plus)} van ${source}`,
-  'live.fromCountry': (plus: number, country: string) => `+${int(plus)} uit ${country}`,
-  'live.inCampaign': (plus: number, campaign: string) => `+${int(plus)} van de campagne ${campaign}`,
-  'live.noOne': 'Geen enkele bron valt op.',
-  'live.started': (at: string) => `sinds ${at}`,
-  'live.startedBefore': (at: string) => `sinds vóór ${at}`,
-  'live.going': 'loopt nog',
 
   // install
   'install.first.cards.close': 'Sluiten',
