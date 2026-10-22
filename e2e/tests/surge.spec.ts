@@ -101,37 +101,15 @@ test('More opens the story as a dialog; Escape closes it and focus comes back', 
   await expect(more).toBeFocused()
 })
 
-test('the busy line in Live is short and opens the same busy-moment card', async ({ page }) => {
+test('Live has no busy line, even when the server says the site is busier than usual', async ({ page }) => {
   const busier = {
     now: 53, baseline: true, usual: 20, low: 15, high: 25, state: 'busier', since: now - 15 * 60, rest: 1,
-    why: [
-      { dim: 'source', value: 'Facebook', now: 34, usual: 2, plus: 32 },
-      { dim: 'country', value: 'AL', now: 20, usual: 2, plus: 18 },
-      { dim: 'page', value: '/blog/launch-post', now: 30, usual: 1, plus: 29 },
-    ],
+    why: [{ dim: 'source', value: 'Facebook', now: 34, usual: 2, plus: 32 }],
   }
   await page.route(/\/api\/v1\/sites\/[^/]+\/busier$/, (r) => r.fulfill({ json: busier }))
   await open(page, 'live', 1440)
-  const line = page.locator('.live-busier-line')
-  await expect(line).toContainText('Busier than usual: 53 vs ~20.', { timeout: 30_000 })
-  const parts = line.locator('.live-busier-parts')
-  await expect(parts).toContainText('+32 from Facebook · +18 from Albania · since')
-  await expect(parts).toContainText('still going')
-  await expect(line).not.toContainText('/blog/launch-post')
-  expect(await parts.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
-  await shoot(page, 'busy-line')
-  await parts.click()
-  await expect(story(page)).toBeVisible()
-  await expect(story(page)).toContainText('/blog/launch-post')
-  await shoot(page, 'busy-line-card')
-  await page.keyboard.press('Escape')
-  await expect(story(page)).toHaveCount(0)
-  await line.getByRole('button', { name: /Why/ }).click()
-  await expect(story(page)).toBeVisible()
-  await page.keyboard.press('Escape')
-  await page.setViewportSize({ width: 390, height: 900 })
-  await expect(line).toBeVisible()
-  await shoot(page, 'busy-line')
+  await expect(page.locator('.lbign').first()).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('.live-busier-line')).toHaveCount(0)
 })
 
 test('on a phone the story is a sheet that fills the screen; See it in Data lands on the moment', async ({ page }) => {

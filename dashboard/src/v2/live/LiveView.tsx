@@ -10,7 +10,6 @@ import { tag } from '../../i18n'
 import { fmtMoney, dateFmt } from '../../lib/format'
 import { channelColor } from '../../lib/palette'
 import type { Site } from '../../lib/api'
-import { BusyLine } from '../ui/BusyLine'
 import { WhyInline } from '../ui/WhyInline'
 import { whyDown } from '../briefing/why'
 import { liveCount, liveLink } from '../../features/live/liveLink'
@@ -142,7 +141,6 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
               {ch && <span className={`mk-ld ${ch.up ? 'up' : 'dn'}`}>{copy.change(ch.up, ch.pct)}</span>}
             </div>
           </div>
-          <BusyLine busier={busier} site={site} timezone={timezone} />
           {!isShared() && !feed.sample && (
             <Suspense fallback={null}>
               <MentionChip site={site} domain={whole?.domain} />
