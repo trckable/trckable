@@ -1,7 +1,8 @@
 // The header, one row: the ghost (all sites), the site and its setup ring, Live | Briefing, the period, and on the right ⌘K, the plan, the bell and the
 // person. Nothing else lives here: no filters, no share, no second row. A phone keeps the site and the person; the
 // period moves into the page, and the switch into the bar at the bottom.
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
+import { QUERY } from '../../kit/breakpoints'
 import { ghostSvg } from '../../brand/logo'
 import '../../brand/logo.css'
 
@@ -51,22 +52,50 @@ interface HeaderProps {
   keys?: ReactNode
 }
 
-/** Whether the page has moved under the header (its bottom edge shows then). */
-function useStuck(): boolean {
+/** How far a phone has to scroll back up before its bar comes back. */
+const REVEAL_PX = 8
+
+/** Whether the page has moved under the header (its bottom edge shows then), and, on a compact page, whether the bar has
+ *  gone out of the way: it leaves as the page scrolls down and returns once it scrolls up a little, and is always there at the top. */
+function useHeader(bar: RefObject<HTMLElement | null>): { stuck: boolean; hidden: boolean; show: () => void } {
   const [stuck, setStuck] = useState(false)
+  const [hidden, setHidden] = useState(false)
   useEffect(() => {
-    const on = () => setStuck(window.scrollY > 0)
+    const compact = window.matchMedia(QUERY.compact)
+    let last = window.scrollY
+    let up = 0
+    const on = () => {
+      const y = window.scrollY
+      setStuck(y > 0)
+      const el = bar.current
+      if (!compact.matches || y <= 0 || el?.querySelector('.mk-menu.on, [aria-expanded="true"]')) {
+        setHidden(false)
+      } else if (y > last) {
+        up = 0
+        if (y > (el?.offsetHeight ?? 0)) setHidden(true)
+      } else if (y < last) {
+        up += last - y
+        if (up >= REVEAL_PX) setHidden(false)
+      }
+      last = y
+    }
     on()
     window.addEventListener('scroll', on, { passive: true })
-    return () => window.removeEventListener('scroll', on)
-  }, [])
-  return stuck
+    compact.addEventListener('change', on)
+    return () => {
+      window.removeEventListener('scroll', on)
+      compact.removeEventListener('change', on)
+    }
+  }, [bar])
+  return { stuck, hidden, show: () => setHidden(false) }
 }
 
 export function Header(p: HeaderProps) {
-  const stuck = useStuck()
+  const bar = useRef<HTMLElement>(null)
+  const { stuck, hidden, show } = useHeader(bar)
   return (
-    <header className="hd" data-stuck={stuck}>
+    // Focus landing in a bar that is out of the way brings it back (the keyboard never ends up on something unseen).
+    <header ref={bar} className="hd" data-stuck={stuck} data-hidden={hidden} onFocusCapture={show}>
       {p.logo}
       <div>{p.site}</div>
       {p.ring}

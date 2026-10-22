@@ -1968,6 +1968,17 @@ html[data-motion='off'] .mk .lswap{animation:none}
  .mk .site-row .mi.site,.mk .team-row .mi.team{min-height:52px}
 }
 @media (prefers-reduced-motion:reduce){.mk .site-row .grip,.mk .team-row .grip{transition:none}}
+
+/* A phone's top bar is out of the way while the page scrolls down and slides back once it scrolls up a little (data-hidden, Header.tsx); it is always there at the top. Not animated when motion is reduced (the reduced-motion rule above stops every transition). */
+@media (--compact){
+.mk .hd{transition:transform .25s ease}
+.mk .hd[data-hidden=true]{transform:translateY(calc(-100% - var(--mk-s4)));pointer-events:none}
+}
+/* The period lives in the page on a phone, so the header's "back to today" has no pill to belong to: it showed as an empty pill. */
+@container (--pane-max-600){
+.mk .hd .pwrap{display:contents}
+.mk .hd .pill-x{display:none}
+}
 /* The panel's header row holds the filter and Mark all read; the filter is one quiet icon with a dot while the list is narrowed. */
 .mk .nftools{display:inline-flex;align-items:center;gap:var(--mk-s2)}
 .mk .cdh .nftools{margin-left:auto}

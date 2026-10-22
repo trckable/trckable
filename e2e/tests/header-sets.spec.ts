@@ -46,6 +46,9 @@ for (const [width, scheme] of [[1440, 'dark'], [390, 'light']] as const) {
     await page.waitForTimeout(800)
     await page.evaluate(() => window.scrollTo(0, 260))
     await page.waitForTimeout(600)
+    // A phone's bar leaves on the way down: a little back up brings it in.
+    await page.evaluate(() => window.scrollTo(0, 240))
+    await page.waitForTimeout(600)
     const band = await page.evaluate(() => {
       const hd = document.querySelector('.hd')!.getBoundingClientRect()
       const lowest = Math.max(...[...document.querySelectorAll('.hd button, .hd #logo')].map((e) => e.getBoundingClientRect().bottom))
