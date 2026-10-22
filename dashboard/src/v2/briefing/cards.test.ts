@@ -58,8 +58,8 @@ describe('the cards', () => {
   })
   it('a mention of the day and slower pages get their cards', () => {
     const list = cardsOf(base({ mention: { host: 'Hacker News', title: 'Show HN: X', at: '14:05', points: 214, comments: 58, page: '/' }, speed: { cur: [3.4, 243, 0.09], usual: [2.1, 180, 0.05] } }))
-    expect(list.map((c) => c.key)).toEqual(['mentions', 'speed'])
-    expect(list[1]).toMatchObject({ bad: true, head: 'Pages got slower', rest: ': loading takes 3.4 s, usually 2.1 s' })
+    expect(list.map((c) => c.key)).toEqual(['speed', 'mentions'])
+    expect(list[0]).toMatchObject({ bad: true, head: 'Pages got slower', rest: ': loading takes 3.4 s, usually 2.1 s' })
   })
   it('ranks the worse news and the bigger change first', () => {
     const list = cardsOf(base({ slices: { referrer: [slice('news.ycombinator.com', 186, 9)], country: [slice('US', 309, 230)], device: [], entry_page: [] }, mention: { host: 'Hacker News', title: 't', at: '14:05', points: 1, comments: 1, page: '/' } }))
@@ -127,5 +127,28 @@ describe('the slower card', () => {
     expect(c?.act?.k).toBe('set')
     expect(c?.extra?.k).toBe('copy')
     expect(c?.ask).toBe('Why did loading slow to 3.2 s from 2.0 s?')
+  })
+})
+
+describe('the order', () => {
+  it('puts a problem before a win, whatever the size of the win', () => {
+    const win = { ...slice('news.ycombinator.com', 186, 9) }
+    const problem = { ...slice('signed-up', 10, 31), name: 'Signed up', band: { c: 31, lo: 25, hi: 37 } }
+    const list = cardsOf(base({ slices: { referrer: [win], country: [], device: [], entry_page: [] }, goals: [problem] }))
+    expect(list.map((c) => c.key)).toEqual(['goals', 'sources'])
+  })
+})
+
+describe('the questions Why? asks', () => {
+  it('every card that can be asked about has one', () => {
+    const list = cardsOf(base({ slices: { referrer: [slice('news.ycombinator.com', 186, 9)], country: [], device: [], entry_page: [] } }))
+    expect(list.find((c) => c.key === 'sources')?.ask).toBe('Why did Hacker News send so many people?')
+  })
+})
+
+describe('a goal with no usual range to say', () => {
+  it('has the number alone, not "usually 0–0"', () => {
+    const tiny = { ...slice('signup', 6, 0.4), name: 'Signed up', band: { c: 0.4, lo: 0, hi: 0.4 } }
+    expect(cardsOf(base({ goals: [tiny] })).find((x) => x.key === 'goals')?.why).toBe('6 today')
   })
 })
