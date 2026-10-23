@@ -58,7 +58,7 @@ const PAGES = [
   ['Explore open', '?view=briefing&period=7d&xp=overview'],
 ] as const
 
-for (const width of [1440]) {
+for (const width of [1440, 1024, 820, 768, 735, 712]) {
   for (const [name, query] of PAGES) {
     test(`${width}px: the header stays at the top of ${name} after a scroll`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 })
