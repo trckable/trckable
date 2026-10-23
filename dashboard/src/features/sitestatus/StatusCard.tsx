@@ -16,8 +16,9 @@ import { GapChart } from './GapChart'
 import { slotOf, useRecent } from './useRecent'
 import { useMute } from './useMute'
 import { firstAfter, fresh, readGap, writeGap } from './recovery'
-import { statusOf } from './status'
-import { silence, span, when } from './time'
+import { downStateOf, statusOf } from './status'
+import { plainSpan } from '../../lib/plainSpan'
+import { silence, when } from './time'
 import { useChecks } from './useChecks'
 import { useProbes } from './useProbes'
 import { ProbeList } from './ProbeList'
@@ -27,7 +28,13 @@ import './StatusCard.css'
 
 /** How long the badge says: since the probe found the site down, else since its last visit. */
 function ageOf(site: Site): string {
-  return site.down_since ? span(Date.now() / 1000 - site.down_since) : silence(site)
+  return site.down_since ? plainSpan(Date.now() / 1000 - site.down_since) : silence(site)
+}
+
+/** The chip's word: Down, Check fails (visits keep arriving), or Tracking stopped. */
+function chipOf(site: Site, down: boolean): string {
+  if (!down) return copy.chipQuiet
+  return downStateOf(site) === 'visitors' ? copy.chipCheck : copy.chipDown
 }
 
 export function StatusPanel({ site, last, down }: { site: Site; last: number; down: boolean }) {
@@ -37,6 +44,7 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
   const mute = useMute(site, can('alert.manage'))
   const probed = down ? site.down_since : undefined
   const downSince = down ? (probed ?? site.check?.down_since) : undefined
+  const chip = chipOf(site, down)
   const result = state.phase === 'done' ? state.result : undefined
   const rows = result ? rowsOf(result, site.domain) : undefined
   return (
@@ -47,7 +55,7 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
         </span>
         <b className="sgm-count">{ageOf(site)}</b>
         <span className="sgm-meta">
-          <span className="sg-chip">{down ? copy.chipDown : copy.chipQuiet}</span>
+          <span className="sg-chip">{chip}</span>
           <span className="sgm-jump">{downSince ? copy.downSince(when(downSince)) : copy.sinceVisit(when(last))}</span>
         </span>
       </header>

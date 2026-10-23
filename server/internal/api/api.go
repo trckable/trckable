@@ -77,10 +77,17 @@ type API struct {
 	// AnswerMax the questions a site may keep.
 	AnswerEngines []string
 	AnswersWake   func(site string)
-	AnswerBudget  int
-	AnswerMax     int
-	AnswerRuns    int // asks per question and engine in a round, to show progress
-	lookAlike     lookAlikeGate
+	// ProbeNow looks at a site's homepage now, off the schedule; force skips
+	// the least time between two such looks. Set by the server, which owns
+	// the prober; nil does nothing (tests).
+	ProbeNow func(site string, force bool)
+	// Resolve says whether a name exists in DNS; nil leaves a new domain
+	// unchecked (tests, offline).
+	Resolve      func(ctx context.Context, host string) bool
+	AnswerBudget int
+	AnswerMax    int
+	AnswerRuns   int // asks per question and engine in a round, to show progress
+	lookAlike    lookAlikeGate
 	// PurgeAnalytics removes a site's rows from the analytics store. It runs on
 	// the writer's connection (the only one allowed to write DuckDB); nil while
 	// the store is still warming up, and deleting a site then is refused.
@@ -1157,7 +1164,8 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 		// seal and the site switcher need no request of their own.
 		last.Verified = a.verifiedOf(r.Context(), last.SiteInfo)
 		if p, ok := downs[s.ID]; ok {
-			out[len(out)-1].DownSince, out[len(out)-1].DownCause = p.DownSince, p.Error
+			out[len(out)-1].SetDown(p)
+			a.recheckIfContradicted(s.ID, out[len(out)-1].SiteInfo)
 		}
 		out[len(out)-1].ProbeBlockedSince = blocked[s.ID]
 		out[len(out)-1].UptimePaused = paused[s.ID]
@@ -1198,7 +1206,8 @@ func (a *API) site(w http.ResponseWriter, r *http.Request) {
 	if p, err := a.Ctl.ProbeOf(r.Context(), si.ID); err == nil {
 		si.ProbeBlockedSince = p.BlockedSince
 		if p.Down() {
-			si.DownSince, si.DownCause = p.DownSince, p.Error
+			si.SetDown(p)
+			a.recheckIfContradicted(si.ID, si)
 		}
 	}
 	writeJSON(w, http.StatusOK, si)

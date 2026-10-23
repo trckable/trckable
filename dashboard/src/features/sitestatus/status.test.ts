@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Site } from '../../lib/api'
-import { statusOf } from './status'
+import { downStateOf, statusOf } from './status'
 import { silence, span } from './time'
 
 const NOW = 1_800_000_000_000
@@ -11,6 +11,15 @@ describe('a site the uptime probe finds not answering', () => {
   it('is down even while visits are still coming in', () => {
     expect(statusOf(site({ last_event_at: sec - 60, down_since: sec - 600 }), NOW)).toBe('down')
     expect(statusOf(site({ down_since: sec - 600 }), NOW)).toBe('down')
+  })
+})
+
+describe('how a down site is told', () => {
+  it('is down when nobody is known to get through, and a failing check when visitors still arrive', () => {
+    expect(downStateOf(site())).toBeUndefined()
+    expect(downStateOf(site({ down_since: sec - 600 }))).toBe('down')
+    expect(downStateOf(site({ down_since: sec - 600, down_visitors: true }))).toBe('visitors')
+    expect(downStateOf(site({ down_visitors: true }))).toBeUndefined()
   })
 })
 

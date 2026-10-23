@@ -144,6 +144,8 @@ export interface Site {
   cookieless?: boolean
   /** Set while the server's uptime probe finds the site not answering: since when (unix seconds) and why, in plain words. */
   down_since?: number
+  /** With down_since: visits arrived after it, so the check fails while people get through. */
+  down_visitors?: boolean
   /** At least one mention was found, so a screen asks for them only then. */
   mentions?: boolean
   /** The server asks the AI assistants (an engine key is set), so a screen offers Answers. */

@@ -4,7 +4,7 @@
 import { lazy, Suspense, useRef, useState } from 'react'
 import { Tooltip } from '../kit/Tooltip'
 import type { Site } from '../lib/api'
-import { quietSites, statusOf } from '../features/sitestatus/status'
+import { downStateOf, quietSites, statusOf } from '../features/sitestatus/status'
 import { copy as status } from '../features/sitestatus/copy'
 import { useServerStatus } from '../lib/serverStatus'
 import { AnchoredPop } from './AnchoredPop'
@@ -28,9 +28,11 @@ export default function ServerStatus({ sites }: { sites: Site[] }) {
     state = 'quiet'
   }
   if (siteDown) {
-    label = t.siteDown(down.map((s) => s.name || s.domain), down.length === 1 ? down[0].down_cause : undefined)
-    tip = t.siteDownTip
-    state = 'down'
+    const names = down.map((s) => s.name || s.domain)
+    const checkOnly = down.every((s) => downStateOf(s) === 'visitors') // only our check fails: amber, not red
+    label = checkOnly ? t.siteCheck(names) : t.siteDown(names, down.length === 1 ? down[0].down_cause : undefined)
+    tip = checkOnly ? t.siteCheckTip : t.siteDownTip
+    state = checkOnly ? 'quiet' : 'down'
   }
   let affected: Site[] = []
   if (siteDown) affected = [...down, ...quiet]

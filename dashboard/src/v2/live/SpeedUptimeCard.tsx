@@ -11,6 +11,8 @@ import { EmptyBlock } from './EmptyBlock'
 import { CardSkeleton } from './CardSkeleton'
 import { pausedWords } from './health'
 import { loading, type Health } from './useHealth'
+import { plainSpan } from '../../lib/plainSpan'
+import { downStateOf } from '../../features/sitestatus/status'
 import './liveUptime.css'
 import type { DayState } from '../../features/incidents/model'
 
@@ -104,11 +106,12 @@ function UptimeBlock({ site, up, down }: { site: Site; up?: Health['uptime']; do
 }
 
 function DownBody({ site, since, health }: { site: Site; since: number; health: Health }) {
+  const checkOnly = downStateOf(site) === 'visitors'
   return (
     <>
-      <button type="button" className="lhbig bad" onClick={() => incidents(site)}>
-        <b>{h.down}</b>
-        <span>{h.downSince(clock(since * 1000, site.timezone), site.down_cause ?? '')}</span>
+      <button type="button" className={`lhbig ${checkOnly ? 'warn' : 'bad'}`} onClick={() => incidents(site)}>
+        <b>{checkOnly ? h.checkFails : h.down}</b>
+        <span>{(checkOnly ? h.checkSince : h.downSince)(clock(since * 1000, site.timezone), site.down_cause ?? '')}</span>
       </button>
       <UptimeBlock site={site} up={health.uptime} down />
     </>
@@ -135,11 +138,14 @@ function body(site: Site, health: Health, downSince?: number) {
 
 export function SpeedUptimeCard({ site, health, now, downSince }: Props) {
   const down = downSince !== undefined
-  const minutes = down ? Math.max(0, Math.round((now - downSince * 1000) / 60_000)) : 0
+  const span = down ? plainSpan((now - downSince * 1000) / 1000) : ''
+  const checkOnly = down && downStateOf(site) === 'visitors'
+  let tone = ''
+  if (down) tone = checkOnly ? ' warn' : ' bad'
   return (
-    <section className={`mk-card lcard lhc${down ? ' bad' : ''}`} aria-label={h.speedUptime}>
+    <section className={`mk-card lcard lhc${tone}`} aria-label={h.speedUptime}>
       <div className="ph">
-        <span className={down ? 'lhdown' : 't'}>{down ? h.downFor(minutes) : h.speedUptime}</span>
+        <span className={down ? 'lhdown' : 't'}>{down ? (checkOnly ? h.checkFor : h.downFor)(span) : h.speedUptime}</span>
       </div>
       <div className="pb lhbody">{body(site, health, downSince)}</div>
     </section>

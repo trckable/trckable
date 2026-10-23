@@ -7,6 +7,7 @@ export const copy = defineCopy('sitestatus', {
   list: 'Sites that need a look',
   listBack: 'All of them',
   chipDown: 'Down',
+  chipCheck: 'Check fails',
   chipQuiet: 'Tracking stopped',
   badge: (down: boolean, age: string) => `${down ? 'Down' : 'Quiet'} · ${age}`,
   backBadge: (gap: string) => `Back · gap of ${gap}`,

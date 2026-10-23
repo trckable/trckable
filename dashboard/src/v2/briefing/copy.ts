@@ -145,7 +145,7 @@ export const copy = defineCopy('briefing', {
   whyScoreOpen: 'How is this worked out?',
   clear: 'no downtime',
   downNow: 'not answering now',
-  downFor: (min: number) => `down ${min} min`,
+  downFor: (span: string) => `down ${span}`,
   // The chart.
   aboveBand: (n: number, of: number, unit: string) => `above the usual band for ${n} of ${of} ${unit}`,
   belowBand: (n: number, unit: string) => `below the usual band for ${n} ${unit}`,

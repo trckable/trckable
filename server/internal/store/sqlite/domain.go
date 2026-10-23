@@ -106,6 +106,18 @@ func (s *Store) ChangeDomain(ctx context.Context, site, domain, author string, n
 	if _, err := tx.ExecContext(ctx, `DELETE FROM site_check WHERE site_id = ?`, site); err != nil {
 		return out, err
 	}
+	// So does the uptime look: a site that was down at the old address is not
+	// down at the new one until a look there says so, and the down incident
+	// of the old address ends now.
+	if _, err := tx.ExecContext(ctx, `DELETE FROM site_probe WHERE site_id = ?`, site); err != nil {
+		return out, err
+	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM site_probe_log WHERE site_id = ?`, site); err != nil {
+		return out, err
+	}
+	if _, err := tx.ExecContext(ctx, `UPDATE incidents SET ended_at = max(started_at, ?) WHERE site_id = ? AND kind = 'down' AND ended_at IS NULL`, now.Unix(), site); err != nil {
+		return out, err
+	}
 	loc, lerr := time.LoadLocation(zone)
 	if lerr != nil {
 		loc = time.UTC

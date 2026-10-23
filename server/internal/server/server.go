@@ -57,11 +57,14 @@ var Version = "0.7.25" // the VERSION file; release builds stamp it too
 
 // Server is a running trckable instance.
 type Server struct {
-	cfg     config.Config
-	judge   atomic.Pointer[mentionJudge] // the optional yes/no check on a mention (SetMentionJudge)
-	answers *answerAsker                 // nil when Answers is off (no key, or TRCKABLE_ANSWERS_EVERY=0)
-	ctl     *sqlite.Store
-	notices *notice.Hub // every notice and alert that must reach someone (notices.go)
+	cfg      config.Config
+	rechecks recheckGate // unscheduled looks at a site, at most one in five minutes (uptime_now.go)
+	nowOnce  sync.Once
+	nowP     *prober
+	judge    atomic.Pointer[mentionJudge] // the optional yes/no check on a mention (SetMentionJudge)
+	answers  *answerAsker                 // nil when Answers is off (no key, or TRCKABLE_ANSWERS_EVERY=0)
+	ctl      *sqlite.Store
+	notices  *notice.Hub // every notice and alert that must reach someone (notices.go)
 	// thresholdCount is what a threshold alert counts; nil reads the stores (threshold.go). Tests replace it.
 	thresholdCount func(ctx context.Context, a sqlite.Alert, info sqlite.SiteInfo, from, now time.Time) (float64, error)
 	log            *wal.Log
@@ -294,6 +297,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	}
 	ctl.RecoveryUsed = a.TellRecovery
 	a.SendWeekly = s.sendWeeklyNow
+	a.ProbeNow, a.Resolve = s.probeNow, domainExists
 	a.OnSurge = s.tellSurge
 	if len(cfg.OIDC) > 0 {
 		if cfg.BaseURL == "" {

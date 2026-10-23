@@ -84,6 +84,9 @@ func failDomain(w http.ResponseWriter, err error) {
 	}
 }
 
+// noSuchDomain is what a new address that is not in DNS is told.
+const noSuchDomain = "This address doesn't exist yet. Check the spelling."
+
 // validNewDomain is the address as it would be kept, or why it cannot be:
 // the rules of adding a site, and not an address the account already has.
 func (a *API) validNewDomain(r *http.Request, site, typed string) (string, error) {
@@ -111,7 +114,18 @@ func (a *API) validNewDomain(r *http.Request, site, typed string) (string, error
 	} else if taken {
 		return "", sqlite.ErrExists
 	}
+	if a.Resolve != nil && !a.Resolve(r.Context(), domain) {
+		return "", errors.New(noSuchDomain)
+	}
 	return domain, nil
+}
+
+// recheckIfContradicted asks for a new look at a site our checks find down
+// while its visitors keep arriving: one of the two is out of date.
+func (a *API) recheckIfContradicted(site string, si sqlite.SiteInfo) {
+	if si.DownVisitors && a.ProbeNow != nil {
+		a.ProbeNow(site, false)
+	}
 }
 
 // siteDomain answers Settings: the domain, the former addresses, the Search
@@ -160,6 +174,9 @@ func (a *API) changeDomain(w http.ResponseWriter, r *http.Request) {
 	}
 	a.tellOwners(r, notice.DomainChanged, site, notice.Vars{"old": ch.Old, "domain": ch.New})
 	a.cache.purgeSite(site)
+	if a.ProbeNow != nil {
+		a.ProbeNow(site, true) // the new address answers or not: say so now, not at the next round
+	}
 	st, err := a.domainStateOf(r, site)
 	if err != nil {
 		failDomain(w, err)

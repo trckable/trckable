@@ -60,7 +60,7 @@ export const copy = defineCopy('v2explore', {
   asUsual: 'as usual',
   higher: 'higher than usual',
   noDowntime: 'no downtime',
-  downFor: (n: number) => `down ${n} min`,
+  downFor: (span: string) => `down ${span}`,
   checksOff: 'checks are off',
   now: 'now',
   channel: 'Channel',

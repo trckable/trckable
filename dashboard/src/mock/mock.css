@@ -612,6 +612,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk.phone .lkc.big{min-height:176px}
 .mk.phone .lkc .lkgo,.mk.phone .lkc-o .how{height:44px}
 /* The "Why?" in the down notice sits in the line, so the notice is as tall as the walkthrough's. */
+.mk .downbox.warn{background:color-mix(in srgb,var(--mk-amber) 14%,transparent);color:var(--mk-amber)}
 .mk .downbox .lk3{padding:0;line-height:inherit;height:auto;vertical-align:baseline;font:inherit}
 .mk .ck2{color:var(--mk-lime);flex:none}
 .mk .setups{display:flex;flex-direction:column;gap:var(--mk-s2)}
@@ -1874,6 +1875,9 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 .mk .lhc.bad{border-color:var(--mk-redL);background:var(--mk-redD)}
 .mk .lhc.bad .lhaxis{color:var(--mk-muted)}
 .mk .lhdown{color:var(--mk-red);font-weight:600}
+.mk .lhc.warn{border-color:color-mix(in srgb,var(--mk-amber) 40%,transparent);background:color-mix(in srgb,var(--mk-amber) 12%,transparent)}
+.mk .lhc.warn .lhdown,.mk .lhbig.warn b{color:var(--mk-amber)}
+.mk .lhc.warn .lhaxis{color:var(--mk-muted)}
 .mk .lhbig{display:flex;flex-direction:column;gap:var(--mk-s2);margin-top:var(--mk-s3)}
 .mk .lhbig b{font-size:56px;font-weight:600;letter-spacing:-.04em;line-height:1;color:var(--mk-red)}
 .mk .lhbig span{font-size:13px;color:var(--mk-muted)}
