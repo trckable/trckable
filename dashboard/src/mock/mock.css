@@ -1526,7 +1526,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .mfoot.sfoot .mi{width:auto;font-size:14px;min-height:var(--mk-h)}
 /* 600 to 839 px (the sm step): no phone bar, but too narrow for one row: the header wraps, the views take a row of their own below, and the bell stays. */
 @container (--pane-min-601) and (--pane-max-700){
-.mk .hd{flex-wrap:wrap;height:auto;min-height:0;position:static;margin:0;padding:0;box-sizing:border-box;row-gap:var(--mk-s2)}
+.mk .hd{flex-wrap:wrap;height:auto;min-height:0;margin:0 calc(var(--mk-s4) * -1);padding:var(--mk-s2) var(--mk-s4);box-sizing:border-box;row-gap:var(--mk-s2)}
 .mk #views{order:9;flex:0 0 100%;width:100%}
 .mk .mk-seg{height:var(--mk-h);padding:2px}
 .mk .mk-seg button{height:calc(var(--mk-h) - 6px);font-size:13px}
