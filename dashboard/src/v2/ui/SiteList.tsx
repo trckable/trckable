@@ -155,13 +155,13 @@ export function SiteList(p: SiteListProps) {
         {found && <ul className="site-group">{found.map((s) => item(s, { kind: 'rest' }))}</ul>}
         {found?.length === 0 && <p className="mk-quiet sites-none">{menu.noMatch(q)}</p>}
         {!found &&
-          sections.map((sec) => {
+          sections.map((sec, at) => {
             const key = placeKey(sec.place)
             const shut = folded.has(key)
             const headed = sec.place.kind !== 'rest' || sections.length > 1
             return (
               <section key={key} className="site-section" data-section={key} aria-label={sec.place.kind === 'group' ? sec.place.name : undefined}>
-                {headed && <SiteHead place={sec.place} count={sec.sites.length} shut={shut} onFold={() => fold(key)} arrange={arrange} />}
+                {headed && <SiteHead place={sec.place} column={at === 0 && numbers !== null} shut={shut} onFold={() => fold(key)} arrange={arrange} />}
                 {!shut && (
                   <ul className="site-group">
                     {sec.sites.map((s) => item(s, sec.place))}

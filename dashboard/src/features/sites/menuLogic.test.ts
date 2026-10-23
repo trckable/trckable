@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Site } from '../../lib/api'
-import { clashes, clashing, hasFinder, teamTotal } from './menuLogic'
+import { clashes, clashing, hasFinder, problemCounts, teamTotal } from './menuLogic'
 
 const site = (id: string, domain: string, name = ''): Site => ({ id, domain, name, timezone: 'UTC', currency: 'USD', proxy_key: '' })
 
@@ -40,5 +40,16 @@ describe('the total beside All sites', () => {
   it('is nothing until the numbers are here, and 0 for a team with none', () => {
     expect(teamTotal(null, [site('a', 'a.test')])).toBeNull()
     expect(teamTotal(numbers, [site('zzz', 'z.test')])).toBe(0)
+  })
+})
+
+describe('what All sites says about the sites that are not fine', () => {
+  const now = Date.now()
+  const at = (ago: number) => now / 1000 - ago
+  it('counts the down and the not verified ones, and leaves a quiet one to its grey dot', () => {
+    const quiet = { ...site('q', 'quiet.example.com'), last_event_at: at(3 * 86400) }
+    const down = { ...site('d', 'down.example.com'), last_event_at: at(60), down_since: at(7200) } as Site
+    const fresh = site('n', 'new.example.com')
+    expect(problemCounts([quiet, down, fresh], now)).toEqual({ down: 1, unverified: 1 })
   })
 })

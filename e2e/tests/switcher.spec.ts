@@ -70,7 +70,7 @@ test('pin, group, reorder by keyboard and drag, saved for the account, same orde
       const ask = page.getByRole('dialog', { name: 'New group' })
       await ask.getByLabel('Group name').fill(`Clients ${browserName}`)
       await ask.getByRole('button', { name: 'Create' }).click()
-      const fold = menu.getByRole('button', { name: new RegExp(`^Clients ${browserName}, 1 site`) })
+      const fold = menu.getByRole('button', { name: `Clients ${browserName}`, exact: true })
       await expect(fold).toHaveAttribute('aria-expanded', 'true')
       await expect.poll(async () => (await layout(page.request)).groups.map((g) => g.name)).toEqual([`Clients ${browserName}`])
       await fold.click()
@@ -115,7 +115,7 @@ test('pin, group, reorder by keyboard and drag, saved for the account, same orde
       await page.reload()
       menu = await open(page)
       await expect(menu.locator('.site-section').first().getByRole('heading', { name: 'Pinned' })).toBeVisible()
-      await expect(menu.getByRole('button', { name: new RegExp(`^Clients ${browserName}, 1 site`) })).toBeVisible()
+      await expect(menu.getByRole('button', { name: `Clients ${browserName}`, exact: true })).toBeVisible()
       // Search flattens the sections.
       await menu.getByRole('searchbox', { name: 'Find a site...' }).fill(`sw2-${tag}`)
       await expect(menu.locator('[data-site]')).toHaveCount(1)
