@@ -115,7 +115,7 @@ func (a *API) validNewDomain(r *http.Request, site, typed string) (string, error
 		return "", sqlite.ErrExists
 	}
 	if a.Resolve != nil && !a.Resolve(r.Context(), domain) {
-		return "", errors.New(noSuchDomain)
+		return "", errors.New(noSuchDomain) //nolint:staticcheck // ST1005: shown to the person as written
 	}
 	return domain, nil
 }

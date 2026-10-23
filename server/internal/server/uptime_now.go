@@ -66,5 +66,5 @@ func domainExists(ctx context.Context, host string) bool {
 	defer cancel()
 	_, err := net.DefaultResolver.LookupHost(ctx, host)
 	var dns *net.DNSError
-	return !(errors.As(err, &dns) && dns.IsNotFound)
+	return !errors.As(err, &dns) || !dns.IsNotFound
 }

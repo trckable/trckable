@@ -297,7 +297,11 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	}
 	ctl.RecoveryUsed = a.TellRecovery
 	a.SendWeekly = s.sendWeeklyNow
-	a.ProbeNow, a.Resolve = s.probeNow, domainExists
+	a.ProbeNow = s.probeNow
+	// A server that looks at no site (uptime off: offline, tests) does not ask DNS either.
+	if s.cfg.UptimeEvery > 0 {
+		a.Resolve = domainExists
+	}
 	a.OnSurge = s.tellSurge
 	if len(cfg.OIDC) > 0 {
 		if cfg.BaseURL == "" {

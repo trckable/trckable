@@ -43,7 +43,7 @@ func (c *chPlatform) Daily(context.Context, channels.Token, channels.Identity, s
 	return c.days, nil
 }
 func (c *chPlatform) Revoke(context.Context, channels.Token) { c.revoked++ }
-func (c *chPlatform) Backfill() int                          { return 90 }
+func (c *chPlatform) Backfill() int                          { return 60 }
 func (c *chPlatform) MaxStale() time.Duration                { return 28 * 24 * time.Hour }
 func (c *chPlatform) RefreshBefore() time.Duration           { return 0 }
 
