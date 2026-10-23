@@ -2006,6 +2006,7 @@ html[data-motion='off'] .mk .lswap{animation:none}
 .mk .sitelist .find-wrap>svg{left:var(--edge)}
 .mk .sitelist #siteFind{padding-left:calc(var(--edge) + 24px)}
 .mk .sitelist .site-head{padding-left:var(--edge)}
+.mk .sitelist .site-head .fold{padding:0}
 .mk .sitelist .site-head .fold>svg{opacity:.6}
 .mk .sitelist .site-head .col-head{flex:none;margin-right:var(--mk-s3);font-size:12px;font-weight:400;color:var(--mk-faint);text-align:right}
 .mk .sitelist .site-head .head-acts{flex:none;width:var(--acts);display:flex;align-items:center;justify-content:flex-end;opacity:0}
