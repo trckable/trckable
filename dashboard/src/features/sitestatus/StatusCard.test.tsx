@@ -42,6 +42,15 @@ describe('the panel of a site that stopped, and the line when visits are back', 
     expect(html).not.toContain('No visits since')
   })
 
+  it('says the check fails, not that the site is down, while visitors still arrive', () => {
+    const s = site({ last_event_at: NOW - 60, down_since: NOW - 2779 * 60, down_visitors: true })
+    const html = renderToStaticMarkup(<StatusPanel site={s} last={NOW - 60} down />)
+    expect(html).toContain('Check fails')
+    expect(html).not.toContain('>Down<')
+    expect(html).toContain('1 day 22 h')
+    expect(html).not.toContain('2779')
+  })
+
   it('says no visits since, and for how long, when the page answers', () => {
     const s = site({ last_event_at: NOW - 8 * 3600 })
     expect(renderToStaticMarkup(<StatusCard site={s} />)).toBe('')

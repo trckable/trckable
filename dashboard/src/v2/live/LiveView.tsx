@@ -11,6 +11,8 @@ import { fmtMoney, dateFmt } from '../../lib/format'
 import { channelColor } from '../../lib/palette'
 import type { Site } from '../../lib/api'
 import { WhyInline } from '../ui/WhyInline'
+import { plainSpan } from '../../lib/plainSpan'
+import { downStateOf } from '../../features/sitestatus/status'
 import { whyDown } from '../briefing/why'
 import { liveCount, liveLink } from '../../features/live/liveLink'
 import { feedOf, seriesAt } from '../../features/live/model'
@@ -108,6 +110,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   const ch = changeOf(data.visitors, data.previous)
   const src = sourceParts(data.sources)
   const down = downSince !== undefined
+  const checkOnly = !!whole && downStateOf(whole) === 'visitors' // our check fails while visitors arrive: not an outage we know of
   const pulseClass = down || !stream.connected ? 'off' : (beat && 'ev') || ''
   const at = (ms: number) => dateFmt(tag, { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone }).format(new Date(ms))
   const colorOf = (channel: string) => colors?.[channel] ?? channelColor(channel)
@@ -147,8 +150,8 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
             </Suspense>
           )}
           {down && (
-            <div className="downbox">
-              {copy.downBox(at(downSince * 1000), Math.max(0, Math.round((now - downSince * 1000) / 60_000)))}{' '}
+            <div className={`downbox${checkOnly ? ' warn' : ''}`}>
+              {(checkOnly ? copy.checkBox : copy.downBox)(at(downSince * 1000), plainSpan((now - downSince * 1000) / 1000))}{' '}
               <WhyInline why={whyDown({ domain: whole?.domain ?? '', cause: whole?.down_cause, minutes: 0, ongoing: true })} />
             </div>
           )}
@@ -182,7 +185,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
             <span className="lt">{copy.onSite}</span>
             <span className="mk-quiet lm">{copy.people(n)}</span>
           </div>
-          <FeedList key={site} rows={rows} up={upSources} clock={now} empty={down ? copy.nobodyDown : copy.nobody} onVisitor={onVisitor} cookieless={whole?.cookieless} />
+          <FeedList key={site} rows={rows} up={upSources} clock={now} empty={down && !checkOnly ? copy.nobodyDown : copy.nobody} onVisitor={onVisitor} cookieless={whole?.cookieless} />
         </section>
       </div>
       )}

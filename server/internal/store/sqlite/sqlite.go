@@ -1402,6 +1402,18 @@ func (s *Store) AllSites(ctx context.Context) ([]SiteRow, error) {
 	return s.listSites(ctx, ``)
 }
 
+// SiteRowOf is one site as the background rounds see it.
+func (s *Store) SiteRowOf(ctx context.Context, id string) (SiteRow, error) {
+	rows, err := s.listSites(ctx, `WHERE id = ?`, id)
+	if err != nil {
+		return SiteRow{}, err
+	}
+	if len(rows) == 0 {
+		return SiteRow{}, auth.ErrNotFound
+	}
+	return rows[0], nil
+}
+
 func (s *Store) listSites(ctx context.Context, where string, args ...any) ([]SiteRow, error) {
 	rows, err := s.DB.QueryContext(ctx, `SELECT id, domain, name, timezone, currency, proxy_key, last_event_at, created_at, max(created_at, coalesce((SELECT since FROM site_watch WHERE site_id = sites.id), 0)) FROM sites `+where+` ORDER BY created_at`, args...) //nolint:gosec // where is a constant fragment from the two callers above; values are bound as parameters
 	if err != nil {

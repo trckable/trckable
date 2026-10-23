@@ -141,3 +141,55 @@ func TestSitesListFailsWhenFormerHostsCannotBeRead(t *testing.T) {
 		t.Fatalf("sites list: %d", code)
 	}
 }
+
+func TestNewDomainThatIsNotInDNSIsRefused(t *testing.T) {
+	g := newRig(t)
+	owner := client()
+	g.setup(t, owner)
+	base := g.srv.URL + "/api/v1/sites/" + g.site + "/domain"
+	g.api.Resolve = func(_ context.Context, host string) bool { return host != "nowhere.example.org" }
+	var probed []bool
+	g.api.ProbeNow = func(_ string, force bool) { probed = append(probed, force) }
+
+	code, out := do(t, owner, "PUT", base, `{"domain":"nowhere.example.org"}`, csrf, "1")
+	if code != http.StatusBadRequest || out["error"] != "This address doesn't exist yet. Check the spelling." {
+		t.Fatalf("unknown name: %d %v", code, out)
+	}
+	if len(probed) != 0 {
+		t.Fatalf("a refused change looked at the site: %v", probed)
+	}
+	if code, out := do(t, owner, "PUT", base, `{"domain":"new.com"}`, csrf, "1"); code != http.StatusOK {
+		t.Fatalf("known name: %d %v", code, out)
+	}
+	if len(probed) != 1 || !probed[0] {
+		t.Fatalf("the change did not ask for a look at once: %v", probed)
+	}
+}
+
+func TestDownWithVisitorsAfterItAsksForARecheck(t *testing.T) {
+	g := newRig(t)
+	owner := client()
+	g.setup(t, owner)
+	ctx := context.Background()
+	var asked []bool
+	g.api.ProbeNow = func(_ string, force bool) { asked = append(asked, force) }
+	down := g.now.Unix() - 3600
+	for i := 0; i < sqlite.DownAfter; i++ {
+		if _, _, err := g.ctl.RecordProbe(ctx, g.site, down+int64(i), 0, 0, "DNS name not found"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	read := func() map[string]any {
+		_, out := do(t, owner, "GET", g.srv.URL+"/api/v1/sites/"+g.site, "")
+		return out
+	}
+
+	if out := read(); out["down_since"] == nil || out["down_visitors"] != nil || len(asked) != 0 {
+		t.Fatalf("down, no visitors since: %v asked %v", out, asked)
+	}
+	g.ctl.SeenSite(ctx, g.site, down+600)
+	out := read()
+	if out["down_visitors"] != true || len(asked) != 1 || asked[0] {
+		t.Fatalf("down, visitors since: %v asked %v", out, asked)
+	}
+}

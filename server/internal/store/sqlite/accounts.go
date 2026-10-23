@@ -301,6 +301,9 @@ type SiteInfo struct {
 	// words), so every screen can say so.
 	DownSince int64  `json:"down_since,omitempty"`
 	DownCause string `json:"down_cause,omitempty"`
+	// DownVisitors is set with them when visits arrived after DownSince: our
+	// checks fail but people get through, so no screen may say nobody can.
+	DownVisitors bool `json:"down_visitors,omitempty"`
 	// ProbeBlockedSince is set while the site's firewall blocks the uptime
 	// probe (unix seconds of the first blocked look): we cannot tell whether
 	// the site is up, and its visitors are not affected.
@@ -492,4 +495,11 @@ func (s *Store) CreateAccount(ctx context.Context) (string, error) {
 	id := auth.Token("acc_", 12)
 	_, err := s.DB.ExecContext(ctx, `INSERT INTO accounts (id, created_at) VALUES (?, ?)`, id, time.Now().Unix())
 	return id, err
+}
+
+// SetDown says the uptime probe finds the site not answering, and whether
+// visitors came in since it stopped: the one place that is decided.
+func (si *SiteInfo) SetDown(p SiteProbe) {
+	si.DownSince, si.DownCause = p.DownSince, p.Error
+	si.DownVisitors = si.LastEventAt > p.DownSince
 }

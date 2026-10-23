@@ -24,6 +24,14 @@ export function statusOf(s: Site, now = Date.now()): Status {
   return c && c.at > last && c.error ? 'down' : 'quiet'
 }
 
+/** How a site our checks find down is told: 'down' (nobody is known to get through) or 'visitors' (the check fails but visits keep arriving, so the check may be wrong). Undefined when the probe finds it up. The one place that is decided; every down text reads it. */
+export type DownState = 'down' | 'visitors'
+
+export function downStateOf(s: Pick<Site, 'down_since' | 'down_visitors'>): DownState | undefined {
+  if (!s.down_since) return undefined
+  return s.down_visitors ? 'visitors' : 'down'
+}
+
 export type SiteState = 'live' | 'quiet' | 'stopped' | 'new'
 
 const STATE = { new: 'new', down: 'stopped', quiet: 'quiet', ok: 'live' } as const

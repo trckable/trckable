@@ -191,3 +191,51 @@ func TestFormerHostsByAccount(t *testing.T) {
 		t.Fatalf("after the grace: %v", got)
 	}
 }
+
+func TestChangeDomainClearsTheDownStateOfTheOldAddress(t *testing.T) {
+	st, ctx, id := domainSite(t)
+	now := time.Date(2026, 10, 21, 10, 0, 0, 0, time.UTC)
+	at := now.Add(-2 * time.Hour).Unix()
+	for i := int64(0); i < DownAfter; i++ {
+		if _, _, err := st.RecordProbe(ctx, id, at+i, 0, 0, "DNS name not found"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := st.StartIncident(ctx, id, "down", at, "DNS name not found"); err != nil {
+		t.Fatal(err)
+	}
+	if p, _ := st.ProbeOf(ctx, id); !p.Down() {
+		t.Fatalf("setup: %+v", p)
+	}
+	if _, err := st.ChangeDomain(ctx, id, "new.com", "", now); err != nil {
+		t.Fatal(err)
+	}
+	if p, _ := st.ProbeOf(ctx, id); p.At != 0 || p.Failures != 0 || p.Down() {
+		t.Fatalf("the old address's failures stand for the new one: %+v", p)
+	}
+	if log, _ := st.ProbeLog(ctx, id, 10); len(log) != 0 {
+		t.Fatalf("probe log: %+v", log)
+	}
+	if open, _ := st.OpenIncident(ctx, id); open != nil {
+		t.Fatalf("incident still open: %+v", open)
+	}
+	list, _ := st.Incidents(ctx, id, 5, 0, 0, 0)
+	if len(list) != 1 || list[0].EndedAt == nil || *list[0].EndedAt != now.Unix() {
+		t.Fatalf("incident: %+v", list)
+	}
+	// The next look at the new address starts from nothing.
+	if _, after, _ := st.RecordProbe(ctx, id, now.Unix()+1, 200, 80, ""); after.Failures != 0 || after.Down() {
+		t.Fatalf("after: %+v", after)
+	}
+}
+
+func TestSetDownSaysWhetherVisitorsCameAfter(t *testing.T) {
+	p := SiteProbe{DownSince: 1000, Error: "x", Failures: DownAfter}
+	quiet := SiteInfo{LastEventAt: 900}
+	quiet.SetDown(p)
+	busy := SiteInfo{LastEventAt: 1500}
+	busy.SetDown(p)
+	if quiet.DownSince != 1000 || quiet.DownCause != "x" || quiet.DownVisitors || !busy.DownVisitors {
+		t.Fatalf("quiet %+v busy %+v", quiet, busy)
+	}
+}

@@ -4,6 +4,7 @@
 // everywhere else. Pure: model.test.ts.
 import type { Filter, Point, Result, Row } from '../../lib/api'
 import { fmtFixed, fmtInt } from '../../lib/format'
+import { plainSpan } from '../../lib/plainSpan'
 import { baseEnough, MAX_TIMES, tooFew } from '../../lib/thin'
 import { KNOWN } from '../../features/markers/sources'
 import { copy } from './copy'
@@ -278,10 +279,10 @@ export function uptimeScore(o: { pct: number | null; downNow: boolean; downMin: 
   if (o.paused) return { key: 'uptime', value: null, verdict: 'paused', words: copy.checksPaused }
   if (o.off) return { key: 'uptime', value: null, verdict: 'off', words: copy.checksOff }
   const value = clamp(100 - o.downMin * 3)
-  if (o.downNow) return { key: 'uptime', value, verdict: 'down', words: copy.downFor(o.downMin) }
+  if (o.downNow) return { key: 'uptime', value, verdict: 'down', words: copy.downFor(plainSpan(o.downMin * 60)) }
   if (o.pct === null) return { key: 'uptime', value: null, verdict: 'none', words: '' }
   if (o.pct >= 100) return { key: 'uptime', value: 100, verdict: 'clear', words: copy.clear }
-  return { key: 'uptime', value, verdict: 'lost', words: copy.downFor(o.downMin) }
+  return { key: 'uptime', value, verdict: 'lost', words: copy.downFor(plainSpan(o.downMin * 60)) }
 }
 
 /** The ring's number: traffic counts for 40, engagement for 25 and uptime for 35, one that cannot be told as if nothing were wrong with it. Null while the site is down, or when none can be told. */

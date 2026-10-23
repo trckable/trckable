@@ -7,9 +7,10 @@ import { StateDot } from '../sites/StateDot'
 import { copy } from './copy'
 import { StatusPanel } from './StatusCard'
 import { statusOf } from './status'
-import { silence, span } from './time'
+import { plainSpan } from '../../lib/plainSpan'
+import { silence } from './time'
 
-const age = (s: Site) => (s.down_since ? span(Date.now() / 1000 - s.down_since) : silence(s))
+const age = (s: Site) => (s.down_since ? plainSpan(Date.now() / 1000 - s.down_since) : silence(s))
 
 export default function StatusList({ sites }: { sites: Site[] }) {
   const [pick, setPick] = useState<Site | null>(sites.length === 1 ? sites[0] : null)

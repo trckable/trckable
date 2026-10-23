@@ -79,7 +79,7 @@ func (m *Manager) Connect(ctx context.Context, team, platform string, t Token, w
 	if err != nil {
 		return sqlite.SocialAccount{}, err
 	}
-	a := sqlite.SocialAccount{ID: id, AccountID: team, Platform: platform, ExternalID: who.ID, AppUserID: who.AppID, Handle: who.Handle, AccessEnc: access, RefreshEnc: refresh, Expires: t.Expires.Unix()}
+	a := sqlite.SocialAccount{ID: id, AccountID: team, Platform: platform, ExternalID: who.ID, AppUserID: who.AppID, Handle: who.Handle, AccessEnc: access, RefreshEnc: refresh, Expires: t.Expires.Unix(), Created: m.Now().Unix()}
 	if err := m.Store.SocialSave(ctx, a); err != nil {
 		return a, err
 	}

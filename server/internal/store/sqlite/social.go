@@ -98,14 +98,15 @@ func (s *Store) SocialIDOf(ctx context.Context, account, platform, external stri
 }
 
 // SocialSave adds an account or replaces the tokens and handle of the one
-// with this id, and clears whatever error it had.
+// with this id, and clears whatever error it had. Created is kept from the
+// first save.
 func (s *Store) SocialSave(ctx context.Context, a SocialAccount) error {
 	_, err := s.DB.ExecContext(ctx, `
 		INSERT INTO social_accounts (id, account_id, platform, external_id, app_user_id, handle, access_enc, refresh_enc, expires_at, created_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET handle = excluded.handle, app_user_id = excluded.app_user_id, access_enc = excluded.access_enc,
 			refresh_enc = excluded.refresh_enc, expires_at = excluded.expires_at, last_error = ''`,
-		a.ID, a.AccountID, a.Platform, a.ExternalID, a.AppUserID, a.Handle, a.AccessEnc, a.RefreshEnc, a.Expires, time.Now().Unix())
+		a.ID, a.AccountID, a.Platform, a.ExternalID, a.AppUserID, a.Handle, a.AccessEnc, a.RefreshEnc, a.Expires, a.Created)
 	return err
 }
 

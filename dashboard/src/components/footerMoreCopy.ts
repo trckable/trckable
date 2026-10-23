@@ -4,6 +4,8 @@ import { defineCopy } from '../i18n'
 export const footerMoreCopy = defineCopy('footerMore', {
   feedback: 'Feedback',
   siteDown: (names: string[], why?: string) => (names.length === 1 ? `${names[0]} is down${why ? `: ${why}` : ''}` : `${names.length} sites are down`),
+  siteCheck: (names: string[]) => (names.length === 1 ? `${names[0]}: our check fails, visitors still arrive` : `${names.length} sites fail our check, visitors still arrive`),
+  siteCheckTip: 'The server cannot open this site just now, yet visits keep arriving, so the check itself may be wrong. trckable looks again on its own.',
   siteDownTip: 'The server cannot open this site just now. Everything recorded before is kept, and trckable looks again on its own.',
   siteQuiet: (n: number) => (n === 1 ? '1 site quiet' : `${n} sites quiet`),
   siteQuietTip: 'No visits for hours on this site. The server still reaches it, so this is about traffic, not an outage.',

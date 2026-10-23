@@ -2,6 +2,7 @@
 import type { Report, Result, Row as ApiRow } from '../../../lib/api'
 import { fmtDay, type ISODate } from '../../../lib/dates'
 import { countryName, fmtFixed, fmtInt, fmtPct } from '../../../lib/format'
+import { plainSpan } from '../../../lib/plainSpan'
 import { channelLabel } from '../../../lib/palette'
 import { baseEnough, tooFew } from '../../../lib/thin'
 import { sourceName } from '../../briefing/model'
@@ -85,9 +86,8 @@ export function mapOverview(r: Report, o: { money?: (minor: number) => string; u
 
 function uptimeKc(u: Uptime | null): Kc {
   const down = (u?.lost ?? 0) > 0
-  const mins = Math.round((u?.lost ?? 0) / 60)
   let note = copy.noDowntime
-  if (down) note = copy.downFor(mins)
+  if (down) note = copy.downFor(plainSpan(u?.lost ?? 0))
   if (u === null || u.pct === null) note = copy.checksOff
   return {
     icon: 'uptime',
