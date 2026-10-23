@@ -52,24 +52,20 @@ function Foot({ s, c }: { s: Story; c: CardCtx }) {
     </button>
   )
   const extra = s.extra && !isShared() ? [{ key: 'extra', label: s.extra.t, onClick: () => c.onExtra(s), hook: 'data-extra' }] : []
-  const items: CardMenuItem[] = [...(isShared() ? [] : [{ key: 'watch', label: w ? copy.watching : copy.watch, onClick: () => c.onWatch(s), hook: 'data-watch' }]), ...extra, { key: 'deeper', label: copy.deeper, onClick: () => c.onDeeper(s), hook: 'data-deeper' }]
+  const watchItem: CardMenuItem[] = isShared() ? [] : [{ key: 'watch', label: w ? copy.watching : copy.watch, onClick: () => c.onWatch(s), hook: 'data-watch' }]
   const act = s.act && !isShared() && (
     <button type="button" className={`xb cact${dn ? ' done' : ''}`} data-ca="1" onClick={() => c.onAct(s)}>
       {dn ? doneLabel[s.act.k] || copy.doneMark : s.act.t}
     </button>
   )
-  const ask = s.ask
   // Where there is Peek, "Why?" asks it (the question already sent); without Peek the card says how it knows.
-  const how =
-    ask && askPeekNow ? (
-      <button type="button" className="gh" data-ask-peek="1" onClick={() => askPeekNow(ask)}>
-        {copy.whyQ}
-      </button>
-    ) : (
-      <button type="button" className="gh" data-hw="1" aria-expanded={c.how(s)} onClick={() => c.onHow(s)}>
-        {s.cause ? copy.whyQ : copy.how}
-      </button>
-    )
+  const peek = s.ask && askPeekNow ? s.ask : null
+  const why = { label: peek || s.cause ? copy.whyQ : copy.how, onClick: () => (peek && askPeekNow ? askPeekNow(peek) : c.onHow(s)), hook: peek ? 'data-ask-peek' : 'data-hw' }
+  const how = (
+    <button type="button" className="gh" {...{ [why.hook]: '1' }} {...(peek ? {} : { 'aria-expanded': c.how(s) })} onClick={why.onClick}>
+      {why.label}
+    </button>
+  )
   // The incident card leads with its one action, Watch and Why? stay quiet beside it, and there is no way deeper: opening the incident is it.
   if (s.key === 'uptime') {
     return (
@@ -80,10 +76,11 @@ function Foot({ s, c }: { s: Story; c: CardCtx }) {
       </div>
     )
   }
+  // Every other card keeps its one action; Why? sits in the ⋯ menu with the rest.
+  const items: CardMenuItem[] = [...watchItem, ...extra, { key: 'why', label: why.label, onClick: why.onClick, hook: why.hook }, { key: 'deeper', label: copy.deeper, onClick: () => c.onDeeper(s), hook: 'data-deeper' }]
   return (
     <div className="ic-f">
       {act}
-      {how}
       <CardMenu id={s.key} items={items} />
     </div>
   )
@@ -146,15 +143,19 @@ export function Card({ s, wide, c }: { s: Story; wide: boolean; c: CardCtx }) {
         <h3>
           <b>{s.head}</b>
           {s.rest}
+          {s.key === 'search' && <CardSeal verified={c.verified} topic={s.key} />}
         </h3>
         <span className="ic-val">{s.val}</span>
         {CHEV}
       </div>
       <Visual s={s} />
-      <div className="ic-w">
-        <span>{s.why}</span>
-        <CardSeal verified={c.verified} topic={s.key} />
-      </div>
+      {/* The goal rows already say the number and its usual, so the card adds no line of its own. */}
+      {s.key !== 'goals' && (
+        <div className="ic-w">
+          <span>{s.why}</span>
+          {s.key !== 'search' && <CardSeal verified={c.verified} topic={s.key} />}
+        </div>
+      )}
       <Also s={s} c={c} />
       <Foot s={s} c={c} />
       <How s={s} />

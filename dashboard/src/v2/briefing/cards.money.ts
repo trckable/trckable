@@ -1,11 +1,10 @@
 // The cards that come from outside the visits: what was sold, what Google sent, and a page people got stuck on. Each
 // reads real answers (the payments, Search Console, the page's heatmap) and says nothing without them. Pure: cards.money.test.ts.
 import type { Money, SearchRow } from '../../lib/api'
-import { averagePosition } from '../../lib/searchPosition'
 import type { Buyer, Refunds } from '../../features/extras/extrasApi'
 import { countryName, flag, fmtInt, fmtFixed } from '../../lib/format'
 import { copy } from './cards.copy'
-import type { Story } from './cards'
+import type { Story, Vis } from './cards'
 import { sourceName } from './model'
 import type { FirstFrom, FunnelStory, SearchStory, Stuck } from './useExtras'
 import { bandFromBefore, judge, type Band } from './usual'
@@ -155,14 +154,15 @@ interface SearchIn {
   rule: string
 }
 
-const pct1 = (x: number) => `${fmtFixed(x * 100, x > 0 && x < 0.1 ? 1 : 0)}%`
-/** A query that is new, or rose or fell against what it sent the period before: the mark by it. */
-const mark = (r: SearchRow, was: SearchRow | undefined): { cls: 'up' | 'dn' | undefined; flag: string } => {
-  if (!was) return { cls: 'up', flag: '+' }
-  const b = bandFromBefore(was.clicks)
-  const st = b ? judge(r.clicks, b) : ''
-  if (st === 'up') return { cls: 'up', flag: '▲' }
-  return st === 'dn' ? { cls: 'dn', flag: '▼' } : { cls: undefined, flag: '' }
+/** The queries as a plain list of query, position and clicks: the one the card is about leads, then the most clicked. */
+export function queryList(rows: SearchRow[], lead: string): Extract<Vis, { k: 'rcpt' }> {
+  const first = rows.filter((r) => r.key === lead)
+  const rest = rows.filter((r) => r.key !== lead).sort((a, b) => b.clicks - a.clicks)
+  return {
+    k: 'rcpt',
+    plain: true,
+    rows: [...first, ...rest].slice(0, 4).map((r, n) => ({ l: `“${r.key}”`, t: copy.pos(fmtFixed(r.position, 1)), a: fmtInt(r.clicks), lead: n === 0 })),
+  }
 }
 
 /** One card about the searches: a query that is new, or the one that moved furthest from what it sent the period before. */
@@ -180,23 +180,17 @@ export function searchCard(i: SearchIn): Story | null {
       return b && st ? [{ r, w: w as SearchRow, b, st, d: Math.abs(r.clicks - b.c) }] : []
     })
     .sort((a, b) => b.d - a.d)[0]
-  const list = [...rows]
-    .sort((a, b) => b.clicks - a.clicks)
-    .slice(0, 4)
-    .map((r) => {
-      const m = mark(r, was.get(r.key))
-      return { l: `“${r.key}”`, t: copy.pos(fmtFixed(r.position, 1)), a: fmtInt(r.clicks), flag: m.flag, mark: m.cls }
-    })
-  const tot = { l: copy.clicksTot(fmtInt(cur.clicks), fmtInt(cur.impressions)), t: `${copy.ctr(pct1(cur.impressions ? cur.clicks / cur.impressions : 0))} · ${copy.avgPos(fmtFixed(averagePosition(cur.rows), 1))}`, a: '', flag: '', tot: true }
-  const base = { key: 'search' as const, vis: { k: 'rcpt' as const, rows: [...list, tot] }, deeper: { kind: 'table' as const, tab: 'search' as const }, how: `${copy.searchKnow} ${copy.searchRule}`, u: 'clicks' }
+  const base = { key: 'search' as const, deeper: { kind: 'table' as const, tab: 'search' as const }, how: `${copy.searchKnow} ${copy.searchRule}`, u: 'clicks' }
   if (fresh) {
-    return { ...base, score: 74, head: copy.rankNew(fresh.key), ask: copy.askRank(fresh.key), rest: copy.onGoogle, why: copy.newWhy(copy.clicks(fresh.clicks), fmtFixed(fresh.position, 1)), val: 'new', m: fresh.clicks, ev: '', act: { k: 'set', t: copy.alertNewSearch, msg: copy.alertNewSearchMsg } }
+    return { ...base, vis: queryList(rows, fresh.key), score: 74, head: copy.rankNew(fresh.key), ask: copy.askRank(fresh.key), rest: copy.onGoogle, why: copy.newWhy(copy.clicks(fresh.clicks), fmtFixed(fresh.position, 1)), val: 'new', m: fresh.clicks, ev: '', act: { k: 'set', t: copy.alertNewSearch, msg: copy.alertNewSearchMsg } }
   }
   if (!moved) return null
   const up = moved.st === 'up'
+  const vis = queryList(rows, moved.r.key)
   const x = moved.b.c > 0.5 ? moved.r.clicks / moved.b.c : 0
   return {
     ...base,
+    vis,
     score: up ? 76 : 79,
     bad: !up,
     head: up ? copy.searchSent(moved.r.key, copy.clicks(moved.r.clicks)) : copy.searchLost(moved.r.key, copy.clicks(moved.r.clicks)),

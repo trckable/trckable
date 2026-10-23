@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CrawlerReport, FunnelResult, Money, Report, SearchReport, WebVitals } from '../../../lib/api'
 import type { Mention as ApiMention } from '../../../features/mentions/api'
-import { searchCard } from '../../briefing/cards.money'
 import { gradeOf, leakOf, mapBots, mapFunnel, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed, stepsOf } from './mapSections'
 
 const step = (value: string, visitors: number): FunnelResult => ({ kind: 'page', value, visitors, rate: 1, of_total: 1, median_s: 0, dropped: 0 })
@@ -104,13 +103,6 @@ describe('search', () => {
       ['Position', '6.7', 'below usual', 'dn'],
     ])
     expect(s.kcs[0].detail).toBe('usual 45–76')
-  })
-  it('says the same position as the Briefing\'s search card, and labels it there', () => {
-    const prev = rep(60, 4000, [{ key: 'trckable', clicks: 60, impressions: 4000, ctr: 0.015, position: 3 }])
-    const explore = mapSearch({ query: q, pages: q, prev }).kcs[3].val
-    const card = searchCard({ story: { cur: q, prev }, domain: 'x.com', rule: '' })
-    const total = card?.vis?.k === 'rcpt' ? card.vis.rows.find((r) => r.tot) : undefined
-    expect(total?.t).toContain(`pos ${explore}`)
   })
   it('marks a query that was not there before as new, in quotes', () => {
     const s = mapSearch({ query: q, pages: q, prev: rep(60, 4000, [{ key: 'trckable', clicks: 60, impressions: 4000, ctr: 0.015, position: 3 }]) })

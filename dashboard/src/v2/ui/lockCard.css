@@ -38,3 +38,5 @@
   .mk .lkc.row { min-height: 0; }
   .mk .lkc.row .lkc-o .lkgo { min-height: 44px; height: 44px; }
 }
+/* A lone locked row runs the full width under the line above it. */
+.mk .lkcs > :only-child { grid-column: 1 / -1; }

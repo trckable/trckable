@@ -1,0 +1,1 @@
+The Briefing is tidier: the search card is a plain list led by the query it is about, each card keeps one button with Why? in the ⋯ menu, the dot strip stays on one line, and cards in a row are the same height.
