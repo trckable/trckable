@@ -1457,8 +1457,8 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk #siteList{display:flex;flex-direction:column;gap:2px;overflow:auto;overscroll-behavior:contain;min-height:0;flex:1 1 auto}
 .mk .site-group{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
 .mk .site-section{display:flex;flex-direction:column}
-.mk .site-head{margin:var(--mk-s2) 0 0;padding:var(--mk-s2) var(--mk-s3) var(--mk-s1);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--mk-faint);display:flex;align-items:center;justify-content:space-between}
-.mk .site-head .fold{display:flex;align-items:center;gap:var(--mk-s1);color:inherit;font:inherit;text-transform:inherit;letter-spacing:inherit;min-height:28px}
+.mk .site-head{margin:var(--mk-s2) 0 0;padding:var(--mk-s2) 0 var(--mk-s1) var(--mk-s3);font-size:12px;font-weight:500;color:var(--mk-faint);display:flex;align-items:center}
+.mk .site-head .fold{display:flex;align-items:center;gap:var(--mk-s1);flex:1;min-width:0;color:inherit;font:inherit;min-height:28px;text-align:left}
 .mk .site-head .fold svg{transition:transform .15s}
 .mk .site-head .fold[aria-expanded="true"] svg{transform:rotate(90deg)}
 .mk .site-row{display:flex;align-items:center;gap:0;position:relative;border-radius:var(--mk-rc)}
@@ -2000,3 +2000,15 @@ html[data-motion='off'] .mk .lswap{animation:none}
 .mk .nfact{display:flex;align-items:center;justify-content:space-between;gap:var(--mk-s2);padding:var(--mk-s1) var(--mk-s3) 0;font-size:12px;color:var(--mk-muted)}
 /* the not-installed dot is amber here, where no pill says it; on a phone the name stays (cut with an ellipsis), with the mark and its dot */
 .mk .mk-chip .mk-dot.off{background:var(--mk-amber)}
+/* One left edge for the finder, All sites, the headings, the sites and Add a site; a heading is only its name, its ⋯ shows on hover or focus (always on touch), and the first one names the column of numbers. */
+.mk .sitelist{--edge:calc(var(--mk-s3) + var(--gut) - 6px)}
+.mk .sitelist .mi.all,.mk .sitelist .mi.site,.mk .sitelist .sfoot .mi{padding-left:var(--edge)}
+.mk .sitelist .find-wrap>svg{left:var(--edge)}
+.mk .sitelist #siteFind{padding-left:calc(var(--edge) + 24px)}
+.mk .sitelist .site-head{padding-left:var(--edge)}
+.mk .sitelist .site-head .fold{padding:0}
+.mk .sitelist .site-head .fold>svg{opacity:.6}
+.mk .sitelist .site-head .col-head{flex:none;margin-right:var(--mk-s3);font-size:12px;font-weight:400;color:var(--mk-faint);text-align:right}
+.mk .sitelist .site-head .head-acts{flex:none;width:var(--acts);display:flex;align-items:center;justify-content:flex-end;opacity:0}
+.mk .sitelist .site-head:hover .head-acts,.mk .sitelist .site-head:focus-within .head-acts,.mk .sitelist .site-head .head-acts:has([aria-expanded="true"]){opacity:1}
+@media (pointer:coarse){.mk .sitelist .site-head .head-acts{opacity:1}}

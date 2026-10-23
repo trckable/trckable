@@ -29,13 +29,13 @@ export const copy = defineCopy('sites.menu', {
   quietShort: (span: string) => `quiet ${span}`,
   quietTip: (span: string) => `No visits for ${span}. Nothing looks wrong with the page.`,
 
-  // All sites: how many of the listed sites are not fine, under its name.
+  // All sites: how many of the listed sites are down or not verified, under its name (a quiet site is only its grey dot).
   downCount: (n: number) => `${n} down`,
-  quietCount: (n: number) => `${n} quiet`,
   unverifiedCount: (n: number) => `${n} not verified`,
 
   // The numbers: today's visitors per site, and both totals beside All sites.
   today: (n: string) => `${n} today`,
+  todayHead: 'Today',
   todayAll: 'Visitors today, all sites',
 
   openSite: (domain: string) => `Open ${domain}`,
@@ -54,7 +54,6 @@ export const copy = defineCopy('sites.menu', {
   groupName: 'Group name',
   create: 'Create',
   groupOptions: (g: string) => `${g}: group options`,
-  collapse: (g: string, n: number) => `${g}, ${n === 1 ? '1 site' : `${n} sites`}`,
   rename: 'Rename…',
   renameTitle: (g: string) => `Rename “${g}”`,
   save: 'Save',

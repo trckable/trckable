@@ -1,5 +1,6 @@
-// A heading in the site list: Pinned, a named group, or the other sites. A group's heading folds it and has its own ⋯ menu
-// (rename, move, remove); a site dragged onto any heading goes first under it.
+// A heading in the site list: Pinned, a named group, or the other sites, just its name. A group's heading folds it and has its own ⋯ menu
+// (rename, move, remove; shown on hover or focus, always on touch); a site dragged onto any heading goes first under it. The first heading
+// carries the small column label over the numbers.
 import { ChevronRight } from 'lucide-react'
 import { Menu } from '../../components/Menu'
 import { confirm, confirmWith } from '../../components/Confirm'
@@ -9,8 +10,17 @@ import type { Arrange } from '../../features/sites/arrange'
 
 const TITLE: Record<'pinned' | 'rest', string> = { pinned: copy.pinned, rest: copy.others }
 
-export function SiteHead({ place, count, shut, onFold, arrange: a }: { place: Place; count: number; shut: boolean; onFold: () => void; arrange: Arrange | null }) {
-  if (place.kind !== 'group') return <h3 className="site-head">{TITLE[place.kind]}</h3>
+export function SiteHead({ place, shut, onFold, arrange: a, column }: { place: Place; shut: boolean; onFold: () => void; arrange: Arrange | null; column: boolean }) {
+  const label = column ? <span className="col-head">{copy.todayHead}</span> : null
+  if (place.kind !== 'group') {
+    return (
+      <h3 className="site-head">
+        <span className="fold">{TITLE[place.kind]}</span>
+        {label}
+        <span className="head-acts" />
+      </h3>
+    )
+  }
   const name = place.name
   const rename = async () => {
     const to = (await confirmWith({ title: copy.renameTitle(name), confirmLabel: copy.save, field: { label: copy.groupName, type: 'text' } }))?.trim()
@@ -23,9 +33,11 @@ export function SiteHead({ place, count, shut, onFold, arrange: a }: { place: Pl
   return (
     <h3 className="site-head group">
       <button type="button" className="fold" aria-expanded={!shut} onClick={onFold}>
-        <ChevronRight size={14} strokeWidth={2} aria-hidden="true" />
-        <span>{copy.collapse(name, count)}</span>
+        <span>{name}</span>
+        <ChevronRight size={12} strokeWidth={2} aria-hidden="true" />
       </button>
+      {label}
+      <span className="head-acts">
       {a && (
         <Menu label={copy.groupOptions(name)}>
           {(close) => {
@@ -45,6 +57,7 @@ export function SiteHead({ place, count, shut, onFold, arrange: a }: { place: Pl
           }}
         </Menu>
       )}
+      </span>
     </h3>
   )
 }

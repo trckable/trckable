@@ -16,14 +16,7 @@ import type { Arrange } from '../../features/sites/arrange'
 import { MarkDot } from '../../features/sites/MarkDot'
 import type { SiteMove } from '../slots'
 
-/** The short word and the tip of a down or quiet site; a quiet one with no visit on record (imported history, a script seen) has no span to tell. */
-function stateWords(s: Site, down: boolean): [string, string | undefined] {
-  const span = silence(s)
-  if (down) return [copy.downShort(span), copy.downTip(span)]
-  return span ? [copy.quietShort(span), copy.quietTip(span)] : [copy.noLiveVisits, undefined]
-}
-
-/** What stands where the people on it would: "setup", or in words how long it has been down or quiet (a quiet one's dot is grey, a down one's red); else today's visitors. */
+/** What stands where the people on it would: "setup", how long it has been down (red), else today's visitors; a quiet site (grey dot) keeps its number, and its span is in the tip. */
 function Tail({ s, today }: { s: Site; today?: number }) {
   const state = dotState(s)
   if (state === 'new') {
@@ -33,18 +26,19 @@ function Tail({ s, today }: { s: Site; today?: number }) {
       </span>
     )
   }
-  if (state === 'stopped' || state === 'quiet') {
-    const down = state === 'stopped'
-    const [word, tip] = stateWords(s, down)
+  if (state === 'stopped') {
+    const span = silence(s)
     return (
-      <span className={`now state-word ${down ? 'down' : 'quiet'}`} title={tip}>
-        {word}
+      <span className="now state-word down" title={copy.downTip(span)}>
+        {copy.downShort(span)}
       </span>
     )
   }
   if (today === undefined) return null
+  const span = state === 'quiet' ? silence(s) : ''
+  const tip = span ? `${copy.today(fmtInt(today))}. ${copy.quietTip(span)}` : copy.today(fmtInt(today))
   return (
-    <span className="now" title={copy.today(fmtInt(today))}>
+    <span className="now" title={tip}>
       <b>{fmtCompact(today)}</b>
     </span>
   )

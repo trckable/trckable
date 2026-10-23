@@ -3,9 +3,9 @@ import { LayoutGrid } from 'lucide-react'
 import { fmtCompact } from '../../lib/format'
 import { copy as menu } from '../../features/sites/menuCopy'
 
-/** The sites that are not fine, said under the name, the worst first: a failing site shows here too, whatever the total says. */
-function Problems({ c }: { c: { down: number; quiet: number; unverified: number } }) {
-  const parts = [c.down > 0 && ['down', menu.downCount(c.down)], c.quiet > 0 && ['quiet', menu.quietCount(c.quiet)], c.unverified > 0 && ['quiet', menu.unverifiedCount(c.unverified)]].filter(Boolean) as string[][]
+/** The sites that are down or not verified, said under the name, the worst first: a failing site shows here too, whatever the total says. */
+function Problems({ c }: { c: { down: number; unverified: number } }) {
+  const parts = [c.down > 0 && ['down', menu.downCount(c.down)], c.unverified > 0 && ['quiet', menu.unverifiedCount(c.unverified)]].filter(Boolean) as string[][]
   if (parts.length === 0) return null
   return (
     <div className="d state-line all-problems">
@@ -19,7 +19,7 @@ function Problems({ c }: { c: { down: number; quiet: number; unverified: number 
   )
 }
 
-export function AllRow({ on, total, all, problems, onPick }: { on: boolean; total: number | null; all: string; problems?: { down: number; quiet: number; unverified: number }; onPick: () => void }) {
+export function AllRow({ on, total, all, problems, onPick }: { on: boolean; total: number | null; all: string; problems?: { down: number; unverified: number }; onPick: () => void }) {
   return (
     <button type="button" data-stop className={`mi all${on ? ' on' : ''}`} aria-current={on ? 'page' : undefined} onClick={onPick}>
       <LayoutGrid size={14} strokeWidth={1.75} aria-hidden="true" />

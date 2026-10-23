@@ -31,13 +31,12 @@ export function teamTotal(numbers: Map<string, Today> | null, sites: Site[]): nu
   return totalOf(new Map([...numbers].filter(([id]) => ids.has(id)))).visitors
 }
 
-/** How many of these sites are down, quiet or not verified yet: All sites says it under its name, so a failing site shows there too. */
-export function problemCounts(sites: Site[], now = Date.now()): { down: number; quiet: number; unverified: number } {
-  const c = { down: 0, quiet: 0, unverified: 0 }
+/** How many of these sites are down or not verified yet: All sites says it under its name, so a failing site shows there too. */
+export function problemCounts(sites: Site[], now = Date.now()): { down: number; unverified: number } {
+  const c = { down: 0, unverified: 0 }
   for (const s of sites) {
     const st = dotState(s, now)
     if (st === 'stopped') c.down++
-    else if (st === 'quiet') c.quiet++
     else if (st === 'new') c.unverified++
   }
   return c
