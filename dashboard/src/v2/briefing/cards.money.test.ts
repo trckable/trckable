@@ -86,6 +86,23 @@ describe('the search card', () => {
     expect(c?.head).toBe('“a” sent 60 clicks')
     expect(c?.rest).toContain('3.0× the period before')
   })
+  it('leads its list with the query it is about, and the footer is about that same query', () => {
+    // The new query has fewer clicks than the four before it: it still comes first, and the footer gives its clicks.
+    const cur = sr([{ key: 'a', clicks: 90 }, { key: 'b', clicks: 80 }, { key: 'c', clicks: 70 }, { key: 'd', clicks: 60 }, { key: 'fresh one', clicks: 3 }])
+    const c = searchCard({ story: { cur, prev: sr(['a', 'b', 'c', 'd'].map((key) => ({ key, clicks: 90 }))) }, domain: 'x.com', rule: '' })
+    const rows = c?.vis?.k === 'rcpt' ? c.vis.rows : []
+    expect(c?.head).toBe('You now rank for “fresh one”')
+    expect(rows[0].l).toBe('“fresh one”')
+    expect(rows[0].a).toBe('3')
+    expect(c?.why).toContain('3 clicks so far, at position 4.0')
+    expect(rows.map((r) => r.l)).toEqual(['“fresh one”', '“a”', '“b”', '“c”'])
+  })
+  it('is a plain list: no totals row and no marks', () => {
+    const c = searchCard({ story: { cur: sr([{ key: 'old', clicks: 30 }, { key: 'fresh one', clicks: 8 }]), prev: sr([{ key: 'old', clicks: 30 }]) }, domain: 'x.com', rule: '' })
+    const rows = c?.vis?.k === 'rcpt' ? c.vis.rows : []
+    expect(c?.vis).toMatchObject({ plain: true })
+    expect(rows.some((r) => r.tot || r.flag || r.mark)).toBe(false)
+  })
   it('says nothing when nothing changed', () => {
     expect(searchCard({ story: { cur: sr([{ key: 'a', clicks: 30 }]), prev: sr([{ key: 'a', clicks: 30 }]) }, domain: 'x.com', rule: '' })).toBeNull()
   })

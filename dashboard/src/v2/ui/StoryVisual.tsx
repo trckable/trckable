@@ -3,21 +3,25 @@
 import { Fragment, type ReactNode } from 'react'
 import { fmtInt } from '../../lib/format'
 import { Rng } from './RangeBar'
+import { useWidth } from '../../charts/useWidth'
+import { dotsFit } from '../briefing/dots'
 import { copy } from '../briefing/copy'
 import { copy as cardCopy } from '../briefing/cards.copy'
 import './goalRows.css'
 import type { Story, Vis } from '../briefing/cards'
 
 function Dots({ v }: { v: Extract<Vis, { k: 'dots' }> }) {
+  const { ref, w } = useWidth<HTMLDivElement>()
+  const { n, per, grey } = dotsFit(v.v, v.c, w)
   return (
     <div>
-      <div className="dots">
-        {Array.from({ length: v.n }, (_, i) => (
-          <i key={i} style={i >= v.grey ? { background: 'var(--mk-lime)' } : undefined} />
+      <div className="dots" ref={ref}>
+        {Array.from({ length: n }, (_, i) => (
+          <i key={i} style={i >= grey ? { background: 'var(--mk-lime)' } : undefined} />
         ))}
       </div>
       <div className="dotn">
-        {copy.dotsNote(v.per, v.name)}
+        {copy.dotsNote(per, v.name)}
         {copy.dotsExtra}.
       </div>
     </div>
@@ -120,9 +124,9 @@ function pictureOf(v: Vis): ReactNode {
     ))
   }
   return (
-      <div className="rcpt">
+      <div className={`rcpt${v.plain ? ' plain' : ''}`}>
         {v.rows.map((r, n) => (
-          <div className={`rr${r.more ? ' more' : ''}${r.tot ? ' tot' : ''}`} key={`${n}${r.l}`}>
+          <div className={`rr${r.more ? ' more' : ''}${r.tot ? ' tot' : ''}${r.lead ? ' lead' : ''}`} key={`${n}${r.l}`}>
             <span className={`fl${r.mark ? ` ${r.mark}m` : ''}`}>{r.flag}</span>
             <span className="rl">{r.l}</span>
             <span className="mk-rt">{r.t}</span>

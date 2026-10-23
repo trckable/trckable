@@ -204,6 +204,9 @@
 .mk .bt i.f.red{background:var(--mk-red)}
 .mk .bt u{position:absolute;top:3px;bottom:3px;background:var(--mk-wash2);border-radius:4px}
 .mk .rcpt{border:1px dashed var(--mk-dash);border-radius:12px;padding:4px 14px;background:var(--mk-faintbg2);font-variant-numeric:tabular-nums;font-size:13px}
+.mk .rcpt.plain{border:0;background:none;padding:0}
+.mk .rcpt.plain .rr .fl{display:none}
+.mk .rcpt.plain .rr.lead .rl{font-weight:700}
 .mk .rr{display:flex;gap:10px;align-items:center;padding:7px 0;min-width:0}
 .mk .rr+.rr{border-top:1px dotted var(--mk-fill)}
 .mk .rr .fl{width:20px;flex:none}
@@ -282,8 +285,8 @@
 .mk .contrib button.up b{color:var(--mk-lime)}
 .mk .mk-ring{border-radius:50%;cursor:pointer;padding:0;background:none;border:0;color:inherit}
 .mk .mk-ring:hover svg{opacity:.8}
-.mk .dots{display:flex;flex-wrap:wrap;gap:4px}
-.mk .dots i{width:9px;height:9px;border-radius:50%;background:var(--mk-dim)}
+.mk .dots{display:flex;flex-wrap:nowrap;overflow:hidden;gap:4px}
+.mk .dots i{flex:none;width:9px;height:9px;border-radius:50%;background:var(--mk-dim)}
 .mk .dotn{font-size:12px;color:var(--mk-faint);margin-top:6px}
 .mk .morebtn{align-self:flex-start;color:var(--mk-muted);font-size:13px;padding:6px 12px;border-radius:10px;border:1px solid var(--mk-line)}
 .mk .morebtn:hover{background:var(--mk-hover);color:var(--mk-text)}
@@ -1690,7 +1693,8 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .rpb+.rpb{margin-left:var(--mk-s2)}
 .mk .khint .gh{height:24px;padding:0 var(--mk-s2);border:1px solid var(--mk-line);font-size:12px}
 @container (--pane-max-600){.mk .mailrow .mt{flex:1 1 100%}.mk .mailrow .gh{flex:1}}
-.mk .cards{align-items:start}
+.mk .cards{align-items:stretch}
+.mk .icard .ic-v + .ic-f{margin-top:auto}
 
 /* The header is a bar of its own: a band of room under the controls, so the page moves under it and never touches them. The room
    is taken back from the gap below, so nothing moves down. */

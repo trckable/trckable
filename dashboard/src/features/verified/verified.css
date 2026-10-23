@@ -57,6 +57,13 @@
   color: var(--accent);
 }
 
+/* Google's mark by a card's title: small, with the name in its tooltip */
+.vf-mark {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
 /* The line a card's body gives its badge when the head is not ours (Search terms) */
 .vf-line {
   display: flex;

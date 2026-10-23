@@ -23,8 +23,8 @@ export type Act =
   | { k: 'x'; t: string }
 
 export type Vis =
-  | { k: 'rcpt'; rows: { l: string; t?: string; a?: string; flag?: string; neg?: boolean; more?: boolean; tot?: boolean; mark?: 'up' | 'dn' }[] }
-  | { k: 'dots'; n: number; per: number; grey: number; name: string }
+  | { k: 'rcpt'; plain?: boolean; rows: { lead?: boolean; l: string; t?: string; a?: string; flag?: string; neg?: boolean; more?: boolean; tot?: boolean; mark?: 'up' | 'dn' }[] }
+  | { k: 'dots'; v: number; c: number; name: string }
   | { k: 'ba'; lo: number; hi: number; c: number; v: number; red: boolean }
   | { k: 'outage'; spans: Span[]; nowAt: number; from: string; now: string }
   | { k: 'funnel'; rows: { name: string; v: number; w: number; hot: string }[] }
@@ -184,7 +184,6 @@ function sourceCard(s: Slice & { st: Judged }, i: CardsIn, total: number, topPag
   const name = sourceName(s.value)
   const r = b.c > 0.5 ? s.v / b.c : 0
   const link = `https://${i.domain}${topPage?.value ?? '/'}?ref=${encodeURIComponent(name.toLowerCase().replace(/\s+/g, ''))}`
-  const per = Math.max(1, Math.ceil(s.v / 60))
   const leave = s.bounce !== undefined ? Math.round(s.bounce * 100) : null
   return {
     key: 'sources',
@@ -194,7 +193,7 @@ function sourceCard(s: Slice & { st: Judged }, i: CardsIn, total: number, topPag
     head: up ? copy.sent(name, people(Math.round(s.v))) : copy.sentOnly(name, people(Math.round(s.v))),
     ask: copy.askSource(name, up),
     rest: sourceRest(up, r, i.low),
-    vis: up ? { k: 'dots', n: Math.max(1, Math.round(s.v / per)), per, grey: Math.min(Math.max(1, Math.round(s.v / per)), Math.round(b.c / per)), name } : { k: 'ba', lo: b.lo, hi: b.hi, c: b.c, v: s.v, red: true },
+    vis: up ? { k: 'dots', v: s.v, c: b.c, name } : { k: 'ba', lo: b.lo, hi: b.hi, c: b.c, v: s.v, red: true },
     why: `${copy.usually(rg(b), name)}${topPage ? copy.mostLanded(topPage.name) : ''}${up && !i.low && leave !== null ? copy.leave(leave) : ''}.`,
     val: fmtInt(Math.round(s.v)),
     m: s.v,

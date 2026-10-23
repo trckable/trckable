@@ -8,10 +8,18 @@ import './verified.css'
 
 const TEXT: Record<Slot, string> = { revenue: copy.badgeText.payments, search: copy.badgeText.search }
 
-export function SourceChip({ verified, slot }: { verified?: Verified; slot: Slot }) {
+export function SourceChip({ verified, slot, compact }: { verified?: Verified; slot: Slot; compact?: boolean }) {
   const s = proofFor(verified, slot)
   if (!s) return null
   const text = TEXT[slot]
+  // Compact: only the source's mark, its name in the tooltip.
+  if (compact) {
+    return (
+      <span className="vf-mark" role="img" aria-label={copy.badge(text)} title={copy.badge(text)}>
+        <SourceMark s={s} size={13} />
+      </span>
+    )
+  }
   return (
     <span className="vf-chip" title={copy.badge(text)}>
       <SourceMark s={s} size={11} />
@@ -22,8 +30,8 @@ export function SourceChip({ verified, slot }: { verified?: Verified; slot: Slot
   )
 }
 
-/** The mark a card of the Briefing wears when its number rests on a source: the money's, or Google's own. */
+/** The mark a card of the Briefing wears when its number rests on a source: the money's pill, or Google's own small mark by the title. */
 export function CardSeal({ verified, topic }: { verified?: Verified; topic: string }) {
   if (topic === 'sales') return <SourceChip verified={verified} slot="revenue" />
-  return topic === 'search' ? <SourceChip verified={verified} slot="search" /> : null
+  return topic === 'search' ? <SourceChip verified={verified} slot="search" compact /> : null
 }
