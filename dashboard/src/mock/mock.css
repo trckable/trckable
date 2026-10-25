@@ -1474,7 +1474,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .site-row .site-open,.mk .site-row .btn.icon.ghost{display:inline-grid;place-items:center;width:32px;height:32px;min-width:32px;padding:0;border-radius:8px;color:var(--mk-faint);flex:none}
 .mk .site-row .btn.icon.ghost svg{width:16px;height:16px}
 .mk .site-row .site-open:hover,.mk .site-row .btn.icon.ghost:hover{background:var(--mk-hov);color:var(--mk-text)}
-.mk .mi.all{width:auto;margin-right:var(--acts)}
+.mk .mi.all{width:100%}
 .mk .mi .now{text-align:right;font-variant-numeric:tabular-nums}
 .mk .mi.all .all-problems{font-size:12px;color:var(--mk-faint)}
 .mk .mi.all .all-problems .down{color:var(--mk-red);font-weight:600}
@@ -1958,7 +1958,7 @@ html[data-motion='off'] .mk .lswap{animation:none}
 .mk .sitelist.reordering,.mk .sitelist.reordering *,.mk .team-rows.reordering,.mk .team-rows.reordering *{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .mk .sitelist.reordering .mi:hover,.mk .team-rows.reordering .mi:hover{background:transparent}
 /* the selected row is a soft fill only */
-.mk .sitelist .mi.on,.mk .sitelist .mi.on:hover{background:var(--mk-hov)}
+.mk .sitelist .mi.all.on,.mk .sitelist .mi.all.on:hover{background:var(--mk-row-act)}
 .mk .sitelist .mi.on .nm,.mk .sitelist .dom-row[aria-checked="true"] .nm{color:var(--mk-text)}
 /* one quiet status at the right of every row; the dot on the logo stays but muted */
 .mk .sitelist .mi .now,.mk .sitelist .mi .now.state-word,.mk .sitelist .mi .now.state-word.down,.mk .sitelist .mi .now.unverified{color:var(--mk-faint);font-weight:400;font-size:12px}
@@ -2012,3 +2012,17 @@ html[data-motion='off'] .mk .lswap{animation:none}
 .mk .sitelist .site-head .head-acts{flex:none;width:var(--acts);display:flex;align-items:center;justify-content:flex-end;opacity:0}
 .mk .sitelist .site-head:hover .head-acts,.mk .sitelist .site-head:focus-within .head-acts,.mk .sitelist .site-head .head-acts:has([aria-expanded="true"]){opacity:1}
 @media (pointer:coarse){.mk .sitelist .site-head .head-acts{opacity:1}}
+/* One hover for every row of the site menu: All sites, a site (the fill spans the row, its ↗ and ⋯ sit inside it), Add a site. The selected row wears the same fill and a bar at its left,
+   a heading only brings up its chevron and ⋯ (no box), and a key's focus has the same shape. The mouse's row is data-act (activeRow.ts), the key's is :focus-visible. */
+.mk .sitelist :is(.site-row,.site-head,.mi.all){position:relative;border-radius:var(--mk-rc)}
+.mk .sitelist .site-row .mi.site,.mk .sitelist .site-row .mi.site:is(.on,[data-act],:focus-visible){background:none;outline:0}
+.mk .sitelist .site-row:is([data-act],:has(:focus-visible),:has(.mi.on)){background:var(--mk-row-act)}
+.mk .sitelist:has([data-act]) .site-row:not([data-act]):not(:has(.mi.on)){background:none}
+.mk .sitelist .site-row.dragging{background:var(--mk-card)}
+.mk .sitelist :is(.site-row:has(.mi.on),.mi.all.on)::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:2px;border-radius:2px;background:var(--mk-lime);pointer-events:none}
+.mk .sitelist .site-head .fold:hover{background:none;color:var(--mk-text)}
+.mk .sitelist .site-head:is([data-act],:has(.fold:focus-visible)) .fold>svg{opacity:1}
+.mk .sitelist .site-head .fold:focus-visible{outline:0}
+.mk .sitelist .site-head:has(.fold:focus-visible){background:var(--mk-row-act)}
+.mk .sitelist .site-head .col-head{pointer-events:none}
+.mk .sitelist .mi.all{padding-right:calc(var(--acts) + var(--mk-s3))}
