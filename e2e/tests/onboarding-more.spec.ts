@@ -78,7 +78,7 @@ test('skip for now opens that site’s dashboard, and the first run stays away',
   await expect(run.getByRole('heading', { name: 'Which site first?' })).toBeVisible({ timeout: 15_000 })
   await run.getByLabel('Domain').fill(one)
   await page.keyboard.press('Enter')
-  await expect(run.getByRole('list', { name: 'Progress' }).locator('[aria-current="step"]')).toContainText('Add the code', { timeout: 15_000 })
+  await expect(run.locator('.ob-progress')).toContainText('Add the code', { timeout: 15_000 })
   await expect(run.getByRole('tablist', { name: 'Your sites' })).toHaveCount(0)
   if (process.env.TRCKABLE_SHOTS) await page.screenshot({ path: `${process.env.TRCKABLE_SHOTS}/onboarding-skip-${browserName}.png` })
   await run.getByRole('button', { name: 'Skip for now — open my dashboard' }).click()
@@ -92,7 +92,7 @@ test('another site: a chip each, the first visit on the second moves on, then Li
   const two = `two-${browserName}-${Date.now()}.test`
   // A fresh browser context has not skipped: the waiting site resumes at step 2.
   const run = await openRun(page)
-  await expect(run.getByRole('list', { name: 'Progress' }).locator('[aria-current="step"]')).toContainText('Add the code', { timeout: 15_000 })
+  await expect(run.locator('.ob-progress')).toContainText('Add the code', { timeout: 15_000 })
   const card = run.getByRole('region', { name: 'Install trckable' })
   await expect(run.getByRole('tablist', { name: 'Your sites' })).toHaveCount(0)
 

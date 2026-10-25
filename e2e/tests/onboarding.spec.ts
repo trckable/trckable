@@ -67,7 +67,7 @@ async function visit(page: Page, site: string) {
 
 /** The step the progress row marks as the current one. */
 async function expectStep(run: Locator, name: string) {
-  await expect(run.getByRole('list', { name: 'Progress' }).locator('[aria-current="step"]')).toContainText(name)
+  await expect(run.locator('.ob-progress')).toContainText(name)
 }
 
 /** Two elements' horizontal centres, within a few pixels. */
@@ -145,7 +145,7 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
   await expect(input).toHaveValue(domain)
   await input.focus()
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/onboarding-1-site-${browserName}.png` })
-  await expect(run.getByRole('figure', { name: `A preview of the dashboard for ${domain}` })).toBeVisible()
+  await expect(run.locator('.ob-j-site')).toContainText(domain)
   await page.keyboard.press('Enter')
 
   // Step 2: the install card, with this site's snippet.

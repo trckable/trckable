@@ -7,7 +7,8 @@ export const copy = defineCopy('onboarding', {
   skip: 'Skip for now',
   skipHint: 'Esc',
   enterKey: '↵',
-  steps: { label: 'Progress', site: 'Your site', code: 'Add the code', visit: 'First visit' },
+  progress: (at: number, of: number, name: string) => `Step ${at} of ${of}: ${name}`,
+  steps: { site: 'Your site', code: 'Add the code', visit: 'First visit' },
 
   site: {
     title: 'Which site first?',
@@ -19,16 +20,7 @@ export const copy = defineCopy('onboarding', {
     busy: 'Adding…',
     enter: 'or press Enter ↵',
   },
-  preview: {
-    label: (domain: string) => `A preview of the dashboard for ${domain}`,
-    empty: 'yoursite.com',
-    sample: 'Sample',
-    visitors: 'Visitors',
-    pageviews: 'Pageviews',
-    online: 'Online now',
-    none: '—',
-    waiting: 'Your dashboard, ready and waiting',
-  },
+  preview: { empty: 'yoursite.com' },
   install: {
     title: 'Add the code',
     sub: (domain: string) => `Paste it into the <head> of ${domain}, then open your site once.`,

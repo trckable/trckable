@@ -6,7 +6,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Check } from 'lucide-react'
 import { AccountMenu } from '../../components/AccountMenu'
-import { Figure } from '../../figures/Figure'
 import { ghostSvg } from '../../brand/logo'
 import { type Site, more, type Visit } from '../../lib/apiMore'
 import { quietOffline } from '../../lib/offline'
@@ -21,11 +20,10 @@ import { AddAnother } from './AddAnother'
 import { copy } from './copy'
 import { FirstVisit } from './FirstVisit'
 import { InstallStep } from './InstallStep'
-import { finishPath, firstVisited, stepAt, type Step } from './model'
-import { Preview } from './Preview'
+import { finishPath, firstVisited, type Step } from './model'
 import { markSkipped } from './skipped'
 import { SiteStep } from './SiteStep'
-import { Steps } from './Steps'
+import { Journey } from './Journey'
 import { SiteTabs } from './SiteTabs'
 import { SiteWatch } from './SiteWatch'
 import '../../mock/mock.css'
@@ -47,6 +45,8 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
   const [seen, setSeen] = useState<Record<string, Visit[] | undefined>>({})
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState('')
+  const [copied, setCopied] = useState(false)
+  const markCopied = useCallback(() => setCopied(true), [])
   const site = sites.find((s) => s.id === active) ?? null
   const visits = seen[active] ?? []
   const onVisits = useCallback((id: string, v: Visit[]) => setSeen((all) => (all[id] === v ? all : { ...all, [id]: v })), [])
@@ -68,6 +68,19 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
   useEffect(() => {
     quietOffline(true)
     return () => quietOffline(false)
+  }, [])
+
+  // On a phone the keyboard shrinks the visible page: the first run follows it, so Continue is never under it.
+  useEffect(() => {
+    const vv = window.visualViewport
+    const el = box.current
+    if (!vv || !el) return
+    const on = () => el.style.setProperty('--ob-h', `${vv.height}px`)
+    vv.addEventListener('resize', on)
+    return () => {
+      vv.removeEventListener('resize', on)
+      el.style.removeProperty('--ob-h')
+    }
   }, [])
 
   // A new step takes the focus to its heading (the site step's input asks
@@ -156,10 +169,9 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
           account={<AccountMenu />}
         />
       </div>
-      <Steps at={stepAt(step)} />
+      <Journey step={step} domain={shown} copied={copied} />
       <main className="ob-main" data-step={step} key={step}>
         <div className="ob-text">
-          {step === 'site' && <Figure name="computer" minWidth={641} className="ob-fig" />}
           {step === 'here' && (
             <span className="ob-check" aria-hidden="true">
               <Check size={44} strokeWidth={2.5} />
@@ -184,6 +196,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
             {sites.length > 1 && <SiteTabs sites={sites} active={active} seen={seen} onPick={setActive} />}
             <InstallStep
               key={site.id}
+              onCopy={markCopied}
               site={site}
               visits={visits}
               after={
@@ -197,7 +210,6 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
             />
           </div>
         )}
-        {step === 'site' && <Preview domain={shown} />}
       </main>
       {sites.map((s) => (
         <SiteWatch key={s.id} id={s.id} onVisits={onVisits} />
