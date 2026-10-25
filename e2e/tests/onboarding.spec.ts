@@ -65,6 +65,11 @@ async function visit(page: Page, site: string) {
   await ctx.close()
 }
 
+/** The step the progress row marks as the current one. */
+async function expectStep(run: Locator, name: string) {
+  await expect(run.getByRole('list', { name: 'Progress' }).locator('[aria-current="step"]')).toContainText(name)
+}
+
 /** Two elements' horizontal centres, within a few pixels. */
 async function expectCentred(page: Page, a: Locator, b: Locator) {
   const [x, y] = await Promise.all([a.boundingBox(), b.boundingBox()])
@@ -85,7 +90,21 @@ test('with no site the first run cannot be left, and stays on every address', as
     await page.getByLabel('Domain').fill('mysite.com')
     await page.screenshot({ path: `${SHOTS}/onboarding-375-${test.info().project.name}.png` })
   }
-  await expectCentred(page, run.getByRole('heading', { name: 'Which site first?' }), run.getByLabel('Domain'))
+  await expectCentred(page, run.getByRole('heading', { name: 'Which site first?' }), run.locator('.ob-field'))
+  // The page's main column is a plain column: no pill border across it (the step's class once collided with the site chip's).
+  const main = run.locator('main')
+  expect(await main.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('0px')
+  expect(await main.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe('0px')
+  // The header is the logo, the account and nothing about sites.
+  await expect(run.locator('#siteBtn')).toHaveCount(0)
+  await expect(run.getByRole('button', { name: /set up/i })).toHaveCount(0)
+  // A placeholder domain is refused under the field, as typed, with no toast and no Retry.
+  await run.getByLabel('Domain').fill('mybakery.example')
+  await page.keyboard.press('Enter')
+  await expect(run.locator('.field-err-msg')).toHaveText('mybakery.example is a placeholder. Enter your own site’s address.')
+  await expect(page.getByRole('button', { name: 'Retry' })).toHaveCount(0)
+  await expect(run.getByLabel('Domain')).toHaveValue('mybakery.example')
+  await run.getByLabel('Domain').fill('')
   // No way out but the account: no Skip, Esc does nothing, other addresses come back.
   await expect(run.getByRole('button', { name: /Skip/ })).toHaveCount(0)
   await page.keyboard.press('Escape')
@@ -115,7 +134,7 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
 
   const run = page.getByRole('dialog', { name: 'Set up your first site' })
   await expect(run.getByRole('heading', { name: 'Which site first?' })).toBeVisible({ timeout: 15_000 })
-  await expect(run.getByRole('img', { name: 'Step 1 of 3' })).toBeVisible()
+  await expectStep(run, 'Your site')
   await expect(run.getByRole('button', { name: /Skip/ })).toHaveCount(0)
 
   // The domain appears in the preview as it is typed; Enter adds the site.
@@ -127,11 +146,16 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
   await page.keyboard.press('Enter')
 
   // Step 2: the install card, with this site's snippet.
-  await expect(run.getByRole('img', { name: 'Step 2 of 3' })).toBeVisible({ timeout: 15_000 })
+  await expectStep(run, 'Add the code')
   const card = run.getByRole('region', { name: 'Install trckable' })
   await expect(run.getByRole('button', { name: /Check (now|again)/ })).toBeVisible()
   // One centred column: the status and the card share a horizontal centre.
-  await expectCentred(page, run.locator('.setup-status'), card)
+  // A new site that cannot be reached yet is not scolded: a calm line waits, the warning only after Check now.
+  await expect(run.getByText('Waiting for your first visit…')).toBeVisible()
+  await page.waitForTimeout(4000)
+  await expect(run.locator('.setup-status')).toHaveCount(0)
+  await expect(run.getByText('Can’t reach your site')).toHaveCount(0)
+  await expect(run.getByText('Waiting for your first visit…')).toBeVisible()
   const sites = (await (await page.request.get(`${base}/api/v1/sites`)).json()).sites as { id: string; domain: string }[]
   const site = sites.find((s) => s.domain === domain)
   expect(site?.id).toMatch(/^tkb_/)
@@ -140,10 +164,9 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
 
   // A real pageview moves it on by itself.
   await visit(page, site!.id)
-  await expect(run.getByRole('heading', { name: 'Someone’s here.' })).toBeVisible({ timeout: 20_000 })
-  await expect(run.getByRole('img', { name: 'Step 3 of 3' })).toBeVisible()
-  await expect(run.locator('.ob-feed')).toContainText('/')
-  await expect(run.locator('.ob-tag')).toHaveText('Live')
+  await expect(run.getByRole('heading', { name: 'Your first visitor just arrived' })).toBeVisible({ timeout: 20_000 })
+  await expectStep(run, 'First visit')
+  await expect(run.getByText(/^Opened \//)).toBeVisible()
   // The first screen's nudge is a side card over the page: the importer's
   // formats and command behind its button; no mail server here, so there is no
   // weekly card to offer in the first run.
@@ -161,7 +184,7 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
   }).toPass({ timeout: 15_000 })
   await expect(run).toBeVisible()
   // Closing it leaves the focus on the page: move on from the heading.
-  await run.getByRole('heading', { name: 'Someone’s here.' }).focus()
+  await run.getByRole('heading', { name: 'Your first visitor just arrived' }).focus()
 
   // Enter: straight to Live mode, where the visit is (no second screen).
   await page.keyboard.press('Enter')

@@ -1,6 +1,5 @@
 // Every word the first run shows, in one place: this is what moves to the
 // message files when translations come.
-import { fmtInt } from '../../lib/format'
 import { defineCopy } from '../../i18n'
 
 export const copy = defineCopy('onboarding', {
@@ -8,12 +7,13 @@ export const copy = defineCopy('onboarding', {
   skip: 'Skip for now',
   skipHint: 'Esc',
   enterKey: '↵',
-  progress: (at: number, of: number) => `Step ${at} of ${of}`,
+  steps: { label: 'Progress', site: 'Your site', code: 'Add the code', visit: 'First visit' },
 
   site: {
     title: 'Which site first?',
     sub: 'Type its address. You can add more sites later.',
     domain: 'Domain',
+    prefix: 'https://',
     placeholder: 'yoursite.com',
     go: 'Continue',
     busy: 'Adding…',
@@ -23,18 +23,22 @@ export const copy = defineCopy('onboarding', {
     label: (domain: string) => `A preview of the dashboard for ${domain}`,
     empty: 'yoursite.com',
     sample: 'Sample',
-    live: 'Live',
     visitors: 'Visitors',
     pageviews: 'Pageviews',
     online: 'Online now',
     none: '—',
     waiting: 'Your dashboard, ready and waiting',
-    opened: (where: string, path: string) => (where ? `${where} · opened ${path}` : `Opened ${path}`),
+  },
+  install: {
+    title: 'Add the code',
+    sub: (domain: string) => `Paste it into the <head> of ${domain}, then open your site once.`,
+    waiting: 'Waiting for your first visit…',
+    check: 'Check now',
   },
   here: {
-    title: 'Someone’s here.',
-    sub: (domain: string) => `Your first visit just landed on ${domain}. Every page they open shows up as it happens.`,
-    go: 'Continue',
+    title: 'Your first visitor just arrived',
+    opened: (path: string, from: string) => (from ? `Opened ${path} · ${from}` : `Opened ${path}`),
+    go: 'Open my dashboard',
     arrived: (path: string) => `Your first visit arrived: ${path}`,
   },
   more: {
@@ -49,5 +53,4 @@ export const copy = defineCopy('onboarding', {
     receiving: 'receiving',
   },
   skipDash: 'Skip for now — open my dashboard',
-  count: (n: number) => fmtInt(n),
 })
