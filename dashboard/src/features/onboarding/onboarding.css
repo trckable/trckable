@@ -93,12 +93,10 @@
   background: var(--sunken);
 }
 .ob-field:focus-within {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  background: var(--field-fill-focus);
 }
 .ob-field.bad {
-  outline: 2px solid var(--down);
-  outline-offset: 1px;
+  background: color-mix(in srgb, var(--down) 12%, var(--sunken));
 }
 .ob-prefix {
   color: var(--text-3);
@@ -313,7 +311,7 @@ body:has(.ob.gated) .side-deck {
   background: color-mix(in srgb, var(--up) 16%, transparent);
   color: var(--up);
 }
-@media (max-width: 640px) {
+@media (--xs-down) {
   .ob-skip .kbd {
     display: none;
   }
@@ -495,7 +493,7 @@ body:has(.ob.gated) .side-deck {
 }
 /* A phone, designed on purpose: the journey stays one small row at the top; the words are left-aligned;
    the main action is full width at the bottom, in thumb reach. */
-@media (max-width: 640px) {
+@media (--xs-down) {
   .ob {
     bottom: auto;
     height: var(--ob-h, 100%);
@@ -719,7 +717,7 @@ body:has(.ob.gated) .side-deck {
 .ob-j-end .ob-j-label {
   display: none;
 }
-@media (max-width: 640px) {
+@media (--xs-down) {
   .ob-journey[data-step='here'] .ob-j-badge {
     position: absolute;
     right: -6px;
@@ -737,7 +735,7 @@ body:has(.ob.gated) .side-deck {
     height: 14px;
   }
 }
-@media (max-width: 640px) and (max-height: 640px) {
+@media (--xs-down) and (max-height: 640px) {
   .ob-journey[data-step='site'],
   .ob-journey[data-step='here'] {
     flex: 0 1 120px;

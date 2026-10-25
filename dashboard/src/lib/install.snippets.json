@@ -12,17 +12,24 @@
     },
     "next": {
       "name": "Next.js",
-      "code": "npm i trckable\n\nimport { Analytics } from 'trckable/next'\n<Analytics site=\"tkb_a1b2c3d4\" />\n\n// app/api/e/route.ts — same-origin: past analytics blocklists, 400-day Safari visitors\nexport { POST } from 'trckable/next'\n\n# .env\nTRCKABLE_HOST=https://stats.example.com\nTRCKABLE_PROXY_KEY=your-proxy-key",
+      "code": "npm i trckable\n\nimport { Analytics } from 'trckable/next'\n<Analytics site=\"tkb_a1b2c3d4\" host=\"https://stats.example.com\" />\n\n// app/api/e/route.ts — same-origin: past analytics blocklists, 400-day Safari visitors\n// With this route, remove host=\"https://stats.example.com\" from <Analytics>\nexport { POST } from 'trckable/next'\n\n# .env\nTRCKABLE_HOST=https://stats.example.com\nTRCKABLE_PROXY_KEY=your-proxy-key",
       "steps": [
         "npm i trckable",
-        "import { Analytics } from 'trckable/next'\n<Analytics site=\"tkb_a1b2c3d4\" />",
-        "// app/api/e/route.ts — same-origin: past analytics blocklists, 400-day Safari visitors\nexport { POST } from 'trckable/next'",
+        "import { Analytics } from 'trckable/next'\n<Analytics site=\"tkb_a1b2c3d4\" host=\"https://stats.example.com\" />",
+        "// app/api/e/route.ts — same-origin: past analytics blocklists, 400-day Safari visitors\n// With this route, remove host=\"https://stats.example.com\" from <Analytics>\nexport { POST } from 'trckable/next'",
         "# .env\nTRCKABLE_HOST=https://stats.example.com\nTRCKABLE_PROXY_KEY=your-proxy-key"
       ]
     },
     "landing": {
       "name": "Landing page and app",
-      "code": "<!-- landing page, in <head> -->\n<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>\n\nnpm i trckable\n\nimport { Analytics } from 'trckable/next'\n<Analytics site=\"tkb_a1b2c3d4\" />\n\n// app/api/e/route.ts — same-origin: past analytics blocklists, 400-day Safari visitors\nexport { POST } from 'trckable/next'\n\n# .env\nTRCKABLE_HOST=https://stats.example.com\nTRCKABLE_PROXY_KEY=your-proxy-key"
+      "code": "<!-- landing page, in <head> -->\n<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>\n\nnpm i trckable\n\nimport { Analytics } from 'trckable/next'\n<Analytics site=\"tkb_a1b2c3d4\" host=\"https://stats.example.com\" />\n\n// app/api/e/route.ts — same-origin: past analytics blocklists, 400-day Safari visitors\n// With this route, remove host=\"https://stats.example.com\" from <Analytics>\nexport { POST } from 'trckable/next'\n\n# .env\nTRCKABLE_HOST=https://stats.example.com\nTRCKABLE_PROXY_KEY=your-proxy-key",
+      "steps": [
+        "<!-- landing page, in <head> -->\n<script\n  defer\n  data-site=\"tkb_a1b2c3d4\"\n  data-domain=\"example.com\"\n  src=\"https://stats.example.com/js/tkb_a1b2c3d4.js\">\n</script>",
+        "npm i trckable",
+        "import { Analytics } from 'trckable/next'\n<Analytics site=\"tkb_a1b2c3d4\" host=\"https://stats.example.com\" />",
+        "// app/api/e/route.ts — same-origin: past analytics blocklists, 400-day Safari visitors\n// With this route, remove host=\"https://stats.example.com\" from <Analytics>\nexport { POST } from 'trckable/next'",
+        "# .env\nTRCKABLE_HOST=https://stats.example.com\nTRCKABLE_PROXY_KEY=your-proxy-key"
+      ]
     },
     "react": {
       "name": "npm / React",
