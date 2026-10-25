@@ -1,0 +1,30 @@
+/* The page of someone with no site yet: one message, one action. */
+.ns {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px 16px;
+  text-align: center;
+  background: var(--bg);
+  color: var(--text);
+}
+.ns h1 {
+  margin: 8px 0 0;
+  font-size: 22px;
+}
+.ns p {
+  margin: 0;
+  max-width: 34ch;
+}
+.ns .btn {
+  margin-top: 8px;
+}
+.ns-bar {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+}

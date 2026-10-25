@@ -1,0 +1,1 @@
+Skipping the first run with no site yet lands on a calm page with one action, "Add your first site", instead of an empty All sites page. The skip is remembered per account, so a second person in the same browser still gets their own first run.

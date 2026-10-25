@@ -50,5 +50,10 @@ export const copy = defineCopy('onboarding', {
     waiting: 'waiting',
     receiving: 'receiving',
   },
+  empty: {
+    title: 'No sites yet',
+    sub: 'Add your first site to start counting visits.',
+    add: 'Add your first site',
+  },
   skipDash: 'Skip for now — open my dashboard',
 })
