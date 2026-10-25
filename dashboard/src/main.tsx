@@ -22,7 +22,8 @@ import { openSettings, settingsTarget } from "./lib/settings";
 import { useSettingsAddress } from "./features/settingsAddress";
 import { useLatest } from "./lib/update";
 import { setRole } from "./lib/me";
-import { NoneShared, useGate } from "./features/onboarding/Gate";
+import { can } from "./lib/permissions";
+import { NoneShared, NoSites, useGate } from "./features/onboarding/Gate";
 // The header of every page is its own chunk, fetched at once after the first paint: the first load carries only the page's boxes.
 const PageBar = lazyLoad(() => import("./v2/PageBar").then((m) => ({ default: m.PageBar })));
 whenIdle(PageBar.preload);
@@ -94,7 +95,7 @@ function App() {
   const accountTab = useAccountTab(); // a hook: must run before any early return
   usePreloadDialogs(boot.state === "ready");
   const adding = useAddSite();
-  const { gated, pass } = useGate(boot.state === "ready" ? boot.sites : null, boot.state === "ready" && !!boot.mustChange, path);
+  const { gated, pass, reopen } = useGate(boot.state === "ready" ? boot.sites : null, boot.state === "ready" && !!boot.mustChange, path, boot.state === "ready" ? boot.email : undefined);
   const settingsOpen = useSettingsAddress(boot.state === "ready" && !gated ? boot.sites : null, path, params); // the dialog, and the address that names a section of it
   // A newer release, if this owner's dashboard may look (lib/update.ts).
   const latest = useLatest(boot.state === "ready" ? boot.version : undefined, boot.state === "ready" ? boot.updateCheck : false);
@@ -119,7 +120,8 @@ function App() {
     // Signed in at the root, or at an address that names none of this
     // person's sites (a typo, someone else's site, one since removed): their
     // main dashboard, never a page made up for an address it does not know.
-    if (boot.state === "ready" && !gated && !(path === "/settings" && namesSite(boot.sites, params)) && path !== "/sites") leaveStray(boot.sites, path, routeOf(boot.sites, path));
+    // No site at all (and the first run skipped): the empty page stays at this address, nothing to go to.
+    if (boot.state === "ready" && !gated && boot.sites.length > 0 && !(path === "/settings" && namesSite(boot.sites, params)) && path !== "/sites") leaveStray(boot.sites, path, routeOf(boot.sites, path));
   }, [boot, path, shared, gated, params]);
 
   if (shared)
@@ -178,7 +180,7 @@ function App() {
   // Until an owner's first site has had a visit, only the first run (Gate).
   let page: React.ReactNode;
   if (gated) page = null;
-  else if (boot.sites.length === 0) page = <NoneShared />;
+  else if (boot.sites.length === 0) page = can("site.add") ? <NoSites onAdd={reopen} /> : <NoneShared />;
   else if (all)
     page = (
       <Suspense fallback={<Loading height={320} />}>

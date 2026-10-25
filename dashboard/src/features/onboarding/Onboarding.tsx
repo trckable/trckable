@@ -21,7 +21,6 @@ import { copy } from './copy'
 import { FirstVisit } from './FirstVisit'
 import { InstallStep } from './InstallStep'
 import { finishPath, firstVisited, type Step } from './model'
-import { markSkipped } from './skipped'
 import { SiteStep } from './SiteStep'
 import { Journey } from './Journey'
 import { SiteTabs } from './SiteTabs'
@@ -36,7 +35,7 @@ import { browserZone } from '../../lib/format'
 
 /** required: nothing else may be reached until the first visit or "Skip for
  *  now" (Esc does nothing); resume: sites already added that have not had one. */
-export default function Onboarding({ onClose, onSites, required = false, resume, prefill = null }: { onClose: () => void; onSites: () => Promise<unknown>; required?: boolean; resume?: Site[]; prefill?: SitePrefill | null }) {
+export default function Onboarding({ onClose, onSites, required = false, resume, prefill = null }: { onClose: (skipped: boolean) => void; onSites: () => Promise<unknown>; required?: boolean; resume?: Site[]; prefill?: SitePrefill | null }) {
   const [start] = useState(() => firstStep(resume, prefill))
   const [step, setStep] = useState<Step>(start.step)
   const [domain, setDomain] = useState(prefill?.domain ?? '')
@@ -113,9 +112,9 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
 
   // Leaving: the sites list learns about the new one first, so the address
   // it goes to is one the app knows.
-  const leave = (path: string | null) => {
+  const leave = (path: string | null, skipped = false) => {
     void onSites().finally(() => {
-      onClose()
+      onClose(skipped)
       if (path) navigate(path)
     })
   }
@@ -124,8 +123,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
   }
   // "Skip for now — open my dashboard": the site's own page, where its install waits.
   const toDashboard = () => {
-    markSkipped()
-    leave(site ? finishPath(site.domain, false) : '/sites')
+    leave(site ? finishPath(site.domain, false) : null, true)
   }
   const added = (s: Site) => {
     setSites((all) => [...all, s])

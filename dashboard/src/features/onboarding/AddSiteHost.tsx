@@ -9,7 +9,7 @@ import { addSitePrefill, closeAddSite } from '../../lib/account'
 const AddWizard = lazy(() => import('../install/AddWizard').then((m) => ({ default: m.AddWizard })))
 const Onboarding = lazy(() => import('./Onboarding'))
 
-export function AddSiteHost({ open, required = false, onPassed, sites, onSites }: { open: boolean; required?: boolean; onPassed?: () => void; sites: Site[]; onSites: () => Promise<unknown> }) {
+export function AddSiteHost({ open, required = false, onPassed, sites, onSites }: { open: boolean; required?: boolean; onPassed?: (skipped: boolean) => void; sites: Site[]; onSites: () => Promise<unknown> }) {
   const [firstRun, setFirstRun] = useState<boolean | null>(null)
   const [prefill, setPrefill] = useState(addSitePrefill)
   if (open && prefill === null && addSitePrefill() !== null) setPrefill(addSitePrefill())
@@ -23,9 +23,9 @@ export function AddSiteHost({ open, required = false, onPassed, sites, onSites }
           required={required}
           prefill={prefill}
           resume={required ? sites : undefined}
-          onClose={() => {
+          onClose={(skipped) => {
             closeAddSite()
-            if (required) onPassed?.()
+            if (required) onPassed?.(skipped)
           }}
           onSites={onSites}
         /> : <AddWizard prefill={prefill} onClose={closeAddSite} onSites={onSites} sites={sites} />}
