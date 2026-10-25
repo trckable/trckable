@@ -105,8 +105,8 @@ test('with no site the first run cannot be left, and stays on every address', as
   await expect(page.getByRole('button', { name: 'Retry' })).toHaveCount(0)
   await expect(run.getByLabel('Domain')).toHaveValue('mybakery.example')
   await run.getByLabel('Domain').fill('')
-  // No way out but the account: no Skip, Esc does nothing, other addresses come back.
-  await expect(run.getByRole('button', { name: /Skip/ })).toHaveCount(0)
+  // Skip is there on every step; Esc does nothing, other addresses come back.
+  await expect(run.getByRole('button', { name: /Skip/ })).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(run).toBeVisible()
   for (const path of ['/settings', '/sites', '/nosuch.example']) {
@@ -135,12 +135,15 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
   const run = page.getByRole('dialog', { name: 'Set up your first site' })
   await expect(run.getByRole('heading', { name: 'Which site first?' })).toBeVisible({ timeout: 15_000 })
   await expectStep(run, 'Your site')
-  await expect(run.getByRole('button', { name: /Skip/ })).toHaveCount(0)
+  await expect(run.getByRole('button', { name: /Skip/ })).toBeVisible()
 
   // The domain appears in the preview as it is typed; Enter adds the site.
   const input = run.getByLabel('Domain')
   await expect(input).toBeFocused()
   await page.keyboard.type(`https://www.${domain}/pricing`)
+  await input.blur()
+  await expect(input).toHaveValue(domain)
+  await input.focus()
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/onboarding-1-site-${browserName}.png` })
   await expect(run.getByRole('figure', { name: `A preview of the dashboard for ${domain}` })).toBeVisible()
   await page.keyboard.press('Enter')
@@ -166,23 +169,10 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
   await visit(page, site!.id)
   await expect(run.getByRole('heading', { name: 'Your first visitor just arrived' })).toBeVisible({ timeout: 20_000 })
   await expectStep(run, 'First visit')
-  await expect(run.getByText(/^Opened \//)).toBeVisible()
-  // The first screen's nudge is a side card over the page: the importer's
-  // formats and command behind its button; no mail server here, so there is no
-  // weekly card to offer in the first run.
-  const nudge = page.getByRole('complementary', { name: 'Import your history' })
-  await expect(nudge).toBeVisible()
-  await expect(page.getByRole('complementary', { name: 'Weekly email' })).toHaveCount(0)
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/onboarding-3-here-${browserName}.png` })
-  await nudge.getByRole('button', { name: 'Import' }).click()
-  await expect(nudge).toHaveCount(0)
-  await expect(page.getByRole('dialog', { name: 'Import your history' })).toContainText('trckabled import')
-  // An Escape sent as the dialog settles can come to nothing in WebKit: sent again while it is open.
-  await expect(async () => {
-    if (await page.getByRole('dialog', { name: 'Import your history' }).count()) await page.keyboard.press('Escape')
-    await expect(page.getByRole('dialog', { name: 'Import your history' })).toHaveCount(0, { timeout: 1_500 })
-  }).toPass({ timeout: 15_000 })
-  await expect(run).toBeVisible()
+  await expect(run.getByText('/_first-visit', { exact: true })).toBeVisible()
+  await expect(run.getByText('Just now')).toBeVisible()
+  // No side card or nudge over the celebration: they wait until the dashboard.
+  await expect(page.getByRole('complementary')).toHaveCount(0)
   // Closing it leaves the focus on the page: move on from the heading.
   await run.getByRole('heading', { name: 'Your first visitor just arrived' }).focus()
 

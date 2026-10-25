@@ -17,11 +17,11 @@ import { domainWords } from '../install/domainWords'
 import { wizard } from '../install/copy'
 import { formWords } from '../../lib/formWords'
 import { useFocusTrap } from '../install/useFocusTrap'
-import { FirstCards } from '../install/FirstCards'
 import { AddAnother } from './AddAnother'
 import { copy } from './copy'
+import { FirstVisit } from './FirstVisit'
 import { InstallStep } from './InstallStep'
-import { cameFrom, finishPath, firstVisited, stepAt, type Step } from './model'
+import { finishPath, firstVisited, stepAt, type Step } from './model'
 import { Preview } from './Preview'
 import { markSkipped } from './skipped'
 import { SiteStep } from './SiteStep'
@@ -137,7 +137,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
 
   const first = visits[0]
   const titles = { site: copy.site.title, install: copy.install.title, here: copy.here.title }
-  const subs = { site: copy.site.sub, install: copy.install.sub(shown), here: copy.here.opened(first?.path ?? '/', cameFrom(first)) }
+  const subs = { site: copy.site.sub, install: copy.install.sub(shown), here: copy.here.sub }
 
   return (
     <div ref={box} className={required ? 'ob gated' : 'ob'} role="dialog" aria-modal="true" aria-label={copy.label}>
@@ -149,11 +149,9 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
           period={null}
           explore={null}
           extras={
-            !required && (
-              <button type="button" className="btn ghost ob-skip" onClick={skip} aria-keyshortcuts="Escape">
-                {copy.skip} <span className="kbd">{copy.skipHint}</span>
-              </button>
-            )
+            <button type="button" className="btn ghost ob-skip" onClick={required ? toDashboard : skip} aria-keyshortcuts="Escape">
+              {copy.skip} <span className="kbd">{copy.skipHint}</span>
+            </button>
           }
           account={<AccountMenu />}
         />
@@ -164,7 +162,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
           {step === 'site' && <Figure name="computer" minWidth={641} className="ob-fig" />}
           {step === 'here' && (
             <span className="ob-check" aria-hidden="true">
-              <Check size={28} strokeWidth={2.5} />
+              <Check size={44} strokeWidth={2.5} />
             </span>
           )}
           <h1 ref={heading} tabIndex={-1}>
@@ -172,7 +170,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
           </h1>
           <p className="muted">{subs[step]}</p>
           {step === 'site' && <SiteStep taken={!!prefill?.taken && clean === prefill.domain} focusGo={!!prefill} domain={domain} onDomain={(d) => { setDomain(d); setProblem('') }} problem={problem} busy={busy} ready={!!clean} onSubmit={create} />}
-          {step === 'here' && site && <FirstCards site={site} quiet />}
+          {step === 'here' && <FirstVisit visit={first} />}
           {step === 'here' && (
             <div className="ob-actions">
               <button type="button" className="btn primary big" onClick={next}>

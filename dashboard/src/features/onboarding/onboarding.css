@@ -19,6 +19,12 @@
 .mk.ob-hd {
   padding-bottom: 0;
 }
+.mk.ob-hd,
+.mk.ob-hd .hd {
+  background: var(--bg);
+  border-color: transparent;
+  box-shadow: none;
+}
 .mk.ob-hd .hd .sp {
   display: block;
 }
@@ -181,6 +187,15 @@
   .ob-check {
     animation: ob-pop 0.5s var(--ease) backwards;
   }
+  .ob-check path {
+    stroke-dasharray: 30;
+    animation: ob-draw 0.5s 0.25s var(--ease) backwards;
+  }
+}
+@keyframes ob-draw {
+  from {
+    stroke-dashoffset: 30;
+  }
 }
 @keyframes ob-pop {
   from {
@@ -324,7 +339,7 @@ body:has(.ob.gated) .side-deck {
   justify-content: center;
   gap: clamp(10px, 3vw, 28px);
   margin: 0;
-  padding: 12px clamp(16px, 4vw, 40px) 0;
+  padding: 28px clamp(16px, 4vw, 40px);
   list-style: none;
   color: var(--text-3);
   font-size: 13px;
@@ -396,9 +411,49 @@ body:has(.ob.gated) .side-deck {
 .ob-check {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
   background: color-mix(in srgb, var(--up) 16%, transparent);
   color: var(--up);
+}
+@media (max-width: 640px) {
+  .ob-skip .kbd {
+    display: none;
+  }
+}
+
+/* The short steps sit in the middle of the space under the step row; a long one, or a short screen, starts at the top. */
+.ob-main[data-step='site'] > :first-child,
+.ob-main[data-step='here'] > :first-child {
+  margin-top: auto;
+}
+.ob-main[data-step='site'] > :last-child,
+.ob-main[data-step='here'] > :last-child {
+  margin-bottom: auto;
+}
+
+/* The first visit's facts, one compact card. */
+.ob-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px 20px;
+  width: min(100%, 520px);
+  margin: 8px 0 0;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  text-align: left;
+}
+.ob-facts dt {
+  font-size: 12px;
+}
+.ob-facts dd {
+  margin: 2px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 500;
 }

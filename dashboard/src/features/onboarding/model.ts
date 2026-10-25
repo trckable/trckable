@@ -12,12 +12,16 @@ export function stepAt(step: Step): number {
   return STEPS.indexOf(step)
 }
 
-/** What a first visit says about where it came from: its referrer and place, when known. */
-export function cameFrom(v: Visit | undefined): string {
-  if (!v) return ''
+/** What the first visit tells about itself, only what is known: [kind, value], the source `null` for a direct visit. */
+export type Fact = { kind: 'page' | 'source' | 'country'; value: string | null }
+
+export function factsOf(v: Visit | undefined): Fact[] {
+  if (!v) return []
   const host = (v.referrer ?? '').replace(/^[a-z]+:\/\//, '').replace(/^www\./, '').replace(/[/?#].*$/, '')
   const place = [v.city, v.country ? countryName(v.country) : ''].filter(Boolean).join(', ')
-  return [host, place].filter(Boolean).join(' · ')
+  const facts: Fact[] = [{ kind: 'page', value: v.path ?? '/' }, { kind: 'source', value: host || null }]
+  if (place) facts.push({ kind: 'country', value: place })
+  return facts
 }
 
 /** Where to go when the first run ends: Live mode, which shows that visit. */

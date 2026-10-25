@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Visit } from '../../lib/api'
-import { cameFrom, finishPath, firstVisited, stepAt } from './model'
+import { factsOf, finishPath, firstVisited, stepAt } from './model'
 
 describe('first run', () => {
   it('has three steps, one per screen', () => {
@@ -12,11 +12,15 @@ describe('first run', () => {
     expect(firstVisited(['a', 'b'], { a: [v], b: [v] })).toBe('a')
     expect(firstVisited(['a', 'b'], {})).toBeNull()
   })
-  it('says where the first visit came from, when it knows', () => {
-    const v: Visit = { kind: 'pageview', ts: 0, path: '/', referrer: 'https://www.news.example.org/story?x=1', country: 'DE', city: 'Berlin' }
-    expect(cameFrom(v)).toBe('news.example.org · Berlin, Germany')
-    expect(cameFrom({ kind: 'pageview', ts: 0, path: '/' })).toBe('')
-    expect(cameFrom(undefined)).toBe('')
+  it('lists what the first visit tells, only what is known', () => {
+    const v: Visit = { kind: 'pageview', ts: 0, path: '/pricing', referrer: 'https://www.news.example.org/story?x=1', country: 'DE', city: 'Berlin' }
+    expect(factsOf(v)).toEqual([
+      { kind: 'page', value: '/pricing' },
+      { kind: 'source', value: 'news.example.org' },
+      { kind: 'country', value: 'Berlin, Germany' },
+    ])
+    expect(factsOf({ kind: 'pageview', ts: 0, path: '/' })).toEqual([{ kind: 'page', value: '/' }, { kind: 'source', value: null }])
+    expect(factsOf(undefined)).toEqual([])
   })
   it('ends in Live mode', () => {
     expect(finishPath('example.com', true)).toBe('/example.com?view=live')
