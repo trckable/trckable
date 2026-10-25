@@ -1332,16 +1332,6 @@ export default {
   'live.footer': 'Nieuwe bezoeken schuiven binnen · bezoekers die 5 minuten inactief zijn, verdwijnen',
 
   // install
-  'install.first.cards.close': 'Sluiten',
-  'install.first.cards.import.label': 'Importeer je geschiedenis',
-  'install.first.cards.import.body': 'Uit GA4 of een CSV.',
-  'install.first.cards.import.go': 'Importeren',
-  'install.first.cards.weekly.label': 'Wekelijkse e-mail',
-  'install.first.cards.weekly.title': 'Zet de wekelijkse e-mail aan',
-  'install.first.cards.weekly.body': 'De cijfers van de week, in je inbox.',
-  'install.first.cards.weekly.go': 'Aanzetten',
-  'install.first.weeklyOn': 'Wekelijkse e-mail: aan',
-  'install.first.weeklyStopped': 'Wekelijkse e-mail: uit',
   'install.first.importDialog.title': 'Importeer je geschiedenis',
   'install.first.importDialog.ga4': 'GA4',
   'install.first.importDialog.ga4Sub': 'BigQuery-export, NDJSON',

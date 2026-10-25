@@ -1343,16 +1343,6 @@ export default {
   'live.footer': 'Las nuevas visitas entran deslizándose · los visitantes inactivos 5 minutos se van',
 
   // install
-  'install.first.cards.close': 'Cerrar',
-  'install.first.cards.import.label': 'Importa tu historial',
-  'install.first.cards.import.body': 'Desde GA4 o un CSV.',
-  'install.first.cards.import.go': 'Importar',
-  'install.first.cards.weekly.label': 'Correo semanal',
-  'install.first.cards.weekly.title': 'Activa el correo semanal',
-  'install.first.cards.weekly.body': 'Las cifras de la semana, en tu bandeja de entrada.',
-  'install.first.cards.weekly.go': 'Activar',
-  'install.first.weeklyOn': 'Correo semanal: activado',
-  'install.first.weeklyStopped': 'Correo semanal: desactivado',
   'install.first.importDialog.title': 'Importa tu historial',
   'install.first.importDialog.ga4': 'GA4',
   'install.first.importDialog.ga4Sub': 'Exportación de BigQuery, NDJSON',

@@ -1340,16 +1340,6 @@ export default {
   'live.footer': 'Neue Besuche rutschen herein · Besucher, die 5 Minuten untätig sind, gehen',
 
   // install
-  'install.first.cards.close': 'Schließen',
-  'install.first.cards.import.label': 'Verlauf importieren',
-  'install.first.cards.import.body': 'Aus GA4 oder einer CSV.',
-  'install.first.cards.import.go': 'Importieren',
-  'install.first.cards.weekly.label': 'Wöchentliche E-Mail',
-  'install.first.cards.weekly.title': 'Wöchentliche E-Mail einschalten',
-  'install.first.cards.weekly.body': 'Die Zahlen der Woche, in deinem Postfach.',
-  'install.first.cards.weekly.go': 'Einschalten',
-  'install.first.weeklyOn': 'Wöchentliche E-Mail: an',
-  'install.first.weeklyStopped': 'Wöchentliche E-Mail: aus',
   'install.first.importDialog.title': 'Importiere deinen Verlauf',
   'install.first.importDialog.ga4': 'GA4',
   'install.first.importDialog.ga4Sub': 'BigQuery-Export, NDJSON',
