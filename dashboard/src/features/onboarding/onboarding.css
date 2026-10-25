@@ -600,37 +600,58 @@ body:has(.ob.gated) .side-deck {
      button sit below it, the button last, in thumb reach. */
   .ob-journey[data-step='site'],
   .ob-journey[data-step='here'] {
+    display: grid;
+    grid-template-columns: 1fr minmax(24px, 1fr) 1fr;
+    align-content: center;
+    align-items: start;
     flex: 1 1 120px;
     min-height: 120px;
     margin: 0;
+    padding: 0 28px;
   }
   .ob-journey[data-step='site'] .ob-j-site,
-  .ob-journey[data-step='here'] .ob-j-site {
+  .ob-journey[data-step='here'] .ob-j-site,
+  .ob-journey[data-step='site'] .ob-j-end,
+  .ob-journey[data-step='here'] .ob-j-end {
+    display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 10px;
-    max-width: 38%;
+    max-width: none;
+    min-width: 0;
     text-align: center;
   }
-  .ob-journey[data-step='site'] .ob-j-site b,
-  .ob-journey[data-step='here'] .ob-j-site b {
+  .ob-journey[data-step='site'] .ob-j-label,
+  .ob-journey[data-step='here'] .ob-j-label {
+    display: block;
     max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-2);
+    font-size: 13px;
+    font-weight: 500;
   }
   .ob-journey[data-step='site'] .ob-j-line,
   .ob-journey[data-step='here'] .ob-j-line {
-    margin: 0 8px;
+    align-self: start;
+    min-width: 0;
+    margin: 27px 8px 0;
   }
   .ob-journey[data-step='site'] .ob-j-line {
     background: repeating-linear-gradient(90deg, var(--border-2) 0 6px, transparent 6px 12px);
   }
   .ob-journey[data-step='site'] .ob-j-mark,
   .ob-journey[data-step='here'] .ob-j-mark {
-    width: 64px;
-    height: 64px;
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
   }
   .ob-journey[data-step='site'] .ob-j-mark svg,
   .ob-journey[data-step='here'] .ob-j-mark svg {
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
   }
   .ob-journey[data-step='site'] .ob-j-mark::before,
   .ob-journey[data-step='here'] .ob-j-mark::before {
@@ -690,6 +711,12 @@ body:has(.ob.gated) .side-deck {
 
 /* The check on the mark (step 3, a phone: it replaces the check circle). */
 .ob-j-badge {
+  display: none;
+}
+.ob-j-end {
+  display: flex;
+}
+.ob-j-end .ob-j-label {
   display: none;
 }
 @media (max-width: 640px) {
