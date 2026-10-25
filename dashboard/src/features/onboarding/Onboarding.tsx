@@ -1,24 +1,29 @@
-// The first run: a person with no site yet. Three steps, three dots: which
-// site first (the domain appears live in a mini dashboard), the one-line
-// install (the install flow's own card, with room for more sites), and
-// "Someone's here" the moment the live stream brings the first visit of any
-// of them; its Continue opens Live mode.
+// The first run: a person with no site yet. Three steps in a row at the top:
+// which site first (the domain appears live in a mini dashboard), the code to
+// add (with room for more sites), and the moment the live stream brings the
+// first visit of any of them; its button opens that site's dashboard.
 // Its own lazy chunk: only the first run ever loads it.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Figure } from '../../figures/Figure'
-import { fail, type Site, more, type Visit } from '../../lib/apiMore'
+import { Check } from 'lucide-react'
+import { AccountMenu } from '../../components/AccountMenu'
+import { ghostSvg } from '../../brand/logo'
+import { type Site, more, type Visit } from '../../lib/apiMore'
+import { quietOffline } from '../../lib/offline'
 import { navigate } from '../../lib/url'
-import { PageHeader } from '../../v2/PageHeader'
+import { Header } from '../../v2/ui/Header'
+import { checkDomain, cleanDomain, isAdded } from '../install/domain'
+import { domainWords } from '../install/domainWords'
+import { wizard } from '../install/copy'
+import { formWords } from '../../lib/formWords'
 import { useFocusTrap } from '../install/useFocusTrap'
-import { FirstCards } from '../install/FirstCards'
-import { SetupInstall } from '../install/SetupInstall'
 import { AddAnother } from './AddAnother'
 import { copy } from './copy'
-import { Dots } from './Dots'
-import { cleanDomain, dotOf, finishPath, firstVisited, type Step } from './model'
-import { Preview } from './Preview'
+import { FirstVisit } from './FirstVisit'
+import { InstallStep } from './InstallStep'
+import { finishPath, firstVisited, type Step } from './model'
 import { markSkipped } from './skipped'
 import { SiteStep } from './SiteStep'
+import { Journey } from './Journey'
 import { SiteTabs } from './SiteTabs'
 import { SiteWatch } from './SiteWatch'
 import '../../mock/mock.css'
@@ -39,6 +44,9 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
   const [active, setActive] = useState(start.active)
   const [seen, setSeen] = useState<Record<string, Visit[] | undefined>>({})
   const [busy, setBusy] = useState(false)
+  const [problem, setProblem] = useState('')
+  const [copied, setCopied] = useState(false)
+  const markCopied = useCallback(() => setCopied(true), [])
   const site = sites.find((s) => s.id === active) ?? null
   const visits = seen[active] ?? []
   const onVisits = useCallback((id: string, v: Visit[]) => setSeen((all) => (all[id] === v ? all : { ...all, [id]: v })), [])
@@ -56,6 +64,25 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
     setStep('here')
   }
 
+  // Nothing is cached yet: "offline, showing the last data" would be untrue here.
+  useEffect(() => {
+    quietOffline(true)
+    return () => quietOffline(false)
+  }, [])
+
+  // On a phone the keyboard shrinks the visible page: the first run follows it, so Continue is never under it.
+  useEffect(() => {
+    const vv = window.visualViewport
+    const el = box.current
+    if (!vv || !el) return
+    const on = () => el.style.setProperty('--ob-h', `${vv.height}px`)
+    vv.addEventListener('resize', on)
+    return () => {
+      vv.removeEventListener('resize', on)
+      el.style.removeProperty('--ob-h')
+    }
+  }, [])
+
   // A new step takes the focus to its heading (the site step's input asks
   // for it itself), so a screen reader hears where it is.
   useEffect(() => {
@@ -63,7 +90,14 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
   }, [step])
 
   const create = () => {
+    const verdict = checkDomain(clean, domain)
+    const bad = domainWords(isAdded(clean, sites.map((x) => x.domain)) ? 'added' : verdict, clean)
+    if (bad) {
+      setProblem(bad)
+      return
+    }
     setBusy(true)
+    setProblem('')
     const zone = browserZone()
     more
       .createSite(clean)
@@ -73,7 +107,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
         setActive(s.id)
         setStep('install')
       })
-      .catch((e: unknown) => fail(e, create))
+      .catch((e: unknown) => setProblem(formWords(e, { 500: wizard.failed, 502: wizard.failed, 503: wizard.failed, 504: wizard.failed })))
       .finally(() => setBusy(false))
   }
 
@@ -88,10 +122,10 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
   const skip = () => {
     if (!required) leave(site ? finishPath(site.domain, false) : null)
   }
-  // "Skip for now — open my dashboard": waiting sites show their install there.
+  // "Skip for now — open my dashboard": the site's own page, where its install waits.
   const toDashboard = () => {
     markSkipped()
-    leave('/sites')
+    leave(site ? finishPath(site.domain, false) : '/sites')
   }
   const added = (s: Site) => {
     setSites((all) => [...all, s])
@@ -114,36 +148,41 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
     return () => window.removeEventListener('keydown', onKey)
   })
 
-  // The install step has no heading of its own: the status card under the header is it.
-  const titles = { site: copy.site.title, here: copy.here.title }
-  const subs = { site: copy.site.sub, here: copy.here.sub(shown) }
+  const first = visits[0]
+  const titles = { site: copy.site.title, install: copy.install.title, here: copy.here.title }
+  const subs = { site: copy.site.sub, install: copy.install.sub(shown), here: copy.here.sub }
 
   return (
     <div ref={box} className={required ? 'ob gated' : 'ob'} role="dialog" aria-modal="true" aria-label={copy.label}>
       <div className="mk ob-hd">
-        <PageHeader sites={sites} site={site} waiting visited={arrived} onPickSite={(id) => id !== '*' && setActive(id)} />
+        <Header
+          logo={<span className="logo tkb-logo" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ghostSvg(30) }} />}
+          site={null}
+          views={null}
+          period={null}
+          explore={null}
+          extras={
+            <button type="button" className="btn ghost ob-skip" onClick={required ? toDashboard : skip} aria-keyshortcuts="Escape">
+              {copy.skip} <span className="kbd">{copy.skipHint}</span>
+            </button>
+          }
+          account={<AccountMenu />}
+        />
       </div>
-      <Dots at={dotOf(step)} />
-      {!required && (
-        <div className="ob-bar">
-          <button type="button" className="btn ghost ob-skip" onClick={skip} aria-keyshortcuts="Escape">
-            {copy.skip} <span className="kbd">{copy.skipHint}</span>
-          </button>
-        </div>
-      )}
-      <main className={`ob-main ob-${step}`} key={step}>
-        <div className={step === 'install' ? 'ob-text ob-quiet' : 'ob-text'}>
-          {step !== 'install' && (
-            <>
-              {step === 'site' && <Figure name="computer" minWidth={641} className="ob-fig" />}
-              <h1 ref={heading} tabIndex={-1}>
-                {titles[step]}
-              </h1>
-              <p className="muted">{subs[step]}</p>
-            </>
+      <Journey step={step} domain={shown} copied={copied} />
+      <main className="ob-main" data-step={step} key={step}>
+        <div className="ob-text">
+          {step === 'here' && (
+            <span className="ob-check" aria-hidden="true">
+              <Check size={44} strokeWidth={2.5} />
+            </span>
           )}
-          {step === 'site' && <SiteStep taken={!!prefill?.taken && clean === prefill.domain} focusGo={!!prefill} domain={domain} onDomain={setDomain} busy={busy} ready={!!clean} onSubmit={create} />}
-          {step === 'here' && site && <FirstCards site={site} quiet />}
+          <h1 ref={heading} tabIndex={-1}>
+            {titles[step]}
+          </h1>
+          <p className="muted">{subs[step]}</p>
+          {step === 'site' && <SiteStep taken={!!prefill?.taken && clean === prefill.domain} focusGo={!!prefill} domain={domain} onDomain={(d) => { setDomain(d); setProblem('') }} problem={problem} busy={busy} ready={!!clean} onSubmit={create} />}
+          {step === 'here' && <FirstVisit visit={first} />}
           {step === 'here' && (
             <div className="ob-actions">
               <button type="button" className="btn primary big" onClick={next}>
@@ -152,11 +191,12 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
             </div>
           )}
         </div>
-        {step === 'install' && site ? (
+        {step === 'install' && site && (
           <div className="ob-install">
             {sites.length > 1 && <SiteTabs sites={sites} active={active} seen={seen} onPick={setActive} />}
-            <SetupInstall
+            <InstallStep
               key={site.id}
+              onCopy={markCopied}
               site={site}
               visits={visits}
               after={
@@ -169,15 +209,13 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
               }
             />
           </div>
-        ) : (
-          <Preview domain={shown} visits={visits} />
         )}
       </main>
       {sites.map((s) => (
         <SiteWatch key={s.id} id={s.id} onVisits={onVisits} />
       ))}
       <p className="sr" aria-live="assertive">
-        {arrived ? copy.here.arrived(visits[0]?.path ?? '/') : ''}
+        {arrived ? copy.here.arrived(first?.path ?? '/') : ''}
       </p>
     </div>
   )

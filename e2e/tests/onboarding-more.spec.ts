@@ -72,18 +72,18 @@ async function openRun(page: Page) {
   return page.getByRole('dialog', { name: 'Set up your first site' })
 }
 
-test('skip for now opens All sites, and the first run stays away', async ({ page, browserName }) => {
+test('skip for now opens that site’s dashboard, and the first run stays away', async ({ page, browserName }) => {
   one = `one-${browserName}-${Date.now()}.test`
   const run = await openRun(page)
   await expect(run.getByRole('heading', { name: 'Which site first?' })).toBeVisible({ timeout: 15_000 })
   await run.getByLabel('Domain').fill(one)
   await page.keyboard.press('Enter')
-  await expect(run.getByRole('img', { name: 'Step 2 of 3' })).toBeVisible({ timeout: 15_000 })
+  await expect(run.locator('.ob-progress')).toContainText('Add the code', { timeout: 15_000 })
   await expect(run.getByRole('tablist', { name: 'Your sites' })).toHaveCount(0)
   if (process.env.TRCKABLE_SHOTS) await page.screenshot({ path: `${process.env.TRCKABLE_SHOTS}/onboarding-skip-${browserName}.png` })
   await run.getByRole('button', { name: 'Skip for now — open my dashboard' }).click()
   await expect(run).toBeHidden()
-  await expect(page).toHaveURL(base + '/sites')
+  await expect(page).toHaveURL(base + '/' + one)
   await page.goto(base + '/')
   await expect(page.getByRole('dialog', { name: 'Set up your first site' })).toHaveCount(0)
 })
@@ -92,7 +92,7 @@ test('another site: a chip each, the first visit on the second moves on, then Li
   const two = `two-${browserName}-${Date.now()}.test`
   // A fresh browser context has not skipped: the waiting site resumes at step 2.
   const run = await openRun(page)
-  await expect(run.getByRole('img', { name: 'Step 2 of 3' })).toBeVisible({ timeout: 15_000 })
+  await expect(run.locator('.ob-progress')).toContainText('Add the code', { timeout: 15_000 })
   const card = run.getByRole('region', { name: 'Install trckable' })
   await expect(run.getByRole('tablist', { name: 'Your sites' })).toHaveCount(0)
 
@@ -133,8 +133,8 @@ test('another site: a chip each, the first visit on the second moves on, then Li
 
   // A visit on the second site moves on, for that site.
   await visit(page, second.id)
-  await expect(run.getByRole('heading', { name: 'Someone’s here.' })).toBeVisible({ timeout: 20_000 })
-  await run.getByRole('button', { name: /Continue/ }).click()
+  await expect(run.getByRole('heading', { name: 'Your first visitor just arrived' })).toBeVisible({ timeout: 20_000 })
+  await run.getByRole('button', { name: /Open my dashboard/ }).click()
   await expect(page).toHaveURL(new RegExp(`/${two.replace(/\./g, '\\.')}\\?view=live`))
   await expect(run).toBeHidden()
 })
