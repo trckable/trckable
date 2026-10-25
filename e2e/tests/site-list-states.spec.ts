@@ -53,7 +53,7 @@ for (const [name, width, height] of [['desktop', 1440, 900], ['phone', 390, 844]
       await expect(menu.locator('[data-site="s4"] .now:not(.mk-dot)')).toHaveText('Not verified')
       const all = menu.locator('.mi.all .all-problems')
       await expect(all).toContainText('1 down')
-      await expect(all).toContainText('1 quiet')
+      await expect(all).not.toContainText('quiet')
       await expect(all).toContainText('1 not verified')
     })
 
