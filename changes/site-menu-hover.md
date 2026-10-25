@@ -1,0 +1,1 @@
+The site menu hovers as one: All sites, each site (its open and ⋯ buttons inside the fill), Add a site and keyboard focus share one fill and shape; the selected site has the same fill with a bar at its left, and a group heading shows only its chevron and ⋯ instead of a darker box.

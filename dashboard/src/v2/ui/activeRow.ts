@@ -3,6 +3,8 @@
 // so the key's row takes over again until the mouse moves.
 import { useEffect } from 'react'
 
+// A site row or a heading in the site menu is one row with its buttons (↗, ⋯), so the mark sits on the whole of it.
+const WHOLE = '.mk .sitelist .site-row, .mk .sitelist .site-head'
 const ROWS = '.mk .mi, .mk .xmi, .mk .xri, .mk .nf, .pop.more-menu button[role="menuitem"]'
 
 export function useActiveRow() {
@@ -16,7 +18,7 @@ export function useActiveRow() {
     }
     const move = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return
-      set(e.target instanceof Element ? e.target.closest(ROWS) : null)
+      set(e.target instanceof Element ? (e.target.closest(WHOLE) ?? e.target.closest(ROWS)) : null)
     }
     const key = (e: FocusEvent) => {
       if (e.target instanceof Element && e.target.matches(ROWS) && e.target.matches(':focus-visible')) set(null)
