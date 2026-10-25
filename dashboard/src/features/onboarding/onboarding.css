@@ -501,7 +501,7 @@ body:has(.ob.gated) .side-deck {
     height: var(--ob-h, 100%);
   }
   .ob-journey {
-    margin: 4px auto 0;
+    margin: 4px auto 16px;
     padding: 0 16px;
   }
   .ob-j-site {
@@ -549,7 +549,14 @@ body:has(.ob.gated) .side-deck {
     width: 100%;
   }
   .ob-check {
-    display: none;
+    align-self: flex-start;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 4px;
+  }
+  .ob-check svg {
+    width: 26px;
+    height: 26px;
   }
   .ob-facts {
     grid-template-columns: 1fr;
@@ -588,6 +595,44 @@ body:has(.ob.gated) .side-deck {
   }
   .ob-main[data-step='install'] > .ob-text {
     flex: none;
+  }
+  /* The short steps are one group in the middle of the screen, a little above centre; the button follows the card. */
+  .ob:has(.ob-main[data-step='site']) .ob-journey,
+  .ob:has(.ob-main[data-step='here']) .ob-journey {
+    margin: auto auto 28px;
+  }
+  .ob-main[data-step='site'],
+  .ob-main[data-step='here'] {
+    flex: none;
+    margin-bottom: auto;
+    padding-top: 0;
+    padding-bottom: 12vh;
+  }
+  .ob-main[data-step='site'] > .ob-text,
+  .ob-main[data-step='here'] > .ob-text,
+  .ob-main[data-step='site'] .ob-form {
+    flex: none;
+  }
+  .ob-main[data-step='site'] > .ob-text,
+  .ob-main[data-step='here'] > .ob-text {
+    align-items: center;
+    text-align: center;
+  }
+  .ob-main[data-step='here'] .ob-check {
+    align-self: center;
+  }
+  .ob-main[data-step='site'] .ob-form,
+  .ob-main[data-step='here'] .ob-facts,
+  .ob-main[data-step='here'] .ob-actions,
+  .ob-main[data-step='site'] .ob-actions {
+    align-self: stretch;
+    text-align: left;
+  }
+  .ob-main[data-step='site'] .ob-actions,
+  .ob-main[data-step='here'] .ob-actions {
+    position: static;
+    margin-top: 24px;
+    padding: 0;
   }
   .mk.ob-hd .hd .account-btn {
     border-color: transparent !important;
