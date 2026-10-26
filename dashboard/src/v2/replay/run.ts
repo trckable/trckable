@@ -42,15 +42,48 @@ export function at(legs: Leg[], ms: number): { p: number; over: boolean } {
   return { p: 1, over: true }
 }
 
-/** Plays the legs on the shared clock, then hands back to the still chart and calls `done`. The returned function stops it where it is. */
-export function runLegs(legs: Leg[], done: () => void): () => void {
-  const t0 = performance.now()
+/** The times (ms into the run) at which the line reaches each stop: the moments, then the end. */
+export function arrivals(legs: Leg[]): number[] {
+  let t = 0
+  return legs.map((l) => {
+    t += l.go
+    const arrive = t
+    t += l.rest
+    return arrive
+  })
+}
+
+/** Where `next` takes a run that is `ms` in: the arrival at the next moment, or the end (null) when none is left before it. */
+export function nextStop(legs: Leg[], ms: number): number | null {
+  const a = arrivals(legs)
+  const k = a.findIndex((t) => t > ms + 1)
+  return k < 0 || k === a.length - 1 ? null : a[k]
+}
+
+export interface Run {
+  stop: () => void
+  pause: () => void
+  resume: () => void
+  /** Goes to the next moment (the end when there is none); `false` when it ended the run. */
+  next: () => boolean
+}
+
+/** Plays the legs on the shared clock, then hands back to the still chart and calls `done`. `stop` leaves it where it is. */
+export function runLegs(legs: Leg[], done: () => void): Run {
+  let t0 = performance.now()
+  /** The run's own time while it waits (paused), else null. */
+  let held: number | null = null
   let id = 0
+  let over = false
+  const finish = () => {
+    over = true
+    reveal.set(-1)
+    done()
+  }
   const frame = (now: number) => {
     const r = at(legs, now - t0)
     if (r.over) {
-      reveal.set(-1)
-      done()
+      finish()
       return
     }
     reveal.set(r.p)
@@ -58,8 +91,37 @@ export function runLegs(legs: Leg[], done: () => void): () => void {
   }
   reveal.set(0)
   id = requestAnimationFrame(frame)
-  return () => {
-    cancelAnimationFrame(id)
-    reveal.set(-1)
+  return {
+    stop() {
+      over = true
+      cancelAnimationFrame(id)
+      reveal.set(-1)
+    },
+    pause() {
+      if (over || held !== null) return
+      held = performance.now() - t0
+      cancelAnimationFrame(id)
+    },
+    resume() {
+      if (over || held === null) return
+      t0 = performance.now() - held
+      held = null
+      id = requestAnimationFrame(frame)
+    },
+    next() {
+      if (over) return false
+      const now = performance.now()
+      const to = nextStop(legs, held ?? now - t0)
+      if (to === null) {
+        cancelAnimationFrame(id)
+        finish()
+        return false
+      }
+      if (held !== null) {
+        held = to
+        reveal.set(at(legs, to).p)
+      } else t0 = now - to
+      return true
+    },
   }
 }

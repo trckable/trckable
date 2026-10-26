@@ -1,5 +1,6 @@
-/* Replay. Nothing here is in the page's flow: the layer over the chart and the bar over the row above it are absolute, and a
-   run only changes opacity and transforms. */
+/* Replay, in the cinema: while one is up the chart's block lifts out of the page onto a stage over a dimmed page (the spacer
+   .rp-hold keeps its place). Nothing in the stage is in the chart's flow: the layer over the chart is absolute, and a run
+   only changes opacity and transforms. */
 .mk .rp-stage{position:relative}
 .mk .rp-over{position:absolute;inset:0;pointer-events:none}
 .mk .rp-stage[data-phase=off] .rp-over{display:none}
@@ -8,33 +9,37 @@
 .mk .rp-tag{position:absolute;left:0;bottom:-20px;transform:translateX(-50%);padding:1px 8px;border-radius:8px;background:var(--mk-card);border:1px solid var(--mk-line);font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--mk-text)}
 .mk .rp-pin{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;border:2px solid var(--mk-lime);opacity:0;transition:opacity .25s;will-change:transform}
 .mk .rp-stage[data-run] .rp-pin{opacity:.55}
-.mk .rp-hud{position:absolute;left:44px;top:0;display:flex;align-items:baseline;gap:8px;padding:2px 12px;border-radius:14px;border:1px solid var(--mk-line);background:color-mix(in srgb,var(--mk-card) 80%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);opacity:0;transition:opacity .3s}
+.mk .rp-hud{position:absolute;left:44px;top:0;display:flex;align-items:baseline;gap:10px;padding:0;opacity:0;transition:opacity .3s}
 .mk .rp-stage[data-phase=on] .rp-hud{opacity:1}
-.mk .rp-n{display:inline-grid;font-size:22px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.mk .rp-n{display:inline-grid;font-size:48px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
 .mk .rp-n>*{grid-area:1/1;font-style:normal}
 .mk .rp-gh{visibility:hidden}
-.mk .rp-u{font-size:13px;color:var(--mk-muted)}
+.mk .rp-u{font-size:16px;color:var(--mk-muted)}
 .mk .rp-cap{position:absolute;left:0;top:0;transform:translate3d(var(--x,0),var(--y,0),0)}
 .mk .rp-dot{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--mk-lime);box-shadow:0 0 0 3px var(--mk-limeD);opacity:0;transform:scale(.3);transition:opacity .3s,transform .35s cubic-bezier(.2,.8,.2,1)}
 .mk .rp-cap[data-s=show] .rp-dot{opacity:1;transform:scale(1.25)}
 .mk .rp-cap[data-s=settled] .rp-dot{opacity:.9;transform:scale(.8)}
 .mk .rp-cap.sale .rp-dot{background:var(--mk-text)}
-.mk .rp-bub{position:absolute;bottom:14px;left:50%;max-width:min(300px,76vw);padding:6px 11px;border-radius:12px;border:1px solid var(--mk-line);background:var(--mk-card);box-shadow:0 6px 24px var(--mk-bandh);opacity:0;transform:translate(-50%,6px);transition:opacity .35s,transform .45s cubic-bezier(.2,.8,.2,1);white-space:nowrap}
-.mk .rp-cap[data-lean=l] .rp-bub{left:-10px;transform:translate(0,6px)}
-.mk .rp-cap[data-lean=r] .rp-bub{left:auto;right:-10px;transform:translate(0,6px)}
-.mk .rp-cap[data-below="1"] .rp-bub{bottom:auto;top:14px}
-.mk .rp-cap[data-s=show] .rp-bub{opacity:1;transform:translate(-50%,0)}
-.mk .rp-cap[data-s=show][data-lean=l] .rp-bub,.mk .rp-cap[data-s=show][data-lean=r] .rp-bub{transform:none}
-.mk .rp-cap[data-s=settled] .rp-bub{opacity:0}
-.mk .rp-bub b{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis}
-.mk .rp-bub span{display:block;font-size:11.5px;color:var(--mk-muted);overflow:hidden;text-overflow:ellipsis}
 .mk .rp-stage[data-phase=end] :is(.rp-hud,.rp-mark,.rp-pin,.rp-cap){display:none}
-/* The buttons and the wrap-up line sit over the row above the chart (it has its own height), in place of what that row says. */
-.mk .chwrap .ch-top{position:relative}
-.mk .chwrap:is([data-rp=on],[data-rp=end]) .ch-top>:not(.rp-bar){visibility:hidden}
-.mk .rp-bar{position:absolute;left:44px;right:0;top:0;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;min-height:28px}
-.mk .rp-wrap{margin:0;flex:1 1 0;min-width:0;padding-top:4px;font-size:13px;font-weight:600;line-height:1.3;animation:rp-in .5s both}
-@keyframes rp-in{from{opacity:0}}
+/* The stage: the block is fixed in the middle of the screen (a phone: the whole screen), the page behind it dimmed. */
+.mk .rp-scrim{position:fixed;inset:0;z-index:var(--z-scrim);background:var(--mk-scrim);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);animation:rp-fade .26s both}
+.mk .rp-scrim[data-cinema=out]{animation:rp-fade .2s reverse both}
+.mk .chwrap[data-cinema]{position:fixed;z-index:calc(var(--z-scrim) + 1);left:50%;top:50%;width:min(90vw,1200px);max-height:96dvh;margin:0;padding:var(--mk-s5) var(--mk-s5) var(--mk-s4);box-sizing:border-box;display:flex;flex-direction:column;gap:var(--mk-s3);border-radius:20px;border:1px solid var(--mk-line);background:var(--mk-card);box-shadow:0 30px 80px var(--mk-shc);transform:translate(-50%,-50%);animation:rp-rise .28s cubic-bezier(.2,.8,.2,1) both}
+.mk .chwrap[data-cinema=out]{animation:rp-rise .2s cubic-bezier(.2,.8,.2,1) reverse both}
+.mk .chwrap[data-cinema] :is(.ch-top,.chno){display:none}
+.mk .chwrap[data-cinema] .chplot{flex:none}
+.mk .chwrap[data-cinema] #chart{height:min(54vh,560px)}
+@keyframes rp-fade{from{opacity:0}}
+@keyframes rp-rise{from{opacity:0;transform:translate(-50%,-48%) scale(.97)}}
+/* The foot: the moment told as a caption, the progress with its time, the buttons. */
+.mk .rp-bar{min-height:66px;align-content:start;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:var(--mk-s2) var(--mk-s4)}
+.mk .rp-bar[data-phase=end]{align-content:center}
+.mk .rp-sub{grid-column:1/-1;margin:0;min-height:1.5em;font-size:17px;font-weight:600;line-height:1.5;text-align:center;font-variant-numeric:tabular-nums}
+.mk .rp-prog{display:flex;align-items:center;gap:var(--mk-s3);min-width:0;font-size:12.5px;color:var(--mk-muted)}
+.mk .rp-time{flex:none;width:6.5em;white-space:nowrap;font-variant-numeric:tabular-nums}
+.mk .rp-track{flex:1 1 0;height:3px;border-radius:2px;background:var(--mk-fill);overflow:hidden}
+.mk .rp-track b{display:block;height:100%;background:var(--mk-lime);transform-origin:left;transform:scaleX(0)}
+.mk .rp-wrap{grid-column:1;margin:0;font-size:20px;font-weight:700;line-height:1.3;animation:rp-fade .5s both}
 .mk .rp-act{display:flex;gap:6px;flex:none;margin-left:auto}
 .mk .rp-btn{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 11px;border-radius:9px;border:1px solid var(--mk-line);background:var(--mk-card);color:var(--mk-text);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
 .mk .rp-btn:hover{background:var(--mk-hover)}
@@ -43,15 +48,18 @@
 /* While a caption is pinned, the chart's own label over its rise steps aside. */
 .mk .rp-stage[data-pinned] [data-rise]{opacity:0;transition:opacity .2s}
 @media (--xs){
-  .mk .rp-hud{left:8px;top:2px;padding:4px 10px;gap:8px}
-  .mk .rp-n{font-size:21px}
-  .mk .rp-bar{left:0}
-  .mk .rp-btn:not(.ic){width:28px;padding:0;justify-content:center}
-  .mk .rp-btn span{display:none}
-  .mk .rp-wrap{-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .mk .rp-bub{max-width:70vw}
+  .mk .chwrap[data-cinema]{left:0;top:0;width:100%;height:100dvh;max-height:none;padding:var(--mk-s4);justify-content:center;border:0;border-radius:0;transform:none;animation-name:rp-fade}
+  .mk .chwrap[data-cinema=out]{animation-name:rp-fade}
+  .mk .chwrap[data-cinema] #chart{height:min(44dvh,380px)}
+  .mk .rp-hud{left:8px;top:2px;gap:8px}
+  .mk .rp-n{font-size:34px}
+  .mk .rp-bar{grid-template-columns:minmax(0,1fr);min-height:116px}
+  .mk .rp-act{margin:0;justify-content:center}
+  .mk .rp-sub{font-size:15px}
+  .mk .rp-wrap{font-size:17px;text-align:center}
 }
 @media (prefers-reduced-motion:reduce){
+  .mk .rp-scrim,.mk .chwrap[data-cinema]{animation:none}
   .mk .rp-wrap{animation:none}
-  .mk .rp-bub,.mk .rp-dot{transition:none}
+  .mk .rp-dot{transition:none}
 }

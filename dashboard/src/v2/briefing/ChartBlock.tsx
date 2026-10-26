@@ -1,6 +1,6 @@
 // The chart of the hero with what lives over and under it: the line of words and the Notes button on top, the moments'
 // markers, the sources' pills and the busy band over the plot, and the replay's stage around the chart.
-import { Suspense } from 'react'
+import { Suspense, useRef } from 'react'
 import { lazyLoad } from '../../lib/lazyLoad'
 import { queryOf } from '../../lib/dashQuery'
 import { isShared } from '../../lib/me'
@@ -11,6 +11,8 @@ import { copy } from './copy'
 import { HeroChart, type ChartIn } from '../ui/DayChart'
 import { ReplayStage, type ReplayIn } from '../ui/ReplayStage'
 import { ReplayBar } from '../ui/ReplayBar'
+import { useCinema } from '../ui/useCinema'
+import { copy as story } from '../replay/story.copy'
 import { ChartControls } from '../ui/ChartControls'
 import { capital } from './compare'
 import './compareLine.css'
@@ -43,6 +45,9 @@ export interface ChartBlockProps {
 export function ChartBlock(p: ChartBlockProps) {
   const query = queryOf(readView(new URLSearchParams(location.search)), p.range)
   const labels = p.series.map((x) => x.t)
+  const block = useRef<HTMLDivElement>(null)
+  const phase = p.replay?.replay.phase ?? 'off'
+  const cinema = useCinema(phase, block)
   const hero = (
     <HeroChart
       c={p.chart}
@@ -60,31 +65,35 @@ export function ChartBlock(p: ChartBlockProps) {
     />
   )
   return (
-    <div className="chwrap" data-rp={p.replay?.replay.phase}>
-      <div className="ch-top">
-        <span className="mk-quiet" id="chNote" data-tone={p.down ? 'dn' : p.tone} style={TONE[p.down ? 'dn' : (p.tone ?? 'none')]}>
-          {p.note}
-        </span>
-        <span className="mk-quiet" id="chCall" />
-        <Suspense fallback={null}>
-          <MentionsChip site={p.site} labels={labels} from={p.series[0]?.t.slice(0, 10) ?? p.range.from} to={p.range.to} />
-        </Suspense>
-        <button type="button" className="gh nbtn" data-info="notes" onClick={p.onNotes}>
-          {copy.noteBtn(p.notes)}
-        </button>
+    <>
+      {cinema.state && <div className="rp-hold" style={{ height: cinema.slot?.h, marginTop: cinema.slot?.mt }} aria-hidden="true" />}
+      {cinema.state && <div className="rp-scrim" data-cinema={cinema.state} onClick={p.replay?.replay.stop} aria-hidden="true" />}
+      <div className="chwrap" ref={block} data-rp={p.replay?.replay.phase} data-cinema={cinema.state ?? undefined} {...(phase === 'off' ? {} : { role: 'dialog', 'aria-modal': true, 'aria-label': story.dialog })}>
+        <div className="ch-top">
+          <span className="mk-quiet" id="chNote" data-tone={p.down ? 'dn' : p.tone} style={TONE[p.down ? 'dn' : (p.tone ?? 'none')]}>
+            {p.note}
+          </span>
+          <span className="mk-quiet" id="chCall" />
+          <Suspense fallback={null}>
+            <MentionsChip site={p.site} labels={labels} from={p.series[0]?.t.slice(0, 10) ?? p.range.from} to={p.range.to} />
+          </Suspense>
+          <button type="button" className="gh nbtn" data-info="notes" onClick={p.onNotes}>
+            {copy.noteBtn(p.notes)}
+          </button>
+        </div>
+        <ChartControls site={p.site} why={p.chart.noCompare} />
+        <div className="chplot">
+          {p.chart.compare && (
+            <span className="chkey" aria-hidden="true">
+              <span data-line="now">{copy.legendNow}</span>
+              <span data-line="before">{capital(p.chart.compare.name)}</span>
+            </span>
+          )}
+          {p.chart.noCompare && <span className="chno mk-quiet">{p.chart.noCompare}</span>}
+          {p.replay ? <ReplayStage r={p.replay}>{hero}</ReplayStage> : hero}
+        </div>
         {p.replay && <ReplayBar r={p.replay} />}
       </div>
-      <ChartControls site={p.site} why={p.chart.noCompare} />
-      <div className="chplot">
-        {p.chart.compare && (
-          <span className="chkey" aria-hidden="true">
-            <span data-line="now">{copy.legendNow}</span>
-            <span data-line="before">{capital(p.chart.compare.name)}</span>
-          </span>
-        )}
-        {p.chart.noCompare && <span className="chno mk-quiet">{p.chart.noCompare}</span>}
-        {p.replay ? <ReplayStage r={p.replay}>{hero}</ReplayStage> : hero}
-      </div>
-    </div>
+    </>
   )
 }
