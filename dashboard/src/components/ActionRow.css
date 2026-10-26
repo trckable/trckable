@@ -1,4 +1,4 @@
-/* DialogActions's styles: they load with its chunk, not with the first load. */
+/* ActionRow's styles: they load with its chunk, not with the first load. */
 /* ---- One footer for every dialog -------------------------------------------
    Bottom right, quiet button first and the primary last, one height. Before
    this every dialog invented its own row, and a rule and a band under it. */

@@ -1,17 +1,4 @@
 /* The Notes list: its own styles, loaded with it (not with the first load). */
-.notes-modal {
-  width: min(560px, calc(100vw - 32px));
-  gap: 10px;
-}
-.notes-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.notes-head h2 {
-  margin: 0;
-}
 .notes-panel {
   display: flex;
   flex-direction: column;

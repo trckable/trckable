@@ -52,7 +52,7 @@ test('Track a goal: a short head, four equal cards as one radio group, one prima
   await expect(dialog).toBeVisible()
   // The head is a title and one short line, no paragraphs.
   await expect(dialog.getByRole('heading', { name: 'Track a goal' })).toBeVisible()
-  const hint = dialog.locator('.dlg-head .faint')
+  const hint = dialog.locator('.modal-head .faint')
   expect((await hint.textContent())!.length).toBeLessThanOrEqual(70)
 
   const group = dialog.getByRole('radiogroup', { name: 'How to count it' })

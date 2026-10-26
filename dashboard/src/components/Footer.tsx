@@ -1,10 +1,7 @@
 import { BookOpen, MessageSquare } from 'lucide-react'
-import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import type { Site } from '../lib/api'
-import { can } from '../lib/permissions'
 import { pageLoading } from '../lib/pageLoading'
-import { caps, keyFor, useKeymap } from '../lib/keys'
-import { openShortcuts } from './ShortcutsHost'
 import { footerCopy as t } from './footerCopy'
 import { CHANGELOG, DOCS, SOCIALS } from './footerLinks'
 import { SocialIcon } from './SocialIcon'
@@ -20,32 +17,7 @@ const SETTLE = 1200
 /** A page that is still loading after this long gets its foot anyway. */
 const WAIT_MAX = 20_000
 
-/** A page that offers Ask marks itself (components/Ask.tsx); the key is only hinted at where there is something behind it. */
-const marked = (on: () => void) => {
-  const watch = new MutationObserver(on)
-  watch.observe(document.documentElement, { attributes: true, attributeFilter: ['data-ask-about'] })
-  return () => watch.disconnect()
-}
-const askOffered = () => document.documentElement.hasAttribute('data-ask-about')
-
-function Key({ id, label, onClick }: { id: string; label: string; onClick?: () => void }) {
-  const cap = caps(keyFor(id)).join('')
-  const inner = (
-    <>
-      <kbd>{cap}</kbd>
-      {label}
-    </>
-  )
-  return onClick ? (
-    <button type="button" className="footer-key" onClick={onClick}>
-      {inner}
-    </button>
-  ) : (
-    <span className="footer-key">{inner}</span>
-  )
-}
-
-/** The foot of every dashboard page: how things are, the keys that help, this version and where to read more. */
+/** The foot of every dashboard page: how things are on the left; this version and where to read more on the right. */
 export function Footer({ version, newer, onNewer, site, sites }: { version?: string; newer?: string; onNewer?: () => void; site?: string; sites: Site[] }) {
   const [feedback, setFeedback] = useState(false)
   // Held back (still taking its room) until the status has arrived and the page has had a moment: a foot that fills in and
@@ -64,8 +36,6 @@ export function Footer({ version, newer, onNewer, site, sites }: { version?: str
   }, [])
   // Drawn when the status has arrived and the page has its numbers (or has been long enough about it).
   const settled = ready && (!loading || tired)
-  useKeymap()
-  const ask = useSyncExternalStore(marked, askOffered, () => false) && can('peek.ask')
   const whatsNew = (
     <>
       {newer && <i className="footer-dot" aria-hidden="true" />}
@@ -79,11 +49,6 @@ export function Footer({ version, newer, onNewer, site, sites }: { version?: str
         <Suspense fallback={null}>
           <ServerStatus sites={sites} />
         </Suspense>
-        <span className="app-footer-keys">
-          {ask && <Key id="ask" label={t.ask} />}
-          <Key id="filter" label={t.filter} />
-          <Key id="shortcuts" label={t.shortcuts} onClick={openShortcuts} />
-        </span>
       </span>
       <span className="app-footer-end">
         {newer ? (

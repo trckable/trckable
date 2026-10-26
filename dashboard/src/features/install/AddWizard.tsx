@@ -3,10 +3,9 @@
 // stream, so the first visit turns it live here too.
 import { ArrowRight, Banknote, Globe } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { DialogActions } from '../../components/DialogActions'
-import { DialogHead } from '../../components/DialogHead'
 import { Name } from '../../components/Logo'
-import { Modal } from '../../kit/Modal'
+import { Modal, type Frame } from '../../kit/Modal'
+import { ModalMark } from '../../kit/ModalMark'
 import { StepBody } from '../../components/StepBody'
 import { Steps } from '../../components/Steps'
 import { type Site, type SiteKind, more } from '../../lib/apiMore'
@@ -138,9 +137,72 @@ export function AddWizard({ onClose, onSites, sites = [], prefill = null }: { on
     openSettings(site, 'payments')
   }
 
+  const foot = (): Pick<Frame, 'cancel' | 'extra' | 'actions'> => {
+    if (step === 1) return {
+          cancel: t.cancel,
+          actions: (
+            <button ref={next} type="submit" form="wiz-domain" className="btn primary big" disabled={busy || !valid} title={reason || undefined} aria-describedby={reason ? 'wiz-status' : undefined}>
+              {busy && <span className="btn-spin" aria-hidden="true" />}
+              {busy ? t.adding : t.add}
+            </button>
+          ),
+        }
+    if (step === 2) return {
+            cancel: false,
+            extra: (
+              <button type="button" className="btn ghost" onClick={() => setStep(3)}>
+                {t.kindSkip}
+              </button>
+            ),
+            actions: (
+              <button type="button" className="btn primary big" disabled={!kind} onClick={keepKind}>
+                {t.kindNext}
+              </button>
+            ),
+          }
+    if (step === 3) return {
+              cancel: false,
+              extra: (
+                <button type="button" className="btn ghost" onClick={open}>
+                  {t.later}
+                </button>
+              ),
+              actions: (
+                <button type="button" className="btn primary big" disabled={checking} onClick={installed}>
+                  {checking && <span className="btn-spin" aria-hidden="true" />}
+                  {installLabel}
+                  {!checking && <ArrowRight size={16} strokeWidth={2} aria-hidden="true" />}
+                </button>
+              ),
+            }
+    return {
+              cancel: false,
+              extra: (
+                <button type="button" className="btn ghost" onClick={() => setStep(3)}>
+                  {t.back}
+                </button>
+              ),
+              actions: (
+                <>
+                  <button type="button" className="btn ghost" onClick={open}>
+                    {t.revenueSkip}
+                  </button>
+                  <button type="button" className="btn primary big" onClick={payments}>
+                    {t.revenueConnect}
+                  </button>
+                </>
+              ),
+            }
+  }
+
   return (
-    <Modal label={t.label} className="wizard add-site" onClose={onClose} keepSize={false}>
-      <DialogHead icon={headIcon(step)} heading={<Title step={step} site={site} live={live} />} hint={t.sub[step - 1]} />
+    <Modal
+      label={t.label}
+      className="add-site"
+      onClose={onClose}
+      keepSize={false}
+      frame={{ title: <Title step={step} site={site} live={live} />, subtitle: t.sub[step - 1], icon: <ModalMark icon={headIcon(step)} />, size: 'lg', busy, ...foot() }}
+    >
       <Steps compact labels={t.steps} at={step - 1} done={live && step === 3 ? 2 : undefined} onGo={(i) => setStep(i + 1)} />
 
       <StepBody step={step} className="wiz-step" fit>
@@ -149,65 +211,6 @@ export function AddWizard({ onClose, onSites, sites = [], prefill = null }: { on
         {step === 3 && site && <Install site={site} visits={stream.visits} variant="wizard" check={check} />}
         {step === 4 && <p className="muted wiz-revenue">{t.revenueBody}</p>}
       </StepBody>
-
-      {step === 1 && (
-        <DialogActions
-          left={
-            <button type="button" className="btn ghost" onClick={onClose}>
-              {t.cancel}
-            </button>
-          }
-        >
-          <button ref={next} type="submit" form="wiz-domain" className="btn primary big" disabled={busy || !valid} title={reason || undefined} aria-describedby={reason ? 'wiz-status' : undefined}>
-            {busy && <span className="btn-spin" aria-hidden="true" />}
-            {busy ? t.adding : t.add}
-          </button>
-        </DialogActions>
-      )}
-      {step === 2 && (
-        <DialogActions
-          left={
-            <button type="button" className="btn ghost" onClick={() => setStep(3)}>
-              {t.kindSkip}
-            </button>
-          }
-        >
-          <button type="button" className="btn primary big" disabled={!kind} onClick={keepKind}>
-            {t.kindNext}
-          </button>
-        </DialogActions>
-      )}
-      {step === 3 && (
-        <DialogActions
-          left={
-            <button type="button" className="btn ghost" onClick={open}>
-              {t.later}
-            </button>
-          }
-        >
-          <button type="button" className="btn primary big" disabled={checking} onClick={installed}>
-            {checking && <span className="btn-spin" aria-hidden="true" />}
-            {installLabel}
-            {!checking && <ArrowRight size={16} strokeWidth={2} aria-hidden="true" />}
-          </button>
-        </DialogActions>
-      )}
-      {step === 4 && (
-        <DialogActions
-          left={
-            <button type="button" className="btn ghost" onClick={() => setStep(3)}>
-              {t.back}
-            </button>
-          }
-        >
-          <button type="button" className="btn ghost" onClick={open}>
-            {t.revenueSkip}
-          </button>
-          <button type="button" className="btn primary big" onClick={payments}>
-            {t.revenueConnect}
-          </button>
-        </DialogActions>
-      )}
     </Modal>
   )
 }

@@ -1,11 +1,4 @@
 /* The role confirmation: it loads with its chunk, not with the first load. */
-.modal.role-modal {
-  width: min(440px, 100%);
-}
-.role-body {
-  display: grid;
-  gap: 16px;
-}
 .role-lines {
   display: grid;
   gap: 8px;

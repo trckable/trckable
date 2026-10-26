@@ -3,6 +3,7 @@
 // Settings page can stay about one site.
 import { Camera, Eye, EyeOff, ImageUp, LockKeyhole, LogOut, ShieldCheck, Trash2 } from 'lucide-react'
 import { Modal } from '../kit/Modal'
+import { ModalMark } from '../kit/ModalMark'
 import { Window } from '../components/Window'
 import { PersonAvatar } from '../components/PersonAvatar'
 import { Suspense, lazy, useEffect, useRef, useState, type ReactNode } from 'react'
@@ -10,8 +11,6 @@ import { api, fail, refused, wrong, type Profile, type TwoStep as TwoStepState, 
 import { toast } from '../components/Toast'
 import { closeAccount, openAccount, type AccountTab as Tab } from '../lib/account'
 import { confirm, confirmWith } from '../components/Confirm'
-import { DialogActions } from '../components/DialogActions'
-import { DialogHead } from '../components/DialogHead'
 import { Field } from '../components/Field'
 import { can } from '../lib/permissions'
 import { usePictureVersion } from '../lib/profile'
@@ -203,16 +202,24 @@ function PasswordDialog({ onClose }: { onClose: () => void }) {
   }
   const Eyes = show ? EyeOff : Eye
   return (
-    <Modal label="Change your password" className="person-modal" onClose={busy ? undefined : onClose}>
-      <form
-        className="modal-form"
-        onSubmit={(e) => {
-          e.preventDefault()
-          submit()
-        }}
-        aria-busy={busy}
-      >
-        <DialogHead icon={LockKeyhole} heading="Change your password" hint="Your other devices are signed out." />
+    <Modal
+      label="Change your password"
+      onClose={busy ? undefined : onClose}
+      frame={{
+        title: 'Change your password',
+        subtitle: 'Your other devices are signed out.',
+        icon: <ModalMark icon={LockKeyhole} />,
+        size: 'sm',
+        busy,
+        onSubmit: submit,
+        actions: (
+          <button type="submit" className="btn primary big" disabled={busy || !cur || !ok || same}>
+            {busy && <span className="btn-spin" aria-hidden="true" />}
+            {busy ? 'Changing…' : 'Change password'}
+          </button>
+        ),
+      }}
+    >
         <Field label="Current password" error={err}>
           {(f) => <input {...f} className="input" type="password" autoFocus autoComplete="current-password" value={cur} onChange={(e) => { setCur(e.target.value); setErr(null) }} />}
         </Field>
@@ -234,19 +241,6 @@ function PasswordDialog({ onClose }: { onClose: () => void }) {
             {meterText(same, ok, next.length, MIN)}
           </span>
         </div>
-        <DialogActions
-          left={
-            <button type="button" className="btn ghost" onClick={onClose} disabled={busy}>
-              Cancel
-            </button>
-          }
-        >
-          <button type="submit" className="btn primary big" disabled={busy || !cur || !ok || same}>
-            {busy && <span className="btn-spin" aria-hidden="true" />}
-            {busy ? 'Changing…' : 'Change password'}
-          </button>
-        </DialogActions>
-      </form>
     </Modal>
   )
 }

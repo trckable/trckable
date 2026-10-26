@@ -42,11 +42,10 @@ test('the footer says all is normal, hints the keys, and Feedback sends a note',
     return { top: c.borderTopWidth, bg: c.backgroundColor, shadow: c.boxShadow, radius: c.borderTopLeftRadius }
   })
   expect(look).toEqual({ top: '1px', bg: 'rgba(0, 0, 0, 0)', shadow: 'none', radius: '0px' })
-  // The keys that exist here: Filter and Shortcuts. Ask is only hinted where something answers it.
-  await expect(foot.locator('.footer-key', { hasText: 'Filter' }).locator('kbd')).toHaveText('/')
-  await expect(foot.getByRole('button', { name: /Shortcuts/ })).toBeVisible()
-  await expect(foot.locator('.footer-key', { hasText: 'Ask' })).toHaveCount(0)
-  await foot.getByRole('button', { name: /Shortcuts/ }).click()
+  // No key hints in the foot: the keys still work, and Shortcuts is under the account menu.
+  await expect(foot.locator('.footer-key, kbd')).toHaveCount(0)
+  await expect(foot.getByRole('button', { name: /Shortcuts/ })).toHaveCount(0)
+  await page.keyboard.press('Shift+/')
   await expect(page.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeHidden()
@@ -146,8 +145,7 @@ test('on a phone the foot is two quiet lines and nothing scrolls sideways', asyn
   const foot = await open(page)
   await foot.scrollIntoViewIfNeeded()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
-  // Keys are for a keyboard: not here. The status, then the links.
-  await expect(foot.locator('.app-footer-keys')).toBeHidden()
+  // The status, then the links.
   const rows = await foot.evaluate((el) => new Set([...el.querySelectorAll('a, button')].filter((x) => (x as HTMLElement).offsetParent).map((x) => Math.round(x.getBoundingClientRect().top / 10))).size)
   expect(rows).toBeLessThanOrEqual(4) // two lines, each a finger tall
   const box = (await foot.boundingBox())!

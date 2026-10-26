@@ -11,7 +11,7 @@
  "components/Code.css": 2,
  "components/Copyable.css": 1,
  "components/DateRangePopover.css": 5,
- "components/DialogActions.css": 1,
+ "components/ActionRow.css": 1,
  "components/Footer.css": 1,
  "components/InlineEdit.css": 2,
  "components/ListPop.css": 4,

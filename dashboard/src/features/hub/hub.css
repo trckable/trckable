@@ -1,42 +1,4 @@
 /* The Tracking options pop-up (FeaturesDialog.tsx): loads with its chunk. */
-.modal.feat-modal {
-  width: min(560px, calc(100vw - 32px));
-  padding: 0;
-  gap: 0;
-}
-/* The heading stays on top while the list scrolls under it: opaque, and never squeezed by the scrolling column. */
-.feat-top {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 20px 24px 14px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--grid);
-}
-.feat-top h2 {
-  font-size: 18px;
-  letter-spacing: -0.02em;
-}
-.feat-top .faint {
-  font-size: 12.5px;
-}
-.feat-top .modal-close {
-  margin-left: auto;
-}
-.feat-body {
-  padding: 8px 24px 24px;
-}
-.feat-body .card {
-  border: 0;
-  background: none;
-  box-shadow: none;
-  padding: 0;
-}
-
 /* A phone: the whole screen and a finger-high close. */
 @media (max-width: 640px) {
   .modal-back:has(.feat-modal) {
@@ -49,14 +11,10 @@
     border-radius: 0;
     border: 0;
   }
-  .feat-top {
-    padding: max(14px, env(safe-area-inset-top)) 14px 12px;
-  }
-  .feat-top .modal-close {
-    width: 40px;
-    height: 40px;
-  }
-  .feat-body {
-    padding: 8px 14px max(24px, env(safe-area-inset-bottom));
-  }
+}
+.feat-modal .modal-body .card {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  padding: 0;
 }

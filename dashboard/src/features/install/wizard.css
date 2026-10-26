@@ -5,16 +5,13 @@
 .modal.add-site > * {
   flex-shrink: 0;
 }
-.modal.wizard.add-site {
+.modal.framed.add-site {
   width: min(620px, 100%);
   max-width: 620px;
   gap: 12px;
 }
 .wiz-step {
   gap: 12px;
-}
-.add-site .dlg-head h2 {
-  font-size: 17px;
 }
 
 /* A phone: the dialog is the whole screen, and its buttons stay at the bottom while the rest scrolls. */
@@ -29,7 +26,7 @@
     border-width: 0;
     border-radius: 0;
   }
-  :root .modal.add-site > .dialog-actions {
+  :root .modal.add-site > .modal-foot {
     position: sticky;
     bottom: 0;
     margin: auto -20px 0;
