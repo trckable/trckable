@@ -4,8 +4,6 @@
 // time. The code carries this site's id, key and server address.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check } from 'lucide-react'
-import { DialogActions } from '../../components/DialogActions'
-import { DialogHead } from '../../components/DialogHead'
 import { Modal } from '../../kit/Modal'
 import { Stepper } from '../../components/Stepper'
 import { type Site, more } from '../../lib/apiMore'
@@ -66,10 +64,44 @@ export function CrawlerSetup({ site, onChanged, onClose }: { site: Site; onChang
   }
   const platform = t.options.find((o) => o.id === setup)?.label
   return (
-    <Modal label={t.label} className="wide" onClose={close}>
+    <Modal
+      label={t.label}
+      onClose={close}
+      frame={{
+        title: t.titles[step - 1],
+        subtitle: t.leads[step - 1],
+        help: t.help,
+        size: 'md',
+        cancel: false,
+        extra:
+          step === 1 ? (
+            <a className="btn ghost" href="https://docs.trckable.com/reports/ai-search/" target="_blank" rel="noreferrer">
+              {t.docs}
+            </a>
+          ) : (
+            <button type="button" className="btn ghost" onClick={() => setStep(step - 1)}>
+              {t.back}
+            </button>
+          ),
+        actions: (
+          <>
+            {step > 1 && <span className="cs-chip">{platform}</span>}
+            {step === 2 && (
+              <button type="button" className="btn primary big" onClick={() => setStep(3)}>
+                {t.next}
+              </button>
+            )}
+            {step === 3 && (
+              <button type="button" className="btn primary big" onClick={close}>
+                {t.done}
+              </button>
+            )}
+          </>
+        ),
+      }}
+    >
       <div ref={top} className="cs-top">
         <Stepper step={step} total={TOTAL} label={t.step(step, TOTAL)} />
-        <DialogHead heading={t.titles[step - 1]} hint={t.leads[step - 1]} help={t.help} />
       </div>
       <div className="cs-body" key={step}>
         {step === 1 && (
@@ -97,31 +129,6 @@ export function CrawlerSetup({ site, onChanged, onClose }: { site: Site; onChang
           </div>
         )}
       </div>
-      <DialogActions
-        left={
-          step === 1 ? (
-            <a className="btn ghost" href="https://docs.trckable.com/reports/ai-search/" target="_blank" rel="noreferrer">
-              {t.docs}
-            </a>
-          ) : (
-            <button type="button" className="btn ghost" onClick={() => setStep(step - 1)}>
-              {t.back}
-            </button>
-          )
-        }
-      >
-        {step > 1 && <span className="cs-chip">{platform}</span>}
-        {step === 2 && (
-          <button type="button" className="btn primary big" onClick={() => setStep(3)}>
-            {t.next}
-          </button>
-        )}
-        {step === 3 && (
-          <button type="button" className="btn primary big" onClick={close}>
-            {t.done}
-          </button>
-        )}
-      </DialogActions>
     </Modal>
   )
 }

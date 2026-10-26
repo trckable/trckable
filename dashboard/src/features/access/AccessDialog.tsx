@@ -1,8 +1,6 @@
 // The popup behind a person's ⋯ → Allowed sites: All sites, or the ones
 // ticked. Nothing changes until Save; Cancel and Escape leave it as it was.
-import { useState, type SyntheticEvent } from 'react'
-import { DialogActions } from '../../components/DialogActions'
-import { DialogHead } from '../../components/DialogHead'
+import { useState } from 'react'
 import { Modal } from '../../kit/Modal'
 import { Switch } from '../../components/Switch'
 import { fail, type SiteAccessList } from '../../lib/api'
@@ -23,8 +21,7 @@ export default function AccessDialog({ viewer, sites, onSave, onClose }: { viewe
       else next.add(id)
       return next
     })
-  const submit = async (e: SyntheticEvent) => {
-    e.preventDefault()
+  const submit = async () => {
     if (busy) return
     setBusy(true)
     try {
@@ -38,34 +35,37 @@ export default function AccessDialog({ viewer, sites, onSave, onClose }: { viewe
   }
   const dirty = changed(viewer.sites, all ? null : [...chosen])
   return (
-    <Modal label={copy.editFor(viewer.email)} className="access-dialog" keepSize={false} onClose={busy ? undefined : onClose}>
-      <form onSubmit={submit}>
-        <DialogHead heading={copy.menuItem} hint={viewer.email} />
-        <div className="access-all">
-          <span>{copy.allToggle}</span>
-          <Switch on={all} label={copy.allToggle} disabled={busy} onChange={() => setAll((a) => !a)} />
-        </div>
-        <fieldset className="access-sites" aria-label={copy.sitesLabel} disabled={all || busy}>
-          {sites.map((s) => (
-            <label key={s.id} className="access-site">
-              <input type="checkbox" checked={all || chosen.has(s.id)} onChange={() => toggle(s.id)} />
-              <span>{s.name || s.domain}</span>
-              {s.name && s.name !== s.domain && <span className="faint">{s.domain}</span>}
-            </label>
-          ))}
-        </fieldset>
-        <DialogActions
-          left={
-            <button type="button" className="btn ghost" disabled={busy} onClick={onClose}>
-              {copy.cancel}
-            </button>
-          }
-        >
+    <Modal
+      label={copy.editFor(viewer.email)}
+      keepSize={false}
+      onClose={busy ? undefined : onClose}
+      frame={{
+        title: copy.menuItem,
+        subtitle: viewer.email,
+        size: 'sm',
+        busy,
+        cancel: copy.cancel,
+        onSubmit: () => void submit(),
+        actions: (
           <button type="submit" className="btn primary" disabled={busy || !dirty}>
             {busy ? copy.saving : copy.save}
           </button>
-        </DialogActions>
-      </form>
+        ),
+      }}
+    >
+    <div className="access-all">
+      <span>{copy.allToggle}</span>
+      <Switch on={all} label={copy.allToggle} disabled={busy} onChange={() => setAll((a) => !a)} />
+    </div>
+    <fieldset className="access-sites" aria-label={copy.sitesLabel} disabled={all || busy}>
+      {sites.map((s) => (
+        <label key={s.id} className="access-site">
+          <input type="checkbox" checked={all || chosen.has(s.id)} onChange={() => toggle(s.id)} />
+          <span>{s.name || s.domain}</span>
+          {s.name && s.name !== s.domain && <span className="faint">{s.domain}</span>}
+        </label>
+      ))}
+    </fieldset>
     </Modal>
   )
 }

@@ -6,6 +6,7 @@
   --bg: #0b0d10;
   --surface: #12151a;
   --surface-2: #181c22;
+  --modal-surface: #12151a; /* every dialog: solid, never see-through */
   --pop: #181c22; /* a pop-up, one step above the page (light: the plain surface, so text keeps its contrast) */
   --pane: rgba(22, 25, 31, 0.78); /* the menus' frosted pane */
   --pane-hair: rgba(255, 255, 255, 0.07);
@@ -78,6 +79,7 @@
     --bg: #fafaf7;
     --surface: #ffffff;
     --surface-2: #f3f4f1;
+    --modal-surface: #ffffff;
   --pop: #ffffff;
   --pane: rgba(255, 255, 255, 0.78);
   --pane-hair: rgba(15, 20, 30, 0.08);
@@ -137,6 +139,7 @@
   color-scheme: light;
   --bg: #fafaf7;
   --surface: #ffffff;
+  --modal-surface: #ffffff;
   --surface-2: #f3f4f1;
   --pop: #ffffff;
   --pane: rgba(255, 255, 255, 0.78);
@@ -1361,11 +1364,6 @@ ul.people button:hover {
 .saved.on {
   opacity: 1;
   transform: none;
-}
-.modal.wizard {
-  /* The install step carries a snippet somebody has to read. */
-  width: min(720px, 100%);
-  max-width: 720px;
 }
 /* ---- Searchable picker ----------------------------------------------------- */
 .picker {

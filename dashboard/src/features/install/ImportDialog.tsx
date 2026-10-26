@@ -3,26 +3,40 @@
 // that runs it, with the docs one click away. Nothing here promises more than
 // the importer does.
 import { ExternalLink, FileSpreadsheet, History, Table2 } from 'lucide-react'
-import { useRef } from 'react'
 import { Copyable } from '../../components/Copyable'
-import { DialogActions } from '../../components/DialogActions'
-import { DialogHead } from '../../components/DialogHead'
 import { Modal } from '../../kit/Modal'
+import { ModalMark } from '../../kit/ModalMark'
 import { first } from './firstCopy'
 import { GoogleStep } from './GoogleStep'
-import { useFocusTrap } from './useFocusTrap'
-import '../../components/ConfirmDialog.css'
 import './firstActions.css'
 
 const t = first.importDialog
 
 export function ImportDialog({ domain, site, onClose }: { domain: string; site: string; onClose: () => void }) {
-  const box = useRef<HTMLDivElement>(null)
-  useFocusTrap(box)
   return (
-    <Modal label={t.title} className="confirm-modal" onClose={onClose} keepSize={false}>
-      <div ref={box} className="confirm-body fa-import">
-        <DialogHead icon={History} heading={t.title} />
+    <Modal
+      label={t.title}
+      onClose={onClose}
+      keepSize={false}
+      frame={{
+        title: t.title,
+        icon: <ModalMark icon={History} />,
+        size: 'sm',
+        cancel: false,
+        extra: (
+          <a className="btn ghost" href={t.docsUrl} target="_blank" rel="noreferrer">
+            {t.docs}
+            <ExternalLink size={13} strokeWidth={1.75} aria-hidden="true" />
+          </a>
+        ),
+        actions: (
+          <button type="button" className="btn primary big" onClick={onClose} autoFocus>
+            {t.close}
+          </button>
+        ),
+      }}
+    >
+      <div className="fa-import">
         <ul className="fa-formats">
           <li>
             <span className="icon-tile small" aria-hidden="true">
@@ -41,18 +55,6 @@ export function ImportDialog({ domain, site, onClose }: { domain: string; site: 
         </ul>
         <GoogleStep site={site} />
         <Copyable value={t.command(domain)} />
-        <DialogActions
-          left={
-            <a className="btn ghost" href={t.docsUrl} target="_blank" rel="noreferrer">
-              {t.docs}
-              <ExternalLink size={13} strokeWidth={1.75} aria-hidden="true" />
-            </a>
-          }
-        >
-          <button type="button" className="btn primary big" onClick={onClose} autoFocus>
-            {t.close}
-          </button>
-        </DialogActions>
       </div>
     </Modal>
   )

@@ -1,4 +1,4 @@
-// Every dialog ends the same way, so nobody has to work out where to look.
+// A row of actions: every dialog's footer (Modal), and the foot of a settings card. Every one ends the same way, so nobody has to work out where to look.
 //
 //   left      the quiet way out — Cancel, Done, Back — a ghost button
 //   children  the one thing you probably came to do: exactly one primary
@@ -7,9 +7,9 @@
 // the dialog's padding is the only space around them. On a phone the primary
 // takes the width the quiet button leaves, where a thumb reaches.
 import type { ReactNode } from 'react'
-import './DialogActions.css'
+import './ActionRow.css'
 
-export function DialogActions({ left, children }: { left?: ReactNode; children?: ReactNode }) {
+export function ActionRow({ left, children }: { left?: ReactNode; children?: ReactNode }) {
   return (
     <div className="dialog-actions">
       {left}

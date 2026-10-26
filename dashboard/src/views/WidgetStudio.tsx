@@ -1,7 +1,6 @@
 // The studio of Settings → Widgets: pick a design, see it with the real numbers,
 // and set its mode, parts, look, language and words. Used to make a widget and
 // to edit one.
-import type { ReactNode } from 'react'
 import { Select } from '../components/Select'
 import { Switch } from '../components/Switch'
 import type { Site, WidgetKind, WidgetLook } from '../lib/apiMore'
@@ -17,7 +16,7 @@ const PLACES: { id: Place; label: string }[] = [
   { id: 'bl', label: 'Floating, bottom left' },
 ]
 
-export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { site: Site; look: WidgetLook; onLook: (patch: Partial<WidgetLook>) => void; place: Place; onPlace: (p: Place) => void; footer: ReactNode }) {
+export function WidgetStudio({ site, look, onLook, place, onPlace }: { site: Site; look: WidgetLook; onLook: (patch: Partial<WidgetLook>) => void; place: Place; onPlace: (p: Place) => void }) {
   const set = onLook
   // The words of one design are not the words of the next.
   const pick = (kind: WidgetKind) => set({ kind, shows: kind === 'online' ? withPlace(DEFAULT_PARTS[kind], place) : DEFAULT_PARTS[kind], texts: {} })
@@ -159,7 +158,6 @@ export function WidgetStudio({ site, look, onLook, place, onPlace, footer }: { s
             </WidgetSection>
           )}
           <input className="wg-name" value={look.name ?? ''} maxLength={MAX_NAME} placeholder={defaultName(look)} aria-label={TEXT.name} title={TEXT.nameLabel} onChange={(e) => set({ name: e.target.value })} />
-          {footer}
         </div>
       </div>
     </>

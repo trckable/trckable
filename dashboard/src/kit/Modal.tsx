@@ -5,6 +5,7 @@
 // and the wizard's own heading was clipped out of reach.
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { Framed, type Frame } from './ModalFrame'
 import { useGlide } from '../components/glide'
 import { useLockScroll } from '../components/lockScroll'
 import './Modal.css'
@@ -123,8 +124,11 @@ export function leave(node: HTMLElement) {
   setTimeout(() => ghost.remove(), 170)
 }
 
+export type { Frame }
+
 export function Modal({
   label,
+  frame,
   onClose,
   className = '',
   keepSize = true,
@@ -133,6 +137,8 @@ export function Modal({
   children,
 }: {
   label: string
+  /** The standard header, body and footer. Without it, children are the dialog's own content. */
+  frame?: Frame
   /** Ease from one height to the next while open (tabs, steps), instead of
    *  jumping. Off for a dialog that should follow its content at once. */
   keepSize?: boolean
@@ -144,7 +150,7 @@ export function Modal({
   className?: string
   /** A question about the dialog beneath (a confirmation): it shows over it instead of replacing it. */
   over?: boolean
-  children: ReactNode
+  children?: ReactNode
 }) {
   useLockScroll()
   const back = useRef<HTMLDivElement>(null)
@@ -182,7 +188,7 @@ export function Modal({
   const [before] = useState(() => (typeof document === 'undefined' ? null : (document.activeElement as HTMLElement | null)))
   useEffect(() => {
     const el = box.current
-    if (el && !el.contains(document.activeElement)) (focus === 'first' ? tabbable(el).find((c) => !c.matches('.info-dot')) ?? el : el).focus()
+    if (el && !el.contains(document.activeElement)) (focus === 'first' ? tabbable(el).find((c) => !c.matches('.info-dot, .modal-close')) ?? el : el).focus()
     return () => {
       if (before && before.isConnected) before.focus()
     }
@@ -199,8 +205,8 @@ export function Modal({
     // Escape is handled above, through the stack; a click on the backdrop is the mouse's way.
     <div ref={back} className="modal-back" role="presentation" onClick={onClose}>
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- only stops a click inside the dialog from reaching the backdrop (and the page behind the portal) */}
-      <div ref={box} tabIndex={-1} className={('modal rise ' + className).trim()} role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => box.current && trapTab(e, box.current)}>
-        {children}
+      <div ref={box} tabIndex={-1} className={(`modal rise ${frame ? 'framed modal-' + (frame.size ?? 'md') : ''} ${className}`).replace(/\s+/g, ' ').trim()} role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.stopPropagation()} onKeyDown={(e) => box.current && trapTab(e, box.current)}>
+        {frame ? <Framed f={frame} onClose={onClose}>{children}</Framed> : children}
       </div>
     </div>,
     document.body,

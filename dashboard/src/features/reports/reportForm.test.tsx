@@ -1,8 +1,11 @@
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { BLANK, ReportForm, summaryOf } from './ReportForm'
 
-const draw = (from = BLANK) => renderToStaticMarkup(<ReportForm site="s" from={from} langs={['en', 'de', 'fr', 'es', 'it', 'nl']} max={10} onDone={() => undefined} />)
+// The dialog draws into the page's body; a string render has none, so the form is drawn without its frame.
+vi.mock('../../kit/Modal', () => ({ Modal: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }))
+
+const draw = (from = BLANK) => renderToStaticMarkup(<ReportForm title="New report" site="s" from={from} langs={['en', 'de', 'fr', 'es', 'it', 'nl']} max={10} onDone={() => undefined} />)
 
 describe('the report form', () => {
   it('offers both rhythms, all six languages, the PDF switch and the addresses', () => {

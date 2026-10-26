@@ -180,7 +180,6 @@
 
 /* ---- Deleting: a dialog that looks as serious as it is ---------------------- */
 .modal.danger-modal {
-  width: min(520px, 100%);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--down) 45%, var(--border));
   background:
     radial-gradient(520px 180px at 0% 0%, color-mix(in srgb, var(--down) 12%, transparent), transparent 70%),

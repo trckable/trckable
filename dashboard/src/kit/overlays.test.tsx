@@ -3,7 +3,7 @@
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { Modal, Popover, Segmented, Sheet, Tooltip } from './index'
+import { Modal, Popover, Segmented, Tooltip } from './index'
 import { hearFrames } from './Modal'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -94,14 +94,6 @@ describe('Modal', () => {
     doc.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     expect(esc).toHaveBeenCalledTimes(1)
     box.remove()
-  })
-})
-
-describe('Sheet', () => {
-  it('is a labelled dialog with a grab handle', () => {
-    act(() => root.render(<Sheet label="Filters" onClose={() => {}}>content</Sheet>))
-    expect(document.querySelector('[role=dialog][aria-label=Filters]')).not.toBeNull()
-    expect(document.querySelector('.kit-grab')).not.toBeNull()
   })
 })
 
