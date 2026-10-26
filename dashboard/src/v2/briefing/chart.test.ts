@@ -82,7 +82,8 @@ describe('the period before on the chart', () => {
     const c = chartOf({ cur: result([0, 0, 0, 40, 50, 60]), prev: result([0, 0, 0, 0, 0, 0]), bucket: 'day', unit: 'month', against: 'last month' })
     expect(c.compare).toBeNull()
     expect(c.noCompare).toBe('Comparison starts Oct 10, once there’s a month of data'.replace('’', "'"))
-    expect(chartNote(c, null)).toBe(c.noCompare)
+    // Said once, beside the Compare menu: the line over the chart does not repeat it.
+    expect(chartNote(c, null)).not.toContain('Comparison starts')
     expect(chartNote(c, 4)).not.toMatch(/usual|0–0/)
   })
   it('asks for nothing when no comparison is asked for', () => {

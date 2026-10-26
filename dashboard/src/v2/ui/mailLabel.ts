@@ -6,9 +6,9 @@ import { copy } from '../briefing/copy'
 /** The send hour the daily email goes out at (local to the reader). */
 export const MAIL_HOUR = 8
 
-/** The hour as the language writes a clock time: "08:00", "8:00 AM". */
+/** The hour as the language writes a clock time: "8:00 AM", "08:00". */
 export const mailTime = (hour = MAIL_HOUR, locale: string | undefined = tag): string =>
-  dateFmt(locale, { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }).format(new Date(Date.UTC(2000, 0, 1, hour)))
+  dateFmt(locale, { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' }).format(new Date(Date.UTC(2000, 0, 1, hour)))
 
 /** The chip's visible text and the sentence a screen reader and the tooltip read. */
 export function mailLabel(on: boolean, hour = MAIL_HOUR, locale: string | undefined = tag): { short: string; full: string } {

@@ -7,21 +7,33 @@
 .mk .cc-seg button.on { background: var(--mk-limeD); color: var(--mk-lime); }
 .mk .cc-seg button[aria-disabled='true'] { opacity: .4; cursor: default; }
 .mk .cc-cmp { display: flex; align-items: center; gap: var(--mk-s3); min-width: 0; flex: none; }
-.mk .cc-why { font-size: 12px; max-width: 28ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mk .cc-sw { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0; border: 0; background: transparent; font-size: 12px; color: var(--mk-muted); cursor: pointer; }
-.mk .cc-sw[data-on='true'] { color: var(--mk-text); }
-.mk .cc-knob { position: relative; width: 26px; height: 16px; border-radius: 999px; background: var(--mk-line); transition: background-color .15s; }
-.mk .cc-knob::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--mk-text); transition: transform .15s; }
-.mk .cc-sw[data-on='true'] .cc-knob { background: var(--mk-lime); }
-.mk .cc-sw[data-on='true'] .cc-knob::after { transform: translateX(10px); background: var(--mk-bg); }
+.mk .cc-menu { position: relative; }
+.mk .cc-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 var(--mk-s2); border: 0; border-radius: 999px; background: transparent; font-size: 12px; color: var(--mk-muted); cursor: pointer; white-space: nowrap; }
+.mk .cc-chip:hover, .mk .cc-chip[aria-expanded='true'] { background: var(--mk-band); color: var(--mk-text); }
+.mk .cc-chip.on { color: var(--mk-lime); }
+.mk .cc-pop { position: absolute; z-index: var(--z-menu); top: calc(100% + var(--mk-s1)); right: 0; min-width: 220px; padding: var(--mk-s1); border: 1px solid var(--mk-line); border-radius: 12px; background: var(--mk-card2); box-shadow: 0 12px 32px var(--mk-shc); }
+.mk .cc-pop button { display: flex; flex-direction: column; align-items: flex-start; width: 100%; padding: var(--mk-s2) var(--mk-s3); border: 0; border-radius: 8px; background: transparent; font-size: 12.5px; color: var(--mk-text); text-align: left; cursor: pointer; }
+.mk .cc-pop button:hover:not([aria-disabled]), .mk .cc-pop button:focus-visible { background: var(--mk-band); }
+.mk .cc-pop button[aria-checked='true'] { color: var(--mk-lime); }
+.mk .cc-pop button[aria-disabled='true'] { opacity: .5; cursor: default; }
+.mk .cc-pop small { font-size: 11.5px; color: var(--mk-muted); }
+.mk .cc-pop .cc-why { margin: 0; padding: var(--mk-s2) var(--mk-s3); font-size: 11.5px; }
+/* The legend of the two lines, on the row beside the menu. */
+.mk .cc-key { display: flex; gap: var(--mk-s3); font-size: 12px; white-space: nowrap; color: var(--mk-muted); }
+.mk .cc-key span { display: inline-flex; align-items: center; gap: 6px; }
+.mk .cc-key span::before { content: ''; width: 18px; border-top: 2px solid var(--mk-muted); }
+.mk .cc-key span[data-line='before']::before { border-top: 1.5px dashed var(--mk-muted); }
 .mk .cc button:focus-visible { outline: 2px solid var(--mk-lime); outline-offset: 1px; }
 /* The dashed line of the period before fades in and out as the switch moves. */
-.mk .shbefore, .mk .chkey { animation: cc-in .2s ease-out; }
+.mk .shbefore, .mk .chkey, .mk .cc-key { animation: cc-in .2s ease-out; }
 @keyframes cc-in { from { opacity: 0; } }
 @container (--pane-max-600) {
-  .mk .cc { gap: var(--mk-s2); overflow-x: auto; scrollbar-width: none; }
+  .mk .cc-chip svg:last-child { display: none; }
+  .mk .cc-cmp { gap: 0; }
+  .mk .cc-chip { padding: 0 var(--mk-s1); }
+  .mk .cc { gap: var(--mk-s1); overflow-x: auto; scrollbar-width: none; }
   .mk .cc::-webkit-scrollbar { display: none; }
-  .mk .cc-why { display: none; }
+  .mk .cc-key { display: none; }
   .mk .cc-seg { flex: none; overflow: visible; }
 }
 @media (prefers-reduced-motion: reduce) {

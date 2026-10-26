@@ -69,12 +69,25 @@ export function ChartBlock(p: ChartBlockProps) {
         <Suspense fallback={null}>
           <MentionsChip site={p.site} labels={labels} from={p.series[0]?.t.slice(0, 10) ?? p.range.from} to={p.range.to} />
         </Suspense>
-        <button type="button" className="gh nbtn" data-info="notes" onClick={p.onNotes}>
-          {copy.noteBtn(p.notes)}
-        </button>
         {p.replay && <ReplayBar r={p.replay} />}
       </div>
-      <ChartControls site={p.site} why={p.chart.noCompare} />
+      <ChartControls
+          site={p.site}
+          why={p.chart.noCompare}
+          legend={
+            p.chart.compare && (
+              <span className="cc-key" aria-hidden="true">
+                <span data-line="now">{copy.legendNow}</span>
+                <span data-line="before">{capital(p.chart.compare.name)}</span>
+              </span>
+            )
+          }
+          notes={
+            <button type="button" className="gh nbtn" data-info="notes" onClick={p.onNotes}>
+              {copy.noteBtn(p.notes)}
+            </button>
+          }
+        />
       <div className="chplot">
         {p.chart.compare && (
           <span className="chkey" aria-hidden="true">

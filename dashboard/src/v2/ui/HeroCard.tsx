@@ -106,13 +106,15 @@ interface HeroProps {
   onReplay?: () => void
   /** It is playing: the button says Stop. */
   replaying?: boolean
+  /** A button after Replay on the same row (the daily email's chip). */
+  extra?: ReactNode
   /** The card has the first-load shimmer, or the site is down and not answering. */
   enter?: boolean
   /** Why the headline says what it says. */
   why?: Why | null
 }
 
-export function Hero({ say, scores, rows, onSee, learn, crowd = null, since, period, onPeriod, chart, moments, onReplay, replaying, enter, why }: HeroProps) {
+export function Hero({ say, scores, rows, onSee, learn, crowd = null, since, period, onPeriod, chart, moments, onReplay, replaying, extra, enter, why }: HeroProps) {
   const [open, setOpen] = useState(false)
   const [sheet, setSheet] = useState<Score['key'] | 'all' | null>(null)
   return (
@@ -144,6 +146,7 @@ export function Hero({ say, scores, rows, onSee, learn, crowd = null, since, per
               </span>
             </button>
           )}
+          {extra}
           {why && (
             <button type="button" className="gh rpb whyb" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
               {copy.whyQ}

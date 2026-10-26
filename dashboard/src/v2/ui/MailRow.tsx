@@ -6,8 +6,8 @@ import { mailLabel } from './mailLabel'
 export function MailRow({ on, onChange }: { on: boolean; onChange: () => void }) {
   const { short, full } = mailLabel(on)
   return (
-    <button type="button" className={`mailchip${on ? '' : ' off'}`} data-mpv="1" aria-label={full} title={full} onClick={onChange}>
-      <Mail size={13} aria-hidden="true" />
+    <button type="button" className={`gh rpb mailchip${on ? '' : ' off'}`} data-mpv="1" aria-label={full} title={full} onClick={onChange}>
+      <Mail size={12} aria-hidden="true" />
       <span>{short}</span>
     </button>
   )
