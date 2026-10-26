@@ -38,7 +38,7 @@ export function useUptime(site: Site, range: Range) {
   const from = Math.min(Math.max(from0, site.watched_since ?? 0), to)
   const { summary, list, ready } = usePeriodIncidents(site.id, from, to, !isShared())
   // Minutes down are counted from the incidents, the part of each inside the period, so every figure on the page agrees.
-  const lost = ready && list ? downSeconds(list, from, to, now) : summary?.seconds ?? 0
+  const lost = ready && list ? downSeconds(list, from0, to, now) : summary?.seconds ?? 0
   const up = summary && ready ? uptimeOf(to - from, lost, undefined, summary.paused) : null
   return { pct: up?.pct ?? null, lost, list, from0, from, to }
 }
