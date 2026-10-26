@@ -162,11 +162,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
       {c.compare && before.length > 1 && (
         <>
           <polyline className="chbefore" points={before.map((p) => `${X(p.i)},${Y(p.v)}`).join(' ')} fill="none" stroke="var(--mk-muted)" strokeWidth="1.25" strokeDasharray="4 4" strokeLinecap="round" strokeLinejoin="round" opacity=".8" />
-          {nameAt && (
-            <text className="lbl lbl-halo" data-lbl="5" style={{ opacity: at !== null && pts[at] && Math.abs(pts[at].i - before[before.length - 1].i) <= 2 ? 0 : undefined }} x={nameAt.x} y={nameAt.y} textAnchor="end" fill="var(--mk-axis)" fontSize="12">
-              {capital(c.compare.name)}
-            </text>
-          )}
+          {nameAt && <text className="lbl lbl-halo" data-lbl="5" style={{ opacity: at !== null && pts[at] && Math.abs(pts[at].i - before[before.length - 1].i) <= 2 ? 0 : undefined }} x={nameAt.x} y={nameAt.y} textAnchor="end" fill="var(--mk-axis)" fontSize="12">{capital(c.compare.name)}</text>}
         </>
       )}
       {c.downs.map((d, k) => {
