@@ -204,11 +204,12 @@ test('Live starts as a line, the chart switch keeps bars across a reload and bot
     const w = window as unknown as { __ev: string[] }
     w.__ev = []
     const el = document.querySelectorAll('.lnow .mins i')[12]
+    new MutationObserver((ms) => ms.forEach((m) => w.__ev.push(`mut:+${[...m.addedNodes].map((n) => (n as Element).className).join('|')}:-${[...m.removedNodes].map((n) => (n as Element).className).join('|')}`))).observe(document.body, { childList: true, subtree: true })
     for (const t of ['pointerover', 'pointerenter', 'pointerleave', 'pointerout', 'mouseover', 'mousemove']) el.addEventListener(t, (e) => w.__ev.push(`${t}:${(e as PointerEvent).pointerType}`))
   })
   await page.locator('.lnow .mins i').nth(12).hover()
   await page.waitForTimeout(500)
-  expect(await page.evaluate(() => (window as unknown as { __ev: string[] }).__ev.join(' '))).toBe('x')
+  expect(await page.evaluate(() => (window as unknown as { __ev: string[] }).__ev.join(' ') + ' connected:' + String(document.querySelectorAll('.lnow .mins i')[12]?.isConnected) + ' tip:' + document.querySelectorAll('.kit-tip').length)).toBe('x')
   await expect(page.locator('.lchart .kit-tip')).toContainText(/\d{1,2}:\d{2}/)
   await expect(page.locator('.lchart .kit-tip')).toContainText(/\d+ views?/)
   await style.getByRole('button', { name: 'Line' }).click()
