@@ -160,7 +160,7 @@ export const copy = defineCopy('briefing', {
   legendNow: 'This period',
   /** The controls over a period chart: the periods, the Compare switch and what it is set against. */
   chartPeriods: 'Period',
-  chartShort: { '7d': '7d', '30d': '30d', '90d': '90d', '12mo': '12m' } as Record<string, string>,
+  chartShort: { '7d': '7d', '30d': '30d', '90d': '90d', '12mo': '12m' },
   chartCompare: 'Compare',
   chartAgainst: 'Compare against',
   againstPrevious: 'Previous period',
