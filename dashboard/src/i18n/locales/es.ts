@@ -618,6 +618,7 @@ export default {
   'error.code.dodo_unreachable': 'No se pudo conectar con Dodo Payments. Inténtalo de nuevo en un minuto.',
 
   // dates
+  'pageName.home': 'Inicio',
   'dates.period.now': 'Ahora',
   'dates.period.today': 'Hoy',
   'dates.period.yesterday': 'Ayer',

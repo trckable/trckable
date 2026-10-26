@@ -606,6 +606,7 @@ export default {
   'error.code.dodo_unreachable': 'Impossible de joindre Dodo Payments. Réessayez dans une minute.',
 
   // dates
+  'pageName.home': 'Accueil',
   'dates.period.now': 'Maintenant',
   'dates.period.today': 'Aujourd’hui',
   'dates.period.yesterday': 'Hier',
