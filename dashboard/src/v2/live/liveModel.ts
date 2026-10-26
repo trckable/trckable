@@ -1,6 +1,7 @@
 // What Live shows, worked out from the server's last half hour and the people on the site: the bars, the sources split,
 // how Today stands against its usual, the pages and the countries. Pure: live.test.ts.
 import { countryName } from '../../lib/format'
+import { baseEnough, overCap } from '../../lib/thin'
 import type { LiveNow } from '../../features/live/api'
 import type { Row } from '../../features/live/model'
 
@@ -47,6 +48,14 @@ export function todayBand(visitors: number, before: number, compare: boolean): {
   const hi = Math.ceil(before * 1.2)
   const word = wordOf(visitors, lo, hi)
   return { word, lo, hi, max: Math.max(visitors, hi, 1) * 1.25 }
+}
+
+/** The line under Today's number: how far it stands from the same time last week, in whole percent, and which way. Nothing while last week had too few people to measure against (or today is over ten times it). */
+export function usualLine(visitors: number, before: number, compare: boolean): { tone: 'up' | 'dn' | 'flat'; pct: number } | null {
+  const band = baseEnough(before) && !overCap(visitors, before) ? todayBand(visitors, before, compare) : null
+  if (!band) return null
+  const tone = { above: 'up', below: 'dn', usual: 'flat' }[band.word] as 'up' | 'dn' | 'flat'
+  return { tone, pct: Math.round((Math.abs(visitors - before) / before) * 100) }
 }
 
 /** A position on the bar, as a percent of its width (never at the very ends). */

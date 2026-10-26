@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Row } from '../../features/live/model'
 import { fitOf } from './cardWidth'
-import { visitors30, barsOf, changeOf, deviceCounts, listsOf, place, sourceParts, todayBand } from './liveModel'
+import { visitors30, barsOf, changeOf, deviceCounts, listsOf, place, sourceParts, todayBand, usualLine } from './liveModel'
 
 const row = (i: number, o: Partial<Row> = {}): Row => ({ kind: 'pageview', ts: 0, last: 0, path: '/p', visitor: `v${i}`, key: `v${i}`, ...o })
 
@@ -34,6 +34,14 @@ describe('Live', () => {
     expect(todayBand(10, 50, true)?.word).toBe('below')
     expect(todayBand(10, 0, true)).toBeNull()
     expect(todayBand(10, 50, false)).toBeNull()
+  })
+  it('tells the line under today\'s number: which way and by how many percent, nothing on a thin last week', () => {
+    expect(usualLine(132, 100, true)).toEqual({ tone: 'up', pct: 32 })
+    expect(usualLine(78, 100, true)).toEqual({ tone: 'dn', pct: 22 })
+    expect(usualLine(105, 100, true)).toEqual({ tone: 'flat', pct: 5 })
+    expect(usualLine(30, 10, true)).toBeNull() // last week had fewer than 20 people
+    expect(usualLine(2100, 100, true)).toBeNull() // over ten times it
+    expect(usualLine(100, 100, false)).toBeNull()
   })
   it('keeps a mark off the ends of its bar', () => {
     expect([place(0, 10), place(5, 10), place(10, 10)]).toEqual([2, 50, 98])

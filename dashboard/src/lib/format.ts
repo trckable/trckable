@@ -9,6 +9,9 @@ const words = defineCopy('format', { change: (up: boolean, pct: string) => `${up
 
 const dateFormats = new Map<string, Intl.DateTimeFormat>()
 
+/** The weekday of a day (YYYY-MM-DD) as the language writes it: "Monday". */
+export const weekdayName = (day: string): string => dateFmt(tag ?? 'en-US', { weekday: 'long', timeZone: 'UTC' }).format(new Date(day + 'T12:00:00Z'))
+
 /** The one place dates and times are formatted: a formatter for a language (undefined: the browser's) and options, made once. A bad time zone throws, as Intl does. */
 export function dateFmt(locale: string | undefined, o: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
   const key = `${locale ?? ''}|${JSON.stringify(o)}`

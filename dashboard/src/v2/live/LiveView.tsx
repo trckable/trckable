@@ -192,7 +192,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
       </div>
       {!globe && (
         <div className="lcards" ref={cardsRef}>
-          <AnalyticsCard today={data.today} lists={day === null ? lists : day} />
+          <AnalyticsCard today={data.today} lists={day === null ? lists : day} timezone={timezone} />
           {whole && !feed.sample && !isShared() && <HealthCards site={whole} now={now} downSince={downSince} near={cardsNear} />}
         </div>
       )}

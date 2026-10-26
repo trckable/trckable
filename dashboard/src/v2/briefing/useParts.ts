@@ -1,7 +1,6 @@
 // Everything the Briefing works out from the report and the site's past, in one place: whether the site is still
 // learning its normal, the usual of every bucket, the scores, the sentence, the chart and the hero's pills.
 import { useMemo } from 'react'
-import { tag } from '../../i18n'
 import type { Point, Result, Site } from '../../lib/api'
 import { fmtDay, type Range } from '../../lib/dates'
 import { chartOf, siteNow } from './chart'
@@ -16,9 +15,7 @@ import type { ScoreFacts } from './scoreWhy'
 import { pctText } from './kpis'
 import { dayBandOf, hourlyPeople, hourTable, periodBand, stretchBand, timesUsual, usualBounce, usualPeople, verdictOf, type Band } from './usual'
 import type { History } from './useHistory'
-import { dateFmt } from '../../lib/format'
-
-const weekdayOf = (day: string) => dateFmt(tag ?? 'en-US', { weekday: 'long', timeZone: 'UTC' }).format(new Date(day + 'T12:00:00Z'))
+import { weekdayName } from '../../lib/format'
 
 interface PartsIn {
   site: Site
@@ -82,7 +79,7 @@ export function useParts(a: PartsIn) {
     const learning = hist.daily ? hd < 7 : false
     const avg = hd ? totals.slice(0, -1).reduce((x, y) => x + y, 0) / Math.max(1, totals.length - 1) : 0
     const low = !!hist.daily && !learning && avg < 20
-    const weekday = weekdayOf(range.to)
+    const weekday = weekdayName(range.to)
     const uptime = uptimeScore({ pct: up.pct, downNow, downMin, off: !site.watched_since, paused: !!site.uptime_paused })
     const table = hourly && hist.hourly ? hourTable(hist.hourly, today) : null
     const long = cur.series.length > 8
