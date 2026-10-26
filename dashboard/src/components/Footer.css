@@ -14,7 +14,6 @@
 }
 .app-footer-start,
 .app-footer-end,
-.app-footer-keys,
 .app-footer-social {
   display: flex;
   align-items: center;
@@ -29,9 +28,6 @@
   justify-content: flex-end;
 }
 .app-footer-social {
-  gap: 14px;
-}
-.app-footer-keys {
   gap: 14px;
 }
 .app-footer a,
@@ -50,19 +46,6 @@
 .app-footer :is(a, button):hover,
 .app-footer :is(a, button):focus-visible {
   color: var(--text);
-}
-.footer-key kbd {
-  padding: 1px 6px;
-  border: 1px solid var(--border-2);
-  border-radius: 5px;
-  font: inherit;
-  font-size: 11px;
-  line-height: 1.4;
-}
-span.footer-key {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 .footer-status {
   gap: 8px;
@@ -98,15 +81,11 @@ span.footer-key {
   color: var(--down);
 }
 
-/* A phone: two quiet lines (how things are, then the links), every target a finger tall; the keys are for
-   a keyboard. Here and not in phone.css: this file loads with the foot, after it. */
+/* A phone: two quiet lines (how things are, then the links), every target a finger tall. Here and not in phone.css: this file loads with the foot, after it. */
 @media (max-width: 640px) {
   .app-footer {
     gap: 0 14px;
     padding: 8px 0 calc(56px + 28px + 12px); /* clears the corner's round button */
-  }
-  .app-footer-keys {
-    display: none;
   }
   /* A site before its first visit is one screen: the foot (about 190 px of room for links and the corner's button)
      would push it past the phone's height and make it scroll for nothing. The Briefing it turns into has the foot. */
