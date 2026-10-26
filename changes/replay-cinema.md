@@ -1,0 +1,1 @@
+Replay plays in a cinema: the page dims, the chart rises into a stage with a big count, the moment told as a caption, a progress bar, and Pause, Skip and Close (Space, right arrow and Esc work too); it ends on a short summary with Replay again.
