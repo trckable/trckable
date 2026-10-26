@@ -1,4 +1,4 @@
-// The domain picker: after the site's name, only while the site has been seen on two or more domains. "All domains" (or the one picked)
+// The domain picker: in the header beside the view switch and the period (the switch never moves), only while the site has been seen on two or more domains. "All domains" (or the one picked)
 // opens a compact list (DomainRows); the choice is the page's own filter, so the chip row and this agree. The site menu has no domains.
 import { ChevronDown } from 'lucide-react'
 import { useCallback, useRef } from 'react'
