@@ -3,5 +3,5 @@ import { defineCopy } from '../i18n'
 
 export const toastCopy = defineCopy('toast', {
   dismiss: 'Dismiss',
-  offline: "You're offline: showing the last data",
+  offline: (at: string) => `No internet connection. Showing data from ${at}. Reconnecting…`,
 })

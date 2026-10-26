@@ -1,0 +1,1 @@
+The offline notice now waits about 5 seconds before it appears (so a short Wi-Fi blip stays quiet), reads "No internet connection. Showing data from 09:24. Reconnecting…", and goes away as soon as you are back online.

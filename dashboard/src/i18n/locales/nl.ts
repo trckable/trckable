@@ -102,7 +102,7 @@ export default {
 
   // toast
   'toast.dismiss': 'Sluiten',
-  'toast.offline': "Je bent offline: laatste gegevens getoond",
+  'toast.offline': (at: string) => `Geen internetverbinding. Gegevens van ${at}. Opnieuw verbinden…`,
 
   // cards
   'records.title': 'Wat het script vastlegt',
