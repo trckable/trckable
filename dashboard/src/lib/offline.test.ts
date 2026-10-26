@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { toast, settle } = vi.hoisted(() => ({ toast: vi.fn((..._a: unknown[]) => 7), settle: vi.fn() }))
+const { toast, settle } = vi.hoisted(() => ({ toast: vi.fn<(m: string) => number>(() => 7), settle: vi.fn() }))
 vi.mock('../components/toastBus', () => ({ toast, settle }))
 
 let online = true
@@ -14,7 +14,7 @@ beforeEach(() => {
 })
 afterEach(() => vi.useRealTimers())
 
-const go = async (on: boolean) => {
+const go = (on: boolean) => {
   online = on
   window.dispatchEvent(new Event(on ? 'online' : 'offline'))
 }
@@ -24,20 +24,20 @@ beforeAll(async () => {
 })
 
 describe('offline notice', () => {
-  it('stays silent for a blip', async () => {
-    await go(false)
+  it('stays silent for a blip', () => {
+    go(false)
     vi.advanceTimersByTime(1500)
-    await go(true)
+    go(true)
     vi.advanceTimersByTime(10_000)
     expect(toast).not.toHaveBeenCalled()
   })
 
-  it('speaks after a real outage and clears when back', async () => {
-    await go(false)
+  it('speaks after a real outage and clears when back', () => {
+    go(false)
     vi.advanceTimersByTime(5000)
     expect(toast).toHaveBeenCalledTimes(1)
-    expect(String(toast.mock.calls[0][0])).toMatch(/^No internet connection\. Showing data from .+\. Reconnecting…$/)
-    await go(true)
+    expect(toast.mock.calls[0][0]).toMatch(/^No internet connection\. Showing data from .+\. Reconnecting…$/)
+    go(true)
     expect(settle).toHaveBeenCalledWith(7, '')
   })
 })
