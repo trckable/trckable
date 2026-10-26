@@ -5,9 +5,7 @@ import type { Site } from '../../lib/api'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { layoutReady, preloadLayout } from '../../features/sites/useSiteLayout'
 import { dotState, type DotState } from '../../features/sites/StateDot'
-import { useDomainControl } from '../../lib/domainControl'
 import { copy } from '../copy'
-import { domainLabel } from './DomainRows'
 import { MenuFoot, type FootItem } from './MenuFoot'
 import { useMenu } from './useMenu'
 import { useOnlyOpen } from '../../lib/headerMenu'
@@ -70,8 +68,6 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
   const menu = useRef<HTMLDivElement>(null)
   useTopLayerWhen(open, menu)
   const cur = p.current
-  const domains = useDomainControl()
-  const picked = cur && domains ? domainLabel(domains) : null
   const state = stateOf(cur, p.unverified)
   const label = cur ? siteLabel(cur.name || cur.domain, state) : undefined
   const toggle = () => {
@@ -86,7 +82,6 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
       <button type="button" id="siteBtn" className={cur ? 'mk-chip' : 'mk-chip all'} aria-label={label} title={label} aria-haspopup="menu" aria-expanded={open} data-key="site" {...warm(warmUp)} onClick={toggle}>
         {cur && <MarkDot site={cur} size={18} state={state} />}
         <NameText cur={cur} all={p.all} />
-        {picked && <span className="dom">{`/ ${picked}`}</span>}
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
           <path d="M3 4.5 6 7.5 9 4.5" stroke="var(--mk-muted)" fill="none" strokeWidth="1.5" />
         </svg>

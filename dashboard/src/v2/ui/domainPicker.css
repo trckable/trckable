@@ -1,0 +1,18 @@
+/* The domain picker after the site's name: a quiet chip, "All domains ▾", and its compact list (about eight rows, then it scrolls). */
+.mk .dompick { position: relative; display: flex; align-items: center; min-width: 0; }
+.mk .dompick-btn { display: inline-flex; align-items: center; gap: var(--mk-s1); height: 28px; max-width: 160px; padding: 0 var(--mk-s2); border: 0; border-radius: 999px; background: transparent; color: var(--mk-muted); font-size: 12px; font-weight: 500; }
+.mk .dompick-btn:hover, .mk .dompick-btn[aria-expanded='true'] { background: var(--mk-hovbg); color: var(--mk-text); }
+.mk .dompick-btn svg { flex: none; }
+.mk .dompick-now { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk .mk-menu.dompick-menu { width: 260px; max-height: min(60vh, 420px); padding: var(--mk-s2); overflow: auto; overscroll-behavior: contain; }
+.mk .dom-list { display: flex; flex-direction: column; gap: 2px; }
+.mk .dom-list input { margin-bottom: var(--mk-s1); }
+.mk .dom-row { gap: var(--mk-s2); }
+.mk .dom-row[aria-checked='true'] { font-weight: 600; }
+.mk .dom-row .now { margin-left: auto; font-size: 12px; color: var(--mk-muted); font-variant-numeric: tabular-nums; }
+.mk .dom-row[aria-checked='true'] .nm { color: var(--mk-lime); }
+.mk .dom-row svg { flex: none; color: var(--mk-lime); }
+@container (--pane-max-600) {
+  .mk .dompick { flex: 0 1 auto; }
+  .mk .dompick-btn { max-width: 112px; }
+}

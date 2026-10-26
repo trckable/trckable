@@ -26,6 +26,7 @@ import { useV2Extras } from './slots'
 import { ExploreChip, Header, Logo } from './ui/Header'
 import { SegmentedSwitch } from './ui/SegmentedSwitch'
 import { SiteChip } from './ui/SiteMenu'
+import { DomainPicker } from './ui/DomainPicker'
 import { TeamSquare } from './ui/TeamSquare'
 import { SetupRing } from './setup/SetupRing'
 
@@ -124,7 +125,12 @@ export function PageHeader(p: PageHeaderProps) {
         site={p.identity ? null : <SiteChip p={siteMenu} />}
         ring={p.identity || !site ? null : <SetupRing site={site} onGoal={p.onGoal ?? (() => openFind(pal.create))} fresh={!!p.waiting} visited={!!p.visited} />}
         views={here && !p.identity && !p.waiting ? <SegmentedSwitch id="views" label={copy.view} value={here} onChange={(t) => void switchTab(t, here)} items={[{ value: 'live', label: copy.live, title: copy.liveTitle, dot: down ? 'down' : 'ok', count: online ?? undefined }, { value: 'briefing', label: copy.briefing, title: copy.briefingTitle }]} /> : null}
-        period={here === 'briefing' ? p.period : null}
+        period={
+          <>
+            {here === 'briefing' ? p.period : null}
+            {site && <DomainPicker />}
+          </>
+        }
         explore={p.waiting ? null : <ExploreChip label={question ? copy.askOrSearch : copy.explore} kbd="⌘K" onClick={question ? () => setFind(true) : exploreOpen} />}
         extras={slots.headerExtra}
         bell={p.identity ? null : <Bell site={site} notices={notices} />}
