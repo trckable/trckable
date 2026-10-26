@@ -1,0 +1,6 @@
+/* The Briefing's head under the title: the actions, then one row (the period, the usual range and the controls) and the chart, all on one left edge. A line over the chart appears only when it has something to say (down now, how it stands against the period before). */
+.mk .chwrap { margin-top: var(--mk-s4); }
+.mk .hero .chwrap .ch-top { padding-left: 0; margin: 0; min-height: 0; }
+.mk .hero .chwrap .ch-top:has(#chNote:not(:empty)) { margin-bottom: var(--mk-s4); min-height: 20px; }
+.mk .chwrap #chNote:empty, .mk .chwrap #chCall { display: none; }
+.mk .chwrap .cc { margin-bottom: var(--mk-s2); }

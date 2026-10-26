@@ -15,6 +15,8 @@ export interface ChartControlsProps {
   why?: string | null
   /** The legend of the two lines, on the row beside the menu (a phone names the dashed line at its end instead). */
   legend?: ReactNode
+  /** After the period's segments, on the left: the usual range being built. */
+  range?: ReactNode
   /** The Notes button, at the end of the row. */
   notes?: ReactNode
 }
@@ -129,7 +131,7 @@ function CompareMenu({ on, against, year, why }: { on: boolean; against: string 
   )
 }
 
-export function ChartControls({ site, why, legend, notes }: ChartControlsProps) {
+export function ChartControls({ site, why, legend, range, notes }: ChartControlsProps) {
   const view: ViewState = readView(useLocation().params)
   const on = isOn(view.compare)
   const period = CHART_PERIODS.find((p) => p === view.period) ?? null
@@ -137,6 +139,7 @@ export function ChartControls({ site, why, legend, notes }: ChartControlsProps) 
   return (
     <div className="cc" data-testid="chart-controls">
       <Group cls="cc-period" label={copy.chartPeriods} items={CHART_PERIODS} value={period} text={(p) => copy.chartShort[p]} onPick={(p) => setView(periodPatch(p))} />
+      {range}
       <div className="cc-cmp">
         {on && legend}
         <CompareMenu on={on} against={against} year={hasYear(site)} why={why} />

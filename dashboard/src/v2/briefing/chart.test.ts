@@ -130,3 +130,26 @@ describe('a week by the hour against a week by the day', () => {
     expect(c.compare?.pct).toBe(-10)
   })
 })
+
+describe('the usual range being built', () => {
+  const days = (xs: number[]): Point[] => xs.map((visitors, d) => ({ t: `2026-10-${String(d + 1).padStart(2, '0')}T00:00`, visitors, pageviews: visitors }))
+  const result = (xs: number[]): Result => ({ ...res([]), series: days(xs) })
+  // Thirty days, the site's first visit on the 16th: fifteen days of history, a month needed.
+  const cur = Array.from({ length: 30 }, (_, i) => (i < 15 ? 0 : 100))
+
+  it('says how many of the needed days there are, and when it is ready, and the line over the chart counts nothing outside a range that is not there', () => {
+    const c = chartOf({ cur: result(cur), prev: result(cur.map(() => 0)), bucket: 'day', unit: 'month', against: 'last month', bands: cur.map(() => ({ c: 15, lo: 10, hi: 20 })), overall: '' })
+    expect(c.learn).toEqual({ have: 15, need: 30 })
+    expect(c.startsOn).not.toBeNull()
+    expect(chartNote(c, null)).toBe('')
+  })
+  it('has nothing to build once the comparison is there', () => {
+    const c = chartOf({ cur: result(cur.map(() => 100)), prev: result(cur.map(() => 100)), bucket: 'day', unit: 'month', against: 'last month' })
+    expect(c.learn).toBeNull()
+    expect(c.startsOn).toBeNull()
+  })
+  it('a chart by the hour has the date, not the days', () => {
+    const c = chartOf({ cur: res([0, 0, 5, 6]), prev: res([0, 0, 0, 0]), bucket: 'hour', unit: 'today', against: 'yesterday' })
+    expect(c.learn).toBeNull()
+  })
+})

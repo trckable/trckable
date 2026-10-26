@@ -21,6 +21,7 @@ import { HIT, HIT_MS } from './focus'
 import { iconOf } from './kinds'
 import { MARK_EDGE, pickMarks, placePins, tipOf, type ChartGeo, type Mark } from './marks'
 import { openMark } from './open'
+import { RecordChip, recordAt } from './RecordChip'
 import { settle } from './settle'
 import { useMoments } from './useMoments'
 import { say } from './words'
@@ -41,6 +42,8 @@ export interface LayerProps {
   bucket: Bucket
   /** Writes an amount in the site's currency (a sale is only a moment where the reader sees revenue: the server leaves it out otherwise). */
   money: (minor: number) => string
+  /** The busiest day of the last 90: a star among the chips. */
+  record?: { day: string; people: number } | null
   onShare?: () => void
 }
 
@@ -119,6 +122,7 @@ export default function MomentLayer(p: LayerProps) {
           )
         })}
       </div>
+      {p.record && <RecordChip g={g} record={p.record} at={recordAt(p.record.day, p.labels, p.bucket, g.x, marks.map((m) => m.at))} />}
       {current && (
         <WhyCard
           open={current}

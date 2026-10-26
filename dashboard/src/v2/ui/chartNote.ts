@@ -5,23 +5,17 @@ import { readOf, signed } from '../briefing/compare'
 import type { ChartIn } from './DayChart'
 
 /** The text over the chart: the standing note, or the point under the pointer. */
-export function chartNote(c: ChartIn, at: number | null, down = false, short = false): string {
+export function chartNote(c: ChartIn, at: number | null, down = false): string {
   if (at !== null && c.points[at]) {
+    // Without a comparison the chart's own tip reads the point: the row over the chart is not there to appear and move the chart.
+    if (!c.compare) return ''
     const p = c.points[at]
-    return readOf(p.name, p.raw, c.compare?.name ?? null, p.was, p.delta)
+    return readOf(p.name, p.raw, c.compare.name, p.was, p.delta)
   }
   if (down) return copy.downRightNow
+  // The usual range being built is said by the pill on the period row (UsualRange), never by a count against it.
   if (c.compare && c.compare.pct !== null) return copy.vsLine(signed(c.compare.pct), c.compare.name)
-  if (!c.band) return ''
-  const up = c.points.filter((p) => p.st === 'up').length
-  const dn = c.points.filter((p) => p.st === 'dn').length
-  // The period's own verdict says it first: inside the usual band, no hour or day is called above or below it.
-  if (c.overall === '') return c.bucket !== 'hour' && up + dn ? copy.normalOverall(up + dn, c.points.length) : copy.withinBand
-  // A phone says it short: "Above usual · 4 of 17 h".
-  if (short && c.bucket === 'hour' && (up || dn)) return `${up ? copy.aboveShort(up) : copy.belowShort(dn)}${copy.ofHours(c.points.length)}`
-  if (up) return copy.aboveBand(up, c.points.length, c.unit)
-  if (dn) return copy.belowBand(dn, c.unit)
-  return copy.withinBand
+  return ''
 }
 
 /** The colour of the line over the chart when it says how the period stands against the one before: green above it, red below, none for level. */
