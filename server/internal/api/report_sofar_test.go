@@ -40,6 +40,36 @@ func TestReportCompareSoFar(t *testing.T) {
 	}
 }
 
+// A chart draws the whole period before, though its figures stay against the elapsed part: with sofar=1 the report also
+// carries the full day's buckets, with the evening's visitor in the bucket the line cut off.
+func TestReportCompareSoFarSeries(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	g.clock.Store(time.Date(2026, 9, 21, 12, 0, 0, 0, time.UTC).UnixMilli())
+	at := func(d, h int) int64 { return time.Date(2026, 9, d, h, 0, 0, 0, time.UTC).UnixMilli() }
+	add := func(id uint64, e event.Event) { e.EventID = id; g.event(t, e) }
+	add(1, event.Event{Kind: event.KindPageview, TS: at(20, 9), Visitor: 1, Path: "/"})
+	add(2, event.Event{Kind: event.KindPageview, TS: at(20, 20), Visitor: 2, Path: "/"})
+	g.waitApplied(t, 2)
+	get := func(q string) map[string]any {
+		_, out := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/report?from=2026-09-21&to=2026-09-21&compare=previous"+q, "")
+		return out
+	}
+	out := get("&sofar=1")
+	elapsed := out["previous"].(map[string]any)["series"].([]any)
+	whole := out["previous_series"].([]any)
+	if len(elapsed) != 12 || len(whole) != 24 {
+		t.Fatalf("elapsed %d buckets, whole %d", len(elapsed), len(whole))
+	}
+	if v := whole[20].(map[string]any)["visitors"].(float64); v != 1 {
+		t.Fatalf("the 20:00 bucket of the day before: %v", v)
+	}
+	if _, ok := get("")["previous_series"]; ok {
+		t.Fatal("the whole day before is already the previous series: no second one")
+	}
+}
+
 // People since an hour are counted as people: one visitor seen in two hours is one.
 func TestReportSinceHour(t *testing.T) {
 	g := newRig(t)

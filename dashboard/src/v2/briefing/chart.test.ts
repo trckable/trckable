@@ -22,6 +22,14 @@ describe('the chart of a day', () => {
     expect(c.elapsed).toBeCloseTo(0.2, 1)
     expect(c.axis[23].tick).toBe('23:00')
   })
+  it('draws the whole day before while the line stops at now, and tells the change only over the hours that are over', () => {
+    const c = chartOf({ cur: res(day.map(() => 2)), prev: res(day), bucket: 'hour', unit: 'today', against: 'yesterday', nowT: '2026-10-16T09:30' })
+    expect(c.points).toHaveLength(10)
+    expect(c.compare?.vals).toEqual(day)
+    // Nine hours are over: 18 people against 1 + 2 + ... + 9 = 45.
+    expect(c.compare?.pct).toBe(-60)
+    expect(c.points[4].was).toBe(5)
+  })
   it('a whole past day has every hour and nothing to come', () => {
     const c = chartOf({ cur: res(day), prev: res(day), bucket: 'hour', unit: 'yesterday', nowT: '2026-10-17T09:30' })
     expect(c.live).toBe(false)

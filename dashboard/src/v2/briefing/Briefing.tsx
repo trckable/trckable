@@ -38,7 +38,7 @@ import { siteNow } from './chart'
 import { nudge } from './steps'
 import { copy } from './copy'
 import { chartLine, heroSub } from './lines'
-import { againstName } from './compare'
+import { againstName, wholeBefore } from './compare'
 import { LOOKED_AT, sinceOf } from './since'
 import { goExplore, seeScorePart } from './deeper'
 import { useSetup, useSinceCount, useUptime, useUsual } from './hooks'
@@ -93,11 +93,11 @@ export default function Briefing({ site, data: page, loading, period, compare = 
   const setupState = useSetup(site)
   const wset = watched.use()
   const hours = useHourly(site, range, !!page && page.bucket !== 'hour' && !bucket && wantsHours(period, range), queryOf(readView(new URLSearchParams(location.search)), range))
-  const data = useMemo(() => (page && hours ? { ...page, bucket: hours.bucket, current: hours.current, previous: hours.previous } : page), [page, hours]) // the period before comes by the hour too, like the line over it
+  const data = useMemo(() => (page && hours ? { ...page, bucket: hours.bucket, current: hours.current, previous: hours.previous, previous_series: hours.previous_series } : page), [page, hours]) // the period before comes by the hour too, like the line over it
   const current = data?.current
   const previous = data?.previous
   const cur = useMemo(() => normal(current), [current])
-  const prev = useMemo(() => (compare === 'none' ? undefined : normal(previous)), [previous, compare])
+  const prev = useMemo(() => (compare === 'none' ? undefined : wholeBefore(normal(previous), data?.previous_series)), [previous, data?.previous_series, compare])
   const unit = unitOf(period)
   const today = todayIn(site.timezone)
   const sinceCount = useSinceCount(site.id, today, LOOKED_AT, range.to === today)

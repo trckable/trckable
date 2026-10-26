@@ -42,12 +42,15 @@ func (a *API) report(w http.ResponseWriter, r *http.Request) {
 type asked struct {
 	Params query.Params
 	Prev   *query.Params // the comparison period, if one was asked for
-	Loc    *time.Location
-	From   time.Time // local midnight, inclusive
-	To     time.Time // local midnight, exclusive
-	TZ     string
-	Bucket string
-	Live   bool // the range includes today
+	// PrevFull is the whole period before, set when Prev was cut to the elapsed part
+	// (sofar): its buckets are the line a chart draws beyond now.
+	PrevFull *query.Params
+	Loc      *time.Location
+	From     time.Time // local midnight, inclusive
+	To       time.Time // local midnight, exclusive
+	TZ       string
+	Bucket   string
+	Live     bool // the range includes today
 }
 
 // parse reads the query parameters. On a bad request it writes the error and
@@ -111,7 +114,7 @@ func (a *API) parse(w http.ResponseWriter, r *http.Request, siteID string, allow
 		PageGoals:   pageGoals(r.Context(), a, siteID),
 	}
 
-	var prev *query.Params
+	var prev, prevFull *query.Params
 	switch v.Get("compare") {
 	case "previous":
 		p := params
@@ -121,6 +124,9 @@ func (a *API) parse(w http.ResponseWriter, r *http.Request, siteID string, allow
 		if v.Get("sofar") == "1" {
 			now := a.Now()
 			if el := now.Sub(params.From); el > 0 && now.Before(params.To) && p.From.Add(el).Before(p.To) {
+				whole := p
+				whole.Daily = false
+				prevFull = &whole
 				p.To = p.From.Add(el)
 			}
 		}
@@ -150,7 +156,7 @@ func (a *API) parse(w http.ResponseWriter, r *http.Request, siteID string, allow
 	}
 
 	return &asked{
-		Params: params, Prev: prev, Loc: loc, From: from, To: to,
+		Params: params, Prev: prev, PrevFull: prevFull, Loc: loc, From: from, To: to,
 		TZ: tzName, Bucket: bucket,
 		Live: !to.Before(startOfDay(today, loc)),
 	}
@@ -203,6 +209,18 @@ func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, a
 			pr, prErr = a.cachedReport(r, q, *prev)
 		}()
 	}
+	// The whole period before, for the chart's dashed line to run its full length while the
+	// figures stay against the elapsed part. A finished day is cached after its first read.
+	var full *query.Result
+	if ask.PrevFull != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if f, err := a.cachedReport(r, q, *ask.PrevFull); err == nil {
+				full = f
+			}
+		}()
+	}
 	if live {
 		wg.Add(1)
 		go func() {
@@ -231,6 +249,9 @@ func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, a
 			return
 		}
 		out["previous"] = pr
+		if full != nil {
+			out["previous_series"] = full.Series
+		}
 		out["previous_from"] = prev.From.In(loc).Format("2006-01-02")
 		// The last day the comparison reaches: the day before the end when it ends at midnight, the same day when it ends part way through one ("so far").
 		out["previous_to"] = prev.To.Add(-time.Nanosecond).In(loc).Format("2006-01-02")

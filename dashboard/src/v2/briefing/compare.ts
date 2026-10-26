@@ -1,7 +1,7 @@
 // The period before, drawn as a thin dashed line under the chart and told in one line over it. It is the `previous`
 // of the same report the main line comes from, bucket against bucket, so the hover, the line and the sentence cannot
 // disagree. Pure: compare.test.ts.
-import type { Point } from '../../lib/api'
+import type { Point, Result } from '../../lib/api'
 import { addDays, compareLabel, diffDays, fmtDay, type CompareMode, type Range } from '../../lib/dates'
 import { fmtInt } from '../../lib/format'
 import { tag } from '../../i18n'
@@ -54,6 +54,9 @@ export function compareOf(cur: readonly Point[], prev: readonly Point[] | undefi
   const sum = (xs: number[]) => xs.slice(0, n).reduce((a, b) => a + b, 0)
   return { name, vals, pct: changeOf(sum(cur.map((p) => p.visitors)), sum(vals)) }
 }
+
+/** The period before as the chart draws it: all of it, though its figures stop where the period now does (the server sends the whole series beside the elapsed part's report). */
+export const wholeBefore = (r: Result | undefined, whole: readonly Point[] | undefined): Result | undefined => (r && whole ? { ...r, series: [...whole] } : r)
 
 /** The day the comparison begins to say something: a whole period after the site's first visit. None while nobody has visited. */
 export function startsOn(cur: readonly Point[], prev: readonly Point[] | undefined): string | null {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { Point } from '../../lib/api'
-import { againstName, capital, changeOf, compareOf, grainOf, hasBefore, sameGrain, pairAt, readOf, signed, startsOn, whyNot } from './compare'
+import type { Point, Result } from '../../lib/api'
+import { againstName, capital, changeOf, compareOf, grainOf, hasBefore, sameGrain, pairAt, readOf, signed, startsOn, whyNot, wholeBefore } from './compare'
 
 const pts = (xs: number[], from = 1): Point[] => xs.map((visitors, d) => ({ t: `2026-10-${String(d + from).padStart(2, '0')}T00:00`, visitors, pageviews: visitors }))
 
@@ -79,5 +79,19 @@ describe('the hover and the reason', () => {
     expect(whyNot(now, pts([0, 0, 0, 0, 0, 0, 0, 0, 0, 5]))).toMatch(/^Comparison starts /)
     expect(whyNot(now, pts(Array.from({ length: 10 }, () => 4)))).toBeNull()
     expect(whyNot(now, undefined)).toBeNull()
+  })
+})
+
+describe('the period before, whole', () => {
+  const r = { approximate: false, kpis: { visitors: 7 }, series: [{ t: '2026-10-15T00:00', visitors: 1, pageviews: 1 }], dims: {}, goals: null } as unknown as Result
+  const whole: Point[] = [r.series[0], { t: '2026-10-15T01:00', visitors: 2, pageviews: 2 }]
+  it('draws every bucket the server sent while its figures stay those of the elapsed part', () => {
+    const w = wholeBefore(r, whole)
+    expect(w?.series).toEqual(whole)
+    expect(w?.kpis.visitors).toBe(7)
+  })
+  it('is the report as it was when the server sent no whole series, or there is no report', () => {
+    expect(wholeBefore(r, undefined)).toBe(r)
+    expect(wholeBefore(undefined, whole)).toBeUndefined()
   })
 })
