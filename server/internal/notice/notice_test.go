@@ -418,7 +418,7 @@ func TestAnAlertReachesTheBellOfTheTeamThatRunsTheSite(t *testing.T) {
 	r.tell(r.hub)
 	ctx := context.Background()
 	ev := alerts.Event{Kind: "threshold", Site: "tkb_site", Domain: "example.com", Title: "10 sales today", Message: "example.com reached 10 sales today.",
-		Data: map[string]any{"metric": "sales", "period": "day", "amount": "10", "value": 12.0}}
+		Data: map[string]any{"metric": "sales", "period": "day", "amount": "10", "value": 12.0, "source": "Facebook", "source_host": "facebook.com"}}
 	for range 2 {
 		if err := r.hub.Alert(ctx, sqlite.DefaultAccount, "alert:a1:2026-10-20", "threshold", "mailto:me@example.com", ev); err != nil {
 			t.Fatal(err)
@@ -429,7 +429,7 @@ func TestAnAlertReachesTheBellOfTheTeamThatRunsTheSite(t *testing.T) {
 		t.Fatalf("the bell was told %d times for a retried alert, want the same entry twice", len(r.bells))
 	}
 	b := r.bells[0]
-	if b.Kind != AlertThreshold || b.Key != "alert:a1:2026-10-20" || b.Site != "tkb_site" || b.Vars["domain"] != "example.com" || b.Vars["metric"] != "sales" || b.Vars["period"] != "day" || b.Vars["amount"] != "10" {
+	if b.Kind != AlertThreshold || b.Key != "alert:a1:2026-10-20" || b.Site != "tkb_site" || b.Vars["domain"] != "example.com" || b.Vars["metric"] != "sales" || b.Vars["period"] != "day" || b.Vars["amount"] != "10" || b.Vars["source"] != "Facebook" || b.Vars["source_host"] != "facebook.com" {
 		t.Fatalf("the entry: %+v", b)
 	}
 	got := map[string]bool{}

@@ -79,3 +79,8 @@ test('on a phone the list is a dialog named for the bell', async ({ page }) => {
   await page.locator('#bellBtn').click()
   await expect(page.getByRole('dialog', { name: 'Notifications' })).toBeVisible()
 })
+
+// The bell also tells the busy spells the server recorded (its moments); this spec counts the rows it sets up itself.
+test.beforeEach(async ({ page }) => {
+  await page.route(/\/moments\?/, (r) => r.fulfill({ json: { moments: [] } }))
+})

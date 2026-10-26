@@ -1,8 +1,8 @@
-// Where a visit came from, as a small mark: the site that sent them as a
-// monogram in the channel's colour, or the channel's own glyph when no site
-// did. Favicons would need a fetch to a third party from the dashboard, which
-// the content policy (and the privacy promise) rules out.
+// Where a visit came from, as a small mark: a known site by its own mark (lib/brandIcons.ts), any other site that
+// sent them as a monogram in the channel's colour, or the channel's own glyph when no site did. Favicons would need
+// a fetch to a third party from the dashboard, which the content policy (and the privacy promise) rules out.
 import { ArrowUpRight, Link2, Mail, Megaphone, Search, Sparkles, Target, Users, type LucideIcon } from 'lucide-react'
+import { brandOf } from '../../lib/brandIcons'
 import { channelColor } from '../../lib/palette'
 import './visitor.css'
 
@@ -28,7 +28,18 @@ const scaled = (px: number) => `calc(${px}px * var(--ph-mark, 1))`
 export function SourceMark({ channel, referrer, goal = false, size = 28 }: { channel: string; referrer?: string; goal?: boolean; size?: number }) {
   const color = goal ? 'var(--accent)' : channelColor(channel || 'Direct')
   const letter = !goal && referrer ? monogram(referrer) : ''
+  const brand = goal ? null : brandOf(referrer)
   const style = { width: scaled(size), height: scaled(size), color, ['--v-ring' as string]: color }
+  if (brand) {
+    const own = brand.color === 'currentColor' ? 'var(--text)' : brand.color
+    return (
+      <span className="v-mark brand" style={{ ...style, color: own, ['--v-ring' as string]: own }} role="img" aria-label={brand.name}>
+        <svg viewBox="0 0 24 24" width={Math.round(size * 0.58)} height={Math.round(size * 0.58)} fill="currentColor" aria-hidden="true">
+          <path d={brand.d} />
+        </svg>
+      </span>
+    )
+  }
   if (letter) {
     return (
       <span className="v-mark letter" style={{ ...style, fontSize: `max(var(--ph-mark-min, 0px), ${scaled(Math.round(size * 0.46))})` }} aria-hidden="true">

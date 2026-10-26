@@ -161,3 +161,8 @@ for (const width of [1440, 390, 360]) {
     await expect(page.locator('.al-kind[data-kind="stopped"] :focus')).toHaveCount(1)
   })
 }
+
+// The bell also tells the busy spells the server recorded (its moments); this spec counts the rows it sets up itself.
+test.beforeEach(async ({ page }) => {
+  await page.route(/\/moments\?/, (r) => r.fulfill({ json: { moments: [] } }))
+})

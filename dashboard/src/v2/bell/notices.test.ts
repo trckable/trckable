@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { arrange, badge, fromAnswers, fromIncidents, othersOf, OTHERS, rowsOf, settle, unreadCount, withFeed, type Notice } from './notices'
+import { arrange, badge, fromAnswers, fromIncidents, fromMentions, fromMoments, othersOf, OTHERS, rowsOf, settle, unreadCount, withFeed, type Notice } from './notices'
 
 const n = (id: string, at: number, kind: Notice['kind'] = 'down'): Notice => ({ id, kind, site: 'a.com', title: id, sub: '', at })
 
@@ -150,5 +150,22 @@ describe('busy moments of several sites at the same time', () => {
     const rows = rowsOf([busy('a', 'a.com', 1000), busy('a2', 'a.com', 950), busy('b', 'b.com', 900), n('x', 990)], new Set())
     expect(rows.map((r) => r.id)).toEqual(['busy:a', 'x', 'a2'])
     expect(rows[0].members?.map((m) => m.id)).toEqual(['a', 'b'])
+  })
+})
+
+describe('busy spells in the bell', () => {
+  const spike = { t: '2026-10-23T15:00', kind: 'spike' as const, factor: 3.2, referrer: 'news.ycombinator.com', visitors: 120 }
+  const surge = { t: '2026-10-23T15:32', kind: 'surge' as const, factor: 1.8, referrer: 'l.facebook.com', visitors: 38 }
+  it('is one row for each moment, with its source and a short line of facts', () => {
+    const [n] = fromMoments([surge], 'example.com')
+    expect(n).toMatchObject({ kind: 'spike', site: 'example.com', source: 'l.facebook.com', title: 'example.com is busy', sub: '38 online · 1.8× usual' })
+    expect(fromMoments([spike], 'example.com')[0].sub).toBe('120 people · 3.2× usual')
+  })
+  it('leaves out the hour spike a surge of that hour already tells, and anything that is not a busy spell', () => {
+    expect(fromMoments([spike, surge], 'example.com').map((x) => x.id)).toEqual(['busy:surge:2026-10-23T15:32'])
+    expect(fromMoments([{ t: '2026-10-23', kind: 'note' as const }], 'example.com')).toEqual([])
+  })
+  it('gives a mention the host that posted it', () => {
+    expect(fromMentions([{ id: 1, source: 'hn', host: 'news.ycombinator.com', title: 'T', posted_at: 1 } as never], 'example.com')[0].source).toBe('news.ycombinator.com')
   })
 })

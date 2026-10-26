@@ -702,13 +702,12 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .nfw .nfx:hover,.mk .nfw .nfx:focus-visible,.mk .nfw .nfx[aria-expanded='true']{background:color-mix(in srgb,var(--mk-text) 7%,transparent);color:var(--mk-text);outline:none}
 @media (hover:none){.mk .nfw .nfx{opacity:1}}
 /* The day a run of rows belongs to, and a row that is still going. */
-.mk .nfdy{margin:0;padding:var(--mk-s2) var(--mk-s3) 0;font-size:12px;font-weight:600;color:var(--mk-muted)}
+.mk .nfdy{margin:0;padding:var(--mk-s3) var(--mk-s3) var(--mk-s1);font-size:11px;font-weight:500;letter-spacing:.02em;color:var(--mk-faint)}
 /* Several in one row: the sites listed under the title, each its own button. */
 .mk .nf.grp{cursor:default}
 .mk .nfn{text-align:left;font-size:13px;color:var(--mk-text);padding:2px 0;min-height:28px}
 .mk .nfn:hover{text-decoration:underline}
 @media (--xs){.mk .nfn{min-height:44px;display:flex;align-items:center}}
-.mk .nfar{align-self:flex-start;margin:var(--mk-s2) var(--mk-s3)}
 /* A short wiggle for what is new (useBellAlert): the glyph turns about the top of the bell; not with reduced motion. */
 .mk .ib.bell.shake svg{transform-origin:50% 12%;animation:mk-bell-shake .6s ease-in-out}
 @keyframes mk-bell-shake{0%,100%{transform:rotate(0)}15%{transform:rotate(16deg)}30%{transform:rotate(-14deg)}45%{transform:rotate(10deg)}60%{transform:rotate(-8deg)}75%{transform:rotate(4deg)}}
@@ -726,9 +725,9 @@ html[data-motion='off'] .mk .ib.bell.shake svg{animation:none}
 .mk .nfi.k-up,.mk .nfi.k-sale,.mk .nfi.k-spike,.mk .nfi.k-goal,.mk .nfi.k-milestone{color:var(--mk-lime)}
 .mk .cdb .nfl{max-height:none}
 .mk .nft{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.mk .nft b{font-weight:600;font-size:13px;color:var(--mk-muted)}
+.mk .nft b{font-weight:400;font-size:13px;color:var(--mk-muted);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .mk .nft small{font-size:12px;color:var(--mk-muted)}
-.mk .nf.unread .nft b{color:var(--mk-text)}
+.mk .nf.unread .nft b{color:var(--mk-text);font-weight:600}
 /* Still going: its title says so in red, read or not. */
 .mk .nf.bad .nft b{color:var(--mk-red)}
 .mk .nfd{width:8px;height:8px;border-radius:50%;background:var(--mk-lime);flex:none}

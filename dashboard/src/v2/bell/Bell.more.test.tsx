@@ -55,8 +55,8 @@ describe('a build’s own list in the bell', () => {
     menu(m.host, 0)
     act(() => item(m.host, 'Archive')?.click())
     expect(m.notices.dismiss).toHaveBeenCalledWith('away')
-    expect(m.host.querySelectorAll('.nff button')).toHaveLength(1) // the footer is the one Settings link
-    const show = m.host.querySelector<HTMLButtonElement>('.nfar')
+    expect(m.host.querySelectorAll('.nff button')).toHaveLength(2) // the footer is one quiet row: the archive and the alert settings
+    const show = m.host.querySelector<HTMLButtonElement>('.nff [aria-pressed]')
     act(() => show?.click())
     expect(m.notices.archive.load).toHaveBeenCalled()
     expect(m.host.textContent).toContain('old one')

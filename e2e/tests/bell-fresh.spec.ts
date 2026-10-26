@@ -66,3 +66,8 @@ for (const width of [1440, 390]) {
     expect(await menu.locator('.nf.unread').count()).toBe(Number(await dot.textContent()))
   })
 }
+
+// The bell also tells the busy spells the server recorded (its moments); this spec counts the rows it sets up itself.
+test.beforeEach(async ({ page }) => {
+  await page.route(/\/moments\?/, (r) => r.fulfill({ json: { moments: [] } }))
+})

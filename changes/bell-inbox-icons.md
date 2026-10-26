@@ -1,0 +1,1 @@
+The bell shows each busy spell, mention and milestone with the real mark of the site that sent it (Facebook, Google, X, Reddit, Hacker News and more, drawn from our own files, nothing fetched), the kind as a small badge, one short line of facts, and one quiet footer row for the archive and the alert settings.
