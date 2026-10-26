@@ -14,6 +14,12 @@ export const copy = defineCopy('briefing.cards', {
   downHow: 'We ask your site for a page every minute. Down means that check got no answer. Visitors lost is what a usual hour brings, for the minutes it was down.',
   incidentsEv: (n: number, min: number) => `${n} incident${n > 1 ? 's' : ''}, ${min} minutes without an answer.`,
   openIncident: 'Open the incident',
+  downFor: (min: number) => `Down for ${min} minutes`,
+  downSince: (at: string) => `Down since ${at}`,
+  downTimes: (n: number) => `Down ${n} times`,
+  upWord: 'Up',
+  downWord: (min: number) => `Down ${min} min`,
+  watchSite: 'Watch the site',
   // Sources.
   sent: (name: string, who: string) => `${name} sent ${who}`,
   sentOnly: (name: string, who: string) => `${name} sent only ${who}`,

@@ -15,7 +15,7 @@ const base = (o: Partial<CardsIn> = {}): CardsIn => ({
   slices: { referrer: [], country: [], device: [], entry_page: [] },
   goals: [],
   rule: 'Compared with the last 4 Fridays, up to 16:30.',
-  uptime: { downNow: false, since: '', minutesNow: 0, incidents: [], minutes: 0, lost: 0, spans: [], nowAt: 0.7, from: '00:00', now: '16:30' },
+  uptime: { downNow: false, since: '', minutesNow: 0, incidents: [], minutes: 0, lost: 0, spans: [], nowAt: 0.7, from: '00:00', now: '16:30', live: true, marks: [], calm: false },
   ...o,
 })
 

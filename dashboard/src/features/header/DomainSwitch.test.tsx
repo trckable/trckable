@@ -74,10 +74,21 @@ describe('DomainSwitch and DomainRow', () => {
     expect(onPick).toHaveBeenLastCalledWith('blog.trckable.com')
     expect(close).toHaveBeenCalled()
   })
-  it('more than six domains bring a search', () => {
+  it('more than eight domains bring a search, eight do not', () => {
     const lots = Array.from({ length: 9 }, (_, i) => row(`d${i}.trckable.com`, 100 - i))
     draw(lots)
     act(() => root.render(<DomainRows c={current() as DomainControl} close={() => {}} />))
     expect(host.querySelector('input[type=search]')).not.toBeNull()
+    draw(lots.slice(0, 8))
+    act(() => root.render(<DomainRows c={current() as DomainControl} close={() => {}} />))
+    expect(host.querySelector('input[type=search]')).toBeNull()
+  })
+  it('ticks the one picked and shows each domain with its count', () => {
+    draw(many, [{ dim: 'hostname', value: 'docs.trckable.com' }])
+    act(() => root.render(<DomainRows c={current() as DomainControl} close={() => {}} />))
+    const on = host.querySelectorAll('[aria-checked=true]')
+    expect(on).toHaveLength(1)
+    expect(on[0].querySelector('svg')).not.toBeNull()
+    expect(on[0].querySelector('.now')?.textContent).toBe('40')
   })
 })

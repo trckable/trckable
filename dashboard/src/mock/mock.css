@@ -1481,11 +1481,8 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .pop.menu .open-touch{display:none}
 .mk .site-head .btn.icon.ghost{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;color:var(--mk-faint)}
 .mk .mi .state-line.quiet{color:var(--mk-amber)}
-.mk .sites-domains{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--mk-line);padding-bottom:var(--mk-s2);margin-bottom:var(--mk-s2)}
-.mk .dom-row[aria-checked="true"] .nm{color:var(--mk-lime)}
 .mk .sites-none{padding:var(--mk-s2) var(--mk-s3);font-size:13px}
 .mk .site-row.sortable.dragging .mi.site{cursor:grabbing}
-.mk .mk-chip .dom{color:var(--mk-lime);font-size:12px;white-space:nowrap}
 .mk .account-btn{position:relative}
 .mk .acct-dot{position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:50%;border:2px solid var(--mk-bg);background:var(--mk-amber)}
 .mk .acct-dot.bad{background:var(--mk-red)}
@@ -1678,7 +1675,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
    colour and check, not by a fill. */
 .mk{--mk-row-gap:2px;--mk-row-pad:var(--mk-s1) var(--mk-s3);--mk-row-h:40px;--mk-row-act:var(--mk-sel)}
 .mk :is(.mk-menu,.palbox) :is(.mi,.xmi,.xri,.pi){box-sizing:border-box;min-height:var(--mk-row-h);padding:var(--mk-row-pad);margin-top:var(--mk-row-gap);border-radius:var(--mk-rc);outline:0}
-.mk :is(.mk-menu,.palbox) :is(.mi,.xmi,.xri,.pi):first-child,.mk :is(.sites-domains,.site-group)>:is(.mi,li){margin-top:0}
+.mk :is(.mk-menu,.palbox) :is(.mi,.xmi,.xri,.pi):first-child,.mk :is(.dom-list,.site-group)>:is(.mi,li){margin-top:0}
 .mk :is(.mk-menu,.palbox) :is(.mi,.xmi,.xri) :is(.nm){line-height:20px}
 .mk :is(.mk-menu,.palbox) :is(.mi,.xmi,.xri) .d{line-height:16px;margin-top:0}
 .mk :is(.mk-menu,.palbox) :is(.mi,.xmi,.xri):has(.d) :is(.xi,.mkwrap){align-self:flex-start}
@@ -1963,7 +1960,7 @@ html[data-motion='off'] .mk .lswap{animation:none}
 .mk .sitelist.reordering .mi:hover,.mk .team-rows.reordering .mi:hover{background:transparent}
 /* the selected row is a soft fill only */
 .mk .sitelist .mi.all.on,.mk .sitelist .mi.all.on:hover{background:var(--mk-row-act)}
-.mk .sitelist .mi.on .nm,.mk .sitelist .dom-row[aria-checked="true"] .nm{color:var(--mk-text)}
+.mk .sitelist .mi.on .nm{color:var(--mk-text)}
 /* one quiet status at the right of every row; the dot on the logo stays but muted */
 .mk .sitelist .mi .now,.mk .sitelist .mi .now.state-word,.mk .sitelist .mi .now.state-word.down,.mk .sitelist .mi .now.unverified{color:var(--mk-faint);font-weight:400;font-size:12px}
 .mk .sitelist .mi .now b{color:var(--mk-muted);font-weight:500}
@@ -2030,3 +2027,9 @@ html[data-motion='off'] .mk .lswap{animation:none}
 .mk .sitelist .site-head:has(.fold:focus-visible){background:var(--mk-row-act)}
 .mk .sitelist .site-head .col-head{pointer-events:none}
 .mk .sitelist .mi.all{padding-right:calc(var(--acts) + var(--mk-s3))}
+/* The guide under the pointer on the line: a hairline at the nearest minute and a dot on the line; it eases to the next minute. */
+.mk .mline-guide{position:absolute;top:0;bottom:0;width:1px;margin-left:-.5px;background:var(--mk-muted);opacity:.55;pointer-events:none;transition:left .08s ease-out}
+.mk .mline-gdot{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--mk-lime);border:2px solid var(--mk-card);box-sizing:border-box;pointer-events:none;transition:left .08s ease-out,top .08s ease-out}
+.mk .mhits{touch-action:pan-y}
+@media (prefers-reduced-motion:reduce){.mk .mline-guide,.mk .mline-gdot{transition:none}}
+html[data-motion='off'] .mk .mline-guide,html[data-motion='off'] .mk .mline-gdot{transition:none}

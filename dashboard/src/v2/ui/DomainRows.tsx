@@ -1,5 +1,6 @@
 // A site seen on more than one domain: "All domains", then each by its short name with its visitors, the busiest first, the
-// one picked checked. It is the list that opens from the header, a section of its own under the site's name.
+// one picked ticked. It is the list that opens from the domain picker (DomainPicker) after the site's name.
+import { Check } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { Row } from '../../lib/api'
 import type { DomainControl } from '../../lib/domainControl'
@@ -13,8 +14,8 @@ export function domainLabel(c: DomainControl): string | null {
   return picked ? shortHost(picked, c.site) : null
 }
 
-/** More domains than this and the section gets a search. */
-const SEARCH_FROM = 6
+/** More domains than this and the list gets a search. */
+export const SEARCH_FROM = 8
 
 export function DomainRows({ c, close }: { c: DomainControl; close: () => void }) {
   const [q, setQ] = useState('')
@@ -32,16 +33,18 @@ export function DomainRows({ c, close }: { c: DomainControl; close: () => void }
         <div className="nm">{shortHost(r.value, c.site)}</div>
       </span>
       {r.visitors > 0 && <span className="now">{fmtInt(r.visitors)}</span>}
+      {picked === r.value && <Check size={14} strokeWidth={2.4} aria-hidden="true" />}
     </button>
   )
   return (
-    <div className="sites-domains" role="menu" aria-label={copy.label}>
+    <div className="dom-list" role="menu" aria-label={copy.label}>
       {rows.length > SEARCH_FROM && <input type="search" placeholder={copy.search} aria-label={copy.search} value={q} onChange={(e) => setQ(e.target.value)} />}
       {!t && (
         <button type="button" role="menuitemradio" aria-checked={!hostFiltered(c.filters)} className="mi dom-row" onClick={() => choose(null)}>
           <span className="mt2">
             <div className="nm">{copy.allDomains}</div>
           </span>
+          {!hostFiltered(c.filters) && <Check size={14} strokeWidth={2.4} aria-hidden="true" />}
         </button>
       )}
       {shown.map(item)}

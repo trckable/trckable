@@ -67,6 +67,14 @@ export function startsOn(cur: readonly Point[], prev: readonly Point[] | undefin
   return fmtDay(addDays(first.t.slice(0, 10), days))
 }
 
+/** How much of what a comparison needs is there, for a chart of days: the days from the first visit to the last day shown, of the days the period has. */
+export function learnOf(cur: readonly Point[], prev: readonly Point[] | undefined): { have: number; need: number } | null {
+  const first = [...(prev ?? []), ...cur].find((p) => p.visitors > 0)
+  if (!first || cur.length === 0) return null
+  const need = cur.length
+  return { have: Math.max(0, Math.min(need, diffDays(first.t.slice(0, 10), cur[cur.length - 1].t.slice(0, 10)) + 1)), need }
+}
+
 /** The same bucket of the period before, and how far this one stands from it; the change is none while the bucket is still going (`i` is not under `done`) or nobody was there before. Every period chart reads its hover from this. */
 export function pairAt(c: Compare | null, v: number, i: number, done: number): { was: number | null; delta: number | null } {
   const was = c ? (c.vals[i] ?? null) : null

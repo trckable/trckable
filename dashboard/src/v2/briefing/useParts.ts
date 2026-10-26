@@ -2,11 +2,12 @@
 // learning its normal, the usual of every bucket, the scores, the sentence, the chart and the hero's pills.
 import { useMemo } from 'react'
 import type { Point, Result, Site } from '../../lib/api'
-import { fmtDay, type Range } from '../../lib/dates'
+import type { Range } from '../../lib/dates'
+import { startOfDay } from '../../features/incidents/model'
 import { chartOf, siteNow } from './chart'
 import { copy } from './copy'
 import { cardsOf, leadSource, type UptimeIn } from './cards'
-import { insideSeconds, outageSpans, periodEnd } from './outage'
+import { incidentDay, insideSeconds, periodEnd } from './outage'
 import { moments } from './moments'
 import type { Extras } from './useExtras'
 import type { SliceData } from './useSlices'
@@ -128,7 +129,7 @@ export function useParts(a: PartsIn) {
       uptime: up.pct === null ? null : { pct: pctText(up.pct), downMin },
     }
     const clockOf = (t: number) => siteNow(site.timezone, new Date(t * 1000)).slice(11)
-    const out = outageSpans(up.list, up.from0, periodEnd(up.from0, range.from, range.to), nowSec)
+    const out = incidentDay(up.list, { now: nowSec, fallbackDay: range.to, dayOf: (t) => siteNow(site.timezone, new Date(t * 1000)).slice(0, 10), startOf: (d) => startOfDay(d, site.timezone), clock: clockOf })
     const uptimeIn: UptimeIn = {
       downNow,
       since: site.down_since ? clockOf(site.down_since) : '',
@@ -138,8 +139,6 @@ export function useParts(a: PartsIn) {
       minutes: downMin,
       lost: up.list.reduce((x, y) => x + (y.expected_visits ?? 0), 0),
       ...out,
-      from: range.from === range.to ? '00:00' : fmtDay(range.from),
-      now: clockOf(nowSec),
     }
     const rule = ruleOf(!!usual, unit, weekday, clock.slice(11))
     const mention = extras.mention
@@ -189,7 +188,7 @@ export function useParts(a: PartsIn) {
     const mo =
       hist.daily && !learning && !low
         ? moments({ totals, days, todayUp: unit === 'today' ? st === 'up' : false, from: Math.max(0, days.indexOf(range.from)), to: Math.max(0, days.indexOf(range.to)), elapsed: Math.round(nowHour * 60), today: unit === 'today', week: unit === 'week', filtered: false })
-        : { pills: [], line: '' }
+        : { pills: [], record: null }
     return { hhmm: clock.slice(11), learning, hd, low, uptime, scores, facts, stories, say, top, chart, weekday, whole, verdict, moneyBand, st, bounceUsual, mo }
   }, [cur, prev, against, usual, unit, up.pct, up.list, up.from0, downNow, downMin, site.domain, money, site.down_since, site.down_cause, site.timezone, site.watched_since, site.uptime_paused, range.to, range.from, bucket, nowSec, hist, hourly, today, notes, clock, slices, extras])
 }

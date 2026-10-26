@@ -311,3 +311,6 @@
     transition: none;
   }
 }
+.moment-mark.record {
+  --mk: var(--money);
+}

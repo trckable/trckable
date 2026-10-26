@@ -40,6 +40,8 @@ export const copy = defineCopy('moments', {
   marker: (day: string, line: string, more: number) => `${day}: ${line}${more ? `, and ${more} more` : ''}. Show it`,
   more: (n: number) => `+${n} more`,
   moreMoments: (n: number) => (n === 1 ? '+1 more moment' : `+${n} more moments`),
+  record: 'Busiest day',
+  recordLine: (people: number) => `Busiest day in 90 days · ${fmtInt(people)} ${people === 1 ? 'person' : 'people'}`,
   milestones: (n: number) => `${n} milestones`,
   close: 'Close',
   share: 'Share',

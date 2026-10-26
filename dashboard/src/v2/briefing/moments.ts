@@ -1,6 +1,5 @@
-// The hero's quiet extras: a pill when the day is a record, and one when several days in a row ran above their usual.
+// The hero's quiet extras: the record day (the chart marks it with a star) and a pill when several days in a row ran above their usual.
 // From the last 90 days of daily visitors only, so it is pure and says nothing it cannot back. Pure: moments.test.ts.
-import { dayWords } from '../dayWords'
 import { copy } from './copy'
 import { dayBandOf } from './usual'
 
@@ -24,7 +23,8 @@ export interface MomentsIn {
 
 export interface Moments {
   pills: string[]
-  line: string
+  /** The busiest day of the last 90, when it falls in the days the chart shows (not today, which is drawn by the hour): the chart marks it. */
+  record: { day: string; people: number } | null
 }
 
 /** How many days in a row (ending yesterday) ran above their usual band. */
@@ -39,7 +39,7 @@ export function streak(totals: number[], days: string[], last: number): number {
 }
 
 export function moments(o: MomentsIn): Moments {
-  const out: Moments = { pills: [], line: '' }
+  const out: Moments = { pills: [], record: null }
   const end = o.totals.length - 1
   if (o.filtered || end < 30) return out
   let rec = -1
@@ -53,10 +53,7 @@ export function moments(o: MomentsIn): Moments {
       }
     }
   }
-  if (rec >= 0) {
-    out.pills.push(copy.recordDay)
-    out.line = rec === end ? copy.busiestOngoing : copy.busiest(dayWords(o.days[rec]))
-  }
+  if (rec >= 0 && rec !== end) out.record = { day: o.days[rec], people: o.totals[rec] }
   const n = streak(o.totals, o.days, end - 1) + (o.todayUp ? 1 : 0)
   if ((o.today || o.week) && n >= 3) out.pills.push(o.todayUp ? copy.nthDay(n) : copy.daysAbove(n))
   return out

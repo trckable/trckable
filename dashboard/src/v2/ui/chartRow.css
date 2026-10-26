@@ -39,3 +39,15 @@
 @media (prefers-reduced-motion: reduce) {
   .mk .cc *, .mk .shbefore, .mk .chkey { transition: none !important; animation: none !important; }
 }
+
+/* The usual range being built: a small ring that fills with the days there are, beside the period's segments. */
+.mk .cc-learn { display: inline-flex; align-items: center; flex: none; gap: 6px; height: 28px; padding: 0 var(--mk-s2); border-radius: 999px; background: var(--mk-band); color: var(--mk-muted); font-size: 12px; white-space: nowrap; }
+.mk .cc-ring { width: 12px; height: 12px; flex: none; border-radius: 50%; background: conic-gradient(var(--mk-lime) var(--share, 0%), var(--mk-line) 0); -webkit-mask: radial-gradient(circle, transparent 3.5px, currentColor 4px); mask: radial-gradient(circle, transparent 3.5px, currentColor 4px); }
+.mk .cc { justify-content: flex-start; gap: var(--mk-s2); }
+.mk .cc-cmp { margin-left: auto; }
+/* A phone keeps the numbers: "15/30" beside the ring, the words in the tooltip. */
+.mk .cc-short { display: none; font-variant-numeric: tabular-nums; }
+@container (--pane-max-600) {
+  .mk .cc-learn .cc-full { display: none; }
+  .mk .cc-learn .cc-short { display: inline; }
+}

@@ -54,21 +54,28 @@ function Ba({ v }: { v: Extract<Vis, { k: 'ba' }> }) {
   )
 }
 
-/** The stretch of the period the site did not answer, on a line from the start to now. */
+/** The incident's day on a line from 00:00 to now (or the end of the day): "Up" on both sides, the stretch the site did not answer as a red segment of real width, its times under it, and the exact times on hover. */
 function Outage({ v }: { v: Extract<Vis, { k: 'outage' }> }) {
   return (
     <div className="mk-ob">
       <div className="obt">
-        {v.spans.map((x) => (
-          <i key={x.a} style={{ left: `${x.a * 100}%`, width: `${Math.max(0.5, (x.b - x.a) * 100)}%` }} />
+        <span className="obu l">{cardCopy.upWord}</span>
+        <span className="obu r">{cardCopy.upWord}</span>
+        {v.marks.map((x) => (
+          <i key={x.a} className="obd" title={`${x.from}–${x.to} · ${cardCopy.downWord(x.min)}`} style={{ left: `${x.a * 100}%`, width: `${(x.b - x.a) * 100}%` }} />
         ))}
-        <s style={{ left: `${v.nowAt * 100}%` }} />
+        {v.live && <s style={{ left: `${v.nowAt * 100}%` }} />}
+      </div>
+      <div className="obm">
+        {v.marks.map((x) => (
+          <span key={x.a} className="num" style={{ left: `${Math.min(88, Math.max(12, ((x.a + x.b) / 2) * 100))}%` }}>
+            {cardCopy.downWord(x.min)} · {x.from}–{x.to}
+          </span>
+        ))}
       </div>
       <div className="obl">
-        <span>{v.from}</span>
-        <span>
-          {copy.nowWord} · {v.now}
-        </span>
+        <span className="num">{v.from}</span>
+        <span className="num">{v.live ? `${copy.nowWord} · ${v.now}` : v.now}</span>
       </div>
     </div>
   )
