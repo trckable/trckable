@@ -2999,7 +2999,7 @@ export default {
   'v2.live.live': 'Live',
   'v2.live.openMinute': (at: string) => `Ouvrir ${at} dans les chiffres`,
   'v2.live.viewsAt': (n: number) => n === 1 ? '1 vue' : `${int(n)} vues`,
-  'v2.live.minsLabel': (n: number) => `Visiteurs par minute sur les 30 dernières minutes : ${n} en tout`,
+  'v2.live.minsLabel': (n: number) => `Vues par minute sur les 30 dernières minutes : ${n} en tout`,
   'v2.live.window': (at: string) => `30 dernières minutes · ${at}`,
   'v2.live.onlineNow': 'Sur le site maintenant',
   'v2.live.visitors30': 'Arrivés ces 30 dernières min',

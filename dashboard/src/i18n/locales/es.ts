@@ -3004,7 +3004,7 @@ export default {
   'v2.live.live': 'En vivo',
   'v2.live.openMinute': (at: string) => `Abrir las ${at} en las cifras`,
   'v2.live.viewsAt': (n: number) => n === 1 ? '1 vista' : `${int(n)} vistas`,
-  'v2.live.minsLabel': (n: number) => `Visitantes por minuto en los últimos 30 minutos: ${n} en total`,
+  'v2.live.minsLabel': (n: number) => `Vistas por minuto en los últimos 30 minutos: ${n} en total`,
   'v2.live.window': (at: string) => `Últimos 30 minutos · ${at}`,
   'v2.live.onlineNow': 'En el sitio ahora',
   'v2.live.visitors30': 'Llegaron en los últimos 30 min',

@@ -3011,7 +3011,7 @@ export default {
   'v2.live.live': 'Live',
   'v2.live.openMinute': (at: string) => `Open ${at} in de cijfers`,
   'v2.live.viewsAt': (n: number) => n === 1 ? '1 weergave' : `${int(n)} weergaven`,
-  'v2.live.minsLabel': (n: number) => `Bezoekers per minuut in de laatste 30 minuten: ${n} in totaal`,
+  'v2.live.minsLabel': (n: number) => `Weergaven per minuut in de laatste 30 minuten: ${n} in totaal`,
   'v2.live.window': (at: string) => `Laatste 30 minuten · ${at}`,
   'v2.live.onlineNow': 'Nu op de site',
   'v2.live.visitors30': 'Binnengekomen in de laatste 30 min',
