@@ -3,9 +3,6 @@
 // its own button, so the page itself stays short.
 import { Banknote, Info, Link2, TriangleAlert } from 'lucide-react'
 import { Menu } from '../components/Menu'
-import { DialogActions } from '../components/DialogActions'
-import { DialogHead } from '../components/DialogHead'
-import { Modal } from '../kit/Modal'
 import { useEffect, useRef, useState } from 'react'
 import { fail, type PayConnection, type Provider, type Site, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
@@ -13,12 +10,12 @@ import { refreshSetup } from '../v2/setup/memory'
 import { visibleInterval } from '../lib/visibleInterval'
 import { navigate } from '../lib/url'
 import { modeNote, modeTag, statusOf } from '../lib/payments'
-import { CodeBlock } from '../components/Code'
 import { Picker } from '../components/Picker'
 import { confirmWith, useConfirm } from '../components/Confirm'
 import { can } from '../lib/permissions'
 import { settle, toast } from '../components/Toast'
 import { useConnectFirst } from './useConnectFirst'
+import { Attribution } from './PaymentsAttribution'
 import { Connect } from './PaymentsConnect'
 import { PayPicker } from './PayPicker'
 import { ManualSetup } from './PaymentsManual'
@@ -301,65 +298,5 @@ function ConnectionRow({ site, c, provider, onChange }: { site: Site; c: PayConn
       }} />}
       {dialog}
     </div>
-  )
-}
-
-
-const snippets: Record<string, string> = {
-  'Payment links': `<!-- Nothing to do: the trckable script adds the visitor to
-     Stripe Payment Links, Lemon Squeezy, Polar and Dodo checkout links on click. -->
-<a href="https://buy.stripe.com/…">Buy</a>`,
-  Stripe: `import { getIds, checkoutFields } from 'trckable/server'
-
-const ids = getIds(request.headers.get('cookie'))
-await stripe.checkout.sessions.create({
-  ...params,
-  ...checkoutFields('stripe', ids, 'subscription'), // or 'payment'
-})`,
-  'Lemon Squeezy': `const ids = getIds(request.headers.get('cookie'))
-await createCheckout(storeId, variantId, {
-  checkoutData: checkoutFields('lemonsqueezy', ids).checkout_data,
-})`,
-  Polar: `const ids = getIds(request.headers.get('cookie'))
-await polar.checkouts.create({ products: [productId], ...checkoutFields('polar', ids) })`,
-  Paddle: `// Paddle.js, in the browser: read the trckable_vid cookie
-Paddle.Checkout.open({
-  items,
-  customData: { trckable_vid: document.cookie.match(/trckable_vid=([^;]+)/)?.[1] },
-})`,
-  Dodo: `const ids = getIds(request.headers.get('cookie'))
-await dodo.checkoutSessions.create({ ...params, ...checkoutFields('dodo', ids) })`,
-}
-
-/** Which mark goes with which snippet tab. */
-const SNIP_FOR: Record<string, string> = {
-  'Payment links': 'custom',
-  Stripe: 'stripe',
-  'Lemon Squeezy': 'lemonsqueezy',
-  Polar: 'polar',
-  Paddle: 'paddle',
-  Dodo: 'dodo',
-}
-
-function Attribution({ onClose }: { onClose: () => void }) {
-  const [tab, setTab] = useState('Payment links')
-  return (
-    <Modal label="Attribute each sale" className="wide" onClose={onClose}>
-      <DialogHead heading="Attribute each sale" hint="Pass the visitor id to your checkout." help="Renewals follow it automatically. Without it, revenue still counts in totals but shows as unattributed." />
-      <div className="prov-tabs" role="tablist" aria-label="Checkout">
-        {Object.entries(SNIP_FOR).map(([label, id]) => (
-          <button key={label} type="button" role="tab" aria-selected={tab === label} className={tab === label ? 'mtile on' : 'mtile'} onClick={() => setTab(label)}>
-            <ProviderMark id={id} />
-            {label}
-          </button>
-        ))}
-      </div>
-      <CodeBlock code={snippets[tab]} lang="text" />
-      <DialogActions>
-        <button type="button" className="btn primary big" onClick={onClose}>
-          Done
-        </button>
-      </DialogActions>
-    </Modal>
   )
 }

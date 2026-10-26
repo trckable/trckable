@@ -12,7 +12,7 @@ import { toast } from '../components/Toast'
 import { CodeBlock } from '../components/Code'
 import { policyCaveats, policyText } from '../lib/policy'
 import { Row } from '../components/Row'
-import { DialogActions } from '../components/DialogActions'
+import { ActionRow } from '../components/ActionRow'
 import { BarPreview } from '../components/BarPreview'
 import { ConsentOff } from './ConsentOff'
 import { LoadFailed } from '../components/LoadFailed'
@@ -412,7 +412,7 @@ function Consent({ site, config, on, onSave, onOn }: { site: Site; config: SiteC
         </>
       )}
 
-      <DialogActions
+      <ActionRow
         left={
           dirty ? (
             <button type="button" className="btn ghost" onClick={() => setB(saved)}>
@@ -426,7 +426,7 @@ function Consent({ site, config, on, onSave, onOn }: { site: Site; config: SiteC
         <button type="button" className="btn primary" disabled={!dirty} onClick={() => onSave({ banner: b }, 'Saved — visitors see it within the hour')}>
           Save
         </button>
-      </DialogActions>
+      </ActionRow>
     </section>
   )
 }

@@ -1,8 +1,7 @@
 import { FileCheck, Server } from 'lucide-react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { DialogActions } from './DialogActions'
-import { DialogHead } from './DialogHead'
+import { ActionRow } from './ActionRow'
 import { Field } from './Field'
 import { OptionCards } from './OptionCards'
 
@@ -30,27 +29,12 @@ describe('OptionCards', () => {
   })
 })
 
-describe('DialogHead', () => {
-  it('is the title, one line, and a tooltip for the rest', () => {
-    const html = renderToStaticMarkup(<DialogHead heading="Track a goal" hint="Count a signup." help="More words" />)
-    expect(html).toContain('<h2>Track a goal')
-    expect(html).toContain('Count a signup.')
-    expect(html).toContain('class="info-dot"')
-  })
-
-  it('needs nothing but a title', () => {
-    const html = renderToStaticMarkup(<DialogHead heading="Note" />)
-    expect(html).not.toContain('info-dot')
-    expect(html).not.toContain('faint')
-  })
-})
-
-describe('DialogActions', () => {
+describe('ActionRow', () => {
   it('puts the quiet button before the primary, in one row', () => {
     const html = renderToStaticMarkup(
-      <DialogActions left={<button className="btn ghost">Cancel</button>}>
+      <ActionRow left={<button className="btn ghost">Cancel</button>}>
         <button className="btn primary">Save</button>
-      </DialogActions>,
+      </ActionRow>,
     )
     expect(html.indexOf('Cancel')).toBeLessThan(html.indexOf('Save'))
     expect(html.match(/class="dialog-actions"/g)).toHaveLength(1)

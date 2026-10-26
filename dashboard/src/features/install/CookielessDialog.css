@@ -1,7 +1,4 @@
 /* The cookieless dialog: a comparison table, then one quiet line. */
-.modal.cl-modal {
-  width: min(520px, 100%);
-}
 .cl-table {
   width: 100%;
   margin: 6px 0 2px;

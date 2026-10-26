@@ -4,9 +4,8 @@
 // stays. Enter confirms only while the button is on.
 import { Check, Globe, KeyRound, Lock, UserPlus, Eye, type LucideIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { DialogActions } from '../../components/DialogActions'
-import { DialogHead } from '../../components/DialogHead'
 import { Modal } from '../../kit/Modal'
+import { ModalMark } from '../../kit/ModalMark'
 import { fail, type Person } from '../../lib/api'
 import { people } from './peopleCopy'
 import './peoplePop.css'
@@ -46,16 +45,25 @@ export default function RoleDialog({ p, role, run, onClose }: { p: Person; role:
       })
   }
   return (
-    <Modal label={title} className="role-modal" over onClose={busy ? undefined : onClose}>
-      <form
-        className="role-body"
-        aria-busy={busy}
-        onSubmit={(e) => {
-          e.preventDefault()
-          submit()
-        }}
-      >
-        <DialogHead icon={promote ? KeyRound : Eye} heading={title} />
+    <Modal
+      label={title}
+      over
+      onClose={busy ? undefined : onClose}
+      frame={{
+        title,
+        icon: <ModalMark icon={promote ? KeyRound : Eye} />,
+        size: 'sm',
+        busy,
+        cancel: t.cancel,
+        onSubmit: submit,
+        actions: (
+          <button ref={goBtn} type="submit" className="btn primary" disabled={!allowed}>
+            {busy && <span className="btn-spin" aria-hidden="true" />}
+            {busy ? t.busy : go}
+          </button>
+        ),
+      }}
+    >
         <ul className="role-lines">
           {lines.map((l, i) => {
             const Icon = icons[i]
@@ -84,19 +92,6 @@ export default function RoleDialog({ p, role, run, onClose }: { p: Person; role:
             {t.trust}
           </button>
         )}
-        <DialogActions
-          left={
-            <button type="button" className="btn ghost" disabled={busy} onClick={onClose}>
-              {t.cancel}
-            </button>
-          }
-        >
-          <button ref={goBtn} type="submit" className="btn primary" disabled={!allowed}>
-            {busy && <span className="btn-spin" aria-hidden="true" />}
-            {busy ? t.busy : go}
-          </button>
-        </DialogActions>
-      </form>
     </Modal>
   )
 }

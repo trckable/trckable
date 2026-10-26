@@ -59,9 +59,6 @@
   white-space: normal;
 }
 
-.modal.person-modal {
-  width: min(480px, 100%);
-}
 .otp-box {
   display: flex;
   align-items: center;

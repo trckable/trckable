@@ -1,12 +1,4 @@
 /* Site access: the popup behind ⋯ → Allowed sites. */
-.modal.access-dialog {
-  width: min(420px, calc(100vw - 32px));
-}
-.access-dialog form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
 .access-all {
   display: flex;
   align-items: center;

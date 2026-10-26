@@ -2,9 +2,6 @@
 
 /* A dialog's heading: its icon tile, then the title with a line under it. */
 
-.modal.update-modal {
-  width: min(560px, 100%);
-}
 .update-notes {
   display: grid;
   gap: 4px;

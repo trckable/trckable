@@ -28,7 +28,7 @@ describe('the Tracking options pop-up', () => {
     expect(hasUnseen('a@b.c')).toBe(true)
     act(() => root.render(<FeaturesDialog site={site} user="a@b.c" onClose={() => undefined} />))
     expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-label')).toBe('Tracking options')
-    expect(document.querySelector('.feat-body #script-records')).not.toBeNull()
+    expect(document.querySelector('#script-records')).not.toBeNull()
     expect(hasUnseen('a@b.c')).toBe(false)
   })
 })

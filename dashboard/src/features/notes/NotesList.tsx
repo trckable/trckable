@@ -1,7 +1,7 @@
 // Every note of a site in one place: from the chart (a dialog) and from
 // Settings (a section). Search by words, author or day; edit or delete one;
 // click one to see its day on the chart. A lazy chunk: never in the first load.
-import { Search, X } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { api, type Annotation, type Site } from '../../lib/api'
 import { words } from '../../lib/errors'
@@ -104,13 +104,7 @@ function Body(p: { list: Annotation[] | null; err: string | null; shown: Annotat
 /** The list over the dashboard, from the chart. Jumping closes it. */
 export function NotesDialog({ site, onJump, onChanged, onClose, onAdd }: { site: Site; onJump: (day: string) => void; onChanged: () => void; onClose: () => void; onAdd?: () => void }) {
   return (
-    <Modal label={copy.title} className="notes-modal" onClose={onClose}>
-      <div className="notes-head">
-        <h2>{copy.title}</h2>
-        <button type="button" className="btn icon ghost" aria-label={copy.close} onClick={onClose}>
-          <X size={18} strokeWidth={1.75} aria-hidden="true" />
-        </button>
-      </div>
+    <Modal label={copy.title} className="notes-modal" onClose={onClose} frame={{ title: copy.title, size: 'md', cancel: false }}>
       <NotesPanel
         site={site}
         onChanged={onChanged}

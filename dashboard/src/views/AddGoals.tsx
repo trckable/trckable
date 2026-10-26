@@ -2,9 +2,7 @@
 // a page seen is a goal reached, counted from the pageviews trckable already
 // has, so it reads history too. The other three are one snippet each.
 import { Check, Code, FileCheck, MousePointerClick, Server, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { DialogActions } from '../components/DialogActions'
-import { DialogHead } from '../components/DialogHead'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Field } from '../components/Field'
 import { Modal } from '../kit/Modal'
 import { CodeBlock } from '../components/Code'
@@ -31,30 +29,20 @@ export function AddGoals({ site, pages, onClose, onChanged }: { site: Site; page
 
   const code = goalCode(host, site)
 
+  const cards = <OptionCards label={copy.methods} options={ROUTES} value={route} onChange={setRoute} />
+  if (route === 'page') return <PageGoals site={site} pages={pages} onChanged={onChanged} onClose={onClose} cards={cards} />
   return (
-    <Modal label={copy.label} className="wide" onClose={onClose}>
-      <DialogHead heading={copy.title} hint={copy.hint} />
-      <OptionCards label={copy.methods} options={ROUTES} value={route} onChange={setRoute} />
-      {route === 'page' ? (
-        <PageGoals site={site} pages={pages} onChanged={onChanged} onClose={onClose} />
-      ) : (
-        <>
-          <CodeBlock code={code[route]} />
-          <span className="faint goal-hint">{copy.hints[route]}</span>
-          <span className="faint goal-hint">{copy.appears[route]}</span>
-          <DialogActions>
-            <button type="button" className="btn primary big" onClick={onClose}>
-              {copy.done}
-            </button>
-          </DialogActions>
-        </>
-      )}
+    <Modal label={copy.label} onClose={onClose} frame={{ title: copy.title, subtitle: copy.hint, size: 'md', cancel: false, actions: <button type="button" className="btn primary big" onClick={onClose}>{copy.done}</button> }}>
+      {cards}
+      <CodeBlock code={code[route]} />
+      <span className="faint goal-hint">{copy.hints[route]}</span>
+      <span className="faint goal-hint">{copy.appears[route]}</span>
     </Modal>
   )
 }
 
 /** Goals that are pages: the ones already set up, a name, a path. */
-function PageGoals({ site, pages, onChanged, onClose }: { site: Site; pages: string[]; onChanged: () => void; onClose: () => void }) {
+function PageGoals({ site, pages, onChanged, onClose, cards }: { site: Site; pages: string[]; onChanged: () => void; onClose: () => void; cards: ReactNode }) {
   const [cfg, setCfg] = useState<SiteConfig | null>(null)
   const [name, setName] = useState('')
   const [path, setPath] = useState('')
@@ -94,7 +82,22 @@ function PageGoals({ site, pages, onChanged, onClose }: { site: Site; pages: str
   }
 
   return (
-    <>
+    <Modal
+      label={copy.label}
+      onClose={onClose}
+      frame={{
+        title: copy.title,
+        subtitle: copy.hint,
+        size: 'md',
+        cancel: copy.done,
+        actions: viewer ? undefined : (
+          <button type="submit" form="pg-form" className="btn primary big" disabled={busy || !cfg || !name.trim() || !path.trim()}>
+            {copy.add}
+          </button>
+        ),
+      }}
+    >
+      {cards}
       {goals.length > 0 && (
         <ul className="pg-list" aria-label={copy.added}>
           {goals.map((g) => (
@@ -147,19 +150,6 @@ function PageGoals({ site, pages, onChanged, onClose }: { site: Site; pages: str
           </datalist>
         </form>
       )}
-      <DialogActions
-        left={
-          <button type="button" className="btn ghost" onClick={onClose}>
-            {copy.done}
-          </button>
-        }
-      >
-        {!viewer && (
-          <button type="submit" form="pg-form" className="btn primary big" disabled={busy || !cfg || !name.trim() || !path.trim()}>
-            {copy.add}
-          </button>
-        )}
-      </DialogActions>
-    </>
+    </Modal>
   )
 }

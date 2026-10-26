@@ -339,7 +339,7 @@ span.wg-thumb {
   color: var(--text-2);
 }
 
-.wg-modal {
+.modal.framed.wg-modal {
   width: min(1040px, 100%);
 }
 .wg-stage-box {
@@ -414,9 +414,6 @@ span.wg-thumb {
 .wg-page iframe,
 .wg-stage iframe {
   display: block;
-}
-.wg-modal > * {
-  flex: none;
 }
 /* The last row's menu opens upward: below it, the window's own edge cuts it off. */
 .wg-row:last-child .wg-menu .pop {
