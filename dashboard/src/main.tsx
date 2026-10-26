@@ -9,16 +9,13 @@ import { navigate, useLocation } from "./lib/url"; import "./lib/legacyPaths";
 import { AccountDialog, SettingsDialog, usePreloadDialogs } from "./views/dialogs";
 import "./kit/breakpoints.css"; import "./styles.css"; import "./field.css";
 import { lazyLoad, whenIdle } from "./lib/lazyLoad";
+import { routeOf, SubRoute } from "./features/subpage";
+import { useBootAddress } from "./lib/useBootAddress";
 import { SiteHost } from "./views/SiteHost";
 import { applySavedTheme } from "./lib/theme";
 import { NO_SITES, useLiveSites } from "./lib/useLiveSites";
 import { useAccountTab, useAddSite } from "./lib/account";
 import { AddSiteHost } from "./features/onboarding/AddSiteHost";
-import { routeOf, SubRoute } from "./features/subpage";
-import { namesSite } from "./lib/landing";
-import { leaveStray } from "./lib/stray";
-import { keepSignInReturn } from "./lib/returnTo";
-import { openSettings, settingsTarget } from "./lib/settings";
 import { useSettingsAddress } from "./features/settingsAddress";
 import { useLatest } from "./lib/update";
 import { setRole } from "./lib/me";
@@ -100,29 +97,7 @@ function App() {
   // A newer release, if this owner's dashboard may look (lib/update.ts).
   const latest = useLatest(boot.state === "ready" ? boot.version : undefined, boot.state === "ready" ? boot.updateCheck : false);
   const [showUpdate, setShowUpdate] = useState(false);
-  // An old /settings?site=…&tab=… link (the docs, a bookmark) opens that
-  // site's settings over its dashboard; the page itself is gone, and any other
-  // /settings address falls through to the main dashboard below.
-  useEffect(() => {
-    if (boot.state !== "ready" || gated || path !== "/settings") return;
-    const s = boot.sites.find((x) => x.id === params.get("site"));
-    if (!s) return;
-    const { tab, extra } = settingsTarget(params.get("tab"));
-    openSettings(s, tab, params.get("visitor") ? { ...extra, visitor: params.get("visitor") ?? "" } : extra, { replace: true });
-  }, [boot, gated, path, params]);
-
-  // Keep the address bar honest about the screen shown.
-  useEffect(() => {
-    if (shared) return;
-    if (boot.state === "setup" && path !== "/setup")
-      navigate("/setup" + location.hash, { replace: true });
-    if (keepSignInReturn(boot.state, path, gated)) return;
-    // Signed in at the root, or at an address that names none of this
-    // person's sites (a typo, someone else's site, one since removed): their
-    // main dashboard, never a page made up for an address it does not know.
-    // No site at all (and the first run skipped): the empty page stays at this address, nothing to go to.
-    if (boot.state === "ready" && !gated && boot.sites.length > 0 && !(path === "/settings" && namesSite(boot.sites, params)) && path !== "/sites") leaveStray(boot.sites, path, routeOf(boot.sites, path));
-  }, [boot, path, shared, gated, params]);
+  useBootAddress({ state: boot.state, sites: boot.state === "ready" ? boot.sites : [], gated, path, params, shared });
 
   if (shared)
     return (
