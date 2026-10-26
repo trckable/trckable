@@ -139,6 +139,7 @@ export function chartOf(a: ChartArgs): ChartIn {
     band,
     compare: cmp,
     noCompare,
+    startsOn: starts,
     overall: a.overall ?? '',
     elapsed: live ? e : 0,
     unit: unitWord,

@@ -2924,6 +2924,8 @@ export default {
   'briefing.needs.range': 'een hele periode',
   'briefing.downRightNow': 'nu offline',
   'briefing.normalOverall': (n: number, of: number) => `Over het geheel normaal · ${n} van de ${of} dagen buiten de gebruikelijke band`,
+  'briefing.outsideBand': (n: number, of: number) => `${n} van ${of} dagen buiten de gebruikelijke band`,
+  'briefing.buildingRange': (date: string) => `Je gebruikelijke bereik wordt opgebouwd · klaar op ${date}`,
   'briefing.downShort': (min: number, now: boolean) => (now ? 'nu offline' : `${min} m offline`),
   'briefing.downLabel': (min: number, now: boolean) => (now ? `nu offline · ${min} min` : `${min} min offline`),
   'briefing.downMany': (n: number, min: number) => `${n}× offline · ${min} min`,

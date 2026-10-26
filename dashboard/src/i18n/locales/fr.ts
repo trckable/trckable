@@ -2912,6 +2912,8 @@ export default {
   'briefing.needs.range': 'une période complète',
   'briefing.downRightNow': 'en panne en ce moment',
   'briefing.normalOverall': (n: number, of: number) => `Normal dans l’ensemble · ${n} jours sur ${of} hors de la bande habituelle`,
+  'briefing.outsideBand': (n: number, of: number) => `${n} jours sur ${of} hors de la bande habituelle`,
+  'briefing.buildingRange': (date: string) => `Construction de votre plage habituelle · prête le ${date}`,
   'briefing.downShort': (min: number, now: boolean) => now ? 'en panne' : `en panne ${min} min`,
   'briefing.downLabel': (min: number, now: boolean) => now ? `en panne · ${min} min` : `en panne ${min} min`,
   'briefing.downMany': (n: number, min: number) => `${n} pannes · ${min} min`,

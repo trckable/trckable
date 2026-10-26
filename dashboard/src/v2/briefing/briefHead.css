@@ -1,0 +1,5 @@
+/* The Briefing's head under the title: the actions, the standing line, and the period with its note share one left edge, 16px between those groups and 8px inside the period's. */
+.mk .chwrap { margin-top: var(--mk-s4); }
+.mk .chwrap .ch-top { padding-left: 0; margin: 0 0 var(--mk-s4); min-height: 20px; align-items: center; }
+.mk .chwrap .cc { margin-bottom: var(--mk-s2); }
+.mk .chwrap .chplot .chno { display: block; margin: 0 0 var(--mk-s2); line-height: 1.4; }

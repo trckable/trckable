@@ -62,6 +62,8 @@ export interface ChartIn {
   compare: Compare | null
   /** What is said instead when a comparison was asked for and there is too little before it: when it begins. */
   noCompare: string | null
+  /** The day the comparison (and with it the usual range) begins, when it has not yet: the standing line says it, never a count against a range that is not there. */
+  startsOn: string | null
   overall: Judged
   unit: string
   bucket: Bucket

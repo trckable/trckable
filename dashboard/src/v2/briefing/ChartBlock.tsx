@@ -17,6 +17,7 @@ import { copy as story } from '../replay/story.copy'
 import { ChartControls } from '../ui/ChartControls'
 import { capital } from './compare'
 import './compareLine.css'
+import './briefHead.css'
 
 // The moments, the sources' pills and the busy band over the chart: their own chunk, drawn when the chart is.
 const MentionsChip = lazyLoad(() => import('../../features/mentions/MentionsChip'))

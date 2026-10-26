@@ -2914,6 +2914,8 @@ export default {
   'briefing.needs.range': 'einen ganzen Zeitraum',
   'briefing.downRightNow': 'gerade offline',
   'briefing.normalOverall': (n: number, of: number) => `Insgesamt normal · ${n} von ${of} Tagen außerhalb des üblichen Bereichs`,
+  'briefing.outsideBand': (n: number, of: number) => `${n} von ${of} Tagen außerhalb des üblichen Bereichs`,
+  'briefing.buildingRange': (date: string) => `Dein üblicher Bereich entsteht noch · fertig am ${date}`,
   'briefing.downShort': (min: number, now: boolean) => now ? 'jetzt offline' : `${min} Min. offline`,
   'briefing.downLabel': (min: number, now: boolean) => now ? `jetzt offline · ${min} Min.` : `${min} Min. offline`,
   'briefing.downMany': (n: number, min: number) => `${n}× offline · ${min} Min.`,

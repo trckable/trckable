@@ -130,3 +130,29 @@ describe('a week by the hour against a week by the day', () => {
     expect(c.compare?.pct).toBe(-10)
   })
 })
+
+describe('the standing line over the chart, against a usual range', () => {
+  const days = (xs: number[]): Point[] => xs.map((visitors, d) => ({ t: `2026-10-${String(d + 1).padStart(2, '0')}T00:00`, visitors, pageviews: visitors }))
+  const result = (xs: number[]): Result => ({ ...res([]), series: days(xs) })
+  // Thirty days, each far above a band of 10 to 20: every day is outside it.
+  const thirty = Array.from({ length: 30 }, () => 100)
+  const bands = thirty.map(() => ({ c: 15, lo: 10, hi: 20 }))
+
+  it('says the range is still being built, when it will be ready, and counts nothing outside it while the comparison has not begun', () => {
+    const c = chartOf({ cur: result(thirty), prev: result(thirty.map(() => 0)), bucket: 'day', unit: 'month', against: 'last month', bands, overall: '' })
+    expect(c.startsOn).not.toBeNull()
+    const line = chartNote(c, null)
+    expect(line).toBe(`Building your usual range · ready ${c.startsOn}`)
+    expect(line).not.toMatch(/\d+ of \d+/)
+    expect(line).not.toContain('Normal overall')
+  })
+  it('once the range is there, a normal verdict is said only with a count that agrees with it', () => {
+    const near = thirty.map((_, i) => (i < 3 ? 100 : 15))
+    const ok = chartOf({ cur: result(near), prev: result(thirty.map(() => 15)), bucket: 'day', unit: 'month', against: undefined, bands, overall: '' })
+    expect(ok.startsOn).toBeNull()
+    expect(chartNote(ok, null)).toBe('Normal overall · 3 of 30 days outside the usual band')
+    // Thirty of thirty outside the band cannot be "normal overall": only the count is said.
+    const off = chartOf({ cur: result(thirty), prev: result(thirty.map(() => 15)), bucket: 'day', unit: 'month', against: undefined, bands, overall: '' })
+    expect(chartNote(off, null)).toBe('30 of 30 days outside the usual band')
+  })
+})

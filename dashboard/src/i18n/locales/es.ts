@@ -2917,6 +2917,8 @@ export default {
   'briefing.needs.range': 'un periodo completo',
   'briefing.downRightNow': 'caído ahora mismo',
   'briefing.normalOverall': (n: number, of: number) => `Normal en conjunto · ${n} de ${of} días fuera de la banda habitual`,
+  'briefing.outsideBand': (n: number, of: number) => `${n} de ${of} días fuera de la banda habitual`,
+  'briefing.buildingRange': (date: string) => `Creando tu rango habitual · listo el ${date}`,
   'briefing.downShort': (min: number, now: boolean) => now ? 'caído ahora' : `caído ${min} min`,
   'briefing.downLabel': (min: number, now: boolean) => now ? `caído ahora · ${min} min` : `caído ${min} min`,
   'briefing.downMany': (n: number, min: number) => `${n} caídas · ${min} min`,

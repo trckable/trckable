@@ -193,6 +193,8 @@ export const copy = defineCopy('briefing', {
   needs: { today: 'a day', yesterday: 'a day', week: 'a week', month: 'a month', range: 'a full period' },
   downRightNow: 'down right now',
   normalOverall: (n: number, of: number) => `Normal overall · ${n} of ${of} days outside the usual band`,
+  outsideBand: (n: number, of: number) => `${n} of ${of} days outside the usual band`,
+  buildingRange: (date: string) => `Building your usual range · ready ${date}`,
   downShort: (min: number, now: boolean) => (now ? 'down now' : `down ${min}m`),
   downLabel: (min: number, now: boolean) => (now ? `down now · ${min} min` : `down ${min} min`),
   downMany: (n: number, min: number) => `down ${n}× · ${min} min`,
