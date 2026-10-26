@@ -196,8 +196,8 @@ export function sentence(o: SayIn): Sentence {
   let short: Part[]
   if (top?.st === 'dn' && up) {
     // The site as a whole is above its usual: the drop is told as a contrast, never as the story.
-    c1 = [{ t: copy.cameAbove(people(v), v, words, copy.though(top.name)) }]
-    short = [{ t: copy.came(people(v), v), em: true }, { t: copy.aboveUsualDot(copy.though(top.name)) }]
+    c1 = [{ t: copy.cameAbove(people(v), words, copy.though(top.name)) }]
+    short = [{ t: copy.came(people(v)), em: true }, { t: copy.aboveUsualDot(copy.though(top.name)) }]
   } else if (top?.st === 'dn') {
     c1 = [{ t: copy.sentFewer(top.name) }]
     short = [{ t: top.name, em: true }, { t: copy.sentFewerShort }]
@@ -210,14 +210,14 @@ export function sentence(o: SayIn): Sentence {
   } else if (up) {
     const r = ratio ?? 0
     const times = r >= 1.3
-    c1 = [{ t: times ? copy.cameTimes(people(v), v, mult(r), words) : copy.cameAbove(people(v), v, words, '') }]
-    short = [{ t: copy.came(people(v), v), em: true }, { t: times ? copy.timesUsualDot(mult(r)) : copy.aboveUsualDot('') }]
+    c1 = [{ t: times ? copy.cameTimes(people(v), mult(r), words) : copy.cameAbove(people(v), words, '') }]
+    short = [{ t: copy.came(people(v)), em: true }, { t: times ? copy.timesUsualDot(mult(r)) : copy.aboveUsualDot('') }]
   } else if (down) {
-    c1 = [{ t: copy.onlyBelow(people(v), v, words) }]
-    short = [{ t: copy.onlyCame(people(v), v), em: true }, { t: copy.belowUsualDot }]
+    c1 = [{ t: copy.onlyBelow(people(v), words) }]
+    short = [{ t: copy.onlyCame(people(v)), em: true }, { t: copy.belowUsualDot }]
   } else {
-    c1 = [{ t: low ? copy.came(people(v), v) : copy.cameExpected(people(v), v) }]
-    short = [{ t: low ? copy.cameDot(people(v), v) : copy.cameAsUsual(people(v), v) }]
+    c1 = [{ t: low ? copy.came(people(v)) : copy.cameExpected(people(v)) }]
+    short = [{ t: low ? copy.cameDot(people(v)) : copy.cameAsUsual(people(v)) }]
   }
   const down2 = o.downMin > 0 ? [{ t: ' ' + copy.wasDown(o.downMin) }] : []
   const page = o.cur.dims.entry_page?.[0]

@@ -171,7 +171,7 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
     return () => {
       live = false
     }
-  }, [key, site.id, site.mentions, today, on])
+  }, [key, site.id, site.mentions, site.timezone, today, on])
   return got && got.key === key ? got.x : none
 }
 
