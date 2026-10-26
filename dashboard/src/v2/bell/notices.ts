@@ -29,6 +29,8 @@ export interface Notice {
   dismissable?: boolean
   /** Already read where it comes from (a build's own list): listed, but not counted as unread and no chime. */
   seen?: boolean
+  /** A busy spell's numbers: a tap tells its story (who sent them, where they landed) and leads on to Explore. */
+  busy?: { visitors: number; factor: number }
   /** A milestone told in full when it is tapped. */
   milestone?: Milestone
   /** Called when the notice is marked read (a build that keeps its own list marks it there too). */
@@ -97,7 +99,7 @@ export function fromMoments(list: Moment[], domain: string): Notice[] {
     if (!Number.isFinite(at)) return []
     const size = m.kind === 'surge' ? copy.onlineN(fmtInt(m.visitors ?? 0)) : copy.peopleN(fmtInt(m.visitors ?? 0))
     const sub = [m.visitors ? size : '', m.factor ? copy.vsUsual(fmtFixed(m.factor, 1)) : ''].filter(Boolean).join(' · ')
-    return [{ id: `busy:${m.kind}:${m.t}`, kind: 'spike' as const, site: domain, title: copy.busy(domain), sub, source: m.referrer, at }]
+    return [{ id: `busy:${m.kind}:${m.t}`, kind: 'spike' as const, site: domain, title: copy.busy(domain), sub, source: m.referrer, at, busy: { visitors: m.visitors ?? 0, factor: m.factor ?? 0 } }]
   })
 }
 

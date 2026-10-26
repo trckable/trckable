@@ -32,6 +32,7 @@ export const signals = defineCopy('signals', {
     someDirect: (n: number) => `${n} direct`,
     more: 'More',
     seeData: 'See it in Data',
+    seeExplore: 'See it in Explore',
     notify: 'Get notified next time',
     close: 'Close',
     // The story.

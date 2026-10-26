@@ -5,12 +5,14 @@
 // sheet on a phone. Everything in it was counted; nothing says why.
 import { Bell, X, TrendingUp } from 'lucide-react'
 import { Modal } from '../../kit/Modal'
+import type { Filter } from '../../lib/api'
+import type { ViewState } from '../../lib/url'
 import { countryName, fmtInt, flag } from '../../lib/format'
 import { RefMark } from '../cards/refIcons'
 import { useHostIcon } from './useHostIcon'
 import { Rolling } from '../moments/Rolling'
 import { signals } from './copy'
-import { beats, clock, deviceShare, honestLine, surgeChip, type Story, type Surge } from './surge'
+import { beats, clock, deviceShare, honestLine, seeInExplore, surgeChip, type Story, type Surge } from './surge'
 import { PathChip } from './PathChip'
 import { SurgeChart } from './SurgeChart'
 import { useFullSurge } from './useFullSurge'
@@ -19,13 +21,26 @@ import './surge.css'
 
 const t = signals.surge
 
-/** site: the site's id, so a surge that arrives without its story (told by a notice) gets the story fetched. */
-export default function SurgeModal({ surge: given, site, tz, onClose, onSee }: { surge: Surge; site?: string; tz: string; onClose: () => void; onSee: () => void }) {
+/** Where the bell's "See it in Explore" leads: the filters it narrows by, and how the address is changed (the surge's own site may not be the one in view). */
+export interface ExploreLead {
+  filters: Filter[]
+  go: (patch: Partial<ViewState>) => void
+}
+
+/** site: the site's id, so a surge that arrives without its story (told by a notice) gets the story fetched. explore: the one action is Explore, narrowed (the bell). */
+export default function SurgeModal({ surge: given, site, tz, explore, onClose, onSee }: { surge: Surge; site?: string; tz: string; explore?: ExploreLead; onClose: () => void; onSee: () => void }) {
   const { surge, state } = useFullSurge(given, site)
-  const { see, seePage, canAsk, notify } = useSurgeActions(surge, tz, () => {
+  const actions = useSurgeActions(surge, tz, () => {
     onSee()
     onClose()
   })
+  const { seePage, canAsk, notify } = actions
+  const see = explore
+    ? () => {
+        explore.go(seeInExplore(surge, tz, explore.filters))
+        onClose()
+      }
+    : actions.see
   const st = surge.story
   const w = surge.why
   return (
@@ -75,7 +90,7 @@ export default function SurgeModal({ surge: given, site, tz, onClose, onSee }: {
           </button>
         )}
         <button type="button" className="btn primary" onClick={see}>
-          {t.seeData}
+          {explore ? t.seeExplore : t.seeData}
         </button>
       </div>
     </Modal>

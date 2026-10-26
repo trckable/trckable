@@ -2,8 +2,9 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import type { Milestone, Site } from '../../lib/api'
 import { lazyLoad } from '../../lib/lazyLoad'
+import type { Surge } from '../../features/signals/surge'
 import { mentionsPath } from '../../features/mentions/route'
-import { navigate } from '../../lib/url'
+import { navigate, readView, setView, writeView } from '../../lib/url'
 import { openSettings } from '../../lib/settings'
 import { toast } from '../../components/Toast'
 import { can as allowed } from '../../lib/permissions'
@@ -19,6 +20,7 @@ import { OPEN_GAP_MS, type useNotices } from './useNotices'
 import { QUERY } from '../../kit/breakpoints'
 
 const MilestoneSheet = lazyLoad(() => import('./MilestoneSheet'))
+const SurgeModal = lazyLoad(() => import('../../features/signals/SurgeModal'))
 
 function go(n: Notice) {
   const base = '/' + encodeURIComponent(n.site)
@@ -26,6 +28,12 @@ function go(n: Notice) {
   else if (n.kind === 'spike') navigate(`${base}?view=live`)
   else if (n.kind === 'mention') navigate(mentionsPath(n.site))
   else navigate(`${base}?view=briefing&period=${n.kind === 'weekly' ? '7d' : 'today'}`)
+}
+
+/** A busy notice as the surge the story is told of: its numbers; the rest is read from what was stored (useFullSurge). */
+function surgeOf(n: Notice): Surge {
+  const { visitors, factor } = n.busy ?? { visitors: 0, factor: 0 }
+  return { id: n.id, started: n.at, online: visitors, usual: factor > 0 ? visitors / factor : 0, times: factor, why: { source: n.source, source_dim: n.source ? 'referrer' : undefined, source_value: n.source, source_usual: 0, before: 0, minutes: 0 } }
 }
 
 /** The source as a person says it: the brand's name, else the host. */
@@ -52,6 +60,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
   const { items, read, refresh, mark, markAll, can, dismiss, archive } = notices
   const [sheet, setSheet] = useState(() => window.matchMedia(QUERY.xs).matches)
   const [told, setTold] = useState<Milestone | null>(null)
+  const [busy, setBusy] = useState<Notice | null>(null)
   const [open, setOpen] = useState(false)
   // Rows put away while the menu is open leave it at once; the rest of a change waits for nothing and moves nothing.
   const [gone, setGone] = useState(NONE)
@@ -141,7 +150,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
       title={copy.title}
       markAll={copy.markAll}
       settings={copy.settings}
-      none={f.group === 'all' && !f.site ? copy.none : copy.nothingHere}
+      none={copy.nothingHere}
       filter={{
         groups: GROUPS.map((g) => ({ id: g, label: label[g], on: f.group === g, dot: dots.has(g) })),
         onGroup: (g) => choose({ ...f, group: GROUPS.find((x) => x === g) ?? 'all' }),
@@ -158,6 +167,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
         mark(group?.members ? group.members.map((m) => m.id) : id)
         for (const m of group?.members ?? [n]) m?.read?.()
         if (n?.milestone && site && n.site === site.domain) setTold(n.milestone)
+        else if (n?.busy && !n.open) setBusy(n)
         else if (n?.open) n.open()
         else if (n) go(n)
       }}
@@ -170,6 +180,23 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
         <MilestoneSheet site={site} m={told} onClose={() => setTold(null)} />
       </Suspense>
     )}
+    {busy && <BusyStory n={busy} sites={sites} site={site} onClose={() => setBusy(null)} />}
     </>
+  )
+}
+
+/** A busy row's story, with one way on: Explore on that site, at that time, narrowed to the source that sent them. */
+function BusyStory({ n, sites, site, onClose }: { n: Notice; sites: Site[]; site: Site | null; onClose: () => void }) {
+  const s = sites.find((x) => (n.siteId ? x.id === n.siteId : x.domain === n.site))
+  if (!s) return null
+  const surge = surgeOf(n)
+  const go = (patch: Parameters<typeof setView>[0]) => {
+    if (site?.id === s.id) setView(patch)
+    else navigate(`/${encodeURIComponent(s.domain)}${writeView({ ...readView(new URLSearchParams()), ...patch })}`)
+  }
+  return (
+    <Suspense fallback={null}>
+      <SurgeModal surge={surge} site={s.id} tz={s.timezone} explore={{ filters: n.source ? [{ dim: 'referrer', value: n.source }] : [], go }} onClose={onClose} onSee={() => undefined} />
+    </Suspense>
   )
 }
