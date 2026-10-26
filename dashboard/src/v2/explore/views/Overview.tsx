@@ -18,7 +18,7 @@ export function Overview({ x, d }: { x: XCtx; d: Model }) {
       <XKcs items={d.kcs} />
       <XSec a={copy.shape} b={copy.per(d.per)} />
       {d.shape ? (
-        <XShape shape={d.shape} />
+        <XShape shape={d.shape} site={x.site} />
       ) : (
         <div className="mk-quiet" style={{ padding: '8px 0' }}>
           {copy.notEnough}

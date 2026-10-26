@@ -21,6 +21,7 @@ import { FreshSlot } from './briefing/FreshSlot'
 import { copy } from './copy'
 import { useV2Extras } from './slots'
 import { PeriodChip } from './ui/PeriodChip'
+import { periodPatch } from './ui/chartPick'
 import { periodOptions } from './periodOptions'
 import { TabBar } from './ui/TabBar'
 import { goExplore } from './briefing/deeper'
@@ -101,7 +102,7 @@ export function V2View(p: V2Props) {
       customRange={p.range}
       grain={grain}
       onReset={p.view.period === 'today' ? undefined : () => setView({ period: 'today', from: undefined, to: undefined, bucket: undefined, day: undefined })}
-      onPick={(id) => setView({ period: id, from: undefined, to: undefined, bucket: undefined, day: undefined })}
+      onPick={(id) => setView(periodPatch(id))}
       onCompare={(c) => setView({ compare: c })}
       bucket={p.view.bucket}
       onBucket={(b) => setView({ bucket: b })}

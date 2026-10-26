@@ -6,12 +6,13 @@ import { copy as briefing } from '../briefing/copy'
 import { capital, pairAt, readOf } from '../briefing/compare'
 import { fmtInt } from '../../lib/format'
 import '../briefing/compareLine.css'
+import { ChartControls } from './ChartControls'
 import type { Shape } from '../explore/types'
 
 const W = 520
 const H = 130
 
-export function XShape({ shape }: { shape: Shape }) {
+export function XShape({ shape, site }: { shape: Shape; site: { created_at?: number } }) {
   const { pts, before } = shape
   const [at, setAt] = useState<number | null>(null)
   const was = before?.vals ?? []
@@ -23,7 +24,9 @@ export function XShape({ shape }: { shape: Shape }) {
   const line = path(pts)
   const pair = at === null ? null : pairAt(before, pts[at], at, pts.length)
   return (
-    <div className="shp">
+    <>
+      <ChartControls site={site} why={shape.why} />
+      <div className="shp">
       <div className="yl">
         <span>{fmtInt(top)}</span>
         <span>{fmtInt(top / 2)}</span>
@@ -64,6 +67,7 @@ export function XShape({ shape }: { shape: Shape }) {
           ))}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

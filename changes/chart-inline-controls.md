@@ -1,0 +1,1 @@
+The period and Compare are switched right over the chart, on the Briefing and in Explore's shape of the period: 7d, 30d, 90d and 12m as quiet segments, a Compare switch, and a choice of the period before or the same time last year (once the site is a year old); the header's period chip and the address follow, and arrow keys and Space work.
