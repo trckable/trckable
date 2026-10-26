@@ -5,6 +5,7 @@
 // The first run has nothing cached to show, so it holds the notice back (quietOffline).
 import { settle, toast } from '../components/toastBus'
 import { toastCopy } from '../components/toastCopy'
+import { dateFmt } from './format'
 
 export const OFFLINE_GRACE_MS = 5000
 
@@ -18,7 +19,7 @@ export function quietOffline(on: boolean) {
   quiet = on
 }
 
-const clock = (d: Date) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+const clock = (d: Date) => dateFmt(undefined, { hour: '2-digit', minute: '2-digit' }).format(d)
 
 const tell = () => {
   timer = undefined
