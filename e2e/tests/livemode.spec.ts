@@ -450,3 +450,38 @@ test('a site with visits opens in Live when the address has no mode', async ({ p
   await page.goto(`${API}/example.com?view=live`)
   await expect(online(page)).toBeVisible({ timeout: 15_000 })
 })
+
+// A person's row: the country is a flag and its code (a dash when unknown), the hover is a soft rounded fill inset from the list's edges.
+const LIVEROW = '/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad'
+for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark']] as const) {
+  test(`a hovered Live row is a soft fill and shows the country's flag, ${width}px ${colorScheme}`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme })
+    await page.setViewportSize({ width, height: 900 })
+    await page.route(/\/sites\/[^/]+\/now(\?|$)/, async (route) => {
+      const res = await route.fetch()
+      const body = await res.json()
+      body.recent = (body.recent ?? []).map((v: { country?: string }, i: number) => ({ ...v, country: i % 3 === 2 ? '' : 'US' }))
+      await route.fulfill({ response: res, json: body })
+    })
+    await visit(page, 'liverow')
+    await signIn(page, '/example.com?view=live')
+    const row = page.locator('.lfeed .lv').first()
+    await expect(row).toBeVisible({ timeout: 15_000 })
+    await row.hover()
+    await expect(row.locator('.ccf')).toHaveText('🇺🇸')
+    await expect(row.locator('.ccn')).toHaveText('US')
+    const look = await row.evaluate((el) => {
+      const s = getComputedStyle(el)
+      return { radius: s.borderTopLeftRadius, bg: s.backgroundColor, weight: getComputedStyle(el.querySelector('.pg')!).fontWeight }
+    })
+    expect(look.radius).toBe('8px')
+    expect(look.bg).not.toBe('rgba(0, 0, 0, 0)')
+    expect(look.weight).toBe('400')
+    // The page gets the flexible width (14 characters at least); the device is its icon with its name as the tooltip.
+    expect(await row.locator('.pg').evaluate((e) => e.getBoundingClientRect().width)).toBeGreaterThan(100)
+    await expect(row.locator('.dv svg')).toBeVisible()
+    await expect(row.locator('.dv')).toHaveAttribute('title', /\w/)
+    await page.waitForTimeout(400)
+    await page.screenshot({ path: `${LIVEROW}/liverow-${width}-${colorScheme}.png` })
+  })
+}
