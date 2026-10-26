@@ -1,6 +1,7 @@
-/* The daily email as one quiet line, no box: the words, and a link that opens the preview with the time and the switch. */
-.mk .mailline { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--mk-s1); margin: 0 0 var(--mk-s2); font-size: 12.5px; color: var(--mk-muted); }
-.mk .mailline button { font: inherit; color: var(--mk-text); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+/* The daily email as one small chip: soft fill, no border, no underline. The plain calm row below shares this file. */
+.mk .mailchip { display: inline-flex; align-self: flex-start; width: fit-content; align-items: center; gap: var(--mk-s1); margin: 0 0 var(--mk-s2); padding: 5px 10px; font: inherit; font-size: 12.5px; color: var(--mk-text); background: var(--mk-fill); border: 0; border-radius: 999px; cursor: pointer; text-decoration: none; }
+.mk .mailchip.off { color: var(--mk-muted); }
+.mk .mailchip:hover { background: var(--mk-hov); }
 .mk .calm2.plain { border: 0; padding: 0; min-height: 0; background: none; }
 .mk .calm2.plain button { margin-left: var(--mk-s2); text-decoration: underline; text-underline-offset: 2px; font-size: 12.5px; }
 .mk .calm2.plain .ck { display: none; }

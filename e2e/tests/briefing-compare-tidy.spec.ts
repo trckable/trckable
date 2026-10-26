@@ -124,9 +124,9 @@ for (const width of [360, 768, 1440] as const) {
     // One nudge at a time: the first thing not set up is the one slim row.
     expect(rows).toHaveLength(1)
     await expect(page.locator('.lkcs .how')).toHaveCount(0)
-    // The email is one quiet line over the Briefing, no box, with one Change.
-    await expect(page.locator('.mailline')).toContainText('Emailed daily at 08:00')
-    await expect(page.locator('.mailline').getByRole('button')).toHaveCount(1)
+    // The email is one small chip over the Briefing, no box, one button that says the full sentence.
+    await expect(page.locator('.mailchip')).toContainText('Daily · 08:00')
+    await expect(page.locator('.mailchip')).toHaveAttribute('aria-label', /Emailed daily at 08:00.*Change/)
     const gaps = await page.evaluate(() => {
       const top = (s: string) => document.querySelector(s)!.getBoundingClientRect()
       const seq = ['.kcs', '.brief > .cards', '.lkcs']

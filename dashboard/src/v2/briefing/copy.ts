@@ -111,9 +111,10 @@ export const copy = defineCopy('briefing', {
   unknownNow: 'unknown now',
   unknownDown: 'unknown while down',
   // The email row, the keys.
-  mailOn: 'Emailed daily at 08:00',
-  mailOff: 'The daily email is off',
-  change: 'Change',
+  mailDaily: (t: string) => `Daily · ${t}`,
+  mailAsk: 'Email me this',
+  mailOnFull: (t: string) => `Emailed daily at ${t}. Change`,
+  mailOffFull: 'The daily email is off. Turn on',
   mailTime: 'Change time',
   turnOffMail: 'Turn off',
   turnOnMail: 'Turn on',

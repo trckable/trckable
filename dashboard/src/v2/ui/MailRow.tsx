@@ -1,15 +1,14 @@
-// The quiet line under the Briefing's top about the daily email, and the one way to change it (preview, time, off).
-import { copy } from '../briefing/copy'
+// The Briefing's daily email as one small chip: what it does now, and the one way to change it (preview, time, off).
+import { Mail } from 'lucide-react'
 import './mailLine.css'
+import { mailLabel } from './mailLabel'
 
 export function MailRow({ on, onChange }: { on: boolean; onChange: () => void }) {
+  const { short, full } = mailLabel(on)
   return (
-    <p className="mailline">
-      <span>{on ? copy.mailOn : copy.mailOff}</span>
-      <span aria-hidden="true">{' · '}</span>
-      <button type="button" data-mpv="1" onClick={onChange}>
-        {copy.change}
-      </button>
-    </p>
+    <button type="button" className={`mailchip${on ? '' : ' off'}`} data-mpv="1" aria-label={full} title={full} onClick={onChange}>
+      <Mail size={13} aria-hidden="true" />
+      <span>{short}</span>
+    </button>
   )
 }
