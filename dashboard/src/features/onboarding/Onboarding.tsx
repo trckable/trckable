@@ -3,7 +3,7 @@
 // add (with room for more sites), and the moment the live stream brings the
 // first visit of any of them; its button opens that site's dashboard.
 // Its own lazy chunk: only the first run ever loads it.
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Check } from 'lucide-react'
 import { AccountMenu } from '../../components/AccountMenu'
 import { ghostSvg } from '../../brand/logo'
@@ -16,14 +16,13 @@ import { domainWords } from '../install/domainWords'
 import { wizard } from '../install/copy'
 import { formWords } from '../../lib/formWords'
 import { useFocusTrap } from '../install/useFocusTrap'
-import { AddAnother } from './AddAnother'
 import { copy } from './copy'
 import { FirstVisit } from './FirstVisit'
 import { InstallStep } from './InstallStep'
 import { finishPath, firstVisited, type Step } from './model'
 import { SiteStep } from './SiteStep'
 import { Journey } from './Journey'
-import { SiteTabs } from './SiteTabs'
+import { SiteSwitch } from './SiteSwitch'
 import { SiteWatch } from './SiteWatch'
 import '../../mock/mock.css'
 import '../../kit/layout.css'
@@ -32,6 +31,18 @@ import './onboarding.css'
 import '../../kit/Modal.css'
 import { firstStep, type SitePrefill } from '../../lib/addSiteLink'
 import { browserZone } from '../../lib/format'
+
+/** A sentence about "the site", with the site's name swapped for a picker. */
+function withSwitch(sentence: (domain: string) => string, pick: ReactNode): ReactNode {
+  const [before, after] = sentence('\u0000').split('\u0000')
+  return (
+    <>
+      {before}
+      {pick}
+      {after}
+    </>
+  )
+}
 
 /** required: nothing else may be reached until the first visit or "Skip for
  *  now" (Esc does nothing); resume: sites already added that have not had one. */
@@ -121,13 +132,9 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
   const skip = () => {
     if (!required) leave(site ? finishPath(site.domain, false) : null)
   }
-  // "Skip for now — open my dashboard": the site's own page, where its install waits.
+  // The header's Skip while required: the site's own page, where its install waits.
   const toDashboard = () => {
     leave(site ? finishPath(site.domain, false) : null, true)
-  }
-  const added = (s: Site) => {
-    setSites((all) => [...all, s])
-    setActive(s.id)
   }
 
   // Keyboard first: Esc skips (unless a menu inside is closing), and Enter
@@ -178,7 +185,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
           <h1 ref={heading} tabIndex={-1}>
             {titles[step]}
           </h1>
-          <p className="muted">{subs[step]}</p>
+          <p className="muted">{step === 'install' && sites.length > 1 ? withSwitch(copy.install.sub, <SiteSwitch sites={sites} active={active} seen={seen} onPick={setActive} />) : subs[step]}</p>
           {step === 'site' && <SiteStep taken={!!prefill?.taken && clean === prefill.domain} focusGo={!!prefill} domain={domain} onDomain={(d) => { setDomain(d); setProblem('') }} problem={problem} busy={busy} ready={!!clean} onSubmit={create} />}
           {step === 'here' && <FirstVisit visit={first} />}
           {step === 'here' && (
@@ -191,20 +198,11 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
         </div>
         {step === 'install' && site && (
           <div className="ob-install">
-            {sites.length > 1 && <SiteTabs sites={sites} active={active} seen={seen} onPick={setActive} />}
             <InstallStep
               key={site.id}
               onCopy={markCopied}
               site={site}
               visits={visits}
-              after={
-                <div className="ob-after">
-                  <AddAnother sites={sites} onAdded={added} />
-                  <button type="button" className="ob-skip-link" onClick={toDashboard}>
-                    {copy.skipDash}
-                  </button>
-                </div>
-              }
             />
           </div>
         )}

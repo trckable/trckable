@@ -1,0 +1,1 @@
+The first run's header sits where the dashboard's does (same column, height and top space, and Skip is quiet text with a ring only for the keyboard), and the code step is calmer: one inline site picker in the sentence instead of a row of chips, cookieless and the AI prompt as one quiet row, and a small note, not a big picture, when the check finds a problem.

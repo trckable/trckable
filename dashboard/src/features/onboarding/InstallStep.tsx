@@ -1,6 +1,6 @@
 // Step two: the code is the hero; under it a calm line while the first visit is awaited.
 // A warning about the site (cannot be reached, script not found) waits for two minutes, or for "Check now".
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Site, Visit } from '../../lib/api'
 import { Install } from '../install/Install'
 import { stageOf } from '../install/journey'
@@ -11,7 +11,7 @@ import { copy } from './copy'
 /** How long a new site may wait before the page says what the check found. */
 export const PATIENCE_MS = 120_000
 
-export function InstallStep({ site, visits, onCopy, after }: { site: Site; visits: Visit[]; onCopy: () => void; after?: ReactNode }) {
+export function InstallStep({ site, visits, onCopy }: { site: Site; visits: Visit[]; onCopy: () => void }) {
   const arrived = visits.length > 0
   const check = useInstallCheck(site.id, arrived, true)
   // A press on the code's Copy button strengthens the glow of the journey.
@@ -37,7 +37,7 @@ export function InstallStep({ site, visits, onCopy, after }: { site: Site; visit
     <div ref={box} className="ob-install-step">
       <Install site={site} visits={visits} variant="setup" />
       {asked || late || found ? (
-        <SetupStatus site={site} check={check} arrived={arrived} />
+        <SetupStatus site={site} check={check} arrived={arrived} compact />
       ) : (
         <div className="ob-wait" aria-live="polite">
           <span className="pulse" aria-hidden="true" />
@@ -47,7 +47,6 @@ export function InstallStep({ site, visits, onCopy, after }: { site: Site; visit
           </button>
         </div>
       )}
-      {after}
     </div>
   )
 }
