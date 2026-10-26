@@ -28,7 +28,29 @@ const NOT_MODAL = new Set([
 // Full-screen surfaces of the dashboard's own (a palette, a drawer, the first-run page): not dialogs of the Modal kind.
 const OWN_SURFACE = new Set(['features/mentions/Detail.tsx', 'features/onboarding/Onboarding.tsx', 'v2/ui/Palette.tsx', 'v2/ui/BellMenu.tsx'])
 
+// A <Modal> without a frame brings its own header and footer. Each one left is named with the reason it cannot use the
+// frame today: its header or footer carries the dialog's live content, or the dialog is a layout of its own.
+const OWN_CHROME: Record<string, string> = {
+  'components/Window.tsx': 'settings and profile: a left-nav window whose header is the section head',
+  'features/journey/JourneyDialog.tsx': 'the visit story: its header is the visitor, with a menu in the corner',
+  'features/signals/SurgeModal.tsx': 'the surge hero: a live count is the header',
+  'features/bounce/BounceGuideModal.tsx': 'the bounce guide: a hero header like the surge dialog',
+  'features/heatmap/HeatOverlay.tsx': 'the heatmap: its header is the toolbar (page, width, layers)',
+  'features/share/ShareDialog.tsx': 'the share image: header carries the period and link switches, body is a preview grid',
+  'features/milestones/ShareSheet.tsx': 'a two-column sheet: the card and its side actions share one grid',
+  'features/milestones/Timeline.tsx': 'the milestones window: its own scroll region and a full screen on a phone',
+  'components/CardModal/CardModal.tsx': 'a story card: tinted kind header and its own action row',
+}
+
 describe('dialogs', () => {
+  it('use the frame unless they are a named exception', () => {
+    const bare = files(SRC, '.tsx')
+      .map((f) => f.slice(SRC.length + 1))
+      .filter((f) => f !== 'kit/Modal.tsx' && !(f in OWN_CHROME))
+      .filter((f) => /<Modal\b/.test(readFileSync(join(SRC, f), 'utf8')) && !/frame[={]/.test(readFileSync(join(SRC, f), 'utf8')))
+    expect(bare).toEqual([])
+  })
+
   it('render only through kit/Modal', () => {
     const stray = files(SRC, '.tsx')
       .map((f) => f.slice(SRC.length + 1))

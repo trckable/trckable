@@ -1365,11 +1365,6 @@ ul.people button:hover {
   opacity: 1;
   transform: none;
 }
-.modal.wizard {
-  /* The install step carries a snippet somebody has to read. */
-  width: min(720px, 100%);
-  max-width: 720px;
-}
 /* ---- Searchable picker ----------------------------------------------------- */
 .picker {
   position: relative;

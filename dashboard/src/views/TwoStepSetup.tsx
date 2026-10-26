@@ -60,13 +60,12 @@ export default function TwoStepSetup({
       .finally(() => setBusy(false));
   };
 
-  const frame: Frame =
-    step === 0
-      ? {
+  const frame = (): Frame => {
+    if (step === 0) return {
           title: "Confirm it's you",
           subtitle: "Adding a second step asks for your password again.",
           help: "It is the one change that could lock you out, so trckable asks even though you are signed in.",
-          size: "md",
+          size: "lg",
           busy,
           actions: (
             <button type="button" className="btn primary big" disabled={busy || !password} onClick={start}>
@@ -74,12 +73,11 @@ export default function TwoStepSetup({
             </button>
           ),
         }
-      : step === 1
-        ? {
+    if (step === 1) return {
             title: "Scan with your app",
             subtitle: "Any authenticator app works.",
             help: "1Password, Bitwarden, Google Authenticator, Aegis. The QR code is drawn in this browser; the secret never goes to a QR service.",
-            size: "md",
+            size: "lg",
             busy,
             actions: (
               <button type="button" className="btn primary big" disabled={busy || code.replace(/\D/g, "").length !== 6} onClick={enable}>
@@ -87,11 +85,11 @@ export default function TwoStepSetup({
               </button>
             ),
           }
-        : {
+    return {
             title: "Save these somewhere safe",
             subtitle: "Each signs you in once if you lose your phone.",
             help: "This is the only time they are shown: trckable keeps only their hashes.",
-            size: "md",
+            size: "lg",
             cancel: false,
             actions: (
               <button type="button" className="btn primary big" disabled={!saved} onClick={onClose}>
@@ -99,9 +97,10 @@ export default function TwoStepSetup({
               </button>
             ),
           };
+  }
 
   return (
-    <Modal label="Turn on two-step sign-in" onClose={step < 2 ? onClose : undefined} frame={frame}>
+    <Modal label="Turn on two-step sign-in" onClose={step < 2 ? onClose : undefined} frame={frame()}>
       <Steps labels={STEPS} at={step} />
 
       <StepBody step={step}>

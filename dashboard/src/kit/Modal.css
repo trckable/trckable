@@ -84,19 +84,13 @@
   }
 }
 
-.modal.wide {
-  /* max-width alone would lose to .modal's own width, so both move. */
-  width: min(560px, 100%);
-  max-width: 560px;
-}
-
 /* A dialog that is a form: the form disappears from the layout so its fields
    sit in the dialog's own column, exactly as they would without it. */
 .modal > .modal-form {
   display: contents;
 }
 
-/* A plain heading, where a dialog has no DialogHead. */
+/* A plain heading, where a dialog has no frame. */
 .modal > h2,
 .modal > .modal-form > h2 {
   margin: 0;

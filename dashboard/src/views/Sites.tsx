@@ -267,9 +267,8 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
     ['widgets', counts?.widgets],
   ]
 
-  const frame: Frame =
-    step === 'what'
-      ? {
+  const frame = (): Frame => {
+    if (step === 'what') return {
           title: `Delete ${site.domain}?`,
           subtitle: 'Removes the site and all its data. There is no undo.',
           icon: <ModalMark icon={TriangleAlert} danger />,
@@ -281,8 +280,7 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
             </button>
           ),
         }
-      : step === 'last'
-        ? {
+    if (step === 'last') return {
             title: 'Last check',
             subtitle: `Hold the button and ${site.domain} is gone for good.`,
             help: 'Nobody, including trckable, can bring it back from here.',
@@ -296,29 +294,21 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
             ),
             actions: <HoldButton onDone={run}>Hold to delete forever</HoldButton>,
           }
-        : step === 'working'
-          ? { title: `Deleting ${site.domain}`, size: 'md', cancel: false }
-          : {
+    if (step === 'working') return { title: `Deleting ${site.domain}`, size: 'md', cancel: false }
+    return {
               title: `${site.domain} is gone`,
               size: 'md',
               cancel: false,
               actions: (
-                <button
-                  type="button"
-                  className="btn primary big"
-                  onClick={() => {
-                    onClose()
-                    onSites()
-                    navigate('/')
-                  }}
-                >
+                <button type="button" className="btn primary big" onClick={() => { onClose(); onSites(); navigate('/') }}>
                   Done
                 </button>
               ),
             }
+  }
 
   return (
-    <Modal label={`Delete ${site.domain}`} className="danger-modal" over keepSize={false} onClose={step === 'what' || step === 'last' ? onClose : undefined} frame={frame}>
+    <Modal label={`Delete ${site.domain}`} className="danger-modal" over keepSize={false} onClose={step === 'what' || step === 'last' ? onClose : undefined} frame={frame()}>
       {step === 'what' && (
         <>
           <div className="danger-list danger-step">

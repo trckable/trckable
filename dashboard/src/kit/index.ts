@@ -18,7 +18,6 @@ export { deltaOf, toneOf, type Tone } from './model'
 // Overlays
 export { Modal } from './Modal'
 export { Popover, type PopTrigger } from './Popover'
-export { Sheet } from './Sheet'
 export { TipText, Tooltip, type TipTrigger } from './Tooltip'
 export { settle, toast } from '../components/Toast'
 export { Stepper } from '../components/Stepper'

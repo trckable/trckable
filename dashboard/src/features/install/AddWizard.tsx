@@ -137,9 +137,8 @@ export function AddWizard({ onClose, onSites, sites = [], prefill = null }: { on
     openSettings(site, 'payments')
   }
 
-  const foot: Pick<Frame, 'cancel' | 'extra' | 'actions'> =
-    step === 1
-      ? {
+  const foot = (): Pick<Frame, 'cancel' | 'extra' | 'actions'> => {
+    if (step === 1) return {
           cancel: t.cancel,
           actions: (
             <button ref={next} type="submit" form="wiz-domain" className="btn primary big" disabled={busy || !valid} title={reason || undefined} aria-describedby={reason ? 'wiz-status' : undefined}>
@@ -148,8 +147,7 @@ export function AddWizard({ onClose, onSites, sites = [], prefill = null }: { on
             </button>
           ),
         }
-      : step === 2
-        ? {
+    if (step === 2) return {
             cancel: false,
             extra: (
               <button type="button" className="btn ghost" onClick={() => setStep(3)}>
@@ -162,8 +160,7 @@ export function AddWizard({ onClose, onSites, sites = [], prefill = null }: { on
               </button>
             ),
           }
-        : step === 3
-          ? {
+    if (step === 3) return {
               cancel: false,
               extra: (
                 <button type="button" className="btn ghost" onClick={open}>
@@ -178,7 +175,7 @@ export function AddWizard({ onClose, onSites, sites = [], prefill = null }: { on
                 </button>
               ),
             }
-          : {
+    return {
               cancel: false,
               extra: (
                 <button type="button" className="btn ghost" onClick={() => setStep(3)}>
@@ -196,6 +193,7 @@ export function AddWizard({ onClose, onSites, sites = [], prefill = null }: { on
                 </>
               ),
             }
+  }
 
   return (
     <Modal
@@ -203,7 +201,7 @@ export function AddWizard({ onClose, onSites, sites = [], prefill = null }: { on
       className="add-site"
       onClose={onClose}
       keepSize={false}
-      frame={{ title: <Title step={step} site={site} live={live} />, subtitle: t.sub[step - 1], icon: <ModalMark icon={headIcon(step)} />, size: 'md', busy, ...foot }}
+      frame={{ title: <Title step={step} site={site} live={live} />, subtitle: t.sub[step - 1], icon: <ModalMark icon={headIcon(step)} />, size: 'lg', busy, ...foot() }}
     >
       <Steps compact labels={t.steps} at={step - 1} done={live && step === 3 ? 2 : undefined} onGo={(i) => setStep(i + 1)} />
 

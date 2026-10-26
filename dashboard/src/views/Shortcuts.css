@@ -1,22 +1,8 @@
 /* The shortcuts list (views/Shortcuts.tsx). Loaded when the list first opens. */
 /* ---- Shortcuts ------------------------------------------------------------ */
-.modal.keys-modal {
+.modal.framed.keys-modal {
   max-width: 1040px;
   width: calc(100vw - 32px);
-}
-.keys-head {
-  gap: 16px;
-}
-.keys-head > div:not(.modal-tools) {
-  display: grid;
-  gap: 3px;
-}
-.keys-head h2 {
-  font-size: 18px;
-  letter-spacing: -0.02em;
-}
-.keys-head .faint {
-  font-size: 12.5px;
 }
 .keys-grid {
   display: grid;

@@ -86,11 +86,9 @@ export function ManualSetup({ site, c, provider, onClose }: { site: Site; c: Pay
       {label}
     </button>
   )
-  const foot: Pick<Frame, 'cancel' | 'extra' | 'actions'> =
-    step === 1
-      ? { cancel: 'Later', actions: next(own ? 'Next' : 'Added it', 2, gr && !shown) }
-      : step === 2
-        ? {
+  const foot = (): Pick<Frame, 'cancel' | 'extra' | 'actions'> => {
+    if (step === 1) return { cancel: 'Later', actions: next(own ? 'Next' : 'Added it', 2, gr && !shown) }
+    if (step === 2) return {
             cancel: false,
             extra: (
               <button type="button" className="btn ghost" onClick={() => setStep(1)}>
@@ -99,7 +97,7 @@ export function ManualSetup({ site, c, provider, onClose }: { site: Site; c: Pay
             ),
             actions: next(gr || own ? 'Next' : 'Subscribed', 3),
           }
-        : {
+    return {
             cancel: false,
             extra: (
               <button type="button" className="btn ghost" onClick={() => setStep(2)}>
@@ -112,9 +110,10 @@ export function ManualSetup({ site, c, provider, onClose }: { site: Site; c: Pay
               </button>
             ),
           }
+  }
 
   return (
-    <Modal label={`${provider?.name} webhook`} onClose={onClose} frame={{ title: `${provider?.name} webhook`, icon: <ProviderMark id={c.provider} />, size: 'md', ...foot }}>
+    <Modal label={`${provider?.name} webhook`} onClose={onClose} frame={{ title: `${provider?.name} webhook`, icon: <ProviderMark id={c.provider} />, size: 'lg', ...foot() }}>
       <Steps labels={steps} at={step - 1} />
 
       <StepBody step={step}>
