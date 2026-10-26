@@ -24,10 +24,11 @@ import { openMark } from './open'
 import { settle } from './settle'
 import { useMoments } from './useMoments'
 import { say } from './words'
+import { MomentTip } from './MomentTip'
 import { WhyCard } from './WhyCard'
 import './moments.css'
 
-const TIP_W = 290
+const TIP_W = 280
 /** The middle of the lane above the plot that the markers sit on. */
 const LANE = LANE_H / 2
 
@@ -76,8 +77,6 @@ export default function MomentLayer(p: LayerProps) {
   const click = (m: Mark) => openMark.set({ pins: [m.pin, ...m.more], at: 0 })
   // One thing at a time: with a card open, a marker is only lit by the pointer, never explained.
   const tip = tipOf(marks, shown, !!current)
-  // The first marker also says what the markers are.
-  const teaching = !!tip && tip.i === marks[0]?.i
   const day = current && placed.find((q) => q.pin.id === current.pins[current.at].id)
   const surge = readView(new URLSearchParams(location.search)).surge
   return (
@@ -129,13 +128,8 @@ export default function MomentLayer(p: LayerProps) {
           onPick={(at) => openMark.set({ pins: current.pins, at })}
         />
       )}
-      {tip && (
-        <div id={id} role="tooltip" className="moment-tip" style={{ left: Math.max(4, Math.min(tip.at - TIP_W / 2, g.w - TIP_W - 4)), top: LANE + 20, maxWidth: TIP_W }}>
-          {copy.tipLead(say(tip.pin, fmt).line, fmtDay(tip.pin.day ?? ''))}
-          {tip.more.length > 0 && <span className="faint"> · {copy.more(tip.more.length)}</span>}
-          {teaching && <span className="faint"> · {copy.chipsMark}</span>}
-        </div>
-      )}
+      {tip && <i className="moment-guide" aria-hidden="true" style={{ left: tip.at, top: LANE, height: g.y(0) - LANE }} />}
+      {tip && <MomentTip id={id} mark={tip} money={fmt} style={{ left: Math.max(4, Math.min(tip.at - TIP_W / 2, g.w - TIP_W - 4)), top: LANE + 18, maxWidth: TIP_W }} />}
     </>
   )
 }

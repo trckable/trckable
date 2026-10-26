@@ -7,6 +7,7 @@ import type { Bucket } from '../../lib/api'
 import { copy } from '../briefing/copy'
 import { capital, readOf, type Compare } from '../briefing/compare'
 import { Tip } from '../../charts/Tip'
+import { beforeName } from './beforeName'
 import { downLabel } from './chartNote'
 import { niceStep } from '../briefing/geometry'
 import type { Judged } from '../briefing/usual'
@@ -126,6 +127,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
   const flip = ph && rise !== null && X(rise.p.i) + 6 + rise.text.length * 8 > W - Rr - 4
   const ticks = c.axis.filter((p) => p.i < span && p.tick && p.i % every === 0)
   const geo = drawn.map((p) => [X(p.i), Y(p.v)])
+  const nameAt = beforeName(c.compare ? capital(c.compare.name).length : 0, before.map((p) => [X(p.i), Y(p.v)]), geo, W - Rr - 2)
   useReveal({ pts: geo, h: H })
   useLabelLayout({ pts: geo })
   const chart = (
@@ -156,9 +158,11 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
       {c.compare && before.length > 1 && (
         <>
           <polyline className="chbefore" points={before.map((p) => `${X(p.i)},${Y(p.v)}`).join(' ')} fill="none" stroke="var(--mk-muted)" strokeWidth="1.25" strokeDasharray="4 4" strokeLinecap="round" strokeLinejoin="round" opacity=".8" />
-          <text className="lbl" data-lbl="5" style={{ opacity: at !== null && pts[at] && Math.abs(pts[at].i - before[before.length - 1].i) <= 2 ? 0 : undefined }} x={Math.min(X(before[before.length - 1].i), W - Rr - 2)} y={Y(before[before.length - 1].v) - 7} textAnchor="end" fill="var(--mk-axis)" fontSize="12">
-            {capital(c.compare.name)}
-          </text>
+          {nameAt && (
+            <text className="lbl lbl-halo" data-lbl="5" style={{ opacity: at !== null && pts[at] && Math.abs(pts[at].i - before[before.length - 1].i) <= 2 ? 0 : undefined }} x={nameAt.x} y={nameAt.y} textAnchor="end" fill="var(--mk-axis)" fontSize="12">
+              {capital(c.compare.name)}
+            </text>
+          )}
         </>
       )}
       {c.downs.map((d, k) => {
