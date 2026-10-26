@@ -195,6 +195,21 @@
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
+.sgm-head {
+  margin: 0 36px 10px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2, var(--text));
+}
+.sgm-unit {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2, var(--text));
+}
+.sgm-facts {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+}
 .sgm-meta {
   display: flex;
   flex-direction: column;
@@ -395,6 +410,11 @@
   color: var(--text);
 }
 .sgm-actions {
+  position: sticky;
+  bottom: 0;
+  margin: 0 -24px -24px;
+  padding: 12px 24px 24px;
+  background: var(--surface);
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -470,6 +490,10 @@
   .sgm-beats {
     flex-direction: column;
     gap: 8px;
+  }
+  .sgm-actions {
+    margin: 0 -16px -24px;
+    padding: 12px 16px 24px;
   }
   .sgm-actions .btn {
     flex: 1 1 100%;

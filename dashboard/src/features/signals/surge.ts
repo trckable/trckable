@@ -178,6 +178,9 @@ export function seeInData(s: Surge, tz: string, now = new Date()): Partial<ViewS
   return { live: false, period: 'custom', from, to: last, bucket: 'hour', compare: 'custom', cfrom: addDays(from, -7), cto: addDays(last, -7), filters: [], day: undefined, v: 'explore', story: undefined, surge: s.started }
 }
 
+/** What the bell's "See it in Explore" does: the moment's days opened in Explore's panel, narrowed to what was asked for (the source that sent them). */
+export const seeInExplore = (s: Surge, tz: string, filters: Filter[], now = new Date()): Partial<ViewState> => ({ ...seeInData(s, tz, now), v: undefined, surge: undefined, xp: 'overview', xf: filters })
+
 /** What "See it in Data" does from the landing page chip: the same moment, filtered to that page. */
 export const seePageInData = (s: Surge, tz: string, page: string, now = new Date()): Partial<ViewState> => ({ ...seeInData(s, tz, now), filters: [{ dim: 'page', value: page }] })
 
