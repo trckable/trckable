@@ -484,3 +484,47 @@ for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark
     await page.screenshot({ path: `${LIVEROW}/liverow-${width}-${colorScheme}.png` })
   })
 }
+
+// The half-hour line fades at its ends and a hairline with a dot follows the pointer, snapping to the minute (and the arrow keys).
+const LIVECHART = '/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad'
+for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark']] as const) {
+  test(`the Live line fades at its ends and a guide follows the pointer, ${width}px ${colorScheme}`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme })
+    await page.setViewportSize({ width, height: 900 })
+    await page.route(/\/sites\/[^/]+\/now(\?|$)/, async (route) => {
+      const res = await route.fetch()
+      const body = await res.json()
+      body.minutes = Array.from({ length: 30 }, (_, i) => Math.round(4 + 22 * Math.exp(-(((i - 19) / 6) ** 2)) + (i % 3)))
+      await route.fulfill({ response: res, json: body })
+    })
+    await signIn(page, '/example.com?view=live')
+    await expect(page.locator('.lchart')).toHaveAttribute('data-mode', 'line', { timeout: 15_000 })
+    const area = page.locator('.mline-in')
+    await expect(area).toBeVisible()
+    // The ends melt away: the solid line sits inside a mask.
+    await expect(page.locator('.mline-in g[mask]')).toHaveCount(1)
+    await expect(page.locator('.mline-guide')).toHaveCount(0)
+    const box = (await area.boundingBox())!
+    if (width > 600) {
+      await page.mouse.move(box.x + box.width * 0.5, box.y + box.height / 2)
+      await page.mouse.move(box.x + box.width * 0.62, box.y + box.height / 2)
+    } else {
+      // A thumb pressing on the line (a mouse click would open the minute).
+      await page.locator('.mline .mhits').dispatchEvent('pointerdown', { pointerType: 'touch', clientX: box.x + box.width * 0.62, clientY: box.y + box.height / 2, bubbles: true })
+    }
+    await expect(page.locator('.mline-guide')).toHaveCount(1)
+    await expect(page.locator('.mline-gdot')).toHaveCount(1)
+    await expect(page.locator('.lchart .kit-tip')).toContainText(/\d{1,2}:\d{2}/)
+    await page.waitForTimeout(300)
+    await page.screenshot({ path: `${LIVECHART}/livechart-${width}-${colorScheme}.png` })
+    if (width > 600) {
+      const x0 = (await page.locator('.mline-guide').boundingBox())!.x
+      await page.mouse.move(box.x - 20, box.y - 40) // out of the chart: the guide leaves
+      await expect(page.locator('.mline-guide')).toHaveCount(0)
+      await page.locator('.mline .mhits i').nth(10).focus()
+      await page.keyboard.press('ArrowRight')
+      await expect(page.locator('.mline-guide')).toHaveCount(1)
+      expect((await page.locator('.mline-guide').boundingBox())!.x).not.toBeCloseTo(x0, 0)
+    }
+  })
+}
