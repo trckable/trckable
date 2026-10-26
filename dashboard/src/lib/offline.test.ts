@@ -24,7 +24,9 @@ beforeAll(async () => {
 })
 
 /** The server answers (or not) when the page asks it. */
-const server = (up: boolean) => vi.stubGlobal('fetch', vi.fn(() => (up ? Promise.resolve({ ok: true }) : Promise.reject(new Error('down')))))
+const reply = (status: number, type: string) => ({ ok: status < 400, status, headers: new Headers({ 'content-type': type }) })
+const server = (up: boolean, res = reply(200, 'application/json')) =>
+  vi.stubGlobal('fetch', vi.fn(() => (up ? Promise.resolve(res) : Promise.reject(new Error('down')))))
 
 describe('offline notice', () => {
   it('stays silent for a blip', async () => {
@@ -40,7 +42,7 @@ describe('offline notice', () => {
     server(true)
     go(false)
     await vi.advanceTimersByTimeAsync(5000)
-    expect(fetch).toHaveBeenCalledWith('/healthz', expect.objectContaining({ cache: 'no-store' }))
+    expect(fetch).toHaveBeenCalledWith('/api/v1/me', expect.objectContaining({ cache: 'no-store' }))
     expect(toast).not.toHaveBeenCalled()
     go(true)
   })
@@ -65,5 +67,21 @@ describe('offline notice', () => {
     server(true)
     await vi.advanceTimersByTimeAsync(5000)
     expect(settle).toHaveBeenCalledWith(7, '')
+  })
+
+  it('counts a refusal from the API (signed out) as reachable', async () => {
+    server(true, reply(401, 'application/json'))
+    go(false)
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(toast).not.toHaveBeenCalled()
+    go(true)
+  })
+
+  it('does not take a page of HTML for the API', async () => {
+    server(true, reply(200, 'text/html; charset=utf-8'))
+    go(false)
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(toast).toHaveBeenCalledTimes(1)
+    go(true)
   })
 })
