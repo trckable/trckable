@@ -129,7 +129,7 @@ export function leave(node: HTMLElement) {
 /** The one frame: header (icon, title, subtitle, close), body, footer. A dialog that passes `title` gets all three;
  *  one that does not (a window, a sheet with its own chrome) brings its own inside the same surface. */
 export type Frame = {
-  title: string
+  title: ReactNode
   subtitle?: ReactNode
   /** A mark beside the title: an icon tile or a provider mark. */
   icon?: ReactNode

@@ -3,8 +3,6 @@
 // its own button, so the page itself stays short.
 import { Banknote, Info, Link2, TriangleAlert } from 'lucide-react'
 import { Menu } from '../components/Menu'
-import { DialogActions } from '../components/DialogActions'
-import { DialogHead } from '../components/DialogHead'
 import { Modal } from '../kit/Modal'
 import { useEffect, useState } from 'react'
 import { fail, type PayConnection, type Provider, type Site, more } from '../lib/apiMore'
@@ -337,8 +335,22 @@ const SNIP_FOR: Record<string, string> = {
 function Attribution({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState('Payment links')
   return (
-    <Modal label="Attribute each sale" className="wide" onClose={onClose}>
-      <DialogHead heading="Attribute each sale" hint="Pass the visitor id to your checkout." help="Renewals follow it automatically. Without it, revenue still counts in totals but shows as unattributed." />
+    <Modal
+      label="Attribute each sale"
+      onClose={onClose}
+      frame={{
+        title: 'Attribute each sale',
+        subtitle: 'Pass the visitor id to your checkout.',
+        help: 'Renewals follow it automatically. Without it, revenue still counts in totals but shows as unattributed.',
+        size: 'md',
+        cancel: false,
+        actions: (
+          <button type="button" className="btn primary big" onClick={onClose}>
+            Done
+          </button>
+        ),
+      }}
+    >
       <div className="prov-tabs" role="tablist" aria-label="Checkout">
         {Object.entries(SNIP_FOR).map(([label, id]) => (
           <button key={label} type="button" role="tab" aria-selected={tab === label} className={tab === label ? 'mtile on' : 'mtile'} onClick={() => setTab(label)}>
@@ -348,11 +360,6 @@ function Attribution({ onClose }: { onClose: () => void }) {
         ))}
       </div>
       <CodeBlock code={snippets[tab]} lang="text" />
-      <DialogActions>
-        <button type="button" className="btn primary big" onClick={onClose}>
-          Done
-        </button>
-      </DialogActions>
     </Modal>
   )
 }

@@ -1,7 +1,7 @@
 // The manual webhook for a provider, one step at a time: the URL, the secret,
 // the events to tick. Opened from Payments.tsx.
 import { Check } from 'lucide-react'
-import { Modal } from '../kit/Modal'
+import { Modal, type Frame } from '../kit/Modal'
 import { StepBody } from '../components/StepBody'
 import { Steps } from '../components/Steps'
 import { Ghost } from '../components/Logo'
@@ -81,12 +81,40 @@ export function ManualSetup({ site, c, provider, onClose }: { site: Site; c: Pay
   const steps = stepNames(c.provider)
   const intro = introFor(c.provider, provider?.name)
 
+  const next = (label: string, to: number, off = false) => (
+    <button type="button" className="btn primary big" disabled={off} onClick={() => setStep(to)}>
+      {label}
+    </button>
+  )
+  const foot: Pick<Frame, 'cancel' | 'extra' | 'actions'> =
+    step === 1
+      ? { cancel: 'Later', actions: next(own ? 'Next' : 'Added it', 2, gr && !shown) }
+      : step === 2
+        ? {
+            cancel: false,
+            extra: (
+              <button type="button" className="btn ghost" onClick={() => setStep(1)}>
+                Back
+              </button>
+            ),
+            actions: next(gr || own ? 'Next' : 'Subscribed', 3),
+          }
+        : {
+            cancel: false,
+            extra: (
+              <button type="button" className="btn ghost" onClick={() => setStep(2)}>
+                Back
+              </button>
+            ),
+            actions: (
+              <button type="button" className={done ? 'btn primary' : 'btn'} onClick={onClose}>
+                {done ? 'Done' : 'Close'}
+              </button>
+            ),
+          }
+
   return (
-    <Modal label={`${provider?.name} webhook`} className="wizard" onClose={onClose}>
-      <div className="dlg-head">
-        <ProviderMark id={c.provider} />
-        <h2>{provider?.name} webhook</h2>
-      </div>
+    <Modal label={`${provider?.name} webhook`} onClose={onClose} frame={{ title: `${provider?.name} webhook`, icon: <ProviderMark id={c.provider} />, size: 'md', ...foot }}>
       <Steps labels={steps} at={step - 1} />
 
       <StepBody step={step}>
@@ -102,14 +130,6 @@ export function ManualSetup({ site, c, provider, onClose }: { site: Site; c: Pay
             ) : (
               <CodeBlock code={gr ? `${c.webhook_url}?token=${shown}` : c.webhook_url} lang="url" />
             )}
-            <div className="wiz-actions">
-              <button type="button" className="btn ghost" onClick={onClose}>
-                Later
-              </button>
-              <button type="button" className="btn primary big" disabled={gr && !shown} onClick={() => setStep(2)}>
-                {own ? 'Next' : 'Added it'}
-              </button>
-            </div>
           </>
         )}
 
@@ -118,14 +138,6 @@ export function ManualSetup({ site, c, provider, onClose }: { site: Site; c: Pay
             <p className="muted" style={{ margin: 0 }}>
               {GUMROAD.refunds(provider?.events ?? [])}
             </p>
-            <div className="wiz-actions">
-              <button type="button" className="btn ghost" onClick={() => setStep(1)}>
-                Back
-              </button>
-              <button type="button" className="btn primary big" onClick={() => setStep(3)}>
-                Next
-              </button>
-            </div>
           </>
         )}
 
@@ -145,14 +157,6 @@ export function ManualSetup({ site, c, provider, onClose }: { site: Site; c: Pay
               <span className="faint" style={{ fontSize: 12 }}>
                 type is payment, refund or dispute. visitor comes from getIds() in trckable/server, or the trckable_vid you put on the checkout.
               </span>
-              <div className="wiz-actions">
-                <button type="button" className="btn ghost" onClick={() => setStep(1)}>
-                  Back
-                </button>
-                <button type="button" className="btn primary big" onClick={() => setStep(3)}>
-                  Next
-                </button>
-              </div>
             </>
           ) : (
             <>
@@ -160,14 +164,6 @@ export function ManualSetup({ site, c, provider, onClose }: { site: Site; c: Pay
                 Subscribe that endpoint to these events.
               </p>
               <CodeBlock code={(provider?.events ?? []).join('\n')} lang="events" />
-              <div className="wiz-actions">
-                <button type="button" className="btn ghost" onClick={() => setStep(1)}>
-                  Back
-                </button>
-                <button type="button" className="btn primary big" onClick={() => setStep(3)}>
-                  Subscribed
-                </button>
-              </div>
             </>
           ))}
 
@@ -229,14 +225,6 @@ export function ManualSetup({ site, c, provider, onClose }: { site: Site; c: Pay
                 </div>
               </form>
             )}
-            <div className="wiz-actions">
-              <button type="button" className="btn ghost" onClick={() => setStep(2)}>
-                Back
-              </button>
-              <button type="button" className={done ? 'btn primary' : 'btn'} onClick={onClose}>
-                {done ? 'Done' : 'Close'}
-              </button>
-            </div>
           </>
         )}
       </StepBody>
