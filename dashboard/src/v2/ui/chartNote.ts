@@ -7,8 +7,10 @@ import type { ChartIn } from './DayChart'
 /** The text over the chart: the standing note, or the point under the pointer. */
 export function chartNote(c: ChartIn, at: number | null, down = false): string {
   if (at !== null && c.points[at]) {
+    // Without a comparison the chart's own tip reads the point: the row over the chart is not there to appear and move the chart.
+    if (!c.compare) return ''
     const p = c.points[at]
-    return readOf(p.name, p.raw, c.compare?.name ?? null, p.was, p.delta)
+    return readOf(p.name, p.raw, c.compare.name, p.was, p.delta)
   }
   if (down) return copy.downRightNow
   // The usual range being built is said by the pill on the period row (UsualRange), never by a count against it.
