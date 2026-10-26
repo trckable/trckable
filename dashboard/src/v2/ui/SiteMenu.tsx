@@ -1,13 +1,12 @@
-// The site in the header, and the list that opens from it (SiteList): the current team's sites with today's visitors, a finder
+// The site in the header (and, after it, the domain picker), and the list that opens from it (SiteList): the current team's sites with today's visitors, a finder
 // for a long list, and what belongs to this site. A build with teams puts their square before the site. The check beside the name says when something independent vouches for the numbers.
 import { Suspense, useCallback, useRef, type ReactNode } from 'react'
 import type { Site } from '../../lib/api'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { layoutReady, preloadLayout } from '../../features/sites/useSiteLayout'
 import { dotState, type DotState } from '../../features/sites/StateDot'
-import { useDomainControl } from '../../lib/domainControl'
 import { copy } from '../copy'
-import { domainLabel } from './DomainRows'
+import { DomainPicker } from './DomainPicker'
 import { MenuFoot, type FootItem } from './MenuFoot'
 import { useMenu } from './useMenu'
 import { useOnlyOpen } from '../../lib/headerMenu'
@@ -70,8 +69,6 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
   const menu = useRef<HTMLDivElement>(null)
   useTopLayerWhen(open, menu)
   const cur = p.current
-  const domains = useDomainControl()
-  const picked = cur && domains ? domainLabel(domains) : null
   const state = stateOf(cur, p.unverified)
   const label = cur ? siteLabel(cur.name || cur.domain, state) : undefined
   const toggle = () => {
@@ -86,11 +83,11 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
       <button type="button" id="siteBtn" className={cur ? 'mk-chip' : 'mk-chip all'} aria-label={label} title={label} aria-haspopup="menu" aria-expanded={open} data-key="site" {...warm(warmUp)} onClick={toggle}>
         {cur && <MarkDot site={cur} size={18} state={state} />}
         <NameText cur={cur} all={p.all} />
-        {picked && <span className="dom">{`/ ${picked}`}</span>}
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
           <path d="M3 4.5 6 7.5 9 4.5" stroke="var(--mk-muted)" fill="none" strokeWidth="1.5" />
         </svg>
       </button>
+      {cur && <DomainPicker />}
       <div ref={menu} className={`mk-menu sites${open ? ' on' : ''}`} id="siteMenu" role={open ? 'dialog' : undefined} aria-label={open ? copy.sites : undefined}>
         {open && (
           <Suspense fallback={null}>

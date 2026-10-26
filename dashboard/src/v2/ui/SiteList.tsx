@@ -1,12 +1,11 @@
 // What opens from the header's site (the current team's sites only): a finder, All sites with today's visitors over
-// the sites, a site seen on more than one domain by its domains, then the sites as the account arranged them (pinned,
+// the sites, then the sites as the account arranged them (pinned,
 // named groups that fold, the others), and what belongs to this site. ↑/↓ and Enter move and open, 1–9 open the site with
 // that number, Shift + Enter opens the site itself. Anyone who may change the account arranges it (drag, Alt + ↑/↓, or a
 // site's ⋯ menu); the layout is saved for the whole account.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Site } from '../../lib/api'
 import { useV2Extras } from '../slots'
-import { useDomainControl } from '../../lib/domainControl'
 import { can } from '../../lib/permissions'
 import { openSettings } from '../../lib/settings'
 import { navigate } from '../../lib/url'
@@ -24,7 +23,6 @@ import type { Arrange } from '../../features/sites/arrange'
 import { SetupLine } from './SetupLine'
 import { SiteRow } from './SiteRow'
 import { SiteHead } from './SiteHead'
-import { DomainRows } from './DomainRows'
 import { Search } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -53,7 +51,6 @@ export function SiteList(p: SiteListProps) {
   const numbers = useToday()
   const moves = useV2Extras().siteMoves
   const layout = useSiteLayout() ?? EMPTY
-  const domains = useDomainControl()
   // Opening the list starts the first few sites' reports, so a pick shows numbers at once.
   useEffect(() => {
     for (const s of sites.filter((x) => x.id !== current?.id).slice(0, PREFETCH)) prefetchSite(s)
@@ -151,7 +148,6 @@ export function SiteList(p: SiteListProps) {
       )}
       <div id="siteList" ref={list}>
         {!found && <AllRow on={!current} total={teamTotal(numbers, sites)} problems={problemCounts(sites)} all={p.all} onPick={() => { p.close(); p.onPick('*') }} />}
-        {domains && current && !found && <DomainRows c={domains} close={p.close} />}
         {found && <ul className="site-group">{found.map((s) => item(s, { kind: 'rest' }))}</ul>}
         {found?.length === 0 && <p className="mk-quiet sites-none">{menu.noMatch(q)}</p>}
         {!found &&
