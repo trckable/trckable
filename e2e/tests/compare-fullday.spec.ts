@@ -47,6 +47,6 @@ test('with the comparison on, the dashed line runs the whole day before and the 
   const svg = (await page.locator('svg#chart').boundingBox())!
   const line = (await dashed.boundingBox())!
   expect(line.x + line.width).toBeGreaterThan(svg.x + svg.width * 0.85)
-  expect(asked.some((a) => a.sofar && a.whole === 24 && a.cut < 24)).toBe(true)
+  await expect.poll(() => asked.some((a) => a.sofar && a.whole === 24 && a.cut < 24)).toBe(true)
   await page.screenshot({ path: '/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad/fullday-dark-1280.png' })
 })
