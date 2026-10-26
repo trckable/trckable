@@ -86,6 +86,17 @@ function vitalsOf(site: string, from: ISODate, to: ISODate) {
   return v
 }
 
+// The funnels the site saved, kept for a minute like the speed figures: a re-read of the page's other numbers does not ask for the list again.
+const heldFunnels = new Map<string, { at: number; v: ReturnType<typeof more.funnels> }>()
+function savedFunnelsOf(site: string) {
+  const k = heldFunnels.get(site)
+  if (k && Date.now() - k.at < 60_000) return k.v
+  const v = more.funnels(site)
+  heldFunnels.set(site, { at: Date.now(), v })
+  v.catch(() => heldFunnels.delete(site))
+  return v
+}
+
 /** What the speed of the period is told against: a day against the 28 days before it, a longer stretch against the same number of days before it. */
 export function usualSpeed(range: Range, days: number): [ISODate, ISODate] {
   const span = days > 1 ? days : 28
@@ -161,7 +172,7 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
       : Promise.resolve(null)
     // Only a funnel the site saved: a path guessed from its busiest pages would say "fewer go on than usual" about steps nobody defined.
     const funnel = want.funnel
-      ? more.funnels(site.id).then((r) => {
+      ? savedFunnelsOf(site.id).then((r) => {
           const f = r.funnels.find((x) => x.steps.length >= 2)
           return f ? readFunnel(site.id, range, days, { steps: f.steps }) : null
         }, () => null)
