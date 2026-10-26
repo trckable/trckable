@@ -605,6 +605,7 @@ export default {
   'error.code.dodo_unreachable': 'Dodo Payments was niet te bereiken. Probeer het over een minuut opnieuw.',
 
   // dates
+  'pageName.home': 'Home',
   'dates.period.now': 'Nu',
   'dates.period.today': 'Vandaag',
   'dates.period.yesterday': 'Gisteren',

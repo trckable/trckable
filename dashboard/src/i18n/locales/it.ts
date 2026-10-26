@@ -612,6 +612,7 @@ export default {
   'error.code.dodo_unreachable': 'Impossibile raggiungere Dodo Payments. Riprova tra un minuto.',
 
   // dates
+  'pageName.home': 'Home',
   'dates.period.now': 'Ora',
   'dates.period.today': 'Oggi',
   'dates.period.yesterday': 'Ieri',
