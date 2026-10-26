@@ -57,7 +57,11 @@ func TestLiveNowIsExact(t *testing.T) {
 	start := now.Truncate(time.Minute).Add(-29 * time.Minute).UnixMilli()
 	minutes := make([]float64, 30)
 	cur, prev, online := map[uint64]bool{}, map[uint64]bool{}, map[uint64]bool{}
-	byChannel := map[string]map[uint64]bool{}
+	type firstView struct {
+		ts      int64
+		channel string
+	}
+	first := map[uint64]firstView{} // each visitor counts once, under the channel of their first page in the half hour
 	type row struct {
 		ts, last int64
 		path     string
@@ -88,14 +92,9 @@ func TestLiveNowIsExact(t *testing.T) {
 		switch {
 		case e.TS >= ms-30*60_000:
 			cur[e.Visitor] = true
-			ch := e.Channel
-			if ch == "" {
-				ch = "Direct"
+			if f, ok := first[e.Visitor]; !ok || e.TS < f.ts {
+				first[e.Visitor] = firstView{ts: e.TS, channel: e.Channel}
 			}
-			if byChannel[ch] == nil {
-				byChannel[ch] = map[uint64]bool{}
-			}
-			byChannel[ch][e.Visitor] = true
 		case e.TS >= ms-60*60_000:
 			prev[e.Visitor] = true
 		}
@@ -144,6 +143,15 @@ func TestLiveNowIsExact(t *testing.T) {
 	for v := range online {
 		cur[v] = true // whoever is online is in the half hour, whatever their event was
 	}
+	byChannel := map[string]int{}
+	for v := range cur {
+		ch := first[v].channel
+		if ch == "" {
+			ch = "Direct"
+		}
+		byChannel[ch]++
+	}
+	total := 0
 	if out["visitors"] != float64(len(cur)) || out["previous"] != float64(len(prev)) || out["online"] != float64(len(online)) {
 		t.Fatalf("visitors %v previous %v online %v, want %d %d %d", out["visitors"], out["previous"], out["online"], len(cur), len(prev), len(online))
 	}
@@ -155,10 +163,14 @@ func TestLiveNowIsExact(t *testing.T) {
 	for _, s := range sources {
 		m := s.(map[string]any)
 		n := int(m["visitors"].(float64))
-		if n != len(byChannel[m["channel"].(string)]) || n > last {
-			t.Fatalf("sources %v", sources)
+		if n != byChannel[m["channel"].(string)] || n > last {
+			t.Fatalf("sources %v, want %v", sources, byChannel)
 		}
 		last = n
+		total += n
+	}
+	if float64(total) != out["visitors"] {
+		t.Fatalf("the sources add up to %d, the half hour has %v visitors", total, out["visitors"])
 	}
 	recent := out["recent"].([]any)
 	if len(recent) != len(rows) {

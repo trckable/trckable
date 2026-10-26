@@ -49,7 +49,7 @@ type Now struct {
 	More int64 `json:"more,omitempty"`
 }
 
-// NowSource is one channel's visitors in the last 30 minutes.
+// NowSource is one channel's visitors in the last 30 minutes: each visitor counts once, under the channel of their first page in it, so the sources add up to Visitors.
 type NowSource struct {
 	Channel  string `json:"channel"`
 	Visitors int64  `json:"visitors"`
@@ -116,12 +116,16 @@ func (q Q) LiveNow(ctx context.Context, site string, now time.Time) (*Now, error
 		return nil, err
 	}
 
+	// Each visitor of the half hour counts once, under the channel of their first page in it, so the sources add up to Visitors.
+	// Someone online with no page view in it (a goal, a page left open) has no channel of their own and counts as Direct.
 	rows, err = q.DB.QueryContext(ctx, `
-		SELECT coalesce(nullif(channel, ''), 'Direct') AS c, count(DISTINCT visitor_id) AS n
-		FROM events
-		WHERE site_id = ? AND kind = 1 AND ts >= ? AND ts <= ?
+		SELECT c, count(*) AS n FROM (
+			SELECT coalesce(nullif(arg_min(coalesce(channel, ''), ts) FILTER (WHERE kind = 1), ''), 'Direct') AS c
+			FROM events
+			WHERE site_id = ? AND (kind = 1 OR ts >= ?) AND ts >= ? AND ts <= ?
+			GROUP BY visitor_id)
 		GROUP BY c ORDER BY n DESC, c`,
-		site, from, now)
+		site, now.Add(-5*time.Minute), from, now)
 	if err != nil {
 		return nil, err
 	}

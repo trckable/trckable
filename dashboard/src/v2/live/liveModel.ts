@@ -5,10 +5,10 @@ import type { LiveNow } from '../../features/live/api'
 import type { Row } from '../../features/live/model'
 
 /** The 30 minutes as bars: each a share of the tallest, never under 3%, and flagged when nothing came. */
-export function barsOf(minutes: number[]): { h: number; z: boolean }[] {
+export function barsOf(minutes: number[]): { h: number; z: boolean; n: number }[] {
   // A quiet half hour stays small: one visit is a short bar, not a full-height one.
   const mx = Math.max(4, ...minutes)
-  return minutes.map((b) => ({ h: Math.max(3, (b / mx) * 100), z: b === 0 }))
+  return minutes.map((b) => ({ h: Math.max(3, (b / mx) * 100), z: b === 0, n: b }))
 }
 
 /** The last half hour against the one before it: a signed whole percent, or nothing when there was too little before. */
@@ -59,22 +59,26 @@ function topFive(values: (string | undefined)[]): [string, number][] {
   return [...counts].sort((a, b) => b[1] - a[1]).slice(0, 5)
 }
 
-/** Phone against computer, as shares of the people whose device is known (a tablet counts with the phone). */
-export function deviceSplit(rows: Row[]): { phone: number; computer: number } | null {
-  const known = rows.filter((r) => r.device === 'mobile' || r.device === 'tablet' || r.device === 'desktop')
-  if (!known.length) return null
-  const phone = known.filter((r) => r.device !== 'desktop').length / known.length
-  return { phone, computer: 1 - phone }
+/** Phone against computer as counts of the people whose device is known (a tablet counts with the phone), the larger first. */
+export function deviceCounts(kinds: [string | undefined, number][]): { key: 'phone' | 'computer'; n: number }[] {
+  const sum = (match: (kind: string) => boolean) => kinds.reduce((n, [k, c]) => n + (k && match(k.toLowerCase()) ? c : 0), 0)
+  const computer = sum((k) => k === 'desktop')
+  const phone = sum((k) => k === 'mobile' || k === 'tablet')
+  return ([{ key: 'phone' as const, n: phone }, { key: 'computer' as const, n: computer }]).filter((d) => d.n > 0).sort((x, y) => y.n - x.n)
 }
 
-/** The pages and countries the Analytics card lists. */
-export type Lists = { pages: { label: string; n: number }[]; countries: { label: string; key: string; n: number }[] }
+/** The pages, countries and devices the Analytics card lists. */
+export type Lists = {
+  pages: { label: string; n: number }[]
+  countries: { label: string; key: string; n: number }[]
+  devices: ReturnType<typeof deviceCounts>
+}
 
-export function listsOf(rows: Row[]) {
+export function listsOf(rows: Row[]): Lists {
   return {
     pages: topFive(rows.map((r) => r.path)).map(([label, n]) => ({ label, n })),
     countries: topFive(rows.map((r) => r.country?.toUpperCase())).map(([key, n]) => ({ label: countryName(key), key, n })),
-    devices: deviceSplit(rows),
+    devices: deviceCounts(rows.map((r) => [r.device, 1])),
   }
 }
 
