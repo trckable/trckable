@@ -115,7 +115,7 @@ export default {
 
   // toast
   'toast.dismiss': 'Cerrar',
-  'toast.offline': (at: string) => `Sin conexión a internet. Datos de las ${at}. Reconectando…`,
+  'toast.offline': (at: string) => `Sin conexión. Datos de las ${at}.\nReconectando…`,
 
   // cards
   'records.title': 'Lo que registra el script',

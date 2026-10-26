@@ -23,21 +23,47 @@ beforeAll(async () => {
   await import('./offline')
 })
 
+/** The server answers (or not) when the page asks it. */
+const server = (up: boolean) => vi.stubGlobal('fetch', vi.fn(() => (up ? Promise.resolve({ ok: true }) : Promise.reject(new Error('down')))))
+
 describe('offline notice', () => {
-  it('stays silent for a blip', () => {
+  it('stays silent for a blip', async () => {
+    server(true)
     go(false)
-    vi.advanceTimersByTime(1500)
+    await vi.advanceTimersByTimeAsync(1500)
     go(true)
-    vi.advanceTimersByTime(10_000)
+    await vi.advanceTimersByTimeAsync(10_000)
     expect(toast).not.toHaveBeenCalled()
   })
 
-  it('speaks after a real outage and clears when back', () => {
+  it('says nothing when the browser says offline but our server still answers', async () => {
+    server(true)
     go(false)
-    vi.advanceTimersByTime(5000)
-    expect(toast).toHaveBeenCalledTimes(1)
-    expect(toast.mock.calls[0][0]).toMatch(/^No internet connection\. Showing data from .+\. Reconnecting…$/)
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(fetch).toHaveBeenCalledWith('/healthz', expect.objectContaining({ cache: 'no-store' }))
+    expect(toast).not.toHaveBeenCalled()
     go(true)
+  })
+
+  it('speaks when the server does not answer either, with the time unbroken, and clears when back', async () => {
+    server(false)
+    go(false)
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(toast).toHaveBeenCalledTimes(1)
+    const text = toast.mock.calls[0][0]
+    expect(text).toMatch(/^Offline\. Showing data from [^\n]+\.\nReconnecting…$/)
+    expect(text.split('\n')[0]).not.toMatch(/\d:\d\d \w/) // no ordinary space inside the time
+    go(true)
+    expect(settle).toHaveBeenCalledWith(7, '')
+  })
+
+  it('goes at once when a later request gets through', async () => {
+    server(false)
+    go(false)
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(toast).toHaveBeenCalledTimes(1)
+    server(true)
+    await vi.advanceTimersByTimeAsync(5000)
     expect(settle).toHaveBeenCalledWith(7, '')
   })
 })

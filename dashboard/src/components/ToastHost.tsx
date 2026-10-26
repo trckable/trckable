@@ -54,7 +54,9 @@ function Card({ item, onDone }: { item: Item; onDone: (id: number) => void }) {
   return (
     <div className={'toast ' + kind} onMouseEnter={() => setHeld(true)} onMouseLeave={() => setHeld(false)} onFocus={() => setHeld(true)} onBlur={() => setHeld(false)}>
       <Mark kind={kind} />
-      <span className="toast-text">{item.text}</span>
+      <span className="toast-text">
+        {item.text.split('\n').map((line, i) => (i === 0 ? line : <small key={line} style={{ display: 'block', opacity: 0.7 }}>{line}</small>))}
+      </span>
       {action && (
         <button
           type="button"
