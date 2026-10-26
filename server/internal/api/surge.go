@@ -195,8 +195,8 @@ func (a *API) surgeStory(ctx context.Context, site string, s surge.Surge) *surge
 }
 
 // surgeWindow is how much of the stored events a past busy moment shows on
-// each side: half an hour before it began and half an hour after it ended.
-const surgeWindow = 30 * time.Minute
+// each side: ten minutes before it began and ten minutes after it ended.
+const surgeWindow = 10 * time.Minute
 
 // surgeSame is how far apart (seconds) two accounts of one busy moment may say it began.
 const surgeSame = 15 * 60

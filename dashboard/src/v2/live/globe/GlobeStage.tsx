@@ -2,7 +2,7 @@
 // when a pin is picked or hovered, never while the globe spins: the tip and the popover are the only DOM, and the
 // engine moves them. Keyboard: Tab to the globe, the arrow keys step through the pins, Enter opens one.
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
-import { countryName } from '../../../lib/format'
+import { countryName, flag } from '../../../lib/format'
 import { copy } from '../copy'
 import { Globe } from './engine'
 import { type Pin } from './geo'
@@ -142,7 +142,7 @@ export function GlobeStage({ pins, people, sel, full, onPick, children }: { pins
       </span>
       {tipPin && (
         <div className="gtip" role="tooltip">
-          {`${tipPin.city || countryName(tipPin.cc)} · ${tipPin.path}`}
+          {copy.spotTip(flag(tipPin.cc), tipPin.city ? `${tipPin.city}, ${countryName(tipPin.cc)}` : countryName(tipPin.cc), tipPin.crowd, tipPin.path)}
         </div>
       )}
       {children}

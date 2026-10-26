@@ -24,6 +24,10 @@ export const signals = defineCopy('signals', {
     label: 'Busy',
     title: 'Whoa, something’s happening',
     onlineNow: 'online now',
+    online: 'online',
+    busyHead: (site: string, when: string) => `${site} was busy · ${when}`,
+    facts: (peak: number, usually: string) => `Peak ${peak} · ${usually}`,
+    lasted: (min: number) => `lasted ${min} min`,
     justNow: 'now',
     chip: (times: string) => `${times} usual`,
     mostly: (source: string) => `Mostly from ${source}`,
@@ -32,6 +36,7 @@ export const signals = defineCopy('signals', {
     someDirect: (n: number) => `${n} direct`,
     more: 'More',
     seeData: 'See it in Data',
+    seeExplore: 'See it in Explore',
     notify: 'Get notified next time',
     close: 'Close',
     // The story.

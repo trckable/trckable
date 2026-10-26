@@ -35,7 +35,7 @@ if (!milestones || milestones > milestonesBudget) {
   console.error('the milestones chunk is missing or over its budget')
   process.exit(1)
 }
-// Live's globe view: one lazy chunk (script and styles, the land dots and the country points inside it), 25 KB at the most.
+// Live's globe view: one lazy chunk (script and styles, the land outlines, the borders and the country points inside it), 25 KB at the most.
 const globeBudget = 25 * 1024
 const globe = lazy.filter((f) => f.startsWith('GlobePanel-')).reduce((n, f) => n + gz('assets/' + f), 0)
 console.log(`globe chunk: ${(globe / 1024).toFixed(1)} KB gz (budget ${globeBudget / 1024} KB)`)
