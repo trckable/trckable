@@ -50,6 +50,9 @@ for (const colorScheme of ['dark', 'light'] as const) {
       await expect(story.locator('.sgm-unit')).toHaveText('online')
       await expect(story.locator('.sgm-facts')).toContainText('Peak 52')
       await expect(story.locator('.sgm-tile')).not.toHaveCount(0)
+      await expect(story.getByRole('img', { name: 'Facebook' })).toBeVisible()
+      await expect(story.locator('.sgm-landing')).toHaveCount(0)
+      await expect(story.getByRole('button', { name: 'See it in Explore' })).toBeInViewport() // the footer stays; the body scrolls
       await page.waitForTimeout(800)
       await page.screenshot({ path: `${SHOTS}/bellopen-story-${colorScheme}.png` })
       await story.getByRole('button', { name: 'See it in Explore' }).click()

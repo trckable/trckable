@@ -8,12 +8,10 @@ import { Modal } from '../../kit/Modal'
 import type { Filter } from '../../lib/api'
 import type { ViewState } from '../../lib/url'
 import { countryName, fmtInt, flag } from '../../lib/format'
-import { RefMark } from '../cards/refIcons'
-import { useHostIcon } from './useHostIcon'
+import { SourceMark } from '../../components/visitor/SourceMark'
 import { Rolling } from '../moments/Rolling'
 import { signals } from './copy'
 import { beats, clock, deviceShare, honestLine, seeInExplore, surgeChip, type Story, type Surge } from './surge'
-import { PathChip } from './PathChip'
 import { SurgeChart } from './SurgeChart'
 import { useFullSurge } from './useFullSurge'
 import { useSurgeActions } from './useSurgeActions'
@@ -34,7 +32,7 @@ export default function SurgeModal({ surge: given, site, tz, explore, head, onCl
     onSee()
     onClose()
   })
-  const { seePage, canAsk, notify } = actions
+  const { canAsk, notify } = actions
   const see = explore
     ? () => {
         explore.go(seeInExplore(surge, tz, explore.filters))
@@ -70,12 +68,6 @@ export default function SurgeModal({ surge: given, site, tz, explore, head, onCl
         </p>
       )}
       <p className="sgm-honest muted">{honestLine(surge)}</p>
-      {w.source && w.source_dim === 'referrer' && w.page && (
-        <p className="sgm-landing">
-          <span className="muted">{t.landingOn}</span>
-          <PathChip page={w.page} onPick={() => seePage(w.page ?? '')} />
-        </p>
-      )}
       {w.campaign && <p className="sgm-camp muted">{t.campaign(w.campaign)}</p>}
       <SurgeChart surge={surge} tz={tz} />
       <ol className="sgm-beats">
@@ -159,12 +151,11 @@ function Tiles({ surge, story }: { surge: Surge; story: Story }) {
 
 /** One source: its icon and name, its people as a bar of everyone online, and what it usually sends when it is the main one. */
 function Bar({ name, n, of, host, usual }: { name: string; n: number; of: number; host?: string; usual?: number }) {
-  const icon = useHostIcon(host ?? null)
   return (
     <div className="sgm-bar">
       <p className="sgm-row">
         <span>
-          {host && <RefMark host={host} icon={icon} />} {name}
+          {host && <SourceMark channel="Referral" referrer={host} size={18} />} {name}
           {usual !== undefined && <small className="faint"> · {t.usually(Math.round(usual))}</small>}
         </span>
         <b>{fmtInt(n)}</b>

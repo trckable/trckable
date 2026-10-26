@@ -197,7 +197,7 @@ function BusyStory({ n, sites, site, onClose }: { n: Notice; sites: Site[]; site
   }
   return (
     <Suspense fallback={null}>
-      <SurgeModal surge={surge} site={s.id} tz={s.timezone} head={signals.surge.busyHead(n.site, whenOf(n.at))} explore={{ filters: n.source ? [{ dim: 'referrer', value: n.source }] : [], go }} onClose={onClose} onSee={() => undefined} />
+      <SurgeModal surge={surge} site={s.id} tz={s.timezone} head={signals.surge.busyHead(n.site, whenOf(n.at, Date.now() / 1000, s.timezone))} explore={{ filters: n.source ? [{ dim: 'referrer', value: n.source }] : [], go }} onClose={onClose} onSee={() => undefined} />
     </Suspense>
   )
 }
