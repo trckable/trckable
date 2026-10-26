@@ -92,8 +92,18 @@ for (const [name, m] of Object.entries(menus)) {
     }
 
     // One active row: the fill of a row that is not the pointer's or the key's own is clear. The row of the page in view (aria-current) keeps its own soft fill, apart from that count.
-    const idle = rows.and(page.locator(':not([aria-current])'))
-    const fills = () => rows.evaluateAll((els) => els.filter((e) => !e.hasAttribute('aria-current')).map((e) => getComputedStyle(e).backgroundColor).map((c) => (c === 'rgba(0, 0, 0, 0)' || c === 'transparent' ? 0 : 1)))
+    // Selected means the accent bar (and aria-current / .on), which wears the hover's fill on purpose (#539): it is not counted.
+    const idle = name === 'sites' ? rows.and(page.locator(':not([aria-current]):not(.on)')) : rows.and(page.locator(':not([aria-current])'))
+    const sites = name === 'sites'
+    // In the site menu the fill sits on the whole row (a site with its buttons), so that is what is read.
+    const fills = () =>
+      rows.evaluateAll((els, sites) => {
+        const whole = new Set(els.map((e) => (sites ? (e.closest('.site-row, .site-head') ?? e) : e)))
+        return [...whole]
+          .filter((e) => !e.hasAttribute('aria-current') && !(sites && (e.classList.contains('on') || e.querySelector('.mi.on'))))
+          .map((e) => getComputedStyle(e).backgroundColor)
+          .map((c) => (c === 'rgba(0, 0, 0, 0)' || c === 'transparent' ? 0 : 1))
+      }, sites)
     const painted = async () => {
       await page.waitForTimeout(100)
       return (await fills()).reduce<number>((a, b) => a + b, 0)
