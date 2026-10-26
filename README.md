@@ -4,10 +4,11 @@
 
 # trckable
 
-**Web analytics that shows which traffic pays.**
+**Everything about your site, in one place.**
 
+Your day in plain words, who's on your site right now, where people mention you, whether AI recommends you, alerts when something breaks,<br>
+and revenue from your payment provider: one open-source tool for your whole team.<br>
 Cookieless, open source (AGPL-3.0) and self-hosted in one container.<br>
-Connects Stripe, Lemon Squeezy, Polar, Paddle and Dodo, and credits each sale to the visit that earned it.<br>
 Self-host it free with every feature, or let [trckable Cloud](https://cloud.trckable.com) run it.
 
 [![Version](https://img.shields.io/badge/version-0.7.25-b8ff3c?style=flat-square)](CHANGELOG.md)
@@ -82,13 +83,13 @@ Where it is not the right pick: with pageviews only, Plausible CE's script is sm
 
 Nothing is paid, limited or held back. The complete list: [features](https://docs.trckable.com/features/).
 
-- **Which traffic pays.** Every sale is credited to the visit that earned it, for Stripe, Lemon Squeezy, Polar, Paddle and Dodo: [revenue](https://docs.trckable.com/revenue/).
+- **Mentions.** See where your site is talked about (Hacker News, the news and blogs, Product Hunt) and the visitors each mention brought: [mentions](docs/mentions.md). A self-hosted server sends your site's address and the words you add to Algolia, Google News and GDELT to search, nothing about your visitors; it is off until `TRCKABLE_MENTIONS=on`.
+- **Answers.** Whether ChatGPT, Perplexity and Claude name you for your buyers' questions, and the visitors and revenue the pages they link to bring: [answers](docs/answers.md). A self-hosted server sends your questions and an approximate country to OpenAI, Perplexity and Anthropic, nothing about your visitors; it is off until an AI key is set.
+- **Revenue from your payment provider.** Every sale is credited to the visit that earned it, for Stripe, Lemon Squeezy, Polar, Paddle and Dodo: [revenue](https://docs.trckable.com/revenue/).
 - **Install anywhere.** A script tag, an npm package, WordPress and more: [platforms](https://docs.trckable.com/install/platforms/).
 - **API and MCP server.** Read-only tools for Claude, Cursor or ChatGPT, and an HTTP API: [API](https://docs.trckable.com/api/), [MCP](https://docs.trckable.com/api/mcp/).
 - **Sign in with Google, Microsoft or OIDC.** Free on every install: [sign-in](https://docs.trckable.com/self-host/sign-in-with-a-provider/).
 - **Privacy by default.** Cookieless, no IP address ever stored: [privacy](https://docs.trckable.com/privacy/), and a printable [privacy report](docs/privacy-report.md) for every site.
-- **Mentions.** See where your site is talked about (Hacker News, the news and blogs, Product Hunt) and the visitors each mention brought: [mentions](docs/mentions.md). A self-hosted server sends your site's address and the words you add to Algolia, Google News and GDELT to search, nothing about your visitors; it is off until `TRCKABLE_MENTIONS=on`.
-- **Answers.** Whether ChatGPT, Perplexity and Claude name you for your buyers' questions, and the visitors and revenue the pages they link to bring: [answers](docs/answers.md). A self-hosted server sends your questions and an approximate country to OpenAI, Perplexity and Anthropic, nothing about your visitors; it is off until an AI key is set.
 - **Heatmaps without recording anyone.** An opt-in module of about 1.5 KB: [heatmaps](docs/heatmaps.md).
 - **Widgets for your own pages.** Live now, revenue, a privacy seal and Online, with no script and no cookie: [widgets](docs/widgets.md).
 - **Client reports.** Weekly or monthly email and PDF for the people who pay for them: [client reports](docs/client-reports.md).
