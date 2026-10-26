@@ -22,7 +22,7 @@
 .mk .rp-cap.sale .rp-dot{background:var(--mk-text)}
 .mk .rp-stage[data-phase=end] :is(.rp-hud,.rp-mark,.rp-pin,.rp-cap){display:none}
 /* The stage: the block is fixed in the middle of the screen (a phone: the whole screen), the page behind it dimmed. */
-.mk .rp-scrim{position:fixed;inset:0;z-index:var(--z-scrim);background:var(--mk-scrim);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);animation:rp-fade .26s both}
+.mk .rp-scrim{position:fixed;inset:0;z-index:var(--z-scrim);background:var(--mk-scrim);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);animation:rp-fade .26s both;user-select:none}
 .mk .rp-scrim[data-cinema=out]{animation:rp-fade .2s reverse both}
 .mk .chwrap[data-cinema]{position:fixed;z-index:calc(var(--z-scrim) + 1);left:50%;top:50%;width:min(90vw,1200px);max-height:96dvh;margin:0;padding:var(--mk-s5) var(--mk-s5) var(--mk-s4);box-sizing:border-box;display:flex;flex-direction:column;gap:var(--mk-s3);border-radius:20px;border:1px solid var(--mk-line);background:var(--mk-card);box-shadow:0 30px 80px var(--mk-shc);transform:translate(-50%,-50%);animation:rp-rise .28s cubic-bezier(.2,.8,.2,1) both}
 .mk .chwrap[data-cinema=out]{animation:rp-rise .2s cubic-bezier(.2,.8,.2,1) reverse both}
@@ -63,3 +63,5 @@
   .mk .rp-wrap{animation:none}
   .mk .rp-dot{transition:none}
 }
+/* A double click on Replay must not leave the words under the pointer selected when the cinema comes and goes. */
+.mk .chwrap[data-cinema],.mk .rpb{user-select:none;-webkit-user-select:none}
