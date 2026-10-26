@@ -3086,6 +3086,7 @@ export default {
   'v2.live.globe': 'Globo',
   'v2.live.globeSwitch': 'Mostra il globo',
   'v2.live.globeLabel': (n: number) => n === 1 ? 'Globo: 1 persona sul sito' : `Globo: ${int(n)} persone sul sito`,
+  'v2.live.spotTip': (flag: string, place: string, n: number, what: string) => `${flag} ${place} · ${n === 1 ? '1 online' : `${int(n)} online`} · ${what}`,
   'v2.live.recent': 'Attività recente',
   'v2.live.fullscreen': 'Schermo intero',
   'v2.live.exitFullscreen': 'Esci da schermo intero',

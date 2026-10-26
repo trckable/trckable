@@ -3086,6 +3086,7 @@ export default {
   'v2.live.globe': 'Wereldbol',
   'v2.live.globeSwitch': 'Wereldbol tonen',
   'v2.live.globeLabel': (n: number) => n === 1 ? 'Wereldbol: 1 persoon op de site' : `Wereldbol: ${int(n)} mensen op de site`,
+  'v2.live.spotTip': (flag: string, place: string, n: number, what: string) => `${flag} ${place} · ${n === 1 ? '1 online' : `${int(n)} online`} · ${what}`,
   'v2.live.recent': 'Recente activiteit',
   'v2.live.fullscreen': 'Volledig scherm',
   'v2.live.exitFullscreen': 'Volledig scherm sluiten',
