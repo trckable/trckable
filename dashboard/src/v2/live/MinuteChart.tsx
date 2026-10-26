@@ -48,6 +48,8 @@ export function MinuteChart({ bars, mode, total, beat, minute, phone, timezone, 
       'aria-label': `${label(ago)}, ${copy.viewsAt(bars[i].n)}. ${copy.openMinute(label(ago))}`,
       onPointerDown: (e: React.PointerEvent) => void (touched.current = e.pointerType === 'touch'),
       onPointerEnter: (e: React.PointerEvent) => e.pointerType !== 'touch' && show(i, e.currentTarget),
+      // Some browsers jump the pointer onto a minute without the out event React pairs the enter with, so a move shows it too.
+      onPointerMove: (e: React.PointerEvent) => e.pointerType !== 'touch' && shown?.i !== i && show(i, e.currentTarget),
       onPointerLeave: (e: React.PointerEvent) => e.pointerType !== 'touch' && setShown(null),
       onFocus: (e: React.FocusEvent) => e.currentTarget.matches(':focus-visible') && show(i, e.currentTarget),
       onBlur: () => setShown(null),
