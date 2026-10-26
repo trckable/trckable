@@ -607,6 +607,9 @@ export default {
   'error.busy': 'Server occupato · Riprova',
   'error.code.not_found': 'Non trovato',
   'error.code.report_memory': 'Troppi dati per il server in una volta · Scegli un periodo più breve o aggiungi un filtro',
+  'error.code.dodo_live_key_in_test': 'Dodo Payments non ha accettato questa chiave. Una chiave live non funziona in modalità test: usa una chiave di test o passa a Live.',
+  'error.code.dodo_test_key_in_live': 'Dodo Payments non ha accettato questa chiave. Una chiave di test non funziona in modalità Live: usa una chiave live o passa alla modalità test.',
+  'error.code.dodo_unreachable': 'Impossibile raggiungere Dodo Payments. Riprova tra un minuto.',
 
   // dates
   'dates.period.now': 'Ora',

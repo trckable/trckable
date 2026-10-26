@@ -13,6 +13,8 @@ import (
 type UserError struct {
 	Msg string
 	Err error // what the provider answered, for logs and errors.As
+	// Code is a short word for the dashboard to put in its own language; empty when the message stands on its own.
+	Code string
 }
 
 func (e *UserError) Error() string { return e.Msg }
@@ -38,11 +40,11 @@ func statusOf(err error) int {
 func paddleProblem(ctx context.Context, err error, perms ...string) error {
 	switch st := statusOf(err); {
 	case st == http.StatusUnauthorized:
-		return &UserError{msgPaddleRejected, err}
+		return &UserError{Msg: msgPaddleRejected, Err: err}
 	case st == http.StatusForbidden && len(perms) > 0:
 		return missingPermissions(err, perms)
 	case st >= 500, st == 0 && ctx.Err() == nil: // a client timeout is Paddle not answering
-		return &UserError{msgPaddleUnreachable, err}
+		return &UserError{Msg: msgPaddleUnreachable, Err: err}
 	}
 	return err
 }
@@ -52,7 +54,7 @@ func missingPermissions(err error, perms []string) error {
 	if len(perms) > 1 {
 		msg = fmt.Sprintf(msgPaddleMissingMany, strings.Join(perms, ", "))
 	}
-	return &UserError{msg, err}
+	return &UserError{Msg: msg, Err: err}
 }
 
 // probe reads one row of a list: the cheapest call that shows the key works

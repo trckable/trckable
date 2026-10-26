@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { SetupItem, SetupState } from '../../lib/apiMore'
-import { CHECK_FOR, installWaiting, isStale, visitMissed, STALE, wanted, splitOf, hiddenBy, hideId, left, offset, percent, ringMode, rowsOf } from './model'
+import { CHECK_FOR, installWaiting, isStale, visitMissed, STALE, wanted, splitOf, hiddenBy, hideId, left, paidWith, offset, percent, ringMode, rowsOf } from './model'
 
 const item = (id: string, group: SetupItem['group'], o: Partial<SetupItem> = {}): SetupItem => ({ id, group, done: false, counted: group !== 'more', skipped: false, skippable: group === 'optional', ...o })
 const state = (done: number, counted: number): SetupState => ({ kind: { value: 'shop', chosen: false }, goal_suggestion: '', done, counted, all_set: counted > 0 && done === counted, items: [] })
@@ -124,5 +124,16 @@ describe('reading the checklist again', () => {
   it('calls a read old after the short time', () => {
     expect(isStale(0, STALE)).toBe(true)
     expect(isStale(1, STALE)).toBe(false)
+  })
+})
+
+describe('paidWith', () => {
+  const pay = (detail: SetupItem['detail']): SetupState => ({ ...state(0, 1), items: [item('payments', 'optional', { detail })] })
+  it('names the provider of a real connection', () => {
+    expect(paidWith(pay({ provider: 'stripe', sales: 0, connected: true }))).toBeTruthy()
+  })
+  it('a provider only seen on the page is not a connection: Connect stays', () => {
+    expect(paidWith(pay({ provider: 'stripe' }))).toBeUndefined()
+    expect(paidWith(null)).toBeUndefined()
   })
 })

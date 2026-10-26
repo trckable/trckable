@@ -601,6 +601,9 @@ export default {
   'error.busy': 'Serveur occupé · Réessayez',
   'error.code.not_found': 'Introuvable',
   'error.code.report_memory': 'Trop de données pour le serveur en une fois · Choisissez une période plus courte ou ajoutez un filtre',
+  'error.code.dodo_live_key_in_test': 'Dodo Payments n\'a pas accepté cette clé. Une clé live ne fonctionne pas en mode test : utilisez une clé de mode test ou passez en Live.',
+  'error.code.dodo_test_key_in_live': 'Dodo Payments n\'a pas accepté cette clé. Une clé de mode test ne fonctionne pas en mode Live : utilisez une clé live ou passez en mode test.',
+  'error.code.dodo_unreachable': 'Impossible de joindre Dodo Payments. Réessayez dans une minute.',
 
   // dates
   'dates.period.now': 'Maintenant',

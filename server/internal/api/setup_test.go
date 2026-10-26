@@ -161,7 +161,7 @@ func TestSetupDefaults(t *testing.T) {
 		in := baseIn()
 		in.Payments = &payState{Provider: "stripe"}
 		it := itemOf(t, buildSetup(in), "payments")
-		if it.Done || !it.Counted || it.Detail["provider"] != "stripe" {
+		if it.Done || !it.Counted || it.Detail["provider"] != "stripe" || it.Detail["connected"] != true {
 			t.Fatalf("%+v", it)
 		}
 	})
@@ -227,8 +227,12 @@ func TestSetupDefaults(t *testing.T) {
 	t.Run("a provider on the page names the payments step", func(t *testing.T) {
 		in := baseIn()
 		in.Stored.Provider = "stripe"
-		if p := itemOf(t, buildSetup(in), "payments").Detail["provider"]; p != "stripe" {
-			t.Fatalf("provider %v", p)
+		d := itemOf(t, buildSetup(in), "payments").Detail
+		if d["provider"] != "stripe" {
+			t.Fatalf("provider %v", d["provider"])
+		}
+		if _, ok := d["connected"]; ok {
+			t.Fatalf("a provider only seen on the page is not a connection: %v", d)
 		}
 	})
 }

@@ -100,7 +100,7 @@ func (a *API) payConnect(w http.ResponseWriter, r *http.Request) {
 		// A message already in plain words about the key or the provider is told as it is (422); the client shows it under the key.
 		var plain *payments.UserError
 		if errors.As(err, &plain) {
-			fail(w, http.StatusUnprocessableEntity, plain.Msg)
+			writeJSON(w, http.StatusUnprocessableEntity, apiError{Error: plain.Msg, Code: plain.Code})
 			return
 		}
 		fail(w, http.StatusBadRequest, err.Error())

@@ -610,6 +610,9 @@ export default {
   'error.busy': 'Server ausgelastet · Versuche es erneut',
   'error.code.not_found': 'Nicht gefunden',
   'error.code.report_memory': 'Zu viele Daten für den Server auf einmal · Wähle einen kürzeren Zeitraum oder füge einen Filter hinzu',
+  'error.code.dodo_live_key_in_test': 'Dodo Payments hat diesen Schlüssel nicht akzeptiert. Ein Live-Schlüssel funktioniert im Testmodus nicht: Nimm einen Testmodus-Schlüssel oder wechsle zu Live.',
+  'error.code.dodo_test_key_in_live': 'Dodo Payments hat diesen Schlüssel nicht akzeptiert. Ein Testmodus-Schlüssel funktioniert im Live-Modus nicht: Nimm einen Live-Schlüssel oder wechsle zum Testmodus.',
+  'error.code.dodo_unreachable': 'Dodo Payments war nicht erreichbar. Versuche es in einer Minute noch einmal.',
 
   // dates
   'dates.period.now': 'Jetzt',

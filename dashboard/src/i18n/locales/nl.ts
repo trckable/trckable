@@ -600,6 +600,9 @@ export default {
   'error.busy': 'Server druk · Probeer het opnieuw',
   'error.code.not_found': 'Niet gevonden',
   'error.code.report_memory': 'Te veel gegevens voor de server in één keer · Kies een kortere periode of voeg een filter toe',
+  'error.code.dodo_live_key_in_test': 'Dodo Payments heeft deze sleutel niet geaccepteerd. Een live-sleutel werkt niet in testmodus: gebruik een testsleutel of schakel over naar Live.',
+  'error.code.dodo_test_key_in_live': 'Dodo Payments heeft deze sleutel niet geaccepteerd. Een testsleutel werkt niet in livemodus: gebruik een live-sleutel of schakel over naar testmodus.',
+  'error.code.dodo_unreachable': 'Dodo Payments was niet te bereiken. Probeer het over een minuut opnieuw.',
 
   // dates
   'dates.period.now': 'Nu',

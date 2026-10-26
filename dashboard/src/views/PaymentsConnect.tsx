@@ -31,7 +31,7 @@ export function Connect({ site, provider, onCancel, onDone }: { site: Site; prov
         // A refused key stays at its field; anything else (offline, busy) is the toast.
         if (!manual && refused(e)) {
           settle(id, connectCopy.notConnected(provider.name), 'error')
-          setKeyErr(e instanceof APIError && e.status === 422 ? e.message : connectCopy.refused(provider.name))
+          setKeyErr(e instanceof APIError && e.status === 422 ? words(e) : connectCopy.refused(provider.name))
         } else settle(id, words(e), 'error')
       })
       .finally(() => setBusy(false))

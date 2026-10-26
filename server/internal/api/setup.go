@@ -158,7 +158,7 @@ func buildSetup(in setupIn) setupOut {
 
 	pay := map[string]any{}
 	if in.Payments != nil {
-		pay["provider"], pay["sales"] = in.Payments.Provider, in.Payments.Sales
+		pay["provider"], pay["sales"], pay["connected"] = in.Payments.Provider, in.Payments.Sales, true // a connection, not just a provider seen on the page
 	} else if in.Stored.Provider != "" {
 		pay["provider"] = in.Stored.Provider // seen on the page: "Connect Stripe"
 	}

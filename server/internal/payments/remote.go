@@ -798,11 +798,11 @@ func dodoProblem(ctx context.Context, err error, test bool) error {
 	switch st := statusOf(err); {
 	case st == http.StatusUnauthorized, st == http.StatusForbidden:
 		if test {
-			return &UserError{"Dodo Payments didn't accept this key. A live key does not work in Test mode: use a test-mode key, or switch to Live.", err}
+			return &UserError{Msg: "Dodo Payments didn't accept this key. A live key does not work in Test mode: use a test-mode key, or switch to Live.", Err: err, Code: "dodo_live_key_in_test"}
 		}
-		return &UserError{"Dodo Payments didn't accept this key. A test-mode key does not work in Live mode: use a live key, or switch to Test mode.", err}
+		return &UserError{Msg: "Dodo Payments didn't accept this key. A test-mode key does not work in Live mode: use a live key, or switch to Test mode.", Err: err, Code: "dodo_test_key_in_live"}
 	case st >= 500, st == 0 && ctx.Err() == nil:
-		return &UserError{"Couldn't reach Dodo Payments. Try again in a minute.", err}
+		return &UserError{Msg: "Couldn't reach Dodo Payments. Try again in a minute.", Err: err, Code: "dodo_unreachable"}
 	}
 	return err
 }
@@ -827,7 +827,7 @@ func (a *DodoAPI) Setup(ctx context.Context, key string, test bool, hookURL stri
 		if err == nil {
 			err = errors.New("the webhook was created, but Dodo Payments returned no signing secret")
 		}
-		return Setup{}, err
+		return Setup{}, dodoProblem(ctx, err, test)
 	}
 	return Setup{RemoteID: hook.ID, Secret: sec.Secret, Label: "Dodo Payments", Test: test}, nil
 }

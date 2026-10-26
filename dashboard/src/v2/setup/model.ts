@@ -48,8 +48,8 @@ export const providerName = (id: string): string => [...PAY_PROVIDERS, ...WEBHOO
 
 /** The provider whose payments the checklist has connected (whether or not a sale has come yet), as its name. */
 export function paidWith(state: SetupState | null): string | undefined {
-  const id = state?.items.find((i) => i.id === 'payments')?.detail?.provider
-  return typeof id === 'string' && id ? providerName(id) : undefined
+  const d = state?.items.find((i) => i.id === 'payments')?.detail
+  return d?.connected === true && typeof d.provider === 'string' && d.provider ? providerName(d.provider) : undefined
 }
 
 /** Steps left to do. */
