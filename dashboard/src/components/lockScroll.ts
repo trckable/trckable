@@ -33,7 +33,8 @@ export function useLockScroll(active = true) {
       savedY = window.scrollY
       savedOverflow = html.style.overflow
       savedGutter = html.style.scrollbarGutter
-      html.style.scrollbarGutter = 'stable'
+      // Only where a scrollbar takes room now: a page without one must not gain a lane.
+      if (window.innerWidth > html.clientWidth) html.style.scrollbarGutter = 'stable'
       html.style.overflow = 'hidden'
       document.addEventListener('touchmove', holdTouch, { passive: false })
     }
