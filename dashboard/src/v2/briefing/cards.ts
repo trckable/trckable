@@ -27,15 +27,28 @@ export type Vis =
   | { k: 'rcpt'; plain?: boolean; rows: { lead?: boolean; l: string; t?: string; a?: string; flag?: string; neg?: boolean; more?: boolean; tot?: boolean; mark?: 'up' | 'dn' }[] }
   | { k: 'dots'; v: number; c: number; name: string }
   | { k: 'ba'; lo: number; hi: number; c: number; v: number; red: boolean }
-  | { k: 'outage'; spans: Span[]; nowAt: number; from: string; now: string }
+  | { k: 'outage'; spans: Span[]; nowAt: number; from: string; now: string; live: boolean; marks: Mark[] }
   | { k: 'funnel'; rows: { name: string; v: number; w: number; hot: string }[] }
   | { k: 'goals'; rows: { name: string; v: number; lo: number; hi: number; st: Judged; pct: number | null }[] }
+
+/** One stretch the site did not answer, on the incident's day: where it lies on the line (0 to 1), its clock times and minutes. */
+export interface Mark extends Span {
+  from: string
+  to: string
+  min: number
+}
 
 export interface Story {
   key: Topic
   score: number
   /** A red card: bad news. */
   bad?: boolean
+  /** A card that has gone quiet: it is no longer drawn in the tone of bad news (the site has been back up for a while). */
+  calm?: boolean
+  /** The incident card's own head: what it is (the status), the site, and when, so each can have its own weight. */
+  lead?: { title: string; site: string; when: string }
+  /** The figure in the `why` line that is said in a heavier weight ("33 people"). */
+  bold?: string
   /** The bold start of the claim, and the quieter rest (with its own punctuation). */
   head: string
   rest?: string
@@ -85,9 +98,15 @@ export interface UptimeIn {
   /** Where each outage lies in the period, 0 to 1, and where now is. */
   spans: Span[]
   nowAt: number
-  /** What the line starts and ends at, as words: "00:00" for a day, the first date for longer, and the clock now. */
+  /** What the line starts and ends at, as words: the incident's day from "00:00", to the clock now while that day is today, else "24:00". */
   from: string
   now: string
+  /** Whether the line's day is today (it ends at now). */
+  live: boolean
+  /** Each outage on that day, with its times. */
+  marks: Mark[]
+  /** The site has been back up for a while: the card is no longer drawn as bad news. */
+  calm: boolean
 }
 
 export interface CardsIn {
@@ -141,6 +160,13 @@ function outageWords(u: UptimeIn, domain: string, n: number, dur: number): [stri
   return [copy.wasDownTimes(domain, n), copy.inAll(dur)]
 }
 
+/** The incident card's head: the status, the site and when, each said on its own. */
+function leadOf(u: UptimeIn, domain: string, n: number, dur: number): { title: string; site: string; when: string } {
+  if (u.downNow) return { title: copy.downSince(u.since), site: domain, when: copy.agoMin(u.minutesNow).replace(/^, /, '') }
+  if (n === 1) return { title: copy.downFor(dur), site: domain, when: `${u.incidents[0].from}–${u.incidents[0].to}` }
+  return { title: copy.downTimes(n), site: domain, when: copy.inAll(dur).replace(/^, /, '') }
+}
+
 function uptimeCard(u: UptimeIn, domain: string): Story {
   const n = u.incidents.length
   const dur = Math.round(u.minutes)
@@ -151,8 +177,11 @@ function uptimeCard(u: UptimeIn, domain: string): Story {
     bad: true,
     head,
     rest,
-    vis: { k: 'outage', spans: u.spans, nowAt: u.nowAt, from: u.from, now: u.now },
+    calm: u.calm,
+    lead: leadOf(u, domain, n, dur),
+    vis: { k: 'outage', spans: u.spans, nowAt: u.nowAt, from: u.from, now: u.now, live: u.live, marks: u.marks },
     why: u.lost > 0 ? copy.noAnswer(people(Math.round(u.lost))) : copy.noAnswerBare,
+    bold: u.lost > 0 ? people(Math.round(u.lost)) : undefined,
     val: `${dur} min`,
     m: dur,
     u: 'min down',

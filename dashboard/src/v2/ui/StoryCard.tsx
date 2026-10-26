@@ -2,6 +2,7 @@
 // A phone sees them as flat rows (icon, sentence, number, arrow) that open the detail. Markup and classes are the
 // walkthrough's own.
 import type { ReactNode } from 'react'
+import { Eye, ArrowUpRight, CircleHelp } from 'lucide-react'
 import { isShared } from '../../lib/me'
 import type { Verified } from '../../lib/api'
 import { CardSeal } from '../../features/verified/SourceChip'
@@ -46,15 +47,20 @@ function Foot({ s, c }: { s: Story; c: CardCtx }) {
   const { askPeekNow } = useV2Extras()
   const w = c.watched(s)
   const dn = c.done(s)
+  const inc = s.key === 'uptime'
+  const idle = inc ? cardCopy.watchSite : copy.watch
+  const watchText = w ? copy.watching : idle
   const watch = !isShared() && (
-    <button type="button" className={`gh${w ? ' on' : ''}`} data-watch="1" title={copy.watchTitle} onClick={() => c.onWatch(s)}>
-      {w ? copy.watching : copy.watch}
+    <button type="button" className={`${inc ? 'qb' : 'gh'}${w ? ' on' : ''}`} data-watch="1" title={copy.watchTitle} onClick={() => c.onWatch(s)}>
+      {inc && <Eye size={14} strokeWidth={1.9} aria-hidden="true" />}
+      {watchText}
     </button>
   )
   const extra = s.extra && !isShared() ? [{ key: 'extra', label: s.extra.t, onClick: () => c.onExtra(s), hook: 'data-extra' }] : []
   const watchItem: CardMenuItem[] = isShared() ? [] : [{ key: 'watch', label: w ? copy.watching : copy.watch, onClick: () => c.onWatch(s), hook: 'data-watch' }]
   const act = s.act && !isShared() && (
-    <button type="button" className={`xb cact${dn ? ' done' : ''}`} data-ca="1" onClick={() => c.onAct(s)}>
+    <button type="button" className={`xb cact${inc ? ' p' : ''}${dn ? ' done' : ''}`} data-ca="1" onClick={() => c.onAct(s)}>
+      {inc && !dn && <ArrowUpRight size={14} strokeWidth={1.9} aria-hidden="true" />}
       {dn ? doneLabel[s.act.k] || copy.doneMark : s.act.t}
     </button>
   )
@@ -62,12 +68,13 @@ function Foot({ s, c }: { s: Story; c: CardCtx }) {
   const peek = s.ask && askPeekNow ? s.ask : null
   const why = { label: peek || s.cause ? copy.whyQ : copy.how, onClick: () => (peek && askPeekNow ? askPeekNow(peek) : c.onHow(s)), hook: peek ? 'data-ask-peek' : 'data-hw' }
   const how = (
-    <button type="button" className="gh" {...{ [why.hook]: '1' }} {...(peek ? {} : { 'aria-expanded': c.how(s) })} onClick={why.onClick}>
+    <button type="button" className={inc ? 'qb' : 'gh'} {...{ [why.hook]: '1' }} {...(peek ? {} : { 'aria-expanded': c.how(s) })} onClick={why.onClick}>
+      {inc && <CircleHelp size={14} strokeWidth={1.9} aria-hidden="true" />}
       {why.label}
     </button>
   )
   // The incident card leads with its one action, Watch and Why? stay quiet beside it, and there is no way deeper: opening the incident is it.
-  if (s.key === 'uptime') {
+  if (inc) {
     return (
       <div className="ic-f">
         {act}
@@ -83,6 +90,19 @@ function Foot({ s, c }: { s: Story; c: CardCtx }) {
       {act}
       <CardMenu id={s.key} items={items} />
     </div>
+  )
+}
+
+/** The line of why, with its one figure in a heavier weight. */
+function withBold(text: string, bold?: string): ReactNode {
+  const at = bold ? text.indexOf(bold) : -1
+  if (!bold || at < 0) return text
+  return (
+    <>
+      {text.slice(0, at)}
+      <b>{bold}</b>
+      {text.slice(at + bold.length)}
+    </>
   )
 }
 
@@ -110,7 +130,7 @@ function How({ s }: { s: Story }) {
 }
 
 export function Card({ s, wide, c }: { s: Story; wide: boolean; c: CardCtx }) {
-  const cls = `${s.bad ? ' r' : ''}${wide ? ' wide' : ''}${s.key === 'uptime' ? ' inc' : ''}${c.focused === s.key ? ' kf' : ''}${c.how(s) ? ' open' : ''}`
+  const cls = `${s.bad && !s.calm ? ' r' : ''}${s.calm ? ' calm' : ''}${wide ? ' wide' : ''}${s.key === 'uptime' ? ' inc' : ''}${c.focused === s.key ? ' kf' : ''}${c.how(s) ? ' open' : ''}`
   const open = () => c.onOpen(s)
   if (s.kc) {
     return (
@@ -141,8 +161,17 @@ export function Card({ s, wide, c }: { s: Story; wide: boolean; c: CardCtx }) {
       <div className="ic-h" role="button" tabIndex={0} onClick={open} onKeyDown={(e) => e.key === 'Enter' && open()}>
         <Ico name={s.key === 'milestone' ? 'goals' : s.key} className="ic-i" />
         <h3>
-          <b>{s.head}</b>
-          {s.rest}
+          {s.lead ? (
+            <>
+              <b>{s.lead.title}</b> <span className="ic-site">{s.lead.site}</span>
+              <span className="ic-when num">{s.lead.when}</span>
+            </>
+          ) : (
+            <>
+              <b>{s.head}</b>
+              {s.rest}
+            </>
+          )}
           {s.key === 'search' && <CardSeal verified={c.verified} topic={s.key} />}
         </h3>
         <span className="ic-val">{s.val}</span>
@@ -152,7 +181,7 @@ export function Card({ s, wide, c }: { s: Story; wide: boolean; c: CardCtx }) {
       {/* The goal rows already say the number and its usual, so the card adds no line of its own. */}
       {s.key !== 'goals' && (
         <div className="ic-w">
-          <span>{s.why}</span>
+          <span>{withBold(s.why, s.bold)}</span>
           {s.key !== 'search' && <CardSeal verified={c.verified} topic={s.key} />}
         </div>
       )}

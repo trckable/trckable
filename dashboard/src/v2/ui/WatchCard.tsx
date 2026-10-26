@@ -1,5 +1,6 @@
 // What a person pinned with Watch: each line says how the number moved since they started watching.
 import { copyOf } from './watchCopy'
+import './watchCard.css'
 
 interface WatchRow {
   key: string
@@ -22,7 +23,7 @@ export function WatchCard({ rows, onStop }: { rows: WatchRow[]; onStop: (key: st
         <div className="wrow" key={r.key}>
           <span className="wl">
             <b>{r.topic}</b>
-            {r.gone ? copyOf.back : ''}
+            {r.gone && <small className="wst">{copyOf.back}</small>}
           </span>
           <span className="wv">
             {copyOf.since(r.since.at)} <b>{r.since.delta}</b> {r.since.unit}

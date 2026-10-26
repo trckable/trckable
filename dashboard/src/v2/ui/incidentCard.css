@@ -16,5 +16,25 @@
   font-size: 13px;
   line-height: 1.45;
 }
-.mk .ic-calm .ck { color: var(--mk-lime); flex: none; }
-.mk .ic-calm b { color: var(--mk-text); font-weight: 600; }
+.mk .ic-calm .ck { color: var(--mk-muted); flex: none; }
+.mk .ic-calm b { color: var(--mk-muted); font-weight: 400; }
+
+/* The title is the status: "Down for 10 minutes" and the site on one line, the clock times muted under it in tabular numbers. The tone is an accent on the card's left edge, not an outline; it goes neutral once the site has been up a while. */
+.mk .icard.inc .ic-h h3 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--mk-s2); font-weight: 400; }
+.mk .icard.inc .ic-site { color: var(--mk-muted); font-weight: 400; }
+.mk .icard.inc .ic-when { flex-basis: 100%; color: var(--mk-faint); font-size: 12.5px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.mk .icard.inc.r { border-color: var(--mk-line); box-shadow: inset 3px 0 0 var(--mk-red); }
+.mk .icard.inc .ic-w, .mk .icard.inc .ic-w span { color: var(--mk-text); }
+.mk .icard.inc .ic-w b { font-weight: 600; }
+/* The incident's day: "Up", the stretch it did not answer as a red segment of real width (at least 6px) with its minutes and times under it, "Up". */
+.mk .icard.inc .obt { height: 22px; border-radius: 8px; }
+.mk .icard.inc .obt .obd { min-width: 6px; z-index: 1; }
+.mk .obt .obu { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; padding: 0 var(--mk-s2); color: var(--mk-faint); font-size: 11px; }
+.mk .obt .obu.l { left: 0; }
+.mk .obt .obu.r { right: 0; }
+.mk .obm { position: relative; height: 16px; color: var(--mk-red); font-size: 12px; }
+.mk .obm span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+/* The card's quiet buttons: the app's own height and radius, an icon each. */
+.mk .ic-f .qb { display: inline-flex; align-items: center; gap: 6px; height: var(--mk-h); padding: 0 var(--mk-s3); border: 1px solid transparent; border-radius: var(--mk-rc); color: var(--mk-muted); font-size: 13px; }
+.mk .ic-f .qb:hover { background: var(--mk-hover); color: var(--mk-text); }
+.mk .ic-f .qb.on { color: var(--mk-lime); }
