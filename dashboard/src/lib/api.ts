@@ -3,6 +3,7 @@
 // `fail` is said once, from where every caller already imports the client: it tells a person that something failed.
 export { fail } from '../components/toastBus'
 import { filterParam } from './filterSet'
+import { API_BASE } from './apiBase'
 import { announceSiteWrite } from './siteWrites'
 
 export interface KPIs {
@@ -515,7 +516,7 @@ export const wrong = "That isn’t right. Check it and try again."
 type Failure = { error?: string; needs_code?: boolean; code?: string; hide_brand?: boolean }
 
 export async function call<T>(method: string, path: string, body?: unknown, signal?: AbortSignal, quiet = false): Promise<T> {
-  const res = await fetch('/api/v1' + path, {
+  const res = await fetch(API_BASE + path, {
     method,
     signal,
     credentials: 'same-origin',
@@ -554,7 +555,7 @@ export const act = (method: string, path: string, body?: unknown): Promise<void>
 
 /** A body that is not JSON (today: a profile picture). */
 export async function raw(method: string, path: string, body: Blob): Promise<void> {
-  const res = await fetch('/api/v1' + path, {
+  const res = await fetch(API_BASE + path, {
     method,
     credentials: 'same-origin',
     headers: { 'X-Trckable-Request': '1' },
@@ -683,7 +684,7 @@ export function reportURL(site: string, q: ReportQuery): string {
  *  export is always the page it was taken from rather than a fresh question. */
 export function exportURL(site: string, q: ReportQuery): string {
   const url = reportURL(site, { ...q, daily: false, deep: true })
-  return '/api/v1' + url.replace('/report?', '/export.csv?')
+  return API_BASE + url.replace('/report?', '/export.csv?')
 }
 
 // shareMode routes reports through the public, read-only endpoint.
