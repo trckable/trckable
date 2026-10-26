@@ -1,0 +1,1 @@
+Every dialog now shares one frame: a solid surface over a dimmed page, a header with an icon, title, subtitle and a close button, and a footer with the main action on the right and Cancel beside it. The payments connect dialog and the confirm dialogs use it first, and the connect dialog's key field is shorter, with its hint underneath.

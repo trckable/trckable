@@ -20,9 +20,8 @@
    one radius, one gap, on the 8 px scale. */
 .modal {
   width: min(480px, 100%);
-  background:
-    radial-gradient(520px 200px at 0% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%),
-    var(--surface);
+  /* Opaque: the page behind must never read through the words. The scrim does the dimming. */
+  background: var(--modal-surface);
   border: 1px solid var(--border-2);
   border-radius: 16px;
   box-shadow: var(--shadow), 0 30px 80px rgb(0 0 0 / 0.35);
@@ -115,6 +114,17 @@
    Profile) stays a full screen of its own, and the dialogs that draw a sheet
    of their own (Share, Milestones, the visit's journey, the row sheet) keep it. */
 @media (max-width: 640px) {
+  /* The frame's footer stacks: the primary full width, the quiet link under it. */
+  .modal-foot {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .modal-foot > .dialog-actions {
+    width: 100%;
+  }
+  .modal-foot > .btn {
+    align-self: center;
+  }
   .modal-back:has(> .modal:not(.window, .journey-dialog, .sd-modal, .row-sheet, .ms-window)) {
     place-items: end center;
     padding: 0;
@@ -128,8 +138,7 @@
     border-radius: 20px 20px 0 0;
     background:
       linear-gradient(var(--border-2), var(--border-2)) center 10px / 36px 4px no-repeat,
-      radial-gradient(520px 200px at 0% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%),
-      var(--surface);
+      var(--modal-surface);
   }
   .modal.rise:not(.window, .journey-dialog, .sd-modal, .row-sheet, .ms-window) {
     animation: modal-sheet-up 0.22s var(--ease) both;
@@ -262,4 +271,61 @@
 .modal-back[data-under] {
   visibility: hidden;
   pointer-events: none;
+}
+
+/* ---- The frame: header, body, footer (Modal's `frame`) ---------------------------------------------------------- */
+.modal.framed.modal-sm {
+  width: min(400px, 100%);
+}
+.modal.framed.modal-lg {
+  width: min(720px, 100%);
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.modal-head-text {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.modal-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.modal-head .faint {
+  font-size: 13px;
+  line-height: 1.4;
+}
+.modal-head .modal-close {
+  flex: none;
+  align-self: flex-start;
+}
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+/* The extra text action sits at the far left, the cancel and the primary at the right. */
+.modal-foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.modal-foot > .dialog-actions {
+  flex: 1;
+  margin-top: 0;
+}
+.modal-foot > .btn,
+.modal-foot > .modal-extra {
+  font-size: 13px;
+  color: var(--text-2);
 }

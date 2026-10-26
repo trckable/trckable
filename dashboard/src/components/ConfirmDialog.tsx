@@ -3,8 +3,6 @@ import { CircleHelp, TriangleAlert } from 'lucide-react'
 import { useState } from 'react'
 import type { Req } from './Confirm'
 import { toast } from './Toast'
-import { DialogActions } from './DialogActions'
-import { DialogHead } from './DialogHead'
 import { Field } from './Field'
 import { Modal } from '../kit/Modal'
 import { fail, refused, wrong } from '../lib/api'
@@ -38,28 +36,36 @@ export default function ConfirmDialog({ req, done }: { req: Req; done: (v: strin
   }
   const Mark = req.danger ? TriangleAlert : CircleHelp
   return (
-    <Modal label={req.title} className="confirm-modal" over onClose={busy ? undefined : () => done(null)}>
-      <form className="confirm-body" onSubmit={(e) => { e.preventDefault(); submit() }} aria-busy={busy}>
-        <DialogHead icon={Mark} danger={req.danger} heading={req.title} />
-        {req.body && <p className="muted confirm-lead">{req.body}</p>}
-        {req.field && (
-          <Field label={req.field.label} error={err}>
-            {(f) => <input {...f} className="input" type={req.field?.type ?? 'text'} autoComplete={req.field?.autoComplete} autoFocus value={value} onChange={(e) => { setValue(e.target.value); setErr(null) }} />}
-          </Field>
-        )}
-        <DialogActions
-          left={
-            <button type="button" className="btn ghost" onClick={() => done(null)} autoFocus={!req.field} disabled={busy}>
-              {req.cancelLabel ?? 'Cancel'}
-            </button>
-          }
-        >
+    <Modal
+      label={req.title}
+      className="confirm-modal"
+      over
+      onClose={busy ? undefined : () => done(null)}
+      frame={{
+        title: req.title,
+        icon: (
+          <span className={'modal-badge' + (req.danger ? ' danger' : '')} aria-hidden="true">
+            <Mark size={19} strokeWidth={1.75} />
+          </span>
+        ),
+        size: 'sm',
+        busy,
+        cancel: req.cancelLabel ?? 'Cancel',
+        onSubmit: submit,
+        actions: (
           <button type="submit" className={req.danger ? 'btn danger big' : 'btn primary big'} disabled={busy || (!!req.field && !value)}>
             {busy && <span className="btn-spin" aria-hidden="true" />}
             {busy ? (req.busyLabel ?? 'Working…') : (req.confirmLabel ?? 'Yes')}
           </button>
-        </DialogActions>
-      </form>
+        ),
+      }}
+    >
+      {req.body && <p className="muted confirm-lead">{req.body}</p>}
+      {req.field && (
+        <Field label={req.field.label} error={err}>
+          {(f) => <input {...f} className="input" type={req.field?.type ?? 'text'} autoComplete={req.field?.autoComplete} autoFocus value={value} onChange={(e) => { setValue(e.target.value); setErr(null) }} />}
+        </Field>
+      )}
     </Modal>
   )
 }
