@@ -1,0 +1,1 @@
+Comparing with the period before shows on every period chart: Explore's shape of the period draws it as a dashed line with a key and a hover that reads both figures and the change, the Replay keeps the key (and says why when there is too little before), the period menu says why a comparison draws nothing, and the people count no longer sits over the markers.

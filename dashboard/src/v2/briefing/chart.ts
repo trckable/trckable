@@ -8,7 +8,7 @@ import type { ChartIn, Down } from '../ui/DayChart'
 import { mult, sourceShort, type Unit } from './model'
 import { judge, type Band, type Judged } from './usual'
 import { dateFmt } from '../../lib/format'
-import { changeOf, compareOf, sameGrain, startsOn } from './compare'
+import { compareOf, pairAt, sameGrain, startsOn } from './compare'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -94,8 +94,8 @@ export function chartOf(a: ChartArgs): ChartIn {
     const name = hourly ? `${days ? `${day} ` : ''}${pad(h)}:00` : day
     const tick = tickOf(hourly, a.cur.series.length, h, p.t.slice(0, 10))
     // The same bucket of the period before, as the report has it; a bucket still going has no change to tell yet.
-    const before = cmp ? (cmp.vals[i] ?? null) : null
-    return { i, name, tick, v, lo: full.lo, hi: full.hi, st, raw: p.visitors, was: before, delta: before !== null && i < done ? changeOf(p.visitors, before) : null }
+    const { was: before, delta } = pairAt(cmp, p.visitors, i, done)
+    return { i, name, tick, v, lo: full.lo, hi: full.hi, st, raw: p.visitors, was: before, delta }
   })
   let best = -1
   let bv = 0

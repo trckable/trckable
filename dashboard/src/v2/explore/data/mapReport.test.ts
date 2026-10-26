@@ -34,7 +34,7 @@ describe('the overview', () => {
   })
   it('draws the shape of the period from the series, ending at now on today', () => {
     const o = mapOverview(report(result(100)), none)
-    expect(o.shape).toEqual({ pts: [1, 2, 3, 4], x: ['00:00', '02:00', 'now'] })
+    expect(o.shape).toMatchObject({ pts: [1, 2, 3, 4], x: ['00:00', '02:00', 'now'], before: null })
     expect(o.per).toBe('hour')
     expect(mapOverview(report(result(100, { series: hours([5]) })), none).shape).toBeNull()
   })
@@ -127,3 +127,18 @@ describe('the deep tables', () => {
   })
 })
 
+
+describe('the shape of the period against the one before', () => {
+  const day = (i: number, visitors: number) => ({ t: `2026-10-${String(i + 1).padStart(2, '0')}T00:00`, visitors, pageviews: visitors })
+  const series = (xs: number[]) => xs.map((v, i) => day(i, v))
+  it('carries the period before, bucket for bucket, and names each point', () => {
+    const r = report({ ...result(100), series: series([5, 6, 7, 8]) }, { ...result(100), series: series([4, 4, 4, 4]) })
+    const s = mapOverview(r, { ...none, against: 'last month' }).shape
+    expect(s?.before?.vals).toEqual([4, 4, 4, 4])
+    expect(s?.names).toHaveLength(4)
+  })
+  it('draws nothing before when no comparison is asked for', () => {
+    const r = report({ ...result(100), series: series([5, 6, 7, 8]) }, { ...result(100), series: series([4, 4, 4, 4]) })
+    expect(mapOverview(r, none).shape?.before).toBeNull()
+  })
+})

@@ -12,6 +12,7 @@ import type { Report, Site } from '../lib/api'
 import { PRESETS, todayIn, type ISODate, type Range } from '../lib/dates'
 import { dayWords, rangeWords } from './dayWords'
 import { hasYear, vsWords } from './periodWords'
+import { whyNot } from './briefing/compare'
 import { switchTab } from '../features/live/switchView'
 import { useViewKeys } from './useViewKeys'
 import { usePeriodKeys } from './usePeriodKeys'
@@ -94,6 +95,7 @@ export function V2View(p: V2Props) {
       more={more}
       value={p.view.period}
       compare={p.view.compare}
+      compareNote={p.view.compare === 'none' ? undefined : (whyNot(p.data?.current?.series ?? [], p.data?.previous?.series) ?? undefined)}
       yearOk={hasYear(p.site)}
       today={today}
       customRange={p.range}

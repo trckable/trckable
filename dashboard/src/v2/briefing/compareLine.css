@@ -3,11 +3,16 @@
 @container (--pane-max-600) {
   .mk .chwrap #chNote[data-tone] { flex: 0 1 auto; white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.2; }
 }
-/* What the two lines are: this period solid, the one before dashed. It sits in the row over the chart (no height of its own, so nothing under it moves) and gives way on a phone, where the dashed line is named at its end. */
+/* What the two lines are: this period solid, the one before dashed. It sits in the top right corner of the plot, over the chart (no height of its own, so nothing moves), so the Replay, which hides the row over the chart, still shows it. It gives way on a phone, where the dashed line is named at its end. */
+.mk .chplot { position: relative; }
+.mk .chplot > .chkey { position: absolute; top: 2px; right: 12px; z-index: 1; pointer-events: none; }
 .mk .chkey { display: flex; gap: var(--mk-s3); font-size: 12px; white-space: nowrap; color: var(--mk-muted); }
+/* A comparison that cannot be drawn says why, in the same corner, while the Replay hides the line of words that says it the rest of the time. */
+.mk .chno { display: none; position: absolute; top: 4px; right: 12px; z-index: 1; font-size: 12px; pointer-events: none; }
+.mk .chwrap[data-rp='on'] .chno { display: block; }
 .mk .chkey span { display: inline-flex; align-items: center; gap: 6px; }
 .mk .chkey span::before { content: ''; width: 18px; border-top: 2px solid var(--mk-muted); }
 .mk .chkey span[data-line='before']::before { border-top: 1.5px dashed var(--mk-muted); }
 @container (--pane-max-600) {
-  .mk .chkey { display: none; }
+  .mk .chkey, .mk .chno { display: none; }
 }

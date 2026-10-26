@@ -158,7 +158,6 @@ export const copy = defineCopy('briefing', {
   /** The line over the chart: how the period stands against the one before. */
   vsLine: (pct: string, name: string) => `${pct} vs ${name}`,
   legendNow: 'This period',
-  legendBefore: 'Previous',
   compareStarts: (date: string, needs: string) => `Comparison starts ${date}, once there's ${needs} of data`,
   needs: { today: 'a day', yesterday: 'a day', week: 'a week', month: 'a month', range: 'a full period' },
   downRightNow: 'down right now',

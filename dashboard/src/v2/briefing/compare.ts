@@ -5,6 +5,7 @@ import type { Point } from '../../lib/api'
 import { addDays, compareLabel, diffDays, fmtDay, type CompareMode, type Range } from '../../lib/dates'
 import { fmtInt } from '../../lib/format'
 import { tag } from '../../i18n'
+import { copy } from './copy'
 
 export interface Compare {
   /** What it is against, as the line over the chart says it: "last month". */
@@ -61,4 +62,22 @@ export function startsOn(cur: readonly Point[], prev: readonly Point[] | undefin
   if (!first || cur.length === 0) return null
   const days = diffDays(cur[0].t.slice(0, 10), cur[cur.length - 1].t.slice(0, 10)) + 1
   return fmtDay(addDays(first.t.slice(0, 10), days))
+}
+
+/** The same bucket of the period before, and how far this one stands from it; the change is none while the bucket is still going (`i` is not under `done`) or nobody was there before. Every period chart reads its hover from this. */
+export function pairAt(c: Compare | null, v: number, i: number, done: number): { was: number | null; delta: number | null } {
+  const was = c ? (c.vals[i] ?? null) : null
+  return { was, delta: was !== null && i < done ? changeOf(v, was) : null }
+}
+
+/** What a hover reads: "Oct 6 · 2,480 visitors · last month 1,910 · +30%", or without the comparison when there is none for the bucket. */
+export function readOf(name: string, v: number, against: string | null, was: number | null, delta: number | null): string {
+  return against !== null && was !== null ? copy.chartReadVs(name, fmtInt(v), against, fmtInt(was), delta === null ? '' : signed(delta)) : copy.chartRead(name, fmtInt(v))
+}
+
+/** Why the comparison cannot be drawn, in one line, when it was asked for and the period before has too little behind it: when it begins. None when it can, or when there is no before at all. */
+export function whyNot(cur: readonly Point[], prev: readonly Point[] | undefined): string | null {
+  if (!prev || compareOf(cur, prev, cur.length, '')) return null
+  const starts = startsOn(cur, prev)
+  return starts ? copy.compareStarts(starts, copy.needs.range) : null
 }
