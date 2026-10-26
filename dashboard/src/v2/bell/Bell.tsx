@@ -2,6 +2,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import type { Milestone, Site } from '../../lib/api'
 import { lazyLoad } from '../../lib/lazyLoad'
+import { signals } from '../../features/signals/copy'
 import type { Surge } from '../../features/signals/surge'
 import { mentionsPath } from '../../features/mentions/route'
 import { navigate, readView, setView, writeView } from '../../lib/url'
@@ -12,7 +13,7 @@ import { BellMenu, type BellRow, type RowAction } from '../ui/BellMenu'
 import { brandOf } from '../../lib/brandIcons'
 import { alertOf, setAlertOn } from './alertState'
 import { copy } from './copy'
-import { timeOf } from './days'
+import { timeOf, whenOf } from './days'
 import { ALL, GROUPS, apply, readFilter, saveFilter, unreadGroups, type Filter } from './filter'
 import { badge, rowsOf, settle, unreadCount, type Notice, type NoticeRow } from './notices'
 import { useBellAlert } from './useBellAlert'
@@ -196,7 +197,7 @@ function BusyStory({ n, sites, site, onClose }: { n: Notice; sites: Site[]; site
   }
   return (
     <Suspense fallback={null}>
-      <SurgeModal surge={surge} site={s.id} tz={s.timezone} explore={{ filters: n.source ? [{ dim: 'referrer', value: n.source }] : [], go }} onClose={onClose} onSee={() => undefined} />
+      <SurgeModal surge={surge} site={s.id} tz={s.timezone} head={signals.surge.busyHead(n.site, whenOf(n.at))} explore={{ filters: n.source ? [{ dim: 'referrer', value: n.source }] : [], go }} onClose={onClose} onSee={() => undefined} />
     </Suspense>
   )
 }

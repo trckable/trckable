@@ -28,7 +28,7 @@ export interface ExploreLead {
 }
 
 /** site: the site's id, so a surge that arrives without its story (told by a notice) gets the story fetched. explore: the one action is Explore, narrowed (the bell). */
-export default function SurgeModal({ surge: given, site, tz, explore, onClose, onSee }: { surge: Surge; site?: string; tz: string; explore?: ExploreLead; onClose: () => void; onSee: () => void }) {
+export default function SurgeModal({ surge: given, site, tz, explore, head, onClose, onSee }: { surge: Surge; site?: string; tz: string; explore?: ExploreLead; head?: string; onClose: () => void; onSee: () => void }) {
   const { surge, state } = useFullSurge(given, site)
   const actions = useSurgeActions(surge, tz, () => {
     onSee()
@@ -48,6 +48,7 @@ export default function SurgeModal({ surge: given, site, tz, explore, onClose, o
       <button type="button" className="sgm-x" aria-label={t.close} onClick={onClose}>
         <X size={16} strokeWidth={2} aria-hidden="true" />
       </button>
+      {head && <p className="sgm-head">{head}</p>}
       <header className="sgm-hero">
         <span className="sgm-badge" aria-hidden="true">
           <TrendingUp size={18} strokeWidth={2} />
@@ -56,11 +57,13 @@ export default function SurgeModal({ surge: given, site, tz, explore, onClose, o
           <Rolling to={surge.online} fmt={fmtInt} />
         </b>
         <span className="sgm-meta">
+          <span className="sgm-unit">{surge.ended ? t.online : t.onlineNow}</span>
           <span className="sg-chip">{surgeChip(surge)}</span>
           {surge.ended ? <span className="sgm-ended muted">{t.ended(clock(surge.ended, tz))}</span> : null}
           {w.before < surge.online && w.minutes > 0 && <span className="sgm-jump">{t.jump(w.before, surge.online, w.minutes)}</span>}
         </span>
       </header>
+      <p className="sgm-facts muted">{[t.facts(st?.peak ?? surge.online, t.usually(Math.round(surge.usual))), surge.ended ? t.lasted(Math.max(1, Math.round((surge.ended - surge.started) / 60))) : ''].filter(Boolean).join(' · ')}</p>
       {state === 'loading' && (
         <p className="sgm-wait muted" role="status">
           {t.loading}

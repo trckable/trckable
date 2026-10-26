@@ -82,3 +82,6 @@
 .mk .nfe p { margin: 0; max-width: 32ch; font-size: 13px; line-height: 1.45; color: var(--mk-muted); }
 .mk .nfe .lk3 { display: inline-flex; align-items: center; gap: 6px; margin-top: var(--mk-s2); font-size: 13px; }
 .mk .nfe .nfe-old { margin-top: 0; font-size: 12px; }
+
+/* The list is solid: the page's glow (the score ring) must not show through the frosted pane the other menus have. */
+.mk .mk-menu.bellmenu { background: var(--mk-card2); -webkit-backdrop-filter: none; backdrop-filter: none; }
