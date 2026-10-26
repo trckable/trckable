@@ -53,3 +53,13 @@ describe('findProviders', () => {
     expect(PAY_PROVIDERS.some((p) => p.id === 'custom')).toBe(true)
   })
 })
+
+describe('shippedNames', () => {
+  it('names every shipped provider from the list, Dodo included', async () => {
+    const { shippedNames } = await import('./payProviders')
+    const s = shippedNames()
+    expect(s).toContain('Dodo Payments')
+    expect(s).toContain('Lemon Squeezy')
+    expect(s).not.toContain('Custom')
+  })
+})

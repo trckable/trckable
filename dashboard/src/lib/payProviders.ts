@@ -1,5 +1,7 @@
 // The providers the connect picker can offer, in one list: add a provider here
 // and it is found by name and by keyword. Only shipped providers belong in it.
+import { tag } from '../i18n'
+
 export type PayProvider = {
   id: string
   name: string
@@ -85,3 +87,7 @@ export function findProviders(query: string, list: PayProvider[] = [...PAY_PROVI
   const byKeyword = open.filter((p) => !byName.includes(p) && p.keywords.some((k) => k.toLowerCase().startsWith(q)))
   return { hits: [...byName, ...byKeyword], wallets: q.length >= 3 && WALLETS.some((w) => w.includes(q)) }
 }
+
+/** The shipped providers by name ("Stripe, Paddle or Polar"), from the one list, so a new provider shows wherever they are named. */
+export const shippedNames = () =>
+  new Intl.ListFormat(tag ?? 'en', { type: 'disjunction' }).format(PAY_PROVIDERS.filter((p) => !p.soon && p.id !== 'custom').map((p) => p.name))

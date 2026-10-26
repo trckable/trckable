@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { DialogActions } from '../components/DialogActions'
 import { Field } from '../components/Field'
 import { Modal } from '../kit/Modal'
-import { refused, type PayConnection, type Provider, type Site, more } from '../lib/apiMore'
+import { APIError, refused, type PayConnection, type Provider, type Site, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
 import { keyPicksMode, testModeName } from '../lib/payments'
 import { settle, toast } from '../components/Toast'
@@ -31,7 +31,7 @@ export function Connect({ site, provider, onCancel, onDone }: { site: Site; prov
         // A refused key stays at its field; anything else (offline, busy) is the toast.
         if (!manual && refused(e)) {
           settle(id, connectCopy.notConnected(provider.name), 'error')
-          setKeyErr(connectCopy.refused(provider.name))
+          setKeyErr(e instanceof APIError && e.status === 422 ? e.message : connectCopy.refused(provider.name))
         } else settle(id, words(e), 'error')
       })
       .finally(() => setBusy(false))

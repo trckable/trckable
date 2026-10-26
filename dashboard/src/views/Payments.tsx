@@ -6,9 +6,10 @@ import { Menu } from '../components/Menu'
 import { DialogActions } from '../components/DialogActions'
 import { DialogHead } from '../components/DialogHead'
 import { Modal } from '../kit/Modal'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { fail, type PayConnection, type Provider, type Site, more } from '../lib/apiMore'
 import { words } from '../lib/errors'
+import { refreshSetup } from '../v2/setup/memory'
 import { visibleInterval } from '../lib/visibleInterval'
 import { navigate } from '../lib/url'
 import { modeNote, modeTag, statusOf } from '../lib/payments'
@@ -34,10 +35,16 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
   const [snippets, setSnippets] = useState(false)
   const [setup, setSetup] = useState<PayConnection | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const linked = useRef<number | null>(null)
   const load = () => {
     more
       .payments(site.id)
-      .then(setData)
+      .then((d) => {
+        setData(d)
+        // A provider connected or removed changes what the Live card says: its checklist is read again.
+        if (linked.current !== null && linked.current !== d.connections.length) refreshSetup(site.id)
+        linked.current = d.connections.length
+      })
       .catch((e: unknown) => setErr(words(e)))
   }
   useEffect(() => {

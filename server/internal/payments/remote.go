@@ -792,13 +792,28 @@ func dodoHdr(key string) map[string]string {
 	return h
 }
 
+// dodoProblem says in words what Dodo's answer to the key means: a key from the
+// other environment is refused like a wrong one, so the message names both.
+func dodoProblem(ctx context.Context, err error, test bool) error {
+	switch st := statusOf(err); {
+	case st == http.StatusUnauthorized, st == http.StatusForbidden:
+		if test {
+			return &UserError{"Dodo Payments didn't accept this key. A live key does not work in Test mode: use a test-mode key, or switch to Live.", err}
+		}
+		return &UserError{"Dodo Payments didn't accept this key. A test-mode key does not work in Live mode: use a live key, or switch to Test mode.", err}
+	case st >= 500, st == 0 && ctx.Err() == nil:
+		return &UserError{"Couldn't reach Dodo Payments. Try again in a minute.", err}
+	}
+	return err
+}
+
 func (a *DodoAPI) Setup(ctx context.Context, key string, test bool, hookURL string) (Setup, error) {
 	var hook struct {
 		ID string `json:"id"`
 	}
 	body := map[string]any{"url": hookURL, "description": "trckable revenue attribution", "filter_types": DodoEvents}
 	if err := call(ctx, "POST", a.base(test)+"/webhooks", dodoHdr(key), jsonBody(body), &hook); err != nil {
-		return Setup{}, err
+		return Setup{}, dodoProblem(ctx, err, test)
 	}
 	var sec struct {
 		Secret string `json:"secret"`
