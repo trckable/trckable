@@ -3,7 +3,7 @@
 // weekday's average where the server gives one (visitors), and the period before
 // everywhere else. Pure: model.test.ts.
 import type { Filter, Point, Result, Row } from '../../lib/api'
-import { fmtFixed, fmtInt } from '../../lib/format'
+import { fmtFixed } from '../../lib/format'
 import { plainSpan } from '../../lib/plainSpan'
 import { baseEnough, MAX_TIMES, tooFew } from '../../lib/thin'
 import { KNOWN } from '../../features/markers/sources'
@@ -40,7 +40,7 @@ export function mult(r: number): string {
 
 const host = (v: string) => v.replace(/^www\./, '')
 const rowOf = (rows: Row[] | null | undefined, value: string) => rows?.find((r) => r.value === value)
-const people = (n: number) => (n === 1 ? '1 person' : `${fmtInt(n)} people`)
+const people = (n: number) => copy.peopleN(n)
 
 /** A host as people say it: "Hacker News" for news.ycombinator.com, the host itself when it is not a known place. */
 export function sourceName(value: string): string {
@@ -158,7 +158,7 @@ export function sentence(o: SayIn): Sentence {
   const noun = { today: o.weekday, yesterday: o.weekday, week: copy.week, month: copy.month, range: copy.stretch }[o.unit]
   const n = paid(o.cur)
   const c2 = n > 0 ? [{ t: copy.paid(n), em: true }] : []
-  const andC2: Part[] = c2.length ? [{ t: ', and ' }, ...c2] : []
+  const andC2: Part[] = c2.length ? [{ t: copy.andJoin }, ...c2] : []
   if (v === 0) {
     const lead = copy.nobody(copy.when[o.unit])
     return { lead, long: [], short: [{ t: `${lead}.`, em: true }], sub: '', bad: false }
@@ -184,38 +184,40 @@ export function sentence(o: SayIn): Sentence {
   if (o.learning) {
     return { lead: copy.dayOne, long: [{ t: people(v), em: true }, { t: copy.soFar }, ...andC2, { t: '.' }], short: [{ t: copy.soFarShort(people(v)), em: true }], sub: copy.learnSub, bad: false }
   }
-  const rose = o.band ? o.band.st === 'up' : ratio !== null && ratio >= 1.15
+  // A site with a handful of visitors a day is told in plain counts: a band of three people says nothing about above or below.
+  const low = !!o.low
+  const rose = !low && (o.band ? o.band.st === 'up' : ratio !== null && ratio >= 1.15)
   // A source that sent far fewer people cannot lead a busy headline: the mood is the period's own verdict, the one the score and the run of days read.
   const jumped = o.jump?.st !== 'dn' && !!(o.jump?.times && o.jump.times >= 1.5)
-  const up = o.band ? rose : rose && o.jump?.st !== 'dn' || jumped
-  const down = o.band ? o.band.st === 'dn' : ratio !== null && ratio <= 0.7
+  const up = !low && (o.band ? rose : (rose && o.jump?.st !== 'dn') || jumped)
+  const down = !low && (o.band ? o.band.st === 'dn' : ratio !== null && ratio <= 0.7)
   const adj = moodWord(o.downMin > 0, up, down)
   let c1: Part[]
   let short: Part[]
-  const low = !!o.low
   if (top?.st === 'dn' && up) {
     // The site as a whole is above its usual: the drop is told as a contrast, never as the story.
-    c1 = [{ t: `${people(v)} came, above ${words}${copy.though(top.name)}` }]
-    short = [{ t: `${people(v)} came`, em: true }, { t: `, above usual${copy.though(top.name)}.` }]
+    c1 = [{ t: copy.cameAbove(people(v), words, copy.though(top.name)) }]
+    short = [{ t: copy.came(people(v)), em: true }, { t: copy.aboveUsualDot(copy.though(top.name)) }]
   } else if (top?.st === 'dn') {
     c1 = [{ t: copy.sentFewer(top.name) }]
     short = [{ t: top.name, em: true }, { t: copy.sentFewerShort }]
   } else if (top && x && !low) {
-    c1 = [{ t: `${top.name} brought ${people(top.visitors)}, ${x} ${vs}`, em: true }]
-    short = [{ t: `${top.name} sent ${x} ${vs}.`, em: true }]
+    c1 = [{ t: copy.brought(top.name, people(top.visitors), x, vs), em: true }]
+    short = [{ t: copy.sentTimes(top.name, x, vs), em: true }]
   } else if (top?.st === 'up') {
-    c1 = [{ t: `${top.name} brought ${people(top.visitors)}`, em: true }]
-    short = [{ t: `${top.name} sent ${people(top.visitors)}.`, em: true }]
+    c1 = [{ t: copy.broughtPpl(top.name, people(top.visitors)), em: true }]
+    short = [{ t: copy.sentPpl(top.name, people(top.visitors)), em: true }]
   } else if (up) {
     const r = ratio ?? 0
-    c1 = [{ t: `${people(v)} came, ${r >= 1.3 && !low ? `${mult(r)} ` : 'above '}${words}` }]
-    short = [{ t: `${people(v)} came`, em: true }, { t: `, ${r >= 1.3 && !low ? mult(r) + ' usual' : 'above usual'}.` }]
+    const times = r >= 1.3
+    c1 = [{ t: times ? copy.cameTimes(people(v), mult(r), words) : copy.cameAbove(people(v), words, '') }]
+    short = [{ t: copy.came(people(v)), em: true }, { t: times ? copy.timesUsualDot(mult(r)) : copy.aboveUsualDot('') }]
   } else if (down) {
-    c1 = [{ t: `only ${people(v)} came, below ${words}` }]
-    short = [{ t: 'Only ' }, { t: people(v), em: true }, { t: ' came, below usual.' }]
+    c1 = [{ t: copy.onlyBelow(people(v), words) }]
+    short = [{ t: copy.onlyCame(people(v)), em: true }, { t: copy.belowUsualDot }]
   } else {
-    c1 = [{ t: `${people(v)} came${low ? '' : ", right about what you'd expect"}` }]
-    short = [{ t: `${people(v)} came${low ? '' : ', as usual'}.` }]
+    c1 = [{ t: low ? copy.came(people(v)) : copy.cameExpected(people(v)) }]
+    short = [{ t: low ? copy.cameDot(people(v)) : copy.cameAsUsual(people(v)) }]
   }
   const down2 = o.downMin > 0 ? [{ t: ' ' + copy.wasDown(o.downMin) }] : []
   const page = o.cur.dims.entry_page?.[0]

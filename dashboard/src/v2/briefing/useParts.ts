@@ -7,7 +7,7 @@ import { fmtDay, type Range } from '../../lib/dates'
 import { chartOf, siteNow } from './chart'
 import { copy } from './copy'
 import { cardsOf, leadSource, type UptimeIn } from './cards'
-import { outageSpans, periodEnd } from './outage'
+import { insideSeconds, outageSpans, periodEnd } from './outage'
 import { moments } from './moments'
 import type { Extras } from './useExtras'
 import type { SliceData } from './useSlices'
@@ -169,9 +169,12 @@ export function useParts(a: PartsIn) {
       first: extras.first ?? undefined,
     })
     const lead = learning ? undefined : leadSource(slices.slices.referrer, cur.kpis.visitors, site.domain)
-    const jump = lead?.band ? { name: sourceName(lead.value), value: lead.value, visitors: lead.v, times: timesUsual(lead.v, lead.band), vs: unit === 'today' || unit === 'yesterday' ? 'your usual' : undefined, st: lead.st === 'dn' ? ('dn' as const) : ('up' as const) } : null
+    const jump = lead?.band ? { name: sourceName(lead.value), value: lead.value, visitors: lead.v, times: timesUsual(lead.v, lead.band), vs: unit === 'today' || unit === 'yesterday' ? copy.yourUsual : undefined, st: lead.st === 'dn' ? ('dn' as const) : ('up' as const) } : null
     const usualWords = usualWordsOf(unit, weekday, clock.slice(11))
-    const say = sentence({ cur, prev, usual, unit, weekday, self: site.domain, downMin, learning, low, jump, ongoing: downNow ? { since: uptimeIn.since, minutes: uptimeIn.minutesNow } : undefined, incidents: up.list.filter((x) => x.ended_at !== null).map((x, i) => ({ from: uptimeIn.incidents[i]?.from ?? '', to: uptimeIn.incidents[i]?.to ?? '', minutes: Math.round(((x.ended_at ?? nowSec) - x.started_at) / 60) })), lost: uptimeIn.lost, band: verdict && !learning ? { ratio: verdict.ratio, st, words: usualWords } : null })
+    // The outage sentence reads from and to from the very incidents it counts, each cut to the period.
+    const end = Math.min(periodEnd(up.from0, range.from, range.to), nowSec)
+    const ended = up.list.filter((x) => x.ended_at !== null && insideSeconds(x, up.from0, end, nowSec) > 0)
+    const say = sentence({ cur, prev, usual, unit, weekday, self: site.domain, downMin, learning, low, jump, ongoing: downNow ? { since: uptimeIn.since, minutes: uptimeIn.minutesNow } : undefined, incidents: ended.map((x) => ({ from: clockOf(Math.max(x.started_at, up.from0)), to: clockOf(x.ended_at ?? nowSec), minutes: Math.round(insideSeconds(x, up.from0, end, nowSec) / 60) })), lost: uptimeIn.lost, band: verdict && !learning ? { ratio: verdict.ratio, st, words: usualWords } : null })
     const top = jump
     const downs = up.list.flatMap((x) => {
       const per = hourly ? 3600 : 86400

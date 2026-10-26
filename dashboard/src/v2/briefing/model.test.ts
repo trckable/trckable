@@ -23,6 +23,16 @@ describe('periods and multiples', () => {
   })
 })
 
+describe('a site with a handful of visitors', () => {
+  it('is told in plain counts, never above or below a usual', () => {
+    const band = { ratio: 4, st: 'up' as const, words: 'a usual Friday by 16:30' }
+    const out = say({ cur: result(3), low: true, band })
+    expect(text(out.long)).toBe('3 people came.')
+    expect(out.lead).toBe('A calm Friday:')
+    expect(text(say({ cur: result(3), low: false, band }).long)).toContain('a usual Friday')
+  })
+})
+
 describe('the sentence', () => {
   const ref: [string, number][] = [['news.ycombinator.com', 186], ['www.google.com', 20]]
   it('names the source, how many times the day before, and who paid', () => {

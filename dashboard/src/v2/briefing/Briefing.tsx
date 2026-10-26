@@ -3,8 +3,7 @@
 // set up yet. Everything comes from the report the page already read, the site's own past (its "usual"), and the
 // incident record.
 import { useEffect, useMemo, useState } from 'react'
-import type { FunnelStep, PaidStep, Report, Result, Site, Visit } from '../../lib/api'
-import { PAID_STEP } from '../explore/data/mapSections'
+import type { Report, Result, Site, Visit } from '../../lib/api'
 import { addDays, fmtRange, presetById, todayIn, type CompareMode, type Range } from '../../lib/dates'
 import { dayWords } from '../dayWords'
 import { fmtInt } from '../../lib/format'
@@ -52,6 +51,7 @@ import { cardCtx, watchRowsOf } from './cardCtx'
 import { BriefingSkeleton, rememberCards } from '../ui/BriefingSkeleton'
 import { useCardLock } from './useCardLock'
 import { useExtras, useSame } from './useExtras'
+import { downSeconds } from './outage'
 import { useSlices } from './useSlices'
 import { useBriefingKeys } from './useBriefingKeys'
 import { readerOf, readerWords } from './reader'
@@ -110,11 +110,10 @@ export default function Briefing({ site, data: page, loading, period, compare = 
   const downNow = !!site.down_since
   const downMin = Math.round(up.lost / 60)
   const slices = useSlices(site, range, cur, prev, unit, cur?.kpis.visitors ?? 0, !!cur && !!hist.daily)
-  const stuckPage = cur?.dims.entry_page?.find((r) => r.value === '/pricing')?.value ?? cur?.dims.entry_page?.[0]?.value ?? null
-  const pathSteps: (FunnelStep | PaidStep)[] = [...(cur?.dims.entry_page ?? []).slice(0, 2).map((p) => ({ kind: 'page' as const, value: p.value })), ...((cur?.goals ?? []).filter((g) => g.visitors > 0).slice(0, 1).map((g) => ({ kind: 'goal' as const, value: g.value }))), ...(cur?.money ? [PAID_STEP] : [])]
-  const funnelWant = useSame(pathSteps.length >= 3 ? { steps: pathSteps, alt: (cur?.dims.entry_page ?? []).find((p) => !/signup|checkout|cart/.test(p.value) && p.value !== '/' && !pathSteps.some((x) => x.value === p.value))?.value } : null)
+  // The page people land on most: the card shows only when the heat map has rage clicks on it, so a page without evidence says nothing.
+  const stuckPage = cur?.dims.entry_page?.[0]?.value ?? null
   const countryWant = useSame((cur?.dims.country ?? []).slice(0, 5).map((r) => ({ code: r.value, people: r.visitors })))
-  const extras = useExtras(site, today, range, { money: !!cur?.money, search: setupState.can && !setupState.noSearch, page: unit === 'today' ? stuckPage : null, funnel: funnelWant, countries: countryWant }, !!cur)
+  const extras = useExtras(site, today, range, { money: !!cur?.money, search: setupState.can && !setupState.noSearch, page: unit === 'today' ? stuckPage : null, funnel: !!cur, countries: countryWant }, !!cur)
   const dayStart = startOfDay(today, site.timezone)
   const clock = siteNow(site.timezone, new Date(nowSec * 1000))
   const end = Number(clock.slice(11, 13)) * 60 + Number(clock.slice(14, 16))
@@ -140,7 +139,7 @@ export default function Briefing({ site, data: page, loading, period, compare = 
   const stories = parts.stories
   const ctx = cardCtx({ site, ui, wset, nowSec, hhmm: parts.hhmm, spark: slices.spark.length ? slices.spark : cur.series.map((p) => p.visitors), onGoal })
   // A day with nobody yet still has its chart and numbers once the site has a history; only a site that never had anyone is empty.
-  const empty = cur.kpis.visitors === 0 && (parts.hd === 0 || !hist.daily)
+  const empty = cur.kpis.visitors === 0 && !hist.loading && (parts.hd === 0 || !hist.daily)
   const v = cur.kpis.visitors
   const pts = chart.points
   const pct = up.pct === null ? uptime.value : up.pct
@@ -177,7 +176,7 @@ export default function Briefing({ site, data: page, loading, period, compare = 
   if (kcs[0] && heroWhy && !stories.find((x) => x.key === 'uptime')) kcs[0].why = usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : undefined
   const sales = cur.money?.payments ?? 0
   const lockSec = dayStart + LOOKED_AT * 3600
-  const down = up.list.reduce((n, x) => n + Math.max(0, Math.min(x.ended_at ?? nowSec, nowSec) - Math.max(x.started_at, lockSec)), 0)
+  const down = downSeconds(up.list, lockSec, nowSec, nowSec)
   const sn = unit === 'today' && v > 0 ? sinceOf({ people: sinceCount, nowMin: end, sales, downSec: down, calm: stories.length === 0 && sales === 0 }) : null
   const since = sn ? <SinceLine sn={sn} /> : undefined
   const reader = readerOf(recent.length ? recent : visits, site.domain, top?.value)
