@@ -8,6 +8,7 @@ const KEEP: Record<string, string> = { money: 'sales' }
 
 export function XKcs({ items }: { items: Kc[] }) {
   return (
+    <div className="xkw">
     <div className="kcs xk">
       {items.map((k) => {
         const dn = k.st === 'dn'
@@ -29,11 +30,13 @@ export function XKcs({ items }: { items: Kc[] }) {
         )
       })}
     </div>
+    </div>
   )
 }
 
 export function XKcsPlain({ items, three }: { items: Xkc[]; three?: boolean }) {
   return (
+    <div className="xkw">
     <div className={`kcs xk${three ? ' k3' : ''}`}>
       {items.map((k) => (
         <div key={k.label} className={`kc ns ${k.tone === 'dn' ? 'dn' : ''}`}>
@@ -51,6 +54,7 @@ export function XKcsPlain({ items, three }: { items: Xkc[]; three?: boolean }) {
           <div className="kd">{k.detail}</div>
         </div>
       ))}
+    </div>
     </div>
   )
 }

@@ -100,3 +100,27 @@ for (const [width, height] of [
     expect(new Set(tops).size, 'two rows of two, not one row of four').toBe(2)
   })
 }
+
+// The Overview cards follow their pane: two by two in the side panel, four across when the pane is wide, one column on a phone;
+// each card's number sits at the same height and none is clipped.
+for (const [width, height, full, rows] of [
+  [360, 800, false, 4],
+  [1280, 900, false, 2],
+  [1280, 900, true, 1],
+] as const) {
+  test(`Overview cards at ${width} px${full ? ' full width' : ' in the panel'}: ${rows} row${rows > 1 ? 's' : ''}, numbers level and whole`, async ({ page }) => {
+    await page.setViewportSize({ width, height })
+    await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+    await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
+    await expect(page.locator('.brief')).toBeVisible()
+    await page.keyboard.press('e')
+    await expect(page.locator('#xp.on .xtb')).toBeVisible()
+    if (full) await page.keyboard.press('f')
+    const cards = page.locator('#xp .kcs .kc')
+    await expect(cards).toHaveCount(4)
+    const at = await cards.evaluateAll((els) => els.map((e) => ({ top: Math.round(e.getBoundingClientRect().top), value: Math.round((e.querySelector('.kv') as HTMLElement).getBoundingClientRect().top - e.getBoundingClientRect().top) })))
+    expect(new Set(at.map((c) => c.top)).size, 'rows').toBe(rows)
+    expect(new Set(at.map((c) => c.value)).size, 'the number sits at one height in every card').toBe(1)
+    expect(await squeezed(page)).toEqual([])
+  })
+}

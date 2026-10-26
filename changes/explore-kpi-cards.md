@@ -1,0 +1,1 @@
+In Explore, the four cards at the top of Overview follow the width of their pane: two by two in the side panel, four across when it is wide, one column on a phone. Every card has the same layout, with the label wrapping instead of being cut and the number at the same height, so no number is clipped.
