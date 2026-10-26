@@ -6,11 +6,10 @@ import { Check, Plus, Settings2, TriangleAlert } from 'lucide-react'
 import { HoldButton } from '../components/HoldButton'
 import { closeAccount } from '../lib/account'
 import { SiteMark } from '../components/SiteMark'
-import { DialogActions } from '../components/DialogActions'
-import { DialogHead } from '../components/DialogHead'
 import { Field } from '../components/Field'
 import { Info } from '../components/Info'
-import { Modal } from '../kit/Modal'
+import { Modal, type Frame } from '../kit/Modal'
+import { ModalMark } from '../kit/ModalMark'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import { Picker } from '../components/Picker'
 import { useEffect, useState } from 'react'
@@ -185,13 +184,28 @@ function EditSite({ site, onClose, onSaved }: { site: Site; onClose: () => void;
   }
 
   return (
-    <Modal label={`Edit ${site.domain}`} onClose={onClose}>
-      <form className="modal-form" onSubmit={(e) => {
-        e.preventDefault()
-        save()
-      }}>
-        <DialogHead heading={site.domain} hint="The domain never changes." help="It is what the snippet reports. Everything else is yours." />
-
+    <Modal
+      label={`Edit ${site.domain}`}
+      onClose={onClose}
+      frame={{
+        title: site.domain,
+        subtitle: 'The domain never changes.',
+        help: 'It is what the snippet reports. Everything else is yours.',
+        size: 'md',
+        busy,
+        onSubmit: save,
+        extra: (
+          <button type="button" className="btn ghost" onClick={() => openSettings(site)}>
+            More settings →
+          </button>
+        ),
+        actions: (
+          <button type="submit" className="btn primary" disabled={busy || !changed}>
+            {busy ? 'Saving…' : 'Save'}
+          </button>
+        ),
+      }}
+    >
         <Field label="Display name">
           {(f) => <input {...f} className="input" value={name} placeholder={site.domain} autoFocus onChange={(e) => setName(e.target.value)} />}
         </Field>
@@ -204,24 +218,6 @@ function EditSite({ site, onClose, onSaved }: { site: Site; onClose: () => void;
             {() => <Picker label="Currency" placeholder="Search a currency…" value={currency} onPick={setCurrency} items={withCurrent(CURRENCIES, currency)} />}
           </Field>
         </div>
-
-        <DialogActions
-          left={
-            <>
-              <button type="button" className="btn ghost" onClick={() => openSettings(site)}>
-                More settings →
-              </button>
-              <button type="button" className="btn ghost" onClick={onClose}>
-                Cancel
-              </button>
-            </>
-          }
-        >
-          <button type="submit" className="btn primary" disabled={busy || !changed}>
-            {busy ? 'Saving…' : 'Save'}
-          </button>
-        </DialogActions>
-      </form>
     </Modal>
   )
 }
@@ -271,13 +267,60 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
     ['widgets', counts?.widgets],
   ]
 
+  const frame: Frame =
+    step === 'what'
+      ? {
+          title: `Delete ${site.domain}?`,
+          subtitle: 'Removes the site and all its data. There is no undo.',
+          icon: <ModalMark icon={TriangleAlert} danger />,
+          size: 'md',
+          cancel: 'Keep it',
+          actions: (
+            <button type="button" className="btn danger big" disabled={!named} onClick={() => setStep('last')}>
+              Continue
+            </button>
+          ),
+        }
+      : step === 'last'
+        ? {
+            title: 'Last check',
+            subtitle: `Hold the button and ${site.domain} is gone for good.`,
+            help: 'Nobody, including trckable, can bring it back from here.',
+            icon: <ModalMark icon={TriangleAlert} danger />,
+            size: 'md',
+            cancel: false,
+            extra: (
+              <button type="button" className="btn ghost" onClick={() => setStep('what')}>
+                Back
+              </button>
+            ),
+            actions: <HoldButton onDone={run}>Hold to delete forever</HoldButton>,
+          }
+        : step === 'working'
+          ? { title: `Deleting ${site.domain}`, size: 'md', cancel: false }
+          : {
+              title: `${site.domain} is gone`,
+              size: 'md',
+              cancel: false,
+              actions: (
+                <button
+                  type="button"
+                  className="btn primary big"
+                  onClick={() => {
+                    onClose()
+                    onSites()
+                    navigate('/')
+                  }}
+                >
+                  Done
+                </button>
+              ),
+            }
+
   return (
-    <Modal label={`Delete ${site.domain}`} className="danger-modal" over keepSize={false} onClose={step === 'what' || step === 'last' ? onClose : undefined}>
+    <Modal label={`Delete ${site.domain}`} className="danger-modal" over keepSize={false} onClose={step === 'what' || step === 'last' ? onClose : undefined} frame={frame}>
       {step === 'what' && (
         <>
-          <div className="danger-step" key="what">
-            <DialogHead icon={TriangleAlert} danger heading={`Delete ${site.domain}?`} hint="Removes the site and all its data. There is no undo." />
-          </div>
           <div className="danger-list danger-step">
             <b className="danger-what">
               What goes
@@ -309,25 +352,11 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
               )}
             </Field>
           </div>
-          <DialogActions
-            left={
-              <button type="button" className="btn ghost" onClick={onClose} autoFocus={false}>
-                Keep it
-              </button>
-            }
-          >
-            <button type="button" className="btn danger big" disabled={!named} onClick={() => setStep('last')}>
-              Continue
-            </button>
-          </DialogActions>
         </>
       )}
 
       {step === 'last' && (
         <>
-          <div className="danger-step" key="last">
-            <DialogHead icon={TriangleAlert} danger heading="Last check" hint={`Hold the button and ${site.domain} is gone for good.`} help="Nobody, including trckable, can bring it back from here." />
-          </div>
           <div className="danger-list danger-final danger-step">
             <span>
               <b className="num">{fmtInt(counts?.events ?? 0)}</b> events
@@ -339,15 +368,6 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
               <b className="num">{fmtInt(counts?.payments ?? 0)}</b> payments
             </span>
           </div>
-          <DialogActions
-            left={
-              <button type="button" className="btn ghost" onClick={() => setStep('what')}>
-                Back
-              </button>
-            }
-          >
-            <HoldButton onDone={run}>Hold to delete forever</HoldButton>
-          </DialogActions>
         </>
       )}
 
@@ -359,7 +379,6 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
             <i />
             <i />
           </div>
-          <b>Deleting {site.domain}…</b>
           <span className="shred-bar" aria-hidden="true">
             <span />
           </span>
@@ -371,7 +390,6 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
         <>
           <div className="wiz-done danger-done danger-step" key="done">
             <Check size={34} strokeWidth={2} aria-hidden="true" />
-            <b>{site.domain} is gone.</b>
           </div>
           {gone && (
             <ul className="bullets">
@@ -382,19 +400,6 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
               <li>Settings, modules, share links and widgets removed</li>
             </ul>
           )}
-          <DialogActions>
-            <button
-              type="button"
-              className="btn primary big"
-              onClick={() => {
-                onClose()
-                onSites()
-                navigate('/')
-              }}
-            >
-              Done
-            </button>
-          </DialogActions>
         </>
       )}
     </Modal>

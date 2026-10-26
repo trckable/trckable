@@ -6,8 +6,6 @@
 // same calendar the date picker uses, not the browser's own.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Modal } from '../kit/Modal'
-import { DialogActions } from './DialogActions'
-import { DialogHead } from './DialogHead'
 import { Chevron } from './Chevron'
 import { Month } from './DateRangeMonth'
 import { toast } from './Toast'
@@ -95,16 +93,23 @@ export function NoteDialog({
   }
 
   return (
-    <Modal label="Add a note" onClose={onClose} className="note-modal" keepSize={false}>
-      <form
-        className="modal-form"
-        onSubmit={(e) => {
-          e.preventDefault()
-          save()
-        }}
-      >
-        <DialogHead heading="Add a note" />
-
+    <Modal
+      label="Add a note"
+      onClose={onClose}
+      keepSize={false}
+      className="note-modal"
+      frame={{
+        title: 'Add a note',
+        size: 'md',
+        busy,
+        onSubmit: save,
+        actions: (
+          <button type="submit" className="btn primary big" disabled={busy || !text.trim()}>
+            {busy ? 'Saving…' : 'Add note'}
+          </button>
+        ),
+      }}
+    >
         {days.length > 1 && (
           <div className="note-strip" role="group" aria-label="Pick the day">
             {days.map((d) => (
@@ -190,19 +195,6 @@ export function NoteDialog({
             ))}
           </ul>
         )}
-
-        <DialogActions
-          left={
-            <button type="button" className="btn ghost" onClick={onClose}>
-              Cancel
-            </button>
-          }
-        >
-          <button type="submit" className="btn primary big" disabled={busy || !text.trim()}>
-            {busy ? 'Saving…' : 'Add note'}
-          </button>
-        </DialogActions>
-      </form>
     </Modal>
   )
 }

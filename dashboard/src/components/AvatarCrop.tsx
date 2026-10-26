@@ -4,10 +4,9 @@
 // as WebP, well under the server's 256 KB, whatever size the original was.
 import { Check, Crosshair, ImageUp, ZoomIn, ZoomOut } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
-import { DialogActions } from './DialogActions'
-import { DialogHead } from './DialogHead'
 import { FieldError } from '../kit/FieldError'
 import { Modal } from '../kit/Modal'
+import { ModalMark } from '../kit/ModalMark'
 import { copy } from './crop/copy'
 import { drawRect, OUT, placed, VIEW } from './crop/math'
 import { useCrop } from './crop/useCrop'
@@ -106,8 +105,26 @@ export default function AvatarCrop({
   const percent = Math.round(crop.zoom * 100)
 
   return (
-    <Modal label={title} className="crop-modal" onClose={busy || saved ? undefined : onCancel}>
-      <DialogHead icon={ImageUp} heading={title} hint={copy.hint} />
+    <Modal
+      label={title}
+      className="crop-modal"
+      onClose={busy || saved ? undefined : onCancel}
+      frame={{
+        title,
+        subtitle: copy.hint,
+        icon: <ModalMark icon={ImageUp} />,
+        size: 'md',
+        busy: busy || saved,
+        cancel: copy.cancel,
+        actions: (
+          <button type="button" className="btn primary" onClick={save} disabled={busy || saved || !img} aria-live="polite">
+            {busy && <span className="btn-spin" aria-hidden="true" />}
+            {saved && <Check size={16} strokeWidth={2.25} aria-hidden="true" />}
+            {saveLabel()}
+          </button>
+        ),
+      }}
+    >
       {!(err && !img) && (
         <div
           className={'crop-stage' + (busy ? ' saving' : '') + (saved ? ' saved' : '')}
@@ -166,19 +183,6 @@ export default function AvatarCrop({
         {crop.centred > 0 && copy.centered}
       </span>
       <FieldError id="crop-err" error={err} />
-      <DialogActions
-        left={
-          <button type="button" className="btn ghost" onClick={onCancel} disabled={busy || saved}>
-            {copy.cancel}
-          </button>
-        }
-      >
-        <button type="button" className="btn primary" onClick={save} disabled={busy || saved || !img} aria-live="polite">
-          {busy && <span className="btn-spin" aria-hidden="true" />}
-          {saved && <Check size={16} strokeWidth={2.25} aria-hidden="true" />}
-          {saveLabel()}
-        </button>
-      </DialogActions>
     </Modal>
   )
 }

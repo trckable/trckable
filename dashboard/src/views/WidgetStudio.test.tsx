@@ -6,7 +6,7 @@ import { WidgetStudio } from './WidgetStudio'
 
 const site = { id: 'tkb_s', domain: 'site.com' } as Site
 const studio = (kind: 'live' | 'online') =>
-  renderToStaticMarkup(<WidgetStudio site={site} look={{ ...EMPTY_LOOK, kind }} onLook={() => undefined} place="inline" onPlace={() => undefined} footer={null} />)
+  renderToStaticMarkup(<WidgetStudio site={site} look={{ ...EMPTY_LOOK, kind }} onLook={() => undefined} place="inline" onPlace={() => undefined} />)
 
 describe('the widget studio', () => {
   it('names each group of buttons once, by a group label and not by a wrapping label', () => {
