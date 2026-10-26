@@ -1,41 +1,69 @@
 // Going offline is told once, in the toast every other notice uses: the page keeps
-// showing what it last had, and says so. A one-second blip (Wi-Fi roaming, wake from
-// sleep, VPN) is not told: it speaks only if the browser is still offline after a
-// few seconds, stays until the connection is back, and then goes at once.
+// showing what it last had, and says so. The browser's word is not enough (a VPN or
+// Wi-Fi handover flips it while the page still works): after a few seconds the page
+// asks its own server, and speaks only if that fails too. It stays until a request
+// gets through (or the browser says it is online), and then goes at once.
 // The first run has nothing cached to show, so it holds the notice back (quietOffline).
 import { settle, toast } from '../components/toastBus'
 import { toastCopy } from '../components/toastCopy'
 import { dateFmt } from './format'
 
 export const OFFLINE_GRACE_MS = 5000
+/** The server is asked this long, and again this often while the notice is up. */
+export const PING_MS = 2000
+export const RETRY_MS = 5000
 
 let quiet = false
 let timer: ReturnType<typeof setTimeout> | undefined
 let shown: number | undefined
 let since = ''
+let down = false
+let retry: ReturnType<typeof setInterval> | undefined
 
 /** The first run is up: there is no last data to show, so going offline is not told. */
 export function quietOffline(on: boolean) {
   quiet = on
 }
 
-const clock = (d: Date) => dateFmt(undefined, { hour: '2-digit', minute: '2-digit' }).format(d)
+/** The time as the language writes it, with no leading zero and never broken across two lines. */
+const clock = (d: Date) => dateFmt(undefined, { hour: 'numeric', minute: '2-digit' }).format(d).replace(/\s/g, '\u00a0')
 
-const tell = () => {
+/** Our own server answers (a tiny request, never cached). */
+async function alive(): Promise<boolean> {
+  const stop = new AbortController()
+  const cut = setTimeout(() => stop.abort(), PING_MS)
+  try {
+    return (await fetch('/healthz', { cache: 'no-store', signal: stop.signal })).ok
+  } catch {
+    return false
+  } finally {
+    clearTimeout(cut)
+  }
+}
+
+const tell = async () => {
   timer = undefined
-  if (quiet || navigator.onLine || shown !== undefined) return
+  if (quiet || shown !== undefined) return
+  if (await alive()) return
+  // The browser came back while the server was being asked.
+  if (!down || shown !== undefined) return
   shown = toast(toastCopy.offline(since), 'busy')
+  retry = setInterval(() => void alive().then((ok) => ok && back()), RETRY_MS)
 }
 
 const lost = () => {
+  down = true
   if (timer || shown !== undefined) return
   since = clock(new Date())
-  timer = setTimeout(tell, OFFLINE_GRACE_MS)
+  timer = setTimeout(() => void tell(), OFFLINE_GRACE_MS)
 }
 
 const back = () => {
+  down = false
   clearTimeout(timer)
+  clearInterval(retry)
   timer = undefined
+  retry = undefined
   if (shown !== undefined) settle(shown, '')
   shown = undefined
 }
