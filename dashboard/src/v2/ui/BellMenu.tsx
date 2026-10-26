@@ -5,11 +5,11 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { MkPortal } from './Portal'
 import { useMenu } from './useMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
-import { BELL_PATH } from './bellIcons'
 import { byDay } from '../bell/days'
 import { copy } from '../bell/copy'
 import { useArrival } from './useBellArrival'
-import { FilterMenu, RowMenu } from './BellPopovers'
+import { FilterMenu } from './BellPopovers'
+import { Row } from './BellItem'
 import './bellMenu.css'
 
 /** What a row's ⋯ offers: mute it for the site, change its alert, put it away. */
@@ -20,6 +20,10 @@ export interface RowAction {
 }
 
 export interface BellRow {
+  /** The host that sent it: its own mark is the icon. */
+  source?: string
+  /** The whole row said out loud (title, details, source). */
+  label?: string
   id: string
   kind: string
   /** Unix seconds: the day it is listed under. */
@@ -77,51 +81,6 @@ export interface BellProps {
 
 const EMPTY: ReadonlySet<string> = new Set()
 
-function Icon({ kind }: { kind: string }) {
-  return (
-    <svg className={`nfi k-${kind}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {BELL_PATH[kind] ?? BELL_PATH.weekly}
-    </svg>
-  )
-}
-
-function Row({ n, p, close }: { n: BellRow; p: BellProps; close: () => void }) {
-  const pick = (id: string) => {
-    p.onPick(id)
-    close()
-  }
-  const under = [n.sub, n.time].filter(Boolean).join(' · ')
-  return (
-    <div className="nfw" data-id={n.id}>
-      {n.lines ? (
-        <div className={`nf grp ${n.unread ? 'unread' : ''}`}>
-          <Icon kind={n.kind} />
-          <span className="nft">
-            <b>{n.title}</b>
-            {n.lines.map((l) => (
-              <button key={l.id} type="button" className="nfn" onClick={() => pick(l.id)}>
-                {l.text}
-              </button>
-            ))}
-            {under && <small>{under}</small>}
-          </span>
-          {n.unread && <i className="nfd" />}
-        </div>
-      ) : (
-        <button type="button" className={`nf ${n.unread ? 'unread' : ''}${n.bad ? ' bad' : ''}`} onClick={() => pick(n.id)}>
-          <Icon kind={n.kind} />
-          <span className="nft">
-            <b>{n.title}</b>
-            {under && <small>{under}</small>}
-          </span>
-          {n.unread && <i className="nfd" />}
-        </button>
-      )}
-      <RowMenu row={n} close={close} />
-    </div>
-  )
-}
-
 /** What sits in the panel's header row: the filter and Mark all read. */
 function Tools(p: BellProps) {
   return (
@@ -176,13 +135,15 @@ function List(p: BellProps & { close: () => void; bare?: boolean }) {
               ))}
             </Fragment>
           ))}
-        {p.archive && !waiting && (
-          <button type="button" className="lk3 nfar" aria-pressed={old} onClick={() => { if (!old) p.archive?.load(); setOld(!old) }}>
-            {old ? copy.showNew : copy.showArchived}
-          </button>
-        )}
       </div>
       <div className="nff">
+        {p.archive && !waiting ? (
+          <button type="button" className="lk3" aria-pressed={old} onClick={() => { if (!old) p.archive?.load(); setOld(!old) }}>
+            {old ? copy.showNew : copy.showArchived}
+          </button>
+        ) : (
+          <span />
+        )}
         <button type="button" className="lk3" onClick={() => { p.onSettings(); p.close() }}>
           {p.settings}
         </button>

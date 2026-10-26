@@ -105,6 +105,10 @@ func surgeEvent(sg surge.Surge, domain, link string, now time.Time, loc *time.Lo
 		Foot: mailkit.Foot{Note: note},
 	}
 	ev.Data = map[string]any{"online": sg.Online, "usual": sg.Usual, "source": sg.Why.Source, "page": sg.Why.Page}
+	// The referring host, when the source is one, so a bell can draw the source's own mark.
+	if sg.Why.SourceDim == "referrer" {
+		ev.Data["source_host"] = sg.Why.SourceValue
+	}
 	return ev
 }
 

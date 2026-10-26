@@ -294,7 +294,7 @@ func (h *Hub) tellBell(ctx context.Context, account, key, kind string, e alerts.
 	vars := Vars{"domain": e.Domain}
 	for k, v := range e.Data {
 		switch k {
-		case "metric", "period", "amount":
+		case "metric", "period", "amount", "source", "source_host":
 			if s, ok := v.(string); ok {
 				vars[k] = s
 			}

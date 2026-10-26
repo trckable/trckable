@@ -10,6 +10,8 @@ import { STALE_DAYS } from '../../features/install/journey'
 import { sourceName } from '../briefing/model'
 import { duration, isDown } from '../../features/incidents/model'
 import { clock } from '../../lib/site'
+import { fmtFixed, fmtInt } from '../../lib/format'
+import type { Moment } from '../../features/story/moments'
 import { copy } from './copy'
 
 export type NoticeKind = 'down' | 'up' | 'spike' | 'sale' | 'mention' | 'answer' | 'milestone' | 'weekly' | 'failed' | 'plan' | 'team' | 'setup'
@@ -33,6 +35,8 @@ export interface Notice {
   read?: () => void
   /** What a tap does instead of going to the page the notice is about. */
   open?: () => void
+  /** The host that sent it (a surge's top referrer, the site a mention was posted on): its own mark is drawn. */
+  source?: string
   /** The site's id, when the notice knows it (else it is found by its domain). */
   siteId?: string
   /** The alert it came from, when that is not the kind's own (an alert the person can mute or change for the site). */
@@ -76,7 +80,25 @@ export function fromSetup(sites: Site[], now: number): Notice[] {
 }
 
 export function fromMentions(list: Mention[], domain: string): Notice[] {
-  return list.map((m) => ({ id: `mention:${m.id}`, kind: 'mention' as const, site: domain, title: copy.mention(m.source === 'hn' ? sourceName(m.host) : m.host), sub: m.title, at: m.posted_at }))
+  return list.map((m) => ({ id: `mention:${m.id}`, kind: 'mention' as const, site: domain, title: copy.mention(m.source === 'hn' ? sourceName(m.host) : m.host), sub: m.title, source: m.host, at: m.posted_at }))
+}
+
+/**
+ * A busy spell the server recorded: its hour (a spike) or its moment (a surge: the most online at once), how many times the
+ * usual it was, and the host that sent most of them, so the bell draws that source's own mark. One row for each moment: a
+ * spike of the hour a surge falls in is the same moment, and is left out.
+ */
+export function fromMoments(list: Moment[], domain: string): Notice[] {
+  const hour = (t: string) => t.slice(0, 13)
+  const surges = new Set(list.filter((m) => m.kind === 'surge').map((m) => hour(m.t)))
+  return list.flatMap((m) => {
+    if ((m.kind !== 'spike' && m.kind !== 'surge') || (m.kind === 'spike' && surges.has(hour(m.t)))) return []
+    const at = Math.floor(Date.parse(m.t.length > 10 ? `${m.t.slice(0, 16)}:00Z` : `${m.t}T00:00:00Z`) / 1000)
+    if (!Number.isFinite(at)) return []
+    const size = m.kind === 'surge' ? copy.onlineN(fmtInt(m.visitors ?? 0)) : copy.peopleN(fmtInt(m.visitors ?? 0))
+    const sub = [m.visitors ? size : '', m.factor ? copy.vsUsual(fmtFixed(m.factor, 1)) : ''].filter(Boolean).join(' · ')
+    return [{ id: `busy:${m.kind}:${m.t}`, kind: 'spike' as const, site: domain, title: copy.busy(domain), sub, source: m.referrer, at }]
+  })
 }
 
 /** What the assistants did lately with the site's questions (the first time one names it is told as such), and a budget that ran out. */
@@ -93,7 +115,7 @@ export function fromAnswers(rep: Pick<AnswersReport, 'changes' | 'paused'>, doma
 }
 
 export function fromMilestones(list: Milestone[], domain: string): Notice[] {
-  return list.map((m) => ({ id: `mile:${m.kind}:${m.step}`, kind: 'milestone' as const, site: domain, title: lineOf(m, true), sub: copy.milestoneSub, at: m.created_at, milestone: m }))
+  return list.map((m) => ({ id: `mile:${m.kind}:${m.step}`, kind: 'milestone' as const, site: domain, title: lineOf(m, true), sub: '', at: m.created_at, milestone: m }))
 }
 
 /**

@@ -8,6 +8,7 @@ import { openSettings } from '../../lib/settings'
 import { toast } from '../../components/Toast'
 import { can as allowed } from '../../lib/permissions'
 import { BellMenu, type BellRow, type RowAction } from '../ui/BellMenu'
+import { brandOf } from '../../lib/brandIcons'
 import { alertOf, setAlertOn } from './alertState'
 import { copy } from './copy'
 import { timeOf } from './days'
@@ -26,6 +27,9 @@ function go(n: Notice) {
   else if (n.kind === 'mention') navigate(mentionsPath(n.site))
   else navigate(`${base}?view=briefing&period=${n.kind === 'weekly' ? '7d' : 'today'}`)
 }
+
+/** The source as a person says it: the brand's name, else the host. */
+const brandName = (host: string) => brandOf(host)?.name ?? host
 
 const NONE: ReadonlySet<string> = new Set()
 
@@ -110,6 +114,8 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
     time: n.members ? '' : (n.when ?? timeOf(n.at)),
     unread: n.unread,
     bad: n.bad,
+    source: n.source,
+    label: n.source ? [n.title, n.sub, brandName(n.source), n.members ? '' : (n.when ?? timeOf(n.at))].filter(Boolean).join(', ') : undefined,
     lines: n.members?.map((m) => ({ id: m.id, text: `${m.site} · ${timeOf(m.at)}` })),
     actions: actionsOf(n, archived),
   })

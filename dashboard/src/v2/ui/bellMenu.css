@@ -58,3 +58,18 @@
 .mk .cd.nfsheet {
   min-height: min(50dvh, 26rem);
 }
+
+/* A row: the unread dot is the first thing in it (it keeps its place when read, so titles line up), then the icon. */
+.mk .nf .nfd { width: 6px; height: 6px; margin-right: calc(var(--mk-s2) * -1); }
+.mk .nf .nfd.off { visibility: hidden; }
+.mk .nf .nft small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The source's own mark, with what kind of moment it was as a small badge on its corner, in the moment's tone. */
+.mk .nfm { position: relative; display: inline-flex; flex: none; }
+.mk .nfb { position: absolute; right: -4px; bottom: -4px; display: grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--mk-card); color: var(--mk-bg); }
+.mk .nfb.up { background: var(--mk-lime); }
+.mk .nfb.ok { background: var(--mk-green); }
+.mk .nfb.down { background: var(--mk-red); }
+.mk .nfb-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--mk-bg); }
+/* The foot: the archive and the alert settings, two small quiet buttons on one row. */
+.mk .nff .lk3 { font-size: 12px; color: var(--mk-muted); }
+.mk .nff .lk3:hover { color: var(--mk-text); }
