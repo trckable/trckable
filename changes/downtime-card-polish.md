@@ -1,0 +1,1 @@
+The downtime card names its status first (Down for 10 minutes, then the site and the times muted), draws the incident's own day with the stretch as a visible segment, uses one primary and two quiet buttons with icons, and a watched line's status is a chip instead of wrapping.
