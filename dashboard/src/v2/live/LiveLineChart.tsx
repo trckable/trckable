@@ -52,12 +52,12 @@ export function LiveLineChart({ heights, beat, hits, at = null, onScrub }: Props
             <stop offset="1" style={{ stopColor: 'var(--mk-lime)' }} stopOpacity="0" />
           </linearGradient>
           <linearGradient id="mline-fade" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={W} y2="0">
-            <stop offset="0" stopColor="#fff" stopOpacity="0" />
-            <stop offset={FADE_IN} stopColor="#fff" />
-            <stop offset={Math.max(FADE_IN, tail - FADE_OUT)} stopColor="#fff" />
-            <stop offset={Math.max(FADE_IN, tail)} stopColor="#fff" stopOpacity="0" />
+            <stop offset="0" stopColor="currentColor" stopOpacity="0" />
+            <stop offset={FADE_IN} stopColor="currentColor" />
+            <stop offset={Math.max(FADE_IN, tail - FADE_OUT)} stopColor="currentColor" />
+            <stop offset={Math.max(FADE_IN, tail)} stopColor="currentColor" stopOpacity="0" />
           </linearGradient>
-          <mask id="mline-edges" maskUnits="userSpaceOnUse" x="-10" y="-30" width={W + 20} height="160">
+          <mask id="mline-edges" style={{ maskType: 'alpha' }} maskUnits="userSpaceOnUse" x="-10" y="-30" width={W + 20} height="160">
             <rect x="-10" y="-30" width={W + 20} height="160" fill="url(#mline-fade)" />
           </mask>
         </defs>
