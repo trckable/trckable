@@ -44,6 +44,7 @@ export const copy = defineCopy('v2.live', {
   globe: 'Globe',
   globeSwitch: 'Show the globe',
   globeLabel: (n: number) => (n === 1 ? 'Globe: 1 person on the site' : `Globe: ${fmtInt(n)} people on the site`),
+  spotTip: (flag: string, place: string, n: number, what: string) => `${flag} ${place} · ${n === 1 ? '1 online' : `${fmtInt(n)} online`} · ${what}`,
   recent: 'Recent activity',
   fullscreen: 'Full screen',
   exitFullscreen: 'Leave full screen',
