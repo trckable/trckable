@@ -230,3 +230,39 @@ test('the list head shows the online count the pill shows, with the half hour as
   const x = (await page.locator('.gclose').boundingBox())!
   expect(f.x + f.width).toBeLessThan(x.x) // clear of the close button
 })
+
+// The earth is real land with borders and a lit sea, and everyone at one spot is one marker with their number.
+const SHOTS = '/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad'
+for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark']] as const) {
+  test(`the globe draws land and merges a crowd into one marker, ${width}px ${colorScheme}`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme })
+    await page.setViewportSize({ width, height: 900 })
+    await page.addInitScript(() => localStorage.setItem('trckable.live.globe', 'on'))
+    await page.route(/\/sites\/[^/]+\/now(\?|$)/, async (route) => {
+      const res = await route.fetch()
+      const body = await res.json()
+      const at = Date.now()
+      const people = [...Array.from({ length: 38 }, () => ['AL', 'Tirana']), ...Array.from({ length: 6 }, () => ['XK', 'Pristina']), ...Array.from({ length: 5 }, () => ['US', 'Chicago']), ['DE', 'Berlin'], ['DE', 'Munich'], ['JP', 'Tokyo'], ['BR', 'Sao Paulo'], ['ZA', 'Cape Town']]
+      body.online = people.length
+      body.recent = people.map(([country, city], i) => ({ kind: 'pageview', ts: at - i * 2000, last: at - i * 2000, path: i === 0 ? '/form_submit' : `/p${i}`, visitor: `visitor-${i}`, country, city }))
+      await route.fulfill({ response: res, json: body })
+    })
+    await open(page)
+    const canvas = page.locator('.gstage canvas')
+    await expect(canvas).toBeVisible({ timeout: 10_000 })
+    await page.evaluate(() => delete document.documentElement.dataset.motion)
+    await page.waitForTimeout(1500)
+    // One marker for the 38 in Tirana, not 38 flags: the hover tells it in words.
+    const marker = await canvas.evaluate((c) => {
+      const g = (c as unknown as { __globe: { states: { count: number; x: number; y: number; a: number }[] } }).__globe
+      return g.states.map((s) => ({ n: s.count, x: s.x, y: s.y, a: s.a }))
+    })
+    expect(marker.filter((m) => m.n === 38)).toHaveLength(1)
+    expect(marker.length).toBeLessThanOrEqual(10)
+    const big = marker.find((m) => m.n === 38)!
+    const box = (await canvas.boundingBox())!
+    await page.mouse.move(box.x + big.x, box.y + big.y)
+    await expect(page.locator('.gtip')).toContainText('38 online', { timeout: 5000 })
+    await page.screenshot({ path: `${SHOTS}/globe-${width}-${colorScheme}.png` })
+  })
+}

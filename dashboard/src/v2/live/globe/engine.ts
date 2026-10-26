@@ -1,11 +1,10 @@
-// The globe's loop, with no React in it: land dots, pins and their pulse all drawn on one canvas, a view that spins on
+// The globe's loop, with no React in it: the earth (earth.ts), the visitors' markers and their pulse all drawn on one canvas, a view that spins on
 // its own, a drag with inertia, and hit-testing in plain maths. Only the open popover and the hover tip are DOM, and the
 // loop moves those by setting their transform. It runs only while the globe is on screen and the tab is visible, and
 // stops (until something wakes it) when nothing moves. A frame builds no objects: the buffers below are made once.
 import { reducedMotion } from '../../../lib/motion'
-import { flag } from '../../../lib/format'
-import { thinning, wrap, type Pin } from './geo'
-import { LAND, STEP } from './globeData'
+import { borders, fillLand, grid, strokeLines } from './earth'
+import { spotsOf, wrap, type Pin } from './geo'
 
 const RAD = Math.PI / 180
 /** Degrees per millisecond of the slow spin (about one turn a minute and a half). */
@@ -27,30 +26,41 @@ const SHEET_W = 700
 /** Room the open popover takes beside its pin. */
 const POP_W = 420
 
-/** The land as dots, worked out once: for each its cosine and sine of latitude and its longitude. */
-const DOTS = (() => {
-  const n = LAND.reduce((t, runs) => t + runs.filter((_, i) => i % 2).reduce((a, b) => a + b, 0), 0)
-  const out = new Float32Array(n * 3)
-  let k = 0
-  LAND.forEach((runs, i) => {
-    const lat = (84 - STEP / 2 - i * STEP) * RAD
-    const cols = Math.max(1, Math.round((360 / STEP) * Math.cos(lat)))
-    for (let r = 0; r < runs.length; r += 2) {
-      for (let j = runs[r]; j < runs[r] + runs[r + 1]; j++) {
-        out[k++] = Math.cos(lat)
-        out[k++] = Math.sin(lat)
-        out[k++] = -180 + ((j + 0.5) * 360) / cols
-      }
-    }
-  })
-  return out
-})()
+/** The colours the globe draws with, from the page's tokens. */
+interface Ink {
+  edge: string
+  card: string
+  lime: string
+  bg: string
+  ring: string
+  sea: string
+  deep: string
+  shade: string
+  fade: string
+  land: string
+  coast: string
+  grat: string
+  air: string
+  airFade: string
+  glowEnd: string
+}
 
+/** One marker: everyone at one spot (a country, or a city of it) is one glowing dot with their number. */
 interface State {
+  /** The newest of them: a tap opens this visitor, the tip tells their page. */
   pin: Pin
+  /** Every visitor key at the spot (a pick, a keyboard step or the open card on any of them marks it). */
+  members: string[]
+  count: number
+  /** The spot's own place, where the marker sits (the visitors' small spreads are not used). */
+  lat: number
+  lon: number
+  label: string
   born: number
   pulse: number
   gone: number
+  /** What changes when someone arrives or acts at the spot (the pulse keys on it). */
+  sig: string
   /** Where it was drawn last frame (CSS pixels) and how visible, for the hit test. */
   x: number
   y: number
@@ -114,10 +124,14 @@ export class Globe {
   private drag = { on: false, id: 0, x: 0, y: 0, t: 0 }
   private states: State[] = []
   private hover: string | null = null
-  private sprites = new Map<string, HTMLCanvasElement>()
-  private ink = { dot: '', edge: '', body: '', card: '', lime: '', bg: '', ring: '' }
+  private ink: Ink = { edge: '', card: '', lime: '', bg: '', ring: '', sea: '', deep: '', shade: '', fade: '', land: '', coast: '', grat: '', air: '', airFade: '', glowEnd: '' }
   private inkAt = -9999
-  private thin: 1 | 2 = 1
+  /** The shading of the sphere (sea, its dark rim, the glow of the air): made again only when the place, the size or the colours change. */
+  private shell: { key: string; sea: CanvasGradient; rim: CanvasGradient; air: CanvasGradient } | null = null
+  /** A soft glow, drawn once and scaled under each marker. */
+  private glow: HTMLCanvasElement | null = null
+  /** The busiest spot is faced once, when the first people arrive. */
+  private faced = false
   private motion: MediaQueryList | null = null
 
   constructor(
@@ -138,13 +152,11 @@ export class Globe {
     this.cx = w / 2
     this.cy = h / 2
     if (this.sheet !== w < SHEET_W) this.hooks.onSheet((this.sheet = w < SHEET_W))
-    const nav = navigator as Navigator & { deviceMemory?: number }
     const weak = (navigator.hardwareConcurrency || 8) <= 4 || (matchMedia('(pointer: coarse)').matches && w < 900)
-    this.thin = weak || thinning(w, navigator.hardwareConcurrency || 8, nav.deviceMemory ?? 8) === 2 ? 2 : 1
     this.dpr = weak ? 1 : Math.min(window.devicePixelRatio || 1, 2)
     this.canvas.width = Math.round(w * this.dpr)
     this.canvas.height = Math.round(h * this.dpr)
-    this.sprites.clear()
+    this.shell = null
     this.wake()
   }
 
@@ -153,22 +165,40 @@ export class Globe {
     this.wake()
   }
 
-  /** The people at the spots now. A new spot pops in, a spot with a new arrival pulses, a spot that emptied shrinks away. The first set only appears. */
+  /** The people at the spots now, one marker for each spot. A new spot pops in, a spot with a new arrival pulses, a spot that emptied shrinks away. The first set only appears, and the globe turns to face the busiest spot. */
   setPins(pins: readonly Pin[]) {
     const now = performance.now()
-    const by = new Map(this.states.map((s) => [s.pin.key, s]))
+    const spots = spotsOf(pins)
+    const by = new Map(this.states.map((s) => [`${s.pin.cc}/${s.pin.city}`, s]))
     const seen = new Set<string>()
-    for (const p of pins) {
-      seen.add(p.key)
-      const s = by.get(p.key)
-      if (!s) this.states.push({ pin: p, born: this.first ? -1e9 : now, pulse: -1e9, gone: 0, x: 0, y: 0, a: 0 })
-      else {
-        if (s.pin.sig !== p.sig && !s.gone) s.pulse = now
-        s.pin = p
+    let busiest: State | null = null
+    for (const [k, g] of spots) {
+      seen.add(k)
+      const count = g.members.length
+      const sig = `${count}:${g.lead.sig}`
+      let s = by.get(k)
+      if (!s) {
+        s = { pin: g.lead, members: g.members, count, lat: g.lead.lat, lon: g.lead.lon, label: count > 99 ? '99+' : String(count), sig, born: this.first ? -1e9 : now, pulse: -1e9, gone: 0, x: 0, y: 0, a: 0 }
+        this.states.push(s)
+      } else {
+        if (s.sig !== sig && !s.gone) s.pulse = now
+        s.pin = g.lead
+        s.members = g.members
+        s.count = count
+        s.lat = g.lead.lat
+        s.lon = g.lead.lon
+        s.label = count > 99 ? '99+' : String(count)
+        s.sig = sig
         s.gone = 0
       }
+      if (!busiest || count > busiest.count || (count === busiest.count && g.lead.last > busiest.pin.last)) busiest = s
     }
-    for (const s of this.states) if (!seen.has(s.pin.key) && !s.gone) s.gone = now
+    for (const s of this.states) if (!seen.has(`${s.pin.cc}/${s.pin.city}`) && !s.gone) s.gone = now
+    if (busiest && !this.faced) {
+      this.faced = true
+      this.lat = Math.max(-55, Math.min(55, busiest.lat))
+      this.lon = busiest.lon
+    }
     this.first = false
     this.wake()
   }
@@ -362,15 +392,15 @@ export class Globe {
     if (!f.el) return
     let seen: State | null = null
     for (let i = 0; i < this.states.length; i++) {
-      if (this.states[i].pin.key === f.key) {
-        f.lat = this.states[i].pin.lat
-        f.lon = this.states[i].pin.lon
+      if (this.states[i].members.includes(f.key)) {
+        f.lat = this.states[i].lat
+        f.lon = this.states[i].lon
         if (!this.states[i].gone) seen = this.states[i]
       }
     }
     const p = f.lat * RAD
     const dl = (f.lon - this.lon) * RAD
-    // On the screen where its pin was drawn (spread included), else where its place is.
+    // On the screen where its marker was drawn, else where its place is.
     const x = seen ? seen.x : cx + R * Math.cos(p) * Math.sin(dl)
     const y = seen ? seen.y : cy - R * (cp * Math.sin(p) - sp * Math.cos(p) * Math.cos(dl))
     if (Math.abs(x - f.x) < 0.25 && Math.abs(y - f.y) < 0.25) return
@@ -441,39 +471,52 @@ export class Globe {
     this.inkAt = now
     const s = getComputedStyle(this.canvas)
     const v = (n: string) => s.getPropertyValue(n).trim()
-    const was = this.ink.card + this.ink.lime
-    this.ink = { dot: v('--mk-muted'), edge: v('--mk-line'), body: v('--mk-card2'), card: v('--mk-card'), lime: v('--mk-lime'), bg: v('--mk-bg'), ring: v('--mk-limeM') }
-    if (was !== this.ink.card + this.ink.lime) this.sprites.clear()
+    const was = Object.values(this.ink).join()
+    this.ink = { edge: v('--mk-line'), card: v('--mk-card'), lime: v('--mk-lime'), bg: v('--mk-bg'), ring: v('--mk-limeM'), sea: v('--mk-sea'), deep: v('--mk-sea-deep'), shade: v('--mk-sea-shade'), fade: v('--mk-sea-fade'), land: v('--mk-land'), coast: v('--mk-land-line'), grat: v('--mk-grat'), air: v('--mk-air'), airFade: v('--mk-air-fade'), glowEnd: v('--mk-lime0') }
+    if (was !== Object.values(this.ink).join()) {
+      this.shell = null
+      this.glow = null
+    }
     return this.ink
   }
 
-  /** A pin's picture, made once per country: a disc with the flag. */
-  private sprite(cc: string): HTMLCanvasElement {
-    let c = this.sprites.get(cc)
-    if (c) return c
-    c = document.createElement('canvas')
-    c.width = c.height = Math.round(CARD * this.dpr)
-    const x = c.getContext('2d')
-    if (x) {
-      x.scale(this.dpr, this.dpr)
-      x.shadowColor = this.ink.edge
-      x.shadowBlur = 4
-      x.fillStyle = this.ink.card
-      x.beginPath()
-      x.arc(CARD / 2, CARD / 2, 12, 0, Math.PI * 2)
-      x.fill()
-      x.shadowBlur = 0
-      x.font = '14px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif'
-      x.textAlign = 'center'
-      x.textBaseline = 'middle'
-      x.fillStyle = this.ink.dot
-      x.fillText(flag(cc), CARD / 2, CARD / 2 + 1)
-    }
-    this.sprites.set(cc, c)
-    return c
+  /** The sphere's shading for this place and size: the sea lit from the upper left, a darker rim, and the thin glow of the air around it. */
+  private shading(c: CanvasRenderingContext2D, ink: Ink, R: number) {
+    const key = `${Math.round(this.cx)},${Math.round(this.cy)},${Math.round(R)}`
+    if (this.shell?.key === key) return this.shell
+    const x = this.cx
+    const y = this.cy
+    const sea = c.createRadialGradient(x - R * 0.38, y - R * 0.42, R * 0.04, x, y, R * 1.08)
+    sea.addColorStop(0, ink.sea)
+    sea.addColorStop(1, ink.deep)
+    const rim = c.createRadialGradient(x, y, R * 0.66, x, y, R)
+    rim.addColorStop(0, ink.fade)
+    rim.addColorStop(1, ink.shade)
+    const air = c.createRadialGradient(x, y, R * 0.97, x, y, R * 1.12)
+    air.addColorStop(0, ink.air)
+    air.addColorStop(1, ink.airFade)
+    this.shell = { key, sea, rim, air }
+    return this.shell
   }
 
-  /** One draw: the sphere, its land, then the pins. Says whether a pin is still animating (the loop must go on). */
+  /** A marker's glow: one soft round light in the accent, made once. */
+  private light(ink: Ink): HTMLCanvasElement {
+    if (this.glow) return this.glow
+    const g = document.createElement('canvas')
+    g.width = g.height = 64
+    const x = g.getContext('2d')
+    if (x) {
+      const r = x.createRadialGradient(32, 32, 0, 32, 32, 32)
+      r.addColorStop(0, ink.ring)
+      r.addColorStop(1, ink.glowEnd)
+      x.fillStyle = r
+      x.fillRect(0, 0, 64, 64)
+    }
+    this.glow = g
+    return g
+  }
+
+  /** One draw: the air and the sea, the land with its borders, the dark rim, then the markers. Says whether a marker is still animating (the loop must go on). */
   private draw(now: number, reduced: boolean): boolean {
     const c = this.ctx
     if (!c || !this.w) return false
@@ -481,38 +524,40 @@ export class Globe {
     const R = this.radius()
     const cx = this.cx
     const cy = this.cy
+    const shell = this.shading(c, ink, R)
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0)
     c.clearRect(0, 0, this.w, this.h)
     c.beginPath()
+    c.arc(cx, cy, R * 1.12, 0, Math.PI * 2)
+    c.fillStyle = shell.air
+    c.fill()
+    c.beginPath()
     c.arc(cx, cy, R, 0, Math.PI * 2)
-    c.fillStyle = ink.body
+    c.fillStyle = shell.sea
+    c.fill()
+    const view = { cx, cy, r: R, lat: this.lat, lon: this.lon }
+    c.lineWidth = 1
+    c.strokeStyle = ink.grat
+    strokeLines(c, grid, view)
+    c.fillStyle = ink.land
+    fillLand(c, view)
+    c.strokeStyle = ink.coast
+    c.lineWidth = 0.7
+    strokeLines(c, borders, view)
+    c.beginPath()
+    c.arc(cx, cy, R, 0, Math.PI * 2)
+    c.fillStyle = shell.rim
     c.fill()
     c.lineWidth = 1
     c.strokeStyle = ink.edge
     c.stroke()
     const sp = Math.sin(this.lat * RAD)
     const cp = Math.cos(this.lat * RAD)
-    const size = Math.max(1.4, R / this.zoom / 150) * Math.min(this.zoom, 3.5) * (this.thin === 2 ? 1.35 : 1)
-    c.fillStyle = ink.dot
-    // Two passes by facing: the rim fainter than the middle, so the sphere reads as round.
-    for (let pass = 0; pass < 2; pass++) {
-      const lo = pass ? 0.3 : 0.02
-      const hi = pass ? 1.01 : 0.3
-      c.globalAlpha = pass ? 0.9 : 0.35
-      for (let i = 0; i < DOTS.length; i += 3 * this.thin) {
-        const dl = (DOTS[i + 2] - this.lon) * RAD
-        const cd = Math.cos(dl)
-        const z = sp * DOTS[i + 1] + cp * DOTS[i] * cd
-        if (z < lo || z >= hi) continue
-        const x = cx + R * DOTS[i] * Math.sin(dl) - size / 2
-        const y = cy - R * (cp * DOTS[i + 1] - sp * DOTS[i] * cd) - size / 2
-        if (x < -size || x > this.w || y < -size || y > this.h) continue
-        c.fillRect(x, y, size, size)
-      }
-    }
-    c.globalAlpha = 1
+    const glow = this.light(ink)
+    c.textAlign = 'center'
+    c.textBaseline = 'middle'
     let animating = false
-    // A crowd draws smaller dots, one each, so they can sit close without hiding one another.
+    // A crowd draws its markers smaller, so they can sit close without hiding one another.
     const dense = this.density()
     for (let i = this.states.length - 1; i >= 0; i--) {
       const s = this.states[i]
@@ -521,15 +566,12 @@ export class Globe {
         this.states.pop()
         continue
       }
-      const p = s.pin.lat * RAD
-      const dl = (s.pin.lon - this.lon) * RAD
+      const p = s.lat * RAD
+      const dl = (s.lon - this.lon) * RAD
       const cd = Math.cos(dl)
       const z = sp * Math.sin(p) + cp * Math.cos(p) * cd
-      // A crowd at one spot spreads on the screen, each by their own place around it.
-      // At 1x a crowd already opens out enough that each flag can be seen and tapped (14 px a head, to 70); zooming in opens it further.
-      const open = Math.min(70, 14 * Math.sqrt(Math.max(0, s.pin.crowd - 1))) * (1 + (this.zoom - 1) / 2.5)
-      s.x = cx + R * Math.cos(p) * Math.sin(dl) + (s.pin.crowd > 1 ? s.pin.ux * open : 0)
-      s.y = cy - R * (cp * Math.sin(p) - sp * Math.cos(p) * cd) + (s.pin.crowd > 1 ? s.pin.uy * open : 0)
+      s.x = cx + R * Math.cos(p) * Math.sin(dl)
+      s.y = cy - R * (cp * Math.sin(p) - sp * Math.cos(p) * cd)
       let a = z > 0.05 ? Math.min(1, z * 4) : 0
       let sc = 1
       const born = reduced ? 1 : (now - s.born) / POP_MS
@@ -545,25 +587,32 @@ export class Globe {
       }
       s.a = a
       if (a <= 0.01 || s.x < -CARD || s.x > this.w + CARD || s.y < -CARD || s.y > this.h + CARD) continue
+      // The dot grows with the people at the spot (its number is on it).
+      const r = (6 + Math.min(10, Math.sqrt(s.count) * 2.6)) * sc * dense
       const pulse = (now - s.pulse) / PULSE_MS
       if (!reduced && pulse < 1 && !s.gone) {
-        c.globalAlpha = a * 0.7 * (1 - pulse)
+        c.globalAlpha = a * 0.6 * (1 - pulse)
         c.fillStyle = ink.ring
         c.beginPath()
-        c.arc(s.x, s.y, (12 + pulse * 22) * dense, 0, Math.PI * 2)
+        c.arc(s.x, s.y, r + pulse * 26 * dense, 0, Math.PI * 2)
         c.fill()
         animating = true
       }
+      c.globalAlpha = a * 0.8
+      c.drawImage(glow, s.x - r * 2.6, s.y - r * 2.6, r * 5.2, r * 5.2)
       c.globalAlpha = a
-      if (this.mark === s.pin.key) {
-        c.lineWidth = 2
-        c.strokeStyle = ink.lime
-        c.beginPath()
-        c.arc(s.x, s.y, 15 * dense, 0, Math.PI * 2)
-        c.stroke()
+      c.beginPath()
+      c.arc(s.x, s.y, r, 0, Math.PI * 2)
+      c.fillStyle = ink.lime
+      c.fill()
+      c.lineWidth = 1.5
+      c.strokeStyle = this.mark !== null && s.members.includes(this.mark) ? ink.bg : ink.card
+      c.stroke()
+      if (s.count > 1 && r >= 7) {
+        c.fillStyle = ink.bg
+        c.font = `700 ${Math.round(Math.min(13, r * 0.95))}px system-ui, sans-serif`
+        c.fillText(s.label, s.x, s.y + 0.5)
       }
-      const half = (CARD / 2) * sc * dense
-      c.drawImage(this.sprite(s.pin.cc), s.x - half, s.y - half, CARD * sc * dense, CARD * sc * dense)
     }
     c.globalAlpha = 1
     this.follow(this.pop, R, cx, cy, sp, cp)
