@@ -1,6 +1,6 @@
 // A quiet row over a period chart: the period as a few segments on the left, and the Compare switch with what it is set
 // against on the right. It reads and writes the address like the header's period menu does, so both stay in step.
-import { useRef, type KeyboardEvent } from 'react'
+import { useEffect, useRef, type KeyboardEvent } from 'react'
 import { hasYear } from '../periodWords'
 import { copy } from '../briefing/copy'
 import { readView, setView, useLocation, type ViewState } from '../../lib/url'
@@ -16,11 +16,21 @@ export interface ChartControlsProps {
 /** A row of choices that act as one control: arrows move through it, Tab leaves it. */
 function Group<T extends string>({ label, items, value, text, off, onPick, cls }: { label: string; items: readonly T[]; value: T | null; text: (v: T) => string; off?: (v: T) => string | undefined; onPick: (v: T) => void; cls: string }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([])
+  // A pick makes the page read the new period and hold the old one still (inert), which drops the focus: it goes back to the segment once the page can be reached again.
+  const keep = useRef<number | null>(null)
+  useEffect(() => {
+    const el = keep.current === null ? null : refs.current[keep.current]
+    if (!el || el.closest('[inert]')) return
+    keep.current = null
+    const at = document.activeElement
+    if (!at || at === document.body) el.focus() // not when the person has moved on
+  })
   const key = (e: KeyboardEvent, i: number) => {
     const to = stepOf(e.key, i, items.length)
     if (to < 0) return
     e.preventDefault()
     refs.current[to]?.focus()
+    keep.current = to
     if (!off?.(items[to])) onPick(items[to])
   }
   const stop = value === null ? 0 : items.indexOf(value)

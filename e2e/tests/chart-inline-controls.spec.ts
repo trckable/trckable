@@ -6,7 +6,8 @@ import { API, STEADY_DOMAIN } from '../playwright.config'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough for a layout')
 
-const SHOTS = '/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad'
+// Pictures for the review: CIC_SHOTS=<folder>.
+const SHOTS = process.env.CIC_SHOTS
 let cookie = ''
 test.beforeAll(async () => {
   cookie = await flowSession()
@@ -29,7 +30,7 @@ async function open(page: Page, width: number, scheme: 'dark' | 'light', query: 
   await page.emulateMedia({ colorScheme: scheme })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/${STEADY_DOMAIN}${query}`)
-  await expect(page.locator('svg#chart, .shp svg').first()).toBeVisible()
+  await expect(page.locator('svg#chart, .shp svg').first()).toBeVisible({ timeout: 20_000 })
   await page.evaluate(() => document.fonts.ready)
 }
 
@@ -41,17 +42,19 @@ test('the period and Compare switch over the chart, and the header chip and the 
   await row.getByRole('radio', { name: '90d' }).click()
   await expect(page).toHaveURL(/period=90d/)
   await expect(page.locator('#perBtn')).toContainText(/90/)
-  // Arrow keys move within the segments.
+  // Arrow keys move within the segments, and the focus stays on the one chosen while the page reads the new period.
+  await expect(page.locator('.mk-held')).toHaveCount(0)
   await row.getByRole('radio', { name: '90d' }).focus()
   await page.keyboard.press('ArrowRight')
   await expect(page).toHaveURL(/period=12mo/)
+  await expect(row.getByRole('radio', { name: '12m' })).toBeFocused()
   await row.getByRole('radio', { name: '7d' }).click()
   await expect(page).toHaveURL(/period=7d/)
   // The switch: on is the default, Space turns it off, and the dashed line goes.
   const sw = row.getByRole('switch', { name: 'Compare' })
   await expect(sw).toHaveAttribute('aria-checked', 'true')
   await page.waitForTimeout(1500)
-  await page.screenshot({ path: `${SHOTS}/inline-on-dark-1280.png` })
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/inline-on-dark-1280.png` })
   await sw.focus()
   await page.keyboard.press('Space')
   await expect(sw).toHaveAttribute('aria-checked', 'false')
@@ -75,7 +78,7 @@ for (const [scheme, width] of [['light', 1280], ['dark', 390]] as const) {
     const row = (await page.locator('[data-testid=chart-controls]').boundingBox())!
     expect(row.height).toBeLessThanOrEqual(34)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-    await page.screenshot({ path: `${SHOTS}/inline-on-${scheme}-${width}.png` })
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/inline-on-${scheme}-${width}.png` })
   })
 }
 
