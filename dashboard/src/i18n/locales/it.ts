@@ -1443,7 +1443,6 @@ export default {
   'install.wizard.taken': 'Questo dominio è già stato aggiunto a un altro account. Chiedi al proprietario di invitarti, oppure usa un altro dominio.',
   'payments.key.refused': (n: string) => `${n} non ha accettato quella chiave. Incolla di nuovo la chiave limitata, dalla pagina collegata qui sotto.`,
   'payments.key.manual': 'Aggiungo il webhook da solo',
-  'payments.key.looksLike': 'Assomiglia a:',
   'payments.key.whereToFind': 'Dove trovarla →',
   'payments.key.notConnected': (n: string) => `${n} non collegato`,
   'payments.picker.search': 'Cerca un fornitore, o Apple Pay',

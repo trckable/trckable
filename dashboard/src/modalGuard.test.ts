@@ -64,6 +64,9 @@ describe('dialogs', () => {
     const defs = [...tokens.matchAll(/--modal-surface:\s*([^;]+);/g)].map((m) => m[1].trim())
     expect(defs.length).toBeGreaterThanOrEqual(3)
     for (const d of defs) expect(d).toMatch(/^#[0-9a-f]{6}\b/i)
+    // The glass (kit/glass.css) once gave dialogs its translucent pop fill: the page read through the words.
+    const glass = readFileSync(join(SRC, 'kit/glass.css'), 'utf8')
+    expect(glass).not.toMatch(/:is\([^)]*\.modal[,)][^{]*\{[^}]*background/)
     const css = readFileSync(join(SRC, 'kit/Modal.css'), 'utf8')
     const rule = css.match(/\n\.modal \{[^}]*\}/)?.[0] ?? ''
     expect(rule).toContain('background: var(--modal-surface)')

@@ -96,7 +96,7 @@ export function Connect({ site, provider, onCancel, onDone }: { site: Site; prov
         {(f) => <input {...f} className="input num" value={key} onChange={(e) => { setKey(e.target.value); setKeyErr(null) }} autoComplete="off" spellCheck={false} placeholder="Paste your API key" aria-label="API key" />}
       </Field>
       <p className="faint key-hint">
-        {connectCopy.looksLike} <code>{provider.key_hint}</code>.{' '}
+        {provider.key_hint}{' '}
         <a className="key-link" href={provider.key_url} target="_blank" rel="noreferrer noopener">
           {connectCopy.whereToFind}
         </a>

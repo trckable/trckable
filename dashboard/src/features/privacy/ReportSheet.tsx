@@ -94,7 +94,7 @@ export default function ReportSheet({ site, print, onClose }: { site: Site; prin
         title: t.title(site.domain),
         subtitle: t.made(dateFmt(tag, {}).format(new Date())),
         size: 'md',
-        cancel: t.close,
+        cancel: false,
         actions: (
           <button type="button" className="btn primary" disabled={!ready} onClick={printSheet}>
             <Printer size={15} strokeWidth={1.75} aria-hidden="true" /> {t.print}

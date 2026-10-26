@@ -318,11 +318,26 @@
   gap: 8px 16px;
 }
 .modal-foot > .dialog-actions {
-  flex: 1;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
   margin-top: 0;
 }
 .modal-foot > .btn,
 .modal-foot > .modal-extra {
   font-size: 13px;
   color: var(--text-2);
+}.modal-body > .kit-seg {
+  align-self: flex-start;
+}
+.modal-foot > .btn.ghost {
+  height: auto;
+  padding: 8px 0;
+}
+/* A tall dialog scrolls under its footer: the main action stays in reach. */
+.modal.framed .modal-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  padding-top: 8px;
+  background: var(--modal-surface);
 }

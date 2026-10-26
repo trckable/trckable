@@ -4,7 +4,6 @@ import { defineCopy } from '../i18n'
 export const connectCopy = defineCopy('payments.key', {
   refused: (name: string) => `${name} didn’t accept that key. Paste the restricted key again, from the page linked below.`,
   manual: "I'll add the webhook myself",
-  looksLike: 'Looks like',
   whereToFind: 'Where to find it →',
   notConnected: (name: string) => `${name} not connected`,
 })
