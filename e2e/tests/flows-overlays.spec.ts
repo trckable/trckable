@@ -16,11 +16,11 @@ for (const look of LOOKS) {
   test.describe(`${look.width}px, ${look.scheme}`, () => {
     test('the email preview is one sheet, Escape closes it, and focus goes back to its button', async ({ page }) => {
       await openFlow(page, cookie, look)
-      await opener(page, /^Change$/).click()
+      await opener(page, /^Emailed daily at|^The daily email is off/).click()
       await expect.poll(() => overlays(page)).toEqual(['Email preview'])
       await page.keyboard.press('Escape')
       await expect.poll(() => overlays(page)).toEqual([])
-      await expect(opener(page, /^Change$/)).toBeFocused()
+      await expect(opener(page, /^Emailed daily at|^The daily email is off/)).toBeFocused()
     })
 
     test('settings open alone from the address, and a click on the backdrop or Escape closes them', async ({ page }) => {

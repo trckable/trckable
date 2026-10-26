@@ -4,6 +4,7 @@
 // everywhere else. Pure: model.test.ts.
 import type { Filter, Point, Result, Row } from '../../lib/api'
 import { fmtFixed } from '../../lib/format'
+import { pageName } from '../../lib/pageName'
 import { plainSpan } from '../../lib/plainSpan'
 import { baseEnough, MAX_TIMES, tooFew } from '../../lib/thin'
 import { KNOWN } from '../../features/markers/sources'
@@ -221,7 +222,7 @@ export function sentence(o: SayIn): Sentence {
   }
   const down2 = o.downMin > 0 ? [{ t: ' ' + copy.wasDown(o.downMin) }] : []
   const page = o.cur.dims.entry_page?.[0]
-  const sub = page && v >= 10 && page.visitors / v >= 0.4 ? copy.mostLanded(page.value) : ''
+  const sub = page && v >= 10 && page.visitors / v >= 0.4 ? copy.mostLanded(pageName(page.value)) : ''
   return { lead: `${adj} ${noun}:`, long: [...c1, ...andC2, { t: '.' }, ...down2], short, sub, bad: o.downMin > 0 || down }
 }
 

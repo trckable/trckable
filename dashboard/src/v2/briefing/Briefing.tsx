@@ -193,7 +193,6 @@ export default function Briefing({ site, data: page, loading, period, compare = 
   const body = (
     <div className="mk mk-body">
       <div className="brief" aria-busy={loading}>
-        {!empty && canNote && <MailRow on={ui.mail} onChange={() => ui.setSheet('mail')} />}
         <Hero
           say={{ ...say, sub }}
           scores={scores}
@@ -207,6 +206,7 @@ export default function Briefing({ site, data: page, loading, period, compare = 
           moments={mo}
           why={heroWhy}
           onReplay={onReplay}
+          extra={!empty && canNote ? <MailRow on={ui.mail} onChange={() => ui.setSheet('mail')} /> : undefined}
           replaying={rp.playing}
           chart={
             empty ? null : (
