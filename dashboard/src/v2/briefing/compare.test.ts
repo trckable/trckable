@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Point } from '../../lib/api'
-import { againstName, capital, changeOf, compareOf, grainOf, hasBefore, sameGrain, signed, startsOn } from './compare'
+import { againstName, capital, changeOf, compareOf, grainOf, hasBefore, sameGrain, pairAt, readOf, signed, startsOn, whyNot } from './compare'
 
 const pts = (xs: number[], from = 1): Point[] => xs.map((visitors, d) => ({ t: `2026-10-${String(d + from).padStart(2, '0')}T00:00`, visitors, pageviews: visitors }))
 
@@ -59,5 +59,25 @@ describe('the comparison', () => {
   it('begins a whole period after the first visit', () => {
     expect(startsOn(pts([0, 0, 40, 50], 10), pts([0, 0, 0, 0], 6))).toBe('Oct 16')
     expect(startsOn(pts([0, 0]), pts([0, 0]))).toBeNull()
+  })
+})
+
+describe('the hover and the reason', () => {
+  const c = { name: 'last month', vals: [270, 100], pct: null }
+  it('reads a bucket against the same one before, with the change', () => {
+    expect(pairAt(c, 312, 0, 2)).toEqual({ was: 270, delta: 16 })
+    expect(readOf('Oct 6', 312, 'last month', 270, 16)).toBe('Oct 6 · 312 visitors · last month 270 · +16%')
+  })
+  it('tells no change for the bucket still going, and none for a bucket with nothing before it', () => {
+    expect(pairAt(c, 50, 1, 1)).toEqual({ was: 100, delta: null })
+    expect(pairAt(c, 50, 5, 9)).toEqual({ was: null, delta: null })
+    expect(pairAt(null, 50, 0, 9)).toEqual({ was: null, delta: null })
+    expect(readOf('Oct 6', 312, null, null, null)).toBe('Oct 6 · 312 visitors')
+  })
+  it('says when the comparison begins when there is too little before, and nothing when it can be drawn', () => {
+    const now = pts(Array.from({ length: 10 }, () => 5), 11)
+    expect(whyNot(now, pts([0, 0, 0, 0, 0, 0, 0, 0, 0, 5]))).toMatch(/^Comparison starts /)
+    expect(whyNot(now, pts(Array.from({ length: 10 }, () => 4)))).toBeNull()
+    expect(whyNot(now, undefined)).toBeNull()
   })
 })

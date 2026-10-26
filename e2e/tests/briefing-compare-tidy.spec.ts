@@ -152,5 +152,5 @@ test('a week by the hour is set against the week before by the hour: the dashed 
   expect(xs.length).toBeGreaterThan(24)
   expect(xs[xs.length - 1] - xs[0]).toBeGreaterThan((line[line.length - 1] - line[0]) * 0.9)
   await expect(page.locator('.chkey')).toContainText('This period')
-  await expect(page.locator('.chkey')).toContainText('Previous')
+  await expect(page.locator('.chkey')).toContainText('Last week')
 })

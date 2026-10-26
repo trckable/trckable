@@ -11,6 +11,7 @@ import { startOfDay, uptimeOf } from '../../../features/incidents/model'
 import { incidents } from '../../../features/incidents/api'
 import { mentionsApi, type Period } from '../../../features/mentions/api'
 import { siteNow } from '../../briefing/chart'
+import { againstName } from '../../briefing/compare'
 import { read as readHistory } from '../../briefing/useHistory'
 import { hourTable, stretchBand } from '../../briefing/usual'
 import { usualBand } from '../../briefing/useSlices'
@@ -115,7 +116,7 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
     case 'overview': {
       const [raw, uptime] = await Promise.all([cachedReport(c.site.id, q, undefined, signal), periodUptime(c)])
       const { report, basis } = await toBasis(c, raw)
-      return mapOverview(report, { money: c.money, uptime, now: today, basis })
+      return mapOverview(report, { money: c.money, uptime, now: today, basis, against: c.view.compare === 'none' ? undefined : againstName(c.view.period, c.view.compare, c.range) })
     }
     case 'funnels': {
       const report = await cachedReport(c.site.id, q, undefined, signal)

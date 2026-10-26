@@ -5,6 +5,7 @@ import { countryName, fmtFixed, fmtInt, fmtPct } from '../../../lib/format'
 import { plainSpan } from '../../../lib/plainSpan'
 import { channelLabel } from '../../../lib/palette'
 import { baseEnough, tooFew } from '../../../lib/thin'
+import { compareOf } from '../../briefing/compare'
 import { sourceName } from '../../briefing/model'
 import { copy } from '../copy'
 import type { Down, FilterDim, Kc, Option, Overview, Row, Shape, Stat, Tab, Table } from '../types'
@@ -27,19 +28,24 @@ function perOf(bucket: Report['bucket'], points: number): string {
   return bucket
 }
 
-function shapeOf(r: Report, now: ISODate): Shape | null {
+function shapeOf(r: Report, now: ISODate, against?: string): Shape | null {
   const pts = (r.current.series ?? []).map((p) => p.visitors)
   if (pts.length < 2) return null
+  const name = (i: number) => {
+    const t = r.current.series[i].t
+    return r.bucket === 'hour' ? `${fmtDay(t.slice(0, 10))} ${t.slice(11, 16)}` : fmtDay(t.slice(0, 10))
+  }
   const label = (i: number) => {
     const t = r.current.series[i].t
     return r.bucket === 'hour' ? t.slice(11, 16) : fmtDay(t.slice(0, 10))
   }
   const last = r.to === now && r.bucket === 'hour' ? copy.now : label(pts.length - 1)
-  return { pts, x: [label(0), label(Math.floor(pts.length / 2)), last] }
+  const before = against ? compareOf(r.current.series ?? [], r.previous?.series, pts.length, against) : null
+  return { pts, x: [label(0), label(Math.floor(pts.length / 2)), last], names: pts.map((_, i) => name(i)), before }
 }
 
 /** The overview's four cards: people, a goal (or views), money (or uptime), and who left after one page. */
-export function mapOverview(r: Report, o: { money?: (minor: number) => string; uptime: Uptime | null; now: ISODate; basis?: Basis }): Overview {
+export function mapOverview(r: Report, o: { money?: (minor: number) => string; uptime: Uptime | null; now: ISODate; basis?: Basis; against?: string }): Overview {
   const cur = r.current
   const prev = r.previous
   const base = !!prev && baseEnough(prev.kpis.visitors)
@@ -75,7 +81,7 @@ export function mapOverview(r: Report, o: { money?: (minor: number) => string; u
   return {
     kcs,
     per: perOf(r.bucket, series.length),
-    shape: shapeOf(r, o.now),
+    shape: shapeOf(r, o.now, o.against),
     down: o.uptime?.down ?? [],
     pages: rows('page', (v) => v),
     // The channels, as the Sources tab lists them: a direct visit has no referrer, so a list of referrers would leave it out.

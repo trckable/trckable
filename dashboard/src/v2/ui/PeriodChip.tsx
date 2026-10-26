@@ -27,6 +27,8 @@ export interface PeriodChipProps {
   more: PeriodOption[]
   value: string
   compare: CompareChoice
+  /** Why the comparison draws nothing, when it is on and cannot: shown under its choices. */
+  compareNote?: string
   /** Last year's comparison needs a year of data. */
   yearOk: boolean
   today: ISODate
@@ -153,6 +155,7 @@ export function PeriodChip(p: PeriodChipProps) {
                     </button>
                   ))}
                 </div>
+                {p.compare !== 'none' && p.compareNote && <div className="mk-quiet cmpnote" role="note">{p.compareNote}</div>}
               </div>
             )}
             {buckets.length > 0 && p.onBucket && (

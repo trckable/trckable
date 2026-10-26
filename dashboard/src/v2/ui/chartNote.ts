@@ -1,15 +1,14 @@
 // The words over the Briefing's chart: the standing line (how the period stands against the one before, or what is wrong
 // right now), the point under the pointer, and the colour the standing line is written in. Pure: chart.test.ts.
-import { fmtInt } from '../../lib/format'
 import { copy } from '../briefing/copy'
-import { signed } from '../briefing/compare'
+import { readOf, signed } from '../briefing/compare'
 import type { ChartIn } from './DayChart'
 
 /** The text over the chart: the standing note, or the point under the pointer. */
 export function chartNote(c: ChartIn, at: number | null, down = false, short = false): string {
   if (at !== null && c.points[at]) {
     const p = c.points[at]
-    return c.compare && p.was !== null ? copy.chartReadVs(p.name, fmtInt(p.raw), c.compare.name, fmtInt(p.was), p.delta === null ? '' : signed(p.delta)) : copy.chartRead(p.name, fmtInt(p.raw))
+    return readOf(p.name, p.raw, c.compare?.name ?? null, p.was, p.delta)
   }
   if (down) return copy.downRightNow
   if (c.compare && c.compare.pct !== null) return copy.vsLine(signed(c.compare.pct), c.compare.name)

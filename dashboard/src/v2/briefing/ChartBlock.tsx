@@ -11,6 +11,7 @@ import { copy } from './copy'
 import { HeroChart, type ChartIn } from '../ui/DayChart'
 import { ReplayStage, type ReplayIn } from '../ui/ReplayStage'
 import { ReplayBar } from '../ui/ReplayBar'
+import { capital } from './compare'
 import './compareLine.css'
 
 // The moments, the sources' pills and the busy band over the chart: their own chunk, drawn when the chart is.
@@ -64,12 +65,6 @@ export function ChartBlock(p: ChartBlockProps) {
           {p.note}
         </span>
         <span className="mk-quiet" id="chCall" />
-        {p.chart.compare && (
-          <span className="chkey" aria-hidden="true">
-            <span data-line="now">{copy.legendNow}</span>
-            <span data-line="before">{copy.legendBefore}</span>
-          </span>
-        )}
         <Suspense fallback={null}>
           <MentionsChip site={p.site} labels={labels} from={p.series[0]?.t.slice(0, 10) ?? p.range.from} to={p.range.to} />
         </Suspense>
@@ -78,7 +73,16 @@ export function ChartBlock(p: ChartBlockProps) {
         </button>
         {p.replay && <ReplayBar r={p.replay} />}
       </div>
-      {p.replay ? <ReplayStage r={p.replay}>{hero}</ReplayStage> : hero}
+      <div className="chplot">
+        {p.chart.compare && (
+          <span className="chkey" aria-hidden="true">
+            <span data-line="now">{copy.legendNow}</span>
+            <span data-line="before">{capital(p.chart.compare.name)}</span>
+          </span>
+        )}
+        {p.chart.noCompare && <span className="chno mk-quiet">{p.chart.noCompare}</span>}
+        {p.replay ? <ReplayStage r={p.replay}>{hero}</ReplayStage> : hero}
+      </div>
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import type { Compare } from '../briefing/compare'
 import type { Filter } from '../../lib/api'
 
 // What Explore draws. Each section reads one of these, made from the API's answers (data/).
@@ -58,6 +59,10 @@ export interface Xkc {
 export interface Shape {
   pts: number[]
   x: [string, string, string]
+  /** What each point is called on hover: "Oct 6", "Oct 6 14:00". */
+  names: string[]
+  /** The period before, bucket for bucket; none when it has too little behind it to draw. */
+  before: Compare | null
 }
 
 export interface Down {
