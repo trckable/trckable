@@ -11,20 +11,20 @@ const files = { de, es, fr, it: it_, nl } as unknown as Record<string, Record<st
 const English = /\b(came|above|below|brought|sent|usual|people|person|only|and|expect|right|about|as)\b/i
 const clauses: Record<string, unknown[]> = {
   peopleN: [12],
-  came: ['12 X', 12],
-  cameDot: ['12 X', 12],
-  cameAbove: ['12 X', 12, 'WORDS', ' TH'],
+  came: ['12 X'],
+  cameDot: ['12 X'],
+  cameAbove: ['12 X', 'WORDS', ' TH'],
   aboveUsualDot: [' TH'],
   brought: ['NAME', '12 X', '2×', 'VS'],
   sentTimes: ['NAME', '2×', 'VS'],
   broughtPpl: ['NAME', '12 X'],
   sentPpl: ['NAME', '12 X'],
-  cameTimes: ['12 X', 12, '2×', 'WORDS'],
+  cameTimes: ['12 X', '2×', 'WORDS'],
   timesUsualDot: ['2×'],
-  onlyBelow: ['12 X', 12, 'WORDS'],
-  onlyCame: ['12 X', 12],
-  cameExpected: ['12 X', 12],
-  cameAsUsual: ['12 X', 12],
+  onlyBelow: ['12 X', 'WORDS'],
+  onlyCame: ['12 X'],
+  cameExpected: ['12 X'],
+  cameAsUsual: ['12 X'],
 }
 const plain = ['belowUsualDot', 'andJoin', 'yourUsual']
 
