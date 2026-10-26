@@ -2030,3 +2030,9 @@ html[data-motion='off'] .mk .lswap{animation:none}
 .mk .sitelist .site-head:has(.fold:focus-visible){background:var(--mk-row-act)}
 .mk .sitelist .site-head .col-head{pointer-events:none}
 .mk .sitelist .mi.all{padding-right:calc(var(--acts) + var(--mk-s3))}
+/* The guide under the pointer on the line: a hairline at the nearest minute and a dot on the line; it eases to the next minute. */
+.mk .mline-guide{position:absolute;top:0;bottom:0;width:1px;margin-left:-.5px;background:var(--mk-muted);opacity:.55;pointer-events:none;transition:left .08s ease-out}
+.mk .mline-gdot{position:absolute;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:var(--mk-lime);border:2px solid var(--mk-card);box-sizing:border-box;pointer-events:none;transition:left .08s ease-out,top .08s ease-out}
+.mk .mhits{touch-action:pan-y}
+@media (prefers-reduced-motion:reduce){.mk .mline-guide,.mk .mline-gdot{transition:none}}
+html[data-motion='off'] .mk .mline-guide,html[data-motion='off'] .mk .mline-gdot{transition:none}

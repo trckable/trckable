@@ -71,6 +71,14 @@ export function MinuteChart({ bars, mode, total, beat, minute, phone, timezone, 
       },
     }
   }
+  // A thumb pressed and dragged along the line follows the minutes under it (a mouse has its own enter and move on each minute).
+  const scrub = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== 'touch') return
+    const hits = e.currentTarget.children
+    const r = e.currentTarget.getBoundingClientRect()
+    const i = Math.max(0, Math.min(hits.length - 1, Math.floor(((e.clientX - r.left) / r.width) * hits.length)))
+    if (hits[i] && shown?.i !== i) show(i, hits[i])
+  }
   const on = (m: ChartMode) => (mode === m ? {} : { 'aria-hidden': true, inert: true })
   return (
     <div key={minute} ref={box} className={minute === first ? 'lchart' : 'lchart shift'} data-mode={mode}>
@@ -80,7 +88,7 @@ export function MinuteChart({ bars, mode, total, beat, minute, phone, timezone, 
         ))}
       </div>
       <div className="mline" role="group" aria-label={copy.minsLabel(total)} {...on('line')}>
-        <LiveLineChart heights={bars.map((b) => b.h)} beat={beat} hits={bars.map((b, i) => <i key={i} className={b.z ? 'z' : ''} {...hit(i)} />)} />
+        <LiveLineChart heights={bars.map((b) => b.h)} beat={beat} at={mode === 'line' ? (shown?.i ?? null) : null} onScrub={scrub} hits={bars.map((b, i) => <i key={i} className={b.z ? 'z' : ''} {...hit(i)} />)} />
       </div>
       <Tip at={tip} width={shown?.w ?? 0} />
     </div>
