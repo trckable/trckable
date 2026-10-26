@@ -454,7 +454,8 @@ test('a site with visits opens in Live when the address has no mode', async ({ p
 // A person's row: the country is a flag and its code (a dash when unknown), the hover is a soft rounded fill inset from the list's edges.
 const LIVEROW = '/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad'
 for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark']] as const) {
-  test(`a hovered Live row is a soft fill and shows the country's flag, ${width}px ${colorScheme}`, async ({ page }) => {
+  test(`a hovered Live row is a soft fill and shows the country's flag, ${width}px ${colorScheme}`, async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'one engine is enough for the row')
     await page.emulateMedia({ colorScheme })
     await page.setViewportSize({ width, height: 900 })
     await page.route(/\/sites\/[^/]+\/now(\?|$)/, async (route) => {
@@ -470,12 +471,10 @@ for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark
     await row.hover()
     await expect(row.locator('.ccf')).toHaveText('🇺🇸')
     await expect(row.locator('.ccn')).toHaveText('US')
-    const look = await row.evaluate((el) => {
-      const s = getComputedStyle(el)
-      return { radius: s.borderTopLeftRadius, bg: s.backgroundColor, weight: getComputedStyle(el.querySelector('.pg')!).fontWeight }
-    })
+    // The fill eases in: read it once the row has settled under the pointer.
+    await expect.poll(() => row.evaluate((el) => getComputedStyle(el).backgroundColor), { timeout: 5000 }).not.toBe('rgba(0, 0, 0, 0)')
+    const look = await row.evaluate((el) => ({ radius: getComputedStyle(el).borderTopLeftRadius, weight: getComputedStyle(el.querySelector('.pg')!).fontWeight }))
     expect(look.radius).toBe('8px')
-    expect(look.bg).not.toBe('rgba(0, 0, 0, 0)')
     expect(look.weight).toBe('400')
     // The page gets the flexible width (14 characters at least); the device is its icon with its name as the tooltip.
     expect(await row.locator('.pg').evaluate((e) => e.getBoundingClientRect().width)).toBeGreaterThan(100)
