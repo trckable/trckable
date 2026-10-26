@@ -1,1 +1,1 @@
-The Briefing's head lines up on one left edge, and until there is enough data for a usual range its status line says so instead of counting days outside a range that does not exist yet.
+The Briefing head is the buttons and one row: the period, a small "Usual range 15/30 days" ring while it builds, and the controls. The record day is a star on the chart.

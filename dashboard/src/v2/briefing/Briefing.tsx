@@ -61,7 +61,6 @@ import { useHistory, useHourly, wantsHours } from './useHistory'
 import { useParts } from './useParts'
 import { useSlice } from './useSeries'
 import { Waiting } from '../ui/Waiting'
-import { QUERY } from '../../kit/breakpoints'
 
 export interface BriefingProps {
   site: Site
@@ -189,7 +188,7 @@ export default function Briefing({ site, data: page, loading, period, compare = 
   const replayIn = replayInOf({ replay: rp, site, query: queryOf(readView(new URLSearchParams(location.search)), range), bucket: data?.bucket ?? 'day', chart, series: cur.series.slice(0, pts.length), total: v, today: unit === 'today', end, clock: clock.slice(11, 16), moments, period: label, source: top?.value, money: isShared() ? undefined : money, onShare: () => openSettings(site, 'sharing') })
   const onReplay = replayIn ? stopOrGo(rp.playing, rp.stop, rp.start) : undefined
 
-  const chartBlock = { site, range, chart, at, onAt: setAt, series: cur.series.slice(0, pts.length), bucket: data?.bucket ?? 'day', money, replay: replayIn ?? undefined, note: chartLine(learning, low, parts.hd, () => chartNote(chart, at, downNow, window.matchMedia(QUERY.xs).matches)), tone: learning || low ? undefined : chartTone(chart, at, downNow), down: uptime.verdict === 'down', notes: notes.notes.length, onNotes: () => ui.setSheet('notes') }
+  const chartBlock = { site, range, chart, at, onAt: setAt, series: cur.series.slice(0, pts.length), bucket: data?.bucket ?? 'day', money, record: mo.record, replay: replayIn ?? undefined, note: chartLine(learning, low, parts.hd, () => chartNote(chart, null, downNow)), tone: learning || low ? undefined : chartTone(chart, at, downNow), down: uptime.verdict === 'down', notes: notes.notes.length, onNotes: () => ui.setSheet('notes') }
   const body = (
     <div className="mk mk-body">
       <div className="brief" aria-busy={loading}>

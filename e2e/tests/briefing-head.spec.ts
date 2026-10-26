@@ -12,28 +12,42 @@ test.beforeAll(async () => {
   cookie = await flowSession()
 })
 
-for (const [width, colorScheme] of [[1280, 'dark'], [390, 'dark']] as const) {
-  test(`the head shares one left edge and tells the truth about the range, ${width}px`, async ({ page }) => {
+for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark']] as const) {
+  test(`the head is the buttons and one chip row, and tells the truth about the range, ${width}px ${colorScheme}`, async ({ page }) => {
     await page.emulateMedia({ colorScheme })
     await page.setViewportSize({ width, height: 900 })
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
     await page.goto(`${API}/${STEADY_DOMAIN}?view=briefing&period=30d&v=`)
-    const status = page.locator('#chNote')
-    await expect(status).toBeVisible({ timeout: 20_000 })
-    // Comparison has not begun: the line says the range is being built, never "Normal overall" or a count outside a band.
-    await expect(status).toHaveText(/^Building your usual range · ready [A-Z][a-z]{2} \d{1,2}$/)
+    const chips = page.locator('.cc-period button').first()
+    await expect(chips).toBeVisible({ timeout: 20_000 })
+    // The comparison has not begun: one pill on the chip row says how much of the usual range there is, and nothing counts days outside it.
+    const pill = page.locator('.cc-learn')
+    await expect(pill).toContainText(/Usual range \d+\/30 days/)
+    await expect(pill).toHaveAttribute('title', /Comparison starts [A-Z][a-z]{2} \d{1,2}/)
     await expect(page.locator('.chwrap')).not.toContainText('days outside the usual band')
-    const left = async (sel: string) => Math.round((await page.locator(sel).first().boundingBox())!.x)
-    const chips = await left('.cc-period button')
-    expect(await left('#chNote')).toBe(chips)
-    expect(await left('.chno')).toBe(chips)
-    // The rows' gaps: 16px between the groups (status, period), 8px between the period and its note.
-    const box = async (sel: string) => (await page.locator(sel).first().boundingBox())!
-    const s = await box('#chNote')
-    const c = await box('.cc')
-    const n = await box('.chno')
-    expect(Math.round(c.y - (s.y + s.height))).toBeLessThanOrEqual(18)
-    expect(Math.round(n.y - (c.y + c.height))).toBeLessThanOrEqual(10)
-    await page.screenshot({ path: `${SHOTS}/briefhead-${width}-${colorScheme}.png`, clip: { x: 0, y: 0, width, height: 620 } })
+    await expect(page.locator('.chno')).toHaveCount(0)
+    await expect(page.locator('.hero .moments .mline')).toHaveCount(0)
+    await expect(page.locator('.hero')).not.toContainText('Record day')
+    // The row under the buttons is one row: the period, the pill and the controls share a line, and the chart follows.
+    const row = await page.locator('.cc').boundingBox()
+    const pb = await pill.boundingBox()
+    const cb = await chips.boundingBox()
+    expect(Math.abs(pb!.y + pb!.height / 2 - (cb!.y + cb!.height / 2))).toBeLessThan(4)
+    expect(Math.round(cb!.x)).toBeLessThanOrEqual(Math.round(row!.x) + 8)
+    const notes = await page.locator('.nbtn').boundingBox()
+    expect(Math.abs(notes!.y + notes!.height / 2 - (cb!.y + cb!.height / 2))).toBeLessThan(4)
+    // Nothing between the buttons and that row but a gap.
+    const buttons = await page.locator('.hero .rpb').first().boundingBox()
+    // (A phone stacks its buttons and puts the score card between them and the row.)
+    if (width > 600) expect(row!.y - (buttons!.y + buttons!.height)).toBeLessThanOrEqual(40)
+    // The record day is a star on the chart, with its sentence as the tooltip.
+    const star = page.locator('.moment-mark.record')
+    if (await star.count()) {
+      await star.hover()
+      await expect(page.locator('.moment-tip')).toContainText('Busiest day in 90 days')
+      await page.mouse.move(2, 2)
+    }
+    await page.waitForTimeout(2500)
+    await page.screenshot({ path: `${SHOTS}/briefhead-after-${width}-${colorScheme}.png`, clip: { x: 0, y: 0, width, height: 700 } })
   })
 }

@@ -8,14 +8,16 @@ const flat = (n: number) => days.map(() => n)
 describe('moments', () => {
   const base = { days, today: true, week: false, from: 89, to: 89, elapsed: 600, todayUp: false, filtered: false }
   it('says nothing for a quiet, ordinary day', () => {
-    expect(moments({ ...base, totals: flat(100) })).toEqual({ pills: [], line: '' })
+    expect(moments({ ...base, totals: flat(100) })).toEqual({ pills: [], record: null })
   })
-  it('marks a record day once the morning is over', () => {
+  it('names the record day of the days it shows, for the chart to mark, and not today (drawn by the hour)', () => {
     const totals = flat(100)
-    totals[89] = 400
-    const m = moments({ ...base, totals })
-    expect(m.pills[0]).toContain('Record day')
-    expect(m.line).toContain("isn't over yet")
+    totals[85] = 400
+    const week = { ...base, today: false, week: true, from: 80, to: 88 }
+    expect(moments({ ...week, totals }).record).toEqual({ day: days[85], people: 400 })
+    const now = flat(100)
+    now[89] = 400
+    expect(moments({ ...base, totals: now }).record).toBeNull()
   })
   it('waits until six in the morning for a record', () => {
     const totals = flat(100)

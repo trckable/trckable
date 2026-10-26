@@ -64,6 +64,8 @@ export interface ChartIn {
   noCompare: string | null
   /** The day the comparison (and with it the usual range) begins, when it has not yet: the standing line says it, never a count against a range that is not there. */
   startsOn: string | null
+  /** For a chart of days: how many of the days the comparison needs there are already. */
+  learn: { have: number; need: number } | null
   overall: Judged
   unit: string
   bucket: Bucket

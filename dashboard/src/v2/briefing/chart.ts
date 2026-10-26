@@ -8,7 +8,7 @@ import type { ChartIn, Down } from '../ui/DayChart'
 import { mult, sourceShort, type Unit } from './model'
 import { judge, type Band, type Judged } from './usual'
 import { dateFmt } from '../../lib/format'
-import { compareOf, pairAt, sameGrain, startsOn } from './compare'
+import { compareOf, learnOf, pairAt, sameGrain, startsOn } from './compare'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -140,6 +140,7 @@ export function chartOf(a: ChartArgs): ChartIn {
     compare: cmp,
     noCompare,
     startsOn: starts,
+    learn: starts && !hourly ? learnOf(a.cur.series, a.prev?.series) : null,
     overall: a.overall ?? '',
     elapsed: live ? e : 0,
     unit: unitWord,

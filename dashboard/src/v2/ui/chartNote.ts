@@ -4,33 +4,16 @@ import { copy } from '../briefing/copy'
 import { readOf, signed } from '../briefing/compare'
 import type { ChartIn } from './DayChart'
 
-/** Up to this share of a period's days may stand outside the usual band while the period as a whole is called normal. */
-const OUTSIDE_SHARE = 0.25
-
 /** The text over the chart: the standing note, or the point under the pointer. */
-export function chartNote(c: ChartIn, at: number | null, down = false, short = false): string {
+export function chartNote(c: ChartIn, at: number | null, down = false): string {
   if (at !== null && c.points[at]) {
     const p = c.points[at]
     return readOf(p.name, p.raw, c.compare?.name ?? null, p.was, p.delta)
   }
   if (down) return copy.downRightNow
+  // The usual range being built is said by the pill on the period row (UsualRange), never by a count against it.
   if (c.compare && c.compare.pct !== null) return copy.vsLine(signed(c.compare.pct), c.compare.name)
-  // The usual range is not there yet (the comparison has not begun): the line says so, and counts nothing against it.
-  if (c.startsOn) return copy.buildingRange(c.startsOn)
-  if (!c.band) return ''
-  const up = c.points.filter((p) => p.st === 'up').length
-  const dn = c.points.filter((p) => p.st === 'dn').length
-  // The period's own verdict says it first: inside the usual band, no hour or day is called above or below it.
-  // The word and the count must agree: "normal" with most days outside the band is no verdict, so past a quarter of the days only the count is said.
-  if (c.overall === '') {
-    if (c.bucket === 'hour' || !(up + dn)) return copy.withinBand
-    return (up + dn) / c.points.length > OUTSIDE_SHARE ? copy.outsideBand(up + dn, c.points.length) : copy.normalOverall(up + dn, c.points.length)
-  }
-  // A phone says it short: "Above usual · 4 of 17 h".
-  if (short && c.bucket === 'hour' && (up || dn)) return `${up ? copy.aboveShort(up) : copy.belowShort(dn)}${copy.ofHours(c.points.length)}`
-  if (up) return copy.aboveBand(up, c.points.length, c.unit)
-  if (dn) return copy.belowBand(dn, c.unit)
-  return copy.withinBand
+  return ''
 }
 
 /** The colour of the line over the chart when it says how the period stands against the one before: green above it, red below, none for level. */

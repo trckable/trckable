@@ -39,6 +39,8 @@ export const copy = defineCopy('moments', {
   moments: 'Moments on the chart',
   marker: (day: string, line: string, more: number) => `${day}: ${line}${more ? `, and ${more} more` : ''}. Show it`,
   more: (n: number) => `+${n} more`,
+  record: 'Busiest day',
+  recordLine: (people: number) => `Busiest day in 90 days · ${fmtInt(people)} ${people === 1 ? 'person' : 'people'}`,
   tipLead: (line: string, day: string) => `Moment: ${line}, ${day}`,
   chipsMark: 'Chips mark moments worth a look',
   milestones: (n: number) => `${n} milestones`,

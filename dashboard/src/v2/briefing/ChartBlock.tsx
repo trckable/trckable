@@ -14,6 +14,7 @@ import { ReplayBar } from '../ui/ReplayBar'
 import { useCinema } from '../ui/useCinema'
 import { useLockScroll } from '../../components/lockScroll'
 import { copy as story } from '../replay/story.copy'
+import { UsualRange } from '../ui/UsualRange'
 import { ChartControls } from '../ui/ChartControls'
 import { capital } from './compare'
 import './compareLine.css'
@@ -34,6 +35,8 @@ export interface ChartBlockProps {
   series: readonly Point[]
   bucket: Bucket
   money?: (minor: number) => string
+  /** The busiest day of the last 90, when the chart shows it: a star on the chips' lane. */
+  record?: { day: string; people: number } | null
   note: string
   /** Green or red when the line over the chart says how the period stands against the one before. */
   tone?: 'up' | 'dn'
@@ -61,7 +64,7 @@ export function ChartBlock(p: ChartBlockProps) {
           ? undefined
           : (g) => (
               <Suspense fallback={null}>
-                <MomentLayer g={g} site={p.site} query={query} labels={labels} series={p.series} bucket={p.bucket} money={p.money ?? (() => '')} />
+                <MomentLayer g={g} site={p.site} query={query} labels={labels} series={p.series} bucket={p.bucket} money={p.money ?? (() => '')} record={p.record ?? null} />
               </Suspense>
             )
       }
@@ -84,6 +87,7 @@ export function ChartBlock(p: ChartBlockProps) {
         <ChartControls
           site={p.site}
           why={p.chart.noCompare}
+          range={<UsualRange c={p.chart} />}
           legend={
             p.chart.compare && (
               <span className="cc-key" aria-hidden="true">
@@ -105,7 +109,6 @@ export function ChartBlock(p: ChartBlockProps) {
               <span data-line="before">{capital(p.chart.compare.name)}</span>
             </span>
           )}
-          {p.chart.noCompare && <span className="chno mk-quiet">{p.chart.noCompare}</span>}
           {p.replay ? <ReplayStage r={p.replay}>{hero}</ReplayStage> : hero}
         </div>
         {p.replay && <ReplayBar r={p.replay} />}

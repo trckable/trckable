@@ -100,8 +100,8 @@ interface HeroProps {
   crowd?: Crowd | null
   /** The chart, drawn in the card's lower half. */
   chart: ReactNode
-  /** The pills and the line under them (a record day, a run above usual). */
-  moments?: { pills: string[]; line: string }
+  /** The pills under the buttons (a run above usual); the record day is a star on the chart. */
+  moments?: { pills: string[] }
   /** Play the period back; absent when there is not enough to play. */
   onReplay?: () => void
   /** It is playing: the button says Stop. */
@@ -157,14 +157,13 @@ export function Hero({ say, scores, rows, onSee, learn, crowd = null, since, per
               <WhyBody why={why} />
             </div>
           )}
-          {moments && (moments.pills.length > 0 || moments.line) && (
+          {moments && moments.pills.length > 0 && (
             <div className="moments">
               {moments.pills.map((t) => (
                 <span key={t} className="mom">
                   {t}
                 </span>
               ))}
-              {moments.line && <span className="mline">{moments.line}</span>}
             </div>
           )}
         </div>
