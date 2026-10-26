@@ -1,0 +1,1 @@
+Live: hovering, tapping or arrowing along the half-hour chart (bars or line) shows that minute and its views in one tooltip; Devices is back in the Analytics card beside Pages and Countries; and the sources count each visitor once, under the channel of their first page in the half hour, so they add up to the half hour's visitors.

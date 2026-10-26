@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import type { Row } from '../../features/live/model'
 import { fitOf } from './cardWidth'
-import { visitors30, barsOf, changeOf, deviceSplit, listsOf, place, sourceParts, todayBand } from './liveModel'
+import { visitors30, barsOf, changeOf, deviceCounts, listsOf, place, sourceParts, todayBand } from './liveModel'
 
 const row = (i: number, o: Partial<Row> = {}): Row => ({ kind: 'pageview', ts: 0, last: 0, path: '/p', visitor: `v${i}`, key: `v${i}`, ...o })
 
 describe('Live', () => {
   it('draws the half hour as bars of the tallest, at least 3%, flagged when empty', () => {
-    expect(barsOf([0, 5, 10])).toEqual([{ h: 3, z: true }, { h: 50, z: false }, { h: 100, z: false }])
+    expect(barsOf([0, 5, 10])).toEqual([{ h: 3, z: true, n: 0 }, { h: 50, z: false, n: 5 }, { h: 100, z: false, n: 10 }])
     expect(barsOf([0, 0])[0].h).toBe(3)
   })
   it('says the change against the half hour before only when there was something to compare', () => {
@@ -20,6 +20,13 @@ describe('Live', () => {
     expect(s.parts.map((p) => p.pct)).toEqual([50, 40, 9])
     expect(s.other).toBeCloseTo(0.01, 2)
     expect(sourceParts([])).toEqual({ parts: [], other: 0 })
+  })
+
+  it('shows sources that add up to the half hour: each visitor is one source', () => {
+    const sources = [{ channel: 'Search', visitors: 11 }, { channel: 'Direct', visitors: 4 }]
+    const sum = sourceParts(sources).parts.reduce((n, p) => n + p.n, 0)
+    expect(sum).toBe(visitors30(15, 3))
+    expect(sourceParts(sources).parts.map((p) => p.pct)).toEqual([73, 27])
   })
   it('puts today above, inside or below last week\'s band', () => {
     expect(todayBand(100, 50, true)?.word).toBe('above')
@@ -39,8 +46,9 @@ describe('Live', () => {
   })
 
   it('splits phone against computer from the people whose device is known', () => {
-    expect(deviceSplit([row(1, { device: 'mobile' }), row(2, { device: 'desktop' }), row(3, { device: 'desktop' }), row(4, { device: 'tablet' })])).toEqual({ phone: 0.5, computer: 0.5 })
-    expect(deviceSplit([row(1)])).toBeNull()
+    expect(listsOf([row(1, { device: 'mobile' }), row(2, { device: 'desktop' }), row(3, { device: 'desktop' }), row(4, { device: 'tablet' }), row(5)]).devices).toEqual([{ key: 'phone', n: 2 }, { key: 'computer', n: 2 }])
+    expect(deviceCounts([['Desktop', 5], ['Mobile', 3], ['Tablet', 1], ['Bot', 9]])).toEqual([{ key: 'computer', n: 5 }, { key: 'phone', n: 4 }])
+    expect(listsOf([row(1)]).devices).toEqual([])
   })
 })
 

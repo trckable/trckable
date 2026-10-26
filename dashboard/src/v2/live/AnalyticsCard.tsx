@@ -7,7 +7,7 @@ import { CardSkeleton } from './CardSkeleton'
 import { todayBand, type Lists } from './liveModel'
 import type { LiveNow } from '../../features/live/api'
 
-type Mode = 'pages' | 'countries'
+type Mode = 'pages' | 'countries' | 'devices'
 
 interface Props {
   today: LiveNow['today']
@@ -25,6 +25,7 @@ interface Bar {
 
 function barsOf(lists: Lists, mode: Mode): Bar[] {
   if (mode === 'pages') return lists.pages.map((p) => ({ key: p.label, label: p.label, n: p.n, mono: true }))
+  if (mode === 'devices') return lists.devices.map((d) => ({ key: d.key, label: copy[d.key], n: d.n, mono: false }))
   return lists.countries.map((c) => ({ key: c.key, label: c.label || countryName(c.key), n: c.n, mono: false, flag: flag(c.key) }))
 }
 
@@ -38,7 +39,7 @@ export function AnalyticsCard({ today, lists }: Props) {
       <div className="ph">
         <span className="t">{copy.analytics}</span>
         <div className="mk-cs lsw" role="group" aria-label={copy.analytics}>
-          {(['pages', 'countries'] as const).map((m) => (
+          {(['pages', 'countries', 'devices'] as const).map((m) => (
             <button key={m} type="button" className={mode === m ? 'on' : ''} aria-pressed={mode === m} onClick={() => setMode(m)}>
               {copy[m]}
             </button>

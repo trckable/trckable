@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { cachedReport, type Row } from '../../lib/api'
 import { todayIn } from '../../lib/dates'
 import { countryName } from '../../lib/format'
-import type { Lists } from './liveModel'
+import { deviceCounts, type Lists } from './liveModel'
 
 const top = (rows: Row[] | null | undefined) => (rows ?? []).filter((r) => r.visitors > 0).slice(0, 5)
 
@@ -23,6 +23,7 @@ export function useTodayLists(site: string, timezone: string, visitors: number):
         return {
           pages: top(d.page).map((p) => ({ label: p.value, n: p.visitors })),
           countries: top(d.country).map((c) => ({ label: countryName(c.value.toUpperCase()), key: c.value.toUpperCase(), n: c.visitors })),
+          devices: deviceCounts((d.device ?? []).map((r) => [r.value, r.visitors])),
         }
       })
       .catch(() => null)

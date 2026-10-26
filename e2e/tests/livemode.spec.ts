@@ -184,7 +184,7 @@ test('Live starts as a line, the chart switch keeps bars across a reload and bot
   await expect(style.getByRole('button', { name: 'Line' })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.locator('.lchart')).toHaveAttribute('data-mode', 'line')
   const read = (sel: string) =>
-    page.locator(sel).evaluate((el) => ({ label: el.getAttribute('aria-label'), titles: [...el.querySelectorAll('i[title]')].map((i) => i.getAttribute('title')) }))
+    page.locator(sel).evaluate((el) => ({ label: el.getAttribute('aria-label'), titles: [...el.querySelectorAll('i[aria-label]')].map((i) => i.getAttribute('aria-label')) }))
   const line = await read('.lnow .mline')
   await expect(page.locator('.lnow .mline-dot')).toBeVisible()
   await style.getByRole('button', { name: 'Bars' }).click()
@@ -199,6 +199,13 @@ test('Live starts as a line, the chart switch keeps bars across a reload and bot
   expect(shape(line.label)).toBe(shape(bars.label))
   expect(line.titles.length).toBe(30)
   expect(line.titles.map(minute)).toEqual(bars.titles.map(minute))
+  // Hovering a minute names it and its views, in the bars and in the line.
+  await page.locator('.lnow .mins i').nth(12).hover()
+  await expect(page.locator('.lchart .kit-tip')).toContainText(/\d{1,2}:\d{2}/)
+  await expect(page.locator('.lchart .kit-tip')).toContainText(/\d+ views?/)
+  await style.getByRole('button', { name: 'Line' }).click()
+  await page.locator('.lnow .mhits i').nth(12).hover()
+  await expect(page.locator('.lchart .kit-tip')).toContainText(/\d+ views?/)
 })
 
 test('the sample revenue card on Live is never clipped: Connect sits fully inside the card', async ({ page }) => {

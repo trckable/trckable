@@ -130,6 +130,8 @@
 .mk .mk-more{width:100%;padding:10px;color:var(--mk-muted);font-size:13px;border-top:1px solid var(--mk-line)}
 .mk .mins{display:flex;align-items:flex-end;gap:3px;height:70px;padding:12px 20px 0}
 .mk .mins i{flex:1;background:var(--mk-fill);border-radius:3px 3px 1px 1px;min-height:2px;transition:height .3s}
+.mk .mins i{position:relative}
+.mk .mins i::before{content:'';position:absolute;inset:-58px -1.5px 0}
 .mk .mins i.z{background:var(--mk-redD)}
 .mk .mins i:last-child{background:var(--mk-lime)}
 .mk .minl{display:flex;justify-content:space-between;padding:4px 20px 0;font-size:12px;color:var(--mk-faint)}
@@ -1546,7 +1548,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .mk-menu{border-radius:12px;box-shadow:var(--pane-shadow),inset 0 1px 0 var(--pane-top)}
 }
 /* Live's arrival moment: a new visit slides in at the top, the rows below make room, a lime glow fades and its dot beats once. */
-.mk .lchart{display:grid;flex:1 1 auto;min-height:0}
+.mk .lchart{position:relative;display:grid;flex:1 1 auto;min-height:0}
 .mk .lchart>*{grid-area:1/1;transition:opacity .2s}
 .mk .lchart[data-mode=bars] .mline,.mk .lchart[data-mode=line] .mins{opacity:0;pointer-events:none}
 .mk .mline{box-sizing:border-box;display:flex}

@@ -1,4 +1,4 @@
-// The cards under Live: Analytics (today so far, the pages and the countries behind one switch),
+// The cards under Live: Analytics (today so far, the pages, the countries and the devices behind one switch),
 // then Speed & uptime and AI & mentions.
 import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
@@ -77,6 +77,9 @@ test('the cards show today and the pages people are on', async ({ page }) => {
   await expect(today.locator('.lhero')).not.toHaveText(/^0/)
   const pages = cards(page).locator('.lan')
   await expect(pages.locator('.lbar', { hasText: run })).toBeVisible({ timeout: 10_000 })
+  // Devices sit behind the same switch, beside the pages and the countries.
+  await pages.getByRole('button', { name: 'Devices' }).click()
+  await expect(pages.locator('.lbar', { hasText: /Computer|Phone/ }).first()).toBeVisible({ timeout: 10_000 })
 })
 
 test('on a phone the cards stack and nothing runs off the side', async ({ page }) => {

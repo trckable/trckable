@@ -1,12 +1,13 @@
 // The half hour, drawn as bars or as a line over the same minutes: both stay in the page and crossfade, and each minute opens in the numbers.
 import { openMinute } from '../../features/live/switchView'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Tip, type TipAt } from '../../charts/Tip'
 import type { ChartMode } from './chartMode'
 import { copy } from './copy'
 import { LiveLineChart } from './LiveLineChart'
 
 interface Props {
-  bars: { h: number; z: boolean }[]
+  bars: { h: number; z: boolean; n: number }[]
   mode: ChartMode
   total: number
   beat: number
@@ -19,22 +20,58 @@ interface Props {
   label: (ago: number) => string
 }
 
+const ARROW: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1 }
+
 export function MinuteChart({ bars, mode, total, beat, minute, phone, timezone, label }: Props) {
   const [first] = useState(minute)
+  const box = useRef<HTMLDivElement>(null)
+  // The minute the tooltip shows, and where it points; a thumb's first tap shows it, the next tap on the same minute opens it.
+  const [shown, setShown] = useState<{ i: number; x: number; w: number } | null>(null)
+  const touched = useRef(false)
+  const show = (i: number, el: Element) => {
+    const c = box.current?.getBoundingClientRect()
+    const r = el.getBoundingClientRect()
+    if (c) setShown({ i, x: r.left + r.width / 2 - c.left, w: c.width })
+  }
+  useEffect(() => {
+    if (!shown) return
+    const away = (e: PointerEvent) => !box.current?.contains(e.target as Node) && setShown(null)
+    document.addEventListener('pointerdown', away)
+    return () => document.removeEventListener('pointerdown', away)
+  }, [shown])
+  const tip: TipAt | null = shown && bars[shown.i] ? { x: shown.x, y: 22, body: <><b>{label(bars.length - 1 - shown.i)}</b><span className="num">{copy.viewsAt(bars[shown.i].n)}</span></> } : null
   const hit = (i: number) => {
     const ago = bars.length - 1 - i
     return {
       role: phone ? undefined : 'button',
       tabIndex: phone ? undefined : 0,
-      title: copy.openMinute(label(ago)),
-      'aria-label': copy.openMinute(label(ago)),
-      onClick: () => void openMinute(ago, timezone),
-      onKeyDown: (e: React.KeyboardEvent) => e.key === 'Enter' && void openMinute(ago, timezone),
+      'aria-label': `${label(ago)}, ${copy.viewsAt(bars[i].n)}. ${copy.openMinute(label(ago))}`,
+      onPointerDown: (e: React.PointerEvent) => void (touched.current = e.pointerType !== 'mouse'),
+      onPointerEnter: (e: React.PointerEvent) => e.pointerType === 'mouse' && show(i, e.currentTarget),
+      onPointerLeave: (e: React.PointerEvent) => e.pointerType === 'mouse' && setShown(null),
+      onFocus: (e: React.FocusEvent) => e.currentTarget.matches(':focus-visible') && show(i, e.currentTarget),
+      onBlur: () => setShown(null),
+      onClick: (e: React.MouseEvent) => {
+        if (touched.current && shown?.i !== i) show(i, e.currentTarget)
+        else void openMinute(ago, timezone)
+      },
+      onKeyDown: (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+          void openMinute(ago, timezone)
+          return
+        }
+        const step = ARROW[e.key]
+        const next = step ? e.currentTarget.parentElement?.children[i + step] : null
+        if (next instanceof HTMLElement) {
+          e.preventDefault()
+          next.focus()
+        }
+      },
     }
   }
   const on = (m: ChartMode) => (mode === m ? {} : { 'aria-hidden': true, inert: true })
   return (
-    <div key={minute} className={minute === first ? 'lchart' : 'lchart shift'} data-mode={mode}>
+    <div key={minute} ref={box} className={minute === first ? 'lchart' : 'lchart shift'} data-mode={mode}>
       <div className="mins" role="group" aria-label={copy.minsLabel(total)} {...on('bars')}>
         {bars.map((b, i) => (
           <i key={i} className={b.z ? 'z' : ''} style={{ height: `${b.h}%` }} {...hit(i)} />
@@ -43,6 +80,7 @@ export function MinuteChart({ bars, mode, total, beat, minute, phone, timezone, 
       <div className="mline" role="group" aria-label={copy.minsLabel(total)} {...on('line')}>
         <LiveLineChart heights={bars.map((b) => b.h)} beat={beat} hits={bars.map((b, i) => <i key={i} className={b.z ? 'z' : ''} {...hit(i)} />)} />
       </div>
+      <Tip at={tip} width={shown?.w ?? 0} />
     </div>
   )
 }
