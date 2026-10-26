@@ -7,6 +7,8 @@ import { addDays, type ISODate, type Range } from '../../lib/dates'
 export interface History {
   daily: Point[] | null
   hourly: Point[] | null
+  /** Still being read: not the same as a site with no past. */
+  loading?: boolean
 }
 
 const cache = new Map<string, Promise<Point[]>>()
@@ -35,7 +37,7 @@ export function useHistory(site: Site, today: ISODate, hourly: boolean, on: bool
       live = false
     }
   }, [key, site.id, today, hourly, on])
-  return got && got.key === key ? got : { daily: null, hourly: null }
+  return got && got.key === key ? got : { daily: null, hourly: null, loading: on }
 }
 
 const hours = new Map<string, Promise<Report>>()

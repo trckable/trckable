@@ -13,6 +13,7 @@ import { leakOf } from '../explore/data/mapSections'
 import type { FunnelStep, PaidStep } from '../../lib/api'
 import { copy } from './copy'
 import { moduleOn } from './moduleOn'
+import { startOfDay } from '../../features/incidents/model'
 
 export interface SearchStory {
   cur: SearchReport
@@ -67,8 +68,8 @@ interface ExtrasWant {
   search: boolean
   /** The page to look at for stuck visitors. */
   page: string | null
-  /** The steps of the signup path to read, with the page many go to instead. */
-  funnel: { steps: (FunnelStep | PaidStep)[]; alt?: string } | null
+  /** Read the site's own saved funnel, when it has one; nothing is guessed. */
+  funnel: boolean
   /** The countries the period's people came from, most first, to look for a first customer in. */
   countries: { code: string; people: number }[]
 }
@@ -85,10 +86,16 @@ function vitalsOf(site: string, from: ISODate, to: ISODate) {
   return v
 }
 
+/** What the speed of the period is told against: a day against the 28 days before it, a longer stretch against the same number of days before it. */
+export function usualSpeed(range: Range, days: number): [ISODate, ISODate] {
+  const span = days > 1 ? days : 28
+  return [addDays(range.from, -span), addDays(range.from, -1)]
+}
+
 const none: Extras = { mention: null, speed: null, buyers: null, search: null, stuck: null, funnel: null, first: null }
 
 /** The path's steps in this period and in the one before it, and the first step where fewer go on than usual. */
-function readFunnel(site: string, range: Range, days: number, want: NonNullable<ExtrasWant['funnel']>): Promise<FunnelStory | null> {
+function readFunnel(site: string, range: Range, days: number, want: { steps: (FunnelStep | PaidStep)[]; alt?: string }): Promise<FunnelStory | null> {
   const before: Range = { from: addDays(range.from, -days), to: addDays(range.from, -1) }
   return Promise.all([more.funnel(site, range, want.steps), more.funnel(site, before, want.steps).catch(() => null)]).then(
     ([c, p]) => {
@@ -124,7 +131,7 @@ export function useSame<T>(v: T): T {
 
 export function useExtras(site: Site, today: ISODate, range: Range, want: ExtrasWant, on: boolean): Extras {
   const [got, setGot] = useState<{ key: string; x: Extras } | null>(null)
-  const funnelKey = want.funnel ? want.funnel.steps.map((x) => x.value).join(',') : ''
+  const funnelKey = want.funnel ? 'f' : ''
   const countryKey = want.countries.map((x) => x.code).join(',')
   const key = `${site.id}|${today}|${range.from}|${range.to}|${want.money}|${want.search}|${want.page}|${funnelKey}|${countryKey}`
   // What the read uses is in `key`; a report that lands makes new `range` and `want` objects with the same contents, which must not read everything again.
@@ -136,7 +143,7 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
     if (!on || isShared()) return
     const { range, want } = latest.current
     let live = true
-    const day0 = Math.floor(new Date(today + 'T00:00:00Z').getTime() / 1000)
+    const day0 = startOfDay(today, site.timezone)
     const mention = site.mentions ? mentionsApi.list(site.id, '7d').then((r) => r.mentions.filter((m) => m.posted_at >= day0 - 3600).sort((a, b) => b.posted_at - a.posted_at)[0] ?? null, () => null) : Promise.resolve(null)
     const vit = (from: ISODate, to: ISODate) => moduleOn(site.id, 'vitals').then((on) => (on ? vitalsOf(site.id, from, to) : null)).then((v) => (v && v.lcp_ms != null && v.inp_ms != null && v.cls_1k != null && Math.min(v.lcp_n ?? v.samples, v.inp_n ?? v.samples, v.cls_n ?? v.samples) >= MIN_VITALS ? ([v.lcp_ms / 1000, v.inp_ms, v.cls_1k / 1000] as [number, number, number]) : null), () => null)
     const buyers = want.money ? extrasApi.buyers(site.id, { from: range.from, to: range.to }, 20).then((r) => r.buyers ?? [], () => null) : Promise.resolve(null)
@@ -152,9 +159,15 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
     const stuck = want.page
       ? heatApi.map(site.id, range, want.page, 0).then((m): Stuck | null => (m.rage.length ? { page: want.page ?? '', views: m.views, rage: m.rage.map((r) => ({ el: r.el, n: r.n })) } : null), () => null)
       : Promise.resolve(null)
-    const funnel = want.funnel ? readFunnel(site.id, range, days, want.funnel) : Promise.resolve(null)
+    // Only a funnel the site saved: a path guessed from its busiest pages would say "fewer go on than usual" about steps nobody defined.
+    const funnel = want.funnel
+      ? more.funnels(site.id).then((r) => {
+          const f = r.funnels.find((x) => x.steps.length >= 2)
+          return f ? readFunnel(site.id, range, days, { steps: f.steps }) : null
+        }, () => null)
+      : Promise.resolve(null)
     const first = want.money && days <= 31 ? readFirst(site.id, range, want.countries) : Promise.resolve(null)
-    void Promise.all([mention, vit(today, today), vit(addDays(today, -28), addDays(today, -1)), buyers, search, stuck, funnel, first, refunds]).then(([m, c, u, b, sr, st, fn, fs, rf]) => live && setGot({ key, x: { fresh: true, mention: m, speed: c && u ? { cur: c, usual: u } : null, buyers: b, refunds: rf, search: sr, stuck: st, funnel: fn, first: fs } }))
+    void Promise.all([mention, vit(range.from, range.to), vit(...usualSpeed(range, days)), buyers, search, stuck, funnel, first, refunds]).then(([m, c, u, b, sr, st, fn, fs, rf]) => live && setGot({ key, x: { fresh: true, mention: m, speed: c && u ? { cur: c, usual: u } : null, buyers: b, refunds: rf, search: sr, stuck: st, funnel: fn, first: fs } }))
     return () => {
       live = false
     }
