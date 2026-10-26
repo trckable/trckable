@@ -11,6 +11,7 @@ import { copy } from './copy'
 import { HeroChart, type ChartIn } from '../ui/DayChart'
 import { ReplayStage, type ReplayIn } from '../ui/ReplayStage'
 import { ReplayBar } from '../ui/ReplayBar'
+import { ChartControls } from '../ui/ChartControls'
 import { capital } from './compare'
 import './compareLine.css'
 
@@ -73,6 +74,7 @@ export function ChartBlock(p: ChartBlockProps) {
         </button>
         {p.replay && <ReplayBar r={p.replay} />}
       </div>
+      <ChartControls site={p.site} why={p.chart.noCompare} />
       <div className="chplot">
         {p.chart.compare && (
           <span className="chkey" aria-hidden="true">

@@ -63,6 +63,8 @@ export interface Shape {
   names: string[]
   /** The period before, bucket for bucket; none when it has too little behind it to draw. */
   before: Compare | null
+  /** Why the comparison draws nothing when it was asked for and the period before has too little behind it. */
+  why: string | null
 }
 
 export interface Down {

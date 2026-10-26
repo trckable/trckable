@@ -5,7 +5,7 @@ import { countryName, fmtFixed, fmtInt, fmtPct } from '../../../lib/format'
 import { plainSpan } from '../../../lib/plainSpan'
 import { channelLabel } from '../../../lib/palette'
 import { baseEnough, tooFew } from '../../../lib/thin'
-import { compareOf } from '../../briefing/compare'
+import { compareOf, whyNot } from '../../briefing/compare'
 import { sourceName } from '../../briefing/model'
 import { copy } from '../copy'
 import type { Down, FilterDim, Kc, Option, Overview, Row, Shape, Stat, Tab, Table } from '../types'
@@ -41,7 +41,7 @@ function shapeOf(r: Report, now: ISODate, against?: string): Shape | null {
   }
   const last = r.to === now && r.bucket === 'hour' ? copy.now : label(pts.length - 1)
   const before = against ? compareOf(r.current.series ?? [], r.previous?.series, pts.length, against) : null
-  return { pts, x: [label(0), label(Math.floor(pts.length / 2)), last], names: pts.map((_, i) => name(i)), before }
+  return { pts, x: [label(0), label(Math.floor(pts.length / 2)), last], names: pts.map((_, i) => name(i)), before, why: against && !before ? whyNot(r.current.series ?? [], r.previous?.series) : null }
 }
 
 /** The overview's four cards: people, a goal (or views), money (or uptime), and who left after one page. */

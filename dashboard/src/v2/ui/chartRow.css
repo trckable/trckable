@@ -1,0 +1,29 @@
+/* The row over a period chart: 32px high, from the chart's left edge to its right edge, one row on a phone (the segments scroll sideways there). */
+.mk .cc { display: flex; align-items: center; justify-content: space-between; gap: var(--mk-s3); min-height: 32px; min-width: 0; }
+.mk .cc-seg { display: flex; gap: 2px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.mk .cc-seg::-webkit-scrollbar { display: none; }
+.mk .cc-seg button { flex: none; height: 28px; padding: 0 var(--mk-s2); border: 0; border-radius: 999px; background: transparent; font-size: 12px; color: var(--mk-muted); white-space: nowrap; transition: background-color .15s, color .15s; }
+.mk .cc-seg button:hover:not([aria-disabled]) { color: var(--mk-text); }
+.mk .cc-seg button.on { background: var(--mk-limeD); color: var(--mk-lime); }
+.mk .cc-seg button[aria-disabled='true'] { opacity: .4; cursor: default; }
+.mk .cc-cmp { display: flex; align-items: center; gap: var(--mk-s3); min-width: 0; flex: none; }
+.mk .cc-why { font-size: 12px; max-width: 28ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk .cc-sw { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0; border: 0; background: transparent; font-size: 12px; color: var(--mk-muted); cursor: pointer; }
+.mk .cc-sw[data-on='true'] { color: var(--mk-text); }
+.mk .cc-knob { position: relative; width: 26px; height: 16px; border-radius: 999px; background: var(--mk-line); transition: background-color .15s; }
+.mk .cc-knob::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--mk-text); transition: transform .15s; }
+.mk .cc-sw[data-on='true'] .cc-knob { background: var(--mk-lime); }
+.mk .cc-sw[data-on='true'] .cc-knob::after { transform: translateX(10px); background: var(--mk-bg); }
+.mk .cc button:focus-visible { outline: 2px solid var(--mk-lime); outline-offset: 1px; }
+/* The dashed line of the period before fades in and out as the switch moves. */
+.mk .shbefore, .mk .chkey { animation: cc-in .2s ease-out; }
+@keyframes cc-in { from { opacity: 0; } }
+@container (--pane-max-600) {
+  .mk .cc { gap: var(--mk-s2); overflow-x: auto; scrollbar-width: none; }
+  .mk .cc::-webkit-scrollbar { display: none; }
+  .mk .cc-why { display: none; }
+  .mk .cc-seg { flex: none; overflow: visible; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk .cc *, .mk .shbefore, .mk .chkey { transition: none !important; animation: none !important; }
+}
