@@ -1442,6 +1442,8 @@ export default {
   'install.wizard.added': (d: string) => `Je hebt ${d} al.`,
   'install.wizard.taken': 'Dit domein is al toegevoegd aan een ander account. Vraag de eigenaar je uit te nodigen, of gebruik een ander domein.',
   'payments.key.refused': (n: string) => `${n} accepteerde die sleutel niet. Plak de beperkte sleutel opnieuw, van de pagina hieronder.`,
+  'payments.key.manual': 'Ik voeg de webhook zelf toe',
+  'payments.key.whereToFind': 'Waar je hem vindt →',
   'payments.key.notConnected': (n: string) => `${n} niet verbonden`,
   'payments.picker.search': 'Zoek een aanbieder, of Apple Pay',
   'payments.picker.mostUsed': 'Meest gebruikt',

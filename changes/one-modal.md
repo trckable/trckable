@@ -1,0 +1,1 @@
+Every dialog now shares one frame: a solid surface over a dimmed page, a header with an icon, title, subtitle and a close button, and a footer with the main action on the right, Cancel beside it and any extra link at the far left. Settings-style windows and a few dialogs with live headers keep their own layout inside the same solid surface.

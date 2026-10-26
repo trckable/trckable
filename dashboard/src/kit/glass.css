@@ -117,8 +117,8 @@
   :root:not([data-glass='off']) :is(.ms-moment, .all-tile.compact) {
     border-radius: 14px;
   }
-  /* Pop-ups over the page and over cards: menus, dialogs, sheets, toasts, tooltips, the side card. A little more opaque and more blurred. */
-  :root:not([data-glass='off']) :is(.pop, .picker-pop, .modal, .toast, .hint, .side-card, .tip, .kit-tip, .chart-tip, .cursor-pill, .moment-tip, .note-tip, .story-pop, .note-cal) {
+  /* Pop-ups over the page and over cards: menus, sheets, toasts, tooltips, the side card. A little more opaque and more blurred. */
+  :root:not([data-glass='off']) :is(.pop, .picker-pop, .toast, .hint, .side-card, .tip, .kit-tip, .chart-tip, .cursor-pill, .moment-tip, .note-tip, .story-pop, .note-cal) {
     border-color: var(--glass-line-pop);
     background: var(--glass-pop);
     -webkit-backdrop-filter: var(--glass-blur-pop);

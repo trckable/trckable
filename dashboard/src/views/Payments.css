@@ -368,3 +368,9 @@
 .pay-pick-custom:focus-visible {
   text-decoration: underline;
 }
+
+/* The provider's key shape and where to find it, under the key field. */
+.key-hint {
+  margin: -8px 0 0;
+  font-size: 13px;
+}

@@ -1443,6 +1443,8 @@ export default {
   'install.wizard.added': (d: string) => `Vous avez déjà ${d}.`,
   'install.wizard.taken': 'Ce domaine est déjà ajouté à un autre compte. Demandez à son propriétaire de vous inviter, ou utilisez un autre domaine.',
   'payments.key.refused': (n: string) => `${n} n’a pas accepté cette clé. Collez de nouveau la clé restreinte, depuis la page liée ci-dessous.`,
+  'payments.key.manual': 'J’ajoute le webhook moi-même',
+  'payments.key.whereToFind': 'Où le trouver →',
   'payments.key.notConnected': (n: string) => `${n} non connecté`,
   'payments.picker.search': 'Cherchez un prestataire, ou Apple Pay',
   'payments.picker.mostUsed': 'Les plus utilisés',

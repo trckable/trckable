@@ -2,8 +2,6 @@
 // code to paste, in the same dialog. Opened by "New widget" on the page.
 import { useState } from 'react'
 import { CodeBlock } from '../components/Code'
-import { DialogActions } from '../components/DialogActions'
-import { DialogHead } from '../components/DialogHead'
 import { Modal } from '../kit/Modal'
 import { toast } from '../components/Toast'
 import { fail, more, type Site, type Widget, type WidgetLook } from '../lib/apiMore'
@@ -28,8 +26,28 @@ export function WidgetCreator({ site, base, onClose, onMade }: { site: Site; bas
       .finally(() => setBusy(false))
   }
   return (
-    <Modal label={TEXT.newWidget} className="wg-modal" onClose={busy ? undefined : onClose}>
-      <DialogHead heading={made ? TEXT.ready : TEXT.newWidget} help={TEXT.pageHint} />
+    <Modal
+      label={TEXT.newWidget}
+      className="wg-modal"
+      onClose={busy ? undefined : onClose}
+      frame={{
+        title: made ? TEXT.ready : TEXT.newWidget,
+        help: TEXT.pageHint,
+        size: 'lg',
+        busy,
+        cancel: made ? false : TEXT.cancel,
+        actions: made ? (
+          <button type="button" className="btn primary" onClick={onClose}>
+            {TEXT.done}
+          </button>
+        ) : (
+          <button type="button" className="btn primary" disabled={busy} onClick={create}>
+            {busy && <span className="btn-spin" aria-hidden="true" />}
+            {TEXT.make[busy ? 1 : 0]}
+          </button>
+        ),
+      }}
+    >
       {made ? (
         <div className="wg-made">
           <b>{TEXT.frame}</b>
@@ -40,34 +58,9 @@ export function WidgetCreator({ site, base, onClose, onMade }: { site: Site; bas
               <CodeBlock code={cornerCode(base, made)} lang="html" wrap />
             </>
           )}
-          <DialogActions>
-            <button type="button" className="btn primary" onClick={onClose}>
-              {TEXT.done}
-            </button>
-          </DialogActions>
         </div>
       ) : (
-        <WidgetStudio
-          site={site}
-          look={look}
-          onLook={(patch) => setLook((l) => ({ ...l, ...patch }))}
-          place={place}
-          onPlace={setPlace}
-          footer={
-            <DialogActions
-              left={
-                <button type="button" className="btn ghost" disabled={busy} onClick={onClose}>
-                  {TEXT.cancel}
-                </button>
-              }
-            >
-              <button type="button" className="btn primary" disabled={busy} onClick={create}>
-                {busy && <span className="btn-spin" aria-hidden="true" />}
-                {TEXT.make[busy ? 1 : 0]}
-              </button>
-            </DialogActions>
-          }
-        />
+        <WidgetStudio site={site} look={look} onLook={(patch) => setLook((l) => ({ ...l, ...patch }))} place={place} onPlace={setPlace} />
       )}
     </Modal>
   )

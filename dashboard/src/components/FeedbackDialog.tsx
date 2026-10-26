@@ -2,8 +2,7 @@
 import { useState } from 'react'
 import { MessageSquare } from 'lucide-react'
 import { Modal } from '../kit/Modal'
-import { DialogActions } from './DialogActions'
-import { DialogHead } from './DialogHead'
+import { ModalMark } from '../kit/ModalMark'
 import { toast } from './Toast'
 import { fail, more } from '../lib/apiMore'
 import { footerMoreCopy } from './footerMoreCopy'
@@ -31,35 +30,25 @@ export default function FeedbackDialog({ site, onClose }: { site?: string; onClo
       })
   }
   return (
-    <Modal label={footerMoreCopy.feedback} onClose={onClose} keepSize={false}>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          send()
-        }}
-      >
-        <DialogHead icon={MessageSquare} heading={footerMoreCopy.feedback} hint={t.hint} />
-        <textarea
-          className="input feedback-text"
-          rows={5}
-          value={text}
-          maxLength={MAX}
-          onChange={(e) => setText(e.target.value)}
-          aria-label={t.field}
-          autoFocus
-        />
-        <DialogActions
-          left={
-            <button type="button" className="btn ghost" onClick={onClose}>
-              {t.cancel}
-            </button>
-          }
-        >
+    <Modal
+      label={footerMoreCopy.feedback}
+      onClose={onClose}
+      keepSize={false}
+      frame={{
+        title: footerMoreCopy.feedback,
+        subtitle: t.hint,
+        icon: <ModalMark icon={MessageSquare} />,
+        busy,
+        cancel: t.cancel,
+        onSubmit: send,
+        actions: (
           <button type="submit" className="btn primary big" disabled={busy || !text.trim()}>
             {busy ? t.sending : t.send}
           </button>
-        </DialogActions>
-      </form>
+        ),
+      }}
+    >
+      <textarea className="input feedback-text" rows={5} value={text} maxLength={MAX} onChange={(e) => setText(e.target.value)} aria-label={t.field} autoFocus />
     </Modal>
   )
 }

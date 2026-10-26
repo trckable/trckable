@@ -2,10 +2,8 @@
 // starts the setup, so the QR encoder never reaches anyone else.
 import { useMemo, useState } from "react";
 import { fail, refused, wrong, more } from "../lib/apiMore";
-import { DialogActions } from "../components/DialogActions";
-import { DialogHead } from "../components/DialogHead";
 import { Field } from "../components/Field";
-import { Modal } from "../kit/Modal";
+import { Modal, type Frame } from "../kit/Modal";
 import { StepBody } from "../components/StepBody";
 import { Steps } from "../components/Steps";
 import { toast } from "../components/Toast";
@@ -62,18 +60,52 @@ export default function TwoStepSetup({
       .finally(() => setBusy(false));
   };
 
+  const frame = (): Frame => {
+    if (step === 0) return {
+          title: "Confirm it's you",
+          subtitle: "Adding a second step asks for your password again.",
+          help: "It is the one change that could lock you out, so trckable asks even though you are signed in.",
+          size: "lg",
+          busy,
+          actions: (
+            <button type="button" className="btn primary big" disabled={busy || !password} onClick={start}>
+              {busy ? "Checking…" : "Continue"}
+            </button>
+          ),
+        }
+    if (step === 1) return {
+            title: "Scan with your app",
+            subtitle: "Any authenticator app works.",
+            help: "1Password, Bitwarden, Google Authenticator, Aegis. The QR code is drawn in this browser; the secret never goes to a QR service.",
+            size: "lg",
+            busy,
+            actions: (
+              <button type="button" className="btn primary big" disabled={busy || code.replace(/\D/g, "").length !== 6} onClick={enable}>
+                {busy ? "Checking…" : "Turn it on"}
+              </button>
+            ),
+          }
+    return {
+            title: "Save these somewhere safe",
+            subtitle: "Each signs you in once if you lose your phone.",
+            help: "This is the only time they are shown: trckable keeps only their hashes.",
+            size: "lg",
+            cancel: false,
+            actions: (
+              <button type="button" className="btn primary big" disabled={!saved} onClick={onClose}>
+                Done
+              </button>
+            ),
+          };
+  }
+
   return (
-    <Modal
-      label="Turn on two-step sign-in"
-      className="wizard"
-      onClose={step < 2 ? onClose : undefined}
-    >
+    <Modal label="Turn on two-step sign-in" onClose={step < 2 ? onClose : undefined} frame={frame()}>
       <Steps labels={STEPS} at={step} />
 
       <StepBody step={step}>
         {step === 0 && (
           <>
-            <DialogHead heading="Confirm it's you" hint="Adding a second step asks for your password again." help="It is the one change that could lock you out, so trckable asks even though you are signed in." />
             <Field label="Your password" error={err}>
               {(f) => (
                 <input
@@ -88,28 +120,11 @@ export default function TwoStepSetup({
                 />
               )}
             </Field>
-            <DialogActions
-              left={
-                <button type="button" className="btn ghost" onClick={onClose}>
-                  Cancel
-                </button>
-              }
-            >
-              <button
-                type="button"
-                className="btn primary big"
-                disabled={busy || !password}
-                onClick={start}
-              >
-                {busy ? "Checking…" : "Continue"}
-              </button>
-            </DialogActions>
           </>
         )}
 
         {step === 1 && (
           <>
-            <DialogHead heading="Scan with your app" hint="Any authenticator app works." help="1Password, Bitwarden, Google Authenticator, Aegis. The QR code is drawn in this browser; the secret never goes to a QR service." />
             <div className="totp-setup">
               <QR uri={uri} />
               <div className="totp-manual">
@@ -150,28 +165,11 @@ export default function TwoStepSetup({
                 />
               )}
             </Field>
-            <DialogActions
-              left={
-                <button type="button" className="btn ghost" onClick={onClose}>
-                  Cancel
-                </button>
-              }
-            >
-              <button
-                type="button"
-                className="btn primary big"
-                disabled={busy || code.replace(/\D/g, "").length !== 6}
-                onClick={enable}
-              >
-                {busy ? "Checking…" : "Turn it on"}
-              </button>
-            </DialogActions>
           </>
         )}
 
         {step === 2 && (
           <>
-            <DialogHead heading="Save these somewhere safe" hint="Each signs you in once if you lose your phone." help="This is the only time they are shown: trckable keeps only their hashes." />
             <ol className="recovery">
               {codes.map((c) => (
                 <li key={c}>
@@ -219,16 +217,6 @@ export default function TwoStepSetup({
               />
               I have saved them
             </label>
-            <DialogActions>
-              <button
-                type="button"
-                className="btn primary big"
-                disabled={!saved}
-                onClick={onClose}
-              >
-                Done
-              </button>
-            </DialogActions>
           </>
         )}
       </StepBody>

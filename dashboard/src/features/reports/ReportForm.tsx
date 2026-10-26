@@ -2,7 +2,9 @@
 // which language and with a PDF or without, and a summary that follows every
 // change.
 import { useState } from 'react'
-import { DialogActions } from '../../components/DialogActions'
+import { FileText } from 'lucide-react'
+import { Modal } from '../../kit/Modal'
+import { ModalMark } from '../../kit/ModalMark'
 import { Switch } from '../../components/Switch'
 import { fail, more, type ReportSchedule } from '../../lib/apiMore'
 import { copy } from './copy'
@@ -16,7 +18,7 @@ const lines = (s: string) => [...new Set(s.split(/[\n,;]+/).map((x) => x.trim())
 export const summaryOf = (d: Draft, n: number) =>
   [copy[d.cadence], copy.langNames[d.lang] ?? d.lang, d.pdf ? copy.pdf : '', n ? copy.to(n) : copy.nobody].filter(Boolean).join(' · ')
 
-export function ReportForm({ site, from, langs, max, onDone }: { site: string; from: Draft; langs: string[]; max: number; onDone: (saved?: ReportSchedule) => void }) {
+export function ReportForm({ title, site, from, langs, max, onDone }: { title: string; site: string; from: Draft; langs: string[]; max: number; onDone: (saved?: ReportSchedule) => void }) {
   const [d, setD] = useState(from)
   const [text, setText] = useState(from.recipients.join('\n'))
   const [busy, setBusy] = useState(false)
@@ -33,13 +35,29 @@ export function ReportForm({ site, from, langs, max, onDone }: { site: string; f
       .finally(() => setBusy(false))
   }
   return (
-    <form
-      className="rp-form"
-      onSubmit={(e) => {
-        e.preventDefault()
-        if (!busy && count <= max) save()
+    <Modal
+      label={title}
+      onClose={() => onDone()}
+      keepSize={false}
+      className="rp-modal"
+      frame={{
+        title,
+        icon: <ModalMark icon={FileText} />,
+        size: 'md',
+        busy,
+        cancel: copy.cancel,
+        onSubmit: () => {
+          if (!busy && count <= max) save()
+        },
+        actions: (
+          <button type="submit" className="btn primary big" disabled={busy || count > max}>
+            {busy && <span className="btn-spin" aria-hidden="true" />}
+            {copy.save}
+          </button>
+        ),
       }}
     >
+      <div className="rp-form">
       <p className="rp-summary" aria-live="polite">
         <span className="faint">{copy.summary}</span>
         <b>{d.name.trim() || copy.untitled}</b>
@@ -88,18 +106,7 @@ export function ReportForm({ site, from, langs, max, onDone }: { site: string; f
           <Switch on={d.pdf} label={copy.attachPdf} onChange={() => set({ pdf: !d.pdf })} />
         </label>
       </fieldset>
-      <DialogActions
-        left={
-          <button type="button" className="btn ghost" onClick={() => onDone()}>
-            {copy.cancel}
-          </button>
-        }
-      >
-        <button type="submit" className="btn primary big" disabled={busy || count > max}>
-          {busy && <span className="btn-spin" aria-hidden="true" />}
-          {copy.save}
-        </button>
-      </DialogActions>
-    </form>
+      </div>
+    </Modal>
   )
 }

@@ -2,9 +2,10 @@
 // on a phone, and from the account dialog — the keys are the fastest way to
 // use trckable, so they should not be a secret.
 import { useEffect, useState } from 'react'
-import { Calendar, ChartSpline, Compass, Gauge, Keyboard, LayoutDashboard, MousePointer2, MoveHorizontal, RotateCcw, Rows3, X } from 'lucide-react'
+import { Calendar, ChartSpline, Compass, Gauge, Keyboard, LayoutDashboard, MousePointer2, MoveHorizontal, RotateCcw, Rows3 } from 'lucide-react'
 import { useConfirm } from '../components/Confirm'
 import { Modal } from '../kit/Modal'
+import { ModalMark } from '../kit/ModalMark'
 import { toast } from '../components/Toast'
 import { fail, more } from '../lib/apiMore'
 import { can } from '../lib/permissions'
@@ -102,38 +103,39 @@ export default function Shortcuts({ onClose }: { onClose: () => void }) {
   const close = onClose
   const count = Object.keys(customKeys()).length
   return (
-    <Modal label="Keyboard shortcuts" className="keys-modal" onClose={rec ? undefined : close}>
-      <div className="card-head keys-head">
-        <span className="modal-badge" aria-hidden="true">
-          <Keyboard size={20} strokeWidth={1.75} />
-        </span>
-        <div>
-          <h2>Keyboard shortcuts</h2>
-          <span className="faint">{rec ? 'Press the new key. Esc to cancel.' : 'Click a key to make it yours.'}</span>
-        </div>
-        <div className="modal-tools">
-          {changed && !rec && (
-            <button type="button" className="pill-btn" onClick={async () => {
-                await ask({
-                  title: count === 1 ? 'Reset the key you changed?' : `Reset all ${count} keys you changed?`,
-                  body: 'Every shortcut goes back to how it came. Your own keys are not kept anywhere, so you would have to set them again.',
-                  confirmLabel: 'Reset shortcuts',
-                  danger: true,
-                  busyLabel: 'Resetting…',
-                  done: 'Shortcuts are back to the defaults',
-                  run: () => more.setKeys({}).then((r) => loadKeymap(r.keys)),
-                })
-              }} title="Put every key back as it came">
-              <RotateCcw size={15} strokeWidth={1.75} aria-hidden="true" />
-              Reset
-              <span className="count">{count}</span>
-            </button>
-          )}
-          <button type="button" className="modal-close" aria-label="Close" onClick={close}>
-            <X size={16} strokeWidth={1.75} aria-hidden="true" />
+    <Modal
+      label="Keyboard shortcuts"
+      className="keys-modal"
+      onClose={rec ? undefined : close}
+      frame={{
+        title: 'Keyboard shortcuts',
+        subtitle: rec ? 'Press the new key. Esc to cancel.' : 'Click a key to make it yours.',
+        icon: <ModalMark icon={Keyboard} />,
+        size: 'lg',
+        cancel: false,
+        tools: (
+          <>
+    {changed && !rec && (
+          <button type="button" className="pill-btn" onClick={async () => {
+              await ask({
+                title: count === 1 ? 'Reset the key you changed?' : `Reset all ${count} keys you changed?`,
+                body: 'Every shortcut goes back to how it came. Your own keys are not kept anywhere, so you would have to set them again.',
+                confirmLabel: 'Reset shortcuts',
+                danger: true,
+                busyLabel: 'Resetting…',
+                done: 'Shortcuts are back to the defaults',
+                run: () => more.setKeys({}).then((r) => loadKeymap(r.keys)),
+              })
+            }} title="Put every key back as it came">
+            <RotateCcw size={15} strokeWidth={1.75} aria-hidden="true" />
+            Reset
+            <span className="count">{count}</span>
           </button>
-        </div>
-      </div>
+        )}
+          </>
+        ),
+      }}
+    >
       <FieldError id="keys-why" error={why} />
       <div className="keys-grid">
         {GROUPS.map((g) => {

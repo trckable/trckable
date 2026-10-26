@@ -3,7 +3,6 @@
 // through the browser. Everything else on the page is hidden while printing.
 import { Printer } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { DialogHead } from '../../components/DialogHead'
 import { Modal } from '../../kit/Modal'
 import { Loading } from '../../components/loading/Loading'
 import { tag } from '../../i18n'
@@ -86,19 +85,26 @@ export default function ReportSheet({ site, print, onClose }: { site: Site; prin
   }, [ready, print])
 
   return (
-    <Modal label={t.title(site.domain)} className="pr-modal" onClose={onClose} keepSize={false}>
-      <DialogHead heading={t.title(site.domain)} hint={t.made(dateFmt(tag, {}).format(new Date()))} />
+    <Modal
+      label={t.title(site.domain)}
+      className="pr-modal"
+      onClose={onClose}
+      keepSize={false}
+      frame={{
+        title: t.title(site.domain),
+        subtitle: t.made(dateFmt(tag, {}).format(new Date())),
+        size: 'md',
+        cancel: false,
+        actions: (
+          <button type="button" className="btn primary" disabled={!ready} onClick={printSheet}>
+            <Printer size={15} strokeWidth={1.75} aria-hidden="true" /> {t.print}
+          </button>
+        ),
+      }}
+    >
       {r === null && <Loading height={200} />}
       {r === 'failed' && <p className="muted">{t.failed}</p>}
       {ready && <Body r={r} />}
-      <div className="pr-actions">
-        <button type="button" className="btn ghost" onClick={onClose}>
-          {t.close}
-        </button>
-        <button type="button" className="btn primary" disabled={!ready} onClick={printSheet}>
-          <Printer size={15} strokeWidth={1.75} aria-hidden="true" /> {t.print}
-        </button>
-      </div>
     </Modal>
   )
 }

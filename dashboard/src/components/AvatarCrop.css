@@ -1,8 +1,6 @@
 /* The crop dialog: the picture under a round window, a zoom slider below. */
-.modal.crop-modal {
-  width: min(400px, 100%);
+.crop-modal .modal-body {
   align-items: center;
-  gap: 16px;
 }
 .crop-modal .modal-head {
   align-self: stretch;
@@ -45,7 +43,7 @@
 .crop-zoom input {
   flex: 1;
 }
-.crop-modal .dialog-actions {
+.crop-modal .modal-foot {
   align-self: stretch;
 }
 
