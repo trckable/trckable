@@ -72,9 +72,9 @@ test('a quiet site shows a grey dot and how long it has been quiet, with its exp
   await page.goto(`${API}/example.com`)
   await page.locator('#siteBtn').click()
   const row = page.locator(`[data-site="${site.id}"]`)
-  const word = row.locator('.state-word.quiet')
-  await expect(word).toHaveText('quiet 19h')
-  await expect(word).toHaveAttribute('title', 'No visits for 19h. Nothing looks wrong with the page.')
+  // A quiet site keeps its number; the dot is grey and the span, with its explanation, is in the tooltip (#535).
+  const word = row.locator('.now:not(.mk-dot)')
+  await expect(word).toHaveAttribute('title', '0 today. No visits for 19h. Nothing looks wrong with the page.')
   await expect(row.locator('.mk-dot.idle')).toBeVisible()
   if (SHOTS) await page.waitForTimeout(400)
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/state-word-quiet-${browserName}.png` })
