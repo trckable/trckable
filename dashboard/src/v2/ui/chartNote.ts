@@ -12,7 +12,6 @@ export function chartNote(c: ChartIn, at: number | null, down = false, short = f
   }
   if (down) return copy.downRightNow
   if (c.compare && c.compare.pct !== null) return copy.vsLine(signed(c.compare.pct), c.compare.name)
-  if (c.noCompare) return c.noCompare
   if (!c.band) return ''
   const up = c.points.filter((p) => p.st === 'up').length
   const dn = c.points.filter((p) => p.st === 'dn').length
