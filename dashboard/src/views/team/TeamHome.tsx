@@ -87,14 +87,17 @@ export function TeamHome({ sites, header }: { sites: Site[]; header: React.React
               <h1>{copy.title}</h1>
               <p className="muted" data-k="briefing">{team ? briefing(team) : copy.reading}</p>
             </div>
-            {team && team.length > 1 && (
-              <Segmented
-                label={copy.sortLabel}
-                value={by}
-                onChange={setBy}
-                options={(['attention', 'traffic', 'change'] as const).map((v) => ({ value: v, label: copy.sort[v] }))}
-              />
-            )}
+            <div className="tm-acts">
+              {team && team.length > 1 && (
+                <Segmented
+                  label={copy.sortLabel}
+                  value={by}
+                  onChange={setBy}
+                  options={(['attention', 'traffic', 'change'] as const).map((v) => ({ value: v, label: copy.sort[v] }))}
+                />
+              )}
+              <Add className="btn small" />
+            </div>
           </div>
           {err && <p className="empty">{err}</p>}
           {!team && !err && <Loading height={320} />}
@@ -103,7 +106,6 @@ export function TeamHome({ sites, header }: { sites: Site[]; header: React.React
             <>
               <Strip sites={ready} />
               <TeamTable sites={ready} />
-              <Add className="tm-addline" />
               <ChannelsSection />
             </>
           )}
