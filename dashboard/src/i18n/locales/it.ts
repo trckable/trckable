@@ -607,6 +607,9 @@ export default {
   'error.busy': 'Server occupato · Riprova',
   'error.code.not_found': 'Non trovato',
   'error.code.report_memory': 'Troppi dati per il server in una volta · Scegli un periodo più breve o aggiungi un filtro',
+  'error.code.dodo_live_key_in_test': 'Dodo Payments non ha accettato questa chiave. Una chiave live non funziona in modalità test: usa una chiave di test o passa a Live.',
+  'error.code.dodo_test_key_in_live': 'Dodo Payments non ha accettato questa chiave. Una chiave di test non funziona in modalità Live: usa una chiave live o passa alla modalità test.',
+  'error.code.dodo_unreachable': 'Impossibile raggiungere Dodo Payments. Riprova tra un minuto.',
 
   // dates
   'dates.period.now': 'Ora',
@@ -2399,7 +2402,9 @@ export default {
   'v2.lock.how': 'Come funziona',
   'v2.lock.ask': 'Chiedi a un Owner o Admin di aggiungerne uno',
   'v2.lock.revLine': 'Scopri quanto rende ogni fonte',
-  'v2.lock.revSub': 'Collega Stripe, Paddle o Lemon Squeezy',
+  'v2.lock.revSub': (names: string) => `Collega ${names}`,
+  'v2.lock.revWaiting': (name: string) => `${name} è collegato`,
+  'v2.lock.revWaitingSub': 'I ricavi compaiono qui con il primo pagamento',
   'v2.lock.searchLine': 'Scopri le ricerche che portano persone',
   'v2.lock.searchSub': 'Collega Google Search Console',
   'v2.lock.goalsLine': 'Scopri cosa conta come successo',

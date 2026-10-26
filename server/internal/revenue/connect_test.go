@@ -189,7 +189,9 @@ func TestReconciliationCoversOutagesAndSaysWhatFailed(t *testing.T) {
 	ctx := context.Background()
 	acct := &stripeAccount{livemode: true, endpoints: map[string]string{}}
 	useStripe(t, g, acct)
-	now := time.Date(2026, 9, 26, 12, 0, 0, 0, time.UTC)
+	// Stripe only keeps 30 days of events, and the fake provider clamps to its real clock: start from now, not a fixed date.
+	start := time.Now().UTC().Truncate(time.Hour)
+	now := start
 	g.svc.Now = func() time.Time { return now }
 	c, err := g.svc.Connect(ctx, ConnectRequest{Site: g.site, Provider: "stripe", APIKey: "rk_live_ok", PublicBase: "https://stats.example"})
 	if err != nil {
@@ -216,7 +218,7 @@ func TestReconciliationCoversOutagesAndSaysWhatFailed(t *testing.T) {
 	if _, err := g.svc.Sync(ctx, c.ID, 7*24*time.Hour); err != nil {
 		t.Fatal(err)
 	}
-	lastOK := time.Date(2026, 9, 26, 11, 0, 0, 0, time.UTC).Unix()
+	lastOK := start.Add(-time.Hour).Unix()
 	if len(acct.sinces) == 0 || acct.sinces[0] != itoa(lastOK) {
 		t.Fatalf("synced from %v, want %d (the last good sync, less an hour)", acct.sinces, lastOK)
 	}

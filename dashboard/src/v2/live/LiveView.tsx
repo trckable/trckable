@@ -174,7 +174,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
               (askRevenue || holdRevenue) && whole && (
                 <div className="lrev" style={holdRevenue ? { visibility: 'hidden' } : undefined} aria-hidden={holdRevenue || undefined}>
                   <span className="ll">{copy.revenueToday}</span>
-                  <RevenueLock go={copy.connect} onGo={() => openSettings(whole, 'payments')} onHow={() => window.open(DOCS, '_blank', 'noopener')} />
+                  <RevenueLock provider={want.paidWith} go={copy.connect} onGo={() => openSettings(whole, 'payments')} onHow={() => window.open(DOCS, '_blank', 'noopener')} />
                 </div>
               )
             )}

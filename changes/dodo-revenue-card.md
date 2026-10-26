@@ -1,0 +1,1 @@
+The revenue card now names every connected-capable provider (Dodo Payments included) from one list, says "<Provider> is connected" while it waits for the first payment, and a refused or unreachable Dodo key is explained under the key field (a test key in Live mode, or the reverse, is named).

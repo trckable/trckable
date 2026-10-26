@@ -576,3 +576,54 @@ func TestGumroadSetupFailingHalfwayRemovesWhatItMade(t *testing.T) {
 		t.Fatalf("%v %v", err, f.calls)
 	}
 }
+
+// What Dodo's refusals and outages become: an owner-facing message with a code (the API answers it as a 422), in
+// test and in live mode, whether the webhook or its secret was the call that failed.
+func TestDodoProblems(t *testing.T) {
+	noWait(t)
+	for _, tc := range []struct {
+		name   string
+		status int // 0: nothing answers
+		test   bool
+		onPath string
+		code   string
+	}{
+		{"a refused key in test mode", 401, true, "/webhooks", "dodo_live_key_in_test"},
+		{"a forbidden key in test mode", 403, true, "/webhooks", "dodo_live_key_in_test"},
+		{"a refused key in live mode", 401, false, "/webhooks", "dodo_test_key_in_live"},
+		{"a refused secret read in test mode", 401, true, "/secret", "dodo_live_key_in_test"},
+		{"a refused secret read in live mode", 403, false, "/secret", "dodo_test_key_in_live"},
+		{"a server error", 500, true, "/webhooks", "dodo_unreachable"},
+		{"a server error on the secret read", 503, false, "/secret", "dodo_unreachable"},
+		{"a network error", 0, false, "/webhooks", "dodo_unreachable"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			f := newFake(t, func(w http.ResponseWriter, r *http.Request, _ []byte) {
+				switch {
+				case r.Method == "DELETE":
+					w.WriteHeader(200)
+				case strings.HasSuffix(r.URL.Path, "/secret"):
+					if tc.onPath == "/secret" {
+						jsonAnswer(w, tc.status, `{"message":"no"}`)
+						return
+					}
+				case r.Method == "POST" && r.URL.Path == "/webhooks":
+					if tc.onPath == "/webhooks" {
+						jsonAnswer(w, tc.status, `{"message":"no"}`)
+						return
+					}
+					jsonAnswer(w, 200, `{"id":"wh_d1"}`)
+				}
+			})
+			api := &DodoAPI{TestURL: f.srv.URL, BaseURL: f.srv.URL}
+			if tc.status == 0 {
+				f.srv.Close()
+			}
+			_, err := api.Setup(context.Background(), "k", tc.test, "https://x")
+			var plain *UserError
+			if !errors.As(err, &plain) || plain.Code != tc.code || plain.Msg == "" {
+				t.Fatalf("want a user error with code %s, got %#v", tc.code, err)
+			}
+		})
+	}
+}

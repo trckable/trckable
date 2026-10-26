@@ -20,4 +20,7 @@ export const errorCopy = defineCopy('error', {
 export const codeCopy: Record<string, string> = defineCopy('error.code', {
   not_found: 'Not found',
   report_memory: 'Too much data for the server to report on at once · Pick a shorter period or add a filter',
+  dodo_live_key_in_test: "Dodo Payments didn't accept this key. A live key does not work in Test mode: use a test-mode key, or switch to Live.",
+  dodo_test_key_in_live: "Dodo Payments didn't accept this key. A test-mode key does not work in Live mode: use a live key, or switch to Test mode.",
+  dodo_unreachable: "Couldn't reach Dodo Payments. Try again in a minute.",
 })

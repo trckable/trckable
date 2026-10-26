@@ -1,4 +1,5 @@
 // The ring's arithmetic and its show/hide rules, with no React in them.
+import { PAY_PROVIDERS, WEBHOOK_PROVIDERS } from '../../lib/payProviders'
 import type { SetupItem, SetupState } from '../../lib/apiMore'
 
 /** A full ring is drawn with this circumference (r = 14 in a 36 box, see SetupRing). */
@@ -42,10 +43,14 @@ export function splitOf(items: SetupItem[]): Split {
   return { todo: counted.filter((i) => !i.done), done: counted.filter((i) => i.done), more: r.more }
 }
 
-const PROVIDERS: Record<string, string> = { stripe: 'Stripe', paddle: 'Paddle', lemonsqueezy: 'Lemon Squeezy', polar: 'Polar', gumroad: 'Gumroad' }
-
 /** A payment provider's id as its name; an unknown id is shown as it came. */
-export const providerName = (id: string): string => PROVIDERS[id] ?? id
+export const providerName = (id: string): string => [...PAY_PROVIDERS, ...WEBHOOK_PROVIDERS].find((p) => p.id === id)?.name ?? id
+
+/** The provider whose payments the checklist has connected (whether or not a sale has come yet), as its name. */
+export function paidWith(state: SetupState | null): string | undefined {
+  const d = state?.items.find((i) => i.id === 'payments')?.detail
+  return d?.connected === true && typeof d.provider === 'string' && d.provider ? providerName(d.provider) : undefined
+}
 
 /** Steps left to do. */
 export const left = (s: Pick<SetupState, 'done' | 'counted'>): number => Math.max(0, s.counted - s.done)

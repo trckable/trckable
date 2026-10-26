@@ -131,6 +131,12 @@ export function changed(site: string, state: SetupState) {
   remember(site, state)
 }
 
+/** The checklist is read again now (a provider was connected or removed): the prompts and the ring follow at once. */
+export function refreshSetup(site: string) {
+  reads.delete(site) // a read on its way began before the change
+  readSetup(site).then((s) => remember(site, s), () => {})
+}
+
 export function onState(f: () => void): () => void {
   listeners.add(f)
   return () => void listeners.delete(f)

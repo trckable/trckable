@@ -2,7 +2,7 @@
 // back there changes the prompts at once.
 import { useCallback, useEffect, useSyncExternalStore } from 'react'
 import { lastState, onState, readSetup, remember, SHARED_MS } from './memory'
-import { wanted } from './model'
+import { paidWith, wanted } from './model'
 
 const asked = new Set<string>()
 
@@ -11,7 +11,7 @@ const asked = new Set<string>()
  * checklist this browser has not read is read now (`ask`: the person may see prompts at all); `known` tells whether it has
  * arrived, so a view can hold the prompt's space until then and nothing moves.
  */
-export function useWanted(site: string | null, ask: boolean): ((kind: string) => boolean) & { known: boolean } {
+export function useWanted(site: string | null, ask: boolean): ((kind: string) => boolean) & { known: boolean; paidWith?: string } {
   const state = useSyncExternalStore(onState, () => (site ? lastState(site) : null))
   useEffect(() => {
     if (!site || !ask || state || asked.has(site)) return
@@ -19,5 +19,5 @@ export function useWanted(site: string | null, ask: boolean): ((kind: string) =>
     readSetup(site, SHARED_MS).then((s) => remember(site, s), () => asked.delete(site))
   }, [site, ask, state])
   const want = useCallback((kind: string) => wanted(state, kind), [state])
-  return Object.assign(want, { known: !!state })
+  return Object.assign(want, { known: !!state, paidWith: paidWith(state) })
 }

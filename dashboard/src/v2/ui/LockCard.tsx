@@ -1,6 +1,7 @@
 // A locked card: one line on what the feature would show, one on what it asks for, and the one way in that sets it up. No
 // example figures stand in it. A slim row under the Briefing's cards, a big card in Explore: one component, two sizes.
 import { useId } from 'react'
+import { shippedNames } from '../../lib/payProviders'
 import { lockCopy, type LockKind } from './lockCopy'
 import './lockCard.css'
 
@@ -17,7 +18,7 @@ export interface LockCardProps {
 export function LockCard({ kind, size = 'row', go, onGo, onHow }: LockCardProps) {
   const id = useId()
   const c = lockCopy
-  const text = { line: c[`${kind}Line`], sub: c[`${kind}Sub`] }
+  const text = { line: c[`${kind}Line`], sub: kind === 'rev' ? c.revSub(shippedNames()) : c[`${kind}Sub`] }
   return (
     <section className={`lkc ${size}`} data-lock={kind}>
       <div className="lkc-o" role="region" aria-labelledby={id}>

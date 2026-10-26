@@ -610,6 +610,9 @@ export default {
   'error.busy': 'Server ausgelastet · Versuche es erneut',
   'error.code.not_found': 'Nicht gefunden',
   'error.code.report_memory': 'Zu viele Daten für den Server auf einmal · Wähle einen kürzeren Zeitraum oder füge einen Filter hinzu',
+  'error.code.dodo_live_key_in_test': 'Dodo Payments hat diesen Schlüssel nicht akzeptiert. Ein Live-Schlüssel funktioniert im Testmodus nicht: Nimm einen Testmodus-Schlüssel oder wechsle zu Live.',
+  'error.code.dodo_test_key_in_live': 'Dodo Payments hat diesen Schlüssel nicht akzeptiert. Ein Testmodus-Schlüssel funktioniert im Live-Modus nicht: Nimm einen Live-Schlüssel oder wechsle zum Testmodus.',
+  'error.code.dodo_unreachable': 'Dodo Payments war nicht erreichbar. Versuche es in einer Minute noch einmal.',
 
   // dates
   'dates.period.now': 'Jetzt',
@@ -2402,7 +2405,9 @@ export default {
   'v2.lock.how': 'So funktioniert es',
   'v2.lock.ask': 'Bitte einen Owner oder Admin, eines hinzuzufügen',
   'v2.lock.revLine': 'Sieh, was jede Quelle einbringt',
-  'v2.lock.revSub': 'Verbinde Stripe, Paddle oder Lemon Squeezy',
+  'v2.lock.revSub': (names: string) => `Verbinde ${names}`,
+  'v2.lock.revWaiting': (name: string) => `${name} ist verbunden`,
+  'v2.lock.revWaitingSub': 'Der Umsatz erscheint hier mit der ersten Zahlung',
   'v2.lock.searchLine': 'Sieh die Suchanfragen, die Leute bringen',
   'v2.lock.searchSub': 'Verbinde die Google Search Console',
   'v2.lock.goalsLine': 'Sieh, was als Erfolg zählt',
