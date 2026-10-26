@@ -32,7 +32,10 @@ test('a visit clears the Quiet badge and turns the switcher dot to now, with no 
   await expect(page.locator('#siteBtn .mk-dot.idle')).toBeVisible() // the button's dot is grey while it is quiet
   await expect(page.locator('#siteBtn')).toHaveAttribute('aria-label', /quiet/i)
   await page.locator('#siteBtn').click() // the switcher stays open while the visit arrives
-  await expect(page.locator('#siteMenu .state-word.quiet')).toContainText('quiet 14h')
+  // A quiet site keeps its number; the dot is grey and the span is in the tooltip.
+  const quietRow = page.locator('#siteMenu [data-site]', { hasText: HISTORY_DOMAIN })
+  await expect(quietRow.locator('.mk-dot.idle')).toBeVisible()
+  await expect(quietRow.locator('.now:not(.mk-dot)')).toHaveAttribute('title', /No visits for 14h/)
   await page.evaluate(() => ((window as unknown as { __kept?: boolean }).__kept = true))
   seen.at = Math.floor(Date.now() / 1000) - 5
   await expect(badge).toHaveCount(0, WAIT)
