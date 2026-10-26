@@ -42,3 +42,60 @@
     font-size: clamp(24px, 3.6vw, 32px);
   }
 }
+
+/* The Explore cards follow the width of their own pane, not the window: four across when it is wide, two by two when it is narrow, one
+   column on a phone. Every card has one anatomy: the icon beside a label that wraps (two lines at most), the note under it, a number at a
+   fixed place whatever the label's length, and the line's room kept at one height even when a card draws none. */
+.mk .xkw {
+  container: xkw / inline-size;
+}
+.mk .xkw .kcs.xk:has(> :nth-child(4):last-child) {
+  --fit-basis: calc((100% - var(--fit-gap)) / 2 - 0.5px);
+}
+@container xkw (--pane-min-701) {
+  .mk .xkw .kcs.xk:has(> :nth-child(4):last-child) {
+    --fit-basis: calc((100% - 3 * var(--fit-gap)) / 4 - 0.5px);
+  }
+}
+@media (--xs) {
+  .mk .xkw .kcs.xk:has(> :nth-child(4):last-child) {
+    --fit-basis: 100%;
+  }
+}
+.mk .kcs.xk .kc .kt {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  align-content: start;
+  column-gap: var(--mk-s2);
+  row-gap: 2px;
+  min-height: 56px;
+}
+.mk .kcs.xk .kc .kl {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  text-overflow: clip;
+}
+.mk .kcs.xk .kc .kn {
+  grid-column: 2;
+  margin: 0;
+  text-align: left;
+  white-space: normal;
+}
+.mk .kcs.xk:not(.k3) .kc {
+  padding: var(--mk-s4) var(--mk-s4) 0;
+  border-radius: var(--mk-r);
+}
+.mk .kcs.xk:not(.k3) .kc .kv {
+  font-size: clamp(22px, 5.4cqi, 32px);
+  margin: var(--mk-s3) 0 var(--mk-s2);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.mk .kcs.xk:not(.k3) .kc .ksp {
+  height: 56px;
+  width: calc(100% + var(--mk-s4) * 2);
+  margin: auto calc(var(--mk-s4) * -1) 0;
+}
