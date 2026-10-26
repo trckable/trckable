@@ -89,6 +89,8 @@ export interface Report {
   to: string
   current: Result
   previous?: Result
+  /** The whole period before, bucket by bucket, when `previous` stops at the elapsed part (a period still running): what a chart's dashed line draws. */
+  previous_series?: Point[]
   previous_from?: string
   previous_to?: string
   online?: number

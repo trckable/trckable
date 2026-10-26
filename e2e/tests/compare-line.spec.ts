@@ -20,6 +20,7 @@ async function withBefore(page: Page) {
     const series = (body.current.series as { t: string; visitors: number; pageviews: number }[]).map((p, i) => ({ ...p, visitors: 200 + i, pageviews: 200 + i }))
     body.current = { ...body.current, series }
     body.previous = { ...body.current, series: series.map((p, i) => ({ ...p, visitors: 150 + i * 7, pageviews: 150 })) }
+    delete body.previous_series // the mock sets the period before whole
     await route.fulfill({ response: res, json: body })
   })
 }
