@@ -6,8 +6,5 @@ export const footerCopy = defineCopy('footer', {
   whatsNew: 'What’s new',
   docs: 'Docs',
   feedback: 'Feedback',
-  shortcuts: 'Shortcuts',
-  filter: 'Filter',
-  ask: 'Ask',
   social: { github: 'GitHub', x: 'X', linkedin: 'LinkedIn' },
 })

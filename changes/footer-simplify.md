@@ -1,0 +1,1 @@
+The dashboard footer is quieter: only the status on the left, and the version, Docs, Feedback and GitHub on the right. The / and ? key hints are gone from it; the keys still work, and Shortcuts is in the account menu.
