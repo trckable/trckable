@@ -5,12 +5,14 @@ import type { Row } from '../../features/live/model'
 import { copy as off } from '../../features/cookieless/copy'
 import { why } from '../../features/cookieless/why'
 import { useLeaving } from '../../features/live/useLeaving'
+import { countryName, flag } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
 import { Avatar } from '../../components/visitor/Avatar'
 import { nameOf } from '../../lib/visitor'
 import { copy as liveCopy } from '../../features/live/copy'
 import { copy } from '../live/copy'
 import { useArrivals } from '../live/useArrivals'
+import './feedRow.css'
 
 export function FeedList({ rows, up, clock, empty, onVisitor, cookieless }: { rows: Row[]; up: Set<string>; clock: number; empty: string; onVisitor?: (v: string) => void; cookieless?: boolean }) {
   const box = useRef<HTMLDivElement>(null)
@@ -53,7 +55,16 @@ export function FeedList({ rows, up, clock, empty, onVisitor, cookieless }: { ro
             <span className="src" style={hot ? { color: 'var(--mk-lime)' } : undefined}>
               {src}
             </span>
-            <span className="cc">{r.country?.toUpperCase()}</span>
+            <span className="cc" title={r.country ? countryName(r.country) : undefined}>
+              {r.country?.length === 2 ? (
+                <>
+                  <span className="ccf" aria-hidden="true">{flag(r.country)}</span>
+                  <span className="ccn">{r.country.toUpperCase()}</span>
+                </>
+              ) : (
+                '\u2014'
+              )}
+            </span>
             <span className="dv">{r.device}</span>
             {r.visitor && onVisitor && (
               <span className="mk-rp" title={copy.replayTitle}>

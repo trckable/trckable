@@ -1,0 +1,16 @@
+/* A person in the Live list: the app's soft row hover (a rounded fill inset from the list's edges, the text where it was), the divider drawn inside the row so the fill never touches its neighbours. */
+.mk .lfeed .lv { position: relative; box-sizing: border-box; width: calc(100% + 2 * var(--mk-s2)); margin-inline: calc(var(--mk-s2) * -1); padding-inline: var(--mk-s2); border-top: 0; border-radius: 8px; color: var(--mk-text); font-weight: 400; transition: background-color 0.12s; }
+.mk .lfeed .lv::before { content: ''; position: absolute; top: 0; left: var(--mk-s2); right: var(--mk-s2); border-top: 1px solid var(--mk-line); pointer-events: none; }
+.mk .lfeed .lv:first-child::before,
+.mk .lfeed .lv:hover::before,
+.mk .lfeed .lv:focus-visible::before,
+.mk .lfeed .lv:hover + .lv::before,
+.mk .lfeed .lv:focus-visible + .lv::before { border-top-color: transparent; }
+.mk .lfeed .lv .pg { color: var(--mk-text); font-weight: 400; }
+/* The country: its flag, then its code; a phone keeps the flag and drops the code first. */
+.mk .lfeed .lv .cc { display: inline-flex; align-items: center; gap: 6px; width: 54px; flex: none; }
+.mk .lfeed .lv .cc .ccf { font-size: 14px; line-height: 1; }
+@container (--pane-max-600) {
+  .mk .lfeed .lv .cc { width: 22px; }
+  .mk .lfeed .lv .cc .ccn { display: none; }
+}
