@@ -1,0 +1,1 @@
+On Live, the Analytics card tells how today stands against a usual day of the week in one quiet line under the number ("↑ 32% above a usual Monday"), with the colour only on the arrow and the figure, instead of a loud badge beside it; it says nothing while last week had too few visitors to measure against.

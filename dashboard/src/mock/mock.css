@@ -1842,9 +1842,13 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on,.mk-menu.on,.
 .mk .lcards>.mk-card{min-height:300px}
 .mk .lsw{margin-left:auto}
 .mk .lsw button{width:auto;padding:0 var(--mk-s2);font-size:12px;font-weight:500}
-.mk .lhero{display:flex;align-items:baseline;flex-wrap:wrap;gap:var(--mk-s1) var(--mk-s2);font-size:44px;margin:var(--mk-s2) 0 var(--mk-s4)}
+.mk .lhero{display:flex;align-items:baseline;flex-wrap:wrap;gap:var(--mk-s1) var(--mk-s2);font-size:44px;margin:var(--mk-s2) 0 var(--mk-s1)}
 .mk .lhero small{margin-left:0}
-.mk .lhword{align-self:center}
+/* Under the number: one quiet line; the tone is on the arrow and the figure only. */
+.mk .lusual{margin:0 0 var(--mk-s4);font-size:13px;color:var(--mk-muted)}
+.mk .lusual b{font-weight:600;font-variant-numeric:tabular-nums}
+.mk .lusual[data-tone=up] b{color:var(--mk-lime)}
+.mk .lusual[data-tone=dn] b{color:var(--mk-red)}
 .mk .lbars{display:flex;flex-direction:column;gap:6px;margin-top:auto}
 .mk .lbar{position:relative;display:flex;justify-content:space-between;align-items:center;gap:var(--mk-s2);height:28px;padding:0 10px;font-size:13px}
 .mk .lbar i{position:absolute;inset:0 auto 0 0;border-radius:8px;background:var(--mk-limeD)}

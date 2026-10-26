@@ -1,10 +1,11 @@
 // Live's first card under the half hour: today's visitors, and where they are, as a bar list of the pages or of the
 // countries behind one small switch.
 import { useState } from 'react'
-import { countryName, fmtInt, flag } from '../../lib/format'
+import { countryName, fmtInt, flag, weekdayName } from '../../lib/format'
+import { todayIn } from '../../lib/dates'
 import { copy } from './copy'
 import { CardSkeleton } from './CardSkeleton'
-import { todayBand, type Lists } from './liveModel'
+import { usualLine, type Lists } from './liveModel'
 import type { LiveNow } from '../../features/live/api'
 
 type Mode = 'pages' | 'countries' | 'devices'
@@ -13,6 +14,8 @@ interface Props {
   today: LiveNow['today']
   /** undefined while the day's own lists are read. */
   lists?: Lists
+  /** The site's time zone: the weekday "usual" is told for. */
+  timezone: string
 }
 
 interface Bar {
@@ -29,9 +32,9 @@ function barsOf(lists: Lists, mode: Mode): Bar[] {
   return lists.countries.map((c) => ({ key: c.key, label: c.label || countryName(c.key), n: c.n, mono: false, flag: flag(c.key) }))
 }
 
-export function AnalyticsCard({ today, lists }: Props) {
+export function AnalyticsCard({ today, lists, timezone }: Props) {
   const [mode, setMode] = useState<Mode>('pages')
-  const tb = today ? todayBand(today.visitors, today.before, today.compare) : null
+  const line = today ? usualLine(today.visitors, today.before, today.compare) : null
   const rows = lists ? barsOf(lists, mode) : []
   const max = Math.max(1, ...rows.map((r) => r.n))
   return (
@@ -51,8 +54,18 @@ export function AnalyticsCard({ today, lists }: Props) {
           <div className="lbig lhero">
             {fmtInt(today.visitors)}
             <small>{copy.visitors}</small>
-            {tb && <span className="mk-tag new lhword">{tb.word === 'usual' ? copy.usualWord : copy[tb.word]}</span>}
           </div>
+        )}
+        {today && today.visitors > 0 && line && (
+          <p className="lusual" data-tone={line.tone}>
+            {line.tone === 'flat' ? (
+              copy.aboutUsual
+            ) : (
+              <>
+                <b>{`${line.tone === 'up' ? '↑' : '↓'} ${line.pct}%`}</b> {(line.tone === 'up' ? copy.aboveDay : copy.belowDay)(weekdayName(todayIn(timezone)))}
+              </>
+            )}
+          </p>
         )}
         {!lists && <CardSkeleton kind="rows" />}
         <div className="lbars">
