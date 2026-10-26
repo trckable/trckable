@@ -1,7 +1,7 @@
-// The globe's arithmetic, apart from drawing so it can be tested: where a visitor's pin sits, how pins group, how a
-// point on the sphere reaches the screen. The server stores a country and a city name for a visit, never coordinates, so
-// a pin sits at its country's middle point moved a small, stable step by its city's name: two cities of one country
-// do not stack, and the same city always lands on the same spot. Nothing here is a precise location.
+// The globe's arithmetic, apart from drawing so it can be tested: where a visitor's pin sits and how pins group into the
+// markers the globe draws. The server stores a country and a city name for a visit, never coordinates, so a pin sits at
+// its country's middle point moved a small, stable step by its city's name: two cities of one country do not stack, and
+// the same city always lands on the same spot. Nothing here is a precise location.
 import type { Row } from '../../../features/live/model'
 import { PLACES } from './globeData'
 
@@ -20,9 +20,7 @@ export interface Pin {
   last: number
   /** Changes whenever they move on or act: the pulse keys on it. */
   sig: string
-  /** Their place in a unit disc around the spot, and how many share it: zoomed in, the pins spread by it on the screen. */
-  ux: number
-  uy: number
+  /** How many people are at the same spot (their country, or their city of it). */
   crowd: number
 }
 
@@ -42,25 +40,6 @@ export function placeOf(cc: string, city: string): [number, number] | null {
   return [Math.max(-80, Math.min(80, c[0] + Math.sin(a) * r)), c[1] + (Math.cos(a) * r) / Math.max(0.3, Math.cos(c[0] * RAD))]
 }
 
-const GOLDEN = 2.399963229728653
-/** The widest a crowd at one spot spreads, in degrees. */
-const SPREAD_MAX = 2.4
-
-/** Where one visitor sits around their spot: a golden-angle spiral position fixed by their id, wider as more share the spot (never past SPREAD_MAX). */
-export function spreadOf(id: string, crowd: number): [number, number] {
-  const i = Math.floor(hash(id) * 997)
-  const reach = Math.min(SPREAD_MAX, 0.5 + 0.3 * Math.sqrt(crowd))
-  const r = crowd > 1 ? reach * Math.sqrt(((i % 61) + 1) / 61) : 0
-  return [Math.sin(i * GOLDEN) * r, Math.cos(i * GOLDEN) * r]
-}
-
-/** The unit-disc place of an id (the same spiral, before it is scaled to a distance). */
-export function unitOf(id: string): [number, number] {
-  const i = Math.floor(hash(id) * 997)
-  const k = Math.sqrt(((i % 61) + 1) / 61)
-  return [Math.sin(i * GOLDEN) * k, Math.cos(i * GOLDEN) * k]
-}
-
 const what = (r: Row): string => (r.kind === 'goal' ? r.label || r.goal || '' : (r.path ?? '/'))
 
 /** The spot a visit belongs to: its country and city. */
@@ -76,9 +55,7 @@ export function pinsOf(rows: readonly Row[]): Pin[] {
     const at = placeOf(cc, r.city ?? '')
     if (!at) continue
     const n = crowd.get(spotOf(r)) ?? 1
-    const [dy, dx] = spreadOf(r.key, n)
-    const [ux, uy] = unitOf(r.key)
-    out.push({ key: r.key, cc, city: r.city ?? '', path: what(r), lat: Math.max(-80, Math.min(80, at[0] + dy)), lon: at[1] + dx / Math.max(0.3, Math.cos(at[0] * RAD)), last: r.last, sig: `${r.key}@${r.last}`, ux, uy, crowd: n })
+    out.push({ key: r.key, cc, city: r.city ?? '', path: what(r), lat: at[0], lon: at[1], last: r.last, sig: `${r.key}@${r.last}`, crowd: n })
   }
   return out
 }
@@ -91,7 +68,17 @@ export function agoOf(ms: number): { unit: 's' | 'm'; n: number } {
   return s < 60 ? { unit: 's', n: s } : { unit: 'm', n: Math.floor(s / 60) }
 }
 
-/** Fewer dots on a small screen or a low-power device: every second dot is skipped (1 draws all). */
-export function thinning(width: number, cores: number, memory: number): 1 | 2 {
-  return width < 600 || cores <= 4 || memory <= 4 ? 2 : 1
+/** The pins grouped by spot, each with its newest pin (a tap on the spot opens that visitor) and everyone's key. */
+export function spotsOf(pins: readonly Pin[]): Map<string, { lead: Pin; members: string[] }> {
+  const out = new Map<string, { lead: Pin; members: string[] }>()
+  for (const p of pins) {
+    const k = `${p.cc}/${p.city}`
+    const g = out.get(k)
+    if (!g) out.set(k, { lead: p, members: [p.key] })
+    else {
+      g.members.push(p.key)
+      if (p.last > g.lead.last) g.lead = p
+    }
+  }
+  return out
 }

@@ -73,3 +73,15 @@
 /* The foot: the archive and the alert settings, two small quiet buttons on one row. */
 .mk .nff .lk3 { font-size: 12px; color: var(--mk-muted); }
 .mk .nff .lk3:hover { color: var(--mk-text); }
+
+/* Nothing in the bell: a soft tile with the bell and a small check in the tone colour, one calm line, one quiet button. */
+.mk .nfe { display: flex; flex-direction: column; align-items: center; gap: var(--mk-s2); padding: 32px; text-align: center; }
+.mk .nfe-tile { position: relative; display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: var(--mk-s2); border-radius: 50%; background: color-mix(in srgb, var(--mk-text) 7%, transparent); color: var(--mk-muted); }
+.mk .nfe-tile i { position: absolute; right: -2px; bottom: -2px; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--mk-card); background: var(--mk-green); color: var(--mk-bg); }
+.mk .nfe b { font-size: 15px; font-weight: 600; color: var(--mk-text); }
+.mk .nfe p { margin: 0; max-width: 32ch; font-size: 13px; line-height: 1.45; color: var(--mk-muted); }
+.mk .nfe .lk3 { display: inline-flex; align-items: center; gap: 6px; margin-top: var(--mk-s2); font-size: 13px; }
+.mk .nfe .nfe-old { margin-top: 0; font-size: 12px; }
+
+/* The list is solid: the page's glow (the score ring) must not show through the frosted pane the other menus have. */
+.mk .mk-menu.bellmenu { background: var(--mk-card2); -webkit-backdrop-filter: none; backdrop-filter: none; }

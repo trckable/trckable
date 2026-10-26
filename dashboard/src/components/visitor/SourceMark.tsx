@@ -1,4 +1,4 @@
-// Where a visit came from, as a small mark: a known site by its own mark (lib/brandIcons.ts), any other site that
+// Where a visit came from, as a small mark: a known site by its own mark (lib/brandIcons.ts), in the text colour, any other site that
 // sent them as a monogram in the channel's colour, or the channel's own glyph when no site did. Favicons would need
 // a fetch to a third party from the dashboard, which the content policy (and the privacy promise) rules out.
 import { ArrowUpRight, Link2, Mail, Megaphone, Search, Sparkles, Target, Users, type LucideIcon } from 'lucide-react'
@@ -31,9 +31,9 @@ export function SourceMark({ channel, referrer, goal = false, size = 28 }: { cha
   const brand = goal ? null : brandOf(referrer)
   const style = { width: scaled(size), height: scaled(size), color, ['--v-ring' as string]: color }
   if (brand) {
-    const own = brand.color === 'currentColor' ? 'var(--text)' : brand.color
+    // A brand's mark is drawn in the theme's text colour like the rest of the interface, never in the brand's own.
     return (
-      <span className="v-mark brand" style={{ ...style, color: own, ['--v-ring' as string]: own }} role="img" aria-label={brand.name}>
+      <span className="v-mark brand" style={{ ...style, color: 'var(--text)', ['--v-ring' as string]: 'var(--text)' }} role="img" aria-label={brand.name}>
         <svg viewBox="0 0 24 24" width={Math.round(size * 0.58)} height={Math.round(size * 0.58)} fill="currentColor" aria-hidden="true">
           <path d={brand.d} />
         </svg>

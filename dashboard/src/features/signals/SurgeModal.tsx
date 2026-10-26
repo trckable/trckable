@@ -5,13 +5,13 @@
 // sheet on a phone. Everything in it was counted; nothing says why.
 import { Bell, X, TrendingUp } from 'lucide-react'
 import { Modal } from '../../kit/Modal'
+import type { Filter } from '../../lib/api'
+import type { ViewState } from '../../lib/url'
 import { countryName, fmtInt, flag } from '../../lib/format'
-import { RefMark } from '../cards/refIcons'
-import { useHostIcon } from './useHostIcon'
+import { SourceMark } from '../../components/visitor/SourceMark'
 import { Rolling } from '../moments/Rolling'
 import { signals } from './copy'
-import { beats, clock, deviceShare, honestLine, surgeChip, type Story, type Surge } from './surge'
-import { PathChip } from './PathChip'
+import { beats, clock, deviceShare, honestLine, seeInExplore, surgeChip, type Story, type Surge } from './surge'
 import { SurgeChart } from './SurgeChart'
 import { useFullSurge } from './useFullSurge'
 import { useSurgeActions } from './useSurgeActions'
@@ -19,13 +19,26 @@ import './surge.css'
 
 const t = signals.surge
 
-/** site: the site's id, so a surge that arrives without its story (told by a notice) gets the story fetched. */
-export default function SurgeModal({ surge: given, site, tz, onClose, onSee }: { surge: Surge; site?: string; tz: string; onClose: () => void; onSee: () => void }) {
+/** Where the bell's "See it in Explore" leads: the filters it narrows by, and how the address is changed (the surge's own site may not be the one in view). */
+export interface ExploreLead {
+  filters: Filter[]
+  go: (patch: Partial<ViewState>) => void
+}
+
+/** site: the site's id, so a surge that arrives without its story (told by a notice) gets the story fetched. explore: the one action is Explore, narrowed (the bell). */
+export default function SurgeModal({ surge: given, site, tz, explore, head, onClose, onSee }: { surge: Surge; site?: string; tz: string; explore?: ExploreLead; head?: string; onClose: () => void; onSee: () => void }) {
   const { surge, state } = useFullSurge(given, site)
-  const { see, seePage, canAsk, notify } = useSurgeActions(surge, tz, () => {
+  const actions = useSurgeActions(surge, tz, () => {
     onSee()
     onClose()
   })
+  const { canAsk, notify } = actions
+  const see = explore
+    ? () => {
+        explore.go(seeInExplore(surge, tz, explore.filters))
+        onClose()
+      }
+    : actions.see
   const st = surge.story
   const w = surge.why
   return (
@@ -33,6 +46,7 @@ export default function SurgeModal({ surge: given, site, tz, onClose, onSee }: {
       <button type="button" className="sgm-x" aria-label={t.close} onClick={onClose}>
         <X size={16} strokeWidth={2} aria-hidden="true" />
       </button>
+      {head && <p className="sgm-head">{head}</p>}
       <header className="sgm-hero">
         <span className="sgm-badge" aria-hidden="true">
           <TrendingUp size={18} strokeWidth={2} />
@@ -41,23 +55,19 @@ export default function SurgeModal({ surge: given, site, tz, onClose, onSee }: {
           <Rolling to={surge.online} fmt={fmtInt} />
         </b>
         <span className="sgm-meta">
+          <span className="sgm-unit">{surge.ended ? t.online : t.onlineNow}</span>
           <span className="sg-chip">{surgeChip(surge)}</span>
           {surge.ended ? <span className="sgm-ended muted">{t.ended(clock(surge.ended, tz))}</span> : null}
           {w.before < surge.online && w.minutes > 0 && <span className="sgm-jump">{t.jump(w.before, surge.online, w.minutes)}</span>}
         </span>
       </header>
+      <p className="sgm-facts muted">{[t.facts(st?.peak ?? surge.online, t.usually(Math.round(surge.usual))), surge.ended ? t.lasted(Math.max(1, Math.round((surge.ended - surge.started) / 60))) : ''].filter(Boolean).join(' · ')}</p>
       {state === 'loading' && (
         <p className="sgm-wait muted" role="status">
           {t.loading}
         </p>
       )}
       <p className="sgm-honest muted">{honestLine(surge)}</p>
-      {w.source && w.source_dim === 'referrer' && w.page && (
-        <p className="sgm-landing">
-          <span className="muted">{t.landingOn}</span>
-          <PathChip page={w.page} onPick={() => seePage(w.page ?? '')} />
-        </p>
-      )}
       {w.campaign && <p className="sgm-camp muted">{t.campaign(w.campaign)}</p>}
       <SurgeChart surge={surge} tz={tz} />
       <ol className="sgm-beats">
@@ -75,7 +85,7 @@ export default function SurgeModal({ surge: given, site, tz, onClose, onSee }: {
           </button>
         )}
         <button type="button" className="btn primary" onClick={see}>
-          {t.seeData}
+          {explore ? t.seeExplore : t.seeData}
         </button>
       </div>
     </Modal>
@@ -141,12 +151,11 @@ function Tiles({ surge, story }: { surge: Surge; story: Story }) {
 
 /** One source: its icon and name, its people as a bar of everyone online, and what it usually sends when it is the main one. */
 function Bar({ name, n, of, host, usual }: { name: string; n: number; of: number; host?: string; usual?: number }) {
-  const icon = useHostIcon(host ?? null)
   return (
     <div className="sgm-bar">
       <p className="sgm-row">
         <span>
-          {host && <RefMark host={host} icon={icon} />} {name}
+          {host && <SourceMark channel="Referral" referrer={host} size={18} />} {name}
           {usual !== undefined && <small className="faint"> · {t.usually(Math.round(usual))}</small>}
         </span>
         <b>{fmtInt(n)}</b>

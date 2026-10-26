@@ -233,17 +233,12 @@ describe('the story told by a notice (no story of its own)', () => {
     expect(dialog()?.textContent).toContain('20 → 53 in 15 min')
   })
 
-  it('keeps a long landing path out of the sentence and in a middle-truncated chip', async () => {
+  it('keeps a long landing path out of the sentence, and says it once (the landing page box), not again as a line', async () => {
     const page = '/news/' + 'raimonda-sino-plani-individual-i-zhvp-se-2026-'.repeat(2) + 'x'.repeat(20) + '-2024'
-    expect(page.length).toBeGreaterThanOrEqual(120)
     answer({ ...surge, why: { ...surge.why, page } })
     await open()
     expect(dialog()?.querySelector('.sgm-honest')?.textContent).not.toContain('/news')
-    const chip = dialog()?.querySelector<HTMLElement>('.sgm-path')
-    expect(chip?.getAttribute('aria-label')).toBe(page)
-    expect(chip?.textContent).toBe(midTruncate(page))
-    expect(chip?.textContent).toMatch(/^\/news\/.*….*-2024$/)
-    expect((chip?.textContent ?? '').length).toBeLessThanOrEqual(34)
+    expect(dialog()?.querySelector('.sgm-landing')).toBeNull()
     expect(midTruncate('/blog/launch-post')).toBe('/blog/launch-post')
   })
 

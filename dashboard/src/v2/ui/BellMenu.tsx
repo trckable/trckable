@@ -10,6 +10,7 @@ import { copy } from '../bell/copy'
 import { useArrival } from './useBellArrival'
 import { FilterMenu } from './BellPopovers'
 import { Row } from './BellItem'
+import { BellEmpty } from './BellEmpty'
 import './bellMenu.css'
 
 /** What a row's ⋯ offers: mute it for the site, change its alert, put it away. */
@@ -81,8 +82,12 @@ export interface BellProps {
 
 const EMPTY: ReadonlySet<string> = new Set()
 
-/** What sits in the panel's header row: the filter and Mark all read. */
+/** Nothing to show and nothing narrowing it: the whole list is empty. */
+const isEmpty = (p: BellProps) => !p.loading && p.rows.length === 0 && !p.filter?.active
+
+/** What sits in the panel's header row: the filter and Mark all read (not while there is nothing to filter or read). */
 function Tools(p: BellProps) {
+  if (isEmpty(p)) return null
   return (
     <span className="nftools">
       {p.filter && <FilterMenu f={p.filter} />}
@@ -99,6 +104,7 @@ function List(p: BellProps & { close: () => void; bare?: boolean }) {
   const list = useRef<HTMLDivElement>(null)
   useArrival(list, p.fresh ?? EMPTY, rows)
   const waiting = p.loading && !old
+  const empty = isEmpty(p) && !old
   return (
     <>
       {!p.bare && (
@@ -125,7 +131,8 @@ function List(p: BellProps & { close: () => void; bare?: boolean }) {
             </span>
           </div>
         )}
-        {rows.length === 0 && !waiting && <div className="xnone">{old && p.archive ? p.archive.none : p.none}</div>}
+        {empty && <BellEmpty p={p} close={p.close} old={old} onOld={() => { p.archive?.load(); setOld(true) }} />}
+        {rows.length === 0 && !waiting && !empty && <div className="xnone">{old && p.archive ? p.archive.none : p.none}</div>}
         {!waiting &&
           byDay(rows).map((d) => (
             <Fragment key={d.day}>
@@ -136,18 +143,20 @@ function List(p: BellProps & { close: () => void; bare?: boolean }) {
             </Fragment>
           ))}
       </div>
-      <div className="nff">
-        {p.archive && !waiting ? (
-          <button type="button" className="lk3" aria-pressed={old} onClick={() => { if (!old) p.archive?.load(); setOld(!old) }}>
-            {old ? copy.showNew : copy.showArchived}
+      {!empty && (
+        <div className="nff">
+          {p.archive && !waiting ? (
+            <button type="button" className="lk3" aria-pressed={old} onClick={() => { if (!old) p.archive?.load(); setOld(!old) }}>
+              {old ? copy.showNew : copy.showArchived}
+            </button>
+          ) : (
+            <span />
+          )}
+          <button type="button" className="lk3" onClick={() => { p.onSettings(); p.close() }}>
+            {p.settings}
           </button>
-        ) : (
-          <span />
-        )}
-        <button type="button" className="lk3" onClick={() => { p.onSettings(); p.close() }}>
-          {p.settings}
-        </button>
-      </div>
+        </div>
+      )}
     </>
   )
 }

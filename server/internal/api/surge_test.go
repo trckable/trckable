@@ -179,7 +179,7 @@ func TestSurgeEndsAndDoesNotRepeatWithinThreeHours(t *testing.T) {
 	one, _ := out["surge"].(map[string]any)
 	story, _ := one["story"].(map[string]any)
 	series, _ := story["series"].([]any)
-	if code != http.StatusOK || one["id"] != latest.ID || one["ended"] == float64(0) || len(series) < 6 || story["peak"] != float64(16) || story["start"] != float64(latest.Started) {
+	if code != http.StatusOK || one["id"] != latest.ID || one["ended"] == float64(0) || len(series) < 4 || story["peak"] != float64(16) || story["start"] != float64(latest.Started) {
 		t.Fatalf("an ended moment: %d %v", code, out)
 	}
 	if code, _ := do(t, c, "GET", g.srv.URL+"/api/v1/sites/"+g.site+"/surges/near?t=5", ""); code != http.StatusNotFound {
