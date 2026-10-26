@@ -1,7 +1,7 @@
 // The replay over the chart: a time marker that sweeps the plot, a count that climbs with the line, and the moments of
-// the period told one at a time. Nothing here is in the chart's flow: the layer sits over it (absolute), and a frame only
+// the period told one at a time (a dot on the line, the words in the caption strip of the cinema's foot). Nothing here is in the chart's flow: the layer sits over it (absolute), and a frame only
 // writes on elements that are already there. The line itself is drawn by the shared clock (reveal.ts, RevealClip.tsx);
-// this only reads it. The buttons and the wrap-up line are ReplayBar's, over the row above the chart.
+// this only reads it. The caption strip, the progress and the buttons are ReplayBar's, under the chart.
 import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import type { Bucket, ReportQuery } from '../../lib/api'
 import { fmtInt } from '../../lib/format'
@@ -35,14 +35,8 @@ export interface ReplayIn {
   onShare: () => void
 }
 
-/** A caption stays this long on the line before it fades. */
+/** A moment's dot stays this long at full size before it settles. */
 const SETTLE_MS = 1000
-
-/** A caption near either edge opens inwards, so it never leaves the card. */
-function leanOf(f: number): 'l' | 'r' | 'c' {
-  if (f < 0.22) return 'l'
-  return f > 0.78 ? 'r' : 'c'
-}
 
 export function ReplayStage({ r, children }: { r: ReplayIn; children: ReactNode }) {
   const root = useRef<HTMLDivElement>(null)
@@ -63,6 +57,11 @@ export function ReplayStage({ r, children }: { r: ReplayIn; children: ReactNode 
     const el = root.current
     if (!el) return
     const q = (s: string) => el.querySelector<HTMLElement>(s)
+    // The foot (caption, progress, time) is the stage's neighbour, in the same block.
+    const foot = (s: string) => el.closest('.chwrap')?.querySelector<HTMLElement>(s) ?? null
+    const sub = foot('[data-rp-sub]')
+    const prog = foot('[data-rp-prog]')
+    const time = foot('[data-rp-time]')
     const cards = [...el.querySelectorAll<HTMLElement>('[data-cap]')]
     const num = q('[data-rp-n]')
     const tag = q('[data-rp-t]')
@@ -88,6 +87,8 @@ export function ReplayStage({ r, children }: { r: ReplayIn; children: ReactNode 
       mark?.style.setProperty('transform', `translate3d(${x.toFixed(1)}px,0,0)`)
       const stamp = today ? clockOf(p * end) : bucketLabel(labels[Math.round(p * (labels.length - 1))] ?? '', bucket)
       if (tag && tag.textContent !== stamp) tag.textContent = stamp
+      if (time && time.textContent !== stamp) time.textContent = stamp
+      prog?.style.setProperty('transform', `scaleX(${p.toFixed(4)})`)
       const n = fmtInt(countAt(vals, total, p))
       if (num && num.textContent !== n) num.textContent = n
       pin?.style.setProperty('transform', `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0)`)
@@ -100,11 +101,10 @@ export function ReplayStage({ r, children }: { r: ReplayIn; children: ReactNode 
         if (card) {
           card.style.setProperty('--x', `${x.toFixed(1)}px`)
           card.style.setProperty('--y', `${y.toFixed(1)}px`)
-          card.setAttribute('data-lean', leanOf(x / (el.clientWidth || 1)))
-          card.setAttribute('data-below', y < 104 ? '1' : '0')
           card.setAttribute('data-s', 'show')
           el.setAttribute('data-pinned', '')
         }
+        if (sub) sub.textContent = [c.at, c.line, c.sub].filter(Boolean).join(' · ')
         clearTimeout(timer)
         timer = window.setTimeout(() => settle(k), SETTLE_MS)
       })
@@ -138,10 +138,6 @@ export function ReplayStage({ r, children }: { r: ReplayIn; children: ReactNode 
         {caps.map((c) => (
           <div key={`${c.pos}${c.kind}`} className={`rp-cap ${c.kind}`} data-cap data-s="">
             <i className="rp-dot" />
-            <div className="rp-bub" role={phase === 'on' ? 'status' : undefined}>
-              <b>{c.line}</b>
-              <span>{[c.at, c.sub].filter(Boolean).join(' · ')}</span>
-            </div>
           </div>
         ))}
       </div>

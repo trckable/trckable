@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { reveal } from './reveal'
-import { at, legsOf, runLegs, runMs } from './run'
+import { arrivals, at, legsOf, nextStop, runLegs, runMs } from './run'
 
 describe('the story run', () => {
   const legs = legsOf([0.3, 0.7])
@@ -66,10 +66,50 @@ describe('runLegs on the shared clock', () => {
     frame(1000 + runMs(legs) + 1)
     expect(done).toHaveBeenCalledOnce()
     expect(reveal.get()).toBe(-1)
-    const stop = runLegs(legs, done)
+    const run = runLegs(legs, done)
     frame(1500)
-    stop()
+    run.stop()
     expect(reveal.get()).toBe(-1)
     expect(done).toHaveBeenCalledOnce()
+  })
+  it('waits while paused, goes on from the same place, and jumps to the next moment', () => {
+    const frame = stage()
+    const legs = legsOf([0.4, 0.8])
+    const done = vi.fn()
+    const run = runLegs(legs, done)
+    frame(1500)
+    const was = reveal.get()
+    vi.spyOn(performance, 'now').mockReturnValue(1500)
+    run.pause()
+    vi.spyOn(performance, 'now').mockReturnValue(9000)
+    run.resume()
+    frame(9001)
+    expect(Math.abs(reveal.get() - was)).toBeLessThan(0.02)
+    expect(run.next()).toBe(true)
+    frame(9002)
+    expect(reveal.get()).toBeCloseTo(0.4, 1)
+    expect(done).not.toHaveBeenCalled()
+  })
+  it('ends the run when there is no moment left to go to', () => {
+    stage()
+    const legs = legsOf([0.4])
+    const done = vi.fn()
+    const run = runLegs(legs, done)
+    vi.spyOn(performance, 'now').mockReturnValue(1000 + arrivals(legs)[0] + 10)
+    expect(run.next()).toBe(false)
+    expect(done).toHaveBeenCalledOnce()
+    expect(reveal.get()).toBe(-1)
+  })
+})
+
+describe('arrivals and nextStop', () => {
+  it('name when the line reaches each moment, and the next one after a time', () => {
+    const legs = legsOf([0.25, 0.75])
+    const a = arrivals(legs)
+    expect(a).toHaveLength(3)
+    expect(a[0]).toBeLessThan(a[1])
+    expect(nextStop(legs, 0)).toBe(a[0])
+    expect(nextStop(legs, a[0])).toBe(a[1])
+    expect(nextStop(legs, a[1])).toBeNull()
   })
 })

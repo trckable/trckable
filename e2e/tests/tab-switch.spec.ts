@@ -153,7 +153,8 @@ for (const width of [1280, 390]) {
     if (await replay.isVisible()) {
       await replay.click()
       await expect(replay).toHaveAttribute('aria-label', 'Stop')
-      await go('Live').click()
+      // The cinema's scrim is over the tabs: the page goes behind it by its own switch, not by a pointer.
+      await go('Live').dispatchEvent('click')
       await expect(page.locator('.liveview')).toBeVisible()
       await go('Briefing').click()
       await expect(page.locator('.brief')).toBeVisible()

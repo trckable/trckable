@@ -1,6 +1,9 @@
-// The replay's buttons and its one-line wrap-up, in the row above the chart: it takes the place of the chart's own line
-// and the Notes button while a replay is up, laid over that row (absolute), so it adds no height and moves nothing.
-import { RotateCcw, Share2, SkipForward, X } from 'lucide-react'
+// The cinema's foot: the moment being told as a caption, the progress with its time, and the buttons (pause, skip, close);
+// at the end the wrap-up line and Replay again / Share / Close. It is only there while a replay is up. The stage writes
+// the caption, the bar and the time on it as the clock moves (ReplayStage); Tab stays on these buttons.
+import { useEffect, useRef } from 'react'
+import { Pause, Play, RotateCcw, Share2, SkipForward, X } from 'lucide-react'
+import { useFocusTrap } from '../../features/install/useFocusTrap'
 import { fmtInt } from '../../lib/format'
 import { sourceName } from '../briefing/model'
 import { best } from '../../features/story/moments'
@@ -17,22 +20,52 @@ export function wrapOf(r: ReplayIn): string {
 const bestOf = (r: ReplayIn, b: string) => (r.bucket === 'hour' ? copy.bestHour(b) : copy.bestDay(b))
 
 export function ReplayBar({ r }: { r: ReplayIn }) {
+  return r.replay.phase === 'off' ? null : <Foot r={r} />
+}
+
+/** Only there while a replay is up, so the focus goes in when it opens and back to the Replay button when it closes. */
+function Foot({ r }: { r: ReplayIn }) {
   const { replay } = r
-  if (replay.phase === 'off') return null
+  const box = useRef<HTMLDivElement>(null)
+  useFocusTrap(box)
+  // The buttons are new for each phase: focus goes to the first of them, and back to the Replay button when it all closes.
+  useEffect(() => {
+    box.current?.querySelector('button')?.focus()
+  }, [replay.phase])
+  useEffect(() => () => document.querySelector<HTMLElement>('[data-replay]')?.focus(), [])
   return (
-    <div className="rp-bar" data-phase={replay.phase}>
-      {replay.phase === 'end' && (
+    <div className="rp-bar" ref={box} data-phase={replay.phase}>
+      {replay.phase === 'end' ? (
         <p className="rp-wrap" role="status">
           {wrapOf(r)}
         </p>
+      ) : (
+        <>
+          <p className="rp-sub" data-rp-sub aria-live="polite" />
+          <div className="rp-prog" aria-hidden="true">
+            <span className="rp-time" data-rp-time />
+            <i className="rp-track">
+              <b data-rp-prog />
+            </i>
+          </div>
+        </>
       )}
       {/* A new set of buttons for each phase, so the row is never one thing that moved. */}
       <div className="rp-act" key={replay.phase}>
         {replay.phase === 'on' ? (
-          <button type="button" className="rp-btn" onClick={replay.skip}>
-            <SkipForward size={14} strokeWidth={1.75} aria-hidden="true" />
-            <span>{copy.skip}</span>
-          </button>
+          <>
+            <button type="button" className="rp-btn" onClick={replay.toggle} aria-label={replay.paused ? copy.play : copy.pause} title={replay.paused ? copy.play : copy.pause}>
+              {replay.paused ? <Play size={14} strokeWidth={1.75} aria-hidden="true" /> : <Pause size={14} strokeWidth={1.75} aria-hidden="true" />}
+              <span>{replay.paused ? copy.play : copy.pause}</span>
+            </button>
+            <button type="button" className="rp-btn" onClick={replay.next}>
+              <SkipForward size={14} strokeWidth={1.75} aria-hidden="true" />
+              <span>{copy.skip}</span>
+            </button>
+            <button type="button" className="rp-btn ic" onClick={replay.stop} aria-label={copy.close} title={copy.close}>
+              <X size={14} strokeWidth={1.75} aria-hidden="true" />
+            </button>
+          </>
         ) : (
           <>
             <button type="button" className="rp-btn" onClick={replay.start} aria-label={copy.again} title={copy.again}>
