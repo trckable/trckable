@@ -91,7 +91,8 @@ test('skip for now opens that site’s dashboard, and the first run stays away',
 test('another site: two waiting sites, an inline picker in the sentence, the first visit on the second moves on, then Live', async ({ page, browserName }) => {
   const two = `two-${browserName}-${Date.now()}.test`
   // A second site added through the API, still waiting: with the first it resumes at step 2.
-  await page.request.post(`${base}/api/v1/sites`, { data: { domain: two }, headers: { Cookie: `trckable_session=${cookie}` } })
+  const made = await page.request.post(`${base}/api/v1/sites`, { data: { domain: two }, headers: { Cookie: `trckable_session=${cookie}`, "X-Trckable-Request": "1" } })
+  expect(made.ok(), await made.text()).toBe(true)
   const run = await openRun(page)
   await expect(run.locator('.ob-progress')).toContainText('Add the code', { timeout: 15_000 })
   const card = run.getByRole('region', { name: 'Install trckable' })
