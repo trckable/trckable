@@ -1833,7 +1833,6 @@ export default {
   'onboarding.more.cancel': 'Cancelar',
   'onboarding.more.placeholder': 'otrositio.com',
   'onboarding.more.sites': 'Tus sitios',
-  'onboarding.more.waiting': 'esperando',
   'onboarding.more.receiving': 'recibiendo',
   'onboarding.empty.title': 'Aún no hay sitios',
   'onboarding.empty.sub': 'Añade tu primer sitio para empezar a contar visitas.',

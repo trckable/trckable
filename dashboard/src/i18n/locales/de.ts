@@ -1830,7 +1830,6 @@ export default {
   'onboarding.more.cancel': 'Abbrechen',
   'onboarding.more.placeholder': 'andere-website.de',
   'onboarding.more.sites': 'Deine Websites',
-  'onboarding.more.waiting': 'wartet',
   'onboarding.more.receiving': 'empfängt',
   'onboarding.empty.title': 'Noch keine Websites',
   'onboarding.empty.sub': 'Füge deine erste Website hinzu, um Besuche zu zählen.',

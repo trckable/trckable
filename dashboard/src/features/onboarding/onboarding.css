@@ -10,14 +10,20 @@
   background: var(--bg);
   color: var(--text);
 }
+/* The header is the dashboard's own: the .mk page's top and side padding and its 1440 px column, so the logo and the
+   account sit where they do there at every width. */
 .ob-hd {
   position: sticky;
   top: 0;
   z-index: 5;
-  padding: 0 clamp(16px, 4vw, 40px);
 }
 .mk.ob-hd {
+  max-width: 1440px;
+  margin: 0 auto;
   padding-bottom: 0;
+}
+.mk.ob-hd .ob-skip {
+  height: var(--mk-h);
 }
 .mk.ob-hd,
 .mk.ob-hd .hd {
@@ -30,6 +36,13 @@
 }
 .ob-skip .kbd {
   margin-left: 6px;
+}
+/* Skip is quiet text: a fill only under the pointer, a ring only for the keyboard. */
+.ob .btn.ghost.ob-skip:not(:hover) {
+  background: transparent;
+}
+.ob .btn.ghost.ob-skip:focus:not(:focus-visible) {
+  outline: none;
 }
 .ob-main {
   flex: 1;
@@ -191,50 +204,21 @@ body:has(.ob.gated) .side-deck {
   z-index: 39;
 }
 
-/* Step 2 with more than one site: a chip per site, a dot for waiting or receiving. */
-.ob-sites {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  margin: 0 auto;
-  max-width: 640px;
-}
-.ob-site {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+/* Step 2 with more than one site: the site in the sentence is a small picker, no box. */
+.ob-pick {
   max-width: 100%;
-  height: 34px;
-  padding: 0 12px;
-  border: 1px solid var(--border-2);
-  border-radius: 999px;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 1px dashed var(--border-2);
+  border-radius: 0;
   background: none;
-  color: var(--muted);
+  color: var(--text);
   font: inherit;
-  font-size: 13px;
   cursor: pointer;
 }
-.ob-site.on {
-  border-color: var(--text);
-  color: var(--text);
-}
-.ob-site-name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.ob-sdot {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1.5px solid var(--muted);
-}
-.ob-sdot.got {
-  border-color: var(--up);
-  background: var(--up);
+.ob-pick:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .ob-after {
   display: flex;

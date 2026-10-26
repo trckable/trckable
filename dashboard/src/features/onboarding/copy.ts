@@ -47,7 +47,6 @@ export const copy = defineCopy('onboarding', {
     cancel: 'Cancel',
     placeholder: 'othersite.com',
     sites: 'Your sites',
-    waiting: 'waiting',
     receiving: 'receiving',
   },
   empty: {

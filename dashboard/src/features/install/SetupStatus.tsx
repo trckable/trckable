@@ -76,7 +76,8 @@ const toneOf = (stage: Stage): 'ok' | 'wait' | 'warn' => {
 /** The logic board by tone: every check lit when the visit came, stopped at a red one on a failure, cycling while it is awaited. */
 const boardOf = { ok: 'done', warn: 'fail', wait: undefined } as const
 
-export function SetupStatus({ site, check, arrived }: { site: Site; check: InstallCheckHandle; arrived: boolean }) {
+/** compact: a small note with the one fix, no illustration (the first run's step two). */
+export function SetupStatus({ site, check, arrived, compact = false }: { site: Site; check: InstallCheckHandle; arrived: boolean; compact?: boolean }) {
   const stage = stageOf(check.state, arrived)
   const days = staleDays(site)
   const { head, line } = wordsOf(stage, check, days)
@@ -84,8 +85,8 @@ export function SetupStatus({ site, check, arrived }: { site: Site; check: Insta
   const wait = stage === 'waiting' || stage === 'limited'
   const tone = toneOf(stage)
   return (
-    <div className={'setup-status ' + tone} aria-live="polite" data-stage={stage}>
-      <Figure name="logic" state={boardOf[tone]} className="setup-fig" />
+    <div className={'setup-status ' + tone + (compact ? ' compact' : '')} aria-live="polite" data-stage={stage}>
+      {!compact && <Figure name="logic" state={boardOf[tone]} className="setup-fig" />}
       <div className="setup-head">
         {tone === 'ok' && <Check size={18} strokeWidth={2.25} aria-hidden="true" />}
         {tone === 'warn' && <TriangleAlert size={18} strokeWidth={1.75} aria-hidden="true" />}

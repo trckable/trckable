@@ -95,6 +95,13 @@ test('with no site the first run cannot be left, and stays on every address', as
   const main = run.locator('main')
   expect(await main.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('0px')
   expect(await main.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe('0px')
+  // The header is the dashboard's: its 1440 px column and its height, and Skip has no fill at rest.
+  await page.setViewportSize({ width: 1920, height: 1000 })
+  const hd = await run.locator('.ob-hd').boundingBox()
+  expect(hd!.width).toBeLessThanOrEqual(1440)
+  expect(await run.locator('.ob-hd .hd').evaluate((el) => el.getBoundingClientRect().height)).toBeLessThanOrEqual(68)
+  expect(await run.getByRole('button', { name: /Skip/ }).evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)')
+  await page.setViewportSize({ width: 1280, height: 800 })
   // The header is the logo, the account and nothing about sites.
   await expect(run.locator('#siteBtn')).toHaveCount(0)
   await expect(run.getByRole('button', { name: /set up/i })).toHaveCount(0)

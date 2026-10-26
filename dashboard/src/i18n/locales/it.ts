@@ -1827,7 +1827,6 @@ export default {
   'onboarding.more.cancel': 'Annulla',
   'onboarding.more.placeholder': 'altrosito.com',
   'onboarding.more.sites': 'I tuoi siti',
-  'onboarding.more.waiting': 'in attesa',
   'onboarding.more.receiving': 'riceve',
   'onboarding.empty.title': 'Ancora nessun sito',
   'onboarding.empty.sub': 'Aggiungi il tuo primo sito per iniziare a contare le visite.',

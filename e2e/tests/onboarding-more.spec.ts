@@ -79,7 +79,7 @@ test('skip for now opens that site’s dashboard, and the first run stays away',
   await run.getByLabel('Domain').fill(one)
   await page.keyboard.press('Enter')
   await expect(run.locator('.ob-progress')).toContainText('Add the code', { timeout: 15_000 })
-  await expect(run.getByRole('tablist', { name: 'Your sites' })).toHaveCount(0)
+  await expect(run.getByRole('combobox', { name: 'Your sites' })).toHaveCount(0)
   if (process.env.TRCKABLE_SHOTS) await page.screenshot({ path: `${process.env.TRCKABLE_SHOTS}/onboarding-skip-${browserName}.png` })
   await run.getByRole('button', { name: 'Skip for now — open my dashboard' }).click()
   await expect(run).toBeHidden()
@@ -88,13 +88,13 @@ test('skip for now opens that site’s dashboard, and the first run stays away',
   await expect(page.getByRole('dialog', { name: 'Set up your first site' })).toHaveCount(0)
 })
 
-test('another site: a chip each, the first visit on the second moves on, then Live', async ({ page, browserName }) => {
+test('another site: an inline picker in the sentence, the first visit on the second moves on, then Live', async ({ page, browserName }) => {
   const two = `two-${browserName}-${Date.now()}.test`
   // A fresh browser context has not skipped: the waiting site resumes at step 2.
   const run = await openRun(page)
   await expect(run.locator('.ob-progress')).toContainText('Add the code', { timeout: 15_000 })
   const card = run.getByRole('region', { name: 'Install trckable' })
-  await expect(run.getByRole('tablist', { name: 'Your sites' })).toHaveCount(0)
+  await expect(run.getByRole('combobox', { name: 'Your sites' })).toHaveCount(0)
 
   await run.getByRole('button', { name: '+ Add another site' }).click()
   const field = run.getByLabel('Another site')
@@ -107,14 +107,14 @@ test('another site: a chip each, the first visit on the second moves on, then Li
   await field.fill(`https://www.${two}/x`)
   await field.press('Enter')
 
-  const chips = run.getByRole('tablist', { name: 'Your sites' })
-  await expect(chips.getByRole('tab')).toHaveCount(2, { timeout: 15_000 })
-  await expect(chips.getByRole('tab', { name: new RegExp(two) })).toHaveAttribute('aria-selected', 'true')
-  await expect(chips.getByRole('tab', { name: new RegExp(`${one}.*waiting`) })).toBeVisible()
+  const pick = run.getByRole('combobox', { name: 'Your sites' })
+  await expect(pick.locator('option')).toHaveCount(2, { timeout: 15_000 })
+  await expect(pick).toHaveValue(/.+/)
+  await expect(pick.locator('option:checked')).toHaveText(new RegExp(two))
   const sites = (await (await page.request.get(`${base}/api/v1/sites`)).json()).sites as { id: string; domain: string }[]
   const second = sites.find((s) => s.domain === two)!
   await expect(card.locator('pre').first()).toContainText(`data-site="${second.id}"`)
-  await chips.getByRole('tab', { name: new RegExp(one) }).click()
+  await pick.selectOption({ label: one })
   await expect(card.locator('pre').first()).toContainText(`data-site="${sites.find((s) => s.domain === one)!.id}"`)
   const shots = process.env.TRCKABLE_SHOTS
   if (shots) {

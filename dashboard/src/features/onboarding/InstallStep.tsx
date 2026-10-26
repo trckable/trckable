@@ -37,7 +37,7 @@ export function InstallStep({ site, visits, onCopy, after }: { site: Site; visit
     <div ref={box} className="ob-install-step">
       <Install site={site} visits={visits} variant="setup" />
       {asked || late || found ? (
-        <SetupStatus site={site} check={check} arrived={arrived} />
+        <SetupStatus site={site} check={check} arrived={arrived} compact />
       ) : (
         <div className="ob-wait" aria-live="polite">
           <span className="pulse" aria-hidden="true" />

@@ -246,6 +246,48 @@
   border-top: 1px solid var(--border);
 }
 
+/* The first run's code step: cookieless and the AI prompt are one quiet row under the code, no box. */
+.inst-setup .inst-extras {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 0 2px;
+  background: none;
+}
+.inst-setup .inst-extras > .inst-cl + .inst-ai {
+  border-top: 0;
+}
+.inst-setup .inst-extras .inst-row {
+  min-height: 36px;
+  color: var(--text-2);
+}
+.inst-setup .inst-extras .inst-row-label {
+  flex: none;
+}
+.inst-setup .inst-cl {
+  flex-wrap: wrap;
+}
+.inst-setup .inst-cl-hint {
+  margin: 0;
+  padding-left: 0;
+  flex-basis: 100%;
+  order: 3;
+}
+.inst-setup .inst-extras .inst-ai-copy {
+  height: 28px;
+  border-color: transparent;
+  background: none;
+  color: var(--text-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.inst-setup .inst-extras .inst-ai-copy:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
 /* What the check found, small. */
 .inst-check ul {
   display: flex;
@@ -503,6 +545,24 @@
 .setup-flow,
 .setup-flow .inst {
   min-width: 0;
+}
+.setup-status.compact {
+  align-items: flex-start;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  text-align: left;
+}
+.setup-status.compact .setup-head {
+  justify-content: flex-start;
+}
+.setup-status.compact .setup-head h2 {
+  font-size: 14px;
+}
+.setup-status.compact .setup-act {
+  justify-content: flex-start;
+  gap: 12px;
+  margin-top: 6px;
 }
 .setup-flow .code-card {
   max-width: 100%;

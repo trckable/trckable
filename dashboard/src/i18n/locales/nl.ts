@@ -1827,7 +1827,6 @@ export default {
   'onboarding.more.cancel': 'Annuleren',
   'onboarding.more.placeholder': 'anderesite.nl',
   'onboarding.more.sites': 'Je sites',
-  'onboarding.more.waiting': 'wacht',
   'onboarding.more.receiving': 'ontvangt',
   'onboarding.empty.title': 'Nog geen sites',
   'onboarding.empty.sub': 'Voeg je eerste site toe om bezoeken te tellen.',
