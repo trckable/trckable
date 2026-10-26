@@ -1,6 +1,5 @@
-/* The daily email as one quiet line, no box: the words, and a link that opens the preview with the time and the switch. */
-.mk .mailline { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--mk-s1); margin: 0 0 var(--mk-s2); font-size: 12.5px; color: var(--mk-muted); }
-.mk .mailline button { font: inherit; color: var(--mk-text); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+/* The daily email chip sits after Replay and takes its look (.rpb); off, it is quieter. The plain calm row below shares this file. */
+.mk .mailchip.off { color: var(--mk-muted); }
 .mk .calm2.plain { border: 0; padding: 0; min-height: 0; background: none; }
 .mk .calm2.plain button { margin-left: var(--mk-s2); text-decoration: underline; text-underline-offset: 2px; font-size: 12.5px; }
 .mk .calm2.plain .ck { display: none; }

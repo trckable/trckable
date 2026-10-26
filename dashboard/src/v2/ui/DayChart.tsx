@@ -5,7 +5,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 import type { Bucket } from '../../lib/api'
 import { copy } from '../briefing/copy'
-import { capital, type Compare } from '../briefing/compare'
+import { capital, readOf, type Compare } from '../briefing/compare'
+import { Tip } from '../../charts/Tip'
 import { downLabel } from './chartNote'
 import { niceStep } from '../briefing/geometry'
 import type { Judged } from '../briefing/usual'
@@ -155,7 +156,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
       {c.compare && before.length > 1 && (
         <>
           <polyline className="chbefore" points={before.map((p) => `${X(p.i)},${Y(p.v)}`).join(' ')} fill="none" stroke="var(--mk-muted)" strokeWidth="1.25" strokeDasharray="4 4" strokeLinecap="round" strokeLinejoin="round" opacity=".8" />
-          <text className="lbl" data-lbl="5" x={Math.min(X(before[before.length - 1].i), W - Rr - 2)} y={Y(before[before.length - 1].v) - 7} textAnchor="end" fill="var(--mk-axis)" fontSize="12">
+          <text className="lbl" data-lbl="5" style={{ opacity: at !== null && pts[at] && Math.abs(pts[at].i - before[before.length - 1].i) <= 2 ? 0 : undefined }} x={Math.min(X(before[before.length - 1].i), W - Rr - 2)} y={Y(before[before.length - 1].v) - 7} textAnchor="end" fill="var(--mk-axis)" fontSize="12">
             {capital(c.compare.name)}
           </text>
         </>
@@ -229,10 +230,14 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
       )}
     </svg>
   )
-  if (!layer) return chart
+  // The point under the pointer, read out next to it: "13:00 · 42 people · yesterday 31 · +35%".
+  const hover = at !== null ? pts[at] : undefined
+  const tip = <Tip width={W} at={hover ? { x: X(hover.i), y: Y(hover.v), body: readOf(hover.name, hover.raw, c.compare?.name ?? null, hover.was, hover.delta) } : null} />
+  if (!layer) return <>{chart}{tip}</>
   return (
     <div className="chlay">
       {chart}
+      {tip}
       <div className="chlay-in">{layer({ x: X, y: (v: number) => Y(v) - LAYER_TOP, vals: pts.map((p) => p.v), w: W })}</div>
     </div>
   )

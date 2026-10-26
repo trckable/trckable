@@ -84,7 +84,9 @@ test('with too little before it the chart draws no line and says when the compar
   await open(page, 1440, 'dark')
   await expect(page.locator('svg#chart')).toBeVisible()
   await expect(page.locator('svg#chart .chbefore')).toHaveCount(0)
-  await expect(note(page)).toHaveText(/^Comparison starts .+, once there's a month of data$/)
+  // Said once, on the Compare chip (its tooltip and its menu), not again in the line over the chart.
+  await expect(note(page)).not.toHaveText(/Comparison starts/)
+  await expect(page.locator('.cc-chip')).toHaveAttribute('title', /^Comparison starts .+, once there's a month of data$/)
   const box = (await page.locator('svg#chart').boundingBox())!
   await page.mouse.move(box.x + box.width * 0.9, box.y + box.height * 0.6)
   await expect(note(page)).not.toHaveText(/usual|0–0/)
@@ -124,9 +126,9 @@ for (const width of [360, 768, 1440] as const) {
     // One nudge at a time: the first thing not set up is the one slim row.
     expect(rows).toHaveLength(1)
     await expect(page.locator('.lkcs .how')).toHaveCount(0)
-    // The email is one quiet line over the Briefing, no box, with one Change.
-    await expect(page.locator('.mailline')).toContainText('Emailed daily at 08:00')
-    await expect(page.locator('.mailline').getByRole('button')).toHaveCount(1)
+    // The email is one small chip over the Briefing, no box, one button that says the full sentence.
+    await expect(page.locator('.mailchip')).toContainText(/Daily · 0?8:00/)
+    await expect(page.locator('.mailchip')).toHaveAttribute('aria-label', /Emailed daily at 0?8:00.*Change/)
     const gaps = await page.evaluate(() => {
       const top = (s: string) => document.querySelector(s)!.getBoundingClientRect()
       const seq = ['.kcs', '.brief > .cards', '.lkcs']

@@ -2,6 +2,7 @@
 // stream); nothing when there is no visitor to speak of. Pure: reader.test.ts.
 import type { Visit } from '../../lib/api'
 import { countryName } from '../../lib/format'
+import { pageName } from '../../lib/pageName'
 import { sourceName } from './model'
 
 interface Reader {
@@ -42,5 +43,5 @@ export function readerOf(visits: Visit[], self: string, prefer?: string): Reader
 export function readerWords(r: Reader): string {
   const where = r.where ? ` in ${r.where}` : ''
   const via = r.via ? `, who found you through ${r.via},` : ''
-  return `someone${where}${via} read ${r.pages} pages and finished on ${r.last}`
+  return `someone${where}${via} read ${r.pages} pages and finished on ${pageName(r.last)}`
 }

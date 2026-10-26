@@ -1,0 +1,1 @@
+The Briefing's daily email is one small chip beside Replay ("Daily · 8:00 AM", or "Email me this" when off), and the chart's header is one quiet row: the periods, the legend, one Compare menu (previous period, last year, off) and Notes, with the comparison's reason said once. Hovering the chart reads the point's figures next to it.

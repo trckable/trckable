@@ -50,21 +50,34 @@ test('the period and Compare switch over the chart, and the header chip and the 
   await expect(row.getByRole('radio', { name: '12m' })).toBeFocused()
   await row.getByRole('radio', { name: '7d' }).click()
   await expect(page).toHaveURL(/period=7d/)
-  // The switch: on is the default, Space turns it off, and the dashed line goes.
-  const sw = row.getByRole('switch', { name: 'Compare' })
-  await expect(sw).toHaveAttribute('aria-checked', 'true')
+  // The Compare menu: on is the default ("vs previous period"), Off turns it off and the dashed line goes.
+  const chip = row.getByRole('button', { name: /^vs previous period/ })
+  await expect(chip).toHaveAttribute('aria-expanded', 'false')
   await page.waitForTimeout(1500)
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/inline-on-dark-1280.png` })
-  await sw.focus()
-  await page.keyboard.press('Space')
-  await expect(sw).toHaveAttribute('aria-checked', 'false')
+  await chip.click()
+  const menu = page.getByRole('menu', { name: 'Compare against' })
+  await expect(menu.getByRole('menuitemradio', { name: /^Previous period/ })).toHaveAttribute('aria-checked', 'true')
+  // Last year needs a year of data: the steady site is younger, so the choice is there but disabled, with its reason.
+  await expect(menu.getByRole('menuitemradio', { name: /^Same time last year/ })).toHaveAttribute('aria-disabled', 'true')
+  await expect(menu.getByRole('menuitemradio', { name: /^Same time last year/ })).toContainText('Needs a year of data')
+  await page.keyboard.press('Escape')
+  await expect(menu).toHaveCount(0)
+  await expect(chip).toBeFocused()
+  await chip.click()
+  await menu.getByRole('menuitemradio', { name: 'Off' }).click()
   await expect(page).toHaveURL(/compare=none/)
   await expect(page.locator('svg#chart .chbefore')).toHaveCount(0)
-  await sw.click()
-  await expect(sw).toHaveAttribute('aria-checked', 'true')
+  const off = row.getByRole('button', { name: 'Compare' })
+  await expect(off).toBeVisible()
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/inline-off-dark-1280.png` })
+  await off.click()
+  await menu.getByRole('menuitemradio', { name: /^Previous period/ }).click()
   await expect(page.locator('svg#chart .chbefore')).toHaveCount(1)
-  // Last year needs a year of data: the steady site is younger, so the choice is there but disabled.
-  await expect(row.getByRole('radio', { name: 'Same time last year' })).toHaveAttribute('aria-disabled', 'true')
+  // The point under the pointer is read out next to it, with both numbers.
+  const box = (await page.locator('svg#chart').boundingBox())!
+  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5)
+  await expect(page.locator('.chart-tip')).toHaveText(/^.+ · [\d,]+ (visitors|people) · .+ [\d,]+ · [+-]?\d+%$/)
   // The header's menu shows the same comparison.
   await page.locator('#perBtn').click()
   await expect(page.locator('#perMenu .mk-lseg button.on').first()).toHaveText('Before')
@@ -77,6 +90,9 @@ for (const [scheme, width] of [['light', 1280], ['dark', 390]] as const) {
     await page.waitForTimeout(2000)
     const row = (await page.locator('[data-testid=chart-controls]').boundingBox())!
     expect(row.height).toBeLessThanOrEqual(34)
+    // Notes sits on the same row as the period and the Compare menu.
+    const notes = (await page.locator('.chwrap [data-info=notes]').boundingBox())!
+    expect(Math.abs(notes.y + notes.height / 2 - (row.y + row.height / 2))).toBeLessThan(4)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/inline-on-${scheme}-${width}.png` })
   })
