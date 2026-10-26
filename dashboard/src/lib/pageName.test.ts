@@ -16,13 +16,13 @@ describe('a page named in a sentence', () => {
   })
   it('cuts a long slug with an ellipsis, never longer than the limit', () => {
     const out = pageName('/news/pergatitja-e-dosjes-per-kualifikimin-e-mesuesve-20252026')
-    expect([...out].length).toBeLessThanOrEqual(PAGE_NAME_MAX)
+    expect(Array.from(out).length).toBeLessThanOrEqual(PAGE_NAME_MAX)
     expect(out.startsWith('…/pergatitja-e-dosjes-per-')).toBe(true)
     expect(out.endsWith('…')).toBe(true)
   })
   it('keeps unicode whole and decodes what it can', () => {
     expect(pageName('/%C3%AB/p%C3%ABrdorues')).toBe('/ë/përdorues')
-    expect([...pageName('/a/' + 'ë'.repeat(50))]).toHaveLength(PAGE_NAME_MAX)
+    expect(Array.from(pageName('/a/' + 'ë'.repeat(50)))).toHaveLength(PAGE_NAME_MAX)
     expect(pageName('/100%')).toBe('/100%')
   })
 })

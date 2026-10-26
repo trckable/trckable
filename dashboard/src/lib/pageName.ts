@@ -22,8 +22,8 @@ export function pageName(path: string, max = PAGE_NAME_MAX): string {
   const clean = cleanPath(path)
   const trimmed = clean.replace(/\/+$/, '')
   if (!trimmed) return words.home
-  if ([...trimmed].length <= max) return trimmed
+  if (Array.from(trimmed).length <= max) return trimmed
   const seg = trimmed.split('/').filter(Boolean).pop() ?? ''
   const room = max - 3 // "…/" in front, "…" behind
-  return `…/${[...seg].slice(0, room).join('')}…`
+  return `…/${Array.from(seg).slice(0, room).join('')}…`
 }
