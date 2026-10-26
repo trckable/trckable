@@ -2,6 +2,7 @@
 // Arrow keys and Enter pick; Escape or a press outside closes. Markup and classes are the walkthrough's own.
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { MkPortal } from './Portal'
+import { useLockScroll } from '../../components/lockScroll'
 import { askIntent, plain } from '../explore/askIntent'
 
 export interface PaletteItem {
@@ -28,6 +29,7 @@ export interface PaletteAsk {
 }
 
 export function Palette({ items, placeholder, none, onClose, initial = '', ask }: { items: PaletteItem[]; placeholder: string; none: (q: string) => string; onClose: () => void; initial?: string; ask?: PaletteAsk }) {
+  useLockScroll()
   const [q, setQ] = useState(initial)
   const [at, setAt] = useState(0)
   const input = useRef<HTMLInputElement>(null)

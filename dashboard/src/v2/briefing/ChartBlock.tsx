@@ -12,6 +12,7 @@ import { HeroChart, type ChartIn } from '../ui/DayChart'
 import { ReplayStage, type ReplayIn } from '../ui/ReplayStage'
 import { ReplayBar } from '../ui/ReplayBar'
 import { useCinema } from '../ui/useCinema'
+import { useLockScroll } from '../../components/lockScroll'
 import { copy as story } from '../replay/story.copy'
 import { ChartControls } from '../ui/ChartControls'
 import { capital } from './compare'
@@ -48,6 +49,7 @@ export function ChartBlock(p: ChartBlockProps) {
   const block = useRef<HTMLDivElement>(null)
   const phase = p.replay?.replay.phase ?? 'off'
   const cinema = useCinema(phase, block)
+  useLockScroll(cinema.state !== null)
   const hero = (
     <HeroChart
       c={p.chart}

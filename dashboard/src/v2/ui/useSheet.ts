@@ -3,6 +3,7 @@
 // nothing under it (the Explore panel it may sit over), and its last moment is a short fade, not a cut.
 import { useEffect, useRef, type RefObject } from 'react'
 import { leave, trapTab } from '../../kit/Modal'
+import { useLockScroll } from '../../components/lockScroll'
 
 const OPENED = 'trckable:sheet'
 
@@ -10,6 +11,7 @@ const OPENED = 'trckable:sheet'
 export const closeSheets = () => window.dispatchEvent(new CustomEvent(OPENED, { detail: {} }))
 
 export function useSheet(box: RefObject<HTMLElement | null>, onClose: () => void) {
+  useLockScroll()
   const close = useRef(onClose)
   useEffect(() => {
     close.current = onClose

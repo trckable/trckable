@@ -1,6 +1,7 @@
 /* The team overview (views/team). Theme tokens only. */
 .tm-page { padding: 8px 0 60px; display: grid; gap: 18px; }
 .tm-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px; }
+.tm-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; max-width: 100%; }
 .tm-head h1 { margin: 0 0 2px; font-size: 26px; letter-spacing: -0.03em; }
 .tm-head p { margin: 0; max-width: 62ch; font-size: 15px; line-height: 1.45; }
 .tm-strip { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--border); border-radius: 16px; background: linear-gradient(180deg, color-mix(in srgb, var(--text) 3.5%, var(--surface)), var(--surface)); box-shadow: var(--shadow-soft); }
@@ -49,8 +50,6 @@
 .tm-row .c-src { font-size: 14px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tm-row .c-rev { color: var(--money); font-weight: 600; }
 .tm-row .tm-status { margin-top: 1px; }
-.tm-addline { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border: 1px dashed var(--border-2); border-radius: 12px; background: none; color: var(--text-3); font: inherit; font-size: 14px; cursor: pointer; }
-.tm-addline:hover { color: var(--text); background: color-mix(in srgb, var(--text) 3%, transparent); }
 .tm-empty { display: grid; justify-items: center; gap: 8px; padding: 64px 16px; text-align: center; border: 1px dashed var(--border-2); border-radius: 16px; }
 .tm-empty h2 { margin: 0; font-size: 20px; }
 .tm-empty p { margin: 0 0 8px; }

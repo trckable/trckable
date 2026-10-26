@@ -7,33 +7,44 @@ import { useEffect } from 'react'
 let depth = 0
 let savedY = 0
 let savedOverflow = ''
+let savedGutter = ''
+
+/** A touch that starts where nothing can scroll (the backdrop, the page) must not drag the page behind: iOS Safari
+ *  ignores overflow: hidden for it. A scrollable box inside a dialog still scrolls. */
+function scrollsInside(from: EventTarget | null) {
+  for (let el = from instanceof Element ? from : null; el && el !== document.documentElement; el = el.parentElement) {
+    const y = getComputedStyle(el).overflowY
+    if ((y === 'auto' || y === 'scroll') && el.scrollHeight > el.clientHeight) return true
+  }
+  return false
+}
+const holdTouch = (e: TouchEvent) => {
+  if (!scrollsInside(e.target)) e.preventDefault()
+}
 
 export function useLockScroll(active = true) {
   useEffect(() => {
     if (!active) return
-    const body = document.body
     const html = document.documentElement
     if (depth === 0) {
-      // The page scrolls on <html>, so that is what has to stop; <body> gets
-      // the scrollbar's width back as padding so nothing shifts sideways.
-      // <body> itself stays as it is: hidden too, it would become a box of its
-      // own that the sticky control line is stuck inside, and the line would
-      // scroll away with the page the moment a dialog opens.
-      const gap = window.innerWidth - html.clientWidth
+      // The page scrolls on <html>, so that is what has to stop. The scrollbar's lane stays (scrollbar-gutter), so
+      // nothing shifts sideways. <body> stays as it is: hidden too, it would become a box of its own that the sticky
+      // control line is stuck inside, and the line would scroll away with the page the moment a dialog opens.
       savedY = window.scrollY
-      body.dataset.prevPad = body.style.paddingRight
       savedOverflow = html.style.overflow
+      savedGutter = html.style.scrollbarGutter
+      // Only where a scrollbar takes room now: a page without one must not gain a lane.
+      if (window.innerWidth > html.clientWidth) html.style.scrollbarGutter = 'stable'
       html.style.overflow = 'hidden'
-      if (gap > 0) body.style.paddingRight = `${gap}px`
+      document.addEventListener('touchmove', holdTouch, { passive: false })
     }
     depth++
     return () => {
       depth = Math.max(0, depth - 1)
       if (depth === 0) {
+        document.removeEventListener('touchmove', holdTouch)
         html.style.overflow = savedOverflow
-        body.style.paddingRight = body.dataset.prevPad ?? ''
-        delete body.dataset.prevPad
-        // Safari moves the page when the scrollbar's width goes back; put it where it was.
+        html.style.scrollbarGutter = savedGutter
         if (window.scrollY !== savedY) window.scrollTo(0, savedY)
       }
     }
