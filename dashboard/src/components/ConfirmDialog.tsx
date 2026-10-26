@@ -5,6 +5,7 @@ import type { Req } from './Confirm'
 import { toast } from './Toast'
 import { Field } from './Field'
 import { Modal } from '../kit/Modal'
+import { ModalMark } from '../kit/ModalMark'
 import { fail, refused, wrong } from '../lib/api'
 import './ConfirmDialog.css'
 
@@ -43,11 +44,7 @@ export default function ConfirmDialog({ req, done }: { req: Req; done: (v: strin
       onClose={busy ? undefined : () => done(null)}
       frame={{
         title: req.title,
-        icon: (
-          <span className={'modal-badge' + (req.danger ? ' danger' : '')} aria-hidden="true">
-            <Mark size={19} strokeWidth={1.75} />
-          </span>
-        ),
+        icon: <ModalMark icon={Mark} danger={req.danger} />,
         size: 'sm',
         busy,
         cancel: req.cancelLabel ?? 'Cancel',

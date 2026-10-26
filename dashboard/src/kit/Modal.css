@@ -275,10 +275,13 @@
 
 /* ---- The frame: header, body, footer (Modal's `frame`) ---------------------------------------------------------- */
 .modal.framed.modal-sm {
-  width: min(400px, 100%);
+  width: min(420px, 100%);
 }
 .modal.framed.modal-lg {
   width: min(720px, 100%);
+}
+.modal.framed.modal-md {
+  width: min(520px, 100%);
 }
 .modal-head {
   display: flex;
