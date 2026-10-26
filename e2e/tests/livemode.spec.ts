@@ -477,6 +477,10 @@ for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark
     expect(look.radius).toBe('8px')
     expect(look.bg).not.toBe('rgba(0, 0, 0, 0)')
     expect(look.weight).toBe('400')
+    // The page gets the flexible width (14 characters at least); the device is its icon with its name as the tooltip.
+    expect(await row.locator('.pg').evaluate((e) => e.getBoundingClientRect().width)).toBeGreaterThan(100)
+    await expect(row.locator('.dv svg')).toBeVisible()
+    await expect(row.locator('.dv')).toHaveAttribute('title', /\w/)
     await page.waitForTimeout(400)
     await page.screenshot({ path: `${LIVEROW}/liverow-${width}-${colorScheme}.png` })
   })

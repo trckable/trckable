@@ -14,3 +14,11 @@
   .mk .lfeed .lv .cc { width: 22px; }
   .mk .lfeed .lv .cc .ccn { display: none; }
 }
+/* The page is what the row is about: it takes the room the other cells leave (at least 14 characters), in its normal weight; the device is its icon. */
+.mk .lfeed .lv { gap: var(--mk-s2); }
+.mk .lfeed .lv .pg { flex: 1 1 0; min-width: 14ch; }
+.mk .lfeed .lv .src { flex: 0 1 auto; max-width: 96px; }
+.mk .lfeed .lv .dv { display: inline-grid; place-items: center; width: 18px; flex: none; }
+.mk .lfeed[data-narrow] .lv .vn { display: none; }
+.mk .lfeed[data-narrow] .lv .mk-rp { width: 18px; }
+.mk .lfeed[data-narrow] .lv .mk-rp em { display: none; }
