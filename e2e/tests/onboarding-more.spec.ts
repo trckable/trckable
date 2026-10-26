@@ -1,6 +1,6 @@
-// First run, step 2: another site can be added while the first waits, each gets
-// a chip and its own snippet, the first visit on ANY of them moves on, and
-// "Skip for now" opens the dashboard and is remembered.
+// First run, step 2: sites already added and waiting each get their own snippet
+// behind an inline picker, the first visit on ANY of them moves on, and the
+// header's Skip opens the dashboard and is remembered.
 //
 // It needs a server with no site at all, so it starts one of its own, on a
 // fresh data directory.
@@ -81,56 +81,30 @@ test('skip for now opens that site’s dashboard, and the first run stays away',
   await expect(run.locator('.ob-progress')).toContainText('Add the code', { timeout: 15_000 })
   await expect(run.getByRole('combobox', { name: 'Your sites' })).toHaveCount(0)
   if (process.env.TRCKABLE_SHOTS) await page.screenshot({ path: `${process.env.TRCKABLE_SHOTS}/onboarding-skip-${browserName}.png` })
-  await run.getByRole('button', { name: 'Skip for now — open my dashboard' }).click()
+  await run.getByRole('button', { name: /Skip/ }).click()
   await expect(run).toBeHidden()
   await expect(page).toHaveURL(base + '/' + one)
   await page.goto(base + '/')
   await expect(page.getByRole('dialog', { name: 'Set up your first site' })).toHaveCount(0)
 })
 
-test('another site: an inline picker in the sentence, the first visit on the second moves on, then Live', async ({ page, browserName }) => {
+test('another site: two waiting sites, an inline picker in the sentence, the first visit on the second moves on, then Live', async ({ page, browserName }) => {
   const two = `two-${browserName}-${Date.now()}.test`
-  // A fresh browser context has not skipped: the waiting site resumes at step 2.
+  // A second site added through the API, still waiting: with the first it resumes at step 2.
+  await page.request.post(`${base}/api/v1/sites`, { data: { domain: two }, headers: { Cookie: `trckable_session=${cookie}` } })
   const run = await openRun(page)
   await expect(run.locator('.ob-progress')).toContainText('Add the code', { timeout: 15_000 })
   const card = run.getByRole('region', { name: 'Install trckable' })
-  await expect(run.getByRole('combobox', { name: 'Your sites' })).toHaveCount(0)
-
-  await run.getByRole('button', { name: '+ Add another site' }).click()
-  const field = run.getByLabel('Another site')
-  await field.fill('not a domain')
-  await field.press('Enter')
-  await expect(run.locator('.field-err-msg')).toContainText('no spaces')
-  await field.fill(one)
-  await field.press('Enter')
-  await expect(run.locator('.field-err-msg')).toContainText('already have')
-  await field.fill(`https://www.${two}/x`)
-  await field.press('Enter')
 
   const pick = run.getByRole('combobox', { name: 'Your sites' })
   await expect(pick.locator('option')).toHaveCount(2, { timeout: 15_000 })
   await expect(pick).toHaveValue(/.+/)
-  await expect(pick.locator('option:checked')).toHaveText(new RegExp(two))
   const sites = (await (await page.request.get(`${base}/api/v1/sites`)).json()).sites as { id: string; domain: string }[]
   const second = sites.find((s) => s.domain === two)!
-  await expect(card.locator('pre').first()).toContainText(`data-site="${second.id}"`)
   await pick.selectOption({ label: one })
   await expect(card.locator('pre').first()).toContainText(`data-site="${sites.find((s) => s.domain === one)!.id}"`)
-  const shots = process.env.TRCKABLE_SHOTS
-  if (shots) {
-    await run.getByRole('button', { name: '+ Add another site' }).click()
-    await run.getByLabel('Another site').fill('bad one')
-    await run.getByLabel('Another site').press('Enter')
-    for (const [name, size, scheme] of [['wide-light', { width: 1280, height: 900 }, 'light'], ['phone-dark', { width: 390, height: 844 }, 'dark'], ['phone-light', { width: 390, height: 844 }, 'light'], ['wide-dark', { width: 1280, height: 900 }, 'dark']] as const) {
-      await page.setViewportSize(size)
-      await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: scheme })
-      await page.waitForTimeout(500)
-      await page.screenshot({ path: `${shots}/onboarding-more-${name}.png`, fullPage: true })
-    }
-    await page.setViewportSize({ width: 1280, height: 720 })
-    await run.getByRole('button', { name: 'Cancel' }).click()
-  }
-
+  await pick.selectOption({ label: two })
+  await expect(card.locator('pre').first()).toContainText(`data-site="${second.id}"`)
   // A visit on the second site moves on, for that site.
   await visit(page, second.id)
   await expect(run.getByRole('heading', { name: 'Your first visitor just arrived' })).toBeVisible({ timeout: 20_000 })

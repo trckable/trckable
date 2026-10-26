@@ -16,7 +16,6 @@ import { domainWords } from '../install/domainWords'
 import { wizard } from '../install/copy'
 import { formWords } from '../../lib/formWords'
 import { useFocusTrap } from '../install/useFocusTrap'
-import { AddAnother } from './AddAnother'
 import { copy } from './copy'
 import { FirstVisit } from './FirstVisit'
 import { InstallStep } from './InstallStep'
@@ -133,13 +132,9 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
   const skip = () => {
     if (!required) leave(site ? finishPath(site.domain, false) : null)
   }
-  // "Skip for now — open my dashboard": the site's own page, where its install waits.
+  // The header's Skip while required: the site's own page, where its install waits.
   const toDashboard = () => {
     leave(site ? finishPath(site.domain, false) : null, true)
-  }
-  const added = (s: Site) => {
-    setSites((all) => [...all, s])
-    setActive(s.id)
   }
 
   // Keyboard first: Esc skips (unless a menu inside is closing), and Enter
@@ -208,14 +203,6 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
               onCopy={markCopied}
               site={site}
               visits={visits}
-              after={
-                <div className="ob-after">
-                  <AddAnother sites={sites} onAdded={added} />
-                  <button type="button" className="ob-skip-link" onClick={toDashboard}>
-                    {copy.skipDash}
-                  </button>
-                </div>
-              }
             />
           </div>
         )}

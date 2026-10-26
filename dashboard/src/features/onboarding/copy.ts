@@ -40,12 +40,6 @@ export const copy = defineCopy('onboarding', {
     arrived: (path: string) => `Your first visit arrived: ${path}`,
   },
   more: {
-    open: '+ Add another site',
-    label: 'Another site',
-    add: 'Add site',
-    busy: 'Adding…',
-    cancel: 'Cancel',
-    placeholder: 'othersite.com',
     sites: 'Your sites',
     receiving: 'receiving',
   },
@@ -54,5 +48,4 @@ export const copy = defineCopy('onboarding', {
     sub: 'Add your first site to start counting visits.',
     add: 'Add your first site',
   },
-  skipDash: 'Skip for now — open my dashboard',
 })

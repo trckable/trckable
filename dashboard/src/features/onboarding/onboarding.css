@@ -220,46 +220,6 @@ body:has(.ob.gated) .side-deck {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-.ob-after {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: min(640px, 100%);
-  margin: 0 auto;
-}
-.ob-more-form {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-}
-.ob-more-form .input {
-  flex: 1 1 200px;
-  min-width: 0;
-}
-.ob-more-problem {
-  flex-basis: 100%;
-}
-.ob-more-problem:empty {
-  display: none;
-}
-.ob-skip-link {
-  padding: 4px 6px;
-  border: 0;
-  background: none;
-  color: var(--faint);
-  font: inherit;
-  font-size: 13px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-.ob-skip-link:hover {
-  color: var(--text);
-}
 
 
 /* Step 2: the code, then a calm line while the first visit is awaited. */

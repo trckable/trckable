@@ -225,6 +225,14 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
   expect(site?.id).toMatch(/^tkb_/)
   await expect(card.locator('pre').first()).toContainText(`data-site="${site!.id}"`)
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/onboarding-2-install-${browserName}.png` })
+  if (SHOTS) {
+    await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'dark' })
+    for (const w of [1280, 390]) {
+      await page.setViewportSize({ width: w, height: 900 })
+      await page.screenshot({ path: `${SHOTS}/onboarding-step2-waiting-dark-${w}.png` })
+    }
+    await page.setViewportSize({ width: 1280, height: 720 })
+  }
 
   // A real pageview moves it on by itself.
   await visit(page, site!.id)
