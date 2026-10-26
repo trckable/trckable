@@ -200,7 +200,15 @@ test('Live starts as a line, the chart switch keeps bars across a reload and bot
   expect(line.titles.length).toBe(30)
   expect(line.titles.map(minute)).toEqual(bars.titles.map(minute))
   // Hovering a minute names it and its views, in the bars and in the line.
+  await page.evaluate(() => {
+    const w = window as unknown as { __ev: string[] }
+    w.__ev = []
+    const el = document.querySelectorAll('.lnow .mins i')[12]
+    for (const t of ['pointerover', 'pointerenter', 'pointerleave', 'pointerout', 'mouseover', 'mousemove']) el.addEventListener(t, (e) => w.__ev.push(`${t}:${(e as PointerEvent).pointerType}`))
+  })
   await page.locator('.lnow .mins i').nth(12).hover()
+  await page.waitForTimeout(500)
+  expect(await page.evaluate(() => (window as unknown as { __ev: string[] }).__ev.join(' '))).toBe('x')
   await expect(page.locator('.lchart .kit-tip')).toContainText(/\d{1,2}:\d{2}/)
   await expect(page.locator('.lchart .kit-tip')).toContainText(/\d+ views?/)
   await style.getByRole('button', { name: 'Line' }).click()
