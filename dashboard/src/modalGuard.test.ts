@@ -26,7 +26,7 @@ const NOT_MODAL = new Set([
   'features/hints/HintHost.tsx',
 ])
 // Full-screen surfaces of the dashboard's own (a palette, a drawer, the first-run page): not dialogs of the Modal kind.
-const OWN_SURFACE = new Set(['features/mentions/Detail.tsx', 'features/onboarding/Onboarding.tsx', 'v2/ui/Palette.tsx', 'v2/ui/BellMenu.tsx'])
+const OWN_SURFACE = new Set(['features/mentions/Detail.tsx', 'features/onboarding/Onboarding.tsx', 'v2/ui/Palette.tsx', 'v2/ui/BellMenu.tsx', 'v2/briefing/ChartBlock.tsx'])
 
 // A <Modal> without a frame brings its own header and footer. Each one left is named with the reason it cannot use the
 // frame today: its header or footer carries the dialog's live content, or the dialog is a layout of its own.

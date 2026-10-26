@@ -43,8 +43,10 @@ for (const [scheme, width] of [['dark', 1280], ['light', 1280], ['dark', 390]] a
     await expect(page.locator('.chwrap[data-rp=on]')).toBeVisible()
     await page.waitForTimeout(1500)
     await expect(page.locator('svg#chart .chbefore')).toHaveCount(1)
-    if (width > 600) await expect(page.locator('.chkey')).toBeVisible()
-    if (width > 600) await expect(page.locator('.chkey')).toContainText('Last month')
+    // The key of the two lines: on the row beside the Compare menu (in the cinema, over the plot).
+    const key = page.locator('.cc-key:visible, .chkey:visible')
+    if (width > 600) await expect(key).toBeVisible()
+    if (width > 600) await expect(key).toContainText('Last month')
     // Nothing overlaps: the count sits above every marker of the chart.
     const hud = (await page.locator('.rp-hud').boundingBox())!
     for (const m of await page.locator('.chlay-in svg, .chlay-in [data-m], .chlay-in button').all()) {

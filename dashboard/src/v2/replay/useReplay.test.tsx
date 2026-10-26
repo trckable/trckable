@@ -10,11 +10,17 @@ let root: Root
 let host: HTMLDivElement
 let r: Replay
 
-function Probe() {
-  r = useReplay('k')
+function Probe({ out }: { out: (v: Replay) => void }) {
+  out(useReplay('k'))
   return null
 }
-const key = (k: string) => act(() => void window.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true })))
+const sink = (v: Replay) => {
+  r = v
+}
+const key = (k: string) =>
+  act(() => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }))
+  })
 
 describe('the replay cinema state', () => {
   beforeEach(() => {
@@ -23,7 +29,7 @@ describe('the replay cinema state', () => {
     host = document.createElement('div')
     document.body.append(host)
     root = createRoot(host)
-    act(() => root.render(<Probe />))
+    act(() => root.render(<Probe out={sink} />))
   })
   afterEach(() => {
     act(() => root.unmount())
@@ -53,9 +59,13 @@ describe('the replay cinema state', () => {
   })
   it('skips to the next moment, then to the end state, and again plays from the start', () => {
     begin()
-    act(() => void r.next())
+    act(() => {
+      r.next()
+    })
     expect(r.phase).toBe('on')
-    act(() => void r.next())
+    act(() => {
+      r.next()
+    })
     expect(r.phase).toBe('end')
     expect(r.playing).toBe(false)
     act(() => r.start())

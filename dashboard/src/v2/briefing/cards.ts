@@ -4,6 +4,7 @@
 import type { Result, Row } from '../../lib/api'
 import type { Span } from './outage'
 import { countryName, flag, fmtFixed, fmtInt } from '../../lib/format'
+import { pageName } from '../../lib/pageName'
 import { assistantOf } from '../../features/extras/assistants'
 import { copy } from './cards.copy'
 import { mult, sourceName, type Deeper, type Unit } from './model'
@@ -194,7 +195,7 @@ function sourceCard(s: Slice & { st: Judged }, i: CardsIn, total: number, topPag
     ask: copy.askSource(name, up),
     rest: sourceRest(up, r, i.low),
     vis: up ? { k: 'dots', v: s.v, c: b.c, name } : { k: 'ba', lo: b.lo, hi: b.hi, c: b.c, v: s.v, red: true },
-    why: `${copy.usually(rg(b), name)}${topPage ? copy.mostLanded(topPage.name) : ''}${up && !i.low && leave !== null ? copy.leave(leave) : ''}.`,
+    why: `${copy.usually(rg(b), name)}${topPage ? copy.mostLanded(pageName(topPage.name)) : ''}${up && !i.low && leave !== null ? copy.leave(leave) : ''}.`,
     val: fmtInt(Math.round(s.v)),
     m: s.v,
     u: 'people',
