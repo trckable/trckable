@@ -4,7 +4,7 @@
 
 # trckable
 
-**Everything about your site, in one place.**
+**The only analytics you need. Private, free and open source.**
 
 Your day in plain words, who's on your site right now, where people mention you, whether AI recommends you, alerts when something breaks,<br>
 and revenue from your payment provider: one open-source tool for your whole team.<br>
