@@ -14,3 +14,5 @@
 @container (--pane-max-600) {
   .mk .chkey { display: none; }
 }
+/* A series' name sits on a halo of the card's colour, so a line that passes behind it never runs through the letters. */
+.mk .chplot text.lbl-halo { paint-order: stroke; stroke: var(--mk-card); stroke-width: 4px; stroke-linejoin: round; }

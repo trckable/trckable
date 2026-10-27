@@ -34,21 +34,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
   box-sizing: border-box;
-  width: 22px;
-  height: 22px;
+  min-width: 20px;
+  height: 20px;
   margin: 0;
-  padding: 0;
+  padding: 0 5px;
   transform: translate(-50%, -50%);
-  border: 1.5px solid var(--mk);
-  border-radius: 11px;
-  background: var(--surface);
+  border: 0;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--text) 9%, var(--surface));
   color: var(--mk);
   cursor: pointer;
+  transition: background-color 0.12s;
 }
 .moment-mark.many {
-  width: auto;
   padding: 0 6px 0 5px;
 }
 .moment-mark svg {
@@ -70,32 +70,29 @@
 .moment-day.ai {
   --mk: var(--ch-5);
 }
-/* A finger-sized target around the small ring. */
+/* A finger-sized target around the small chip. */
 .moment-mark::after {
   content: '';
   position: absolute;
-  inset: -8px;
-  border-radius: 50%;
+  inset: -10px -6px;
+  border-radius: 8px;
 }
 .moment-mark:hover,
 .moment-mark:focus-visible {
-  border-width: 2.5px;
-  background: color-mix(in srgb, var(--mk) 18%, var(--surface));
+  background: color-mix(in srgb, var(--text) 16%, var(--surface));
   outline: none;
 }
-/* The one whose card is open. */
+/* The one whose card is open: the kind's colour fills it. */
 .moment-mark.on {
-  border-width: 2.5px;
   background: var(--mk);
   color: var(--surface);
 }
 .moment-mark:focus-visible {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--text) 35%, transparent);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px color-mix(in srgb, var(--text) 45%, transparent);
 }
 /* "See it" lit it: a ring that spreads and fades twice. With reduced motion the ring just stays while it is lit. */
 .moment-mark.hit {
-  border-width: 2.5px;
-  background: color-mix(in srgb, var(--mk) 22%, var(--surface));
+  background: color-mix(in srgb, var(--mk) 24%, var(--surface));
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--mk) 35%, transparent);
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -111,9 +108,18 @@
     box-shadow: 0 0 0 14px color-mix(in srgb, var(--mk) 0%, transparent);
   }
 }
+/* The line down to the plot from the chip pointed at or focused, and only then. */
+.moment-guide {
+  position: absolute;
+  z-index: 2;
+  width: 1px;
+  margin-left: -0.5px;
+  background: color-mix(in srgb, var(--text) 28%, transparent);
+  pointer-events: none;
+}
 /* Markers that landed together are one, with how many: beside the icon, inside the ring. */
 .moment-n {
-  color: var(--text);
+  color: var(--text-2);
   font-size: 12px;
   font-style: normal;
   font-weight: 600;
@@ -123,9 +129,12 @@
   color: var(--surface);
 }
 .moment-tip {
+  --mk: var(--accent);
   position: absolute;
   z-index: 6;
-  padding: 6px 10px;
+  box-sizing: border-box;
+  width: max-content;
+  padding: 8px 10px;
   border: 1px solid var(--border-2);
   border-radius: 10px;
   background: var(--surface);
@@ -134,6 +143,53 @@
   font-size: 12.5px;
   pointer-events: none;
   animation: rise 0.12s var(--ease) backwards;
+}
+.moment-tip.sale {
+  --mk: var(--money);
+}
+.moment-tip.drop {
+  --mk: var(--down);
+}
+.moment-tip.referrer {
+  --mk: var(--ch-1);
+}
+.moment-tip.ai {
+  --mk: var(--ch-5);
+}
+.moment-tip .mt-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.moment-tip .mt-head svg {
+  flex: none;
+  color: var(--mk);
+}
+.moment-tip .mt-head b {
+  font-weight: 600;
+}
+.moment-tip .mt-day {
+  margin-left: auto;
+  padding-left: 12px;
+  color: var(--text-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.moment-tip .mt-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 0;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.moment-tip .mt-more {
+  margin: 6px 0 0;
+  padding: 6px 0 0;
+  border-top: 1px solid var(--border);
+  list-style: none;
+  color: var(--text-3);
+  font-size: 12px;
 }
 @media (prefers-reduced-motion: reduce) {
   .moment-tip {
