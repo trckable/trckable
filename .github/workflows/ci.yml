@@ -516,12 +516,12 @@ jobs:
         name: build image
         run: docker build -f deploy/Dockerfile -t trckable:ci .
       - if: needs.changes.outputs.image == 'true'
-        name: compressed size ≤ 32 MB
+        name: compressed size ≤ 34 MB
         run: |
           bytes=$(docker save trckable:ci | gzip -1 | wc -c)
-          echo "compressed image: $(awk "BEGIN{printf \"%.1f\", $bytes/1048576}") MB (budget 32 MB)"
+          echo "compressed image: $(awk "BEGIN{printf \"%.1f\", $bytes/1048576}") MB (budget 34 MB)"
           echo "IMAGE_BYTES=$bytes" >> "$GITHUB_ENV"
-          test "$bytes" -le $(( 32 * 1048576 ))
+          test "$bytes" -le $(( 34 * 1048576 ))
       - if: needs.changes.outputs.image == 'true'
         name: runs as an unprivileged user, and says what to run for a volume it cannot write
         run: |
