@@ -2,8 +2,7 @@
 // four numbers, and one card per kind the page had last), so nothing jumps when the numbers land.
 import type { CSSProperties } from 'react'
 import { Ico } from './icons'
-
-const CHEV = <Ico name="chev" className="ic-ch" strokeWidth={1.8} />
+import './storyCard.css'
 
 /** What a card of each kind looks like before it is read: rows, dots, a line or bars. */
 const SHAPE: Record<string, 'rows' | 'dots' | 'spark' | 'bar' | 'bars'> = { uptime: 'bar', sales: 'rows', sources: 'dots', funnel: 'rows', countries: 'spark', devices: 'bars', pages: 'bars', goals: 'bars', search: 'rows' }
@@ -19,29 +18,28 @@ function Vis({ topic }: { topic: string }) {
   return [0, 1].map((k) => <i key={k} className="skl" style={bone(14)} />)
 }
 
-function Card({ topic, wide }: { topic: string; wide: boolean }) {
+function Card({ topic }: { topic: string }) {
   return (
-    <article className={`icard sk${wide ? ' wide' : ''}`} data-topic={topic}>
+    <article className="icard sk" data-topic={topic}>
       <div className="ic-h">
-        <Ico name={topic} className="ic-i" />
+        <div className="ic-top">
+          <Ico name={topic} className="ic-i" />
+          <i className="skl" style={{ width: 90, margin: 0 }} />
+        </div>
         <h3>
           <i className="skl" style={{ width: '86%' }} />
           <i className="skl" style={{ width: '54%' }} />
         </h3>
-        <span className="ic-val">
-          <i className="skl" style={{ width: 34 }} />
-        </span>
-        {CHEV}
       </div>
+      <p className="ic-w">
+        <i className="skl" style={{ width: '70%' }} />
+      </p>
       <div className="ic-v">
         <Vis topic={topic} />
       </div>
-      <div className="ic-w">
-        <i className="skl" style={{ width: '70%' }} />
-      </div>
       <div className="ic-f">
         <i className="skl" style={{ width: 96, height: 'var(--mk-h)' }} />
-        <i className="skl" style={{ width: 130, height: 'var(--mk-h)' }} />
+        <i className="skl" style={{ width: 90, height: 14, marginLeft: 'auto' }} />
       </div>
     </article>
   )
@@ -87,8 +85,8 @@ export function BriefingSkeleton({ site, label }: { site: string; label: string 
           ))}
         </div>
         <div className="cards">
-          {topics.map((t, k) => (
-            <Card key={t} topic={t} wide={k === 0 || (topics.length % 2 === 0 && k === topics.length - 1)} />
+          {topics.map((t) => (
+            <Card key={t} topic={t} />
           ))}
         </div>
       </div>

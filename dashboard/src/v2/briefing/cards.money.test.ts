@@ -48,6 +48,16 @@ describe('the sales cards', () => {
 
 const sr = (rows: { key: string; clicks: number }[]): SearchReport => ({ property: 'p', dim: 'query', rows: rows.map((r) => ({ ...r, impressions: r.clicks * 20, ctr: 0.05, position: 4 })), from: '', to: '', clicks: rows.reduce((n, r) => n + r.clicks, 0), impressions: 0, preliminary_from: '', ignored_filters: null })
 
+describe('the sales title counts a new customer whatever the provider calls the first payment', () => {
+  const sale = (kind: string) => salesCards({ ...base, money: money({ revenue: 33800, payments: 2, customers: 1, new_revenue: 12000, renewal_revenue: 21800 }), band: null, buyers: [{ id: 'a', at: '2026-10-16T15:20:00Z', amount: 12000, kind }] })[0]
+  it.each(['subscription', 'one_time', 'new'])('says the %s payment is a customer, not only the renewal', (kind) => {
+    expect(sale(kind).head).toBe('1 person became a customer, 1 renewal')
+  })
+  it('does not count an upgrade as a new customer', () => {
+    expect(sale('upgrade').head).toBe('1 customer upgraded, 1 renewal')
+  })
+})
+
 describe('the sales rows add up to the headline', () => {
   const rowsOf = (c: ReturnType<typeof salesCards>[number]) => (c.vis?.k === 'rcpt' ? c.vis.rows : [])
   const num = (a?: string) => Number((a ?? '').replace(/[^0-9.-]/g, ''))
@@ -133,10 +143,11 @@ describe('the signup path and a first customer', () => {
     expect(leakCard({ f: { steps, leak: { at: -1, r: 0, ur: 0 } }, domain: 'a.com', rule: '' })).toBeNull()
     expect(leakCard({ f: { steps: [{ name: 'a', v: 6, c: 6 }, { name: 'b', v: 0, c: 3 }], leak: { at: 1, r: 0, ur: 0.4 } }, domain: 'a.com', rule: '' })).toBeNull()
   })
-  it('is a number with a line for a country that never had a customer', () => {
+  it('is a card for a country that never had a customer', () => {
     const c = firstCard({ first: { country: 'DE', amount: 2900, at: '2026-10-16T09:05:00Z', referrer: 'news.ycombinator.com', people: 14 }, band: { c: 10, lo: 6, hi: 14 }, fmt: usd, clock: (iso) => iso.slice(11, 16), rule: '' })
     expect(c.head).toBe('Your first customer from Germany')
-    expect(c.kc).toMatchObject({ note: 'first customer', tone: 'up' })
+    expect(c.kc).toMatchObject({ label: 'Germany' })
+    expect(c.vis).toMatchObject({ k: 'rcpt', rows: [{ l: 'New customer · via Hacker News', t: '09:05', a: '+$29' }] })
     expect(c.why).toContain('$29 via')
   })
 })

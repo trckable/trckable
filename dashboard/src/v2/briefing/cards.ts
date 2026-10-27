@@ -25,7 +25,7 @@ export type Act =
 
 export type Vis =
   | { k: 'rcpt'; plain?: boolean; rows: { lead?: boolean; l: string; t?: string; a?: string; flag?: string; neg?: boolean; more?: boolean; tot?: boolean; mark?: 'up' | 'dn' }[] }
-  | { k: 'dots'; v: number; c: number; name: string }
+  | { k: 'spike' }
   | { k: 'ba'; lo: number; hi: number; c: number; v: number; red: boolean }
   | { k: 'outage'; spans: Span[]; nowAt: number; from: string; now: string; live: boolean; marks: Mark[] }
   | { k: 'funnel'; rows: { name: string; v: number; w: number; hot: string }[] }
@@ -72,8 +72,12 @@ export interface Story {
   /** Why it happened, as far as can be known: shown as "Why?" with the evidence. */
   cause?: Why
   deeper: Deeper
-  /** A card that is a number with a line (a country). */
-  kc?: { flag: string; label: string; note: string; tone: 'up' | 'dn'; filter: { dim: string; value: string } }
+  /** How many times its usual the number is (above 1 is more than usual); none where there is no usual to say. */
+  ratio?: number
+  /** What the badge says where the card has no usual to compare with ("first customer"). */
+  mark?: string
+  /** A card about a country: the flag and the name it is told by. */
+  kc?: { flag: string; label: string }
 }
 
 export interface Slice {
@@ -138,6 +142,9 @@ export interface CardsIn {
   /** A customer from a country nobody had paid from before. */
   first?: FirstFrom
 }
+
+/** How many times the usual's middle the number is; none where that middle is too small to say. */
+const ratioOf = (v: number, c: number): number | undefined => (c >= 1 ? v / c : undefined)
 
 const people = (n: number) => (n === 1 ? '1 person' : `${fmtInt(n)} people`)
 const rg = (b: Band) => `${fmtInt(Math.max(0, b.lo))}–${fmtInt(b.hi)}`
@@ -223,7 +230,8 @@ function sourceCard(s: Slice & { st: Judged }, i: CardsIn, total: number, topPag
     head: up ? copy.sent(name, people(Math.round(s.v))) : copy.sentOnly(name, people(Math.round(s.v))),
     ask: copy.askSource(name, up),
     rest: sourceRest(up, r, i.low),
-    vis: up ? { k: 'dots', v: s.v, c: b.c, name } : { k: 'ba', lo: b.lo, hi: b.hi, c: b.c, v: s.v, red: true },
+    ratio: r || undefined,
+    vis: up ? { k: 'spike' } : { k: 'ba', lo: b.lo, hi: b.hi, c: b.c, v: s.v, red: true },
     why: `${copy.usually(rg(b), name)}${topPage ? copy.mostLanded(pageName(topPage.name)) : ''}${up && !i.low && leave !== null ? copy.leave(leave) : ''}.`,
     val: fmtInt(Math.round(s.v)),
     m: s.v,
@@ -248,7 +256,8 @@ function countryCard(s: Slice & { st: Judged }, i: CardsIn, total: number, src?:
     head: `${flag(s.value)} ${people(Math.round(s.v))} from ${name}`,
     rest: `, ${up ? 'more' : 'fewer'} than usual`,
     ask: copy.askCountry(name, up),
-    vis: null,
+    ratio: ratioOf(s.v, b.c),
+    vis: { k: 'spike' },
     why: `${src ? copy.sendsMost(src) : ''}${copy.usuallyFromCountry(rg(b), name)}`,
     val: fmtInt(Math.round(s.v)),
     m: s.v,
@@ -257,7 +266,7 @@ function countryCard(s: Slice & { st: Judged }, i: CardsIn, total: number, src?:
     ev: evidence(s.v, b),
     act: { k: 'set', t: copy.setAlert, msg: copy.alertMoves(name, rg(b)) },
     deeper: { kind: 'explore', filter: { dim: 'country', value: s.value } },
-    kc: { flag: flag(s.value), label: name, note: up ? copy.moreThanUsual : copy.fewerThanUsual, tone: up ? 'up' : 'dn', filter: { dim: 'country', value: s.value } },
+    kc: { flag: flag(s.value), label: name },
   }
 }
 
@@ -272,6 +281,7 @@ function deviceCard(s: Slice & { st: Judged }, i: CardsIn, total: number): Story
     head: copy.devicesAre(s.name, up),
     ask: copy.askDevice(s.name, up),
     rest: `: ${people(Math.round(s.v))}`,
+    ratio: ratioOf(s.v, b.c),
     vis: { k: 'ba', lo: b.lo, hi: b.hi, c: b.c, v: s.v, red: !up },
     why: `${i.low ? '' : `${Math.round((s.v / Math.max(1, total)) * 100)}% of everyone; `}usually ${rg(b)} people.`,
     val: fmtInt(Math.round(s.v)),
@@ -297,6 +307,7 @@ function pageCard(s: Slice & { st: Judged }, i: CardsIn): Story {
     head: `${s.name} ${up ? 'is getting more readers' : 'lost readers'}`,
     ask: copy.askPage(s.name, up),
     rest: `: ${people(Math.round(s.v))}`,
+    ratio: ratioOf(s.v, b.c),
     vis: { k: 'ba', lo: b.lo, hi: b.hi, c: b.c, v: s.v, red: !up },
     why: copy.usuallyRead(rg(b)),
     val: fmtInt(Math.round(s.v)),
@@ -342,6 +353,7 @@ function goalCard(i: CardsIn): Story | null {
     score: 45,
     bad: rows.some((x) => x.st === 'dn'),
     head: goalHead(g.name, up, g.pct),
+    ratio: g.pct === null ? undefined : 1 + g.pct / 100,
     vis: { k: 'goals', rows },
     why: g.hi >= 1 ? copy.goalSub(fmtInt(Math.round(g.v)), goalWhen(i.unit), range) : copy.goalSubBare(fmtInt(Math.round(g.v)), goalWhen(i.unit)),
     ask: goalAsk(g.name, up, g.pct, goalWhen(i.unit)),

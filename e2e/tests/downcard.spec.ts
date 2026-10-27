@@ -33,12 +33,6 @@ for (const [width, scheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark']] a
     await expect(card).toBeVisible({ timeout: 20_000 })
     await expect(card.locator('.ic-h b')).toHaveText('Down for 10 minutes')
     await expect(card.locator('.ic-site')).toHaveText(STEADY_DOMAIN)
-    // A phone lists the card as one flat row (the picture and the buttons open from it).
-    if (width < 600) {
-      expect(Math.round((await card.locator('.ic-h').boundingBox())!.height)).toBeLessThanOrEqual(90)
-      await card.screenshot({ path: `${SHOTS}/downcard-${width}-${scheme}.png` })
-      return
-    }
     await expect(card.locator('.ic-when')).toHaveText(/^\d\d:\d\d–\d\d:\d\d$/)
     // The incident's day: the red segment is at least 6px wide and says its minutes and times.
     const seg = card.locator('.obt .obd')

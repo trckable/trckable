@@ -1,0 +1,115 @@
+/* The Briefing's cards: one family. The same shell for every card (equal height in a row, roomy corners, no boxes in boxes),
+   a top row, one sentence with its figure lit, a line of why, one picture that fills the lower part, one foot. */
+.mk .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: var(--mk-s4); }
+.mk .icard {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mk-s3);
+  min-width: 0;
+  min-height: 300px;
+  padding: var(--mk-s5) var(--mk-s5) var(--mk-s4);
+  background: var(--mk-card);
+  border: 1px solid var(--mk-line);
+  border-radius: 22px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s;
+  animation: bc-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.mk .icard.r { border-color: var(--mk-redL); }
+.mk .icard.sk { min-height: 0; animation: none; }
+.mk .icard > * { position: relative; z-index: 1; }
+@media (hover: hover) {
+  .mk .icard:not(.sk):not(.inc):hover { transform: translateY(-2px); box-shadow: 0 14px 32px var(--mk-shc); }
+}
+
+/* The top row: the kind's icon and what the card is about on the left, how far from usual on the right. */
+.mk .ic-h { display: flex; flex-direction: column; gap: var(--mk-s3); }
+.mk .ic-top { display: flex; align-items: center; gap: var(--mk-s2); min-width: 0; color: var(--mk-muted); font-size: 12.5px; }
+.mk .ic-top .ic-i { flex: none; box-sizing: border-box; width: 26px; height: 26px; padding: 5px; border-radius: 8px; background: var(--mk-limeD); color: var(--mk-lime); }
+.mk .icard.r .ic-top .ic-i { background: color-mix(in srgb, var(--mk-red) 14%, transparent); }
+.mk .ic-sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk .ic-bd { flex: none; margin-left: auto; padding: 3px 9px; border-radius: 999px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mk .ic-bd.up { background: var(--mk-limeD); color: var(--mk-lime); }
+.mk .ic-bd.dn { background: color-mix(in srgb, var(--mk-red) 14%, transparent); color: var(--mk-red); }
+.mk .ic-vf { display: inline-flex; flex: none; align-items: center; gap: 5px; margin-left: auto; color: var(--mk-lime); font-size: 12px; white-space: nowrap; }
+
+/* The sentence: the figure in it lit, with a soft glow. */
+.mk .icard h3 { margin: 0; color: var(--mk-text); font-size: 19px; font-weight: 650; line-height: 1.3; letter-spacing: -0.01em; text-wrap: balance; }
+.mk .icard h3 .hl { color: var(--mk-lime); font-weight: 700; text-shadow: 0 0 18px var(--mk-limeL); }
+.mk .ic-w { margin: 0; color: var(--mk-muted); font-size: 13.5px; line-height: 1.45; }
+.mk .ic-w b { color: var(--mk-text); font-weight: 600; }
+
+/* What else moved: small chips, and the way to all of it. */
+.mk .ic-also { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; color: var(--mk-muted); font-size: 12px; }
+.mk .ic-also .chip { padding: 4px 9px; border-radius: 999px; background: var(--mk-band); }
+.mk .ic-also .lk3 { padding: 0 4px; border: 0; background: none; color: var(--mk-text); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+
+/* The picture sits at the bottom of the card, above the foot. A rising line bleeds to the card's edges behind the foot. */
+.mk .ic-v { display: flex; flex-direction: column; gap: var(--mk-s2); min-width: 0; margin-top: auto; }
+.mk .icard > .ic-v.spike { position: absolute; z-index: 0; left: 0; right: 0; bottom: 0; height: 120px; margin: 0; pointer-events: none; }
+.mk .icard.spk { min-height: 320px; }
+.mk .ic-spk { width: 100%; height: 100%; color: var(--mk-lime); filter: drop-shadow(0 0 6px var(--mk-limeL)); animation: bc-draw 1.1s cubic-bezier(0.3, 0.7, 0.2, 1) 0.15s both; }
+.mk .ic-spk.dn { color: var(--mk-red); filter: none; }
+.mk .ic-spkl { display: block; width: 100%; height: 100%; }
+
+/* The foot: the card's one action on the left; the link deeper and the "⋯" together on the right, on a line of their own where there is no room. */
+.mk .ic-f { display: flex; flex-wrap: wrap; align-items: center; gap: var(--mk-s2); min-width: 0; margin-top: var(--mk-s2); }
+.mk .ic-f .xb { flex: 0 1 auto; max-width: 100%; padding: 0 var(--mk-s3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk .ic-fr { display: flex; align-items: center; gap: var(--mk-s1); margin-left: auto; }
+.mk .ic-lk { height: var(--mk-h); padding: 0 var(--mk-s2); border: 0; border-radius: var(--mk-rc); background: none; color: var(--mk-muted); font-size: 13px; white-space: nowrap; cursor: pointer; }
+.mk .ic-lk:hover { background: var(--mk-hover); color: var(--mk-text); }
+
+/* The sales: the total big, a clean row for each payment. */
+.mk .ic-big { color: var(--mk-text); font-size: 44px; font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
+.mk .ic-rows { display: flex; flex-direction: column; }
+.mk .rr { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 9px 0; border-top: 1px solid var(--mk-line); font-size: 14px; font-variant-numeric: tabular-nums; }
+.mk .rr:first-child { border-top: 0; }
+.mk .rr .d { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--mk-lime); }
+.mk .rr .d.dn { background: var(--mk-red); }
+.mk .rr .fl { flex: none; width: 20px; }
+.mk .rr .rl { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk .rr .rl small { margin-left: 6px; color: var(--mk-faint); font-size: 12.5px; }
+.mk .rr .ra { flex: none; margin-left: auto; font-weight: 650; }
+.mk .rr .ra.neg { color: var(--mk-red); }
+.mk .rr.more { color: var(--mk-faint); }
+.mk .rr.lead .rl { font-weight: 700; }
+
+/* The usual as a soft band, the number as a lit mark on it. */
+.mk .ic-band { position: relative; padding-top: 24px; }
+.mk .ic-band .bn { position: absolute; top: 0; transform: translateX(-50%); color: var(--mk-lime); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mk .ic-band .bt { position: relative; height: 20px; border-radius: 6px; background: var(--mk-band); }
+.mk .ic-band .bu { position: absolute; top: 0; height: 100%; border-radius: 6px; background: color-mix(in srgb, var(--mk-text) 12%, transparent); }
+.mk .ic-band .bm { position: absolute; top: -8px; width: 4px; height: 36px; margin-left: -2px; border-radius: 4px; background: var(--mk-lime); box-shadow: 0 0 16px var(--mk-limeM); animation: bc-pop 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both; }
+.mk .ic-band .bl { position: relative; height: 22px; margin-top: 10px; }
+.mk .ic-band .bl span { position: absolute; top: 0; color: var(--mk-muted); font-size: 11.5px; white-space: nowrap; }
+.mk .ic-band.dn .bn { color: var(--mk-red); }
+.mk .ic-band.dn .bm { background: var(--mk-red); box-shadow: 0 0 16px var(--mk-redL); }
+.mk .ic-band.sm { padding-top: 20px; }
+.mk .ic-band.sm .bt { height: 14px; }
+.mk .ic-band.sm .bm { top: -5px; height: 24px; }
+.mk .ic-band.sm .bl { height: 18px; margin-top: 6px; }
+.mk .ic-goal { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 0 var(--mk-s3); padding: var(--mk-s3) 0; border-top: 1px solid var(--mk-line); }
+.mk .ic-goal:first-child { padding-top: 0; border-top: 0; }
+.mk .ic-goal .gn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 600; }
+.mk .ic-goal .gp { color: var(--mk-lime); font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mk .ic-goal.dn .gp { color: var(--mk-red); }
+.mk .ic-goal .ic-band { grid-column: 1 / -1; }
+
+@keyframes bc-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes bc-draw { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+@keyframes bc-pop { from { transform: scaleY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .mk .icard, .mk .ic-spk, .mk .ic-band .bm { animation: none; }
+  .mk .icard:hover { transform: none; }
+}
+
+/* A phone: one column, compact. */
+@container (--pane-max-600) {
+  .mk .cards { grid-template-columns: 1fr; gap: var(--mk-s3); }
+  .mk .icard { min-height: 0; padding: var(--mk-s4); border-radius: 20px; }
+  .mk .icard.spk { min-height: 250px; }
+  .mk .icard h3 { font-size: 17px; }
+  .mk .ic-big { font-size: 34px; }
+  .mk .icard > .ic-v.spike { height: 88px; }
+}

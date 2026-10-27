@@ -229,7 +229,7 @@ export default function Briefing({ site, data: page, loading, period, compare = 
             {ui.all ? copy.hideMore(rest.length) : copy.more(rest.length)}
           </button>
         )}
-        {ui.all && rest.length > 0 && <CardList list={rest} c={listCtx} first={false} />}
+        {ui.all && rest.length > 0 && <CardList list={rest} c={listCtx} />}
         {!empty && !incidentOn && <Calm {...calmIn} onExplore={() => goExplore()} />}
         <Setups rows={setups} />
         {act && <Act text={act.text} rest={act.rest} label={act.label} onAct={act.run} />}

@@ -27,12 +27,13 @@ describe('the movers', () => {
 })
 
 describe('the cards', () => {
-  it('writes a source that jumped as a claim, its dots in its colour, and a link to share', () => {
+  it('writes a source that jumped as a claim, a rising line, how many times its usual and a link to share', () => {
     const list = cardsOf(base({ slices: { referrer: [slice('news.ycombinator.com', 186, 9)], country: [], device: [], entry_page: [] }, topPageOf: () => ({ name: '/', value: '/' }) }))
     expect(list).toHaveLength(1)
     const c = list[0]
     expect(c).toMatchObject({ key: 'sources', head: 'Hacker News sent 186 people', rest: ', 21× your usual' })
-    expect(c.vis).toMatchObject({ k: 'dots' })
+    expect(c.vis).toMatchObject({ k: 'spike' })
+    expect(c.ratio).toBeCloseTo(21, 0)
     expect(c.act).toMatchObject({ k: 'copy', t: 'Share the link that worked' })
     expect(c.why).toContain('most landed on Home')
     expect(c.why).toContain('66% leave after one page')
@@ -45,7 +46,8 @@ describe('the cards', () => {
   })
   it('a country that came in more than usual is a number with a line and its main source', () => {
     const c = cardsOf(base({ slices: { referrer: [], country: [slice('US', 309, 230)], device: [], entry_page: [] }, topSourceOf: () => 'Google' }))[0]
-    expect(c.kc).toMatchObject({ label: 'United States', note: 'more than usual', tone: 'up' })
+    expect(c.kc).toMatchObject({ label: 'United States' })
+    expect(c.ratio).toBeGreaterThan(1)
     expect(c.why).toMatch(/^Google sends most of them\. Usually \d+–\d+ people from United States\.$/)
   })
   it('a site that is down has one card, red, and nothing else', () => {

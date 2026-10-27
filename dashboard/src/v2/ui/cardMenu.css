@@ -1,5 +1,2 @@
 /* The card's "⋯": it sits at the end of the row of buttons, and its menu is the toolbar's. What else moved is one quiet line. */
-.mk .ic-f .cardmenu { margin-left: auto; }
 .mk .ic-f .cardmenu .xw { display: block; }
-.mk .ic-also { margin: var(--mk-s2) 0 0; font-size: 12.5px; color: var(--mk-muted); }
-.mk .ic-also .lk3 { font: inherit; color: var(--mk-text); text-decoration: underline; text-underline-offset: 2px; background: none; border: 0; padding: 0; cursor: pointer; }
