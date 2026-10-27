@@ -1,10 +1,13 @@
-// The globe's loop, with no React in it: the earth (earth.ts), the visitors' markers and their pulse all drawn on one canvas, a view that spins on
-// its own, a drag with inertia, and hit-testing in plain maths. Only the open popover and the hover tip are DOM, and the
+// The globe's loop, with no React in it: space with its stars, the earth (earth.ts), the names on it (labels.ts, loaded on zoom), the visitors' markers
+// and their pulse all drawn on one canvas, a view that spins on its own, a drag with inertia, and hit-testing in plain maths. Only the open popover and the hover tip are DOM, and the
 // loop moves those by setting their transform. It runs only while the globe is on screen and the tab is visible, and
 // stops (until something wakes it) when nothing moves. A frame builds no objects: the buffers below are made once.
 import { reducedMotion } from '../../../lib/motion'
-import { borders, fillLand, grid, strokeLines } from './earth'
+import { borders, fillLand, grid, land, strokeLines, type View } from './earth'
 import { spotsOf, wrap, type Pin } from './geo'
+
+/** The detail (50m land, names), a separate chunk that loads when someone zooms in. */
+type Detail = typeof import('./labels')
 
 const RAD = Math.PI / 180
 /** Degrees per millisecond of the slow spin (about one turn a minute and a half). */
@@ -20,11 +23,17 @@ const HIT = 44
 const CARD = 32
 /** How far in the globe zooms. */
 const ZOOM_MIN = 1
-const ZOOM_MAX = 6
+const ZOOM_MAX = 8
 /** Under this stage width the popover is a sheet over the foot of the globe, not beside the pin. */
 const SHEET_W = 700
 /** Room the open popover takes beside its pin. */
 const POP_W = 420
+/** Markers closer than this on the screen (CSS pixels between centres) are one marker with their people added up. */
+const CLUSTER_PX = 24
+/** From this zoom the 50m land and the names are fetched, and from FINE_ZOOM the land is drawn with them. */
+const DETAIL_ZOOM = 1.25
+const FINE_ZOOM = 2
+const TAU = Math.PI * 2
 
 /** The colours the globe draws with, from the page's tokens. */
 interface Ink {
@@ -43,6 +52,19 @@ interface Ink {
   air: string
   airFade: string
   glowEnd: string
+  airMid: string
+  rim: string
+  rimFade: string
+  night: string
+  relief: string
+  border: string
+  space0: string
+  space1: string
+  star: string
+  starA: number
+  name: string
+  halo: string
+  nameSea: string
 }
 
 /** One marker: everyone at one spot (a country, or a city of it) is one glowing dot with their number. */
@@ -55,7 +77,6 @@ interface State {
   /** The spot's own place, where the marker sits (the visitors' small spreads are not used). */
   lat: number
   lon: number
-  label: string
   born: number
   pulse: number
   gone: number
@@ -65,6 +86,18 @@ interface State {
   x: number
   y: number
   a: number
+  /** Its place as a unit vector (for gathering near markers). */
+  u: [number, number, number]
+  /** The marker it is drawn in: itself, or a bigger one close by. The marker holds the sum of the people, its newest visitor and every key. */
+  head: State
+  total: number
+  spots: number
+  top: Pin
+  keys: string[]
+  /** The newest pulse among the spots in the marker. */
+  pv: number
+  /** The marker's radius as drawn, in CSS pixels. */
+  r: number
 }
 
 export interface Hooks {
@@ -124,10 +157,32 @@ export class Globe {
   private drag = { on: false, id: 0, x: 0, y: 0, t: 0 }
   private states: State[] = []
   private hover: string | null = null
-  private ink: Ink = { edge: '', card: '', lime: '', bg: '', ring: '', sea: '', deep: '', shade: '', fade: '', land: '', coast: '', grat: '', air: '', airFade: '', glowEnd: '' }
+  private ink: Ink = { edge: '', card: '', lime: '', bg: '', ring: '', sea: '', deep: '', shade: '', fade: '', land: '', coast: '', grat: '', air: '', airFade: '', glowEnd: '', airMid: '', rim: '', rimFade: '', night: '', relief: '', border: '', space0: '', space1: '', star: '', starA: 0, name: '', halo: '', nameSea: '' }
   private inkAt = -9999
-  /** The shading of the sphere (sea, its dark rim, the glow of the air): made again only when the place, the size or the colours change. */
-  private shell: { key: string; sea: CanvasGradient; rim: CanvasGradient; air: CanvasGradient } | null = null
+  /** The shading of the sphere (sea, its dark rim, the night side, the air and the lit edge): made again only when the place, the size or the colours change. */
+  private shell: { key: string; sea: CanvasGradient; rim: CanvasGradient; air: CanvasGradient; night: CanvasGradient; edge: CanvasGradient } | null = null
+  /** Space and its stars, drawn once for the size (and the colours). */
+  private backdrop: HTMLCanvasElement | null = null
+  /** The earth as drawn, kept while the view stands still (a marker's pulse then costs one image, not the whole earth). */
+  private layer: HTMLCanvasElement | null = null
+  private layerKey = ''
+  private lastKey = ''
+  private inkVer = 0
+  /** The 50m land and the names, once their chunk is here. */
+  private det: Detail | null = null
+  private loading = false
+  private failed = -1e9
+  /** Whether the 50m land is the one drawn (with a margin, so it does not flip back and forth at the edge). */
+  private fineNow = false
+  /** Full screen: the detail is fetched at once, there is room for it. */
+  full = false
+  /** The markers are gathered again (a marker came or went, or the zoom changed enough). */
+  private regroup = true
+  private groupAt = -1
+  /** How many markers there are after gathering. */
+  private heads = 0
+  private view: View = { cx: 0, cy: 0, r: 1, lat: 0, lon: 0 }
+  private labelInk: Parameters<Detail['drawLabels']>[3] = { name: '', halo: '', sea: '' }
   /** A soft glow, drawn once and scaled under each marker. */
   private glow: HTMLCanvasElement | null = null
   /** The busiest spot is faced once, when the first people arrive. */
@@ -157,6 +212,16 @@ export class Globe {
     this.canvas.width = Math.round(w * this.dpr)
     this.canvas.height = Math.round(h * this.dpr)
     this.shell = null
+    this.backdrop = null
+    this.layer = null
+    this.layerKey = ''
+    this.regroup = true
+    this.wake()
+  }
+
+  /** Full screen: the detail is fetched at once. */
+  setFull(on: boolean) {
+    this.full = on
     this.wake()
   }
 
@@ -178,7 +243,8 @@ export class Globe {
       const sig = `${count}:${g.lead.sig}`
       let s = by.get(k)
       if (!s) {
-        s = { pin: g.lead, members: g.members, count, lat: g.lead.lat, lon: g.lead.lon, label: count > 99 ? '99+' : String(count), sig, born: this.first ? -1e9 : now, pulse: -1e9, gone: 0, x: 0, y: 0, a: 0 }
+        s = { pin: g.lead, members: g.members, count, lat: g.lead.lat, lon: g.lead.lon, sig, born: this.first ? -1e9 : now, pulse: -1e9, gone: 0, x: 0, y: 0, a: 0, u: [0, 0, 0], head: null as unknown as State, total: count, spots: 1, top: g.lead, keys: g.members, pv: -1e9, r: 0 }
+        s.head = s
         this.states.push(s)
       } else {
         if (s.sig !== sig && !s.gone) s.pulse = now
@@ -187,13 +253,19 @@ export class Globe {
         s.count = count
         s.lat = g.lead.lat
         s.lon = g.lead.lon
-        s.label = count > 99 ? '99+' : String(count)
         s.sig = sig
         s.gone = 0
       }
       if (!busiest || count > busiest.count || (count === busiest.count && g.lead.last > busiest.pin.last)) busiest = s
     }
-    for (const s of this.states) if (!seen.has(`${s.pin.cc}/${s.pin.city}`) && !s.gone) s.gone = now
+    for (const s of this.states) {
+      const p = s.lat * RAD
+      s.u[0] = Math.cos(p) * Math.sin(s.lon * RAD)
+      s.u[1] = Math.sin(p)
+      s.u[2] = Math.cos(p) * Math.cos(s.lon * RAD)
+      if (!seen.has(`${s.pin.cc}/${s.pin.city}`) && !s.gone) s.gone = now
+    }
+    this.regroup = true
     if (busiest && !this.faced) {
       this.faced = true
       this.lat = Math.max(-55, Math.min(55, busiest.lat))
@@ -242,6 +314,7 @@ export class Globe {
       if (at) this.focus(at.lat, at.lon)
     }
     this.zoomT = nz
+    if (nz > DETAIL_ZOOM) this.preload(performance.now())
     if (nz <= 1.02) this.still = performance.now() - REST_MS + 1000
     this.wake()
   }
@@ -340,8 +413,12 @@ export class Globe {
         this.tap.t = e.timeStamp
         this.tap.x = px
         this.tap.y = py
-        const k = this.hit(px, py)
-        if (k) this.hooks.onPick(k)
+        const m = this.hitState(px, py)
+        // A marker that gathers several places opens into them (zooms in on it); one place opens its newest visitor.
+        if (m && m.spots > 1 && this.zoomT < ZOOM_MAX - 0.5) {
+          this.focus(m.lat, m.lon)
+          this.zoomBy(2.4)
+        } else if (m) this.hooks.onPick(m.top.key)
       }
       this.vx = this.vy = 0
     } else if (e.timeStamp - d.t > 80) this.vx = this.vy = 0
@@ -351,24 +428,29 @@ export class Globe {
 
   /** The size of a pin, by how many there are: whole up to 60, then smaller down to a third. */
   private density(): number {
-    return Math.max(0.35, Math.min(1, Math.sqrt(60 / Math.max(1, this.states.length))))
+    return Math.max(0.35, Math.min(1, Math.sqrt(60 / Math.max(1, this.heads))))
   }
 
-  /** The pin whose tap target holds the point, the nearest if several. */
-  hit(px: number, py: number): string | null {
-    let best: string | null = null
+  /** The marker whose tap target holds the point, the nearest if several. */
+  private hitState(px: number, py: number): State | null {
+    let best: State | null = null
     const reach = Math.max(10, (HIT / 2) * this.density())
     let bd = reach * reach
     for (let i = 0; i < this.states.length; i++) {
       const s = this.states[i]
-      if (s.a < 0.3 || s.gone) continue
+      if (s.head !== s || s.a < 0.3 || s.gone) continue
       const d = (s.x - px) * (s.x - px) + (s.y - py) * (s.y - py)
       if (d < bd) {
         bd = d
-        best = s.pin.key
+        best = s
       }
     }
     return best
+  }
+
+  /** The newest visitor of the marker under the point (a tap opens them). */
+  hit(px: number, py: number): string | null {
+    return this.hitState(px, py)?.top.key ?? null
   }
 
   private look(px: number, py: number) {
@@ -395,7 +477,7 @@ export class Globe {
       if (this.states[i].members.includes(f.key)) {
         f.lat = this.states[i].lat
         f.lon = this.states[i].lon
-        if (!this.states[i].gone) seen = this.states[i]
+        if (!this.states[i].gone) seen = this.states[i].head
       }
     }
     const p = f.lat * RAD
@@ -447,6 +529,11 @@ export class Globe {
       if (Math.abs(this.zoomT - this.zoom) <= 0.002) this.zoom = this.zoomT
       moving = true
     }
+    if (this.full || this.zoom > DETAIL_ZOOM) this.preload(now)
+    if (this.det) {
+      const fine = this.zoom >= (this.fineNow ? FINE_ZOOM - 0.15 : FINE_ZOOM)
+      if (fine !== this.fineNow) this.fineNow = fine
+    }
     // An open popover takes room beside its pin (or under it, as a sheet): the globe slides aside to make it.
     const R = this.radius()
     const tx = this.held && !this.sheet ? Math.min(this.w / 2, Math.max(R + 12, this.w - POP_W - 12)) : this.w / 2
@@ -472,31 +559,112 @@ export class Globe {
     const s = getComputedStyle(this.canvas)
     const v = (n: string) => s.getPropertyValue(n).trim()
     const was = Object.values(this.ink).join()
-    this.ink = { edge: v('--mk-line'), card: v('--mk-card'), lime: v('--mk-lime'), bg: v('--mk-bg'), ring: v('--mk-limeM'), sea: v('--mk-sea'), deep: v('--mk-sea-deep'), shade: v('--mk-sea-shade'), fade: v('--mk-sea-fade'), land: v('--mk-land'), coast: v('--mk-land-line'), grat: v('--mk-grat'), air: v('--mk-air'), airFade: v('--mk-air-fade'), glowEnd: v('--mk-lime0') }
+    this.ink = {
+      edge: v('--mk-line'),
+      card: v('--mk-card'),
+      lime: v('--mk-lime'),
+      bg: v('--mk-bg'),
+      ring: v('--mk-limeM'),
+      sea: v('--mk-sea'),
+      deep: v('--mk-sea-deep'),
+      shade: v('--mk-sea-shade'),
+      fade: v('--mk-sea-fade'),
+      land: v('--mk-land'),
+      coast: v('--mk-land-line'),
+      grat: v('--mk-grat'),
+      air: v('--mk-air'),
+      airFade: v('--mk-air-fade'),
+      glowEnd: v('--mk-lime0'),
+      airMid: v('--mk-air-mid'),
+      rim: v('--mk-rim'),
+      rimFade: v('--mk-rim-fade'),
+      night: v('--mk-night'),
+      relief: v('--mk-edge'),
+      border: v('--mk-border'),
+      space0: v('--mk-space0'),
+      space1: v('--mk-space1'),
+      star: v('--mk-star'),
+      starA: Number(v('--mk-star-a')) || 0,
+      name: v('--mk-name'),
+      halo: v('--mk-name-halo'),
+      nameSea: v('--mk-name-sea'),
+    }
     if (was !== Object.values(this.ink).join()) {
       this.shell = null
       this.glow = null
+      this.backdrop = null
+      this.layerKey = ''
+      this.inkVer++
+      this.labelInk = { name: this.ink.name, halo: this.ink.halo, sea: this.ink.nameSea }
     }
     return this.ink
   }
 
-  /** The sphere's shading for this place and size: the sea lit from the upper left, a darker rim, and the thin glow of the air around it. */
+  /** The sphere's shading for this place and size: the sea lit from the upper left, the dark rim, the night side, the blue air around it and the lit edge. */
   private shading(c: CanvasRenderingContext2D, ink: Ink, R: number) {
     const key = `${Math.round(this.cx)},${Math.round(this.cy)},${Math.round(R)}`
     if (this.shell?.key === key) return this.shell
     const x = this.cx
     const y = this.cy
-    const sea = c.createRadialGradient(x - R * 0.38, y - R * 0.42, R * 0.04, x, y, R * 1.08)
+    const sea = c.createRadialGradient(x - R * 0.4, y - R * 0.45, R * 0.05, x, y, R * 1.1)
     sea.addColorStop(0, ink.sea)
     sea.addColorStop(1, ink.deep)
-    const rim = c.createRadialGradient(x, y, R * 0.66, x, y, R)
+    const rim = c.createRadialGradient(x, y, R * 0.62, x, y, R)
     rim.addColorStop(0, ink.fade)
     rim.addColorStop(1, ink.shade)
-    const air = c.createRadialGradient(x, y, R * 0.97, x, y, R * 1.12)
+    const air = c.createRadialGradient(x, y, R * 0.96, x, y, R * 1.24)
     air.addColorStop(0, ink.air)
+    air.addColorStop(0.2, ink.airMid)
     air.addColorStop(1, ink.airFade)
-    this.shell = { key, sea, rim, air }
+    const night = c.createRadialGradient(x - R * 0.5, y - R * 0.55, R * 0.4, x - R * 0.5, y - R * 0.55, R * 1.75)
+    night.addColorStop(0, ink.fade)
+    night.addColorStop(0.4, ink.fade)
+    night.addColorStop(1, ink.night)
+    const edge = c.createLinearGradient(x - R * 0.72, y - R * 0.72, x + R * 0.72, y + R * 0.72)
+    edge.addColorStop(0, ink.rim)
+    edge.addColorStop(0.6, ink.rimFade)
+    edge.addColorStop(1, ink.rimFade)
+    this.shell = { key, sea, rim, air, night, edge }
     return this.shell
+  }
+
+  /** Space: a deep gradient and a sparse field of stars (the same ones every time), drawn once for this size. */
+  private space(ink: Ink): HTMLCanvasElement | null {
+    if (this.backdrop) return this.backdrop
+    const g = document.createElement('canvas')
+    g.width = Math.round(this.w * this.dpr)
+    g.height = Math.round(this.h * this.dpr)
+    const x = g.getContext('2d')
+    if (!x) return null
+    x.scale(this.dpr, this.dpr)
+    const far = Math.hypot(this.w, this.h) / 2
+    const sky = x.createRadialGradient(this.w / 2, this.h / 2, 0, this.w / 2, this.h / 2, far)
+    sky.addColorStop(0, ink.space0)
+    sky.addColorStop(1, ink.space1)
+    x.fillStyle = sky
+    x.fillRect(0, 0, this.w, this.h)
+    if (ink.starA > 0) {
+      let seed = 20251027
+      const rnd = () => {
+        seed = (seed + 0x6d2b79f5) | 0
+        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+      }
+      x.fillStyle = ink.star
+      const n = Math.max(40, Math.min(420, Math.round((this.w * this.h) / 5000)))
+      for (let i = 0; i < n; i++) {
+        const px = rnd() * this.w
+        const py = rnd() * this.h
+        const k = rnd()
+        x.globalAlpha = (0.2 + k * 0.6) * ink.starA
+        x.beginPath()
+        x.arc(px, py, 0.35 + k * k * k * 0.95, 0, TAU)
+        x.fill()
+      }
+    }
+    this.backdrop = g
+    return g
   }
 
   /** A marker's glow: one soft round light in the accent, made once. */
@@ -516,7 +684,97 @@ export class Globe {
     return g
   }
 
-  /** One draw: the air and the sea, the land with its borders, the dark rim, then the markers. Says whether a marker is still animating (the loop must go on). */
+  /** Fetches the 50m land and the names (their own chunk) the first time they are wanted; tries again after a while if it fails. */
+  private preload(now: number) {
+    if (this.det || this.loading || now - this.failed < 15000) return
+    this.loading = true
+    import('./labels').then(
+      (m) => {
+        this.det = m
+        this.loading = false
+        this.layerKey = ''
+        this.wake()
+      },
+      () => {
+        this.loading = false
+        this.failed = performance.now()
+      },
+    )
+  }
+
+  /** Gathers the spots into markers: spots closer together than CLUSTER_PX on the screen are one marker (the largest spot's place) with their people added up. Done when the spots change or the zoom has moved a step, not every frame. */
+  private group(R: number) {
+    const step = Math.round(Math.log2(Math.max(1, R)) * 3)
+    if (!this.regroup && step === this.groupAt) return
+    this.regroup = false
+    this.groupAt = step
+    const cos = Math.cos(CLUSTER_PX / Math.pow(2, step / 3))
+    const live: State[] = []
+    for (const s of this.states) {
+      s.head = s
+      s.total = s.count
+      s.spots = 1
+      s.top = s.pin
+      s.keys = s.members
+      if (!s.gone) live.push(s)
+    }
+    live.sort((a, b) => b.count - a.count || b.pin.last - a.pin.last)
+    let heads = 0
+    for (let i = 0; i < live.length; i++) {
+      const h = live[i]
+      if (h.head !== h) continue
+      heads++
+      for (let j = i + 1; j < live.length; j++) {
+        const t = live[j]
+        if (t.head !== t || h.u[0] * t.u[0] + h.u[1] * t.u[1] + h.u[2] * t.u[2] < cos) continue
+        t.head = h
+        if (h.keys === h.members) h.keys = h.members.slice()
+        for (const k of t.members) h.keys.push(k)
+        h.total += t.count
+        h.spots++
+        if (t.pin.last > h.top.last) h.top = t.pin
+      }
+    }
+    this.heads = heads
+  }
+
+  /** How many people the marker holding this visitor shows (the tip says it). */
+  crowdOf(key: string): number | null {
+    for (const s of this.states) if (s.head === s && !s.gone && s.keys.includes(key)) return s.total
+    return null
+  }
+
+  /** The earth: the air, the sea, the land with its coast and borders, the night side, the dark rim and the lit edge. */
+  private paintEarth(c: CanvasRenderingContext2D, ink: Ink, shell: NonNullable<Globe['shell']>, view: View, fine: boolean) {
+    const { cx, cy, r: R } = view
+    c.beginPath()
+    c.arc(cx, cy, R * 1.24, 0, TAU)
+    c.fillStyle = shell.air
+    c.fill()
+    c.beginPath()
+    c.arc(cx, cy, R, 0, TAU)
+    c.fillStyle = shell.sea
+    c.fill()
+    c.lineWidth = 1
+    c.strokeStyle = ink.grat
+    strokeLines(c, grid, view)
+    c.fillStyle = ink.land
+    fillLand(c, view, fine && this.det ? this.det.fine.land : land, { shade: ink.relief, line: ink.coast })
+    c.lineWidth = 0.7
+    c.strokeStyle = ink.border
+    strokeLines(c, fine && this.det ? this.det.fine.borders : borders, view)
+    c.beginPath()
+    c.arc(cx, cy, R, 0, TAU)
+    c.fillStyle = shell.night
+    c.fill()
+    c.fillStyle = shell.rim
+    c.fill()
+    c.lineWidth = 1.5
+    c.strokeStyle = shell.edge
+    c.stroke()
+  }
+
+  /** One draw: space, the earth, the names, then the markers. Says whether a marker is still animating (the loop must go on). */
   private draw(now: number, reduced: boolean): boolean {
     const c = this.ctx
     if (!c || !this.w) return false
@@ -525,40 +783,41 @@ export class Globe {
     const cx = this.cx
     const cy = this.cy
     const shell = this.shading(c, ink, R)
+    const view = this.view
+    view.cx = cx
+    view.cy = cy
+    view.r = R
+    view.lat = this.lat
+    view.lon = this.lon
+    view.w = this.w
+    view.h = this.h
     c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0)
-    c.clearRect(0, 0, this.w, this.h)
-    c.beginPath()
-    c.arc(cx, cy, R * 1.12, 0, Math.PI * 2)
-    c.fillStyle = shell.air
-    c.fill()
-    c.beginPath()
-    c.arc(cx, cy, R, 0, Math.PI * 2)
-    c.fillStyle = shell.sea
-    c.fill()
-    const view = { cx, cy, r: R, lat: this.lat, lon: this.lon }
-    c.lineWidth = 1
-    c.strokeStyle = ink.grat
-    strokeLines(c, grid, view)
-    c.fillStyle = ink.land
-    fillLand(c, view)
-    c.strokeStyle = ink.coast
-    c.lineWidth = 0.7
-    strokeLines(c, borders, view)
-    c.beginPath()
-    c.arc(cx, cy, R, 0, Math.PI * 2)
-    c.fillStyle = shell.rim
-    c.fill()
-    c.lineWidth = 1
-    c.strokeStyle = ink.edge
-    c.stroke()
+    const sky = this.space(ink)
+    if (sky) c.drawImage(sky, 0, 0, this.w, this.h)
+    else c.clearRect(0, 0, this.w, this.h)
+    // The earth is kept as an image while the view stands still, so a marker's pulse does not redraw the continents.
+    const key = `${this.lat.toFixed(3)},${this.lon.toFixed(3)},${R.toFixed(2)},${cx.toFixed(1)},${cy.toFixed(1)},${this.w},${this.h},${this.dpr},${this.inkVer},${this.fineNow ? 1 : 0}`
+    if (key === this.layerKey && this.layer) c.drawImage(this.layer, 0, 0, this.w, this.h)
+    else if (key === this.lastKey) {
+      const l = this.layer ?? (this.layer = document.createElement('canvas'))
+      l.width = Math.round(this.w * this.dpr)
+      l.height = Math.round(this.h * this.dpr)
+      const x = l.getContext('2d')
+      if (x) {
+        x.setTransform(this.dpr, 0, 0, this.dpr, 0, 0)
+        this.paintEarth(x, ink, shell, view, this.fineNow)
+        this.layerKey = key
+        c.drawImage(l, 0, 0, this.w, this.h)
+      } else this.paintEarth(c, ink, shell, view, this.fineNow)
+    } else this.paintEarth(c, ink, shell, view, this.fineNow)
+    this.lastKey = key
+    this.group(R)
     const sp = Math.sin(this.lat * RAD)
     const cp = Math.cos(this.lat * RAD)
-    const glow = this.light(ink)
-    c.textAlign = 'center'
-    c.textBaseline = 'middle'
     let animating = false
     // A crowd draws its markers smaller, so they can sit close without hiding one another.
     const dense = this.density()
+    for (const s of this.states) s.pv = s.pulse
     for (let i = this.states.length - 1; i >= 0; i--) {
       const s = this.states[i]
       if (s.gone && now - s.gone > LEAVE_MS) {
@@ -566,8 +825,16 @@ export class Globe {
         this.states.pop()
         continue
       }
-      const p = s.lat * RAD
+      if (s.head !== s) {
+        if (s.pulse > s.head.pv) s.head.pv = s.pulse
+        s.a = 0
+        s.r = 0
+      }
+    }
+    for (const s of this.states) {
+      if (s.head !== s) continue
       const dl = (s.lon - this.lon) * RAD
+      const p = s.lat * RAD
       const cd = Math.cos(dl)
       const z = sp * Math.sin(p) + cp * Math.cos(p) * cd
       s.x = cx + R * Math.cos(p) * Math.sin(dl)
@@ -586,15 +853,28 @@ export class Globe {
         animating = true
       }
       s.a = a
-      if (a <= 0.01 || s.x < -CARD || s.x > this.w + CARD || s.y < -CARD || s.y > this.h + CARD) continue
-      // The dot grows with the people at the spot (its number is on it).
-      const r = (6 + Math.min(10, Math.sqrt(s.count) * 2.6)) * sc * dense
-      const pulse = (now - s.pulse) / PULSE_MS
+      s.r = a <= 0.01 || s.x < -CARD || s.x > this.w + CARD || s.y < -CARD || s.y > this.h + CARD ? 0 : (6 + Math.min(10, Math.sqrt(s.total) * 2.6)) * sc * dense
+    }
+    // The names on the map, in the room the markers leave.
+    const det = this.det
+    if (det) {
+      det.clearTaken()
+      for (const s of this.states) if (s.head === s && s.r > 0) det.block(s.x, s.y, s.r * 1.3 + 5)
+      det.drawLabels(c, view, this.zoom, this.labelInk)
+    }
+    const glow = this.light(ink)
+    c.textAlign = 'center'
+    c.textBaseline = 'middle'
+    c.globalAlpha = 1
+    for (const s of this.states) {
+      if (s.head !== s || s.r <= 0) continue
+      const { a, r } = s
+      const pulse = (now - s.pv) / PULSE_MS
       if (!reduced && pulse < 1 && !s.gone) {
         c.globalAlpha = a * 0.6 * (1 - pulse)
         c.fillStyle = ink.ring
         c.beginPath()
-        c.arc(s.x, s.y, r + pulse * 26 * dense, 0, Math.PI * 2)
+        c.arc(s.x, s.y, r + pulse * 26 * dense, 0, TAU)
         c.fill()
         animating = true
       }
@@ -602,16 +882,16 @@ export class Globe {
       c.drawImage(glow, s.x - r * 2.6, s.y - r * 2.6, r * 5.2, r * 5.2)
       c.globalAlpha = a
       c.beginPath()
-      c.arc(s.x, s.y, r, 0, Math.PI * 2)
+      c.arc(s.x, s.y, r, 0, TAU)
       c.fillStyle = ink.lime
       c.fill()
       c.lineWidth = 1.5
-      c.strokeStyle = this.mark !== null && s.members.includes(this.mark) ? ink.bg : ink.card
+      c.strokeStyle = this.mark !== null && s.keys.includes(this.mark) ? ink.bg : ink.card
       c.stroke()
-      if (s.count > 1 && r >= 7) {
+      if (r >= 7) {
         c.fillStyle = ink.bg
         c.font = `700 ${Math.round(Math.min(13, r * 0.95))}px system-ui, sans-serif`
-        c.fillText(s.label, s.x, s.y + 0.5)
+        c.fillText(s.total > 99 ? '99+' : String(s.total), s.x, s.y + 0.5)
       }
     }
     c.globalAlpha = 1

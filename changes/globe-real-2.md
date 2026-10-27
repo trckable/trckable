@@ -1,0 +1,1 @@
+Live's globe sits in deep space with stars, a blue atmosphere and a lit and a night side. Zooming in (up to 8x) brings finer coastlines and borders, and names: seas, countries, then cities. Places close together are one marker with their people added up, and split apart as you zoom in.

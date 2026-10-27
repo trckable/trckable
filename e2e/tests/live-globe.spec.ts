@@ -231,38 +231,93 @@ test('the list head shows the online count the pill shows, with the half hour as
   expect(f.x + f.width).toBeLessThan(x.x) // clear of the close button
 })
 
-// The earth is real land with borders and a lit sea, and everyone at one spot is one marker with their number.
+// The earth is real land with borders and a lit sea in space, and everyone at one spot, or close to it, is one marker with their number.
 const SHOTS = '/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad'
+type Inside = { states: { head: unknown; total: number; x: number; y: number; r: number }[]; det: unknown; zoom: number; zoomT: number; fineNow: boolean; zoomTo: (z: number) => void; focus: (lat: number, lon: number) => void }
+
+async function crowd(page: Page, width: number, colorScheme: 'dark' | 'light') {
+  await page.emulateMedia({ colorScheme })
+  await page.setViewportSize({ width, height: width < 600 ? 900 : 800 })
+  await page.addInitScript(() => localStorage.setItem('trckable.live.globe', 'on'))
+  await page.route(/\/sites\/[^/]+\/now(\?|$)/, async (route) => {
+    const res = await route.fetch()
+    const body = await res.json()
+    const at = Date.now()
+    const people = [['DE', 'Berlin'], ['DE', 'Munich'], ['JP', 'Tokyo'], ['BR', 'Sao Paulo'], ['ZA', 'Cape Town'], ...Array.from({ length: 5 }, () => ['US', 'Chicago']), ...Array.from({ length: 30 }, () => ['AL', 'Tirana']), ...Array.from({ length: 6 }, () => ['XK', 'Pristina']), ['AL', '']]
+    body.online = people.length
+    body.recent = people.map(([country, city], i) => ({ kind: 'pageview', ts: at - i * 2000, last: at - i * 2000, path: i === 0 ? '/form_submit' : `/p${i}`, visitor: `visitor-${i}`, country, city }))
+    await route.fulfill({ response: res, json: body })
+  })
+  await open(page)
+  const canvas = page.locator('.gstage canvas')
+  await expect(canvas).toBeVisible({ timeout: 10_000 })
+  await page.evaluate(() => delete document.documentElement.dataset.motion)
+  await page.waitForTimeout(1500)
+  return canvas
+}
+
+const heads = (canvas: ReturnType<Page['locator']>) =>
+  canvas.evaluate((c) => {
+    const g = (c as unknown as { __globe: Inside }).__globe
+    return g.states.filter((s) => s.head === s).map((s) => ({ n: s.total, x: s.x, y: s.y, r: s.r }))
+  })
+
 for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark']] as const) {
   test(`the globe draws land and merges a crowd into one marker, ${width}px ${colorScheme}`, async ({ page }) => {
-    await page.emulateMedia({ colorScheme })
-    await page.setViewportSize({ width, height: 900 })
-    await page.addInitScript(() => localStorage.setItem('trckable.live.globe', 'on'))
-    await page.route(/\/sites\/[^/]+\/now(\?|$)/, async (route) => {
-      const res = await route.fetch()
-      const body = await res.json()
-      const at = Date.now()
-      const people = [...Array.from({ length: 38 }, () => ['AL', 'Tirana']), ...Array.from({ length: 6 }, () => ['XK', 'Pristina']), ...Array.from({ length: 5 }, () => ['US', 'Chicago']), ['DE', 'Berlin'], ['DE', 'Munich'], ['JP', 'Tokyo'], ['BR', 'Sao Paulo'], ['ZA', 'Cape Town']]
-      body.online = people.length
-      body.recent = people.map(([country, city], i) => ({ kind: 'pageview', ts: at - i * 2000, last: at - i * 2000, path: i === 0 ? '/form_submit' : `/p${i}`, visitor: `visitor-${i}`, country, city }))
-      await route.fulfill({ response: res, json: body })
-    })
-    await open(page)
-    const canvas = page.locator('.gstage canvas')
-    await expect(canvas).toBeVisible({ timeout: 10_000 })
-    await page.evaluate(() => delete document.documentElement.dataset.motion)
-    await page.waitForTimeout(1500)
-    // One marker for the 38 in Tirana, not 38 flags: the hover tells it in words.
-    const marker = await canvas.evaluate((c) => {
-      const g = (c as unknown as { __globe: { states: { count: number; x: number; y: number; a: number }[] } }).__globe
-      return g.states.map((s) => ({ n: s.count, x: s.x, y: s.y, a: s.a }))
-    })
-    expect(marker.filter((m) => m.n === 38)).toHaveLength(1)
+    const canvas = await crowd(page, width, colorScheme)
+    // One marker for the 30 in Tirana and the places by it (a blank dot and Pristina), not a pile of dots: the hover tells it in words.
+    const marker = await heads(canvas)
+    expect(marker.filter((m) => m.n >= 37)).toHaveLength(1)
+    expect(marker.reduce((n, m) => n + m.n, 0)).toBe(47)
     expect(marker.length).toBeLessThanOrEqual(10)
-    const big = marker.find((m) => m.n === 38)!
+    // No two markers sit on each other.
+    const shown = marker.filter((m) => m.r > 0)
+    for (const a of shown) for (const b of shown) if (a !== b) expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(14)
+    const big = marker.find((m) => m.n >= 37)!
     const box = (await canvas.boundingBox())!
     await page.mouse.move(box.x + big.x, box.y + big.y)
-    await expect(page.locator('.gtip')).toContainText('38 online', { timeout: 5000 })
-    await page.screenshot({ path: `${SHOTS}/globe-${width}-${colorScheme}.png` })
+    await expect(page.locator('.gtip')).toContainText(`${big.n} online`, { timeout: 5000 })
+    await page.mouse.move(box.x + 2, box.y + 2)
+    await page.screenshot({ path: `${SHOTS}/globe2-${width}-${colorScheme}.png` })
   })
 }
+
+test('zooming in fetches the detail chunk once, swaps to the finer land and writes names; markers split apart', async ({ page }) => {
+  const chunks: string[] = []
+  page.on('request', (r) => /\/labels-/.test(r.url()) && chunks.push(r.url()))
+  const canvas = await crowd(page, 1280, 'dark')
+  await page.waitForTimeout(500)
+  expect(chunks).toHaveLength(0)
+  const inside = <T,>(f: (g: Inside) => T, src = f.toString()) => canvas.evaluate((c, code) => new Function('g', `return (${code})(g)`)((c as unknown as { __globe: Inside }).__globe), src) as Promise<T>
+  const before = (await heads(canvas)).length
+  await canvas.evaluate((c) => {
+    const g = (c as unknown as { __globe: Inside }).__globe
+    g.focus(46, 14)
+    g.zoomTo(3)
+  })
+  await expect.poll(() => inside((g) => !!g.det), { timeout: 15_000 }).toBe(true)
+  await page.waitForTimeout(2500)
+  expect(chunks.length).toBe(1)
+  expect(await inside((g) => g.fineNow)).toBe(true)
+  expect((await heads(canvas)).length).toBeGreaterThan(before) // zoomed in, the gathered places split
+  await page.screenshot({ path: `${SHOTS}/globe2-1280-dark-zoom3.png` })
+  // The detail stays: zooming out and in again fetches nothing more.
+  await canvas.evaluate((c) => (c as unknown as { __globe: Inside }).__globe.zoomTo(1))
+  await page.waitForTimeout(800)
+  await canvas.evaluate((c) => (c as unknown as { __globe: Inside }).__globe.zoomTo(8))
+  await page.waitForTimeout(1500)
+  expect(chunks.length).toBe(1)
+})
+
+test('full screen uses the room: the detail comes at once, and it is a shot of the whole screen', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(document, 'fullscreenEnabled', { value: true, configurable: true })
+    HTMLElement.prototype.requestFullscreen = () => Promise.resolve()
+  })
+  const canvas = await crowd(page, 1280, 'dark')
+  await page.getByRole('button', { name: 'Full screen' }).click()
+  await expect(page.locator('.gwrap')).toHaveClass(/fill/)
+  await expect.poll(() => canvas.evaluate((c) => !!(c as unknown as { __globe: Inside }).__globe.det), { timeout: 15_000 }).toBe(true)
+  await page.waitForTimeout(1500)
+  await page.screenshot({ path: `${SHOTS}/globe2-1280-dark-full.png` })
+})

@@ -35,11 +35,19 @@ if (!milestones || milestones > milestonesBudget) {
   console.error('the milestones chunk is missing or over its budget')
   process.exit(1)
 }
-// Live's globe view: one lazy chunk (script and styles, the land outlines, the borders and the country points inside it), 25 KB at the most.
+// Live's globe view: one lazy chunk (script and styles, and the earth: the land outlines, the borders and the country points; the earth is its own file because the detail chunk shares its reader), 25 KB at the most.
 const globeBudget = 25 * 1024
-const globe = lazy.filter((f) => f.startsWith('GlobePanel-')).reduce((n, f) => n + gz('assets/' + f), 0)
+const globe = lazy.filter((f) => f.startsWith('GlobePanel-') || f.startsWith('earth-')).reduce((n, f) => n + gz('assets/' + f), 0)
 console.log(`globe chunk: ${(globe / 1024).toFixed(1)} KB gz (budget ${globeBudget / 1024} KB)`)
 if (!globe || globe > globeBudget) {
   console.error('the globe chunk is missing or over its budget')
+  process.exit(1)
+}
+// The globe's detail, a second lazy chunk fetched only on zoom or full screen: the 50m land and borders, the names and cities. 60 KB at the most.
+const detailBudget = 60 * 1024
+const detail = lazy.filter((f) => f.startsWith('labels-')).reduce((n, f) => n + gz('assets/' + f), 0)
+console.log(`globe detail chunk: ${(detail / 1024).toFixed(1)} KB gz (budget ${detailBudget / 1024} KB)`)
+if (!detail || detail > detailBudget) {
+  console.error('the globe detail chunk is missing or over its budget')
   process.exit(1)
 }

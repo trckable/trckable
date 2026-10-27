@@ -21,6 +21,7 @@ export function GlobeStage({ pins, people, sel, full, onPick, children }: { pins
   const canvas = useRef<HTMLCanvasElement>(null)
   const globe = useRef<Globe | null>(null)
   const [tip, setTip] = useState<string | null>(null)
+  const [tipCrowd, setTipCrowd] = useState<number | null>(null)
   const [kb, setKb] = useState<string | null>(null)
   const [sheet, setSheet] = useState(false)
   const latest = useRef({ pins, onPick, full })
@@ -31,7 +32,14 @@ export function GlobeStage({ pins, people, sel, full, onPick, children }: { pins
     const el = box.current
     const cv = canvas.current
     if (!el || !cv) return
-    const g = new Globe(cv, { onPick: (k) => latest.current.onPick(k), onHover: setTip, onSheet: setSheet })
+    const g = new Globe(cv, {
+      onPick: (k) => latest.current.onPick(k),
+      onHover: (k) => {
+        setTip(k)
+        setTipCrowd(k ? g.crowdOf(k) : null)
+      },
+      onSheet: setSheet,
+    })
     globe.current = g
     g.setPins(latest.current.pins)
     const size = new ResizeObserver(([e]) => g.resize(e.contentRect.width, e.contentRect.height))
@@ -82,6 +90,7 @@ export function GlobeStage({ pins, people, sel, full, onPick, children }: { pins
   useEffect(() => globe.current?.setPins(pins), [pins])
   // Leaving full screen puts the zoom back.
   useEffect(() => {
+    globe.current?.setFull(full)
     if (!full) globe.current?.zoomTo(1)
   }, [full])
   // A pin is open: the globe stops and eases it to the middle; closed, it spins again after about a second.
@@ -142,7 +151,7 @@ export function GlobeStage({ pins, people, sel, full, onPick, children }: { pins
       </span>
       {tipPin && (
         <div className="gtip" role="tooltip">
-          {copy.spotTip(flag(tipPin.cc), tipPin.city ? `${tipPin.city}, ${countryName(tipPin.cc)}` : countryName(tipPin.cc), tipPin.crowd, tipPin.path)}
+          {copy.spotTip(flag(tipPin.cc), tipPin.city ? `${tipPin.city}, ${countryName(tipPin.cc)}` : countryName(tipPin.cc), tipCrowd ?? tipPin.crowd, tipPin.path)}
         </div>
       )}
       {children}
