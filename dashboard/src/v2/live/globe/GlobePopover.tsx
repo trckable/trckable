@@ -3,17 +3,18 @@
 // it stays attached when the visitor leaves ("Left just now") and then closes.
 import { Cpu, Globe } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Avatar } from '../../../components/visitor/Avatar'
 import { DeviceIcon } from '../../../components/visitor/DeviceIcon'
 import { SourceMark } from '../../../components/visitor/SourceMark'
 import { copy as jcopy } from '../../../features/journey/copy'
-import { filterFrom } from '../../../features/journey/filterFrom'
 import { useJourney } from '../../../features/journey/useJourney'
 import type { Row } from '../../../features/live/model'
 import { countryName, flag, fmtDuration } from '../../../lib/format'
+import { useNarrow } from '../../../lib/useNarrow'
 import { channelLabel } from '../../../lib/palette'
-import { readView } from '../../../lib/url'
 import { nameOf } from '../../../lib/visitor'
+import { openExplore } from '../../explore/open'
 import { copy } from '../copy'
 import { agoOf } from './geo'
 
@@ -27,7 +28,7 @@ const ago = (ms: number) => {
 }
 const sourceOf = (r: Row) => (r.referrer ? r.referrer.replace(/^www\./, '') : channelLabel(r.channel || 'Direct'))
 const pageOf = (r: Row) => (r.kind === 'goal' ? `${jcopy.goal}: ${r.label || r.goal}` : (r.path ?? '/'))
-const explore = (r: Row) => r.kind === 'pageview' && r.path && filterFrom(readView(new URLSearchParams(location.search)), 'page', r.path)
+const explore = (r: Row) => r.kind === 'pageview' && r.path && openExplore('pages', [{ dim: 'page', value: r.path }])
 
 interface Extra {
   os?: string
@@ -42,6 +43,7 @@ interface CardProps {
   extra: Extra
   onClose: () => void
   onVisitor?: (v: string) => void
+  onLeave: () => void
 }
 
 function Head({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
@@ -55,7 +57,7 @@ function Head({ children, onClose }: { children: React.ReactNode; onClose: () =>
   )
 }
 
-function Card({ row, clock, gone, extra, onClose, onVisitor }: CardProps) {
+function Card({ row, clock, gone, extra, onClose, onVisitor, onLeave }: CardProps) {
   const place = [row.city, row.country ? countryName(row.country) : ''].filter(Boolean).join(', ')
   return (
     <div className="gcardv">
@@ -104,12 +106,18 @@ function Card({ row, clock, gone, extra, onClose, onVisitor }: CardProps) {
       {!gone && (row.visitor || row.path) && (
         <div className="gacts">
           {row.visitor && onVisitor && (
-            <button type="button" className="gpop-go" onClick={() => row.visitor && onVisitor(row.visitor)}>
+            <button type="button" className="gpop-go" onClick={() => {
+              onLeave()
+              if (row.visitor) onVisitor(row.visitor)
+            }}>
               {'▶'} {copy.replay}
             </button>
           )}
           {row.kind === 'pageview' && row.path && (
-            <button type="button" className="gpop-ex" onClick={() => explore(row)}>
+            <button type="button" className="gpop-ex" onClick={() => {
+                onLeave()
+                explore(row)
+              }}>
               {copy.openExplore}
             </button>
           )}
@@ -137,7 +145,9 @@ export interface Open {
   lon: number
 }
 
-export function GlobePopover({ open, row, clock, site, onVisitor, onClose }: { open: Open; row: Row | undefined; clock: number; site: string; onVisitor?: (v: string) => void; onClose: () => void }) {
+/** `onLeave` runs before a button acts: the globe's full screen covers the replay and Explore, so it ends first. */
+export function GlobePopover({ open, row, clock, site, onVisitor, onClose, onLeave }: { open: Open; row: Row | undefined; clock: number; site: string; onVisitor?: (v: string) => void; onClose: () => void; onLeave: () => void }) {
+  const phone = useNarrow()
   const box = useRef<HTMLDivElement | null>(null)
   // The visitor as last seen: kept when they have left, so the card can say so before it goes.
   const [kept, setKept] = useState(row)
@@ -169,12 +179,14 @@ export function GlobePopover({ open, row, clock, site, onVisitor, onClose }: { o
   }, [onClose])
   const title = [open.city, countryName(open.cc)].filter(Boolean).join(', ')
   const withJourney = shown && onVisitor && shown.visitor
-  return (
+  // On a phone the card is a sheet over the screen's foot: it is placed in the page's root, since inside the Live view's own layer it would stay under the tab bar.
+  const card = (
     <div className="gpop" ref={box} role="dialog" aria-label={title} tabIndex={-1}>
       <div className="gpop-in">
-        {shown && withJourney && <Journeyed key={shown.key} row={shown} site={site} clock={clock} gone={gone} onClose={onClose} onVisitor={onVisitor} />}
-        {shown && !withJourney && <Card key={shown.key} row={shown} extra={{}} clock={clock} gone={gone} onClose={onClose} onVisitor={onVisitor} />}
+        {shown && withJourney && <Journeyed key={shown.key} row={shown} site={site} clock={clock} gone={gone} onClose={onClose} onVisitor={onVisitor} onLeave={onLeave} />}
+        {shown && !withJourney && <Card key={shown.key} row={shown} extra={{}} clock={clock} gone={gone} onClose={onClose} onVisitor={onVisitor} onLeave={onLeave} />}
       </div>
     </div>
   )
+  return phone ? createPortal(card, document.querySelector('.mk-body') ?? document.body) : card
 }
