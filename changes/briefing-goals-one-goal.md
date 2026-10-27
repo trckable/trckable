@@ -1,0 +1,1 @@
+The Briefing's goals card with a single goal no longer has an empty gap under its sentence: it shows the goal's number and its usual range there ("672 today · usually 420–490"). With several goals the rows already say this, so nothing changes.

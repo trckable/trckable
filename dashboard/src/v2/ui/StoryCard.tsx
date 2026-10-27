@@ -116,8 +116,7 @@ export function Card({ s, c }: { s: Story; c: CardCtx }) {
         </div>
         <Said s={s} />
       </div>
-      {/* The goal's picture already says the number and its usual, so the card adds no line of its own. */}
-      {s.key !== 'goals' && <p className="ic-w">{withBold(s.why, s.bold)}</p>}
+      {sh.why && <p className="ic-w">{withBold(s.why, s.bold)}</p>}
       <Also s={s} c={c} />
       <Picture s={s} pic={sh.pic} vals={c.spark(s)} />
       <Foot s={s} c={c} link={sh.link} />
