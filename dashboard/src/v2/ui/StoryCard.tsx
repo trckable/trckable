@@ -57,7 +57,7 @@ function Also({ s, c }: { s: Story; c: CardCtx }) {
     <p className="ic-also">
       <span>{cardCopy.alsoLabel}</span>
       {s.also.map((a) => (
-        <span className="chip" key={a.name}>
+        <span className="chip" key={a.name} title={a.name}>
           {a.name}
         </span>
       ))}

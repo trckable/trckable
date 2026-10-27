@@ -940,14 +940,6 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .icard.err{border-color:var(--mk-redL)}
 .mk .skl{display:block;background:linear-gradient(90deg,var(--mk-sk1),var(--mk-sk2),var(--mk-sk1));background-size:220% 100%;animation:mk-shim 1.5s linear infinite;border-radius:8px;height:14px;margin:6px 0}
 @keyframes mk-shim{to{background-position:-220% 0}}
-.mk .watchc{padding:var(--mk-s4) var(--mk-s5)}
-.mk .wh{display:flex;gap:var(--mk-s3);align-items:baseline;font-weight:600;margin-bottom:var(--mk-s2)}
-.mk .wh .mk-quiet{font-weight:400;font-size:13px}
-.mk .wrow{display:flex;align-items:center;gap:var(--mk-s4);padding:var(--mk-s2) 0;border-top:1px solid var(--mk-line);font-size:13px;color:var(--mk-muted)}
-.mk .wrow .wl{width:110px;flex:none}
-.mk .wrow .wl b{color:var(--mk-text)}
-.mk .wrow .wv{flex:1;min-width:0}
-.mk .wrow .wv b{color:var(--mk-lime)}
 .mk .mailrow{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s2) var(--mk-s4);border:1px solid var(--mk-line);background:var(--mk-card);border-radius:16px;font-size:13px;color:var(--mk-muted);min-height:48px}
 .mk .mailrow .mt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mk .mailrow i{font-style:normal;color:var(--mk-text)}
@@ -1072,9 +1064,6 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .act{border:0;background:none;padding:var(--mk-s2) 0}
 .mk .mailrow{padding:var(--mk-s3) var(--mk-s4);min-height:0;font-size:12px;align-items:flex-start}
 .mk .mailrow .mt{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.mk .watchc{background:none;border:0;padding:0}
-.mk .wrow{flex-wrap:wrap;gap:var(--mk-s1) var(--mk-s3)}
-.mk .wrow .wl{width:auto}
 .mk .khint, .mk .npw{display:flex}
 .mk .khint{display:none}
 .mk .liveview>.mk-card, .mk .liveview .mk-card{background:none;border:0;border-radius:0;box-shadow:none}

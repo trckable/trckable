@@ -1,4 +1,5 @@
 // What a person pinned with Watch: each line says how the number moved since they started watching.
+import { Ico } from './icons'
 import { copyOf } from './watchCopy'
 import './watchCard.css'
 
@@ -14,21 +15,22 @@ interface WatchRow {
 export function WatchCard({ rows, onStop }: { rows: WatchRow[]; onStop: (key: string) => void }) {
   if (!rows.length) return null
   return (
-    <section className="mk-card watchc">
+    <section className="watchc">
       <div className="wh">
-        <span>{copyOf.watching}</span>
-        <span className="mk-quiet">{copyOf.pinned}</span>
+        <b>{copyOf.watching}</b>
+        <span>{copyOf.pinned}</span>
       </div>
       {rows.map((r) => (
         <div className="wrow" key={r.key}>
+          <Ico name={r.key} className="ic-i" />
           <span className="wl">
             <b>{r.topic}</b>
-            {r.gone && <small className="wst">{copyOf.back}</small>}
+            <span className="wv">
+              {copyOf.since(r.since.at)} <b>{r.since.delta}</b> {r.since.unit}
+            </span>
           </span>
-          <span className="wv">
-            {copyOf.since(r.since.at)} <b>{r.since.delta}</b> {r.since.unit}
-          </span>
-          <button type="button" className="gh" onClick={() => onStop(r.key)}>
+          {r.gone && <span className="ic-bd up">{copyOf.back}</span>}
+          <button type="button" className="xb" onClick={() => onStop(r.key)}>
             {copyOf.stop}
           </button>
         </div>

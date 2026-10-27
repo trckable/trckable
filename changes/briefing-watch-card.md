@@ -1,0 +1,1 @@
+The Briefing's Watching card now looks like the cards around it: the same corners and spacing, each watched topic with its icon and how it moved since you started watching, "back to normal" as a badge and Stop as a button. On a card that went down, the number in its sentence is red instead of green, and a long page name under "Also changed" stays on one line.

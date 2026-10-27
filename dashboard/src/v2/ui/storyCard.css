@@ -37,12 +37,13 @@
 /* The sentence: the figure in it lit, with a soft glow. */
 .mk .icard h3 { margin: 0; color: var(--mk-text); font-size: 19px; font-weight: 650; line-height: 1.3; letter-spacing: -0.01em; text-wrap: balance; }
 .mk .icard h3 .hl { color: var(--mk-lime); font-weight: 700; text-shadow: 0 0 18px var(--mk-limeL); }
+.mk .icard.r h3 .hl { color: var(--mk-red); text-shadow: 0 0 18px var(--mk-redD); }
 .mk .ic-w { margin: 0; color: var(--mk-muted); font-size: 13.5px; line-height: 1.45; }
 .mk .ic-w b { color: var(--mk-text); font-weight: 600; }
 
 /* What else moved: small chips, and the way to all of it. */
 .mk .ic-also { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; color: var(--mk-muted); font-size: 12px; }
-.mk .ic-also .chip { padding: 4px 9px; border-radius: 999px; background: var(--mk-band); }
+.mk .ic-also .chip { max-width: min(100%, 320px); overflow: hidden; padding: 4px 9px; border-radius: 999px; background: var(--mk-band); text-overflow: ellipsis; white-space: nowrap; }
 .mk .ic-also .lk3 { padding: 0 4px; border: 0; background: none; color: var(--mk-text); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 
 /* The picture sits at the bottom of the card, above the foot. A rising line bleeds to the card's edges behind the foot. */
