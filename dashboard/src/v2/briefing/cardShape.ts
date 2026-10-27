@@ -21,6 +21,8 @@ export interface Shape {
   pic: Pic
   /** The plain link in the footer, which goes deeper; none where the card's own action is the way in. */
   link: string | null
+  /** Whether the line of why shows: not on a card of several goals, whose rows already say each number and usual. */
+  why: boolean
 }
 
 const PIC: Record<Vis['k'], Pic> = { spike: 'spike', journey: 'journey', ba: 'band', goals: 'goals', funnel: 'steps', outage: 'outage', rcpt: 'rows' }
@@ -57,6 +59,7 @@ export function shapeOf(s: Story): Shape {
     badge: badgeOf(s),
     pic: picOf(s),
     link: s.key === 'uptime' ? null : (LINK[s.key] ?? copy.deeper),
+    why: !(s.vis?.k === 'goals' && s.vis.rows.length > 1),
   }
 }
 

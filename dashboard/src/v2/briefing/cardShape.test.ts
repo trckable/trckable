@@ -26,6 +26,12 @@ describe('the shell takes its picture and link from the card', () => {
   ] as [Partial<Story>, string][])('%j is the %s picture', (o, pic) => {
     expect(shapeOf(story(o)).pic).toBe(pic)
   })
+  it('shows the line of why under one goal, not under several whose rows say it', () => {
+    const row = { name: 'Sign up', v: 9, lo: 2, hi: 4, st: 'up' as const, pct: 200 }
+    expect(shapeOf(story({ key: 'goals', vis: { k: 'goals', rows: [row] } })).why).toBe(true)
+    expect(shapeOf(story({ key: 'goals', vis: { k: 'goals', rows: [row, { ...row, name: 'Buy' }] } })).why).toBe(false)
+    expect(shapeOf(story({})).why).toBe(true)
+  })
   it('names a country by its flag, shows the ratio as the badge and links to who', () => {
     const sh = shapeOf(story({ key: 'countries', kc: { flag: '🇦🇱', label: 'Albania' }, ratio: 19 }))
     expect(sh).toMatchObject({ subject: '🇦🇱 Albania', badge: { text: '↑ 19× usual', tone: 'up' }, link: 'See who' })
