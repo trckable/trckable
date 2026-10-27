@@ -1,4 +1,14 @@
-/* A watched line: the topic on one line (cut short, never wrapped), its status a small chip under it, and room kept for the figure beside it. */
-.mk .wrow .wl { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: auto; min-width: 110px; max-width: 40%; }
-.mk .wrow .wl b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mk .wrow .wst { padding: 1px var(--mk-s2); border-radius: 999px; background: var(--mk-limeD); color: var(--mk-lime); font-size: 11.5px; font-weight: 500; white-space: nowrap; }
+/* What a person pinned with Watch: the same shell as the Briefing's cards (corners, spacing, top row), a row a topic with its
+   icon, the topic and how it moved since watching on the left, "back to normal" as a badge and Stop as the card's one action. */
+.mk .watchc { display: flex; flex-direction: column; gap: var(--mk-s3); padding: var(--mk-s4) var(--mk-s5); background: var(--mk-card); border: 1px solid var(--mk-line); border-radius: 22px; }
+.mk .watchc .wh { display: flex; align-items: baseline; gap: var(--mk-s2); min-width: 0; color: var(--mk-muted); font-size: 12.5px; }
+.mk .watchc .wh b { color: var(--mk-text); font-size: 14px; font-weight: 650; }
+.mk .watchc .wh span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk .wrow { display: flex; align-items: center; gap: var(--mk-s3); padding-top: var(--mk-s3); border-top: 1px solid var(--mk-line); }
+.mk .wrow .ic-i { flex: none; box-sizing: border-box; width: 26px; height: 26px; padding: 5px; border-radius: 8px; background: var(--mk-limeD); color: var(--mk-lime); }
+.mk .wrow .wl { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
+.mk .wrow .wl > b { overflow: hidden; color: var(--mk-text); font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.mk .wrow .wv { color: var(--mk-muted); font-size: 12.5px; }
+.mk .wrow .wv b { color: var(--mk-lime); font-variant-numeric: tabular-nums; }
+.mk .wrow .ic-bd { margin-left: 0; font-size: 12px; }
+.mk .wrow .xb { flex: none; }

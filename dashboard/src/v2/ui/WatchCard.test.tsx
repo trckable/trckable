@@ -11,14 +11,14 @@ afterEach(() => {
 })
 
 describe('a watched line', () => {
-  it('names the topic on its own and puts the status under it as a chip, never after it on the same line', () => {
+  it('names the topic on its own line and shows the status as the cards’ badge beside it, never inside the name', () => {
     const host = document.createElement('div')
     document.body.append(host)
     const root = createRoot(host)
     act(() => root.render(<WatchCard onStop={vi.fn()} rows={[{ key: 'goals', topic: 'Goals', gone: true, since: { at: '16:30', delta: '+12', unit: 'people' } }]} />))
-    expect(host.querySelector('.wl b')?.textContent).toBe('Goals')
-    expect(host.querySelector('.wl .wst')?.textContent).toBe('back to normal')
-    expect(host.querySelector('.wl')?.textContent).not.toContain('·')
+    expect(host.querySelector('.wl > b')?.textContent).toBe('Goals')
+    expect(host.querySelector('.wrow > .ic-bd')?.textContent).toBe('back to normal')
+    expect(host.querySelector('.wl')?.textContent).not.toContain('back to normal')
     act(() => root.unmount())
   })
   it('has no status chip while the card is still among the day’s', () => {
@@ -26,7 +26,7 @@ describe('a watched line', () => {
     document.body.append(host)
     const root = createRoot(host)
     act(() => root.render(<WatchCard onStop={vi.fn()} rows={[{ key: 'goals', topic: 'Goals', gone: false, since: { at: '16:30', delta: '+12', unit: 'people' } }]} />))
-    expect(host.querySelector('.wst')).toBeNull()
+    expect(host.querySelector('.ic-bd')).toBeNull()
     act(() => root.unmount())
   })
 })
