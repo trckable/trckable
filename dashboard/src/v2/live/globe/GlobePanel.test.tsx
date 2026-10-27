@@ -101,7 +101,7 @@ describe('the globe popover', () => {
     }
     const ptr = (el: HTMLElement, type: string, id: number, x: number, y: number) => act(() => void el.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: id, pointerType: 'touch', clientX: x, clientY: y })))
 
-    it('zooms with Ctrl or Cmd and the wheel, leaves a plain wheel to the page, and stays between 1x and 8x', () => {
+    it('zooms with Ctrl or Cmd and the wheel, leaves a plain wheel to the page, and stays between 1x and 16x', () => {
       const { box, globe, root } = mount([row(1)])
       const plain = wheel(stage(box), { deltaY: -300, clientX: 10, clientY: 10 })
       expect(plain.defaultPrevented).toBe(false)
@@ -110,7 +110,7 @@ describe('the globe popover', () => {
       expect(globe().zoomT).toBeGreaterThan(1)
       expect(pinch.defaultPrevented).toBe(true)
       for (let i = 0; i < 40; i++) wheel(stage(box), { deltaY: -400, metaKey: true })
-      expect(globe().zoomT).toBe(8)
+      expect(globe().zoomT).toBe(16)
       for (let i = 0; i < 80; i++) wheel(stage(box), { deltaY: 400, metaKey: true })
       expect(globe().zoomT).toBe(1)
       act(() => root.unmount())
@@ -159,6 +159,23 @@ describe('the globe popover', () => {
       ptr(el, 'pointerup', 1, 100, 100)
       act(() => root.unmount())
     })
+  })
+})
+
+describe('a marker zooming cannot split', () => {
+  it('opens as a list of its people, a row opens that visitor, and back returns to the list', () => {
+    const rows = Array.from({ length: 20 }, (_, i) => row(i + 1, { visitor: `vis-${i}` }))
+    const { box, globe, root } = mount(rows)
+    act(() => (globe() as unknown as { hooks: { onCrowd: (k: string[]) => void } }).hooks.onCrowd(rows.map((r) => r.key)))
+    const dialog = box.querySelector('[role=dialog]')
+    expect(dialog?.textContent).toContain('20 people in Berlin')
+    expect(dialog?.querySelectorAll('.gcrow')).toHaveLength(20)
+    act(() => (dialog?.querySelectorAll('.gcrow')[2] as HTMLElement).click())
+    expect(box.querySelector('[role=dialog] .gcrow')).toBeNull()
+    expect(box.querySelector('[role=dialog]')?.textContent).toContain('/p3')
+    act(() => (box.querySelector('.gpop-back') as HTMLElement).click())
+    expect(box.querySelectorAll('[role=dialog] .gcrow')).toHaveLength(20)
+    act(() => root.unmount())
   })
 })
 

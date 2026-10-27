@@ -38,6 +38,12 @@ export default function GlobePanel({ rows, clock, online, bar, pulse, minutes, b
   const sel = useMemo<Pick | null>(() => (open ? { key: open.key, lat: open.lat, lon: open.lon } : null), [open])
   const here = open ? rows.find((r) => r.key === open.key) : undefined
   const close = useCallback(() => setOpen(null), [])
+  // A marker zooming cannot split opens as a list of its people; the spot it sits at is its newest visitor's.
+  const crowdAt = (keys: string[]) => {
+    const top = pins.filter((x) => keys.includes(x.key)).sort((a, b) => b.last - a.last)[0]
+    if (top) setOpen({ key: top.key, cc: top.cc, city: top.city, lat: top.lat, lon: top.lon, crowd: keys })
+  }
+  const crowd = open?.crowd ? rows.filter((r) => open.crowd?.includes(r.key)) : undefined
   const at = (key: string) => {
     const p = pins.find((x) => x.key === key)
     if (p) setOpen({ key, cc: p.cc, city: p.city, lat: p.lat, lon: p.lon })
@@ -57,8 +63,8 @@ export default function GlobePanel({ rows, clock, online, bar, pulse, minutes, b
             </svg>
           </button>
         </div>
-        <GlobeStage pins={pins} people={online} sel={sel} full={full.on} onPick={at}>
-          {open && <GlobePopover open={open} row={here} clock={clock} site={site} onVisitor={onVisitor} onClose={close} onLeave={() => { close(); if (full.on) full.toggle() }} />}
+        <GlobeStage pins={pins} people={online} sel={sel} full={full.on} onPick={at} onCrowd={crowdAt}>
+          {open && <GlobePopover key={open.crowd ? `crowd:${open.key}` : open.key} open={open} row={here} crowd={crowd} clock={clock} site={site} onVisitor={onVisitor} onClose={close} onLeave={() => { close(); if (full.on) full.toggle() }} />}
         </GlobeStage>
         <button type="button" className="gclose" aria-label={copy.exitFullscreen} title={copy.exitFullscreen} onClick={full.toggle}>
           <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
