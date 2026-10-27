@@ -28,6 +28,9 @@
 }
 .mk .gstage:active { cursor: grabbing; }
 .mk .gstage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* Space dissolves into the card under the header, so there is no seam where the picture starts (full screen has no header). */
+.mk .gstage canvas { -webkit-mask-image: linear-gradient(to bottom, transparent, currentColor var(--gfade, 56px)); mask-image: linear-gradient(to bottom, transparent, currentColor var(--gfade, 56px)); }
+.mk .gwrap.fill .gstage canvas { -webkit-mask-image: none; mask-image: none; }
 @media (--md-up) {
   .mk .gstage { height: auto; }
 }

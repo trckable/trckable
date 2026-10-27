@@ -406,3 +406,60 @@ test('with the pictures the earth is textured, and the 4096 day picture comes on
   await canvas.evaluate((c) => (c as unknown as { __globe: Inside }).__globe.zoomTo(4))
   await expect.poll(() => sharp.length, { timeout: 15_000 }).toBe(1)
 })
+
+// A pin opens the visitor card, and its buttons work: Replay opens the visitor's journey where it can be seen, and Open in Explore
+// lands in Explore narrowed to the page, also from full screen (which covers both) and on a phone (where the tab bar sits over the card's foot).
+for (const [width, full, force] of [[1280, false, true], [1280, true, true], [390, false, true], [1280, false, false]] as const) {
+  test(`the visitor card's buttons work, ${width}px${full ? ', full screen' : ''}${force ? ', with the skin' : ', without it'}`, async ({ page }) => {
+    const canvas = await crowd(page, width, 'dark')
+    if (!force) await page.evaluate(() => localStorage.removeItem('trckable.globe.skin'))
+    if (full) {
+      await page.getByRole('button', { name: 'Full screen' }).click()
+      await expect(page.locator('.gwrap.fill')).toBeVisible()
+      await page.waitForTimeout(800)
+    }
+    const pick = async () => {
+      const box = (await canvas.boundingBox())!
+      const [cx, cy] = [box.width / 2, box.height / 2]
+      const m = (await heads(canvas)).filter((h) => h.r > 0 && h.n === 1).sort((p, q) => Math.hypot(p.x - cx, p.y - cy) - Math.hypot(q.x - cx, q.y - cy))[0]
+      await page.mouse.click(box.x + m.x, box.y + m.y)
+      await expect(page.locator('.gpop .gacts')).toBeVisible({ timeout: 5000 })
+      await page.waitForTimeout(600) // the phone's sheet slides up
+    }
+    await pick()
+    await page.screenshot({ path: `${SHOTS}/gcard-${width}${full ? '-full' : ''}.png` })
+    await page.locator('.gpop-go').click()
+    const journey = page.getByText('Visitor journey')
+    await expect(journey).toBeVisible({ timeout: 5000 })
+    // It is on top: the point in its middle belongs to the dialog, not to the full-screen cover under it.
+    expect(await journey.evaluate((e) => { const r = e.getBoundingClientRect(); return !!document.elementFromPoint(r.x + 4, r.y + 4)?.closest('[role=dialog], .modal-back, dialog') })).toBe(true)
+    await page.keyboard.press('Escape')
+    await page.keyboard.press('Escape')
+    await expect(page.locator('.gpop')).toHaveCount(0)
+    await page.waitForTimeout(1500)
+    if (!full) await pick()
+    else {
+      await page.getByRole('button', { name: 'Full screen' }).click()
+      await expect(page.locator('.gwrap.fill')).toBeVisible()
+      await page.waitForTimeout(800)
+      await pick()
+    }
+    await page.locator('.gpop-ex').click()
+    await expect(page).toHaveURL(/xf=page%3A%2Fp\d/, { timeout: 5000 })
+    await expect(page.locator('.gwrap.fill')).toHaveCount(0)
+  })
+}
+
+// Space dissolves into the card under the header: no seam. Full screen has no header, so no fade there.
+for (const colorScheme of ['dark', 'light'] as const) {
+  test(`the globe's space fades into the card under the header, ${colorScheme}`, async ({ page }) => {
+    const canvas = await crowd(page, 1280, colorScheme)
+    const mask = () => canvas.evaluate((c) => getComputedStyle(c).maskImage)
+    expect(await mask()).toContain('linear-gradient')
+    const box = (await canvas.boundingBox())!
+    await page.screenshot({ path: `${SHOTS}/gcard-top-${colorScheme}.png`, clip: { x: box.x - 8, y: box.y - 60, width: box.width + 16, height: 220 } })
+    await page.getByRole('button', { name: 'Full screen' }).click()
+    await expect(page.locator('.gwrap.fill')).toBeVisible()
+    expect(await mask()).toBe('none')
+  })
+}
