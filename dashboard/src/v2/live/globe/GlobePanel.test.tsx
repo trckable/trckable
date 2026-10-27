@@ -101,7 +101,7 @@ describe('the globe popover', () => {
     }
     const ptr = (el: HTMLElement, type: string, id: number, x: number, y: number) => act(() => void el.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: id, pointerType: 'touch', clientX: x, clientY: y })))
 
-    it('zooms with Ctrl or Cmd and the wheel, leaves a plain wheel to the page, and stays between 1x and 6x', () => {
+    it('zooms with Ctrl or Cmd and the wheel, leaves a plain wheel to the page, and stays between 1x and 8x', () => {
       const { box, globe, root } = mount([row(1)])
       const plain = wheel(stage(box), { deltaY: -300, clientX: 10, clientY: 10 })
       expect(plain.defaultPrevented).toBe(false)
@@ -110,7 +110,7 @@ describe('the globe popover', () => {
       expect(globe().zoomT).toBeGreaterThan(1)
       expect(pinch.defaultPrevented).toBe(true)
       for (let i = 0; i < 40; i++) wheel(stage(box), { deltaY: -400, metaKey: true })
-      expect(globe().zoomT).toBe(6)
+      expect(globe().zoomT).toBe(8)
       for (let i = 0; i < 80; i++) wheel(stage(box), { deltaY: 400, metaKey: true })
       expect(globe().zoomT).toBe(1)
       act(() => root.unmount())
@@ -159,5 +159,23 @@ describe('the globe popover', () => {
       ptr(el, 'pointerup', 1, 100, 100)
       act(() => root.unmount())
     })
+  })
+})
+
+describe('the markers', () => {
+  type Inside = { group: (r: number) => void; states: { head: unknown; total: number; spots: number }[] }
+  const heads = (g: Inside) => g.states.filter((s) => s.head === s)
+
+  it('gathers places close together into one marker with the people added up, and splits them when zoomed in', () => {
+    // A blank place and two cities of one country, and one far away.
+    const { globe, root } = mount([row(1, { city: '' }), row(2, { city: '' }), row(3, { city: 'Berlin' }), row(4, { city: 'Munich' }), row(5, { country: 'jp', city: 'Tokyo' })])
+    const g = globe() as unknown as Inside
+    g.group(250)
+    const far = heads(g)
+    expect(far.map((s) => s.total).sort()).toEqual([1, 4])
+    expect(far.find((s) => s.total === 4)?.spots).toBe(3)
+    g.group(1e7)
+    expect(heads(g)).toHaveLength(4)
+    act(() => root.unmount())
   })
 })

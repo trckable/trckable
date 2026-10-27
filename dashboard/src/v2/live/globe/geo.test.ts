@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { feedOf, IDLE_MS, type Row } from '../../../features/live/model'
 import type { NowVisit } from '../../../features/live/api'
+import { cityAt } from './cities'
 import { agoOf, placeOf, pinsOf, spotsOf, wrap } from './geo'
 
 const at = (i: number, o: Partial<NowVisit> = {}): NowVisit => ({ kind: 'pageview', ts: 1000, last: 1000, path: `/p${i}`, visitor: `v${i}`, country: 'de', city: 'Berlin', ...o })
@@ -54,5 +55,24 @@ describe('globe maths', () => {
   it('says seconds, then minutes', () => {
     expect(agoOf(15_000)).toEqual({ unit: 's', n: 15 })
     expect(agoOf(190_000)).toEqual({ unit: 'm', n: 3 })
+  })
+})
+
+describe('a pin on its city', () => {
+  it('sits on the listed city, whatever the accents or case, and on the country middle for one that is not listed', () => {
+    expect(cityAt('DE', 'Berlin')).toEqual([52.52, 13.4])
+    expect(cityAt('BR', 'sao PAULO')).toEqual([-23.55, -46.63])
+    expect(cityAt('CO', 'Bogota')).toEqual([4.71, -74.07])
+    expect(cityAt('DE', 'Smallville')).toBeNull()
+    expect(cityAt('DE', '')).toBeNull()
+  })
+  it('does not take a same-named city from the other side of the world', () => {
+    expect(cityAt('ES', 'Santiago')).toBeNull() // the listed Santiago is in Chile
+    expect(cityAt('CL', 'Santiago')).toEqual([-33.45, -70.67])
+  })
+  it('puts the pin on the city when the finder knows it, and keeps the jitter around the country otherwise', () => {
+    const pins = pinsOf([row(1, { city: 'Berlin' }), row(2, { city: 'Smallville' })], cityAt)
+    expect([pins[0].lat, pins[0].lon]).toEqual([52.52, 13.4])
+    expect([pins[1].lat, pins[1].lon]).toEqual(placeOf('DE', 'Smallville'))
   })
 })

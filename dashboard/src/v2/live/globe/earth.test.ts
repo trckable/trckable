@@ -27,7 +27,7 @@ function shares(lat: number, lon: number): number[] {
   let from = 0
   for (let r = 0; r < land.end.length; r++) {
     const to = land.end[r]
-    const one: Lines = { ...land, end: Int32Array.from([to - from]), turn: Int8Array.from([land.turn[r]]), xyz: land.xyz.subarray(from * 3, to * 3), points: to - from }
+    const one: Lines = { ...land, end: Int32Array.from([to - from]), turn: Int8Array.from([land.turn[r]]), xyz: land.xyz.subarray(from * 3, to * 3), cap: land.cap.subarray(r * 4, r * 4 + 4), points: to - from }
     const pts: number[][] = []
     const c = {
       beginPath() {},

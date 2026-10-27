@@ -15,10 +15,12 @@ export interface Lines {
   end: Int32Array
   turn: Int8Array
   points: number
+  /** Each line's cap: the middle of it as a unit vector (x, y, z) and the angle to its farthest point, so a line out of sight can be skipped whole. */
+  cap: Float32Array
 }
 
 /** Lines from their text (see build-globe.mjs): a turn mark first when `turned`, then steps in quarter degrees from the point before, a "." between lines. */
-export function decode(text: string, turned: boolean): Lines {
+export function decode(text: string, turned: boolean, q = Q): Lines {
   const lines = text.split('.')
   const lon: number[] = []
   const lat: number[] = []
@@ -43,12 +45,12 @@ export function decode(text: string, turned: boolean): Lines {
     while (i < line.length) {
       x += next()
       y += next()
-      lon.push(x / Q)
-      lat.push(y / Q)
+      lon.push(x / q)
+      lat.push(y / q)
     }
     end[k] = lon.length
   })
-  return { ...fromDegrees(lon, lat, end), end, turn }
+  return withCaps({ ...fromDegrees(lon, lat, end), end, turn })
 }
 
 /** The longest an edge may be, in radians (about 3 degrees): a longer one is cut into pieces along the sphere, so it bends the way a line on the globe does. */
@@ -87,6 +89,35 @@ function fromDegrees(lon: number[], lat: number[], ends: Int32Array): { xyz: Flo
   return { xyz: Float32Array.from(out), points: out.length / 3 }
 }
 
+/** The caps of the lines (see Lines.cap). A line that goes round a pole has no middle: its cap is more than the whole sphere. */
+function withCaps(g: Omit<Lines, 'cap'>): Lines {
+  const cap = new Float32Array(g.end.length * 4)
+  let from = 0
+  for (let r = 0; r < g.end.length; r++) {
+    const to = g.end[r]
+    let x = 0
+    let y = 0
+    let z = 0
+    for (let i = from; i < to; i++) {
+      x += g.xyz[3 * i]
+      y += g.xyz[3 * i + 1]
+      z += g.xyz[3 * i + 2]
+    }
+    const m = Math.hypot(x, y, z)
+    let far = 0
+    if (m < 0.2 * (to - from)) far = 4
+    else {
+      x /= m
+      y /= m
+      z /= m
+      for (let i = from; i < to; i++) far = Math.max(far, Math.acos(Math.min(1, x * g.xyz[3 * i] + y * g.xyz[3 * i + 1] + z * g.xyz[3 * i + 2])))
+    }
+    cap.set([x, y, z, far], r * 4)
+    from = to
+  }
+  return { ...g, cap }
+}
+
 /** The graticule: a meridian every 30 degrees and a parallel every 30, as lines. */
 function graticule(): Lines {
   const lon: number[] = []
@@ -107,7 +138,7 @@ function graticule(): Lines {
     ends.push(lon.length)
   }
   const end = Int32Array.from(ends)
-  return { ...fromDegrees(lon, lat, end), end, turn: new Int8Array(ends.length) }
+  return withCaps({ ...fromDegrees(lon, lat, end), end, turn: new Int8Array(ends.length) })
 }
 
 export const land = decode(LAND, true)
@@ -121,29 +152,57 @@ export interface View {
   r: number
   lat: number
   lon: number
+  /** The size of the canvas, when known: a line wholly outside it is not drawn. */
+  w?: number
+  h?: number
 }
 
-const MOST = Math.max(land.points, borders.points, grid.points)
-// The projected points: screen x and y, and how far toward the viewer (negative: behind the globe). Shared by every drawing, one set of lines at a time.
-const sx = new Float32Array(MOST)
-const sy = new Float32Array(MOST)
-const sz = new Float32Array(MOST)
+let room = Math.max(land.points, borders.points, grid.points)
+// The projected points: screen x and y, and how far toward the viewer (negative: behind the globe). Shared by every drawing, one set of lines at a time. They grow when a bigger set (the detail) first comes.
+let sx = new Float32Array(room)
+let sy = new Float32Array(room)
+let sz = new Float32Array(room)
 // Where a line meets the horizon (set by `cross`).
 let hx = 0
 let hy = 0
 
-function project(g: Lines, v: View) {
+/** Projects the points from `from` up to `to`. */
+function project(g: Lines, v: View, from: number, to: number) {
+  if (g.points > room) {
+    room = g.points
+    sx = new Float32Array(room)
+    sy = new Float32Array(room)
+    sz = new Float32Array(room)
+  }
   const cl = Math.cos(v.lon * RAD)
   const sl = Math.sin(v.lon * RAD)
   const cp = Math.cos(v.lat * RAD)
   const sp = Math.sin(v.lat * RAD)
   const a = g.xyz
-  for (let i = 0, k = 0; i < g.points; i++, k += 3) {
+  for (let i = from, k = from * 3; i < to; i++, k += 3) {
     const z1 = a[k] * sl + a[k + 2] * cl
     sx[i] = v.cx + v.r * (a[k] * cl - a[k + 2] * sl)
     sy[i] = v.cy - v.r * (a[k + 1] * cp - z1 * sp)
     sz[i] = a[k + 1] * sp + z1 * cp
   }
+}
+
+/** True when line `r` cannot show: all of it is behind the globe or off the canvas. */
+function hidden(g: Lines, v: View, r: number): boolean {
+  const k = r * 4
+  const far = g.cap[k + 3]
+  if (far > 1.5) return false
+  const cl = Math.cos(v.lon * RAD)
+  const sl = Math.sin(v.lon * RAD)
+  const z1 = g.cap[k] * sl + g.cap[k + 2] * cl
+  const z = g.cap[k + 1] * Math.sin(v.lat * RAD) + z1 * Math.cos(v.lat * RAD)
+  if (z < -Math.sin(far)) return true
+  if (v.w === undefined || v.h === undefined) return false
+  // Nothing of the cap is farther from its middle than r * far on the canvas.
+  const x = v.cx + v.r * (g.cap[k] * cl - g.cap[k + 2] * sl)
+  const y = v.cy - v.r * (g.cap[k + 1] * Math.cos(v.lat * RAD) - z1 * Math.sin(v.lat * RAD))
+  const reach = v.r * far + 2
+  return x + reach < 0 || x - reach > v.w || y + reach < 0 || y - reach > v.h
 }
 
 /** The point on the horizon where the line from point `a` (in front) to point `b` (behind) goes over it. */
@@ -170,18 +229,30 @@ const used = new Uint8Array(CHAINS)
 const TURN = Math.PI * 2
 
 /** The land as filled shapes in the current fill style. An outline that goes behind the globe is cut at the horizon, and each stretch in front is closed along the horizon to the next stretch that comes round in the outline's own direction, so a continent (or a bay across the edge) stays whole as it turns. */
-export function fillLand(c: CanvasRenderingContext2D, v: View, g: Lines = land) {
-  project(g, v)
+export function fillLand(c: CanvasRenderingContext2D, v: View, g: Lines = land, edge?: { shade: string; line: string }) {
   c.beginPath()
   let from = 0
   for (let r = 0; r < g.end.length; r++) {
     const to = g.end[r]
+    if (hidden(g, v, r)) {
+      from = to
+      continue
+    }
+    project(g, v, from, to)
     const n = to - from
     let front = 0
     for (let i = from; i < to; i++) if (sz[i] >= 0) front++
     if (front === n) {
-      c.moveTo(sx[from], sy[from])
-      for (let i = from + 1; i < to; i++) c.lineTo(sx[i], sy[i])
+      // Whole in front: a point less than a pixel from the one before it adds nothing to the picture.
+      let lx = sx[from]
+      let ly = sy[from]
+      c.moveTo(lx, ly)
+      for (let i = from + 1; i < to; i++) {
+        if (Math.abs(sx[i] - lx) + Math.abs(sy[i] - ly) < 0.9 && i < to - 1) continue
+        lx = sx[i]
+        ly = sy[i]
+        c.lineTo(lx, ly)
+      }
       c.closePath()
     } else if (front > 0) {
       // The stretches in front, in the outline's order.
@@ -240,25 +311,50 @@ export function fillLand(c: CanvasRenderingContext2D, v: View, g: Lines = land) 
     from = to
   }
   c.fill()
+  if (edge) {
+    // A soft shade inside the coast, so the land has an edge and a little depth.
+    c.save()
+    c.clip()
+    c.lineWidth = 6
+    c.strokeStyle = edge.shade
+    c.stroke()
+    c.restore()
+    // And the coast itself, a crisp thin line.
+    c.lineWidth = 0.8
+    c.strokeStyle = edge.line
+    c.stroke()
+  }
 }
 
 /** Lines (borders, graticule) in the current stroke style: only what is in front, cut at the horizon. */
 export function strokeLines(c: CanvasRenderingContext2D, g: Lines, v: View) {
-  project(g, v)
   c.beginPath()
   let from = 0
   for (let r = 0; r < g.end.length; r++) {
     const to = g.end[r]
+    if (hidden(g, v, r)) {
+      from = to
+      continue
+    }
+    project(g, v, from, to)
+    let lx = -1e9
+    let ly = -1e9
     for (let i = from; i < to; i++) {
       const on = sz[i] >= 0
       const was = i > from && sz[i - 1] >= 0
-      if (on && was) c.lineTo(sx[i], sy[i])
-      else if (on) {
+      if (on && was) {
+        if (Math.abs(sx[i] - lx) + Math.abs(sy[i] - ly) < 0.9 && i < to - 1) continue
+        lx = sx[i]
+        ly = sy[i]
+        c.lineTo(lx, ly)
+      } else if (on) {
         if (i > from) {
           cross(v, i, i - 1)
           c.moveTo(hx, hy)
           c.lineTo(sx[i], sy[i])
         } else c.moveTo(sx[i], sy[i])
+        lx = sx[i]
+        ly = sy[i]
       } else if (was) {
         cross(v, i - 1, i)
         c.lineTo(hx, hy)
