@@ -145,7 +145,7 @@ export interface Open {
   lon: number
 }
 
-/** `onLeave` runs before a button acts: the globe's full screen covers the replay and Explore, so it ends first. */
+/** `onLeave` runs before a button acts: the card closes and the globe's full screen ends, so neither covers the replay or Explore. */
 export function GlobePopover({ open, row, clock, site, onVisitor, onClose, onLeave }: { open: Open; row: Row | undefined; clock: number; site: string; onVisitor?: (v: string) => void; onClose: () => void; onLeave: () => void }) {
   const phone = useNarrow()
   const box = useRef<HTMLDivElement | null>(null)

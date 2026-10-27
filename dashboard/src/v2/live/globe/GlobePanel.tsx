@@ -58,7 +58,7 @@ export default function GlobePanel({ rows, clock, online, bar, pulse, minutes, b
           </button>
         </div>
         <GlobeStage pins={pins} people={online} sel={sel} full={full.on} onPick={at}>
-          {open && <GlobePopover open={open} row={here} clock={clock} site={site} onVisitor={onVisitor} onClose={close} onLeave={() => full.on && full.toggle()} />}
+          {open && <GlobePopover open={open} row={here} clock={clock} site={site} onVisitor={onVisitor} onClose={close} onLeave={() => { close(); if (full.on) full.toggle() }} />}
         </GlobeStage>
         <button type="button" className="gclose" aria-label={copy.exitFullscreen} title={copy.exitFullscreen} onClick={full.toggle}>
           <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
