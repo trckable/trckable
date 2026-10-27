@@ -4,10 +4,12 @@
 // stops (until something wakes it) when nothing moves. A frame builds no objects: the buffers below are made once.
 import { reducedMotion } from '../../../lib/motion'
 import { borders, fillLand, grid, land, strokeLines, type View } from './earth'
-import { spotsOf, wrap, type Pin } from './geo'
+import { spotsOf, sunNow, wrap, type Pin } from './geo'
 
 /** The detail (50m land, names), a separate chunk that loads when someone zooms in. */
 type Detail = typeof import('./labels')
+/** The imagery of the earth (NASA pictures drawn by a shader), a chunk of its own, used where WebGL2 is. */
+type SkinOf = import('./skin').Skin
 
 const RAD = Math.PI / 180
 /** Degrees per millisecond of the slow spin (about one turn a minute and a half). */
@@ -174,6 +176,11 @@ export class Globe {
   private failed = -1e9
   /** Whether the 50m land is the one drawn (with a margin, so it does not flip back and forth at the edge). */
   private fineNow = false
+  /** The picture of the earth, once it is here; until then, and without WebGL2, the vector earth is drawn. */
+  private skin: SkinOf | null = null
+  private skinTried = false
+  private skinVer = 0
+  private sharp = false
   /** Full screen: the detail is fetched at once, there is room for it. */
   full = false
   /** The markers are gathered again (a marker came or went, or the zoom changed enough). */
@@ -530,6 +537,7 @@ export class Globe {
       moving = true
     }
     if (this.full || this.zoom > DETAIL_ZOOM) this.preload(now)
+    if (this.skin && !this.sharp && this.zoom > 2.8) this.sharpen(this.skin)
     if (this.det) {
       const fine = this.zoom >= (this.fineNow ? FINE_ZOOM - 0.15 : FINE_ZOOM)
       if (fine !== this.fineNow) this.fineNow = fine
@@ -702,6 +710,37 @@ export class Globe {
     )
   }
 
+  /** Fetches the earth's pictures the first time the globe draws (not on a connection that saves data); the vector earth stands in meanwhile. */
+  private dress() {
+    this.skinTried = true
+    if ((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData) return
+    void import('./skin').then(async (m) => {
+      let force = false
+      try {
+        force = localStorage.getItem('trckable.globe.skin') === 'force'
+      } catch {
+        // storage blocked: the normal check
+      }
+      const skin = await m.Skin.create(force)
+      if (!skin) return
+      this.skin = skin
+      this.skinVer++
+      this.layerKey = ''
+      this.wake()
+    })
+  }
+
+  /** The sharper day picture, fetched once when the view is close. */
+  private sharpen(skin: SkinOf) {
+    this.sharp = true
+    void skin.sharpen().then((ok) => {
+      if (!ok) return
+      this.skinVer++
+      this.layerKey = ''
+      this.wake()
+    })
+  }
+
   /** Gathers the spots into markers: spots closer together than CLUSTER_PX on the screen are one marker (the largest spot's place) with their people added up. Done when the spots change or the zoom has moved a step, not every frame. */
   private group(R: number) {
     const step = Math.round(Math.log2(Math.max(1, R)) * 3)
@@ -751,24 +790,33 @@ export class Globe {
     c.arc(cx, cy, R * 1.24, 0, TAU)
     c.fillStyle = shell.air
     c.fill()
-    c.beginPath()
-    c.arc(cx, cy, R, 0, TAU)
-    c.fillStyle = shell.sea
-    c.fill()
-    c.lineWidth = 1
-    c.strokeStyle = ink.grat
-    strokeLines(c, grid, view)
-    c.fillStyle = ink.land
-    fillLand(c, view, fine && this.det ? this.det.fine.land : land, { shade: ink.relief, line: ink.coast })
+    const skin = this.skin
+    if (skin) {
+      // The pictures, lit by the sun where it is now; then the faint borders on them.
+      skin.render({ lat: this.lat, lon: this.lon, cx, cy, r: R, w: this.w, h: this.h, dpr: this.dpr }, sunNow(), ink.starA > 0 ? 0.05 : 0.25)
+      c.drawImage(skin.canvas, 0, 0, this.w, this.h)
+    } else {
+      c.beginPath()
+      c.arc(cx, cy, R, 0, TAU)
+      c.fillStyle = shell.sea
+      c.fill()
+      c.lineWidth = 1
+      c.strokeStyle = ink.grat
+      strokeLines(c, grid, view)
+      c.fillStyle = ink.land
+      fillLand(c, view, fine && this.det ? this.det.fine.land : land, { shade: ink.relief, line: ink.coast })
+    }
     c.lineWidth = 0.7
     c.strokeStyle = ink.border
     strokeLines(c, fine && this.det ? this.det.fine.borders : borders, view)
     c.beginPath()
     c.arc(cx, cy, R, 0, TAU)
-    c.fillStyle = shell.night
-    c.fill()
-    c.fillStyle = shell.rim
-    c.fill()
+    if (!skin) {
+      c.fillStyle = shell.night
+      c.fill()
+      c.fillStyle = shell.rim
+      c.fill()
+    }
     c.lineWidth = 1.5
     c.strokeStyle = shell.edge
     c.stroke()
@@ -779,6 +827,7 @@ export class Globe {
     const c = this.ctx
     if (!c || !this.w) return false
     const ink = this.colours(now)
+    if (!this.skinTried) this.dress()
     const R = this.radius()
     const cx = this.cx
     const cy = this.cy
@@ -796,7 +845,7 @@ export class Globe {
     if (sky) c.drawImage(sky, 0, 0, this.w, this.h)
     else c.clearRect(0, 0, this.w, this.h)
     // The earth is kept as an image while the view stands still, so a marker's pulse does not redraw the continents.
-    const key = `${this.lat.toFixed(3)},${this.lon.toFixed(3)},${R.toFixed(2)},${cx.toFixed(1)},${cy.toFixed(1)},${this.w},${this.h},${this.dpr},${this.inkVer},${this.fineNow ? 1 : 0}`
+    const key = `${this.lat.toFixed(3)},${this.lon.toFixed(3)},${R.toFixed(2)},${cx.toFixed(1)},${cy.toFixed(1)},${this.w},${this.h},${this.dpr},${this.inkVer},${this.fineNow ? 1 : 0},${this.skinVer},${Math.floor(Date.now() / 60000)}`
     if (key === this.layerKey && this.layer) c.drawImage(this.layer, 0, 0, this.w, this.h)
     else if (key === this.lastKey) {
       const l = this.layer ?? (this.layer = document.createElement('canvas'))

@@ -238,7 +238,10 @@ type Inside = { states: { head: unknown; total: number; x: number; y: number; r:
 async function crowd(page: Page, width: number, colorScheme: 'dark' | 'light') {
   await page.emulateMedia({ colorScheme })
   await page.setViewportSize({ width, height: width < 600 ? 900 : 800 })
-  await page.addInitScript(() => localStorage.setItem('trckable.live.globe', 'on'))
+  await page.addInitScript(() => {
+    localStorage.setItem('trckable.live.globe', 'on')
+    localStorage.setItem('trckable.globe.skin', 'force')
+  })
   await page.route(/\/sites\/[^/]+\/now(\?|$)/, async (route) => {
     const res = await route.fetch()
     const body = await res.json()
@@ -267,6 +270,9 @@ for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark
     const canvas = await crowd(page, width, colorScheme)
     // One marker for the 30 in Tirana and the places by it (a blank dot and Pristina), not a pile of dots: the hover tells it in words.
     const marker = await heads(canvas)
+    // A visitor from a listed city is pinned on that city: Berlin's marker holds Berlin's own place.
+    const berlin = await canvas.evaluate((c) => (c as unknown as { __globe: { states: { pin: { city: string }; lat: number; lon: number }[] } }).__globe.states.find((s) => s.pin.city === 'Berlin'))
+    expect([berlin?.lat, berlin?.lon]).toEqual([52.52, 13.4])
     expect(marker.filter((m) => m.n >= 37)).toHaveLength(1)
     expect(marker.reduce((n, m) => n + m.n, 0)).toBe(47)
     expect(marker.length).toBeLessThanOrEqual(10)
@@ -320,4 +326,83 @@ test('full screen uses the room: the detail comes at once, and it is a shot of t
   await expect.poll(() => canvas.evaluate((c) => !!(c as unknown as { __globe: Inside }).__globe.det), { timeout: 15_000 }).toBe(true)
   await page.waitForTimeout(1500)
   await page.screenshot({ path: `${SHOTS}/globe2-1280-dark-full.png` })
+})
+
+// The earth is never an empty disc: the vector land is drawn until the pictures are in, and for good where they cannot be.
+const looks = (canvas: ReturnType<Page['locator']>) =>
+  canvas.evaluate((c: HTMLCanvasElement) => {
+    const x = c.getContext('2d')!
+    const seen = new Set<string>()
+    for (let i = 0; i < 24; i++)
+      for (let j = 0; j < 24; j++) {
+        const d = x.getImageData(c.width * (0.3 + i * 0.016), c.height * (0.3 + j * 0.016), 1, 1).data
+        seen.add(`${d[0] >> 4},${d[1] >> 4},${d[2] >> 4}`)
+      }
+    return seen.size
+  })
+const skinOf = (canvas: ReturnType<Page['locator']>) => canvas.evaluate((c) => !!(c as unknown as { __globe: { skin: unknown } }).__globe.skin)
+
+test('without WebGL the vector earth stays, land and sea', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('trckable.live.globe', 'on')
+    const get = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, kind: string, ...rest: unknown[]) {
+      return kind === 'webgl2' || kind === 'webgl' ? null : (get as (...a: unknown[]) => unknown).call(this, kind, ...rest)
+    } as typeof get
+  })
+  await open(page)
+  const canvas = page.locator('.gstage canvas')
+  await expect(canvas).toBeVisible({ timeout: 10_000 })
+  await page.waitForTimeout(2500)
+  expect(await skinOf(canvas)).toBe(false)
+  expect(await looks(canvas)).toBeGreaterThan(4)
+})
+
+test('while the pictures are slow the vector earth shows, then the pictures take over', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('trckable.live.globe', 'on')
+    localStorage.setItem('trckable.globe.skin', 'force')
+  })
+  let release: () => void = () => {}
+  const held = new Promise<void>((r) => (release = r))
+  await page.route(/\/(day|night)-2048-.*\.webp/, async (route) => {
+    await held
+    await route.continue()
+  })
+  await open(page)
+  const canvas = page.locator('.gstage canvas')
+  await expect(canvas).toBeVisible({ timeout: 10_000 })
+  await page.waitForTimeout(3000)
+  expect(await skinOf(canvas)).toBe(false)
+  expect(await looks(canvas)).toBeGreaterThan(4)
+  release()
+  await expect.poll(() => skinOf(canvas), { timeout: 15_000 }).toBe(true)
+  await page.waitForTimeout(800)
+  expect(await looks(canvas)).toBeGreaterThan(30)
+})
+
+test('a picture that never arrives leaves the vector earth', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('trckable.live.globe', 'on')
+    localStorage.setItem('trckable.globe.skin', 'force')
+  })
+  await page.route(/\/(day|night)-2048-.*\.webp/, (route) => route.abort())
+  await open(page)
+  const canvas = page.locator('.gstage canvas')
+  await expect(canvas).toBeVisible({ timeout: 10_000 })
+  await page.waitForTimeout(2500)
+  expect(await skinOf(canvas)).toBe(false)
+  expect(await looks(canvas)).toBeGreaterThan(4)
+})
+
+test('with the pictures the earth is textured, and the 4096 day picture comes only when zoomed in', async ({ page }) => {
+  const sharp: string[] = []
+  page.on('request', (r) => /day-4096/.test(r.url()) && sharp.push(r.url()))
+  const canvas = await crowd(page, 1280, 'dark')
+  await expect.poll(() => skinOf(canvas), { timeout: 15_000 }).toBe(true)
+  await page.waitForTimeout(1000)
+  expect(await looks(canvas)).toBeGreaterThan(30)
+  expect(sharp).toHaveLength(0)
+  await canvas.evaluate((c) => (c as unknown as { __globe: Inside }).__globe.zoomTo(4))
+  await expect.poll(() => sharp.length, { timeout: 15_000 }).toBe(1)
 })

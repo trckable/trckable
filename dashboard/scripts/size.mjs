@@ -37,7 +37,7 @@ if (!milestones || milestones > milestonesBudget) {
 }
 // Live's globe view: one lazy chunk (script and styles, and the earth: the land outlines, the borders and the country points; the earth is its own file because the detail chunk shares its reader), 25 KB at the most.
 const globeBudget = 25 * 1024
-const globe = lazy.filter((f) => f.startsWith('GlobePanel-') || f.startsWith('earth-')).reduce((n, f) => n + gz('assets/' + f), 0)
+const globe = lazy.filter((f) => f.startsWith('GlobePanel-') || f.startsWith('earth-') || f.startsWith('cities-')).reduce((n, f) => n + gz('assets/' + f), 0)
 console.log(`globe chunk: ${(globe / 1024).toFixed(1)} KB gz (budget ${globeBudget / 1024} KB)`)
 if (!globe || globe > globeBudget) {
   console.error('the globe chunk is missing or over its budget')
@@ -49,5 +49,15 @@ const detail = lazy.filter((f) => f.startsWith('labels-')).reduce((n, f) => n + 
 console.log(`globe detail chunk: ${(detail / 1024).toFixed(1)} KB gz (budget ${detailBudget / 1024} KB)`)
 if (!detail || detail > detailBudget) {
   console.error('the globe detail chunk is missing or over its budget')
+  process.exit(1)
+}
+// The globe's picture of the earth (the shader and its loader), a lazy chunk of its own: 15 KB at the most. The pictures are files beside it, fetched after it:
+// 2048 day and night on mount (about 190 KB), the 4096 day only when zoomed in (about 340 KB).
+const skinBudget = 15 * 1024
+const skin = lazy.filter((f) => f.startsWith('skin-') && f.endsWith('.js')).reduce((n, f) => n + gz('assets/' + f), 0)
+const pictures = lazy.filter((f) => /^(day|night)-\d+-.*\.webp$/.test(f)).map((f) => `${f.split('-')[0]}-${f.split('-')[1]} ${(gz('assets/' + f) / 1024).toFixed(0)} KB`)
+console.log(`globe skin chunk: ${(skin / 1024).toFixed(1)} KB gz (budget ${skinBudget / 1024} KB); pictures: ${pictures.join(', ')}`)
+if (!skin || skin > skinBudget || pictures.length !== 3) {
+  console.error('the globe skin chunk or its pictures are missing, or the chunk is over its budget')
   process.exit(1)
 }

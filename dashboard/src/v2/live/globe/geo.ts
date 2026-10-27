@@ -30,11 +30,16 @@ function hash(s: string): number {
   return (h >>> 0) / 4294967296
 }
 
-/** A country's middle point moved up to about two degrees in a direction its city's name decides. No city: the middle itself. */
-export function placeOf(cc: string, city: string): [number, number] | null {
+/** Finds a city's own place (cities.ts), when it is known. */
+export type CityFinder = (cc: string, city: string) => [number, number] | null
+
+/** The city's own place when it is on the list; else its country's middle point moved up to about two degrees in a direction the city's name decides. No city: the middle itself. */
+export function placeOf(cc: string, city: string, find?: CityFinder): [number, number] | null {
   const c = PLACES[cc]
   if (!c) return null
   if (!city) return c
+  const own = find?.(cc, city)
+  if (own) return own
   const a = hash(city) * 2 * Math.PI
   const r = 0.4 + hash(city + '/') * 1.6
   return [Math.max(-80, Math.min(80, c[0] + Math.sin(a) * r)), c[1] + (Math.cos(a) * r) / Math.max(0.3, Math.cos(c[0] * RAD))]
@@ -46,18 +51,27 @@ const what = (r: Row): string => (r.kind === 'goal' ? r.label || r.goal || '' : 
 export const spotOf = (r: Pick<Row, 'country' | 'city'>): string => `${r.country?.toUpperCase() ?? ''}/${r.city ?? ''}`
 
 /** The people on the site, as pins: one each, the same people the "On the site now" list holds. Rows are newest first. */
-export function pinsOf(rows: readonly Row[]): Pin[] {
+export function pinsOf(rows: readonly Row[], find?: CityFinder): Pin[] {
   const crowd = new Map<string, number>()
   for (const r of rows) crowd.set(spotOf(r), (crowd.get(spotOf(r)) ?? 0) + 1)
   const out: Pin[] = []
   for (const r of rows) {
     const cc = r.country?.toUpperCase() ?? ''
-    const at = placeOf(cc, r.city ?? '')
+    const at = placeOf(cc, r.city ?? '', find)
     if (!at) continue
     const n = crowd.get(spotOf(r)) ?? 1
     out.push({ key: r.key, cc, city: r.city ?? '', path: what(r), lat: at[0], lon: at[1], last: r.last, sig: `${r.key}@${r.last}`, crowd: n })
   }
   return out
+}
+
+/** Where the sun is over the earth now, as a unit vector (x east, y north, z toward longitude 0): the declination from the day of the year, the longitude from the time of day. */
+export function sunNow(at = Date.now()): [number, number, number] {
+  const d = new Date(at)
+  const day = (at - Date.UTC(d.getUTCFullYear(), 0, 0)) / 86_400_000
+  const dec = 23.44 * Math.sin(((2 * Math.PI) / 365.25) * (day - 81)) * RAD
+  const lon = -((d.getUTCHours() + d.getUTCMinutes() / 60 - 12) * 15) * RAD
+  return [Math.cos(dec) * Math.sin(lon), Math.sin(dec), Math.cos(dec) * Math.cos(lon)]
 }
 
 export const wrap = (lon: number): number => ((((lon + 180) % 360) + 360) % 360) - 180
