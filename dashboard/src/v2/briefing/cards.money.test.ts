@@ -9,8 +9,8 @@ const base = { fmt: usd, clock: (iso: string) => iso.slice(11, 16), today: true,
 describe('the sales cards', () => {
   it('says who paid, what came in, and what the usual is', () => {
     const [c] = salesCards({ ...base, money: money(), band: { c: 11000, lo: 8000, hi: 14000 }, buyers: [{ id: 'a', at: '2026-10-16T15:20:00Z', amount: 8700, kind: 'new', referrer: 'google.com' }, { id: 'b', at: '2026-10-16T16:00:00Z', amount: 21800, kind: 'upgrade' }] })
-    expect(c.head).toBe('1 person became a customer, 1 customer upgraded')
-    expect(c.rest).toBe(': $305 in')
+    expect(c.head).toBe('1 new customer, 1 customer upgraded')
+    expect(c.rest).toBeUndefined()
     expect(c.score).toBe(72)
     expect(c.why).toContain('Usual $80–$140 by now.')
     expect(c.vis).toMatchObject({ k: 'rcpt' })
@@ -51,10 +51,21 @@ const sr = (rows: { key: string; clicks: number }[]): SearchReport => ({ propert
 describe('the sales title counts a new customer whatever the provider calls the first payment', () => {
   const sale = (kind: string) => salesCards({ ...base, money: money({ revenue: 33800, payments: 2, customers: 1, new_revenue: 12000, renewal_revenue: 21800 }), band: null, buyers: [{ id: 'a', at: '2026-10-16T15:20:00Z', amount: 12000, kind }] })[0]
   it.each(['subscription', 'one_time', 'new'])('says the %s payment is a customer, not only the renewal', (kind) => {
-    expect(sale(kind).head).toBe('1 person became a customer, 1 renewal')
+    expect(sale(kind).head).toBe('1 new customer, 1 renewal')
   })
   it('does not count an upgrade as a new customer', () => {
     expect(sale('upgrade').head).toBe('1 customer upgraded, 1 renewal')
+  })
+})
+
+describe('every figure of the sales card is one total', () => {
+  it('has the big total equal to the sum of its rows', () => {
+    const [c] = salesCards({ ...base, money: money({ revenue: 33800, payments: 2, customers: 1, new_revenue: 12000, renewal_revenue: 21800 }), band: null, buyers: [{ id: 'a', at: '2026-10-16T15:20:00Z', amount: 12000, kind: 'subscription' }] })
+    const rows = c.vis?.k === 'rcpt' ? c.vis.rows.filter((r) => !r.tot) : []
+    const sum = rows.reduce((n, r) => n + Number((r.a ?? '').replace(/[^0-9.-]/g, '')), 0)
+    expect(c.val).toBe('$338')
+    expect(sum).toBe(338)
+    expect(`${c.head}${c.rest ?? ''}`).not.toMatch(/\$/)
   })
 })
 
@@ -64,8 +75,8 @@ describe('the sales rows add up to the headline', () => {
   it('lists the renewals the buyers list leaves out, so 2 sales are 2 lines', () => {
     // One new customer ($120) and one renewal ($218): 1 customer, 2 payments, $338.
     const [c] = salesCards({ ...base, money: money({ revenue: 33800, payments: 2, customers: 1, new_revenue: 12000, renewal_revenue: 21800 }), band: null, buyers: [{ id: 'a', at: '2026-10-16T15:20:00Z', amount: 12000, kind: 'new' }] })
-    expect(c.head).toBe('1 person became a customer, 1 renewal')
-    expect(c.rest).toBe(': $338 in')
+    expect(c.head).toBe('1 new customer, 1 renewal')
+    expect(c.rest).toBeUndefined()
     const rows = rowsOf(c)
     expect(rows.map((r) => r.l)).toEqual(['New customer', '1 renewal', 'Total in'])
     const lines = rows.filter((r) => !r.tot)
@@ -147,7 +158,7 @@ describe('the signup path and a first customer', () => {
     const c = firstCard({ first: { country: 'DE', amount: 2900, at: '2026-10-16T09:05:00Z', referrer: 'news.ycombinator.com', people: 14 }, band: { c: 10, lo: 6, hi: 14 }, fmt: usd, clock: (iso) => iso.slice(11, 16), rule: '' })
     expect(c.head).toBe('Your first customer from Germany')
     expect(c.kc).toMatchObject({ label: 'Germany' })
-    expect(c.vis).toMatchObject({ k: 'rcpt', rows: [{ l: 'New customer · via Hacker News', t: '09:05', a: '+$29' }] })
+    expect(c.vis).toEqual({ k: 'journey', steps: [{ l: 'Hacker News' }, { l: '\u{1F1E9}\u{1F1EA} Germany' }, { l: '$29', t: 'New customer · 09:05' }] })
     expect(c.why).toContain('$29 via')
   })
 })

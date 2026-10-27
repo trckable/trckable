@@ -72,6 +72,16 @@
 .mk .rr .rl small { margin-left: 6px; color: var(--mk-faint); font-size: 12.5px; }
 .mk .rr .ra { flex: none; margin-left: auto; font-weight: 650; }
 .mk .rr .ra.neg { color: var(--mk-red); }
+.mk .rr { position: relative; flex-wrap: wrap; }
+.mk .rr .rb { flex: 0 0 100%; height: 6px; border-radius: 3px; background: var(--mk-band); }
+.mk .rr .rb u { display: block; height: 100%; border-radius: 3px; background: var(--mk-lime); box-shadow: 0 0 12px var(--mk-limeL); transform-origin: left; animation: bc-grow 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both; }
+.mk .ic-jr { display: flex; align-items: flex-start; margin: 0; padding: 0; list-style: none; }
+.mk .ic-jr li { position: relative; flex: 1 1 0; min-width: 0; padding-top: 18px; font-size: 13px; }
+.mk .ic-jr li::before { content: ""; position: absolute; top: 4px; left: 12px; right: 0; height: 2px; background: var(--mk-limeL); }
+.mk .ic-jr li:last-child::before { display: none; }
+.mk .ic-jr li i { position: absolute; top: 0; left: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--mk-lime); box-shadow: 0 0 12px var(--mk-limeM); }
+.mk .ic-jr li b { display: block; padding-right: var(--mk-s2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 650; }
+.mk .ic-jr li small { display: block; color: var(--mk-muted); font-size: 12px; }
 .mk .rr.more { color: var(--mk-faint); }
 .mk .rr.lead .rl { font-weight: 700; }
 
@@ -98,9 +108,11 @@
 
 @keyframes bc-in { from { opacity: 0; transform: translateY(8px); } }
 @keyframes bc-draw { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+@keyframes bc-grow { from { transform: scaleX(0); } }
 @keyframes bc-pop { from { transform: scaleY(0); } }
 @media (prefers-reduced-motion: reduce) {
-  .mk .icard, .mk .ic-spk, .mk .ic-band .bm { animation: none; }
+  .mk .icard, .mk .ic-spk, .mk .ic-band .bm, .mk .rr .rb { flex: 0 0 100%; height: 6px; border-radius: 3px; background: var(--mk-band); }
+.mk .rr .rb u { display: block; height: 100%; border-radius: 3px; background: var(--mk-lime); box-shadow: 0 0 12px var(--mk-limeL); transform-origin: left; animation: bc-grow 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both; }
   .mk .icard:hover { transform: none; }
 }
 

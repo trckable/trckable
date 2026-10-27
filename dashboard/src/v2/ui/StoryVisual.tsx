@@ -112,6 +112,9 @@ function Lead({ r, dots }: { r: Row; dots?: boolean }) {
   return r.flag ? <span className="fl">{r.flag}</span> : null
 }
 
+/** The most a row's bar can stand for: each row's figure against the biggest of them. */
+const share = (rows: Row[], n: number): number => Math.max(4, (n / Math.max(1, ...rows.map((r) => r.n ?? 0))) * 100)
+
 function Rows({ rows, dots }: { rows: Row[]; dots?: boolean }) {
   return (
     <div className="ic-rows">
@@ -123,6 +126,9 @@ function Rows({ rows, dots }: { rows: Row[]; dots?: boolean }) {
             {r.t && <small className="mk-rt">{r.t}</small>}
           </span>
           <span className={`ra${r.neg ? ' neg' : ''}`}>{r.a}</span>
+          {r.n !== undefined && <span className="rb">
+              <u style={{ width: `${share(rows, r.n)}%` }} />
+            </span>}
         </div>
       ))}
     </div>
@@ -132,6 +138,21 @@ function Rows({ rows, dots }: { rows: Row[]; dots?: boolean }) {
 const signOf = (neg: boolean, m: number): string => {
   if (neg) return '−'
   return m > 0 ? '+' : ''
+}
+
+/** Where the person came from, where they live and what they paid: one strip. */
+function Journey({ v }: { v: Of<'journey'> }) {
+  return (
+    <ol className="ic-jr">
+      {v.steps.map((x, n) => (
+        <li key={`${n}${x.l}`}>
+          <i />
+          <b>{x.l}</b>
+          {x.t && <small>{x.t}</small>}
+        </li>
+      ))}
+    </ol>
+  )
 }
 
 /** The sales: the total big, and a clean row for each payment. */
@@ -155,6 +176,7 @@ export function Picture({ s, pic, vals }: { s: Story; pic: Pic; vals: number[] }
 function inner(s: Story, v: Vis, pic: Pic, vals: number[]): ReactNode {
   if (v.k === 'spike') return <Spike vals={vals} bad={s.bad} />
   if (v.k === 'ba') return <Band v={v.v} lo={v.lo} hi={v.hi} red={v.red} />
+  if (v.k === 'journey') return <Journey v={v} />
   if (v.k === 'outage') return <Outage v={v} />
   if (v.k === 'funnel') return <Steps v={v} />
   if (v.k === 'goals') return <Goals v={v} />

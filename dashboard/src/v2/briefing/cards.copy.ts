@@ -77,10 +77,9 @@ export const copy = defineCopy('briefing.cards', {
   goalKnow: 'A goal counts people who did the thing at least once.',
   alertLeaves: (name: string) => `We will tell you when ${name} leaves its usual range`,
   // Sales, search, a stuck visit.
-  becameCustomers: (n: number) => (n === 1 ? '1 person became a customer' : `${n} people became customers`),
+  becameCustomers: (n: number) => (n === 1 ? '1 new customer' : `${n} new customers`),
   upgraded: (n: number) => (n === 1 ? '1 customer upgraded' : `${n} customers upgraded`),
   renewals: (n: number) => (n === 1 ? '1 renewal' : `${n} renewals`),
-  paidIn: (total: string) => `: ${total} in`,
   newCustomer: 'New customer',
   upgrade: 'Upgrade',
   renewal: 'Renewal',

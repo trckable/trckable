@@ -7,7 +7,7 @@ import { mult } from './model'
 import type { Story, Topic, Vis } from './cards'
 
 /** The picture of a card: a rising line, the usual's band with the number on it, the sales, rows, the signup steps or the outage's day. */
-export type Pic = 'spike' | 'band' | 'goals' | 'money' | 'rows' | 'steps' | 'outage' | 'none'
+export type Pic = 'spike' | 'band' | 'goals' | 'money' | 'rows' | 'steps' | 'journey' | 'outage' | 'none'
 
 export interface Badge {
   text: string
@@ -23,7 +23,7 @@ export interface Shape {
   link: string | null
 }
 
-const PIC: Record<Vis['k'], Pic> = { spike: 'spike', ba: 'band', goals: 'goals', funnel: 'steps', outage: 'outage', rcpt: 'rows' }
+const PIC: Record<Vis['k'], Pic> = { spike: 'spike', journey: 'journey', ba: 'band', goals: 'goals', funnel: 'steps', outage: 'outage', rcpt: 'rows' }
 
 /** A rise of less than this, either way, is not worth a badge. */
 const QUIET = 0.05
@@ -66,6 +66,8 @@ const FIGURE = /[$€£]?\d+(?:[.,]\d+)*[%×]?/
 /** The sentence of a card, flag taken out where the top row has it, split around the one figure that is lit: the card's own number where it is in the words, else the first. */
 export function sentence(s: Story): { before: string; figure: string; after: string } {
   const text = `${s.head}${s.rest ?? ''}`.replace(FLAGS, '').trim()
+  // The sales say their figure big in the picture: no second one is lit in the words.
+  if (s.key === 'sales' && s.vis?.k === 'rcpt') return { before: text, figure: '', after: '' }
   const own = s.val ? new RegExp(`(?<![\\d.,])${s.val.replace(/[.*+?^${}()|[\]\\$]/g, '\\$&')}(?![\\d])`).exec(text) : null
   const m = own ?? FIGURE.exec(text)
   if (!m) return { before: text, figure: '', after: '' }

@@ -24,8 +24,9 @@ export type Act =
   | { k: 'x'; t: string }
 
 export type Vis =
-  | { k: 'rcpt'; plain?: boolean; rows: { lead?: boolean; l: string; t?: string; a?: string; flag?: string; neg?: boolean; more?: boolean; tot?: boolean; mark?: 'up' | 'dn' }[] }
+  | { k: 'rcpt'; plain?: boolean; rows: { lead?: boolean; l: string; t?: string; a?: string; flag?: string; n?: number; neg?: boolean; more?: boolean; tot?: boolean; mark?: 'up' | 'dn' }[] }
   | { k: 'spike' }
+  | { k: 'journey'; steps: { l: string; t?: string }[] }
   | { k: 'ba'; lo: number; hi: number; c: number; v: number; red: boolean }
   | { k: 'outage'; spans: Span[]; nowAt: number; from: string; now: string; live: boolean; marks: Mark[] }
   | { k: 'funnel'; rows: { name: string; v: number; w: number; hot: string }[] }
@@ -414,7 +415,7 @@ export function cardsOf(i: CardsIn): Story[] {
       score: 71,
       head: copy.newMention(m.host),
       rest: `: “${m.title}”`,
-      vis: { k: 'rcpt', rows: [{ l: m.title, t: m.at, a: `▲ ${m.points}` }, { l: copy.commentsSoFar, a: String(m.comments) }] },
+      vis: { k: 'rcpt', rows: [{ l: m.title, t: m.at, a: `▲ ${m.points}`, n: m.points }, { l: copy.commentsSoFar, a: String(m.comments), n: m.comments }] },
       why: copy.followLand(m.page),
       val: `▲ ${m.points}`,
       m: m.points,

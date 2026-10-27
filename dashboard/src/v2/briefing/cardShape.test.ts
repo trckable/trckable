@@ -16,6 +16,7 @@ describe('the badge says how far from usual', () => {
 describe('the shell takes its picture and link from the card', () => {
   it.each([
     [{ vis: { k: 'spike' } }, 'spike'],
+    [{ vis: { k: 'journey', steps: [] } }, 'journey'],
     [{ vis: { k: 'ba', lo: 1, hi: 2, c: 1, v: 3, red: false } }, 'band'],
     [{ vis: { k: 'goals', rows: [] } }, 'goals'],
     [{ vis: { k: 'funnel', rows: [] } }, 'steps'],
@@ -43,8 +44,9 @@ describe('the shell takes its picture and link from the card', () => {
 })
 
 describe('the sentence lights one figure', () => {
-  it('lights the card\'s own number where it is in the words', () => {
-    expect(sentence(story({ key: 'sales', head: '1 person became a customer, 1 renewal', rest: ': $338 in', val: '$338' }))).toEqual({ before: '1 person became a customer, 1 renewal: ', figure: '$338', after: ' in' })
+  it('lights the card\'s own number where it is in the words, and none in the sales words (the picture has it)', () => {
+    expect(sentence(story({ key: 'sales', vis: { k: 'rcpt', rows: [] }, head: '1 new customer, 1 renewal', rest: '', val: '$338' })).figure).toBe('')
+    expect(sentence(story({ key: 'sources', head: 'Hacker News sent 186 people', rest: '', val: '186' })).figure).toBe('186')
   })
   it('falls back to the first figure, and takes the flag out', () => {
     expect(sentence(story({ key: 'countries', head: '🇦🇱 115 people from Albania', rest: ', more than usual', val: '115' }))).toEqual({ before: '', figure: '115', after: ' people from Albania, more than usual' })
