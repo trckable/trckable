@@ -63,6 +63,12 @@ export interface SkinView {
   dpr: number
 }
 
+/** A GL object that was made (the call gives null when the context is lost). */
+function need<T>(v: T | null): T {
+  if (!v) throw new Error('gl')
+  return v
+}
+
 function load(url: string): Promise<HTMLImageElement> {
   return new Promise((res, rej) => {
     const img = new Image()
@@ -102,19 +108,19 @@ export class Skin {
       const info = gl.getExtension('WEBGL_debug_renderer_info')
       if (!force && info && /swiftshader|llvmpipe|softpipe|software/i.test(String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)))) return null
       const sh = (type: number, src: string) => {
-        const s = gl.createShader(type)!
+        const s = need(gl.createShader(type))
         gl.shaderSource(s, src)
         gl.compileShader(s)
         if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error('shader')
         return s
       }
-      const prog = gl.createProgram()!
+      const prog = need(gl.createProgram())
       gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT))
       gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG))
       gl.linkProgram(prog)
       if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error('program')
       const [dayImg, nightImg] = await Promise.all([load(day2k), load(night2k)])
-      const skin = new Skin(c, gl, prog, gl.createTexture()!, gl.createTexture()!)
+      const skin = new Skin(c, gl, prog, need(gl.createTexture()), need(gl.createTexture()))
       skin.upload(skin.day, dayImg)
       skin.upload(skin.night, nightImg)
       return skin
