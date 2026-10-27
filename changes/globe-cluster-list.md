@@ -1,0 +1,1 @@
+A cluster on the Live globe that zooming cannot split any more (people of one city, or the closest zoom) opens as a list of its people, and each row opens that visitor with a way back. The globe zooms in to 16x.

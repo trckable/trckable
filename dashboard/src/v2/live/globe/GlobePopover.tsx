@@ -16,6 +16,7 @@ import { channelLabel } from '../../../lib/palette'
 import { nameOf } from '../../../lib/visitor'
 import { openExplore } from '../../explore/open'
 import { copy } from '../copy'
+import { GlobeCrowd } from './GlobeCrowd'
 import { agoOf } from './geo'
 
 const dayStr = (d: Date) => d.toISOString().slice(0, 10)
@@ -44,11 +45,18 @@ interface CardProps {
   onClose: () => void
   onVisitor?: (v: string) => void
   onLeave: () => void
+  /** Set when the card was opened from a list of people: a way back to it. */
+  onBack?: () => void
 }
 
-function Head({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+function Head({ children, onClose, onBack }: { children: React.ReactNode; onClose: () => void; onBack?: () => void }) {
   return (
     <div className="gpop-top">
+      {onBack && (
+        <button type="button" className="gpop-x gpop-back" aria-label={copy.back} title={copy.back} onClick={onBack}>
+          ←
+        </button>
+      )}
       {children}
       <button type="button" className="gpop-x" aria-label={copy.close} title={copy.close} onClick={onClose}>
         ×
@@ -57,11 +65,11 @@ function Head({ children, onClose }: { children: React.ReactNode; onClose: () =>
   )
 }
 
-function Card({ row, clock, gone, extra, onClose, onVisitor, onLeave }: CardProps) {
+function Card({ row, clock, gone, extra, onClose, onVisitor, onLeave, onBack }: CardProps) {
   const place = [row.city, row.country ? countryName(row.country) : ''].filter(Boolean).join(', ')
   return (
     <div className="gcardv">
-      <Head onClose={onClose}>
+      <Head onClose={onClose} onBack={onBack}>
         {row.visitor ? <Avatar id={row.visitor} size={64} live={!gone} /> : <span className="gpop-flag" aria-hidden="true">{flag(row.country ?? '')}</span>}
         <div className="gwho">
           <b>{row.visitor ? nameOf(row.visitor) : place}</b>
@@ -139,6 +147,8 @@ function Journeyed({ site, ...p }: Omit<CardProps, 'extra'> & { site: string }) 
 export interface Open {
   /** The visitor's row key. */
   key: string
+  /** Everyone in the marker, when it opened as a list. */
+  crowd?: string[]
   cc: string
   city: string
   lat: number
@@ -146,14 +156,19 @@ export interface Open {
 }
 
 /** `onLeave` runs before a button acts: the card closes and the globe's full screen ends, so neither covers the replay or Explore. */
-export function GlobePopover({ open, row, clock, site, onVisitor, onClose, onLeave }: { open: Open; row: Row | undefined; clock: number; site: string; onVisitor?: (v: string) => void; onClose: () => void; onLeave: () => void }) {
+export function GlobePopover({ open, row, crowd, clock, site, onVisitor, onClose, onLeave }: { open: Open; row: Row | undefined; crowd?: Row[]; clock: number; site: string; onVisitor?: (v: string) => void; onClose: () => void; onLeave: () => void }) {
   const phone = useNarrow()
   const box = useRef<HTMLDivElement | null>(null)
   // The visitor as last seen: kept when they have left, so the card can say so before it goes.
-  const [kept, setKept] = useState(row)
-  if (row && row !== kept) setKept(row)
-  const gone = !row
-  const shown = row ?? kept
+  // From a list, the card is the row picked in it; until one is picked, the list shows.
+  const [pick, setPick] = useState<string | null>(null)
+  const listing = !!crowd && !pick
+  const target = crowd ? crowd.find((r) => r.key === pick) : row
+  const [kept, setKept] = useState(target)
+  if (target && target !== kept) setKept(target)
+  const gone = listing ? crowd.length === 0 : !target
+  const shown = listing ? undefined : (target ?? kept)
+  const back = crowd ? () => setPick(null) : undefined
   useEffect(() => {
     if (!gone) return
     const t = setTimeout(onClose, 2200)
@@ -183,8 +198,9 @@ export function GlobePopover({ open, row, clock, site, onVisitor, onClose, onLea
   const card = (
     <div className="gpop" ref={box} role="dialog" aria-label={title} tabIndex={-1}>
       <div className="gpop-in">
-        {shown && withJourney && <Journeyed key={shown.key} row={shown} site={site} clock={clock} gone={gone} onClose={onClose} onVisitor={onVisitor} onLeave={onLeave} />}
-        {shown && !withJourney && <Card key={shown.key} row={shown} extra={{}} clock={clock} gone={gone} onClose={onClose} onVisitor={onVisitor} onLeave={onLeave} />}
+        {shown && withJourney && <Journeyed key={shown.key} row={shown} site={site} clock={clock} gone={gone} onClose={onClose} onVisitor={onVisitor} onLeave={onLeave} onBack={back} />}
+        {shown && !withJourney && <Card key={shown.key} row={shown} extra={{}} clock={clock} gone={gone} onClose={onClose} onVisitor={onVisitor} onLeave={onLeave} onBack={back} />}
+        {listing && <GlobeCrowd rows={crowd} title={open.city || countryName(open.cc)} clock={clock} onPick={setPick} onClose={onClose} />}
       </div>
     </div>
   )

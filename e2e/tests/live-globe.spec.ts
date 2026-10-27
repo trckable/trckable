@@ -282,7 +282,7 @@ for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark
     const big = marker.find((m) => m.n >= 37)!
     const box = (await canvas.boundingBox())!
     await page.mouse.move(box.x + big.x, box.y + big.y)
-    await expect(page.locator('.gtip')).toContainText(`${big.n} online`, { timeout: 5000 })
+    await expect(page.locator('.gtip')).toContainText(`${big.n} people in`, { timeout: 5000 })
     await page.mouse.move(box.x + 2, box.y + 2)
     await page.screenshot({ path: `${SHOTS}/globe2-${width}-${colorScheme}.png` })
   })
@@ -310,7 +310,7 @@ test('zooming in fetches the detail chunk once, swaps to the finer land and writ
   // The detail stays: zooming out and in again fetches nothing more.
   await canvas.evaluate((c) => (c as unknown as { __globe: Inside }).__globe.zoomTo(1))
   await page.waitForTimeout(800)
-  await canvas.evaluate((c) => (c as unknown as { __globe: Inside }).__globe.zoomTo(8))
+  await canvas.evaluate((c) => (c as unknown as { __globe: Inside }).__globe.zoomTo(16))
   await page.waitForTimeout(1500)
   expect(chunks.length).toBe(1)
 })
@@ -461,5 +461,47 @@ for (const colorScheme of ['dark', 'light'] as const) {
     await page.getByRole('button', { name: 'Full screen' }).click()
     await expect(page.locator('.gwrap.fill')).toBeVisible()
     expect(await mask()).toBe('none')
+  })
+}
+
+// A cluster that zooming cannot split opens as the list of its people: 20 in one city, at the most zoom.
+for (const width of [1280, 390]) {
+  test(`a same-city cluster at the most zoom opens as a list, a row opens the card, back returns, ${width}px`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'dark' })
+    await page.setViewportSize({ width, height: width < 600 ? 900 : 800 })
+    await page.addInitScript(() => localStorage.setItem('trckable.live.globe', 'on'))
+    await page.route(/\/sites\/[^/]+\/now(\?|$)/, async (route) => {
+      const res = await route.fetch()
+      const body = await res.json()
+      const at = Date.now()
+      body.online = 20
+      body.recent = Array.from({ length: 20 }, (_, i) => ({ kind: 'pageview', ts: at - i * 2000, last: at - i * 2000, path: `/p${i}`, visitor: `visitor-${i}`, country: 'AL', city: 'Tirana' }))
+      await route.fulfill({ response: res, json: body })
+    })
+    await open(page)
+    const canvas = page.locator('.gstage canvas')
+    await expect(canvas).toBeVisible({ timeout: 10_000 })
+    await page.evaluate(() => delete document.documentElement.dataset.motion)
+    await page.waitForTimeout(1000)
+    const at = await canvas.evaluate(async (c) => {
+      const g = (c as unknown as { __globe: Inside & { states: { head: unknown; x: number; y: number; lat: number; lon: number }[] } }).__globe
+      const s = g.states.find((x) => x.head === x)!
+      g.focus(s.lat, s.lon)
+      g.zoomTo(16)
+      await new Promise((r) => setTimeout(r, 2500))
+      return { zoomT: (g as unknown as { zoomT: number }).zoomT, x: s.x, y: s.y }
+    })
+    expect(at.zoomT).toBe(16)
+    const box = (await canvas.boundingBox())!
+    await page.mouse.click(box.x + at.x, box.y + at.y)
+    const list = page.getByRole('dialog')
+    await expect(list.locator('.gcrow')).toHaveCount(20)
+    await expect(list).toContainText('20 people in Tirana')
+    await page.screenshot({ path: `${SHOTS}/gcluster-${width}-dark.png` })
+    await list.locator('.gcrow').nth(3).click()
+    await expect(list.locator('.gcrow')).toHaveCount(0)
+    await expect(list).toContainText('/p3')
+    await list.getByRole('button', { name: 'Back' }).click()
+    await expect(list.locator('.gcrow')).toHaveCount(20)
   })
 }

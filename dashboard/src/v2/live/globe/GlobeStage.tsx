@@ -14,9 +14,15 @@ export interface Pick {
 }
 
 const HIDDEN = { position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' } as const
+const placeOf = (p: Pin) => (p.city ? `${p.city}, ${countryName(p.cc)}` : countryName(p.cc))
+/** A marker of several people says how many and where; one person, where and on what. */
+const tipText = (p: Pin, crowd: number | null) => {
+  const n = crowd ?? p.crowd
+  return n > 1 ? copy.crowdTip(flag(p.cc), n, p.city || countryName(p.cc)) : copy.spotTip(flag(p.cc), placeOf(p), n, p.path)
+}
 const nameOf = (p: Pin) => `${p.city || countryName(p.cc)} · ${p.path}`
 
-export function GlobeStage({ pins, people, sel, full, onPick, children }: { pins: Pin[]; people: number; sel: Pick | null; full: boolean; onPick: (key: string) => void; children: ReactNode }) {
+export function GlobeStage({ pins, people, sel, full, onPick, onCrowd, children }: { pins: Pin[]; people: number; sel: Pick | null; full: boolean; onPick: (key: string) => void; onCrowd: (keys: string[]) => void; children: ReactNode }) {
   const box = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
   const globe = useRef<Globe | null>(null)
@@ -24,9 +30,9 @@ export function GlobeStage({ pins, people, sel, full, onPick, children }: { pins
   const [tipCrowd, setTipCrowd] = useState<number | null>(null)
   const [kb, setKb] = useState<string | null>(null)
   const [sheet, setSheet] = useState(false)
-  const latest = useRef({ pins, onPick, full })
+  const latest = useRef({ pins, onPick, onCrowd, full })
   useEffect(() => {
-    latest.current = { pins, onPick, full }
+    latest.current = { pins, onPick, onCrowd, full }
   })
   useEffect(() => {
     const el = box.current
@@ -34,6 +40,7 @@ export function GlobeStage({ pins, people, sel, full, onPick, children }: { pins
     if (!el || !cv) return
     const g = new Globe(cv, {
       onPick: (k) => latest.current.onPick(k),
+      onCrowd: (ks) => latest.current.onCrowd(ks),
       onHover: (k) => {
         setTip(k)
         setTipCrowd(k ? g.crowdOf(k) : null)
@@ -151,7 +158,7 @@ export function GlobeStage({ pins, people, sel, full, onPick, children }: { pins
       </span>
       {tipPin && (
         <div className="gtip" role="tooltip">
-          {copy.spotTip(flag(tipPin.cc), tipPin.city ? `${tipPin.city}, ${countryName(tipPin.cc)}` : countryName(tipPin.cc), tipCrowd ?? tipPin.crowd, tipPin.path)}
+          {tipText(tipPin, tipCrowd)}
         </div>
       )}
       {children}

@@ -25,7 +25,7 @@ const HIT = 44
 const CARD = 32
 /** How far in the globe zooms. */
 const ZOOM_MIN = 1
-const ZOOM_MAX = 8
+const ZOOM_MAX = 16
 /** Under this stage width the popover is a sheet over the foot of the globe, not beside the pin. */
 const SHEET_W = 700
 /** Room the open popover takes beside its pin. */
@@ -104,6 +104,8 @@ interface State {
 
 export interface Hooks {
   onPick: (key: string) => void
+  /** A marker that zooming cannot split any further: the keys of everyone in it. */
+  onCrowd: (keys: string[]) => void
   onHover: (key: string | null) => void
   onSheet: (on: boolean) => void
 }
@@ -313,7 +315,7 @@ export class Globe {
     return { lat: Math.asin(Math.cos(c) * Math.sin(p0) + (y * Math.sin(c) * Math.cos(p0)) / rho) / RAD, lon: this.lon + Math.atan2(x * Math.sin(c), rho * Math.cos(p0) * Math.cos(c) - y * Math.sin(p0) * Math.sin(c)) / RAD }
   }
 
-  /** Zooms to a level (kept within 1x to 6x), easing; zooming in with a point brings the place under it to the middle. Zoomed in, the globe does not spin; back at 1x it does after a second. */
+  /** Zooms to a level (kept within ZOOM_MIN to ZOOM_MAX), easing; zooming in with a point brings the place under it to the middle. Zoomed in, the globe does not spin; back at 1x it does after a second. */
   zoomTo(z: number, px?: number, py?: number) {
     const nz = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z))
     if (px !== undefined && py !== undefined && nz > this.zoomT) {
@@ -421,11 +423,12 @@ export class Globe {
         this.tap.x = px
         this.tap.y = py
         const m = this.hitState(px, py)
-        // A marker that gathers several places opens into them (zooms in on it); one place opens its newest visitor.
+        // A marker that gathers several places opens into them (zooms in on it) while zooming can still split it; when it cannot (the most zoom, or one shared place), its people open as a list. One person opens their card.
         if (m && m.spots > 1 && this.zoomT < ZOOM_MAX - 0.5) {
           this.focus(m.lat, m.lon)
           this.zoomBy(2.4)
-        } else if (m) this.hooks.onPick(m.top.key)
+        } else if (m && m.total > 1) this.hooks.onCrowd(m.keys)
+        else if (m) this.hooks.onPick(m.top.key)
       }
       this.vx = this.vy = 0
     } else if (e.timeStamp - d.t > 80) this.vx = this.vy = 0

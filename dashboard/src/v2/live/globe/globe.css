@@ -178,3 +178,18 @@ html[data-motion='off'] .mk .gnv { animation: none !important; }
 }
 .mk .gwrap.fill .gfloat .ghead { display: block; padding: var(--mk-s3) var(--mk-s4) 0; }
 .mk .gwrap.fill .gfloat .gbig { font-size: 28px; }
+
+/* The people of a marker that cannot be split: a scrolling list of rows, each opening that visitor's card. */
+.mk .gpop-back { margin: -6px 0 0 -8px; }
+.mk .gcrows { list-style: none; margin: 0; padding: var(--mk-s2) 0 0; border-top: 1px solid var(--mk-line); max-height: min(360px, 50vh); overflow: auto; }
+.mk .gcrow { width: 100%; display: flex; align-items: center; gap: var(--mk-s3); padding: var(--mk-s2) var(--mk-s2); border: 0; border-radius: 10px; background: none; color: var(--mk-text); text-align: left; font-size: 12px; }
+.mk .gcrow:hover, .mk .gcrow:focus-visible { background: var(--mk-fill); }
+.mk .gcwho { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mk .gcwho b { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk .gcwho code { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--mk-muted); }
+.mk .gcrow > .mk-quiet { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk .gcrow .gct { flex: none; }
+@media (--xs) {
+  .mk .gcrows { max-height: 50vh; }
+  .mk .gcrow { padding: var(--mk-s3) var(--mk-s2); }
+}
