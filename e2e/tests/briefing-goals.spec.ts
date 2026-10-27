@@ -34,12 +34,10 @@ for (const width of [1440, 390]) {
     await expect(card).toBeVisible()
     await expect(card).toContainText('Form submissions up 48%')
     await expect(card).not.toContainText(/more goal|Form_submit/i)
-    // A phone sees the card as a flat row that opens the detail: the rest is there once it is opened.
-    if (width < 500) return
     // The rows say the number and its usual: no second line repeats them under the rows.
-    await expect(card.locator('.mk-goal').first()).toContainText('usually')
+    await expect(card.locator('.ic-goal').first()).toContainText('usually')
     await expect(card).not.toContainText('in this period · usually')
     await expect(card.getByRole('button', { name: 'Alert me next time' })).toBeVisible()
-    await expect(card.locator('.mk-goal')).toHaveCount(2)
+    await expect(card.locator('.ic-goal')).toHaveCount(2)
   })
 }

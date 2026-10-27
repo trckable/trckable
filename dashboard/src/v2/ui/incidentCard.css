@@ -1,11 +1,6 @@
 /* The incident card: its title, the timeline with the down stretches in red, what happened, the actions, and last of all
-   what else was normal. One column at every width (the other wide cards put their picture beside the words). */
-@container (--pane-min-601) {
-  .mk .icard.wide.inc { display: flex !important; flex-direction: column; align-items: stretch; gap: var(--mk-s3); }
-  .mk .icard.wide.inc .ic-v { align-self: stretch; }
-  .mk .icard.wide.inc .ic-w { border-top: 0; padding-top: 0; }
-  .mk .icard.wide.inc .ic-f { align-self: stretch; }
-}
+   what else was normal. It spans the row. */
+.mk .icard.inc { grid-column: 1 / -1; min-height: 0; }
 .mk .ic-calm {
   display: flex;
   align-items: baseline;
@@ -38,3 +33,6 @@
 .mk .ic-f .qb { display: inline-flex; align-items: center; gap: 6px; height: var(--mk-h); padding: 0 var(--mk-s3); border: 1px solid transparent; border-radius: var(--mk-rc); color: var(--mk-muted); font-size: 13px; }
 .mk .ic-f .qb:hover { background: var(--mk-hover); color: var(--mk-text); }
 .mk .ic-f .qb.on { color: var(--mk-lime); }
+/* Three buttons on one row where there is room, on two where there is not: none of them is cut short. */
+.mk .icard.inc .ic-f { flex-wrap: wrap; }
+.mk .icard.inc .ic-f .xb { flex: none; }

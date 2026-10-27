@@ -1,4 +1,4 @@
-// What a card does when it is pressed (open, go deeper, watch, act, say how it knows), and the rows of what is being watched.
+// What a card does when it is pressed (go deeper, watch, act, say how it knows), and the rows of what is being watched.
 import type { Site } from '../../lib/api'
 import { fmtCompact } from '../../lib/format'
 import { toggleWatch, type Watched } from '../../lib/watch'
@@ -9,7 +9,6 @@ import type { Story } from './cards'
 import { copy } from './copy'
 import { goDeeper } from './deeper'
 import type { useBriefingState } from './useBriefingState'
-import { QUERY } from '../../kit/breakpoints'
 
 export function cardCtx(o: { site: Site; ui: ReturnType<typeof useBriefingState>; wset: Record<string, Watched>; nowSec: number; hhmm: string; spark: number[]; onGoal: () => void }): CardCtx {
   const { site, ui, wset } = o
@@ -18,8 +17,6 @@ export function cardCtx(o: { site: Site; ui: ReturnType<typeof useBriefingState>
   const own = (s: Story) => `${key(s)}|${s.head}`
   return {
     verified: site.verified,
-    know: () => null,
-    onOpen: (s) => window.matchMedia(QUERY.xs).matches && ui.setOpen(s),
     onDeeper: (s) => goDeeper(site, s.deeper),
     watched: (s) => key(s) in wset,
     onWatch: (s) => {

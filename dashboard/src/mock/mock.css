@@ -177,15 +177,6 @@
 .mk .hero .ch-top{margin-top:14px;min-height:20px}
 .mk .hero .chart{height:250px}
 .mk .facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--mk-line);margin:8px -28px 0}
-.mk .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.mk .icard{background:var(--mk-card);border:1px solid var(--mk-line);border-radius:var(--mk-r);padding:20px 22px 12px;display:flex;flex-direction:column;gap:14px;min-width:0}
-.mk .icard:first-child{grid-column:1/-1}
-.mk .icard.r{border-color:var(--mk-redL)}
-.mk .icard h3{margin:0;font-size:18px;line-height:1.3;font-weight:540;letter-spacing:-.012em;color:var(--mk-muted)}
-.mk .icard h3 b{color:var(--mk-text);font-weight:650}
-.mk .icard:first-child h3{font-size:22px}
-.mk .ic-w{display:flex;gap:14px;align-items:flex-start;border-top:1px solid var(--mk-line);padding-top:10px;margin-top:auto;color:var(--mk-faint);font-size:13px;line-height:1.45}
-.mk .ic-w span{flex:1;min-width:0}
 .mk .deep{margin-left:auto;color:var(--mk-muted);font-size:13px;padding:2px 9px;border-radius:8px;white-space:nowrap;margin-top:-2px}
 .mk .deep:hover{background:var(--mk-hover);color:var(--mk-text)}
 .mk .calm2{display:flex;align-items:center;gap:10px;padding:13px 20px;border:1px solid var(--mk-line);border-radius:16px;color:var(--mk-muted);font-size:13px;flex-wrap:wrap}
@@ -196,28 +187,7 @@
 .mk .act{display:flex;align-items:center;gap:16px;padding:16px 22px;border:1px solid var(--mk-limeL);background:var(--mk-limeF);border-radius:var(--mk-r);flex-wrap:wrap}
 .mk .act span{flex:1;min-width:220px;font-size:15px;color:var(--mk-muted)}
 .mk .act b{color:var(--mk-text)}
-.mk .ba{display:flex;flex-direction:column;gap:9px}
-.mk .mk-bl{display:flex;align-items:center;gap:12px;font-size:13px}
-.mk .mk-bl>span{width:44px;color:var(--mk-muted)}
-.mk .mk-bl b{width:96px;text-align:right;font-variant-numeric:tabular-nums}
-.mk .bt{flex:1;height:14px;border-radius:8px;background:var(--mk-band);position:relative;overflow:hidden}
-.mk .bt i{position:absolute;inset:0 auto 0 0;background:var(--mk-fill);border-radius:8px}
-.mk .bt i.f{background:var(--mk-lime)}
-.mk .bt i.f.red{background:var(--mk-red)}
-.mk .bt u{position:absolute;top:3px;bottom:3px;background:var(--mk-wash2);border-radius:4px}
-.mk .rcpt{border:1px dashed var(--mk-dash);border-radius:12px;padding:4px 14px;background:var(--mk-faintbg2);font-variant-numeric:tabular-nums;font-size:13px}
-.mk .rcpt.plain{border:0;background:none;padding:0}
-.mk .rcpt.plain .rr .fl{display:none}
-.mk .rcpt.plain .rr.lead .rl{font-weight:700}
-.mk .rr{display:flex;gap:10px;align-items:center;padding:7px 0;min-width:0}
 .mk .rr+.rr{border-top:1px dotted var(--mk-fill)}
-.mk .rr .fl{width:20px;flex:none}
-.mk .rr .rl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mk .rr .mk-rt{color:var(--mk-faint);white-space:nowrap}
-.mk .rr .ra{font-weight:700;width:68px;text-align:right;flex:none}
-.mk .ra.neg{color:var(--mk-red)}
-.mk .rr.tot{border-top:1px dashed var(--mk-dash);color:var(--mk-muted)}
-.mk .rr.more{color:var(--mk-faint)}
 .mk .mf{display:flex;flex-direction:column;gap:6px}
 .mk .mfr{display:flex;align-items:center;gap:12px;font-size:13px}
 .mk .mfr>span{width:90px;color:var(--mk-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -289,7 +259,6 @@
 .mk .mk-ring:hover svg{opacity:.8}
 .mk .dots{display:flex;flex-wrap:nowrap;overflow:hidden;gap:4px}
 .mk .dots i{flex:none;width:9px;height:9px;border-radius:50%;background:var(--mk-dim)}
-.mk .dotn{font-size:12px;color:var(--mk-faint);margin-top:6px}
 .mk .morebtn{align-self:flex-start;color:var(--mk-muted);font-size:13px;padding:6px 12px;border-radius:10px;border:1px solid var(--mk-line)}
 .mk .morebtn:hover{background:var(--mk-hover);color:var(--mk-text)}
 .mk .icard.flash{animation:mk-fl 1.2s}
@@ -339,13 +308,7 @@
 .mk .fact:nth-child(2){border-right:0}
 .mk .fact:nth-child(-n+2){border-bottom:1px solid var(--mk-line)}
 .mk .fact b{font-size:18px}
-.mk .cards{grid-template-columns:1fr}
-.mk .icard{padding:16px 16px 10px}
-.mk .icard h3{font-size:16px}
-.mk .icard:first-child h3{font-size:18px}
 .mk .mfr>span{width:70px}
-.mk .mk-bl b{width:76px}
-.mk .rr .mk-rt{display:none}
 .mk .exb .t2, .mk .exb .mk-kbd{display:none}
 .mk .exb{padding:0 10px}
 }
@@ -403,8 +366,6 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk button:focus-visible,.mk [tabindex]:focus-visible,.mk a:focus-visible{outline:1px solid var(--mk-lime);outline-offset:1px}
 .mk button{transition:background .15s,color .15s,border-color .15s}
 .mk .brief,.mk .cards{gap:var(--mk-s4)}
-.mk .icard{padding:var(--mk-s5) var(--mk-s5) var(--mk-s4);gap:var(--mk-s4)}
-.mk .ic-w{padding-top:var(--mk-s3)}
 .mk .hero{padding:var(--mk-s6) var(--mk-s6) var(--mk-s2)}
 .mk .facts{margin:var(--mk-s2) calc(var(--mk-s6) * -1) 0}
 .mk .hero .ch-top{margin-top:var(--mk-s4)}
@@ -480,7 +441,6 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk #views{order:9;width:100%}
 .mk #views button{flex:1}
 .mk .mk-seg{width:100%}
-.mk .icard{padding:var(--mk-s4)}
 .mk .hero{padding:var(--mk-s5) var(--mk-s4) var(--mk-s2)}
 .mk .facts{margin:var(--mk-s2) calc(var(--mk-s4) * -1) 0}
 .mk .fact{padding:var(--mk-s3) var(--mk-s4)}
@@ -511,7 +471,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .pwrap{flex:none}
 .mk .brief,.mk .cards,.mk .liveview,.mk .lcards{gap:var(--mk-s3)}
 .mk .lcards{margin:0 0 var(--mk-s3)}
-.mk .vs,.mk .mk-kbd,.mk .mk-tag,.mk .xth,.mk .lv .src,.mk .mi .d,.mk .lcard .mk-n,.mk .minl,.mk .obl,.mk .st .mk-n,.mk .mk-ld,.mk .lm,.mk .xnote,.mk .dotn,.mk .ic-w,.mk .wl,.mk .contrib button,.mk .gap,.mk .mom,.mk .since{font-size:12px}
+.mk .vs,.mk .mk-kbd,.mk .mk-tag,.mk .xth,.mk .lv .src,.mk .mi .d,.mk .lcard .mk-n,.mk .minl,.mk .obl,.mk .st .mk-n,.mk .mk-ld,.mk .lm,.mk .xnote,.mk .wl,.mk .contrib button,.mk .gap,.mk .mom,.mk .since{font-size:12px}
 .mk .mk-menu,.mk .pmenu,.mk #siteMenu{position:fixed!important;left:0!important;right:0!important;top:auto!important;bottom:0!important;width:auto!important;max-width:none!important;max-height:85dvh!important;border-radius:20px 20px 0 0;border-width:1px 0 0;padding:var(--mk-s5) var(--mk-s4) calc(var(--mk-s4) + env(safe-area-inset-bottom));z-index:95;box-shadow:0 0 0 100vmax var(--mk-scrim);background:var(--mk-card2)}
 .mk .mk-menu::before{content:"";position:absolute;top:var(--mk-s2);left:50%;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:var(--mk-grab)}
 .mk .mk-menu .mi{min-height:44px;align-items:center}
@@ -557,10 +517,6 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .fact b{font-size:30px;display:inline-block}
 .mk .fact small{font-size:13px}
 .mk .fact .m{font-size:13px;margin-top:var(--mk-s2);white-space:normal}
-.mk .icard, .mk .icard:first-child{grid-column:auto;padding:var(--mk-s4);gap:var(--mk-s3);border-radius:22px;cursor:pointer}
-.mk .icard h3, .mk .icard:first-child h3{font-size:18px;line-height:1.25}
-.mk .ic-w{flex-direction:column;gap:var(--mk-s2);padding-top:var(--mk-s3);align-items:stretch}
-.mk .ic-w span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px}
 .mk .deep{margin:0;height:44px;width:100%;justify-content:space-between;border:1px solid var(--mk-line);color:var(--mk-text);font-size:14px;padding:0 var(--mk-s4);border-radius:12px}
 .mk .calm2 button, .mk .act .actbtn{min-height:44px}
 .mk .calm2{flex-direction:column;align-items:stretch;gap:var(--mk-s2)}
@@ -599,7 +555,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:48px;border-radius:12px;color:var(--mk-muted);font-size:12px;font-weight:600;transition:transform .12s,background .15s,color .15s}
 .mk .tabbar button svg{width:22px;height:22px}
 .mk .tabbar button.on{color:var(--mk-lime)}
-.mk .tabbar button:active,.mk .icard:active,.mk .deep:active,.mk .mk-chip:active,.mk .pill:active,.mk .mi:active,.mk .pi:active,.mk .xrw:active{transform:scale(.97);background:var(--mk-hov2)}
+.mk .tabbar button:active,.mk .deep:active,.mk .mk-chip:active,.mk .pill:active,.mk .mi:active,.mk .pi:active,.mk .xrw:active{transform:scale(.97);background:var(--mk-hov2)}
 }
 .mk .tabbar button.on{color:var(--mk-lime)}
 /* The locked preview cards (round 10), where the walkthrough has them. */
@@ -917,14 +873,12 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .xs{margin-top:var(--mk-s3)}
 @container (--pane-max-1100){
 .mk .hd .pill .vs{display:none}
-.mk .icard.wide{display:block!important}
 }
 @container (--pane-max-600){
 .mk .hd .pwrap{position:static}
 .mk .hd .pwrap .pill{display:none}
 }
 .mk .mk-hl.s,.mk .tline,.mk .sidecol:empty{display:none}
-.mk .ic-i,.mk .ic-val,.mk .ic-ch{display:none}
 .mk #main{min-height:60vh}
 .mk .vfade{animation:mk-vfade .18s ease-out both}
 @keyframes mk-vfade{from{opacity:.6}}
@@ -971,14 +925,6 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .chwrap #chart{height:270px}
 .mk .hero{padding-bottom:0}
 }
-.mk .icard{position:relative}
-.mk .icard:first-child{grid-column:auto}
-.mk .icard.wide{grid-column:1/-1}
-.mk .ic-h{display:flex;align-items:flex-start;gap:var(--mk-s3)}
-.mk .ic-h h3{flex:1;min-width:0}
-.mk .ic-f{display:flex;gap:var(--mk-s2);align-items:center;flex-wrap:wrap;margin:0 calc(var(--mk-s2) * -1)}
-.mk .ic-f .deep{margin:0 0 0 auto}
-.mk .ic-f .xb{padding:0 var(--mk-s3)}
 .mk .gh{height:var(--mk-h);padding:0 var(--mk-s3);border-radius:var(--mk-rc);color:var(--mk-muted);font-size:13px;display:inline-flex;align-items:center;white-space:nowrap}
 .mk .gh:hover{background:var(--mk-hov);color:var(--mk-text)}
 .mk .gh.on{color:var(--mk-lime)}
@@ -994,17 +940,6 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .icard.err{border-color:var(--mk-redL)}
 .mk .skl{display:block;background:linear-gradient(90deg,var(--mk-sk1),var(--mk-sk2),var(--mk-sk1));background-size:220% 100%;animation:mk-shim 1.5s linear infinite;border-radius:8px;height:14px;margin:6px 0}
 @keyframes mk-shim{to{background-position:-220% 0}}
-.mk .icard.sk .ic-h h3 .skl{height:16px}
-.mk .icard.sk .ic-w .skl{height:12px}
-@container (--pane-min-761){
-.mk .icard.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-rows:auto auto 1fr auto;column-gap:var(--mk-s6);row-gap:var(--mk-s3);align-items:start}
-.mk .icard.wide .ic-h{grid-column:1;grid-row:1}
-.mk .icard.wide .ic-w{grid-column:1;grid-row:2;border-top:0;padding-top:0;margin:0}
-.mk .icard.wide .ic-f{grid-column:1;grid-row:3;align-self:end}
-.mk .icard.wide .hw{grid-column:1;grid-row:4}
-.mk .icard.wide .ic-v{grid-column:2;grid-row:1/span 4;align-self:center}
-.mk .icard.wide.err .ic-v, .mk .icard.wide.sk .ic-v{align-self:start}
-}
 .mk .watchc{padding:var(--mk-s4) var(--mk-s5)}
 .mk .wh{display:flex;gap:var(--mk-s3);align-items:baseline;font-weight:600;margin-bottom:var(--mk-s2)}
 .mk .wh .mk-quiet{font-weight:400;font-size:13px}
@@ -1130,20 +1065,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .fact b{font-size:22px;display:inline}
 .mk .fact small{font-size:12px;margin-left:4px}
 .mk .fact .m{display:block;font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mk .cards{display:flex;flex-direction:column;gap:0;margin-top:var(--mk-s2);border-top:1px solid var(--mk-line)}
 /* On a phone the cards are one flat list; its gap above is the one the cards above have (the pill's slot between them takes 8px off each side, so the list's own margin makes up the rest). Here and not with the story card's own styles: those arrive with its chunk, and the list would move when they do. */
-@container (--pane-max-600){.mk .brief > .cards{margin-top:calc(16px - var(--mk-s3))}}
-.mk .icard, .mk .icard:first-child, .mk .icard.wide, .mk .icard.r, .mk .icard.err{display:block;background:none;border:0;border-bottom:1px solid var(--mk-line);border-radius:0;padding:0;min-height:56px;gap:0}
-.mk .ic-h{align-items:center;padding:var(--mk-s3) 0}
-.mk .ic-i{display:block;width:22px;height:22px;flex:none;color:var(--mk-muted)}
-.mk .ic-h h3, .mk .icard:first-child h3{font-size:15px;line-height:1.3;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--mk-muted)}
-.mk .ic-h h3 b{color:var(--mk-text);font-weight:600}
-.mk .ic-val{display:block;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;flex:none;color:var(--mk-text)}
-.mk .icard.r .ic-val, .mk .icard.err .ic-val{color:var(--mk-red)}
-.mk .ic-ch{display:block;width:16px;height:16px;flex:none;color:var(--mk-faint)}
-.mk .icard .ic-v, .mk .icard .ic-w, .mk .icard .ic-f, .mk .icard .hw{display:none!important}
-.mk .icard.sk .ic-val .skl{margin:0}
-.mk .icard.sk .ic-h h3 .skl{margin:5px 0}
 .mk .morebtn{align-self:flex-start;border:0;background:none;padding:0;color:var(--mk-muted)}
 .mk .calm2{border:0;padding:var(--mk-s3) 0;min-height:0;border-radius:0;flex-direction:row;align-items:center}
 .mk .calm2 button{width:auto;border:0;min-height:0;padding:0;margin-left:auto}
@@ -1172,12 +1094,6 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .lon{margin-top:var(--mk-s4)}
 }
 .mk .kc[data-k]{scroll-margin:96px}
-.mk .icard.kc{padding:var(--mk-s4) var(--mk-s4) 0;gap:0}
-.mk .kc.kcty .ki,.mk .kc.kcty .ksp{color:var(--mk-kcc,var(--mk-lime))}
-.mk .kc.kcty .kv{margin:var(--mk-s3) 0 var(--mk-s1)}
-.mk .kc.kcty .kcw{font-size:13px;color:var(--mk-muted);line-height:1.45;margin-bottom:var(--mk-s2)}
-.mk .kc.kcty .ic-f{padding-bottom:var(--mk-s3)}
-.mk .kc.kcty .ksp{margin-top:auto}
 .mk .rpb{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 var(--mk-s3);margin-top:var(--mk-s3)}
 .mk .rpb svg{width:11px;height:11px}
 .mk .rpl{display:inline-block;text-align:center}
@@ -1539,7 +1455,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:48px;border-radius:12px;color:var(--mk-muted);font-size:12px;font-weight:600;transition:transform .12s,background .15s,color .15s}
 .mk .tabbar button svg{width:22px;height:22px}
 .mk .tabbar button.on{color:var(--mk-lime)}
-.mk .tabbar button:active,.mk .icard:active,.mk .deep:active,.mk .mk-chip:active,.mk .pill:active,.mk .mi:active,.mk .pi:active,.mk .xrw:active{transform:scale(.97);background:var(--mk-hov2)}
+.mk .tabbar button:active,.mk .deep:active,.mk .mk-chip:active,.mk .pill:active,.mk .mi:active,.mk .pi:active,.mk .xrw:active{transform:scale(.97);background:var(--mk-hov2)}
 }
 }
 /* The site list, the period and the bell are the same frosted pane as the account menu (styles.css, "Menus"). */
@@ -1692,7 +1608,6 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .khint .gh{height:24px;padding:0 var(--mk-s2);border:1px solid var(--mk-line);font-size:12px}
 @container (--pane-max-600){.mk .mailrow .mt{flex:1 1 100%}.mk .mailrow .gh{flex:1}}
 .mk .cards{align-items:stretch}
-.mk .icard .ic-v + .ic-f{margin-top:auto}
 
 /* The header is a bar of its own: a band of room under the controls, so the page moves under it and never touches them. The room
    is taken back from the gap below, so nothing moves down. */

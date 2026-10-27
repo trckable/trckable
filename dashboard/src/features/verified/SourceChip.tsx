@@ -29,9 +29,3 @@ export function SourceChip({ verified, slot, compact }: { verified?: Verified; s
     </span>
   )
 }
-
-/** The mark a card of the Briefing wears when its number rests on a source: the money's pill, or Google's own small mark by the title. */
-export function CardSeal({ verified, topic }: { verified?: Verified; topic: string }) {
-  if (topic === 'sales') return <SourceChip verified={verified} slot="revenue" />
-  return topic === 'search' ? <SourceChip verified={verified} slot="search" compact /> : null
-}

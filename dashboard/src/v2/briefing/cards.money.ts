@@ -25,6 +25,8 @@ export interface SalesIn {
 
 const KIND: Record<string, string> = { upgrade: copy.upgrade, renewal: copy.renewal }
 const kindWord = (k: string) => KIND[k] ?? copy.newCustomer
+/** The payment providers say "one_time" or "subscription" for a first payment: a buyer is new unless the sale moved a plan or renewed one. */
+const isNew = (b: Buyer) => b.kind !== 'upgrade' && b.kind !== 'renewal'
 
 /** The sales list holds new customers and upgrades only (the server leaves renewals out) and at most this many. */
 export const BUYERS_ASKED = 20
@@ -38,7 +40,7 @@ export function unlisted(buyers: Buyer[], money: Money): { n: number; net: numbe
 
 function who(buyers: Buyer[], money: Money): string {
   const rest = unlisted(buyers, money).n
-  const nNew = buyers.length >= money.payments || buyers.length < BUYERS_ASKED ? buyers.filter((b) => b.kind === 'new').length : money.customers
+  const nNew = buyers.length >= money.payments || buyers.length < BUYERS_ASKED ? buyers.filter(isNew).length : money.customers
   const nUp = buyers.filter((b) => b.kind === 'upgrade').length
   const nRen = buyers.filter((b) => b.kind === 'renewal').length + rest
   const parts = [nNew ? copy.becameCustomers(nNew) : '', nUp ? copy.upgraded(nUp) : '', nRen ? copy.renewals(nRen) : ''].filter(Boolean)
@@ -92,7 +94,6 @@ export function salesCards(i: SalesIn): Story[] {
       score: st === 'up' ? 72 : 62,
       head: who(buyers, money),
       ask: copy.askSold(fmt(total)),
-      rest: copy.paidIn(fmt(total)),
       vis: { k: 'rcpt', rows: [...rows, ...extra, ...renewed, { l: copy.rowIn, t: '', a: fmt(total), flag: '', tot: true }] },
       why: `${range}${top ? copy.broughtOf(sourceName(top[0]), top[1], buyers.length) : ''}`.trim(),
       val: fmt(total),
@@ -276,8 +277,8 @@ export function firstCard(i: { first: FirstFrom; band: Band | null; fmt: (minor:
     key: 'countries',
     score: 68,
     head: copy.firstFrom(name),
-    rest: ` ${flag(f.country)}`,
-    vis: null,
+    rest: '',
+    vis: { k: 'journey', steps: [...(f.referrer ? [{ l: sourceName(f.referrer) }] : []), { l: `${flag(f.country)} ${name}` }, { l: i.fmt(f.amount), t: `${copy.newCustomer} · ${i.clock(f.at)}` }] },
     why: copy.firstWhy(i.fmt(f.amount), via, i.clock(f.at), name, band ? `${fmtInt(Math.max(0, band.lo))}–${fmtInt(band.hi)}` : ''),
     val: '1st',
     m: 1,
@@ -286,6 +287,7 @@ export function firstCard(i: { first: FirstFrom; band: Band | null; fmt: (minor:
     ev: band ? `Now ${fmtInt(f.people)}, usual ${fmtInt(Math.max(0, band.lo))} to ${fmtInt(band.hi)}.` : '',
     act: { k: 'set', t: copy.firstAlert, msg: copy.firstAlertMsg(name) },
     deeper: { kind: 'explore', filter: { dim: 'country', value: f.country } },
-    kc: { flag: flag(f.country), label: name, note: copy.firstNote, tone: 'up', filter: { dim: 'country', value: f.country } },
+    mark: copy.firstNote,
+    kc: { flag: flag(f.country), label: name },
   }
 }

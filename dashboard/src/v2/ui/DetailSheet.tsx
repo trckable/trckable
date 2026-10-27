@@ -5,7 +5,8 @@ import { useSheet } from './useSheet'
 import { Ico } from './icons'
 import { MkPortal } from './Portal'
 import type { CardCtx } from './StoryCard'
-import { Visual } from './StoryVisual'
+import { Picture } from './StoryVisual'
+import { shapeOf } from '../briefing/cardShape'
 import { copy } from '../briefing/copy'
 import { WhyBody } from './WhyBody'
 import type { Story } from '../briefing/cards'
@@ -32,7 +33,7 @@ export function Detail({ s, site, c, onClose }: { s: Story; site: string; c: Car
             <b>{s.head}</b>
             {s.rest}
           </h3>
-          <Visual s={s} />
+          <Picture s={s} pic={shapeOf(s).pic} vals={c.spark(s)} />
           <p className="cdw">{s.why}</p>
           <div className="hw show">
             {s.cause && (
