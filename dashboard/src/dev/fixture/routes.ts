@@ -353,8 +353,8 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
     case 'report/funnel':
       return ok(funnelOf(c, id, parseQuery(sp), JSON.parse(sp.get('steps') ?? '[]') as FunnelStep[]))
     case 'report/ai-search': {
-      const bots = crawlersOf(c, id, parseQuery(sp)).series.filter((s) => s.kind === 'train')
-      return ok({ visitors: 12, assistants: [{ name: 'ChatGPT', visitors: 9, referrer: 'chatgpt.com' }, { name: 'Perplexity', visitors: 3, referrer: 'perplexity.ai' }], referrers: [{ value: 'chatgpt.com', visitors: 9 }, { value: 'perplexity.ai', visitors: 3 }], crawled: bots.reduce((n, s) => n + s.total, 0), bots: bots.map((s) => ({ name: s.name, kind: s.kind, hits: s.total })), pages: [], google: c.conn.search })
+      const bots = crawlersOf(c, id, parseQuery(sp)).series.filter((s) => s.kind === 'train' || s.kind === 'answer')
+      return ok({ visitors: 12, assistants: [{ name: 'ChatGPT', visitors: 9, referrer: 'chatgpt.com' }, { name: 'Perplexity', visitors: 3, referrer: 'perplexity.ai' }], referrers: [{ value: 'chatgpt.com', visitors: 9 }, { value: 'perplexity.ai', visitors: 3 }], crawled: bots.reduce((n, s) => n + s.total, 0), bots: bots.map((s) => ({ name: s.name, kind: s.kind, hits: s.total, blocked: s.blocked, errors: s.errors })), pages: [], google: c.conn.search })
     }
     case 'report/answers':
       return ok(answersReport(answersState(), Math.floor(Date.now() / 1000)))

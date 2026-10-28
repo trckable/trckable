@@ -56,8 +56,8 @@ export function crawlCard(robots: Robot[]): Story | null {
     vis: {
       k: 'rcpt',
       rows: [
-        { l: copy.crawlRowBlocked, a: fmtInt(worst.blocked), n: worst.blocked },
-        { l: copy.crawlRowBroken, a: fmtInt(worst.errors), n: worst.errors },
+        { l: copy.crawlRowBlocked, a: fmtInt(worst.blocked), n: worst.blocked, neg: true },
+        { l: copy.crawlRowBroken, a: fmtInt(worst.errors), n: worst.errors, neg: true },
         { l: copy.crawlRowOk, a: fmtInt(worst.hits - failed), n: worst.hits - failed },
       ],
     },

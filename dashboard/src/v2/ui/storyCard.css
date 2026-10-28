@@ -73,6 +73,8 @@
 .mk .rr .rl small { margin-left: 6px; color: var(--mk-faint); font-size: 12.5px; }
 .mk .rr .ra { flex: none; margin-left: auto; font-weight: 650; }
 .mk .rr .ra.neg { color: var(--mk-red); }
+/* A row that is bad news (a robot turned away) has a red bar too. */
+.mk .rr.neg .rb u { background: var(--mk-red); box-shadow: none; }
 .mk .rr { position: relative; flex-wrap: wrap; }
 .mk .rr .rb { flex: 0 0 100%; height: 6px; border-radius: 3px; background: var(--mk-band); }
 .mk .rr .rb u { display: block; height: 100%; border-radius: 3px; background: var(--mk-lime); box-shadow: 0 0 12px var(--mk-limeL); transform-origin: left; animation: bc-grow 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both; }

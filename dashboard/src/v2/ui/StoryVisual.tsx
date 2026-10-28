@@ -119,7 +119,7 @@ function Rows({ rows, dots }: { rows: Row[]; dots?: boolean }) {
   return (
     <div className="ic-rows">
       {rows.map((r, n) => (
-        <div className={`rr${r.more ? ' more' : ''}${r.lead ? ' lead' : ''}`} key={`${n}${r.l}`}>
+        <div className={`rr${r.more ? ' more' : ''}${r.lead ? ' lead' : ''}${r.neg ? ' neg' : ''}`} key={`${n}${r.l}`}>
           <Lead r={r} dots={dots} />
           <span className="rl">
             {r.l}

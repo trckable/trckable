@@ -29,16 +29,21 @@ const BOTS: [string, number, string][] = [
   ['ClaudeBot', 0.11, 'train'],
   ['Bingbot', 0.09, 'index'],
   ['AhrefsBot', 0.07, 'index'],
+  ['OpenAI', 0.05, 'answer'],
 ]
+
+/** The share of a robot's visits the fixture's CDN turns away: ChatGPT's answers, so the Briefing has its card. */
+const BLOCKED: Record<string, number> = { OpenAI: 0.62, GPTBot: 0.04 }
 
 export function crawlersOf(c: Ctx, id: string, q: Query): CrawlerReport {
   const v = reportOf(c, id, q).current.kpis.visitors
   const days = Math.max(1, dayIndex(c, q.to) - dayIndex(c, q.from) + 1)
   const series = BOTS.map(([name, share, kind]) => {
     const total = Math.round(v * share * 0.9)
-    return { name, kind, total, values: Array.from({ length: days }, () => Math.round(total / days)) }
+    const blocked = Math.round(total * (BLOCKED[name] ?? 0))
+    return { name, kind, total, blocked, errors: Math.round(total * 0.02), values: Array.from({ length: days }, () => Math.round(total / days)) }
   })
-  return { kinds: { index: 0, train: 0 }, series, pages: [], total: series.reduce((p, s) => p + s.total, 0), errors: 0, buckets: Array.from({ length: days }, (_, i) => `${i}`) }
+  return { kinds: { index: 0, train: 0 }, series, pages: [], total: series.reduce((p, s) => p + s.total, 0), blocked: series.reduce((p, s) => p + s.blocked, 0), errors: series.reduce((p, s) => p + s.errors, 0), buckets: Array.from({ length: days }, (_, i) => `${i}`) }
 }
 
 const LINKS: Record<string, [string, number][]> = {

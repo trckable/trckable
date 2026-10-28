@@ -21,7 +21,7 @@ export function setupOf(): SetupState {
     opt('payments', false, { provider: 'stripe' }),
     opt('funnel', false),
     opt('search', true),
-    opt('crawlers', false),
+    opt('crawlers', true),
     opt('proxy', true, { last_seen: 1760000000 }),
     extra('own_visits', false),
     extra('vitals', false, { bytes: 1130 }),
