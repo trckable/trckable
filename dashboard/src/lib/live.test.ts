@@ -205,4 +205,9 @@ describe('onlineNow', () => {
     expect(onlineNow({ online: 18, stale: true, at: 5000 }, 19, 19, 4000)).toBe(18)
     expect(onlineNow({ online: 18, stale: true, at: 5000 }, 19, 19, 6000)).toBe(19)
   })
+
+  it('lets a newer polled count replace a stream count that stopped, even while the stream looks alive', () => {
+    expect(onlineNow({ online: 3, stale: false, at: 5000 }, 1, 1, 6000)).toBe(1)
+    expect(onlineNow({ online: 3, stale: false, at: 5000 }, 1, 1, 4000)).toBe(3)
+  })
 })

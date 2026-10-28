@@ -37,8 +37,9 @@ export function debounce(fn: () => void, ms: number, max: number) {
  * Online now: the stream's count, or the polled report's while the stream is
  * stuck. The stream's count is the server's own, never a guess from visits
  * (a visit from someone already counted would show one too many until the
- * next count). While stuck, the polled count only wins when it was read
- * after the stream's last count: an older one must not replace a newer one.
+ * next count). A report read after the stream's last count wins even while
+ * the stream looks alive, so a count the stream stopped sending never stays
+ * on screen next to a list that moved on; an older one never replaces a newer.
  */
 export function onlineNow(
   stream: { online: number | null; stale: boolean; at?: number },
@@ -48,5 +49,6 @@ export function onlineNow(
 ) {
   const newer = stream.online === null || polledAt === undefined || stream.at === undefined || polledAt >= stream.at
   if (stream.stale && polled !== undefined && newer) return polled
+  if (polled !== undefined && polledAt !== undefined && stream.at !== undefined && polledAt > stream.at) return polled
   return stream.online ?? shown
 }
