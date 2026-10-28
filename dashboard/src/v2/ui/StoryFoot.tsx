@@ -9,7 +9,7 @@ import { CardMenu, type CardMenuItem } from './CardMenu'
 import type { Act, Story } from '../briefing/cards'
 import type { CardCtx } from './StoryCard'
 
-const doneLabel: Record<Act['k'], string> = { set: copy.alertSet, copy: copy.copiedDone, goal: copy.goalDone, x: '' }
+const doneLabel: Record<Act['k'], string> = { set: copy.alertSet, copy: copy.copiedDone, goal: copy.goalDone, x: '', link: '' }
 
 export function Foot({ s, c, link }: { s: Story; c: CardCtx; link: string | null }) {
   const { askPeekNow } = useV2Extras()

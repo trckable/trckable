@@ -92,9 +92,11 @@ var aiAssistantSQL = func() string {
 
 // AIBot is one crawler on one errand.
 type AIBot struct {
-	Name string `json:"name"`
-	Kind string `json:"kind"`
-	Hits int64  `json:"hits"`
+	Name    string `json:"name"`
+	Kind    string `json:"kind"`
+	Hits    int64  `json:"hits"`
+	Blocked int64  `json:"blocked,omitempty"` // turned away: 401, 403, 429
+	Errors  int64  `json:"errors,omitempty"`  // broken pages: 404, 5xx and the rest
 }
 
 // AIPage is one page's two numbers: how often AI read it, and how many
@@ -214,7 +216,8 @@ func (q Q) AISearch(ctx context.Context, p Params, o AIOptions) (*AISearch, erro
 	scope := `site_id = ? AND day >= CAST(? AS DATE) AND day < CAST(? AS DATE) AND kind IN ('` + crawlAnswer + `', '` + crawlTrain + `')`
 	//nolint:gosec // scope and pathIf are constant fragments of this file; every value is bound
 	bots, err := conn.QueryContext(ctx, `
-		SELECT name, kind, sum(hits)::BIGINT AS n FROM crawler_hits WHERE `+scope+pathIf(o.Page)+`
+		SELECT name, kind, sum(hits)::BIGINT AS n, sum(coalesce(blocked, 0))::BIGINT, sum(errors)::BIGINT
+		FROM crawler_hits WHERE `+scope+pathIf(o.Page)+`
 		GROUP BY 1, 2 ORDER BY n DESC, 1, 2 LIMIT ?`, append(withPage(span, o.Page), aiMaxBots)...)
 	if err != nil {
 		return nil, fmt.Errorf("ai crawlers: %w", err)
@@ -222,7 +225,7 @@ func (q Q) AISearch(ctx context.Context, p Params, o AIOptions) (*AISearch, erro
 	defer bots.Close()
 	for bots.Next() {
 		var b AIBot
-		if err := bots.Scan(&b.Name, &b.Kind, &b.Hits); err != nil {
+		if err := bots.Scan(&b.Name, &b.Kind, &b.Hits, &b.Blocked, &b.Errors); err != nil {
 			return nil, err
 		}
 		out.Bots = append(out.Bots, b)

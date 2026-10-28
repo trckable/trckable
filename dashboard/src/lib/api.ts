@@ -355,15 +355,20 @@ export interface SearchReport {
 
 export interface CrawlerReport {
   kinds: Record<string, number>
-  series: { name: string; kind: string; total: number; values: number[] }[]
+  series: { name: string; kind: string; total: number; values: number[]; blocked?: number; errors?: number }[]
   pages: Row[]
   total: number
+  /** Hits on broken pages: 404, 5xx and the rest. */
   errors: number
+  /** Hits the site's server or CDN turned away: 401, 403, 429. */
+  blocked?: number
   buckets: string[]
   /** Which robot read which page, busiest first. */
   reads?: { path: string; name: string; kind: string; hits: number }[]
   /** Hits past fair use, counted without their page. */
   folded?: number
+  /** Each robot's worst pages, at most five apiece: turned away or broken, whichever happened more. */
+  failing?: { path: string; name: string; kind: string; count: number; why: 'blocked' | 'broken' }[]
 }
 
 export interface SiteConfig {

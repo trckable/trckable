@@ -17,7 +17,7 @@ func (w *Writer) countCrawls(ctx context.Context, conn *sql.Conn, crawls []event
 		return nil
 	}
 	zones := map[string]*time.Location{}
-	sums := map[crawlKey][2]uint64{}
+	sums := map[crawlKey][3]uint64{}
 	for i := range crawls {
 		e := &crawls[i]
 		loc, ok := zones[e.Site]
@@ -28,16 +28,21 @@ func (w *Writer) countCrawls(ctx context.Context, conn *sql.Conn, crawls []event
 		k := crawlKey{e.Site, time.UnixMilli(e.TS).In(loc).Format(time.DateOnly), e.Browser, e.OS, e.Path}
 		v := sums[k]
 		v[0]++
-		if e.Goal == "error" {
+		switch e.Goal {
+		case "error":
 			v[1]++
+		case "blocked":
+			v[2]++
 		}
 		sums[k] = v
 	}
 	for k, v := range sums {
 		if _, err := conn.ExecContext(ctx, `
-			INSERT INTO crawler_hits VALUES (?, CAST(? AS DATE), ?, ?, ?, ?, ?)
-			ON CONFLICT DO UPDATE SET hits = hits + excluded.hits, errors = errors + excluded.errors`,
-			k.site, k.day, k.name, k.kind, k.path, v[0], v[1]); err != nil {
+			INSERT INTO crawler_hits (site_id, day, name, kind, path, hits, errors, blocked)
+			VALUES (?, CAST(? AS DATE), ?, ?, ?, ?, ?, ?)
+			ON CONFLICT DO UPDATE SET hits = hits + excluded.hits, errors = errors + excluded.errors,
+				blocked = blocked + excluded.blocked`,
+			k.site, k.day, k.name, k.kind, k.path, v[0], v[1], v[2]); err != nil {
 			return err
 		}
 	}

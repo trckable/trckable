@@ -163,6 +163,7 @@ export function useParts(a: PartsIn) {
       stuck: extras.stuck ?? undefined,
       funnel: extras.funnel ?? undefined,
       first: extras.first ?? undefined,
+      robots: extras.robots ?? undefined,
     })
     const lead = learning ? undefined : leadSource(slices.slices.referrer, cur.kpis.visitors, site.domain)
     const jump = lead?.band ? { name: sourceName(lead.value), value: lead.value, visitors: lead.v, times: timesUsual(lead.v, lead.band), vs: unit === 'today' || unit === 'yesterday' ? copy.yourUsual : undefined, st: lead.st === 'dn' ? ('dn' as const) : ('up' as const) } : null

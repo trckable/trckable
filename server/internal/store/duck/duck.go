@@ -265,6 +265,10 @@ var migrations = []string{
 		views    UBIGINT NOT NULL,
 		PRIMARY KEY (site_id, day, dim, value)
 	);`,
+	// 10: robots a site's server or CDN turned away (401, 403, 429), counted
+	// apart from pages that were broken (404, 5xx), which stay in errors. Rows
+	// recorded before this release read zero here.
+	`ALTER TABLE crawler_hits ADD COLUMN blocked UBIGINT DEFAULT 0;`,
 }
 
 // tableSince is the migration that created each table added after the first

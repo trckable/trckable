@@ -168,6 +168,16 @@ export const copy = defineCopy('briefing.cards', {
   speedPrompt: 'Copy a speed prompt',
   speedCopied: 'Speed prompt copied',
   speedPromptText: (site: string, now: string, usual: string) => `On ${site}, loading (LCP) rose to ${now} from ${usual}. Find the heaviest image or script on the top pages and shrink or defer it.`,
+  // Robots that cannot read the site.
+  crawlHead: (who: string) => `${who} can’t read your site`,
+  crawlBlocked: (pct: number, robot: string, hits: number) => `${pct}% of ${robot}’s ${hits} visits were blocked by your server or CDN.`,
+  crawlBroken: (pct: number, robot: string, hits: number) => `${pct}% of ${robot}’s ${hits} visits hit broken pages.`,
+  crawlHow: 'Counted from the robot visits your server reports. A robot is only judged after 20 visits, and only the ones that answer for someone or index your pages: not training robots.',
+  crawlEv: (hits: number, blocked: number, broken: number) => `${hits} visits: ${blocked} blocked, ${broken} on broken pages.`,
+  crawlRowBlocked: 'Blocked',
+  crawlRowBroken: 'Broken pages',
+  crawlRowOk: 'Read fine',
+  crawlAct: 'How to let it in',
   // The signup path, and a first customer.
   leakHead: (to: string, from: string, a: string, b: string) => `Only ${to} of ${from} people made it from ${a} to ${b}`,
   leakRest: (usual: string, from: string) => `, usually about ${usual} of ${from}`,

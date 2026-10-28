@@ -11,6 +11,7 @@ import { isShared } from '../../lib/me'
 import { mentionsApi, type Mention } from '../../features/mentions/api'
 import { leakOf } from '../explore/data/mapSections'
 import type { FunnelStep, PaidStep } from '../../lib/api'
+import type { Robot } from './cards.crawl'
 import { copy } from './copy'
 import { moduleOn } from './moduleOn'
 import { startOfDay } from '../../features/incidents/model'
@@ -59,6 +60,8 @@ export interface Extras {
   funnel: FunnelStory | null
   /** A customer from a country that never had one. */
   first: FirstFrom | null
+  /** Each robot's visits and refusals over the period. */
+  robots?: Robot[] | null
   /** Read for the period on screen. */
   fresh?: boolean
 }
@@ -178,7 +181,8 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
         }, () => null)
       : Promise.resolve(null)
     const first = want.money && days <= 31 ? readFirst(site.id, range, want.countries) : Promise.resolve(null)
-    void Promise.all([mention, vit(range.from, range.to), vit(...usualSpeed(range, days)), buyers, search, stuck, funnel, first, refunds]).then(([m, c, u, b, sr, st, fn, fs, rf]) => live && setGot({ key, x: { fresh: true, mention: m, speed: c && u ? { cur: c, usual: u } : null, buyers: b, refunds: rf, search: sr, stuck: st, funnel: fn, first: fs } }))
+    const robots = more.crawlers(site.id, { from: range.from, to: range.to }).then((r) => (r.series ?? []).map((s): Robot => ({ name: s.name, kind: s.kind, hits: s.total, blocked: s.blocked ?? 0, errors: s.errors ?? 0 })), () => null)
+    void Promise.all([mention, vit(range.from, range.to), vit(...usualSpeed(range, days)), buyers, search, stuck, funnel, first, refunds, robots]).then(([m, c, u, b, sr, st, fn, fs, rf, rb]) => live && setGot({ key, x: { fresh: true, mention: m, speed: c && u ? { cur: c, usual: u } : null, buyers: b, refunds: rf, search: sr, stuck: st, funnel: fn, first: fs, robots: rb } }))
     return () => {
       live = false
     }

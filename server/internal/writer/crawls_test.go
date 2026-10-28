@@ -54,3 +54,26 @@ func TestCrawlsDayInTheSiteZone(t *testing.T) {
 		t.Fatalf("want the hit on the 11th (Berlin), got %d rows", n)
 	}
 }
+
+// Refused visits and broken pages are counted apart.
+func TestCrawlsCountBlockedAndBroken(t *testing.T) {
+	e := newEnv(t, t.TempDir())
+	defer e.close()
+	day := time.Date(2026, 9, 10, 9, 0, 0, 0, time.UTC).UnixMilli()
+	c1, c2, c3, c4 := crawl(1, day, "OpenAI", "answer", "/"), crawl(2, day+1000, "OpenAI", "answer", "/"), crawl(3, day+2000, "OpenAI", "answer", "/"), crawl(4, day+3000, "OpenAI", "answer", "/")
+	c1.Goal, c2.Goal, c3.Goal = "blocked", "blocked", "error"
+	e.append(t, c1)
+	e.append(t, c2)
+	e.append(t, c3)
+	e.append(t, c4)
+	e.runUntil(t, 4)
+	if n := e.count(t, `SELECT blocked FROM crawler_hits WHERE name = 'OpenAI'`); n != 2 {
+		t.Fatalf("blocked: want 2, got %d", n)
+	}
+	if n := e.count(t, `SELECT errors FROM crawler_hits WHERE name = 'OpenAI'`); n != 1 {
+		t.Fatalf("errors: want 1, got %d", n)
+	}
+	if n := e.count(t, `SELECT hits FROM crawler_hits WHERE name = 'OpenAI'`); n != 4 {
+		t.Fatalf("hits: want 4, got %d", n)
+	}
+}

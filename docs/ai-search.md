@@ -209,6 +209,33 @@ curl -X POST https://stats.example.com/api/crawl \
   -d '{"s":"tkb_yoursiteid","u":"https://example.com/page","ua":"<user agent>","st":200}'
 ```
 
+## Blocked and broken
+
+Next to each robot's hits, the crawler column has **Blocked / failed**: the visits
+your server or CDN turned away (status 401, 403 or 429) plus the visits that hit a
+broken page (404, 5xx and the rest), in red when there are any. Hover the number for
+the split. This needs the robot reports to carry the status (`st`); the Vercel
+middleware and the nginx mirror cannot send it, so they show a dash.
+
+The Briefing tells you when an answer or index robot, such as ChatGPT or Google, was
+turned away or found broken pages on half or more of at least 20 visits in the
+period. Training robots are never warned about: blocking them is often on purpose.
+
+### Letting robots in
+
+If a robot you want is blocked, check these in order:
+
+- **robots.txt.** A `Disallow` for the robot's name keeps it out. Remove it, or add
+  an `Allow` for it.
+- **Your CDN or firewall.** Bot-fight and "block AI bots" switches (Cloudflare,
+  Vercel, AWS WAF and others) answer 403 to robots they do not know. Allow the
+  robot's user agent, or switch the rule off for the pages you want read.
+- **Rate limits.** A 429 means the robot asked too often. Raise the limit for its
+  user agent.
+- **Sign-in walls.** A 401 means the page needs a login. Robots cannot give one.
+
+Broken pages (404, 5xx) are not a block: fix the page, or redirect the old address.
+
 ## Where else it shows up
 
 - **What the assistants say about you.** A line under the tab tells in how many of their answers ChatGPT, Perplexity and Claude named or linked your site, and opens Answers: [answers](answers.md).

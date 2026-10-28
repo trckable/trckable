@@ -17,6 +17,10 @@ export function runAct(s: Story, o: { site: Site; onGoal: () => void }): boolean
     goDeeper(o.site, s.deeper)
     return false
   }
+  if (a.k === 'link') {
+    window.open(a.url, '_blank', 'noopener,noreferrer')
+    return false
+  }
   if (a.k === 'copy') {
     try {
       void navigator.clipboard?.writeText(a.text)

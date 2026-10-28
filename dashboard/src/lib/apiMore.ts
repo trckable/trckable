@@ -116,6 +116,10 @@ export interface AiBot {
   /** answer, train or index. */
   kind: string
   hits: number
+  /** Visits the site's server or CDN turned away (401, 403, 429). */
+  blocked?: number
+  /** Visits that hit broken pages (404, 5xx and the rest). */
+  errors?: number
 }
 
 /** One page's two numbers: how often AI read it, and how many visitors AI sent to it. */

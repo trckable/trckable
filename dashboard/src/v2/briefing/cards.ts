@@ -10,10 +10,12 @@ import { copy } from './cards.copy'
 import { mult, sourceName, type Deeper, type Unit } from './model'
 import { judge, type Band, type Judged } from './usual'
 import { whyDown, whyJump, type Why } from './why'
+import { crawlCard } from './cards.crawl'
 import { firstCard, leakCard, salesCards, searchCard, stuckCard, withStuck, type SalesIn } from './cards.money'
+import type { Robot } from './cards.crawl'
 import type { FirstFrom, FunnelStory, SearchStory, Stuck } from './useExtras'
 
-export type Topic = 'uptime' | 'sales' | 'sources' | 'countries' | 'devices' | 'search' | 'pages' | 'goals' | 'peek' | 'mentions' | 'speed' | 'milestone' | 'funnel'
+export type Topic = 'uptime' | 'sales' | 'sources' | 'countries' | 'devices' | 'search' | 'pages' | 'goals' | 'peek' | 'mentions' | 'speed' | 'milestone' | 'funnel' | 'crawlers'
 export type Dim = 'referrer' | 'country' | 'device' | 'entry_page'
 
 /** The one thing a card offers to do. */
@@ -22,6 +24,7 @@ export type Act =
   | { k: 'set'; t: string; msg: string }
   | { k: 'goal'; t: string; msg: string; page: string }
   | { k: 'x'; t: string }
+  | { k: 'link'; t: string; url: string }
 
 export type Vis =
   | { k: 'rcpt'; plain?: boolean; rows: { lead?: boolean; l: string; t?: string; a?: string; flag?: string; n?: number; neg?: boolean; more?: boolean; tot?: boolean; mark?: 'up' | 'dn' }[] }
@@ -142,6 +145,8 @@ export interface CardsIn {
   funnel?: FunnelStory
   /** A customer from a country nobody had paid from before. */
   first?: FirstFrom
+  /** Each robot's visits over the period, with how many were turned away or hit broken pages. */
+  robots?: Robot[]
 }
 
 /** How many times the usual's middle the number is; none where that middle is too small to say. */
@@ -447,6 +452,8 @@ export function cardsOf(i: CardsIn): Story[] {
       deeper: { kind: 'speed' },
     })
   }
+  const robots = i.robots ? crawlCard(i.robots) : null
+  if (robots) out.push(robots)
   // Problems before wins, then the bigger change.
   return out.sort((a, b) => Number(!!b.bad) - Number(!!a.bad) || b.score - a.score)
 }
