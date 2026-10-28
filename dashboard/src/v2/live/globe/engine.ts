@@ -423,17 +423,30 @@ export class Globe {
         this.tap.x = px
         this.tap.y = py
         const m = this.hitState(px, py)
-        // A marker that gathers several places opens into them (zooms in on it) while zooming can still split it; when it cannot (the most zoom, or one shared place), its people open as a list. One person opens their card.
-        if (m && m.spots > 1 && this.zoomT < ZOOM_MAX - 0.5) {
-          this.focus(m.lat, m.lon)
-          this.zoomBy(2.4)
-        } else if (m && m.total > 1) this.hooks.onCrowd(m.keys)
-        else if (m) this.hooks.onPick(m.top.key)
+        if (m) this.openMarker(m)
       }
       this.vx = this.vy = 0
     } else if (e.timeStamp - d.t > 80) this.vx = this.vy = 0
     this.still = performance.now()
     this.wake()
+  }
+
+  /** What a tap on a marker does. One that gathers several places opens into them (zooms in on it) while zooming can still split it; when it cannot (the most zoom, or one shared place), its people open as a list. One person opens their card. */
+  private openMarker(m: State) {
+    if (m.spots > 1 && this.zoomT < ZOOM_MAX - 0.5) {
+      this.focus(m.lat, m.lon)
+      this.zoomBy(2.4)
+    } else if (m.total > 1) this.hooks.onCrowd(m.keys)
+    else this.hooks.onPick(m.top.key)
+  }
+
+  /** The keyboard's Enter on a visitor's pin: the same as a tap on the marker that holds it. Returns false when no marker holds it. */
+  activate(key: string): boolean {
+    const m = this.states.find((s) => s.head === s && !s.gone && s.keys.includes(key))
+    if (!m) return false
+    this.openMarker(m)
+    this.wake()
+    return true
   }
 
   /** The size of a pin, by how many there are: whole up to 60, then smaller down to a third. */

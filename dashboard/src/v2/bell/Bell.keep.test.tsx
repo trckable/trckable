@@ -1,10 +1,11 @@
 // @vitest-environment happy-dom
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api, type Site } from '../../lib/api'
 import { incidents } from '../../features/incidents/api'
 import { more } from '../../lib/apiMore'
+import { momentsApi } from '../../features/moments/api'
 import { V2ExtrasContext, type V2Extras } from '../slots'
 import type { Notice } from './notices'
 import { Bell } from './Bell'
@@ -42,6 +43,11 @@ function Provider({ extras, sites }: { extras: V2Extras; sites: Site[] }) {
 
 const rows = (host: HTMLElement) => [...host.querySelectorAll('.nft b')].map((b) => b.textContent)
 const open = () => act(() => document.querySelector<HTMLButtonElement>('#bellBtn')?.click())
+
+// The bell also asks for the site's busy spells: answered here, so no read waits on a network that is not there.
+beforeEach(() => {
+  vi.spyOn(momentsApi, 'moments').mockResolvedValue({ moments: [] })
+})
 
 afterEach(() => {
   vi.restoreAllMocks()
