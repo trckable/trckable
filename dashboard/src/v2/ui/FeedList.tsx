@@ -18,6 +18,9 @@ import './feedRow.css'
 /** Under this width (px) the list drops the visitor's name and the word Replay, so the page keeps the room. */
 const NARROW = 480
 
+/** How long ago the row's last activity was, short: "12s", "3m". */
+export const agoShort = (ms: number) => (ms < 60_000 ? `${Math.max(0, Math.floor(ms / 1000))}s` : `${Math.floor(ms / 60_000)}m`)
+
 export function FeedList({ rows, up, clock, empty, onVisitor, cookieless }: { rows: Row[]; up: Set<string>; clock: number; empty: string; onVisitor?: (v: string) => void; cookieless?: boolean }) {
   const box = useRef<HTMLDivElement>(null)
   const [below, setBelow] = useState(false)
@@ -71,6 +74,7 @@ export function FeedList({ rows, up, clock, empty, onVisitor, cookieless }: { ro
                 '\u2014'
               )}
             </span>
+            <span className="tm num">{agoShort(clock - r.last)}</span>
             <span className="dv" title={r.device} aria-label={r.device}>
               {r.device && <DeviceIcon device={r.device} size={15} />}
             </span>
