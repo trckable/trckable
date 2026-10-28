@@ -24,7 +24,7 @@ func aiRig(t *testing.T) Q {
 			VALUES ('s1', ` + itoa(id) + `, ` + itoa(visitor) + `, TIMESTAMP '` + day + ` 10:00:00', TIMESTAMP '` + day + ` 10:05:00', '` + channel + `', '` + ref + `', '` + entry + `', 1, 0, 0, 0)`
 	}
 	hit := func(site, day, name, kind, path string, n int) string {
-		return `INSERT INTO crawler_hits VALUES ('` + site + `', DATE '` + day + `', '` + name + `', '` + kind + `', '` + path + `', ` + itoa(n) + `, 0)`
+		return `INSERT INTO crawler_hits (site_id, day, name, kind, path, hits, errors) VALUES ('` + site + `', DATE '` + day + `', '` + name + `', '` + kind + `', '` + path + `', ` + itoa(n) + `, 0)`
 	}
 	for _, q := range []string{
 		sess(1, 1, "2026-09-10", "AI", "chatgpt.com", "/pricing"),
@@ -267,5 +267,61 @@ func TestAIPagesFor(t *testing.T) {
 	none, err := q.AIPagesFor(context.Background(), week, nil)
 	if err != nil || len(none) != 0 {
 		t.Fatal(none, err)
+	}
+}
+
+// Each robot's refused visits and broken pages are told apart, and the
+// crawler report carries the same split with each robot's worst pages.
+func TestCrawlBlockedAndBroken(t *testing.T) {
+	st, err := duck.Open(context.Background(), filepath.Join(t.TempDir(), "b.duckdb"), duck.Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { st.Close() })
+	for _, q := range []string{
+		`INSERT INTO crawler_hits (site_id, day, name, kind, path, hits, errors, blocked) VALUES ('s1', DATE '2026-09-10', 'OpenAI', 'answer', '/pricing', 20, 2, 15)`,
+		`INSERT INTO crawler_hits (site_id, day, name, kind, path, hits, errors, blocked) VALUES ('s1', DATE '2026-09-10', 'OpenAI', 'answer', '/docs', 10, 6, 0)`,
+		`INSERT INTO crawler_hits (site_id, day, name, kind, path, hits, errors, blocked) VALUES ('s1', DATE '2026-09-10', 'OpenAI', 'answer', '/ok', 5, 0, 0)`,
+		`INSERT INTO crawler_hits (site_id, day, name, kind, path, hits, errors, blocked) VALUES ('s1', DATE '2026-09-10', 'Anthropic', 'train', '/pricing', 8, 0, 0)`,
+		`INSERT INTO crawler_hits (site_id, day, name, kind, path, hits, errors, blocked) VALUES ('s1', DATE '2026-09-10', 'Google', 'index', '/pricing', 40, 0, 30)`,
+	} {
+		if _, err := st.DB.Exec(q); err != nil {
+			t.Fatal(err)
+		}
+	}
+	q := Q{DB: st.DB}
+	r, err := q.AISearch(context.Background(), week, AIOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got AIBot
+	for _, b := range r.Bots {
+		if b.Name == "OpenAI" {
+			got = b
+		}
+	}
+	if got.Hits != 35 || got.Blocked != 15 || got.Errors != 8 {
+		t.Fatalf("OpenAI: want 35 hits, 15 blocked, 8 errors; got %+v", got)
+	}
+	for _, b := range r.Bots {
+		if b.Name == "Anthropic" && (b.Blocked != 0 || b.Errors != 0) {
+			t.Fatalf("Anthropic had no failures: %+v", b)
+		}
+	}
+	c, err := q.Crawlers(context.Background(), week)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.Blocked != 45 || c.Errors != 8 {
+		t.Fatalf("report: want 45 blocked, 8 broken; got %d, %d", c.Blocked, c.Errors)
+	}
+	var fails []CrawlerFail
+	for _, f := range c.Failing {
+		if f.Name == "OpenAI" {
+			fails = append(fails, f)
+		}
+	}
+	if len(fails) != 2 || fails[0].Path != "/pricing" || fails[0].Why != "blocked" || fails[0].Count != 17 || fails[1].Path != "/docs" || fails[1].Why != "broken" {
+		t.Fatalf("OpenAI failing pages: %+v", fails)
 	}
 }

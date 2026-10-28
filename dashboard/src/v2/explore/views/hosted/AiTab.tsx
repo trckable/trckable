@@ -7,6 +7,7 @@ import { Loading } from '../../../../components/loading/Loading'
 import { fmtInt } from '../../../../lib/format'
 import { messageOf, more, type SearchReport } from '../../../../lib/apiMore'
 import { aiCopy } from '../../../../features/aisearch/copy'
+import { FailedCell } from '../../../../features/aisearch/FailedCell'
 import { useAiSearch } from '../../../../features/aisearch/useAiSearch'
 import { takeCrawlerSetupAsk } from '../../../../features/crawlers/ask'
 import { can } from '../../../../lib/permissions'
@@ -66,7 +67,7 @@ export default function AiTab({ x }: { x: XCtx }) {
     return { key: a.name, a: a.name, bar: a.visitors / top, onPick: host ? () => x.pick('referrer', host) : undefined, c: [fmtInt(a.visitors)] }
   })
   const hit = Math.max(1, ...rep.bots.map((b) => b.hits))
-  const crawlers: CRow[] = rep.bots.slice(0, ROWS).map((b) => ({ key: `${b.name}/${b.kind}`, a: `${b.name} · ${aiCopy.kind[b.kind] ?? b.kind}`, bar: b.hits / hit, c: [fmtInt(b.hits)] }))
+  const crawlers: CRow[] = rep.bots.slice(0, ROWS).map((b) => ({ key: `${b.name}/${b.kind}`, a: `${b.name} · ${aiCopy.kind[b.kind] ?? b.kind}`, bar: b.hits / hit, c: [fmtInt(b.hits), <FailedCell blocked={b.blocked ?? 0} broken={b.errors ?? 0} />] }))
   const pages = rep.pages.filter((p) => p.read > 0 || p.flag).slice(0, ROWS)
   const read = Math.max(1, ...pages.map((p) => p.read))
   const reads: CRow[] = pages.map((p) => ({ key: p.path, a: p.flag ? `${p.path} · ${aiCopy.flag[p.flag]}` : p.path, bar: p.read / read, mono: true, onPick: () => x.pick('page', p.path), c: [fmtInt(p.read), fmtInt(p.sent)] }))
@@ -89,7 +90,7 @@ export default function AiTab({ x }: { x: XCtx }) {
           </button>
         </XEmpty>
       ) : (
-        <XCols first={aiCopy.crawler} cols={[{ h: aiCopy.hits }]} rows={crawlers} xc="minmax(0,1fr) 84px" limit={x.limit} onAll={x.showAll} />
+        <XCols first={aiCopy.crawler} cols={[{ h: aiCopy.hits }, { h: aiCopy.blockedHead }]} rows={crawlers} xc="minmax(0,1fr) 72px 120px" limit={x.limit} onAll={x.showAll} />
       )}
       {reads.length > 0 && (
         <>

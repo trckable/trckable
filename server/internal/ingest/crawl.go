@@ -72,9 +72,7 @@ func (h *Handler) Crawl(w http.ResponseWriter, r *http.Request) {
 		Browser:  c.Name, // the crawler
 		OS:       c.Kind, // answer | index | train
 	}
-	if p.Status >= 400 {
-		e.Goal = "error" // a crawler that only finds errors is worth seeing
-	}
+	e.Goal = crawlGoal(p.Status)
 	b, err := e.Marshal()
 	if err != nil {
 		h.reject(w, http.StatusBadRequest, errBadPayload)
@@ -86,6 +84,19 @@ func (h *Handler) Crawl(w http.ResponseWriter, r *http.Request) {
 	}
 	h.markSeen(site.ID, now)
 	w.WriteHeader(http.StatusAccepted)
+}
+
+// crawlGoal names what a status says about the robot's visit: "blocked" when
+// the site's server or CDN refused it (401, 403, 429), "error" for any other
+// failure (404, 5xx: a page that is missing or broken), nothing otherwise.
+func crawlGoal(status int) string {
+	switch {
+	case status == http.StatusUnauthorized, status == http.StatusForbidden, status == http.StatusTooManyRequests:
+		return "blocked"
+	case status >= 400:
+		return "error" // a crawler that only finds errors is worth seeing
+	}
+	return ""
 }
 
 // crawlID is a dedupe key: the same crawler, on the same errand, asking for

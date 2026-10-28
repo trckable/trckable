@@ -62,3 +62,17 @@ func TestCrawlIsAlwaysRecorded(t *testing.T) {
 		t.Fatal("the crawler hit was not recorded")
 	}
 }
+
+// A refusal and a broken page are different things to fix: 401, 403 and 429
+// are the site turning the robot away, every other failure is a broken page.
+func TestCrawlGoal(t *testing.T) {
+	for status, want := range map[int]string{
+		200: "", 301: "", 399: "",
+		401: "blocked", 403: "blocked", 429: "blocked",
+		400: "error", 404: "error", 410: "error", 500: "error", 503: "error",
+	} {
+		if got := crawlGoal(status); got != want {
+			t.Errorf("status %d: want %q, got %q", status, want, got)
+		}
+	}
+}

@@ -18,7 +18,7 @@ func TestBotCountersMigrateAnExistingStore(t *testing.T) {
 	if err := s.MigrateTo(ctx, 6); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.DB.ExecContext(ctx, `INSERT INTO crawler_hits VALUES ('s1', DATE '2026-09-10', 'OpenAI', 'train', '/', 4, 0)`); err != nil {
+	if _, err := s.DB.ExecContext(ctx, `INSERT INTO crawler_hits (site_id, day, name, kind, path, hits, errors) VALUES ('s1', DATE '2026-09-10', 'OpenAI', 'train', '/', 4, 0)`); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.Migrate(ctx); err != nil {
