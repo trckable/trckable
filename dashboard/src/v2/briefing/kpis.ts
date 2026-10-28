@@ -1,13 +1,12 @@
-// The four numbers under the hero, as the walkthrough builds them: People, the goal (or pageviews), Uptime, and
-// what people paid (or how many left after one page). Pure: kpis.test.ts.
+// The cards under the hero: the goal (or pageviews), Uptime, and what people paid. Visitors and bounce rate are
+// in the numbers row above them, so they are not repeated here. Pure.
 import { goalName } from '../../lib/goalName'
 import type { Result } from '../../lib/api'
-import { delta, fmtCompact, fmtFixed, fmtInt, fmtPct } from '../../lib/format'
-import { baseEnough, tooFew } from '../../lib/thin'
+import { delta, fmtCompact, fmtFixed, fmtInt } from '../../lib/format'
 import type { Kc } from '../ui/KpiCard'
 import { copy } from './copy'
-import { type Score, type Unit, type Usual } from './model'
-import { judge, type Band as UsualBand, type Judged, type Verdict } from './usual'
+import { type Score } from './model'
+import { judge, type Band as UsualBand, type Judged } from './usual'
 
 /** "+27% vs usual", "as usual", "−6% vs the day before": the note on a number that has a figure to be told against. */
 export function noteOf(now: number, was: number | undefined, before: string): Kc['note'] {
@@ -46,16 +45,12 @@ interface KpiIn {
   prev?: Result
   learning: boolean
   before: string
-  people: { note: Kc['note']; vals: number[] }
   /** The goal's own line, bucket by bucket (empty while it is read). */
   goal: { vals: number[] } | null
   viewsVals: number[]
-  leave: { note: Kc['note']; vals: number[] }
   uptime: Score
-  /** A site with few visitors: each card says its usual range in numbers, and the last one counts people, not a share. */
+  /** A site with few visitors: each card says its usual range in numbers. */
   low?: boolean
-  /** The one verdict on people against their usual (the headline reads the same). */
-  peopleVerdict?: Verdict | null
   /** The goal against its own usual, when the history says (else the period before is the measure). */
   goalBand?: UsualBand | null
   /** What the sales of the period are told against, when the history says. */
@@ -74,7 +69,6 @@ export function kpiCards(a: KpiIn): Kc[] {
   const stale = a.uptime.verdict === 'down'
   const unknown: Kc['note'] = { t: copy.unknownNow }
   const upNote: Kc['note'] = { t: a.uptime.verdict === 'clear' ? copy.noDowntime : a.uptime.words, dn: down }
-  const thin = tooFew(cur.kpis.sessions)
   const few = !!a.low && !a.learning
   // The note of a card: unknown while the site is down, in numbers for a quiet site, "learning" on the first days, else its own.
   const say = (f: Kc['note'], l: Kc['note'], b: Kc['note']): Kc['note'] => {
@@ -82,59 +76,21 @@ export function kpiCards(a: KpiIn): Kc[] {
     if (few) return f
     return a.learning ? l : b
   }
-  const soFar: Kc['note'] = { t: copy.soFarToday }
   const learning: Kc['note'] = { t: copy.learning }
-  const leaveVal = (): string => {
-    if (few) return fmtInt(Math.round(cur.kpis.bounce_rate * cur.kpis.visitors))
-    return thin ? '–' : fmtPct(cur.kpis.bounce_rate)
-  }
   // An uptime nobody measured (a past day with no monitor data) is not a card with a dash: the card is left out.
   const unmeasured = a.uptime.value === null && !down && a.uptime.verdict !== 'paused'
   const cards: Kc[] = [
-    { key: 'people', icon: 'people', label: copy.people, val: fmtInt(cur.kpis.visitors), note: say(a.peopleVerdict ? rangeNote(a.peopleVerdict.now, a.peopleVerdict.band, ` ${copy.peopleWord}`) : learning, learning, a.people.note), vals: a.people.vals, dn: false },
     goal
       ? { key: 'goal', icon: 'goal', label: goalName(goal.label, goal.value).replace(/^./, (c) => c.toUpperCase()), val: fmtInt(goal.visitors), note: say(rangeNote(goal.visitors, a.goalBand, ''), learning, bandNote(goal.visitors, a.goalBand) ?? noteOf(goal.visitors, prev?.goals?.find((g) => g.value === goal.value)?.visitors, a.before)), vals: a.goal?.vals ?? [], col: 'var(--mk-blue)' }
       : { key: 'views', icon: 'click', label: copy.views, val: fmtCompact(cur.kpis.pageviews), note: a.learning ? { t: copy.learning } : noteOf(cur.kpis.pageviews, prev?.kpis.pageviews, a.before), vals: a.viewsVals, col: 'var(--mk-blue)' },
     { key: 'uptime', icon: 'uptime', label: copy.uptimeCard, val: a.uptime.value === null ? '–' : `${a.uptimePct}%`, note: upNote, vals: a.uptime.value === null ? [] : a.uptimeVals, lo: Math.min(90, ...a.uptimeVals), hi: Math.min(90, ...a.uptimeVals) + (100 - Math.min(90, ...a.uptimeVals)) * 1.7, dn: down },
-    cur.money && a.money
-      ? { key: 'money', icon: 'sales', label: copy.net(cur.money.payments), val: a.money(cur.money.revenue), note: a.learning ? { t: copy.soFarToday } : (bandNote(cur.money.revenue, a.moneyBand) ?? noteOf(cur.money.revenue, prev?.money?.revenue, a.before)), vals: a.moneyVals }
-      : { key: 'leave', icon: 'leave', label: copy.left, val: leaveVal(), note: say({ t: copy.ofPeople(fmtInt(cur.kpis.visitors)) }, soFar, thin ? soFar : a.leave.note), vals: a.leave.vals, lo: 0, hi: Math.max(0.8, ...a.leave.vals), col: 'var(--mk-blue)' },
+    ...(cur.money && a.money ? [{ key: 'money', icon: 'sales', label: copy.net(cur.money.payments), val: a.money(cur.money.revenue), note: a.learning ? { t: copy.soFarToday } : (bandNote(cur.money.revenue, a.moneyBand) ?? noteOf(cur.money.revenue, prev?.money?.revenue, a.before)), vals: a.moneyVals }] : []),
   ]
   return unmeasured ? cards.filter((c) => c.key !== 'uptime') : cards
-}
-
-/** The note under "left after one page": higher or lower than the site usually sees, within a few points as usual. */
-export function bounceNote(now: number, usual: number | null): Kc['note'] {
-  const pct = Math.round(now * 100)
-  if (usual !== null && pct > Math.round((usual + 0.04) * 100)) return { t: copy.higherThanUsual, dn: true }
-  if (usual !== null && pct < Math.round((usual - 0.04) * 100)) return { t: copy.lowerThanUsual, up: true }
-  return { t: usual === null ? '' : copy.asUsual }
 }
 
 /** An uptime figure as the card writes it: whole when it is whole, one decimal otherwise, nothing without one. */
 export function pctText(pct: number | null): string {
   if (pct === null) return ''
   return Number.isInteger(pct) ? fmtInt(pct) : fmtFixed(pct, 1)
-}
-
-interface PeopleNoteIn {
-  verdict: Verdict | null
-  learning: boolean
-  usual: Usual | null
-  unit: Unit
-  prev: Result | undefined
-  v: number
-  before: string
-}
-
-/** The note on the People card: against the one verdict when the history says, else the server's usual, else the period before. */
-export function peopleNoteOf(a: PeopleNoteIn): Kc['note'] {
-  if (a.verdict && !a.learning) return usualNote(a.verdict.now, a.verdict.band.c, a.verdict.st)
-  const u = a.usual
-  if (u && u.average >= 5 && (u.weeks?.length ?? 0) > 0 && (a.unit === 'today' || a.unit === 'yesterday')) {
-    const d = a.v / u.average - 1
-    if (Math.abs(d) < 0.05) return { t: copy.asUsual }
-    return d > 0 ? { t: copy.vsUsual('+', Math.round(d * 100)), up: true } : { t: copy.vsUsual('−', Math.round(-d * 100)), dn: true }
-  }
-  return a.prev && baseEnough(a.prev.kpis.visitors) ? noteOf(a.v, a.prev.kpis.visitors, a.before) : { t: a.unit === 'today' ? copy.soFarToday : '' }
 }

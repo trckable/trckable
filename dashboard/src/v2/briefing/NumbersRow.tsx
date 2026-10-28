@@ -9,9 +9,11 @@ interface Props {
   prev?: Result
   /** Writes an amount in the site's currency; absent where revenue is not shown. */
   money?: (minor: number) => string
+  /** The month's projection, under Visitors while the period is this month so far. */
+  pace?: React.ReactNode
 }
 
-export function NumbersRow({ cur, prev, money }: Props) {
+export function NumbersRow({ cur, prev, money, pace }: Props) {
   const figures = figuresOf(cur, prev, money)
   return (
     <dl className="nrow" aria-label={copy.numbersLabel} style={{ '--cols': figures.length } as React.CSSProperties}>
@@ -22,6 +24,7 @@ export function NumbersRow({ cur, prev, money }: Props) {
           <dd className={`nd ${f.change?.verdict ?? f.change?.tone ?? ''}`} title={f.change?.label}>
             {f.change?.short ?? ' '}
           </dd>
+          {f.key === 'visitors' && pace && <dd className="nd">{pace}</dd>}
         </div>
       ))}
     </dl>
