@@ -38,6 +38,9 @@ type Now struct {
 	Start   int64   `json:"start"`
 	Minutes []int64 `json:"minutes"` // pageviews per minute, oldest first
 	Online  int64   `json:"online"`
+	// OnlineMinutes is Online for each of the same minutes, oldest first: the
+	// last slot is Online itself.
+	OnlineMinutes []int64 `json:"online_minutes"`
 	// Visitors viewed a page in the last 30 minutes; Previous in the 30
 	// before that.
 	Visitors int64       `json:"visitors"`
@@ -143,6 +146,9 @@ func (q Q) LiveNow(ctx context.Context, site string, now time.Time) (*Now, error
 	}
 
 	if out.Online, err = q.Online(ctx, site, now); err != nil {
+		return nil, err
+	}
+	if out.OnlineMinutes, err = q.OnlineSeries(ctx, site, now); err != nil {
 		return nil, err
 	}
 	if out.Recent, err = q.onSite(ctx, site, now); err != nil {

@@ -8,6 +8,8 @@ import { LiveLineChart } from './LiveLineChart'
 
 interface Props {
   bars: { h: number; z: boolean; n: number }[]
+  /** The same minutes as people on the site, which the line draws. */
+  people: { h: number; z: boolean; n: number }[]
   mode: ChartMode
   total: number
   beat: number
@@ -22,7 +24,7 @@ interface Props {
 
 const ARROW: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1 }
 
-export function MinuteChart({ bars, mode, total, beat, minute, phone, timezone, label }: Props) {
+export function MinuteChart({ bars, people, mode, total, beat, minute, phone, timezone, label }: Props) {
   const [first] = useState(minute)
   const box = useRef<HTMLDivElement>(null)
   // The minute the tooltip shows, and where it points; a thumb's first tap shows it, the next tap on the same minute opens it.
@@ -39,13 +41,14 @@ export function MinuteChart({ bars, mode, total, beat, minute, phone, timezone, 
     document.addEventListener('pointerdown', away)
     return () => document.removeEventListener('pointerdown', away)
   }, [shown])
-  const tip: TipAt | null = shown && bars[shown.i] ? { x: shown.x, y: 22, body: <><b>{label(bars.length - 1 - shown.i)}</b><span className="num">{copy.viewsAt(bars[shown.i].n)}</span></> } : null
-  const hit = (i: number) => {
+  const words = (i: number, m: ChartMode = mode) => (m === 'line' ? copy.peopleAt(people[i].n) : copy.viewsAt(bars[i].n))
+  const tip: TipAt | null = shown && bars[shown.i] ? { x: shown.x, y: 22, body: <><b>{label(bars.length - 1 - shown.i)}</b><span className="num">{words(shown.i)}</span></> } : null
+  const hit = (i: number, m: ChartMode) => {
     const ago = bars.length - 1 - i
     return {
       role: phone ? undefined : 'button',
       tabIndex: phone ? undefined : 0,
-      'aria-label': `${label(ago)}, ${copy.viewsAt(bars[i].n)}. ${copy.openMinute(label(ago))}`,
+      'aria-label': `${label(ago)}, ${words(i, m)}. ${copy.openMinute(label(ago))}`,
       onPointerDown: (e: React.PointerEvent) => void (touched.current = e.pointerType === 'touch'),
       onPointerEnter: (e: React.PointerEvent) => e.pointerType !== 'touch' && show(i, e.currentTarget),
       // Some browsers jump the pointer onto a minute without the out event React pairs the enter with, so a move shows it too.
@@ -84,11 +87,11 @@ export function MinuteChart({ bars, mode, total, beat, minute, phone, timezone, 
     <div key={minute} ref={box} className={minute === first ? 'lchart' : 'lchart shift'} data-mode={mode}>
       <div className="mins" role="group" aria-label={copy.minsLabel(total)} {...on('bars')}>
         {bars.map((b, i) => (
-          <i key={i} className={b.z ? 'z' : ''} style={{ height: `${b.h}%` }} {...hit(i)} />
+          <i key={i} className={b.z ? 'z' : ''} style={{ height: `${b.h}%` }} {...hit(i, 'bars')} />
         ))}
       </div>
-      <div className="mline" role="group" aria-label={copy.minsLabel(total)} {...on('line')}>
-        <LiveLineChart heights={bars.map((b) => b.h)} beat={beat} at={mode === 'line' ? (shown?.i ?? null) : null} onScrub={scrub} hits={bars.map((b, i) => <i key={i} className={b.z ? 'z' : ''} {...hit(i)} />)} />
+      <div className="mline" role="group" aria-label={copy.peopleLabel} {...on('line')}>
+        <LiveLineChart heights={people.map((b) => b.h)} beat={beat} at={mode === 'line' ? (shown?.i ?? null) : null} onScrub={scrub} hits={people.map((b, i) => <i key={i} className={b.z ? 'z' : ''} {...hit(i, 'line')} />)} />
       </div>
       <Tip at={tip} width={shown?.w ?? 0} />
     </div>

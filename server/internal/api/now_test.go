@@ -293,6 +293,10 @@ func TestLiveNowListsEveryoneOnline(t *testing.T) {
 	if _, more := out["more"]; more {
 		t.Fatalf("more with room to spare: %v", out)
 	}
+	series := out["online_minutes"].([]any)
+	if len(series) != len(out["minutes"].([]any)) || series[len(series)-1] != out["online"] {
+		t.Fatalf("online_minutes %v does not end on online %v", series, out["online"])
+	}
 	want := []struct{ visitor, kind, path string }{{"4", "pageview", "/new"}, {"1", "pageview", "/old"}, {"2", "active", ""}}
 	for i, w := range want {
 		m := recent[i].(map[string]any)

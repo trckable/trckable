@@ -14,6 +14,7 @@ export interface LiveNow {
   start: number // unix ms where minutes[0] begins, on a whole minute
   minutes: number[] // pageviews per minute, oldest first; the last is running now
   online: number
+  online_minutes?: number[] // people on the site at each of those minutes; the last is `online`
   visitors: number // last 30 minutes
   previous: number // the 30 minutes before
   sources: { channel: string; visitors: number }[]
