@@ -41,6 +41,9 @@ export function nowOf(c: Ctx, id: string): LiveNow {
   const mix = SRCS.map((_, s) => c.w.data[id].H[hour * NS + s])
   const tot = mix.reduce((p, q) => p + q, 0)
   const n = online(c, site)
+  // People on the site each minute: the five-minute sums of views, scaled so the last one is the count now.
+  const five = (k: number) => [0, 1, 2, 3, 4].reduce((p, j) => p + perMin(c, site, now - k - j), 0)
+  const online_minutes = minutes.map((_, i) => (five(0) > 0 ? Math.round((five(29 - i) * n) / five(0)) : 0))
   const r = mulberry(hash(`${id}|live|${Math.floor(now / 2)}`))
   const recent: NowVisit[] = []
   if (tot > 0)
@@ -57,6 +60,7 @@ export function nowOf(c: Ctx, id: string): LiveNow {
     start: (Math.floor(at / MINUTE) - 29) * MINUTE,
     minutes,
     online: n,
+    online_minutes,
     visitors: Math.round(minutes.reduce((p, q) => p + q, 0)),
     previous: Math.round(previous),
     sources: SRCS.map((s, i) => ({ channel: s.name, visitors: Math.round((tot > 0 ? mix[i] / tot : 0) * 1000) })).sort((a, b) => b.visitors - a.visitors),

@@ -6,6 +6,8 @@ export const copy = defineCopy('v2.live', {
   live: 'Live',
   openMinute: (at: string) => `Open ${at} in the numbers`,
   viewsAt: (n: number) => (n === 1 ? '1 view' : `${fmtInt(n)} views`),
+  peopleAt: (n: number) => (n === 1 ? '1 on the site' : `${fmtInt(n)} on the site`),
+  peopleLabel: 'People on the site each minute over the last 30 minutes',
   minsLabel: (n: number) => `Views per minute over the last 30 minutes: ${n} in all`,
   window: (at: string) => `Last 30 minutes · ${at}`,
   onlineNow: 'On the site now',

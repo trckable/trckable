@@ -24,20 +24,21 @@ afterEach(() => {
 })
 
 const bars = [{ h: 3, z: true, n: 0 }, { h: 50, z: false, n: 5 }, { h: 100, z: false, n: 1 }]
+const people = [{ h: 3, z: true, n: 0 }, { h: 60, z: false, n: 3 }, { h: 100, z: false, n: 1 }]
 const chart = (mode: 'bars' | 'line') => {
-  act(() => root.render(<MinuteChart bars={bars} mode={mode} total={6} beat={0} minute={1} phone={false} timezone="UTC" label={(ago) => `10:0${2 - ago}`} />))
+  act(() => root.render(<MinuteChart bars={bars} people={people} mode={mode} total={6} beat={0} minute={1} phone={false} timezone="UTC" label={(ago) => `10:0${2 - ago}`} />))
   return [...host.querySelectorAll<HTMLElement>(mode === 'bars' ? '.mins i' : '.mhits i')]
 }
 const fire = (el: Element, type: string, init: object = {}) => act(() => void el.dispatchEvent(new (type.startsWith('pointer') ? PointerEvent : MouseEvent)(type, { bubbles: true, ...init })))
 const tip = () => host.querySelector('[role=status]')
 
 describe('the half hour chart tooltip', () => {
-  for (const mode of ['bars', 'line'] as const) {
-    it(`shows the minute and its views on hover in ${mode}, and hides on leave`, () => {
+  for (const [mode, words] of [['bars', '5 views'], ['line', '3 on the site']] as const) {
+    it(`shows the minute and ${mode === 'bars' ? 'its views' : 'the people on the site'} on hover in ${mode}, and hides on leave`, () => {
       const hit = chart(mode)[1]
       fire(hit, 'pointerover', { pointerType: 'mouse' })
       expect(tip()?.textContent).toContain('10:01')
-      expect(tip()?.textContent).toContain('5 views')
+      expect(tip()?.textContent).toContain(words)
       fire(hit, 'pointerout', { pointerType: 'mouse', relatedTarget: document.body })
       expect(tip()).toBeNull()
     })
@@ -54,7 +55,7 @@ describe('the half hour chart tooltip', () => {
     const hit = chart('line')[2]
     fire(hit, 'pointerdown', { pointerType: 'touch' })
     fire(hit, 'click')
-    expect(tip()?.textContent).toContain('1 view')
+    expect(tip()?.textContent).toContain('1 on the site')
     expect(openMinute).not.toHaveBeenCalled()
     fire(hit, 'pointerdown', { pointerType: 'touch' })
     fire(hit, 'click')

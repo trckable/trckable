@@ -44,6 +44,20 @@ export function seriesAt(now: LiveNow, visits: readonly Visit[], at: number): nu
   return withVisits(shiftTo({ start: now.start, minutes: now.minutes }, at), visits, now.at).minutes
 }
 
+/**
+ * The line's series at `at`: people on the site each minute, as the answer read them, moved on to the minute
+ * `at` is in. Visits from the stream are not guessed at: the minutes that passed carry the live count, and the
+ * last point is always `online`, so the line ends on the number beside it.
+ */
+export function peopleAt(now: LiveNow, online: number, at: number): number[] {
+  const read = now.online_minutes ?? new Array<number>(now.minutes.length).fill(0)
+  const minutes = shiftTo({ start: now.start, minutes: read }, at).minutes
+  const steps = Math.max(0, Math.min(minutes.length, Math.floor((at - now.start) / MINUTE) - (minutes.length - 1)))
+  const out = minutes.map((n, i) => (i >= minutes.length - steps ? online : n))
+  if (out.length) out[out.length - 1] = online
+  return out
+}
+
 export type Row = NowVisit & { key: string }
 
 /** A row's identity: the visitor when journeys lets us know them; otherwise

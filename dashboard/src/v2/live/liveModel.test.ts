@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Row } from '../../features/live/model'
+import { peopleAt } from '../../features/live/model'
+import type { LiveNow } from '../../features/live/api'
 import { fitOf } from './cardWidth'
 import { visitors30, barsOf, changeOf, deviceCounts, listsOf, place, sourceParts, todayBand, usualLine } from './liveModel'
 
@@ -78,5 +80,17 @@ describe('a quiet half hour', () => {
 describe('fitOf', () => {
   it('tells how roomy the card is', () => {
     expect([fitOf(420), fitOf(479), fitOf(480), fitOf(559), fitOf(560), fitOf(900)]).toEqual(['tiny', 'tiny', 'narrow', 'narrow', 'wide', 'wide'])
+  })
+})
+
+describe('the line of people on the site', () => {
+  const read = { at: 0, start: 0, minutes: [0, 0, 0], online_minutes: [2, 4, 3], online: 3 } as unknown as LiveNow
+  it('plots the read series and pins its end to the live count', () => {
+    expect(peopleAt(read, 3, 2 * 60_000)).toEqual([2, 4, 3])
+    expect(peopleAt(read, 5, 2 * 60_000)).toEqual([2, 4, 5])
+  })
+  it('moves on with the clock, carrying the live count into the minutes that passed', () => {
+    expect(peopleAt(read, 3, 4 * 60_000)).toEqual([3, 3, 3])
+    expect(peopleAt(read, 6, 3 * 60_000)).toEqual([4, 3, 6])
   })
 })

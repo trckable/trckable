@@ -24,6 +24,7 @@ import { queryOf } from '../../lib/dashQuery'
 import { readView } from '../../lib/url'
 import { AnswersSlot } from './AnswersSlot'
 import { BounceNote } from './BounceNote'
+import { NumbersRow } from './NumbersRow'
 import { PaceFoot } from './PaceFoot'
 import { KeyHint } from '../ui/KeyHint'
 import { Kcs } from '../ui/KpiCard'
@@ -42,7 +43,7 @@ import { againstName, wholeBefore } from './compare'
 import { LOOKED_AT, sinceOf } from './since'
 import { goExplore, seeScorePart } from './deeper'
 import { useSetup, useSinceCount, useUptime, useUsual } from './hooks'
-import { bounceNote, kpiCards, pctText, peopleNoteOf } from './kpis'
+import { kpiCards, pctText } from './kpis'
 import { unitOf } from './model'
 import { calmTopics } from './cards'
 import { Hold } from '../ui/Hold'
@@ -147,13 +148,10 @@ export default function Briefing({ site, data: page, loading, period, compare = 
     prev,
     learning,
     before,
-    people: { note: peopleNoteOf({ verdict: parts.verdict, learning, usual, unit, prev, v, before }), vals: pts.map((p) => p.v) },
     goal: goalSlice.length ? { vals: goalSlice.slice(0, pts.length) } : null,
     viewsVals: cur.series.slice(0, pts.length).map((p) => p.pageviews),
-    leave: { note: bounceNote(cur.kpis.bounce_rate, parts.bounceUsual), vals: pts.map((_, i) => cur.series[i]?.bounce_rate ?? 0) },
     uptime,
     low,
-    peopleVerdict: parts.verdict,
     moneyBand: parts.moneyBand,
     goalBand: slices.goals.find((g) => g.value === goalValue)?.band ?? null,
     uptimePct: pctText(pct),
@@ -172,7 +170,6 @@ export default function Briefing({ site, data: page, loading, period, compare = 
   const cards = empty ? quiet : <CardList list={shown} c={listCtx} />
   const { act, setups } = nudge({ site, cur, stories, top, downNow, can: setupState.can, shared: isShared(), noSearch: setupState.noSearch, noAlerts: setupState.noAlerts, want: setupState.want, onGoal })
   const heroWhy = stories.find((x) => x.key === 'uptime')?.cause ?? stories.find((x) => x.key === 'sources')?.cause ?? (usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : null)
-  if (kcs[0] && heroWhy && !stories.find((x) => x.key === 'uptime')) kcs[0].why = usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : undefined
   const sales = cur.money?.payments ?? 0
   const lockSec = dayStart + LOOKED_AT * 3600
   const down = downSeconds(up.list, lockSec, nowSec, nowSec)
@@ -199,6 +196,7 @@ export default function Briefing({ site, data: page, loading, period, compare = 
           onSee={(k) => seeScorePart(site, k)}
           learn={learning ? { day: Math.min(7, parts.hd + 1) } : null}
           crowd={crowd}
+          numbers={empty || learning ? undefined : <NumbersRow cur={cur} prev={prev} money={money} pace={<PaceFoot site={site.id} today={today} range={range} />} />}
           since={since}
           period={label}
           onPeriod={() => document.querySelector<HTMLElement>('#perBtn')?.click()}
@@ -213,7 +211,7 @@ export default function Briefing({ site, data: page, loading, period, compare = 
             )
           }
         />
-        {!empty && <Kcs items={kcs} foot={{ people: <PaceFoot site={site.id} today={today} range={range} /> }} />}
+        {!empty && <Kcs items={kcs} />}
         <div className="npw">
           {lock.queued.length > 0 && (
             <button type="button" className="newpill" onClick={lock.release}>

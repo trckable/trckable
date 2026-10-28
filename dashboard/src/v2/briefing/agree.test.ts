@@ -5,7 +5,6 @@ import { usualNote } from './kpis'
 import { overall, sentence, sourceName, trafficFromBand, WEIGHT } from './model'
 import { moments, streak } from './moments'
 import { bandFromWeeks, dayBandOf, periodBand, usualPeople, verdictOf } from './usual'
-import { kpiCards } from './kpis'
 
 const cur = (v: number): Result => ({ approximate: false, kpis: { visitors: v, sessions: v, pageviews: v, bounce_rate: 0.5, avg_session_s: 60, views_per_session: 1, new_visitor_share: 0.5 }, series: [], dims: {}, goals: null })
 
@@ -82,8 +81,6 @@ describe('one band for the same people on the same day', () => {
   it('never calls a number above a usual of nothing: too little history says so', () => {
     expect(verdictOf(2, hourly)).toBeNull()
     expect(verdictOf(2, { c: 0, lo: 0, hi: 0.4 })).toBeNull()
-    const kc = kpiCards({ cur: { ...cur(2), series: [] }, learning: false, before: 'x', people: { note: { t: 'p' }, vals: [] }, goal: null, viewsVals: [], leave: { note: { t: 'l' }, vals: [] }, uptime: { key: 'uptime', value: 100, verdict: 'clear', words: '' } as never, low: true, peopleVerdict: null, uptimePct: '100', uptimeVals: [], moneyVals: [] })
-    expect(kc[0].note?.t).toBe('learning')
   })
 })
 

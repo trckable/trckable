@@ -15,7 +15,7 @@ import { plainSpan } from '../../lib/plainSpan'
 import { downStateOf } from '../../features/sitestatus/status'
 import { whyDown } from '../briefing/why'
 import { liveCount, liveLink } from '../../features/live/liveLink'
-import { feedOf, seriesAt } from '../../features/live/model'
+import { feedOf, peopleAt, seriesAt } from '../../features/live/model'
 import type { Busier, LiveNow } from '../../features/live/api'
 import { useTicking } from '../../features/live/useTicking'
 import { AnalyticsCard } from './AnalyticsCard'
@@ -106,6 +106,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   if (!data) return <div className="liveview" role="region" aria-label={copy.live}><p className="mk-quiet">{failed ? copy.failed : copy.loading}</p></div>
   const n = online ?? 0
   const bars = barsOf(seriesAt(data, stream.visits, now))
+  const people = barsOf(peopleAt(data, n, now))
   const phone = window.matchMedia(QUERY.xs).matches // a thumb taps the bar; it is no target to tab to
   const ch = changeOf(data.visitors, data.previous)
   const src = sourceParts(data.sources)
@@ -155,7 +156,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
               <WhyInline why={whyDown({ domain: whole?.domain ?? '', cause: whole?.down_cause, minutes: 0, ongoing: true })} />
             </div>
           )}
-          <MinuteChart bars={bars} mode={mode} total={visitors30(data.visitors, online)} beat={beat} minute={Math.floor(now / 60_000)} phone={phone} timezone={timezone} label={(ago) => at(now - ago * 60_000)} />
+          <MinuteChart bars={bars} people={people} mode={mode} total={visitors30(data.visitors, online)} beat={beat} minute={Math.floor(now / 60_000)} phone={phone} timezone={timezone} label={(ago) => at(now - ago * 60_000)} />
           <div className="minl">
             <span>{copy.ago30}</span>
             <span>{copy.nowWord}</span>

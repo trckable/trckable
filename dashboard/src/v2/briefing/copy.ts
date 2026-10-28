@@ -191,6 +191,14 @@ export const copy = defineCopy('briefing', {
   noteBtn: (n: number) => (n > 0 ? `Notes (${n})` : 'Notes'),
   // The four numbers.
   people: 'People',
+  // The numbers row under the headline.
+  numbersLabel: 'Key numbers',
+  numVisitors: 'Visitors',
+  numRevenue: 'Revenue',
+  numConversion: 'Conversion rate',
+  numPerVisitor: 'Revenue per visitor',
+  numBounce: 'Bounce rate',
+  numSession: 'Session time',
   views: 'Pageviews',
   uptimeCard: 'Uptime',
   left: 'Left after one page',
