@@ -101,7 +101,7 @@ describe('the globe popover', () => {
     }
     const ptr = (el: HTMLElement, type: string, id: number, x: number, y: number) => act(() => void el.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: id, pointerType: 'touch', clientX: x, clientY: y })))
 
-    it('zooms with Ctrl or Cmd and the wheel, leaves a plain wheel to the page, and stays between 1x and 16x', () => {
+    it('zooms with Ctrl or Cmd and the wheel, leaves a plain wheel to the page, and stays between 1x and 8x', () => {
       const { box, globe, root } = mount([row(1)])
       const plain = wheel(stage(box), { deltaY: -300, clientX: 10, clientY: 10 })
       expect(plain.defaultPrevented).toBe(false)
@@ -110,7 +110,7 @@ describe('the globe popover', () => {
       expect(globe().zoomT).toBeGreaterThan(1)
       expect(pinch.defaultPrevented).toBe(true)
       for (let i = 0; i < 40; i++) wheel(stage(box), { deltaY: -400, metaKey: true })
-      expect(globe().zoomT).toBe(16)
+      expect(globe().zoomT).toBe(8)
       for (let i = 0; i < 80; i++) wheel(stage(box), { deltaY: 400, metaKey: true })
       expect(globe().zoomT).toBe(1)
       act(() => root.unmount())

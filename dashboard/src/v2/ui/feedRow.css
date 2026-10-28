@@ -22,3 +22,4 @@
 .mk .lfeed[data-narrow] .lv .vn { display: none; }
 .mk .lfeed[data-narrow] .lv .mk-rp { width: 18px; }
 .mk .lfeed[data-narrow] .lv .mk-rp em { display: none; }
+.mk .lfeed .lv .tm { width: 30px; flex: none; text-align: right; color: var(--mk-muted); font-size: 12.5px; }

@@ -23,9 +23,9 @@ const LEAVE_MS = 600
 /** A pin's tap target, in CSS pixels across. */
 const HIT = 44
 const CARD = 32
-/** How far in the globe zooms. */
+/** How far in the globe zooms: past 8x the Earth pictures go soft. */
 const ZOOM_MIN = 1
-const ZOOM_MAX = 16
+const ZOOM_MAX = 8
 /** Under this stage width the popover is a sheet over the foot of the globe, not beside the pin. */
 const SHEET_W = 700
 /** Room the open popover takes beside its pin. */
