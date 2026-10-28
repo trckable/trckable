@@ -143,7 +143,7 @@ export function GlobeStage({ pins, people, sel, full, onPick, onCrowd, children 
       globe.current?.focus(next.lat, next.lon)
     } else if ((e.key === 'Enter' || e.key === ' ') && at >= 0) {
       e.preventDefault()
-      onPick(list[at].key)
+      if (!globe.current?.activate(list[at].key)) onPick(list[at].key)
     }
   }
   const tipPin = tip && tip !== sel?.key ? pins.find((p) => p.key === tip) : undefined

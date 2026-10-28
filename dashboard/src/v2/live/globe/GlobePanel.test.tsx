@@ -177,6 +177,21 @@ describe('a marker zooming cannot split', () => {
     expect(box.querySelectorAll('[role=dialog] .gcrow')).toHaveLength(20)
     act(() => root.unmount())
   })
+
+  it('opens the same list when Enter is pressed on a focused pin of the marker', () => {
+    const rows = Array.from({ length: 3 }, (_, i) => row(i + 1, { visitor: `vis-${i}` }))
+    const { box, globe, root } = mount(rows)
+    ;(globe() as unknown as { group: (r: number) => void }).group(1e7)
+    const stage = box.querySelector('.gstage') as HTMLElement
+    const press = (key: string) => act(() => void stage.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })))
+    press('Enter') // nothing focused yet: nothing opens
+    expect(box.querySelector('[role=dialog]')).toBeNull()
+    press('ArrowRight')
+    press('Enter')
+    expect(box.querySelector('[role=dialog]')?.textContent).toContain('3 people in Berlin')
+    expect(box.querySelectorAll('[role=dialog] .gcrow')).toHaveLength(3)
+    act(() => root.unmount())
+  })
 })
 
 describe('the markers', () => {
