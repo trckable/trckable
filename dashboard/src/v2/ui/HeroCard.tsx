@@ -98,6 +98,8 @@ interface HeroProps {
   onPeriod: () => void
   /** A quiet site: its people as dots, not a score. */
   crowd?: Crowd | null
+  /** The key numbers, a row under the headline and above the chart. */
+  numbers?: ReactNode
   /** The chart, drawn in the card's lower half. */
   chart: ReactNode
   /** The pills under the buttons (a run above usual); the record day is a star on the chart. */
@@ -114,7 +116,7 @@ interface HeroProps {
   why?: Why | null
 }
 
-export function Hero({ say, scores, rows, onSee, learn, crowd = null, since, period, onPeriod, chart, moments, onReplay, replaying, extra, enter, why }: HeroProps) {
+export function Hero({ say, scores, rows, onSee, learn, crowd = null, since, period, onPeriod, chart, numbers, moments, onReplay, replaying, extra, enter, why }: HeroProps) {
   const [open, setOpen] = useState(false)
   const [sheet, setSheet] = useState<Score['key'] | 'all' | null>(null)
   return (
@@ -169,6 +171,7 @@ export function Hero({ say, scores, rows, onSee, learn, crowd = null, since, per
         </div>
         <Side scores={scores} learn={learn} crowd={crowd} onOpen={setSheet} />
       </div>
+      {numbers}
       {chart}
       {sheet && <ScoreSheet rows={rows} only={sheet === 'all' ? null : sheet} onSee={onSee} onClose={() => setSheet(null)} />}
     </section>

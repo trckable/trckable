@@ -1,0 +1,38 @@
+/* The key numbers under the headline: one row that fills its width, two columns of three on a phone. */
+.mk .hero .nrow {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 6), minmax(0, 1fr));
+  gap: var(--mk-s4) var(--mk-s3);
+  margin: var(--mk-s4) 0 0;
+}
+.mk .hero .nfig { min-width: 0; }
+.mk .hero .nfig dt {
+  font-size: 12px;
+  color: var(--mk-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mk .hero .nfig dd { margin: 0; }
+.mk .hero .nv {
+  font-size: clamp(18px, 2.2vw, 24px);
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mk .hero .nd {
+  font-size: 12px;
+  color: var(--mk-muted);
+  min-height: 1.4em;
+  font-variant-numeric: tabular-nums;
+}
+/* A change reads by its arrow and sign as well as its colour; for bounce rate a rise is the bad one. */
+.mk .hero .nd.up, .mk .hero .nd.better { color: var(--mk-lime); }
+.mk .hero .nd.down, .mk .hero .nd.worse { color: var(--mk-red); }
+@media (--xs) {
+  .mk .hero .nrow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .mk .hero .nfig dt { white-space: normal; }
+}
