@@ -14,7 +14,7 @@ export interface FieldProps {
 }
 
 /** `plain`: the control names itself (a picker), so the label is only text. */
-export function Field({ label, help, error, plain, children }: { label: string; help?: string; error?: string | null; plain?: boolean; children: (p: FieldProps) => ReactNode }) {
+export function Field({ label, help, error, plain, children }: { label: ReactNode; help?: string; error?: string | null; plain?: boolean; children: (p: FieldProps) => ReactNode }) {
   const id = useId()
   const errId = id + '-err'
   return (

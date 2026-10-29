@@ -2,7 +2,7 @@
 // Adding a site is a short wizard (features/install: your site → install →
 // revenue), and each
 // site can be renamed or removed from the same list.
-import { Check, Plus, Settings2, TriangleAlert } from 'lucide-react'
+import { Check, Copy, Plus, Settings2, TriangleAlert } from 'lucide-react'
 import { HoldButton } from '../components/HoldButton'
 import { closeAccount } from '../lib/account'
 import { SiteMark } from '../components/SiteMark'
@@ -12,7 +12,7 @@ import { Modal, type Frame } from '../kit/Modal'
 import { ModalMark } from '../kit/ModalMark'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import { Picker } from '../components/Picker'
-import { useEffect, useState } from 'react'
+import { type MouseEvent, useEffect, useState } from 'react'
 import { siteState, stoppedWhy, fail, type Site, type SiteState, more } from '../lib/apiMore'
 import { fmtInt } from '../lib/format'
 import { navigate } from '../lib/url'
@@ -326,7 +326,7 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
             </ul>
           </div>
           <div className="danger-type">
-            <Field label={`Type ${site.domain} to continue`}>
+            <Field label={<>Type <NameBadge name={site.domain} /> to continue</>}>
               {(f) => (
                 <input
                   {...f}
@@ -393,5 +393,25 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
         </>
       )}
     </Modal>
+  )
+}
+
+/** The name to type, as a badge with a copy button: the same as typing it, for whoever would rather paste. */
+function NameBadge({ name }: { name: string }) {
+  const [copied, setCopied] = useState(false)
+  const copy = (e: MouseEvent) => {
+    e.preventDefault() // inside the field's label: copying should not move the focus
+    void navigator.clipboard?.writeText(name).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1400)
+    })
+  }
+  return (
+    <span className="name-badge">
+      <code>{name}</code>
+      <button type="button" onClick={copy} aria-label={copied ? 'Copied' : `Copy ${name}`} title={copied ? 'Copied' : 'Copy'}>
+        {copied ? <Check size={13} /> : <Copy size={13} />}
+      </button>
+    </span>
   )
 }

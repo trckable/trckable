@@ -226,6 +226,37 @@
 .danger-type .input {
   font-family: var(--mono);
 }
+/* The name to type: a badge with its own copy button. */
+.name-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 2px;
+  padding: 1px 2px 1px 8px;
+  border-radius: 6px;
+  background: var(--border);
+  color: var(--text);
+  vertical-align: baseline;
+}
+.name-badge code {
+  font-family: var(--mono);
+  font-size: 0.95em;
+}
+.name-badge button {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.name-badge button:hover {
+  color: var(--text);
+  background: var(--border);
+}
 .danger-working {
   display: grid;
   justify-items: center;
