@@ -137,6 +137,9 @@ const TABLES: Partial<Record<Tab, TableCfg>> = {
 /** A visit has one entry page but many pages and sections, and a sale belongs to the visit: nothing to attribute to those. */
 const NO_SALE = new Set(['page', 'group', 'exit_page', 'hostname'])
 
+/** Signups are counted for the visit's own dimensions; a page or a section is not one. */
+const NO_SIGNUP = new Set(['page', 'group', 'hostname'])
+
 /** A table of people for one tab: the dimension's rows against the period before, each said in its own words. */
 export function mapTable(tab: Tab, r: Report): Table {
   const t = TABLES[tab]
@@ -150,7 +153,13 @@ export function mapTable(tab: Tab, r: Report): Table {
     for (const x of r.current.revenue_dims?.[t.key] ?? []) paid.set(x.value, x)
     for (const x of r.current.dims[t.key] ?? []) if (x.revenue !== undefined) paid.set(x.value, x)
   }
-  const extra = (v: string): Partial<Row> => ({ ...(t.code ? { code: v } : {}), ...(sales ? { cust: paid.get(v)?.customers ?? 0, rev: paid.get(v)?.revenue ?? 0 } : {}) })
+  const signups = !!r.current.signup && !NO_SIGNUP.has(t.key)
+  const joined = new Map((r.current.dims[t.key] ?? []).map((x) => [x.value, x.signups ?? 0]))
+  const extra = (v: string): Partial<Row> => ({
+    ...(t.code ? { code: v } : {}),
+    ...(signups ? { su: joined.get(v) ?? 0 } : {}),
+    ...(sales ? { cust: paid.get(v)?.customers ?? 0, rev: paid.get(v)?.revenue ?? 0 } : {}),
+  })
   const rows = rowsOf(r.current.dims[t.key], r.previous?.dims[t.key], r.previous?.kpis.visitors, t.name, extra)
   return { rows, dim: t.dim, of: r.current.kpis.visitors }
 }

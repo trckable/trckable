@@ -75,7 +75,7 @@ export const copy = defineCopy('v2explore', {
   underOne: '<1%',
   usual: 'usual',
   below: 'below',
-  heads: { page: 'Page', source: 'Source', country: 'Country', device: 'Device', referrer: 'Referrer', campaign: 'Campaign', browser: 'Browser', link: 'Link', clicks: 'Clicks', exit: 'Exit page', group: 'Page group', region: 'Region', city: 'City', utmSource: 'UTM source', medium: 'UTM medium', version: 'Browser version', screen: 'Screen width', language: 'Language', conv: 'Conversion', revenue: 'Revenue', read: 'AI reads', sent: 'Sent' },
+  heads: { page: 'Page', source: 'Source', country: 'Country', device: 'Device', referrer: 'Referrer', campaign: 'Campaign', browser: 'Browser', link: 'Link', clicks: 'Clicks', exit: 'Exit page', group: 'Page group', region: 'Region', city: 'City', utmSource: 'UTM source', medium: 'UTM medium', version: 'Browser version', screen: 'Screen width', language: 'Language', signups: 'Signups', conv: 'Conversion', revenue: 'Revenue', read: 'AI reads', sent: 'Sent' },
   showAll: (n: number) => `Show all (${n})`,
   showAllPages: 'Show all pages',
   showAllSources: 'Show all sources',

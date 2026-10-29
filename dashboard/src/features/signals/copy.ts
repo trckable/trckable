@@ -5,6 +5,8 @@ import { defineCopy } from '../../i18n'
 
 export const signals = defineCopy('signals', {
   sale: (amount: string) => `Cha-ching! ${amount}`,
+  /** A person reached the signup goal; who is left out where the site does not know people apart. */
+  signup: (who: string, source: string) => ['New signup', who, source].filter(Boolean).join(' · '),
   /** Money found late says when it really happened. */
   late: (line: string, time: string) => `${line} · ${time}`,
   // Settings.

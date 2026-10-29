@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/query"
+	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
 // Report serves GET /api/v1/sites/{site}/report
@@ -112,6 +113,9 @@ func (a *API) parse(w http.ResponseWriter, r *http.Request, siteID string, allow
 		Groups:      contentGroups(r.Context(), a, siteID),
 		SundayWeeks: sundayWeeks(r.Context(), a, siteID),
 		PageGoals:   pageGoals(r.Context(), a, siteID),
+	}
+	if params.Goals {
+		params.SignupGoal = signupGoal(r.Context(), a, siteID, params.PageGoals)
 	}
 
 	var prev, prevFull *query.Params
@@ -356,6 +360,22 @@ func pageGoals(ctx context.Context, a *API, site string) []query.Group {
 	return out
 }
 
+// signupGoal is the goal this site counts as its signup: the one its owner
+// picked, none when they said so, else the one that is called a signup.
+func signupGoal(ctx context.Context, a *API, site string, pages []query.Group) string {
+	c, err := a.Ctl.SiteConfig(ctx, site)
+	if err != nil {
+		return ""
+	}
+	switch c.SignupGoal {
+	case sqlite.SignupNone:
+		return ""
+	case "":
+		return query.AutoSignup(a.goalNames(ctx, site), pages)
+	}
+	return c.SignupGoal
+}
+
 func cacheKey(p query.Params) string {
 	fs := make([]string, len(p.Filters))
 	for i, f := range p.Filters {
@@ -369,7 +389,7 @@ func cacheKey(p query.Params) string {
 	for _, g := range p.PageGoals {
 		gs = append(gs, "goal:"+g.Name+"="+g.Path)
 	}
-	return fmt.Sprintf("%s|%d|%d|%s|%s|%v|%v|%v|%s|%s|%v|%v|%v|%s|%s|%v|%v|%d|%d|%d|%v", p.Site, p.From.Unix(), p.To.Unix(), p.TZ, p.Bucket, p.SundayWeeks, p.Daily, p.Deep, strings.Join(fs, "&"), p.Currency, p.Test, p.Revenue, p.Goals, p.Attribution, strings.Join(gs, "&"), p.Sales, p.SalePages, p.Limit, p.Buyers, p.NewReferrers, p.LinkRevenue)
+	return fmt.Sprintf("%s|%d|%d|%s|%s|%v|%v|%v|%s|%s|%v|%v|%v|%s|%s|%v|%v|%d|%d|%d|%v|%s", p.Site, p.From.Unix(), p.To.Unix(), p.TZ, p.Bucket, p.SundayWeeks, p.Daily, p.Deep, strings.Join(fs, "&"), p.Currency, p.Test, p.Revenue, p.Goals, p.Attribution, strings.Join(gs, "&"), p.Sales, p.SalePages, p.Limit, p.Buyers, p.NewReferrers, p.LinkRevenue, p.SignupGoal)
 }
 
 // shareReportRange is the longest period a public link may ask for.

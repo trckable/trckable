@@ -23,6 +23,7 @@ export const copy = defineCopy('goals', {
     js: 'It shows up in Goals after the first event. Nothing to save.',
     api: 'It shows up in Goals after the first event. Nothing to save.',
   },
+  signup: { label: 'Counts as signup', help: 'The goal behind Signups and the signup rate.', auto: 'Automatic', none: 'None', saved: (n: string) => `${n} counts as the signup`, savedNone: 'No goal counts as the signup', savedAuto: 'The signup is picked by its name' },
   name: 'Goal name',
   namePlaceholder: 'Saw pricing',
   page: 'Page',

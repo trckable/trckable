@@ -26,7 +26,12 @@ export interface Row {
   bounce_rate?: number
   revenue?: number // attributed net revenue, minor units
   customers?: number
+  /** People who reached the signup goal (when the site has one). */
+  signups?: number
 }
+
+/** `signup_goal` when the site has no signup. */
+export const SIGNUP_NONE = '!none'
 
 export interface Money {
   currency: string
@@ -80,6 +85,8 @@ export interface Result {
   days?: Day[]
   money?: Money
   revenue_dims?: Record<string, Row[] | null>
+  /** The goal that counts as the site's signup and the people who reached it; absent when the site has none. */
+  signup?: { goal: string; visitors: number }
 }
 
 export interface Report {
@@ -386,6 +393,8 @@ export interface SiteConfig {
   groups: ContentGroup[]
   /** Goals reached by visiting a page: "Saw pricing = /pricing". */
   page_goals?: ContentGroup[]
+  /** The goal that counts as the signup: empty picks the one called a signup, SIGNUP_NONE says there is none. */
+  signup_goal?: string
   banner: BannerText
 }
 

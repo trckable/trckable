@@ -4,6 +4,7 @@ import type { Busier, LiveNow, NowVisit } from '../../features/live/api'
 import { CTYS, DEVS, END, NS, SRCS, type SiteDef } from './data'
 import { countIn, online, REFS, siteOf, type Ctx } from './report'
 import { hash, mulberry, pick } from './rand'
+import { goalsOf } from './visits'
 
 const MINUTE = 60000
 
@@ -54,6 +55,9 @@ export function nowOf(c: Ctx, id: string): LiveNow {
       const ts = at - (4 + i * 5) * 1000
       recent.push({ kind: 'pageview', ts, last: ts, visitor: `lv${i}`, path: site.pages[pick(r, site.pg[s])][0], channel: SRCS[s].name, country: CTYS[ct].id, city: CITIES[CTYS[ct].id]?.[i % 2], device: DEVS[dv].name })
     }
+  // A person who has just signed up, when the site has a signup goal.
+  const signup = c.conn.goals ? goalsOf(site).find((g) => /^(sign-?up|signed-?up)$/.test(g.key)) : undefined
+  if (signup && recent.length > 2) recent[2] = { ...recent[2], kind: 'goal', path: undefined, goal: signup.key, label: signup.label }
   const today = countIn(c, id, END * 1440, c.nowAbs + 1, [])
   const out: LiveNow = {
     at,
@@ -65,6 +69,7 @@ export function nowOf(c: Ctx, id: string): LiveNow {
     previous: Math.round(previous),
     sources: SRCS.map((s, i) => ({ channel: s.name, visitors: Math.round((tot > 0 ? mix[i] / tot : 0) * 1000) })).sort((a, b) => b.visitors - a.visitors),
     recent,
+    ...(signup ? { signup: signup.key } : {}),
   }
   if (c.w.sc.since?.[id] == null || today > 0) out.today = { visitors: today, before: Math.round(usualOf(c, id, []).c), compare: true, hours: [], last: [] }
   return out

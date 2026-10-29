@@ -11,6 +11,12 @@ export const BELL_PATH: Record<string, ReactNode> = {
       <path d="M12 8v8M9.5 10c0-1 1-1.6 2.5-1.6s2.5.6 2.5 1.6-1 1.4-2.5 1.6-2.5.7-2.5 1.7 1 1.6 2.5 1.6 2.5-.6 2.5-1.6" />
     </>
   ),
+  signup: (
+    <>
+      <circle cx="10" cy="9" r="3" />
+      <path d="M4 19c0-3.3 2.7-5 6-5s6 1.7 6 5M18 8v6M15 11h6" />
+    </>
+  ),
   failed: (
     <>
       <circle cx="12" cy="12" r="8" />

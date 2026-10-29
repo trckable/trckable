@@ -84,6 +84,9 @@ type Params struct {
 	// NewReferrers adds the referring sites that sent nobody before the period
 	// (Result.NewReferrers): this many, the busiest first.
 	NewReferrers int
+	// SignupGoal is the goal that counts as a signup (a custom goal's key or a
+	// page goal's name). Empty: the site has none, and nothing is counted.
+	SignupGoal string
 }
 
 // KPIs are the headline numbers.
@@ -108,6 +111,7 @@ type Row struct {
 	Bounce    float64 `json:"bounce_rate,omitempty"`
 	Revenue   *int64  `json:"revenue,omitempty"` // attributed net revenue, minor units (when payments are connected)
 	Payers    int64   `json:"customers,omitempty"`
+	Signups   int64   `json:"signups,omitempty"` // people who reached the signup goal (when the site has one)
 }
 
 // Point is one chart bucket.
@@ -150,6 +154,7 @@ type Result struct {
 	Hosts        int              `json:"hosts,omitempty"` // domains the period saw, when 2 or more (then Dims["hostname"] lists them)
 	Goals        []Row            `json:"goals"`
 	Days         []Day            `json:"days,omitempty"`
+	Signup       *Signup          `json:"signup,omitempty"`       // nil unless the site has a signup goal
 	Money        *Money           `json:"money,omitempty"`        // nil until a payment provider is connected
 	RevenueDims  map[string][]Row `json:"revenue_dims,omitempty"` // top rows by revenue
 	Sales        []SaleBucket     `json:"-"`                      // with Params.Sales: the payments per bucket
@@ -391,6 +396,11 @@ func (q Q) report(ctx context.Context, p Params) (*Result, error) {
 			if len(res.Goals) > p.Limit {
 				res.Goals = res.Goals[:p.Limit]
 			}
+		}
+	}
+	if p.SignupGoal != "" {
+		if err := signups(ctx, conn, p, cte, args, distinct, res); err != nil {
+			return nil, err
 		}
 	}
 	if len(p.Groups) > 0 {

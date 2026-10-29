@@ -24,6 +24,8 @@ export interface LiveNow {
   revenue?: { amount: number; currency: string; exponent: number }
   // The site's day so far against the same time a week ago; absent when the server cannot tell.
   today?: NowToday
+  // The key of the goal that counts as the site's signup: its rows in the list are marked.
+  signup?: string
 }
 
 export interface NowToday {

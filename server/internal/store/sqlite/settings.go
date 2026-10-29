@@ -33,6 +33,10 @@ type SiteConfig struct {
 	// PageGoals are goals completed by visiting a page: "Saw pricing =
 	// /pricing". Unlike groups, one page view can complete several.
 	PageGoals []Group `json:"page_goals"`
+	// SignupGoal is the goal that counts as the site's signup: a custom goal's
+	// name or a page goal's name. Empty picks one that is called a signup
+	// (query.AutoSignup); SignupNone says there is none.
+	SignupGoal string `json:"signup_goal"`
 	// Banner is how the consent module asks. Every field is optional; empty
 	// wording means the built-in English.
 	Banner BannerText `json:"banner"`
@@ -40,6 +44,9 @@ type SiteConfig struct {
 	// ipfilter.Max): visits from them are dropped before anything is hashed.
 	ExcludeIPs []string `json:"exclude_ips"`
 }
+
+// SignupNone is SignupGoal when the owner said the site has no signup.
+const SignupNone = "!none"
 
 // BannerText is what trckable's cookie bar says and how it looks. It asks
 // about one cookie, so there is little to say; everything else here is so the
@@ -100,6 +107,7 @@ func (s *Store) SiteConfig(ctx context.Context, site string) (SiteConfig, error)
 	if err := s.DB.QueryRowContext(ctx, `SELECT hash_mode FROM sites WHERE id = ?`, site).Scan(&hash); err == nil {
 		c.HashMode = hash == 1
 	}
+	_ = s.DB.QueryRowContext(ctx, `SELECT goal FROM site_signup_goal WHERE site_id = ?`, site).Scan(&c.SignupGoal) // no row: auto
 	var paths, ips, groups, banner, pageGoals string
 	var dnt, city, strict, free int
 	err := s.DB.QueryRowContext(ctx, `
@@ -277,6 +285,14 @@ func (s *Store) SetSiteConfig(ctx context.Context, site string, c SiteConfig) er
 		return err
 	}
 	if _, err := s.DB.ExecContext(ctx, `UPDATE sites SET hash_mode = ? WHERE id = ?`, b(c.HashMode), site); err != nil {
+		return err
+	}
+	if goal := strings.TrimSpace(c.SignupGoal); goal == "" {
+		_, err = s.DB.ExecContext(ctx, `DELETE FROM site_signup_goal WHERE site_id = ?`, site)
+	} else {
+		_, err = s.DB.ExecContext(ctx, `INSERT INTO site_signup_goal (site_id, goal) VALUES (?, ?) ON CONFLICT (site_id) DO UPDATE SET goal = excluded.goal`, site, goal)
+	}
+	if err != nil {
 		return err
 	}
 	return s.reloadSites(ctx)

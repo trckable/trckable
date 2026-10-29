@@ -134,8 +134,8 @@ func TestFormerHostsEndWithTheGraceOrNow(t *testing.T) {
 // The migration adds the table to a database from before it, and leaves its sites alone.
 func TestFormerHostsMigration(t *testing.T) {
 	st, ctx, id := domainSite(t)
-	// Its migration is the last one: the database is put back to just before it.
-	if _, err := st.DB.ExecContext(ctx, `DROP TABLE site_former_hosts; DROP TABLE site_domain_changes; PRAGMA user_version = `+strconv.Itoa(len(migrations)-1)); err != nil {
+	// Its migration is the last but one (the signup goal's table follows): the database is put back to just before it.
+	if _, err := st.DB.ExecContext(ctx, `DROP TABLE site_former_hosts; DROP TABLE site_domain_changes; PRAGMA user_version = `+strconv.Itoa(len(migrations)-2)); err != nil {
 		t.Fatal(err)
 	}
 	if err := st.MigrateTo(ctx, len(migrations)); err != nil {

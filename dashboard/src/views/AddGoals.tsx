@@ -8,8 +8,10 @@ import { Modal } from '../kit/Modal'
 import { CodeBlock } from '../components/Code'
 import { OptionCards, type Option } from '../components/OptionCards'
 import { fail, type ContentGroup, type SiteConfig, type Site, more } from '../lib/apiMore'
+import type { Row } from '../lib/api'
 import { can } from '../lib/permissions'
 import { toast } from '../components/Toast'
+import { SignupChoice } from './SignupChoice'
 import { copy } from './addGoalsCopy'
 import { goalCode } from './goalCode'
 import './AddGoals.css'
@@ -23,26 +25,28 @@ const ROUTES: Option<Route>[] = [
   { id: 'api', label: copy.routes.api.name, hint: copy.routes.api.hint, icon: Server },
 ]
 
-export function AddGoals({ site, pages, onClose, onChanged }: { site: Site; pages: string[]; onClose: () => void; onChanged: () => void }) {
+export function AddGoals({ site, pages, goals, onClose, onChanged }: { site: Site; pages: string[]; goals: Pick<Row, 'value' | 'label'>[]; onClose: () => void; onChanged: () => void }) {
   const [route, setRoute] = useState<Route>('page')
   const host = location.origin
 
   const code = goalCode(host, site)
 
   const cards = <OptionCards label={copy.methods} options={ROUTES} value={route} onChange={setRoute} />
-  if (route === 'page') return <PageGoals site={site} pages={pages} onChanged={onChanged} onClose={onClose} cards={cards} />
+  const signup = <SignupChoice site={site} goals={goals} onChanged={onChanged} />
+  if (route === 'page') return <PageGoals site={site} pages={pages} onChanged={onChanged} onClose={onClose} cards={cards} signup={signup} />
   return (
     <Modal label={copy.label} onClose={onClose} frame={{ title: copy.title, subtitle: copy.hint, size: 'md', cancel: false, actions: <button type="button" className="btn primary big" onClick={onClose}>{copy.done}</button> }}>
       {cards}
       <CodeBlock code={code[route]} />
       <span className="faint goal-hint">{copy.hints[route]}</span>
       <span className="faint goal-hint">{copy.appears[route]}</span>
+      {signup}
     </Modal>
   )
 }
 
 /** Goals that are pages: the ones already set up, a name, a path. */
-function PageGoals({ site, pages, onChanged, onClose, cards }: { site: Site; pages: string[]; onChanged: () => void; onClose: () => void; cards: ReactNode }) {
+function PageGoals({ site, pages, onChanged, onClose, cards, signup }: { site: Site; pages: string[]; onChanged: () => void; onClose: () => void; cards: ReactNode; signup: ReactNode }) {
   const [cfg, setCfg] = useState<SiteConfig | null>(null)
   const [name, setName] = useState('')
   const [path, setPath] = useState('')
@@ -150,6 +154,7 @@ function PageGoals({ site, pages, onChanged, onClose, cards }: { site: Site; pag
           </datalist>
         </form>
       )}
+      {signup}
     </Modal>
   )
 }

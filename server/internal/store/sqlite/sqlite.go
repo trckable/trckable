@@ -1115,6 +1115,12 @@ var migrations = []string{
 		site_id    TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
 		changed_at INTEGER NOT NULL
 	) WITHOUT ROWID;`,
+	// 81: the goal a site counts as its signup (SiteConfig.SignupGoal). No row:
+	// the site's own goals are read for one that is called that.
+	`CREATE TABLE IF NOT EXISTS site_signup_goal (
+		site_id TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
+		goal    TEXT NOT NULL
+	) WITHOUT ROWID;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

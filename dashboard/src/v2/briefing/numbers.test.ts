@@ -12,6 +12,8 @@ const result = (o: { visitors?: number; sessions?: number; bounce?: number; sec?
     ...(o.money ? { money: { revenue: 10_000, revenue_per_visitor: 100, conversion: 0.02, ...o.money } } : {}),
   }) as Result
 
+const withSignup = (r: Result, visitors: number): Result => ({ ...r, signup: { goal: 'signup', visitors } })
+
 const usd = (n: number) => `$${n / 100}`
 
 describe('the numbers row', () => {
@@ -32,5 +34,24 @@ describe('the numbers row', () => {
     const f = figuresOf(result({ sessions: 5 }), result({ visitors: 3 }))
     expect(f[0].change).toBeNull()
     expect([f[1].val, f[2].val]).toEqual(['–', '–'])
+  })
+  it('adds Signups and the signup rate after Visitors when the site has a signup goal, and not without one', () => {
+    expect(figuresOf(withSignup(result(), 10), result()).map((f) => f.key)).toEqual(['visitors', 'signups', 'signupRate', 'bounce', 'session'])
+    expect(figuresOf(result(), result()).map((f) => f.key)).not.toContain('signups')
+  })
+  it('counts the rate as signups over visitors and says each change against the period before', () => {
+    const [, su, rt] = figuresOf(withSignup(result({ visitors: 200 }), 10), withSignup(result({ visitors: 200 }), 8))
+    expect([su.val, rt.val]).toEqual(['10', '5.0%'])
+    expect(su.change?.short).toBe('25% ↑')
+    expect(rt.change?.short).toBe('25% ↑')
+  })
+  it('has eight figures with payments, signups first of the extras', () => {
+    const f = figuresOf(withSignup(result({ money: {} }), 10), result(), usd)
+    expect(f.map((x) => x.key)).toEqual(['visitors', 'signups', 'signupRate', 'revenue', 'conversion', 'perVisitor', 'bounce', 'session'])
+  })
+  it('shows a signup count of nothing as zero, and no change without a base', () => {
+    const [, su] = figuresOf(withSignup(result(), 0), result())
+    expect(su.val).toBe('0')
+    expect(su.change).toBeNull()
   })
 })
