@@ -64,7 +64,8 @@ interface KpiIn {
 
 export function kpiCards(a: KpiIn): Kc[] {
   const { cur, prev } = a
-  const goal = (cur.goals ?? []).find((g) => g.visitors > 0)
+  // The signup has its own figure in the numbers row: the card shows the next goal, or pageviews.
+  const goal = (cur.goals ?? []).find((g) => g.visitors > 0 && g.value !== cur.signup?.goal)
   const down = a.uptime.verdict === 'down' || a.uptime.verdict === 'lost'
   const stale = a.uptime.verdict === 'down'
   const unknown: Kc['note'] = { t: copy.unknownNow }
