@@ -1,0 +1,1 @@
+AI & Search: the crawler table also lists the search engines' indexers (Google, Bing and others), so a blocked or failing Googlebot shows in the Blocked / failed column. The section is now called Crawlers; which pages AI read still counts AI robots only.

@@ -71,10 +71,13 @@ func TestAISearchTab(t *testing.T) {
 	if p := page(out, "/docs"); p["read"] != float64(12) || p["sent"] != nil && p["sent"] != float64(0) || p["flag"] != "uncredited" {
 		t.Fatalf("/docs is read twelve times and sends nobody: %v", p)
 	}
+	// A search engine's indexer is listed with the robots, so its failures show, but is not counted as crawled by AI.
+	google := false
 	for _, b := range out["bots"].([]any) {
-		if b.(map[string]any)["kind"] == "index" {
-			t.Fatalf("a search bot is listed as an AI crawler: %v", b)
-		}
+		google = google || b.(map[string]any)["kind"] == "index"
+	}
+	if !google {
+		t.Fatalf("the search bot is missing from the robots: %v", out["bots"])
 	}
 
 	// A page filter narrows the robots to that page, like every other card.

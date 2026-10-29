@@ -14,6 +14,7 @@ const (
 	channelAI     = "AI"
 	crawlAnswer   = "answer"
 	crawlTrain    = "train"
+	crawlIndex    = "index"
 	aiMaxBots     = 50
 	aiMaxReads    = 200
 	aiMaxReferrer = 50
@@ -211,13 +212,15 @@ func (q Q) AISearch(ctx context.Context, p Params, o AIOptions) (*AISearch, erro
 		return nil, err
 	}
 
-	// What the robots did, by crawler.
+	// What the robots did, by crawler: the AI ones, and in the list of robots also the search engines' indexers, whose
+	// failures matter as much. Which page AI read stays AI only.
 	span := []any{p.Site, from, to}
 	scope := `site_id = ? AND day >= CAST(? AS DATE) AND day < CAST(? AS DATE) AND kind IN ('` + crawlAnswer + `', '` + crawlTrain + `')`
+	robots := `site_id = ? AND day >= CAST(? AS DATE) AND day < CAST(? AS DATE) AND kind IN ('` + crawlAnswer + `', '` + crawlTrain + `', '` + crawlIndex + `')`
 	//nolint:gosec // scope and pathIf are constant fragments of this file; every value is bound
 	bots, err := conn.QueryContext(ctx, `
 		SELECT name, kind, sum(hits)::BIGINT AS n, sum(coalesce(blocked, 0))::BIGINT, sum(errors)::BIGINT
-		FROM crawler_hits WHERE `+scope+pathIf(o.Page)+`
+		FROM crawler_hits WHERE `+robots+pathIf(o.Page)+`
 		GROUP BY 1, 2 ORDER BY n DESC, 1, 2 LIMIT ?`, append(withPage(span, o.Page), aiMaxBots)...)
 	if err != nil {
 		return nil, fmt.Errorf("ai crawlers: %w", err)
@@ -229,7 +232,9 @@ func (q Q) AISearch(ctx context.Context, p Params, o AIOptions) (*AISearch, erro
 			return nil, err
 		}
 		out.Bots = append(out.Bots, b)
-		out.Crawled += b.Hits
+		if b.Kind != crawlIndex {
+			out.Crawled += b.Hits
+		}
 	}
 	if err := bots.Err(); err != nil {
 		return nil, err

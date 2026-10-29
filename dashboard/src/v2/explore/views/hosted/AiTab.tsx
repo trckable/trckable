@@ -82,7 +82,7 @@ export default function AiTab({ x }: { x: XCtx }) {
       <GoogleLines x={x} />
       <XSec a={aiCopy.assistants} b={fmtInt(people.reduce((n, a) => n + a.visitors, 0))} />
       {assistants.length === 0 ? <XEmpty title={aiCopy.noAssistants} hint="" /> : <XCols first={aiCopy.assistant} cols={[{ h: aiCopy.visitors }]} rows={assistants} xc="minmax(0,1fr) 84px" limit={x.limit} onAll={x.showAll} />}
-      <XSec a={aiCopy.crawlers} b={fmtInt(rep.crawled)} />
+      <XSec a={aiCopy.crawlers} b={fmtInt(rep.bots.reduce((n, b) => n + b.hits, 0))} />
       {crawlers.length === 0 ? (
         <XEmpty title={aiCopy.noAssistants} hint="">
           <button type="button" className="xb" onClick={() => setSetup(true)}>
