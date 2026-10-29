@@ -23,5 +23,6 @@ export const journey = defineCopy('install.journey', {
   remove: 'Remove this site',
   showCode: 'Show the code',
   whyMissing: ['The code is not in the page’s <head> yet.', 'A cache or CDN still serves the old page: purge it.', 'It is only on a staging copy, not on the live site.', 'data-domain is not this site’s domain.'],
+  whyOffline: ['The domain is mistyped, or its DNS does not point to your server yet.', 'The server is down or answers too slowly.', 'A firewall or bot protection blocks our check: your visitors still count.'],
   whyQuiet: ['An ad blocker or a private window can hide your own visit: try another browser.', 'Do Not Track is on: trckable respects it.', 'A cache or CDN serves an old copy of the page.'],
 })

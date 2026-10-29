@@ -35,6 +35,7 @@ describe('the way to the first visit', () => {
   it('lists causes only where there are some to look at', () => {
     expect(whyOf('waiting')).toBeNull()
     expect(whyOf('notfound')).toBe('missing')
+    expect(whyOf('unreachable')).toBe('offline')
     expect(whyOf('found')).toBe('quiet')
     expect(whyOf('arrived')).toBeNull()
   })

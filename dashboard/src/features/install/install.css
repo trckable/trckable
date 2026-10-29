@@ -275,17 +275,39 @@
   flex-basis: 100%;
   order: 3;
 }
-.inst-setup .inst-extras .inst-ai-copy {
-  height: 28px;
-  border-color: transparent;
-  background: none;
+.inst-ai-hint {
+  display: none;
+}
+/* Many set up with their AI tool, so on the first run the prompt is a card of its own, above cookieless. */
+.inst-setup .inst-extras .inst-ai {
+  order: -1;
+  flex-basis: 100%;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--text);
+}
+.inst-setup .inst-ai .inst-row-label {
+  flex: 1;
+  font-weight: 600;
+}
+.inst-setup .inst-ai-hint {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 400;
   color: var(--text-2);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+}
+.inst-setup .inst-extras .inst-ai-copy {
+  height: 34px;
+  padding: 0 14px;
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
 }
 .inst-setup .inst-extras .inst-ai-copy:hover {
-  color: var(--text);
-  background: var(--surface-2);
+  filter: brightness(1.08);
 }
 
 /* What the check found, small. */
@@ -488,17 +510,25 @@
   cursor: pointer;
 }
 .setup-why ul {
-  margin: 8px 0 0;
-  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px auto 0;
+  padding: 10px 14px 10px 28px;
+  max-width: 440px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  text-align: left;
+  line-height: 1.45;
 }
-.setup-why li {
-  margin: 2px 0;
+.setup-why li::marker {
+  color: var(--text-3, var(--text-2));
 }
 .setup-why p {
   display: flex;
   justify-content: center;
   gap: 14px;
-  margin: 8px 0 0;
+  margin: 10px 0 0;
 }
 .setup-why a {
   color: var(--text-2);
@@ -506,11 +536,15 @@
 .setup-why .linkish {
   margin: 0;
 }
+/* Open, the reasons take their own line under the button, centred like the rest of the card. */
 .setup-why[open] {
   flex-basis: 100%;
 }
-.setup-why[open] :is(ul, p) {
-  text-align: left;
+.setup-status.compact .setup-why ul {
+  margin-left: 0;
+}
+.setup-status.compact .setup-why p {
+  justify-content: flex-start;
 }
 .setup-code > summary {
   cursor: pointer;

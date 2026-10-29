@@ -34,7 +34,8 @@ export function staleDays(site: Pick<Site, 'created_at'>, now = Date.now()): num
 }
 
 /** The "Why?" list a stage has: what to look at when the code is missing, or when it is there and nothing arrives. */
-export const whyOf = (stage: Stage): 'missing' | 'quiet' | null => {
-  if (stage === 'notfound' || stage === 'wrongid' || stage === 'unreachable' || stage === 'blocked') return 'missing'
+export const whyOf = (stage: Stage): 'missing' | 'quiet' | 'offline' | null => {
+  if (stage === 'unreachable') return 'offline'
+  if (stage === 'notfound' || stage === 'wrongid' || stage === 'blocked') return 'missing'
   return stage === 'found' ? 'quiet' : null
 }

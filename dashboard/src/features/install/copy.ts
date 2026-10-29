@@ -64,6 +64,7 @@ export const copy = defineCopy('install', {
   // Install with AI.
   ai: {
     title: 'Install with AI',
+    hint: 'Paste it into Cursor, Copilot or Claude Code',
     button: 'Copy prompt',
     copied: 'Copied',
   },
