@@ -23,6 +23,9 @@ import { can } from '../lib/permissions'
 import { openSettings } from '../lib/settings'
 import './Sites.css'
 
+/** The delete field's label, around the site's name. */
+const CONFIRM = ['Type', 'to continue'] as const
+
 export function SitesSettings({ sites, onSites }: { sites: Site[]; onSites: () => void }) {
   const [wizard, setWizard] = useState(false)
   const [drop, setDrop] = useState<Site | null>(null)
@@ -326,7 +329,7 @@ export function DeleteSite({ site, onClose, onSites }: { site: Site; onClose: ()
             </ul>
           </div>
           <div className="danger-type">
-            <Field label={<>Type <NameBadge name={site.domain} /> to continue</>}>
+            <Field label={<>{CONFIRM[0]} <NameBadge name={site.domain} /> {CONFIRM[1]}</>}>
               {(f) => (
                 <input
                   {...f}
