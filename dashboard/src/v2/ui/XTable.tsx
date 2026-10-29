@@ -63,14 +63,19 @@ export interface XTableProps {
 
 export function XTable({ rows, head, unit = copy.people, mono, flags, selected, onPick, dim, limit, of, money, onAll, go }: XTableProps) {
   const paid = !!money && rows.some((r) => r.rev !== undefined)
+  const signups = rows.some((r) => r.su !== undefined)
+  // Columns after the share: signups, then (with payments) conversion and revenue. A phone keeps the signups and drops the money.
+  const wide = ['minmax(0,1fr) 70px 96px 64px', ...(signups ? ['64px'] : []), ...(paid ? ['64px 84px'] : [])].join(' ')
+  const narrow = ['minmax(0,1fr) 52px 64px', ...(signups ? ['52px'] : [])].join(' ')
   const max = Math.max(1, ...rows.map((r) => Math.max(r.v, r.c)))
   return (
-    <div className={`xt${paid ? ' xc' : ''}`} style={paid ? ({ '--xc': 'minmax(0,1fr) 70px 96px 64px 64px 84px', '--xcm': 'minmax(0,1fr) 52px 64px' } as React.CSSProperties) : undefined}>
+    <div className={`xt${paid || signups ? ' xc' : ''}`} style={paid || signups ? ({ '--xc': wide, '--xcm': narrow } as React.CSSProperties) : undefined}>
       <div className="xth">
         <span>{head}</span>
         <span>{unit}</span>
         <span>{copy.vsUsual}</span>
         <span className="shh">{copy.share}</span>
+        {signups && <span>{copy.heads.signups}</span>}
         {paid && <span className="hm">{copy.heads.conv}</span>}
         {paid && <span className="hm">{copy.heads.revenue}</span>}
       </div>
@@ -85,6 +90,7 @@ export function XTable({ rows, head, unit = copy.people, mono, flags, selected, 
             <span className="mk-n">{fmtInt(r.v)}</span>
             <span className={`d ${d.tone}`}>{d.text}</span>
             <span className="sh">{shareOf(r.v, of)}</span>
+            {signups && <span className="mk-n">{r.su ? fmtInt(r.su) : '–'}</span>}
             {paid && <span className="mk-n hm">{r.v > 0 ? fmtPct(Math.min(1, (r.cust ?? 0) / r.v)) : '–'}</span>}
             {paid && <span className="mk-n hm">{r.rev ? money(r.rev) : '–'}</span>}
           </>

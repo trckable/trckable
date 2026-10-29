@@ -11,6 +11,7 @@ import { Avatar } from '../../components/visitor/Avatar'
 import { DeviceIcon } from '../../components/visitor/DeviceIcon'
 import { nameOf } from '../../lib/visitor'
 import { copy as liveCopy } from '../../features/live/copy'
+import { isSignup } from '../../features/signals/signupLine'
 import { copy } from '../live/copy'
 import { useArrivals } from '../live/useArrivals'
 import './feedRow.css'
@@ -21,7 +22,7 @@ const NARROW = 480
 /** How long ago the row's last activity was, short: "12s", "3m". */
 export const agoShort = (ms: number) => (ms < 60_000 ? `${Math.max(0, Math.floor(ms / 1000))}s` : `${Math.floor(ms / 60_000)}m`)
 
-export function FeedList({ rows, up, clock, empty, onVisitor, cookieless }: { rows: Row[]; up: Set<string>; clock: number; empty: string; onVisitor?: (v: string) => void; cookieless?: boolean }) {
+export function FeedList({ rows, up, signup, clock, empty, onVisitor, cookieless }: { rows: Row[]; up: Set<string>; signup?: string; clock: number; empty: string; onVisitor?: (v: string) => void; cookieless?: boolean }) {
   const box = useRef<HTMLDivElement>(null)
   const [below, setBelow] = useState(false)
   const [above, setAbove] = useState(false)
@@ -52,7 +53,7 @@ export function FeedList({ rows, up, clock, empty, onVisitor, cookieless }: { ro
         const page = r.kind === 'goal' ? { title: liveCopy.goal(r.label || (r.goal ?? '')), text: liveCopy.goal(r.label || (r.goal ?? '')) } : { title: r.path, text: r.kind === 'active' ? copy.still : (r.path ?? '/') }
         const hot = up.has(r.channel || 'Direct') || clock - r.last < 30_000
         return (
-          <button key={r.key} type="button" className={`lv ${r.leaving ? 'leaving' : (marks.get(r.key) ?? '')}`.trim()} onClick={() => r.visitor && onVisitor?.(r.visitor)} disabled={r.leaving || !r.visitor || !onVisitor}>
+          <button key={r.key} type="button" className={`lv ${r.leaving ? 'leaving' : (marks.get(r.key) ?? '')}${isSignup(r, signup) ? ' signup' : ''}`.trim()} onClick={() => r.visitor && onVisitor?.(r.visitor)} disabled={r.leaving || !r.visitor || !onVisitor}>
             <span className={`mk-dot ${hot ? '' : 'off'}`} />
             {r.visitor && (
               <>

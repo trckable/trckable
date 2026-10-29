@@ -2,7 +2,7 @@
 // the first paint and again when the sites it asks about change, when /now answers, when a tab is shown after a minute away
 // and when the menu opens or is about to (never more than once in a minute by the first three, and never in a hidden tab).
 // The last list is kept in memory, so a bell that mounts again starts with it.
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { api, type Site } from '../../lib/api'
 import { incidents } from '../../features/incidents/api'
 import { mentionsApi } from '../../features/mentions/api'
@@ -14,7 +14,8 @@ import { onNowAnswer } from '../../features/live/api'
 import { visibleInterval } from '../../lib/visibleInterval'
 import { useReadSet } from './readState'
 import { momentsApi } from '../../features/moments/api'
-import { arrange, fromIncidents, fromSetup, fromMentions, fromMilestones, fromMoments, fromAnswers, othersOf, withFeed, type Notice } from './notices'
+import { onSignups, signupMoments } from '../../features/signals/signupMoments'
+import { arrange, byNewest, fromIncidents, fromSignups, fromSetup, fromMentions, fromMilestones, fromMoments, fromAnswers, othersOf, withFeed, type Notice } from './notices'
 
 /** The least time between two reads the bell starts by itself. */
 export const GAP_MS = 60_000
@@ -37,7 +38,8 @@ export function useNotices(site: Site | null, sites: Site[]) {
   const [own, setItems] = useState<Notice[]>(() => heldFor(sites) ?? [])
   const [loaded, setLoaded] = useState(() => !!heldFor(sites))
   const { bell: extra, bellMore } = useV2Extras()
-  const items = useMemo(() => withFeed(own, extra), [own, extra])
+  const signed = useSyncExternalStore(onSignups, signupMoments)
+  const items = useMemo(() => withFeed(site ? [...own, ...fromSignups(signed, site.domain)].sort(byNewest).slice(0, 40) : own, extra), [own, extra, signed, site])
   const can = !isShared()
   // The list is read again with every new fact about a site (its last visit moves all day); the bell is read again only when the sites it asks about change.
   const asked = useRef(sites)

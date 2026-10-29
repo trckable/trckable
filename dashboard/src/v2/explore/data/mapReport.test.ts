@@ -142,3 +142,16 @@ describe('the shape of the period against the one before', () => {
     expect(mapOverview(r, none).shape?.before).toBeNull()
   })
 })
+
+describe('the signups column', () => {
+  const dims = { country: [{ value: 'DE', visitors: 40, signups: 3 }, { value: 'US', visitors: 30 }], region: [{ value: 'Bavaria', visitors: 40, signups: 2 }], group: [{ value: '/blog', visitors: 50 }] }
+  it('gives each row its signups when the site has a signup goal, a zero where nobody signed up', () => {
+    const cur = result(100, { dims, signup: { goal: 'signup', visitors: 5 } })
+    expect(mapTable('countries', report(cur)).rows.map((r) => r.su)).toEqual([3, 0])
+    expect(mapTable('regions', report(cur)).rows[0].su).toBe(2)
+  })
+  it('gives none without a signup goal, and none to a section', () => {
+    expect(mapTable('countries', report(result(100, { dims }))).rows[0].su).toBeUndefined()
+    expect(mapTable('groups', report(result(100, { dims, signup: { goal: 'signup', visitors: 5 } }))).rows[0].su).toBeUndefined()
+  })
+})

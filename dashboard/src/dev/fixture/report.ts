@@ -116,9 +116,10 @@ interface Acc {
   pageviews: number
   bounced: number
   dur: number
+  signups: number
 }
-const acc = (): Acc => ({ visitors: 0, pageviews: 0, bounced: 0, dur: 0 })
-const row = (value: string, a: Acc): Row => ({ value, visitors: a.visitors, sessions: a.visitors, pageviews: a.pageviews, bounce_rate: a.visitors ? a.bounced / a.visitors : 0 })
+const acc = (): Acc => ({ visitors: 0, pageviews: 0, bounced: 0, dur: 0, signups: 0 })
+const row = (value: string, a: Acc): Row => ({ value, visitors: a.visitors, sessions: a.visitors, pageviews: a.pageviews, bounce_rate: a.visitors ? a.bounced / a.visitors : 0, ...(a.signups ? { signups: a.signups } : {}) })
 
 export function salesIn(c: Ctx, site: SiteDef, a: number, b: number, filters: Flt[]): Sale[] {
   const tests = filters.flatMap((f) => saleTest(f, site) ?? [])
@@ -195,12 +196,16 @@ function resultOf(c: Ctx, v: Visits, a: number, b: number, bucket: Bucket, filte
   const tot = acc()
   const dims: Record<string, Map<string, Acc>> = { browser: new Map(), channel: new Map(), country: new Map(), device: new Map(), entry_page: new Map(), os: new Map(), referrer: new Map(), page: new Map() }
   const goalN = new Array<number>(v.list.length).fill(0)
+  // The goal called a signup, as the server finds it: the people who reached it are counted in all and per row.
+  const su = c.conn.goals ? v.list.findIndex((g) => /^(sign-?up|signed-?up|register(ed)?|create-?account)$/.test(g.key)) : -1
+  let signed = false
   const bump = (m: Map<string, Acc>, k: string, np: number, bounced: number) => {
     let x = m.get(k)
     if (!x) m.set(k, (x = acc()))
     x.visitors++
     x.pageviews += np
     x.bounced += bounced
+    if (signed) x.signups++
   }
   const pages = new Map<string, number>()
   for (let i = 0; i < v.n; i++) {
@@ -216,6 +221,7 @@ function resultOf(c: Ctx, v: Visits, a: number, b: number, bucket: Bucket, filte
     }
     const s = v.s[i]
     const id = SRCS[s].id
+    signed = su >= 0 && (v.goals[i] & (1 << su)) !== 0
     bump(dims.browser, BROWSERS[v.br[i]], v.np[i], v.bounced[i])
     bump(dims.channel, CHANNEL[id], v.np[i], v.bounced[i])
     bump(dims.country, CTYS[v.cty[i]].id, v.np[i], v.bounced[i])
@@ -259,6 +265,7 @@ function resultOf(c: Ctx, v: Visits, a: number, b: number, bucket: Bucket, filte
     series: points,
     dims: d,
     goals: [],
+    ...(su >= 0 ? { signup: { goal: v.list[su].key, visitors: goalN[su] } } : {}),
   }
   // The goal the second card tells (see kpiGoal) leads; a site that sells counts its sales as the last step.
   const lead = kpiGoal(c, site)

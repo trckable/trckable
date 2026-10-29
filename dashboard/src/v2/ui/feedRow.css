@@ -23,3 +23,6 @@
 .mk .lfeed[data-narrow] .lv .mk-rp { width: 18px; }
 .mk .lfeed[data-narrow] .lv .mk-rp em { display: none; }
 .mk .lfeed .lv .tm { width: 30px; flex: none; text-align: right; color: var(--mk-muted); font-size: 12.5px; }
+/* Someone who reached the signup goal: the row is tinted like a sale, and its page line (the goal's name) reads in the accent. */
+.mk .lfeed .lv.signup { background: var(--mk-band); }
+.mk .lfeed .lv.signup .pg { color: var(--mk-lime); font-weight: 500; }

@@ -194,6 +194,8 @@ export const copy = defineCopy('briefing', {
   // The numbers row under the headline.
   numbersLabel: 'Key numbers',
   numVisitors: 'Visitors',
+  numSignups: 'Signups',
+  numSignupRate: 'Signup rate',
   numRevenue: 'Revenue',
   numConversion: 'Conversion rate',
   numPerVisitor: 'Revenue per visitor',

@@ -168,6 +168,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
           <AddGoals
             site={site}
             pages={(cur?.dims.page ?? []).map((r) => r.value)}
+            goals={cur?.goals ?? []}
             onClose={() => setAddGoals(false)}
             onChanged={() => {
               dropReports(site.id)
@@ -178,7 +179,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
       )}
       {!shared && (stream.online !== null || stream.sales.length > 0) && (
         <Suspense fallback={null}>
-          <Signals key={site.id} site={site} online={stream.online} visits={stream.visits} sales={stream.sales} scope={site.id + range.from + range.to + filtersKey} sources={live && cur?.revenue_dims ? (cur.revenue_dims.channel ?? []).map((r) => r.value) : undefined} />
+          <Signals key={site.id} site={site} online={stream.online} visits={stream.visits} sales={stream.sales} scope={site.id + range.from + range.to + filtersKey} sources={live && cur?.revenue_dims ? (cur.revenue_dims.channel ?? []).map((r) => r.value) : undefined} signup={cur?.signup?.goal} />
         </Suspense>
       )}
       {!shared && location.search.includes('import=ga') && (

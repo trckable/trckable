@@ -1,0 +1,1 @@
+Signups get their own place: the goal called "Signed up", "sign_up" or similar (or the one you pick under Track a goal) shows as Signups and the signup rate in the Briefing's numbers, as a Signups column in the Explore tables, and as a highlighted row, a toast and a bell entry in Live when someone signs up.

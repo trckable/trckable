@@ -12,9 +12,10 @@ import { duration, isDown } from '../../features/incidents/model'
 import { clock } from '../../lib/site'
 import { fmtFixed, fmtInt } from '../../lib/format'
 import type { Moment } from '../../features/story/moments'
+import type { SignupMoment } from '../../features/signals/signupMoments'
 import { copy } from './copy'
 
-export type NoticeKind = 'down' | 'up' | 'spike' | 'sale' | 'mention' | 'answer' | 'milestone' | 'weekly' | 'failed' | 'plan' | 'team' | 'setup'
+export type NoticeKind = 'down' | 'up' | 'spike' | 'sale' | 'signup' | 'mention' | 'answer' | 'milestone' | 'weekly' | 'failed' | 'plan' | 'team' | 'setup'
 
 export interface Notice {
   id: string
@@ -114,6 +115,11 @@ export function fromAnswers(rep: Pick<AnswersReport, 'changes' | 'paused'>, doma
   })
   if (rep.paused) out.push({ id: `answer:paused:${new Date(now * 1000).toISOString().slice(0, 7)}`, kind: 'answer', site: domain, title: c.paused, sub: c.section[0], at: now, open })
   return out
+}
+
+/** The signups seen on the stream: told as they happen, so a row each, with the host that sent the person. */
+export function fromSignups(list: SignupMoment[], domain: string): Notice[] {
+  return list.filter((m) => m.site === domain).map((m) => ({ id: m.id, kind: 'signup' as const, site: domain, title: m.title, sub: '', source: m.source, at: Math.floor(m.ts / 1000) }))
 }
 
 export function fromMilestones(list: Milestone[], domain: string): Notice[] {

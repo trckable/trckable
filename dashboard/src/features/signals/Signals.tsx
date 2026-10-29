@@ -7,20 +7,24 @@ import { NotifyAsk } from './NotifyAsk'
 import SurgeCard from './SurgeCard'
 import { useNotices } from './useNotices'
 import { useSaleToast } from './useSaleToast'
+import { useSignupToast } from './useSignupToast'
 import { useTabCount } from './useTabCount'
 
 export interface SignalsProps {
   site: Site
   online: number | null
-  visits: Visit[]
+  visits: (Visit & { id: number })[]
   sales: (Sale & { id: number })[]
   scope: string
   sources?: string[]
+  /** The goal that counts as the site's signup, once a report has said which. */
+  signup?: string
 }
 
 export default function Signals(p: SignalsProps) {
   useTabCount(p.online)
   useSaleToast(p.sales)
+  useSignupToast(p.site, p.visits, p.signup)
   useNotices(p)
   return (
     <>

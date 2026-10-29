@@ -1,10 +1,13 @@
 package api
 
 import (
+	"context"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/trckable/trckable/server/internal/event"
 	"github.com/trckable/trckable/server/internal/query"
 )
 
@@ -28,6 +31,10 @@ type nowAnswer struct {
 	// view's Revenue tile for Today. Absent while the revenue module is off
 	// or no payment provider is connected.
 	Revenue *nowMoney `json:"revenue,omitempty"`
+	// Signup is the key of the goal that counts as the site's signup, so Live
+	// can mark the people who reach it. Absent when the site has none, or its
+	// signup is a page (a page goal is not an event the feed carries).
+	Signup string `json:"signup,omitempty"`
 }
 
 type nowMoney struct {
@@ -110,6 +117,7 @@ func (a *API) liveNow(w http.ResponseWriter, r *http.Request) {
 	}
 	res := &nowAnswer{Now: n}
 	res.Today = a.todayNow(r, q, site, now)
+	res.Signup = a.signupEvent(r.Context(), site)
 	if withMoney {
 		res.Revenue = a.revenueToday(r, q, site)
 	}
@@ -173,3 +181,15 @@ type discard struct{}
 func (discard) Header() http.Header         { return http.Header{} }
 func (discard) Write(b []byte) (int, error) { return len(b), nil }
 func (discard) WriteHeader(int)             {}
+
+// signupEvent is the signup goal when it is an event the site sends.
+func (a *API) signupEvent(ctx context.Context, site string) string {
+	pages := pageGoals(ctx, a, site)
+	goal := signupGoal(ctx, a, site, pages)
+	for _, g := range pages {
+		if strings.TrimSpace(g.Name) == goal {
+			return ""
+		}
+	}
+	return event.NormGoal(goal)
+}

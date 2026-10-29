@@ -20,6 +20,8 @@ export interface Row {
   /** Customers and attributed revenue (minor units) from this row, where payments are connected. */
   cust?: number
   rev?: number
+  /** People from this row who reached the signup goal, where the site has one. */
+  su?: number
 }
 
 /** A number, the range it usually sits in, and where it is now. */
