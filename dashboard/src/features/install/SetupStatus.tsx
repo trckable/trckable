@@ -46,7 +46,7 @@ function Why({ stage, site, days }: { stage: Stage; site: Site; days: number }) 
       <summary>{list ? t.why : t.help}</summary>
       {list && (
         <ul>
-          {(list === 'missing' ? t.whyMissing : list === 'offline' ? t.whyOffline : t.whyQuiet).map((w) => (
+          {{ missing: t.whyMissing, offline: t.whyOffline, quiet: t.whyQuiet }[list].map((w) => (
             <li key={w}>{w}</li>
           ))}
         </ul>
