@@ -14,7 +14,7 @@ Self-host it free with every feature, or let [trckable Cloud](https://cloud.trck
 [![Version](https://img.shields.io/badge/version-0.7.25-b8ff3c?style=flat-square)](CHANGELOG.md)
 [![License: AGPL-3.0](https://img.shields.io/badge/server-AGPL--3.0-0b0d10?style=flat-square)](LICENSE)
 [![Tracker: MIT](https://img.shields.io/badge/tracker-MIT-0b0d10?style=flat-square)](packages/trckable/LICENSE)
-[![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/tracker-2095_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2095 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-57_MB-b8ff3c?style=flat-square" alt="Idle memory: 57 MB"></a><!--/f-->
+[![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/tracker-2098_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2098 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-61_MB-b8ff3c?style=flat-square" alt="Idle memory: 61 MB"></a><!--/f-->
 
 [Website](https://trckable.com) · [Live demo](https://trckable.com/#demo) · [Cloud](https://cloud.trckable.com) · [Quick start](#quick-start) · [How it compares](#how-it-compares) · [What it does](#what-it-does) · [Gallery](#gallery) · [Docs](https://docs.trckable.com/) · [Changelog](CHANGELOG.md)
 
@@ -28,7 +28,7 @@ Self-host it free with every feature, or let [trckable Cloud](https://cloud.trck
 
 <br><br>
 
-<img src=".github/images/readme/numbers.svg" width="880" alt="2.1 KB browser script. 1 container, no external database. 57 MB of memory when idle. 0 IP addresses stored.">
+<img src=".github/images/readme/numbers.svg" width="880" alt="2.1 KB browser script. 1 container, no external database. 61 MB of memory when idle. 0 IP addresses stored.">
 
 </div>
 
@@ -71,13 +71,13 @@ Compose, Railway, Coolify, Dokploy, Umbrel and Helm, all the same image with a d
 The free, self-hostable tools, plus DataFast (paid, hosted only) for script size, all measured the same way. Tables, sources and caveats: [How it compares](https://docs.trckable.com/compare/).
 
 <p align="center">
-  <img src=".github/images/readme/script-size.svg" width="880" alt="Browser script, gzipped, with goals and outbound links: trckable 2,095 bytes, Plausible CE 2,141, Umami 2,333, GoatCounter 3,467, DataFast 5,253 (paid, no self-hosting documented), Rybbit 11,172, Matomo 28,172.">
+  <img src=".github/images/readme/script-size.svg" width="880" alt="Browser script, gzipped, with goals and outbound links: trckable 2,098 bytes, Plausible CE 2,141, Umami 2,333, GoatCounter 3,467, DataFast 5,253 (paid, no self-hosting documented), Rybbit 11,172, Matomo 28,172.">
 </p>
 <p align="center">
-  <img src=".github/images/readme/self-host.svg" width="880" alt="To self-host: trckable is one binary using 57 MB idle, with payment sync for five providers. GoatCounter: one binary, about 30 MB, no payment sync. Umami: Node and PostgreSQL, about 300 MB, manual revenue events. Matomo: PHP and MySQL, about 512 MB, no payment sync. Plausible CE: Elixir, PostgreSQL and ClickHouse, about 2 GB, payment sync on its cloud only. Rybbit: ClickHouse, PostgreSQL and Redis, 2 GB or more, no payment sync.">
+  <img src=".github/images/readme/self-host.svg" width="880" alt="To self-host: trckable is one binary using 61 MB idle, with payment sync for five providers. GoatCounter: one binary, about 30 MB, no payment sync. Umami: Node and PostgreSQL, about 300 MB, manual revenue events. Matomo: PHP and MySQL, about 512 MB, no payment sync. Plausible CE: Elixir, PostgreSQL and ClickHouse, about 2 GB, payment sync on its cloud only. Rybbit: ClickHouse, PostgreSQL and Redis, 2 GB or more, no payment sync.">
 </p>
 
-Where it is not the right pick: with pageviews only, Plausible CE's script is smaller (1,283 B against <!--f:tracker_core_bytes-->1,649<!--/f--> B). Session replay and A/B tests are out of scope on purpose; if you need those, use Matomo.
+Where it is not the right pick: with pageviews only, Plausible CE's script is smaller (1,283 B against <!--f:tracker_core_bytes-->1,651<!--/f--> B). Session replay and A/B tests are out of scope on purpose; if you need those, use Matomo.
 
 ## What it does
 
