@@ -132,6 +132,8 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
   const skip = () => {
     if (!required) leave(site ? finishPath(site.domain, false) : null)
   }
+  // Before a site exists the required run has no Skip: leaving would only reach an empty page.
+  const canSkip = !!site || !required
   // The header's Skip while required: the site's own page, where its install waits.
   const toDashboard = () => {
     leave(site ? finishPath(site.domain, false) : null, true)
@@ -167,7 +169,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
           period={null}
           explore={null}
           extras={
-            <button type="button" className="btn ghost ob-skip" onClick={required ? toDashboard : skip} aria-keyshortcuts="Escape">
+            canSkip && <button type="button" className="btn ghost ob-skip" onClick={required ? toDashboard : skip} aria-keyshortcuts="Escape">
               {copy.skip} <span className="kbd">{copy.skipHint}</span>
             </button>
           }
