@@ -37,13 +37,13 @@ export function SiteMark({ site, size = 22 }: { site: Pick<Site, 'domain' | 'col
       />
     )
   const c = siteColor(site)
+  // The letter is drawn by CSS, so it never joins the text, and so the name, of a button around it.
   return (
     <span
       className="site-mark letter"
       aria-hidden="true"
+      data-letter={site.domain.replace(/^www\./, '')[0]?.toUpperCase() ?? '?'}
       style={{ width: scaled(size), height: scaled(size), fontSize: `max(var(--ph-mark-min, 0px), ${scaled(Math.round(size * 0.5))})`, color: c, background: `color-mix(in srgb, ${c} 16%, transparent)` }}
-    >
-      {site.domain.replace(/^www\./, '')[0]?.toUpperCase() ?? '?'}
-    </span>
+    />
   )
 }

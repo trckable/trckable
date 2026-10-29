@@ -2216,6 +2216,9 @@ body[data-mode] .card.overview {
   font-weight: 700;
   line-height: 1;
 }
+.site-mark.letter::before {
+  content: attr(data-letter);
+}
 /* The live dot sits on the mark's corner. */
 
 /* A site's state (features/sites/StateDot.tsx). */

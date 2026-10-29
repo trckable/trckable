@@ -74,7 +74,7 @@ test('Timezone: "Which day and hour a visit belongs to": a 23:30 UTC visit moves
 
   const pick = async (search: string, option: string | RegExp) => {
     await openSettings(page, site, 'site')
-    await page.getByRole('dialog').getByRole('button', { name: 'Timezone' }).click()
+    await page.getByRole('dialog').getByRole('button', { name: /^Timezone:/ }).click()
     await page.getByRole('searchbox', { name: 'Search a city or zone…' }).fill(search)
     await page.getByRole('option', { name: option }).first().click()
   }
@@ -129,7 +129,7 @@ test('Currency: "Revenue is converted at the payment date": a EUR sale reads in 
 
   // Switch the site to EUR in Settings: nothing to convert, the number is what was paid.
   await openSettings(page, site, 'site')
-  await page.getByRole('dialog').getByRole('button', { name: 'Currency' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: /^Currency:/ }).click()
   await page.getByRole('searchbox', { name: 'Search a currency…' }).fill('EUR')
   await page.getByRole('option', { name: 'EUR' }).first().click()
   await expect.poll(async () => (await mine(page, site)).currency).toBe('EUR')
