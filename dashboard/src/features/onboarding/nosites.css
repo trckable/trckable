@@ -1,4 +1,4 @@
-/* The page of someone with no site yet: one message, one action. */
+/* The page of someone with no site yet: the first step right here, and what follows. */
 .ns {
   position: fixed;
   inset: 0;
@@ -27,4 +27,48 @@
   position: absolute;
   top: 12px;
   right: 16px;
+}
+.ns-form {
+  display: flex;
+  gap: 8px;
+  width: min(420px, 100%);
+  margin-top: 8px;
+}
+.ns-form .input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--mono);
+}
+.ns-form .btn {
+  margin-top: 0;
+}
+.ns-bad {
+  color: var(--down);
+  font-size: 13px;
+}
+.ns-steps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 20px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-2);
+  font-size: 13px;
+}
+.ns-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ns-steps .num {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--text);
+  font-size: 11px;
 }

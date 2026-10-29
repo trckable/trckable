@@ -1,0 +1,1 @@
+First run: no "Skip for now" before a site is added, so nobody lands on an empty page. An account with no site always opens the first run; a skip only holds once a site exists. The rare no-site page now has the site field and Start right on it, with the three steps that follow.

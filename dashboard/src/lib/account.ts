@@ -70,10 +70,10 @@ export function useAddSite(): boolean {
 }
 
 /** A viewer adds no site: the wizard stays shut for them, whatever opened it (a link, the first run, a key). */
-export function openAddSite() {
+export function openAddSite(domain: SitePrefill | null = null) {
   if (!can('site.add')) return
   adding = true
-  prefill = null
+  prefill = domain
   emit()
 }
 

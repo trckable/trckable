@@ -92,7 +92,7 @@ function App() {
   const accountTab = useAccountTab(); // a hook: must run before any early return
   usePreloadDialogs(boot.state === "ready");
   const adding = useAddSite();
-  const { gated, pass, reopen } = useGate(boot.state === "ready" ? boot.sites : null, boot.state === "ready" && !!boot.mustChange, path, boot.state === "ready" ? boot.email : undefined);
+  const { gated, pass } = useGate(boot.state === "ready" ? boot.sites : null, boot.state === "ready" && !!boot.mustChange, path, boot.state === "ready" ? boot.email : undefined);
   const settingsOpen = useSettingsAddress(boot.state === "ready" && !gated ? boot.sites : null, path, params); // the dialog, and the address that names a section of it
   // A newer release, if this owner's dashboard may look (lib/update.ts).
   const latest = useLatest(boot.state === "ready" ? boot.version : undefined, boot.state === "ready" ? boot.updateCheck : false);
@@ -155,7 +155,7 @@ function App() {
   // Until an owner's first site has had a visit, only the first run (Gate).
   let page: React.ReactNode;
   if (gated) page = null;
-  else if (boot.sites.length === 0) page = can("site.add") ? <NoSites onAdd={reopen} /> : <NoneShared />;
+  else if (boot.sites.length === 0) page = can("site.add") ? <NoSites /> : <NoneShared />;
   else if (all)
     page = (
       <Suspense fallback={<Loading height={320} />}>

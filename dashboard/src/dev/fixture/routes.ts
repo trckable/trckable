@@ -248,7 +248,8 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
   const chan = channelsAnswer(c, method, path, sp)
   if (chan) return chan
   if (method !== 'GET') return none()
-  const sites = SITES
+  // `&nosites=1`: an account with no site yet, for the first run.
+  const sites = new URLSearchParams(location.search).has('nosites') ? [] : SITES
   switch (path) {
     case '/setup':
       return ok({ email_codes: false, needs_setup: false, sso: [] })

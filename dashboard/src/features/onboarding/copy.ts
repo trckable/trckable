@@ -44,8 +44,12 @@ export const copy = defineCopy('onboarding', {
     receiving: 'receiving',
   },
   empty: {
-    title: 'No sites yet',
-    sub: 'Add your first site to start counting visits.',
-    add: 'Add your first site',
+    title: 'Add your site',
+    sub: 'Two minutes from here to your first visitor, live.',
+    field: 'Your site',
+    placeholder: 'yoursite.com',
+    add: 'Start',
+    bad: 'That doesn’t look like a site address, like yoursite.com.',
+    steps: ['Type your site', 'Paste one line, or pick your platform', 'Watch your first visitor arrive'],
   },
 })

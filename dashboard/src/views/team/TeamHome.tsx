@@ -54,7 +54,7 @@ function Add({ className }: { className: string }) {
   const { addSiteGuard } = useV2Extras()
   if (!can('site.add')) return null
   const draw = (off: boolean) => (
-    <button type="button" className={className} disabled={off} onClick={openAddSite}>
+    <button type="button" className={className} disabled={off} onClick={() => openAddSite()}>
       <Plus size={16} aria-hidden="true" />
       {copy.add}
     </button>
