@@ -6,14 +6,14 @@ import { fmtInt } from '../../lib/format'
 const times = (n: number) => `${fmtInt(n)} ${n === 1 ? 'time' : 'times'}`
 const visitors = (n: number) => `${fmtInt(n)} ${n === 1 ? 'visitor' : 'visitors'}`
 
-const kind: Record<string, string> = { answer: 'answers', train: 'training' }
+const kind: Record<string, string> = { answer: 'answers', train: 'training', index: 'search' }
 
 export const aiCopy = defineCopy('aisearch', {
   label: 'Google, AI assistants and AI crawlers',
   failed: 'Couldn’t read AI & Search.',
   google: 'Google',
   assistants: 'AI assistants',
-  crawlers: 'AI crawlers',
+  crawlers: 'Crawlers',
   assistant: 'Assistant',
   crawler: 'Crawler',
   page: 'Page',

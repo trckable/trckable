@@ -62,8 +62,9 @@ func pageOf(r *AISearch, path string) AIPage {
 	return AIPage{Path: "missing:" + path}
 }
 
-// The tab's numbers: AI's visitors by referrer, the robots that are AI (not
-// search bots), and the pages with read against sent.
+// The tab's numbers: AI's visitors by referrer, the robots (AI ones and the
+// search engines' indexers, which do not count as crawled by AI), and the
+// pages with read against sent.
 func TestAISearchCounts(t *testing.T) {
 	q := aiRig(t)
 	r, err := q.AISearch(context.Background(), week, AIOptions{})
@@ -75,9 +76,11 @@ func TestAISearchCounts(t *testing.T) {
 	eq(t, "busiest referrer", r.Referrers[0].Value, "chatgpt.com")
 	eq(t, "its visitors", r.Referrers[0].Visitors, int64(1))
 	eq(t, "crawled", r.Crawled, int64(30+10+25+12+7))
-	eq(t, "bots", len(r.Bots), 3+0) // OpenAI train, Anthropic train, OpenAI answer
-	eq(t, "busiest bot", r.Bots[0].Name+"/"+r.Bots[0].Kind, "OpenAI/train")
-	eq(t, "its hits", r.Bots[0].Hits, int64(49))
+	eq(t, "bots", len(r.Bots), 4) // Google index, OpenAI train, Anthropic train, OpenAI answer
+	eq(t, "busiest bot", r.Bots[0].Name+"/"+r.Bots[0].Kind, "Google/index")
+	eq(t, "its hits", r.Bots[0].Hits, int64(400))
+	eq(t, "busiest AI bot", r.Bots[1].Name+"/"+r.Bots[1].Kind, "OpenAI/train")
+	eq(t, "its hits", r.Bots[1].Hits, int64(49))
 
 	pricing := pageOf(r, "/pricing")
 	eq(t, "pricing read", pricing.Read, int64(40))
