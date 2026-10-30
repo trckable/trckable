@@ -69,9 +69,17 @@ async function visit(page: Page, name: string, people = 1) {
 const cards = (page: Page) => page.locator('.lcards')
 
 test('the cards show today and the pages people are on', async ({ page }) => {
+  // Other files' visits (their own /r/<run>/ pages) land on the same site meanwhile and can push this run out of the top five.
+  let run = ''
+  await page.route(/\/sites\/[^/]+\/now(\?|$)/, async (route) => {
+    const res = await route.fetch()
+    const body = await res.json()
+    if (run) body.recent = (body.recent ?? []).filter((r: { path?: string }) => !r.path?.startsWith('/r/') || r.path.includes(run))
+    await route.fulfill({ response: res, json: body })
+  })
   await signIn(page, '/example.com?view=live')
   await expect(page.locator('.lnow .lfig .lbign').first()).toBeVisible({ timeout: 15_000 })
-  const run = await visit(page, 'livecards', 4)
+  run = await visit(page, 'livecards', 4)
   const today = cards(page).locator('.lan')
   await expect(today).toBeVisible({ timeout: 10_000 })
   await expect(today.locator('.lhero')).not.toHaveText(/^0/)

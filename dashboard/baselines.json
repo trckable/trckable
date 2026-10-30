@@ -7,8 +7,7 @@
     "src/views/Payments.tsx": 302,
     "src/views/Privacy.tsx": 575,
     "src/views/Search.tsx": 352,
-    "src/views/Settings.tsx": 332,
-    "src/views/Sites.tsx": 397
+    "src/views/Settings.tsx": 332
   },
   "colors": 0
 }

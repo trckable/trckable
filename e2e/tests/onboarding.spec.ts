@@ -18,8 +18,8 @@ const PASSWORD = 'first run e2e password 1'
 const SHOTS = process.env.TRCKABLE_SHOTS // a folder: screenshots of each step, for review
 const PORTS = PORT.onboarding
 
-// One server per browser, and its tests in order: Skip first, while there
-// is still no site, then the whole first run.
+// One server per browser, and its tests in order: the first run that cannot
+// be left while there is still no site, then the whole first run.
 test.describe.configure({ mode: 'serial' })
 
 let server: ChildProcess | undefined
@@ -95,12 +95,11 @@ test('with no site the first run cannot be left, and stays on every address', as
   const main = run.locator('main')
   expect(await main.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('0px')
   expect(await main.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe('0px')
-  // The header is the dashboard's: its 1440 px column and its height, and Skip has no fill at rest.
+  // The header is the dashboard's: its 1440 px column and its height.
   await page.setViewportSize({ width: 1920, height: 1000 })
   const hd = await run.locator('.ob-hd').boundingBox()
   expect(hd!.width).toBeLessThanOrEqual(1440)
   expect(await run.locator('.ob-hd .hd').evaluate((el) => el.getBoundingClientRect().height)).toBeLessThanOrEqual(68)
-  expect(await run.getByRole('button', { name: /Skip/ }).evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)')
   await page.setViewportSize({ width: 1280, height: 800 })
   // The header is the logo, the account and nothing about sites.
   await expect(run.locator('#siteBtn')).toHaveCount(0)
@@ -112,8 +111,8 @@ test('with no site the first run cannot be left, and stays on every address', as
   await expect(page.getByRole('button', { name: 'Retry' })).toHaveCount(0)
   await expect(run.getByLabel('Domain')).toHaveValue('mybakery.example')
   await run.getByLabel('Domain').fill('')
-  // Skip is there on every step; Esc does nothing, other addresses come back.
-  await expect(run.getByRole('button', { name: /Skip/ })).toBeVisible()
+  // There is no Skip before a site exists; Esc does nothing, other addresses come back.
+  await expect(run.getByRole('button', { name: /Skip/ })).toHaveCount(0)
   await page.keyboard.press('Escape')
   await expect(run).toBeVisible()
   for (const path of ['/settings', '/sites', '/nosuch.example']) {
@@ -132,60 +131,6 @@ test('with no site the first run cannot be left, and stays on every address', as
   await expect(run).toBeVisible()
 })
 
-test('Skip with no site lands on the empty page, no loop after a reload, and another account still gets its first run', async ({ page, browserName }) => {
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: base }])
-  await page.goto(base + '/')
-  const run = page.getByRole('dialog', { name: 'Set up your first site' })
-  await expect(run).toBeVisible({ timeout: 15_000 })
-  await run.getByRole('button', { name: /Skip/ }).click()
-  const empty = page.getByRole('heading', { name: 'No sites yet' })
-  await expect(empty).toBeVisible({ timeout: 15_000 })
-  await expect(run).toHaveCount(0)
-  await expect(page.locator('#siteBtn')).toHaveCount(0)
-  if (SHOTS) {
-    for (const [w, h] of [[1280, 800], [390, 800]]) {
-      for (const scheme of ['dark', 'light'] as const) {
-        await page.setViewportSize({ width: w, height: h })
-        await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: scheme })
-        await page.screenshot({ path: `${SHOTS}/edge-${w}-${scheme}.png` })
-      }
-    }
-  }
-  // Reload, a new tab and deep links: the same page, the same address, no first run flashing back.
-  for (const path of ['/', '/sites', '/nosuch.example']) {
-    await page.goto(base + path)
-    await expect(empty).toBeVisible({ timeout: 15_000 })
-    await expect(run).toHaveCount(0)
-    await expect(page).toHaveURL(base + path)
-  }
-  const tab = await page.context().newPage()
-  await tab.goto(base + '/')
-  await expect(tab.getByRole('heading', { name: 'No sites yet' })).toBeVisible({ timeout: 15_000 })
-  await tab.close()
-  // Sign out stays reachable from the empty page.
-  await page.getByRole('button', { name: 'Account', exact: true }).click()
-  await expect(page.getByRole('menu', { name: 'Account' }).getByText('Sign out')).toBeVisible()
-  await page.keyboard.press('Escape')
-
-  // A second account in the same browser: its own first run, the first account's skip does not carry over.
-  const env = { ...process.env, TRCKABLE_DATA_DIR: dataDir, TRCKABLE_GEO: 'off' }
-  const email = `second-owner-${browserName}@example.com`
-  execFileSync(BIN, ['admin', 'add-user', email, '--role', 'owner'], { input: PASSWORD + '\n', env, stdio: ['pipe', 'ignore', 'ignore'] })
-  const res = await fetch(base + '/api/v1/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: PASSWORD }) })
-  const other = /trckable_session=([^;]+)/.exec(res.headers.get('set-cookie') ?? '')?.[1] ?? ''
-  await page.context().clearCookies()
-  await page.context().addCookies([{ name: 'trckable_session', value: other, url: base }])
-  await page.goto(base + '/')
-  await expect(run).toBeVisible({ timeout: 15_000 })
-  // Back to the first account: "Add your first site" on the empty page brings the first run back.
-  await page.context().clearCookies()
-  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: base }])
-  await page.goto(base + '/')
-  await page.getByRole('button', { name: 'Add your first site' }).click()
-  await expect(run).toBeVisible()
-})
-
 test('a first site, its install, its first visit, then Live', async ({ page, browserName }) => {
   const domain = `first-${browserName}-${Date.now()}.test`
   verified = domain
@@ -196,7 +141,6 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
   const run = page.getByRole('dialog', { name: 'Set up your first site' })
   await expect(run.getByRole('heading', { name: 'Which site first?' })).toBeVisible({ timeout: 15_000 })
   await expectStep(run, 'Your site')
-  await expect(run.getByRole('button', { name: /Skip/ })).toBeVisible()
 
   // The domain appears in the preview as it is typed; Enter adds the site.
   const input = run.getByLabel('Domain')

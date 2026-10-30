@@ -1,0 +1,1 @@
+Briefing: the month's pace line under Visitors is gone; on a phone the cards keep the same gap under the key numbers; the AI crawlers read is asked once per load; the bell's count and the setup ring are named as they read.

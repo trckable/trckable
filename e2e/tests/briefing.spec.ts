@@ -75,7 +75,7 @@ test('Live to Briefing: the sentence, the ring, a card in place, and the period'
   // A site in its first week has no normal yet: it says so where the ring would be.
   await expect(page.locator('.sidecol .sn')).toContainText('learn your normal over 7 days')
   // Uptime has nothing measured here, so its card is left out instead of showing a dash.
-  await expect(page.locator('.kcs .kc')).toHaveCount(3)
+  await expect(page.locator('.kcs .kc[data-k="uptime"]')).toHaveCount(0)
   // The range picker: Custom dates opens the calendar.
   await page.locator('.pill').click()
   await page.locator('#perMenu').getByRole('button', { name: /^Custom dates/ }).click()

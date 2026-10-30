@@ -52,7 +52,7 @@ export function SetupRing({ site, onGoal, fresh = false, visited = false }: { si
   const words = said ?? ''
   return (
     <div className="ringw" ref={attach}>
-      <button type="button" className="ringb" data-ring={mode} aria-haspopup="dialog" aria-expanded={open} aria-label={copy.ringLabel(state.done, state.counted)} title={words} onClick={onRing}>
+      <button type="button" className="ringb" data-ring={mode} aria-haspopup="dialog" aria-expanded={open} aria-label={words} title={words} onClick={onRing}>
         <RingMark done={state.done} counted={state.counted} check={mode === 'check'} />
         <span className="rtext">{words}</span>
       </button>

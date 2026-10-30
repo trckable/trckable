@@ -33,14 +33,15 @@ test('one card for who changed, the rest named under it, and the card’s extras
   const who = page.locator('[data-topic="sources"]:not(.sk)')
   await expect(who).toBeVisible()
   await expect(page.locator('[data-topic="countries"]:not(.sk)')).toHaveCount(0)
-  await expect(who).toContainText('Also changed: ')
+  await expect(who).toContainText('Also changed')
   await expect(who.getByRole('button', { name: 'See all' })).toBeVisible()
-  // One action on the card, and the rest behind the ⋯: Why?, Watch and Go deeper are not on the card until it is opened.
+  // One action and one link deeper on the card, and the rest behind the ⋯: Why? and Watch are not on the card until it is opened.
   await expect(who.locator('[data-watch]')).toBeHidden()
   await expect(who.getByRole('button', { name: 'Why?' })).toHaveCount(0)
   await who.getByRole('button', { name: 'More' }).click()
   await expect(who.getByRole('menuitem', { name: 'Watch' })).toBeVisible()
   await expect(who.getByRole('menuitem', { name: 'Why?' })).toBeVisible()
-  await who.getByRole('menuitem', { name: 'Go deeper' }).click()
+  await page.keyboard.press('Escape')
+  await who.locator('[data-deeper]').click()
   await expect(page.locator('#xp.on')).toBeVisible()
 })

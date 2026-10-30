@@ -77,28 +77,30 @@ interface ExtrasWant {
   countries: { code: string; people: number }[]
 }
 
-// The speed figures of a day or a stretch, kept for a minute: the page's other numbers may be asked again (a report lands, a filter is set), the speed of the same days is not.
-const heldVitals = new Map<string, { at: number; v: ReturnType<typeof more.vitals> }>()
-function vitalsOf(site: string, from: ISODate, to: ISODate) {
-  const key = `${site}|${from}|${to}`
-  const k = heldVitals.get(key)
-  if (k && Date.now() - k.at < 60_000) return k.v
-  const v = more.vitals(site, { from, to })
-  heldVitals.set(key, { at: Date.now(), v })
-  v.catch(() => heldVitals.delete(key)) // a failed read is not kept
-  return v
+// A read kept for a minute by its key: the page's other numbers may be asked again (a report lands, a filter is set), the same read is not. A failed read is not kept.
+function heldFor<T>(): (key: string, read: () => Promise<T>) => Promise<T> {
+  const held = new Map<string, { at: number; v: Promise<T> }>()
+  return (key, read) => {
+    const k = held.get(key)
+    if (k && Date.now() - k.at < 60_000) return k.v
+    const v = read()
+    held.set(key, { at: Date.now(), v })
+    v.catch(() => held.delete(key))
+    return v
+  }
 }
 
-// The funnels the site saved, kept for a minute like the speed figures: a re-read of the page's other numbers does not ask for the list again.
-const heldFunnels = new Map<string, { at: number; v: ReturnType<typeof more.funnels> }>()
-function savedFunnelsOf(site: string) {
-  const k = heldFunnels.get(site)
-  if (k && Date.now() - k.at < 60_000) return k.v
-  const v = more.funnels(site)
-  heldFunnels.set(site, { at: Date.now(), v })
-  v.catch(() => heldFunnels.delete(site))
-  return v
-}
+// The speed figures of a day or a stretch.
+const heldVitals = heldFor<Awaited<ReturnType<typeof more.vitals>>>()
+const vitalsOf = (site: string, from: ISODate, to: ISODate) => heldVitals(`${site}|${from}|${to}`, () => more.vitals(site, { from, to }))
+
+// The funnels the site saved.
+const heldFunnels = heldFor<Awaited<ReturnType<typeof more.funnels>>>()
+const savedFunnelsOf = (site: string) => heldFunnels(site, () => more.funnels(site))
+
+// The robots of the period.
+const heldCrawlers = heldFor<Awaited<ReturnType<typeof more.crawlers>>>()
+const crawlersOf = (site: string, from: ISODate, to: ISODate) => heldCrawlers(`${site}|${from}|${to}`, () => more.crawlers(site, { from, to }))
 
 /** What the speed of the period is told against: a day against the 28 days before it, a longer stretch against the same number of days before it. */
 export function usualSpeed(range: Range, days: number): [ISODate, ISODate] {
@@ -181,7 +183,7 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
         }, () => null)
       : Promise.resolve(null)
     const first = want.money && days <= 31 ? readFirst(site.id, range, want.countries) : Promise.resolve(null)
-    const robots = more.crawlers(site.id, { from: range.from, to: range.to }).then((r) => (r.series ?? []).map((s): Robot => ({ name: s.name, kind: s.kind, hits: s.total, blocked: s.blocked ?? 0, errors: s.errors ?? 0 })), () => null)
+    const robots = crawlersOf(site.id, range.from, range.to).then((r) => (r.series ?? []).map((s): Robot => ({ name: s.name, kind: s.kind, hits: s.total, blocked: s.blocked ?? 0, errors: s.errors ?? 0 })), () => null)
     void Promise.all([mention, vit(range.from, range.to), vit(...usualSpeed(range, days)), buyers, search, stuck, funnel, first, refunds, robots]).then(([m, c, u, b, sr, st, fn, fs, rf, rb]) => live && setGot({ key, x: { fresh: true, mention: m, speed: c && u ? { cur: c, usual: u } : null, buyers: b, refunds: rf, search: sr, stuck: st, funnel: fn, first: fs, robots: rb } }))
     return () => {
       live = false
