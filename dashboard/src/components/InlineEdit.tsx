@@ -126,7 +126,7 @@ export function InlineEdit({
           </button>
         </span>
       ) : (
-        <button type="button" className="ie-box view" style={style} onClick={() => setEditing(true)} aria-label={`${label}: ${value || 'not set'}. Edit`}>
+        <button type="button" className="ie-box view" style={style} onClick={() => setEditing(true)} aria-label={`${label}: ${value || placeholder}. Edit`}>
           <span className={value ? 'ie-text' : 'ie-text empty'}>{value || placeholder}</span>
           {saved ? (
             <span className="ie-saved" aria-live="polite">

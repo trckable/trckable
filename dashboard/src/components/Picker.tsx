@@ -110,7 +110,7 @@ export function Picker({
         label={label}
         className="picker-pop"
         trigger={(p) => (
-          <button type="button" className="btn picker-btn" {...p} aria-haspopup="listbox" aria-label={label}>
+          <button type="button" className="btn picker-btn" {...p} aria-haspopup="listbox" aria-label={`${label}: ${current?.label ?? placeholder}`}>
             {trigger ? (
               trigger(current, p['aria-expanded'])
             ) : (

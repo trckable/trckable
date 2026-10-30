@@ -8,7 +8,7 @@ const row = (on: boolean) => renderToStaticMarkup(<MailRow on={on} onChange={() 
 describe('the email chip', () => {
   it('is one button, on or off, with the full sentence for the tooltip and screen readers', () => {
     expect(row(true)).toMatch(/Daily · 0?8:00/)
-    expect(row(true)).toMatch(/aria-label="Emailed daily at 0?8:00[^"]*\. Change"/)
+    expect(row(true)).toMatch(/aria-label="[^"]*: Emailed daily at 0?8:00[^"]*\. Change"/)
     expect(row(false)).toContain('Email me this')
     expect(row(false)).toContain('mailchip off')
     expect(row(true)).toContain('data-mpv')

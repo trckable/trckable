@@ -31,7 +31,7 @@
 .mk .ic-sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mk .ic-bd { flex: none; margin-left: auto; padding: 3px 9px; border-radius: 999px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .mk .ic-bd.up { background: var(--mk-limeD); color: var(--mk-lime); }
-.mk .ic-bd.dn { background: color-mix(in srgb, var(--mk-red) 14%, transparent); color: var(--mk-red); }
+.mk .ic-bd.dn { background: color-mix(in srgb, var(--mk-red) 14%, transparent); color: color-mix(in srgb, var(--mk-red) 75%, var(--mk-text)); } /* mixed toward the text so it reads on its own tint (4.5:1 in light) */
 .mk .ic-vf { display: inline-flex; flex: none; align-items: center; gap: 5px; margin-left: auto; color: var(--mk-lime); font-size: 12px; white-space: nowrap; }
 
 /* The sentence: the figure in it lit, with a soft glow. */
