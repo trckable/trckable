@@ -17,7 +17,7 @@ describe('the shared page header', () => {
   it('draws the site\'s initial on its colour when it has no icon', () => {
     const html = header({ color: '#3366ff' })
     expect(html).toContain('site-mark letter')
-    expect(html).toContain('>E<')
+    expect(html).toContain('data-letter="E"')
     expect(html).not.toContain('<img')
   })
   it('draws the icon from this server when it has one', () => {
