@@ -29,10 +29,11 @@ test('connect, see the card, and disconnect deletes it', async ({ page }) => {
     connected = false
     return r.fulfill({ status: 204 })
   })
-  // The sign-in: the server's start address sends the browser to the platform, which sends it back; here both are one hop.
+  // The sign-in: the server's start address sends the browser to the platform, which sends it back; here both are one hop
+  // (a page that goes straight back, since WebKit cannot fulfill a request with a redirect).
   await page.route('**/api/v1/channels/youtube/start', (r) => {
     connected = true
-    return r.fulfill({ status: 303, headers: { location: '/sites?channel=youtube&connected=1' } })
+    return r.fulfill({ contentType: 'text/html', body: `<script>location.replace('/sites?channel=youtube&connected=1')</script>` })
   })
 
   await page.goto(`${API}/sites`)

@@ -25,7 +25,6 @@ import { readView } from '../../lib/url'
 import { AnswersSlot } from './AnswersSlot'
 import { BounceNote } from './BounceNote'
 import { NumbersRow } from './NumbersRow'
-import { PaceFoot } from './PaceFoot'
 import { KeyHint } from '../ui/KeyHint'
 import { Kcs } from '../ui/KpiCard'
 import { MailRow } from '../ui/MailRow'
@@ -196,7 +195,7 @@ export default function Briefing({ site, data: page, loading, period, compare = 
           onSee={(k) => seeScorePart(site, k)}
           learn={learning ? { day: Math.min(7, parts.hd + 1) } : null}
           crowd={crowd}
-          numbers={empty || learning ? undefined : <NumbersRow cur={cur} prev={prev} money={money} pace={<PaceFoot site={site.id} today={today} range={range} />} />}
+          numbers={empty || learning ? undefined : <NumbersRow cur={cur} prev={prev} money={money} />}
           since={since}
           period={label}
           onPeriod={() => document.querySelector<HTMLElement>('#perBtn')?.click()}

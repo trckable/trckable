@@ -1238,8 +1238,6 @@ export default {
   'notes.openLabel': (n: number) => (n ? `Notas (${n})` : 'Notas'),
 
   // extras
-  'extras.pace': (total: string) => `Al ritmo de ~${total} este mes`,
-  'extras.paceShort': (total: string) => `→ ~${total} este mes`,
   'extras.ring.spike': (factor: number) => `Pico · ${times(factor)} lo habitual`,
   'extras.ring.newTraffic': (visitors: number) => `Tráfico nuevo · ${count(visitors, 'visitante', 'visitantes')}`,
   'extras.ring.from': (referrer: string) => `sobre todo de ${referrer}`,
@@ -3213,7 +3211,6 @@ export default {
   'briefing.paidStep': (after: string) => (after ? `Pagado después de ${after}` : 'Pagado'),
   'setup.ring': (done: number, counted: number) => `${done}/${counted} configurado`,
   'setup.allSet': 'Todo listo',
-  'setup.ringLabel': (done: number, counted: number) => `Configuración: ${done} de ${counted} pasos hechos`,
   'setup.title': (done: number, counted: number) => `Configuración · ${done} de ${counted}`,
   'setup.kind': 'Tipo de sitio',
   'setup.moreActions': 'Más',

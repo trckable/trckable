@@ -44,10 +44,13 @@ for (const [width, scheme] of [[1440, 'dark'], [390, 'light']] as const) {
   test(`${width}px ${scheme}: the page scrolls under a header that keeps a band of its own`, async ({ page }) => {
     await open(page, width, scheme)
     await page.waitForTimeout(800)
-    await page.evaluate(() => window.scrollTo(0, 260))
+    // Down as far as 260 px goes (a short page stops sooner), then a little back up.
+    const down = await page.evaluate(() => Math.min(260, document.documentElement.scrollHeight - innerHeight))
+    expect(down, 'room to scroll past the header').toBeGreaterThan(120)
+    await page.evaluate((y) => window.scrollTo(0, y), down)
     await page.waitForTimeout(600)
     // A phone's bar leaves on the way down: a little back up brings it in.
-    await page.evaluate(() => window.scrollTo(0, 240))
+    await page.evaluate((y) => window.scrollTo(0, y), down - 20)
     await page.waitForTimeout(600)
     const band = await page.evaluate(() => {
       const hd = document.querySelector('.hd')!.getBoundingClientRect()

@@ -36,10 +36,12 @@ for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark
     expect(Math.round(cb!.x)).toBeLessThanOrEqual(Math.round(row!.x) + 8)
     const notes = await page.locator('.nbtn').boundingBox()
     expect(Math.abs(notes!.y + notes!.height / 2 - (cb!.y + cb!.height / 2))).toBeLessThan(4)
-    // Nothing between the buttons and that row but a gap.
+    // Nothing between the buttons and that row but the key numbers and a gap.
     const buttons = await page.locator('.hero .rpb').first().boundingBox()
+    const nums = await page.locator('.hero .nrow').boundingBox()
+    expect(nums!.y).toBeGreaterThanOrEqual(buttons!.y + buttons!.height)
     // (A phone stacks its buttons and puts the score card between them and the row.)
-    if (width > 600) expect(row!.y - (buttons!.y + buttons!.height)).toBeLessThanOrEqual(40)
+    if (width > 600) expect(row!.y - (nums!.y + nums!.height)).toBeLessThanOrEqual(40)
     // The record day is a star on the chart, with its sentence as the tooltip.
     const star = page.locator('.moment-mark.record')
     if (await star.count()) {

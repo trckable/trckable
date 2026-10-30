@@ -194,18 +194,19 @@ test('Live starts as a line, the chart switch keeps bars across a reload and bot
   await expect(style.getByRole('button', { name: 'Bars' })).toHaveAttribute('aria-pressed', 'true')
   const bars = await read('.lnow .mins')
   // Other specs' visits land on the shared site between the two reads, so compare the minutes, not the counts.
-  const shape = (s: string | null) => (s ?? '').replace(/\d+ in all/, 'N in all')
+  // The line is people on the site, the bars are views: each group says which.
   const minute = (s: string | null) => (s ?? '').match(/\d{1,2}:\d{2}/)?.[0] ?? s
-  expect(shape(line.label)).toBe(shape(bars.label))
+  expect(line.label).toBe('People on the site each minute over the last 30 minutes')
+  expect(bars.label).toMatch(/^Views per minute over the last 30 minutes: \d+ in all$/)
   expect(line.titles.length).toBe(30)
   expect(line.titles.map(minute)).toEqual(bars.titles.map(minute))
-  // Hovering a minute names it and its views, in the bars and in the line.
+  // Hovering a minute names it and its views in the bars, its people in the line.
   await page.locator('.lnow .mins i').nth(12).hover()
   await expect(page.locator('.lchart .kit-tip')).toContainText(/\d{1,2}:\d{2}/)
   await expect(page.locator('.lchart .kit-tip')).toContainText(/\d+ views?/)
   await style.getByRole('button', { name: 'Line' }).click()
   await page.locator('.lnow .mhits i').nth(12).hover()
-  await expect(page.locator('.lchart .kit-tip')).toContainText(/\d+ views?/)
+  await expect(page.locator('.lchart .kit-tip')).toContainText(/\d+ on the site/)
 })
 
 test('the sample revenue card on Live is never clipped: Connect sits fully inside the card', async ({ page }) => {

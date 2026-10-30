@@ -21,7 +21,7 @@ const LOAD_MS = 10_000
 const WATCH_MS = 45_000
 
 // The most calls a first load may make (Live 19 and the Briefing 31 were measured, with the lazy reads that follow the load and the bell and the setup ring sharing one read of the account's marks).
-const BUDGET = { Live: 21, Briefing: 38 } // (+2: the bell also reads the busy spells the server recorded for the site and the other sites it tells) (reads other than /now, counted apart; Live's was 19 until its Speed & uptime and AI & mentions cards: crawlers, speed and the uptime record, read once the page is quiet; the Briefing's was 31 until a young site opened on Today, which reads the 30 days behind it as well and the day's own hours; 33 until Live is built behind it when the page is idle, so the first switch to it has its numbers: 4 reads; 36 once the signup path reads the site's saved funnels, one read kept for a minute)
+const BUDGET = { Live: 21, Briefing: 39 } // (+2: the bell also reads the busy spells the server recorded for the site and the other sites it tells) (reads other than /now, counted apart; Live's was 19 until its Speed & uptime and AI & mentions cards: crawlers, speed and the uptime record, read once the page is quiet; the Briefing's was 31 until a young site opened on Today, which reads the 30 days behind it as well and the day's own hours; 33 until Live is built behind it when the page is idle, so the first switch to it has its numbers: 4 reads; 36 once the signup path reads the site's saved funnels, one read kept for a minute; 38 until the Briefing's AI crawlers card reads the period's robots)
 
 const tally = (urls: string[]) => {
   const out: Record<string, number> = {}
@@ -78,7 +78,9 @@ for (const [name, query] of [['Live', 'view=live'], ['Briefing', 'view=briefing'
       expect(twice, 'asked twice by the load').toEqual([])
       const again = minute.filter((u) => /\/(report|mentions|milestones|incidents|busier)(\?|$)/.test(u.replace(/\/sites\/[^/?]+/, '')))
       expect(again, 'asked again within 45 s').toEqual([])
-      for (const [url, n] of Object.entries(tally(minute))) expect(n, `${url} in 45 s`).toBeLessThanOrEqual(/\/now$/.test(url) ? 5 : 1)
+      // (The sites list is read every 30 s by design: 45 s hold one or two of those reads, by where the load ended.)
+      const most = (url: string) => (/\/now$/.test(url) ? 5 : url === '/api/v1/sites' ? Math.ceil(WATCH_MS / 30_000) : 1)
+      for (const [url, n] of Object.entries(tally(minute))) expect(n, `${url} in 45 s`).toBeLessThanOrEqual(most(url))
       expect(first.filter((u) => !isNow(u)).length).toBeLessThanOrEqual(BUDGET[name])
       expect(first.filter(isNow).length, '/now in the load').toBeLessThanOrEqual(4)
       expect(first.filter((u) => /health$/.test(u))).toEqual([])

@@ -5,7 +5,6 @@ import { fmtInt } from '../../lib/format'
 export const copy = defineCopy('setup', {
   ring: (done: number, counted: number) => `${done}/${counted} set up`,
   allSet: 'All set',
-  ringLabel: (done: number, counted: number) => `Setup: ${done} of ${counted} steps done`,
   title: (done: number, counted: number) => `Set up · ${done} of ${counted}`,
   kind: 'Site type',
   moreActions: 'More',

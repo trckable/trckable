@@ -1,4 +1,4 @@
-// Every word of the Data view's extras: the pace line, the lines the chart's
+// Every word of the Data view's extras: the lines the chart's
 // moments say, Highlights, the revenue tabs, Latest buyers. Messages with
 // the rest of the dashboard's words, for when translations come.
 import { fmtInt, fmtPct } from '../../lib/format'
@@ -8,8 +8,6 @@ import { defineCopy } from '../../i18n'
 const plural = (n: number, one: string, many: string) => `${fmtInt(n)} ${n === 1 ? one : many}`
 
 export const extrasCopy = defineCopy('extras', {
-  pace: (total: string) => `On pace for ~${total} this month`,
-  paceShort: (total: string) => `→ ~${total} this month`,
   /** What a spike or a burst of sales says (the moments on the chart). */
   ring: {
     spike: (factor: number) => `Spike · ${times(factor)} the usual`,

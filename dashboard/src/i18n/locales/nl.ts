@@ -1225,8 +1225,6 @@ export default {
   'notes.openLabel': (n: number) => (n ? `Notities (${n})` : 'Notities'),
 
   // extras
-  'extras.pace': (total: string) => `Op koers voor ~${total} deze maand`,
-  'extras.paceShort': (total: string) => `→ ~${total} deze maand`,
   'extras.ring.spike': (factor: number) => `Piek · ${times(factor)} het gebruikelijke`,
   'extras.ring.newTraffic': (visitors: number) => `Nieuw verkeer · ${count(visitors, 'bezoeker', 'bezoekers')}`,
   'extras.ring.from': (referrer: string) => `vooral van ${referrer}`,
@@ -3220,7 +3218,6 @@ export default {
   'briefing.paidStep': (after: string) => (after ? `Betaald na ${after}` : 'Betaald'),
   'setup.ring': (done: number, counted: number) => `${done}/${counted} ingesteld`,
   'setup.allSet': 'Alles ingesteld',
-  'setup.ringLabel': (done: number, counted: number) => `Instellen: ${done} van ${counted} stappen klaar`,
   'setup.title': (done: number, counted: number) => `Instellen · ${done} van ${counted}`,
   'setup.kind': 'Soort site',
   'setup.moreActions': 'Meer',
