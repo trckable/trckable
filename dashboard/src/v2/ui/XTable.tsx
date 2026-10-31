@@ -66,17 +66,19 @@ export function XTable({ rows, head, unit = copy.people, mono, flags, selected, 
   const signups = rows.some((r) => r.su !== undefined)
   // Columns after the share: signups, then (with payments) conversion and revenue. A phone keeps the signups and drops the money.
   const wide = ['minmax(0,1fr) 70px 96px 64px', ...(signups ? ['64px'] : []), ...(paid ? ['64px 84px'] : [])].join(' ')
+  // The side panel has no share column and no conversion: the name keeps its room.
+  const panel = ['minmax(0,1fr) 70px 96px', ...(signups ? ['64px'] : []), ...(paid ? ['84px'] : [])].join(' ')
   const narrow = ['minmax(0,1fr) 52px 64px', ...(signups ? ['52px'] : [])].join(' ')
   const max = Math.max(1, ...rows.map((r) => Math.max(r.v, r.c)))
   return (
-    <div className={`xt${paid || signups ? ' xc' : ''}`} style={paid || signups ? ({ '--xc': wide, '--xcm': narrow } as React.CSSProperties) : undefined}>
+    <div className={`xt${paid || signups ? ' xc' : ''}`} style={paid || signups ? ({ '--xc': wide, '--xcp': panel, '--xcm': narrow } as React.CSSProperties) : undefined}>
       <div className="xth">
         <span>{head}</span>
         <span>{unit}</span>
         <span>{copy.vsUsual}</span>
         <span className="shh">{copy.share}</span>
         {signups && <span>{copy.heads.signups}</span>}
-        {paid && <span className="hm">{copy.heads.conv}</span>}
+        {paid && <span className="hm cv">{copy.heads.conv}</span>}
         {paid && <span className="hm">{copy.heads.revenue}</span>}
       </div>
       {rows.slice(0, limit).map((r) => {
@@ -91,7 +93,7 @@ export function XTable({ rows, head, unit = copy.people, mono, flags, selected, 
             <span className={`d ${d.tone}`}>{d.text}</span>
             <span className="sh">{shareOf(r.v, of)}</span>
             {signups && <span className="mk-n">{r.su ? fmtInt(r.su) : '–'}</span>}
-            {paid && <span className="mk-n hm">{r.v > 0 ? fmtPct(Math.min(1, (r.cust ?? 0) / r.v)) : '–'}</span>}
+            {paid && <span className="mk-n hm cv">{r.v > 0 ? fmtPct(Math.min(1, (r.cust ?? 0) / r.v)) : '–'}</span>}
             {paid && <span className="mk-n hm">{r.rev ? money(r.rev) : '–'}</span>}
           </>
         )
