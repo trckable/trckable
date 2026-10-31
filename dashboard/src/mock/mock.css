@@ -1194,7 +1194,10 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .xt.xc .xrw .two small{font-size:12px;color:var(--mk-muted)}
 .mk .xt.xc .xrw .two .ms{color:var(--mk-lime)}
 .mk .xt.xc .ph{display:none}
-.mk .xp .xt.xc .xth,.mk .xp .xt.xc .xrw{grid-template-columns:var(--xc)}
+.mk .xp .xt.xc .xth,.mk .xp .xt.xc .xrw{grid-template-columns:var(--xcp)}
+.mk .xp .xt.xc .cv{display:none}
+.mk .xp.full .xt.xc .xth,.mk .xp.full .xt.xc .xrw{grid-template-columns:var(--xc)}
+.mk .xp.full .xt.xc .cv{display:revert}
 .mk .xt.xc .xrw .mk-n{white-space:nowrap}
 .mk .xt.xc .xrw .mk-n .vg{margin-right:6px;vertical-align:1px}
 .mk .xt.xc .xrw .mk-n:last-child{color:var(--mk-text)}
@@ -1237,8 +1240,8 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .xnote .xb{height:44px}
 .mk .xedr select{flex:1 1 100%}
 .mk .xedr .xb{height:44px}
-.mk .xp .xt.xc .xth,.mk .xp .xt.xc .xrw{grid-template-columns:var(--xcm)}
-.mk .xt.xc .hm{display:none}
+.mk .xp .xt.xc .xth,.mk .xp .xt.xc .xrw,.mk .xp.full .xt.xc .xth,.mk .xp.full .xt.xc .xrw{grid-template-columns:var(--xcm)}
+.mk .xt.xc .hm,.mk .xp.full .xt.xc .cv{display:none}
 .mk .xt.xc .ph{display:inline}
 .mk .xm,.mk .xm.xmenu,.mk .xw.r .xm{padding-bottom:calc(var(--mk-s4) + env(safe-area-inset-bottom,0px))}
 .mk .xgrab{display:block;width:36px;height:4px;border-radius:2px;background:var(--mk-grab);margin:0 auto var(--mk-s2)}
