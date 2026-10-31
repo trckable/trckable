@@ -15,7 +15,7 @@ import { plainSpan } from '../../lib/plainSpan'
 import { downStateOf } from '../../features/sitestatus/status'
 import { whyDown } from '../briefing/why'
 import { liveCount, liveLink } from '../../features/live/liveLink'
-import { feedOf, peopleAt, seriesAt } from '../../features/live/model'
+import { feedOf, onlineAt, peopleAt, seriesAt } from '../../features/live/model'
 import type { Busier, LiveNow } from '../../features/live/api'
 import { useTicking } from '../../features/live/useTicking'
 import { AnalyticsCard } from './AnalyticsCard'
@@ -84,7 +84,9 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
     liveLink.set(stream.connected)
     return () => liveLink.set(true)
   }, [stream.connected])
-  const online = onlineNow(stream, data?.online, data?.online, got) ?? null
+  const reading = onlineNow(stream, data?.online, data?.online, got) ?? null
+  // The newer of the two readings is the one onlineNow chose; on the server's clock, as the rows are.
+  const online = data ? onlineAt(reading, Math.max(stream.at ?? 0, got) + skew, data.recent, stream.visits, data.at, now) : reading
   useEffect(() => liveCount.set(online), [online])
   const rows = useMemo(() => (data ? feedOf(data.recent, stream.visits, data.at, now) : []), [data, stream.visits, now])
   const lists = useMemo(() => listsOf(rows), [rows])
