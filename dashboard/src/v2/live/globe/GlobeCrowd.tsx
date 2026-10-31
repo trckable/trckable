@@ -4,11 +4,12 @@ import { Avatar } from '../../../components/visitor/Avatar'
 import { SourceMark } from '../../../components/visitor/SourceMark'
 import { copy as jcopy } from '../../../features/journey/copy'
 import type { Row } from '../../../features/live/model'
-import { countryName, flag } from '../../../lib/format'
+import { countryName } from '../../../lib/format'
 import { nameOf } from '../../../lib/visitor'
 import { channelLabel } from '../../../lib/palette'
 import { copy } from '../copy'
 import { agoOf } from './geo'
+import { Flag } from '../../ui/Flag'
 
 /** The most rows listed; the rest are counted. */
 export const CROWD_MAX = 50
@@ -36,7 +37,7 @@ export function GlobeCrowd({ rows, title, clock, onPick, onClose }: { rows: Row[
         {shown.map((r) => (
           <li key={r.key}>
             <button type="button" className="gcrow" onClick={() => onPick(r.key)}>
-              {r.visitor ? <Avatar id={r.visitor} size={28} live /> : <span className="gcc" aria-hidden="true">{flag(r.country ?? '')}</span>}
+              {r.visitor ? <Avatar id={r.visitor} size={28} live /> : <span className="gcc"><Flag code={r.country ?? ''} /></span>}
               <span className="gcwho">
                 <b>{r.visitor ? nameOf(r.visitor) : [r.city, r.country ? countryName(r.country) : ''].filter(Boolean).join(', ')}</b>
                 <code className="mono">{pageOf(r)}</code>

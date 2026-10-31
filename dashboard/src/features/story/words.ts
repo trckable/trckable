@@ -1,7 +1,7 @@
 // How one moment reads in its pop: an icon, a line and a faint second line.
 import { Bot, Coins, Flag, Ghost, Globe, Newspaper, StickyNote, TrendingUp, type LucideIcon } from 'lucide-react'
 import type { MilestoneKind } from '../../lib/api'
-import { countryName, flag } from '../../lib/format'
+import { countryName } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
 import { times } from '../../lib/times'
 import { say } from '../milestones/words'
@@ -46,7 +46,7 @@ export function wordsOf(m: Moment, fmt?: (minor: number) => string): Words {
       return { icon, line: copy.sale(m.count ?? 1), sub: sub || undefined }
     }
     case 'country':
-      return { icon, line: copy.country(countryName(m.country ?? '')), sub: flag(m.country ?? '') }
+      return { icon, line: copy.country(countryName(m.country ?? '')) }
     case 'ai':
       return { icon, line: copy.ai(m.bot ?? '') }
     case 'milestone': {

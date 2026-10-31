@@ -4,10 +4,11 @@
 // you are in Full mode.
 import { useMemo, useState } from 'react'
 import type { Row } from '../lib/api'
-import { countryName, flag, fmtInt } from '../lib/format'
+import { countryName, fmtInt } from '../lib/format'
 import { COUNTRIES, MAP_H, MAP_W } from '../lib/worldmap'
 import './WorldMap.css'
 import '../charts/Tip.css'
+import { Flag } from '../v2/ui/Flag'
 
 /** What the map shades by. Visitors unless told otherwise: the revenue card
  *  passes the money, its own words and a hue of its own. */
@@ -85,7 +86,7 @@ export function WorldMap({ rows, onPick, metric = VISITORS }: { rows: Row[]; onP
       {hovered && at && (
         <div className="chart-tip" style={{ left: Math.min(at.x + 14, 320), top: Math.max(at.y - 16, 0) }} aria-hidden="true">
           <b>
-            {flag(hovered.code)} {countryName(hovered.code)}
+            <Flag code={hovered.code} /> {countryName(hovered.code)}
           </b>
           <span className="num">{metric.fmt(hovered.n)}</span>
         </div>
@@ -93,7 +94,7 @@ export function WorldMap({ rows, onPick, metric = VISITORS }: { rows: Row[]; onP
       <div className="worldmap-foot">
         {hovered ? (
           <span>
-            {flag(hovered.code)} <b>{countryName(hovered.code)}</b> <span className="num">{metric.fmt(hovered.n)}</span>
+            <Flag code={hovered.code} /> <b>{countryName(hovered.code)}</b> <span className="num">{metric.fmt(hovered.n)}</span>
           </span>
         ) : (
           <span className="faint">{metric.foot(by.size)}</span>

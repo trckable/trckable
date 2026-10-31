@@ -470,7 +470,7 @@ for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark
     const row = page.locator('.lfeed .lv').first()
     await expect(row).toBeVisible({ timeout: 15_000 })
     await row.hover()
-    await expect.poll(() => row.locator('img.flag').evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0)
+    await expect.poll(() => row.locator('img.cflag').evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0)
     await expect(row.locator('.ccn')).toHaveText('US')
     // The fill eases in: read it once the row has settled under the pointer.
     await expect.poll(() => row.evaluate((el) => getComputedStyle(el).backgroundColor), { timeout: 5000 }).not.toBe('rgba(0, 0, 0, 0)')

@@ -18,7 +18,7 @@ describe('the sales cards', () => {
   it('puts the buyer\'s country on the receipt line, and nothing when the provider named none', () => {
     const [c] = salesCards({ ...base, money: money(), band: null, buyers: [{ id: 'a', at: '2026-10-16T15:20:00Z', amount: 8700, kind: 'new', country: 'DE' }, { id: 'b', at: '2026-10-16T16:00:00Z', amount: 500, kind: 'new' }] })
     const rows = c.vis?.k === 'rcpt' ? c.vis.rows : []
-    expect(rows.map((r) => r.flag)).toEqual(['\u{1F1E9}\u{1F1EA}', '', ''])
+    expect(rows.map((r) => r.flag)).toEqual(['DE', '', ''])
   })
   it('lists the refunds as a receipt and counts them over 90 days', () => {
     const refunds = { count: 2, amount: 3000, count_90d: 5, refunds: [{ id: 'x', at: '2026-10-16T15:20:00Z', amount: 2000, kind: 'subscription', country: 'FR' }, { id: 'y', at: '2026-10-16T12:00:00Z', amount: 1000, kind: 'renewal' }] }
@@ -28,7 +28,7 @@ describe('the sales cards', () => {
     expect(c.vis).toEqual({
       k: 'rcpt',
       rows: [
-        { l: 'Refund · New customer', t: '15:20', a: '-$20', flag: '\u{1F1EB}\u{1F1F7}', neg: true },
+        { l: 'Refund · New customer', t: '15:20', a: '-$20', flag: 'FR', neg: true },
         { l: 'Refund · Renewal', t: '12:00', a: '-$10', flag: '', neg: true },
         { l: 'Refunded', t: '', a: '-$30', flag: '', neg: true, tot: true },
       ],
@@ -158,7 +158,7 @@ describe('the signup path and a first customer', () => {
     const c = firstCard({ first: { country: 'DE', amount: 2900, at: '2026-10-16T09:05:00Z', referrer: 'news.ycombinator.com', people: 14 }, band: { c: 10, lo: 6, hi: 14 }, fmt: usd, clock: (iso) => iso.slice(11, 16), rule: '' })
     expect(c.head).toBe('Your first customer from Germany')
     expect(c.kc).toMatchObject({ label: 'Germany' })
-    expect(c.vis).toEqual({ k: 'journey', steps: [{ l: 'Hacker News' }, { l: '\u{1F1E9}\u{1F1EA} Germany' }, { l: '$29', t: 'New customer · 09:05' }] })
+    expect(c.vis).toEqual({ k: 'journey', steps: [{ l: 'Hacker News' }, { l: 'Germany', flag: 'DE' }, { l: '$29', t: 'New customer · 09:05' }] })
     expect(c.why).toContain('$29 via')
   })
 })

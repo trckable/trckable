@@ -1,11 +1,12 @@
 // One visit: when, where from, on what, and the timeline of what they did.
-import { countryName, flag, fmtDuration } from '../../lib/format'
+import { countryName, fmtDuration } from '../../lib/format'
 import { DeviceIcon } from '../../components/visitor/DeviceIcon'
 import { copy } from './copy'
 import type { VisitStory } from './model'
 import { SourceChip, type OnFilter } from './SourceChip'
 import { TimelineNode } from './TimelineNode'
 import { fmtDayShort, fmtTime, isoOf } from './when'
+import { Flag } from '../../v2/ui/Flag'
 
 export function VisitCard({ v, currency, onFilter }: { v: VisitStory; currency: string; onFilter?: OnFilter }) {
   const headId = `jr-${v.key}`
@@ -22,7 +23,7 @@ export function VisitCard({ v, currency, onFilter }: { v: VisitStory; currency: 
         <span className="jr-visit-meta faint">
           {v.country && (
             <span title={countryName(v.country)}>
-              <span aria-hidden="true">{flag(v.country)}</span> {v.country}
+              <Flag code={v.country} /> {v.country}
             </span>
           )}
           {v.device && (

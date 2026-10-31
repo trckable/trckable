@@ -5,7 +5,7 @@ import { XEmpty, XError, XSec } from '../../../ui/XBits'
 import { Loading } from '../../../../components/loading/Loading'
 import { CookielessOff } from '../../../../features/cookieless/Off'
 import { call, type ReportQuery } from '../../../../lib/api'
-import { countryName, flag } from '../../../../lib/format'
+import { countryName } from '../../../../lib/format'
 import { visibleInterval } from '../../../../lib/visibleInterval'
 import { channelColor, channelLabel } from '../../../../lib/palette'
 import { liveNow } from '../../../../features/live/api'
@@ -18,6 +18,7 @@ import { pathOf } from '../../../../features/extras/Buyers'
 import { useLoad } from '../../data/useLoad'
 import { copy } from '../../copy'
 import type { XCtx } from '../../ctx'
+import { Flag } from '../../../ui/Flag'
 
 const SIGN: Record<Tone, string> = { up: '▲', down: '▼', money: '$', warn: '!', new: '+' }
 const KIND: Record<Tone, string> = { up: 'new', down: 'refund', money: 'renewal', warn: 'refund', new: 'upgrade' }
@@ -117,7 +118,7 @@ export function People({ x, onPick }: { x: XCtx; onPick: (visitor: string) => vo
             <span className="gn">
               <div className="mono">{p.path}</div>
               <div className="mk-quiet" style={{ fontSize: '12px' }}>
-                {[p.country ? `${flag(p.country)} ${countryName(p.country)}` : '', source, p.device, p.pages > 0 ? c.pages(p.pages, span(p.seconds)) : ''].filter(Boolean).join(' · ')}
+                {p.country && <><Flag code={p.country} />{' '}</>}{[p.country ? countryName(p.country) : '', source, p.device, p.pages > 0 ? c.pages(p.pages, span(p.seconds)) : ''].filter(Boolean).join(' · ')}
               </div>
             </span>
             <span className="mk-quiet">{ago(now - p.last)}</span>

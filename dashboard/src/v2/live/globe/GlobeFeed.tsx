@@ -1,13 +1,13 @@
 // The recent pageviews and events beside the globe: flag, page or event, how long ago. New rows slide in at the top and
 // older ones fade. The rows are the ones "On the site right now" holds, so both lists name the same people.
 import { useMemo } from 'react'
-import { flag } from '../../../lib/format'
 import type { Row } from '../../../features/live/model'
 import { copy as liveCopy } from '../../../features/live/copy'
 import { useLeaving } from '../../../features/live/useLeaving'
 import { useArrivals } from '../useArrivals'
 import { copy } from '../copy'
 import { agoOf } from './geo'
+import { Flag } from '../../ui/Flag'
 
 const SHOWN = 14
 
@@ -27,7 +27,7 @@ export function GlobeFeed({ rows, clock, active, onPick }: { rows: Row[]; clock:
         const a = agoOf(clock - r.last)
         return (
           <button key={r.key} type="button" className={`lv ${r.leaving ? 'leaving' : (marks.get(r.key) ?? '')}${active === r.key ? ' on' : ''}`.trim()} style={{ opacity: Math.max(0.3, 1 - i * 0.055) }} disabled={r.leaving} onClick={() => onPick(r)}>
-            <span className="gcc" aria-hidden="true">{flag(r.country ?? '')}</span>
+            <span className="gcc"><Flag code={r.country ?? ''} /></span>
             <span className="pg mono" title={textOf(r)}>{textOf(r)}</span>
             <span className="src">{a.unit === 's' ? copy.agoSec(a.n) : copy.agoMin(a.n)}</span>
           </button>

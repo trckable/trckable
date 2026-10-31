@@ -105,12 +105,6 @@ export function countryName(code: string) {
   }
 }
 
-export function flag(code: string) {
-  if (!code || code.length !== 2) return ''
-  const up = code.toUpperCase()
-  return String.fromCodePoint(0x1f1a5 + up.charCodeAt(0), 0x1f1a5 + up.charCodeAt(1))
-}
-
 /** How many decimals a currency has (2 for dollars, 0 for yen, 3 for dinars): what a typed amount is checked against. */
 export function currencyDigits(currency: string): number {
   try {

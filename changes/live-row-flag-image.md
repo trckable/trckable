@@ -1,1 +1,1 @@
-Live: the On the site right now list shows a real flag picture in every browser, also on Windows.
+Flags are real pictures everywhere in the dashboard, so they also show in Windows browsers.

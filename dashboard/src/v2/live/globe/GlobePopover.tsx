@@ -10,7 +10,7 @@ import { SourceMark } from '../../../components/visitor/SourceMark'
 import { copy as jcopy } from '../../../features/journey/copy'
 import { useJourney } from '../../../features/journey/useJourney'
 import type { Row } from '../../../features/live/model'
-import { countryName, flag, fmtDuration } from '../../../lib/format'
+import { countryName, fmtDuration } from '../../../lib/format'
 import { useNarrow } from '../../../lib/useNarrow'
 import { channelLabel } from '../../../lib/palette'
 import { nameOf } from '../../../lib/visitor'
@@ -18,6 +18,7 @@ import { openExplore } from '../../explore/open'
 import { copy } from '../copy'
 import { GlobeCrowd } from './GlobeCrowd'
 import { agoOf } from './geo'
+import { Flag } from '../../ui/Flag'
 
 const dayStr = (d: Date) => d.toISOString().slice(0, 10)
 /** The last 30 days, for the journey behind a visitor (how many visits they have made). */
@@ -70,14 +71,14 @@ function Card({ row, clock, gone, extra, onClose, onVisitor, onLeave, onBack }: 
   return (
     <div className="gcardv">
       <Head onClose={onClose} onBack={onBack}>
-        {row.visitor ? <Avatar id={row.visitor} size={64} live={!gone} /> : <span className="gpop-flag" aria-hidden="true">{flag(row.country ?? '')}</span>}
+        {row.visitor ? <Avatar id={row.visitor} size={64} live={!gone} /> : <span className="gpop-flag"><Flag code={row.country ?? ''} width={32} /></span>}
         <div className="gwho">
           <b>{row.visitor ? nameOf(row.visitor) : place}</b>
           {gone ? (
             <span className="mk-quiet">{copy.leftNow}</span>
           ) : (
             <ul className="gfacts">
-              {place && <li><span aria-hidden="true">{flag(row.country ?? '')}</span> {place}</li>}
+              {place && <li><Flag code={row.country ?? ''} /> {place}</li>}
               {extra.os && <li><Cpu size={14} aria-hidden="true" /> {extra.os}</li>}
               {row.device && <li><DeviceIcon device={row.device} /> {row.device}</li>}
               {row.browser && <li><Globe size={14} aria-hidden="true" /> {row.browser}</li>}

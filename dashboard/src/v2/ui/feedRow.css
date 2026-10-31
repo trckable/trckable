@@ -9,7 +9,7 @@
 .mk .lfeed .lv .pg { color: var(--mk-text); font-weight: 400; }
 /* The country: its flag, then its code; a phone keeps the flag and drops the code first. */
 .mk .lfeed .lv .cc { display: inline-flex; align-items: center; gap: 6px; width: 54px; flex: none; }
-.mk .lfeed .lv .cc .flag { flex: none; border-radius: 2px; }
+.mk .lfeed .lv .cc .cflag { flex: none; }
 @container (--pane-max-600) {
   .mk .lfeed .lv .cc { width: 22px; }
   .mk .lfeed .lv .cc .ccn { display: none; }

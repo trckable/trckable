@@ -2,7 +2,7 @@
 // reads real answers (the payments, Search Console, the page's heatmap) and says nothing without them. Pure: cards.money.test.ts.
 import type { Money, SearchRow } from '../../lib/api'
 import type { Buyer, Refunds } from '../../features/extras/extrasApi'
-import { countryName, flag, fmtInt, fmtFixed } from '../../lib/format'
+import { countryName, fmtInt, fmtFixed } from '../../lib/format'
 import { copy } from './cards.copy'
 import type { Story, Vis } from './cards'
 import { sourceName } from './model'
@@ -51,7 +51,7 @@ function who(buyers: Buyer[], money: Money): string {
 function refundVis(i: SalesIn): Story['vis'] {
   const r = i.refunds
   if (!r || r.refunds.length === 0) return null
-  const rows = r.refunds.slice(0, 4).map((x) => ({ l: copy.refundRow(kindWord(x.kind)), t: i.clock(x.at), a: x.amount > 0 ? `-${i.fmt(x.amount)}` : `+${i.fmt(-x.amount)}`, flag: flag(x.country ?? ''), neg: true }))
+  const rows = r.refunds.slice(0, 4).map((x) => ({ l: copy.refundRow(kindWord(x.kind)), t: i.clock(x.at), a: x.amount > 0 ? `-${i.fmt(x.amount)}` : `+${i.fmt(-x.amount)}`, flag: x.country ?? '', neg: true }))
   const extra = r.count > rows.length ? [{ l: copy.more(r.count - rows.length), more: true }] : []
   return { k: 'rcpt', rows: [...rows, ...extra, { l: copy.refundTot, t: '', a: `-${i.fmt(r.amount)}`, flag: '', neg: true, tot: true }] }
 }
@@ -82,7 +82,7 @@ export function salesCards(i: SalesIn): Story[] {
   if (money.payments > 0) {
     // The headline, the rows and the total are the same sales, net of what went back: the rows add up to the total.
     const total = money.revenue
-    const rows = buyers.slice(0, 4).map((b) => ({ l: `${kindWord(b.kind)}${b.referrer ? copy.via(sourceName(b.referrer)) : ''}`, t: i.clock(b.at), a: `+${fmt(b.amount)}`, flag: flag(b.country ?? '') }))
+    const rows = buyers.slice(0, 4).map((b) => ({ l: `${kindWord(b.kind)}${b.referrer ? copy.via(sourceName(b.referrer)) : ''}`, t: i.clock(b.at), a: `+${fmt(b.amount)}`, flag: b.country ?? '' }))
     const extra = buyers.length > 4 ? [{ l: copy.more(buyers.length - 4), more: true }] : []
     const un = unlisted(buyers, money)
     const renewed = un.n > 0 ? [{ l: copy.renewals(un.n), t: '', a: `+${fmt(un.net)}`, flag: '' }] : []
@@ -278,7 +278,7 @@ export function firstCard(i: { first: FirstFrom; band: Band | null; fmt: (minor:
     score: 68,
     head: copy.firstFrom(name),
     rest: '',
-    vis: { k: 'journey', steps: [...(f.referrer ? [{ l: sourceName(f.referrer) }] : []), { l: `${flag(f.country)} ${name}` }, { l: i.fmt(f.amount), t: `${copy.newCustomer} · ${i.clock(f.at)}` }] },
+    vis: { k: 'journey', steps: [...(f.referrer ? [{ l: sourceName(f.referrer) }] : []), { l: name, flag: f.country }, { l: i.fmt(f.amount), t: `${copy.newCustomer} · ${i.clock(f.at)}` }] },
     why: copy.firstWhy(i.fmt(f.amount), via, i.clock(f.at), name, band ? `${fmtInt(Math.max(0, band.lo))}–${fmtInt(band.hi)}` : ''),
     val: '1st',
     m: 1,
@@ -288,6 +288,6 @@ export function firstCard(i: { first: FirstFrom; band: Band | null; fmt: (minor:
     act: { k: 'set', t: copy.firstAlert, msg: copy.firstAlertMsg(name) },
     deeper: { kind: 'explore', filter: { dim: 'country', value: f.country } },
     mark: copy.firstNote,
-    kc: { flag: flag(f.country), label: name },
+    kc: { flag: f.country, label: name },
   }
 }

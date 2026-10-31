@@ -16,6 +16,7 @@ import { VerifiedWith } from './VerifiedWith'
 import './storyCard.css'
 import './incidentCard.css'
 import type { Story } from '../briefing/cards'
+import { Flag } from './Flag'
 
 export interface CardCtx {
   onDeeper: (s: Story) => void
@@ -109,7 +110,7 @@ export function Card({ s, c }: { s: Story; c: CardCtx }) {
       <div className="ic-h">
         <div className="ic-top">
           <Ico name={s.key === 'milestone' ? 'goals' : s.key} className="ic-i" />
-          <span className="ic-sub">{sh.subject}</span>
+          <span className="ic-sub">{sh.flag && <><Flag code={sh.flag} />{' '}</>}{sh.subject}</span>
           {s.key === 'search' && <SourceChip verified={c.verified} slot="search" compact />}
           {s.key === 'sales' && <VerifiedWith verified={c.verified} />}
           {sh.badge && <span className={`ic-bd ${sh.badge.tone}`}>{sh.badge.text}</span>}

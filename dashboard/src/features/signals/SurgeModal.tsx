@@ -7,7 +7,7 @@ import { Bell, X, TrendingUp } from 'lucide-react'
 import { Modal } from '../../kit/Modal'
 import type { Filter } from '../../lib/api'
 import type { ViewState } from '../../lib/url'
-import { countryName, fmtInt, flag } from '../../lib/format'
+import { countryName, fmtInt } from '../../lib/format'
 import { SourceMark } from '../../components/visitor/SourceMark'
 import { Rolling } from '../moments/Rolling'
 import { signals } from './copy'
@@ -16,6 +16,7 @@ import { SurgeChart } from './SurgeChart'
 import { useFullSurge } from './useFullSurge'
 import { useSurgeActions } from './useSurgeActions'
 import './surge.css'
+import { Flag } from '../../v2/ui/Flag'
 
 const t = signals.surge
 
@@ -122,7 +123,7 @@ function Tiles({ surge, story }: { surge: Surge; story: Story }) {
           {story.countries.map((c) => (
             <p key={c.country} className="sgm-row">
               <span>
-                <span aria-hidden="true">{flag(c.country)}</span> {countryName(c.country)}
+                <Flag code={c.country} /> {countryName(c.country)}
               </span>
               <b>{fmtInt(c.n)}</b>
             </p>

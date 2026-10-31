@@ -2,13 +2,14 @@
 // smoothly and the oldest slips out; a click focuses that visitor's pin and opens their card.
 import { useMemo } from 'react'
 import { Avatar } from '../../../components/visitor/Avatar'
-import { countryName, flag } from '../../../lib/format'
+import { countryName } from '../../../lib/format'
 import { nameOf } from '../../../lib/visitor'
 import type { Row } from '../../../features/live/model'
 import { useLeaving } from '../../../features/live/useLeaving'
 import { useArrivals } from '../useArrivals'
 import { copy } from '../copy'
 import { agoOf } from './geo'
+import { Flag } from '../../ui/Flag'
 
 const SHOWN = 5
 /** Under this many seconds a visitor "just" came in. */
@@ -31,11 +32,11 @@ export function GlobeNew({ rows, clock, onPick }: { rows: Row[]; clock: number; 
       <h3>{copy.newVisitors}</h3>
       {list.map((r) => (
         <button key={r.key} type="button" className={`gnv ${r.leaving ? 'leaving' : (marks.get(r.key) ?? '')}`.trim()} disabled={r.leaving} onClick={() => onPick(r)}>
-          {r.visitor ? <Avatar id={r.visitor} size={28} /> : <span className="gnf" aria-hidden="true">{flag(r.country ?? '')}</span>}
+          {r.visitor ? <Avatar id={r.visitor} size={28} /> : <span className="gnf"><Flag code={r.country ?? ''} width={20} /></span>}
           <span className="gnt">
             <b>{r.visitor ? nameOf(r.visitor) : (r.city || countryName(r.country ?? ''))}</b>
             <span className="mk-quiet">
-              {r.country && <span aria-hidden="true">{flag(r.country)} </span>}
+              {r.country && <><Flag code={r.country} />{' '}</>}
               {r.city ? `${r.city} · ` : ''}
               <span className="mono">{r.kind === 'goal' ? (r.label || r.goal) : (r.path ?? '/')}</span>
             </span>

@@ -1,12 +1,13 @@
 // Live's first card under the half hour: today's visitors, and where they are, as a bar list of the pages or of the
 // countries behind one small switch.
 import { useState } from 'react'
-import { countryName, fmtInt, flag, weekdayName } from '../../lib/format'
+import { countryName, fmtInt, weekdayName } from '../../lib/format'
 import { todayIn } from '../../lib/dates'
 import { copy } from './copy'
 import { CardSkeleton } from './CardSkeleton'
 import { usualLine, type Lists } from './liveModel'
 import type { LiveNow } from '../../features/live/api'
+import { Flag } from '../ui/Flag'
 
 type Mode = 'pages' | 'countries' | 'devices'
 
@@ -29,7 +30,7 @@ interface Bar {
 function barsOf(lists: Lists, mode: Mode): Bar[] {
   if (mode === 'pages') return lists.pages.map((p) => ({ key: p.label, label: p.label, n: p.n, mono: true }))
   if (mode === 'devices') return lists.devices.map((d) => ({ key: d.key, label: copy[d.key], n: d.n, mono: false }))
-  return lists.countries.map((c) => ({ key: c.key, label: c.label || countryName(c.key), n: c.n, mono: false, flag: flag(c.key) }))
+  return lists.countries.map((c) => ({ key: c.key, label: c.label || countryName(c.key), n: c.n, mono: false, flag: c.key }))
 }
 
 export function AnalyticsCard({ today, lists, timezone }: Props) {
@@ -73,7 +74,7 @@ export function AnalyticsCard({ today, lists, timezone }: Props) {
             <div className={`lbar${i === 0 ? ' top' : ''}`} key={r.key}>
               <i style={{ width: `${(r.n / max) * 100}%` }} />
               <span className={r.mono ? 'mono' : undefined}>
-                {r.flag && <span className="lflag">{r.flag}</span>}
+                {r.flag && <span className="lflag"><Flag code={r.flag} /></span>}
                 {r.label}
               </span>
               <b>{r.n}</b>

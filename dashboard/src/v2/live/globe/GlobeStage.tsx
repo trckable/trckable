@@ -2,7 +2,7 @@
 // when a pin is picked or hovered, never while the globe spins: the tip and the popover are the only DOM, and the
 // engine moves them. Keyboard: Tab to the globe, the arrow keys step through the pins, Enter opens one.
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
-import { countryName, flag } from '../../../lib/format'
+import { countryName } from '../../../lib/format'
 import { copy } from '../copy'
 import { Globe } from './engine'
 import { type Pin } from './geo'
@@ -18,7 +18,7 @@ const placeOf = (p: Pin) => (p.city ? `${p.city}, ${countryName(p.cc)}` : countr
 /** A marker of several people says how many and where; one person, where and on what. */
 const tipText = (p: Pin, crowd: number | null) => {
   const n = crowd ?? p.crowd
-  return n > 1 ? copy.crowdTip(flag(p.cc), n, p.city || countryName(p.cc)) : copy.spotTip(flag(p.cc), placeOf(p), n, p.path)
+  return n > 1 ? copy.crowdTip(n, p.city || countryName(p.cc)) : copy.spotTip(placeOf(p), n, p.path)
 }
 const nameOf = (p: Pin) => `${p.city || countryName(p.cc)} · ${p.path}`
 

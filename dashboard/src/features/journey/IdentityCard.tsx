@@ -4,11 +4,12 @@
 import { Avatar } from '../../components/visitor/Avatar'
 import { DeviceIcon } from '../../components/visitor/DeviceIcon'
 import { nameOf } from '../../lib/visitor'
-import { countryName, flag, fmtDuration, fmtInt, fmtMoney } from '../../lib/format'
+import { countryName, fmtDuration, fmtInt, fmtMoney } from '../../lib/format'
 import { copy } from './copy'
 import type { Identity } from './model'
 import { SourceChip, type OnFilter } from './SourceChip'
 import { fmtDate, fmtDayTime, isoOf } from './when'
+import { Flag } from '../../v2/ui/Flag'
 
 function Fact({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return (
@@ -23,7 +24,7 @@ function Place({ who }: { who: Identity }) {
   if (!who.country) return <span>{copy.unknownPlace}</span>
   return (
     <span title={countryName(who.country)}>
-      <span aria-hidden="true">{flag(who.country)}</span> {countryName(who.country)}
+      <Flag code={who.country} /> {countryName(who.country)}
     </span>
   )
 }
