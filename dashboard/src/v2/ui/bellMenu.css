@@ -61,7 +61,7 @@
 
 /* A row: the unread dot is the first thing in it (it keeps its place when read, so titles line up), then the icon. */
 .mk .nf .nfd { width: 6px; height: 6px; margin-right: calc(var(--mk-s2) * -1); }
-.mk .nf .nfd.off { visibility: hidden; }
+.mk .nf .nfd.off { opacity: 0; transform: scale(.4); }
 .mk .nf .nft small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* The source's own mark, with what kind of moment it was as a small badge on its corner, in the moment's tone. */
 .mk .nfm { position: relative; display: inline-flex; flex: none; }
@@ -85,3 +85,15 @@
 
 /* The list is solid: the page's glow (the score ring) must not show through the frosted pane the other menus have. */
 .mk .mk-menu.bellmenu { background: var(--mk-card2); -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+/* The count, the read mark and the list come and go softly; with reduced motion they just change. */
+.mk .bdot.off { visibility: hidden; opacity: 0; transform: scale(.6); }
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion='off']) .mk .bdot { transition: opacity 160ms ease, transform 160ms ease, visibility 160ms; }
+  :root:not([data-motion='off']) .mk .nf .nfd { transition: opacity 180ms ease, transform 180ms ease; }
+  :root:not([data-motion='off']) .mk .nf .nft b { transition: color 180ms ease; }
+  :root:not([data-motion='off']) .mk .mk-menu.bellmenu.on { animation: bell-in 160ms cubic-bezier(.2, .7, .2, 1); }
+}
+@keyframes bell-in {
+  from { opacity: 0; transform: translateY(-4px); }
+}
