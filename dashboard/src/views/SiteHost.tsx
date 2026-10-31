@@ -129,6 +129,11 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
     window.addEventListener('trckable:bounce', open)
     return () => window.removeEventListener('trckable:bounce', open)
   }, [shared])
+  // A goal was added or removed: the reports are read again.
+  const goalsChanged = () => {
+    dropReports(site.id)
+    refresh(false)
+  }
   const askOn = can('peek.ask')
   const narrow = useNarrow()
   const money = mods === null || shows(mods, 'cards', 'revenue') ? cur?.money : undefined
@@ -151,6 +156,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
           failed={!data && error ? <LoadFailed reason={error} onRetry={() => refresh(true)} /> : undefined}
           money={money ? fmtM : undefined}
           onGoal={() => can('goal.create') && setAddGoals(true)}
+          onGoalsChanged={goalsChanged}
           onAsk={askOn ? () => setAskOpen(true) : undefined}
           identity={identity}
           top={view.surge ? <Suspense fallback={null}><SurgeLine site={site.id} tz={site.timezone} started={view.surge} filters={view.filters} /></Suspense> : undefined}
@@ -170,10 +176,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
             pages={(cur?.dims.page ?? []).map((r) => r.value)}
             goals={cur?.goals ?? []}
             onClose={() => setAddGoals(false)}
-            onChanged={() => {
-              dropReports(site.id)
-              refresh(false)
-            }}
+            onChanged={goalsChanged}
           />
         </Suspense>
       )}

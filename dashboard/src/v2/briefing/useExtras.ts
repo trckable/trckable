@@ -29,6 +29,8 @@ export interface Stuck {
 }
 
 export interface FunnelStory {
+  /** The saved funnel's name. */
+  name?: string
   steps: { name: string; v: number; c: number }[]
   leak: { at: number; r: number; ur: number }
   /** The page many go to instead of the next step. */
@@ -96,7 +98,7 @@ const vitalsOf = (site: string, from: ISODate, to: ISODate) => heldVitals(`${sit
 
 // The funnels the site saved.
 const heldFunnels = heldFor<Awaited<ReturnType<typeof more.funnels>>>()
-const savedFunnelsOf = (site: string) => heldFunnels(site, () => more.funnels(site))
+export const savedFunnelsOf = (site: string) => heldFunnels(site, () => more.funnels(site))
 
 // The robots of the period.
 const heldCrawlers = heldFor<Awaited<ReturnType<typeof more.crawlers>>>()
@@ -111,12 +113,12 @@ export function usualSpeed(range: Range, days: number): [ISODate, ISODate] {
 const none: Extras = { mention: null, speed: null, buyers: null, search: null, stuck: null, funnel: null, first: null }
 
 /** The path's steps in this period and in the one before it, and the first step where fewer go on than usual. */
-function readFunnel(site: string, range: Range, days: number, want: { steps: (FunnelStep | PaidStep)[]; alt?: string }): Promise<FunnelStory | null> {
+export function readFunnel(site: string, range: Range, days: number, want: { steps: (FunnelStep | PaidStep)[]; alt?: string; name?: string }): Promise<FunnelStory | null> {
   const before: Range = { from: addDays(range.from, -days), to: addDays(range.from, -1) }
   return Promise.all([more.funnel(site, range, want.steps), more.funnel(site, before, want.steps).catch(() => null)]).then(
     ([c, p]) => {
       const steps = c.steps.map((s, i) => ({ name: s.kind === 'paid' && i > 0 ? copy.paidStep(stepName(c.steps[i - 1], '')) : stepName(s, copy.paidStep('')), v: s.visitors, c: p?.steps[i]?.visitors ?? 0 }))
-      return { steps, leak: leakOf(steps), alt: want.alt }
+      return { name: want.name, steps, leak: leakOf(steps), alt: want.alt }
     },
     () => null,
   )
@@ -179,7 +181,7 @@ export function useExtras(site: Site, today: ISODate, range: Range, want: Extras
     const funnel = want.funnel
       ? savedFunnelsOf(site.id).then((r) => {
           const f = r.funnels.find((x) => x.steps.length >= 2)
-          return f ? readFunnel(site.id, range, days, { steps: f.steps }) : null
+          return f ? readFunnel(site.id, range, days, { steps: f.steps, name: f.name }) : null
         }, () => null)
       : Promise.resolve(null)
     const first = want.money && days <= 31 ? readFirst(site.id, range, want.countries) : Promise.resolve(null)
