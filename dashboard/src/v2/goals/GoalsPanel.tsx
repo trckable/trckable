@@ -1,15 +1,14 @@
 // What the Goals menu holds: a row for each goal and saved funnel, one suggested goal to add, Track a goal, and a way to all of it.
 import { useEffect, useState } from 'react'
 import { toast } from '../../components/Toast'
-import { fail, more, type ContentGroup, type Site } from '../../lib/apiMore'
+import { fail, more, type Site } from '../../lib/apiMore'
 import type { Report } from '../../lib/api'
 import { can } from '../../lib/permissions'
 import { copy as dialog } from '../../views/addGoalsCopy'
-import { goalSuggestions } from '../../views/goalSuggestions'
 import { useMorePages } from '../../views/useMorePages'
 import { goExplore } from '../briefing/deeper'
 import { copy } from './copy'
-import { goalRows, type GoalRow } from './model'
+import { goalRows, suggestionsFor, type GoalRow } from './model'
 import { openRow } from './open'
 import { amountText, GoalChip, Trend } from './parts'
 import { useFunnelRows } from './useFunnelRows'
@@ -46,14 +45,9 @@ export default function GoalsPanel({ site, data, close, onGoal, onChanged, onSee
   const goals = data ? goalRows(data.current.goals, data.previous ? (data.previous.goals ?? []) : undefined) : []
   const funnels = useFunnelRows(site.id, { from: data?.from ?? '', to: data?.to ?? '' }, !!data?.previous, !!data)
   const more90 = useMorePages(site.id, may)
-  const [cfg, setCfg] = useState<ContentGroup[] | null>(null)
   const [busy, setBusy] = useState(false)
-  useEffect(() => {
-    if (!may) return
-    more.siteConfig(site.id).then((c) => setCfg(c.page_goals ?? [])).catch(() => setCfg(null))
-  }, [site.id, may])
   const pages = [...(data?.current.dims.page ?? []).map((r) => r.value), ...more90]
-  const suggestions = may && cfg ? goalSuggestions(pages, cfg) : []
+  const suggestions = may ? suggestionsFor(pages, data?.current.goals) : []
   const next = suggestions[0]
   useEffect(() => {
     if (suggestions.length) onSeen(suggestions.map((s) => s.path))
@@ -66,11 +60,11 @@ export default function GoalsPanel({ site, data, close, onGoal, onChanged, onSee
     openRow(r)
   }
   const add = () => {
-    if (!next || !cfg) return
+    if (!next) return
     setBusy(true)
     more
       .siteConfig(site.id)
-      .then((c) => more.setSiteConfig(site.id, { ...c, page_goals: [...(c.page_goals ?? []), next] }))
+      .then((c) => ((c.page_goals ?? []).some((g) => g.name === next.name || g.path === next.path) ? c : more.setSiteConfig(site.id, { ...c, page_goals: [...(c.page_goals ?? []), next] })))
       .then(() => {
         toast(dialog.counts(next.name))
         onChanged?.()

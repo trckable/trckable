@@ -2,6 +2,7 @@
 // saved funnels by how many go all the way. Pure; model.test.ts.
 import type { Row } from '../../lib/api'
 import { goalName } from '../../lib/goalName'
+import { goalSuggestions, type Suggestion } from '../../views/goalSuggestions'
 import { copy } from './copy'
 
 export type Kind = 'goal' | 'form' | 'funnel'
@@ -75,4 +76,9 @@ export function funnelRow(f: FunnelSteps | null | undefined, compared: boolean):
 /** The Briefing's cards: the top goals, then the funnel last, four in all. */
 export function cardRows(goals: GoalRow[], funnel: GoalRow | null): GoalRow[] {
   return [...goals.slice(0, funnel ? MAX_CARDS - 1 : MAX_CARDS), ...(funnel ? [funnel] : [])]
+}
+
+/** The goals worth suggesting from these pages, leaving out those the report already counts by name: the one rule behind the header's dot and the menu's row. */
+export function suggestionsFor(pages: string[], goals: Row[] | null | undefined): Suggestion[] {
+  return goalSuggestions(pages, (goals ?? []).map((g) => ({ name: goalName(g.label, g.value), path: '' })))
 }

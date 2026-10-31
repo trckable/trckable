@@ -8,8 +8,7 @@ import { lazyLoad, whenIdle } from '../../lib/lazyLoad'
 import { can } from '../../lib/permissions'
 import { shows } from '../../lib/modules'
 import { useMods } from '../../lib/useMods'
-import { goalName } from '../../lib/goalName'
-import { goalSuggestions } from '../../views/goalSuggestions'
+import { suggestionsFor } from './model'
 import { copy } from './copy'
 import { markSeen, readSeen } from './seen'
 import './goals.css'
@@ -29,8 +28,7 @@ export function GoalsButton({ site, data, onGoal, onChanged }: Props) {
   useEffect(() => whenIdle(Panel.preload), [])
   if (!shows(mods, 'cards', 'goals')) return null
   // What the report alone says is worth suggesting; the menu looks further back and tells the button what it found.
-  const known = (data?.current.goals ?? []).map((g) => ({ name: goalName(g.label, g.value), path: '' }))
-  const paths = can('goal.create') && data ? goalSuggestions((data.current.dims.page ?? []).map((r) => r.value), known).map((s) => s.path) : []
+  const paths = can('goal.create') && data ? suggestionsFor((data.current.dims.page ?? []).map((r) => r.value), data.current.goals).map((s) => s.path) : []
   const fresh = paths.some((p) => !seen.includes(p))
   return (
     <Popover

@@ -17,7 +17,7 @@ interface Props {
   /** The period before; absent when the numbers are not compared. */
   before: Row[] | null | undefined
   funnel: FunnelSteps | null | undefined
-  /** The funnel has been read (it may have been found to have nothing): until then the empty row waits. */
+  /** The funnel has been read (it may have been found to have nothing) and the page does not already ask for a first goal: until then the empty row waits. */
   read: boolean
   onGoal: () => void
 }
