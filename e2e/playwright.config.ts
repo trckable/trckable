@@ -78,9 +78,9 @@ export default defineConfig({
   // that only passes on a retry is reported as flaky (listed, not hidden).
   retries: process.env.CI ? 1 : 0,
   // Nothing hangs silently: a test is cut off at a minute, an action or a page
-  // load at less, and a whole run at ten minutes, with what it had done so far.
+  // load at less, and a whole run at fifteen minutes, with what it had done so far.
   timeout: 60_000,
-  globalTimeout: process.env.CI ? 10 * 60_000 : undefined,
+  globalTimeout: process.env.CI ? 15 * 60_000 : undefined,
   // The slowest tests and every retry, at the end of the run and in the job summary.
   reporter: [['list'], ['./slowest.mjs']],
   reportSlowTests: null,

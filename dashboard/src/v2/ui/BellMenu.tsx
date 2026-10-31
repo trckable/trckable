@@ -169,7 +169,7 @@ export function BellMenu(p: BellProps) {
   useTopLayerWhen(open && !p.sheet, menu)
   return (
     <div className="bellw" ref={attach} style={{ position: 'relative' }}>
-      <button type="button" className={`ib bell${p.shaking ? " shake" : ""}`} id="bellBtn" data-bell="1" data-key="notes" title={p.title} aria-label={p.title} aria-haspopup={p.sheet ? "dialog" : "menu"} aria-expanded={open} onClick={toggle} onPointerEnter={p.onWarm} onFocus={p.onWarm} onTouchStart={p.onWarm}>
+      <button type="button" className={`ib bell${p.shaking ? " shake" : ""}`} id="bellBtn" data-bell="1" data-key="notes" title={p.title} aria-label={p.unread ? `${p.title} ${p.badge}` : p.title} aria-haspopup={p.sheet ? "dialog" : "menu"} aria-expanded={open} onClick={toggle} onPointerEnter={p.onWarm} onFocus={p.onWarm} onTouchStart={p.onWarm}>
         <i className="bdot" id="bellDot" aria-hidden="true" style={p.unread ? undefined : { display: 'none' }}>
           {p.badge}
         </i>
