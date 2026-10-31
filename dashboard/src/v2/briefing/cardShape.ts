@@ -16,6 +16,7 @@ export interface Badge {
 
 export interface Shape {
   /** What the card is about, in the top row beside its icon. */
+  flag?: string
   subject: string
   badge: Badge | null
   pic: Pic
@@ -55,7 +56,8 @@ function picOf(s: Story): Pic {
 
 export function shapeOf(s: Story): Shape {
   return {
-    subject: s.kc ? `${s.kc.flag} ${s.kc.label}` : copy.detailTitle[s.key],
+    flag: s.kc?.flag,
+    subject: s.kc ? s.kc.label : copy.detailTitle[s.key],
     badge: badgeOf(s),
     pic: picOf(s),
     link: s.key === 'uptime' ? null : (LINK[s.key] ?? copy.deeper),
@@ -63,12 +65,11 @@ export function shapeOf(s: Story): Shape {
   }
 }
 
-const FLAGS = /[\u{1F1E6}-\u{1F1FF}]{2}\s*/gu
 const FIGURE = /[$€£]?\d+(?:[.,]\d+)*[%×]?/
 
-/** The sentence of a card, flag taken out where the top row has it, split around the one figure that is lit: the card's own number where it is in the words, else the first. */
+/** The sentence of a card, split around the one figure that is lit: the card's own number where it is in the words, else the first. */
 export function sentence(s: Story): { before: string; figure: string; after: string } {
-  const text = `${s.head}${s.rest ?? ''}`.replace(FLAGS, '').trim()
+  const text = `${s.head}${s.rest ?? ''}`.trim()
   // The sales say their figure big in the picture: no second one is lit in the words.
   if (s.key === 'sales' && s.vis?.k === 'rcpt') return { before: text, figure: '', after: '' }
   const own = s.val ? new RegExp(`(?<![\\d.,])${s.val.replace(/[.*+?^${}()|[\]\\$]/g, '\\$&')}(?![\\d])`).exec(text) : null

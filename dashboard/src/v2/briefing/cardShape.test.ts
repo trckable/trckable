@@ -33,8 +33,8 @@ describe('the shell takes its picture and link from the card', () => {
     expect(shapeOf(story({})).why).toBe(true)
   })
   it('names a country by its flag, shows the ratio as the badge and links to who', () => {
-    const sh = shapeOf(story({ key: 'countries', kc: { flag: '🇦🇱', label: 'Albania' }, ratio: 19 }))
-    expect(sh).toMatchObject({ subject: '🇦🇱 Albania', badge: { text: '↑ 19× usual', tone: 'up' }, link: 'See who' })
+    const sh = shapeOf(story({ key: 'countries', kc: { flag: 'AL', label: 'Albania' }, ratio: 19 }))
+    expect(sh).toMatchObject({ flag: 'AL', subject: 'Albania', badge: { text: '↑ 19× usual', tone: 'up' }, link: 'See who' })
   })
   it('puts the figure in the corner of a card that has no usual, red when it is bad news, and none for the sales', () => {
     expect(shapeOf(story({ key: 'speed', bad: true, val: '3.1 s' })).badge).toEqual({ text: '3.1 s', tone: 'dn' })
@@ -54,8 +54,8 @@ describe('the sentence lights one figure', () => {
     expect(sentence(story({ key: 'sales', vis: { k: 'rcpt', rows: [] }, head: '1 new customer, 1 renewal', rest: '', val: '$338' })).figure).toBe('')
     expect(sentence(story({ key: 'sources', head: 'Hacker News sent 186 people', rest: '', val: '186' })).figure).toBe('186')
   })
-  it('falls back to the first figure, and takes the flag out', () => {
-    expect(sentence(story({ key: 'countries', head: '🇦🇱 115 people from Albania', rest: ', more than usual', val: '115' }))).toEqual({ before: '', figure: '115', after: ' people from Albania, more than usual' })
+  it('falls back to the first figure', () => {
+    expect(sentence(story({ key: 'countries', head: '115 people from Albania', rest: ', more than usual', val: '115' }))).toEqual({ before: '', figure: '115', after: ' people from Albania, more than usual' })
     expect(sentence(story({ key: 'goals', head: 'Signup up 1700%', rest: undefined, val: '214' })).figure).toBe('1700%')
     expect(sentence(story({ head: 'Pages got slower', rest: '', val: '3 s' })).figure).toBe('')
   })

@@ -1,11 +1,11 @@
 // Explore's tables. One of people (a bar behind the name, how many, against the usual, the share) and one with columns of
 // its own. Both end in a button when there are more rows than shown: the rest of the list, or the section that holds it.
 import type { ReactNode } from 'react'
-import { flag } from '../../lib/format'
 import { fmtInt, fmtPct } from '../../lib/format'
 import { mult } from '../briefing/model'
 import { copy } from '../explore/copy'
 import type { Row } from '../explore/types'
+import { Flag } from './Flag'
 
 export interface More {
   /** The number of rows in all. */
@@ -85,7 +85,7 @@ export function XTable({ rows, head, unit = copy.people, mono, flags, selected, 
           <>
             <span className="mk-bar">
               <i style={{ width: `${(r.v / max) * 100}%` }} />
-              <span className={mono ? 'mono' : ''}>{flags && r.code ? `${flag(r.code)} ${r.name}` : r.name}</span>
+              <span className={mono ? 'mono' : ''}>{flags && r.code && <><Flag code={r.code} />{' '}</>}{r.name}</span>
             </span>
             <span className="mk-n">{fmtInt(r.v)}</span>
             <span className={`d ${d.tone}`}>{d.text}</span>

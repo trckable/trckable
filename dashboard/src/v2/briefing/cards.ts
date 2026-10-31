@@ -3,7 +3,7 @@
 // one thing to do. The cards are ranked by how much they matter and how bad the news is. Pure: cards.test.ts.
 import type { Result, Row } from '../../lib/api'
 import type { Span } from './outage'
-import { countryName, flag, fmtFixed, fmtInt } from '../../lib/format'
+import { countryName, fmtFixed, fmtInt } from '../../lib/format'
 import { pageName } from '../../lib/pageName'
 import { assistantOf } from '../../features/extras/assistants'
 import { copy } from './cards.copy'
@@ -29,7 +29,7 @@ export type Act =
 export type Vis =
   | { k: 'rcpt'; plain?: boolean; rows: { lead?: boolean; l: string; t?: string; a?: string; flag?: string; n?: number; neg?: boolean; more?: boolean; tot?: boolean; mark?: 'up' | 'dn' }[] }
   | { k: 'spike' }
-  | { k: 'journey'; steps: { l: string; t?: string }[] }
+  | { k: 'journey'; steps: { l: string; t?: string; flag?: string }[] }
   | { k: 'ba'; lo: number; hi: number; c: number; v: number; red: boolean }
   | { k: 'outage'; spans: Span[]; nowAt: number; from: string; now: string; live: boolean; marks: Mark[] }
   | { k: 'funnel'; rows: { name: string; v: number; w: number; hot: string }[] }
@@ -259,7 +259,7 @@ function countryCard(s: Slice & { st: Judged }, i: CardsIn, total: number, src?:
     tag: name,
     score: 55 + Math.min(8, (Math.abs(s.v - b.c) / Math.max(1, total)) * 40),
     bad: !up,
-    head: `${flag(s.value)} ${people(Math.round(s.v))} from ${name}`,
+    head: `${people(Math.round(s.v))} from ${name}`,
     rest: `, ${up ? 'more' : 'fewer'} than usual`,
     ask: copy.askCountry(name, up),
     ratio: ratioOf(s.v, b.c),
@@ -272,7 +272,7 @@ function countryCard(s: Slice & { st: Judged }, i: CardsIn, total: number, src?:
     ev: evidence(s.v, b),
     act: { k: 'set', t: copy.setAlert, msg: copy.alertMoves(name, rg(b)) },
     deeper: { kind: 'explore', filter: { dim: 'country', value: s.value } },
-    kc: { flag: flag(s.value), label: name },
+    kc: { flag: s.value, label: name },
   }
 }
 

@@ -10,6 +10,7 @@ import { shapeOf } from '../briefing/cardShape'
 import { copy } from '../briefing/copy'
 import { WhyBody } from './WhyBody'
 import type { Story } from '../briefing/cards'
+import { Flag } from './Flag'
 
 export function Detail({ s, site, c, onClose }: { s: Story; site: string; c: CardCtx; onClose: () => void }) {
   const box = useRef<HTMLElement>(null)
@@ -30,7 +31,7 @@ export function Detail({ s, site, c, onClose }: { s: Story; site: string; c: Car
         </div>
         <div className="cdb">
           <h3>
-            <b>{s.head}</b>
+            <b>{s.kc && <><Flag code={s.kc.flag} />{' '}</>}{s.head}</b>
             {s.rest}
           </h3>
           <Picture s={s} pic={shapeOf(s).pic} vals={c.spark(s)} />

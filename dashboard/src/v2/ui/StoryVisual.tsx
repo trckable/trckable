@@ -8,6 +8,7 @@ import { copy } from '../briefing/copy'
 import { copy as cardCopy } from '../briefing/cards.copy'
 import type { Pic } from '../briefing/cardShape'
 import type { Story, Vis } from '../briefing/cards'
+import { Flag } from './Flag'
 
 type Of<K extends Vis['k']> = Extract<Vis, { k: K }>
 
@@ -109,7 +110,7 @@ type Row = Of<'rcpt'>['rows'][number]
 /** What starts a row: a dot for a sale, the buyer's flag where there is one. */
 function Lead({ r, dots }: { r: Row; dots?: boolean }) {
   if (dots) return <i className={`d${r.neg ? ' dn' : ''}`} />
-  return r.flag ? <span className="fl">{r.flag}</span> : null
+  return r.flag ? <span className="fl"><Flag code={r.flag} /></span> : null
 }
 
 /** The most a row's bar can stand for: each row's figure against the biggest of them. */
@@ -147,7 +148,7 @@ function Journey({ v }: { v: Of<'journey'> }) {
       {v.steps.map((x, n) => (
         <li key={`${n}${x.l}`}>
           <i />
-          <b>{x.l}</b>
+          <b>{x.flag && <><Flag code={x.flag} />{' '}</>}{x.l}</b>
           {x.t && <small>{x.t}</small>}
         </li>
       ))}
