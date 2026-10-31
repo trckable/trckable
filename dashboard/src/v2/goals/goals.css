@@ -1,0 +1,216 @@
+/* The goal cards under the Briefing's story, and the Goals button and menu in the header. Colours are the page's tokens. */
+.mk .gcs {
+  display: grid;
+  gap: var(--mk-s3);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.mk .gcs.n1 {
+  grid-template-columns: minmax(0, 1fr);
+}
+.mk .gcs.n2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.mk .gcs.n3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (--xs) {
+  .mk .gcs.n2,
+  .mk .gcs.n3,
+  .mk .gcs.n4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mk .gcs.n3 > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+.mk .gc {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--mk-s2);
+  min-width: 0;
+  padding: var(--mk-s4);
+  text-align: left;
+  background: var(--mk-card);
+  border: 1px solid var(--mk-line);
+  border-radius: var(--mk-r);
+  color: var(--mk-text);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.mk .gc:hover {
+  background: var(--mk-hovbg);
+  border-color: var(--mk-bord2);
+}
+.mk .gc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mk-s2);
+}
+.gc-chip {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--mk-lime);
+  background: color-mix(in srgb, currentColor 16%, transparent);
+}
+.gc-chip.k-form {
+  color: var(--mk-blue);
+}
+.gc-chip.k-funnel {
+  color: var(--mk-amber);
+}
+.gc-tr {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mk-muted);
+  white-space: nowrap;
+}
+.gc-tr.up {
+  color: var(--mk-lime);
+}
+.gc-tr.down {
+  color: var(--mk-red);
+}
+.mk .gc-num {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.mk .gc-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mk-muted);
+}
+@media (--xs) {
+  .mk .gc {
+    padding: var(--mk-s3);
+    border-radius: 16px;
+  }
+  .mk .gc-chip {
+    width: 24px;
+    height: 24px;
+  }
+  .mk .gc-num {
+    font-size: 24px;
+  }
+}
+.mk .gc-empty {
+  display: flex;
+  align-items: center;
+  gap: var(--mk-s3);
+  padding: var(--mk-s3) var(--mk-s4);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mk-muted);
+  background: var(--mk-card);
+  border: 1px solid var(--mk-line);
+  border-radius: var(--mk-r);
+  cursor: pointer;
+}
+.mk .gc-empty:hover {
+  background: var(--mk-hovbg);
+  color: var(--mk-text);
+}
+
+/* The header button: the Explore chip's look, and on a phone just the icon (the Explore chip is not there then). */
+.mk .hd .mk-chip.goalsb {
+  position: relative;
+  border-color: transparent;
+  background: var(--mk-field);
+}
+.mk .hd .mk-chip.goalsb:hover,
+.mk .hd .mk-chip.goalsb[aria-expanded='true'] {
+  border-color: transparent;
+  background: var(--mk-hovbg);
+}
+.mk .goalsb .gdot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mk-lime);
+  box-shadow: 0 0 0 2px var(--mk-field);
+}
+@container (--pane-max-900) {
+  .mk .hd .mk-chip.goalsb {
+    padding: 0 10px;
+  }
+  .mk .hd .mk-chip.goalsb .t2 {
+    display: none;
+  }
+}
+@container (--pane-max-600) {
+  .mk .hd .mk-chip.goalsb {
+    flex: none;
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+/* The menu: the light popovers' rows (components/ListPop.css), a little taller for the chip and the number. */
+.pop.gm {
+  min-width: 280px;
+}
+.gm-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 258px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lrow.gm-row {
+  height: 42px;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--text);
+}
+.lrow.gm-row.dim {
+  color: var(--text-3);
+}
+.gm-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.gm-num {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.gm-row .gc-tr {
+  min-width: 48px;
+  justify-content: flex-end;
+}
+.gm-kind {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.gm-row .gc-chip {
+  width: 26px;
+  height: 26px;
+}
+@media (--xs) {
+  .lrow.gm-row {
+    height: 48px;
+  }
+}

@@ -29,6 +29,7 @@ import { SiteChip } from './ui/SiteMenu'
 import { DomainPicker } from './ui/DomainPicker'
 import { TeamSquare } from './ui/TeamSquare'
 import { SetupRing } from './setup/SetupRing'
+import { GoalsButton } from './goals/GoalsButton'
 
 const Palette = lazyLoad(() => import('./ui/Palette').then((m) => ({ default: m.Palette })))
 
@@ -44,6 +45,8 @@ export interface PageHeaderProps {
   data?: Report | null
   onAsk?: () => void
   onGoal?: () => void
+  /** A goal was added from the header's Goals menu: the page reads its numbers again. */
+  onGoalsChanged?: () => void
   /** A newer version of the product, when there is one: a small pill by the ghost. */
   update?: string
   onUpdate?: () => void
@@ -131,6 +134,7 @@ export function PageHeader(p: PageHeaderProps) {
             {site && <DomainPicker />}
           </>
         }
+        goals={site && !p.waiting && !p.identity && !isShared() ? <GoalsButton key={site.id} site={site} data={p.data ?? null} onGoal={p.onGoal} onChanged={p.onGoalsChanged} /> : null}
         explore={p.waiting ? null : <ExploreChip label={question ? copy.askOrSearch : copy.explore} kbd="⌘K" onClick={question ? () => setFind(true) : exploreOpen} />}
         extras={slots.headerExtra}
         bell={p.identity ? null : <Bell site={site} notices={notices} />}

@@ -43,6 +43,8 @@ interface HeaderProps {
   ring?: ReactNode
   views: ReactNode
   period: ReactNode
+  /** Before Explore: the goals menu, where the page has a site. */
+  goals?: ReactNode
   explore: ReactNode
   account: ReactNode
   /** Between ⌘K and the bell: a build with a plan puts its chip here (see ../slots). */
@@ -102,6 +104,7 @@ export function Header(p: HeaderProps) {
       {p.views}
       {p.period}
       <span className="sp" />
+      {p.goals}
       {p.explore}
       {p.extras}
       {p.bell}

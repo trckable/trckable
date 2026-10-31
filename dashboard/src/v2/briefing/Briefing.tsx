@@ -61,6 +61,7 @@ import { useHistory, useHourly, wantsHours } from './useHistory'
 import { useParts } from './useParts'
 import { useSlice } from './useSeries'
 import { Waiting } from '../ui/Waiting'
+import { GoalCards } from '../goals/GoalCards'
 
 export interface BriefingProps {
   site: Site
@@ -228,6 +229,7 @@ export default function Briefing({ site, data: page, loading, period, compare = 
         )}
         {ui.all && rest.length > 0 && <CardList list={rest} c={listCtx} />}
         {!empty && !incidentOn && <Calm {...calmIn} onExplore={() => goExplore()} />}
+        {!empty && <GoalCards site={site.id} goals={cur.goals} before={prev ? (prev.goals ?? []) : undefined} funnel={extras.funnel} read={extras.fresh === true && !setups.some((x) => x.key === 'goals')} onGoal={onGoal} />}
         <Setups rows={setups} />
         {act && <Act text={act.text} rest={act.rest} label={act.label} onAct={act.run} />}
         <BounceNote site={site} range={range} />

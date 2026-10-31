@@ -50,6 +50,8 @@ interface V2Props {
   failed?: ReactNode
   money?: (minor: number) => string
   onGoal: () => void
+  /** A goal was added from the header: the page's numbers are read again. */
+  onGoalsChanged?: () => void
   /** Open Peek; absent where the person cannot ask. */
   onAsk?: () => void
   live: LiveProps
@@ -150,6 +152,7 @@ export function V2View(p: V2Props) {
         onAsk={p.onAsk}
         identity={p.identity}
         onGoal={p.onGoal}
+        onGoalsChanged={p.onGoalsChanged}
         period={here === 'briefing' && !p.waiting ? periodChip() : null}
       />
       <main id="main" className="vfade">

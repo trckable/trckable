@@ -1,6 +1,9 @@
 // Goals, end to end: a goal made in the dialog counts the visit that reached its page, and a button's attribute and a
 // call from code count the way a real visitor sends them (the real tracker in a browser), each then read where a
 // person reads it: the goals under the funnel in Explore. A goal is counted under a lowercase key and shown as written.
+import { execFileSync } from 'node:child_process'
+import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
@@ -8,6 +11,7 @@ import { PORT, origin } from '../ports'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one browser is enough: the server counts')
 
+const BIN = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../server/bin/trckabled')
 const SITE_ORIGIN = origin(PORT.site)
 
 let cookie = ''
@@ -69,6 +73,86 @@ test('a page-visit goal made in the dialog counts the visit', async ({ page }) =
     await expect(remove).toBeVisible({ timeout: 3_000 })
   }).toPass({ timeout: 30_000 })
   await remove.click()
+})
+
+const H = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
+
+/** Track a goal, from the command palette (tried again while the page is still starting). */
+async function openGoalDialog(page: Page) {
+  await expect(async () => {
+    await page.keyboard.press('Escape')
+    await page.keyboard.press('ControlOrMeta+k')
+    await page.locator('.pal.on .palbox input').fill('A goal', { timeout: 3_000 })
+    await page.keyboard.press('Enter')
+    await expect(page.getByRole('dialog', { name: 'Add goals' })).toBeVisible({ timeout: 3_000 })
+  }).toPass({ timeout: 30_000 })
+}
+
+/** Opens Track a goal on the test site until the pages it suggests from have arrived. */
+async function suggested(page: Page, want: string) {
+  const dialog = page.getByRole('dialog', { name: 'Add goals' })
+  // The shared test site has many pages with one visitor each and the report lists only its top ten: put the two
+  // pages this run really visited at the end of that list, so the suggestions do not depend on the other suites.
+  await page.route(/\/api\/v1\/sites\/[^/]+\/report\?/, async (route) => {
+    const res = await route.fetch()
+    const body = (await res.json()) as { current?: { dims: Record<string, { value: string; visitors: number }[] | null> } }
+    const rows = body.current?.dims.page ?? []
+    for (const value of ['/thanks', '/pricing']) if (!rows.some((r) => r.value === value)) rows.push({ value, visitors: 1 })
+    if (body.current) body.current.dims.page = rows
+    await route.fulfill({ response: res, json: body })
+  })
+  await expect(async () => {
+    await page.goto(`${API}/example.com`)
+    await openGoalDialog(page)
+    await expect(dialog.getByRole('list', { name: 'Suggested' }).getByText(want, { exact: true })).toBeVisible({ timeout: 3_000 })
+  }).toPass({ timeout: 40_000, intervals: [1_000, 2_000] })
+  return dialog
+}
+
+test('Track a goal suggests goals from recorded pages, one click adds one, and a form row turns forms on', async ({ page }) => {
+  await open(page, '/thanks', '<h1>Thanks</h1>')
+  await open(page, '/pricing', '<h1>Pricing</h1>')
+  await page.waitForTimeout(1500) // the pageviews leave
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  const site = ((await (await page.request.get(`${API}/api/v1/sites`, { headers: H })).json()) as { sites: { id: string; domain: string }[] }).sites.find((s) => s.domain === 'example.com')!.id
+  const forms = (on: boolean) => page.request.put(`${API}/api/v1/sites/${site}/modules/forms`, { headers: H, data: { enabled: on } })
+  expect((await forms(false)).ok()).toBe(true)
+
+  const dialog = await suggested(page, 'Opened pricing')
+  const list = dialog.getByRole('list', { name: 'Suggested' })
+  await expect(list.getByText('Reached thank-you page', { exact: true })).toBeVisible()
+  await expect(list.getByText('Form submissions', { exact: true })).toBeVisible()
+
+  await list.getByRole('button', { name: 'Count Opened pricing' }).click()
+  await expect(dialog.getByRole('list', { name: 'Page goals' })).toContainText('Opened pricing')
+  await expect(list.getByText('Opened pricing', { exact: true })).toHaveCount(0)
+
+  await list.getByRole('button', { name: 'Count Form submissions' }).click()
+  await expect(list.getByText('Form submissions', { exact: true })).toHaveCount(0)
+  const mods = (await (await page.request.get(`${API}/api/v1/sites/${site}/modules`, { headers: H })).json()) as { modules: { id: string; enabled: boolean }[] }
+  expect(mods.modules.find((m) => m.id === 'forms')?.enabled).toBe(true)
+
+  // The shared site keeps nothing from this run.
+  await dialog.getByRole('button', { name: 'Remove the goal Opened pricing' }).click()
+  await expect(dialog.getByRole('button', { name: 'Remove the goal Opened pricing' })).toHaveCount(0)
+  expect((await forms(false)).ok()).toBe(true)
+})
+
+test('a viewer cannot open Track a goal, so sees no suggestions', async ({ page }) => {
+  const email = `goals-viewer-${Date.now()}@example.com`
+  const password = 'goals e2e password 1'
+  execFileSync(BIN, ['admin', 'add-user', email, '--role', 'viewer'], { input: password + '\n', env: process.env, stdio: ['pipe', 'ignore', 'ignore'] })
+  const res = await fetch(API + '/api/v1/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) })
+  const viewer = /trckable_session=([^;]+)/.exec(res.headers.get('set-cookie') ?? '')?.[1] ?? ''
+  expect(viewer).toBeTruthy()
+  await page.context().addCookies([{ name: 'trckable_session', value: viewer, url: API }])
+  await page.goto(`${API}/example.com`)
+  await expect(page.getByRole('tablist', { name: 'View' })).toBeVisible({ timeout: 15_000 })
+  // A viewer cannot open Track a goal, so there is nowhere for a suggestion to show.
+  await page.keyboard.press('ControlOrMeta+k')
+  await page.locator('.pal.on .palbox input').fill('A goal')
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('dialog', { name: 'Add goals' })).toHaveCount(0)
 })
 
 test('a button with data-trckable-goal counts on its first click', async ({ page }) => {

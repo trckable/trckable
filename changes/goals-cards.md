@@ -1,0 +1,1 @@
+Goals and funnels can be seen without opening Explore: the Briefing shows your top goals and your first saved funnel as small cards with their change, and a Goals button before Explore in the header opens a short list with a suggested goal to add and a way to track a new one.
