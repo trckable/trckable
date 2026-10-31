@@ -321,7 +321,7 @@ jobs:
       # All of them, or only the specs for what changed (scripts/ci-select.mjs),
       # in one of its shards.
       - name: browser specs
-        timeout-minutes: 12
+        timeout-minutes: 17
         env:
           SPECS: ${{ matrix.specs }}
           SHARD: ${{ matrix.shard }}

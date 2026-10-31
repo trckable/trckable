@@ -96,7 +96,8 @@ for (const size of [
     )
     await page.goto(`${API}/settings?site=${site.id}&tab=install`)
     const card = page.locator('.card.install-check')
-    await expect(card.getByRole('heading', { name: 'Snippet not seen' })).toBeVisible()
+    // The card first says "Checking…"; on a loaded CI WebKit the check alone can pass five seconds.
+    await expect(card.getByRole('heading', { name: 'Snippet not seen' })).toBeVisible({ timeout: 20_000 })
     const more = page.getByRole('button', { name: 'Hide the code' })
     await expect(more).toBeVisible()
     const panel = page.locator('.inst-settings')
