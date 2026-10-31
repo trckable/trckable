@@ -38,4 +38,13 @@ export const copy = defineCopy('goals', {
   removed: (n: string) => `"${n}" removed`,
   remove: (n: string) => `Remove the goal ${n}`,
   removeTip: 'Remove',
+  suggested: {
+    heading: 'Suggested',
+    names: { thanks: 'Reached thank-you page', confirm: 'Reached confirmation page', welcome: 'Reached welcome page', signup: 'Opened sign up', pricing: 'Opened pricing', contact: 'Opened contact' },
+    add: 'Add',
+    addTip: (n: string) => `Count ${n}`,
+    forms: 'Form submissions',
+    formsPath: 'every form sent',
+    formsOn: 'Form submissions count from now on',
+  },
 })

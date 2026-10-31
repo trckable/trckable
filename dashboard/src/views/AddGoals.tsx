@@ -12,6 +12,7 @@ import type { Row } from '../lib/api'
 import { can } from '../lib/permissions'
 import { toast } from '../components/Toast'
 import { SignupChoice } from './SignupChoice'
+import { SuggestedGoals } from './SuggestedGoals'
 import { copy } from './addGoalsCopy'
 import { goalCode } from './goalCode'
 import './AddGoals.css'
@@ -117,6 +118,9 @@ function PageGoals({ site, pages, onChanged, onClose, cards, signup }: { site: S
             </li>
           ))}
         </ul>
+      )}
+      {!viewer && (
+        <SuggestedGoals site={site} pages={pages} goals={goals} busy={busy || !cfg} onAdd={(g) => save([...goals, g], copy.counts(g.name))} />
       )}
       {viewer ? (
         <p className="muted goal-viewer">{copy.viewer}</p>
