@@ -66,7 +66,9 @@ test('what is typed is never sent: field names are, values never', async ({ page
     }
   // And it keeps nothing in the browser.
   const storage = await page.evaluate(() => JSON.stringify({ local: { ...localStorage }, cookie: document.cookie.replace(/trckable_vid=[^;]*;?/, '') }))
-  expect(storage).not.toMatch(/heat|signup|email/i)
+  for (const value of TYPED) expect(storage).not.toContain(value)
+  // An engagement event still waiting to go holds the page's address, which here says heat and signup.
+  expect(storage.replaceAll(`/heat/${site}/signup`, '')).not.toMatch(/heat|signup|email/i)
 })
 
 test('the module is off for a new site: its script is the base script alone', async ({ page }) => {
