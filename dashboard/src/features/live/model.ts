@@ -70,6 +70,20 @@ export const keyOf = (v: Pick<NowVisit, 'visitor' | 'ts' | 'kind' | 'path' | 'go
  * everyone idle for five minutes gone. Newest activity first.
  */
 export function feedOf(recent: readonly NowVisit[], visits: readonly Visit[], at: number, now: number): Row[] {
+  return merged(recent, visits, at).filter((r) => now - r.last < IDLE_MS).slice(0, MAX_ROWS)
+}
+
+/**
+ * The count at `now`: the last reading, less the people who went idle since it was taken. The server counts
+ * again only every few seconds, the list drops a person the moment they go, and both must say the same.
+ */
+export function onlineAt(online: number | null, read: number, recent: readonly NowVisit[], visits: readonly Visit[], at: number, now: number): number | null {
+  if (online === null) return null
+  const gone = merged(recent, visits, at).filter((r) => now - r.last >= IDLE_MS && read - r.last < IDLE_MS).length
+  return Math.max(0, online - gone)
+}
+
+function merged(recent: readonly NowVisit[], visits: readonly Visit[], at: number): Row[] {
   const rows = recent.map((v) => ({ ...v, key: keyOf(v) }))
   // The stream's list is newest first: lay the oldest down first.
   for (let i = visits.length - 1; i >= 0; i--) {
@@ -80,7 +94,7 @@ export function feedOf(recent: readonly NowVisit[], visits: readonly Visit[], at
     if (was >= 0) rows.splice(was, 1)
     rows.unshift(row)
   }
-  return rows.filter((r) => now - r.last < IDLE_MS).slice(0, MAX_ROWS)
+  return rows
 }
 
 /** People online the list does not show: only when it is full, and never

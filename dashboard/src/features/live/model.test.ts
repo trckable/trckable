@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Visit } from '../../lib/api'
 import type { LiveNow, NowVisit } from './api'
-import { feedOf, IDLE_MS, keyOf, MAX_ROWS, MINUTE, moreOf, pct, seriesAt, sharesOf, shiftTo, withVisits } from './model'
+import { feedOf, IDLE_MS, keyOf, MAX_ROWS, MINUTE, moreOf, onlineAt, pct, seriesAt, sharesOf, shiftTo, withVisits } from './model'
 
 const T0 = Date.UTC(2026, 8, 27, 12, 0, 0) // a whole minute
 const pv = (ts: number, o: Partial<Visit> = {}): Visit => ({ kind: 'pageview', ts, path: '/', ...o })
@@ -107,5 +107,30 @@ describe('people the list leaves out', () => {
     expect(moreOf(null, MAX_ROWS)).toBe(0)
     expect(moreOf(MAX_ROWS + 7, MAX_ROWS)).toBe(7)
     expect(moreOf(MAX_ROWS, MAX_ROWS)).toBe(0)
+  })
+})
+
+describe('onlineAt', () => {
+  const t = 100 * MINUTE
+  const row = (visitor: string, last: number) => ({ visitor, ts: last, last, kind: 'pageview' }) as unknown as NowVisit
+
+  it('drops a person from the count the moment the list does', () => {
+    const recent = [row('a', t - MINUTE), row('b', t - IDLE_MS + 1000)]
+    expect(onlineAt(2, t, recent, [], t, t)).toBe(2)
+    expect(onlineAt(2, t, recent, [], t, t + 1000)).toBe(1)
+    expect(feedOf(recent, [], t, t + 1000)).toHaveLength(1)
+  })
+
+  it('does not take off someone the reading had already left out', () => {
+    expect(onlineAt(1, t, [row('a', t - MINUTE), row('b', t - IDLE_MS)], [], t, t)).toBe(1)
+  })
+
+  it('keeps a person who came back on the stream', () => {
+    const back = [{ id: 1, visitor: 'a', ts: t + 1000, kind: 'pageview' }] as unknown as Visit[]
+    expect(onlineAt(1, t, [row('a', t - IDLE_MS + 1000)], back, t, t + 2000)).toBe(1)
+  })
+
+  it('stays unknown until there is a count', () => {
+    expect(onlineAt(null, t, [], [], t, t)).toBeNull()
   })
 })
