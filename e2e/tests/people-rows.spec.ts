@@ -12,7 +12,6 @@ const email = `rows-${tag}@example.com`
 const name = `rows-${tag}`
 let AUTH: Record<string, string> = {}
 let personId = ''
-let sitesTotal = 0
 
 test.describe.configure({ mode: 'serial' })
 
@@ -38,7 +37,6 @@ async function open(page: Page) {
 
 const stored = async (page: Page) => {
   const list = await (await page.request.get(`${API}/api/v1/site-access`, { headers: AUTH })).json()
-  sitesTotal = list.sites.length
   return list.viewers.find((v: { id: string }) => v.id === personId).sites as string[] | null
 }
 
@@ -78,8 +76,6 @@ test('the sites popover ticks, searches and saves at once', async ({ page }) => 
 
 test('fast ticks are saved one at a time, and the newest state wins', async ({ page }) => {
   const { row, sites } = await open(page)
-  await stored(page)
-  const all = sitesTotal
   // The first save is held for a moment; the next two ticks come while it is out.
   let puts = 0
   await page.route('**/api/v1/site-access/*', async (route) => {
@@ -91,9 +87,14 @@ test('fast ticks are saved one at a time, and the newest state wins', async ({ p
   await pop.getByRole('menuitemcheckbox', { name: new RegExp(`rows-a-${tag}`) }).click()
   await pop.getByRole('menuitemcheckbox', { name: new RegExp(`rows-b-${tag}`) }).click()
   await page.waitForTimeout(2000)
-  expect(await stored(page)).toHaveLength(all - 2)
-  // Other suites add sites at the same time: the total may have grown, the ticked count may not.
-  await expect(row.locator('.sites-btn .sites-text')).toHaveText(new RegExp(`^${all - 2} of \\d+ sites$`))
+  // Other suites add and delete sites at the same time: what counts is that both ticks were saved and the third site kept.
+  const left = (await stored(page))!
+  const list = await (await page.request.get(`${API}/api/v1/site-access`, { headers: AUTH })).json()
+  const idOf = (n: string) => list.sites.find((s: { domain: string }) => s.domain.startsWith(`rows-${n}-${tag}`)).id as string
+  expect(left).not.toContain(idOf('a'))
+  expect(left).not.toContain(idOf('b'))
+  expect(left).toContain(idOf('c'))
+  await expect(row.locator('.sites-btn .sites-text')).toHaveText(/^\d+ of \d+ sites$/)
   await page.unroute('**/api/v1/site-access/*')
   await pop.getByRole('button', { name: 'All sites' }).click()
   await expect.poll(() => stored(page)).toBeNull()
