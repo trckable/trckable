@@ -11,6 +11,5 @@ export const copy = defineCopy('v2.goals', {
   suggested: 'Suggested',
   add: 'Add',
   addTip: (n: string) => `Count ${n}`,
-  card: (name: string, value: string, change: string) => (change ? `${name}, ${value}, ${change}` : `${name}, ${value}`),
-  change: (up: boolean, pct: number) => `${up ? 'up' : 'down'} ${pct} percent`,
+  dir: (up: boolean) => (up ? 'up' : 'down'),
 })

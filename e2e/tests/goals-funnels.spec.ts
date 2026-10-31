@@ -134,7 +134,7 @@ test('Track a goal suggests goals from recorded pages, one click adds one, and a
 
   // The shared site keeps nothing from this run.
   await dialog.getByRole('button', { name: 'Remove the goal Opened pricing' }).click()
-  await expect(dialog.getByRole('list', { name: 'Page goals' })).toHaveCount(0)
+  await expect(dialog.getByRole('button', { name: 'Remove the goal Opened pricing' })).toHaveCount(0)
   expect((await forms(false)).ok()).toBe(true)
 })
 

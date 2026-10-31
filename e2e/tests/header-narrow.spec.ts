@@ -7,7 +7,7 @@ import { session } from './session'
 const SHOTS = process.env.HN_SHOTS
 const AUTH = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
 const WIDTHS = [390, 463, 600, 700, 900, 1440]
-const CONTROLS = ['#siteBtn', '.hd .exb', '.hd .ib.bell', '.hd .account-btn', '.hd .ptop-chip', '.hd .ringb']
+const CONTROLS = ['#siteBtn', '.hd .goalsb', '.hd .exb', '.hd .ib.bell', '.hd .account-btn', '.hd .ptop-chip', '.hd .ringb']
 
 let cookie = ''
 let longSite = ''
@@ -51,7 +51,7 @@ for (const scheme of ['dark', 'light'] as const)
         expect(Math.max(...mids) - Math.min(...mids), `one centre line ${JSON.stringify(row)}`).toBeLessThanOrEqual(0.5)
         // The right group (from the bell back to whatever sits before it) has one gap; with no spacer (600 and under) the site joins it.
         const gaps = row.slice(1).map((c, i) => Math.round((c.x - row[i].x - row[i].w) * 10) / 10)
-        const right = ['.hd .exb', '.hd .ptop-chip', '.hd .ib.bell', '.hd .account-btn']
+        const right = ['.hd .goalsb', '.hd .exb', '.hd .ptop-chip', '.hd .ib.bell', '.hd .account-btn']
         const group = w <= 600 ? gaps : gaps.filter((_, i) => right.includes(row[i].sel) && right.includes(row[i + 1].sel))
         expect(new Set(group).size, `gaps ${JSON.stringify(gaps)} ${JSON.stringify(row)}`).toBe(1)
         expect(group.every((g) => g === 12), `gaps ${JSON.stringify(gaps)}`).toBe(true)

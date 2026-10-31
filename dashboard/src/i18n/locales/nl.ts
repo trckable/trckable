@@ -3599,6 +3599,5 @@ export default {
   'v2.goals.suggested': 'Voorgesteld',
   'v2.goals.add': 'Toevoegen',
   'v2.goals.addTip': (n: string) => `${n} tellen`,
-  'v2.goals.card': (name: string, value: string, change: string) => (change ? `${name}, ${value}, ${change}` : `${name}, ${value}`),
-  'v2.goals.change': (up: boolean, pct: number) => `${up ? 'omhoog' : 'omlaag'} ${pct} procent`,
+  'v2.goals.dir': (up: boolean) => (up ? 'omhoog' : 'omlaag'),
 } satisfies Messages

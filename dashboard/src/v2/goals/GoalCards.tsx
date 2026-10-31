@@ -8,7 +8,7 @@ import { useMods } from '../../lib/useMods'
 import { copy } from './copy'
 import { cardRows, funnelRow, goalRows, type FunnelSteps, type GoalRow } from './model'
 import { openRow } from './open'
-import { amountText, changeText, GoalChip, Trend } from './parts'
+import { amountText, GoalChip, Trend } from './parts'
 import './goals.css'
 
 interface Props {
@@ -25,7 +25,7 @@ interface Props {
 function Card({ r }: { r: GoalRow }) {
   const text = amountText(r)
   return (
-    <button type="button" className="gc" data-goal-card={r.kind} title={r.name} aria-label={copy.card(r.name, text, changeText(r.change))} onClick={() => openRow(r)}>
+    <button type="button" className="gc" data-goal-card={r.kind} title={r.name} onClick={() => openRow(r)}>
       <span className="gc-top">
         <GoalChip kind={r.kind} />
         <Trend change={r.change} />

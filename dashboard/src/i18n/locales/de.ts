@@ -3589,6 +3589,5 @@ export default {
   'v2.goals.suggested': 'Vorgeschlagen',
   'v2.goals.add': 'Hinzufügen',
   'v2.goals.addTip': (n: string) => `${n} zählen`,
-  'v2.goals.card': (name: string, value: string, change: string) => (change ? `${name}, ${value}, ${change}` : `${name}, ${value}`),
-  'v2.goals.change': (up: boolean, pct: number) => `${up ? 'plus' : 'minus'} ${pct} Prozent`,
+  'v2.goals.dir': (up: boolean) => (up ? 'plus' : 'minus'),
 } satisfies Messages

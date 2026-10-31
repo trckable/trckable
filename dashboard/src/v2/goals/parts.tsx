@@ -19,8 +19,6 @@ export function GoalChip({ kind, size = 16 }: { kind: Kind; size?: number }) {
 
 export const amountText = (r: GoalRow) => (r.unit === 'rate' ? fmtPct(r.amount) : fmtInt(r.amount))
 
-export const changeText = (c: Change | null) => (c && c.dir !== 'flat' ? copy.change(c.dir === 'up', c.pct) : '')
-
 /** The arrow and the percent; nothing where there is no comparison. */
 export function Trend({ change }: { change: Change | null }) {
   if (!change) return null
@@ -29,6 +27,7 @@ export function Trend({ change }: { change: Change | null }) {
   return (
     <span className={`gc-tr ${change.dir}`}>
       <Arrow size={12} strokeWidth={2.2} aria-hidden={true} />
+      <span className="sr">{copy.dir(change.dir === 'up')} </span>
       {`${change.pct}%`}
     </span>
   )

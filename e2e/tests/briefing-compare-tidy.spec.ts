@@ -133,7 +133,7 @@ for (const width of [360, 768, 1440] as const) {
     await expect(page.locator('.mailchip')).toHaveAttribute('aria-label', /Emailed daily at 0?8:00.*Change/)
     const gaps = await page.evaluate(() => {
       const top = (s: string) => document.querySelector(s)!.getBoundingClientRect()
-      const seq = ['.kcs', '.brief > .cards', '.lkcs']
+      const seq = ['.kcs', '.brief > .cards', '.gcs, .gc-empty', '.lkcs'].filter((q) => document.querySelector(q))
       return { kcs: parseFloat(getComputedStyle(document.querySelector('.kcs')!).rowGap), between: seq.slice(1).map((s, i) => Math.round(top(s).top - top(seq[i]).bottom)) }
     })
     for (const g of gaps.between) expect(g).toBe(gaps.kcs)

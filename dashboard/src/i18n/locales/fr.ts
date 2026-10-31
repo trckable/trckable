@@ -3587,6 +3587,5 @@ export default {
   'v2.goals.suggested': 'Suggéré',
   'v2.goals.add': 'Ajouter',
   'v2.goals.addTip': (n: string) => `Compter ${n}`,
-  'v2.goals.card': (name: string, value: string, change: string) => (change ? `${name}, ${value}, ${change}` : `${name}, ${value}`),
-  'v2.goals.change': (up: boolean, pct: number) => `${up ? 'en hausse' : 'en baisse'} de ${pct} pour cent`,
+  'v2.goals.dir': (up: boolean) => (up ? 'en hausse' : 'en baisse'),
 } satisfies Messages
