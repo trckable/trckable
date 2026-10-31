@@ -26,6 +26,7 @@ function anchorOf(list: HTMLElement): { id: string; top: number } | null {
  */
 export function useArrival(list: RefObject<HTMLDivElement | null>, fresh: ReadonlySet<string>, rows: readonly BellRow[]) {
   const seen = useRef<{ id: string; top: number; scrolled: number } | null>(null)
+  const tops = useRef(new Map<string, number>())
   useLayoutEffect(() => {
     const el = list.current
     if (!el) return
@@ -43,6 +44,13 @@ export function useArrival(list: RefObject<HTMLDivElement | null>, fresh: Readon
         if (lift > 0) for (const w of items) w.animate([{ transform: `translateY(${-lift}px)` }, { transform: 'none' }], { duration: SLIDE_MS, easing: 'cubic-bezier(.2,.7,.2,1)' })
       }
     }
+    // A row put away: the ones under it close the gap instead of jumping up.
+    if (!fresher.length && !reducedMotion() && typeof el.animate === 'function')
+      for (const w of items) {
+        const before = tops.current.get(w.dataset.id ?? '')
+        if (before !== undefined && before !== w.offsetTop) w.animate([{ transform: `translateY(${before - w.offsetTop}px)` }, { transform: 'none' }], { duration: SLIDE_MS, easing: 'cubic-bezier(.2,.7,.2,1)' })
+      }
+    tops.current = new Map(items.map((w) => [w.dataset.id ?? '', w.offsetTop]))
     if (typeof el.animate === 'function') for (const w of fresher) w.animate([{ opacity: 0 }, { opacity: 1 }], { duration: SLIDE_MS, easing: 'ease-out' })
     const a = anchorOf(el)
     seen.current = a && { ...a, scrolled: box.scrollTop }
