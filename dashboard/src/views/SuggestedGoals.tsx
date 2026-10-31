@@ -15,9 +15,20 @@ export function SuggestedGoals({ site, pages, goals, busy, onAdd }: { site: Site
   useEffect(() => {
     api.modules(site.id).then((d) => setMods(d.modules)).catch(() => setMods(null))
   }, [site.id])
+  // The dialog's pages are the current report's top ten; a thank-you page is rarely among them.
+  const [more90, setMore90] = useState<string[]>([])
+  useEffect(() => {
+    const day = (ago: number) => new Date(Date.now() - ago * 86_400_000).toISOString().slice(0, 10)
+    const ctl = new AbortController()
+    api
+      .report(site.id, { from: day(90), to: day(0), limit: 100 }, ctl.signal)
+      .then((r) => setMore90((r.current.dims.page ?? []).map((x) => x.value)))
+      .catch(() => {})
+    return () => ctl.abort()
+  }, [site.id])
   const on = (id: string) => mods?.find((m) => m.id === id)?.enabled
   const forms = !!mods && !on('forms') && !!on('goals') && can('site.settings')
-  const list = goalSuggestions(pages, goals)
+  const list = goalSuggestions([...pages, ...more90], goals)
   if (!list.length && !forms) return null
 
   const turnOnForms = () => {
