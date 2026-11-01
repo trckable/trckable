@@ -157,11 +157,11 @@ func TestSetupDefaults(t *testing.T) {
 			t.Fatalf("%+v", it)
 		}
 	})
-	t.Run("a connection without a sale is not done yet, and still names the provider", func(t *testing.T) {
+	t.Run("a connection is done before its first sale, and names the provider", func(t *testing.T) {
 		in := baseIn()
 		in.Payments = &payState{Provider: "stripe"}
 		it := itemOf(t, buildSetup(in), "payments")
-		if it.Done || !it.Counted || it.Detail["provider"] != "stripe" || it.Detail["connected"] != true {
+		if !it.Done || !it.Counted || it.Detail["provider"] != "stripe" || it.Detail["connected"] != true {
 			t.Fatalf("%+v", it)
 		}
 	})
@@ -344,8 +344,8 @@ func TestSetupEndpointEachItem(t *testing.T) {
 	if _, err := g.ctl.DB.Exec(`INSERT INTO pay_connections (id, site_id, provider, created_at) VALUES ('c2', ?, 'stripe', 1)`, g.site); err != nil {
 		t.Fatal(err)
 	}
-	if apiItem(t, getSetup(t, g, c), "payments")["done"] == true {
-		t.Fatal("a connection without a sale is not done")
+	if apiItem(t, getSetup(t, g, c), "payments")["done"] != true {
+		t.Fatal("a connection is done before its first sale")
 	}
 	if _, err := g.ctl.DB.Exec(`INSERT INTO pay_payments (site_id, provider, id, connection_id, paid_at, currency, gross, version) VALUES (?, 'stripe', 'p1', 'c2', 1, 'USD', 500, 1)`, g.site); err != nil {
 		t.Fatal(err)
