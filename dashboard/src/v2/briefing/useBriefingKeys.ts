@@ -25,7 +25,6 @@ export function useBriefingKeys(o: { on: boolean; cards: string[]; ui: ReturnTyp
       const k = e.key.length === 1 ? e.key.toLowerCase() : e.key
       if (!['j', 'k', 'Enter'].includes(k)) return
       const onCard = (document.activeElement as HTMLElement | null)?.classList.contains('icard')
-      if (ui.hint && (k !== 'Enter' || onCard)) ui.hideHint()
       if (k === 'j' || k === 'k') {
         if (!cards.length) return
         const at = ui.kf ? cards.indexOf(ui.kf) : -1

@@ -104,7 +104,6 @@ test('one incident card: the down stretches in red, everything else was normal a
   for (const m of await marks.all()) expect((await m.boundingBox())!.width).toBeGreaterThanOrEqual(6)
   await expect(card.locator('.ic-calm')).toContainText('No other unusual changes in')
   expect(await card.evaluate((el) => el.lastElementChild?.className)).toContain('ic-calm')
-  await expect(page.locator('.calm2')).toHaveCount(0)
   await expect(card.getByRole('button', { name: 'Open the incident' })).toBeVisible()
   await expect(card.getByRole('button', { name: 'Watch the site' })).toBeVisible()
   await expect(card.getByRole('button', { name: 'Why?' })).toBeVisible()
@@ -114,6 +113,13 @@ test('one incident card: the down stretches in red, everything else was normal a
 for (const width of [360, 768, 1440] as const) {
   test(`locked features are a slim row, the email is one quiet line, and every gap is the cards' gap, ${width}px`, async ({ page }) => {
     await withIncidents(page)
+    // A site with a goal: without one, the goal prompt is the one prompt.
+    await page.route(REPORT, async (route) => {
+      const res = await route.fetch()
+      const body = await res.json()
+      body.current = { ...body.current, goals: [{ value: 'Signup', visitors: 12 }] }
+      await route.fulfill({ response: res, json: body })
+    })
     await open(page, width, 'light')
     await expect(page.locator('.lkcs .lkc.row').first()).toBeVisible()
     const measure = () => page.locator('.lkcs .lkc.row').evaluateAll((els) => els.map((e) => ({ ...e.getBoundingClientRect().toJSON(), go: getComputedStyle(e.querySelector('.lkgo')!).backgroundColor })))
@@ -134,7 +140,7 @@ for (const width of [360, 768, 1440] as const) {
     const gaps = await page.evaluate(() => {
       const top = (s: string) => document.querySelector(s)!.getBoundingClientRect()
       const seq = ['.kcs', '.brief > .cards', '.gcs, .gc-empty', '.lkcs'].filter((q) => document.querySelector(q))
-      return { kcs: parseFloat(getComputedStyle(document.querySelector('.kcs')!).rowGap), between: seq.slice(1).map((s, i) => Math.round(top(s).top - top(seq[i]).bottom)) }
+      return { kcs: parseFloat(getComputedStyle(document.querySelector('.kcs, .cards')!).rowGap), between: seq.slice(1).map((s, i) => Math.round(top(s).top - top(seq[i]).bottom)) }
     })
     for (const g of gaps.between) expect(g).toBe(gaps.kcs)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBe(0)

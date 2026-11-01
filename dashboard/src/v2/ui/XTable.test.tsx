@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { Row } from '../explore/types'
-import { Calm } from './ConnectPlaceholder'
+import { CalmLine } from './ConnectPlaceholder'
 import { shareOf, XTable } from './XTable'
 
 const row = (o: Partial<Row>): Row => ({ val: 'a', name: 'a', v: 10, c: 0, st: '', ...o })
@@ -29,14 +29,14 @@ describe('the share column', () => {
 
 describe('the quiet line under the cards', () => {
   it('says it is still learning, not that everything was normal, in a site\'s first days', () => {
-    const html = renderToStaticMarkup(<Calm cards={false} names={[]} paused={false} learning onExplore={() => {}} />)
+    const html = renderToStaticMarkup(<CalmLine cards={false} names={[]} paused={false} learning />)
     expect(html).toContain('Still learning')
     expect(html).not.toContain('normal</b>')
-    expect(renderToStaticMarkup(<Calm cards={false} names={[]} paused={false} learning={false} onExplore={() => {}} />)).toContain('Everything was normal')
+    expect(renderToStaticMarkup(<CalmLine cards={false} names={[]} paused={false} learning={false} />)).toContain('Everything was normal')
   })
 
   it('names what was calm in plain words', () => {
-    const calm = (names: string[]) => renderToStaticMarkup(<Calm cards names={names} paused={false} learning={false} onExplore={() => {}} />)
+    const calm = (names: string[]) => renderToStaticMarkup(<CalmLine cards names={names} paused={false} learning={false} />)
     expect(calm(['search'])).toContain('No other unusual changes in search</b>')
     expect(calm(['devices', 'pages'])).toContain('No other unusual changes in devices or pages</b>')
   })

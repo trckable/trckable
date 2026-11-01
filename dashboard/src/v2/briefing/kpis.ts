@@ -1,8 +1,8 @@
-// The cards under the hero: the goal (or pageviews), Uptime, and what people paid. Visitors and bounce rate are
+// The cards under the hero: the goal, Uptime, and what people paid. Visitors and bounce rate are
 // in the numbers row above them, so they are not repeated here. Pure.
 import { goalName } from '../../lib/goalName'
 import type { Result } from '../../lib/api'
-import { delta, fmtCompact, fmtFixed, fmtInt } from '../../lib/format'
+import { delta, fmtFixed, fmtInt } from '../../lib/format'
 import type { Kc } from '../ui/KpiCard'
 import { copy } from './copy'
 import { type Score } from './model'
@@ -64,7 +64,7 @@ interface KpiIn {
 
 export function kpiCards(a: KpiIn): Kc[] {
   const { cur, prev } = a
-  // The signup has its own figure in the numbers row: the card shows the next goal, or pageviews.
+  // The signup has its own figure in the numbers row: the card shows the next goal, if there is one.
   const goal = (cur.goals ?? []).find((g) => g.visitors > 0 && g.value !== cur.signup?.goal)
   const down = a.uptime.verdict === 'down' || a.uptime.verdict === 'lost'
   const stale = a.uptime.verdict === 'down'
@@ -81,11 +81,9 @@ export function kpiCards(a: KpiIn): Kc[] {
   // An uptime nobody measured (a past day with no monitor data) is not a card with a dash: the card is left out.
   const unmeasured = a.uptime.value === null && !down && a.uptime.verdict !== 'paused'
   const cards: Kc[] = [
-    goal
-      ? { key: 'goal', icon: 'goal', label: goalName(goal.label, goal.value).replace(/^./, (c) => c.toUpperCase()), val: fmtInt(goal.visitors), note: say(rangeNote(goal.visitors, a.goalBand, ''), learning, bandNote(goal.visitors, a.goalBand) ?? noteOf(goal.visitors, prev?.goals?.find((g) => g.value === goal.value)?.visitors, a.before)), vals: a.goal?.vals ?? [], col: 'var(--mk-blue)' }
-      : { key: 'views', icon: 'click', label: copy.views, val: fmtCompact(cur.kpis.pageviews), note: a.learning ? { t: copy.learning } : noteOf(cur.kpis.pageviews, prev?.kpis.pageviews, a.before), vals: a.viewsVals, col: 'var(--mk-blue)' },
+    ...(goal ? [{ key: 'goal', icon: 'goal', label: goalName(goal.label, goal.value).replace(/^./, (c) => c.toUpperCase()), val: fmtInt(goal.visitors), note: say(rangeNote(goal.visitors, a.goalBand, ''), learning, bandNote(goal.visitors, a.goalBand) ?? noteOf(goal.visitors, prev?.goals?.find((g) => g.value === goal.value)?.visitors, a.before)), vals: a.goal?.vals ?? [], col: 'var(--mk-blue)' }] : []),
     { key: 'uptime', icon: 'uptime', label: copy.uptimeCard, val: a.uptime.value === null ? '–' : `${a.uptimePct}%`, note: upNote, vals: a.uptime.value === null ? [] : a.uptimeVals, lo: Math.min(90, ...a.uptimeVals), hi: Math.min(90, ...a.uptimeVals) + (100 - Math.min(90, ...a.uptimeVals)) * 1.7, dn: down },
-    ...(cur.money && a.money ? [{ key: 'money', icon: 'sales', label: copy.net(cur.money.payments), val: a.money(cur.money.revenue), note: a.learning ? { t: copy.soFarToday } : (bandNote(cur.money.revenue, a.moneyBand) ?? noteOf(cur.money.revenue, prev?.money?.revenue, a.before)), vals: a.moneyVals }] : []),
+    ...(cur.money && cur.money.payments > 0 && a.money ? [{ key: 'money', icon: 'sales', label: copy.net(cur.money.payments), val: a.money(cur.money.revenue), note: a.learning ? { t: copy.soFarToday } : (bandNote(cur.money.revenue, a.moneyBand) ?? noteOf(cur.money.revenue, prev?.money?.revenue, a.before)), vals: a.moneyVals }] : []),
   ]
   return unmeasured ? cards.filter((c) => c.key !== 'uptime') : cards
 }

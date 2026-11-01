@@ -1,6 +1,2 @@
 /* The daily email chip sits after Replay and takes its look (.rpb); off, it is quieter. The plain calm row below shares this file. */
 .mk .mailchip.off { color: var(--mk-muted); }
-.mk .calm2.plain { border: 0; padding: 0; min-height: 0; background: none; }
-.mk .calm2.plain button { margin-left: var(--mk-s2); text-decoration: underline; text-underline-offset: 2px; font-size: 12.5px; }
-.mk .calm2.plain .ck { display: none; }
-.mk .calm2.plain b { font-weight: 400; color: inherit; }

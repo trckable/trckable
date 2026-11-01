@@ -27,17 +27,12 @@ export function useBriefingState(site: string) {
   const [done, setDone] = useState<Set<string>>(new Set())
   const [kf, setKf] = useState<string | null>(null)
   const [mail, setMail] = useState(() => get(`trckable:mail:${site}`) !== 'off')
-  const [hint, setHint] = useState(() => get('trckable:khint') === null && typeof matchMedia === 'function' && matchMedia('(hover:hover)').matches)
   const toggleMail = useCallback(() => {
     setMail((m) => {
       put(`trckable:mail:${site}`, m ? 'off' : 'on')
       return !m
     })
   }, [site])
-  const hideHint = useCallback(() => {
-    put('trckable:khint', '1')
-    setHint(false)
-  }, [])
   const flip = (set: Set<string>, k: string) => {
     const n = new Set(set)
     if (!n.delete(k)) n.add(k)
@@ -45,5 +40,5 @@ export function useBriefingState(site: string) {
   }
   const toggleHow = useCallback((k: string) => setHow((h) => flip(h, k)), [])
   const markDone = useCallback((k: string) => setDone((d) => new Set(d).add(k)), [])
-  return { how, toggleHow, done, markDone, kf, setKf, open, setOpen, all, setAll, sheet, setSheet, addNote, setAddNote, mail, toggleMail, hint, hideHint }
+  return { how, toggleHow, done, markDone, kf, setKf, open, setOpen, all, setAll, sheet, setSheet, addNote, setAddNote, mail, toggleMail }
 }

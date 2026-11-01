@@ -1,0 +1,1 @@
+The Briefing is lighter: Pageviews sits beside Visitors in place of Revenue per visitor, small cards appear only when they have something to say, only one prompt shows at a time, and the keyboard hints and the quiet "nothing else" row are gone.

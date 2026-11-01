@@ -105,6 +105,7 @@ test('with no goals the Briefing offers to track the first one', async ({ page }
   await page.goto(`${API}/${STEADY_DOMAIN}?view=briefing&period=30d&v=`)
   const row = page.locator('[data-goal-cards-empty]')
   await expect(row).toContainText('Track your first goal')
+  await expect(page.locator('.lkcs .lkc.row')).toHaveCount(0) // one prompt at a time
   await row.click()
   await expect(page.getByRole('dialog', { name: 'Add goals' })).toBeVisible()
 })
