@@ -41,17 +41,6 @@ export function CalmLine({ cards, names, paused, learning }: CalmIn) {
   )
 }
 
-export function Calm({ onExplore, ...says }: CalmIn & { onExplore: () => void }) {
-  return (
-    <div className="calm2 plain">
-      <CalmLine {...says} />
-      <button type="button" onClick={onExplore}>
-        {copy.exploreAll} {'\u203A'}
-      </button>
-    </div>
-  )
-}
-
 export function Act({ text, rest, label, onAct }: { text: string; rest?: string; label: string; onAct: () => void }) {
   return (
     <div className="act">

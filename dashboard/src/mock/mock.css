@@ -179,11 +179,6 @@
 .mk .facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--mk-line);margin:8px -28px 0}
 .mk .deep{margin-left:auto;color:var(--mk-muted);font-size:13px;padding:2px 9px;border-radius:8px;white-space:nowrap;margin-top:-2px}
 .mk .deep:hover{background:var(--mk-hover);color:var(--mk-text)}
-.mk .calm2{display:flex;align-items:center;gap:10px;padding:13px 20px;border:1px solid var(--mk-line);border-radius:16px;color:var(--mk-muted);font-size:13px;flex-wrap:wrap}
-.mk .calm2 .ck{color:var(--mk-lime)}
-.mk .calm2 b{color:var(--mk-text);font-weight:600}
-.mk .calm2 button{margin-left:auto;color:var(--mk-muted);font-size:13px}
-.mk .calm2 button:hover{color:var(--mk-text)}
 .mk .act{display:flex;align-items:center;gap:16px;padding:16px 22px;border:1px solid var(--mk-limeL);background:var(--mk-limeF);border-radius:var(--mk-r);flex-wrap:wrap}
 .mk .act span{flex:1;min-width:220px;font-size:15px;color:var(--mk-muted)}
 .mk .act b{color:var(--mk-text)}
@@ -343,12 +338,12 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .pmenu .dates button{background:var(--mk-limeD);color:var(--mk-lime);border:1px solid var(--mk-limeL);display:inline-flex;align-items:center}
 .mk .actbtn{height:var(--mk-h);border-radius:var(--mk-rc);padding:0 var(--mk-s4);display:inline-flex;align-items:center;font-size:13px;line-height:1}
 .mk .actbtn:hover{filter:brightness(1.08)}
-.mk .deep,.mk .calm button,.mk .calm2 button,.mk .mk-more{height:var(--mk-h);border-radius:var(--mk-rc);display:inline-flex;align-items:center;justify-content:center;line-height:1;white-space:nowrap}
-.mk .deep,.mk .calm button,.mk .calm2 button{padding:0 var(--mk-s3);font-size:13px;margin-top:0}
+.mk .deep,.mk .calm button,.mk .mk-more{height:var(--mk-h);border-radius:var(--mk-rc);display:inline-flex;align-items:center;justify-content:center;line-height:1;white-space:nowrap}
+.mk .deep,.mk .calm button{padding:0 var(--mk-s3);font-size:13px;margin-top:0}
 .mk .deep{margin:-6px 0 -6px auto}
-.mk .calm2 button,.mk .calm button{margin-left:auto}
+.mk .calm button{margin-left:auto}
 .mk .mk-more{height:var(--mk-h);padding:0 var(--mk-s3)}
-.mk .deep:hover,.mk .calm button:hover,.mk .calm2 button:hover{background:var(--mk-hov);color:var(--mk-text)}
+.mk .deep:hover,.mk .calm button:hover{background:var(--mk-hov);color:var(--mk-text)}
 .mk .ib{width:var(--mk-h);height:var(--mk-h);flex:none}
 
 .mk .ib{border-radius:var(--mk-rc);transition:background .15s,color .15s}
@@ -371,7 +366,6 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .hero .ch-top{margin-top:var(--mk-s4)}
 .mk .mk-hl{margin-top:var(--mk-s4)}
 .mk .hsub{margin-top:var(--mk-s3)}
-.mk .calm2{padding:var(--mk-s3) var(--mk-s5);gap:var(--mk-s3);min-height:48px}
 .mk .act{padding:var(--mk-s4) var(--mk-s5);gap:var(--mk-s4)}
 .mk .lhead{padding:var(--mk-s5) var(--mk-s5) 0}
 .mk .lfig{padding:var(--mk-s4) var(--mk-s5) 0}
@@ -449,7 +443,6 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .lfeed{padding:var(--mk-s2) var(--mk-s4) 0}
 
 .mk .brief, .mk .cards, .mk .liveview{gap:var(--mk-s3);--brief-gap:var(--mk-s3)}
-.mk .calm2{padding:var(--mk-s3) var(--mk-s4)}
 .mk .act{padding:var(--mk-s4)}
 .mk .act .actbtn{width:100%;justify-content:center}
 .mk .ph{padding:var(--mk-s4) var(--mk-s4) var(--mk-s1)}
@@ -518,9 +511,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .fact small{font-size:13px}
 .mk .fact .m{font-size:13px;margin-top:var(--mk-s2);white-space:normal}
 .mk .deep{margin:0;height:44px;width:100%;justify-content:space-between;border:1px solid var(--mk-line);color:var(--mk-text);font-size:14px;padding:0 var(--mk-s4);border-radius:12px}
-.mk .calm2 button, .mk .act .actbtn{min-height:44px}
-.mk .calm2{flex-direction:column;align-items:stretch;gap:var(--mk-s2)}
-.mk .calm2 button{margin:0;border:1px solid var(--mk-line);width:100%}
+.mk .act .actbtn{min-height:44px}
 .mk .liveview{display:flex;flex-direction:column}
 .mk .lnow .lhead{padding:var(--mk-s4) var(--mk-s4) 0}
 .mk .lnow .lfig{display:flex;flex-direction:column;gap:var(--mk-s1);padding:var(--mk-s2) var(--mk-s4) 0}
@@ -748,8 +739,6 @@ html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-
 .mk .cdh .mk-quiet{display:none}
 .mk .cdh b{flex:1;min-width:0}
 }
-.mk .calm2 .ck{flex:none}
-.mk .calm2>span:nth-child(2){flex:1 1 220px;min-width:0}
 .mk .pmenu .mi .mt2{display:block;flex:1;min-width:0;text-align:left}
 .mk .pmenu .mi .nm,.mk .pmenu .mi .d{line-height:1.3}
 .mk .pmenu .mi.on .nm{color:var(--mk-lime)}
@@ -944,8 +933,6 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .mailrow .mt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mk .mailrow i{font-style:normal;color:var(--mk-text)}
 .mk .mailrow b{color:var(--mk-muted);font-weight:600}
-.mk .khint{display:flex;gap:var(--mk-s2) var(--mk-s4);flex-wrap:wrap;justify-content:center;align-items:center;font-size:12px;color:var(--mk-faint)}
-.mk .khint kbd{border:1px solid var(--mk-line);border-radius:5px;padding:0 5px;font:inherit;font-size:12px;color:var(--mk-muted)}
 .mk .npw{position:sticky;top:64px;height:0;margin:calc(var(--brief-gap,16px) / -2) 0;z-index:6;display:flex;justify-content:center;pointer-events:none}
 .mk .newpill{pointer-events:auto;height:32px;padding:0 var(--mk-s4);border-radius:16px;background:var(--mk-lime);color:var(--mk-on-lime);font-weight:700;font-size:13px;box-shadow:0 8px 24px var(--mk-shc3);animation:mk-rise .3s both}
 .mk .sk-hl{width:100%;height:127px;margin:0;border-radius:12px}
@@ -1059,13 +1046,10 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .fact .m{display:block;font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* On a phone the cards are one flat list; its gap above is the one the cards above have (the pill's slot between them takes 8px off each side, so the list's own margin makes up the rest). Here and not with the story card's own styles: those arrive with its chunk, and the list would move when they do. */
 .mk .morebtn{align-self:flex-start;border:0;background:none;padding:0;color:var(--mk-muted)}
-.mk .calm2{border:0;padding:var(--mk-s3) 0;min-height:0;border-radius:0;flex-direction:row;align-items:center}
-.mk .calm2 button{width:auto;border:0;min-height:0;padding:0;margin-left:auto}
 .mk .act{border:0;background:none;padding:var(--mk-s2) 0}
 .mk .mailrow{padding:var(--mk-s3) var(--mk-s4);min-height:0;font-size:12px;align-items:flex-start}
 .mk .mailrow .mt{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.mk .khint, .mk .npw{display:flex}
-.mk .khint{display:none}
+.mk .npw{display:flex}
 .mk .liveview>.mk-card, .mk .liveview .mk-card{background:none;border:0;border-radius:0;box-shadow:none}
 .mk .lnow .lhead, .mk .lon .lhead{padding:var(--mk-s2) 0}
 .mk .lnow .lfig{display:flex;flex-direction:row;align-items:flex-end;justify-content:space-between;gap:var(--mk-s4);padding:0}
@@ -1597,7 +1581,6 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 @media (--xs){.mk{--mk-row-h:44px}}
 /* Design round 2: Replay and Why? sit apart, the Briefing's keys strip hides with a word, the mail line stacks on a phone. */
 .mk .rpb+.rpb{margin-left:var(--mk-s2)}
-.mk .khint .gh{height:24px;padding:0 var(--mk-s2);border:1px solid var(--mk-line);font-size:12px}
 @container (--pane-max-600){.mk .mailrow .mt{flex:1 1 100%}.mk .mailrow .gh{flex:1}}
 .mk .cards{align-items:stretch}
 

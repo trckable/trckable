@@ -43,6 +43,7 @@ for (const [width, scheme] of [[1440, 'dark'], [2000, 'light']] as const) {
 for (const [width, scheme] of [[1440, 'dark'], [390, 'light']] as const) {
   test(`${width}px ${scheme}: the page scrolls under a header that keeps a band of its own`, async ({ page }) => {
     await open(page, width, scheme)
+    await page.setViewportSize({ width, height: 560 }) // the Briefing is short: a low window leaves room to scroll
     await page.waitForTimeout(800)
     // Down as far as 260 px goes (a short page stops sooner), then a little back up.
     const down = await page.evaluate(() => Math.min(260, document.documentElement.scrollHeight - innerHeight))

@@ -6,7 +6,7 @@ import { baseEnough, tooFew } from '../../lib/thin'
 import { copy } from './copy'
 
 export interface Figure {
-  key: 'visitors' | 'signups' | 'signupRate' | 'revenue' | 'conversion' | 'perVisitor' | 'bounce' | 'session'
+  key: 'visitors' | 'pageviews' | 'signups' | 'signupRate' | 'revenue' | 'conversion' | 'bounce' | 'session'
   label: string
   val: string
   /** The change against the period before; nothing when there is no base to measure it on. */
@@ -22,7 +22,10 @@ function rate(cur: Result, prev: Result | undefined, val: (r: Result) => number,
 
 export function figuresOf(cur: Result, prev: Result | undefined, money?: (minor: number) => string): Figure[] {
   const base = prev && baseEnough(prev.kpis.visitors) ? prev : undefined
-  const out: Figure[] = [{ key: 'visitors', label: copy.numVisitors, val: fmtCompact(cur.kpis.visitors), change: delta(cur.kpis.visitors, base?.kpis.visitors) }]
+  const out: Figure[] = [
+    { key: 'visitors', label: copy.numVisitors, val: fmtCompact(cur.kpis.visitors), change: delta(cur.kpis.visitors, base?.kpis.visitors) },
+    { key: 'pageviews', label: copy.numPageviews, val: fmtCompact(cur.kpis.pageviews), change: delta(cur.kpis.pageviews, base?.kpis.pageviews) },
+  ]
   const su = cur.signup
   if (su) {
     const was = base?.signup
@@ -38,7 +41,6 @@ export function figuresOf(cur: Result, prev: Result | undefined, money?: (minor:
     out.push(
       { key: 'revenue', label: copy.numRevenue, val: money(m.revenue), change: delta(m.revenue, was?.revenue) },
       { key: 'conversion', label: copy.numConversion, val: fmtRatio(m.conversion, 1), change: delta(m.conversion, was?.conversion) },
-      { key: 'perVisitor', label: copy.numPerVisitor, val: money(Math.round(m.revenue_per_visitor)), change: delta(m.revenue_per_visitor, was?.revenue_per_visitor) },
     )
   }
   out.push(

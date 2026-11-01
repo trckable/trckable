@@ -25,11 +25,10 @@ import { readView } from '../../lib/url'
 import { AnswersSlot } from './AnswersSlot'
 import { BounceNote } from './BounceNote'
 import { NumbersRow } from './NumbersRow'
-import { KeyHint } from '../ui/KeyHint'
 import { Kcs } from '../ui/KpiCard'
 import { MailRow } from '../ui/MailRow'
 import { WatchCard } from '../ui/WatchCard'
-import { Act, Calm, CalmLine, Setups } from '../ui/ConnectPlaceholder'
+import { Act, CalmLine, Setups } from '../ui/ConnectPlaceholder'
 import { Overlays } from './Overlays'
 import { whyUsual } from './why'
 import { useMoments } from '../replay/useMoments'
@@ -40,7 +39,7 @@ import { copy } from './copy'
 import { chartLine, heroSub } from './lines'
 import { againstName, wholeBefore } from './compare'
 import { LOOKED_AT, sinceOf } from './since'
-import { goExplore, seeScorePart } from './deeper'
+import { seeScorePart } from './deeper'
 import { useSetup, useSinceCount, useUptime, useUsual } from './hooks'
 import { kpiCards, pctText } from './kpis'
 import { unitOf } from './model'
@@ -169,6 +168,8 @@ export default function Briefing({ site, data: page, loading, period, compare = 
   const listCtx = incidentOn ? { ...ctx, calm: <div className="ic-calm"><CalmLine {...calmIn} /></div> } : ctx
   const cards = empty ? quiet : <CardList list={shown} c={listCtx} />
   const { act, setups } = nudge({ site, cur, stories, top, downNow, can: setupState.can, shared: isShared(), noSearch: setupState.noSearch, noAlerts: setupState.noAlerts, want: setupState.want, onGoal })
+  // One prompt at a time: asking for a first goal stands in for the row of things to connect.
+  const firstGoal = extras.fresh === true && !cur.goals?.length && !extras.funnel && can('goal.create') && !setups.some((x) => x.key === 'goals')
   const heroWhy = stories.find((x) => x.key === 'uptime')?.cause ?? stories.find((x) => x.key === 'sources')?.cause ?? (usual && parts.st ? whyUsual({ label: copy.people, now: v, weeks: usual.weeks ?? [], weekday: parts.weekday, at: parts.hhmm }) : null)
   const sales = cur.money?.payments ?? 0
   const lockSec = dayStart + LOOKED_AT * 3600
@@ -211,7 +212,7 @@ export default function Briefing({ site, data: page, loading, period, compare = 
             )
           }
         />
-        {!empty && <Kcs items={kcs} />}
+        {!empty && kcs.length > 0 && <Kcs items={kcs} />}
         <div className="npw">
           {lock.queued.length > 0 && (
             <button type="button" className="newpill" onClick={lock.release}>
@@ -228,12 +229,10 @@ export default function Briefing({ site, data: page, loading, period, compare = 
           </button>
         )}
         {ui.all && rest.length > 0 && <CardList list={rest} c={listCtx} />}
-        {!empty && !incidentOn && <Calm {...calmIn} onExplore={() => goExplore()} />}
         {!empty && <GoalCards site={site.id} goals={cur.goals} before={prev ? (prev.goals ?? []) : undefined} funnel={extras.funnel} read={extras.fresh === true && !setups.some((x) => x.key === 'goals')} onGoal={onGoal} />}
-        <Setups rows={setups} />
+        <Setups rows={firstGoal ? [] : setups} />
         {act && <Act text={act.text} rest={act.rest} label={act.label} onAct={act.run} />}
         <BounceNote site={site} range={range} />
-        {ui.hint && <KeyHint onHide={ui.hideHint} />}
       </div>
       <Overlays ui={ui} site={site} range={range} today={today} notes={notes} ctx={ctx} headline={headline} kcs={kcs} shown={shown} canNote={canNote} />
     </div>
