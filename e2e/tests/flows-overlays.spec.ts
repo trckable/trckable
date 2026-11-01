@@ -55,7 +55,7 @@ for (const look of LOOKS) {
 
     test('Explore opens over the Briefing and Escape closes it', async ({ page }) => {
       await openFlow(page, cookie, look)
-      await page.getByRole('button', { name: /^Explore all data/ }).last().click()
+      await page.getByRole('button', { name: /^Explore/ }).filter({ visible: true }).last().click()
       await expect(page.locator('#xp.on')).toBeVisible()
       await page.keyboard.press('Escape')
       await expect(page.locator('#xp.on')).toHaveCount(0)

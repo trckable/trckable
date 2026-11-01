@@ -54,7 +54,7 @@ for (const size of SIZES) {
       await lastIsReachable(page, '.cd.on')
       await page.keyboard.press('Escape')
       await expect(page.locator('.cd.on')).toHaveCount(0) // put away before the next one opens, whatever the runner's speed
-      await page.getByRole('button', { name: /^Explore all data/ }).last().click()
+      await page.getByRole('button', { name: /^Explore/ }).filter({ visible: true }).last().click()
       await expect(page.locator('#xp.on button:visible').first()).toBeVisible({ timeout: 20_000 })
       await lastIsReachable(page, '#xp.on')
       await page.keyboard.press('Escape')
