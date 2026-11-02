@@ -210,7 +210,7 @@
 .mk .xb:hover{background:var(--mk-hover);color:var(--mk-text)}
 .mk .xb.p{background:var(--mk-limeD);color:var(--mk-lime);border-color:var(--mk-limeL)}
 .mk .xt{display:flex;flex-direction:column}
-.mk .xth{display:grid;grid-template-columns:minmax(0,1fr) 70px 96px;gap:10px;font-size:12px;color:var(--mk-faint);padding:0 0 6px}
+.mk .xth{display:grid;grid-template-columns:minmax(0,1fr) 70px 96px;gap:10px;font-size:12px;color:var(--mk-muted);padding:0 0 6px}
 .mk .xth span:nth-child(n+2){text-align:right}
 .mk .xrw{display:grid;grid-template-columns:minmax(0,1fr) 70px 96px;gap:10px;align-items:center;padding:6px 0;text-align:left;font-size:13px;width:100%;border-top:1px solid var(--mk-line)}
 .mk button.xrw:hover .mk-bar{background:var(--mk-bandh)}

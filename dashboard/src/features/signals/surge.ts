@@ -164,10 +164,10 @@ export function localHour(unix: number, tz: string): { day: ISODate; hour: strin
 }
 
 /**
- * What "See it in Data" does to the address: the day or days around the moment (half an hour before
+ * What "See it in Explore" does to the address: the day or days around the moment (half an hour before
  * it began to half an hour after it ended, or now while it lasts), by the hour, against the same days
- * a week earlier (the usual is the same hour of the same weekday), opened on the numbers. No filter is
- * applied: the other traffic stays in view, and the page offers the source as a chip.
+ * a week earlier (the usual is the same hour of the same weekday), opened on Overview. No filter is
+ * applied: the other traffic stays in view.
  */
 export function seeInData(s: Surge, tz: string, now = new Date()): Partial<ViewState> {
   const today = todayIn(tz, now)
@@ -175,14 +175,14 @@ export function seeInData(s: Surge, tz: string, now = new Date()): Partial<ViewS
   const end = s.ended ? Math.min(s.ended + HALF_HOUR, Math.floor(now.getTime() / 1000)) : Math.floor(now.getTime() / 1000)
   const to = localHour(end, tz).day
   const last = to > today ? today : to
-  return { live: false, period: 'custom', from, to: last, bucket: 'hour', compare: 'custom', cfrom: addDays(from, -7), cto: addDays(last, -7), filters: [], day: undefined, v: 'explore', story: undefined, surge: s.started }
+  return { live: false, period: 'custom', from, to: last, bucket: 'hour', compare: 'custom', cfrom: addDays(from, -7), cto: addDays(last, -7), filters: [], xf: [], xp: 'overview', day: undefined, v: undefined, story: undefined, surge: s.started }
 }
 
 /** What the bell's "See it in Explore" does: the moment's days opened in Explore's panel, narrowed to what was asked for (the source that sent them). */
-export const seeInExplore = (s: Surge, tz: string, filters: Filter[], now = new Date()): Partial<ViewState> => ({ ...seeInData(s, tz, now), v: undefined, surge: undefined, xp: 'overview', xf: filters })
+export const seeInExplore = (s: Surge, tz: string, filters: Filter[], now = new Date()): Partial<ViewState> => ({ ...seeInData(s, tz, now), surge: undefined, xf: filters })
 
-/** What "See it in Data" does from the landing page chip: the same moment, filtered to that page. */
-export const seePageInData = (s: Surge, tz: string, page: string, now = new Date()): Partial<ViewState> => ({ ...seeInData(s, tz, now), filters: [{ dim: 'page', value: page }] })
+/** What the button does from the landing page chip: the same moment, filtered to that page. */
+export const seePageInData = (s: Surge, tz: string, page: string, now = new Date()): Partial<ViewState> => ({ ...seeInData(s, tz, now), xf: [{ dim: 'page', value: page }] })
 
 /** The line over the numbers: when it was, how busy, who sent them and where they landed. */
 export function bannerLine(s: Surge, tz: string): string {

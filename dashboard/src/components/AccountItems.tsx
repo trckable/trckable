@@ -83,7 +83,7 @@ export default function AccountItems({ profile, v, go }: { profile: Profile | nu
       <button type="button" role="menuitem" onClick={go(() => location.assign(CHANGELOG))}>
         <Sparkles size={18} strokeWidth={1.75} aria-hidden="true" />
         {footerCopy.whatsNew}
-        {appVersion() && <span className="menu-kbd">v{appVersion()}</span>}
+        {appVersion() && <span className="menu-kbd">{`v${appVersion()}`}</span>}
       </button>
       <button type="button" role="menuitem" onClick={go(signOutOf ?? signOut)}>
         <LogOut size={18} strokeWidth={1.75} aria-hidden="true" />
