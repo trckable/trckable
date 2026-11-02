@@ -343,22 +343,37 @@ func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from in
 	}
 	if p.Goals {
 		names := a.goalNames(ctx, s.ID)
-		if list, err := q.GoalHours(ctx, s.ID, p.TZ, time.Unix(from, 0).UTC(), now.UTC(), 100); err != nil {
+		if list, err := q.GoalHours(ctx, s.ID, p.TZ, time.Unix(from, 0).UTC(), now.UTC(), 2000); err != nil {
 			ok = false
 		} else {
+			// One row per goal per day, at its latest hour: a few busy goals must not push everything else off the list.
+			rows := map[string]*bellRow{}
+			var order []string
 			for _, g := range list {
 				at, ok := hour(g.Hour)
 				if !ok {
 					continue
 				}
-				row := bellRow{ID: "goal:" + s.ID + ":" + goalKey(g.Goal) + ":" + g.Hour, Kind: "goal", Site: s.ID, At: at, Count: g.Count, Text: g.Goal}
-				if n := names[g.Goal]; n != "" {
-					row.Text = n
-				}
+				day := g.Hour[:min(len(g.Hour), 10)]
+				id := "goal:" + s.ID + ":" + goalKey(g.Goal) + ":" + day
+				kind := "goal"
 				if p.SignupGoal != "" && g.Goal == p.SignupGoal {
-					row.ID, row.Kind = "signup:"+s.ID+":"+g.Hour, "signup"
+					id, kind = "signup:"+s.ID+":"+day, "signup"
 				}
-				out = append(out, row)
+				row := rows[id]
+				if row == nil {
+					row = &bellRow{ID: id, Kind: kind, Site: s.ID, At: at, Text: g.Goal}
+					if n := names[g.Goal]; n != "" {
+						row.Text = n
+					}
+					rows[id] = row
+					order = append(order, id)
+				}
+				row.Count += g.Count
+				row.At = max(row.At, at)
+			}
+			for _, id := range order {
+				out = append(out, *rows[id])
 			}
 		}
 	}
