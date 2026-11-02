@@ -625,5 +625,5 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 @media (prefers-reduced-motion:reduce){.xtile,.xtile svg{transition:none}.xtile:hover,.xtile:hover svg,.xtile:focus-visible svg,.xtile:active svg{transform:none}}
 .pop.xtiles-pop,.lpop.xtiles-pop{width:auto;max-width:calc(100vw - 16px)}
 /* As a sheet the tiles fill its width, up to a size that still reads as a grid; the button stays one square on every screen. */
-@media (--compact){.pop.xtiles-pop,.lpop.xtiles-pop{width:100%;max-width:none}.xtiles{width:100%;max-width:520px;margin-inline:auto}}
+.pop.xtiles-pop.is-sheet{width:100%;max-width:none}.is-sheet .xtiles{width:100%;max-width:520px;margin-inline:auto}
 .mk .hd .mk-chip.xtiles-btn{flex:none;justify-content:center;width:40px;min-width:40px;max-width:40px;padding:0}
