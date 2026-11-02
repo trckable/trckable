@@ -162,7 +162,7 @@ func buildSetup(in setupIn) setupOut {
 	} else if in.Stored.Provider != "" {
 		pay["provider"] = in.Stored.Provider // seen on the page: "Connect Stripe"
 	}
-	add("payments", setupOpt, in.Payments != nil && in.Payments.Sales > 0, pay)
+	add("payments", setupOpt, in.Payments != nil, pay)
 	add("funnel", setupOpt, in.Stored.FunnelBuiltAt > 0, nil)
 	add("search", setupOpt, in.Search, nil)
 	add("crawlers", setupOpt, in.Crawlers, nil)
