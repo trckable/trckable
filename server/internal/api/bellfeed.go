@@ -2,7 +2,7 @@ package api
 
 import (
 	"context"
-	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/hex"
 	"net/http"
 	"net/url"
@@ -76,16 +76,6 @@ type bellFlight struct {
 	done    chan struct{}
 	rows    []bellRow
 	partial bool
-}
-
-func (c *bellCache) get(key string, now time.Time) ([]bellRow, bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	e, ok := c.m[key]
-	if !ok || now.Sub(e.at) >= bellKeep || now.Before(e.at) {
-		return nil, false
-	}
-	return e.rows, true
 }
 
 // build answers from the cache, else from the build already running for this key, else runs `make` itself. A partial list
@@ -259,7 +249,7 @@ func (w *nullWriter) WriteHeader(int)             {}
 
 // goalKey shortens a goal's name for an id (ids are kept as read marks and are short).
 func goalKey(goal string) string {
-	h := sha1.Sum([]byte(goal))
+	h := sha256.Sum256([]byte(goal))
 	return hex.EncodeToString(h[:6])
 }
 
