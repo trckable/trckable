@@ -45,7 +45,7 @@ export function paletteItems(o: { sites: Site[]; site: Site | null; data: Report
   // What the old Create menu made: a goal, a funnel (its steps are set in Explore), a note on the chart (the Briefing's sheet).
   if (o.site && o.onGoal && can('goal.create')) out.push({ title: pc.newGoal, kind: pc.kinds.create, group: pc.groups.create, run: o.onGoal })
   if (o.site && ready && can('funnel.create')) out.push({ title: pc.newFunnel, kind: pc.kinds.create, group: pc.groups.create, run: () => openExplore('funnels') })
-  if (o.site && ready && o.here === 'briefing' && can('note.write')) out.push({ title: pc.newNote, kind: pc.kinds.create, group: pc.groups.create, run: () => window.dispatchEvent(new Event('trckable:note')) })
+  if (o.site && ready && o.here === 'briefing' && ['', 'changed'].includes(new URLSearchParams(globalThis.location?.search).get('x') ?? '') && can('note.write')) out.push({ title: pc.newNote, kind: pc.kinds.create, group: pc.groups.create, run: () => window.dispatchEvent(new Event('trckable:note')) })
   // The tables and the two views belong to a site; a page without one offers the sites and the periods only.
   if (o.site && ready) for (const t of ALL_TABS.filter(offered)) out.push({ title: t in copy.sub ? copy.sub[t] : copy.names[sectionOf(t)][0], also: copy.title, kind: '', group: copy.title, run: () => openExplore(t) })
   // The chart's markers (the sources' pills) are shown or put away from here; the guide to leaving after one page opens from here too.

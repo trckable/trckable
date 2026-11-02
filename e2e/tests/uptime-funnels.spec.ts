@@ -68,6 +68,7 @@ test('save the funnel on screen, open it later, rename it and delete it', async 
   const name = `Pricing path ${Date.now()}`
   const renamed = `${name} v2`
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=&x=funnels&fs=page:/&fs=page:/pricing`)
+  await page.locator('#xp [data-xcard="funnels"]').evaluate((el) => el.scrollIntoView())
   const saved = page.locator('#xp [data-saved-funnels]')
   await expect(saved).toBeVisible({ timeout: 15_000 })
   await saved.getByRole('button', { name: 'Save this funnel' }).click()
@@ -79,6 +80,7 @@ test('save the funnel on screen, open it later, rename it and delete it', async 
 
   // Later: the plain funnel, and the saved one opens from the picker.
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=&x=funnels`)
+  await page.locator('#xp [data-xcard="funnels"]').evaluate((el) => el.scrollIntoView())
   const picker = page.locator('#xp [data-saved-funnels]').getByLabel('Saved funnels')
   await expect(picker).toBeVisible({ timeout: 15_000 })
   await picker.selectOption({ label: name })

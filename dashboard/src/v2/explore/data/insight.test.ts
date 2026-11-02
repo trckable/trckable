@@ -1,0 +1,12 @@
+import { describe, expect, it } from 'vitest'
+import type { Row } from '../types'
+import { insightOf } from './insight'
+
+const row = (name: string, v: number, c: number, st: Row['st']): Row => ({ val: name, name, v, c, st }) as Row
+
+describe('insightOf', () => {
+  it('names the biggest move', () => expect(insightOf([row('/a', 49, 70, 'dn'), row('/docs', 28, 56, 'dn')])).toBe('/docs fell 50%, from 56 to 28 people.'))
+  it('says nothing about small numbers', () => expect(insightOf([row('Albania', 2, 7, 'dn')])).toBeNull())
+  it('says nothing when nothing moved', () => expect(insightOf([row('/a', 49, 50, '')])).toBeNull())
+  it('names a page that is new', () => expect(insightOf([row('/new', 12, 0, 'up')])).toBe('/new is new, with 12 people.'))
+})

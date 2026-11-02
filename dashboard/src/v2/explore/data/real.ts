@@ -3,6 +3,8 @@
 // saved views. Each section is asked for when it is opened.
 import { api, cachedReport, call, rangeQS, type Filter, type Report, type ReportQuery, type WebVitals } from '../../../lib/api'
 import { more } from '../../../lib/apiMore'
+import { channelLabel } from '../../../lib/palette'
+import { MIN_VITALS } from '../../../lib/api'
 import { queryOf } from '../../../lib/dashQuery'
 import { addDays, diffDays, fmtRange, todayIn, type Range } from '../../../lib/dates'
 import { parseFilterParam } from '../../../lib/filterSet'
@@ -19,6 +21,8 @@ import type { Usual } from '../../briefing/model'
 import { funnelBuilt } from '../../setup/funnelBuilt'
 import type { Down, SavedView, Tab } from '../types'
 import { basisOf, type Basis } from './basis'
+import { insightOf } from './insight'
+import { headline, rateOf, type QualityRow } from './quality'
 import { EXPLORE_ROWS, LINKS_ROWS } from './rows'
 import { scaled, withSourceUsuals } from './scaled'
 import { mapOverview, mapTable, optionsOf, type Uptime } from './mapReport'
@@ -113,6 +117,12 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
   const q = query(c)
   const today = todayIn(c.site.timezone)
   switch (tab) {
+    case 'changed':
+    {
+      // Measured against the same period as the changes below it: the cards and the table have to agree.
+      const [report, uptime] = await Promise.all([cachedReport(c.site.id, q, undefined, signal), periodUptime(c)])
+      return { ...mapOverview(report, { money: c.money, uptime, now: today, basis: 'previous', against: againstName(c.view.period, c.view.compare === 'none' ? 'previous' : c.view.compare, c.range) }), report }
+    }
     case 'overview': {
       const [raw, uptime] = await Promise.all([cachedReport(c.site.id, q, undefined, signal), periodUptime(c)])
       const { report, basis } = await toBasis(c, raw)
@@ -141,6 +151,20 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
       const [query_, pages, prev] = await Promise.all([more.searchReport(c.site.id, q, 'query', signal), more.searchReport(c.site.id, q, 'page', signal), more.searchReport(c.site.id, { ...q, from: p.from, to: p.to, compare: undefined }, 'query', signal).catch(() => undefined)])
       return mapSearch({ query: query_, pages, prev })
     }
+    case 'quality': {
+      const report = await cachedReport(c.site.id, q, undefined, signal)
+      const top = (report.current.dims.channel ?? []).filter((r) => r.visitors > 0).slice(0, 6)
+      const goal = report.current.signup?.goal ?? report.current.goals?.[0]?.value ?? null
+      const rows = await Promise.all(top.map(async (s): Promise<QualityRow> => {
+        const filters = [...c.filters, { dim: 'channel', value: s.value }]
+        const one = await cachedReport(c.site.id, { ...query(c, filters), compare: undefined, cfrom: undefined, cto: undefined, sofar: false }, undefined, signal)
+        const page = one.current.dims.entry_page?.[0]?.value ?? null
+        const reached = goal === null ? null : (one.current.goals ?? []).find((g) => g.value === goal)?.visitors ?? 0
+        const speed = page ? await more.vitals(c.site.id, { ...q, filters: [...c.filters, { dim: 'page', value: page }] }).catch(() => null) : null
+        return { value: s.value, name: channelLabel(s.value), people: s.visitors, page, rate: rateOf(reached, s.visitors), lcp: speed && (speed.lcp_n ?? 0) >= MIN_VITALS ? speed.lcp_ms ?? null : null }
+      }))
+      return { say: headline(rows, goal), goal, rows }
+    }
     case 'speed': {
       const report = await cachedReport(c.site.id, q, undefined, signal)
       const p = before(report)
@@ -159,14 +183,17 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
     case 'outbound': {
       const r = await call<{ properties: { key: string; value: string; visitors: number }[] | null }>('GET', `/sites/${c.site.id}/report/goal-props${rangeQS(q)}&goal=outbound_click&limit=${LINKS_ROWS}`, undefined, signal)
       const rows = mapLinks(r.properties ?? [])
+      const noneAtAll = rows.length === 0 && c.filters.length > 0 && !(await call<{ properties: unknown[] | null }>('GET', `/sites/${c.site.id}/report/goal-props${rangeQS({ ...q, filters: [] })}&goal=outbound_click&limit=1`, undefined, signal)).properties?.length
       // A share here is of the clicks listed (the report names no total for them).
-      return { rows, of: rows.reduce((p, x) => p + x.v, 0) }
+      return { rows, of: rows.reduce((p, x) => p + x.v, 0), noneAtAll }
     }
     case 'highlights': case 'overtime': case 'hours': case 'revmap': case 'earners': case 'sells': case 'people': case 'buyers': case 'retention': case 'vsale': case 'toconvert': case 'flow': case 'ai': case 'answers':
       // These read their own numbers (views/Hosted.tsx).
       return null
-    default:
-      return mapTable(tab, (await toBasis(c, await cachedReport(c.site.id, q, undefined, signal))).report)
+    default: {
+      const table = mapTable(tab, (await toBasis(c, await cachedReport(c.site.id, q, undefined, signal))).report)
+      return (tab === 'pages' || tab === 'countries') && c.view.compare !== 'none' ? { ...table, say: insightOf(table.rows) } : table
+    }
   }
 }
 

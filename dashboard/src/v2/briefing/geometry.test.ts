@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dash, niceStep, ringTone, smooth, spark } from './geometry'
+import { dash, niceStep, smooth, spark } from './geometry'
 
 describe('geometry', () => {
   it('draws a smooth path through every point', () => {
@@ -20,8 +20,7 @@ describe('geometry', () => {
     const s = spark([1, 5, 2], 64)
     expect(s?.area).toBe(`${s?.line} L300,64 L0,64 Z`)
   })
-  it('dashes the ring by its score and tones it', () => {
+  it('dashes the ring by its score', () => {
     expect(dash(100).split(' ')[0]).toBe(dash(100).split(' ')[1].slice(0, 5))
-    expect([ringTone(90), ringTone(60), ringTone(20)]).toEqual(['lime', 'amber', 'red'])
   })
 })

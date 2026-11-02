@@ -91,6 +91,12 @@ export function FlowChart(p: {
                 <rect width="5" height="5" fill="var(--sunken)" />
                 <line x1="0" y1="0" x2="0" y2="5" stroke="var(--text-3)" strokeWidth="1.5" opacity="0.6" />
               </pattern>
+              {bands.map((b, i) => (
+                <linearGradient key={i} id={`${hatch}b${i}`} gradientUnits="userSpaceOnUse" x1={bx(b.from.col)} x2={bx(b.to.col)} y1="0" y2="0">
+                  <stop offset="0" stopColor={ribbonColor(b)} stopOpacity=".95" />
+                  <stop offset="1" stopColor={ribbonColor(b)} stopOpacity=".3" />
+                </linearGradient>
+              ))}
             </defs>
             {p.heads.map((t, c) => (
               <text key={t} x={bx(c)} y={12} className="kit-axis">
@@ -101,7 +107,7 @@ export function FlowChart(p: {
               <path
                 key={`${b.from.col}${b.from.key}>${b.to.key}`}
                 d={band(b)}
-                fill={ribbonColor(b)}
+                fill={`url(#${hatch}b${i})`}
                 className={bandClass(lit(b, i), hot !== null)}
                 onPointerEnter={() => {
                   setHot({ kind: 'band', i })

@@ -1,10 +1,9 @@
-// One multiple, said the same on every screen: the Briefing's headline, the chart's label over the rise, and Explore's
-// row all count it from the same figure against the same usual (the one rule is timesUsual).
+// One multiple, said the same on every screen: the chart's label over the rise and Explore's row both count it from the same figure against the same usual (the one rule is timesUsual).
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { Point, Result } from '../lib/api'
 import { chartOf } from './briefing/chart'
-import { mult, sentence, type Part } from './briefing/model'
+import { mult } from './briefing/model'
 import { timesUsual, type Band } from './briefing/usual'
 import { rowsOf } from './explore/data/stats'
 import { withSourceUsuals } from './explore/data/scaled'
@@ -13,7 +12,6 @@ import { XTable } from './ui/XTable'
 const kpis = { visitors: 0, sessions: 0, pageviews: 0, bounce_rate: 0, avg_session_s: 0, views_per_session: 0, new_visitor_share: 0 }
 const pts = (xs: number[]): Point[] => xs.map((visitors, h) => ({ t: `2026-10-16T${String(h).padStart(2, '0')}:00`, visitors, pageviews: visitors }))
 const res = (xs: number[], dims: Result['dims'] = {}, v = 0): Result => ({ approximate: false, kpis: { ...kpis, visitors: v }, series: pts(xs), dims, goals: null })
-const text = (p: Part[]) => p.map((x) => x.t).join('')
 
 describe('the same multiple on every screen', () => {
   const band: Band = { c: 23, lo: 18, hi: 28 }
@@ -25,11 +23,6 @@ describe('the same multiple on every screen', () => {
     expect(said).toBe('23×')
     expect(timesUsual(10, { c: 0.2, lo: 0, hi: 1 })).toBeNull()
     expect(timesUsual(10, null)).toBeNull()
-  })
-
-  it('the Briefing headline says it', () => {
-    const s = sentence({ cur: res([], {}, 700), unit: 'today', weekday: 'Friday', self: 'x.com', downMin: 0, learning: false, jump: { name: 'Hacker News', value: 'news.ycombinator.com', visitors: hn, times, st: 'up', vs: 'your usual' } })
-    expect(text(s.long)).toContain(`${said} your usual`)
   })
 
   it('the chart label over the rise says it, not the whole site hour', () => {

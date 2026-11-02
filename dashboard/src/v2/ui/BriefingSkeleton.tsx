@@ -45,14 +45,8 @@ function Card({ topic }: { topic: string }) {
   )
 }
 
-/** The topics of the cards a site had on its last page, so its loading page is shaped like it. */
-const last = new Map<string, string[]>()
-export function rememberCards(site: string, topics: string[]) {
-  if (topics.length) last.set(site, topics)
-}
-
-export function BriefingSkeleton({ site, label }: { site: string; label: string }) {
-  const topics = (last.get(site) ?? ['sources', 'countries', 'pages']).slice(0, 4)
+export function BriefingSkeleton({ label }: { label: string }) {
+  const topics = ['sources', 'countries', 'pages']
   return (
     <div className="mk mk-body">
       <div className="brief" aria-busy="true" role="status" aria-label={label}>

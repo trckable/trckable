@@ -2,7 +2,16 @@
 // (the Uptime card says it where it is shown).
 import { copy } from '../copy'
 import type { Down } from '../types'
+import { plainSpan } from '../../../lib/plainSpan'
 import { XSec } from '../../ui/XBits'
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+/** "11-01 17:27" as "Nov 1, 17:27"; anything else stays as it came. */
+const when = (s: string) => {
+  const m = /^(\d\d)-(\d\d) (\d\d:\d\d)$/.exec(s)
+  return m ? `${MONTHS[+m[1] - 1]} ${+m[2]}, ${m[3]}` : s
+}
 
 export function Downtime({ down }: { down: Down[] }) {
   if (down.length === 0) return null
@@ -12,8 +21,8 @@ export function Downtime({ down }: { down: Down[] }) {
       {down.map((i) => (
         <div key={i.from} className="sale">
           <span className="mk-tag refund">{copy.down}</span>
-          <span className="gn">{copy.downSpan(i.from, i.to)}</span>
-          <span className="amt">{copy.minutes(i.min)}</span>
+          <span className="gn">{copy.downSpan(when(i.from), when(i.to).replace(/^.*, /, ''))}</span>
+          <span className="amt">{plainSpan(i.min * 60)}</span>
         </div>
       ))}
     </>

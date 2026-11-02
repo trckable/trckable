@@ -24,7 +24,7 @@ The headline is **Seen**: named or linked, counted over the latest complete roun
 
 Every page the assistants linked is set against what trckable already knows about it: the times AI crawlers read it, the visitors an AI assistant sent to it, and the revenue those visitors made (when Revenue is on). Only links to your own address join: a link to `docs.example.com` counts as linked, but adds no row for `example.com`'s pages. Dashboard filters do not change these counts.
 
-When an assistant names you for a question for the first time, the dashboard says so once. When one that named you in the last two rounds stops, you get the **Answers** alert (Settings, Alerts), the bell, a line in the Briefing and the moments on the chart; the weekly email carries one line of the round. The first answer ever to name you is told once.
+When an assistant names you for a question for the first time, the dashboard says so once. When one that named you in the last two rounds stops, you get the **Answers** alert (Settings, Alerts), the bell and the moments on the chart; the weekly email carries one line of the round. The first answer ever to name you is told once.
 
 ## What leaves your server
 

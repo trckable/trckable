@@ -48,7 +48,7 @@ async function open(page: Page, width: number) {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   // An empty v is the address with no view: the suite would otherwise send it to Explore, which opens the panel.
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
-  await expect(page.locator('.brief')).toBeVisible()
+  await expect(page.locator('#xp.on')).toBeVisible()
 }
 
 
@@ -86,25 +86,15 @@ for (const width of [1440, 390]) {
       await expect(page.locator('#xClr')).toHaveCount(0)
     })
 
-    test('Back undoes the last filter, and Escape leaves no hidden one', async ({ page }) => {
+    test('Back undoes the last filter', async ({ page }) => {
       await open(page, width)
       await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=&x=overview`)
       await expect(panel(page)).toBeVisible()
-      await page.locator('[data-xm="filt"]').click()
-      await page.locator('#xm-filt [data-xfd="page"]').click()
-      await page.locator('#xm-filt [data-xfv]').first().click()
+      await page.locator('#xp .xt .xrw').first().click()
       await expect(chips(page)).toHaveCount(1)
       await page.goBack()
       await expect(chips(page)).toHaveCount(0)
       await expect(panel(page)).toBeVisible()
-      await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=&x=overview&f=page%3A%2Fpricing`)
-      await expect(chips(page)).toHaveCount(1)
-      await page.keyboard.press('Escape')
-      await expect(panel(page)).toHaveCount(0)
-      await expect(page).not.toHaveURL(/[?&](f|xf)=/)
-      await (width < 700 ? page.locator('.tabbar').getByRole('button', { name: 'Explore' }).click() : page.keyboard.press('e'))
-      await expect(panel(page)).toBeVisible()
-      await expect(chips(page)).toHaveCount(0)
     })
   })
 }
@@ -113,18 +103,16 @@ test('Live has no period and no filters, and the Briefing gets its own back', as
   await open(page, 1440)
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=&x=overview&f=page%3A%2Fpricing`)
   await expect(chips(page)).toHaveCount(1)
-  await page.keyboard.press('Escape')
-  await expect(panel(page)).toHaveCount(0)
   await page.keyboard.press('l')
   await expect(page).toHaveURL(/view=live/)
   await expect(page).not.toHaveURL(/[?&](period|f|xf|x|compare)=/)
-  await expect(page.locator('.xchip2')).toHaveCount(0)
+  await expect(page.locator('.xchip2:visible')).toHaveCount(0)
   await expect(page.locator('#per, .mk-chip.per')).toHaveCount(0)
   // Live's keys are on once Live is drawn: a B before that goes nowhere.
   await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible()
   await page.keyboard.press('b')
   await expect(page).toHaveURL(/period=7d/)
-  await expect(page.locator('.brief')).toBeVisible()
+  await expect(page.locator('#xp.on')).toBeVisible()
 })
 
 test('the palette takes the open panel to Live with nothing of it left behind, and the Briefing is as it was', async ({ page }) => {
@@ -136,8 +124,7 @@ test('the palette takes the open panel to Live with nothing of it left behind, a
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/view=live/)
   await expect(page).not.toHaveURL(/[?&](period|f|xf|x|compare)=/)
-  await expect(panel(page)).toHaveCount(0)
-  await expect(page.locator('.xchip2')).toHaveCount(0)
+  await expect(page.locator('.xchip2:visible')).toHaveCount(0)
   // Live's keys are on once Live is drawn: a B before that goes nowhere.
   await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible()
   await page.keyboard.press('b')

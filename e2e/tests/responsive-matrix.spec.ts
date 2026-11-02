@@ -1,12 +1,11 @@
 // One responsive system, one test: the key pages at the widths of real devices (a small phone to a wide desktop) have
 // no sideways scroll, nothing past the screen's edge, no label narrower than its longest word, no card row with an empty
-// end, and a hero chart whose height stays in its step's range (dashboard/src/kit/breakpoints.ts). Chromium only.
+// end. Chromium only.
 import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { CHART_H, stepOf } from '../../dashboard/src/kit/breakpoints'
 import { API, HISTORY_DOMAIN, LABELS_DOMAIN } from '../playwright.config'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough for a layout')
@@ -171,8 +170,7 @@ type Go = (page: Page) => Promise<void>
 const settle = (page: Page) => page.waitForTimeout(700)
 const briefing = (domain: string, period = '30d'): Go => async (page) => {
   await page.goto(`${API}/${domain}?view=briefing&period=${period}&v=`)
-  await expect(page.locator('.brief')).toBeVisible()
-  await expect(page.locator('svg#chart')).toBeVisible()
+  await expect(page.locator('#xp.on')).toBeVisible()
   await settle(page)
 }
 const at = (url: () => string, ready: string): Go => async (page) => {
@@ -181,18 +179,19 @@ const at = (url: () => string, ready: string): Go => async (page) => {
   await settle(page)
 }
 
-// The Explore panel at full width, on one section of its list.
+// Explore's page on one section of its list (the rail at wide widths, the drawer on a phone).
 const explore = (n: number): Go => async (page) => {
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
-  await expect(page.locator('.brief')).toBeVisible()
-  // The key can land before the page listens for it: press again until the panel is open.
-  await expect(async () => {
-    if (!(await page.locator('#xp.on .xtb').isVisible())) await page.keyboard.press('e')
-    await expect(page.locator('#xp.on .xtb')).toBeVisible({ timeout: 1500 })
-  }).toPass({ timeout: 15_000 })
-  await page.keyboard.press('f')
-  const items = page.locator('#xp.full .xrail .xri')
-  if ((await items.count()) > n) await items.nth(n).click()
+  await expect(page.locator('#xp.on')).toBeVisible()
+  // (The drawer is drawn on top of the page, outside #xp.)
+  const wide = await page.locator('#xp.full').count()
+  const items = page.locator(wide ? '#xp .xrail .xri' : '.xdrawer-box .xri')
+  if (!wide) {
+    await page.locator('#xp .xdrawer-open').click()
+    await expect(page.locator('.xdrawer-box')).toBeVisible()
+  }
+  await expect(items).toHaveCount(12)
+  await items.nth(n).click()
   await settle(page)
 }
 // A menu or a sheet the header opens.
@@ -203,9 +202,9 @@ const opened = (click: string): Go => async (page) => {
 }
 
 const PAGES: [string, Go, boolean][] = [
-  ['Briefing, a steady site', briefing(LABELS_DOMAIN), true],
-  ['Briefing, today', briefing(HISTORY_DOMAIN, 'today'), true],
-  ['Briefing, 7 days (still learning)', briefing(HISTORY_DOMAIN, '7d'), true],
+  ['Explore, a steady site', briefing(LABELS_DOMAIN), false],
+  ['Explore, today', briefing(HISTORY_DOMAIN, 'today'), false],
+  ['Explore, 7 days (still learning)', briefing(HISTORY_DOMAIN, '7d'), false],
   ['Live', at(() => `${API}/${LABELS_DOMAIN}?view=live`, '.liveview'), false],
   ['Setup, not verified', at(() => `${API}/${waiting}`, '.mk'), false],
   ['Answers', at(() => `${API}/${HISTORY_DOMAIN}?x=answers`, '.mk'), false],
@@ -216,17 +215,17 @@ const PAGES: [string, Go, boolean][] = [
   ['The bell', opened('.bellw .ib.bell'), false],
   ['The account menu', opened('.account-btn'), false],
   ['The palette', async (page) => { await briefing(HISTORY_DOMAIN, '7d')(page); await page.keyboard.press('Control+k'); await expect(page.locator('.pal .palbox')).toBeVisible(); await settle(page) }, false],
-  ...Array.from({ length: 11 }, (_, i): [string, Go, boolean] => [`Explore, section ${i + 1}`, explore(i), false]),
+  ...Array.from({ length: 12 }, (_, i): [string, Go, boolean] => [`Explore, section ${i + 1}`, explore(i), false]),
   ['404', at(() => `${API}/no-such-page-here`, 'body'), false],
 ]
 
-for (const [name, go, hasChart] of PAGES) {
+for (const [name, go] of PAGES) {
   for (const [width, height] of DEVICES) {
     test(`${name} at ${width}x${height}`, async ({ page }) => {
       await page.setViewportSize({ width, height })
       await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
       await go(page)
-      expect(await audit(page, hasChart ? CHART_H[stepOf(width)] : null)).toEqual([])
+      expect(await audit(page, null)).toEqual([])
     })
   }
 }

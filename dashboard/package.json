@@ -13,8 +13,10 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@number-flow/react": "^0.6.2",
     "flag-icons": "7.6.0",
     "lucide-react": "^1.61.0",
+    "motion": "^14.9.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

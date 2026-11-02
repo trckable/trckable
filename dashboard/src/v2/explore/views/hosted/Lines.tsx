@@ -52,17 +52,23 @@ export function Buyers({ x, query }: { x: XCtx; query: ReportQuery }) {
       <XSec a={copy.latestBuyers(list.length)} b={`${x.money(list.reduce((p, b) => p + b.amount, 0))} ${copy.net}`} />
       {list.map((b) => {
         const path = pathOf(b)
+        const from = path[0]
+        const pages = path.slice(1, -1)
         const meta = b.visits ? [c.visits(b.visits), b.seconds !== undefined ? c.toBuy(b.seconds) : ''].filter(Boolean).join(' · ') : ''
         return (
-          <div key={b.id} className="sale">
-            <i className="xdt" style={{ background: channelColor(b.channel ?? '') }} aria-hidden="true" />
-            <span className="gn">
-              <div title={path.join(' → ')}>{path.join(' → ') || c.direct}</div>
-              <div className="mk-quiet" style={{ fontSize: '12px' }}>
-                {[meta, c.ago(Math.max(0, (now - Date.parse(b.at)) / 1000))].filter(Boolean).join(' · ')}
-              </div>
+          <div key={b.id} className="buyer">
+            <i className="buyer-av" style={{ background: `color-mix(in srgb, ${channelColor(b.channel ?? '')} 24%, transparent)`, color: channelColor(b.channel ?? '') }} aria-hidden="true">
+              {(from || c.direct).charAt(0).toUpperCase()}
+            </i>
+            <span className="buyer-who">
+              <b>{from || c.direct}</b>
+              <small>{[meta, c.ago(Math.max(0, (now - Date.parse(b.at)) / 1000))].filter(Boolean).join(' · ')}</small>
             </span>
-            <span className="amt">+{x.money(b.amount)}</span>
+            <span className="bj" title={path.join(' → ')}>
+              {pages.map((step, i) => <span key={i}>{step}</span>)}
+              <em aria-label={path[path.length - 1]} />
+            </span>
+            <span className="buyer-amt">+{x.money(b.amount)}</span>
           </div>
         )
       })}

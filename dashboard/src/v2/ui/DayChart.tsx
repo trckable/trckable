@@ -16,7 +16,6 @@ import { useGlide } from './glide'
 import { FutureHatch } from './FutureHatch'
 import { NoteMarks, SaleMarks, firstData } from './ChartMarks'
 import { useLabelLayout } from './labelLayout'
-import { DRAWN, RevealTip, useReveal } from './RevealClip'
 import './chartLayer.css'
 
 export interface ChartPoint {
@@ -132,7 +131,6 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
   const ticks = c.axis.filter((p) => p.i < span && p.tick && p.i % every === 0)
   const geo = drawn.map((p) => [X(p.i), Y(p.v)])
   const nameAt = beforeName(c.compare ? capital(c.compare.name).length : 0, before.map((p) => [X(p.i), Y(p.v)]), geo, W - Rr - 2)
-  useReveal({ pts: geo, h: H })
   useLabelLayout({ pts: geo })
   const chart = (
     <svg
@@ -187,7 +185,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
       )}
       {c.live && <FutureHatch x={nowEdge} y={T} width={Math.max(0, W - Rr - nowEdge)} height={B - T} />}
       {drawn.length > 0 && (
-        <g {...DRAWN}>
+        <g>
           <polygon points={`${X(drawn[0].i)},${B} ${line} ${X(last.i)},${B}`} fill="var(--mk-areafill)" />
           <polyline points={line} fill="none" stroke="var(--mk-muted)" strokeWidth="2" strokeLinejoin="round" />
           {pts.map((p, i) =>
@@ -217,7 +215,6 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
           </text>
         </g>
       )}
-      <RevealTip h={H} />
       <SaleMarks sales={c.sales ?? []} ph={ph} edge={edge} B={B} />
       <NoteMarks notes={c.notes} X={X} B={B} />
       {ticks.map((p) => (

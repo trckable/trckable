@@ -30,6 +30,9 @@ export const QUERY = {
   // The page's compact header and chrome (bottom bar, 16 px sides) run to 700 px, with a band of 601 to 700 inside it that keeps the desktop header on one wrapped row.
   compact: '(max-width: 700px)',
   roomy: '(min-width: 701px)',
+  /** Room for Explore's menu beside its numbers; under it the menu is a drawer. */
+  rail: '(min-width: 1024px)',
+  'no-rail': '(max-width: 1023px)',
   hold: '(min-width: 601px) and (max-width: 700px)',
   'sm-up': from(BP.sm),
   'md-up': from(BP.md),

@@ -25,9 +25,11 @@ function XMore({ more }: { more: More }) {
   )
 }
 
-/** What a row did against its usual: the multiple when there is a usual to count from, "as usual" when it kept to it, a dash when there is no usual. */
+/** What a row did against the other period: the multiple once it has at least doubled (as the Briefing says it), else the percent it moved, "about the same" when it held, a dash when there is none. */
 function delta(r: Row): { text: string; tone: string } {
-  const ratio = r.c > 0.5 ? mult(r.v / r.c) : ''
+  const x = r.v / r.c
+  const pct = `${Math.abs(Math.round((x - 1) * 100))}%`
+  const ratio = r.c > 0.5 ? (x >= 2 ? mult(x) : pct) : ''
   if (r.st === 'up') return { text: `▲ ${ratio || copy.fresh}`, tone: 'up' }
   if (r.st === 'dn') return { text: `▼ ${ratio || copy.below}`, tone: 'dn' }
   // Inside its usual it says so; with nothing to count from it says that, never a blank.
@@ -71,7 +73,7 @@ export function XTable({ rows, head, unit = copy.people, mono, flags, selected, 
   const narrow = ['minmax(0,1fr) 52px 64px', ...(signups ? ['52px'] : [])].join(' ')
   const max = Math.max(1, ...rows.map((r) => Math.max(r.v, r.c)))
   return (
-    <div className={`xt${paid || signups ? ' xc' : ''}`} style={paid || signups ? ({ '--xc': wide, '--xcp': panel, '--xcm': narrow } as React.CSSProperties) : undefined}>
+    <div className={`xt${paid || signups ? ' xc' : ''}${signups ? ' xsu' : ''}`} style={paid || signups ? ({ '--xc': wide, '--xcp': panel, '--xcm': narrow } as React.CSSProperties) : undefined}>
       <div className="xth">
         <span>{head}</span>
         <span>{unit}</span>
@@ -124,6 +126,8 @@ export interface CRow {
   a: ReactNode
   /** The share of the widest row, 0 to 1: draws the bar behind the name. */
   bar?: number
+  /** A rating that colours the bar: a slow page must not read as good news. */
+  grade?: string
   mono?: boolean
   /** A tap on the row, as a filter would: the row is a button. */
   onPick?: () => void
@@ -145,7 +149,7 @@ export function XCols({ first, cols, rows, xc, xcm, limit, onAll }: { first: str
         const inner = (
           <>
             {r.bar !== undefined ? (
-              <span className="mk-bar">
+              <span className={`mk-bar${r.grade ? ` g-${r.grade}` : ''}`}>
                 <i style={{ width: `${r.bar * 100}%` }} />
                 <span className={r.mono ? 'mono' : ''}>{r.a}</span>
               </span>

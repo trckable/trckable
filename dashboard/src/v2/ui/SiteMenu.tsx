@@ -1,6 +1,6 @@
 // The site in the header, and the list that opens from it (SiteList): the current team's sites with today's visitors, a finder
 // for a long list, and what belongs to this site. A build with teams puts their square before the site. The check beside the name says when something independent vouches for the numbers.
-import { Suspense, useCallback, useRef, type ReactNode } from 'react'
+import { Suspense, useCallback, useRef, useState, type ReactNode } from 'react'
 import type { Site } from '../../lib/api'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { layoutReady, preloadLayout } from '../../features/sites/useSiteLayout'
@@ -12,6 +12,9 @@ import { useOnlyOpen } from '../../lib/headerMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
 import { midEllipsis } from '../../lib/midEllipsis'
 import { MarkDot } from '../../features/sites/MarkDot'
+import { copy as statusCopy } from '../../features/sitestatus/copy'
+import { quietSites, statusOf } from '../../features/sitestatus/status'
+import { footerMoreCopy } from '../../components/footerMoreCopy'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
 const warmUp = () => {
@@ -20,6 +23,7 @@ const warmUp = () => {
 }
 /** The list opens whole and in its final order: its chunk is waited for, and the layout (300 ms at most), rather than shown late. */
 const LAYOUT_WAIT = 300
+const StatusList = lazyLoad(() => import('../../features/sitestatus/StatusList'))
 
 interface SiteMenuProps {
   sites: Site[]
@@ -75,11 +79,15 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
     else void Promise.all([layoutReady(LAYOUT_WAIT), SiteList.load()]).then(() => setOpen(true))
   }
   const done = useCallback(() => close(), [close])
+  const down = p.sites.filter((s) => statusOf(s) === 'down')
+  const quiet = quietSites(p.sites)
+  const told = [...down, ...quiet]
+  const [why, setWhy] = useState(false)
   const footer = <MenuFoot items={p.footer} done={done} />
   return (
     <div ref={attach} style={{ position: 'relative' }} className="sitechip">
       {p.team}
-      <button type="button" id="siteBtn" className={cur ? 'mk-chip' : 'mk-chip all'} aria-label={label} title={label} aria-haspopup="menu" aria-expanded={open} data-key="site" {...warm(warmUp)} onClick={toggle}>
+      <button type="button" id="siteBtn" className={`${cur ? 'mk-chip' : 'mk-chip all'}${cur?.down_since ? ' is-down' : ''}`} aria-label={label} title={label} aria-haspopup="menu" aria-expanded={open} data-key="site" {...warm(warmUp)} onClick={toggle}>
         {cur && <MarkDot site={cur} size={18} state={state} />}
         <NameText cur={cur} all={p.all} />
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
@@ -87,7 +95,18 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
         </svg>
       </button>
       <div ref={menu} className={`mk-menu sites${open ? ' on' : ''}`} id="siteMenu" role={open ? 'dialog' : undefined} aria-label={open ? copy.sites : undefined}>
-        {open && (
+        {open && told.length > 0 && (
+          <button type="button" className="site-why" data-site-why="1" aria-expanded={why} onClick={() => setWhy((w) => !w)}>
+            <i aria-hidden="true" />
+            {why ? statusCopy.backToSites : down.length ? statusCopy.whatHappened(down.length) : footerMoreCopy.siteQuiet(quiet.length)}
+          </button>
+        )}
+        {open && why && told.length > 0 && (
+          <Suspense fallback={null}>
+            <StatusList sites={told} />
+          </Suspense>
+        )}
+        {open && !(why && told.length > 0) && (
           <Suspense fallback={null}>
             <SiteList
               sites={p.sites}

@@ -42,23 +42,13 @@ for (const size of SIZES) {
       await expect(page.locator('.tabbar')).toBeVisible({ timeout: 20_000 })
     }
 
-    test('the sheets: notes, email preview, Explore, settings', async ({ page }) => {
+    test('the sheets: the section drawer, settings', async ({ page }) => {
       await go(page)
-      await page.getByRole('button', { name: /^Notes/ }).first().click()
-      await expect(page.locator('.cd.on')).toBeVisible()
-      await lastIsReachable(page, '.cd.on')
+      await page.locator('#xp .xdrawer-open').click()
+      await expect(page.locator('.xdrawer-box')).toBeVisible({ timeout: 20_000 })
+      await lastIsReachable(page, '.xdrawer-box')
       await page.keyboard.press('Escape')
-      await expect(page.locator('.cd.on')).toHaveCount(0) // put away before the next one opens, whatever the runner's speed
-      await page.getByRole('button', { name: /Emailed daily at|The daily email is off/ }).click()
-      await expect(page.locator('.cd.on')).toBeVisible()
-      await lastIsReachable(page, '.cd.on')
-      await page.keyboard.press('Escape')
-      await expect(page.locator('.cd.on')).toHaveCount(0) // put away before the next one opens, whatever the runner's speed
-      await page.getByRole('button', { name: /^Explore/ }).filter({ visible: true }).last().click()
-      await expect(page.locator('#xp.on button:visible').first()).toBeVisible({ timeout: 20_000 })
-      await lastIsReachable(page, '#xp.on')
-      await page.keyboard.press('Escape')
-      await expect(page.locator('#xp.on')).toHaveCount(0)
+      await expect(page.locator('.xdrawer-box')).toHaveCount(0)
       await go(page, '?view=briefing&settings=alerts')
       await expect(page.getByRole('dialog', { name: /^Settings for/ })).toBeVisible({ timeout: 20_000 })
       await lastIsReachable(page, '.modal-back [role=dialog]')

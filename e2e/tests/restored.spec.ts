@@ -1,8 +1,6 @@
-// What the Briefing keeps from the old Data page, each in its place on the new one: the moments' markers over the
-// chart (and the search list that puts the sources' markers away), the mentions' dots, the busy moment's band and
-// line, the guide to leaving after one page, a long period played as a story, the card seals, Google's lines in AI
-// & search, a note's flag on the chart, and a goal made in the dialog. The server's own findings are given through
-// the routes, as the Down badge gives its probe.
+// What Explore keeps from the old Data page, each in its place on the new one: the chart of What changed with its moments'
+// markers, mentions' dots, busy band and note flags, the guide to leaving after one page, the card seals, and Google's
+// lines in AI & search. The server's own findings are given through the routes.
 import { expect, test, type Page } from './fixtures'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
@@ -36,6 +34,48 @@ async function told(page: Page, patch: Record<string, unknown>) {
     await r.fulfill({ response: res, json: body })
   })
 }
+
+test('visitors who leave after one page: the search list opens the guide', async ({ page }) => {
+  const guide = {
+    direction: 'high',
+    rate: 0.8,
+    usual: 0.5,
+    sessions: 420,
+    since: day(8),
+    days: [14, 12, 10, 8, 6, 4, 2].map((n, i) => ({ day: day(n), rate: [0.5, 0.52, 0.48, 0.55, 0.85, 0.82, 0.8][i], sessions: 60 })),
+    causes: [{ kind: 'page', label: '/blog/launch-post', rate: 0.93, share_of_visits: 0.42, was: 0.55 }],
+  }
+  await page.route(/\/report\/bounce-guide/, (r) => r.fulfill({ json: guide }))
+  await open(page, '?view=briefing&period=30d')
+  const dialog = page.getByRole('dialog', { name: 'Why visitors leave' })
+  await expect(async () => {
+    if (!(await page.locator('.pal.on .palbox input').isVisible())) await page.keyboard.press('ControlOrMeta+k')
+    await expect(page.locator('.pal.on .palbox input')).toBeVisible({ timeout: 1500 })
+  }).toPass({ timeout: 15_000 })
+  await page.locator('.pal.on .palbox input').fill('Why visitors leave')
+  await page.keyboard.press('Enter')
+  await expect(dialog).toBeVisible()
+  await expect(dialog).toContainText('What happened')
+})
+
+test('a card that rests on a source wears its seal in Explore', async ({ page }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  const site = await newSite(page, 'seal')
+  await stripeSale(page.request, site.id)
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await page.goto(`${API}/${site.domain}?view=briefing&period=30d&x=sales`)
+  await expect(page.locator('#xp .vf-chip')).toContainText('Payments verified', { timeout: 20_000 })
+})
+
+test('AI & search keeps Google beside the assistants and the crawlers', async ({ page }) => {
+  await page.route('**/api/v1/sites/*/search-console', (r) => r.fulfill({ json: { connected: true, connection: { property: `sc-domain:${HISTORY_DOMAIN}` } } }))
+  await page.route(/\/report\/search\?/, (r) => r.fulfill({ json: { property: `sc-domain:${HISTORY_DOMAIN}`, dim: 'query', rows: [{ key: 'privacy analytics', clicks: 42, impressions: 900, ctr: 0.047, position: 5.1 }, { key: 'trckable', clicks: 30, impressions: 300, ctr: 0.1, position: 1.2 }], from: day(30), to: day(0), clicks: 72, impressions: 1200 } }))
+  await open(page, '?view=briefing&period=30d&x=ai')
+  const panel = page.locator('#xp.on')
+  await expect(panel.getByText('privacy analytics')).toBeVisible({ timeout: 20_000 })
+  await expect(panel).toContainText('Google')
+  await expect(panel).toContainText('AI assistants')
+})
 
 test('a moment is a marker over the chart: it says itself on pointing and opens its card on a click', async ({ page }) => {
   await page.route(/\/moments\?/, (r) => r.fulfill({ json: { moments: [{ t: `${day(3)}T00:00`, kind: 'spike', factor: 3.2, referrer: 'news.ycombinator.com', visitors: 120 }] } }))
@@ -91,56 +131,12 @@ test('the chart header says how many mentions the period has, lights their dots,
   await expect(page).toHaveURL(new RegExp(`/${HISTORY_DOMAIN.replace('.', '\\.')}/mentions`))
 })
 
-test('a busy moment opens the page with its line over the Briefing and its band on the chart', async ({ page }) => {
+test('the busy moment band is on the chart of What changed', async ({ page }) => {
   const started = NOW - 3 * 86400
   const surge = { id: 'sg_1', started, ended: started + 1500, online: 60, usual: 8, times: 7, why: { source: 'Hacker News', source_dim: 'referrer', source_value: 'news.ycombinator.com', source_n: 40, source_usual: 1, page: '/blog/launch', page_n: 31, before: 4, minutes: 25 } }
   await page.route(/\/surges\/near/, (r) => r.fulfill({ json: { surge } }))
   await open(page, `?view=briefing&period=7d&sg=${started}`)
-  await expect(page.locator('.surge-banner')).toBeVisible({ timeout: 20_000 })
-  await expect(page.locator('.chlay .surge-band, .chlay [class*="surge"]').first()).toBeVisible()
-})
-
-test('visitors who leave after one page: a line on the Briefing opens the guide, and the search list does too', async ({ page }) => {
-  const guide = {
-    direction: 'high',
-    rate: 0.8,
-    usual: 0.5,
-    sessions: 420,
-    since: day(8),
-    days: [14, 12, 10, 8, 6, 4, 2].map((n, i) => ({ day: day(n), rate: [0.5, 0.52, 0.48, 0.55, 0.85, 0.82, 0.8][i], sessions: 60 })),
-    causes: [{ kind: 'page', label: '/blog/launch-post', rate: 0.93, share_of_visits: 0.42, was: 0.55 }],
-  }
-  await page.route(/\/report\/bounce-guide/, (r) => r.fulfill({ json: guide }))
-  await open(page, '?view=briefing&period=30d')
-  await page.getByRole('button', { name: 'See why' }).click()
-  const dialog = page.getByRole('dialog', { name: 'Why visitors leave' })
-  await expect(dialog).toBeVisible()
-  await expect(dialog).toContainText('What happened')
-  await page.keyboard.press('Escape')
-  await expect(dialog).toHaveCount(0)
-  await page.keyboard.press('ControlOrMeta+k')
-  await page.locator('.pal.on .palbox input').fill('Why visitors leave')
-  await page.keyboard.press('Enter')
-  await expect(dialog).toBeVisible()
-})
-
-test('a card that rests on a source wears its seal in Explore', async ({ page }) => {
-  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  const site = await newSite(page, 'seal')
-  await stripeSale(page.request, site.id)
-  await page.setViewportSize({ width: 1440, height: 1000 })
-  await page.goto(`${API}/${site.domain}?view=briefing&period=30d&x=sales`)
-  await expect(page.locator('#xp .vf-chip')).toContainText('Payments verified', { timeout: 20_000 })
-})
-
-test('AI & search keeps Google beside the assistants and the crawlers', async ({ page }) => {
-  await page.route('**/api/v1/sites/*/search-console', (r) => r.fulfill({ json: { connected: true, connection: { property: `sc-domain:${HISTORY_DOMAIN}` } } }))
-  await page.route(/\/report\/search\?/, (r) => r.fulfill({ json: { property: `sc-domain:${HISTORY_DOMAIN}`, dim: 'query', rows: [{ key: 'privacy analytics', clicks: 42, impressions: 900, ctr: 0.047, position: 5.1 }, { key: 'trckable', clicks: 30, impressions: 300, ctr: 0.1, position: 1.2 }], from: day(30), to: day(0), clicks: 72, impressions: 1200 } }))
-  await open(page, '?view=briefing&period=30d&x=ai')
-  const panel = page.locator('#xp.on')
-  await expect(panel.getByText('privacy analytics')).toBeVisible({ timeout: 20_000 })
-  await expect(panel).toContainText('Google')
-  await expect(panel).toContainText('AI assistants')
+  await expect(page.locator('.chlay .surge-band, .chlay [class*="surge"]').first()).toBeVisible({ timeout: 20_000 })
 })
 
 test('a note is a flag on the chart, with its words', async ({ page }) => {

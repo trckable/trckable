@@ -17,7 +17,7 @@ test('a shared link is the Briefing and Explore, read only, and its embed is the
   const reader = await browser.newContext({ viewport: { width: 1280, height: 900 } })
   const tab = await reader.newPage()
   await tab.goto(url)
-  await expect(tab.locator('.brief')).toBeVisible({ timeout: 20_000 })
+  await expect(tab.locator('#xp.on')).toBeVisible({ timeout: 20_000 })
   // Whose numbers they are, and none of the owner's header.
   await expect(tab.locator('.hd .share-who')).toContainText(site.domain)
   for (const gone of ['#views', '.bellw', '.acctw', '[data-watch]', '.cact']) await expect(tab.locator(gone), gone).toHaveCount(0)
@@ -36,7 +36,7 @@ test('a shared link is the Briefing and Explore, read only, and its embed is the
   // The embed: the same page, with the slim header (whose numbers, and by what).
   const framed = await reader.newPage()
   await framed.goto(`${url}?embed=1`)
-  await expect(framed.locator('.brief')).toBeVisible({ timeout: 20_000 })
+  await expect(framed.locator('#xp.on')).toBeVisible({ timeout: 20_000 })
   await expect(framed.locator('.hd .embed-who')).toContainText(site.domain)
   await expect(framed.locator('#views, .bellw, .acctw')).toHaveCount(0)
   await reader.close()
@@ -50,7 +50,7 @@ test('a shared page by default carries no "Powered by" link', async ({ page, bro
   const reader = await browser.newContext()
   const tab = await reader.newPage()
   await tab.goto(url)
-  await expect(tab.locator('.brief')).toBeVisible({ timeout: 20_000 })
+  await expect(tab.locator('#xp.on')).toBeVisible({ timeout: 20_000 })
   await expect(tab.locator('.share-powered')).toHaveCount(0)
   await reader.close()
 })

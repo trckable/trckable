@@ -15,25 +15,22 @@ async function open(page: Page, query: string) {
 }
 
 const surfaces = [
-  { name: 'Briefing', extra: '', base: 'per' },
   { name: 'Explore', extra: '&x=overview', base: 'xper' },
 ]
 const periods = [
-  { name: 'Today', id: 'today', vs: /vs usual/ },
-  { name: 'Last 30 days', id: '30d', vs: /vs the 30 days before/ },
+  { name: 'Today', id: 'today', vs: /vs .+/ },
+  { name: 'Last 30 days', id: '30d', vs: /vs .+/ },
 ]
 
 for (const s of surfaces) {
   for (const per of periods) {
     test(`${s.name}, ${per.name}: Compare and Group by stick and the pill agrees`, async ({ page }) => {
       await open(page, `?view=briefing&period=${per.id}${s.extra}`)
-      // Explore shows its own period chip when it fills the window.
-      if (s.base === 'xper') await page.locator('#xpFull').click()
       const pill = page.locator(`#${s.base}Btn`)
       const menu = page.locator(`#${s.base}Menu`)
       const seg = (row: string, text: string) => menu.locator('.mk-lopt', { hasText: row }).locator('.mk-lseg button', { hasText: new RegExp(`^${text}$`) })
       await pill.click()
-      // The default says what the pill says: Before is selected while it reads "vs usual" / "vs the 30 days before".
+      // The default says what the pill says: Before is selected while it names what it compares against.
       await expect(pill).toContainText(per.vs)
       await expect(seg('Compare', 'Before')).toHaveClass(/on/)
       await expect(seg('Compare', 'Off')).not.toHaveClass(/on/)

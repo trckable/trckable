@@ -1,5 +1,6 @@
 // What a section needs from the panel around it: the filters, how many rows to show, and the things a tap does.
 import type { Filter, ReportQuery, Site } from '../../lib/api'
+import type { ViewState } from '../../lib/url'
 import type { Connected, FilterDim, Option, Tab } from './types'
 
 export type Setup = 'rev' | 'search' | 'goals'
@@ -10,7 +11,11 @@ export interface Custom {
 }
 
 export interface XCtx {
+  /** On a page of cards: what asks to be connected is a slim row. */
+  slim?: boolean
   site: Site
+  /** The address's state: the period, how it is compared and cut. */
+  view: ViewState
   /** The report's question for this site, period and filters, for the cards that read their own numbers. */
   query: ReportQuery
   siteName: string
@@ -28,6 +33,8 @@ export interface XCtx {
   pick: (dim: string, value: string) => void
   clearFilters: () => void
   goTo: (tab: Tab) => void
+  /** Goes to a section with this one thing filtered. */
+  goWith: (tab: Tab, dim: string, value: string) => void
   connect: (k: Setup) => void
   how: (k: Setup) => void
   money: (minor: number) => string

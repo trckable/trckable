@@ -20,24 +20,25 @@ function patchFor(to: Tab): Parameters<typeof setView>[0] {
   if (to === 'live') return { live: true, ...plainView() }
   if (to === 'data') return { live: false }
   const cur = readView(new URLSearchParams(location.search))
-  if (kept) {
-    const back = kept
-    kept = null
-    return { live: false, briefing: true, ...back }
-  }
+  const back = keptOn === location.pathname ? kept : null
+  kept = null
+  if (back) return { live: false, briefing: true, ...back, ...(cur.xp ? { xp: cur.xp, xf: cur.xf ?? cur.filters } : {}) }
   return { live: false, briefing: true, ...(cur.period === '30d' && !cur.from ? { period: 'today' } : {}) }
 }
 
 /** What the Briefing had set (the period, the comparison, the filters and the panel) when Live was opened: Live has none of them, and the Briefing gets them back. */
 let kept: Partial<ViewState> | null = null
+/** The site they were set on: another site does not take them. */
+let keptOn = ''
 
 function keep(from: Tab) {
   if (from !== 'briefing') return
   const { period, from: f, to, compare, cfrom, cto, bucket, filters, xp, xf } = readView(new URLSearchParams(location.search))
-  kept = { period, from: f, to, compare, cfrom, cto, bucket, ...(xp ? { xp, xf: xf ?? filters } : {}) }
+  kept = { period, from: f, to, compare, cfrom, cto, bucket, ...(xp || xf ? { xp, xf: xf ?? filters } : {}) }
+  keptOn = location.pathname
 }
 
-export async function switchTab(to: Tab, from: Tab): Promise<void> {
+export async function switchTab(to: Tab, from: Tab, opts: { replace?: boolean } = {}): Promise<void> {
   if (to === from) return
   rememberTab(to)
   if (to === 'live') keep(from)
@@ -45,7 +46,7 @@ export async function switchTab(to: Tab, from: Tab): Promise<void> {
   if (from === 'data') dataScroll = scrollY
   const top = to === 'data' ? dataScroll : 0
   await transition(
-    () => setView(patchFor(to)),
+    () => setView(patchFor(to), opts),
     () => keepScroll(top),
   )
 }

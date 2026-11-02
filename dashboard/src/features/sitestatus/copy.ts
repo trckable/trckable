@@ -4,6 +4,8 @@ import { defineCopy } from '../../i18n'
 
 export const copy = defineCopy('sitestatus', {
   label: 'Site status',
+  whatHappened: (n: number) => (n === 1 ? 'Site down: what happened ›' : `${n} sites down: what happened ›`),
+  backToSites: '‹ All sites',
   list: 'Sites that need a look',
   listBack: 'All of them',
   chipDown: 'Down',

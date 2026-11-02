@@ -1,18 +1,19 @@
 // The shape of the period: people over time as one line over a faint fill, with its top, middle and bottom on the left
 // and three times underneath, and the period before as a dashed line beside it (one key, and a hover that reads both
 // figures and the change). A drawing of what the table below adds up to, not a chart to read values from.
-import { useState } from 'react'
+import { motion } from 'motion/react'
+import { useId, useState } from 'react'
 import { copy as briefing } from '../briefing/copy'
 import { capital, pairAt, readOf } from '../briefing/compare'
+import { curve } from '../../charts/curve'
 import { fmtInt } from '../../lib/format'
 import '../briefing/compareLine.css'
-import { ChartControls } from './ChartControls'
 import type { Shape } from '../explore/types'
 
 const W = 520
 const H = 130
 
-export function XShape({ shape, site }: { shape: Shape; site: { created_at?: number } }) {
+export function XShape({ shape }: { shape: Shape }) {
   const { pts, before } = shape
   const [at, setAt] = useState<number | null>(null)
   const was = before?.vals ?? []
@@ -20,12 +21,12 @@ export function XShape({ shape, site }: { shape: Shape; site: { created_at?: num
   const mx = top * 1.12
   const x = (i: number) => (W * i) / (pts.length - 1)
   const y = (v: number) => H - 4 - ((H - 12) * v) / mx
-  const path = (vs: number[]) => vs.map((p, i) => `${x(i).toFixed(1)},${y(p).toFixed(1)}`).join(' ')
+  const path = (vs: number[]) => curve(vs.map((p, i): [number, number] => [x(i), y(p)]))
   const line = path(pts)
+  const id = 'shp' + useId().replace(/:/g, '')
   const pair = at === null ? null : pairAt(before, pts[at], at, pts.length)
   return (
     <>
-      <ChartControls site={site} why={shape.why} />
       <div className="shp">
       <div className="yl">
         <span>{fmtInt(top)}</span>
@@ -48,12 +49,23 @@ export function XShape({ shape, site }: { shape: Shape; site: { created_at?: num
           }}
           onPointerLeave={() => setAt(null)}
         >
+          <defs>
+            <linearGradient id={`${id}f`} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stopColor="var(--mk-lime)" stopOpacity=".38" />
+              <stop offset="1" stopColor="var(--mk-lime)" stopOpacity="0" />
+            </linearGradient>
+            <clipPath id={`${id}c`}>
+              <motion.rect x="0" y="0" height={H} initial={{ width: 0 }} animate={{ width: W }} transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }} />
+            </clipPath>
+          </defs>
           {[0, 0.5, 1].map((t) => (
             <line key={t} x1="0" x2={W} y1={y(top * t).toFixed(1)} y2={y(top * t).toFixed(1)} stroke="var(--mk-grid)" vectorEffect="non-scaling-stroke" />
           ))}
-          <polygon points={`0,${H} ${line} ${W},${H}`} fill="var(--mk-areafill2)" />
-          {before && <polyline className="shbefore" points={path(was.slice(0, pts.length))} fill="none" stroke="var(--mk-muted)" strokeWidth="1.25" strokeDasharray="4 4" strokeLinecap="round" strokeLinejoin="round" opacity=".8" vectorEffect="non-scaling-stroke" />}
-          <polyline points={line} fill="none" stroke="var(--mk-lime)" strokeWidth="2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          <g clipPath={`url(#${id}c)`}>
+          <path d={`${line}L${W},${H}L0,${H}Z`} fill={`url(#${id}f)`} />
+          {before && <path className="shbefore" d={path(was.slice(0, pts.length))} fill="none" stroke="var(--mk-muted)" strokeWidth="1.25" strokeDasharray="4 4" strokeLinecap="round" strokeLinejoin="round" opacity=".8" vectorEffect="non-scaling-stroke" />}
+          <path className="shline" d={line} fill="none" stroke="var(--mk-lime)" strokeWidth="2.5" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          </g>
           {at !== null && <line x1={x(at)} x2={x(at)} y1="0" y2={H} stroke="var(--mk-text)" strokeOpacity=".35" vectorEffect="non-scaling-stroke" />}
         </svg>
         {at !== null && pair && (
@@ -68,6 +80,7 @@ export function XShape({ shape, site }: { shape: Shape; site: { created_at?: num
         </div>
       </div>
       </div>
+      {shape.why && <p className="shwhy">{shape.why}</p>}
     </>
   )
 }

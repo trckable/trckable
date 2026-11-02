@@ -1,3 +1,4 @@
+import type { QualityRow } from './data/quality'
 import type { Compare } from '../briefing/compare'
 import type { Filter } from '../../lib/api'
 
@@ -41,6 +42,8 @@ export interface Kc {
   unit?: string
   note: { c: string; t: string }
   vals: number[]
+  /** With no line to draw: the share of people this number is, 0 to 1. */
+  share?: number
   lo?: number
   hi?: number
   col?: string
@@ -56,6 +59,8 @@ export interface Xkc {
   tag: string
   tone: Tone
   detail: string
+  /** Where the score sits from good to poor, 0 to 1: each grade takes a third. */
+  at?: number
 }
 
 export interface Shape {
@@ -88,11 +93,15 @@ export interface Overview {
 }
 
 export interface Table {
+  /** The one line over the table: the biggest move between the two periods. */
+  say?: string | null
   rows: Row[]
   /** The people of the period: the whole a row's share is a share of. */
   of: number
   /** The filter a tapped row sets, where the rows are not the table's usual kind (a channel, not a source). */
   dim?: string
+  /** Empty with no filter too: the filter is not why there is nothing here. */
+  noneAtAll?: boolean
 }
 
 export interface SearchRow {
@@ -210,15 +219,17 @@ export type HostedTab = 'highlights' | 'overtime' | 'hours' | 'revmap' | 'earner
 /** The breakdowns only the deep report has: where people left, regions and cities, the parts of a campaign, language, browser version, screen width, page groups. */
 export type DeepTab = 'exits' | 'groups' | 'regions' | 'cities' | 'utmsource' | 'medium' | 'bversion' | 'screens' | 'languages'
 
-export type Tab = HostedTab | DeepTab | 'overview' | 'pages' | 'sources' | 'referrers' | 'utm' | 'search' | 'countries' | 'devices' | 'browsers' | 'funnels' | 'sales' | 'speed' | 'mentions' | 'outbound' | 'bots'
+export type Tab = HostedTab | DeepTab | 'changed' | 'overview' | 'pages' | 'sources' | 'quality' | 'referrers' | 'utm' | 'search' | 'countries' | 'devices' | 'browsers' | 'funnels' | 'sales' | 'speed' | 'mentions' | 'outbound' | 'bots'
 
-export type Section = 'overview' | 'pages' | 'sources' | 'places' | 'tech' | 'results' | 'sales' | 'speed' | 'mentions' | 'links' | 'ai' | 'answers'
+export type Section = 'changed' | 'overview' | 'pages' | 'sources' | 'places' | 'tech' | 'results' | 'sales' | 'speed' | 'mentions' | 'links' | 'ai' | 'answers'
 
 /** Every section's answer for one site, period and set of filters. */
 export interface Tabs {
+  changed: Overview & { report: import('../../lib/api').Report }
   overview: Overview
   pages: Table
   sources: Table
+  quality: Quality
   referrers: Table
   utm: Table
   browsers: Table
@@ -260,4 +271,10 @@ export interface SavedView {
   id?: string
   name: string
   filters: Filter[]
+}
+
+export interface Quality {
+  say: string
+  goal: string | null
+  rows: QualityRow[]
 }

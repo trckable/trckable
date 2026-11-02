@@ -2,15 +2,14 @@
 // Every cell names its row, column and count on hover; the key under the grid
 // says which way is more.
 import { useState } from 'react'
-import { heatLevel } from './scale'
 import { Tip } from './Tip'
 import { useWidth } from './useWidth'
 
 export const HEAT_LEVELS = 4
 
-/** The fill for a level: level 0 is the empty cell, the rest mix the hue in. */
-export const heatFill = (level: number, color: string) =>
-  level === 0 ? 'var(--grid)' : `color-mix(in srgb, ${color} ${Math.round(18 + (level / HEAT_LEVELS) * 82)}%, var(--sunken))`
+/** A cell's own shade: the curve keeps the busy hours standing out instead of a wall of bright cells. */
+export const heatShade = (n: number, peak: number, color: string) =>
+  n === 0 || peak === 0 ? 'var(--grid)' : `color-mix(in srgb, ${color} ${Math.round(6 + (n / peak) ** 2.4 * 94)}%, var(--sunken))`
 
 const LABEL_W = 34
 const AXIS_H = 18
@@ -42,12 +41,14 @@ export function HeatGrid(p: {
             {(p.cells[r] ?? []).map((n, c) => (
               <rect
                 key={c}
-                x={LABEL_W + c * cw + 0.75}
-                y={r * ch + 0.75}
-                width={Math.max(1, cw - 1.5)}
-                height={ch - 1.5}
-                rx={2}
-                fill={heatFill(heatLevel(n, peak, HEAT_LEVELS), p.color)}
+                x={LABEL_W + c * cw + 1.5}
+                y={r * ch + 1.5}
+                width={Math.max(1, cw - 3)}
+                height={ch - 3}
+                rx={4}
+                className="kit-heat"
+                style={{ animationDelay: `${c * 22}ms` }}
+                fill={heatShade(n, peak, p.color)}
                 stroke={at && at.r === r && at.c === c ? 'var(--text)' : 'none'}
                 onPointerEnter={() => setAt({ r, c })}
               />
@@ -71,7 +72,7 @@ export function HeatKey({ color, fewer, more }: { color: string; fewer: string; 
     <div className="kit-legend kit-heatkey">
       <span>{fewer}</span>
       {Array.from({ length: HEAT_LEVELS + 1 }, (_, l) => (
-        <i key={l} className="swatch" style={{ background: heatFill(l, color) }} aria-hidden="true" />
+        <i key={l} className="swatch" style={{ background: heatShade(l, HEAT_LEVELS, color) }} aria-hidden="true" />
       ))}
       <span>{more}</span>
     </div>

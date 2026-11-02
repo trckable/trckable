@@ -4,6 +4,7 @@ import type { CSSProperties, ReactNode } from 'react'
 const PATHS: Record<string, ReactNode> = {
   answers: <path d="M12 3a7 7 0 0 0-7 7v10l2.5-1.8 2.2 1.8 2.3-1.8 2.3 1.8 2.2-1.8 2.5 1.8V10a7 7 0 0 0-7-7z" />,
   ai: <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18 16l.8 2.2L21 19l-2.2.8L18 22l-.8-2.2L15 19l2.2-.8z" />,
+  changed: <path d="M7 4v14M7 18l-3-3M7 18l3-3M17 20V6M17 6l-3 3M17 6l3 3" />,
   overview: <path d="M4 19V5M4 19h16M8 15l3-4 3 2 5-6" />,
   pages: (
     <>
@@ -11,7 +12,7 @@ const PATHS: Record<string, ReactNode> = {
       <path d="M14 3v4h4" />
     </>
   ),
-  sources: <path d="M4 12h12M12 6l6 6-6 6" />,
+  sources: <path d="M4 6h4l8 12h4M4 18h4l2.5-3.8M13.5 9.8 16 6h4M18 3l3 3-3 3M18 15l3 3-3 3" />,
   places: (
     <>
       <circle cx="12" cy="12" r="8" />

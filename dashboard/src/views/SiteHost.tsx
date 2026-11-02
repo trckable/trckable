@@ -163,7 +163,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
           live={{ site: site.id, timezone: site.timezone, stream, cookieless: site.cookieless, whole: site, onVisitor: !shared && journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined }}
         />
       </Suspense>
-      {!liveView && !waiting && <DomainSwitch seen={cur?.hosts ? cur.dims.hostname : null} filters={view.filters} site={site.domain} narrow={narrow} onPick={filterOps.domain} />}
+      {!liveView && !waiting && <DomainSwitch seen={cur?.hosts ? cur.dims.hostname : null} filters={view.xf ?? view.filters} site={site.domain} narrow={narrow} onPick={filterOps.domain} />}
       {journey && mods !== null && shows(mods, 'cards', 'journey') && (
         <Suspense fallback={null}>
           <JourneyDialog site={site} visitor={journey} query={query} onClose={() => setJourney(null)} onFilter={(dim, value) => filterFrom(view, dim, value)} />

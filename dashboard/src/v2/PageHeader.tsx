@@ -7,7 +7,9 @@ import { openAddSite } from '../lib/account'
 import { liveCount, siteDown } from '../features/live/liveLink'
 import { switchTab } from '../features/live/switchView'
 import { AccountMenu } from '../components/AccountMenu'
-import { isShared } from '../lib/me'
+import { appVersion, isShared, updateChecks } from '../lib/me'
+import { useLatest } from '../lib/update'
+import { SectionsButton } from './explore/SectionsButton'
 import { can } from '../lib/permissions'
 import { pressed } from '../lib/keys'
 import { navigate } from '../lib/url'
@@ -16,7 +18,6 @@ import { lazyLoad, whenIdle } from '../lib/lazyLoad'
 import { ghostSvg } from '../brand/logo'
 import { Bell } from './bell/Bell'
 import { useNotices } from './bell/useNotices'
-import { goExplore } from './briefing/deeper'
 import { copy } from './copy'
 import { goHome } from './home'
 import { peekAction } from './openPeek'
@@ -29,7 +30,6 @@ import { SiteChip } from './ui/SiteMenu'
 import { DomainPicker } from './ui/DomainPicker'
 import { TeamSquare } from './ui/TeamSquare'
 import { SetupRing } from './setup/SetupRing'
-import { GoalsButton } from './goals/GoalsButton'
 
 const Palette = lazyLoad(() => import('./ui/Palette').then((m) => ({ default: m.Palette })))
 
@@ -62,6 +62,10 @@ export function PageHeader(p: PageHeaderProps) {
   const online = liveCount.use()
   const down = siteDown.use()
   const slots = useV2Extras()
+  // Explore and Live have no foot, so a new release is told here; a page that hands its own in keeps it.
+  const latest = useLatest(appVersion(), updateChecks())
+  const update = p.update ?? latest?.v
+  const onUpdate = p.onUpdate ?? (() => window.dispatchEvent(new Event('trckable:update-open')))
   const notices = useNotices(p.site, p.sites)
   const viewer = !can('site.add')
   const [find, setFind] = useState(false)
@@ -105,21 +109,20 @@ export function PageHeader(p: PageHeaderProps) {
   }
   const here = p.tab
   // Peek is there only where the build gives one: a page's own, or the slot. The public product has none, so no row or button asks for it.
+  const question = slots.askPeekNow
   const ask = peekAction(p.onAsk, slots.askPeekNow)
   // A page with a site opens Explore; a page without one has nothing to open it on, so ⌘K's list opens instead.
   // Where the build provides Peek, a question typed into ⌘K is asked at once.
-  const question = slots.askPeekNow
-  const exploreOpen = () => (site ? goExplore() : setFind(true))
   return (
     <>
       <Header
         logo={p.identity ? <div className="hd-id">{p.identity}</div> : (
           <>
             <Logo title={copy.home} onClick={() => goHome(site)} />
-            {p.update && (
-              <button type="button" className="update-pill" onClick={p.onUpdate} title={copy.updateOut(p.update)}>
+            {update && (
+              <button type="button" className="update-pill" onClick={onUpdate} title={copy.updateOut(update)}>
                 <span className="dot" aria-hidden="true" />
-                <span className="num">{`v${p.update}`}</span>
+                <span className="num">{`v${update}`}</span>
                 <span className="sr">{copy.upgrade}</span>
               </button>
             )}
@@ -127,15 +130,15 @@ export function PageHeader(p: PageHeaderProps) {
         )}
         site={p.identity ? null : <SiteChip p={siteMenu} />}
         ring={p.identity || !site ? null : <SetupRing site={site} onGoal={p.onGoal ?? (() => openFind(pal.create))} fresh={!!p.waiting} visited={!!p.visited} />}
-        views={here && !p.identity && !p.waiting ? <SegmentedSwitch id="views" label={copy.view} value={here} onChange={(t) => void switchTab(t, here)} items={[{ value: 'live', label: copy.live, title: copy.liveTitle, dot: down ? 'down' : 'ok', count: online ?? undefined }, { value: 'briefing', label: copy.briefing, title: copy.briefingTitle }]} /> : null}
+        views={here && !p.identity && !p.waiting ? <SegmentedSwitch id="views" label={copy.view} value={here} onChange={(t) => void switchTab(t, here)} items={[{ value: 'live', label: copy.live, title: copy.liveTitle, dot: down ? 'down' : 'ok', count: online ?? undefined }, { value: 'briefing', label: copy.exploreTab, title: copy.briefingTitle }]} /> : null}
         period={
           <>
             {here === 'briefing' ? p.period : null}
             {site && <DomainPicker />}
           </>
         }
-        goals={site && !p.waiting && !p.identity && !isShared() ? <GoalsButton key={site.id} site={site} data={p.data ?? null} onGoal={p.onGoal} onChanged={p.onGoalsChanged} /> : null}
-        explore={p.waiting ? null : <ExploreChip label={question ? copy.askOrSearch : copy.explore} kbd="⌘K" onClick={question ? () => setFind(true) : exploreOpen} />}
+        goals={site && !p.waiting && !p.identity && !isShared() ? <SectionsButton /> : null}
+        explore={p.waiting ? null : <ExploreChip label="Search" kbd="⌘K" onClick={() => setFind(true)} />}
         extras={slots.headerExtra}
         bell={p.identity ? null : <Bell site={site} notices={notices} />}
         account={isShared() ? null : <AccountMenu alert={slots.accountAlert} />}

@@ -1,5 +1,9 @@
 // The sections that are one table of people: pages, sources and where they came from, countries, devices, browsers and
 // the links people leave by. Each says what a tap on a row does and what is written under it.
+import { fmtInt } from '../../../lib/format'
+import { channelColor } from '../../../lib/palette'
+import { PageMap } from '../../ui/PageMap'
+import { ShareDonut } from '../../ui/ShareDonut'
 import { XNote } from '../../ui/XBits'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
@@ -22,7 +26,7 @@ const CFG: Partial<Record<Tab, Cfg>> = {
   sources: { head: copy.heads.source },
   countries: { head: copy.heads.country, flags: true },
   devices: { head: copy.heads.device },
-  referrers: { head: copy.heads.referrer, min: 14 },
+  referrers: { head: copy.heads.referrer },
   utm: { head: copy.heads.campaign },
   browsers: { head: copy.heads.browser },
   outbound: { head: copy.heads.link, mono: true, unit: copy.heads.clicks },
@@ -59,11 +63,21 @@ function Note({ tab, x }: { tab: Tab; x: XCtx }) {
 export function Tables({ tab, x, d }: { tab: Tab; x: XCtx; d: Table }) {
   const c = CFG[tab] ?? CFG.pages ?? { head: '' }
   const dim = d.dim ?? ROW_DIM[tab]
+  const donut = tab === 'sources' && d.rows.length > 0 && <ShareDonut label={copy.people} people={d.of} parts={d.rows.map((r) => ({ key: r.val, name: r.name, v: r.v, color: channelColor(r.val) }))} />
   return (
     <>
+      {d.say && <p className="xchg-say xsay-table">{d.say}</p>}
+      {donut}
+      {tab === 'pages' && d.rows.length > 1 && <PageMap label={copy.people} rows={d.rows.map((r) => ({ key: r.val, name: r.name === '/' ? copy.homePage : r.name, v: r.v }))} onPick={dim ? (k) => x.pick(dim, k) : undefined} />}
+      {(tab === 'devices' || tab === 'browsers' || tab === 'screens') && d.rows.length > 0 && (
+        <div className="xsplit-bar xdev" role="img" aria-label={d.rows.map((r) => `${r.name} ${fmtInt(r.v)}`).join(', ')}>
+          {d.rows.map((r, i) => <i key={r.val} title={`${r.name}: ${fmtInt(r.v)}`} style={{ flexGrow: r.v, background: `color-mix(in srgb, var(--mk-soft) ${Math.max(22, 100 - i * 16)}%, transparent)` }} />)}
+        </div>
+      )}
       <PeopleTable
+        noneAtAll={d.noneAtAll}
         x={x}
-        rows={d.rows}
+        rows={tab === 'pages' || tab === 'exits' ? d.rows.map((r) => (r.name === '/' ? { ...r, name: copy.homePage } : r)) : d.rows}
         head={c.head}
         unit={c.unit}
         mono={c.mono}

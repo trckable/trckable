@@ -1,4 +1,4 @@
-// The period and the comparison are switched from right over the chart, and the header's chip and the address follow.
+// The period and the comparison are switched from Explore's period chip, and the chart and the address follow.
 // Chromium only (a layout).
 import { expect, test, type Page } from './fixtures'
 import { flowSession } from './flows-kit'
@@ -35,74 +35,46 @@ async function open(page: Page, width: number, scheme: 'dark' | 'light', query: 
   await page.evaluate(() => document.fonts.ready)
 }
 
-test('the period and Compare switch over the chart, and the header chip and the address follow', async ({ page }) => {
+test('the period chip switches the period and the comparison, and the chart and the address follow', async ({ page }) => {
   await withBefore(page)
   await open(page, 1280, 'dark', '?view=briefing&period=30d&v=')
-  const row = page.locator('.chwrap [data-testid=chart-controls]')
-  await expect(row.getByRole('radio', { name: '30d' })).toHaveAttribute('aria-checked', 'true')
-  await row.getByRole('radio', { name: '90d' }).click()
+  // The row of segments over the chart is left out of the Explore page: the chip is the one place.
+  const chip = page.locator('#xp .xperiod #xperBtn')
+  await chip.click()
+  await page.locator('#xperMenu').getByRole('button', { name: /^Last 90 days/ }).click()
   await expect(page).toHaveURL(/period=90d/)
-  await expect(page.locator('#perBtn')).toContainText(/90/)
-  // Arrow keys move within the segments, and the focus stays on the one chosen while the page reads the new period.
-  await expect(page.locator('.mk-held')).toHaveCount(0)
-  await row.getByRole('radio', { name: '90d' }).focus()
-  await page.keyboard.press('ArrowRight')
-  await expect(page).toHaveURL(/period=12mo/)
-  await expect(row.getByRole('radio', { name: '12m' })).toBeFocused()
-  await row.getByRole('radio', { name: '7d' }).click()
+  await chip.click()
+  await page.locator('#xperMenu').getByRole('button', { name: /^Last 7 days/ }).click()
   await expect(page).toHaveURL(/period=7d/)
-  // The Compare menu: on is the default ("vs previous period"), Off turns it off and the dashed line goes.
-  const chip = row.getByRole('button', { name: /^vs previous period/ })
-  await expect(chip).toHaveAttribute('aria-expanded', 'false')
-  await page.waitForTimeout(1500)
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/inline-on-dark-1280.png` })
+  // Compare: Before is the default, Off turns it off and the dashed line goes.
+  await expect(page.locator('svg#chart .chbefore')).toHaveCount(1)
   await chip.click()
-  const menu = page.getByRole('menu', { name: 'Compare against' })
-  await expect(menu.getByRole('menuitemradio', { name: /^Previous period/ })).toHaveAttribute('aria-checked', 'true')
+  const seg = page.locator('#xperMenu .mk-lseg').first()
+  await expect(seg.locator('button.on').first()).toHaveText('Before')
   // Last year needs a year of data: the steady site is younger, so the choice is there but disabled, with its reason.
-  await expect(menu.getByRole('menuitemradio', { name: /^Same time last year/ })).toHaveAttribute('aria-disabled', 'true')
-  await expect(menu.getByRole('menuitemradio', { name: /^Same time last year/ })).toContainText('Needs a year of data')
-  await page.keyboard.press('Escape')
-  await expect(menu).toHaveCount(0)
-  await expect(chip).toBeFocused()
-  await chip.click()
-  await menu.getByRole('menuitemradio', { name: 'Off' }).click()
+  await expect(seg.getByRole('button', { name: 'Last year' })).toBeDisabled()
+  await expect(seg.getByRole('button', { name: 'Last year' })).toHaveAttribute('title', 'Needs a year of data')
+  await seg.getByRole('button', { name: 'Off' }).click()
   await expect(page).toHaveURL(/compare=none/)
-  await expect(page.locator('svg#chart .chbefore')).toHaveCount(0)
-  const off = row.getByRole('button', { name: 'Compare' })
-  await expect(off).toBeVisible()
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/inline-off-dark-1280.png` })
-  await off.click()
-  await menu.getByRole('menuitemradio', { name: /^Previous period/ }).click()
+  await expect(page.locator('.chbefore')).toHaveCount(0)
+  // The page holds still (inert) while it reads the new period: the chip is pressed again until the menu opens.
+  await expect(async () => {
+    if (!(await seg.isVisible())) await chip.click()
+    await expect(seg).toBeVisible({ timeout: 1000 })
+  }).toPass()
+  await seg.getByRole('button', { name: 'Before' }).click()
   await expect(page.locator('svg#chart .chbefore')).toHaveCount(1)
   // The point under the pointer is read out next to it, with both numbers.
   const box = (await page.locator('svg#chart').boundingBox())!
   await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5)
   await expect(page.locator('.chart-tip')).toHaveText(/^.+ · [\d,]+ (visitors|people) · .+ [\d,]+ · [+-]?\d+%$/)
-  // The header's menu shows the same comparison.
-  await page.locator('#perBtn').click()
-  await expect(page.locator('#perMenu .mk-lseg button.on').first()).toHaveText('Before')
 })
 
 for (const [scheme, width] of [['light', 1280], ['dark', 390]] as const) {
-  test(`the row over the chart, ${scheme} ${width}px`, async ({ page }) => {
+  test(`the chart on What changed does not overflow the page, ${scheme} ${width}px`, async ({ page }) => {
     await withBefore(page)
     await open(page, width, scheme, '?view=briefing&period=30d&v=')
-    await page.waitForTimeout(2000)
-    const row = (await page.locator('[data-testid=chart-controls]').boundingBox())!
-    expect(row.height).toBeLessThanOrEqual(34)
-    // Notes sits on the same row as the period and the Compare menu.
-    const notes = (await page.locator('.chwrap [data-info=notes]').boundingBox())!
-    expect(Math.abs(notes.y + notes.height / 2 - (row.y + row.height / 2))).toBeLessThan(4)
+    await page.waitForTimeout(1000)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-    if (SHOTS) await page.screenshot({ path: `${SHOTS}/inline-on-${scheme}-${width}.png` })
   })
 }
-
-test('Explore\'s shape has the same row', async ({ page }) => {
-  await withBefore(page)
-  await open(page, 1280, 'dark', '?view=briefing&period=30d&v=&x=overview')
-  const row = page.locator('.shp').locator('xpath=preceding-sibling::*[@data-testid="chart-controls"]')
-  await row.getByRole('radio', { name: '90d' }).click()
-  await expect(page).toHaveURL(/period=90d/)
-})

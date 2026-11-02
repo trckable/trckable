@@ -9,5 +9,5 @@ export type Basis = 'usual' | 'previous' | 'year' | 'custom'
 export function basisOf(o: { range: Range; filters: Filter[]; compare: CompareMode }): Basis {
   if (o.compare === 'year') return 'year'
   if (o.compare === 'custom') return 'custom'
-  return o.range.from === o.range.to && o.filters.length === 0 ? 'usual' : 'previous'
+  return 'previous'
 }

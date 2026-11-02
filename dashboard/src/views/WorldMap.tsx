@@ -5,10 +5,13 @@
 import { useMemo, useState } from 'react'
 import type { Row } from '../lib/api'
 import { countryName, fmtInt } from '../lib/format'
-import { COUNTRIES, MAP_H, MAP_W } from '../lib/worldmap'
+import { COUNTRIES, MAP_W } from '../lib/worldmap'
+import { dotPaths } from './mapDots'
 import './WorldMap.css'
 import '../charts/Tip.css'
 import { Flag } from '../v2/ui/Flag'
+
+const DOTS = dotPaths(COUNTRIES, MAP_W, 5)
 
 /** What the map shades by. Visitors unless told otherwise: the revenue card
  *  passes the money, its own words and a hue of its own. */
@@ -46,7 +49,7 @@ export function WorldMap({ rows, onPick, metric = VISITORS }: { rows: Row[]; onP
   // One hue, light to dark: magnitude, never a rainbow. The square root keeps
   // a country with a tenth of the traffic visible instead of black.
   const fill = (n: number | undefined) => {
-    if (!n || !peak) return 'var(--grid)'
+    if (!n || !peak) return 'color-mix(in srgb, var(--text) 13%, transparent)'
     const t = Math.sqrt(n / peak)
     return `color-mix(in srgb, ${metric.color} ${Math.round(12 + t * 88)}%, var(--sunken))`
   }
@@ -64,17 +67,18 @@ export function WorldMap({ rows, onPick, metric = VISITORS }: { rows: Row[]; onP
         setAt(null)
       }}
     >
-      <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} role="img" aria-label={metric.label} preserveAspectRatio="xMidYMid meet">
-        {COUNTRIES.map(([code, d]) => {
+      <svg viewBox={`0 12 ${MAP_W} 396`} role="img" aria-label={metric.label} preserveAspectRatio="xMidYMid meet">
+        {DOTS.map(([code, d]) => {
           const n = by.get(code)
           return (
             <path
               key={code}
               d={d}
-              fill={fill(n)}
-              stroke="var(--surface)"
-              strokeWidth={n ? 1.2 : 0.8}
-              opacity={hover && hover !== code ? 0.55 : 1}
+              fill="none"
+              stroke={fill(n)}
+              strokeWidth={3.9}
+              strokeLinecap="round"
+              opacity={hover && hover !== code ? 0.4 : 1}
               onMouseEnter={() => setHover(code)}
               onMouseLeave={() => setHover(null)}
               onClick={n && onPick ? () => onPick(code) : undefined}
@@ -101,7 +105,7 @@ export function WorldMap({ rows, onPick, metric = VISITORS }: { rows: Row[]; onP
         )}
         <span className="spacer" style={{ flex: 1 }} />
         <span className="scale" aria-hidden="true">
-          <i style={{ background: 'var(--grid)' }} />
+          <i style={{ background: fill(0) }} />
           <i style={{ background: fill(peak * 0.15) }} />
           <i style={{ background: fill(peak * 0.45) }} />
           <i style={{ background: fill(peak) }} />

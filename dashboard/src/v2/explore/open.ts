@@ -1,37 +1,13 @@
-// Opening and shutting Explore from anywhere: the address says whether it is open (?x=pages), which table it is on, and
+// Opening Explore from anywhere: the address says whether it is open (?x=pages), which table it is on, and
 // what it narrows by (?xf=), so a link opens it and Back leaves it.
 import type { Filter } from '../../lib/api'
-import { historySteps, readView, setView, type ViewState } from '../../lib/url'
+import { readView, setView, type ViewState } from '../../lib/url'
 import { isTab, type Tab } from './sections'
 
 /** Open on a table, narrowed by some filters (the page's own when none are given). */
 export function openExplore(tab: Tab = 'overview', filters?: Filter[]) {
   const cur = readView(new URLSearchParams(location.search))
-  if (cur.xp === undefined) opened = { step: historySteps() + 1, base: withoutPanel() }
-  setView({ xp: tab, xf: filters ?? cur.filters })
-}
-
-/** Where the page stood when the app opened the panel: its step in the history, and its address without the panel's parts. */
-let opened: { step: number; base: string } | null = null
-
-/** The address with the panel's own parts taken out (its table and filters): what the page itself says. */
-function withoutPanel(): string {
-  const p = new URLSearchParams(location.search)
-  p.delete('x')
-  p.delete('xf')
-  return location.pathname + '?' + p.toString()
-}
-
-/** Shut. The Briefing and Live read the whole site, so what the panel narrowed by goes with it. When the app opened it and nothing but the panel has changed since, shutting is Back to before it (so Back does not open it again); otherwise the address is replaced. */
-export function closeExplore() {
-  const was = opened
-  opened = null
-  const back = was ? historySteps() - was.step + 1 : 0
-  if (was && back > 0 && withoutPanel() === was.base) {
-    history.go(-back)
-    return
-  }
-  setView({ xp: undefined, xf: undefined, filters: [] }, { replace: true })
+  setView({ xp: tab, xf: filters ?? cur.xf ?? cur.filters })
 }
 
 /** An address that narrows the site (?f=country:US) opens Explore with those filters on, where the chips show them and every table is narrowed. */

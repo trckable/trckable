@@ -58,7 +58,7 @@ export function mapOverview(r: Report, o: { money?: (minor: number) => string; u
   const kcs: Kc[] = [
     { icon: 'people', label: copy.people, val: fmtInt(people.v), note: pe(people), vals: series.map((p) => p.visitors), st: people.st === 'dn' ? 'dn' : '' },
     goal && gs
-      ? { icon: 'goal', label: cap(goal.label || goal.value), val: fmtInt(goal.visitors), note: pe(gs), vals: [], col: 'var(--mk-blue)', st: gs.st === 'dn' ? 'dn' : '' }
+      ? { icon: 'goal', label: cap(goal.label || goal.value), val: fmtInt(goal.visitors), note: pe(gs), vals: [], share: people.v ? goal.visitors / people.v : 0, col: 'var(--mk-blue)', st: gs.st === 'dn' ? 'dn' : '' }
       : { icon: 'click', label: copy.kc.views, val: fmtInt(views.v), note: pe(views), vals: series.map((p) => p.pageviews), col: 'var(--mk-blue)', st: views.st === 'dn' ? 'dn' : '' },
   ]
   if (cur.money && o.money) {

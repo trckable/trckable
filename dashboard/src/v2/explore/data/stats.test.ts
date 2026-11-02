@@ -45,7 +45,7 @@ describe('rowsOf', () => {
 
 describe('noteOf', () => {
   it('says how far from usual a number is', () => {
-    expect(noteOf(statOf(200, 100), 'vs usual', 'as usual', '')).toEqual({ c: 'up', t: '+100% vs usual' })
+    expect(noteOf(statOf(200, 100), 'vs usual', 'as usual', '')).toEqual({ c: 'up', t: '2× vs usual' })
     expect(noteOf(statOf(40, 100), 'vs usual', 'as usual', '')).toEqual({ c: 'dn', t: '−60% vs usual' })
   })
   it('says as usual inside the range, and nothing with nothing to compare', () => {

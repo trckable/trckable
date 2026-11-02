@@ -1,4 +1,4 @@
-// The Briefing's chart header: the line of words, the Notes button, the moments' labels and Replay beside Why?
+// The chart header on What changed: the line of words, the Notes button under it, and the moments' labels
 // are each their own box, none on top of another, on a quiet site and a busy one, on a wide screen and a phone.
 import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
@@ -44,7 +44,7 @@ test.beforeAll(async () => {
 
 type Box = { name: string; x: number; y: number; w: number; h: number }
 
-// Every box that should stand alone: the words, Notes, the buttons under the headline, and each label inside the chart.
+// Every box that should stand alone: the words, the buttons under the chart, and each label inside the chart.
 async function boxes(page: Page): Promise<Box[]> {
   return page.evaluate(() => {
     const out: Box[] = []
@@ -54,8 +54,7 @@ async function boxes(page: Page): Promise<Box[]> {
     }
     const note = document.querySelector('#chNote')
     if (note) add('note', note)
-    document.querySelectorAll('.chwrap .nbtn').forEach((el) => add('notes', el))
-    document.querySelectorAll('.hl-col .rpb').forEach((el) => add(`button: ${el.textContent?.trim()}`, el))
+    document.querySelectorAll('.xchg-tools .xb').forEach((el) => add(`button: ${el.textContent?.trim()}`, el))
     document.querySelectorAll('svg#chart text').forEach((el) => add(`label: ${el.textContent?.trim()}`, el))
     document.querySelectorAll('.chwrap .moment-mark').forEach((el, i) => add(`mark ${i}`, el))
     return out
@@ -76,17 +75,9 @@ for (const [kind, domain, width, scheme] of cases) {
     await page.setViewportSize({ width, height: 900 })
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
     await page.goto(`${API}/${domain}?view=briefing&period=7d&v=`)
-    await expect(page.locator('.chwrap .nbtn')).toBeVisible()
-    await expect(page.locator('svg#chart')).toBeVisible()
-    // Why? beside Replay is there only while a change has a cause to tell; the pair is checked whenever it is.
-    await page.evaluate(() => {
-      const replay = document.querySelector('.hl-col .rpb')
-      if (!replay || document.querySelector('.hl-col .whyb')) return
-      const why = replay.cloneNode(false) as HTMLElement
-      why.classList.add('whyb')
-      why.textContent = 'Why?'
-      replay.after(why)
-    })
+    await expect(page.locator('svg#chart')).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('.xchg-tools .xb').first()).toBeVisible()
+    await page.waitForTimeout(800)
     const list = await boxes(page)
     expect(list.length).toBeGreaterThanOrEqual(3)
     for (let i = 0; i < list.length; i++) {
@@ -97,9 +88,5 @@ for (const [kind, domain, width, scheme] of cases) {
         expect(apart, `${a.name} and ${b.name} overlap`).toBe(true)
       }
     }
-    // Replay and Why? are two buttons with room between them, where both are on one line.
-    const replay = list.find((b) => b.name === 'button: Replay')!
-    const why = list.find((b) => b.name === 'button: Why?')!
-    if (Math.abs(replay.y - why.y) < 4) expect(why.x - (replay.x + replay.w)).toBeGreaterThanOrEqual(6)
   })
 }

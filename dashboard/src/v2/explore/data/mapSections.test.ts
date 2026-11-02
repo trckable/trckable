@@ -97,10 +97,10 @@ describe('search', () => {
     const prev = rep(60, 4000, [{ key: 'trckable', clicks: 60, impressions: 4000, ctr: 0.015, position: 3 }])
     const s = mapSearch({ query: q, pages: q, prev })
     expect(s.kcs.map((k) => [k.label, k.val, k.tag, k.tone])).toEqual([
-      ['Clicks', '120', 'above usual', 'up'],
-      ['Impressions', '4.0k', 'as usual', ''],
-      ['Click rate', '3.0%', 'as usual', ''],
-      ['Position', '6.7', 'below usual', 'dn'],
+      ['Clicks', '120', 'higher', 'up'],
+      ['Impressions', '4.0k', '≈ same', ''],
+      ['Click rate', '3.0%', '≈ same', ''],
+      ['Position', '6.7', 'lower', 'dn'],
     ])
     expect(s.kcs[0].detail).toBe('usual 45–76')
   })

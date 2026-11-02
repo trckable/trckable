@@ -1,2 +1,0 @@
-/* The daily email chip sits after Replay and takes its look (.rpb); off, it is quieter. The plain calm row below shares this file. */
-.mk .mailchip.off { color: var(--mk-muted); }

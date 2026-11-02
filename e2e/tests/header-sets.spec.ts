@@ -24,18 +24,19 @@ async function shot(page: Page, name: string) {
 }
 
 for (const [width, scheme] of [[1440, 'dark'], [2000, 'light']] as const) {
-  test(`${width}px ${scheme}: Explore full fills the window`, async ({ page }) => {
+  test(`${width}px ${scheme}: Explore is the page and fills the window`, async ({ page }) => {
     await open(page, width, scheme, '?view=briefing&period=7d&x=overview')
-    await page.locator('#xpFull').click()
+    await expect(page.locator('#xp.xpage')).toBeVisible()
     await page.waitForTimeout(700)
     const m = await page.evaluate(() => {
       const r = (s: string) => document.querySelector(s)?.getBoundingClientRect()
-      const xp = r('.xp.full'), body = r('#xpBody')
+      const xp = r('#xp.xpage'), body = r('#xpBody')
       const kids = [...document.querySelectorAll('#xpBody > *')].map((e) => Math.round(e.getBoundingClientRect().right))
       return { xp: xp && [xp.left, xp.right], body: body && [body.left, body.right], kids, w: innerWidth }
     })
-    // The content reaches the same side padding on the right as on the left.
-    expect(m.kids[0], 'content right edge').toBeGreaterThan(m.w - 48)
+    // The page is wide (held to a reading width on a big monitor, not narrower than a laptop's), and its content stays inside the window.
+    expect(m.xp![1] - m.xp![0], 'page width').toBeGreaterThan(Math.min(m.w, 1400) - 64)
+    expect(m.kids[0], 'content right edge').toBeLessThanOrEqual(m.w)
     await shot(page, `explore-${width}-${scheme}`)
   })
 }
@@ -98,40 +99,33 @@ test('All sites in the site menu opens the overview', async ({ page }) => {
   await expect(page.locator('.tm-head')).toBeVisible()
 })
 
-for (const [width, scheme, full] of [[1440, 'dark', false], [390, 'dark', false], [2000, 'light', true]] as const) {
-  test(`${width}px ${scheme}${full ? ' full' : ''}: every Explore tab bar keeps its labels whole`, async ({ page }) => {
+for (const [width, scheme] of [[1440, 'dark'], [390, 'dark'], [2000, 'light']] as const) {
+  test(`${width}px ${scheme}: every Explore section list and card header keeps its labels whole`, async ({ page }) => {
     await open(page, width, scheme, '?view=briefing&period=7d&x=funnels')
     let checked = 0
-    for (const section of ['funnels', 'overview', 'pages', 'sources', 'countries', 'devices', 'sales', 'ai']) {
+    for (const section of ['funnels', 'overview', 'pages', 'sources', 'sales', 'ai']) {
       await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&x=${section}&v=`)
       await page.locator('#xpBody').waitFor({ timeout: 4000 }).catch(() => undefined)
-      if (!(await page.locator('#xpBody').count())) continue // a table this build does not offer
-      if (full) {
-        await page.locator('#xpFull').click()
-      }
+      if (!(await page.locator('#xpBody').count())) continue // a section this build does not offer
+      // On a phone the list is the drawer's.
+      if (width < 500) await page.locator('.xdrawer-open').click()
       await page.waitForTimeout(500)
-      if (!(await page.locator('.xp .xsub').count())) continue
       checked++
       const bad = await page.evaluate(() =>
-        [...document.querySelectorAll<HTMLElement>('.xp .xsub')].flatMap((bar) => {
-          const rects = [...bar.querySelectorAll<HTMLElement>('button')].map((b) => ({ b, r: b.getBoundingClientRect() }))
+        [...document.querySelectorAll<HTMLElement>('#xp .xrail, .xdrawer-box, #xpBody')].flatMap((box) => {
+          const rects = [...box.querySelectorAll<HTMLElement>('.xrail button, .xdrawer-box button, .xsec button')].map((b) => ({ b, r: b.getBoundingClientRect() })).filter((x) => x.r.width > 0)
           const out: string[] = []
           rects.forEach(({ b, r }, i) => {
             if (b.scrollWidth > b.clientWidth + 1) out.push(`clipped: ${b.textContent}`)
             const next = rects[i + 1]
-            if (next && r.right > next.r.left + 0.5) out.push(`overlap: ${b.textContent}`)
-            const dot = b.querySelector('i.xdot')?.getBoundingClientRect()
-            if (dot && (dot.right > r.right - 4 || dot.left < r.left)) out.push(`dot outside: ${b.textContent}`)
-            if (b.getAttribute('aria-selected') === 'true') {
-              const box = bar.getBoundingClientRect()
-              if (r.left < box.left - 1 || r.right > box.right + 1) out.push(`active out of view: ${b.textContent}`)
-            }
+            if (next && r.right > next.r.left + 0.5 && r.bottom > next.r.top + 0.5 && r.top < next.r.bottom - 0.5) out.push(`overlap: ${b.textContent}`)
           })
           return out
         }),
       )
       expect(bad, section).toEqual([])
-      if (section === 'funnels') await shot(page, `tabs-${width}-${scheme}${full ? '-full' : ''}`)
+      if (width < 500) await page.keyboard.press('Escape')
+      if (section === 'funnels') await shot(page, `tabs-${width}-${scheme}`)
     }
     expect(checked).toBeGreaterThanOrEqual(5)
   })
@@ -153,7 +147,7 @@ test('no control of the header overlaps another, every 40 px from 360 to 2560 an
     await page.setViewportSize({ width: w, height: h })
     await page.waitForTimeout(60)
     const found = await page.evaluate(() => {
-      const els = [...document.querySelectorAll<HTMLElement>('.hd #logo, .hd #siteBtn, .hd .ringb, .hd #views, .hd #perBtn, .hd .exb, .hd .ib.bell, .hd .account-btn, .hd .update-pill, .hd .planw')]
+      const els = [...document.querySelectorAll<HTMLElement>('.hd #logo, .hd #siteBtn, .hd .ringb, .hd #views, .hd .exb, .hd .ib.bell, .hd .account-btn, .hd .update-pill, .hd .planw')]
       const boxes = els.map((e) => ({ n: e.id || e.className.split(' ')[0], r: e.getBoundingClientRect() })).filter((b) => b.r.width > 0 && b.r.height > 0)
       const out: string[] = []
       boxes.forEach((a, i) => {
@@ -180,6 +174,6 @@ test('at tablet width the header is compact: no key hint, a short period, a squa
   const search = await page.locator('.hd .exb').boundingBox()
   const bell = await page.locator('.hd .ib.bell').boundingBox()
   expect(Math.round(search!.width)).toBe(Math.round(bell!.width))
-  await expect(page.locator('.hd #perBtn')).toHaveAttribute('title', /.+/)
+  await expect(page.locator('#xp .xperiod #xperBtn')).toHaveAttribute('title', /.+/)
   await shot(page, 'header-948-dark')
 })

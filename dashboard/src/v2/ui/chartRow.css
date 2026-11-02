@@ -1,50 +1,13 @@
-/* The row over a period chart: 32px high, from the chart's left edge to its right edge, one row on a phone (the segments scroll sideways there). */
-.mk .cc { display: flex; align-items: center; justify-content: space-between; gap: var(--mk-s3); min-height: 32px; min-width: 0; }
-.mk .cc-seg { display: flex; gap: 2px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
-.mk .cc-seg::-webkit-scrollbar { display: none; }
-.mk .cc-seg button { flex: none; height: 28px; padding: 0 var(--mk-s2); border: 0; border-radius: 999px; background: transparent; font-size: 12px; color: var(--mk-muted); white-space: nowrap; transition: background-color .15s, color .15s; }
-.mk .cc-seg button:hover:not([aria-disabled]) { color: var(--mk-text); }
-.mk .cc-seg button.on { background: var(--mk-limeD); color: var(--mk-lime); }
-.mk .cc-seg button[aria-disabled='true'] { opacity: .4; cursor: default; }
-.mk .cc-cmp { display: flex; align-items: center; gap: var(--mk-s3); min-width: 0; flex: none; }
-.mk .cc-menu { position: relative; }
-.mk .cc-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 var(--mk-s2); border: 0; border-radius: 999px; background: transparent; font-size: 12px; color: var(--mk-muted); cursor: pointer; white-space: nowrap; }
-.mk .cc-chip:hover, .mk .cc-chip[aria-expanded='true'] { background: var(--mk-band); color: var(--mk-text); }
-.mk .cc-chip.on { color: var(--mk-lime); }
-.mk .cc-pop { position: absolute; z-index: var(--z-menu); top: calc(100% + var(--mk-s1)); right: 0; min-width: 220px; padding: var(--mk-s1); border: 1px solid var(--mk-line); border-radius: 12px; background: var(--mk-card2); box-shadow: 0 12px 32px var(--mk-shc); }
-.mk .cc-pop button { display: flex; flex-direction: column; align-items: flex-start; width: 100%; padding: var(--mk-s2) var(--mk-s3); border: 0; border-radius: 8px; background: transparent; font-size: 12.5px; color: var(--mk-text); text-align: left; cursor: pointer; }
-.mk .cc-pop button:hover:not([aria-disabled]), .mk .cc-pop button:focus-visible { background: var(--mk-band); }
-.mk .cc-pop button[aria-checked='true'] { color: var(--mk-lime); }
-.mk .cc-pop button[aria-disabled='true'] { opacity: .5; cursor: default; }
-.mk .cc-pop small { font-size: 11.5px; color: var(--mk-muted); }
-.mk .cc-pop .cc-why { margin: 0; padding: var(--mk-s2) var(--mk-s3); font-size: 11.5px; }
-/* The legend of the two lines, on the row beside the menu. */
-.mk .cc-key { display: flex; gap: var(--mk-s3); font-size: 12px; white-space: nowrap; color: var(--mk-muted); }
-.mk .cc-key span { display: inline-flex; align-items: center; gap: 6px; }
-.mk .cc-key span::before { content: ''; width: 18px; border-top: 2px solid var(--mk-muted); }
-.mk .cc-key span[data-line='before']::before { border-top: 1.5px dashed var(--mk-muted); }
-.mk .cc button:focus-visible { outline: 2px solid var(--mk-lime); outline-offset: 1px; }
 /* The dashed line of the period before fades in and out as the switch moves. */
-.mk .shbefore, .mk .chkey, .mk .cc-key { animation: cc-in .2s ease-out; }
+.mk .shbefore, .mk .chkey { animation: cc-in .2s ease-out; }
 @keyframes cc-in { from { opacity: 0; } }
-@container (--pane-max-600) {
-  .mk .cc-chip svg:last-child { display: none; }
-  .mk .cc-cmp { gap: 0; }
-  .mk .cc-chip { padding: 0 var(--mk-s1); }
-  .mk .cc { gap: var(--mk-s1); overflow-x: auto; scrollbar-width: none; }
-  .mk .cc::-webkit-scrollbar { display: none; }
-  .mk .cc-key { display: none; }
-  .mk .cc-seg { flex: none; overflow: visible; }
-}
 @media (prefers-reduced-motion: reduce) {
-  .mk .cc *, .mk .shbefore, .mk .chkey { transition: none !important; animation: none !important; }
+  .mk .shbefore, .mk .chkey { transition: none !important; animation: none !important; }
 }
 
-/* The usual range being built: a small ring that fills with the days there are, beside the period's segments. */
+/* The usual range being built: a small ring that fills with the days there are. */
 .mk .cc-learn { display: inline-flex; align-items: center; flex: none; gap: 6px; height: 28px; padding: 0 var(--mk-s2); border-radius: 999px; background: var(--mk-band); color: var(--mk-muted); font-size: 12px; white-space: nowrap; }
 .mk .cc-ring { width: 12px; height: 12px; flex: none; border-radius: 50%; background: conic-gradient(var(--mk-lime) var(--share, 0%), var(--mk-line) 0); -webkit-mask: radial-gradient(circle, transparent 3.5px, currentColor 4px); mask: radial-gradient(circle, transparent 3.5px, currentColor 4px); }
-.mk .cc { justify-content: flex-start; gap: var(--mk-s2); }
-.mk .cc-cmp { margin-left: auto; }
 /* A phone keeps the numbers: "15/30" beside the ring, the words in the tooltip. */
 .mk .cc-short { display: none; font-variant-numeric: tabular-nums; }
 @container (--pane-max-600) {

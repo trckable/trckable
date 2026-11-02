@@ -24,21 +24,29 @@ const runId = (name: string) => `${name}-${Date.now()}-${Math.random().toString(
 /** A page of the test site that carries the real tracker, with the given body. */
 const open = (page: Page, path: string, body: string) => page.goto(`${SITE_ORIGIN}${path}?b=${encodeURIComponent(body)}`)
 
-/** Explore's goals, narrowed to one page of the test site (the site holds the goals of every run). */
+/** Explore's goals card, narrowed to one page of the test site (the site holds the goals of every run). */
 async function goals(page: Page, path: string) {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/example.com?view=briefing&x=funnels&xf=${encodeURIComponent(`page:${path}`)}`)
   await expect(page.locator('#xp.on')).toBeVisible({ timeout: 15_000 })
+  // The card is filled in when it is scrolled to.
+  await page.locator('#xp [data-xcard="funnels"]').evaluate((el) => el.scrollIntoView())
 }
 
-const row = (page: Page, name: string) => page.locator('#xp .mk-goal', { has: page.locator('.gn', { hasText: new RegExp(`^${name}$`) }) })
+const row = (page: Page, name: string) => page.locator('#xp .grs .gr', { has: page.locator('span', { hasText: new RegExp(`^${name}$`) }) })
+/** A goal's count is an animated number (a number-flow element): each digit wheel stands at its --current. */
+const count = (page: Page, name: string) =>
+  row(page, name)
+    .locator('.gr-ring b')
+    .evaluate((b) => [...(b.firstElementChild?.shadowRoot?.querySelectorAll('[part~="integer-digit"]') ?? [])].map((d) => (d as HTMLElement).style.getPropertyValue('--current').trim()).join(''))
 
 /** Reloads until the goal is listed with this many visitors: the writer flushes about once a second. */
 async function expectGoal(page: Page, name: string, visitors: number) {
   await expect(async () => {
     await page.reload()
+    await page.locator('#xp [data-xcard="funnels"]').evaluate((el) => el.scrollIntoView())
     await expect(row(page, name)).toHaveCount(1, { timeout: 4_000 })
-    await expect(row(page, name).locator('.gv')).toHaveText(String(visitors))
+    await expect.poll(() => count(page, name), { timeout: 4_000 }).toBe(String(visitors))
   }).toPass({ timeout: 30_000, intervals: [1_000, 1_500, 2_000] })
 }
 
@@ -50,7 +58,6 @@ test('a page-visit goal made in the dialog counts the visit', async ({ page }) =
   await page.waitForTimeout(1500) // the pageview leaves
 
   await goals(page, path)
-  await page.keyboard.press('Escape')
   await page.keyboard.press('ControlOrMeta+k')
   await page.locator('.pal.on .palbox input').fill('A goal')
   await page.keyboard.press('Enter')

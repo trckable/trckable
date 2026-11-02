@@ -91,7 +91,8 @@ test('the tracker sends what Chromium measured, the server keeps it, and Speed s
 
   // Shown: the same numbers, each with its grade, and the page and the device.
   await page.goto(`${API}/${domain}?view=briefing&x=speed&period=7d&v=`)
-  const cards = page.locator('#xp .kcs.k3 .kc')
+  await page.locator('#xp [data-xcard="speed"]').evaluate((el) => el.scrollIntoView())
+  const cards = page.locator('#xp [data-xcard="speed"] .kcs.k3 .kc')
   await expect(cards).toHaveCount(3, { timeout: 15_000 })
   const lcp = (out.lcp_ms! / 1000).toFixed(1)
   await expect(cards.nth(0)).toContainText(`${lcp} s`)
@@ -112,7 +113,8 @@ test('a site with too few visits shows no number', async ({ page, context }) => 
   expect(out.lcp_n).toBe(2)
 
   await page.goto(`${API}/${domain}?view=briefing&x=speed&period=7d&v=`)
-  const cards = page.locator('#xp .kcs.k3 .kc')
+  await page.locator('#xp [data-xcard="speed"]').evaluate((el) => el.scrollIntoView())
+  const cards = page.locator('#xp [data-xcard="speed"] .kcs.k3 .kc')
   await expect(cards).toHaveCount(3, { timeout: 15_000 })
   for (let i = 0; i < 3; i++) await expect(cards.nth(i)).toContainText('not enough yet: 2 of 5 visits')
   await expect(page.locator('#xp')).not.toContainText(/\d\.\d s\b/)

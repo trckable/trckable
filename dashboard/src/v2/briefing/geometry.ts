@@ -41,9 +41,3 @@ export const dash = (score: number, r = 27): string => {
   const c = 2 * Math.PI * r
   return `${((c * score) / 100).toFixed(1)} ${c}`
 }
-
-/** The ring's colour: lime from 80, amber from 55, red under it. */
-export function ringTone(score: number): 'lime' | 'amber' | 'red' {
-  if (score >= 80) return 'lime'
-  return score >= 55 ? 'amber' : 'red'
-}

@@ -22,7 +22,7 @@ async function open(page: Page) {
   await page.setViewportSize({ width: WIDTH, height: WIDTH < 600 ? 800 : 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
-  await expect(page.locator('.brief')).toBeVisible()
+  await expect(page.locator('#xp.on')).toBeVisible()
   await page.evaluate(() => document.fonts.ready)
   await page.addStyleTag({ content: '*{transition:none!important}' }) // a fill is read at once, not while it fades
 }
@@ -46,8 +46,8 @@ const menus: Record<string, { open: (p: Page) => Promise<Locator> }> = {
   },
   period: {
     open: async (p) => {
-      await p.locator('#perBtn').click()
-      const box = p.locator('#perMenu.on')
+      await p.locator('#xp .xperiod #xperBtn').click()
+      const box = p.locator('#xperMenu.on')
       await expect(box).toBeVisible()
       return box
     },
@@ -62,9 +62,14 @@ const menus: Record<string, { open: (p: Page) => Promise<Locator> }> = {
   },
   explore: {
     open: async (p) => {
-      await p.keyboard.press('e')
-      await p.locator('[data-xm="pick"]').click()
-      const box = p.locator('#xm-pick.on')
+      // The section list: the rail on a wide page, the drawer on a phone.
+      if (WIDTH < 600) {
+        await p.locator('#xp .xdrawer-open').click()
+        const box = p.locator('.xdrawer-box')
+        await expect(box).toBeVisible()
+        return box
+      }
+      const box = p.locator('#xp .xrail')
       await expect(box).toBeVisible()
       return box
     },

@@ -1,5 +1,5 @@
 // The avatar menu's items (AccountMenu.tsx). Its own chunk, so the first load carries only the button.
-import { CircleUser, Keyboard, LogOut } from 'lucide-react'
+import { BookOpen, CircleUser, Keyboard, LogOut, MessageSquare, Sparkles } from 'lucide-react'
 import { openAccount } from '../lib/account'
 import type { Profile } from '../lib/api'
 import type { MenuItems } from '../lib/headerMenu'
@@ -8,6 +8,9 @@ import { can } from '../lib/permissions'
 import { signOut } from '../lib/signOut'
 import { THEMES, useTheme } from '../lib/theme'
 import { useV2Extras } from '../v2/slots'
+import { appVersion } from '../lib/me'
+import { footerCopy } from './footerCopy'
+import { CHANGELOG, DOCS } from './footerLinks'
 import { PersonAvatar } from './PersonAvatar'
 import { openShortcuts } from './ShortcutsHost'
 import { copy } from './itemsCopy'
@@ -68,6 +71,19 @@ export default function AccountItems({ profile, v, go }: { profile: Profile | nu
         <Keyboard size={18} strokeWidth={1.75} aria-hidden="true" />
         {copy.shortcuts}
         <kbd className="menu-kbd">{caps(keyFor('shortcuts')).join('')}</kbd>
+      </button>
+      <button type="button" role="menuitem" onClick={go(() => location.assign(DOCS))}>
+        <BookOpen size={18} strokeWidth={1.75} aria-hidden="true" />
+        {footerCopy.docs}
+      </button>
+      <button type="button" role="menuitem" onClick={go(() => window.dispatchEvent(new Event('trckable:feedback')))}>
+        <MessageSquare size={18} strokeWidth={1.75} aria-hidden="true" />
+        {footerCopy.feedback}
+      </button>
+      <button type="button" role="menuitem" onClick={go(() => location.assign(CHANGELOG))}>
+        <Sparkles size={18} strokeWidth={1.75} aria-hidden="true" />
+        {footerCopy.whatsNew}
+        {appVersion() && <span className="menu-kbd">v{appVersion()}</span>}
       </button>
       <button type="button" role="menuitem" onClick={go(signOutOf ?? signOut)}>
         <LogOut size={18} strokeWidth={1.75} aria-hidden="true" />

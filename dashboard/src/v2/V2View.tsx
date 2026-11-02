@@ -1,40 +1,39 @@
 // Live and the Briefing: the walkthrough's header, and one of its two screens under it. This replaces the dashboard's
 // own header and control rows for these two views; Explore (the full numbers) opens over either as a panel.
 import { useEffect, useState, type ReactNode } from 'react'
-import { tag } from '../i18n'
-import { lazyLoad, whenIdle } from '../lib/lazyLoad'
 import { setView, type ViewState } from '../lib/url'
 import { PageHeader } from './PageHeader'
 import '../mock/mock.css'
 import '../mock/theme.css'
 import '../kit/layout.css'
 import type { Report, Site } from '../lib/api'
-import { PRESETS, todayIn, type ISODate, type Range } from '../lib/dates'
+import { todayIn, type ISODate, type Range } from '../lib/dates'
 import { dayWords, rangeWords } from './dayWords'
-import { hasYear, vsWords } from './periodWords'
+import { compares } from './explore/sections'
+import { vsDates } from './explore/periods'
+import type { Tab } from './explore/types'
+import { hasYear } from './periodWords'
 import { whyNot } from './briefing/compare'
 import { switchTab } from '../features/live/switchView'
 import { useViewKeys } from './useViewKeys'
 import { usePeriodKeys } from './usePeriodKeys'
-import { Briefing, BriefingSlot } from './briefing/BriefingSlot'
 import { FreshSlot } from './briefing/FreshSlot'
 import { copy } from './copy'
-import { useV2Extras } from './slots'
 import { PeriodChip } from './ui/PeriodChip'
 import { periodPatch } from './ui/chartPick'
 import { periodOptions } from './periodOptions'
 import { TabBar } from './ui/TabBar'
-import { goExplore } from './briefing/deeper'
+import { whenIdle } from '../lib/lazyLoad'
+import { ExplorePage, preloadExplore } from './explore/Page'
+import './why/why.css'
 import { routeFiltered } from './explore/open'
 import { MkToastHost } from './ui/MkToastHost'
 import { AiHost } from './ui/AiHost'
 import { useActiveRow } from './ui/activeRow'
 import { Live } from './live/Live'
 import type { LiveProps } from './live/Live'
-import { dateFmt } from '../lib/format'
 
 // Explore's panel is its own chunk, fetched when the page is idle, so the first load does not carry it.
-const ExplorePanel = lazyLoad(() => import('./explore/Panel').then((m) => ({ default: m.ExplorePanel })))
 
 interface V2Props {
   tab: 'live' | 'briefing'
@@ -66,19 +65,17 @@ const grain = (a: ISODate, b: ISODate) => (a === b ? 'by hour' : 'by day')
 export function V2View(p: V2Props) {
   const today = todayIn(p.site.timezone)
   const { options, more } = periodOptions(today)
-  const weekday = dateFmt(tag ?? 'en-US', { weekday: 'long', timeZone: 'UTC' }).format(new Date(p.range.to + 'T12:00:00Z'))
   const day = p.view.period === 'today' || p.view.period === 'yesterday'
-  const vs = vsWords(day, weekday, p.view, p.range)
-  const label = day ? `${p.view.period === 'today' ? copy.today : copy.yesterday} · ${dayWords(p.range.to)}` : (PRESETS.find((q) => q.id === p.view.period)?.label ?? rangeWords(p.range, today, copy.todayWord))
+  const label = day ? `${p.view.period === 'today' ? copy.today : copy.yesterday} · ${dayWords(p.range.to)}` : rangeWords(p.range, today, copy.todayWord)
   const here = p.tab
-  const slots = useV2Extras()
   // Explore's panel is built the first time it is asked for, and stays so it can slide out again.
-  const [opened, setOpened] = useState(false)
-  if (p.view.xp !== undefined && !opened) setOpened(true)
+  // Anything that opens a table of Explore from Live moves to the Explore screen.
+  useEffect(() => {
+    if (p.view.xp !== undefined && here === 'live') void switchTab('briefing', 'live', { replace: true })
+  }, [p.view.xp, here])
   useActiveRow()
-  useEffect(() => whenIdle(ExplorePanel.preload), [])
+  useEffect(() => whenIdle(preloadExplore), [])
   // The other tab's code, fetched on idle: switching to it then has nothing to wait for.
-  useEffect(() => whenIdle(Briefing.preload), [])
   useViewKeys(here, !p.waiting)
   usePeriodKeys({ on: here === 'briefing' && !p.waiting, today, range: p.range, view: p.view })
   // An old address with filters lands where the filters can be seen.
@@ -87,13 +84,12 @@ export function V2View(p: V2Props) {
     // Once, on the address that was opened: shutting the panel clears the filters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [p.waiting])
-  const exploreOpen = () => (slots.askPeekNow ? window.dispatchEvent(new Event('trckable:find')) : goExplore())
   const setTab = (t: 'live' | 'briefing') => void switchTab(t, here)
   const periodChip = (idBase?: string) => (
     <PeriodChip
       idBase={idBase}
       label={label}
-      vs={vs}
+      vs={compares((p.view.xp ?? 'changed') as Tab) ? vsDates(p.view, p.range, today) : undefined}
       options={options}
       more={more}
       value={p.view.period}
@@ -119,17 +115,21 @@ export function V2View(p: V2Props) {
   if (here === 'live' && !liveOn) setLiveOn(true)
   if (here === 'briefing' && briefFor !== p.site.id) setBriefFor(p.site.id)
   useEffect(() => (p.identity ? undefined : whenIdle(() => document.visibilityState === 'visible' && setLiveOn(true))), [p.identity])
-  const now = { site: p.site, data: p.data, loading: p.loading, period: p.view.period, compare: p.view.compare, bucket: p.view.bucket, range: p.range, money: p.money, onGoal: p.onGoal, visits: p.live.stream.visits }
-  // What the Briefing last had, for while it waits (the functions are taken with the rest, and renewed with it).
-  const [kept, setKept] = useState(now)
-  const moved = (['site', 'data', 'loading', 'period', 'compare', 'bucket', 'range', 'visits'] as const).some((k) => kept[k] !== now[k])
-  if (here === 'briefing' && moved) setKept(now)
-  const briefProps = here === 'briefing' ? now : kept
+  // What Explore last had, for while Live is on: Live's plain address is not Explore's to read. Another site starts afresh.
+  const [held, setHeld] = useState({ view: p.view, range: p.range, site: p.site.id })
+  if ((here === 'briefing' || held.site !== p.site.id) && (held.site !== p.site.id || JSON.stringify([held.view, held.range]) !== JSON.stringify([p.view, p.range]))) setHeld({ view: p.view, range: p.range, site: p.site.id })
+  // Back from Live after a while: the numbers are read again.
+  const [leftAt, setLeftAt] = useState(0)
+  if (here === 'live' && !leftAt) setLeftAt(Date.now())
+  if (here === 'briefing' && leftAt) setLeftAt(0)
+  useEffect(() => {
+    if (here === 'briefing' && leftAt && Date.now() - leftAt > 60_000) window.dispatchEvent(new Event('trckable:refresh'))
+  }, [here, leftAt])
   const screen = (
     <>
       {briefFor === p.site.id && (
         <div className="view-pane" hidden={here !== 'briefing'}>
-          <BriefingSlot {...briefProps} active={here === 'briefing'} />
+          <ExplorePage site={p.site} range={held.range} view={held.view} label={label} period={periodChip('xper')} money={p.money} onGoal={p.onGoal} />
         </div>
       )}
       {liveOn && (
@@ -153,16 +153,15 @@ export function V2View(p: V2Props) {
         identity={p.identity}
         onGoal={p.onGoal}
         onGoalsChanged={p.onGoalsChanged}
-        period={here === 'briefing' && !p.waiting ? periodChip() : null}
+        period={null}
       />
       <main id="main" className="vfade">
         {p.top}
         {p.waiting ? <FreshSlot site={p.site} visits={p.live.stream.visits} /> : shown}
       </main>
-      {opened && !p.waiting && <ExplorePanel site={p.site} range={p.range} view={p.view} label={label} period={periodChip('xper')} money={p.money} onGoal={p.onGoal} />}
       <AiHost site={p.site} />
       <MkToastHost />
-      {!p.waiting && <TabBar value={p.view.xp ? 'explore' : here} labels={{ live: copy.live, briefing: copy.briefing, explore: slots.askPeekNow ? copy.askOrSearch : copy.exploreTab }} hide={p.identity ? ['live'] : undefined} onChange={(t) => (t === 'explore' ? exploreOpen() : setTab(t))} />}
+      {!p.waiting && <TabBar value={here} labels={{ live: copy.live, briefing: copy.exploreTab, explore: copy.exploreTab }} hide={p.identity ? ['live', 'explore'] : ['explore']} onChange={(t) => t !== 'explore' && setTab(t)} />}
     </div>
   )
 }

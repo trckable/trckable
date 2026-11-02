@@ -1,0 +1,620 @@
+.mk .xp.xpage{position:static;inset:auto;width:100%;height:auto;max-width:none;transform:none;background:none;border:0;box-shadow:none;z-index:auto;border-radius:0;transition:none}
+.mk .xp.xpage .xph{display:none}
+.mk .xp.xpage #xpBody{height:auto;overflow:visible;padding:0}
+.mk .xp.xpage .xlay{gap:var(--mk-s6);align-items:start}
+.mk .xp.xpage .xrail{top:76px;padding-top:0;align-self:start}
+.mk .xp.xpage .xmain{min-width:0}
+.mk .xp.xpage .xlay .xtb{margin-top:0}
+.mk .xp.xpage .xtb{flex-wrap:wrap}
+.mk .xchg-say{margin:var(--mk-s3) 0 var(--mk-s4);font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.2;text-wrap:balance}
+.mk .xchg .xth,.mk .xchg .xrw{grid-template-columns:minmax(0,1fr) 70px 70px 84px}
+.mk .xchg .d.dn{color:var(--mk-red,#ff6466)}
+.mk .xchg .d.up{color:var(--mk-accent,#cdfb5a)}
+.mk .xchg-head{align-items:center}
+.mk .xchg-kinds{display:flex;gap:2px;flex-wrap:wrap}
+.mk .xchg-kinds button{background:none;border:0;border-radius:8px;padding:4px 9px;color:inherit;opacity:.6;font:inherit;font-size:12.5px;cursor:pointer}
+.mk .xchg-kinds button.on{background:var(--mk-card2);opacity:1}
+.mk .xchg-rest{margin:var(--mk-s2) 0 0;font-size:13px;opacity:.65}
+.mk .xchg-tools{display:flex;gap:var(--mk-s2);margin-top:var(--mk-s5)}
+.mk .view-pane{animation:view-in .14s ease-out}
+.mk .view-pane[hidden]{animation:none}
+@keyframes view-in{from{opacity:.4}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.mk .view-pane{animation:none}}
+@media (--sm-down){
+  .mk #main{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+  .mk .xchg-say{font-size:21px}
+  .mk .xchg .xth,.mk .xchg .xrw{grid-template-columns:minmax(0,1fr) 42px 42px 58px;gap:8px}
+}
+.mk .xp.xpage{width:auto}
+.mk .xp.xpage.full #xpBody,.mk .xp.xpage #xpBody{padding:0}
+.mk .xp.xpage .xrail{position:sticky;align-self:start;margin:0}
+@media (--sm-down){
+  .mk .xp.xpage .xtb{flex-wrap:wrap}
+  .mk .xp.xpage .xperiod{order:10;flex:1 0 100%;min-width:0}
+  .mk .xp.xpage .xperiod .vs.hide-s{display:inline}
+  .mk .xp.xpage .xpw{flex:1;min-width:0}
+  .mk .xp.xpage .kcs.xk{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--mk-s2)}
+}
+.mk .xp.xpage{width:100%!important;max-width:100%!important;left:auto;right:auto}
+.mk .xp.xpage .xrail{padding-top:0!important;margin-top:0!important}
+.mk .xp.xpage .xmain{width:auto}
+.mk .xp.xpage .xlay{width:100%;grid-template-columns:200px minmax(0,1fr)}
+@media (--no-rail){.mk .xp.xpage .xlay{grid-template-columns:minmax(0,1fr)}}
+.mk .xp.xpage.full{position:static!important;width:100%!important;max-width:100%!important;height:auto!important;top:auto!important;left:auto!important;right:auto!important;bottom:auto!important;display:block;border:0}
+/* One rhythm: 16 between header, strip and content; 16 between blocks in a group; 32 before a new section, 12 under its title. */
+.mk .xp.xpage .xmain>*{margin-block:0}
+.mk .xp.xpage .xmain{display:flex;flex-direction:column;gap:var(--mk-s4)}
+.mk .xp.xpage .xmain>.xsec{margin-top:var(--mk-s5);margin-bottom:calc(var(--mk-s2) - var(--mk-s4));padding:0}
+.mk .xp.xpage .xrail{top:76px}
+.mk .xrail .xgl:first-child{margin-top:0}
+.mk .xp.xpage .xtb{min-height:36px}
+.mk .xchg-tools{margin-top:var(--mk-s5)}
+.mk .xp.xpage.full .xlay .xtb{margin-top:0}
+.mk .xp.xpage.full .xrail{position:static;transform:none;translate:none}
+.mk .xp.xpage.full .xrail>:first-child{margin-top:0;padding-top:0}
+.mk .xp.xpage .xchg-rest{margin-top:calc(var(--mk-s2) - var(--mk-s4))}
+/* Moving around Explore: the new section rises in, a read in progress dims what is there, a loading shape appears only if the wait is felt. */
+.mk .xfade{display:flex;flex-direction:column;gap:var(--mk-s4);min-width:0;animation:x-rise .2s cubic-bezier(.2,.8,.2,1)}
+.mk .xstale{display:flex;flex-direction:column;gap:var(--mk-s4);min-width:0;opacity:.55;pointer-events:none;transition:opacity .15s ease .08s}
+.mk .xfade>*,.mk .xstale>*{margin-block:0}
+.mk .xfade>.xsec,.mk .xstale>.xsec{margin-top:var(--mk-s5);margin-bottom:calc(var(--mk-s2) - var(--mk-s4))}
+.mk .xp.xpage .xsk{animation:x-show .2s ease .09s backwards}
+.mk .xrail .xri{transition:background-color .15s ease,color .15s ease}
+@keyframes x-rise{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes x-show{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.mk .xfade,.mk .xp.xpage .xsk{animation:none}.mk .xstale{transition:none}}
+[data-motion='off'] .mk .xfade,[data-motion='off'] .mk .xp.xpage .xsk{animation:none}
+/* Dividers that fade out at their ends, so sections are told apart without boxes. */
+.mk .xfade>.xsec,.mk .xstale>.xsec{position:relative;padding-top:var(--mk-s5);margin-top:var(--mk-s4)}
+.mk .xfade>.xsec::before,.mk .xstale>.xsec::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--mk-line) 10%,var(--mk-line) 90%,transparent)}
+@media (--md-up){
+  .mk .xp.xpage .xmain{position:relative}
+  .mk .xp.xpage .xmain::before{content:"";position:absolute;top:0;bottom:0;left:calc(var(--mk-s6) / -2);width:1px;background:linear-gradient(180deg,transparent,var(--mk-line) 48px,var(--mk-line) calc(100% - 96px),transparent)}
+}
+/* The left menu: each icon on its own small tile, the current section lit and fading out to the right. */
+.mk .xp.xpage .xrail{gap:2px}
+.mk .xrail .xgl{padding:var(--mk-s4) 8px var(--mk-s2);font-size:11px;letter-spacing:.08em}
+.mk .xrail .xgl:first-child{padding-top:0}
+.mk .xrail .xri{position:relative;display:flex;align-items:center;gap:10px;min-height:38px;padding:5px 8px;border:0;border-radius:11px;color:var(--mk-muted);background:transparent;transition:background .18s ease,color .18s ease}
+.mk .xrail .xri::before{display:none}
+.mk .xrail .xri svg{box-sizing:content-box;flex:none;width:15px;height:15px;padding:5px;border-radius:8px;background:var(--mk-band);transition:background .18s ease,color .18s ease,transform .18s ease}
+.mk .xrail .xri:hover{background:var(--mk-band);color:var(--mk-text)}
+.mk .xrail .xri:hover svg{background:var(--mk-bandh);transform:scale(1.06)}
+.mk .xrail .xri.on{background:linear-gradient(90deg,var(--mk-limeD),transparent);color:var(--mk-text);font-weight:600}
+.mk .xrail .xri.on svg{background:var(--mk-lime);color:var(--mk-bg)}
+@media (prefers-reduced-motion:reduce){.mk .xrail .xri,.mk .xrail .xri svg{transition:none}.mk .xrail .xri:hover svg{transform:none}}
+/* The left menu stays while the page scrolls, with the version at its foot. */
+@media (--rail){
+  .mk .xp.xpage.full .xrail{position:sticky;top:64px;height:calc(100dvh - 145px);min-height:fit-content}
+  .mk .xp.xpage.full{overflow:visible!important}
+}
+/* The first heading of a section has nothing above it to divide from. */
+.mk .xfade>.xsec:first-child::before,.mk .xstale>.xsec:first-child::before{display:none}
+/* Channel quality */
+.mk .xqual .xth,.mk .xqual .xrw{grid-template-columns:minmax(0,1fr) 70px minmax(0,1.4fr) 120px 70px!important;gap:var(--mk-s3);align-items:center;text-align:left}
+.mk .xqual .xth span:nth-child(2),.mk .xqual .xth span:nth-child(n+4){text-align:right}
+.mk .xqual-page{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk .xqual-slow{color:var(--mk-red)}
+@media (--xs){.mk .xqual .xth,.mk .xqual .xrw{grid-template-columns:minmax(0,1fr) 44px 64px 52px!important;gap:8px}.mk .xqual .xth span:nth-child(3),.mk .xqual .xrw>:nth-child(3){display:none}}
+/* One control row, then quiet tabs on a soft line: no boxed strip, no third row. */
+.mk .xupdated{align-self:center;margin-right:var(--mk-s3);font-size:12px;color:var(--mk-muted);white-space:nowrap}
+.mk .xperiod-note{margin:0 0 var(--mk-s3);font-size:13px;color:var(--mk-muted)}
+.mk .xp.xpage .xsub{display:flex;gap:var(--mk-s4);width:100%;padding:0;border:0;border-radius:0;background:linear-gradient(90deg,var(--mk-line),transparent) bottom/100% 1px no-repeat}
+.mk .xp.xpage .xsub button{flex:none!important;width:auto;height:36px;padding:0 2px;border-radius:0;background:none;border-bottom:2px solid transparent;transition:color .15s ease,border-color .15s ease}
+.mk .xp.xpage .xsub button:hover{color:var(--mk-text)}
+.mk .xp.xpage .xsub button.on{background:none;color:var(--mk-text);border-bottom-color:var(--mk-lime)}
+@media (--xs){
+  .mk .xupdated{order:11;margin:0 0 0 auto;align-self:center}
+  .mk .xp.xpage .xchg-say{font-size:18px;margin:var(--mk-s2) 0 var(--mk-s3)}
+}
+.mk .xqual.nospeed .xth,.mk .xqual.nospeed .xrw{grid-template-columns:minmax(0,1fr) 70px minmax(0,1.4fr) 120px!important}
+@media (--xs){.mk .xqual.nospeed .xth,.mk .xqual.nospeed .xrw{grid-template-columns:minmax(0,1fr) 52px 72px!important}}
+.mk .xp.xpage .xchg-say.xsay-table{font-size:18px;margin:var(--mk-s2) 0 var(--mk-s3)}
+.mk .xp.xpage .xrw .d,.mk .xp.xpage .xrw [class*=tag]{white-space:nowrap}
+/* A site that is down stays in sight as a small pill, not a banner across the page. */
+/* Under 1024 the menu is a drawer, and the section's name a plain heading. */
+.mk .xdrawer-open{flex:none;width:36px;height:36px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.mk .xp.xpage .xtitle.on-drawer{display:inline-flex!important;align-items:center;gap:var(--mk-s2);font-size:17px;margin-right:auto}
+.mk .xdrawer{position:fixed;inset:0;z-index:5000}
+.mk .xdrawer-back{position:absolute;inset:0;width:100%;border:0;background:rgba(0,0,0,.55);animation:x-show .18s ease}
+.mk .xdrawer-box{position:absolute;inset:0 auto 0 0;width:min(280px,84vw);padding:var(--mk-s4);background:var(--mk-bg);border-right:1px solid var(--mk-line);overflow-y:auto;animation:x-drawer .2s ease}
+.mk .xdrawer .xrail{position:static!important;display:flex!important;flex-direction:column;gap:2px;min-height:100%;height:auto!important;padding:0}
+@keyframes x-drawer{from{transform:translateX(-100%)}}
+@media (prefers-reduced-motion:reduce){.mk .xdrawer-back,.mk .xdrawer-box{animation:none}}
+/* Room to breathe: under the header, and between the controls and what they control. */
+.mk .xp.xpage #xpBody{padding-top:var(--mk-s4)}
+.mk .xp.xpage .xtb{margin-bottom:var(--mk-s3)}
+.mk .xp.xpage .xchg-say{margin-top:var(--mk-s4)}
+.mk .xp.xpage .xrail .xgl:first-child{padding-top:8px}
+.mk .xdrawer .xrail .xgl:first-child{padding-top:0}
+/* Every block is a card: its heading on top with a line under it, what it holds below, one even gap between cards. */
+.mk .xfade,.mk .xstale{gap:0}
+.mk .xfade>*,.mk .xstale>*{margin-bottom:var(--mk-s4)}
+.mk .xfade>.xsec,.mk .xstale>.xsec{margin:0;padding:12px var(--mk-s4);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px 16px 0 0;color:var(--mk-text);font-weight:600}
+.mk .xfade>.xsec::before,.mk .xstale>.xsec::before{display:none}
+.mk .xfade>.xsec~*:not(.xsec),.mk .xstale>.xsec~*:not(.xsec){margin:0;padding:var(--mk-s2) var(--mk-s4);background:var(--mk-card);border-inline:1px solid var(--mk-line)}
+.mk .xfade>.xsec+*:not(.xsec),.mk .xstale>.xsec+*:not(.xsec){padding-top:var(--mk-s3)}
+.mk .xfade>.xsec~*:not(.xsec):has(+.xsec),.mk .xfade>.xsec~*:not(.xsec):last-child,.mk .xstale>.xsec~*:not(.xsec):has(+.xsec),.mk .xstale>.xsec~*:not(.xsec):last-child{margin-bottom:var(--mk-s4);padding-bottom:var(--mk-s4);border-bottom:1px solid var(--mk-line);border-radius:0 0 16px 16px}
+/* A section with no headings of its own is one card. */
+.mk .xfade:not(:has(>.xsec,>.xkw,>.xchg-say)),.mk .xstale:not(:has(>.xsec,>.xkw,>.xchg-say)){padding:var(--mk-s4);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px}
+.mk .xfade:not(:has(>.xsec,>.xkw,>.xchg-say))>:last-child{margin-bottom:0}
+.mk .xp.xpage .xchg-say.xsay-table{margin-top:0}
+.mk .xfade>.xsay-table+.xt,.mk .xfade>.xchg-say+.xqual{padding:var(--mk-s2) var(--mk-s4);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px}
+/* Tabs inside a card are small buttons, not a second row of page tabs. */
+.mk .xp.xpage .xfade .xsub{display:inline-flex;width:auto;align-self:flex-start;gap:2px;padding:3px;border-radius:10px;background:var(--mk-field)}
+.mk .xp.xpage .xfade .xsub button{height:28px;padding:0 10px;border:0;border-radius:7px}
+.mk .xp.xpage .xfade .xsub button.on{background:var(--mk-hover);border:0}
+.mk .xp.xpage .xmain::before{display:none}
+.mk .xlg{display:inline-flex;flex-wrap:wrap;gap:4px var(--mk-s3);font-size:12px;font-weight:400;color:var(--mk-muted)}
+.mk .xlg>span{display:inline-flex;align-items:center;gap:6px}
+.mk .xlg i{width:8px;height:8px;border-radius:50%}
+/* The two top tables are their own card, not part of the block before them. */
+.mk .xfade>.xsec~*:not(.xsec):has(+.x2),.mk .xstale>.xsec~*:not(.xsec):has(+.x2){margin-bottom:var(--mk-s4);padding-bottom:var(--mk-s4);border-bottom:1px solid var(--mk-line);border-radius:0 0 16px 16px}
+.mk .xfade>.xsec~.x2,.mk .xstale>.xsec~.x2{padding:var(--mk-s4);border:1px solid var(--mk-line);border-radius:16px}
+.mk .xlg{margin-right:var(--mk-s3)}
+/* A section is one page of cards. */
+.mk .xcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--mk-s4);align-items:start}
+.mk .xcards>.wide{grid-column:1/-1}
+.mk .xcp{min-width:0;background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px;overflow:hidden}
+.mk .xcp-bare{min-width:0}
+.mk .xcp-h{margin:0;padding:12px var(--mk-s4);border-bottom:1px solid var(--mk-line);font-size:14px;font-weight:600}
+.mk .xcp-b{padding:var(--mk-s3) var(--mk-s4) var(--mk-s4);min-width:0}
+.mk .xcp-bare>.xcp-b{padding:0}
+.mk .xcp-wait{min-height:220px}
+.mk .xcp .xfade,.mk .xcp .xstale{padding:0!important;background:none!important;border:0!important;border-radius:0!important}
+.mk .xcp .xfade>:last-child{margin-bottom:0}
+.mk .xcp .xfade>.xsec{padding:0 0 var(--mk-s2);background:none;border:0;border-radius:0;font-weight:400;color:var(--mk-muted)}
+.mk .xcp .xfade>.xsec~*:not(.xsec){padding:0;background:none;border:0;border-radius:0}
+.mk .xcp .xfade>.xsay-table+.xt{padding:0;background:none;border:0;border-radius:0}
+.mk .xcp .xchg-say{font-size:15px!important;margin:0 0 var(--mk-s3)!important}
+/* Nothing to show: slim, half width, last. */
+.mk .xcards>.xcp:has(.xempty){order:9;grid-column:auto}
+.mk .xcards>.xcp:has(.xempty) .xcp-b{padding-block:var(--mk-s2)}
+@media (--sm-down){.mk .xcards{grid-template-columns:minmax(0,1fr)}}
+.mk .xpage-desc{margin:calc(var(--mk-s1,4px) * -1) 0 var(--mk-s4);font-size:14px;color:var(--mk-muted)}
+.mk .xcards{grid-auto-flow:dense}
+.mk .xcp .xfade>.xchg-say+.xqual{padding:0;background:none;border:0;border-radius:0}
+.mk .xp.xpage .xpage-desc{margin:-12px 0 var(--mk-s4)}
+/* In a half-width card the name keeps its room: money has its own cards. */
+.mk .xcp:not(.wide) .xt.xc:not(.xsu):has(.sh){--xc:minmax(0,1fr) 56px 76px 48px!important}
+.mk .xcp:not(.wide) .xt.xc:not(.xsu):has(.sh) .hm{display:none}
+/* What needs connecting comes last. */
+.mk .xcards>:has(.lkc){order:9}
+/* Cards in a row are one height, their columns start level, and notes sit on the floor of the card. */
+.mk .xcards{align-items:stretch}
+.mk .xcp{display:flex;flex-direction:column}
+.mk .xcp-b{flex:1;display:flex;flex-direction:column}
+.mk .xcp-b>.xfade,.mk .xcp-b>.xstale{flex:1}
+.mk .xcp .xfade>.xnote{margin-top:auto;padding-top:var(--mk-s3)}
+.mk .xcp .xsay-table{display:none}
+.mk .xp.xpage .xchg-say.xsay-page{font-size:18px;margin:0 0 var(--mk-s4)}
+.mk .xcp .xfade>section{margin:0;padding:0}
+.mk .xcp .mk-more{border:0;border-radius:0;background:none}
+/* Overview: top pages and top sources are two cards. */
+.mk .xfade>.xsec~.x2,.mk .xstale>.xsec~.x2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--mk-s4);padding:0;background:none;border:0;border-radius:0;margin-bottom:0}
+.mk .xfade>.x2>div{min-width:0;padding:0 var(--mk-s4) var(--mk-s3);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px}
+.mk .xfade>.x2 .xsec{margin:0 calc(var(--mk-s4) * -1) var(--mk-s2);padding:12px var(--mk-s4);border-bottom:1px solid var(--mk-line);color:var(--mk-text);font-weight:600}
+.mk .xfade>.x2 .xsec>span:last-child{font-weight:400;color:var(--mk-muted)}
+@media (--sm-down){.mk .xfade>.xsec~.x2{grid-template-columns:minmax(0,1fr)}}
+/* A chart in a card: its caption on top, no gap of its own, and room under the axis. */
+.mk .xcp section>.xsec{margin-top:0;align-items:center}
+.mk .xcp .xfade>.xsub{margin:0 0 var(--mk-s3)}
+.mk .xcp .xchb .kit-chart{margin-bottom:0}
+.mk .xcp .xnote{margin-top:var(--mk-s3)}
+.mk .xcp section>.xsec>span:last-child{display:inline-flex;align-items:center;gap:var(--mk-s3)}
+/* Stacked areas: softer colors, no dark outline. */
+.mk [data-xcard=overtime] svg path[fill]:not([fill=none]){fill-opacity:.8;stroke:none}
+/* Nothing moved: no card saying so. */
+.mk .xcards>[data-xcard=highlights]:has(.xempty){display:none}
+.mk .xfade>.xsec~.x2{border:0!important;padding:0!important;background:none!important;margin-bottom:var(--mk-s4)!important}
+.mk .xfade>.x2 .xsec>span:first-child{font-weight:600;color:var(--mk-text)}
+/* Calmer cards: no outlines or rules, a thin bar under each name, only the numbers that matter. */
+.mk .xcards .xcp,.mk .xcards .xfade>.x2>div,.mk .xcards .xcp-bare .xfade>.xsec,.mk .xcards .xcp-bare .xfade>.xsec~*:not(.xsec){border-color:transparent}
+.mk .xcp-h,.mk .xcards .xfade>.xsec,.mk .xcards .xfade>.x2 .xsec{border-bottom:0!important;padding-bottom:4px!important;font-size:14px}
+.mk .xcards .xfade>.x2 .xsec>span:last-child:not(:first-child){display:none}
+.mk .xcards .xth{border:0;font-size:12px;opacity:.7}
+.mk .xcards .xrw{border:0!important;min-height:42px;padding-block:5px;border-radius:8px}
+.mk .xcards .xrw:hover{background:var(--mk-band)}
+.mk .xcards .mono{font-family:inherit}
+.mk .xcards .xt:has(.sh) .sh,.mk .xcards .xt:has(.sh) .xth>:nth-child(4){display:none}
+.mk .xcards .xt:not(.xc):has(.sh) :is(.xth,.xrw){grid-template-columns:minmax(0,1fr) 56px 72px!important}
+.mk .xcards .xcp:not(.wide) .xt.xc:not(.xsu):has(.sh){--xc:minmax(0,1fr) 56px 72px!important}
+.mk .xcards .xfade>.x2 .xt.xc:not(.xsu):has(.sh){--xc:minmax(0,1fr) 56px 72px!important}
+.mk .xcards .xfade>.x2 .xt .hm{display:none}
+.mk .xcards .mk-more{font-size:12.5px;padding-block:6px}
+.mk .xcards .xt~.xnote{display:none}
+/* The four numbers: no icon tiles. */
+.mk .xcards .xkw svg:not([class*=sp]):not([viewBox*="100"]){}
+/* Graphs: lighter fills, faint grid, rounded heat cells. */
+.mk [data-xcard=overtime] svg path[fill]:not([fill=none]){fill-opacity:.55}
+.mk .xcards .kit-chart svg line{stroke-opacity:.45}
+.mk .xcards .kit-chart svg rect{rx:3px}
+.mk .xcards .xrw{padding-inline:0}
+/* Empty cards say one calm thing, centered in the card, with one small way forward. */
+.mk .xcards .xcp .xempty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:120px;padding:var(--mk-s3);text-align:center;border:0;background:none}
+.mk .xcards .xcp .xempty::before{content:"";width:28px;height:28px;margin-bottom:6px;border:1.5px dashed var(--mk-line);border-radius:50%}
+.mk .xcards .xcp .xempty :is(b,strong,h3,h4,p){margin:0}
+.mk .xcards .xcp .xempty>:first-of-type{font-size:13.5px;font-weight:600;color:var(--mk-text)}
+.mk .xcards .xcp .xempty{font-size:12.5px;color:var(--mk-muted)}
+.mk .xcards .xcp .xempty .xb{margin-top:8px;height:30px;font-size:12.5px}
+/* Filled bars: the row's name sits on a bold fill that shows its size at a glance. */
+.mk .xcards .mk-bar{position:relative;display:flex;align-items:center;height:32px;padding:0;border-radius:9px;background:var(--mk-band);overflow:hidden}
+.mk .xcards .mk-bar>i{position:absolute;inset:0 auto 0 0;height:100%;min-width:4px;border-radius:9px;background:linear-gradient(90deg,color-mix(in srgb,var(--mk-lime) 62%,transparent),color-mix(in srgb,var(--mk-lime) 28%,transparent))!important;opacity:1!important}
+.mk .xcards .mk-bar>span{position:relative;z-index:1;padding:0 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:500;color:var(--mk-text)}
+.mk .xcards .xrw{min-height:38px;padding-block:3px}
+.mk .xcards .xth>:first-child{visibility:hidden}
+
+/* Charts in cards: the card's name is enough, the switch sits in its corner, notes go. */
+.mk .xcp{position:relative}
+.mk .xcards [data-chart]>.xsec{position:absolute;top:10px;right:var(--mk-s3);z-index:2;width:auto;padding:0!important;margin:0}
+.mk .xcards [data-chart]>.xsec>:first-child{display:none}
+.mk .xcards [data-chart]>.xnote{display:none}
+.mk .xcards [data-chart] .xchb{margin-top:var(--mk-s2)}
+/* A quiet ghost chart where there is nothing to draw. */
+.mk .xcards .xempty{flex:1;align-items:center;justify-content:center;gap:4px;min-height:140px;padding:var(--mk-s3);text-align:center}
+.mk .xcards .xcp .xempty::before,.mk .xcards .xempty::before{content:"";width:64px;height:40px;margin-bottom:10px;border:0;border-radius:0;opacity:.9;background:linear-gradient(var(--mk-hover),var(--mk-hover)) 0 100%/12px 40%,linear-gradient(var(--mk-hover),var(--mk-hover)) 17px 100%/12px 100%,linear-gradient(var(--mk-hover),var(--mk-hover)) 34px 100%/12px 65%,linear-gradient(var(--mk-hover),var(--mk-hover)) 51px 100%/12px 25%;background-repeat:no-repeat}
+.mk .xcards .xempty>span:empty{display:none}
+/* The funnel shape. */
+.mk .fs{overflow-x:auto;scrollbar-width:thin}
+.mk .fs-in{position:relative}
+.mk .fs-heads{display:grid;margin:0 0 var(--mk-s3);padding:0;list-style:none}
+.mk .fs-heads li{display:flex;flex-direction:column;gap:1px;min-width:0;padding-inline:0 var(--mk-s3)}
+.mk .fs-heads span{overflow:hidden;font-size:12.5px;color:var(--mk-muted);text-overflow:ellipsis;white-space:nowrap}
+.mk .fs-heads b{font-size:26px;font-weight:650;line-height:1.2;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mk .fs-heads em{min-height:16px;font-size:12px;font-style:normal;color:var(--mk-muted)}
+.mk .fs-plot{position:relative}
+.mk .fs-plot svg{display:block;border-radius:12px;background:var(--mk-band)}
+.mk .fs-col{fill:transparent;transition:fill .15s}
+.mk .fs-col.on{fill:var(--mk-hover)}
+.mk .fs-drop{position:absolute;top:50%;padding:3px 8px;border-radius:999px;background:var(--mk-card);font-size:11.5px;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap;transform:translate(-50%,-50%);pointer-events:none}
+.mk .fs-drop.red{background:color-mix(in srgb,var(--mk-red) 18%,var(--mk-card));color:var(--mk-red)}
+/* Goals as rings. */
+.mk .grs{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:var(--mk-s4);padding-block:var(--mk-s2)}
+.mk .gr{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;text-align:center}
+.mk .gr>span{max-width:100%;overflow:hidden;font-size:12.5px;color:var(--mk-muted);text-overflow:ellipsis;white-space:nowrap}
+.mk .gr-ring{position:relative;width:84px;height:84px}
+.mk .gr-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.mk .gr-ring circle{fill:none;stroke-width:7}
+.mk .gr-track{stroke:var(--mk-band)}
+.mk .gr-usual{stroke:var(--mk-line);stroke-width:7}
+.mk .gr-val{stroke-linecap:round}
+.mk .gr-ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:17px;font-weight:650;font-variant-numeric:tabular-nums}
+/* Flow: taller, softer names. */
+.mk .xcards .kit-flow-chip rect{fill:var(--mk-card);stroke:none}
+.mk .xcards .kit-flow-label{font:500 11.5px var(--mk-font,inherit);fill:var(--mk-text)}
+.mk .xcards .xchb .kit-chart{margin-inline:0}
+/* Retention: one line a week, weeks evenly wide, soft cells. */
+.mk .xcards .xrt .xth,.mk .xcards .xrt .xrw{display:grid!important;grid-template-columns:minmax(64px,1fr) 64px repeat(var(--weeks),minmax(52px,1.4fr))!important;gap:4px;align-items:center;min-height:0}
+.mk .xcards .xrt .xth>:first-child{visibility:visible}
+.mk .xcards .xrt{overflow-x:auto}
+.mk .xcards .xrt .xrcell{display:grid;place-items:center;height:32px;border-radius:8px;font-size:12.5px;font-variant-numeric:tabular-nums}
+.mk .xcards .xrt .xrcell.open{opacity:.35}
+.mk .xcards .xrt .avg{font-weight:650}
+/* Funnel: the short one, the step still to connect, its one line. */
+.mk .fs.short .fs-heads b{font-size:20px}
+.mk .fs-heads .ghost{opacity:.55}
+.mk .fs-ghost{fill:none;stroke:var(--mk-line);stroke-width:1.5;stroke-dasharray:4 4}
+.mk .mf>.mfd{margin:var(--mk-s2) 0 0;padding:0;border:0;background:none;color:var(--mk-red);font-size:12.5px}
+.mk .mf>.mfn{margin-top:var(--mk-s2)}
+.mk .xcards .kit-band{opacity:.24}
+.mk .xcards .kit-band.lit{opacity:.8}
+/* Time to convert: filled rows. */
+.mk .ttc{display:flex;flex-direction:column;gap:6px}
+.mk .ttc-r{display:grid;grid-template-columns:56px 1fr 44px;align-items:center;gap:var(--mk-s2);font-size:12.5px;color:var(--mk-muted)}
+.mk .ttc-r b{color:var(--mk-text);text-align:right;font-variant-numeric:tabular-nums}
+/* Sales: the net, the split, the keys. */
+.mk .xsplit{display:flex;flex-direction:column;gap:var(--mk-s3);margin-bottom:var(--mk-s3)}
+.mk .xsplit-net{display:flex;align-items:baseline;flex-wrap:wrap;gap:var(--mk-s2)}
+.mk .xsplit-net>b{font-size:34px;font-weight:650;line-height:1.1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mk .xsplit-net>span{color:var(--mk-muted);font-size:13px}
+.mk .xsplit-bar{display:flex;gap:3px;height:14px}
+.mk .xsplit-bar i{flex-basis:6px;min-width:6px;border-radius:5px;transition:opacity .15s}
+.mk .xsplit-bar i.off{opacity:.2}
+.mk .xsplit-keys{display:flex;flex-wrap:wrap;gap:6px}
+.mk .xsplit-keys button{display:flex;align-items:center;gap:7px;padding:6px 11px;border:0;border-radius:10px;background:var(--mk-band);color:var(--mk-muted);font:inherit;font-size:12.5px;cursor:pointer}
+.mk .xsplit-keys button[aria-pressed=true]{background:var(--mk-hover);color:var(--mk-text)}
+.mk .xsplit-keys i{width:8px;height:8px;border-radius:50%}
+.mk .xsplit-keys b{color:var(--mk-text);font-variant-numeric:tabular-nums}
+/* Buyers: the way each one came, step by step. */
+.mk [data-xcard=buyers] .xsec>:first-child{display:none}
+.mk [data-xcard=buyers] .xfade>.xsec{position:absolute;top:13px;right:var(--mk-s4);padding:0;color:var(--mk-text);font-weight:600}
+.mk [data-xcard=buyers] .sale{gap:var(--mk-s2);padding-block:9px;padding-inline:0}
+.mk .bj{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:3px}
+.mk .bj>span{padding:2px 7px;border-radius:6px;background:var(--mk-band);font-size:12px;color:var(--mk-muted)}
+.mk .bj>span.from{color:var(--mk-text);font-weight:600}
+.mk .bj>span.end{background:var(--mk-limeD,var(--mk-hover));color:var(--mk-lime);font-weight:600}
+/* Buyers: who, the pages on the way, what they paid. */
+.mk .buyer{display:grid;grid-template-columns:36px minmax(170px,1fr) minmax(0,2fr) 72px;align-items:center;gap:var(--mk-s3);padding:11px var(--mk-s2);margin-inline:calc(var(--mk-s2) * -1);border-radius:12px;transition:background .15s}
+.mk .buyer:hover{background:var(--mk-band)}
+.mk .buyer-av{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;font-style:normal;font-weight:700;font-size:14px}
+.mk .buyer-who{display:flex;flex-direction:column;gap:1px;min-width:0}
+.mk .buyer-who b{overflow:hidden;font-size:13.5px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
+.mk .buyer-who small{font-size:12px;color:var(--mk-muted);white-space:nowrap}
+.mk .buyer-amt{font-size:15px;font-weight:650;text-align:right;font-variant-numeric:tabular-nums}
+.mk .buyer .bj{display:flex;flex-wrap:nowrap;align-items:center;gap:0;margin:0;min-width:0;overflow:hidden}
+.mk .buyer .bj>span{flex:0 1 auto;overflow:hidden;padding:3px 8px;border-radius:7px;background:var(--mk-band);font-size:12px;color:var(--mk-muted);text-overflow:ellipsis;white-space:nowrap}
+.mk .buyer:hover .bj>span{background:var(--mk-hover)}
+.mk .buyer .bj>span::after{content:none}
+.mk .buyer .bj>:not(:last-child){margin-right:14px;position:relative;overflow:visible}
+.mk .buyer .bj>span:not(:last-child)::after{content:"";position:absolute;top:50%;left:100%;width:14px;height:1px;background:var(--mk-line)}
+.mk .buyer .bj>em{flex:none;width:10px;height:10px;border-radius:50%;background:var(--mk-lime);box-shadow:0 0 0 3px color-mix(in srgb,var(--mk-lime) 20%,transparent)}
+@media (--xs){.mk .buyer{grid-template-columns:36px minmax(0,1fr) auto}.mk .buyer .bj{grid-column:2/-1;grid-row:2}}
+.mk .xcp .xfade>.buyer{padding:11px var(--mk-s2)!important;border-radius:12px}
+.mk .xcp .xfade>.buyer:hover{background:var(--mk-band)!important}
+.mk [data-xcard=buyers] .xfade>.xsec{top:14px;line-height:1.4}
+/* Overview: number cards with the change as a pill on their first line. */
+.mk .xcards .xkw .kt{flex-wrap:wrap;align-items:center}
+.mk .xcards .xkw .kn{margin-left:auto;padding:2px 7px;border-radius:999px;background:var(--mk-band);font-size:11.5px;white-space:nowrap}
+.mk .xcards .xkw .kv{font-size:30px;letter-spacing:-.02em}
+/* The hero line. */
+.mk .xcards .shp svg{height:230px;overflow:visible}
+.mk .xcards .shline{filter:drop-shadow(0 0 7px color-mix(in srgb,var(--mk-lime) 55%,transparent))}
+/* Highlights as tiles. */
+.mk [data-xcard=highlights] [aria-label]:has(>.xbtn){display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:var(--mk-s2)}
+.mk .xcp [data-xcard] .xbtn,.mk [data-xcard=highlights] .xbtn{display:flex;align-items:flex-start;gap:10px;margin:0;padding:12px!important;border:0!important;border-radius:12px;background:var(--mk-band)!important;text-align:left}
+.mk [data-xcard=highlights] .xbtn:hover{background:var(--mk-hover)!important}
+/* Hours: a wave of soft cells. */
+@keyframes kit-heat-in{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
+.mk .kit-heat{transform-box:fill-box;transform-origin:center}
+@media (prefers-reduced-motion:no-preference){.mk .kit-heat{animation:kit-heat-in .45s ease both}}
+.mk .xcards .xkw .kt{display:flex!important;gap:8px}
+.mk .xcards .xkw .kl{flex:0 0 auto;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk .xcards .xkw .kn{flex:none;width:auto;grid-column:auto}
+.mk .xcards .xkw .kn:empty{display:none}
+.mk [data-xcard=highlights] .xbtn .gn,.mk [data-xcard=highlights] .xbtn .gn>div{overflow:visible;white-space:normal;text-overflow:clip}
+@media (--sm-down){
+  .mk .xcards [data-chart]>.xsec{position:static;display:flex;flex-wrap:wrap;justify-content:flex-start;gap:8px;margin-top:6px}
+  .mk .xcards [data-chart]>.xsec .xb{position:absolute;top:10px;right:var(--mk-s3)}
+}
+@media (--xs){
+  .mk .xcards .xkw .kt{flex-wrap:wrap;gap:4px 8px}
+  .mk .xcards .xkw .kn{margin-left:0}
+}
+.mk .shwhy{margin:var(--mk-s2) 0 0;font-size:12px;color:var(--mk-muted)}
+/* A number without a line: its share as a meter. */
+.mk .kshare{display:flex;flex-direction:column;gap:6px;margin-top:auto;padding:0 var(--mk-s4) var(--mk-s3)}
+.mk .kshare i{display:block;height:8px;border-radius:5px;background:var(--mk-band);overflow:hidden}
+.mk .kshare b{display:block;height:100%;border-radius:5px;background:var(--mk-blue)}
+.mk .kshare span{font-size:12px;color:var(--mk-muted)}
+/* Channels: the ring beside its table. */
+.mk [data-xcard=sources] .xfade,.mk [data-xcard=sources] .xstale{display:grid;grid-template-columns:190px minmax(0,1fr);gap:var(--mk-s5);align-items:center}
+.mk [data-xcard=sources] .xfade>.xsay-table{grid-column:1/-1}
+.mk .dn-ring{position:relative;width:190px;height:190px}
+.mk .dn-ring svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+.mk .dn-ring circle{cursor:pointer;transition:stroke-width .15s,opacity .15s}
+.mk .dn-mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:34px;text-align:center;pointer-events:none}
+.mk .dn-mid b{font-size:25px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mk .dn-mid span{font-size:11.5px;line-height:1.25;color:var(--mk-muted)}
+@media (--xs){.mk [data-xcard=sources] .xfade,.mk [data-xcard=sources] .xstale{grid-template-columns:minmax(0,1fr);justify-items:center}.mk [data-xcard=sources] .xfade>*{width:100%}.mk [data-xcard=sources] .dn-ring{width:190px}}
+/* Quality: the rate as a filled meter, the page as a chip. */
+.mk .xqual-rate{display:grid;grid-template-columns:minmax(40px,1fr) 34px;align-items:center;gap:8px;min-width:0}
+.mk .xqual-rate i{display:block;height:10px;border-radius:6px;background:var(--mk-band);overflow:hidden}
+.mk .xqual-rate b{display:block;height:100%;border-radius:6px;background:color-mix(in srgb,var(--mk-lime) 45%,transparent)}
+.mk .xqual-rate.best b{background:var(--mk-lime)}
+.mk .xqual-rate em{font-style:normal;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.mk .xcards .xqual .xqual-page{justify-self:start;max-width:100%;overflow:hidden;padding:2px 8px;border-radius:7px;background:var(--mk-band);font-size:12px;text-overflow:ellipsis;white-space:nowrap}
+.mk .xcards .xqual{--xqr:minmax(150px,1.3fr)}
+.mk .xcards .xqual .xth,.mk .xcards .xqual .xrw{grid-template-columns:minmax(90px,1fr) 64px minmax(0,1.2fr) minmax(120px,1.4fr)!important}
+.mk .xcards .xqual:not(.nospeed) .xth,.mk .xcards .xqual:not(.nospeed) .xrw{grid-template-columns:minmax(90px,1fr) 64px minmax(0,1.2fr) minmax(120px,1.4fr) 56px!important}
+.mk .xcards .xqual .xth>:first-child{visibility:hidden}
+.mk .xcards .xqual .xth>:nth-child(3){text-align:left}
+.mk .xcards .xchg-rest{display:none}
+/* Sources that pay: the two switches on one line. */
+.mk [data-xcard=earners] .xfade{display:flex;flex-wrap:wrap;column-gap:var(--mk-s3);align-items:center}
+.mk [data-xcard=earners] .xfade>:not(.xsub){flex:1 0 100%;min-width:0}
+.mk .xcards .lkc{border:0;background:none;min-height:0}
+.mk [data-xcard=earners] .xfade{display:block}
+.mk [data-xcard=earners] .xfade>:not(.xsub){flex:none;width:100%}
+.mk [data-xcard=earners] .xfade>.xsub{display:inline-flex!important;width:auto!important;margin:0 var(--mk-s2) var(--mk-s2) 0;vertical-align:top}
+.mk .xcards>:has(.lkc),.mk .xcards>:has(.lkc) .xfade{border-color:transparent}
+/* Cards built from pieces: notes go, an empty piece is one whole card. */
+.mk .xcards .xcp-bare .xfade>.xnote{display:none}
+.mk .xcards .xcp-bare .xfade>.xempty{width:100%;box-sizing:border-box;background:var(--mk-card);border-radius:16px}
+.mk .xcards .xcp-bare .xfade>.xsec~.xempty{border-radius:0 0 16px 16px}
+/* People: a face, where they are, when. */
+.mk [data-xcard=people] .xfade>.xsec{position:absolute;top:14px;right:var(--mk-s4);padding:0;color:var(--mk-muted)}
+.mk [data-xcard=people] .xfade>.xsec>:first-child{display:none}
+.mk .xcp .xfade>.sale.xbtn:has(.xface){display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:var(--mk-s3);width:100%;padding:9px var(--mk-s2)!important;border-radius:12px;text-align:left}
+.mk .xcp .xfade>.sale.xbtn:has(.xface):hover{background:var(--mk-band)!important}
+.mk .xcp .sale .xface{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;font-weight:700}
+.mk .xcp .sale.xbtn .gn,.mk .xcp .sale.xbtn .gn>div{min-width:0;overflow:hidden;text-align:left;text-overflow:ellipsis;white-space:nowrap}
+/* Phone: the section's head is one calm line, its period one line of text, and the data starts high up. */
+@media (--xs){
+  .mk .xp.xpage{padding-top:0}
+  .mk .xp.xpage .xtb{row-gap:2px;column-gap:2px;margin-bottom:var(--mk-s2)}
+  .mk .xp.xpage .xtb>.xb,.mk .xp.xpage .xtb>.xw>.xb{min-width:40px;padding-inline:8px;border:0!important;background:none!important;box-shadow:none}
+  .mk .xp.xpage .xdrawer-open{margin-left:-8px}
+  .mk .xp.xpage .xtitle .xi{display:none}
+  .mk .xp.xpage .xtitle b{font-size:19px;letter-spacing:-.01em}
+  .mk .xp.xpage .xperiod .pwrap{width:100%;min-height:0;padding:0;border:0!important;background:none!important;box-shadow:none}
+  .mk .xp.xpage .xperiod .vs{padding:0;background:none!important;color:var(--mk-muted);font-weight:500}
+  .mk .xp.xpage .xperiod button{min-height:32px}
+  .mk .xp.xpage .xupdated{font-size:11.5px}
+  .mk .xp.xpage .xpage-desc{display:none}
+  .mk .xsay-page{margin-block:var(--mk-s2) var(--mk-s3);font-size:15px}
+}
+@media (--xs){
+  .mk .xp.xpage .xlay .xtb,.mk .xp.xpage .xtb{margin-top:-24px}
+  .mk .xp.xpage .xperiod *{border-color:transparent!important;background-color:transparent!important;box-shadow:none!important}
+  .mk .xp.xpage .xperiod .pwrap>*{padding-left:0}
+}
+.mk .xdev{height:18px;margin-bottom:var(--mk-s3)}
+.mk .xcards .xcp-bare .xfade:has(>.xempty:only-child){border-color:transparent}
+/* Speed: each score on its good, needs-work and poor thirds. */
+.mk .kg{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin:var(--mk-s2) 0 6px}
+.mk .kg i{height:8px;border-radius:4px}
+.mk .kg i:nth-child(1){background:color-mix(in srgb,var(--mk-lime) 55%,transparent)}
+.mk .kg i:nth-child(2){background:color-mix(in srgb,#ffb347 45%,transparent)}
+.mk .kg i:nth-child(3){background:color-mix(in srgb,var(--mk-red) 45%,transparent)}
+.mk .kg b{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:var(--mk-text);box-shadow:0 0 0 2px var(--mk-card);transform:translateX(-50%)}
+/* Plain score cards: left aligned like the Overview's, the scale across the card. */
+.mk .xcards .kc.ns{display:flex;flex-direction:column;align-items:stretch;text-align:left;justify-content:flex-start}
+.mk .xcards .kc.ns .kt{justify-content:flex-start}
+.mk .xcards .kc.ns .kv{justify-content:flex-start;text-align:left;margin-block:var(--mk-s2) 0}
+.mk .xcards .kc.ns .kd{text-align:left}
+.mk .xcards .kg{width:100%}
+.mk .xcards .xkw .kn{width:fit-content!important;max-width:max-content;align-self:center}
+@media (--xs){
+  .mk .xcards .kcs.k3{grid-template-columns:minmax(0,1fr)!important}
+  .mk .xcards .kc.ns .kt{flex-wrap:nowrap}
+  .mk .xcards .kc.ns .kn{margin-left:auto}
+}
+/* Bars that carry a rating. */
+.mk .xcards .mk-bar.g-good>i{background:linear-gradient(90deg,color-mix(in srgb,var(--mk-lime) 62%,transparent),color-mix(in srgb,var(--mk-lime) 28%,transparent))!important}
+.mk .xcards .mk-bar.g-mid>i{background:linear-gradient(90deg,color-mix(in srgb,#ffb347 62%,transparent),color-mix(in srgb,#ffb347 28%,transparent))!important}
+.mk .xcards .mk-bar.g-poor>i{background:linear-gradient(90deg,color-mix(in srgb,var(--mk-red) 66%,transparent),color-mix(in srgb,var(--mk-red) 30%,transparent))!important}
+/* Empty card: no footnote under it. */
+.mk .xcards .xempty~.xnote{display:none}
+/* AI: assistants as tiles, crawlers by what they came for, pieces closing their card. */
+.mk .xai-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--mk-s2);padding-bottom:var(--mk-s2)}
+.mk .xai-tile{display:flex;flex-direction:column;gap:3px;padding:12px;border:0;border-radius:12px;background:var(--mk-band);color:inherit;font:inherit;text-align:left;cursor:pointer}
+.mk .xai-tile:hover:not(:disabled){background:var(--mk-hover)}
+.mk .xai-tile:disabled{cursor:default}
+.mk .xai-tile>span{font-size:12.5px;color:var(--mk-muted)}
+.mk .xai-tile>b{font-size:24px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mk .xai-tile>i{display:block;height:5px;margin-top:4px;border-radius:3px;background:var(--mk-hover);overflow:hidden}
+.mk .xai-tile u{display:block;height:100%;border-radius:3px;background:var(--mk-lime)}
+.mk .xsplit-key{display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:10px;background:var(--mk-band);color:var(--mk-muted);font-size:12.5px}
+.mk .xsplit-key>i{width:8px;height:8px;border-radius:50%}
+.mk .xsplit-key>b{color:var(--mk-text);font-variant-numeric:tabular-nums}
+.mk .xcards .xflag{margin-left:6px;padding:1px 6px;border-radius:6px;background:color-mix(in srgb,var(--mk-red) 18%,transparent);color:var(--mk-red);font-size:11px;font-style:normal;font-family:var(--mk-font,inherit)}
+.mk .xcards .xcp-bare .xfade>:last-child{border-bottom-left-radius:16px;border-bottom-right-radius:16px}
+.mk .xcards .mk-bar .xflag{background:color-mix(in srgb,var(--mk-red) 16%,var(--mk-card))}
+/* What changed: the waterfall. */
+.mk .wf{display:grid;gap:var(--mk-s2);padding-top:var(--mk-s2);overflow-x:auto}
+.mk .wf-c{display:flex;flex-direction:column;align-items:stretch;gap:6px;min-width:0;padding:6px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;text-align:center}
+.mk button.wf-c:not(:disabled){cursor:pointer}
+.mk button.wf-c:hover:not(:disabled){background:var(--mk-band)}
+.mk .wf-c>b{font-size:15px;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mk .wf-c>b.up{color:var(--mk-lime)}
+.mk .wf-c>b.dn{color:var(--mk-red)}
+.mk .wf-c>span{overflow:hidden;font-size:12px;color:var(--mk-muted);text-overflow:ellipsis;white-space:nowrap}
+.mk .wf-plot{position:relative;height:190px;border-bottom:1px solid var(--mk-line)}
+.mk .wf-plot>i{position:absolute;inset-inline:12%;display:block;border-radius:6px}
+.mk .wf-plot>i.total{background:color-mix(in srgb,var(--mk-text) 22%,transparent)}
+.mk .wf-plot>i.total.now{background:color-mix(in srgb,var(--mk-text) 42%,transparent)}
+.mk .wf-plot>i.up{background:linear-gradient(180deg,var(--mk-lime),color-mix(in srgb,var(--mk-lime) 45%,transparent))}
+.mk .wf-plot>i.dn{background:linear-gradient(0deg,var(--mk-red),color-mix(in srgb,var(--mk-red) 45%,transparent))}
+/* Pages: the page map. */
+.mk .pm{position:relative;margin-bottom:var(--mk-s4);border-radius:12px;overflow:hidden}
+.mk .pm-t{position:absolute;display:flex;flex-direction:column;justify-content:space-between;gap:2px;padding:9px 10px;border:2px solid var(--mk-card);border-radius:12px;color:var(--mk-text);font:inherit;text-align:left;cursor:pointer;overflow:hidden;transition:filter .15s}
+.mk .pm-t:hover{filter:brightness(1.18)}
+.mk .pm-t span{overflow:hidden;font-size:12px;text-overflow:ellipsis;white-space:nowrap}
+.mk .pm-t b{font-size:16px;font-weight:650;font-variant-numeric:tabular-nums}
+@keyframes pm-in{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:no-preference){.mk .pm-t{animation:pm-in .4s ease both}}
+/* Big fills: the green with some gray in it, easy on the eye. Bright lime stays for small accents. */
+.mk{--mk-soft:color-mix(in srgb,var(--mk-lime) 52%,#8b9096)}
+.mk .xcards .mk-bar>i,.mk .xcards .mk-bar.g-good>i{background:linear-gradient(90deg,color-mix(in srgb,var(--mk-soft) 58%,transparent),color-mix(in srgb,var(--mk-soft) 26%,transparent))!important}
+.mk .xqual-rate b{background:color-mix(in srgb,var(--mk-soft) 55%,transparent)}
+.mk .xqual-rate.best b,.mk .xai-tile u,.mk .wf-plot>i.up{background:var(--mk-soft)}
+.mk .xsplit-bar i[style*="--mk-lime"]{background:var(--mk-soft)!important}
+.mk .xrcell{background-blend-mode:normal;filter:saturate(.6)}
+/* Softer still: a light gray with only a hint of green; muted follows the theme. */
+.mk{--mk-soft:color-mix(in srgb,var(--mk-lime) 14%,var(--mk-muted))}
+.mk .xrcell{filter:saturate(.25)}
+.mk{--mk-soft:color-mix(in srgb,var(--mk-lime) 10%,#6f7479)}
+/* Pages: the map shows the sizes, so the list under it is only names and numbers. */
+.mk [data-xcard=pages] .mk-bar{background:none}
+.mk [data-xcard=pages] .mk-bar>i{display:none}
+.mk [data-xcard=pages] .xrw{min-height:34px}
+/* Empty cards take less room. */
+.mk .xcards .xempty,.mk .xcards .xcp .xempty{min-height:104px;padding:var(--mk-s2)}
+.mk .xcards .xcp:has(.xempty){align-self:start}
+/* Waterfall on a phone: every step in view, nothing to scroll to. */
+.mk .wf{overflow:visible}
+@media (--xs){
+  .mk .wf{gap:2px}
+  .mk .wf-c{padding:2px}
+  .mk .wf-c>b{font-size:11px;letter-spacing:-.02em}
+  .mk .wf-c>span{font-size:10.5px;line-height:1.2;white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .mk .wf-plot{height:150px}
+  .mk .wf-plot>i{inset-inline:6%;border-radius:4px}
+  .mk .xchg-head{flex-wrap:wrap}
+}
+/* Motion: numbers rise in, bars and lines grow, cards answer the pointer. All of it stays still for who asks for less. */
+.mk .roll{display:inline-flex;white-space:pre}
+@keyframes roll-in{from{opacity:0;transform:translateY(.55em)}to{opacity:1;transform:none}}
+@keyframes bar-in{from{transform:scaleX(0)}to{transform:none}}
+@keyframes spark-in{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@media (prefers-reduced-motion:no-preference){
+  .mk .roll>span{display:inline-block;animation:roll-in .5s cubic-bezier(.22,1,.36,1) both}
+  .mk .xcards .mk-bar>i,.mk .xsplit-bar>i,.mk .xai-tile u,.mk .xqual-rate b,.mk .kshare b{transform-origin:left;animation:bar-in .75s cubic-bezier(.22,1,.36,1) both}
+  .mk .xcards .xrw:nth-child(2) i{animation-delay:.04s}
+  .mk .xcards .xrw:nth-child(3) i{animation-delay:.08s}
+  .mk .xcards .xrw:nth-child(4) i{animation-delay:.12s}
+  .mk .xcards .xrw:nth-child(5) i{animation-delay:.16s}
+  .mk .xcards .xrw:nth-child(6) i{animation-delay:.2s}
+  .mk .xcards .kc svg{animation:spark-in 1s cubic-bezier(.22,1,.36,1) both}
+  .mk .xcards .kc,.mk .xcards .xai-tile,.mk .xcards .xrw{transition:transform .2s ease,background .15s ease,box-shadow .2s ease}
+  .mk .xcards .kc:hover{transform:translateY(-3px);box-shadow:0 10px 26px -14px rgba(0,0,0,.45)}
+  .mk .xcards .xai-tile:hover:not(:disabled){transform:translateY(-2px)}
+  .mk .xcards .xrw:hover .mk-bar>i{filter:brightness(1.18)}
+}
+@media (hover:hover){
+  .mk .xcards .xcp:hover,.mk .xcards .kc:hover,.mk .xcards .xfade>.x2>div:hover{background-image:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),color-mix(in srgb,var(--mk-text) 6%,transparent),transparent 70%)}
+}
+@keyframes card-in{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:no-preference){.mk .xcp-in{animation:card-in .5s cubic-bezier(.22,1,.36,1) backwards}}
+.mk .xcp-h:has(.xcp-why){display:flex;align-items:center;justify-content:space-between;gap:var(--mk-s2)}
+.mk .xcp-why{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border:0;border-radius:8px;background:none;color:var(--mk-muted);font:inherit;font-size:12px;font-weight:500;cursor:pointer}
+.mk .xcp-why:hover,.mk .xcp-why:focus-visible{background:var(--mk-band);color:var(--mk-text)}
+.mk .xcp-foot{display:flex;justify-content:flex-end;padding-top:var(--mk-s2)}
+.mk .xcp:has(.xempty,.lkc) .xcp-why,.mk .xcp-bare:has(.xempty,.lkc) .xcp-why{display:none}
+.mk .xnext{display:flex;flex-wrap:wrap;gap:var(--mk-s2);margin-top:var(--mk-s4)}
+.mk .xleak{margin-left:var(--mk-s2)}
+.mk .mk-chip.is-down{border-color:color-mix(in srgb,#ff6466 45%,var(--mk-line));background:color-mix(in srgb,#ff6466 8%,var(--mk-card))}
+.mk .site-why{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;margin-bottom:var(--mk-s2);border:0;border-radius:10px;background:color-mix(in srgb,#ff6466 10%,transparent);color:inherit;font:inherit;font-size:13px;font-weight:500;text-align:left;cursor:pointer}
+.mk .site-why i{width:6px;height:6px;border-radius:50%;background:#ff6466}
+
+.lsn-go { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+.lsn-go:hover { text-decoration: underline; }
+/* Explore and Live have no foot: Docs, Feedback and What's new are under the avatar. */
+body:has(.mk.mk-body) .app-footer{border:0;padding:0;margin:0;min-height:0}
+body:has(.mk.mk-body) .app-footer>span{display:none}
+/* A new filter or period: the card keeps its shape, dimmed, until the new numbers arrive. */
+.mk .xcp-b{transition:opacity .18s ease}
+.mk .xcp-b.is-stale{opacity:.5;pointer-events:none}
+.mk .xcards .xrw:focus:not(:focus-visible){outline:none;box-shadow:none}
+.mk .xcards .xrw:active{transform:none}
+/* The phone's quality table: no room for Lands on, and the last heading whole. */
+@media (--xs){
+  .mk .xcards .xqual.nospeed .xth,.mk .xcards .xqual.nospeed .xrw{grid-template-columns:minmax(0,1fr) 52px 88px!important;gap:8px}
+  .mk .xcards .xqual:not(.nospeed) .xth,.mk .xcards .xqual:not(.nospeed) .xrw{grid-template-columns:minmax(0,1fr) 48px 64px 56px!important;gap:8px}
+  .mk .xcards .xqual .xth>span{overflow:visible;white-space:nowrap}
+}
+.mk .xchg-chart{min-height:320px;margin-top:var(--mk-s4)}
+@media (--xl){.mk .xchg-chart{min-height:302px}}
+@media (--sm){.mk .xchg-chart{min-height:280px}}
+@media (--xs){.mk .xchg-chart{min-height:200px}}
+.mk .xp.xpage>.xsk{margin-top:0}
+/* The header's grid of sections. */
+.xtiles-pop{overflow-x:hidden!important}
+.xtiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:8px;width:min(372px,calc(100vw - 48px));box-sizing:border-box}
+.xtile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:84px;padding:10px 6px;border:0;border-radius:12px;background:none;color:var(--mk-text);font:inherit;font-size:12px;line-height:1.25;text-align:center;cursor:pointer;transition:background .15s ease}
+.xtile:hover,.xtile:focus-visible{background:var(--mk-band)}
+.xtile svg{width:20px;height:20px;flex:none}
+.xtile{min-height:76px}
+/* Each section its own colour, as an app grid has: soft glass on the card, the same in both themes. */
+.xtile{--c:var(--mk-lime);transition:background .15s ease,transform .15s ease}
+.xtile:hover{transform:translateY(-1px)}
+.xtile svg{width:42px;height:42px;padding:10px;border-radius:13px;color:#fff;box-sizing:border-box;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,#fff),color-mix(in srgb,var(--c) 72%,#000));box-shadow:0 4px 12px color-mix(in srgb,var(--c) 28%,transparent),inset 0 1px 0 rgb(255 255 255/.28)}
+.xtile[data-xtile=changed],.xri[data-xsec=changed]{--c:#8b7cf6}
+.xtile[data-xtile=overview],.xri[data-xsec=overview]{--c:#4f8ef7}
+.xtile[data-xtile=pages],.xri[data-xsec=pages]{--c:#2fb8c6}
+.xtile[data-xtile=sources],.xri[data-xsec=sources]{--c:#f08a5d}
+.xtile[data-xtile=places],.xri[data-xsec=places]{--c:#34b37e}
+.xtile[data-xtile=tech],.xri[data-xsec=tech]{--c:#6c7a91}
+.xtile[data-xtile=results],.xri[data-xsec=results]{--c:#e9668f}
+.xtile[data-xtile=sales],.xri[data-xsec=sales]{--c:#d9a62e}
+.xtile[data-xtile=speed],.xri[data-xsec=speed]{--c:#ef6a5a}
+.xtile[data-xtile=mentions],.xri[data-xsec=mentions]{--c:#c26bdc}
+.xtile[data-xtile=links],.xri[data-xsec=links]{--c:#3f9fd8}
+.xtile[data-xtile=ai],.xri[data-xsec=ai]{--c:#7a6cf0}
+.xtile[data-xtile=answers],.xri[data-xsec=answers]{--c:#22a699}
+.mk .xgoal-next{margin-inline-end:8px}
+/* The list beside the numbers wears the same colours as the grid. */
+.mk .xrail .xri svg,.mk .xrail .xri:hover svg,.mk .xrail .xri.on svg{color:#fff;border-radius:9px;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,#fff),color-mix(in srgb,var(--c) 72%,#000));box-shadow:inset 0 1px 0 rgb(255 255 255/.25)}
+.mk .xrail .xri:not(.on) svg{opacity:.82}
+.mk .xrail .xri:hover svg{opacity:1}
+.pop.xtiles-pop,.lpop.xtiles-pop{width:auto;max-width:calc(100vw - 16px)}

@@ -1,0 +1,1 @@
+Explore is now one page per topic with stacked cards, connected sections and a drawer on phones: it replaces the Briefing screen, clicks on Live open the matching table, and Docs, Feedback and What's new move to the avatar menu.

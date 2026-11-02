@@ -217,7 +217,7 @@ broken page (404, 5xx and the rest), in red when there are any. Hover the number
 the split. This needs the robot reports to carry the status (`st`); the Vercel
 middleware and the nginx mirror cannot send it, so they show a dash.
 
-The Briefing tells you when an answer or index robot, such as ChatGPT or Google, was
+What changed tells you when an answer or index robot, such as ChatGPT or Google, was
 turned away or found broken pages on half or more of at least 20 visits in the
 period. Training robots are never warned about: blocking them is often on purpose.
 

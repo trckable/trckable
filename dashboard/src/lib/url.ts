@@ -28,8 +28,6 @@ export function useLocation() {
 const stepOf = () => (history.state as { d?: number } | null)?.d ?? 0
 let steps = typeof history === 'undefined' ? 0 : stepOf()
 if (typeof window !== 'undefined') window.addEventListener('popstate', () => (steps = stepOf()))
-/** Entries pushed by this app so far: a later number minus an earlier one is how far Back goes between two moments. */
-export const historySteps = () => steps
 
 export function navigate(to: string, opts: { replace?: boolean } = {}) {
   if (to === snapshot()) return

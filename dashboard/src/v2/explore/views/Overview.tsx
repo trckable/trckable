@@ -1,4 +1,4 @@
-// Overview: the four numbers, the shape of the period, downtime when there was some, and the top pages and sources.
+// Overview: the four numbers, the shape of the period, the top pages and sources, and downtime when there was some.
 import { valueOf } from '../filters'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
@@ -18,13 +18,12 @@ export function Overview({ x, d }: { x: XCtx; d: Model }) {
       <XKcs items={d.kcs} />
       <XSec a={copy.shape} b={copy.per(d.per)} />
       {d.shape ? (
-        <XShape shape={d.shape} site={x.site} />
+        <XShape shape={d.shape} />
       ) : (
         <div className="mk-quiet" style={{ padding: '8px 0' }}>
           {copy.notEnough}
         </div>
       )}
-      <Downtime down={d.down} />
       <div className="x2">
         <div>
           <XSec a={copy.topPages} b={rowWords().filter} />
@@ -35,6 +34,7 @@ export function Overview({ x, d }: { x: XCtx; d: Model }) {
           <PeopleTable x={x} rows={d.sources} head={copy.heads.source} selected={valueOf(x.filters, 'channel')} onPick={(r) => x.pick('channel', r.val)} dim="channel" limit={5} of={d.of} onAll={x.showAll} go={{ label: copy.showAllSources, section: 'sources', run: () => x.goTo('sources') }} />
         </div>
       </div>
+      <Downtime down={d.down} />
     </>
   )
 }
