@@ -617,4 +617,9 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .mk .xp.xpage .xtitle svg{box-sizing:content-box;flex:none;width:17px;height:17px;padding:7px;color:#fff;border-radius:11px;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,#fff),color-mix(in srgb,var(--c) 72%,#000))}
 .mk .xrail .xri:not(.on) svg{opacity:.82}
 .mk .xrail .xri:hover svg{opacity:1}
+/* A tile answers the pointer: its icon lifts with a small spring. */
+.xtile svg{transition:transform .28s cubic-bezier(.34,1.56,.64,1),filter .2s ease}
+.xtile:hover svg,.xtile:focus-visible svg{transform:translateY(-3px) scale(1.1) rotate(-4deg);filter:brightness(1.08)}
+.xtile:active svg{transform:scale(.96);transition-duration:.1s}
+@media (prefers-reduced-motion:reduce){.xtile,.xtile svg{transition:none}.xtile:hover,.xtile:hover svg,.xtile:focus-visible svg,.xtile:active svg{transform:none}}
 .pop.xtiles-pop,.lpop.xtiles-pop{width:auto;max-width:calc(100vw - 16px)}
