@@ -626,4 +626,4 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .pop.xtiles-pop,.lpop.xtiles-pop{width:auto;max-width:calc(100vw - 16px)}
 /* As a sheet the tiles fill its width, up to a size that still reads as a grid; the button stays one square on every screen. */
 @media (--compact){.pop.xtiles-pop,.lpop.xtiles-pop{width:100%;max-width:none}.xtiles{width:100%;max-width:520px;margin-inline:auto}}
-.mk .hd .xtiles-btn{flex:none;justify-content:center;width:40px;min-width:40px;max-width:40px;padding:0}
+.mk .hd .mk-chip.xtiles-btn{flex:none;justify-content:center;width:40px;min-width:40px;max-width:40px;padding:0}
