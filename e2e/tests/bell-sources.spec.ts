@@ -28,7 +28,8 @@ for (const width of [1280, 390]) {
     const fb = page.locator('.nf', { has: page.getByRole('img', { name: 'Facebook' }) })
     await expect(fb).toBeVisible({ timeout: 15_000 })
     await expect(fb.locator('.nft b')).toHaveText(`${STEADY_DOMAIN} is busy`)
-    await expect(fb.locator('.nft small')).toHaveText(/^38 online · 1\.8× usual · \d\d:\d\d$/)
+    await expect(fb.locator('.nft small')).toHaveText(/^38 online · 1\.8× usual/)
+    await expect(fb.locator('.nfw-t')).toHaveText(/^\d\d:\d\d$/)
     await expect(fb).not.toContainText('Facebook') // the mark says it
     await expect(fb).toHaveAttribute('aria-label', /Facebook/)
     await expect(fb.locator('.nfb.up')).toBeVisible()

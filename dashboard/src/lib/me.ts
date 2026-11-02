@@ -3,6 +3,7 @@
 // nothing, so a missing or new role never shows a control the server would
 // refuse.
 let role = ''
+let email = '' // who is signed in, for what this browser keeps for them (the bell's last list)
 let mentionsOn = false // set with the role, from /me: whether the server has Mentions switched on
 let answersOn = false // and whether it asks the AI assistants (an engine key is set)
 
@@ -11,6 +12,11 @@ export const setRole = (r?: string, withMentions?: boolean, withAnswers?: boolea
   mentionsOn = withMentions === true
   answersOn = withAnswers === true
 }
+
+export const setEmail = (e?: string) => {
+  email = e ?? ''
+}
+export const currentEmail = () => email
 
 /** The role to ask the table about: a shared link reads, whoever opens it. */
 export const currentRole = () => (shared ? 'viewer' : role)

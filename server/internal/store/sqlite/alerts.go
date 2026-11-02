@@ -191,11 +191,11 @@ func (s *Store) recordFire(ctx context.Context, id string, at int64) error {
 	return err
 }
 
-// AlertFiresSince lists the alerts of these sites that fired at or after from, newest first.
+// AlertFiresSince lists the alerts of these sites that fired at or after from, newest first. An alert sent to several channels at once is one fire.
 func (s *Store) AlertFiresSince(ctx context.Context, sites []string, from int64) ([]AlertFire, error) {
 	var out []AlertFire
 	for _, site := range sites {
-		rows, err := s.DB.QueryContext(ctx, `SELECT id, site_id, kind, at FROM alert_fires WHERE site_id = ? AND at >= ? ORDER BY at DESC, id DESC`, site, from)
+		rows, err := s.DB.QueryContext(ctx, `SELECT min(id), site_id, kind, min(at) FROM alert_fires WHERE site_id = ? AND at >= ? GROUP BY site_id, kind, at / 60 ORDER BY min(at) DESC, min(id) DESC`, site, from)
 		if err != nil {
 			return nil, err
 		}

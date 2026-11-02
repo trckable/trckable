@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Site } from '../../lib/api'
 import { more } from '../../lib/apiMore'
+import { setEmail } from '../../lib/me'
 import type { FeedRow } from './feed'
 import { V2ExtrasContext, type V2Extras } from '../slots'
 import type { Notice } from './notices'
@@ -46,10 +47,12 @@ const open = () => act(() => document.querySelector<HTMLButtonElement>('#bellBtn
 
 // The bell asks the server once: answered here, so no read waits on a network that is not there.
 beforeEach(() => {
+  setEmail('a@x.com')
   vi.spyOn(more, 'notifications').mockResolvedValue({ notifications: [down] })
 })
 
 afterEach(() => {
+  setEmail()
   vi.restoreAllMocks()
   document.body.innerHTML = ''
   localStorage.clear()

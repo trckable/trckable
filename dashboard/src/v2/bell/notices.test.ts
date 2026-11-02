@@ -97,6 +97,17 @@ const sites = [{ id: 's1', domain: 'a.com' }, { id: 's2', domain: 'b.com' }] as 
 const row = (r: Partial<FeedRow> & Pick<FeedRow, 'id' | 'kind'>): FeedRow => ({ site: 's1', at: 1_000_000, ...r })
 const now = 1_000_100
 
+describe('the cap', () => {
+  it('lists 40 rows and every site that is down besides', () => {
+    const t = 10_000_000
+    const many = Array.from({ length: 50 }, (_, i) => n(`x${i}`, t - 10 - i, 'mention'))
+    const out = arrange([...many, n('down:old', t - 6 * 86400, 'down')], t)
+    expect(out).toHaveLength(41)
+    expect(out.at(-1)?.id).toBe('down:old')
+    expect(withFeed(out, [n('p', t - 1, 'plan')]).some((x) => x.id === 'down:old')).toBe(true)
+  })
+})
+
 describe('the server’s list as the bell’s rows', () => {
   it('keeps one id for a site that was down, red while it goes on and calm with its span once it is back', () => {
     const [going] = fromFeed([row({ id: 'down:i1', kind: 'down', at: now - 600 })], sites, now)
@@ -134,8 +145,8 @@ describe('the server’s list as the bell’s rows', () => {
   })
 
   it('tells a fired alert by its kind and a mention by the host that posted it', () => {
-    const out = fromFeed([row({ id: 'alert:1', kind: 'alert', what: 'stopped' }), row({ id: 'alert:2', kind: 'alert', what: 'weekly' }), row({ id: 'mention:1', kind: 'mention', source: 'hn', host: 'news.ycombinator.com', text: 'T' })], sites, now)
-    expect(out.map((r) => [r.kind, r.alert])).toEqual([['alert', 'stopped'], ['mention', undefined]])
+    const out = fromFeed([row({ id: 'alert:1', kind: 'alert', what: 'disk' }), row({ id: 'alert:2', kind: 'alert', what: 'weekly' }), row({ id: 'mention:1', kind: 'mention', source: 'hn', host: 'news.ycombinator.com', text: 'T' })], sites, now)
+    expect(out.map((r) => [r.kind, r.alert])).toEqual([['alert', 'disk'], ['mention', undefined]])
     expect(out[1].source).toBe('news.ycombinator.com')
   })
 

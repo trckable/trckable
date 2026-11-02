@@ -1129,7 +1129,8 @@ var migrations = []string{
 		kind    TEXT NOT NULL,
 		at      INTEGER NOT NULL
 	);
-	CREATE INDEX IF NOT EXISTS alert_fires_site ON alert_fires (site_id, at);`,
+	CREATE INDEX IF NOT EXISTS alert_fires_site ON alert_fires (site_id, at);
+	CREATE INDEX IF NOT EXISTS alert_fires_at ON alert_fires (at);`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

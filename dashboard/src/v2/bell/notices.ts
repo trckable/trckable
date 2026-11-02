@@ -1,5 +1,6 @@
 // The bell's list: what happened that a person would want to hear of, put together from what the server already
 // records (incidents, milestones, mentions). Pure; read marks are kept by useNotices.
+import { goalName } from '../../lib/goalName'
 import { lineOf } from '../../features/milestones/words'
 import type { Alert, Milestone, Site } from '../../lib/api'
 import { answersCopy } from '../../features/answers/copy'
@@ -115,7 +116,7 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number, open: () =
         out.push({ ...base, kind: 'signup', title: copy.signups(r.count ?? 1), sub: '' })
         break
       case 'goal':
-        out.push({ ...base, kind: 'goal', title: copy.goalReached(r.text ?? '', r.count ?? 1), sub: '' })
+        out.push({ ...base, kind: 'goal', title: copy.goalReached(goalName(undefined, r.text ?? ''), r.count ?? 1), sub: '' })
         break
       case 'alert': {
         const kind = (r.what ?? '') as AlertKind
@@ -128,7 +129,11 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number, open: () =
   return out
 }
 
-const ALERT_TITLE: Partial<Record<AlertKind, (d: string) => string>> = { stopped: copy.alertStopped, spike: copy.alertSpike, threshold: copy.alertThreshold, customer: copy.alertCustomer, disk: copy.alertDisk }
+const ALERT_TITLE: Partial<Record<AlertKind, (d: string) => string>> = { threshold: copy.alertThreshold, disk: copy.alertDisk }
+
+/** The most rows the bell lists; a site that is down is listed past it. */
+export const CAP = 40
+const capped = (list: Notice[]): Notice[] => list.filter((n, i) => i < CAP || n.kind === 'down')
 
 /**
  * A build's own feed (its slot) tells surges and milestones with their numbers: where it has any of a kind, the site's own
@@ -138,19 +143,16 @@ export function withFeed(own: Notice[], feed: Notice[] | undefined): Notice[] {
   if (!feed?.length) return own
   const told = new Set(feed.map((f) => f.kind))
   const ids = new Set(feed.map((f) => f.id))
-  return [...own.filter((n) => !ids.has(n.id) && !((n.kind === 'spike' || n.kind === 'milestone') && told.has(n.kind))), ...feed].sort(byNewest).slice(0, 40)
+  return capped([...own.filter((n) => !ids.has(n.id) && !((n.kind === 'spike' || n.kind === 'milestone') && told.has(n.kind))), ...feed].sort(byNewest))
 }
 
 /** The list's one order: newest first, and the id for notices of the same second, so the same rows never swap places between reads. */
 export const byNewest = (a: Pick<Notice, 'at' | 'id'>, b: Pick<Notice, 'at' | 'id'>): number => b.at - a.at || a.id.localeCompare(b.id)
 
-/** Newest first (the server cut the week), each once, and never more than 40. */
+/** Newest first (the server cut the week), each once, and never more than 40 besides the sites that are down. */
 export function arrange(all: Notice[], now: number): Notice[] {
   const seen = new Set<string>()
-  return all
-    .filter((n) => n.at <= now + 60 && !seen.has(n.id) && !!seen.add(n.id))
-    .sort(byNewest)
-    .slice(0, 40)
+  return capped(all.filter((n) => n.at <= now + 60 && !seen.has(n.id) && !!seen.add(n.id)).sort(byNewest))
 }
 
 export type NoticeRow = Notice & { unread: boolean }

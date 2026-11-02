@@ -40,7 +40,6 @@ export function Row({ n, p, close }: { n: BellRow; p: BellProps; close: () => vo
     p.onPick(id)
     close()
   }
-  const under = [n.sub, n.time].filter(Boolean).join(' · ')
   const dot = <i className={`nfd${n.unread ? '' : ' off'}`} aria-hidden="true" />
   return (
     <div className="nfw" data-id={n.id}>
@@ -55,8 +54,9 @@ export function Row({ n, p, close }: { n: BellRow; p: BellProps; close: () => vo
                 {l.text}
               </button>
             ))}
-            {under && <small>{under}</small>}
+            {n.sub && <small>{n.sub}</small>}
           </span>
+          {n.time && <time className="nfw-t">{n.time}</time>}
         </div>
       ) : (
         <button type="button" className={`nf ${n.unread ? 'unread' : ''}${n.bad ? ' bad' : ''}`} aria-label={n.label} onClick={() => pick(n.id)}>
@@ -64,8 +64,9 @@ export function Row({ n, p, close }: { n: BellRow; p: BellProps; close: () => vo
           <Icon n={n} />
           <span className="nft">
             <b>{n.title}</b>
-            {under && <small>{under}</small>}
+            {n.sub && <small>{n.sub}</small>}
           </span>
+          {n.time && <time className="nfw-t">{n.time}</time>}
         </button>
       )}
       <RowMenu row={n} close={close} />

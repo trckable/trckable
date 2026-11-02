@@ -1,5 +1,5 @@
 // The bell's list as the server tells it (GET /me/notifications): one request, every site the person may read, each row with
-// its own id and true time. The last list is kept in this browser for the account (its sites), so the next page paints the bell at once.
+// its own id and true time. The last list is kept in this browser for the person who read it, so the next page paints the bell at once.
 import type { Milestone } from '../../lib/api'
 import { more } from '../../lib/apiMore'
 
@@ -33,22 +33,40 @@ export interface FeedRow {
 
 const KEY = 'trckable:bell:feed'
 
-/** What this browser last read, for the account it was read for (named by its sites); null when nothing is kept or it is another account's. With no account named, whatever is kept stands in until the sites are known. */
-export function loadFeed(account: string | null): FeedRow[] | null {
+/** What the server answers: `partial` when a source could not be read (the list is what could be), `first` once per person. */
+export interface Feed {
+  notifications: FeedRow[]
+  partial?: boolean
+  first?: boolean
+}
+
+/** What this browser last read for this person (by their sign-in); null when nothing is kept, it is another person's, or nobody is known yet. */
+export function loadFeed(who: string): FeedRow[] | null {
+  if (!who) return null
   try {
-    const v = JSON.parse(localStorage.getItem(KEY) ?? 'null') as { account?: string; rows?: FeedRow[] } | null
-    return v && (account === null || v.account === account) && Array.isArray(v.rows) ? v.rows : null
+    const v = JSON.parse(localStorage.getItem(KEY) ?? 'null') as { who?: string; rows?: FeedRow[] } | null
+    return v?.who === who && Array.isArray(v.rows) ? v.rows : null
   } catch {
     return null
   }
 }
 
-export function saveFeed(account: string, rows: FeedRow[]): void {
+export function saveFeed(who: string, rows: FeedRow[]): void {
+  if (!who) return
   try {
-    localStorage.setItem(KEY, JSON.stringify({ account, rows }))
+    localStorage.setItem(KEY, JSON.stringify({ who, rows }))
   } catch {
     /* a blocked store only costs the instant paint */
   }
 }
 
-export const readFeed = (): Promise<FeedRow[]> => more.notifications().then((r) => r.notifications)
+/** Forgets the kept list (signing out). */
+export function clearFeed(): void {
+  try {
+    localStorage.removeItem(KEY)
+  } catch {
+    /* nothing kept to forget */
+  }
+}
+
+export const readFeed = (): Promise<Feed> => more.notifications()

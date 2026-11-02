@@ -129,12 +129,14 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
     if (n.members) return ''
     return n.day ? copy.allDay : (n.when ?? timeOf(n.at))
   }
+  /** The row names its site when the person has several, unless its words already do. */
+  const manySites = (n: Notice): boolean => !!n.site && sites.length > 1 && !n.title.includes(n.site) && !n.sub?.includes(n.site)
   const rowOf = (n: Notice & { unread: boolean }, archived: boolean): BellRow => ({
     id: n.id,
     kind: n.kind,
     at: n.at,
     title: n.title,
-    sub: n.sub,
+    sub: [n.sub, manySites(n) ? n.site : ''].filter(Boolean).join(' · '),
     time: whenOfRow(n),
     unread: n.unread,
     bad: n.bad,

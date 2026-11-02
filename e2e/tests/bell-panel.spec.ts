@@ -80,7 +80,7 @@ for (const width of [1440, 390, 360]) {
     expect(titles[0]).toMatch(/^history\.example down since \d\d:\d\d$/)
     expect(titles[1]).toBe('history.example was down 10m')
     await expect(menu.locator('.nf.bad')).toHaveCount(1)
-    await expect(menu.locator('.nf').nth(1).locator('small')).toHaveText(/^\d\d:\d\d–\d\d:\d\d$/)
+    await expect(menu.locator('.nf').nth(1).locator('.nfw-t')).toHaveText(/^\d\d:\d\d–\d\d:\d\d$/)
 
     // The footer is one link.
     await expect(menu.locator('.nff button')).toHaveCount(1)

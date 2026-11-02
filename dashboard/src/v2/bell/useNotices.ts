@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Site } from '../../lib/api'
 import { openExplore } from '../explore/open'
-import { isShared } from '../../lib/me'
+import { currentEmail, isShared } from '../../lib/me'
 import { useV2Extras } from '../slots'
 import { onNowAnswer } from '../../features/live/api'
 import { visibleInterval } from '../../lib/visibleInterval'
@@ -19,21 +19,21 @@ export const GAP_MS = 60_000
 /** The least time between two reads when the menu is opened. */
 export const OPEN_GAP_MS = 5000
 
-/** The account the list was read for: the sites it may read. */
+/** The sites the person may read, as the effect's key. */
 const keyOf = (sites: Site[]) => sites.map((s) => s.id).sort().join(',')
 
-/** The last list read in this page, for a bell that mounts again (as long as it is the same account). */
-let held: { key: string; rows: FeedRow[] } | null = null
-// Before the sites are known (a page that has just mounted) the last list stands in for them.
-const heldFor = (sites: Site[]): FeedRow[] | null => {
-  if (held && (sites.length === 0 || held.key === keyOf(sites))) return held.rows
-  return loadFeed(sites.length === 0 ? null : keyOf(sites))
+/** The last list read in this page, for a bell that mounts again (as long as it is the same person). */
+let held: { who: string; rows: FeedRow[] } | null = null
+// Only a person who is known is painted for: what was kept for another sign-in, or for nobody, is never shown.
+const heldFor = (): FeedRow[] | null => {
+  const who = currentEmail()
+  return who && held?.who === who ? held.rows : loadFeed(who)
 }
 
 export function useNotices(sites: Site[]) {
-  const [rows, setRows] = useState<FeedRow[]>(() => heldFor(sites) ?? [])
+  const [rows, setRows] = useState<FeedRow[]>(() => heldFor() ?? [])
   // A list kept from before is drawn at once: this browser's own read marks stand in until the account's arrive.
-  const [loaded, setLoaded] = useState(() => !!heldFor(sites))
+  const [loaded, setLoaded] = useState(() => !!heldFor())
   const [kept] = useState(loaded)
   const { bell: extra, bellMore } = useV2Extras()
   const can = !isShared()
@@ -60,15 +60,30 @@ export function useNotices(sites: Site[]) {
     refreshExtra.current = bellRefresh
   })
   const { read, mark: send, synced, sync: syncRead } = useReadSet(can)
+  const tell = useRef(send)
+  useEffect(() => {
+    tell.current = send
+  })
   const run = useCallback(async () => {
     // A failed read keeps the list as it is: the bell is not what the page waits for.
     const got = await readFeed().catch(() => null)
+    // A list that could not be read whole never replaces the one shown: a site that is down must not vanish over a failed read.
     if (!got) return
     const { sites } = ctx.current
-    const list = got.map((r) => ({ ...r, domain: sites.find((s) => s.id === r.site)?.domain }))
-    const key = keyOf(sites)
-    held = { key, rows: list }
-    saveFeed(key, list)
+    const list = got.notifications.map((r) => ({ ...r, domain: sites.find((s) => s.id === r.site)?.domain }))
+    if (got.partial) {
+      // Only a bell with nothing yet takes it, so it is not left waiting; it is not kept.
+      if (alive.current) {
+        setRows((cur) => (cur.length ? cur : list))
+        setLoaded(true)
+      }
+      return
+    }
+    const who = currentEmail()
+    held = { who, rows: list }
+    saveFeed(who, list)
+    // The first list a person is given: what is already behind them is read, so the deploy is not a burst of unread.
+    if (got.first) tell.current(list.map((r) => r.id))
     if (alive.current) {
       setRows(list)
       setNow(Math.floor(Date.now() / 1000))

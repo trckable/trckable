@@ -76,12 +76,19 @@ func TestBellFeedSources(t *testing.T) {
 	}
 
 	// An alert that fired, at the minute it fired.
-	al, err := g.ctl.SaveAlert(ctx, sqlite.Alert{SiteID: g.site, Kind: "customer", Enabled: true, Target: "me@site.com"})
+	al, err := g.ctl.SaveAlert(ctx, sqlite.Alert{SiteID: g.site, Kind: "disk", Enabled: true, Target: "me@site.com"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	fired := now.Add(-90 * time.Minute).Unix()
-	if err := g.ctl.MarkFired(ctx, al.ID, fired); err != nil {
+	// Sent to two channels in the same minute: one fire. A customer alert has its sale row, so it has none here.
+	for _, at := range []int64{fired, fired + 20} {
+		if err := g.ctl.MarkFired(ctx, al.ID, at); err != nil {
+			t.Fatal(err)
+		}
+	}
+	cust, _ := g.ctl.SaveAlert(ctx, sqlite.Alert{SiteID: g.site, Kind: "customer", Enabled: true, Target: "me@site.com"})
+	if err := g.ctl.MarkFired(ctx, cust.ID, fired); err != nil {
 		t.Fatal(err)
 	}
 
@@ -103,15 +110,24 @@ func TestBellFeedSources(t *testing.T) {
 	if want := time.Date(now.Year(), now.Month(), now.Day()-2, 0, 0, 0, 0, time.UTC).Unix(); int64(m["at"].(float64)) != want {
 		t.Fatalf("a milestone is at its day: %v want %d", m["at"], want)
 	}
-	if a := rowByID(rows, "alert:1"); a == nil || a["what"] != "customer" || int64(a["at"].(float64)) != fired {
+	if a := rowByID(rows, "alert:1"); a == nil || a["what"] != "disk" || int64(a["at"].(float64)) != fired {
 		t.Fatalf("alert: %v", a)
 	}
 	if s := rowByID(rows, "busy:surge:s1"); s == nil || int64(s["at"].(float64)) != now.Add(-5*time.Hour).Unix()+17 {
 		t.Fatalf("surge: %v", s)
 	}
+	n := 0
+	for _, r := range rows {
+		if r["kind"] == "alert" {
+			n++
+		}
+	}
+	if n != 1 {
+		t.Fatalf("two sends of one alert, and a customer alert, are %d alert rows", n)
+	}
 	var goals feedRow
 	for _, r := range rows {
-		if r["kind"] == "goal" && strings.HasPrefix(r["id"].(string), "goal:"+g.site+":newsletter:") {
+		if r["kind"] == "goal" && strings.HasPrefix(r["id"].(string), "goal:"+g.site+":"+goalKey("newsletter")+":") {
 			goals = r
 		}
 	}
@@ -223,4 +239,74 @@ func TestBellFeedHourInTheSitesZone(t *testing.T) {
 		}
 	}
 	t.Fatal("no goal row")
+}
+
+// A source that cannot be read is told, never cached, and a site that is down does not leave the list over it.
+func TestBellFeedPartial(t *testing.T) {
+	g := newRig(t)
+	ctx := context.Background()
+	owner := client()
+	g.setup(t, owner)
+	if _, err := g.ctl.StartIncident(ctx, g.site, "down", g.now.Add(-time.Hour).Unix(), "timeout"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := g.ctl.DB.Exec(`ALTER TABLE alert_fires RENAME TO alert_fires_gone`); err != nil {
+		t.Fatal(err)
+	}
+	code, out := do(t, owner, "GET", g.srv.URL+"/api/v1/me/notifications", "")
+	if code != http.StatusOK || out["partial"] != true || out["first"] != false {
+		t.Fatalf("a failed source: %d %v", code, out)
+	}
+	if len(out["notifications"].([]any)) != 1 {
+		t.Fatalf("the down row stays: %v", out["notifications"])
+	}
+	if len(g.api.bell.m) != 0 {
+		t.Fatal("a partial list was kept")
+	}
+	if _, err := g.ctl.DB.Exec(`ALTER TABLE alert_fires_gone RENAME TO alert_fires`); err != nil {
+		t.Fatal(err)
+	}
+	_, out = do(t, owner, "GET", g.srv.URL+"/api/v1/me/notifications", "")
+	if out["partial"] != false || out["first"] != true || out["user"] == "" {
+		t.Fatalf("whole again: %v", out)
+	}
+	_, out = do(t, owner, "GET", g.srv.URL+"/api/v1/me/notifications", "")
+	if out["first"] != false {
+		t.Fatalf("told once: %v", out)
+	}
+}
+
+// A site that is down is in the list past the cap on the rest, and a long goal name still makes a short id.
+func TestBellFeedPinsDownAndKeepsIdsShort(t *testing.T) {
+	g := newRig(t)
+	ctx := context.Background()
+	owner := client()
+	g.setup(t, owner)
+	if _, err := g.ctl.StartIncident(ctx, g.site, "down", g.now.Add(-6*24*time.Hour).Unix(), "timeout"); err != nil {
+		t.Fatal(err)
+	}
+	al, _ := g.ctl.SaveAlert(ctx, sqlite.Alert{SiteID: g.site, Kind: "disk", Enabled: true, Target: "me@site.com"})
+	for i := 0; i < bellMax+10; i++ {
+		if err := g.ctl.MarkFired(ctx, al.ID, g.now.Add(-time.Duration(i+1)*5*time.Minute).Unix()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g.event(t, event.Event{Kind: event.KindGoal, Goal: strings.Repeat("g", 190), EventID: 9001, TS: g.now.Add(-3 * time.Hour).UnixMilli(), Visitor: 1, Path: "/"})
+	g.waitApplied(t, 1)
+	rows := feedOf(t, g, owner)
+	if len(rows) != bellMax+1 {
+		t.Fatalf("the cap and the down site: %d rows", len(rows))
+	}
+	down := 0
+	for _, r := range rows {
+		if r["kind"] == "down" {
+			down++
+		}
+		if len(r["id"].(string)) > 120 {
+			t.Fatalf("an id too long to be marked read: %v", r["id"])
+		}
+	}
+	if down != 1 {
+		t.Fatalf("down rows: %d", down)
+	}
 }
