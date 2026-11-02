@@ -3,6 +3,7 @@
 import { expect, test } from './fixtures'
 import { flowSession } from './flows-kit'
 import { API, STEADY_DOMAIN } from '../playwright.config'
+import { mockFeed, siteIdOf } from './bell-feed-kit'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough for the bell')
 
@@ -17,8 +18,9 @@ for (const colorScheme of ['dark', 'light'] as const) {
     test.use({ colorScheme })
 
     test(`a busy row opens its story, then Explore filtered (${colorScheme})`, async ({ page }) => {
-      const iso = (h: number) => new Date(Date.now() - h * 3600_000).toISOString().slice(0, 16)
-      await page.route(/\/moments\?/, (r) => r.fulfill({ json: { moments: [{ t: iso(1), kind: 'surge', factor: 2.4, referrer: 'l.facebook.com', visitors: 52 }] } }))
+      await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+      const site = await siteIdOf(page, STEADY_DOMAIN)
+      await mockFeed(page, () => [{ id: 'busy:surge:x', kind: 'busy', what: 'surge', site, at: Math.floor(Date.now() / 1000) - 3600, factor: 2.4, source: 'l.facebook.com', visitors: 52 }])
       // The story the server keeps of that spell: its last hour, the sources and pages of it.
       await page.route(/\/surges\/near/, (r) => {
         const started = Number(new URL(r.request().url()).searchParams.get('t'))
@@ -61,10 +63,7 @@ for (const colorScheme of ['dark', 'light'] as const) {
     })
 
     test(`an empty bell says so (${colorScheme})`, async ({ page }) => {
-      await page.route(/\/moments\?/, (r) => r.fulfill({ json: { moments: [] } }))
-      await page.route(/\/api\/v1\/incidents(\?|$)/, (r) => r.fulfill({ json: { incidents: [] } }))
-      await page.route(/\/api\/v1\/sites\/[^/]+\/milestones(\?|$)/, (r) => r.fulfill({ json: { enabled: true, milestones: [], moment: null } }))
-      await page.route(/\/api\/v1\/sites\/[^/]+\/mentions(\?|$)/, (r) => r.fulfill({ json: { mentions: [] } }))
+      await mockFeed(page, () => [])
       await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
       await page.setViewportSize({ width: 1280, height: 900 })
       await page.goto(`${API}/${STEADY_DOMAIN}?view=briefing&period=30d&v=`)

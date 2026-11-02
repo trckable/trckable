@@ -6,6 +6,7 @@ import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
+import { milestone, mockFeed, siteIdOf } from './bell-feed-kit'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough for the bell')
 
@@ -45,20 +46,17 @@ test.beforeAll(async () => {
 for (const width of [1440, 390]) {
   test(`at ${width} px a new notice reaches the bell without a reload, and the number is the unread rows`, async ({ page }) => {
     test.setTimeout(150_000)
-    const now = Math.floor(Date.now() / 1000)
-    const mile = (step: string, value: number, ago: number) => ({ kind: 'visitors', step: `fresh${width}-${step}`, value, day: '2026-01-01', created_at: now - ago, new: false, shared: false })
-    const list = [mile('100', 100, 7200)]
-    await page.route(/\/api\/v1\/sites\/[^/]+\/milestones(\?|$)/, (route) => route.fulfill({ json: { enabled: true, milestones: [...list], moment: null } }))
-    // Only the rows this spec brings: the shared database holds incidents and mentions that other specs made.
-    await page.route(/\/api\/v1\/incidents(\?|$)/, (route) => route.fulfill({ json: { incidents: [] } }))
-    await page.route(/\/api\/v1\/sites\/[^/]+\/mentions(\?|$)/, (route) => route.fulfill({ json: { mentions: [] } }))
-    await page.setViewportSize({ width, height: 844 })
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+    // Only the rows this spec brings: the shared database holds incidents and mentions that other specs made.
+    const site = await siteIdOf(page, HISTORY_DOMAIN)
+    const list = [milestone(site, `fresh${width}-100`, 100, 2)]
+    await mockFeed(page, () => [...list])
+    await page.setViewportSize({ width, height: 844 })
     await page.goto(`${API}/${HISTORY_DOMAIN}?view=live&v=`)
     const dot = page.locator('#bellDot')
     await expect(dot).toHaveText('1', { timeout: 20_000 })
     // A second notice arrives while the page is open: the next /now (each new minute) brings the bell to it.
-    list.unshift(mile('1000', 1000, 60))
+    list.unshift(milestone(site, `fresh${width}-1000`, 1000, 1))
     await expect(dot).toHaveText('2', { timeout: 110_000 })
     await page.locator('#bellBtn').click()
     const menu = page.locator('#bellMenu.on, aside.cd.on')
@@ -66,8 +64,3 @@ for (const width of [1440, 390]) {
     expect(await menu.locator('.nf.unread').count()).toBe(Number(await dot.textContent()))
   })
 }
-
-// The bell also tells the busy spells the server recorded (its moments); this spec counts the rows it sets up itself.
-test.beforeEach(async ({ page }) => {
-  await page.route(/\/moments\?/, (r) => r.fulfill({ json: { moments: [] } }))
-})

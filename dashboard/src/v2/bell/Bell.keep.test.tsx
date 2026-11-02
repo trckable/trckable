@@ -2,10 +2,9 @@
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { api, type Site } from '../../lib/api'
-import { incidents } from '../../features/incidents/api'
+import type { Site } from '../../lib/api'
 import { more } from '../../lib/apiMore'
-import { momentsApi } from '../../features/moments/api'
+import type { FeedRow } from './feed'
 import { V2ExtrasContext, type V2Extras } from '../slots'
 import type { Notice } from './notices'
 import { Bell } from './Bell'
@@ -14,13 +13,14 @@ import { useNotices } from './useNotices'
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 const site = { id: 's1', domain: 'a.com' } as Site
+const down: FeedRow = { id: 'down:i1', kind: 'down', site: 's1', at: Math.floor(Date.now() / 1000) - 100 }
 const now = Math.floor(Date.now() / 1000)
 const hosted = (id: string, at: number, extra: Partial<Notice> = {}): Notice => ({ id, kind: 'plan', site: '', title: id, sub: 's', at, ...extra })
 const DOWN = /^a\.com down since \d\d:\d\d$/
 const flush = () => act(() => new Promise((r) => setTimeout(r, 20)))
 
 function Harness({ sites }: { extras: V2Extras; sites: Site[] }) {
-  const notices = useNotices(sites[0] ?? null, sites)
+  const notices = useNotices(sites)
   return <Bell site={sites[0] ?? null} notices={notices} />
 }
 
@@ -44,9 +44,9 @@ function Provider({ extras, sites }: { extras: V2Extras; sites: Site[] }) {
 const rows = (host: HTMLElement) => [...host.querySelectorAll('.nft b')].map((b) => b.textContent)
 const open = () => act(() => document.querySelector<HTMLButtonElement>('#bellBtn')?.click())
 
-// The bell also asks for the site's busy spells: answered here, so no read waits on a network that is not there.
+// The bell asks the server once: answered here, so no read waits on a network that is not there.
 beforeEach(() => {
-  vi.spyOn(momentsApi, 'moments').mockResolvedValue({ moments: [] })
+  vi.spyOn(more, 'notifications').mockResolvedValue({ notifications: [down] })
 })
 
 afterEach(() => {
@@ -57,8 +57,6 @@ afterEach(() => {
 
 describe('the bell after a row is opened', () => {
   it('holds hosted rows back until the build says its list is read, then shows all at once', async () => {
-    vi.spyOn(incidents, 'account').mockResolvedValue({ incidents: [{ id: 'i1', site: 's1', kind: 'down', started_at: now - 100, ended_at: null, cause: '', expected_visits: null, note: '' }] })
-    vi.spyOn(api, 'milestones').mockResolvedValue({ enabled: true, milestones: [], moment: null })
     vi.spyOn(more, 'bellRead').mockResolvedValue({ read: [] })
     const base = { readAll: () => undefined, dismiss: () => undefined, archive: { items: [], load: () => undefined, loading: false, words: { none: 'n' } } }
     const m = mount({ bell: [hosted('plan', now - 50)], bellMore: { ...base, ready: false } }, [site])
@@ -73,8 +71,6 @@ describe('the bell after a row is opened', () => {
   })
 
   it('keeps its rows when a row is opened, the page mounts the bell again and the read marks arrive late', async () => {
-    vi.spyOn(incidents, 'account').mockResolvedValue({ incidents: [{ id: 'i1', site: 's1', kind: 'down', started_at: now - 100, ended_at: null, cause: '', expected_visits: null, note: '' }] })
-    vi.spyOn(api, 'milestones').mockResolvedValue({ enabled: true, milestones: [], moment: null })
     let answer: (v: { read: string[] }) => void = () => undefined
     vi.spyOn(more, 'bellRead').mockReturnValue(new Promise((r) => (answer = r)))
     vi.spyOn(more, 'markBellRead').mockResolvedValue({ read: [] })

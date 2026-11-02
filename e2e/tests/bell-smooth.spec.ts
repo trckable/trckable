@@ -6,6 +6,7 @@ import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
+import { milestone, mockFeed, siteIdOf } from './bell-feed-kit'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough for the bell')
 
@@ -51,20 +52,12 @@ for (const width of [1440, 390]) {
   test(`at ${width} px the bell opens complete, the number is the unread rows, and a new notice slides in without a jump`, async ({ page }) => {
     test.setTimeout(90_000)
     const now = Math.floor(Date.now() / 1000)
-    const mile = (step: string, ago: number) => ({ kind: 'visitors', step: `smooth${width}-${run()}-${step}`, value: 100, day: '2026-01-01', created_at: now - ago, new: false, shared: false })
-    const siteIds = new Set<string>()
+    await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+    const site = await siteIdOf(page, HISTORY_DOMAIN)
+    const mile = (step: string, daysAgo: number) => milestone(site, `smooth${width}-${run()}-${step}`, 100, daysAgo)
     let arrived = false
-    await page.route(/\/api\/v1\/sites\/[^/]+\/milestones(\?|$)/, (route) => {
-      siteIds.add(/sites\/([^/]+)\//.exec(route.request().url())![1])
-      return route.fulfill({ json: { enabled: true, milestones: [mile('a', 7200), mile('b', 3600), mile('c', 1800)], moment: null } })
-    })
-    // The account's incidents: none at first, then a site that stopped answering.
-    await page.route(/\/api\/v1\/incidents(\?|$)/, (route) => {
-      const site = [...siteIds][0]
-      const incidents = arrived && site ? [{ id: `smooth${width}`, site, kind: 'down', started_at: now - 30, ended_at: null, cause: 'timeout', expected_visits: null, note: '' }] : []
-      return route.fulfill({ json: { incidents } })
-    })
-    await page.route(/\/api\/v1\/sites\/[^/]+\/mentions(\?|$)/, (route) => route.fulfill({ json: { mentions: [] } }))
+    // The account's list: three milestones, then a site that stopped answering.
+    await mockFeed(page, () => [...(arrived ? [{ id: `down:smooth${width}`, site, kind: 'down', at: now - 30 }] : []), mile('a', 3), mile('b', 2), mile('c', 1)])
     await page.addInitScript(() => {
       const w = window as unknown as { __p: Probe }
       w.__p = { counts: [], cls: 0, vis: 'visible', skew: 0 }
@@ -134,17 +127,16 @@ for (const width of [1440, 390]) {
 for (const width of [1440, 390]) {
   test(`at ${width} px opening a row, and the read marks answering after it, never empty the list`, async ({ page }) => {
     test.setTimeout(90_000)
-    const now = Math.floor(Date.now() / 1000)
-    const mile = (step: string, ago: number) => ({ kind: 'visitors', step: `keep${width}-${run()}-${step}`, value: 100, day: '2026-01-01', created_at: now - ago, new: false, shared: false })
-    await page.route(/\/api\/v1\/sites\/[^/]+\/milestones(\?|$)/, (route) => route.fulfill({ json: { enabled: true, milestones: [mile('a', 7200), mile('b', 3600), mile('c', 1800)], moment: null } }))
-    await page.route(/\/api\/v1\/incidents(\?|$)/, (route) => route.fulfill({ json: { incidents: [] } }))
-    await page.route(/\/api\/v1\/sites\/[^/]+\/mentions(\?|$)/, (route) => route.fulfill({ json: { mentions: [] } }))
+    await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+    const site = await siteIdOf(page, HISTORY_DOMAIN)
+    const mile = (step: string, daysAgo: number) => milestone(site, `keep${width}-${run()}-${step}`, 100, daysAgo)
+    await mockFeed(page, () => [mile('a', 3), mile('b', 2), mile('c', 1)])
     // The account's read marks answer late, after the row has been opened, and say another row was read elsewhere.
     let release: () => void = () => undefined
     const late = new Promise<void>((r) => (release = r))
     await page.route(/\/api\/v1\/me\/bell-read$/, async (route) => {
       await late
-      await route.fulfill({ json: { read: [`mile:visitors:keep${width}-b`] } })
+      await route.fulfill({ json: { read: [`mile:${site}:visitors:keep${width}-${run()}-b`] } })
     })
     await page.addInitScript(() => {
       const w = window as unknown as { __k: { counts: number[]; empty: boolean } }
@@ -184,8 +176,3 @@ for (const width of [1440, 390]) {
     expect(await menu.locator('.nf.unread').count()).toBe(Number(await page.locator('#bellDot').textContent()))
   })
 }
-
-// The bell also tells the busy spells the server recorded (its moments); this spec counts the rows it sets up itself.
-test.beforeEach(async ({ page }) => {
-  await page.route(/\/moments\?/, (r) => r.fulfill({ json: { moments: [] } }))
-})

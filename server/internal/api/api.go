@@ -140,6 +140,7 @@ type API struct {
 	storyMu    sync.Mutex
 	stories    map[string]storyEntry // how each site's surge went, kept half a minute
 	busier     busierCache           // each site's "busier than usual" answer, kept half a minute
+	bell       bellCache             // each person's bell list, kept half a minute
 	refIcons   *refIcons             // the icons of referring sites, fetched and kept here
 	search     *searchState
 	searchOnce sync.Once
@@ -237,6 +238,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("POST /api/v1/logout", a.logout)
 	handle("GET /api/v1/me", a.authed(a.me))
 	handle("PUT /api/v1/me/keys", a.authed(a.setKeys))
+	handle("GET /api/v1/me/notifications", a.authed(a.bellFeed))
 	handle("GET /api/v1/me/bell-read", a.authed(a.bellRead))
 	handle("POST /api/v1/me/bell-read", a.authed(a.markBellRead))
 	handle("GET /api/v1/me/devices", a.authed(a.devices))

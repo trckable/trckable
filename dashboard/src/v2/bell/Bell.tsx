@@ -1,6 +1,7 @@
 // The bell: the list of notices, which of them are read, and where a tap on one goes.
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
-import type { Milestone, Site } from '../../lib/api'
+import type { Filter as ApiFilter, Milestone, Site } from '../../lib/api'
+import { openExplore } from '../explore/open'
 import { lazyLoad } from '../../lib/lazyLoad'
 import { signals } from '../../features/signals/copy'
 import type { Surge } from '../../features/signals/surge'
@@ -23,9 +24,17 @@ import { QUERY } from '../../kit/breakpoints'
 const MilestoneSheet = lazyLoad(() => import('./MilestoneSheet'))
 const SurgeModal = lazyLoad(() => import('../../features/signals/SurgeModal'))
 
-function go(n: Notice) {
+/** Explore on the row's site: opened in place when that site is in view, else its page is opened with Explore on. */
+function exploreOn(n: Notice, site: Site | null, tab: Parameters<typeof openExplore>[0], filters?: ApiFilter[]) {
+  if (site && site.domain === n.site) openExplore(tab, filters)
+  else navigate(`/${encodeURIComponent(n.site)}${writeView({ ...readView(new URLSearchParams()), xp: tab, xf: filters })}`)
+}
+
+function go(n: Notice, site: Site | null) {
   const base = '/' + encodeURIComponent(n.site)
-  if (n.kind === 'down' || n.kind === 'up') navigate(`${base}/incidents`)
+  if (n.kind === 'sale') exploreOn(n, site, 'sales')
+  else if (n.kind === 'signup' || n.kind === 'goal') exploreOn(n, site, 'overview')
+  else if (n.kind === 'down' || n.kind === 'up') navigate(`${base}/incidents`)
   else if (n.kind === 'spike') navigate(`${base}?view=live`)
   else if (n.kind === 'mention') navigate(mentionsPath(n.site))
   else navigate(`${base}?view=briefing&period=${n.kind === 'weekly' ? '7d' : 'today'}`)
@@ -115,17 +124,22 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
     if (n.dismissable && !archived && dismiss) out.push({ key: 'archive', label: copy.archive, run: () => away(n) })
     return out
   }
+  /** What the row says of the time: nothing for a row of several, "All day" for what is kept by the day, else its span or its clock. */
+  const whenOfRow = (n: Notice): string => {
+    if (n.members) return ''
+    return n.day ? copy.allDay : (n.when ?? timeOf(n.at))
+  }
   const rowOf = (n: Notice & { unread: boolean }, archived: boolean): BellRow => ({
     id: n.id,
     kind: n.kind,
     at: n.at,
     title: n.title,
     sub: n.sub,
-    time: n.members ? '' : (n.when ?? timeOf(n.at)),
+    time: whenOfRow(n),
     unread: n.unread,
     bad: n.bad,
     source: n.source,
-    label: n.source ? [n.title, n.sub, brandName(n.source), n.members ? '' : (n.when ?? timeOf(n.at))].filter(Boolean).join(', ') : undefined,
+    label: n.source ? [n.title, n.sub, brandName(n.source), whenOfRow(n)].filter(Boolean).join(', ') : undefined,
     lines: n.members?.map((m) => ({ id: m.id, text: `${m.site} · ${timeOf(m.at)}` })),
     actions: actionsOf(n, archived),
   })
@@ -170,7 +184,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
         if (n?.milestone && site && n.site === site.domain) setTold(n.milestone)
         else if (n?.busy && !n.open) setBusy(n)
         else if (n?.open) n.open()
-        else if (n) go(n)
+        else if (n) go(n, site)
       }}
       onAll={markAll}
       archive={archive && { rows: old, load: archive.load, loading: archive.loading, none: archive.words.none }}

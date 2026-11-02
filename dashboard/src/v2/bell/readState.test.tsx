@@ -59,6 +59,23 @@ describe('the read set a bell shows', () => {
     stop()
   })
 
+  it('tells the server again at the next read when it did not take a mark, and the row stays read meanwhile', async () => {
+    vi.spyOn(more, 'bellRead').mockResolvedValue({ read: [] })
+    const post = vi.spyOn(more, 'markBellRead').mockRejectedValueOnce(new Error('offline')).mockResolvedValue({ read: [] })
+    const { out, stop } = mount()
+    await act(() => new Promise((r) => setTimeout(r, 5)))
+    act(() => out.current?.mark(['x']))
+    await act(() => Promise.resolve())
+    expect(out.current?.read.has('x')).toBe(true)
+    expect(post).toHaveBeenCalledTimes(1)
+    act(() => out.current?.sync())
+    expect(post).toHaveBeenCalledTimes(2)
+    expect(post.mock.calls[1][0]).toEqual(['x'])
+    act(() => out.current?.sync())
+    expect(post).toHaveBeenCalledTimes(2)
+    stop()
+  })
+
   it('follows another tab through the storage event', async () => {
     vi.spyOn(more, 'bellRead').mockResolvedValue({ read: [] })
     vi.spyOn(more, 'markBellRead').mockResolvedValue({ read: [] })

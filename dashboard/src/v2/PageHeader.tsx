@@ -66,7 +66,7 @@ export function PageHeader(p: PageHeaderProps) {
   const latest = useLatest(appVersion(), updateChecks())
   const update = p.update ?? latest?.v
   const onUpdate = p.onUpdate ?? (() => window.dispatchEvent(new Event('trckable:update-open')))
-  const notices = useNotices(p.site, p.sites)
+  const notices = useNotices(p.sites)
   const viewer = !can('site.add')
   const [find, setFind] = useState(false)
   const [seed, setSeed] = useState('')

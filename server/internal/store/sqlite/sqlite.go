@@ -1121,6 +1121,15 @@ var migrations = []string{
 		site_id TEXT PRIMARY KEY REFERENCES sites(id) ON DELETE CASCADE,
 		goal    TEXT NOT NULL
 	) WITHOUT ROWID;`,
+	// 82: each time an alert fired, for the bell to tell at the minute it
+	// happened (alerts.go MarkFired). Append-only; rows older than a month go.
+	`CREATE TABLE IF NOT EXISTS alert_fires (
+		id      INTEGER PRIMARY KEY AUTOINCREMENT,
+		site_id TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		kind    TEXT NOT NULL,
+		at      INTEGER NOT NULL
+	);
+	CREATE INDEX IF NOT EXISTS alert_fires_site ON alert_fires (site_id, at);`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

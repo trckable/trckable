@@ -2,6 +2,7 @@
 // privacy, payments, a site's settings and the full-mode reports): kept apart
 // from lib/api.ts so the first load does not carry them. Same shapes, same error
 // handling (api.ts's call).
+import type { FeedRow } from '../v2/bell/feed'
 import { act, call, raw, rangeQS } from './api'
 
 /** A site's domain, the earlier ones still accepted and the Search Console match; `preview` is a change asked about. */
@@ -188,6 +189,7 @@ function sharedBellRead(): Promise<{ read: string[] }> {
 export const more = {
   me: () => call<{ kind: string; email?: string; ip?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean; mentions?: boolean }>('GET', '/me'),
   setKeys: (keys: Record<string, string>) => call<{ keys: Record<string, string> }>('PUT', '/me/keys', { keys }),
+  notifications: () => call<{ notifications: FeedRow[] }>('GET', '/me/notifications'),
   bellRead: sharedBellRead,
   markBellRead: (read: string[]) => {
     heldBell = null

@@ -293,6 +293,7 @@ func (f *answerAsker) holdBack(ctx context.Context, now time.Time) {
 		}
 	}
 	_ = f.st.SetMeta(ctx, sqlite.AnswerPausedKey, strconv.FormatInt(until, 10))
+	_ = f.st.SetMeta(ctx, sqlite.AnswerPausedAtKey, strconv.FormatInt(now.Unix(), 10))
 	slog.Info("answers: the monthly budget is spent; rounds wait for next month")
 	sites, err := f.st.AnswerSitesDue(ctx, now.Unix()+1<<40, 1000)
 	if err != nil || f.told == nil {

@@ -2,20 +2,16 @@
 // records (incidents, milestones, mentions). Pure; read marks are kept by useNotices.
 import { lineOf } from '../../features/milestones/words'
 import type { Alert, Milestone, Site } from '../../lib/api'
-import type { Incident } from '../../features/incidents/api'
-import type { Mention } from '../../features/mentions/api'
 import { answersCopy } from '../../features/answers/copy'
-import type { AnswersReport } from '../../features/answers/api'
 import { STALE_DAYS } from '../../features/install/journey'
 import { sourceName } from '../briefing/model'
-import { duration, isDown } from '../../features/incidents/model'
+import { duration } from '../../features/incidents/model'
 import { clock } from '../../lib/site'
-import { fmtFixed, fmtInt } from '../../lib/format'
-import type { Moment } from '../../features/story/moments'
-import type { SignupMoment } from '../../features/signals/signupMoments'
+import { fmtFixed, fmtInt, fmtMoney } from '../../lib/format'
+import type { FeedRow } from './feed'
 import { copy } from './copy'
 
-export type NoticeKind = 'down' | 'up' | 'spike' | 'sale' | 'signup' | 'mention' | 'answer' | 'milestone' | 'weekly' | 'failed' | 'plan' | 'team' | 'setup'
+export type NoticeKind = 'down' | 'up' | 'spike' | 'sale' | 'signup' | 'goal' | 'alert' | 'mention' | 'answer' | 'milestone' | 'weekly' | 'failed' | 'plan' | 'team' | 'setup'
 
 export interface Notice {
   id: string
@@ -26,6 +22,8 @@ export interface Notice {
   sub: string
   /** Unix seconds. */
   at: number
+  /** The calendar day ("2026-10-31") of what is kept by the day (a milestone): listed under it as "All day", at the day's start. */
+  day?: string
   /** From a build that keeps its own list: it can be put away (to its archive). */
   dismissable?: boolean
   /** Already read where it comes from (a build's own list): listed, but not counted as unread and no chime. */
@@ -54,26 +52,6 @@ export interface Notice {
 
 export type AlertKind = Alert['kind']
 
-/** How many of the account's other sites the bell reads on top of the one in view. */
-export const OTHERS = 6
-
-/** The sites the bell reads besides the one in view: those that have had a visit, the first few in the account's order. */
-export const othersOf = (sites: Site[], current: Site | null): Site[] => sites.filter((s) => s.id !== current?.id && !!s.last_event_at).slice(0, OTHERS)
-
-/** One row for each time a site stopped answering: red and "down since 18:39" while it goes on, "was down 10m" with its span once it is over. The server's incident id pairs the two; no row is made of a guess. */
-export function fromIncidents(list: Incident[], domain: (id: string) => string | undefined, now: number): Notice[] {
-  const out: Notice[] = []
-  const at = (t: number) => clock(new Date(t * 1000), '')
-  for (const i of list) {
-    const d = domain(i.site)
-    if (!d || !isDown(i)) continue
-    const over = i.ended_at !== null && i.ended_at <= now
-    if (over) out.push({ id: `up:${i.id}`, kind: 'up', site: d, siteId: i.site, title: copy.wasDownFor(d, duration((i.ended_at ?? now) - i.started_at)), sub: '', when: `${at(i.started_at)}–${at(i.ended_at ?? now)}`, at: i.ended_at ?? now })
-    else out.push({ id: `down:${i.id}`, kind: 'down', site: d, siteId: i.site, title: copy.downSince(d, at(i.started_at)), sub: '', when: '', bad: true, at: i.started_at })
-  }
-  return out
-}
-
 /** A site added days ago that has still had no visit: one gentle reminder to finish the install. */
 export function fromSetup(sites: Site[], now: number): Notice[] {
   return sites.flatMap((s) => {
@@ -82,54 +60,79 @@ export function fromSetup(sites: Site[], now: number): Notice[] {
   })
 }
 
-export function fromMentions(list: Mention[], domain: string): Notice[] {
-  return list.map((m) => ({ id: `mention:${m.id}`, kind: 'mention' as const, site: domain, title: copy.mention(m.source === 'hn' ? sourceName(m.host) : m.host), sub: m.title, source: m.host, at: m.posted_at }))
-}
+/** The start of a calendar day in this browser's zone, as unix seconds: where a row kept by the day sits in the list. */
+const startOf = (day: string): number => Math.floor(new Date(`${day}T00:00:00`).getTime() / 1000)
 
 /**
- * A busy spell the server recorded: its hour (a spike) or its moment (a surge: the most online at once), how many times the
- * usual it was, and the host that sent most of them, so the bell draws that source's own mark. One row for each moment: a
- * spike of the hour a surge falls in is the same moment, and is left out.
+ * The server's list as notices, in its order. A row keeps its id when the thing it tells goes on (a site that was down is
+ * the same row once it is back, told "was down 10m" where it sat), and a row of a site the person has no longer is left out.
  */
-export function fromMoments(list: Moment[], domain: string): Notice[] {
-  const hour = (t: string) => t.slice(0, 13)
-  const surges = new Set(list.filter((m) => m.kind === 'surge').map((m) => hour(m.t)))
-  return list.flatMap((m) => {
-    if ((m.kind !== 'spike' && m.kind !== 'surge') || (m.kind === 'spike' && surges.has(hour(m.t)))) return []
-    const at = Math.floor(Date.parse(m.t.length > 10 ? `${m.t.slice(0, 16)}:00Z` : `${m.t}T00:00:00Z`) / 1000)
-    if (!Number.isFinite(at)) return []
-    const size = m.kind === 'surge' ? copy.onlineN(fmtInt(m.visitors ?? 0)) : copy.peopleN(fmtInt(m.visitors ?? 0))
-    const sub = [m.visitors ? size : '', m.factor ? copy.vsUsual(fmtFixed(m.factor, 1)) : ''].filter(Boolean).join(' · ')
-    return [{ id: `busy:${m.kind}:${m.t}`, kind: 'spike' as const, site: domain, title: copy.busy(domain), sub, source: m.referrer, at, busy: { visitors: m.visitors ?? 0, factor: m.factor ?? 0 } }]
-  })
-}
-
-/** What the assistants did lately with the site's questions (the first time one names it is told as such), and a budget that ran out. */
-export function fromAnswers(rep: Pick<AnswersReport, 'changes' | 'paused'>, domain: string, now: number, open: () => void): Notice[] {
-  const c = answersCopy
-  const out: Notice[] = (rep.changes ?? []).map((x) => {
-    const engine = c.engine[x.engine] ?? x.engine
-    const started = x.first_ever ? c.first(engine) : c.change.seen(engine, x.question)
-    const title = x.kind === 'dropped' ? c.change.dropped(engine, x.question) : started
-    return { id: `answer:${x.engine}:${x.question_id}:${x.at}`, kind: 'answer' as const, site: domain, title, sub: c.section[0], at: x.at, open }
-  })
-  if (rep.paused) out.push({ id: `answer:paused:${new Date(now * 1000).toISOString().slice(0, 7)}`, kind: 'answer', site: domain, title: c.paused, sub: c.section[0], at: now, open })
+export function fromFeed(rows: FeedRow[], sites: Site[], now: number, open: () => void = () => undefined): Notice[] {
+  const out: Notice[] = []
+  for (const r of rows) {
+    const s = sites.find((x) => x.id === r.site)
+    const d = s?.domain ?? r.domain ?? ''
+    if (r.site && (sites.length > 0 ? !s : !d)) continue
+    const base = { id: r.id, site: d, siteId: r.site || undefined, at: r.at }
+    const hm = (t: number) => clock(new Date(t * 1000), '')
+    switch (r.kind) {
+      case 'down': {
+        const over = r.ended != null && r.ended <= now
+        if (over) out.push({ ...base, kind: 'up', title: copy.wasDownFor(d, duration((r.ended ?? now) - r.at)), sub: '', when: `${hm(r.at)}–${hm(r.ended ?? now)}` })
+        else out.push({ ...base, kind: 'down', title: copy.downSince(d, hm(r.at)), sub: '', when: '', bad: true })
+        break
+      }
+      case 'busy': {
+        const size = r.what === 'surge' ? copy.onlineN(fmtInt(r.visitors ?? 0)) : copy.peopleN(fmtInt(r.visitors ?? 0))
+        const sub = [r.visitors ? size : '', r.factor ? copy.vsUsual(fmtFixed(r.factor, 1)) : ''].filter(Boolean).join(' · ')
+        out.push({ ...base, kind: 'spike', title: copy.busy(d), sub, source: r.source, busy: { visitors: r.visitors ?? 0, factor: r.factor ?? 0 } })
+        break
+      }
+      case 'mention':
+        out.push({ ...base, kind: 'mention', title: copy.mention(r.source === 'hn' ? sourceName(r.host ?? '') : (r.host ?? '')), sub: r.text ?? '', source: r.host })
+        break
+      case 'answer': {
+        const c = answersCopy
+        const engine = c.engine[r.engine ?? ''] ?? r.engine ?? ''
+        const started = r.first ? c.first(engine) : c.change.seen(engine, r.text ?? '')
+        const title = r.what === 'dropped' ? c.change.dropped(engine, r.text ?? '') : started
+        if (r.what === 'paused') {
+          out.push({ ...base, kind: 'answer', title: c.paused, sub: c.section[0], open })
+          break
+        }
+        out.push({ ...base, kind: 'answer', title, sub: c.section[0], open })
+        break
+      }
+      case 'milestone':
+        if (r.milestone && r.day) out.push({ ...base, kind: 'milestone', title: lineOf(r.milestone, true), sub: '', at: startOf(r.day), day: r.day, milestone: r.milestone })
+        break
+      case 'sale': {
+        const n = r.count ?? 1
+        out.push({ ...base, kind: 'sale', title: copy.sales(n), sub: fmtMoney(r.amount ?? 0, r.currency ?? 'USD', r.exponent ?? 2) })
+        break
+      }
+      case 'signup':
+        out.push({ ...base, kind: 'signup', title: copy.signups(r.count ?? 1), sub: '' })
+        break
+      case 'goal':
+        out.push({ ...base, kind: 'goal', title: copy.goalReached(r.text ?? '', r.count ?? 1), sub: '' })
+        break
+      case 'alert': {
+        const kind = (r.what ?? '') as AlertKind
+        const title = ALERT_TITLE[kind]?.(d)
+        if (title) out.push({ ...base, kind: 'alert', alert: kind, title, sub: '' })
+        break
+      }
+    }
+  }
   return out
 }
 
-/** The signups seen on the stream: told as they happen, so a row each, with the host that sent the person. */
-export function fromSignups(list: SignupMoment[], domain: string): Notice[] {
-  return list.filter((m) => m.site === domain).map((m) => ({ id: m.id, kind: 'signup' as const, site: domain, title: m.title, sub: '', source: m.source, at: Math.floor(m.ts / 1000) }))
-}
-
-export function fromMilestones(list: Milestone[], domain: string): Notice[] {
-  return list.map((m) => ({ id: `mile:${m.kind}:${m.step}`, kind: 'milestone' as const, site: domain, title: lineOf(m, true), sub: '', at: m.created_at, milestone: m }))
-}
+const ALERT_TITLE: Partial<Record<AlertKind, (d: string) => string>> = { stopped: copy.alertStopped, spike: copy.alertSpike, threshold: copy.alertThreshold, customer: copy.alertCustomer, disk: copy.alertDisk }
 
 /**
  * A build's own feed (its slot) tells surges and milestones with their numbers: where it has any of a kind, the site's own
- * of that kind are left out, so one event is not two rows. Alert rules that fired are not rows: they carry no number or
- * detail to say, and the feed or the Briefing has the event itself.
+ * of that kind are left out, so one event is not two rows.
  */
 export function withFeed(own: Notice[], feed: Notice[] | undefined): Notice[] {
   if (!feed?.length) return own
@@ -141,11 +144,11 @@ export function withFeed(own: Notice[], feed: Notice[] | undefined): Notice[] {
 /** The list's one order: newest first, and the id for notices of the same second, so the same rows never swap places between reads. */
 export const byNewest = (a: Pick<Notice, 'at' | 'id'>, b: Pick<Notice, 'at' | 'id'>): number => b.at - a.at || a.id.localeCompare(b.id)
 
-/** Newest first, a week back at most, and never more than 40. */
+/** Newest first (the server cut the week), each once, and never more than 40. */
 export function arrange(all: Notice[], now: number): Notice[] {
   const seen = new Set<string>()
   return all
-    .filter((n) => n.at <= now + 60 && n.at >= now - 7 * 86400 && !seen.has(n.id) && !!seen.add(n.id))
+    .filter((n) => n.at <= now + 60 && !seen.has(n.id) && !!seen.add(n.id))
     .sort(byNewest)
     .slice(0, 40)
 }

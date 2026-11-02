@@ -74,6 +74,9 @@ type AnswerRound struct {
 // AnswerPausedKey is the meta key holding when a paused budget ends (unix seconds).
 const AnswerPausedKey = "answers_paused_until"
 
+// AnswerPausedAtKey is the meta key holding when the budget was found spent (unix seconds), for the bell to tell it at that time.
+const AnswerPausedAtKey = "answers_paused_at"
+
 // AnswerSiteOf reads a site's schedule; a site that never had one is due now.
 func (s *Store) AnswerSiteOf(ctx context.Context, site string) (AnswerSite, error) {
 	a := AnswerSite{SiteID: site}

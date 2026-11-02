@@ -63,6 +63,15 @@
 .mk .nf .nfd { width: 6px; height: 6px; margin-right: calc(var(--mk-s2) * -1); }
 .mk .nf .nfd.off { visibility: hidden; }
 .mk .nf .nft small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The kind's icon on a soft rounded tile of its own colour: down red, sale green, busy amber, goal teal, mention purple, milestone pink, signup blue. The tile is the colour at a low strength, so it reads in both themes. */
+.mk .nf .nfi { box-sizing: border-box; width: 32px; height: 32px; padding: 7px; border-radius: 10px; background: color-mix(in srgb, currentColor 14%, transparent); }
+.mk .nf .nfi.k-down, .mk .nf .nfi.k-failed { color: var(--mk-red); }
+.mk .nf .nfi.k-up, .mk .nf .nfi.k-sale { color: var(--mk-green); }
+.mk .nf .nfi.k-spike, .mk .nf .nfi.k-alert, .mk .nf .nfi.k-setup { color: var(--mk-amber); }
+.mk .nf .nfi.k-goal { color: color-mix(in srgb, var(--mk-green) 55%, var(--mk-blue)); }
+.mk .nf .nfi.k-mention, .mk .nf .nfi.k-answer { color: color-mix(in srgb, var(--mk-blue) 60%, var(--mk-red)); }
+.mk .nf .nfi.k-milestone { color: color-mix(in srgb, var(--mk-red) 55%, var(--mk-amber) 10%, var(--mk-blue)); }
+.mk .nf .nfi.k-signup { color: var(--mk-blue); }
 /* The source's own mark, with what kind of moment it was as a small badge on its corner, in the moment's tone. */
 .mk .nfm { position: relative; display: inline-flex; flex: none; }
 .mk .nfb { position: absolute; right: -4px; bottom: -4px; display: grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--mk-card); color: var(--mk-bg); }

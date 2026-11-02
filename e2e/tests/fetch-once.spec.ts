@@ -76,7 +76,7 @@ for (const [name, query] of [['Live', 'view=live'], ['Briefing', 'view=briefing'
       const isNow = (u: string) => /\/now$/.test(kind(u))
       const twice = Object.entries(tally(first)).filter(([u, n]) => n > 1 && !isNow(u))
       expect(twice, 'asked twice by the load').toEqual([])
-      const again = minute.filter((u) => /\/(report|mentions|milestones|incidents|busier)(\?|$)/.test(u.replace(/\/sites\/[^/?]+/, '')))
+      const again = minute.filter((u) => /\/(report|mentions|milestones|incidents|busier|notifications)(\?|$)/.test(u.replace(/\/sites\/[^/?]+/, '')))
       expect(again, 'asked again within 45 s').toEqual([])
       // (The sites list is read every 30 s by design: 45 s hold one or two of those reads, by where the load ended.)
       const most = (url: string) => (/\/now$/.test(url) ? 5 : url === '/api/v1/sites' ? Math.ceil(WATCH_MS / 30_000) : 1)
