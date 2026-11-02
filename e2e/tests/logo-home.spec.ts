@@ -1,4 +1,4 @@
-// The logo is Home: from the Briefing on another period, one click lands on the site's Live with the period back to
+// The logo is Home: from Explore on another period, one click lands on the site's Live with the period back to
 // default, no panel open, and the tooltip says only "Home".
 import { expect, test } from './fixtures'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
@@ -10,7 +10,7 @@ test('the logo goes Home: Live, default view, nothing open', async ({ page }) =>
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: await session('logo-home'), url: API }])
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
-  await expect(page.getByRole('tab', { name: 'Briefing' })).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByRole('tab', { name: 'Explore' })).toHaveAttribute('aria-selected', 'true')
   // A sheet is open over the page: Home closes it too.
   await page.keyboard.press('ControlOrMeta+k')
   await expect(page.locator('.pal.on .palbox input')).toBeVisible()

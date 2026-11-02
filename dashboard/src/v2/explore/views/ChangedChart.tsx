@@ -11,7 +11,8 @@ import type { XCtx } from '../ctx'
 export default function ChangedChart({ x, report, notes, onNotes }: { x: XCtx; report: Report; notes: { day: string; text: string }[]; onNotes: () => void }) {
   const [at, setAt] = useState<number | null>(null)
   const { view, site, query } = x
-  const { limit: _rows, ...ask } = query
+  const ask = { ...query }
+  delete ask.limit
   const b = useBriefingChart({ site, report, period: view.period, compare: view.compare, range: { from: query.from, to: query.to }, bucket: view.bucket, ask, notes, money: x.money, on: true })
   if (!b || !b.ready) return null
   const { chart } = b

@@ -20,7 +20,7 @@ export const rateOf = (reached: number | null, people: number): number | null =>
 export function headline(rows: QualityRow[], goal: string | null): string {
   const judged = rows.filter((r) => r.rate !== null)
   const slow = rows.find((r) => r.people >= ENOUGH && r.lcp !== null && r.lcp > SLOW_MS)
-  if (slow) return copy.qSlow(slow.name, slow.people, slow.page ?? '', (slow.lcp! / 1000).toFixed(1))
+  if (slow) return copy.qSlow(slow.name, slow.people, slow.page ?? '', ((slow.lcp ?? 0) / 1000).toFixed(1))
   if (goal && judged.length >= 2) {
     const best = judged.reduce((a, b) => ((b.rate as number) > (a.rate as number) ? b : a))
     if ((best.rate as number) > 0) return copy.qBest(best.name, Math.round((best.rate as number) * 100), goal)

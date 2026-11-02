@@ -1,4 +1,4 @@
-// What the surge card and its story can do: open Data on the moment, and ask for browser notices (from a click only, never by itself).
+// What the surge card and its story can do: open Explore on the moment, and ask for browser notices (from a click only, never by itself).
 import { toast } from '../../components/Toast'
 import { setView } from '../../lib/url'
 import { signals } from './copy'

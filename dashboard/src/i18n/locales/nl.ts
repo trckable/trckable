@@ -551,7 +551,6 @@ export default {
   'signals.surge.mostlyDirect': 'Vooral directe bezoeken',
   'signals.surge.someDirect': (n: number) => `${int(n)} direct`,
   'signals.surge.more': 'Meer',
-  'signals.surge.seeData': 'Bekijk in Data',
   'signals.surge.seeExplore': 'Bekijk in Explore',
   'signals.surge.notify': 'Waarschuw me de volgende keer',
   'signals.surge.close': 'Sluiten',

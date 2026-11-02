@@ -27,11 +27,11 @@ test('a visit clears the Quiet badge and turns the switcher dot to now, with no 
   await page.context().addCookies([{ name: 'trckable_session', value: await session('live-state'), url: API }])
   const seen = await fakeLastSeen(page)
   await page.goto(`${API}/${HISTORY_DOMAIN}?period=7d`)
-  const badge = page.locator('.footer-status[data-status="quiet"]') // the foot says it, nothing floats
-  await expect(badge).toBeVisible({ timeout: 20_000 })
-  await expect(page.locator('#siteBtn .mk-dot.idle')).toBeVisible() // the button's dot is grey while it is quiet
+  const badge = page.locator('[data-site-why]') // the site selector says it, nothing floats
+  await expect(page.locator('#siteBtn .mk-dot.idle')).toBeVisible({ timeout: 20_000 }) // the button's dot is grey while it is quiet
   await expect(page.locator('#siteBtn')).toHaveAttribute('aria-label', /quiet/i)
   await page.locator('#siteBtn').click() // the switcher stays open while the visit arrives
+  await expect(badge).toBeVisible()
   // A quiet site keeps its number; the dot is grey and the span is in the tooltip.
   const quietRow = page.locator('#siteMenu [data-site]', { hasText: HISTORY_DOMAIN })
   await expect(quietRow.locator('.mk-dot.idle')).toBeVisible()

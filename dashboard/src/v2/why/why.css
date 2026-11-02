@@ -1,3 +1,4 @@
+:root{--x-lime:#cdfb5a;--x-red:#ff6466;--x-amber:#ffb347;--x-white:#fff;--x-black:#000;--x-scrim:rgba(0,0,0,.55);--x-lift:rgba(0,0,0,.45);--x-gloss:rgb(255 255 255/.28);--x-gloss2:rgb(255 255 255/.25);--x-soft-hi:#8b9096;--x-soft-lo:#6f7479}
 .mk .xp.xpage{position:static;inset:auto;width:100%;height:auto;max-width:none;transform:none;background:none;border:0;box-shadow:none;z-index:auto;border-radius:0;transition:none}
 .mk .xp.xpage .xph{display:none}
 .mk .xp.xpage #xpBody{height:auto;overflow:visible;padding:0}
@@ -8,12 +9,12 @@
 .mk .xp.xpage .xtb{flex-wrap:wrap}
 .mk .xchg-say{margin:var(--mk-s3) 0 var(--mk-s4);font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.2;text-wrap:balance}
 .mk .xchg .xth,.mk .xchg .xrw{grid-template-columns:minmax(0,1fr) 70px 70px 84px}
-.mk .xchg .d.dn{color:var(--mk-red,#ff6466)}
-.mk .xchg .d.up{color:var(--mk-accent,#cdfb5a)}
+.mk .xchg .d.dn{color:var(--mk-red,var(--x-red))}
+.mk .xchg .d.up{color:var(--mk-accent,var(--x-lime))}
 .mk .xchg-head{align-items:center}
 .mk .xchg-kinds{display:flex;gap:2px;flex-wrap:wrap}
-.mk .xchg-kinds button{background:none;border:0;border-radius:8px;padding:4px 9px;color:inherit;opacity:.6;font:inherit;font-size:12.5px;cursor:pointer}
-.mk .xchg-kinds button.on{background:var(--mk-card2);opacity:1}
+.mk .xchg-kinds button{background:none;border:0;border-radius:8px;padding:4px 9px;color:var(--mk-muted);font:inherit;font-size:12.5px;cursor:pointer}
+.mk .xchg-kinds button.on{background:var(--mk-card2);color:var(--mk-text)}
 .mk .xchg-rest{margin:var(--mk-s2) 0 0;font-size:13px;opacity:.65}
 .mk .xchg-tools{display:flex;gap:var(--mk-s2);margin-top:var(--mk-s5)}
 .mk .view-pane{animation:view-in .14s ease-out}
@@ -116,7 +117,7 @@
 .mk .xdrawer-open{flex:none;width:36px;height:36px;padding:0;display:inline-flex;align-items:center;justify-content:center}
 .mk .xp.xpage .xtitle.on-drawer{display:inline-flex!important;align-items:center;gap:var(--mk-s2);font-size:17px;margin-right:auto}
 .mk .xdrawer{position:fixed;inset:0;z-index:5000}
-.mk .xdrawer-back{position:absolute;inset:0;width:100%;border:0;background:rgba(0,0,0,.55);animation:x-show .18s ease}
+.mk .xdrawer-back{position:absolute;inset:0;width:100%;border:0;background:var(--x-scrim);animation:x-show .18s ease}
 .mk .xdrawer-box{position:absolute;inset:0 auto 0 0;width:min(280px,84vw);padding:var(--mk-s4);background:var(--mk-bg);border-right:1px solid var(--mk-line);overflow-y:auto;animation:x-drawer .2s ease}
 .mk .xdrawer .xrail{position:static!important;display:flex!important;flex-direction:column;gap:2px;min-height:100%;height:auto!important;padding:0}
 @keyframes x-drawer{from{transform:translateX(-100%)}}
@@ -212,7 +213,7 @@
 .mk .xcards .xcp,.mk .xcards .xfade>.x2>div,.mk .xcards .xcp-bare .xfade>.xsec,.mk .xcards .xcp-bare .xfade>.xsec~*:not(.xsec){border-color:transparent}
 .mk .xcp-h,.mk .xcards .xfade>.xsec,.mk .xcards .xfade>.x2 .xsec{border-bottom:0!important;padding-bottom:4px!important;font-size:14px}
 .mk .xcards .xfade>.x2 .xsec>span:last-child:not(:first-child){display:none}
-.mk .xcards .xth{border:0;font-size:12px;opacity:.7}
+.mk .xcards .xth{border:0;font-size:12px}
 .mk .xcards .xrw{border:0!important;min-height:42px;padding-block:5px;border-radius:8px}
 .mk .xcards .xrw:hover{background:var(--mk-band)}
 .mk .xcards .mono{font-family:inherit}
@@ -443,7 +444,7 @@
 .mk .kg{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin:var(--mk-s2) 0 6px}
 .mk .kg i{height:8px;border-radius:4px}
 .mk .kg i:nth-child(1){background:color-mix(in srgb,var(--mk-lime) 55%,transparent)}
-.mk .kg i:nth-child(2){background:color-mix(in srgb,#ffb347 45%,transparent)}
+.mk .kg i:nth-child(2){background:color-mix(in srgb,var(--x-amber) 45%,transparent)}
 .mk .kg i:nth-child(3){background:color-mix(in srgb,var(--mk-red) 45%,transparent)}
 .mk .kg b{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:var(--mk-text);box-shadow:0 0 0 2px var(--mk-card);transform:translateX(-50%)}
 /* Plain score cards: left aligned like the Overview's, the scale across the card. */
@@ -460,7 +461,7 @@
 }
 /* Bars that carry a rating. */
 .mk .xcards .mk-bar.g-good>i{background:linear-gradient(90deg,color-mix(in srgb,var(--mk-lime) 62%,transparent),color-mix(in srgb,var(--mk-lime) 28%,transparent))!important}
-.mk .xcards .mk-bar.g-mid>i{background:linear-gradient(90deg,color-mix(in srgb,#ffb347 62%,transparent),color-mix(in srgb,#ffb347 28%,transparent))!important}
+.mk .xcards .mk-bar.g-mid>i{background:linear-gradient(90deg,color-mix(in srgb,var(--x-amber) 62%,transparent),color-mix(in srgb,var(--x-amber) 28%,transparent))!important}
 .mk .xcards .mk-bar.g-poor>i{background:linear-gradient(90deg,color-mix(in srgb,var(--mk-red) 66%,transparent),color-mix(in srgb,var(--mk-red) 30%,transparent))!important}
 /* Empty card: no footnote under it. */
 .mk .xcards .xempty~.xnote{display:none}
@@ -503,7 +504,7 @@
 @keyframes pm-in{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:no-preference){.mk .pm-t{animation:pm-in .4s ease both}}
 /* Big fills: the green with some gray in it, easy on the eye. Bright lime stays for small accents. */
-.mk{--mk-soft:color-mix(in srgb,var(--mk-lime) 52%,#8b9096)}
+.mk{--mk-soft:color-mix(in srgb,var(--mk-lime) 52%,var(--x-soft-hi))}
 .mk .xcards .mk-bar>i,.mk .xcards .mk-bar.g-good>i{background:linear-gradient(90deg,color-mix(in srgb,var(--mk-soft) 58%,transparent),color-mix(in srgb,var(--mk-soft) 26%,transparent))!important}
 .mk .xqual-rate b{background:color-mix(in srgb,var(--mk-soft) 55%,transparent)}
 .mk .xqual-rate.best b,.mk .xai-tile u,.mk .wf-plot>i.up{background:var(--mk-soft)}
@@ -512,7 +513,7 @@
 /* Softer still: a light gray with only a hint of green; muted follows the theme. */
 .mk{--mk-soft:color-mix(in srgb,var(--mk-lime) 14%,var(--mk-muted))}
 .mk .xrcell{filter:saturate(.25)}
-.mk{--mk-soft:color-mix(in srgb,var(--mk-lime) 10%,#6f7479)}
+.mk{--mk-soft:color-mix(in srgb,var(--mk-lime) 10%,var(--x-soft-lo))}
 /* Pages: the map shows the sizes, so the list under it is only names and numbers. */
 .mk [data-xcard=pages] .mk-bar{background:none}
 .mk [data-xcard=pages] .mk-bar>i{display:none}
@@ -546,7 +547,7 @@
   .mk .xcards .xrw:nth-child(6) i{animation-delay:.2s}
   .mk .xcards .kc svg{animation:spark-in 1s cubic-bezier(.22,1,.36,1) both}
   .mk .xcards .kc,.mk .xcards .xai-tile,.mk .xcards .xrw{transition:transform .2s ease,background .15s ease,box-shadow .2s ease}
-  .mk .xcards .kc:hover{transform:translateY(-3px);box-shadow:0 10px 26px -14px rgba(0,0,0,.45)}
+  .mk .xcards .kc:hover{transform:translateY(-3px);box-shadow:0 10px 26px -14px var(--x-lift)}
   .mk .xcards .xai-tile:hover:not(:disabled){transform:translateY(-2px)}
   .mk .xcards .xrw:hover .mk-bar>i{filter:brightness(1.18)}
 }
@@ -562,9 +563,9 @@
 .mk .xcp:has(.xempty,.lkc) .xcp-why,.mk .xcp-bare:has(.xempty,.lkc) .xcp-why{display:none}
 .mk .xnext{display:flex;flex-wrap:wrap;gap:var(--mk-s2);margin-top:var(--mk-s4)}
 .mk .xleak{margin-left:var(--mk-s2)}
-.mk .mk-chip.is-down{border-color:color-mix(in srgb,#ff6466 45%,var(--mk-line));background:color-mix(in srgb,#ff6466 8%,var(--mk-card))}
-.mk .site-why{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;margin-bottom:var(--mk-s2);border:0;border-radius:10px;background:color-mix(in srgb,#ff6466 10%,transparent);color:inherit;font:inherit;font-size:13px;font-weight:500;text-align:left;cursor:pointer}
-.mk .site-why i{width:6px;height:6px;border-radius:50%;background:#ff6466}
+.mk .mk-chip.is-down{border-color:color-mix(in srgb,var(--x-red) 45%,var(--mk-line));background:color-mix(in srgb,var(--x-red) 8%,var(--mk-card))}
+.mk .site-why{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;margin-bottom:var(--mk-s2);border:0;border-radius:10px;background:color-mix(in srgb,var(--x-red) 10%,transparent);color:inherit;font:inherit;font-size:13px;font-weight:500;text-align:left;cursor:pointer}
+.mk .site-why i{width:6px;height:6px;border-radius:50%;background:var(--x-red)}
 
 .lsn-go { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
 .lsn-go:hover { text-decoration: underline; }
@@ -597,7 +598,7 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 /* Each section its own colour, as an app grid has: soft glass on the card, the same in both themes. */
 .xtile{--c:var(--mk-lime);transition:background .15s ease,transform .15s ease}
 .xtile:hover{transform:translateY(-1px)}
-.xtile svg{width:42px;height:42px;padding:10px;border-radius:13px;color:#fff;box-sizing:border-box;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,#fff),color-mix(in srgb,var(--c) 72%,#000));box-shadow:0 4px 12px color-mix(in srgb,var(--c) 28%,transparent),inset 0 1px 0 rgb(255 255 255/.28)}
+.xtile svg{width:42px;height:42px;padding:10px;border-radius:13px;color:var(--x-white);box-sizing:border-box;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,var(--x-white)),color-mix(in srgb,var(--c) 72%,var(--x-black)));box-shadow:0 4px 12px color-mix(in srgb,var(--c) 28%,transparent),inset 0 1px 0 var(--x-gloss)}
 .xtile[data-xtile=changed],.xri[data-xsec=changed],.xtitle[data-xtitle=changed]{--c:#8b7cf6}
 .xtile[data-xtile=overview],.xri[data-xsec=overview],.xtitle[data-xtitle=overview]{--c:#4f8ef7}
 .xtile[data-xtile=pages],.xri[data-xsec=pages],.xtitle[data-xtitle=pages]{--c:#2fb8c6}
@@ -613,8 +614,8 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .xtile[data-xtile=answers],.xri[data-xsec=answers],.xtitle[data-xtitle=answers]{--c:#22a699}
 .mk .xgoal-next{margin-inline-end:8px}
 /* The list beside the numbers wears the same colours as the grid. */
-.mk .xrail .xri svg,.mk .xrail .xri:hover svg,.mk .xrail .xri.on svg{color:#fff;border-radius:9px;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,#fff),color-mix(in srgb,var(--c) 72%,#000));box-shadow:inset 0 1px 0 rgb(255 255 255/.25)}
-.mk .xp.xpage .xtitle svg{box-sizing:content-box;flex:none;width:17px;height:17px;padding:7px;color:#fff;border-radius:11px;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,#fff),color-mix(in srgb,var(--c) 72%,#000))}
+.mk .xrail .xri svg,.mk .xrail .xri:hover svg,.mk .xrail .xri.on svg{color:var(--x-white);border-radius:9px;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,var(--x-white)),color-mix(in srgb,var(--c) 72%,var(--x-black)));box-shadow:inset 0 1px 0 var(--x-gloss2)}
+.mk .xp.xpage .xtitle svg{box-sizing:content-box;flex:none;width:17px;height:17px;padding:7px;color:var(--x-white);border-radius:11px;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,var(--x-white)),color-mix(in srgb,var(--c) 72%,var(--x-black)))}
 .mk .xrail .xri:not(.on) svg{opacity:.82}
 .mk .xrail .xri:hover svg{opacity:1}
 /* A tile answers the pointer: its icon lifts with a small spring. */
@@ -623,3 +624,6 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .xtile:active svg{transform:scale(.96);transition-duration:.1s}
 @media (prefers-reduced-motion:reduce){.xtile,.xtile svg{transition:none}.xtile:hover,.xtile:hover svg,.xtile:focus-visible svg,.xtile:active svg{transform:none}}
 .pop.xtiles-pop,.lpop.xtiles-pop{width:auto;max-width:calc(100vw - 16px)}
+/* As a sheet the tiles fill its width, up to a size that still reads as a grid; the button stays one square on every screen. */
+@media (--compact){.pop.xtiles-pop,.lpop.xtiles-pop{width:100%;max-width:none}.xtiles{width:100%;max-width:520px;margin-inline:auto}}
+.mk .hd .mk-chip.xtiles-btn{flex:none;justify-content:center;width:40px;min-width:40px;max-width:40px;padding:0}

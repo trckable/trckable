@@ -159,7 +159,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
           onGoalsChanged={goalsChanged}
           onAsk={askOn ? () => setAskOpen(true) : undefined}
           identity={identity}
-          top={view.surge ? <Suspense fallback={null}><SurgeLine site={site.id} tz={site.timezone} started={view.surge} filters={view.filters} /></Suspense> : undefined}
+          top={view.surge ? <Suspense fallback={null}><SurgeLine site={site.id} tz={site.timezone} started={view.surge} filters={view.xf ?? view.filters} /></Suspense> : undefined}
           live={{ site: site.id, timezone: site.timezone, stream, cookieless: site.cookieless, whole: site, onVisitor: !shared && journeysOn(site, mods !== null && shows(mods, 'cards', 'journey')) ? setJourney : undefined }}
         />
       </Suspense>

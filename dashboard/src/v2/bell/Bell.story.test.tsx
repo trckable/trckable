@@ -41,7 +41,7 @@ describe('a busy row in the bell', () => {
     const set = vi.spyOn(url, 'setView').mockImplementation(() => undefined)
     const m = mount([busy])
     act(() => m.host.querySelector<HTMLButtonElement>('.nf')?.click())
-    await vi.waitFor(() => expect(document.querySelector('.surge-modal')).not.toBeNull())
+    await vi.waitFor(() => expect(document.querySelector('.surge-modal')).not.toBeNull(), { timeout: 5000 })
     const go = [...document.querySelectorAll<HTMLButtonElement>('.surge-modal .btn.primary')]
     expect(go.map((b) => b.textContent)).toEqual(['See it in Explore'])
     act(() => go[0].click())

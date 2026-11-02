@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Row } from '../types'
 import { insightOf } from './insight'
 
-const row = (name: string, v: number, c: number, st: Row['st']): Row => ({ val: name, name, v, c, st }) as Row
+const row = (name: string, v: number, c: number, st: Row['st']): Row => ({ val: name, name, v, c, st })
 
 describe('insightOf', () => {
   it('names the biggest move', () => expect(insightOf([row('/a', 49, 70, 'dn'), row('/docs', 28, 56, 'dn')])).toBe('/docs fell 50%, from 56 to 28 people.'))

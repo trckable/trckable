@@ -6,7 +6,7 @@ import type { XCtx } from './ctx'
 import type { DataCtx } from './data/useExplore'
 
 vi.mock('./data/useExplore', () => ({ useTab: () => ({ state: 'ok', data: { say: 'Pricing doubled.', rows: [{ name: '/pricing', v: 40 }] } }) }))
-vi.mock('./SectionBody', () => ({ SectionBody: () => <p>numbers</p> }))
+vi.mock('./SectionBody', () => ({ SectionBody: () => <p>{'numbers'}</p> }))
 
 const x = { query: { from: '2026-10-01', to: '2026-10-30' }, filters: [], limit: 5, showAll: () => {} } as unknown as XCtx
 const page = () => <SectionPage section="links" tab="outbound" x={x} c={{} as DataCtx} onRead={() => {}} />

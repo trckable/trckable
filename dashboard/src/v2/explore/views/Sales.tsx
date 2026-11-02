@@ -72,6 +72,7 @@ export function Sales({ x, d }: { x: XCtx; d: Model }) {
   const list = d.sales.filter((s) => !x.kind || s.kind === x.kind)
   // One line a kind says what the split already says.
   const same = d.sales.length === new Set(d.sales.map((s) => s.kind)).size
+  const lines = same ? null : list.slice(0, x.limit).map((s, i) => <Line key={`${i}${s.when}`} s={s} money={x.money} />)
   return (
     <>
       <Split x={x} sales={d.sales} />
@@ -83,8 +84,8 @@ export function Sales({ x, d }: { x: XCtx; d: Model }) {
             </button>
           )}
         </XEmpty>
-      ) : same ? null : (
-        list.slice(0, x.limit).map((s, i) => <Line key={`${i}${s.when}`} s={s} money={x.money} />)
+      ) : (
+        lines
       )}
       {list.length > x.limit && (
         <button type="button" className="mk-more" id="xMore" onClick={x.showAll}>

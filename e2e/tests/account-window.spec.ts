@@ -67,14 +67,14 @@ test('site settings never scrolls sideways on a phone or a big phone, shows no O
   await expect(list.getByRole('switch', { name: 'Goals', exact: true })).toBeVisible()
 })
 
-test('the avatar menu holds six rows; the rest is in the account window and ⌘K', async ({ page, context, browserName }) => {
+test('the avatar menu holds nine rows; the rest is in the account window and ⌘K', async ({ page, context, browserName }) => {
   test.skip(browserName !== 'chromium', 'one browser is enough')
   await context.addCookies([{ name: 'trckable_session', value: await session('account-window'), url: API }])
   await page.goto(API + '/example.com?view=briefing')
   await page.getByRole('button', { name: 'Account', exact: true }).click()
   const menu = page.getByRole('menu', { name: 'Account' })
   const rows = menu.locator('[role="menuitem"], [role="menuitemradio"]')
-  await expect(rows).toHaveCount(6) // Profile, the three themes, Shortcuts, Sign out
+  await expect(rows).toHaveCount(9) // Profile, the three themes, Shortcuts, Docs, What’s new, Feedback, Sign out (the foot's links live here now)
   for (const gone of ['Language', 'Tracking options', 'Install app', 'Exclude this browser']) await expect(menu.getByRole('menuitem', { name: gone })).toHaveCount(0)
   await page.keyboard.press('Escape')
 

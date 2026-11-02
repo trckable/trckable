@@ -69,7 +69,7 @@ function Tools({ site, to, notes, sheet, setSheet }: { site: Site; to: string; n
     <div className="xchg-tools">
       <button type="button" className="xb" onClick={() => setSheet(true)}>{copy.notesBtn(notes.notes.length)}</button>
       {canNote && <button type="button" className="xb" onClick={() => openSettings(site, 'alerts')}>{copy.dailyEmail}</button>}
-      {sheet && <NotesSheet site={site.domain} siteId={site.id} notes={notes.notes} onChanged={notes.load} onClose={() => setSheet(false)} onAdd={canNote ? () => { setSheet(false); setAdd(true) } : undefined} />}
+      {sheet && <NotesSheet site={site.domain} siteId={site.id} notes={notes.notes} onChanged={notes.load} onClose={() => setSheet(false)} onAdd={canNote ? () => setAdd(true) : undefined} />}
       {add && (
         <Suspense fallback={null}>
           <NoteDialog site={site} day={to} today={to} days={[]} notes={notes.notes} onClose={() => setAdd(false)} onSaved={() => { setAdd(false); notes.load() }} />
@@ -97,7 +97,7 @@ function ChartSlot({ x, report, notes, onNotes }: { x: XCtx; report: Report; not
 export function Changed({ x, d }: { x: XCtx; d: Model & { report: Report } }) {
   const cur = { ...d.report.current, series: d.report.current.series ?? [] }
   const prev = d.report.previous ? { ...d.report.previous, series: d.report.previous.series ?? [] } : undefined
-  const metrics = (['visitors', 'pageviews', 'signups', 'revenue'] as Metric[]).filter((m) => (m === 'signups' ? !!cur.signup : m === 'revenue' ? !!cur.money : true))
+  const metrics = (['visitors', 'pageviews', 'signups', 'revenue'] as Metric[]).filter((m) => (m === 'signups' ? !!cur.signup : m !== 'revenue' || !!cur.money))
   const [metric, setMetric] = useState<Metric>('visitors')
   const notes = useNotes(x.site.id, { from: x.query.from, to: x.query.to }, () => undefined)
   const [sheet, setSheet] = useState(false)

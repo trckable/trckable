@@ -1,6 +1,6 @@
 // Live and the Briefing: the walkthrough's header, and one of its two screens under it. This replaces the dashboard's
 // own header and control rows for these two views; Explore (the full numbers) opens over either as a panel.
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { setView, type ViewState } from '../lib/url'
 import { PageHeader } from './PageHeader'
 import '../mock/mock.css'
@@ -119,12 +119,14 @@ export function V2View(p: V2Props) {
   const [held, setHeld] = useState({ view: p.view, range: p.range, site: p.site.id })
   if ((here === 'briefing' || held.site !== p.site.id) && (held.site !== p.site.id || JSON.stringify([held.view, held.range]) !== JSON.stringify([p.view, p.range]))) setHeld({ view: p.view, range: p.range, site: p.site.id })
   // Back from Live after a while: the numbers are read again.
-  const [leftAt, setLeftAt] = useState(0)
-  if (here === 'live' && !leftAt) setLeftAt(Date.now())
-  if (here === 'briefing' && leftAt) setLeftAt(0)
+  const leftAt = useRef(0)
   useEffect(() => {
-    if (here === 'briefing' && leftAt && Date.now() - leftAt > 60_000) window.dispatchEvent(new Event('trckable:refresh'))
-  }, [here, leftAt])
+    if (here === 'live') leftAt.current ||= Date.now()
+    else if (here === 'briefing') {
+      if (leftAt.current && Date.now() - leftAt.current > 60_000) window.dispatchEvent(new Event('trckable:refresh'))
+      leftAt.current = 0
+    }
+  }, [here])
   const screen = (
     <>
       {briefFor === p.site.id && (
