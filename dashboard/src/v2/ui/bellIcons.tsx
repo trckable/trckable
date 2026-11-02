@@ -43,6 +43,13 @@ export const BELL_PATH: Record<string, ReactNode> = {
       <path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z" />
     </>
   ),
+  goal: (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="3.5" />
+    </>
+  ),
+  alert: <path d="M12 4l9 15H3zM12 10v4M12 17v.5" />,
   weekly: <path d="M7 3h7l4 4v14H7z M14 3v4h4" />,
 }
 

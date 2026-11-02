@@ -18,7 +18,8 @@ import { useAccountTab, useAddSite } from "./lib/account";
 import { AddSiteHost } from "./features/onboarding/AddSiteHost";
 import { useSettingsAddress } from "./features/settingsAddress";
 import { useLatest } from "./lib/update";
-import { setAppVersion, setRole } from "./lib/me";
+import { setAppVersion, setEmail, setRole } from "./lib/me";
+import { clearFeed } from "./v2/bell/feed";
 import { can } from "./lib/permissions";
 import { NoneShared, NoSites, useGate } from "./features/onboarding/Gate";
 // The header of every page is its own chunk, fetched at once after the first paint: the first load carries only the page's boxes.
@@ -63,10 +64,12 @@ function App() {
       }
       const me = await early.me;
       if (!me) {
+        clearFeed();
         setBoot({ state: "login" });
         return;
       }
       setRole(me.role, me.mentions, me.answers);
+      setEmail(me.email);
       setAppVersion(me.version, me.update_check);
       loadKeymap(me.keys);
       // Before choosing their own password a person may do nothing else (the server refuses /sites).

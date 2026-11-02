@@ -159,15 +159,61 @@ func (s *Store) SaveAlert(ctx context.Context, a Alert) (Alert, error) {
 // MarkFired records that an alert has just been sent, so it does not repeat.
 // The caller must not send again soon when this fails.
 func (s *Store) MarkFired(ctx context.Context, id string, at int64) error {
-	_, err := s.DB.ExecContext(ctx, `UPDATE alerts SET last_fired = ? WHERE id = ?`, at, id)
-	return err
+	if _, err := s.DB.ExecContext(ctx, `UPDATE alerts SET last_fired = ? WHERE id = ?`, at, id); err != nil {
+		return err
+	}
+	return s.recordFire(ctx, id, at)
 }
 
 // MarkThresholdFired records that a threshold alert has spoken for a period
 // (alerts.Window's key), so it stays quiet until the next one.
 func (s *Store) MarkThresholdFired(ctx context.Context, id, key string, at int64) error {
-	_, err := s.DB.ExecContext(ctx, `UPDATE alerts SET last_fired = ?, fired_period = ? WHERE id = ?`, at, key, id)
+	if _, err := s.DB.ExecContext(ctx, `UPDATE alerts SET last_fired = ?, fired_period = ? WHERE id = ?`, at, key, id); err != nil {
+		return err
+	}
+	return s.recordFire(ctx, id, at)
+}
+
+// AlertFire is one time an alert fired.
+type AlertFire struct {
+	ID   int64
+	Site string
+	Kind string
+	At   int64
+}
+
+// recordFire keeps that the alert fired at `at`, for the bell (alert_fires).
+func (s *Store) recordFire(ctx context.Context, id string, at int64) error {
+	if _, err := s.DB.ExecContext(ctx, `INSERT INTO alert_fires (site_id, kind, at) SELECT site_id, kind, ? FROM alerts WHERE id = ?`, at, id); err != nil {
+		return err
+	}
+	_, err := s.DB.ExecContext(ctx, `DELETE FROM alert_fires WHERE at < ?`, at-30*86400)
 	return err
+}
+
+// AlertFiresSince lists the alerts of these sites that fired at or after from, newest first. An alert sent to several channels at once is one fire.
+func (s *Store) AlertFiresSince(ctx context.Context, sites []string, from int64) ([]AlertFire, error) {
+	var out []AlertFire
+	for _, site := range sites {
+		rows, err := s.DB.QueryContext(ctx, `SELECT min(id), site_id, kind, min(at) FROM alert_fires WHERE site_id = ? AND at >= ? GROUP BY site_id, kind, at / 60 ORDER BY min(at) DESC, min(id) DESC`, site, from)
+		if err != nil {
+			return nil, err
+		}
+		for rows.Next() {
+			var f AlertFire
+			if err := rows.Scan(&f.ID, &f.Site, &f.Kind, &f.At); err != nil {
+				rows.Close()
+				return nil, err
+			}
+			out = append(out, f)
+		}
+		if err := rows.Err(); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		rows.Close()
+	}
+	return out, nil
 }
 
 // DeleteAlert removes one alert.

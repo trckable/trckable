@@ -67,7 +67,8 @@ describe('a build’s own list in the bell', () => {
   it('lists the rows under their day, each with only its time', () => {
     const m = mount([n('a', false)])
     expect(m.host.querySelector('.nfdy')?.textContent).toBe('Today')
-    expect(m.host.querySelector('.nft small')?.textContent).toMatch(/^sub · \d\d:\d\d$/)
+    expect(m.host.querySelector('.nft small')?.textContent).toBe('sub')
+    expect(m.host.querySelector('.nfw-t')?.textContent).toMatch(/^\d\d:\d\d$/)
     m.stop()
   })
 })

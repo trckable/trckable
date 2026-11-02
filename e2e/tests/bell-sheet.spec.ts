@@ -6,6 +6,7 @@ import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
+import { milestone, mockFeed, siteIdOf } from './bell-feed-kit'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough for the bell')
 
@@ -43,14 +44,11 @@ test.beforeAll(async () => {
 })
 
 async function open(page: Page, width: number) {
-  const now = Math.floor(Date.now() / 1000)
-  // Read marks belong to the account, which both widths share: each has its own steps.
-  const mile = (step: string, value: number, ago: number) => ({ kind: 'visitors', step: `${width}-${step}`, value, day: '2026-01-01', created_at: now - ago, new: false, shared: false })
-  await page.route(/\/api\/v1\/sites\/[^/]+\/milestones(\?|$)/, (route) =>
-    route.fulfill({ json: { enabled: true, milestones: [mile('100', 100, 7200), mile('1000', 1000, 3600)], moment: null } }),
-  )
-  await page.setViewportSize({ width, height: 844 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  // Read marks belong to the account, which both widths share: each has its own steps.
+  const site = await siteIdOf(page, HISTORY_DOMAIN)
+  await mockFeed(page, () => [milestone(site, `${width}-100`, 100, 2), milestone(site, `${width}-1000`, 1000, 1)])
+  await page.setViewportSize({ width, height: 844 })
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&v=`)
 }
 
@@ -78,9 +76,4 @@ test('on a phone the list is a dialog named for the bell', async ({ page }) => {
   await open(page, 390)
   await page.locator('#bellBtn').click()
   await expect(page.getByRole('dialog', { name: 'Notifications' })).toBeVisible()
-})
-
-// The bell also tells the busy spells the server recorded (its moments); this spec counts the rows it sets up itself.
-test.beforeEach(async ({ page }) => {
-  await page.route(/\/moments\?/, (r) => r.fulfill({ json: { moments: [] } }))
 })

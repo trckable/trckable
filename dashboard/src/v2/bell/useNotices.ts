@@ -1,58 +1,52 @@
-// The bell's list and which of it has been read by this person: one store for the badge and the menu. It is read once after
-// the first paint and again when the sites it asks about change, when /now answers, when a tab is shown after a minute away
-// and when the menu opens or is about to (never more than once in a minute by the first three, and never in a hidden tab).
-// The last list is kept in memory, so a bell that mounts again starts with it.
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
-import { api, type Site } from '../../lib/api'
-import { incidents } from '../../features/incidents/api'
-import { mentionsApi } from '../../features/mentions/api'
-import { answersApi } from '../../features/answers/api'
+// The bell's list and which of it has been read by this person: one store for the badge and the menu. The list is one
+// request to the server (every site the person may read, each row with its own id and true time), made once after the first
+// paint and again when /now answers, when a tab is shown after a minute away and when the menu opens or is about to (never
+// more than once in a minute by the first three, and never in a hidden tab). The last list is kept in this browser, so a
+// bell that mounts again, or a page that has just loaded, starts with it.
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { Site } from '../../lib/api'
 import { openExplore } from '../explore/open'
-import { isShared } from '../../lib/me'
+import { currentEmail, isShared } from '../../lib/me'
 import { useV2Extras } from '../slots'
 import { onNowAnswer } from '../../features/live/api'
 import { visibleInterval } from '../../lib/visibleInterval'
 import { useReadSet } from './readState'
-import { momentsApi } from '../../features/moments/api'
-import { onSignups, signupMoments } from '../../features/signals/signupMoments'
-import { arrange, byNewest, fromIncidents, fromSignups, fromSetup, fromMentions, fromMilestones, fromMoments, fromAnswers, othersOf, withFeed, type Notice } from './notices'
+import { loadFeed, readFeed, saveFeed, type FeedRow } from './feed'
+import { arrange, fromFeed, fromSetup, withFeed } from './notices'
 
 /** The least time between two reads the bell starts by itself. */
 export const GAP_MS = 60_000
 /** The least time between two reads when the menu is opened. */
 export const OPEN_GAP_MS = 5000
 
-/** The week the bell looks back over, as the report's range (day keys in UTC). */
-const answersRange = (now: number) => ({ from: new Date((now - 7 * 86400) * 1000).toISOString().slice(0, 10), to: new Date(now * 1000).toISOString().slice(0, 10) })
+/** The sites the person may read, as the effect's key. */
+const keyOf = (sites: Site[]) => sites.map((s) => s.id).sort().join(',')
 
-/** The busy spells of the week the server recorded for a site (a failure is none: the bell is not what the page waits for). */
-const busyOf = (s: Site, now: number): Promise<Notice[]> => momentsApi.moments(s.id, answersRange(now), 'hour').then((r) => fromMoments(r.moments ?? [], s.domain), () => [])
+/** The last list read in this page, for a bell that mounts again (as long as it is the same person). */
+let held: { who: string; rows: FeedRow[] } | null = null
+// Only a person who is known is painted for: what was kept for another sign-in, or for nobody, is never shown.
+const heldFor = (): FeedRow[] | null => {
+  const who = currentEmail()
+  return who && held?.who === who ? held.rows : loadFeed(who)
+}
 
-/** The last list read, for a bell that mounts again (as long as it is the same account: the same sites). */
-let held: { key: string; own: Notice[] } | null = null
-const keyOf = (sites: Site[]) => sites.map((s) => s.id).join(',')
-// Before the sites are known (a page that has just mounted) the last list stands in for them.
-const heldFor = (sites: Site[]) => (held && (sites.length === 0 || held.key === keyOf(sites)) ? held.own : null)
-
-export function useNotices(site: Site | null, sites: Site[]) {
-  const [own, setItems] = useState<Notice[]>(() => heldFor(sites) ?? [])
-  const [loaded, setLoaded] = useState(() => !!heldFor(sites))
+export function useNotices(sites: Site[]) {
+  const [rows, setRows] = useState<FeedRow[]>(() => heldFor() ?? [])
+  // A list kept from before is drawn at once: this browser's own read marks stand in until the account's arrive.
+  const [loaded, setLoaded] = useState(() => !!heldFor())
+  const [kept] = useState(loaded)
   const { bell: extra, bellMore } = useV2Extras()
-  const signed = useSyncExternalStore(onSignups, signupMoments)
-  const items = useMemo(() => withFeed(site ? [...own, ...fromSignups(signed, site.domain)].sort(byNewest).slice(0, 40) : own, extra), [own, extra, signed, site])
   const can = !isShared()
-  // The list is read again with every new fact about a site (its last visit moves all day); the bell is read again only when the sites it asks about change.
-  const asked = useRef(sites)
-  useEffect(() => {
-    asked.current = sites
-  })
-  const sitesKey = sites.map((s) => `${s.id}:${s.domain}:${!!s.mentions}:${!!s.answers}:${!!s.last_event_at}`).join('|')
-  const ctx = useRef({ site, sites })
+  // What the sites say of themselves (a site with no visit yet) is drawn from the sites; the rest is the server's list.
+  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000))
+  const items = useMemo(() => withFeed(arrange([...fromFeed(rows, sites, now, () => openExplore('answers')), ...fromSetup(sites, now)], now), extra), [rows, sites, now, extra])
+  const sitesKey = keyOf(sites)
+  const ctx = useRef({ sites })
   const last = useRef(0)
   const flight = useRef<Promise<void> | null>(null)
   const alive = useRef(true)
   useEffect(() => {
-    ctx.current = { site, sites }
+    ctx.current = { sites }
   })
   useEffect(() => {
     alive.current = true
@@ -66,28 +60,33 @@ export function useNotices(site: Site | null, sites: Site[]) {
     refreshExtra.current = bellRefresh
   })
   const { read, mark: send, synced, sync: syncRead } = useReadSet(can)
+  const tell = useRef(send)
+  useEffect(() => {
+    tell.current = send
+  })
   const run = useCallback(async () => {
-    const { site, sites } = ctx.current
-    const now = Math.floor(Date.now() / 1000)
-    const domain = (id: string) => sites.find((s) => s.id === id)?.domain
-    const parts = await Promise.all([
-      Promise.resolve(fromSetup(sites, now)),
-      incidents.account(7).then((r) => fromIncidents(r.incidents, domain, now), () => []),
-      site ? api.milestones(site.id).then((r) => fromMilestones(r.milestones, site.domain), () => []) : Promise.resolve([]),
-      site ? busyOf(site, now) : Promise.resolve([]),
-      site?.mentions ? mentionsApi.list(site.id, '7d').then((r) => fromMentions(r.mentions, site.domain), () => []) : Promise.resolve([]),
-      site?.answers ? answersApi.report(site.id, answersRange(now), undefined).then((r) => fromAnswers(r, site.domain, now, () => openExplore('answers')), () => []) : Promise.resolve([]),
-      // The account's other sites tell their milestones and mentions too, the first few of them.
-      ...othersOf(sites, site).flatMap((o) => [
-        api.milestones(o.id).then((r) => fromMilestones(r.milestones, o.domain), () => []),
-        busyOf(o, now),
-        o.mentions ? mentionsApi.list(o.id, '7d').then((r) => fromMentions(r.mentions, o.domain), () => []) : Promise.resolve([]),
-      ]),
-    ])
-    const list = arrange(parts.flat(), now)
-    held = { key: keyOf(sites), own: list }
+    // A failed read keeps the list as it is: the bell is not what the page waits for.
+    const got = await readFeed().catch(() => null)
+    // A list that could not be read whole never replaces the one shown: a site that is down must not vanish over a failed read.
+    if (!got) return
+    const { sites } = ctx.current
+    const list = got.notifications.map((r) => ({ ...r, domain: sites.find((s) => s.id === r.site)?.domain }))
+    if (got.partial) {
+      // Only a bell with nothing yet takes it, so it is not left waiting; it is not kept.
+      if (alive.current) {
+        setRows((cur) => (cur.length ? cur : list))
+        setLoaded(true)
+      }
+      return
+    }
+    const who = currentEmail()
+    held = { who, rows: list }
+    saveFeed(who, list)
+    // The first list a person is given: what is already behind them is read, so the deploy is not a burst of unread.
+    if (got.first) tell.current(list.map((r) => r.id))
     if (alive.current) {
-      setItems(list)
+      setRows(list)
+      setNow(Math.floor(Date.now() / 1000))
       setLoaded(true)
     }
   }, [])
@@ -121,7 +120,7 @@ export function useNotices(site: Site | null, sites: Site[]) {
     again.current = refresh
   })
   useEffect(() => () => clearTimeout(later.current), [])
-  // The sites it asks about changed (or this is the first read, after the first paint has had its reads: the bell is not what the page is waiting for).
+  // This is the first read (after the first paint has had its reads: the bell is not what the page is waiting for) or the account's sites changed.
   useEffect(() => {
     if (!can) return
     let started = false
@@ -149,13 +148,13 @@ export function useNotices(site: Site | null, sites: Site[]) {
       pulse()
       document.removeEventListener('visibilitychange', shown)
     }
-  }, [site?.id, site?.domain, site?.mentions, site?.answers, sitesKey, can, refresh])
+  }, [sitesKey, can, refresh])
   const mark = useCallback((id: string | string[]) => send(Array.isArray(id) ? id : [id]), [send])
   const markAll = useCallback(() => {
     bellMore?.readAll()
     send(items.map((i) => i.id))
   }, [send, items, bellMore])
-  // Ready when the whole list can be drawn at once: the site's own rows, what the account has read and the build's own rows.
-  const ready = loaded && synced && (bellMore?.ready ?? true)
+  // Ready when the whole list can be drawn at once: the server's rows, what the account has read (or the list of last time, with this browser's marks) and the build's own rows.
+  const ready = loaded && (synced || kept) && (bellMore?.ready ?? true)
   return { items, read, refresh, mark, markAll, can, ready, sites, dismiss: bellMore?.dismiss, archive: bellMore?.archive }
 }

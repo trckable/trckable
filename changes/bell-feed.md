@@ -1,0 +1,1 @@
+The bell opens at once from its last list and tells everything on all your sites from one server list: down and back up as one row, milestones under their day, busy spells, sales, signups, goals, mentions and fired alerts, each at its true time and in a steady order.

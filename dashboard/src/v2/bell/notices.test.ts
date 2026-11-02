@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { arrange, badge, fromAnswers, fromIncidents, fromMentions, fromMoments, othersOf, OTHERS, rowsOf, settle, unreadCount, withFeed, type Notice } from './notices'
+import type { Site } from '../../lib/api'
+import type { FeedRow } from './feed'
+import { arrange, badge, fromFeed, rowsOf, settle, unreadCount, withFeed, type Notice } from './notices'
 
 const n = (id: string, at: number, kind: Notice['kind'] = 'down'): Notice => ({ id, kind, site: 'a.com', title: id, sub: '', at })
 
 describe('the bell list', () => {
-  it('puts the newest first, drops a week-old one and repeats', () => {
+  it('puts the newest first, drops repeats and what has not happened yet', () => {
     const now = 10_000_000
-    const out = arrange([n('a', now - 100), n('b', now - 10), n('a', now - 100), n('old', now - 8 * 86400)], now)
+    const out = arrange([n('a', now - 100), n('b', now - 10), n('a', now - 100), n('later', now + 3600)], now)
     expect(out.map((x) => x.id)).toEqual(['b', 'a'])
   })
 
@@ -44,17 +46,6 @@ describe('the bell with a build’s own feed', () => {
   })
 })
 
-describe('the account’s other sites', () => {
-  const site = (id: string, last?: number) => ({ id, domain: id + '.com', last_event_at: last }) as never
-  it('are read when they have had a visit, a few of them, never the one in view', () => {
-    const all = [site('a', 1), site('b'), ...Array.from({ length: 9 }, (_, i) => site(`s${i}`, 1))]
-    const out = othersOf(all, all[0])
-    expect(out.map((s) => s.id)).not.toContain('a')
-    expect(out.map((s) => s.id)).not.toContain('b')
-    expect(out).toHaveLength(OTHERS)
-  })
-})
-
 describe('the rows of an open bell', () => {
   const row = (id: string, at: number, unread = true) => ({ ...n(id, at), unread })
 
@@ -75,57 +66,6 @@ describe('the rows of an open bell', () => {
     const out = settle(shown, [row('a', 10)], new Set())
     expect(out.map((r) => [r.id, r.unread])).toEqual([['b', false], ['a', true]])
     expect(settle(shown, [row('a', 10)], new Set(['b'])).map((r) => r.id)).toEqual(['a'])
-  })
-})
-
-describe('the bell and Answers', () => {
-  const rep = {
-    changes: [
-      { at: 5000, engine: 'openai' as const, question_id: 4, question: 'best analytics', kind: 'dropped' as const },
-      { at: 4000, engine: 'anthropic' as const, question_id: 4, question: 'best analytics', kind: 'seen' as const, first_ever: true },
-    ],
-    paused: true,
-  }
-
-  it('shows a change as a row that opens Answers, the first time with its own words, and a budget that ran out', () => {
-    let opened = 0
-    const rows = fromAnswers(rep, 'a.com', 9000, () => opened++)
-    expect(rows.map((r) => r.title)).toEqual(['ChatGPT stopped naming you for “best analytics”', 'Peekaboo. Claude just named you.', 'Paused until the 1st: this month’s budget is used.'])
-    expect(new Set(rows.map((r) => r.id)).size).toBe(3)
-    rows[0].open?.()
-    expect(opened).toBe(1)
-    expect(rows.every((r) => r.kind === 'answer' && r.site === 'a.com')).toBe(true)
-  })
-
-  it('is nothing when nothing changed', () => {
-    expect(fromAnswers({}, 'a.com', 9000, () => undefined)).toEqual([])
-  })
-})
-
-describe('an incident is one row', () => {
-  const inc = (id: string, started_at: number, ended_at: number | null, kind: 'down' | 'quiet' = 'down') => ({ id, site: 's1', kind, started_at, ended_at, cause: '', expected_visits: null, note: '' })
-  const dom = (id: string) => (id === 's1' ? 'a.com' : undefined)
-  const now = 1_000_000
-
-  it('is red and “down since” while it goes on, with no row for a back-up it has not had', () => {
-    const out = fromIncidents([inc('i1', now - 600, null)], dom, now)
-    expect(out).toHaveLength(1)
-    expect(out[0]).toMatchObject({ id: 'down:i1', kind: 'down', bad: true, at: now - 600, when: '' })
-    expect(out[0].title).toMatch(/^a\.com down since \d\d:\d\d$/)
-  })
-
-  it('is one calm row with its span once the server has closed it, paired by its id', () => {
-    const out = fromIncidents([inc('i1', now - 900, now - 300)], dom, now)
-    expect(out).toHaveLength(1)
-    expect(out[0]).toMatchObject({ id: 'up:i1', kind: 'up', at: now - 300 })
-    expect(out[0].bad).toBeUndefined()
-    expect(out[0].title).toBe('a.com was down 10m')
-    expect(out[0].when).toMatch(/^\d\d:\d\d–\d\d:\d\d$/)
-  })
-
-  it('treats an end in the future as still going, and leaves out quiet spells and unknown sites', () => {
-    expect(fromIncidents([inc('i1', now - 60, now + 60)], dom, now)[0].kind).toBe('down')
-    expect(fromIncidents([inc('i2', now - 60, null, 'quiet'), { ...inc('i3', now - 60, null), site: 'zz' }], dom, now)).toEqual([])
   })
 })
 
@@ -153,19 +93,99 @@ describe('busy moments of several sites at the same time', () => {
   })
 })
 
-describe('busy spells in the bell', () => {
-  const spike = { t: '2026-10-23T15:00', kind: 'spike' as const, factor: 3.2, referrer: 'news.ycombinator.com', visitors: 120 }
-  const surge = { t: '2026-10-23T15:32', kind: 'surge' as const, factor: 1.8, referrer: 'l.facebook.com', visitors: 38 }
-  it('is one row for each moment, with its source and a short line of facts', () => {
-    const [n] = fromMoments([surge], 'example.com')
-    expect(n).toMatchObject({ kind: 'spike', site: 'example.com', source: 'l.facebook.com', title: 'example.com is busy', sub: '38 online · 1.8× usual' })
-    expect(fromMoments([spike], 'example.com')[0].sub).toBe('120 people · 3.2× usual')
-  })
-  it('leaves out the hour spike a surge of that hour already tells, and anything that is not a busy spell', () => {
-    expect(fromMoments([spike, surge], 'example.com').map((x) => x.id)).toEqual(['busy:surge:2026-10-23T15:32'])
-    expect(fromMoments([{ t: '2026-10-23', kind: 'note' as const }], 'example.com')).toEqual([])
-  })
-  it('gives a mention the host that posted it', () => {
-    expect(fromMentions([{ id: 1, source: 'hn', host: 'news.ycombinator.com', title: 'T', posted_at: 1 } as never], 'example.com')[0].source).toBe('news.ycombinator.com')
+const sites = [{ id: 's1', domain: 'a.com' }, { id: 's2', domain: 'b.com' }] as Site[]
+const row = (r: Partial<FeedRow> & Pick<FeedRow, 'id' | 'kind'>): FeedRow => ({ site: 's1', at: 1_000_000, ...r })
+const now = 1_000_100
+
+describe('the cap', () => {
+  it('lists 40 rows and every site that is down besides', () => {
+    const t = 10_000_000
+    const many = Array.from({ length: 50 }, (_, i) => n(`x${i}`, t - 10 - i, 'mention'))
+    const out = arrange([...many, n('down:old', t - 6 * 86400, 'down')], t)
+    expect(out).toHaveLength(41)
+    expect(out.at(-1)?.id).toBe('down:old')
+    expect(withFeed(out, [n('p', t - 1, 'plan')]).some((x) => x.id === 'down:old')).toBe(true)
   })
 })
+
+describe('the server’s list as the bell’s rows', () => {
+  it('keeps one id for a site that was down, red while it goes on and calm with its span once it is back', () => {
+    const [going] = fromFeed([row({ id: 'down:i1', kind: 'down', at: now - 600 })], sites, now)
+    expect(going).toMatchObject({ id: 'down:i1', kind: 'down', bad: true, at: now - 600, site: 'a.com', siteId: 's1' })
+    expect(going.title).toMatch(/^a\.com down since \d\d:\d\d$/)
+    const [over] = fromFeed([row({ id: 'down:i1', kind: 'down', at: now - 900, ended: now - 300 })], sites, now)
+    expect(over).toMatchObject({ id: 'down:i1', kind: 'up', at: now - 900 })
+    expect(over.title).toBe('a.com was down 10m')
+    expect(over.when).toMatch(/^\d\d:\d\d–\d\d:\d\d$/)
+    expect(fromFeed([row({ id: 'down:i1', kind: 'down', at: now - 60, ended: now + 60 })], sites, now)[0].kind).toBe('down')
+  })
+
+  it('leaves out a row of a site the person does not have', () => {
+    expect(fromFeed([row({ id: 'x', kind: 'mention', site: 'zz' })], sites, now)).toEqual([])
+  })
+
+  it('tells a busy spell with its source and a short line of facts', () => {
+    const [surge] = fromFeed([row({ id: 'busy:surge:1', kind: 'busy', what: 'surge', visitors: 38, factor: 1.8, source: 'l.facebook.com' })], sites, now)
+    expect(surge).toMatchObject({ kind: 'spike', source: 'l.facebook.com', title: 'a.com is busy', sub: '38 online · 1.8× usual', busy: { visitors: 38, factor: 1.8 } })
+    expect(fromFeed([row({ id: 'busy:spike:1', kind: 'busy', what: 'spike', visitors: 120, factor: 3.2 })], sites, now)[0].sub).toBe('120 people · 3.2× usual')
+  })
+
+  it('puts a daily milestone under its day, all day, whatever hour the server found it', () => {
+    const m = { kind: 'visitors', step: '100', value: 100, day: '2026-10-30', created_at: 1_700_000_999, new: true, shared: false } as never
+    const [n] = fromFeed([row({ id: 'mile:s1:visitors:100', kind: 'milestone', at: 1_700_000_000, day: '2026-10-30', milestone: m })], sites, now)
+    expect(n.day).toBe('2026-10-30')
+    expect(new Date(n.at * 1000).toDateString()).toBe(new Date('2026-10-30T00:00:00').toDateString())
+    expect(n.at).not.toBe(1_700_000_999)
+  })
+
+  it('tells sales, signups and goals of an hour as one row with their count', () => {
+    const out = fromFeed([row({ id: 'sale:s1:h', kind: 'sale', count: 3, amount: 4500, currency: 'USD', exponent: 2 }), row({ id: 'signup:s1:h', kind: 'signup', count: 2 }), row({ id: 'goal:s1:g:h', kind: 'goal', count: 1, text: 'Newsletter' })], sites, now)
+    expect(out.map((r) => r.title)).toEqual(['3 sales', '2 new signups', 'Newsletter reached'])
+    expect(out[0].sub).toContain('45')
+  })
+
+  it('tells a fired alert by its kind and a mention by the host that posted it', () => {
+    const out = fromFeed([row({ id: 'alert:1', kind: 'alert', what: 'disk' }), row({ id: 'alert:2', kind: 'alert', what: 'weekly' }), row({ id: 'mention:1', kind: 'mention', source: 'hn', host: 'news.ycombinator.com', text: 'T' })], sites, now)
+    expect(out.map((r) => [r.kind, r.alert])).toEqual([['alert', 'disk'], ['mention', undefined]])
+    expect(out[1].source).toBe('news.ycombinator.com')
+  })
+
+  it('tells Answers changes, the first time with its own words, and a budget that ran out at its own time', () => {
+    let opened = 0
+    const out = fromFeed(
+      [row({ id: 'a1', kind: 'answer', what: 'dropped', engine: 'openai', text: 'best analytics' }), row({ id: 'a2', kind: 'answer', what: 'seen', engine: 'anthropic', first: true }), row({ id: 'a3', kind: 'answer', what: 'paused', site: '', at: now - 5000 })],
+      sites,
+      now,
+      () => opened++,
+    )
+    expect(out.map((r) => r.title)).toEqual(['ChatGPT stopped naming you for “best analytics”', 'Peekaboo. Claude just named you.', 'Paused until the 1st: this month’s budget is used.'])
+    expect(out[2].at).toBe(now - 5000)
+    out[0].open?.()
+    expect(opened).toBe(1)
+  })
+})
+
+describe('busy moments of several sites at the same time', () => {
+  const busy = (id: string, site: string, at: number): Notice => ({ id, kind: 'spike', site, title: id, sub: '', at })
+
+  it('are one row naming how many, newest first, unread while any of them is', () => {
+    const rows = rowsOf([busy('a', 'a.com', 1000), busy('b', 'b.com', 900), n('d', 800)], new Set(['a']))
+    expect(rows.map((r) => r.id)).toEqual(['busy:a', 'd'])
+    expect(rows[0].title).toBe('2 sites are busy')
+    expect(rows[0].members?.map((m) => m.site)).toEqual(['a.com', 'b.com'])
+    expect(rows[0].unread).toBe(true)
+    expect(rowsOf([busy('a', 'a.com', 1000), busy('b', 'b.com', 900)], new Set(['a', 'b']))[0].unread).toBe(false)
+  })
+
+  it('stay apart when far apart in time, or when it is one site twice', () => {
+    expect(rowsOf([busy('a', 'a.com', 5000), busy('b', 'b.com', 1000)], new Set()).map((r) => r.id)).toEqual(['a', 'b'])
+    expect(rowsOf([busy('a', 'a.com', 1000), busy('b', 'a.com', 900)], new Set()).map((r) => r.id)).toEqual(['a', 'b'])
+  })
+
+  it('keep a site to its newest in the row and the order of every other row', () => {
+    const rows = rowsOf([busy('a', 'a.com', 1000), busy('a2', 'a.com', 950), busy('b', 'b.com', 900), n('x', 990)], new Set())
+    expect(rows.map((r) => r.id)).toEqual(['busy:a', 'x', 'a2'])
+    expect(rows[0].members?.map((m) => m.id)).toEqual(['a', 'b'])
+  })
+})
+

@@ -42,7 +42,8 @@ export async function syncRead(local: ReadonlySet<string>): Promise<Set<string> 
 
 /**
  * The read set a bell shows: this browser's copy at first, joined with the account's once the server answers (never
- * replacing what was read meanwhile), kept in step with other tabs, and every mark told to the server once.
+ * replacing what was read meanwhile), kept in step with other tabs, and every mark told to the server at once (the row is read
+ * before the server has answered); a mark the server did not take is told again at the next read of the list.
  */
 // Whether the account's list has been asked for once in this page (a bell that mounts again does not wait for it again).
 let askedOnce = false
@@ -59,16 +60,27 @@ export function useReadSet(on: boolean, delay = 3000) {
     setRead(u)
   }, [])
   const started = useRef(false)
-  /** Asks for the account's list, once: at the delay below, or sooner when the bell is about to be opened. `synced` says it has answered (or could not). */
+  const failed = useRef(new Set<string>())
+  const tell = useCallback((ids: string[]) => {
+    void more.markBellRead(ids.slice(-PER_POST)).catch(() => ids.forEach((id) => failed.current.add(id)))
+  }, [])
+  /** Asks for the account's list, once: at the delay below, or sooner when the bell is about to be opened. `synced` says it has answered (or could not). Later it tells again what the server did not take. */
   const sync = useCallback(() => {
-    if (started.current) return
+    if (started.current) {
+      if (failed.current.size) {
+        const ids = [...failed.current]
+        failed.current.clear()
+        tell(ids)
+      }
+      return
+    }
     started.current = true
     void syncRead(loadLocal()).then((all) => {
       if (all) join(all)
       askedOnce = true
       setSynced(true)
     })
-  }, [join])
+  }, [join, tell])
   useEffect(() => {
     if (!on) return
     // After the first paint has had its reads: the bell is not what the page is waiting for.
@@ -85,9 +97,9 @@ export function useReadSet(on: boolean, delay = 3000) {
       const fresh = ids.filter((id) => !latest.current.has(id))
       if (!fresh.length) return
       join(fresh)
-      void more.markBellRead(fresh.slice(-PER_POST)).catch(() => undefined)
+      tell(fresh)
     },
-    [join],
+    [join, tell],
   )
   return { read, mark, synced, sync }
 }

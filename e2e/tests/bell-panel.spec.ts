@@ -6,6 +6,7 @@ import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
+import { mockFeed, siteIdOf } from './bell-feed-kit'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough for the bell')
 
@@ -49,22 +50,10 @@ for (const width of [1440, 390, 360]) {
   test(`at ${width} px the panel groups by day, tells each outage once, and its ⋯ mutes or changes the alert`, async ({ page }) => {
     test.setTimeout(90_000)
     const now = Math.floor(Date.now() / 1000)
-    let siteId = ''
-    await page.route(/\/api\/v1\/sites\/[^/]+\/milestones(\?|$)/, (route) => {
-      siteId = /sites\/([^/]+)\//.exec(route.request().url())![1]
-      return route.fulfill({ json: { enabled: true, milestones: [], moment: null } })
-    })
-    await page.route(/\/api\/v1\/sites\/[^/]+\/mentions(\?|$)/, (route) => route.fulfill({ json: { mentions: [] } }))
-    const out = (id: string, started: number, ended: number | null) => ({ id: `${id}${width}`, site: siteId, kind: 'down', started_at: started, ended_at: ended, cause: 'timeout', expected_visits: null, note: '' })
-    await page.route(/\/api\/v1\/incidents(\?|$)/, (route) =>
-      route.fulfill({
-        json: {
-          incidents: siteId
-            ? [out('open', now - 90, null), out('today', now - 1500, now - 900), out('yesterday', now - 90_000 - 600, now - 90_000), out('older', now - 3 * 86_400 - 1800, now - 3 * 86_400 - 600)]
-            : [],
-        },
-      }),
-    )
+    await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+    const siteId = await siteIdOf(page, HISTORY_DOMAIN)
+    const out = (id: string, started: number, ended: number | null) => ({ id: `down:${id}${width}`, site: siteId, kind: 'down', at: started, ...(ended ? { ended } : {}) })
+    await mockFeed(page, () => [out('open', now - 90, null), out('today', now - 1500, now - 900), out('yesterday', now - 90_000 - 600, now - 90_000), out('older', now - 3 * 86_400 - 1800, now - 3 * 86_400 - 600)])
     const saved: unknown[] = []
     await page.route(/\/api\/v1\/sites\/[^/]+\/alerts(\?|$)/, (route) => {
       if (route.request().method() === 'PUT') {
@@ -91,7 +80,7 @@ for (const width of [1440, 390, 360]) {
     expect(titles[0]).toMatch(/^history\.example down since \d\d:\d\d$/)
     expect(titles[1]).toBe('history.example was down 10m')
     await expect(menu.locator('.nf.bad')).toHaveCount(1)
-    await expect(menu.locator('.nf').nth(1).locator('small')).toHaveText(/^\d\d:\d\d–\d\d:\d\d$/)
+    await expect(menu.locator('.nf').nth(1).locator('.nfw-t')).toHaveText(/^\d\d:\d\d–\d\d:\d\d$/)
 
     // The footer is one link.
     await expect(menu.locator('.nff button')).toHaveCount(1)
@@ -161,8 +150,3 @@ for (const width of [1440, 390, 360]) {
     await expect(page.locator('.al-kind[data-kind="stopped"] :focus')).toHaveCount(1)
   })
 }
-
-// The bell also tells the busy spells the server recorded (its moments); this spec counts the rows it sets up itself.
-test.beforeEach(async ({ page }) => {
-  await page.route(/\/moments\?/, (r) => r.fulfill({ json: { moments: [] } }))
-})
