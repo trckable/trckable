@@ -69,7 +69,7 @@ function Tools({ site, to, notes, sheet, setSheet }: { site: Site; to: string; n
     <div className="xchg-tools">
       <button type="button" className="xb" onClick={() => setSheet(true)}>{copy.notesBtn(notes.notes.length)}</button>
       {canNote && <button type="button" className="xb" onClick={() => openSettings(site, 'alerts')}>{copy.dailyEmail}</button>}
-      {sheet && <NotesSheet site={site.domain} siteId={site.id} notes={notes.notes} onChanged={notes.load} onClose={() => setSheet(false)} onAdd={canNote ? () => { setSheet(false); setAdd(true) } : undefined} />}
+      {sheet && <NotesSheet site={site.domain} siteId={site.id} notes={notes.notes} onChanged={notes.load} onClose={() => setSheet(false)} onAdd={canNote ? () => setAdd(true) : undefined} />}
       {add && (
         <Suspense fallback={null}>
           <NoteDialog site={site} day={to} today={to} days={[]} notes={notes.notes} onClose={() => setAdd(false)} onSaved={() => { setAdd(false); notes.load() }} />
