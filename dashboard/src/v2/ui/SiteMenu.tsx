@@ -81,6 +81,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
   const done = useCallback(() => close(), [close])
   const down = p.sites.filter((s) => statusOf(s) === 'down')
   const quiet = quietSites(p.sites)
+  const whyLabel = down.length ? statusCopy.whatHappened(down.length) : footerMoreCopy.siteQuiet(quiet.length)
   const told = [...down, ...quiet]
   const [why, setWhy] = useState(false)
   const footer = <MenuFoot items={p.footer} done={done} />
@@ -98,7 +99,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
         {open && told.length > 0 && (
           <button type="button" className="site-why" data-site-why="1" aria-expanded={why} onClick={() => setWhy((w) => !w)}>
             <i aria-hidden="true" />
-            {why ? statusCopy.backToSites : down.length ? statusCopy.whatHappened(down.length) : footerMoreCopy.siteQuiet(quiet.length)}
+            {why ? statusCopy.backToSites : whyLabel}
           </button>
         )}
         {open && why && told.length > 0 && (

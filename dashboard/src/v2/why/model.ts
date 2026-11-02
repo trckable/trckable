@@ -41,7 +41,7 @@ export function totalOf(r: Result, m: Metric): number {
   return r.kpis[m]
 }
 
-const valueOf = (x: Row, m: Metric): number => (m === 'signups' ? x.signups : m === 'revenue' ? x.revenue : x[m]) ?? 0
+const valueOf = (x: Row, m: Metric): number => x[m] ?? 0
 
 const rowsOf = (r: Result, d: Dim, m: Metric): Row[] => (m === 'revenue' ? r.revenue_dims?.[d] : r.dims[d]) ?? []
 

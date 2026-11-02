@@ -1,6 +1,6 @@
 // The section the person is on: its loading shape while the numbers come, a plain line when they could not, or the
 // section itself.
-import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { XError, XSkeleton } from '../ui/XBits'
 import { copy } from './copy'
 import type { XCtx } from './ctx'
@@ -50,9 +50,9 @@ function Shown({ tab, x, d }: { tab: Tab; x: XCtx; d: TabData }) {
 
 export function SectionBody({ tab, x, r, still }: { tab: Tab; x: XCtx; r: Loaded<TabData>; still?: boolean }) {
   // The last numbers of this table stay, dimmed, while a new period or filter is read: the page does not jump. Another table starts from its loading shape.
-  const kept = useRef<{ tab: Tab; data: TabData } | null>(null)
-  if (r.state === 'ok') kept.current = { tab, data: r.data }
-  const stale = r.state === 'loading' && kept.current?.tab === tab ? kept.current.data : null
+  const [kept, setKept] = useState<{ tab: Tab; data: TabData } | null>(null)
+  if (r.state === 'ok' && (kept?.tab !== tab || kept.data !== r.data)) setKept({ tab, data: r.data })
+  const stale = r.state === 'loading' && kept?.tab === tab ? kept.data : null
   useEffect(() => {
     if (!still && scrollY > 0) scrollTo({ top: 0 })
   }, [tab, still])

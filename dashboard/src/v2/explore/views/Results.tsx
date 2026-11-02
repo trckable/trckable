@@ -1,7 +1,6 @@
 // Goals & funnels: the funnel as bars with where people leave, the goals under it, and the card to change the funnel.
 import { XEmpty, XSec, XSub } from '../../ui/XBits'
 import { SuggestedGoal } from '../../goals/SuggestedGoal'
-import type { Row } from '../../../lib/api'
 import { XGoals, XMiniFunnel } from '../../ui/XFunnel'
 import { can } from '../../../lib/permissions'
 import { lockCopy } from '../../ui/lockCopy'
@@ -99,7 +98,7 @@ export function Results({ x, d }: { x: XCtx; d: Funnel }) {
       <XSec a={copy.goals} />
       {!d.goalsOn && <Lock k="goals" x={x} />}
       <XGoals goals={d.goalsOn ? [...d.goals, ...own] : []} />
-      {d.goalsOn && <SuggestedGoal site={x.site} pages={d.pages.map((p) => p.name)} goals={d.goals.map((g) => ({ label: g.name, value: g.name, visitors: g.v }) as Row)} />}
+      {d.goalsOn && <SuggestedGoal site={x.site} pages={d.pages.map((p) => p.name)} goals={d.goals.map((g) => ({ label: g.name, value: g.name, visitors: g.v }))} />}
       {d.goalsOn && can('goal.create') && (
         <button type="button" className="xb" id="xTrack" onClick={() => x.connect('goals')}>
           {copy.trackGoal}

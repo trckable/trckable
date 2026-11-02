@@ -3,7 +3,7 @@
 export function RollText({ text }: { text: string }) {
   return (
     <span className="roll" aria-label={text}>
-      {[...text].map((ch, i) => (
+      {Array.from(text).map((ch, i) => (
         <span key={`${text}${i}`} aria-hidden="true" style={{ animationDelay: `${i * 28}ms` }}>
           {ch === ' ' ? ' ' : ch}
         </span>

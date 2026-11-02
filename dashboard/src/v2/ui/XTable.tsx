@@ -29,7 +29,8 @@ function XMore({ more }: { more: More }) {
 function delta(r: Row): { text: string; tone: string } {
   const x = r.v / r.c
   const pct = `${Math.abs(Math.round((x - 1) * 100))}%`
-  const ratio = r.c > 0.5 ? (x >= 2 ? mult(x) : pct) : ''
+  const big = x >= 2 ? mult(x) : pct
+  const ratio = r.c > 0.5 ? big : ''
   if (r.st === 'up') return { text: `▲ ${ratio || copy.fresh}`, tone: 'up' }
   if (r.st === 'dn') return { text: `▼ ${ratio || copy.below}`, tone: 'dn' }
   // Inside its usual it says so; with nothing to count from it says that, never a blank.

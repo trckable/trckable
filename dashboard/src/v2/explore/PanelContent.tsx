@@ -168,12 +168,12 @@ export default function PanelContent(p: ContentProps) {
           {p.full && p.period ? '' : ` · ${p.label}`}
         </span>
       </div>
-      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- one place for the keys of every menu and list below */}
       {drawer && (
         <RailDrawer onClose={() => setDrawer(false)}>
           <Rail section={section} conn={meta.connected} onPick={(sec) => { setDrawer(false); act.section(sec) }} />
         </RailDrawer>
       )}
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- one place for the keys of every menu and list below */}
       <div id="xpBody" ref={body} onClick={away} onKeyDown={(e: KeyboardEvent) => keys.onKey(e)}>
         {p.full ? (
           <div className="xlay">

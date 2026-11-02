@@ -97,7 +97,7 @@ function ChartSlot({ x, report, notes, onNotes }: { x: XCtx; report: Report; not
 export function Changed({ x, d }: { x: XCtx; d: Model & { report: Report } }) {
   const cur = { ...d.report.current, series: d.report.current.series ?? [] }
   const prev = d.report.previous ? { ...d.report.previous, series: d.report.previous.series ?? [] } : undefined
-  const metrics = (['visitors', 'pageviews', 'signups', 'revenue'] as Metric[]).filter((m) => (m === 'signups' ? !!cur.signup : m === 'revenue' ? !!cur.money : true))
+  const metrics = (['visitors', 'pageviews', 'signups', 'revenue'] as Metric[]).filter((m) => (m === 'signups' ? !!cur.signup : m !== 'revenue' || !!cur.money))
   const [metric, setMetric] = useState<Metric>('visitors')
   const notes = useNotes(x.site.id, { from: x.query.from, to: x.query.to }, () => undefined)
   const [sheet, setSheet] = useState(false)
