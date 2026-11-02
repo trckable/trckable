@@ -118,12 +118,12 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('Data landed on the moment', () => {
+describe('Explore landed on the moment', () => {
   const over: Surge = { ...surge, ended: surge.started + 25 * 60 }
   const now = new Date((surge.started + 3600) * 1000)
   it('opens the days around it by the hour, against the same days a week earlier, with no filter', () => {
     const day = localHour(surge.started, 'UTC').day
-    expect(seeInData(over, 'UTC', now)).toEqual({ live: false, period: 'custom', from: day, to: day, bucket: 'hour', compare: 'custom', cfrom: addDays(day, -7), cto: addDays(day, -7), filters: [], day: undefined, v: 'explore', story: undefined, surge: surge.started })
+    expect(seeInData(over, 'UTC', now)).toEqual({ live: false, period: 'custom', from: day, to: day, bucket: 'hour', compare: 'custom', cfrom: addDays(day, -7), cto: addDays(day, -7), filters: [], xf: [], xp: 'overview', day: undefined, v: undefined, story: undefined, surge: surge.started })
   })
   it('runs to now while the moment lasts', () => {
     const live = seeInData(surge, 'UTC', new Date((surge.started + 40 * 3600) * 1000))
@@ -149,7 +149,7 @@ describe('the surge card', () => {
     expect(card()?.querySelector('.sg-chip')?.textContent).toBe('2.7× usual')
     expect(card()?.querySelector('.sg-source span:last-child')?.textContent).toBe('Mostly from Facebook')
     expect(card()?.querySelector('svg.sg-spark')).not.toBeNull()
-    expect([...(card()?.querySelectorAll('.side-card-actions button') ?? [])].map((b) => b.textContent)).toEqual(['More', 'See it in Data'])
+    expect([...(card()?.querySelectorAll('.side-card-actions button') ?? [])].map((b) => b.textContent)).toEqual(['More', 'See it in Explore'])
   })
 
   it('the number opens the same dialog as More, and so does openSurgeStory(id) from outside', async () => {
@@ -194,14 +194,14 @@ describe('the surge card', () => {
     expect(document.body.querySelector('[role="dialog"]')).toBeNull()
   })
 
-  it('See it in Data, on the card and in the story, opens today in Data filtered to the source, and the card is put away for good', async () => {
+  it('See it in Explore, on the card, opens the moment on Overview by the hour against a week earlier, and the card is put away for good', async () => {
     answer(surge)
     await draw()
-    const see = [...document.body.querySelectorAll<HTMLButtonElement>('.side-card .side-card-actions button')].find((b) => b.textContent === 'See it in Data')
+    const see = [...document.body.querySelectorAll<HTMLButtonElement>('.side-card .side-card-actions button')].find((b) => b.textContent === 'See it in Explore')
     act(() => {
       see?.click()
     })
-    expect(setView).toHaveBeenCalledWith(expect.objectContaining({ live: false, period: 'custom', bucket: 'hour', compare: 'custom', filters: [], v: 'explore', surge: surge.started }))
+    expect(setView).toHaveBeenCalledWith(expect.objectContaining({ live: false, period: 'custom', bucket: 'hour', compare: 'custom', cfrom: addDays(localHour(surge.started, 'UTC').day, -7), filters: [], xf: [], xp: 'overview', surge: surge.started }))
     expect(localStorage.getItem('trckable:card:surge:surge_1')).toBe('1')
   })
 
@@ -278,7 +278,7 @@ describe('the story told by a notice (no story of its own)', () => {
   })
 })
 
-describe('the line and the band on Data', () => {
+describe('the line and the band on Explore', () => {
   const over: Surge = { ...surge, ended: surge.started + 25 * 60 }
   const asked = () => vi.stubGlobal('fetch', () => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ surge: over }) }))
 
@@ -296,9 +296,9 @@ describe('the line and the band on Data', () => {
     expect(host.querySelector('.sgm-path')?.getAttribute('aria-label')).toBe('/blog/launch-post')
     expect(only.textContent).toBe('Only Facebook')
     act(() => only.click())
-    expect(setView).toHaveBeenCalledWith({ filters: [{ dim: 'referrer', value: 'l.facebook.com' }] })
+    expect(setView).toHaveBeenCalledWith({ xf: [{ dim: 'referrer', value: 'l.facebook.com' }] })
     act(() => back.click())
-    expect(setView).toHaveBeenCalledWith(expect.objectContaining({ period: 'today', surge: undefined, filters: [] }))
+    expect(setView).toHaveBeenCalledWith(expect.objectContaining({ period: 'today', surge: undefined, filters: [], xf: [] }))
   })
 
   it('the band covers the hours from its start to its end, with its name', async () => {

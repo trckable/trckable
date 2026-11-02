@@ -2,7 +2,7 @@
 // number counting up to who is on, how many times the usual as a chip, one line
 // about who sent most of them (with the source's icon), the last hour drawing
 // itself, and a small ghost hopping. A sneak peek of what it brought (SurgePeek), and two buttons:
-// See it in Data (today, filtered to the source) and More (the story in a dialog). Calm: a soft glow that
+// See it in Explore (the moment's days on Overview, by the hour, against a week earlier) and More (the story in a dialog). Calm: a soft glow that
 // pulses twice, no confetti, and none of it moves with reduced motion. The
 // browser notice (only for someone who said yes, and only when the tab is out of
 // sight) is told once for each surge.
@@ -89,7 +89,7 @@ function Actions({ see, more }: { see: () => void; more: () => void }) {
         {t.more}
       </button>
       <button type="button" className="btn primary" onClick={see}>
-        {t.seeData}
+        {t.seeExplore}
       </button>
     </>
   )

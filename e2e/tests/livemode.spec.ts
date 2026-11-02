@@ -359,19 +359,19 @@ test('the switch has the one dot, and it dims while the connection is down', asy
   await expect(page.locator('.lnow .lhead .mk-pulse.off')).toBeVisible({ timeout: 15_000 })
 })
 
-test('L and B and the switch lead between Live and the Briefing', async ({ page }) => {
+test('L and B and the switch lead between Live and Explore', async ({ page }) => {
   await signIn(page, '/example.com?view=briefing')
-  await expect(page.locator('.hero')).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('#xp.on')).toBeVisible({ timeout: 15_000 })
   await tabs(page).getByRole('tab', { name: /^Live/ }).click()
   await expect(page).toHaveURL(/[?&]view=live/)
   await expect(live(page)).toBeVisible()
   await page.keyboard.press('b')
   await expect(page).toHaveURL(/[?&]view=briefing/)
-  await expect(page.locator('.hero')).toBeVisible()
+  await expect(page.locator('#xp.on')).toBeVisible()
   await page.keyboard.press('l')
   await expect(page).toHaveURL(/[?&]view=live/)
-  await tabs(page).getByRole('tab', { name: 'Briefing' }).click()
-  await expect(tabs(page).getByRole('tab', { name: 'Briefing' })).toHaveAttribute('aria-selected', 'true')
+  await tabs(page).getByRole('tab', { name: 'Explore' }).click()
+  await expect(tabs(page).getByRole('tab', { name: 'Explore' })).toHaveAttribute('aria-selected', 'true')
 })
 
 test('on a phone the panels stack and nothing runs off the side', async ({ page }) => {
@@ -400,7 +400,7 @@ async function expectSamePlace(read: () => Promise<Box>, was: Box) {
 test('switching both ways: the header does not move and Live opens at the top', async ({ page }) => {
   await visit(page, 'switch') // a site with data shows its Briefing
   await signIn(page, '/example.com?view=briefing')
-  await expect(page.locator('.hero')).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('#xp.on')).toBeVisible({ timeout: 15_000 })
   const top = await tabs(page).boundingBox()
   await page.evaluate(() => window.scrollTo(0, Math.min(150, document.documentElement.scrollHeight - innerHeight - 40)))
   // Scrolled down, the switch is out of sight: L is the way to Live.
@@ -409,8 +409,8 @@ test('switching both ways: the header does not move and Live opens at the top', 
   await expect(page).toHaveURL(/[?&]view=live/)
   expect(await page.evaluate(() => scrollY)).toBe(0)
   await expectSamePlace(() => tabs(page).boundingBox(), top)
-  await tabs(page).getByRole('tab', { name: 'Briefing' }).click()
-  await expect(page.locator('.hero')).toBeVisible()
+  await tabs(page).getByRole('tab', { name: 'Explore' }).click()
+  await expect(page.locator('#xp.on')).toBeVisible()
   await expectSamePlace(() => tabs(page).boundingBox(), top)
 })
 
@@ -434,17 +434,17 @@ test('a site with visits opens in Live when the address has no mode', async ({ p
   await expect(page.locator('.pwrap')).toHaveCount(0)
 
   // The Briefing, chosen: the address keeps it through a reload.
-  await tabs(page).getByRole('tab', { name: 'Briefing' }).click()
-  await expect(page.locator('.pwrap')).toBeVisible()
+  await tabs(page).getByRole('tab', { name: 'Explore' }).click()
+  await expect(page.locator('#xp .xperiod .pwrap')).toBeVisible()
   await expect(page).toHaveURL(/[?&]view=briefing/)
   await page.reload()
-  await expect(page.locator('.hero')).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('#xp.on')).toBeVisible({ timeout: 15_000 })
   await expect(live(page)).toHaveCount(0)
 
   // Addresses made before Live was the default are the Briefing now.
   for (const q of ['?period=7d', '?f=channel:Direct']) {
     await page.goto(`${API}/example.com${q}&v=`)
-    await expect(page.locator('.hero')).toBeVisible({ timeout: 15_000 })
+    await expect(page.locator('#xp.on')).toBeVisible({ timeout: 15_000 })
     await expect(live(page)).toHaveCount(0)
   }
   // ?view=live still says Live.

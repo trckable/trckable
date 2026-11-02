@@ -76,7 +76,7 @@ async function lastAction(page: Page) {
 
 const OPEN: [string, (page: Page) => Promise<void>][] = [
   ['the site list', (p) => p.locator('#siteBtn').click()],
-  ['the period', (p) => p.locator('.hero .tline').click()],
+  ['the period', (p) => p.locator('#xperBtn').click()],
   ['the bell', (p) => p.locator('.bellw .ib.bell').click()],
   ['the account', (p) => p.locator('.account-btn').click()],
   ['Ask or search', (p) => p.keyboard.press('Control+k')],
@@ -91,7 +91,7 @@ for (const [width, height] of [
       await page.setViewportSize({ width, height })
       await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
       await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
-      await expect(page.locator('.brief')).toBeVisible()
+      await expect(page.locator('#xp.on')).toBeVisible()
       await expect(page.locator('.tabbar')).toBeVisible()
       await open(page)
       await expect.poll(async () => JSON.stringify(await lastAction(page)), { message: name, timeout: 5000 }).toContain('"inside":true,"reachable":true')

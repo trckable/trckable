@@ -56,11 +56,11 @@ test('a chunk the new build no longer has: the page reloads once, on the same ad
   await goneAfterDeploy(page)
   await deployed(page)
   await page.goto(ADDRESS)
-  await expect(page.locator('.brief')).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('#xp.on')).toBeVisible({ timeout: 30_000 })
   expect(seen.loads).toBe(1)
   await page.keyboard.press('ControlOrMeta+k') // asks for the chunk that is gone
   await expect.poll(() => seen.loads, { message: 'the page reloads', timeout: 20_000 }).toBe(2)
-  await expect(page.locator('.brief'), 'the dashboard is back, not a black page').toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('#xp.on'), 'the dashboard is back, not a black page').toBeVisible({ timeout: 30_000 })
   expect(page.url(), 'the period and the number are kept').toBe(ADDRESS)
   expect(await page.evaluate((k) => sessionStorage.getItem(k), FLAG)).not.toBeNull()
   await page.waitForTimeout(2000)
@@ -72,7 +72,7 @@ test('a chunk that fails while the server runs this very build is no stale tab: 
   const seen = watch(page)
   await goneAfterDeploy(page) // the chunk is missing, but nothing was deployed
   await page.goto(ADDRESS)
-  await expect(page.locator('.brief')).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('#xp.on')).toBeVisible({ timeout: 30_000 })
   await page.keyboard.press('ControlOrMeta+k')
   await expect(page.getByText("Couldn't draw this.")).toBeVisible({ timeout: 20_000 })
   await page.waitForTimeout(2000)
@@ -86,7 +86,7 @@ test('after that reload, a chunk that is still missing says so in a line, and do
   await deployed(page)
   await page.addInitScript((k) => sessionStorage.setItem(k, String(Date.now())), FLAG) // this page was reloaded just now
   await page.goto(ADDRESS)
-  await expect(page.locator('.brief')).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('#xp.on')).toBeVisible({ timeout: 30_000 })
   await page.keyboard.press('ControlOrMeta+k')
   await expect(page.getByText("Couldn't draw this."), 'an inline message, not a black page').toBeVisible({ timeout: 20_000 })
   await expect(page.getByRole('button', { name: 'Reload' })).toBeVisible()

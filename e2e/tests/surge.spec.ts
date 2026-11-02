@@ -35,6 +35,7 @@ test.beforeAll(async ({ browser }) => {
 async function open(page: Page, view: 'live' | 'data', width = 1280, moment = surge) {
   await withoutPayments(page)
   await page.route(/\/api\/v1\/sites\/[^/]+\/surge$/, (r) => r.fulfill({ json: { surge: moment } }))
+  await page.route(/\/api\/v1\/sites\/[^/]+\/surges\/near/, (r) => r.fulfill({ json: { surge: moment } }))
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width, height: 900 })
@@ -62,7 +63,7 @@ test('the card comes up in Live and in Data: a number, a chip, one line, one but
   await expect(card(page).locator('.sg-chip')).toHaveText('2.7× usual')
   await expect(card(page).locator('.sg-source')).toContainText('Mostly from Facebook')
   await expect(card(page).getByRole('button', { name: 'More' })).toBeVisible()
-  await expect(card(page).getByRole('button', { name: 'See it in Data' })).toBeVisible()
+  await expect(card(page).getByRole('button', { name: 'See it in Explore' })).toBeVisible()
   await shoot(page, 'surge-card')
   await open(page, 'data')
   await expect(card(page)).toBeVisible({ timeout: 30_000 })
@@ -112,7 +113,7 @@ test('Live has no busy line, even when the server says the site is busier than u
   await expect(page.locator('.live-busier-line')).toHaveCount(0)
 })
 
-test('on a phone the story is a sheet that fills the screen; See it in Data lands on the moment', async ({ page }) => {
+test('on a phone the story is a sheet that fills the screen; See it in Explore lands on the moment', async ({ page }) => {
   await open(page, 'live', 390)
   await expect(card(page)).toBeVisible({ timeout: 30_000 })
   await shoot(page, 'surge-card')
@@ -122,15 +123,36 @@ test('on a phone the story is a sheet that fills the screen; See it in Data land
   expect(box!.width).toBeGreaterThanOrEqual(389)
   expect(box!.height).toBeGreaterThanOrEqual((await page.evaluate(() => window.innerHeight)) - 1)
   await shoot(page, 'surge-story')
-  await story(page).getByRole('button', { name: 'See it in Data' }).click()
+  await story(page).getByRole('button', { name: 'See it in Explore' }).click()
   await expect(page).toHaveURL(new RegExp(`[?&]sg=${surge.started}`))
   await expect(page).toHaveURL(/[?&]bucket=hour/)
   await expect(page).toHaveURL(/[?&]compare=custom/)
   await expect(page).not.toHaveURL(/[?&]f=/)
+  await expect(page).not.toHaveURL(/[?&]xf=/)
   await expect(card(page)).toHaveCount(0)
   await page.reload()
   await page.waitForTimeout(1500)
   await expect(card(page)).toHaveCount(0)
+})
+
+test('See it in Explore on the card opens Overview for the moment, by the hour against a week earlier, with numbers from that range', async ({ page }) => {
+  await open(page, 'live', 1280)
+  await expect(card(page)).toBeVisible({ timeout: 30_000 })
+  await card(page).getByRole('button', { name: 'See it in Explore' }).click()
+  await expect(page).toHaveURL(/[?&]x=overview/)
+  await expect(page).toHaveURL(new RegExp(`[?&]sg=${surge.started}`))
+  await expect(page).toHaveURL(/[?&]bucket=hour/)
+  await expect(page).toHaveURL(/[?&]compare=custom/)
+  await expect(page).toHaveURL(/[?&]cfrom=/)
+  await expect(page).not.toHaveURL(/[?&]xf=/)
+  // The line over the page that says it was opened on a busy moment, and the numbers of the range under it.
+  await expect(page.locator('#xp.on')).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('.surge-banner')).toBeVisible()
+  await expect(page.locator('#xp [data-xcard="overview"] .kcs .kc .kv').first()).toHaveText(/\d/)
+  // The chips on the line narrow Explore's own filters (xf), never the old f.
+  await page.locator('.surge-banner').getByRole('button', { name: /Facebook/ }).click()
+  await expect(page).toHaveURL(/[?&]xf=/)
+  await expect(page).not.toHaveURL(/[?&]f=/)
 })
 
 test('opened from a notification the story is one opaque card, at most 600px wide', async ({ page }) => {

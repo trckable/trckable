@@ -9,5 +9,5 @@ const GO: Record<Setup, string> = { rev: brief.connect, search: brief.connect, g
 const MAY: Record<Setup, Action> = { rev: 'payment.manage', search: 'search.connect', goals: 'goal.create' }
 
 export function Lock({ k, x }: { k: Setup; x: XCtx }) {
-  return <LockCard kind={k} size="big" go={GO[k]} onGo={can(MAY[k]) ? () => x.connect(k) : undefined} onHow={() => x.how(k)} />
+  return <LockCard kind={k} size={x.slim ? 'row' : 'big'} go={GO[k]} onGo={can(MAY[k]) ? () => x.connect(k) : undefined} onHow={() => x.how(k)} />
 }

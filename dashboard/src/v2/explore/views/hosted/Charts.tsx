@@ -1,9 +1,7 @@
 // The chart tabs (over time, hours, revenue map, visit to sale, time to convert, flow): the old cards' charts and the
 // numbers they read, set in the section's own frame.
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
-import { ColumnChart } from '../../../../charts/ColumnChart'
 import { FlowChart } from '../../../../charts/FlowChart'
-import { FunnelRows } from '../../../../charts/FunnelRows'
 import { HeatGrid, HeatKey } from '../../../../charts/HeatGrid'
 import { SeriesChart } from '../../../../charts/SeriesChart'
 import { bucketLabel } from '../../../../charts/TimeChart'
@@ -17,6 +15,7 @@ import { fmtCompact, fmtInt } from '../../../../lib/format'
 import type { Report, ReportQuery, Row } from '../../../../lib/api'
 import { type Heatmap, more } from '../../../../lib/apiMore'
 import { XEmpty, XError, XNote, XSub } from '../../../ui/XBits'
+import { FunnelShape } from '../../../ui/FunnelShape'
 import type { XCtx } from '../../ctx'
 import { XChart } from './XChart'
 import '../../../../charts/charts.css'
@@ -50,8 +49,8 @@ function Hours({ x, query }: { x: XCtx; query: ReportQuery }) {
   const c = chartCopy.rhythm
   if (got && !got.h) return <XError title={chartCopy.failedShort} onRetry={() => setRound((n) => n + 1)} />
   return (
-    <XChart id="rhythm" title={c.title} question={c.question} loading={!h} empty={!!h && h.total === 0} table={h ? rhythmModel(h).table : NONE} headKey={<HeatKey color="var(--accent)" fewer={c.fewer} more={c.more} />} foot={<XNote>{c.caption(tz)}</XNote>}>
-      {h && <HeatGrid cells={h.cells} rows={c.days} cols={HOURS} colTicks={[0, 6, 12, 18, 23]} color="var(--accent)" label={c.label(tz)} tip={(r, col, n) => c.tip(c.days[r], col, n)} />}
+    <XChart id="rhythm" title={c.title} question={c.question} loading={!h} empty={!!h && h.total === 0} table={h ? rhythmModel(h).table : NONE} headKey={<HeatKey color="var(--mk-soft)" fewer={c.fewer} more={c.more} />} foot={<XNote>{c.caption(tz)}</XNote>}>
+      {h && <HeatGrid cells={h.cells} rows={c.days} cols={HOURS} colTicks={[0, 6, 12, 18, 23]} color="var(--mk-soft)" label={c.label(tz)} tip={(r, col, n) => c.tip(c.days[r], col, n)} />}
     </XChart>
   )
 }
@@ -102,18 +101,18 @@ function Steps({ x, report, query, tab }: { x: XCtx; report: Report; query: Repo
     const c = chartCopy.flow
     return (
       <XChart id="flow" title={c.title} question={c.question} loading={!m} empty={!!charts && charts.flow.visits === 0} table={m?.table ?? NONE} foot={<XNote>{c.foot}</XNote>}>
-        {m && <FlowChart cols={m.cols} heads={c.heads} links={m.links} fmt={fmtInt} label={c.label} boxTip={(_, b) => c.box(b.label, b.value)} bandTip={(a, b, n) => c.band(a.label, b.label, n)} />}
+        {m && <FlowChart cols={m.cols} heads={c.heads} links={m.links} height={340} fmt={fmtInt} label={c.label} boxTip={(_, b) => c.box(b.label, b.value)} bandTip={(a, b, n) => c.band(a.label, b.label, n)} />}
       </XChart>
     )
   }
   if (!charts) return <Loading height={190} />
   if (tab === 'visit-to-sale') {
     const steps = charts.conversion ?? []
-    if (steps.length < 2) return <XEmpty title={kitLater.empty} hint="" />
+    if (steps.length < 2 || !steps[0].visitors) return <XEmpty title={kitLater.empty} hint="" />
     const m = funnelModel(steps)
     return (
       <XChart id="funnel" title={chartCopy.funnel.title} question={chartCopy.funnel.question} table={m.table} foot={<XNote>{chartCopy.funnel.foot}</XNote>}>
-        <FunnelRows rows={m.rows} color="var(--accent)" label={chartCopy.funnel.label} />
+        <FunnelShape steps={steps.map((s, i) => ({ name: m.rows[i].label, v: s.visitors }))} label={chartCopy.funnel.label} short />
       </XChart>
     )
   }
@@ -123,7 +122,15 @@ function Steps({ x, report, query, tab }: { x: XCtx; report: Report; query: Repo
   const c = chartCopy.convert
   return (
     <XChart id="convert" title={c.title} question={c.question} table={m.table} empty={m.values.every((v) => v === 0)} foot={<XNote>{c.foot}</XNote>}>
-      <ColumnChart values={m.values} labels={m.axis} color="var(--money)" label={c.label} fmt={fmtInt} tip={(i) => c.tip(m.labels[i], m.values[i])} />
+      <div className="ttc" role="list" aria-label={c.label}>
+        {m.values.map((v, i) => (
+          <div key={m.labels[i]} className="ttc-r" role="listitem" title={c.tip(m.labels[i], v)}>
+            <span>{m.axis[i]}</span>
+            <div className="mk-bar"><i style={{ width: `${(v / Math.max(1, ...m.values)) * 100}%` }} /></div>
+            <b>{fmtInt(v)}</b>
+          </div>
+        ))}
+      </div>
     </XChart>
   )
 }

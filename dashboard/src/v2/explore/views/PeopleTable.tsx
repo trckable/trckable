@@ -4,9 +4,9 @@ import { XTable, type XTableProps } from '../../ui/XTable'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
 
-export function PeopleTable({ x, ...p }: { x: XCtx } & XTableProps) {
+export function PeopleTable({ x, noneAtAll, ...p }: { x: XCtx; noneAtAll?: boolean } & XTableProps) {
   if (p.rows.length) return <XTable {...p} />
-  if (x.filters.length)
+  if (x.filters.length && !noneAtAll)
     return (
       <XEmpty title={copy.emptyFiltered} hint={copy.emptyFilteredHint}>
         <button type="button" className="xb" onClick={x.clearFilters}>

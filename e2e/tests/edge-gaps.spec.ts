@@ -35,7 +35,7 @@ test('a report that cannot be read says so and can be asked again', async ({ pag
   fail = false
   await alert.getByRole('button', { name: 'Retry' }).click()
   await expect(alert).toHaveCount(0)
-  await expect(page.locator('.brief')).toBeVisible()
+  await expect(page.locator('#xp.on')).toBeVisible()
 })
 
 test('a theme chosen in one tab reaches the other', async ({ page, context }) => {
@@ -45,18 +45,6 @@ test('a theme chosen in one tab reaches the other', async ({ page, context }) =>
   await other.goto(`${API}/example.com`)
   await other.evaluate(() => localStorage.setItem('trckable:theme', 'dark'))
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
-})
-
-test('closing Explore leaves it behind: Back does not open it again', async ({ page }) => {
-  await page.context().addCookies([{ name: 'trckable_session', value: await session('edge-gaps'), url: API }])
-  await page.goto(`${API}/history.example?view=briefing&period=7d`)
-  await page.getByRole('button', { name: /^Explore all data/ }).first().click()
-  await expect(page).toHaveURL(/x=overview/)
-  await expect(page.getByRole('tab', { name: 'Highlights' })).toBeVisible()
-  await page.keyboard.press('Escape')
-  await expect(page).not.toHaveURL(/x=/)
-  await page.goBack()
-  await expect(page).not.toHaveURL(/x=/)
 })
 
 test('an address with a stray ending is the site, and an unknown site says so', async ({ page }) => {
@@ -93,7 +81,7 @@ test('a viewer opening a settings address is told, not left on nothing', async (
 test('a period that cannot be read does not keep the last period\'s numbers under its name', async ({ page }) => {
   await page.context().addCookies([{ name: 'trckable_session', value: await session('edge-gaps'), url: API }])
   await page.goto(`${API}/history.example?view=briefing&period=7d`)
-  await expect(page.locator('.brief')).toBeVisible()
+  await expect(page.locator('#xp.on')).toBeVisible()
   let fail = false
   await page.route(/\/api\/v1\/sites\/[^/]+\/report/, (route) => (fail ? route.abort() : route.continue()))
   fail = true
@@ -102,7 +90,7 @@ test('a period that cannot be read does not keep the last period\'s numbers unde
     window.dispatchEvent(new Event('trckable:navigate'))
   })
   await expect(page.getByRole('alert').filter({ hasText: /load/i })).toBeVisible()
-  await expect(page.locator('.brief')).toHaveCount(0)
+  await expect(page.locator('#xp.on')).toHaveCount(0)
 })
 
 test.describe('a longer language on a phone', () => {

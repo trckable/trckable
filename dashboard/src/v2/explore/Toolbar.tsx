@@ -1,40 +1,45 @@
-// The row under the header: which section, + Filter, Views, and the rest in ⋯; then what is filtered, and the section's
-// own tabs. On a phone each menu is a sheet, and Filter and Views fold into the ones that are left.
+// The row under the header: which section, and the rest in ⋯; then what is filtered, and the section's
+// own tabs. On a phone each menu is a sheet.
+import type { ReactNode } from 'react'
 import type { Filter } from '../../lib/api'
 import { XSub } from '../ui/XBits'
 import { XIco } from '../ui/XIcons'
 import { XMenu } from '../ui/XMenu'
 import { copy } from './copy'
 import { chipName, dimWord } from './filters'
-import { FilterMenu, MoreMenu, PickMenu, ViewsMenu, type ViewsProps } from './menus'
+import { MoreMenu, PickMenu, type ViewsProps } from './menus'
 import { FILTER_DIMS, TABS } from './sections'
 import type { Connected, FilterDim, Option, Section, Tab } from './types'
 
 /** The tabs that read the payments. */
 const PAID: Tab[] = ['revmap', 'earners', 'sells', 'buyers', 'vsale', 'toconvert']
 
-export type MenuKey = 'pick' | 'filt' | 'views' | 'more'
+export type MenuKey = 'pick' | 'views' | 'more'
 
 interface ToolbarProps {
+  period?: ReactNode
+  updated?: ReactNode
+  noTabs?: boolean
+  /** Opens the menu of sections, where it is a drawer: the name is then a heading, not a menu. */
+  onDrawer?: () => void
   section: Section
   tab: Tab
   filters: Filter[]
   options: Partial<Record<FilterDim, Option[]>>
   conn: Connected
   menu: MenuKey | null
-  fd: FilterDim | null
   views: ViewsProps
   details: boolean
   onMenu: (k: MenuKey) => void
   onSection: (s: Section) => void
   onTab: (t: Tab) => void
-  onDim: (d: FilterDim | null) => void
-  onValue: (d: FilterDim, v: string) => void
   onRemove: (dim: string) => void
   onClear: () => void
   onDetails: () => void
   onCsv: () => void
   onCopy: () => void
+  /** Opens the daily email as it will read; absent where the person cannot set it. */
+  onMail?: () => void
 }
 
 function Caret() {
@@ -68,17 +73,21 @@ function Chips({ p }: { p: ToolbarProps }) {
 
 export function Toolbar(p: ToolbarProps) {
   const name = copy.names[p.section][0]
-  const n = p.filters.length
   const btn = (k: MenuKey) => ({ 'aria-haspopup': 'menu' as const, 'aria-expanded': p.menu === k, onClick: () => p.onMenu(k) })
   const tabs = TABS[p.section]
   return (
     <>
       <div className="xtb">
-        <span className="xtitle">
+        {p.onDrawer && (
+          <button type="button" className="xb xdrawer-open" aria-label={copy.sections} onClick={p.onDrawer}>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10" /></svg>
+          </button>
+        )}
+        <span className={`xtitle${p.onDrawer ? ' on-drawer' : ''}`} data-xtitle={p.section}>
           <XIco name={p.section} />
           <b>{name}</b>
         </span>
-        <XMenu
+        {!p.onDrawer && <XMenu
           id="pick"
           cls="xpw"
           pick
@@ -93,36 +102,10 @@ export function Toolbar(p: ToolbarProps) {
           }
         >
           <PickMenu section={p.section} conn={p.conn} onPick={p.onSection} />
-        </XMenu>
-        <XMenu
-          id="filt"
-          open={p.menu === 'filt'}
-          label={copy.filterTitle}
-          button={
-            <button type="button" className="xb" data-xm="filt" {...btn('filt')}>
-              <span className="lb-d">{copy.filter}</span>
-              <span className="lb-p">
-                {copy.filters}
-                {n ? ` (${n})` : ''} <Caret />
-              </span>
-            </button>
-          }
-        >
-          <FilterMenu filters={p.filters} options={p.options} fd={p.fd} onDim={p.onDim} onValue={p.onValue} />
-        </XMenu>
-        <XMenu
-          id="views"
-          open={p.menu === 'views'}
-          label={copy.views}
-          button={
-            <button type="button" className="xb xvb" data-xm="views" {...btn('views')}>
-              {copy.views} <Caret />
-            </button>
-          }
-        >
-          <ViewsMenu {...p.views} />
-        </XMenu>
+        </XMenu>}
         <span className="sp" />
+        {p.updated}
+        {p.period && <span className="xperiod">{p.period}</span>}
         <XMenu
           id="more"
           cls="r"
@@ -134,11 +117,12 @@ export function Toolbar(p: ToolbarProps) {
             </button>
           }
         >
-          <MoreMenu views={p.views} details={p.details} onDetails={p.onDetails} onCsv={p.onCsv} onCopy={p.onCopy} />
+          <MoreMenu views={p.views} details={p.details} onDetails={p.onDetails} onCsv={p.onCsv} onCopy={p.onCopy} onMail={p.onMail} />
         </XMenu>
       </div>
+      {p.noTabs && <p className="xpage-desc">{copy.names[p.section][1]}</p>}
       <Chips p={p} />
-      {tabs.length > 1 && <XSub label={name} attr="xtab" value={p.tab} items={tabs.map((t) => ({ key: t, label: copy.sub[t], dot: (t === 'search' && !p.conn.search) || (!p.conn.rev && PAID.includes(t)) ? copy.notConnected : undefined }))} onPick={p.onTab} />}
+      {!p.noTabs && tabs.length > 1 && <XSub label={name} attr="xtab" value={p.tab} items={tabs.map((t) => ({ key: t, label: copy.sub[t], dot: (t === 'search' && !p.conn.search) || (!p.conn.rev && PAID.includes(t)) ? copy.notConnected : undefined }))} onPick={p.onTab} />}
     </>
   )
 }

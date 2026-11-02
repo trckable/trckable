@@ -46,9 +46,8 @@ test.beforeAll(async () => {
 async function open(page: Page, width: number) {
   await page.setViewportSize({ width, height: 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  // An empty v is the address with no view: the suite would otherwise send it to Explore, which opens the panel.
-  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
-  await expect(page.locator('.brief')).toBeVisible()
+    await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
+  await expect(page.locator('#xp.on')).toBeVisible()
 }
 
 
@@ -81,41 +80,38 @@ for (const [width, height] of [
     await page.setViewportSize({ width, height })
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
     await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
-    await expect(page.locator('.brief')).toBeVisible()
-    await page.keyboard.press('e')
-    await expect(page.locator('#xp.on .xtb')).toBeVisible()
-    await page.keyboard.press('f')
-    const items = page.locator('#xp.full .xrail .xri')
-    await expect(items).toHaveCount(11)
-    for (let i = 0; i < 11; i++) {
+    await expect(page.locator('#xp.on')).toBeVisible()
+    // Below the rail breakpoint the section list is a drawer, opened by its button and shut by a pick.
+    const items = page.locator('.xdrawer-box .xri')
+    for (let i = 0; i < 12; i++) {
+      await page.locator('#xp .xdrawer-open').click()
+      await expect(items).toHaveCount(12)
       await items.nth(i).click()
-      await expect(page.locator('#xp .xrail .xri').nth(i)).toBeVisible()
+      await expect(page.locator('.xdrawer-box')).toHaveCount(0)
+      await expect(page.locator('#xp .xtb')).toBeVisible()
       expect(await squeezed(page), `section ${i}`).toEqual([])
     }
-    const overview = page.locator('#xp .xrail .xri').first()
-    await overview.click()
+    await page.locator('#xp .xdrawer-open').click()
+    await items.first().click()
     const cards = page.locator('#xp .kcs .kc')
     await expect(cards).toHaveCount(4)
     const tops = await cards.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)))
-    expect(new Set(tops).size, 'two rows of two, not one row of four').toBe(2)
+    // The page has no rail beside the cards, so at 900 four fit across (squeezed() above says none is cramped); at 820 they stay two by two.
+    expect(new Set(tops).size, width < 900 ? 'two rows of two, not one row of four' : 'one row of four').toBe(width < 900 ? 2 : 1)
   })
 }
 
-// The Overview cards follow their pane: two by two in the side panel, four across when the pane is wide, one column on a phone;
+// The Overview cards follow the page: four across when it is wide, two by two on a phone;
 // each card's number sits at the same height and none is clipped.
-for (const [width, height, full, rows] of [
-  [360, 800, false, 4],
-  [1280, 900, false, 2],
-  [1280, 900, true, 1],
+for (const [width, height, rows] of [
+  [360, 800, 2],
+  [1280, 900, 1],
 ] as const) {
-  test(`Overview cards at ${width} px${full ? ' full width' : ' in the panel'}: ${rows} row${rows > 1 ? 's' : ''}, numbers level and whole`, async ({ page }) => {
+  test(`Overview cards at ${width} px: ${rows} row${rows > 1 ? 's' : ''}, numbers level and whole`, async ({ page }) => {
     await page.setViewportSize({ width, height })
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
     await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
-    await expect(page.locator('.brief')).toBeVisible()
-    await page.keyboard.press('e')
-    await expect(page.locator('#xp.on .xtb')).toBeVisible()
-    if (full) await page.keyboard.press('f')
+    await expect(page.locator('#xp.on')).toBeVisible()
     const cards = page.locator('#xp .kcs .kc')
     await expect(cards).toHaveCount(4)
     const at = await cards.evaluateAll((els) => els.map((e) => ({ top: Math.round(e.getBoundingClientRect().top), value: Math.round((e.querySelector('.kv') as HTMLElement).getBoundingClientRect().top - e.getBoundingClientRect().top) })))

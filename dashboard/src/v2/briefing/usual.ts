@@ -90,21 +90,6 @@ export function judge(v: number, b: Band, thr = 0.5): Judged {
   return v < b.lo - thr ? 'dn' : ''
 }
 
-/** The share who usually leave after one page: the days of the window (the same weekday, when one is asked), each counted by its people. */
-export function usualBounce(daily: Point[], today: string, weekday: number | null): number | null {
-  const from = addDays(today, -WINDOW)
-  let people = 0
-  let left = 0
-  for (const p of daily) {
-    const day = p.t.slice(0, 10)
-    if (day >= today || day < from || p.bounce_rate === undefined) continue
-    if (weekday !== null && weekdayOf(day) !== weekday) continue
-    people += p.visitors
-    left += p.visitors * p.bounce_rate
-  }
-  return people >= 30 ? left / people : null
-}
-
 /** A slice's band from the same figure on the weekdays before it (what the server calls its weeks): the middle, and the spread. */
 export function bandFromWeeks(weeks: number[]): Band | null {
   if (weeks.length < 2) return null
@@ -112,11 +97,6 @@ export function bandFromWeeks(weeks: number[]): Band | null {
   const c = quantile(xs, 0.5)
   const m = 1.3 * spread(xs) + 0.06 * c
   return { c, lo: Math.max(0, c - m), hi: c + m }
-}
-
-/** A slice's band from the period before it, a quarter either way; none when that had too few to say. */
-export function bandFromBefore(was: number | undefined): Band | null {
-  return was === undefined || was < 3 ? null : { c: was, lo: Math.max(0, Math.floor(was * 0.75)), hi: Math.ceil(was * 1.25) + 1 }
 }
 
 /** The one verdict on how a period's people stand against their usual: what was counted, the usual it is told against, and whether it is above, below or inside. The headline, the People card, the score and the run of days all read this, so they cannot disagree. */

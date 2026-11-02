@@ -2,7 +2,7 @@
 // What is shown equals the rows behind it, a share is a share of the people of the period, a bar is as long as its
 // number says, the lines against the period before are the right multiples, and a table nothing was recorded for says
 // so instead of listing zeros. Chromium only.
-import { expect, test, type Page } from './fixtures'
+import { expect, test, type Locator, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -45,13 +45,21 @@ test.beforeAll(async () => {
   cookie = await session()
 })
 
+/** The table card open now (a table is a card of its section's page, filled in when it is scrolled to). */
+let cur = ''
+const card = (page: Page) => page.locator(`#xp [data-xcard="${cur}"]`)
+
 /** Opens one table of Explore over the fixture's last seven days (the period before it is the 23 people of the fixture). */
 async function open(page: Page, tab: string) {
+  cur = tab
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/${TRUTH_DOMAIN}?view=briefing&period=7d&x=${tab}`)
   await expect(page.locator('#xp.on')).toBeVisible()
-  await expect(page.locator('#xp .xloading, #xp .mk-loading')).toHaveCount(0)
+  // (A card with nothing in it is hidden by its style: it is there, not shown.)
+  await expect(card(page)).toBeAttached()
+  await card(page).evaluate((el) => el.scrollIntoView())
+  await expect(card(page).locator('.xloading, .mk-loading')).toHaveCount(0)
 }
 
 interface Line {
@@ -64,8 +72,11 @@ interface Line {
 
 /** The rows of the open table of people, as drawn: the name, the count, the line against the period before, the share and the bar's length. */
 async function lines(page: Page): Promise<Line[]> {
-  const rows = page.locator('#xp .xt .xrw')
+  const rows = card(page).locator('.xt .xrw')
   await expect(rows.first()).toBeVisible()
+  // A card lists its first five rows; the rest is one press away.
+  const all = card(page).getByRole('button', { name: /^Show all/ })
+  if (await all.count()) await all.click()
   return rows.evaluateAll((els) =>
     els.map((el) => ({
       name: el.querySelector('.mk-bar > span')!.textContent!.replace(/^\p{Regional_Indicator}{2}\s*/u, '').trim(),
@@ -76,6 +87,10 @@ async function lines(page: Page): Promise<Line[]> {
     })),
   )
 }
+
+/** Counts drawn as animated digits (a number-flow element): each digit wheel stands at its --current. */
+const numbers = (els: Locator) =>
+  els.evaluateAll((bs) => bs.map((b) => [...(b.firstElementChild?.shadowRoot?.querySelectorAll('[part~="integer-digit"]') ?? [])].map((d) => (d as HTMLElement).style.getPropertyValue('--current').trim()).join('')))
 
 const names = (l: Line[]) => l.map((x) => x.name)
 const counts = (l: Line[]) => Object.fromEntries(l.map((x) => [x.name, x.n]))
@@ -94,8 +109,8 @@ async function expectTable(page: Page, want: [string, number][], people = 37) {
 }
 
 const tableOf: [string, [string, number][]][] = [
-  ['pages', [['/', 24], ['/pricing', 21], ['/blog', 4]]],
-  ['exits', [['/pricing', 21], ['/', 12], ['/blog', 4]]],
+  ['pages', [['Home page', 24], ['/pricing', 21], ['/blog', 4]]],
+  ['exits', [['/pricing', 21], ['Home page', 12], ['/blog', 4]]],
   ['sources', [['Search', 18], ['Direct', 7], ['Social', 5], ['AI assistants', 4], ['Email', 3]]],
   ['referrers', [['google.com', 18], ['news.ycombinator.com', 5], ['chatgpt.com', 4]]],
   ['utm', [['launch', 3]]],
@@ -116,12 +131,12 @@ for (const [tab, want] of tableOf) {
 
 test('the overview cards and its two lists equal the hand count', async ({ page }) => {
   await open(page, 'overview')
-  const cards = page.locator('#xp .kcs .kc')
+  const cards = card(page).locator('.kcs .kc')
   await expect(cards).toHaveCount(4)
   // 37 people against 23 before is 61% more; 49 views; no money and no checks: nothing is made up for them.
   const people = cards.nth(0)
   await expect(people.locator('.kv')).toHaveText('37')
-  await expect(people.locator('.kn')).toHaveText('+61% vs the period before')
+  await expect(people.locator('.kn')).toHaveText(/^\+61%/)
   const second = cards.nth(1)
   await expect(second.locator('.kl')).toHaveText('Signup')
   await expect(second.locator('.kv')).toHaveText('4')
@@ -131,7 +146,7 @@ test('the overview cards and its two lists equal the hand count', async ({ page 
   await expect(third.locator('.kn')).toHaveText('checks are off')
   // Bounced: 25 of 37 visits saw one page and signed nothing up (68%).
   await expect(cards.nth(3).locator('.kv')).toHaveText('68%')
-  const lists = page.locator('#xp .x2 > div')
+  const lists = card(page).locator('.x2 > div')
   const pages = lists.nth(0).locator('.xrw')
   await expect(pages).toHaveCount(3)
   await expect(pages.nth(0).locator('.mk-n')).toHaveText('24')
@@ -143,66 +158,64 @@ test('the overview cards and its two lists equal the hand count', async ({ page 
   await expect(sources.nth(0).locator('.sh')).toHaveText('49%')
 })
 
-test('the lines against the period before are the multiples of the hand count', async ({ page }) => {
+test('the lines against the period before are the changes of the hand count', async ({ page }) => {
   await open(page, 'referrers')
   const got = Object.fromEntries((await lines(page)).map((x) => [x.name, x.vs]))
-  // google.com: 18 now, 10 before (1.8 times); Hacker News: 5 and 5; chatgpt.com: nobody before.
-  expect(got['google.com']).toBe('▲ 1.8×')
-  expect(got['news.ycombinator.com']).toBe('as usual')
+  // google.com: 18 now, 10 before (80% more); Hacker News: 5 and 5; chatgpt.com: nobody before.
+  expect(got['google.com']).toBe('▲ 80%')
+  expect(got['news.ycombinator.com']).toBe('≈ same')
   expect(got['chatgpt.com']).toBe('–')
   await open(page, 'sources')
   const channels = Object.fromEntries((await lines(page)).map((x) => [x.name, x.vs]))
   // Direct: 7 now, 8 before: inside what is usual.
-  expect(channels['Direct']).toBe('as usual')
-  expect(channels['Search']).toBe('▲ 1.8×')
+  expect(channels['Direct']).toBe('≈ same')
+  expect(channels['Search']).toBe('▲ 80%')
 })
 
 test('a tab nothing was recorded for says so, with no row of zeros', async ({ page }) => {
   for (const tab of ['languages', 'screens', 'groups', 'bots', 'outbound']) {
     await open(page, tab)
-    await expect(page.locator('#xp .xt .xrw'), `${tab} lists nothing`).toHaveCount(0)
-    await expect(page.locator('#xp .xempty, #xp .xe'), `${tab} says there is nothing`).toBeVisible()
+    await expect(card(page).locator('.xt .xrw'), `${tab} lists nothing`).toHaveCount(0)
+    await expect(card(page).locator('.xempty, .xe'), `${tab} says there is nothing`).toBeVisible()
   }
 })
 
-test('speed that no visit measured says so on its cards and lists no pages', async ({ page }) => {
+test('speed that no visit measured says so and lists no pages', async ({ page }) => {
   await open(page, 'speed')
-  const cards = page.locator('#xp .kcs .kc')
-  await expect(cards).toHaveCount(3)
-  await expect(cards.locator('.kv')).toHaveText(['–', '–', '–'])
-  await expect(cards.locator('.kd')).toHaveText(['nothing measured yet', 'nothing measured yet', 'nothing measured yet'])
-  await expect(page.locator('#xp .xt .xrw')).toHaveCount(0)
+  await expect(card(page).locator('.xempty')).toContainText('No page measured yet')
+  await expect(card(page).locator('.xt .xrw')).toHaveCount(0)
+  await expect(card(page).locator('.kcs .kc')).toHaveCount(0)
 })
 
 test('what needs payments shows no figures that are not there', async ({ page }) => {
   for (const tab of ['sales', 'revmap', 'earners', 'sells', 'buyers', 'vsale', 'toconvert']) {
     await open(page, tab)
-    const card = page.locator('#xp .lkc')
-    await expect(card, `${tab} asks for the payments`).toBeVisible()
+    const lock = card(page).locator('.lkc')
+    await expect(lock, `${tab} asks for the payments`).toBeVisible()
     // No example amounts stand where this site's own will be.
-    await expect(card.locator('.lkc-s, .lkc-tag')).toHaveCount(0)
-    await expect(card).not.toContainText(/\$\s?\d/)
+    await expect(lock.locator('.lkc-s, .lkc-tag')).toHaveCount(0)
+    await expect(lock).not.toContainText(/\$\s?\d/)
   }
   await open(page, 'search')
-  await expect(page.locator('#xp .lkc')).toBeVisible()
-  await expect(page.locator('#xp .lkc .lkc-s')).toHaveCount(0)
+  await expect(card(page).locator('.lkc')).toBeVisible()
+  await expect(card(page).locator('.lkc .lkc-s')).toHaveCount(0)
 })
 
 test('goals and the funnel count the people who got there', async ({ page }) => {
   await open(page, 'funnels')
   // Seen the home page: 24. Then the pricing page after it: 12. Then signed up: 4.
-  await expect(page.locator('#xp .mf')).toBeVisible()
-  const steps = page.locator('#xp .mf .mfr')
-  const got = await steps.evaluateAll((els) => els.map((el) => [el.querySelector('span')!.textContent, el.querySelector('b')!.textContent]))
-  expect(got.slice(0, 3).map((x) => x[1])).toEqual(['24', '12', '4'])
-  await expect(page.locator('#xp .mk-goal .gv')).toHaveText(['4'])
+  await expect(card(page).locator('.mf')).toBeVisible()
+  const steps = card(page).locator('.mf .fs-heads li:not(.ghost) b')
+  await expect(steps).toHaveCount(3)
+  await expect.poll(() => numbers(steps)).toEqual(['24', '12', '4'])
+  await expect.poll(() => numbers(card(page).locator('.grs .gr .gr-ring b'))).toEqual(['4'])
 })
 
 test('the screens and the other cards of a site with no payments or robots show no error and no placeholder', async ({ page }) => {
   for (const tab of ['highlights', 'overtime', 'hours', 'flow', 'retention', 'people', 'mentions']) {
     await open(page, tab)
-    await expect(page.locator('#xp'), `${tab} did not fail`).not.toContainText(/couldn.t|failed|error/i)
-    await expect(page.locator('#xp'), `${tab} has no sample`).not.toContainText(/sample/i)
+    await expect(card(page), `${tab} did not fail`).not.toContainText(/couldn.t|failed|error/i)
+    await expect(card(page), `${tab} has no sample`).not.toContainText(/sample/i)
   }
 })
 

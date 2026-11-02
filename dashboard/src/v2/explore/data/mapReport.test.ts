@@ -13,11 +13,11 @@ describe('the overview', () => {
   it('has four cards: people, views without a goal, uptime without revenue, and who left', () => {
     const o = mapOverview(report(result(100), result(100)), none)
     expect(o.kcs.map((k) => k.icon)).toEqual(['people', 'click', 'uptime', 'leave'])
-    expect(o.kcs[0]).toMatchObject({ val: '100', note: { c: '', t: 'as usual' } })
+    expect(o.kcs[0]).toMatchObject({ val: '100', note: { c: '', t: '≈ same' } })
   })
   it('says how far people are from usual against the period before', () => {
     const o = mapOverview(report(result(200), result(100)), none)
-    expect(o.kcs[0]).toMatchObject({ note: { c: 'up', t: '+100% vs usual' }, st: '' })
+    expect(o.kcs[0]).toMatchObject({ note: { c: 'up', t: '2× vs usual' }, st: '' })
     expect(mapOverview(report(result(40), result(100)), none).kcs[0]).toMatchObject({ note: { c: 'dn' }, st: 'dn' })
   })
   it('names the first goal that anyone reached, and puts money in the third place when it is on', () => {

@@ -20,7 +20,7 @@ test.beforeEach(async ({ page }) => {
 test('opens with the MCP setup, and closes again', async ({ page, browserName }) => {
   test.skip(browserName !== 'chromium', 'one browser is enough')
   await page.goto(API + '/example.com')
-  await expect(page.getByRole('button', { name: /^Explore all data/ })).toBeVisible()
+  await expect(page.getByRole('tab', { name: 'Explore' })).toBeVisible()
   await page.keyboard.press('ControlOrMeta+k')
   await expect(page.locator('.pal.on .palbox input')).toBeVisible() // the list is its own chunk: Enter waits for it
   await page.keyboard.press('Enter') // the list's first row is Peek
@@ -36,7 +36,7 @@ test('opens with the MCP setup, and closes again', async ({ page, browserName })
 test('Create a key opens the API keys', async ({ page, browserName }) => {
   test.skip(browserName !== 'chromium', 'one browser is enough')
   await page.goto(API + '/example.com')
-  await expect(page.getByRole('button', { name: /^Explore all data/ })).toBeVisible()
+  await expect(page.getByRole('tab', { name: 'Explore' })).toBeVisible()
   await page.keyboard.press('ControlOrMeta+k')
   await expect(page.locator('.pal.on .palbox input')).toBeVisible() // the list is its own chunk: Enter waits for it
   await page.keyboard.press('Enter') // the list's first row is Peek

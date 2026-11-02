@@ -1,7 +1,7 @@
 // What the Speed & uptime and AI & mentions cards read: loading time, uptime, AI crawler hits, Answers and mentions. None of it is asked before the page
 // has painted, and a read that fails is a quiet empty block, never an error over Live. Speed goes through the same
 // module check the Briefing uses, so a site that records no speed is not asked.
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { more } from '../../lib/apiMore'
 import { addDays, todayIn } from '../../lib/dates'
 import type { Site } from '../../lib/api'
@@ -34,14 +34,24 @@ export function useHealth(site: Site | undefined, on: boolean): Health {
   // A write to this site's modules, Answers or Mentions (switching something on) reads every figure again.
   const [round, setRound] = useState(0)
   const id = site?.id
+  // Each time the cards come near, the figures are read again; leaving Live does not throw away a read under way, only another site does.
+  const [wasOn, setWasOn] = useState(false)
+  const [visits, setVisits] = useState(0)
+  if (on !== wasOn) {
+    setWasOn(on)
+    if (on) setVisits((n) => n + 1)
+  }
+  const current = useRef(id)
+  useEffect(() => {
+    current.current = id
+  }, [id])
   useEffect(() => onSiteWrite((_, written) => written === id && setRound((n) => n + 1)), [id])
   const tz = site?.timezone
   const watched = site?.watched_since ?? 0
   const withMentions = !!site?.mentions && hasMentions()
   const withAnswers = hasAnswers()
   useEffect(() => {
-    if (!on || !id || !tz) return
-    let live = true
+    if (!visits || !id || !tz) return
     const cancel = whenQuiet(() => {
       const today = todayIn(tz)
       const now = Math.floor(Date.now() / 1000)
@@ -50,12 +60,9 @@ export function useHealth(site: Site | undefined, on: boolean): Health {
       const ai = more.crawlers(id, { from: addDays(today, -6), to: today }).then(aiOf, () => null)
       const mentions = withMentions ? mentionsApi.list(id, '7d').then((r) => mentionsOf(r.mentions), () => null) : Promise.resolve(null)
       const answers = withAnswers ? answersApi.report(id, { from: addDays(today, -6), to: today }).then((r) => (r.latest ? { seen: r.latest.seen, total: r.latest.total } : null), () => null) : Promise.resolve(null)
-      void Promise.all([speed, uptime, ai, mentions, answers]).then(([s, u, a, m, an]) => live && setGot({ id, h: { speed: s.s, vitalsOn: s.on, uptime: u, ai: a, mentions: m, answers: an } }))
+      void Promise.all([speed, uptime, ai, mentions, answers]).then(([s, u, a, m, an]) => current.current === id && setGot({ id, h: { speed: s.s, vitalsOn: s.on, uptime: u, ai: a, mentions: m, answers: an } }))
     })
-    return () => {
-      live = false
-      cancel()
-    }
-  }, [id, tz, watched, withMentions, withAnswers, on, round])
+    return cancel
+  }, [id, tz, watched, withMentions, withAnswers, visits, round])
   return got && got.id === id ? got.h : {}
 }

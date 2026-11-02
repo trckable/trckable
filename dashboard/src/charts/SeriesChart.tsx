@@ -2,6 +2,7 @@
 // came from) or plain lines (things compared: new vs returning). Hovering or
 // arrowing to a bucket shows every series' value there.
 import { useDraw } from '../lib/motion'
+import { curve } from './curve'
 import '../kit/draw.css'
 import { anchorOf, stack, stackPeak, niceScale, tickIndexes } from './scale'
 import { Tip } from './Tip'
@@ -40,10 +41,10 @@ export function SeriesChart(p: {
   const y = (v: number) => PAD_T + ph - (v / max) * ph
   const hover = useHover(n, PAD_L, pw)
   const layers = stack(p.series.map((s) => s.values))
-  const path = (ys: number[]) => ys.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('')
+  const path = (ys: number[]) => curve(ys.map((v, i): [number, number] => [x(i), y(v)]))
   const area = (y0: number[], y1: number[]) => {
-    const back = y0.map((_, j) => y0.length - 1 - j).map((i) => `L${x(i).toFixed(1)},${y(y0[i]).toFixed(1)}`)
-    return path(y1) + back.join('') + 'Z'
+    const back = curve(y0.map((_, j) => y0.length - 1 - j).map((i): [number, number] => [x(i), y(y0[i])]))
+    return path(y1) + 'L' + back.slice(1) + 'Z'
   }
   const at = hover.i
   return (
@@ -67,7 +68,7 @@ export function SeriesChart(p: {
         ))}
         {p.series.map((s, k) =>
           p.stacked ? (
-            <path key={s.label} className={draw && 'draw-fill'} style={{ '--i': k } as React.CSSProperties} d={area(layers[k].y0, layers[k].y1)} fill={s.color} fillOpacity={0.85} stroke="var(--surface)" strokeWidth={0.75} />
+            <path key={s.label} className={draw && 'draw-fill'} style={{ '--i': k } as React.CSSProperties} d={area(layers[k].y0, layers[k].y1)} fill={s.color} fillOpacity={0.62} stroke={s.color} strokeWidth={1.25} />
           ) : (
             <path key={s.label} className={draw} pathLength="1" style={{ '--i': k } as React.CSSProperties} d={path(s.values)} fill="none" stroke={s.color} strokeWidth={2} strokeLinejoin="round" />
           ),

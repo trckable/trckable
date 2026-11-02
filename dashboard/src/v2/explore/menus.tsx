@@ -4,11 +4,9 @@ import { Fragment } from 'react'
 import { XGl, XGrab, XMi, XSep } from '../ui/XMenu'
 import { XIco } from '../ui/XIcons'
 import { copy } from './copy'
-import { chipName, dimWord, valueOf } from './filters'
-import { FILTER_DIMS, groups } from './sections'
-import type { Filter } from '../../lib/api'
+import { groups } from './sections'
 import { can } from '../../lib/permissions'
-import type { Connected, FilterDim, Option, SavedView, Section } from './types'
+import type { Connected, SavedView, Section } from './types'
 
 export function PickMenu({ section, conn, onPick }: { section: Section; conn: Connected; onPick: (s: Section) => void }) {
   return (
@@ -22,30 +20,6 @@ export function PickMenu({ section, conn, onPick }: { section: Section; conn: Co
           ))}
         </Fragment>
       ))}
-    </>
-  )
-}
-
-export function FilterMenu({ filters, options, fd, onDim, onValue }: { filters: Filter[]; options: Partial<Record<FilterDim, Option[]>>; fd: FilterDim | null; onDim: (d: FilterDim | null) => void; onValue: (d: FilterDim, v: string) => void }) {
-  if (fd) {
-    const now = valueOf(filters, fd)
-    return (
-      <>
-        <XGrab />
-        <XMi back name={`‹ ${dimWord(fd)}`} onClick={() => onDim(null)} />
-        {(options[fd] ?? []).map((o) => (
-          <XMi key={o.val} data={{ 'data-xfv': o.val }} radio on={now === o.val} name={o.name} onClick={() => onValue(fd, o.val)} />
-        ))}
-      </>
-    )
-  }
-  return (
-    <>
-      <XGrab />
-      {FILTER_DIMS.map((d) => {
-        const v = valueOf(filters, d)
-        return <XMi key={d} enter data={{ 'data-xfd': d }} name={dimWord(d)} value={`${v !== null ? chipName({ dim: d, value: v }, options) : copy.any} ›`} onClick={() => onDim(d)} />
-      })}
     </>
   )
 }
@@ -90,22 +64,11 @@ function ViewTail(p: ViewsProps) {
   )
 }
 
-export function ViewsMenu(p: ViewsProps) {
+export function MoreMenu({ views, details, onDetails, onCsv, onCopy, onMail }: { views: ViewsProps; details: boolean; onDetails: () => void; onCsv: () => void; onCopy: () => void; onMail?: () => void }) {
   return (
     <>
       <XGrab />
-      <ViewRows {...p} />
-      <XSep />
-      <ViewTail {...p} />
-    </>
-  )
-}
-
-export function MoreMenu({ views, details, onDetails, onCsv, onCopy }: { views: ViewsProps; details: boolean; onDetails: () => void; onCsv: () => void; onCopy: () => void }) {
-  return (
-    <>
-      <XGrab />
-      <div className="onlyph">
+      <div>
         <XGl>{copy.views}</XGl>
         <ViewRows {...views} />
         <XSep />
@@ -114,6 +77,7 @@ export function MoreMenu({ views, details, onDetails, onCsv, onCopy }: { views: 
       </div>
       {details && <XMi data={{ 'data-pgd': '1' }} name={copy.pageDetails} desc={copy.pageDetailsHint} onClick={onDetails} />}
       <XMi id="xCsv" name={copy.exportCsv} desc={copy.exportHint} disabled={!can('data.export')} title={can('data.export') ? undefined : copy.exportDenied} onClick={onCsv} />
+      {onMail && <XMi data={{ 'data-mail': '1' }} name={copy.emailPreview} desc={copy.emailPreviewHint} onClick={onMail} />}
       <XMi data={{ 'data-copy': '1' }} name={copy.copyLink} onClick={onCopy} />
     </>
   )

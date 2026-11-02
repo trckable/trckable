@@ -43,7 +43,7 @@ for (const look of LOOKS) {
       await title.scrollIntoViewIfNeeded()
       await panel(page).getByRole('button', { name: 'Connect', exact: true }).focus()
       const gap = await page.evaluate(() => {
-        const head = document.querySelector('#xp .xph')!.getBoundingClientRect().bottom
+        const head = document.querySelector('.hd')!.getBoundingClientRect().bottom
         const t = [...document.querySelectorAll('#xp b, #xp h3, #xp h2')].find((e) => e.textContent?.trim() === 'Connect Search Console')!
         return t.getBoundingClientRect().top - head
       })

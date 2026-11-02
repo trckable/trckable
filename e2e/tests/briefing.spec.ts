@@ -1,4 +1,4 @@
-// The Briefing tab: switching to it from Live, a story opening in place, the
+// The Explore tab (the page's second tab, still addressed view=briefing): switching to it from Live, the
 // period and its range picker, and a phone, where the tabs are the bar at the
 // bottom. Chromium only (it runs against the site with a few days behind it).
 import { expect, test, type Page } from './fixtures'
@@ -47,7 +47,6 @@ test.beforeAll(async () => {
 async function open(page: Page, width: number, query: string) {
   await page.setViewportSize({ width, height: 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  // An empty v is the address with no view: the suite would otherwise send it to Explore, which opens the panel.
   await page.goto(`${API}/${HISTORY_DOMAIN}${query}${query ? '&' : '?'}v=`)
 }
 
@@ -59,40 +58,32 @@ async function bare(page: Page) {
 
 const tab = (page: Page, name: string) => page.getByRole('tab', { name })
 
-test('Live to Briefing: the sentence, the ring, a card in place, and the period', async ({ page }) => {
+test('Live to Explore: the page, the uptime card without a figure, and the period', async ({ page }) => {
   await open(page, 1280, '?view=live')
   await expect(page.locator('.liveview')).toBeVisible()
-  await tab(page, 'Briefing').click()
+  await tab(page, 'Explore').click()
   await expect(page).toHaveURL(/view=briefing/)
-  await expect(tab(page, 'Briefing')).toHaveAttribute('aria-selected', 'true')
-  // The tab opens on today; the site has no visits today, and says so plainly.
-  await expect(page.locator('.hero .mk-hl').first()).toContainText('Nobody')
-  // A week has people: the sentence, the ring, the four numbers.
-  await page.locator('.pill').click()
-  await page.locator('#perMenu').getByRole('button', { name: /^Last 7 days/ }).click()
-  await expect(page).toHaveURL(/period=7d/)
-  await expect(page.locator('.hero .mk-hl').first()).toContainText('47 people')
-  // A site in its first week has no normal yet: it says so where the ring would be.
-  await expect(page.locator('.sidecol .sn')).toContainText('learn your normal over 7 days')
-  // Uptime has nothing measured here, so its card is left out instead of showing a dash.
-  await expect(page.locator('.kcs .kc[data-k="uptime"]')).toHaveCount(0)
-  // The range picker: Custom dates opens the calendar.
-  await page.locator('.pill').click()
-  await page.locator('#perMenu').getByRole('button', { name: /^Custom dates/ }).click()
-  await expect(page.locator('#perMenu .cal .mk-cm')).toBeVisible()
-  await page.keyboard.press('Escape')
-  // The way deeper (a week in its first days has no card yet): Explore opens over the Briefing, which stays where it was.
-  await page.getByRole('button', { name: /^Explore all data/ }).last().click()
+  await expect(tab(page, 'Explore')).toHaveAttribute('aria-selected', 'true')
   await expect(page.locator('#xp.on')).toBeVisible()
-  await expect(page).toHaveURL(/view=briefing/)
+  const period = page.locator('#xp .xperiod #xperBtn')
+  await period.click()
+  await page.locator('#xperMenu').getByRole('button', { name: /^Last 7 days/ }).click()
+  await expect(page).toHaveURL(/period=7d/)
+  // Uptime has nothing measured here, so its card shows a dash, not a made-up figure.
+  await expect(page.locator('#xp .kcs .kc[data-k="uptime"] .kv')).toHaveText('–')
+  // The range picker: Custom dates opens the calendar.
+  await period.click()
+  await page.locator('#xperMenu').getByRole('button', { name: /^Custom dates/ }).click()
+  await expect(page.locator('#xperMenu .cal .mk-cm')).toBeVisible()
+  await page.keyboard.press('Escape')
 })
 
-test('the Briefing is remembered until Live is chosen', async ({ page }) => {
+test('Explore is remembered until Live is chosen', async ({ page }) => {
   await open(page, 1280, '?view=live')
-  await tab(page, 'Briefing').click()
-  await expect(page.locator('.brief')).toBeVisible()
+  await tab(page, 'Explore').click()
+  await expect(page.locator('#xp.on')).toBeVisible()
   await bare(page)
-  await expect(page.locator('.brief')).toBeVisible()
+  await expect(page.locator('#xp.on')).toBeVisible()
   await tab(page, 'Live').click()
   await expect(page).toHaveURL(/view=live/)
   expect(await page.evaluate(() => localStorage.getItem('trckable.tab'))).toBe('other')
@@ -104,7 +95,7 @@ test('on a phone the tabs are the bar at the bottom, and nothing runs off the si
   await expect(bar).toBeVisible()
   const box = (await bar.boundingBox())!
   expect(box.y + box.height, 'at the bottom of the screen').toBeGreaterThanOrEqual(899)
-  await expect(page.locator('.hero .mk-hl.s')).toBeVisible()
+  await expect(page.locator('#xp.on')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
   await bar.getByRole('button', { name: 'Live' }).click()
   await expect(page.locator('.liveview')).toBeVisible()
@@ -123,8 +114,8 @@ test('the page that Google Analytics sends people back to opens the import, and 
 
 test('the chart can be cut by week from the period menu, and Refresh is in the palette', async ({ page }) => {
   await open(page, 1440, '?view=briefing&period=30d')
-  await page.locator('#perBtn').click()
-  await page.locator('#perMenu .mk-lseg button', { hasText: 'Week' }).click()
+  await page.locator('#xp .xperiod #xperBtn').click()
+  await page.locator('#xperMenu .mk-lseg button', { hasText: 'Week' }).click()
   await expect(page).toHaveURL(/bucket=week/)
   await page.keyboard.press('Escape')
   await page.keyboard.press('ControlOrMeta+k')
@@ -137,7 +128,7 @@ test('the chart can be cut by week from the period menu, and Refresh is in the p
 for (const width of [620, 640, 700]) {
   test(`at ${width} px the header holds: nothing passes the edge, the bell stays, Live is one tap away`, async ({ page }) => {
     await open(page, width, '?view=briefing')
-    await expect(page.locator('.hero, .brief').first()).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('#xp.on')).toBeVisible({ timeout: 20_000 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
     const [site, bell, avatar] = await Promise.all([page.locator('#siteBtn').boundingBox(), page.locator('#bellBtn').boundingBox(), page.getByRole('button', { name: 'Account' }).boundingBox()])
     expect({ site: !!site, bell: !!bell && bell.width > 0, avatar: !!avatar }).toEqual({ site: true, bell: true, avatar: true })
@@ -153,13 +144,13 @@ for (const width of [620, 640, 700]) {
 
 test('N and 4 pick Now and the last 28 days, and the ? list names them', async ({ page }) => {
   await open(page, 1280, '?view=briefing&period=7d')
-  await expect(page.locator('.hero')).toBeVisible()
+  await expect(page.locator('#xp.on')).toBeVisible()
   await page.keyboard.press('4')
   await expect(page).toHaveURL(/period=28d/)
-  await expect(page.locator('.hero')).toBeVisible()
+  await expect(page.locator('#xp.on')).toBeVisible()
   await page.keyboard.press('n')
   await expect(page).toHaveURL(/period=now/)
-  await expect(page.locator('.hero')).toBeVisible()
+  await expect(page.locator('#xp.on')).toBeVisible()
   await page.keyboard.press('?')
   const list = page.getByRole('dialog')
   await expect(list).toContainText('Now')

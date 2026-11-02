@@ -1,15 +1,14 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { Row } from '../explore/types'
-import { CalmLine } from './ConnectPlaceholder'
 import { shareOf, XTable } from './XTable'
 
 const row = (o: Partial<Row>): Row => ({ val: 'a', name: 'a', v: 10, c: 0, st: '', ...o })
 const cells = (rows: Row[]) => [...renderToStaticMarkup(<XTable rows={rows} head="Page" limit={5} of={30} onAll={() => {}} />).matchAll(/<span class="d[^"]*">([^<]*)<\/span>/g)].map((m) => m[1])
 
 describe('the vs usual column', () => {
-  it('is never blank: as usual inside the usual, a dash with nothing to count from', () => {
-    expect(cells([row({ c: 10 }), row({ val: 'b', c: 0 }), row({ val: 'c', c: 3, v: 9, st: 'up' })])).toEqual(['as usual', '–', '▲ 3×'])
+  it('is never blank: about the same inside the usual, a dash with nothing to count from', () => {
+    expect(cells([row({ c: 10 }), row({ val: 'b', c: 0 }), row({ val: 'c', c: 3, v: 9, st: 'up' })])).toEqual(['≈ same', '–', '▲ 3×'])
   })
 })
 
@@ -24,20 +23,5 @@ describe('the share column', () => {
     expect(shareOf(0, 500)).toBe('0%')
     expect(shareOf(520, 500)).toBe('100%')
     expect(shareOf(250, 500)).toBe('50%')
-  })
-})
-
-describe('the quiet line under the cards', () => {
-  it('says it is still learning, not that everything was normal, in a site\'s first days', () => {
-    const html = renderToStaticMarkup(<CalmLine cards={false} names={[]} paused={false} learning />)
-    expect(html).toContain('Still learning')
-    expect(html).not.toContain('normal</b>')
-    expect(renderToStaticMarkup(<CalmLine cards={false} names={[]} paused={false} learning={false} />)).toContain('Everything was normal')
-  })
-
-  it('names what was calm in plain words', () => {
-    const calm = (names: string[]) => renderToStaticMarkup(<CalmLine cards names={names} paused={false} learning={false} />)
-    expect(calm(['search'])).toContain('No other unusual changes in search</b>')
-    expect(calm(['devices', 'pages'])).toContain('No other unusual changes in devices or pages</b>')
   })
 })

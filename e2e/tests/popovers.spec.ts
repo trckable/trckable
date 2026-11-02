@@ -50,14 +50,14 @@ for (const width of WIDTHS) {
 
     test('the header: site list, period, bell and your menu', async ({ page }) => {
       await page.goto(`${API}/${HISTORY_DOMAIN}?v=&period=7d`)
-      await expect(page.locator('.hero')).toBeVisible({ timeout: 30_000 })
+      await expect(page.locator('#xp.on')).toBeVisible({ timeout: 30_000 })
       await page.locator('#siteBtn').click()
       await onTop(page, page.locator('#siteMenu.on'), 'the site list')
       await page.keyboard.press('Escape')
-      const pill = page.locator('.pill').first()
+      const pill = page.locator('#xp .xperiod #xperBtn')
       if (await pill.isVisible()) {
         await pill.click()
-        await onTop(page, page.locator('#perMenu'), 'the period menu')
+        await onTop(page, page.locator('#xperMenu.on'), 'the period menu')
         await page.keyboard.press('Escape')
       }
       await page.getByRole('button', { name: /^Notifications/ }).click()
@@ -65,16 +65,6 @@ for (const width of WIDTHS) {
       await page.keyboard.press('Escape')
       await page.getByRole('button', { name: 'Account', exact: true }).click()
       await onTop(page, page.getByRole('menu', { name: 'Account' }), 'your menu')
-    })
-
-    test('a number’s Why? and the hero’s', async ({ page }) => {
-      await page.goto(`${API}/${HISTORY_DOMAIN}?v=&period=7d`)
-      await expect(page.locator('.hero')).toBeVisible({ timeout: 30_000 })
-      const why = page.locator('.hero .whyb, .kc .kn[title]').first()
-      if (await why.count()) {
-        await why.click()
-        await onTop(page, page.locator('.hw.show').first(), 'the Why? panel')
-      }
     })
 
     test('Settings: a tooltip inside a dialog', async ({ page }) => {

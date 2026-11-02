@@ -1,6 +1,9 @@
 // The cards at the top of an Explore section: the walkthrough's four numbers with their line, and a plainer card
 // (a number, its tag and what is usual) for search and speed.
+import { fmtPct } from '../../lib/format'
+import { copy } from '../explore/copy'
 import { Spark } from './KpiCard'
+import { RollText } from './RollText'
 import { XIco } from './XIcons'
 import type { Kc, Xkc } from '../explore/types'
 
@@ -22,10 +25,17 @@ export function XKcs({ items }: { items: Kc[] }) {
               <span className={`kn ${k.note.c}`}>{k.note.t}</span>
             </div>
             <div className="kv">
-              {k.val}
+              <RollText text={k.val} />
               {k.unit && <small>{k.unit}</small>}
             </div>
-            <Spark vals={k.vals} h={56} lo={k.lo} hi={k.hi} />
+            {k.share !== undefined ? (
+              <div className="kshare">
+                <i><b style={{ width: `${Math.min(100, k.share * 100)}%` }} /></i>
+                <span>{fmtPct(k.share)} {copy.ofPeople}</span>
+              </div>
+            ) : (
+              <Spark vals={k.vals} h={56} lo={k.lo} hi={k.hi} />
+            )}
           </div>
         )
       })}
@@ -48,9 +58,15 @@ export function XKcsPlain({ items, three }: { items: Xkc[]; three?: boolean }) {
             <span className={`kn ${k.tone}`}>{k.tag}</span>
           </div>
           <div className="kv">
-            {k.val}
+            <RollText text={k.val} />
             {k.unit && <small>{k.unit}</small>}
           </div>
+          {k.at !== undefined && (
+            <div className="kg" aria-hidden="true">
+              <i /><i /><i />
+              <b style={{ left: `${k.at * 100}%` }} />
+            </div>
+          )}
           <div className="kd">{k.detail}</div>
         </div>
       ))}

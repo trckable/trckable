@@ -8,7 +8,7 @@ import { session } from './session'
 const SHOTS = process.env.POLISH_SHOTS
 const NOW = Math.floor(Date.now() / 1000)
 
-test('a site the probe finds down is told in the foot, by its name and on the Live dot', async ({ page }) => {
+test('a site the probe finds down is told on the site button and in its list, by its name', async ({ page }) => {
   test.slow()
   await page.context().addCookies([{ name: 'trckable_session', value: await session('down-badge'), url: API }])
   await page.route('**/api/v1/sites', async (r) => {
@@ -21,19 +21,19 @@ test('a site the probe finds down is told in the foot, by its name and on the Li
     await r.fulfill({ response: res, json: body })
   })
   await page.goto(`${API}/${HISTORY_DOMAIN}?period=7d`)
-  // Nothing floats: the foot's status is the one way in, and the site's name carries a red dot.
-  const status = page.locator('.footer-status')
-  await expect(status).toHaveAttribute('data-status', 'down', { timeout: 20_000 })
+  // Nothing floats: the site's name carries a red dot, and its list opens what happened.
+  await expect(page.locator('#siteBtn .mk-dot.down')).toBeVisible({ timeout: 20_000 })
   await expect(page.locator('.status-float')).toHaveCount(0)
-  await expect(page.locator('#siteBtn .mk-dot.down')).toBeVisible()
-  await status.click()
-  await expect(page.locator('.status-pop')).toContainText('Some visitors still get through')
-  await expect(page.locator('.status-pop')).toContainText('No answer within 10 seconds')
+  await expect(page.locator('.footer-status[data-status="down"]')).toHaveCount(0) // the foot never repeats it
+  await page.locator('#siteBtn').click()
+  await page.locator('.site-why').click()
+  await expect(page.locator('#siteMenu')).toContainText('Some visitors still get through')
+  await expect(page.locator('#siteMenu')).toContainText('No answer within 10 seconds')
   await expect(page.getByRole('link', { name: 'See incident' })).toBeVisible()
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/downfix-badge-1440.png` })
 })
 
-test('the Live card says Down in its header, and the panel in the foot lists the last checks, the time once', async ({ page }) => {
+test('the Live card says Down in its header, and the panel in the site list lists the last checks, the time once', async ({ page }) => {
   test.slow()
   await page.context().addCookies([{ name: 'trckable_session', value: await session('down-live'), url: API }])
   await page.route('**/api/v1/sites', async (r) => {
@@ -53,8 +53,9 @@ test('the Live card says Down in its header, and the panel in the foot lists the
   await expect(page.getByRole('tablist', { name: 'View' }).locator('.mk-dot.down')).toBeVisible({ timeout: 20_000 })
   await expect(page.locator('.lnow .downbox')).toContainText('nobody can reach the site') // the Live card says it
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/down2-live-badge-1440.png` })
-  await page.locator('.footer-status').click()
-  const pop = page.locator('.status-pop')
+  await page.locator('#siteBtn').click()
+  await page.locator('.site-why').click()
+  const pop = page.locator('#siteMenu')
   await expect(pop.locator('[data-probe]')).toHaveCount(3)
   await expect(pop.getByText(/since/)).toHaveCount(1)
   await expect(pop.getByText('Checking…')).toHaveCount(0)

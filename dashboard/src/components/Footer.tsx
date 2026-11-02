@@ -34,6 +34,12 @@ export function Footer({ version, newer, onNewer, site, sites }: { version?: str
       clearTimeout(cap)
     }
   }, [])
+  // The avatar menu's Feedback opens it from here: on Explore and Live this foot shows nothing else.
+  useEffect(() => {
+    const on = () => setFeedback(true)
+    window.addEventListener('trckable:feedback', on)
+    return () => window.removeEventListener('trckable:feedback', on)
+  }, [])
   // Drawn when the status has arrived and the page has its numbers (or has been long enough about it).
   const settled = ready && (!loading || tired)
   const whatsNew = (

@@ -1,18 +1,13 @@
-// A paused uptime check reads the same on Live and in the Briefing, and a paused day is neither green nor red.
+// A paused uptime check paints its days paused on Live, and a paused day is neither green nor red.
 import { describe, expect, it } from 'vitest'
 import { dayStates } from '../../features/incidents/model'
-import { uptimeScore } from '../briefing/model'
-import { pausedWords, uptimeFigure } from './health'
+import { uptimeFigure } from './health'
 
 const DAY = 86400
 const now = Date.parse('2026-10-20T12:00:00Z') / 1000
 const watched = now - 40 * DAY
 
 describe('a paused check', () => {
-  it('is said in the Briefing’s words on Live', () => {
-    expect(pausedWords).toBe(uptimeScore({ pct: 100, downNow: false, downMin: 0, off: false, paused: true }).words)
-  })
-
   it('paints its days paused in Live’s strip, and a day with an incident stays an incident', () => {
     const day = (d: string) => Date.parse(`${d}T00:00:00Z`) / 1000
     const paused = [{ from: day('2026-10-17'), to: day('2026-10-20') }]

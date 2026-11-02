@@ -222,7 +222,7 @@ for (const width of [390, 360]) {
 test('390px: no empty pill sits between the site and the bell', async ({ page }) => {
   await phone(page, 390)
   const kids = await page.locator('.hd > *').evaluateAll((els) => els.filter((e) => e.getBoundingClientRect().width > 0 && !e.classList.contains('sr')).map((e) => ({ w: e.getBoundingClientRect().width, text: e.textContent, box: e.matches('.mk-chip, .pill-x') })))
-  expect(kids.some((k) => k.box && k.w > 0 && !k.text?.trim() && k.w !== 44 && k.w !== 40)).toBe(false)
+  expect(JSON.stringify(kids.filter((k) => k.box && k.w > 0 && !k.text?.trim() && Math.round(k.w) !== 44 && Math.round(k.w) !== 40)), 'empty header items').toBe('[]')
   await expect(page.locator('.hd .pill-x')).toBeHidden()
 })
 
@@ -237,9 +237,9 @@ test('390px: motion reduced, the bar goes without a transition', async ({ page }
 
 test('390px: from another period, the in-page period and one tap on Today go back to today', async ({ page }) => {
   await phone(page, 390)
-  await expect(page.locator('.tline')).toContainText(/7 days/i)
-  await page.locator('.tline').click()
+  await expect(page.locator('#xp .xperiod #xperBtn')).toContainText(/ – today/i)
+  await page.locator('#xp .xperiod #xperBtn').click()
   await page.locator('.pmenu.on .mi', { hasText: /^\s*Today/ }).first().click()
-  await expect(page.locator('.tline')).toContainText(/today/i)
+  await expect(page.locator('#xp .xperiod #xperBtn')).toContainText(/today/i)
   await expect(page).not.toHaveURL(/period=7d/)
 })

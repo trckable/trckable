@@ -8,7 +8,7 @@ const Fresh = lazy(() => import('./Fresh'))
 
 export function FreshSlot({ site, visits }: { site: Site; visits: Visit[] }) {
   return (
-    <Suspense fallback={<BriefingSkeleton site={site.id} label={copy.loading} />}>
+    <Suspense fallback={<BriefingSkeleton label={copy.loading} />}>
       <Fresh site={site} visits={visits} />
     </Suspense>
   )

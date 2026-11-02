@@ -1048,10 +1048,17 @@ function hold(key: string, run: Running, signal?: AbortSignal): Promise<Report> 
   return run.p
 }
 
+let lastReadAt = 0
+/** When the report last handed out was read from the server: a cached answer keeps its own time. */
+export const reportReadAt = () => lastReadAt
+
 export function cachedReport(site: string, q: ReportQuery, maxAgeMs = reportTtl(q), signal?: AbortSignal): Promise<Report> {
   const key = site + reportURL(site, q)
   const hit = cache.get(key)
-  if (hit && Date.now() - hit.at < maxAgeMs) return Promise.resolve(hit.data)
+  if (hit && Date.now() - hit.at < maxAgeMs) {
+    lastReadAt = hit.at
+    return Promise.resolve(hit.data)
+  }
   const running = inflight.get(key)
   if (running && running.gen === generation) return hold(key, running, signal)
   const gen = generation
@@ -1061,7 +1068,8 @@ export function cachedReport(site: string, q: ReportQuery, maxAgeMs = reportTtl(
     .then((data) => {
       if (gen !== generation) return data // dropped while it ran: it may predate the change
       cache.delete(key) // re-inserted last: the oldest read is the first to go
-      cache.set(key, { at: Date.now(), data })
+      lastReadAt = Date.now()
+      cache.set(key, { at: lastReadAt, data })
       const oldest = cache.keys().next().value
       if (cache.size > KEPT && oldest !== undefined) cache.delete(oldest)
       return data

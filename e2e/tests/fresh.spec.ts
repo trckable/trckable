@@ -26,10 +26,10 @@ test('before the first visit: the setup screen, Not verified, a locked ring, no 
   await expect(page.locator('#siteBtn')).toHaveAttribute('aria-label', /Not verified/)
   await expect(page.locator('#siteBtn .mk-dot.off')).toHaveCount(1)
   await expect(page.locator('#views')).toHaveCount(0)
-  await expect(page.locator('.exb')).toHaveCount(0)
+  await expect(page.locator('#xp')).toHaveCount(0)
   await expect(page.locator('nav.tabbar')).toHaveCount(0)
   // No empty numbers on the page.
-  await expect(page.locator('.hero, .kcs')).toHaveCount(0)
+  await expect(page.locator('.xchg-say, .kcs')).toHaveCount(0)
   // The ring: Install is the step to do, the ones after it wait.
   await page.locator('.ringb').click()
   await expect(page.locator('.setupmenu .snext')).toContainText('Install', { timeout: 15_000 })

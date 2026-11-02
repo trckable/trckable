@@ -1,4 +1,4 @@
-// The Briefing's chart for today runs along the site's own day: at 12:12 on the site's clock the now-dot sits at the middle of the
+// The chart for today (on Explore's What changed) runs along the site's own day: at 12:12 on the site's clock the now-dot sits at the middle of the
 // day, not at 00:00, and the axis goes on to the evening, on a phone and on a tablet. Chromium only.
 import { expect, test } from './fixtures'
 import { execFileSync } from 'node:child_process'
@@ -63,6 +63,13 @@ for (const [width, height] of [
     await page.clock.setFixedTime(noonIn(tz))
     await page.setViewportSize({ width, height })
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+    // The chart on What changed is drawn once the period has a visitor: today has none on this site, so one is said to have come.
+    await page.route(/\/api\/v1\/sites\/[^/]+\/report\?/, async (route) => {
+      const res = await route.fetch()
+      const body = await res.json()
+      body.current = { ...body.current, kpis: { ...body.current.kpis, visitors: Math.max(1, body.current.kpis.visitors) } }
+      await route.fulfill({ response: res, json: body })
+    })
     await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=today&v=`)
     await expect(page.locator('svg#chart')).toBeVisible()
     await page.waitForTimeout(800)

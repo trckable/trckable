@@ -16,7 +16,11 @@ export const filterOps = {
   dropValue: (f: Filter) => setView({ filters: withoutValue(now(), f.dim, f.value) }),
   dropSet: (set: FilterSet) => setView({ filters: withoutSet(now(), set) }),
   /** From the domain switcher: one domain, or none for all. */
-  domain: (host: string | null) => setView({ filters: [...now().filter((f) => f.dim !== 'hostname'), ...(host ? [{ dim: 'hostname', value: host }] : [])], day: undefined }),
+  domain: (host: string | null) => {
+    const cur = readView(new URLSearchParams(location.search))
+    const rest = [...(cur.xf ?? cur.filters).filter((f) => f.dim !== 'hostname'), ...(host ? [{ dim: 'hostname', value: host }] : [])]
+    setView({ ...(cur.briefing || cur.xp || cur.xf ? { xf: rest } : { filters: rest }), day: undefined })
+  },
   flip: (set: FilterSet) => setView({ filters: flipped(now(), set) }),
 }
 

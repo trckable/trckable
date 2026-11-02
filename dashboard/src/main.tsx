@@ -18,7 +18,7 @@ import { useAccountTab, useAddSite } from "./lib/account";
 import { AddSiteHost } from "./features/onboarding/AddSiteHost";
 import { useSettingsAddress } from "./features/settingsAddress";
 import { useLatest } from "./lib/update";
-import { setRole } from "./lib/me";
+import { setAppVersion, setRole } from "./lib/me";
 import { can } from "./lib/permissions";
 import { NoneShared, NoSites, useGate } from "./features/onboarding/Gate";
 // The header of every page is its own chunk, fetched at once after the first paint: the first load carries only the page's boxes.
@@ -67,6 +67,7 @@ function App() {
         return;
       }
       setRole(me.role, me.mentions, me.answers);
+      setAppVersion(me.version, me.update_check);
       loadKeymap(me.keys);
       // Before choosing their own password a person may do nothing else (the server refuses /sites).
       const { sites } = me.must_change ? { sites: [] } : ((await early.sites) ?? (await api.sites()));
@@ -97,6 +98,11 @@ function App() {
   // A newer release, if this owner's dashboard may look (lib/update.ts).
   const latest = useLatest(boot.state === "ready" ? boot.version : undefined, boot.state === "ready" ? boot.updateCheck : false);
   const [showUpdate, setShowUpdate] = useState(false);
+  useEffect(() => {
+    const on = () => setShowUpdate(true);
+    window.addEventListener("trckable:update-open", on);
+    return () => window.removeEventListener("trckable:update-open", on);
+  }, []);
   useBootAddress({ state: boot.state, sites: boot.state === "ready" ? boot.sites : [], gated, path, params, shared });
 
   if (shared)

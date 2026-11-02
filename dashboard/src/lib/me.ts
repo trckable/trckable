@@ -37,3 +37,14 @@ export const hasAnswers = () => answersOn
 /** Which modules the shared site has on: they travel with the link, because a
  *  shared page cannot ask for them itself. */
 export const sharedModules = () => sharedMods
+
+let version: string | undefined
+let updateCheck: boolean | undefined
+export const setAppVersion = (v?: string, check?: boolean) => {
+  version = v
+  updateCheck = check
+}
+/** Whether this server lets the browser look for new releases. */
+export const updateChecks = () => updateCheck
+/** The running version, once the server has said. */
+export const appVersion = () => version

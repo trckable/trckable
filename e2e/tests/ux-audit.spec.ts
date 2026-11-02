@@ -1,5 +1,4 @@
-// Fixes from the v2 UX audit: a section of the settings is an address, ⌘K finds the places the menus hold, the sheets
-// of the Briefing never stack, and the Briefing and Live do not move while they load.
+// Fixes from the v2 UX audit: a section of the settings is an address, ⌘K finds the places the menus hold, and Explore and Live do not move while they load.
 import { expect, test, type Page } from './fixtures'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
@@ -30,9 +29,9 @@ const cls = (page: Page) => page.evaluate(() => (window as unknown as { __cls: n
 
 for (const width of [1440, 390]) {
   for (const view of ['briefing', 'live']) {
-    test(`the ${view} does not move while it loads at ${width}`, async ({ page }) => {
+    test(`${view === 'briefing' ? 'Explore' : 'Live'} does not move while it loads at ${width}`, async ({ page }) => {
       await open(page, width, `?view=${view}`, true)
-      await expect(page.locator(view === 'live' ? '.liveview' : '.brief')).toBeVisible()
+      await expect(page.locator(view === 'live' ? '.liveview' : '#xp.on')).toBeVisible()
       await page.waitForLoadState('networkidle')
       await page.waitForTimeout(1500)
       expect(await cls(page)).toBe(0)
@@ -40,19 +39,16 @@ for (const width of [1440, 390]) {
   }
 }
 
-test('Explore at full width has the period, and its menu changes it', async ({ page }) => {
+test('Explore has the period, and its menu changes it', async ({ page }) => {
   await open(page, 1440, '?view=briefing')
-  await expect(page.locator('.brief')).toBeVisible()
-  await page.keyboard.press('e')
-  await expect(page.locator('#xp.on .xtb')).toBeVisible()
-  await page.keyboard.press('f')
   await expect(page.locator('#xp.full')).toBeVisible()
-  const chip = page.locator('#xp #xperBtn')
+  const chip = page.locator('#xp .xperiod #xperBtn')
   await expect(chip).toBeVisible()
   await chip.click()
   await page.locator('#xperMenu').getByRole('button', { name: /Last 7 days/ }).click()
   await expect(page).toHaveURL(/period=7d/)
-  await expect(chip).toContainText('Last 7 days')
+  await expect(chip).toContainText(/ – today/) // the chip says the dates of the week, not "Today"
+  await expect(chip).not.toContainText(/^Today/)
 })
 
 test('the foot waits for a slow Briefing: nothing moves when its numbers arrive late', async ({ page }) => {
@@ -71,14 +67,14 @@ test('the foot waits for a slow Briefing: nothing moves when its numbers arrive 
     }).observe({ type: 'layout-shift', buffered: true })
   })
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&v=`)
-  await expect(page.locator('.brief')).toBeVisible({ timeout: 60_000 })
+  await expect(page.locator('#xp.on')).toBeVisible({ timeout: 60_000 })
   await page.waitForTimeout(4000)
   expect(await cls(page)).toBe(0)
 })
 
 test('a section of the settings is in the address, opens from it, and leaves with the dialog', async ({ page }) => {
   await open(page, 1280, '?view=briefing')
-  await expect(page.locator('.brief')).toBeVisible()
+  await expect(page.locator('#xp.on')).toBeVisible()
   await page.keyboard.press(',')
   await expect(page.getByRole('dialog', { name: /^Settings for/ })).toBeVisible()
   await page.getByRole('tab', { name: 'Alerts' }).click()
@@ -93,7 +89,7 @@ test('a section of the settings is in the address, opens from it, and leaves wit
 
 test('⌘K finds settings, alerts, share, the theme and sign out', async ({ page }) => {
   await open(page, 1280, '?view=briefing')
-  await expect(page.locator('.brief')).toBeVisible()
+  await expect(page.locator('#xp.on')).toBeVisible()
   await page.keyboard.press('ControlOrMeta+k')
   const input = page.locator('.palbox input')
   await expect(input).toBeVisible()
@@ -104,18 +100,4 @@ test('⌘K finds settings, alerts, share, the theme and sign out', async ({ page
   await input.fill('alerts')
   await page.keyboard.press('Enter')
   await expect(page.getByRole('tab', { name: 'Alerts' })).toHaveAttribute('aria-selected', 'true')
-})
-
-test('only one sheet of the Briefing is open at a time, and Escape closes it', async ({ page }) => {
-  await open(page, 1280, '?view=briefing&period=7d')
-  await expect(page.locator('.brief')).toBeVisible()
-  await page.locator('.nbtn').click()
-  await expect(page.locator('aside.cd')).toHaveCount(1)
-  await expect(page.locator('aside.cd')).toContainText(/note/i)
-  // The email preview sits behind the scrim: a click that reaches it opens the next sheet, and the first goes.
-  await page.locator('[data-mpv]').evaluate((el) => (el as HTMLElement).click())
-  await expect(page.locator('aside.cd')).toHaveCount(1)
-  await expect(page.locator('aside.cd')).not.toContainText(/notes/i)
-  await page.keyboard.press('Escape')
-  await expect(page.locator('aside.cd')).toHaveCount(0)
 })

@@ -1,63 +1,39 @@
-// The funnel as bars, one a step, with the step where people leave more than usual in red; and the goals under it, each a
-// number against the range it usually sits in.
-import { Fragment } from 'react'
-import { fmtInt, fmtPct } from '../../lib/format'
+// The funnel as one shape, and the goals under it as rings.
+import { fmtPct } from '../../lib/format'
 import { copy } from '../explore/copy'
 import type { Funnel, Goal, Step } from '../explore/types'
-import { Rng } from './RangeBar'
+import { FunnelShape } from './FunnelShape'
+import { copy as exCopy } from '../explore/copy'
+import { GoalRing } from './GoalRing'
 
-export function XMiniFunnel({ steps, leak, ghost, onConnect }: { steps: Step[]; leak: Funnel['leak']; ghost: boolean; onConnect?: () => void }) {
-  const first = steps[0]?.v || 1
+export function XMiniFunnel({ steps, leak, ghost, leakPage, onLeak, onConnect }: { steps: Step[]; leak: Funnel['leak']; ghost: boolean; leakPage?: string; onLeak?: () => void; onConnect?: () => void }) {
+  const at = leak.at > 0 ? steps[leak.at] : undefined
   return (
     <div className="mf">
-      {steps.map((s, i) => {
-        const hot = i > 0 && i === leak.at
-        return (
-          <Fragment key={s.name}>
-            {hot && <div className="mfd">{copy.goesOn(fmtPct(s.v / (steps[i - 1].v || 1)), fmtPct(leak.ur))}</div>}
-            <div className="mfr">
-              <span>{s.name}</span>
-              <div className="mb">
-                <i className={hot ? 'red' : ''} style={{ width: s.v > 0 ? `${Math.max(3, (s.v / first) * 100)}%` : 0 }} />
-              </div>
-              <b>{fmtInt(s.v)}</b>
-            </div>
-          </Fragment>
-        )
-      })}
+      <FunnelShape steps={steps} label={copy.funnel} red={leak.at} ghost={ghost ? copy.paid : undefined} />
+      {at && <div className="mfd">{copy.goesOn(fmtPct(at.v / (steps[leak.at - 1].v || 1)), fmtPct(leak.ur))}{onLeak && leakPage && <button type="button" className="xb xleak" data-xleak="1" onClick={onLeak}>{exCopy.seePage(leakPage)} {'›'}</button>}</div>}
       {ghost && (
-        <>
-          <div className="mfr ghost">
-            <span>{copy.paid}</span>
-            <div className="mb" />
-            <b>{'–'}</b>
-          </div>
-          <div className="mfn">
-            {onConnect && (
-              <button type="button" className="lk3" onClick={onConnect}>
-                {copy.connectRevenue}
-              </button>
-            )}
-            {copy.toSeeWhoPaid}
-          </div>
-        </>
+        <div className="mfn">
+          {onConnect && (
+            <button type="button" className="lk3" onClick={onConnect}>
+              {copy.connectRevenue}
+            </button>
+          )}
+          {copy.toSeeWhoPaid}
+        </div>
       )}
     </div>
   )
 }
 
 export function XGoals({ goals }: { goals: Goal[] }) {
+  if (goals.length === 0) return null
+  const max = Math.max(1, ...goals.flatMap((g) => [g.v, g.hi]))
   return (
-    <>
+    <div className="grs">
       {goals.map((g) => (
-        <div key={g.name} className={`mk-goal ${g.st}`}>
-          <span className="gn">{g.name}</span>
-          <Rng v={g.v} lo={g.lo} hi={g.hi} max={Math.max(g.v, g.hi, 1) * 1.3} />
-          <span className="gv" style={g.st === 'dn' ? { color: 'var(--mk-red)' } : undefined}>
-            {fmtInt(g.v)}
-          </span>
-        </div>
+        <GoalRing key={g.name} g={g} max={max} />
       ))}
-    </>
+    </div>
   )
 }

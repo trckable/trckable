@@ -72,7 +72,7 @@ async function watch(page: Page) {
     let on = true
     const tick = () => {
       const m = (document.querySelector('#main .view-pane:not([hidden])') ?? document.querySelector('#main')) as HTMLElement | null
-      const kind = !m || !m.children.length ? 'blank' : m.querySelector('.sk, .skl') ? 'skeleton' : m.querySelector('.liveview > .mk-quiet') ? 'loading' : m.querySelector('.liveview') ? 'live' : m.querySelector('.brief') ? 'brief' : 'other'
+      const kind = !m || !m.children.length ? 'blank' : m.querySelector('.sk, .skl') ? 'skeleton' : m.querySelector('.liveview > .mk-quiet') ? 'loading' : m.querySelector('.liveview') ? 'live' : m.querySelector('#xp.on') ? 'brief' : 'other'
       w.__f.push(kind)
       w.__h.push(Math.round(m?.getBoundingClientRect().height ?? 0))
       if (on) requestAnimationFrame(tick)
@@ -110,7 +110,7 @@ for (const width of [1280, 390]) {
     await ready(page, width)
     const go = (name: string) => (width < 600 ? page.locator('.tabbar').getByRole('button', { name }) : tab(page, name))
     const seen = new Set<string>(['Live'])
-    for (const [to, shown] of [['Briefing', '.brief'], ['Live', '.liveview'], ['Briefing', '.brief'], ['Live', '.liveview']] as const) {
+    for (const [to, shown] of [['Explore', '#xp.on'], ['Live', '.liveview'], ['Explore', '#xp.on'], ['Live', '.liveview']] as const) {
       await watch(page)
       await go(to).click()
       await expect(page.locator(shown)).toBeVisible()
@@ -134,33 +134,21 @@ for (const width of [1280, 390]) {
     await page.setViewportSize({ width, height: 900 })
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
     await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
-    await expect(page.locator('.brief')).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('#xp.on')).toBeVisible({ timeout: 20_000 })
     // Live is built when the page is idle, out of sight.
     await expect(page.locator('.liveview')).toBeAttached({ timeout: 20_000 })
     await expect(page.locator('.liveview')).toBeHidden()
-    await page.waitForFunction(() => !document.querySelector('.brief .skl'), undefined, { timeout: 20_000 })
+    await page.waitForFunction(() => !document.querySelector('#xp .skl'), undefined, { timeout: 20_000 })
     await page.waitForTimeout(2800) // the Briefing's reading is done
     await slow(page)
     const go = (name: string) => (width < 600 ? page.locator('.tabbar').getByRole('button', { name }) : tab(page, name))
     // Live has been read once (how soon it is read behind the Briefing depends on the machine), then both screens stay built.
     await go('Live').click()
     await expect(page.locator('.liveview')).toBeVisible()
-    await page.waitForFunction(() => !document.querySelector('.liveview .sk, .liveview .skl'), undefined, { timeout: 20_000 })
-    await go('Briefing').click()
-    await expect(page.locator('.brief')).toBeVisible()
-    // A Replay that is playing ends when Live is shown, and is not playing when the Briefing is back.
-    const replay = page.locator('.brief [data-replay]').first()
-    if (await replay.isVisible()) {
-      await replay.click()
-      await expect(replay).toHaveAttribute('aria-label', 'Stop')
-      // The cinema's scrim is over the tabs: the page goes behind it by its own switch, not by a pointer.
-      await go('Live').dispatchEvent('click')
-      await expect(page.locator('.liveview')).toBeVisible()
-      await go('Briefing').click()
-      await expect(page.locator('.brief')).toBeVisible()
-      await expect(replay).toHaveAttribute('aria-label', 'Replay')
-    }
-    for (const [to, shown, other] of [['Live', '.liveview', '.brief'], ['Briefing', '.brief', '.liveview'], ['Live', '.liveview', '.brief'], ['Briefing', '.brief', '.liveview']] as const) {
+    await page.waitForFunction(() => document.querySelector('.lhc') && !document.querySelector('.view-pane:not([hidden]) .sk, .view-pane:not([hidden]) .skl'), undefined, { timeout: 20_000 })
+    await go('Explore').click()
+    await expect(page.locator('#xp.on')).toBeVisible()
+    for (const [to, shown, other] of [['Live', '.liveview', '#xp.on'], ['Explore', '#xp.on', '.liveview'], ['Live', '.liveview', '#xp.on'], ['Explore', '#xp.on', '.liveview']] as const) {
       await watch(page)
       await go(to).click()
       await expect(page.locator(shown)).toBeVisible()
@@ -177,35 +165,3 @@ for (const width of [1280, 390]) {
   })
 }
 
-test('Explore closes after its exit animation and leaves no overlay behind', async ({ page }) => {
-  await ready(page, 1280)
-  await tab(page, 'Briefing').click()
-  await expect(page.locator('.brief')).toBeVisible()
-  await page.getByRole('button', { name: /^Explore all data/ }).last().click()
-  await expect(page.locator('#xp.on')).toBeVisible()
-  await expect(page.locator('#xscrim')).toHaveCSS('opacity', '1')
-  // When Escape lands and when the panel's content is taken out, on the page's own clock.
-  await page.evaluate(() => {
-    const w = window as unknown as { __esc: number; __gone: number }
-    w.__esc = 0
-    w.__gone = 0
-    window.addEventListener('keydown', (e) => e.key === 'Escape' && !w.__esc && (w.__esc = performance.now()), true)
-    new MutationObserver(() => {
-      if (!document.querySelector('#xp #xpBody') && !w.__gone) w.__gone = performance.now()
-    }).observe(document.querySelector('#xp')!, { childList: true, subtree: true })
-  })
-  await page.keyboard.press('Escape')
-  await expect.poll(() => page.evaluate(() => (window as unknown as { __gone: number }).__gone)).toBeGreaterThan(0)
-  // The panel stays built while it slides out (at least the exit glide), and is taken out after.
-  const wait = await page.evaluate(() => {
-    const w = window as unknown as { __esc: number; __gone: number }
-    return w.__gone - w.__esc
-  })
-  expect(wait).toBeGreaterThanOrEqual(180)
-  await expect(page.locator('#xscrim')).toHaveCSS('opacity', '0')
-  await expect(page.locator('#xscrim')).toHaveCSS('pointer-events', 'none')
-  await expect(page).not.toHaveURL(/xp=/)
-  // Nothing is left over the page: a click in the middle reaches the page, not an overlay.
-  const top = await page.evaluate(() => document.elementFromPoint(640, 450)?.closest('#xscrim, #xp') !== null)
-  expect(top).toBe(false)
-})

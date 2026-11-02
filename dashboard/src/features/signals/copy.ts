@@ -37,7 +37,6 @@ export const signals = defineCopy('signals', {
     mostlyDirect: 'Mostly direct visits',
     someDirect: (n: number) => `${n} direct`,
     more: 'More',
-    seeData: 'See it in Data',
     seeExplore: 'See it in Explore',
     notify: 'Get notified next time',
     close: 'Close',

@@ -37,7 +37,7 @@ for (const size of [{ w: 1440, h: 900 }, { w: 390, h: 844 }]) {
     await page.goto(`${API}/${site.domain}?view=live`)
     await expect(page.locator('.downbox')).toContainText('Down since', { timeout: 20_000 })
     await expect(page.locator('.status-float')).toHaveCount(0) // nothing floats over the page
-    await expect(page.locator('.footer-status')).toHaveAttribute('data-status', 'down')
+    await expect(page.locator('.footer-status[data-status="down"]')).toHaveCount(0) // the foot stays empty; the site button tells it
     await expect(page.locator('#siteBtn .mk-dot.down')).toBeVisible()
     // Empty: a line that says why nobody is there, no heading over nothing.
     await expect(page.getByText('Waiting for the first visit since')).toHaveCount(0)
@@ -45,8 +45,9 @@ for (const size of [{ w: 1440, h: 900 }, { w: 390, h: 844 }]) {
     await expect(page.locator('.lfeed .lv')).toHaveCount(0)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
     await shoot(page, 'live')
-    await page.locator('.footer-status').click()
-    await expect(page.locator('.status-pop')).toContainText('No answer within 10 seconds')
+    await page.locator('#siteBtn').click()
+    await page.locator('.site-why').click()
+    await expect(page.locator('#siteMenu')).toContainText('No answer within 10 seconds')
     await shoot(page, 'foot-panel')
   })
 }

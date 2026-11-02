@@ -17,6 +17,7 @@ export function Speed({ x, d }: { x: XCtx; d: SpeedModel }) {
     a: p.name,
     bar: p.v / max,
     mono: true,
+    grade: p.grade,
     c: [
       p.val,
       <>
@@ -30,6 +31,7 @@ export function Speed({ x, d }: { x: XCtx; d: SpeedModel }) {
     a: p.name,
     bar: p.v / Math.max(1, ...d.devices.map((x) => x.v)),
     mono: true,
+    grade: p.grade,
     c: [
       p.val,
       <>
@@ -38,6 +40,8 @@ export function Speed({ x, d }: { x: XCtx; d: SpeedModel }) {
       </>,
     ],
   }))
+  // Nothing at all to say; a site with a few visits keeps its cards, which tell how many more it takes.
+  if (rows.length === 0 && devices.length === 0 && !d.kcs.some((k) => k.detail && k.detail !== copy.nothingMeasured)) return <XEmpty title={copy.emptySpeed} hint={copy.emptySpeedHint} />
   return (
     <>
       <XKcsPlain items={d.kcs} three />

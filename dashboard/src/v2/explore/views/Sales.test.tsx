@@ -14,10 +14,9 @@ const d: Model = {
 }
 
 describe('Sales', () => {
-  it('heads the list with no count that its lines do not carry, and nets exactly its lines', () => {
+  it('shows no count its lines do not carry, and nets exactly its lines', () => {
     const html = renderToStaticMarkup(<Sales x={x} d={d} />)
-    expect(html).toContain('All sales')
     expect(html).not.toMatch(/\d+ sales/)
-    expect(html).toContain('$338 net')
+    expect(html).toContain('aria-label="$338"')
   })
 })

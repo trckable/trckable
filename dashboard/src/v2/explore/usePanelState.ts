@@ -9,7 +9,7 @@ import { toggled, without } from './filters'
 import type { Ask } from './open'
 import { TABS } from './sections'
 import type { MenuKey } from './Toolbar'
-import type { FilterDim, Section, Tab } from './types'
+import type { Section, Tab } from './types'
 
 export interface PanelState {
   /** Rows shown in a table. */
@@ -20,14 +20,13 @@ export interface PanelState {
   addAs: 'step' | 'goal'
   custom: Custom
   menu: MenuKey | null
-  fd: FilterDim | null
   manage: boolean
 }
 
 const FIRST = 12
 
 export function usePanelState(ask: Ask) {
-  const [s, setS] = useState<PanelState>(() => ({ n: FIRST, kind: '', sdim: 'q', edit: false, addAs: 'step', custom: { steps: [], goals: [] }, menu: null, fd: null, manage: false }))
+  const [s, setS] = useState<PanelState>(() => ({ n: FIRST, kind: '', sdim: 'q', edit: false, addAs: 'step', custom: { steps: [], goals: [] }, menu: null, manage: false }))
   const set = useCallback((p: Partial<PanelState>) => setS((o) => ({ ...o, ...p })), [])
   const { tab, filters } = ask
   const narrow = (next: Filter[], more: Partial<PanelState> = {}) => {
@@ -38,19 +37,22 @@ export function usePanelState(ask: Ask) {
     section: (sec: Section) => {
       const to: Tab = TABS[sec].includes(tab) ? tab : TABS[sec][0]
       setView({ xp: to, xf: filters })
-      set({ n: FIRST, menu: null, fd: null, manage: false })
+      set({ n: FIRST, menu: null, manage: false })
     },
     tab: (to: Tab) => {
       setView({ xp: to, xf: filters })
-      set({ n: FIRST, menu: null, fd: null })
+      set({ n: FIRST, menu: null })
+    },
+    goWith: (to: Tab, dim: string, value: string) => {
+      setView({ xp: to, xf: [...without(filters, dim), { dim, value }] })
+      set({ n: FIRST, menu: null })
     },
     pick: (dim: string, value: string) => narrow(toggled(filters, dim, value)),
-    setFilter: (dim: string, value: string) => narrow([...without(filters, dim), { dim, value }], { menu: null, fd: null }),
     remove: (dim: string) => narrow(without(filters, dim)),
-    clear: () => narrow([], { menu: null, fd: null }),
+    clear: () => narrow([], { menu: null }),
     apply: (next: Filter[]) => narrow(next, { menu: null }),
-    menu: (k: MenuKey) => set({ menu: s.menu === k ? null : k, fd: null, manage: false }),
-    shut: () => set({ menu: null, fd: null, manage: false }),
+    menu: (k: MenuKey) => set({ menu: s.menu === k ? null : k, manage: false }),
+    shut: () => set({ menu: null, manage: false }),
     addCustom: (page: string) => {
       const key = s.addAs === 'goal' ? 'goals' : 'steps'
       if (s.custom[key].includes(page)) return

@@ -37,7 +37,7 @@ test('the list of tabs was read', () => {
   expect(TABS).toEqual(expect.arrayContaining(['overview', 'sells', 'earners', 'buyers', 'sales', 'pages']))
 })
 
-// One small test per sheet and range; the sheet's own #xp.on is the ready signal.
+// One small test per sheet and range; the page's own #xp.on is the ready signal.
 const CASES = [
   ...TABS.flatMap((tab) => PERIODS.map((period) => ({ tab, period, money: true, width: 1440 }))),
   ...TABS.map((tab) => ({ tab, period: 'today', money: false, width: 1440 })),
@@ -55,6 +55,12 @@ for (const { tab, period, money, width } of CASES) {
     page.on('pageerror', (e) => thrown.push(e.message))
     await page.goto(`${API}/${HISTORY_DOMAIN}?period=${period}&x=${tab}`)
     await expect(page.locator('#xp.on')).toBeVisible({ timeout: 15_000 })
+    // A table is a card of its section's page, drawn when it is scrolled to.
+    const card = page.locator(`#xp [data-xcard="${tab}"]`)
+    if (await card.count()) {
+      await card.evaluate((el) => el.scrollIntoView())
+      await expect(card.locator('.xloading, .mk-loading')).toHaveCount(0, { timeout: 15_000 })
+    }
     await expect(page.getByText(/Couldn.t draw this/), thrown.join(' | ')).toHaveCount(0)
     expect(thrown).toEqual([])
   })

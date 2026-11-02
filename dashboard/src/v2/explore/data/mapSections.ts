@@ -52,7 +52,7 @@ export function mapFunnel(o: { cur: FunnelResult[]; prev?: FunnelResult[]; repor
   const goals: Goal[] = (report.current.goals ?? []).map((g) => ({ name: g.label || g.value, ...statOf(g.visitors, report.previous?.goals?.find((p) => p.value === g.value)?.visitors, base) }))
   const pages = (report.current.dims.page ?? []).map((r) => ({ name: r.value, ...statOf(r.visitors, report.previous?.dims.page?.find((p) => p.value === r.value)?.visitors, base) }))
   const spec = cur.flatMap((s) => (s.kind === 'page' || s.kind === 'goal' ? [{ kind: s.kind, value: s.value }] : []))
-  return { steps, spec, leak: leakOf(steps), goals, vs: copy.vsUsual, ghost: o.ghost, goalsOn: goals.length > 0, pages }
+  return { steps, spec, leak: leakOf(steps), goals, vs: 'People', ghost: o.ghost, goalsOn: goals.length > 0, pages }
 }
 
 // ---- sales ----
@@ -119,6 +119,14 @@ export const gradeOf = (i: 0 | 1 | 2, v: number): Grade => {
   return v <= mid ? 'mid' : 'poor'
 }
 
+/** A score's place on the good, needs-work and poor thirds of its scale; past twice the poor line it stays at the end. */
+export const placeOf = (i: 0 | 1 | 2, v: number): number => {
+  const [good, mid] = [[2.5, 4], [200, 500], [0.1, 0.25]][i]
+  if (v <= good) return (v / good) / 3
+  if (v <= mid) return (1 + (v - good) / (mid - good)) / 3
+  return Math.min(1, (2 + (v - mid) / mid) / 3)
+}
+
 const written = (i: 0 | 1 | 2, v: number): string => {
   if (i === 0) return `${fmtFixed(v, 1)} s`
   return i === 1 ? `${Math.round(v)} ms` : fmtFixed(v, 2)
@@ -136,7 +144,7 @@ export function mapSpeed(cur: WebVitals, prev?: WebVitals): Speed {
     if (n[i] < MIN_VITALS) return { icon, label, val: '–', tag: abbr, tone: '', detail: copy.fewVisits(n[i], MIN_VITALS) }
     const g = gradeOf(i, now[i])
     const usual = was && prev && [prev.lcp_ms, prev.inp_ms, prev.cls_1k][i] != null ? `${copy.usual} ${written(i, was[i])} · ` : ''
-    return { icon, label, val: written(i, now[i]), tag: abbr, tone: g === 'good' ? '' : 'dn', detail: `${usual}${copy.grades[g]}` }
+    return { icon, label, val: written(i, now[i]), tag: abbr, tone: g === 'good' ? '' : 'dn', detail: `${usual}${copy.grades[g]}`, at: placeOf(i, now[i]) }
   }
   const pages: SlowPage[] = (cur.pages ?? [])
     .toSorted((a, b) => b.visitors - a.visitors)

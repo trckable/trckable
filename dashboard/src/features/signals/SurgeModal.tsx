@@ -86,7 +86,7 @@ export default function SurgeModal({ surge: given, site, tz, explore, head, onCl
           </button>
         )}
         <button type="button" className="btn primary" onClick={see}>
-          {explore ? t.seeExplore : t.seeData}
+          {t.seeExplore}
         </button>
       </div>
     </Modal>

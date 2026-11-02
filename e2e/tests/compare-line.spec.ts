@@ -34,32 +34,6 @@ async function open(page: Page, width: number, scheme: 'dark' | 'light', query =
   await page.evaluate(() => document.fonts.ready)
 }
 
-for (const [scheme, width] of [['dark', 1280], ['light', 1280], ['dark', 390]] as const) {
-  test(`Replay keeps the comparison: the dashed line, its key, the count clear of the markers, ${scheme} ${width}px`, async ({ page }) => {
-    await withBefore(page)
-    await open(page, width, scheme)
-    await page.waitForTimeout(2500)
-    await expect(page.locator('svg#chart .chbefore')).toHaveCount(1)
-    await page.locator('[data-replay]').first().click()
-    await expect(page.locator('.chwrap[data-rp=on]')).toBeVisible()
-    await page.waitForTimeout(1500)
-    await expect(page.locator('svg#chart .chbefore')).toHaveCount(1)
-    // The key of the two lines: on the row beside the Compare menu (in the cinema, over the plot).
-    const key = page.locator('.cc-key:visible, .chkey:visible')
-    if (width > 600) await expect(key).toBeVisible()
-    if (width > 600) await expect(key).toContainText('Last month')
-    // Nothing overlaps: the count sits above every marker of the chart.
-    const hud = (await page.locator('.rp-hud').boundingBox())!
-    for (const m of await page.locator('.chlay-in svg, .chlay-in [data-m], .chlay-in button').all()) {
-      const b = await m.boundingBox()
-      if (!b || b.width < 2 || b.y > hud.y + hud.height + 200) continue
-      const apart = b.x + b.width <= hud.x || b.x >= hud.x + hud.width || b.y >= hud.y + hud.height
-      expect(apart, `marker at ${b.x},${b.y} vs count ${hud.x},${hud.y} ${hud.width}x${hud.height}`).toBe(true)
-    }
-    await page.screenshot({ path: `/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad/compare-replay-${scheme}-${width}.png` })
-  })
-}
-
 test('Explore\'s shape of the period draws the period before and reads both figures on hover', async ({ page }) => {
   await withBefore(page)
   await open(page, 1280, 'dark', '?view=briefing&period=30d&v=&x=overview')
@@ -75,6 +49,6 @@ test('Explore\'s shape of the period draws the period before and reads both figu
 
 test('the compare control says why when the period before has too little behind it', async ({ page }) => {
   await open(page, 1280, 'dark')
-  await page.locator('#perBtn').click()
+  await page.locator('#xp .xperiod #xperBtn').click()
   await expect(page.locator('.cmpnote')).toContainText('Comparison starts')
 })

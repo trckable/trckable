@@ -1,4 +1,4 @@
-// Every kind of "Why?" in Live, the Briefing and Explore, at a desktop width and at a phone's: each opens an answer
+// The "Why?" that is left (Live's outage line), at a desktop width and at a phone's: each opens an answer
 // in words (about the card it sits on), and a second press closes it again. Chromium only.
 import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
@@ -43,11 +43,8 @@ test.beforeAll(async () => {
   cookie = await session()
 })
 
-// The kinds of "Why?": the number's own note on a card of four, the sentence's button, a story's, and the inline one (Live's outage).
+// The kinds of "Why?": only the inline one (Live's outage) is left; Explore tells its causes in the sentence and the steps.
 const KINDS: Record<string, string> = {
-  number: 'button.kn[title="Why?"]',
-  sentence: 'button.whyb',
-  story: 'button[data-hw]:text-is("Why?")',
   inline: 'button.lk3:text-is("Why?")',
 }
 
@@ -69,7 +66,6 @@ async function sweep(page: Page, width: number, query: string, seen: Set<string>
   await page.goto(`${API}/${HISTORY_DOMAIN}${query}${query ? '&' : '?'}v=`)
   // Count the buttons only once the page has settled: the loading shapes are gone and the first Why? is there.
   await page.waitForLoadState('networkidle')
-  await expect(page.locator('article.icard.sk')).toHaveCount(0, { timeout: 15000 })
   await expect(page.locator(Object.values(KINDS).join(', ')).first()).toBeVisible({ timeout: 15000 })
   await page.waitForTimeout(1500)
   for (const [kind, sel] of Object.entries(KINDS)) {
@@ -98,28 +94,13 @@ for (const width of [1440, 390]) {
   test(`every Why? opens with an answer and closes again at ${width}px`, async ({ page }) => {
     const seen = new Set<string>()
     await markDown(page)
-    for (const q of ['?view=live', '?view=briefing&period=7d', '?view=briefing&period=today', '?view=briefing&period=30d']) await sweep(page, width, q, seen)
-    // The number's own Why? needs a normal to compare with (a site in its first week has none): KpiCard.test.tsx.
-    expect([...seen].sort(), 'the kinds a down site shows').toEqual(['inline', 'sentence', 'story'])
+    for (const q of ['?view=live']) await sweep(page, width, q, seen)
+        expect([...seen].sort(), 'the kinds a down site shows').toEqual(['inline'])
   })
 }
 
-test('on a phone the outage card tells the cause, about this site', async ({ page }) => {
-  await markDown(page)
-  await page.setViewportSize({ width: 390, height: 900 })
-  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=today&v=`)
-  await expect(page.locator('article.icard.sk')).toHaveCount(0)
-  const card = page.locator('article.icard:not(.sk)[data-topic="uptime"]').first()
-  await expect(card).toBeVisible()
-  await card.scrollIntoViewIfNeeded()
-  await card.locator('button[data-hw]').click()
-  await expect(card.locator('.hw')).toContainText(HISTORY_DOMAIN)
-  await expect(card.locator('.hw')).toContainText('connection refused')
-})
-
 // The kinds that need the site to be down: the check's answer is made up here, so they can be asked on any day.
-test('the outage Why? in Live and in the Briefing names the site and what the check said', async ({ page }) => {
+test('the outage Why? in Live names the site and what the check said', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await markDown(page)
@@ -133,11 +114,6 @@ test('the outage Why? in Live and in the Briefing names the site and what the ch
   await expect(live).toContainText('connection refused')
   await btn.click()
   await expect(btn).toHaveAttribute('aria-expanded', 'false')
-  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=today&v=`)
-  const hero = page.locator('.hero').first()
-  await hero.getByRole('button', { name: 'Why?' }).click()
-  await expect(hero).toContainText(HISTORY_DOMAIN)
-  await expect(hero).toContainText('connection refused')
   // The public product has no Peek: the text stands alone, with no button that leads nowhere.
-  await expect(hero.getByRole('button', { name: 'Ask Peek' })).toHaveCount(0)
+  await expect(live.getByRole('button', { name: 'Ask Peek' })).toHaveCount(0)
 })

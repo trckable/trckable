@@ -27,7 +27,7 @@ test('390: the first row is not under the header, and the site keeps its name', 
   await open(page, 390)
   const m = await page.evaluate(() => {
     const hd = document.querySelector('.hd')!.getBoundingClientRect()
-    const first = document.querySelector('.brief')!.getBoundingClientRect()
+    const first = document.querySelector('#xp.on')!.getBoundingClientRect()
     const name = document.querySelector('#siteBtn .nmx')!
     return { hdBottom: hd.bottom, firstTop: first.top, nameW: name.getBoundingClientRect().width, cut: name.scrollWidth > name.clientWidth + 1 }
   })

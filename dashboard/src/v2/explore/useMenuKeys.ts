@@ -42,11 +42,7 @@ export function useMenuKeys(body: RefObject<HTMLElement | null>, s: PanelState, 
         else if (e.key === 'ArrowUp') move((i - 1 + items.length) % items.length)
         else if (e.key === 'Home') move(0)
         else if (e.key === 'End') move(items.length - 1)
-        else if (e.key === 'ArrowLeft' && s.fd) {
-          e.preventDefault()
-          menu.querySelector<HTMLElement>('[data-back]')?.click()
-          intent.current = 'in'
-        } else if (e.key === 'ArrowRight' && a.dataset.enter) {
+        else if (e.key === 'ArrowRight' && a.dataset.enter) {
           e.preventDefault()
           a.click()
         } else if (e.key === 'Tab') {

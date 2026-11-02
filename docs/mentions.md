@@ -20,7 +20,7 @@ When unsure, a mention is not shown: a missed one costs little, a wrong one cost
 
 Per site you can set topic words, required words (all must be in the text), excluded words (one rules it out) and blocked sites. **Not about us** on a mention hides it for good: it stays in a hidden list you can restore from, and you are offered to exclude the words that set it apart or block its source. When you add a name, the news is sampled for it first: if headlines use it for something else, you see them and are offered words to exclude.
 
-A page that sent your site visitors is listed as a confirmed mention with how many came (at least two in the last month), and comes first. A story that several publishers copy, or that Google News and the publisher both carry, is one mention. Every number you see (the Briefing, the palette, the bell, the weekly email) is the mentions in the list.
+A page that sent your site visitors is listed as a confirmed mention with how many came (at least two in the last month), and comes first. A story that several publishers copy, or that Google News and the publisher both carry, is one mention. Every number you see (Explore, the palette, the bell, the weekly email) is the mentions in the list.
 
 It looks in:
 

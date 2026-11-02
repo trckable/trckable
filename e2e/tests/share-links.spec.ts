@@ -206,12 +206,12 @@ test('a shared link keeps its address: a reload goes back in, a password link wi
   await tab.getByRole('button', { name: 'Open' }).click()
   await expect(tab.locator('.hd')).toBeVisible()
   expect(tab.url()).toBe(locked)
-  // One row: the name on the left, the period beside it, centred together.
+  // One row: the name on the left, the search on the right, centred together.
   const mid = async (sel: string) => {
     const b = (await tab.locator(sel).first().boundingBox())!
     return b.y + b.height / 2
   }
-  expect(Math.abs((await mid('.hd .share-who')) - (await mid('.hd .pill')))).toBeLessThanOrEqual(8)
+  expect(Math.abs((await mid('.hd .share-who')) - (await mid('.hd .exb')))).toBeLessThanOrEqual(8)
   // The site's own mark comes first, on the same line as its name.
   const mark = (await tab.locator('.hd .share-id .site-mark').boundingBox())!
   const name = (await tab.locator('.hd .share-who b').boundingBox())!
