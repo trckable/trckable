@@ -4,7 +4,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const setView = vi.fn<(patch: unknown) => void>()
-vi.mock('../../lib/url', () => ({ setView: (p: unknown) => setView(p) }))
+vi.mock('../../lib/url', () => ({ setView: (p: unknown) => setView(p), readView: () => ({ xf: undefined, filters: [] }) }))
 vi.mock('../../components/Toast', () => ({ toast: vi.fn() }))
 
 import { dropReports } from '../../lib/api'
@@ -126,7 +126,7 @@ describe('Explore landed on the moment', () => {
   const now = new Date((surge.started + 3600) * 1000)
   it('opens the days around it by the hour, against the same days a week earlier, with no filter', () => {
     const day = localHour(surge.started, 'UTC').day
-    expect(seeInData(over, 'UTC', now)).toEqual({ live: false, period: 'custom', from: day, to: day, bucket: 'hour', compare: 'custom', cfrom: addDays(day, -7), cto: addDays(day, -7), filters: [], xf: [], xp: 'overview', day: undefined, v: undefined, story: undefined, surge: surge.started })
+    expect(seeInData(over, 'UTC', now)).toEqual({ live: false, period: 'custom', from: day, to: day, bucket: 'hour', compare: 'custom', cfrom: addDays(day, -7), cto: addDays(day, -7), filters: [], xf: [], xp: 'changed', day: undefined, v: undefined, story: undefined, surge: surge.started })
   })
   it('runs to now while the moment lasts', () => {
     const live = seeInData(surge, 'UTC', new Date((surge.started + 40 * 3600) * 1000))
@@ -201,7 +201,7 @@ describe('the surge card', () => {
     act(() => {
       see?.click()
     })
-    expect(setView).toHaveBeenCalledWith(expect.objectContaining({ live: false, period: 'custom', bucket: 'hour', compare: 'custom', cfrom: addDays(localHour(surge.started, 'UTC').day, -7), filters: [], xf: [], xp: 'overview', surge: surge.started }))
+    expect(setView).toHaveBeenCalledWith(expect.objectContaining({ live: false, period: 'custom', bucket: 'hour', compare: 'custom', cfrom: addDays(localHour(surge.started, 'UTC').day, -7), filters: [], xf: [], xp: 'changed', surge: surge.started }))
     expect(localStorage.getItem('trckable:card:surge:surge_1')).toBe('1')
   })
 
@@ -278,45 +278,51 @@ describe('the story told by a notice (no story of its own)', () => {
   })
 })
 
-describe('the line and the band on Explore', () => {
+describe('the band and the marker on the chart', () => {
   const over: Surge = { ...surge, ended: surge.started + 25 * 60 }
-  const asked = () => vi.stubGlobal('fetch', () => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ surge: over }) }))
-
-  it('the line names the moment, offers only its source and leads back to today', async () => {
-    asked()
-    const { default: SurgeBanner } = await import('./SurgeBanner')
+  const asked = (moment: Surge = over) => vi.stubGlobal('fetch', () => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ surge: moment }) }))
+  const hour = localHour(over.started, 'UTC').hour
+  const labels = [-2, -1, 0, 1, 2].map((d) => `${hour.slice(0, 11)}${String(Number(hour.slice(11, 13)) + d).padStart(2, '0')}:00`)
+  const g = { x: (i: number) => 40 + i * 50, y: () => 200, vals: [], w: 400, top: 8, lane: 180 }
+  const draw = async (site: string, filters: { dim: 'referrer'; value: string }[] = []) => {
+    const { SurgeBand } = await import('./SurgeBand')
     await act(() => {
-      root.render(<SurgeBanner site="tkb_b" tz="UTC" started={over.started} filters={[]} />)
+      root.render(<SurgeBand site={site} tz="UTC" started={over.started} g={g} labels={labels} filters={filters} taken={[]} />)
       return Promise.resolve()
     })
     await act(() => new Promise((r) => setTimeout(r, 40)))
-    expect(host.textContent).toContain('Busy moment')
-    expect(host.querySelector('.bz-when')?.textContent).toBe(`${clock(over.started, 'UTC')}–${clock(over.started + 25 * 60, 'UTC')}`)
-    expect(host.querySelector('.bz-count')?.textContent).toBe('53')
-    expect(host.querySelector('.bz-unit')?.textContent).toBe('people at the peak')
-    expect(host.querySelector('.bz-src-name')?.textContent).toBe('Facebook')
-    expect(host.querySelector('.bz-page')?.textContent).toBe('/blog/launch-post')
-    const [only, back] = [...host.querySelectorAll('button')]
+  }
+
+  it('the band covers the hours from its start to its end, and the marker names the peak', async () => {
+    asked()
+    await draw('tkb_c')
+    const band = host.querySelector<HTMLElement>('.surge-band')
+    expect(band?.style.left).toBe('115px')
+    expect(band?.style.width).toBe('50px')
+    expect(host.querySelector('.surge-mark')?.textContent).toBe(`Busy · ${busyCount(over)} at peak`)
+  })
+
+  it('says "Busy now" while it lasts', async () => {
+    asked({ ...surge, ended: undefined })
+    await draw('tkb_d')
+    expect(host.querySelector('.surge-mark')?.textContent).toBe('Busy now · 53')
+  })
+
+  it('opens once with the span, the numbers, the source and the page, narrows to the source, and closes', async () => {
+    asked()
+    await draw('tkb_e')
+    const tip = () => host.querySelector('.surge-tip')
+    expect(tip()?.querySelector('.mt-day')?.textContent).toBe(`${clock(over.started, 'UTC')}–${clock(over.started + 25 * 60, 'UTC')}`)
+    expect(tip()?.querySelector('.mt-line')?.textContent).toContain('2.7× usual')
+    expect(tip()?.querySelector('.bz-src-name')?.textContent).toBe('Facebook')
+    expect(tip()?.querySelector('.bz-page')?.textContent).toBe('/blog/launch-post')
+    const [only, close] = [...(tip()?.querySelectorAll('button') ?? [])]
     expect(only.textContent).toBe('Only Facebook')
     act(() => only.click())
     expect(setView).toHaveBeenCalledWith({ xf: [{ dim: 'referrer', value: 'l.facebook.com' }] })
-    act(() => back.click())
-    expect(setView).toHaveBeenCalledWith(expect.objectContaining({ period: 'today', surge: undefined, filters: [], xf: [] }))
-  })
-
-  it('the band covers the hours from its start to its end, with its name', async () => {
-    asked()
-    const { SurgeBand } = await import('./SurgeBand')
-    const hour = localHour(over.started, 'UTC').hour
-    const labels = [-2, -1, 0, 1, 2].map((d) => `${hour.slice(0, 11)}${String(Number(hour.slice(11, 13)) + d).padStart(2, '0')}:00`)
-    const g = { x: (i: number) => 40 + i * 50, y: () => 200, vals: [], w: 400, top: 8, lane: 180 }
-    await act(() => {
-      root.render(<SurgeBand site="tkb_c" tz="UTC" started={over.started} g={g} labels={labels} />)
-      return Promise.resolve()
-    })
-    await act(() => new Promise((r) => setTimeout(r, 40)))
-    const band = host.querySelector<HTMLElement>('.surge-band')
-    expect(band?.textContent).toBe('Busy moment · 2.7× usual')
-    expect(band?.style.left).toBe('115px')
+    act(() => close.click())
+    expect(tip()).toBeNull()
+    act(() => host.querySelector<HTMLElement>('.surge-mark')?.click())
+    expect(tip()).not.toBeNull()
   })
 })

@@ -83,8 +83,8 @@ export default function MomentLayer(p: LayerProps) {
       <IncidentMarks g={g} site={p.site} labels={p.labels} bucket={p.bucket} />
       <MentionMarks g={g} site={p.site} labels={p.labels} bucket={p.bucket} taken={marks.map((m) => m.at)} />
       <SourceMarkers g={g} site={p.site} from={p.query.from} to={p.query.to} labels={p.labels} visitors={p.series.map((x) => x.visitors)} bucket={p.bucket} />
-      {surge && <SurgeBand site={p.site.id} tz={p.site.timezone} started={surge} g={g} labels={p.labels} />}
-            {day && <i className={`moment-day ${day.pin.kind}`} aria-hidden="true" style={{ left: g.x(day.i), width: Math.max(8, g.x(1) - g.x(0)), top: g.top, height: g.y(0) - g.top }} />}
+      {surge && <SurgeBand site={p.site.id} tz={p.site.timezone} started={surge} g={g} labels={p.labels} filters={p.query.filters ?? []} taken={marks.map((m) => m.at)} />}
+      {day && <i className={`moment-day ${day.pin.kind}`} aria-hidden="true" style={{ left: g.x(day.i), width: Math.max(8, g.x(1) - g.x(0)), top: g.top, height: g.y(0) - g.top }} />}
       <div role="group" aria-label={copy.moments} className="moment-marks">
         {marks.map((m) => {
           const Icon = iconOf(m.pin.kind)

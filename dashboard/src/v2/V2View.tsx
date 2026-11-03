@@ -56,8 +56,6 @@ interface V2Props {
   live: LiveProps
   /** A shared link's header (whose numbers these are): the page then has no Live and nothing that writes. */
   identity?: ReactNode
-  /** A line over the screen: the busy moment the page was opened on. */
-  top?: ReactNode
 }
 
 const grain = (a: ISODate, b: ISODate) => (a === b ? 'by hour' : 'by day')
@@ -158,7 +156,6 @@ export function V2View(p: V2Props) {
         period={null}
       />
       <main id="main" className="vfade">
-        {p.top}
         {p.waiting ? <FreshSlot site={p.site} visits={p.live.stream.visits} /> : shown}
       </main>
       <AiHost site={p.site} />

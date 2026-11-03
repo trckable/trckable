@@ -1,9 +1,7 @@
-// What the busy moment says, in one design for both places it appears: the card that comes up in the corner
-// (SurgeCard) and the line over Explore when it was opened on a moment (SurgeBanner). The people on the site
+// What the busy moment says: the card that comes up in the corner (SurgeCard), and its source and page again in the
+// tip on the chart (Where, SurgeBand). The people on the site
 // with how many times the usual as a chip, the last hour in small, and where it came from: the source with its
-// icon and how many more than usual, and the page it landed on. The head and the actions around it are the
-// caller's, passed as lead and trail, so one row (or one card) holds them all and wraps as a whole.
-import type { ReactNode } from 'react'
+// icon and how many more than usual, and the page it landed on.
 import { fmtInt } from '../../lib/format'
 import { RefMark } from '../cards/refIcons'
 import { Rolling } from '../moments/Rolling'
@@ -18,10 +16,9 @@ const t = signals.surge
 /** The live dot: it pulses while the moment lasts. */
 export const BusyDot = ({ live }: { live: boolean }) => <i className="bz-dot" data-live={live ? '1' : undefined} aria-hidden="true" />
 
-export function BusyBody({ surge, layout, lead, trail }: { surge: Surge; layout: 'card' | 'row'; lead?: ReactNode; trail?: ReactNode }) {
+export function BusyBody({ surge }: { surge: Surge }) {
   return (
-    <div className="bz" data-layout={layout}>
-      {lead}
+    <div className="bz bz-card">
       <div className="bz-hero">
         <b className="bz-count">
           <Rolling to={busyCount(surge)} fmt={fmtInt} />
@@ -31,12 +28,11 @@ export function BusyBody({ surge, layout, lead, trail }: { surge: Surge; layout:
       </div>
       <BusySpark surge={surge} />
       <Where surge={surge} />
-      {trail}
     </div>
   )
 }
 
-function Where({ surge }: { surge: Surge }) {
+export function Where({ surge }: { surge: Surge }) {
   const host = sourceHost(surge)
   const icon = useHostIcon(host)
   const { source, source_n: n, page } = surge.why
