@@ -2958,6 +2958,7 @@ export default {
   'setup.payments.sub': 'Verkäufe und Rückerstattungen',
   'setup.payments.seen': (p: string) => `${p} auf deiner Seite gefunden`,
   'setup.payments.connected': (p: string) => `${p} verbunden`,
+  'setup.payments.waiting': (p: string) => `${p} verbunden, noch kein Verkauf`,
   'setup.payments.go': 'Zahlungen verbinden',
   'setup.payments.goProvider': (p: string) => `${p} verbinden`,
   'setup.funnel.title': 'Ein Funnel',

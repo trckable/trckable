@@ -1,0 +1,1 @@
+- Setup: a connected payment provider counts as done, and says when no sale has come yet, instead of asking to connect again.
