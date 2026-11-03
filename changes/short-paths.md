@@ -1,0 +1,1 @@
+- What changed: long page addresses shortened in the headline and chips; the full address on hover.

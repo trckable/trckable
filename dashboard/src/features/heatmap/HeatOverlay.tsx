@@ -5,6 +5,10 @@
 // card that suggests the module.
 import { useEffect, useMemo, useState } from 'react'
 import { Modal } from '../../kit/Modal'
+import { fail, more } from '../../lib/apiMore'
+import { isOn } from '../../lib/modules'
+import { can } from '../../lib/permissions'
+import { useMods } from '../../lib/useMods'
 import { words } from '../../lib/errors'
 import { type ReportQuery, type Site } from '../../lib/api'
 import { heatApi, type HeatMap, type Width } from './api'
@@ -12,6 +16,7 @@ import { heatCopy } from './copy'
 import { HeatBar } from './HeatBar'
 import { HeatSide } from './HeatSide'
 import { HeatStage, type Layers } from './HeatStage'
+import { markHeatDone } from './guide'
 import { exampleHeat, isRisky } from './model'
 import './heatmap.css'
 
@@ -23,6 +28,7 @@ export default function HeatOverlay({ site, path, query, demo = false, onClose }
   const [layers, setLayers] = useState<Layers>({ ...SHOWN, page: !isRisky(path) }) // a sign-out page is not opened to look at it
   const [got, setGot] = useState<{ key: string; map: HeatMap } | null>(null)
   const [err, setErr] = useState<{ key: string; text: string } | null>(null)
+  const mods = useMods(site.id)
   const key = JSON.stringify([site.id, path, query.from, query.to, width])
   useEffect(() => {
     if (demo) return
@@ -40,12 +46,31 @@ export default function HeatOverlay({ site, path, query, demo = false, onClose }
   const map = demo ? example : read
   const failed = err?.key === key ? err.text : ''
   const empty = !!map && map.views === 0 && map.clicks.length === 0
+  // Nothing is recorded because the module is off: an owner can switch it on here.
+  const off = empty && !demo && mods !== null && !isOn(mods, 'heatmaps') && can('site.settings')
+  const turnOn = () =>
+    more
+      .setModule(site.id, 'heatmaps', true)
+      .then(() => markHeatDone(site.id))
+      .catch((e: unknown) => fail(e))
   return (
     <Modal label={heatCopy.open(path)} className="heat" keepSize={false} onClose={onClose}>
       <HeatBar map={map} path={path} width={width} onWidth={setWidth} layers={layers} onLayer={(k) => setLayers((l) => ({ ...l, [k]: !l[k] }))} noPage={isRisky(path)} demo={demo} onClose={onClose} />
       {failed && <div className="empty">{failed}</div>}
       {!map && !failed && <div className="empty">{heatCopy.loading}</div>}
-      {empty && <div className="empty">{width ? heatCopy.noneWidth : heatCopy.none}</div>}
+      {empty && (
+        <div className="empty">
+          {off ? heatCopy.off : heatCopy[width ? 'noneWidth' : 'none']}
+          {off && (
+            <>
+              {' '}
+              <button type="button" className="btn ghost" onClick={() => void turnOn()}>
+                {heatCopy.turnOn}
+              </button>
+            </>
+          )}
+        </div>
+      )}
       {map && !empty && (
         <div className="heat-body">
           <HeatStage map={map} layers={layers} site={site.id} demo={demo} />

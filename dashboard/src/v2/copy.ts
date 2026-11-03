@@ -63,4 +63,5 @@ export const copy = defineCopy('v2', {
 export const waiting = defineCopy('waiting', {
   title: 'Waiting for the first visit',
   hint: 'The numbers show up here as soon as someone visits.',
+  check: 'Check install',
 })

@@ -7,6 +7,7 @@ import { useLoad } from '../../data/useLoad'
 import { XCols, type CRow } from '../../../ui/XTable'
 import type { Report, ReportQuery } from '../../../../lib/api'
 import { fmtInt } from '../../../../lib/format'
+import { can } from '../../../../lib/permissions'
 import { channelLabel } from '../../../../lib/palette'
 import { laterCopy } from '../../../../features/cards/copyLater'
 import { DIM_LABEL } from '../../../../features/overview/dimLabels'
@@ -42,7 +43,17 @@ export function Earners({ x, report, first, onAttr }: { x: XCtx; report: Report;
     <>
       <XSub label={laterCopy.credit} attr="xcredit" value={first ? 'first' : 'last'} items={[{ key: 'last', label: laterCopy.closedIt }, { key: 'first', label: laterCopy.foundThem }]} onPick={(k) => onAttr(k === 'first')} />
       <XSub label={copy.heads.source} attr="xearn" value={asked} items={DIMS.map((d) => ({ key: d, label: dimName(d) }))} onPick={setAsked} />
-      {rows.length === 0 ? <XEmpty title={laterCopy.noRevenue} hint={copy.emptyEarnersHint} /> : <XCols first={dimName(asked)} cols={COLS} rows={rows} xc={XC} xcm={XCM} limit={x.limit} onAll={x.showAll} />}
+      {rows.length === 0 ? (
+        <XEmpty title={laterCopy.noRevenue} hint={copy.emptyEarnersHint}>
+          {!x.conn.rev && can('payment.manage') && (
+            <button type="button" className="xb" onClick={() => x.connect('rev')}>
+              {laterCopy.noRevenueAction}
+            </button>
+          )}
+        </XEmpty>
+      ) : (
+        <XCols first={dimName(asked)} cols={COLS} rows={rows} xc={XC} xcm={XCM} limit={x.limit} onAll={x.showAll} />
+      )}
     </>
   )
 }
