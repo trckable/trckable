@@ -1,0 +1,1 @@
+- Install: the AI install prompt for each documented platform is part of the install canon, so the docs show the same prompt as the dashboard.
