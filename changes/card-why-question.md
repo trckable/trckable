@@ -1,0 +1,1 @@
+- Explore: a card's Why? asks one short question ("Why does Browsers look like this?"), not the dates and numbers.

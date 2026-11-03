@@ -3,7 +3,6 @@ import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { CircleHelp } from 'lucide-react'
 import { isShared } from '../../lib/me'
 import { useV2Extras } from '../slots'
-import { cardAsk } from './cardAsk'
 import { copy } from './copy'
 import type { XCtx } from './ctx'
 import { useTab, type DataCtx } from './data/useExplore'
@@ -43,10 +42,10 @@ function Card({ tab, x, c, open, onRead, onSay }: { tab: Tab; x: XCtx; c: DataCt
   }, [seen])
   const bare = BARE.includes(tab)
   const { askPeekNow } = useV2Extras()
-  // Peek's "Why?": once the card has answered, where the build has Peek. A card with nothing in it hides it in the CSS.
+  // Peek's "Why?": a short question, since Peek already knows the page, the period and the filters; once the card has answered, where the build has Peek. A card with nothing in it hides it in the CSS.
   const canAsk = askPeekNow && !isShared() && (ok || (seen && HOSTED.includes(tab)))
   const why = canAsk && (
-    <button type="button" className="xcp-why" data-ask-peek="1" onClick={() => askPeekNow(cardAsk(copy.sub[tab], x.query.from, x.query.to, x.filters, ok ? (r.data as Parameters<typeof cardAsk>[4]) : null))}>
+    <button type="button" className="xcp-why" data-ask-peek="1" onClick={() => askPeekNow(copy.cardAsk(copy.sub[tab]))}>
       <CircleHelp size={13} strokeWidth={1.9} aria-hidden="true" />
       {copy.cardWhy}
     </button>
