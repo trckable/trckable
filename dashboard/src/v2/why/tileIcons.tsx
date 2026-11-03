@@ -1,14 +1,4 @@
-/*
- * Motion icons for the sections grid: each symbol moves by what it means, once per hover.
- * The approach follows lucide-animated (https://lucide-animated.com, MIT, (c) pqoqubbw): lucide-style
- * strokes animated with `motion`, driven from the parent's hover state.
- *
- * MIT License. Permission is hereby granted, free of charge, to any person obtaining a copy of this software
- * and associated documentation files, to deal in the software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies, subject to the
- * above copyright notice and this permission notice being included in all copies. The software is provided
- * "as is", without warranty of any kind.
- */
+/** Motion icons for the sections grid: each symbol moves by what it means, once per hover, driven from the tile. */
 import type { ReactNode } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import type { TargetAndTransition } from 'motion/react'
