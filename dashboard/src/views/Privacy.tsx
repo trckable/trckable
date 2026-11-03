@@ -164,7 +164,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
           <Info text="trckable never stores an IP address, never makes your visitors' browsers load anything from another company, and never sells or shares your data. These switches are about recording less than that floor, not more." />
         </div>
 
-        <Row label="Region and city" hint={free ? 'Cookieless mode keeps the country only' : 'The country is always recorded; region and city are yours to choose'}>
+        <Row label="Region and city" hint={free ? 'Cookieless mode keeps the country only' : 'The country is always recorded; region, city and internet provider are yours to choose'}>
           <Switch on={c.record_city && !free} disabled={free} onChange={() => save({ record_city: !c.record_city }, c.record_city ? 'Region and city are no longer recorded' : 'Region and city will be recorded')} />
         </Row>
 

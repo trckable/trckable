@@ -140,9 +140,10 @@ type Handler struct {
 	Sites    Sites
 	Salts    *Salts
 	ClientIP IPResolver
-	// Hosting reports whether an address belongs to a network that only hosts
-	// servers. Used by stricter bot filtering; nil means unknown.
-	Hosting func(ip string) bool
+	// Network looks an address up once in the network database: whether it
+	// belongs to a network that only hosts servers (stricter bot filtering,
+	// strict is set) and the provider's name. nil means unknown.
+	Network func(ip string, strict bool) (hosting bool, name string)
 	Geo     Geo // optional
 	Now     func() time.Time
 	Stats   Stats
@@ -434,8 +435,15 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 	}
 	// Stricter filtering also drops visits from rented servers: a browser
 	// running in a data centre is a script, not a reader.
-	if site.BotStrict && h.Hosting != nil && h.Hosting(ip) {
-		return nil, BotHosting, nil, nil
+	// The same lookup gives the provider's name, so it is made only when the
+	// site keeps the name or filters strictly.
+	keepNet := !site.NoCity && !site.ConsentFree
+	var network string
+	if (site.BotStrict || keepNet) && h.Network != nil {
+		var hosting bool
+		if hosting, network = h.Network(ip, site.BotStrict); site.BotStrict && hosting {
+			return nil, BotHosting, nil, nil
+		}
 	}
 	h.limitOnce.Do(func() {
 		h.limit = newLimiter(10, 60)
@@ -535,6 +543,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 			e.Region, e.City = "", ""
 		} else if !site.ConsentFree {
 			e.Timezone = normZone(zone)
+			e.Network = normNetwork(network)
 		}
 	}
 	if e.Country == "" && !proxied { // trusted edge header (Cloudflare) as a fallback
@@ -658,6 +667,21 @@ func normZone(s string) string {
 	}
 	if !slash && s != "UTC" {
 		return ""
+	}
+	return s
+}
+
+// normNetwork keeps a provider's name as a person reads it: control characters
+// dropped, spaces collapsed, at most 64 characters.
+func normNetwork(s string) string {
+	s = strings.Join(strings.Fields(strings.Map(func(r rune) rune {
+		if r < 0x20 || r == 0x7f {
+			return ' '
+		}
+		return r
+	}, s)), " ")
+	if len(s) > 64 {
+		s = strings.ToValidUTF8(s[:64], "")
 	}
 	return s
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groups, sectionOf, TABS } from './sections'
+import { groups, sectionOf, seeNetworks, TABS } from './sections'
 
 describe('the Sources section', () => {
   it('has one UTM tab, not a second pair for source and medium', () => {
@@ -17,5 +17,16 @@ describe('the Search section', () => {
   })
   it('stands in the Traffic group after Sources', () => {
     expect(groups()[0].items.slice(-2)).toEqual(['sources', 'search'])
+  })
+})
+
+describe('the Networks table', () => {
+  it('is in Tech after Browsers, and only once a visit named a provider', () => {
+    seeNetworks(false)
+    expect(TABS.tech).not.toContain('networks')
+    seeNetworks(true)
+    expect(TABS.tech).toEqual(['devices', 'browsers', 'networks', 'bversion', 'screens'])
+    expect(sectionOf('networks')).toBe('tech')
+    seeNetworks(false)
   })
 })

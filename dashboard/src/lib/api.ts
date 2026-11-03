@@ -435,6 +435,8 @@ export interface WebVitals {
   pages?: Row[]
   /** The same scores by kind of device. */
   devices?: { value: string; n: number; lcp_ms?: number | null; cls_1k?: number | null; inp_ms?: number | null }[]
+  /** The same scores by internet provider, where the instance records them. */
+  networks?: { value: string; n: number; lcp_ms?: number | null }[]
 }
 
 /** One speed band of the period: how many visits had their slowest page in it and what they did. */

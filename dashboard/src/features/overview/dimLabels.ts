@@ -17,6 +17,7 @@ export const DIM_LABEL: Record<string, string> = {
   city: 'City',
   timezone: 'Time zone',
   language: 'Language',
+  network: 'Network',
   os: 'OS',
   goal: 'Goal',
   link: 'Link',

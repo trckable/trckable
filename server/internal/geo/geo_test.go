@@ -72,15 +72,15 @@ func TestASNLive(t *testing.T) {
 		t.Fatal(err)
 	}
 	for ip, want := range map[string]uint32{"8.8.8.8": 15169, "1.1.1.1": 13335} {
-		if got := g.ASN(ip); got != want {
+		if got := asnOf(g, ip); got != want {
 			t.Errorf("%s: AS%d, want AS%d", ip, got, want)
 		}
 	}
 	// An Amazon Web Services address (their published range for EC2).
-	if got := g.ASN("3.80.0.1"); got != 14618 && got != 16509 {
+	if got := asnOf(g, "3.80.0.1"); got != 14618 && got != 16509 {
 		t.Errorf("3.80.0.1: AS%d, want an Amazon network", got)
 	}
-	if g.ASN("10.0.0.1") != 0 || g.ASN("nonsense") != 0 {
+	if asnOf(g, "10.0.0.1") != 0 || asnOf(g, "nonsense") != 0 {
 		t.Error("private or invalid addresses must have no network")
 	}
 }
@@ -139,4 +139,9 @@ func TestSharedPicksUpANewerFile(t *testing.T) {
 	if g.loaded.Load() == first {
 		t.Fatal("a replaced file was not picked up")
 	}
+}
+
+func asnOf(g *DB, ip string) uint32 {
+	asn, _ := g.Network(ip)
+	return asn
 }

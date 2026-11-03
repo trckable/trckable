@@ -99,7 +99,7 @@ func (h *Handler) Heat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ip := h.heatIP(r, site)
-	if site.SkipIP(ip) || (site.BotStrict && h.Hosting != nil && h.Hosting(ip)) {
+	if site.SkipIP(ip) || (site.BotStrict && h.hostile(ip)) {
 		w.WriteHeader(http.StatusAccepted)
 		return
 	}
@@ -384,4 +384,13 @@ func (c *HeatCounts) Restore(rows []HeatRow) {
 	for _, r := range rows {
 		c.add(heatKey{r.Site, r.Day, r.Path, r.Width, r.Kind, r.El, r.CX, r.CY}, heatSum{r.N, r.X, r.Y, r.W, r.H})
 	}
+}
+
+// hostile reports whether ip is a rented server, by the network database.
+func (h *Handler) hostile(ip string) bool {
+	if h.Network == nil {
+		return false
+	}
+	hosting, _ := h.Network(ip, true)
+	return hosting
 }

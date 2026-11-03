@@ -10,3 +10,7 @@ Where the server has an AI key for Answers, the "Where the data is" part adds on
 ## Form fields kept in a goal
 
 With Form submissions on, a field marked `data-trckable-keep="site"` adds what was typed in it to that form's goal, so the goal can say which site was scanned or which plan was picked. It is opt-in per field: nothing is read from a field you did not mark. Use one lowercase word without spaces for the label (the server lowercases it and drops a label with a space). At most 9 fields are kept, each cut to 100 characters. Only text, url, search and number fields, selects, text areas and chosen checkboxes or radios count. Never sent, even when marked: passwords, email addresses, phone numbers, card numbers, one-time codes, hidden fields, files, and any value containing an @.
+
+## Internet provider
+
+Where the instance has the network database, a visit also keeps the name of the visitor's internet provider ("Deutsche Telekom"), under the same switch as region and city: with Region and city off, or in cookieless mode, it is not kept. The privacy report and the privacy-policy paragraph say so. See [networks](networks.md).

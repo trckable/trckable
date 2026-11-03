@@ -266,7 +266,7 @@ export type HostedTab = 'highlights' | 'overtime' | 'hours' | 'revmap' | 'earner
 /** The breakdowns only the deep report has: where people left, regions and cities, the parts of a campaign, language, browser version, screen width, page groups. */
 export type DeepTab = 'paths' | 'entries' | 'exits' | 'groups' | 'regions' | 'cities' | 'utmsource' | 'medium' | 'bversion' | 'screens' | 'languages' | 'timezones'
 
-export type Tab = HostedTab | DeepTab | 'changed' | 'overview' | 'pages' | 'sources' | 'quality' | 'referrers' | 'utm' | 'search' | 'countries' | 'devices' | 'browsers' | 'funnels' | 'sales' | 'speed' | 'mentions' | 'outbound' | 'bots'
+export type Tab = HostedTab | DeepTab | 'changed' | 'overview' | 'pages' | 'sources' | 'quality' | 'referrers' | 'utm' | 'search' | 'countries' | 'devices' | 'browsers' | 'funnels' | 'sales' | 'speed' | 'mentions' | 'outbound' | 'bots' | 'networks'
 
 export type Section = 'changed' | 'overview' | 'pages' | 'sources' | 'search' | 'places' | 'tech' | 'results' | 'sales' | 'speed' | 'mentions' | 'links' | 'ai' | 'answers'
 
@@ -296,6 +296,7 @@ export interface Tabs {
   languages: Table
   timezones: Table
   bots: Bot[]
+  networks: Networks
   search: Search
   funnels: Funnel
   sales: Sales
@@ -343,6 +344,25 @@ export interface PathRoute {
   steps: string[]
   visits: number
   converted: number
+}
+
+/** One internet provider: its visitors, how many of them converted (0 to 1, null while too few to say) and how fast the pages loaded for them (ms, null when too little was measured). */
+export interface NetworkRow {
+  value: string
+  name: string
+  people: number
+  rate: number | null
+  lcp: number | null
+}
+
+/** What the conversion column counts: sales when payments are connected, else the signup goal, else visits that stayed. */
+export type NetworkBasis = 'sales' | 'goal' | 'engaged'
+
+export interface Networks {
+  say: string
+  basis: NetworkBasis
+  goal: string | null
+  rows: NetworkRow[]
 }
 
 export interface Quality {

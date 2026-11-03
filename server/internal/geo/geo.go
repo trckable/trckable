@@ -143,24 +143,26 @@ func (g *DB) Lookup(ip string) Location {
 	return loc
 }
 
-// ASN is the autonomous system (the network) an address belongs to, for a DB
-// opened in "asn" mode. 0 when unknown or unavailable.
-func (g *DB) ASN(ip string) uint32 {
+// Network is the autonomous system an address belongs to and its operator's
+// name ("Deutsche Telekom AG"), for a DB opened in "asn" mode, in one lookup.
+// Zero values when unknown or unavailable.
+func (g *DB) Network(ip string) (asn uint32, org string) {
 	r := g.reader.Load()
 	if r == nil {
-		return 0
+		return 0, ""
 	}
 	addr, err := netip.ParseAddr(ip)
 	if err != nil || addr.IsPrivate() || addr.IsLoopback() {
-		return 0
+		return 0, ""
 	}
 	var rec struct {
 		ASN uint32 `maxminddb:"autonomous_system_number"`
+		Org string `maxminddb:"autonomous_system_organization"`
 	}
 	if err := r.Lookup(addr.Unmap()).Decode(&rec); err != nil {
-		return 0
+		return 0, ""
 	}
-	return rec.ASN
+	return rec.ASN, rec.Org
 }
 
 // Run keeps the database present and fresh: it downloads immediately if the

@@ -367,7 +367,7 @@ func TestHeatDaysAreTheSitesOwn(t *testing.T) {
 func TestHeatHonoursStrictBotFiltering(t *testing.T) {
 	h, _ := newHandler(t)
 	h.Sites = fakeSites{"tkb_test": {ID: "tkb_test", Domain: "site.com", BotStrict: true}}
-	h.Hosting = func(ip string) bool { return ip == "203.0.113.99" }
+	h.Network = func(ip string, _ bool) (bool, string) { return ip == "203.0.113.99", "" }
 	rented := func(r *http.Request) { r.RemoteAddr = "203.0.113.99:1" }
 	heatPost(h, heatBatchAt("/blog"), rented)
 	if n := len(h.Heats.Drain()); n != 0 {

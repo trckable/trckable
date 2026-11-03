@@ -19,7 +19,7 @@ import { biggestMover, whyContext } from './whyLine'
 /** Tables that already are cards with their own headings. */
 const BARE: Tab[] = ['changed', 'overview', 'funnels', 'speed', 'search', 'ai', 'sales']
 /** Charts and long rows that need the whole width. */
-const WIDE: Tab[] = ['pages', 'paths', 'devices', 'sources', 'earners', 'highlights', 'overtime', 'hours', 'revmap', 'people', 'flow', 'vsale', 'retention', 'toconvert', 'quality', 'mentions', 'answers', 'payments', 'customers']
+const WIDE: Tab[] = ['pages', 'paths', 'devices', 'sources', 'earners', 'highlights', 'overtime', 'hours', 'revmap', 'people', 'flow', 'vsale', 'retention', 'toconvert', 'quality', 'networks', 'mentions', 'answers', 'payments', 'customers']
 const ROWS = 5
 
 function Card({ tab, x, c, open, onRead, onSay }: { tab: Tab; x: XCtx; c: DataCtx; open: boolean; onRead: () => void; onSay: (s: string | null) => void }) {
@@ -30,7 +30,7 @@ function Card({ tab, x, c, open, onRead, onSay }: { tab: Tab; x: XCtx; c: DataCt
   const ok = r.state === 'ok'
   const said = ok ? ((r.data as { say?: string | null }).say ?? null) : null
   useEffect(() => {
-    if (ok && tab !== 'quality') onSay(said)
+    if (ok && tab !== 'quality' && tab !== 'networks') onSay(said)
     // The section's one line, from the table that has one.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [said, ok])

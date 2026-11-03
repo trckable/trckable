@@ -36,7 +36,7 @@ export const copy = defineCopy('privacy', {
   collected: {
     page: 'The page and the site that sent the visitor',
     country: 'Country',
-    city: 'Country, region and city',
+    city: 'Country, region, city and internet provider',
     device: 'Browser, operating system and device type',
     time: 'How long the visitor stayed',
   },

@@ -27,6 +27,9 @@ type Vitals struct {
 	Good    int64       `json:"good"`              // of the three, how many are in the green
 	Rows    []Row       `json:"pages,omitempty"`   // the slowest pages by LCP
 	Devices []VitalsRow `json:"devices,omitempty"` // the same scores, by kind of device
+	// Networks are the same scores by internet provider, for the providers
+	// the instance recorded (empty where it records none).
+	Networks []VitalsRow `json:"networks,omitempty"`
 }
 
 // VitalsRow is one device's scores, each at the 75th percentile.
@@ -72,7 +75,7 @@ func (q Q) VitalsFor(ctx context.Context, p Params) (*Vitals, error) {
 	// Reports arrive after their page view, so they may fall just past the
 	// range's end; a day's grace covers any real page.
 	with := cte + `, pv AS (
-		SELECT e.pageview_id, any_value(e.path) AS path, any_value(e.device) AS device,
+		SELECT e.pageview_id, any_value(e.path) AS path, any_value(e.device) AS device, any_value(e.network) AS network,
 		       max(x.lcp_ms) AS lcp, max(x.cls_1k) AS cls, max(x.inp_ms) AS inp
 		FROM events e JOIN events x
 		  ON x.site_id = e.site_id AND x.pageview_id = e.pageview_id AND x.kind = 3
@@ -174,5 +177,32 @@ func (q Q) VitalsFor(ctx context.Context, p Params) (*Vitals, error) {
 		}
 		v.Devices = append(v.Devices, d)
 	}
-	return v, devs.Err()
+	if err := devs.Err(); err != nil {
+		return nil, err
+	}
+
+	nets, err := conn.QueryContext(ctx, with+`
+		SELECT network, count(*) FILTER (lcp IS NOT NULL OR cls IS NOT NULL OR inp IS NOT NULL),
+		       quantile_cont(lcp, 0.75), quantile_cont(cls, 0.75), quantile_cont(inp, 0.75)
+		FROM pv WHERE network IS NOT NULL GROUP BY network ORDER BY 2 DESC, network LIMIT 100`, args...)
+	if err != nil {
+		return nil, fmt.Errorf("web vitals by network: %w", err)
+	}
+	defer nets.Close()
+	for nets.Next() {
+		var d VitalsRow
+		var l, c, i sql.NullFloat64
+		if err := nets.Scan(&d.Value, &d.N, &l, &c, &i); err != nil {
+			return nil, err
+		}
+		if d.N == 0 {
+			continue
+		}
+		if l.Valid {
+			x := int64(l.Float64 + 0.5)
+			d.LCP = &x
+		}
+		v.Networks = append(v.Networks, d)
+	}
+	return v, nets.Err()
 }
