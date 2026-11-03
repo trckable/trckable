@@ -10,7 +10,6 @@ import { openSettings } from '../../../lib/settings'
 import { NotesSheet } from '../../ui/BriefingSheets'
 import { mult } from '../../briefing/model'
 import { Waterfall } from '../../ui/Waterfall'
-import { XKcs } from '../../ui/XKcs'
 import { explain, type Cause, type Dim, type Metric } from '../../why/model'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
@@ -108,7 +107,6 @@ export function Changed({ x, d }: { x: XCtx; d: Model & { report: Report } }) {
   return (
     <>
       <p className="xchg-say">{w ? sentence(copy.metric[metric], w.kind, w.pct, w.diff, w.causes[0]) : copy.sayChoose}</p>
-      <XKcs items={d.kcs} />
       {chart && <ChartSlot x={x} report={d.report} notes={notes.notes} onNotes={() => setSheet(true)} />}
       <div className="xsec xchg-head">
         <span>{copy.biggestChanges}</span>
