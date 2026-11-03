@@ -1,0 +1,1 @@
+- What changed: country movers show the flag and the country's name.

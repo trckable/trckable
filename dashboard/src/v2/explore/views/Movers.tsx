@@ -1,5 +1,6 @@
 // What changed: the biggest changes of every table as one ranked list, a bar from the centre for each, and the top three as chips.
 import { isShared } from '../../../lib/me'
+import { countryName } from '../../../lib/format'
 import { Flag } from '../../ui/Flag'
 import { useV2Extras } from '../../slots'
 import type { Cause, Dim, Metric } from '../../why/model'
@@ -20,6 +21,8 @@ export const nameOf = (v: string) => (v === '/' ? copy.homePage : v || copy.dire
 const pick = (c: Cause) => openExplore(OPEN[c.dim].tab, [{ dim: OPEN[c.dim].filter, value: c.value }])
 const signed = (n: number, fmt: (n: number) => string) => `${n < 0 ? '−' : '+'}${fmt(Math.abs(n))}`
 const kind = (c: Cause) => (c.diff < 0 ? 'dn' : 'up')
+/** A country by its name beside its flag; anything else as it is called. */
+const label = (c: Cause) => (c.dim === 'country' && c.value ? countryName(c.value) : nameOf(c.value))
 
 /** Under the headline: the top three movers, tinted by the way they went. */
 export function MoverChips({ list, metric, fmt }: { list: Cause[]; metric: Metric; fmt: (n: number) => string }) {
@@ -28,7 +31,8 @@ export function MoverChips({ list, metric, fmt }: { list: Cause[]; metric: Metri
     <div className="xmv-chips">
       {list.slice(0, 3).map((c) => (
         <button key={`${c.dim}:${c.value}`} type="button" className={`xmv-chip ${kind(c)}`} title={copy.metric[metric]} onClick={() => pick(c)}>
-          {nameOf(c.value)} <b>{signed(c.diff, fmt)}</b>
+          {c.dim === 'country' && c.value && <Flag code={c.value} />}
+          {label(c)} <b>{signed(c.diff, fmt)}</b>
         </button>
       ))}
     </div>
@@ -47,7 +51,7 @@ export function MoverList({ list, fmt }: { list: Cause[]; fmt: (n: number) => st
           <button key={`${c.dim}:${c.value}`} type="button" className="xmv-row" title={`${nameOf(c.value)}: ${fmt(c.was)} → ${fmt(c.now)}`} onClick={() => pick(c)}>
             <span className="xmv-name">
               {c.dim === 'country' && c.value && <><Flag code={c.value} />{' '}</>}
-              {nameOf(c.value)} <em>{copy.dimWord[c.dim]}</em>
+              {label(c)} <em>{copy.dimWord[c.dim]}</em>
             </span>
             <span className="xmv-was">{fmt(c.was)} → {fmt(c.now)}</span>
             <span className="xmv-bar" aria-hidden="true"><i className={kind(c)} style={{ width: `${(Math.abs(c.diff) / max) * 50}%` }} /></span>
