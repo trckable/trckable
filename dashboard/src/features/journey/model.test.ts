@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { JourneyResult, JourneyVisit } from '../../lib/api'
 import { hueOf, truncateMiddle } from '../../lib/visitor'
+import { copy } from './copy'
 import { buildStory, nodesOf, propsOf, visitFor, type PageNode } from './model'
 
 const at = (min: number) => new Date(Date.UTC(2026, 8, 27, 12, min)).toISOString()
@@ -132,4 +133,8 @@ describe('goal properties', () => {
     const v = visit(0, 5, [pv(0, '/scan'), { at: at(1), kind: 'goal', goal: 'Site scan', props: '{"form":"/scan","Site":"example.com"}' }])
     expect(nodesOf(v, [], 'v').find((n) => n.kind === 'goal')).toMatchObject({ props: [{ key: 'Site', value: 'example.com' }] })
   })
+})
+
+it('writes a property key with a capital', () => {
+  expect(copy.prop('site', 'example.com')).toBe('Site: example.com')
 })
