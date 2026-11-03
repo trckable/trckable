@@ -338,6 +338,13 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
       const v = long ? x.usual : x.cur
       return ok({ samples: 40, lcp_n: 40, inp_n: 32, cls_n: 40, lcp_ms: Math.round(v[0] * 1000), inp_ms: Math.round(v[1]), cls_1k: Math.round(v[2] * 1000), good: 1, devices: [{ value: 'desktop', n: 26, lcp_ms: Math.round(v[0] * 900) }, { value: 'mobile', n: 14, lcp_ms: Math.round(v[0] * 1250) }], pages: [{ value: site.pages[0][0], visitors: Math.round(v[0] * 1000), pageviews: 40 }] })
     }
+    case 'report/slow-cost': {
+      // Visits by how long their slowest page took: the slower, the fewer who reach a goal or pay.
+      const pages = site.pages.map((p) => p[0])
+      const band = (b: string, visits: number, rate: number, at: string[]) => ({ band: b, visits, goals: Math.round(visits * rate), engaged: Math.round(visits * (rate + 0.3)), paid: c.conn.rev ? Math.round(visits * rate * 0.4) : 0, revenue: c.conn.rev ? Math.round(visits * rate * 0.4) * 4200 : 0, orders: c.conn.rev ? Math.round(visits * rate * 0.4) : 0, pages: at })
+      const bands = [band('slow', 300, 0.03, pages.slice(0, 1)), band('mid', 400, 0.08, pages.slice(1, 2)), band('fast', 800, 0.16, pages.slice(2, 4))]
+      return ok({ bands, money: c.conn.rev, exponent: 2, days: 30 })
+    }
     case 'report/search':
       return ok(searchReport(c, id, sp))
     case 'search-console':

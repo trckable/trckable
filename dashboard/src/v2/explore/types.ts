@@ -198,7 +198,29 @@ export interface SlowPage {
   grade: Grade
 }
 
+/** One speed band of the cost card. rate: the share of its visits that did what counts; null when there are too few to say. lost: in minor units for sales, else in visits. */
+export interface SlowCostRow {
+  band: 'slow' | 'mid' | 'fast'
+  visits: number
+  rate: number | null
+  lost: number
+  /** The band's pages, for the filter a tap sets. */
+  pages: string[]
+}
+
+/** What slow pages cost a month, against the fast pages. verdict few: nothing to compare yet, and nothing is claimed. */
+export interface SlowCostModel {
+  kind: 'money' | 'goals' | 'engaged'
+  verdict: 'loss' | 'few'
+  lost: number
+  /** Most of the loss is on the pages slower than 4 s. */
+  mostSlow: boolean
+  rows: SlowCostRow[]
+}
+
 export interface Speed {
+  /** Absent when nothing was measured, and where the site's server does not have it. */
+  cost?: SlowCostModel | null
   kcs: Xkc[]
   pages: SlowPage[]
   /** Loading time by kind of device, once there are enough views on it. */

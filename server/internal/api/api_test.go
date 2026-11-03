@@ -617,6 +617,32 @@ func TestWebVitalsEndToEnd(t *testing.T) {
 	if len(devices) != 1 || devices[0].(map[string]any)["n"] != 20.0 {
 		t.Fatalf("by device: %v", out["devices"])
 	}
+
+	// What slow pages cost: each visit sits in the band of its slowest page,
+	// here 3.0-3.9 s, so all ten are "needs work". No payments, so no money.
+	if code, _ := do(t, c, "PUT", base+"/modules/vitals", `{"enabled":false}`, csrf, "1"); code != 200 {
+		t.Fatal("could not turn the module off")
+	}
+	if code, _ := do(t, c, "GET", base+"/report/slow-cost?from=2026-09-22&to=2026-09-22", ""); code != http.StatusNotFound {
+		t.Fatalf("slow-cost answered with the module off: %d", code)
+	}
+	if code, _ := do(t, c, "PUT", base+"/modules/vitals", `{"enabled":true}`, csrf, "1"); code != 200 {
+		t.Fatal("could not turn the module on")
+	}
+	code, out = do(t, c, "GET", base+"/report/slow-cost?from=2026-09-22&to=2026-09-22", "")
+	if code != 200 {
+		t.Fatalf("slow-cost: %d %v", code, out)
+	}
+	bands, _ := out["bands"].([]any)
+	if len(bands) != 3 || out["money"] != false || out["days"].(float64) < 1 {
+		t.Fatalf("slow-cost: %v", out)
+	}
+	if b := bands[1].(map[string]any); b["band"] != "mid" || b["visits"] != 10.0 {
+		t.Errorf("mid band: %v", bands[1])
+	}
+	if b := bands[0].(map[string]any); b["visits"] != 0.0 {
+		t.Errorf("slow band: %v", bands[0])
+	}
 }
 
 // Retention: of the people who first came in a week, how many came back. A

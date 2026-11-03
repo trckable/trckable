@@ -5,6 +5,7 @@ import { XEmpty, XNote, XSec } from '../../ui/XBits'
 import { XKcsPlain } from '../../ui/XKcs'
 import { XCols, type CRow } from '../../ui/XTable'
 import { copy } from '../copy'
+import { SlowCost } from './SlowCost'
 import { EmptyTab } from './PeopleTable'
 import type { XCtx } from '../ctx'
 import type { Bot, Mention, Speed as SpeedModel } from '../types'
@@ -66,6 +67,7 @@ export function Speed({ x, d }: { x: XCtx; d: SpeedModel }) {
   if (rows.length === 0 && devices.length === 0 && !d.kcs.some((k) => k.detail && k.detail !== copy.nothingMeasured)) return <SpeedEmpty x={x} />
   return (
     <>
+      {d.cost && <SlowCost x={x} d={d.cost} />}
       <XKcsPlain items={d.kcs} />
       {devices.length > 0 && (
         <>

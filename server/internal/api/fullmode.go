@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"github.com/trckable/trckable/server/internal/permissions"
@@ -221,6 +222,43 @@ func (a *API) vitals(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, v)
+}
+
+// slowCost reports what the period's visits did by how fast their slowest page
+// painted, for the Speed table's "what slow pages cost". It reads as a report
+// does (the filters, the attribution, test payments when asked for) and is kept
+// like one. Money is in it only while the revenue module is on.
+func (a *API) slowCost(w http.ResponseWriter, r *http.Request) {
+	if !a.needs(w, r, "vitals") {
+		return
+	}
+	q := a.Query()
+	if q == nil {
+		w.Header().Set("Retry-After", "2")
+		fail(w, http.StatusServiceUnavailable, "analytics store warming up")
+		return
+	}
+	ask := a.parse(w, r, r.PathValue("site"), true)
+	if ask == nil {
+		return
+	}
+	p := ask.Params
+	v, err := a.cachedRead(r, p, cacheKey(p)+"|slow", func(ctx context.Context) (any, error) { return q.SlowCostFor(ctx, p) })
+	if err != nil {
+		reportFail(w, err)
+		return
+	}
+	// The days the figures cover, for scaling them to a month: a period still
+	// running counts up to now.
+	end := p.To
+	if now := a.Now(); now.Before(end) {
+		end = now
+	}
+	days := end.Sub(p.From).Hours() / 24
+	writeJSON(w, http.StatusOK, struct {
+		*query.SlowCost
+		Days float64 `json:"days"`
+	}{v.(*query.SlowCost), max(days, 1)})
 }
 
 // crawlers reports who crawled the site: AI answers, indexing and training.

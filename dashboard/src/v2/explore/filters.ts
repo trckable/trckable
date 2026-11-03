@@ -21,6 +21,14 @@ export function toggled(list: Filter[], dim: string, value: string): Filter[] {
   return same ? rest : [...rest, { dim, value }]
 }
 
+/** The filter set with a dimension narrowed to any of these values, or that dimension off when they are the ones on. */
+export function toggledAny(list: Filter[], dim: string, values: string[]): Filter[] {
+  const now = list.filter((f) => f.dim === dim)
+  const same = now.length === values.length && values.every((v) => now.some((f) => f.value === v))
+  const rest = list.filter((f) => f.dim !== dim)
+  return same ? rest : [...rest, ...values.map((value) => ({ dim, value }))]
+}
+
 export const withValue = (list: Filter[], dim: string, value: string): Filter[] => [...list.filter((f) => f.dim !== dim), { dim, value }]
 
 export const without = (list: Filter[], dim: string): Filter[] => list.filter((f) => f.dim !== dim)

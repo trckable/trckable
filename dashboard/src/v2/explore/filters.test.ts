@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chipName, keyOf, nameOf, toggled, valueOf, withValue, without } from './filters'
+import { chipName, keyOf, nameOf, toggled, toggledAny, valueOf, withValue, without } from './filters'
 import type { FilterDim, Option } from './types'
 
 const options: Partial<Record<FilterDim, Option[]>> = {
@@ -8,6 +8,13 @@ const options: Partial<Record<FilterDim, Option[]>> = {
 }
 
 describe('filters', () => {
+  it('narrows a dimension to any of several values, and off again when they are the ones on', () => {
+    const base = [{ dim: 'device', value: 'Mobile' }]
+    const on = toggledAny([...base, { dim: 'page', value: '/old' }], 'page', ['/a', '/b'])
+    expect(on).toEqual([...base, { dim: 'page', value: '/a' }, { dim: 'page', value: '/b' }])
+    expect(toggledAny(on, 'page', ['/b', '/a'])).toEqual(base)
+  })
+
   it('turns a value on, and off again when it is the one that is on', () => {
     const on = toggled([], 'device', 'Mobile')
     expect(on).toEqual([{ dim: 'device', value: 'Mobile' }])
