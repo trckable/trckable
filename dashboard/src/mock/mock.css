@@ -1921,3 +1921,10 @@ html[data-motion='off'] .mk .lswap{animation:none}
 .mk .mhits{touch-action:pan-y}
 @media (prefers-reduced-motion:reduce){.mk .mline-guide,.mk .mline-gdot{transition:none}}
 html[data-motion='off'] .mk .mline-guide,html[data-motion='off'] .mk .mline-gdot{transition:none}
+/* The site pill: the site, its setup ring and its settings, one border around them. */
+.mk .hd .sitegrp{display:flex;align-items:center;min-width:0;border:1px solid var(--mk-line);background:var(--mk-card);border-radius:12px;height:36px}
+.mk .hd .sitegrp .mk-chip{border:0;background:none;min-width:0}
+.mk .hd .sitegrp .ringw{border-left:1px solid var(--mk-line);height:100%;display:flex;align-items:center}
+.mk .hd .sitegrp .ringb{border:0;background:none;height:100%}
+.mk .hd .sitegrp .sitegear{display:grid;place-items:center;width:34px;height:100%;border-left:1px solid var(--mk-line);color:var(--mk-muted);border-radius:0 12px 12px 0;flex:none}
+.mk .hd .sitegrp .sitegear:hover{color:var(--mk-text);background:color-mix(in srgb,var(--mk-text) 5%,transparent)}
