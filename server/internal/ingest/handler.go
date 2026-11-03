@@ -245,6 +245,7 @@ type payload struct {
 	Referrer   string            `json:"r"`
 	Width      int               `json:"w"`
 	Lang       string            `json:"l"`
+	Zone       string            `json:"z"`
 	ID         string            `json:"id"` // event id, base36
 	Age        int64             `json:"a"`  // ms since the event happened (queued retries)
 	PV         string            `json:"pv"` // pageview id, base36
@@ -534,6 +535,9 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 			e.Region, e.City = "", ""
 		}
 	}
+	if !site.NoCity && !site.ConsentFree {
+		e.Timezone = normZone(p.Zone)
+	}
 	if e.Country == "" && !proxied { // trusted edge header (Cloudflare) as a fallback
 		if cc := r.Header.Get("CF-IPCountry"); len(cc) == 2 && cc != "XX" {
 			e.Country = strings.ToUpper(cc)
@@ -635,6 +639,28 @@ func parseID(s string) uint64 {
 		return 0
 	}
 	return v
+}
+
+// normZone keeps an IANA zone name ("Europe/Berlin", "America/Argentina/Buenos_Aires")
+// and drops anything else the browser or a script might send.
+func normZone(s string) string {
+	if s == "" || len(s) > 40 {
+		return ""
+	}
+	slash := false
+	for _, c := range s {
+		switch {
+		case c == '/':
+			slash = true
+		case c >= 'a' && c <= 'z', c >= 'A' && c <= 'Z', c >= '0' && c <= '9', c == '_', c == '-', c == '+':
+		default:
+			return ""
+		}
+	}
+	if !slash && s != "UTC" {
+		return ""
+	}
+	return s
 }
 
 func normLang(s string) string {

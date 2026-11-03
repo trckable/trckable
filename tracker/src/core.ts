@@ -4,7 +4,7 @@
 //
 // It sends raw signals only; the server derives everything else. Wire format
 // (short keys): s site · k kind (pv|g|e) · u url · r referrer · w screen width
-// l language · id event id · a age ms · pv pageview id · v visitor id
+// l language · z time zone · id event id · a age ms · pv pageview id · v visitor id
 // n goal · p props · en engaged ms · sc scroll % · dev localhost allowed · c cookieless
 // lcp ms · cls thousandths · inp ms (Core Web Vitals, with that module on)
 
@@ -319,6 +319,7 @@ export function start(c: Config): Tracker {
       p.u = loc.href
       p.w = screen.width
       p.l = nav.language
+      p.z = Intl.DateTimeFormat().resolvedOptions().timeZone
       p.id = rid()
       if (c.dev) p.dev = 1
       if ((__CONSENT__ || __BANNER__) && held) return held.push(p)

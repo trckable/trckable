@@ -8,6 +8,7 @@ import { copy } from './copy'
 import type { XCtx } from './ctx'
 import { useTab, type DataCtx } from './data/useExplore'
 import { SectionBody } from './SectionBody'
+import { isPlaceTab, PlacesCard } from './views/Places'
 import { HOSTED, relatedTo, TABS } from './sections'
 import type { Row, Section, Tab } from './types'
 import { biggestMover, whyContext } from './whyLine'
@@ -87,6 +88,8 @@ function glow(e: PointerEvent<HTMLDivElement>) {
 
 export function SectionPage({ section, tab, x, c, onRead }: { section: Section; tab: Tab; x: XCtx; c: DataCtx; onRead: () => void }) {
   const tabs = TABS[section]
+  // The places tables are one card, with a switch between them: it stands where the first of them would.
+  const cards = tabs.filter((t, i) => !isPlaceTab(t) || tabs.findIndex(isPlaceTab) === i)
   const [say, setSay] = useState<string | null>(null)
   // The way on stands under the cards: drawn once the first has answered, so it does not slide down as they fill.
   const [answered, setAnswered] = useState<Section | null>(null)
@@ -98,7 +101,7 @@ export function SectionPage({ section, tab, x, c, onRead }: { section: Section; 
   useEffect(() => {
     if (tab === tabs[0]) return
     // The table the address names, each time it names another; after a move from Live has put the page at its top.
-    const f = requestAnimationFrame(() => document.getElementById(`xc-${tab}`)?.scrollIntoView({ block: 'start' }))
+    const f = requestAnimationFrame(() => document.getElementById(`xc-${isPlaceTab(tab) ? 'places' : tab}`)?.scrollIntoView({ block: 'start' }))
     return () => cancelAnimationFrame(f)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab])
@@ -106,7 +109,10 @@ export function SectionPage({ section, tab, x, c, onRead }: { section: Section; 
     <>
       {say && <p className="xchg-say xsay-page">{say}</p>}
       <div className="xcards" key={section} onPointerMove={glow}>
-        {tabs.map((t, i) => <Card key={t} tab={t} x={x} c={c} open={i === 0 || t === tab} onRead={onRead} onSay={(s) => { setAnswered(section); if (s) setSay(s) }} />)}
+        {cards.map((t, i) => {
+          const read = (s: string | null) => { setAnswered(section); if (s) setSay(s) }
+          return isPlaceTab(t) ? <PlacesCard key="places" x={x} c={c} tab={tab} onRead={onRead} onSay={read} /> : <Card key={t} tab={t} x={x} c={c} open={i === 0 || t === tab} onRead={onRead} onSay={read} />
+        })}
       </div>
       {answered === section && <nav className="xnext" aria-label={copy.keepGoing}>
         {relatedTo(section).map((s) => (

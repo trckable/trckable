@@ -706,7 +706,7 @@ func AppendSession(app *duckdb.Appender, s *Session) error {
 		nz(s.Country), nz(s.Region), nz(s.City),
 		nz(s.Device), nz(s.Browser), nz(s.OS), nz(s.Language),
 		s.Pageviews, s.Goals, s.EngagedMs(), s.DurationS(),
-		nz(s.BrowserVersion), nzU16(s.Screen),
+		nz(s.BrowserVersion), nzU16(s.Screen), nz(s.Timezone),
 	)
 }
 
@@ -741,7 +741,7 @@ func appendRow(app *duckdb.Appender, r *row) error {
 		nzU32(e.EngagedMs), nzU8(e.ScrollPct),
 		nzU32(e.LCPms), nilU32(e.CLS1k), nzU32(e.INPms),
 		nzTrue(e.Imported),
-		nz(e.BrowserVersion),
+		nz(e.BrowserVersion), nz(e.Timezone),
 	)
 }
 
@@ -771,7 +771,8 @@ func (w *Writer) restore(ctx context.Context, conn *sql.Conn) error {
 		       coalesce(any_value(device), ''), coalesce(any_value(browser), ''), coalesce(any_value(os), ''),
 		       coalesce(any_value(language), ''),
 		       count(*) FILTER (kind = 1), count(*) FILTER (kind = 2),
-		       coalesce(any_value(browser_version), ''), coalesce(arg_min(screen, ts) FILTER (kind = 1), 0)
+		       coalesce(any_value(browser_version), ''), coalesce(arg_min(screen, ts) FILTER (kind = 1), 0),
+		       coalesce(any_value(timezone), '')
 		FROM ev WHERE session_id NOT IN (SELECT session_id FROM done)
 		GROUP BY site_id, session_id`, wm, wm)
 	if err != nil {
@@ -784,7 +785,7 @@ func (w *Writer) restore(ctx context.Context, conn *sql.Conn) error {
 			&s.Channel, &s.Referrer, &s.EntryPage, &s.ExitPage, &s.lastPV,
 			&s.Campaign, &s.Source, &s.Medium, &s.Country, &s.Region, &s.City,
 			&s.Device, &s.Browser, &s.OS, &s.Language, &s.Pageviews, &s.Goals,
-			&s.BrowserVersion, &s.Screen); err != nil {
+			&s.BrowserVersion, &s.Screen, &s.Timezone); err != nil {
 			rows.Close()
 			return err
 		}

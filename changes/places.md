@@ -1,0 +1,1 @@
+Places: four numbers (countries, regions, cities, top country with its flag) over a filled world map shaded by visitors, and one switch for the tables of countries, regions, cities, time zones and languages; the time zone is now recorded with region and city, and languages read as names.

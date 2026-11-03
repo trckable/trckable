@@ -59,6 +59,8 @@ export interface Xkc {
   tag: string
   tone: Tone
   detail: string
+  /** A country's flag shown before the number. */
+  flag?: string
   /** Where the score sits from good to poor, 0 to 1: each grade takes a third. */
   at?: number
 }
@@ -217,7 +219,7 @@ export interface Connected {
 export type HostedTab = 'highlights' | 'overtime' | 'hours' | 'revmap' | 'earners' | 'sells' | 'people' | 'buyers' | 'retention' | 'vsale' | 'toconvert' | 'flow' | 'ai' | 'answers'
 
 /** The breakdowns only the deep report has: where people left, regions and cities, the parts of a campaign, language, browser version, screen width, page groups. */
-export type DeepTab = 'exits' | 'groups' | 'regions' | 'cities' | 'utmsource' | 'medium' | 'bversion' | 'screens' | 'languages'
+export type DeepTab = 'exits' | 'groups' | 'regions' | 'cities' | 'utmsource' | 'medium' | 'bversion' | 'screens' | 'languages' | 'timezones'
 
 export type Tab = HostedTab | DeepTab | 'changed' | 'overview' | 'pages' | 'sources' | 'quality' | 'referrers' | 'utm' | 'search' | 'countries' | 'devices' | 'browsers' | 'funnels' | 'sales' | 'speed' | 'mentions' | 'outbound' | 'bots'
 
@@ -245,6 +247,7 @@ export interface Tabs {
   bversion: Table
   screens: Table
   languages: Table
+  timezones: Table
   bots: Bot[]
   search: Search
   funnels: Funnel
