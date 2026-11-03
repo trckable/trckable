@@ -2636,6 +2636,7 @@ export default {
   'briefing.siteDown': (min: number, ongoing: boolean) => `site ${min} min offline${ongoing ? ' en nog steeds' : ''}`,
   'briefing.beforeFirst': 'Vóór het eerste bezoek',
   'briefing.started': (when: string) => `Sinds ${when}`,
+  'briefing.downSince': (when: string) => `Offline sinds ${when}`,
   'briefing.usualTag': 'gebruikelijk',
   'briefing.stop': 'Stop',
   'briefing.allNotes': 'Alle notities',

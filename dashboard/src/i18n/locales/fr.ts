@@ -2637,6 +2637,7 @@ export default {
   'briefing.siteDown': (min: number, ongoing: boolean) => `site en panne ${min} min${ongoing ? ' et ça continue' : ''}`,
   'briefing.beforeFirst': 'Avant la première visite',
   'briefing.started': (when: string) => `Depuis ${when}`,
+  'briefing.downSince': (when: string) => `En panne depuis ${when}`,
   'briefing.usualTag': 'habituel',
   'briefing.stop': 'Arrêter',
   'briefing.allNotes': 'Toutes les notes',

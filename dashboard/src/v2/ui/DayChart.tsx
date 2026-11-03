@@ -76,7 +76,7 @@ export interface ChartIn {
   downs: Down[]
   notes: { i: number; text: string }[]
   /** Where the run outside the usual began (or the biggest rise, once the period is over): the bucket, when as the axis writes it, and which way. */
-  started?: { i: number; when: string; dir: 'up' | 'dn' }
+  started?: { i: number; when: string; dir: 'up' | 'dn'; down?: boolean }
   /** Sales on the line of the day: where on the axis (in buckets, with the part of the hour), and the amount as written. */
   sales?: { at: number; text: string; neg?: boolean }[]
 }
@@ -133,7 +133,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
   const nowEdge = c.live ? edge(Math.min(c.elapsed, span)) : edge(span)
   const every = Math.max(1, Math.ceil(span / (ph ? 3 : 7)))
   const kfmt = (g: number) => (g >= 1000 ? `${g / 1000}k` : String(g))
-  const run = c.started && c.started.i >= f0 && pts[c.started.i] ? { p: pts[c.started.i], text: ph ? c.started.when : copy.started(c.started.when), dir: c.started.dir } : null
+  const run = c.started && c.started.i >= f0 && pts[c.started.i] ? { p: pts[c.started.i], text: ph ? c.started.when : (c.started.down ? copy.downSince : copy.started)(c.started.when), dir: c.started.dir } : null
   const pillW = run ? Math.round(run.text.length * 6.8 + 18) : 0
   const pill = { w: pillW, h: 18, y: 4, x: run ? Math.max(L, Math.min(X(run.p.i) - pillW / 2, W - Rr - pillW)) : 0 }
   const ticks = c.axis.filter((p) => p.i < span && p.tick && p.i % every === 0)

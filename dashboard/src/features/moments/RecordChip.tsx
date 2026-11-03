@@ -21,7 +21,7 @@ export function RecordChip({ g, record, at }: { g: ChartGeo; record: { day: stri
   return (
     <>
       <button type="button" className="moment-mark record" style={{ left: at, top: g.lane }} aria-label={line} onPointerEnter={() => setOn(true)} onPointerLeave={() => setOn(false)} onFocus={() => setOn(true)} onBlur={() => setOn(false)} onPointerDown={(e) => e.stopPropagation()}>
-        <Star size={9} strokeWidth={2.5} aria-hidden="true" />
+        <Star size={11} strokeWidth={2.25} aria-hidden="true" />
       </button>
       {on && (
         <div role="tooltip" className="moment-tip" style={{ left: Math.max(4, Math.min(at - 120, g.w - 244)), top: g.lane - 12, translate: '0 -100%', maxWidth: 240 }}>

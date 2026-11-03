@@ -110,7 +110,7 @@ export default function MomentLayer(p: LayerProps) {
               }}
               onClick={() => click(m)}
             >
-              <Icon size={9} strokeWidth={2.5} aria-hidden="true" />
+              <Icon size={11} strokeWidth={2.25} aria-hidden="true" />
               {m.more.length > 0 && <i className="moment-n num" aria-hidden="true">{m.more.length > 98 ? '99+' : m.more.length + 1}</i>}
             </button>
           )

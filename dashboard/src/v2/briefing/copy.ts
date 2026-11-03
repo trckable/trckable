@@ -49,6 +49,8 @@ export const copy = defineCopy('briefing', {
   beforeFirst: 'Before the first visit',
   /** The pill at the top of the chart where the current run outside the usual began: "Started Mon 09:00". */
   started: (when: string) => `Started ${when}`,
+  /** The pill where an outage that is still going began: "Down since Sun 20:00". */
+  downSince: (when: string) => `Down since ${when}`,
   /** The band's name at its right end. */
   usualTag: 'usual',
   // Sheets, the quiet states.

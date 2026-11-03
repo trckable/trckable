@@ -2636,6 +2636,7 @@ export default {
   'briefing.siteDown': (min: number, ongoing: boolean) => `sito offline da ${min} min${ongoing ? ' e continua' : ''}`,
   'briefing.beforeFirst': 'Prima della prima visita',
   'briefing.started': (when: string) => `Da ${when}`,
+  'briefing.downSince': (when: string) => `Offline da ${when}`,
   'briefing.usualTag': 'abituale',
   'briefing.stop': 'Ferma',
   'briefing.allNotes': 'Tutte le note',

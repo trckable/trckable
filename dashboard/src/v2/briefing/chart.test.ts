@@ -47,6 +47,22 @@ describe('the chart of a day', () => {
     const c = chartOf({ cur: res([5, 5, 40, 5]), prev: res([5, 5, 5, 5]), bucket: 'hour', unit: 'yesterday' })
     expect(c.started).toEqual({ i: 2, when: '02:00', dir: 'up' })
   })
+  it('walks back over buckets with no verdict (a usual of nothing) to where the run began', () => {
+    // Hours 3 and 4 have a usual of nothing, so the run that holds at 5 began at 2.
+    const c = chartOf({ cur: res([0, 0, 9, 0, 0, 9]), prev: res([0, 0, 1, 0, 0, 1]), bucket: 'hour', unit: 'yesterday', bands: [null, null, { c: 1, lo: 0, hi: 2 }, { c: 0, lo: 0, hi: 0 }, { c: 0, lo: 0, hi: 0 }, { c: 1, lo: 0, hi: 2 }] })
+    expect(c.started?.i).toBe(2)
+    const d = chartOf({ cur: res([0, 9, 0, 0, 9]), prev: res([0, 1, 0, 0, 1]), bucket: 'hour', unit: 'yesterday', bands: [null, { c: 1, lo: 0, hi: 2 }, { c: 0, lo: 0, hi: 0 }, { c: 0, lo: 0, hi: 0 }, { c: 1, lo: 0, hi: 2 }] })
+    expect(d.started?.i).toBe(1)
+  })
+  it('stops the run at a bucket back inside a real usual', () => {
+    const band = { c: 5, lo: 3, hi: 7 }
+    const c = chartOf({ cur: res([30, 5, 30, 30]), prev: res([5, 5, 5, 5]), bucket: 'hour', unit: 'yesterday', bands: [band, band, band, band] })
+    expect(c.started?.i).toBe(2)
+  })
+  it('says when an outage that is still going began, over any verdict', () => {
+    const c = chartOf({ cur: res(day.slice(0, 6)), prev: res(day.slice(0, 6)), bucket: 'hour', unit: 'yesterday', downs: [{ a: 3.2, b: 6, min: 150, now: true }] })
+    expect(c.started).toEqual({ i: 3, when: '03:00', dir: 'dn', down: true })
+  })
   it('has no run to name while the live hour is inside its usual', () => {
     expect(chartOf({ cur: res([5, 5, 5, 5]), prev: res([5, 5, 5, 5]), bucket: 'hour', unit: 'today', nowT: '2026-10-16T03:59' }).started).toBeUndefined()
   })

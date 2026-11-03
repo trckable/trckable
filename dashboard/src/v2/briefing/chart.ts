@@ -48,24 +48,41 @@ interface ChartArgs {
   sales?: { at: string; text: string; neg?: boolean; size: number }[]
 }
 
-/** Where the run that is outside its usual right now began: the first bucket of the last stretch of the same verdict that reaches the end (a bucket barely begun does not count), with when, as the axis writes it. A period that is over and ends inside its usual has the point of its biggest rise instead. */
-function startOf(points: ChartIn['points'], hourly: boolean, live: boolean, e: number, series: Point[]): ChartIn['started'] {
+/** A bucket's time as the axis writes it: the weekday and hour for a long hourly chart, the hour for a day, the date for days. */
+function whenOf(series: Point[], i: number, hourly: boolean): string {
+  const t = series[i].t
+  if (!hourly) return fmtDay(t.slice(0, 10))
+  if (series.length <= 24) return t.slice(11, 16)
+  return `${dateFmt(tag ?? 'en-US', { weekday: 'short', timeZone: 'UTC' }).format(new Date(t.slice(0, 10) + 'T12:00:00Z'))} ${t.slice(11, 16)}`
+}
+
+/**
+ * Where the run that is outside its usual right now began, for the pill. A site that is down says when the outage began.
+ * Otherwise it is the first bucket of the last stretch of the same verdict that reaches the end (a bucket barely begun
+ * does not count): buckets with no verdict because the usual there is next to nothing (night hours) do not break it, a
+ * bucket of the other verdict or one back inside a real usual does. A period that is over and ends inside its usual has
+ * the point of its biggest rise instead.
+ */
+export function startOf(points: ChartIn['points'], hourly: boolean, live: boolean, e: number, series: Point[], downs: Down[] = []): ChartIn['started'] {
+  const out = downs.find((d) => d.now)
+  if (out) {
+    const i = Math.min(Math.max(0, Math.floor(out.a)), series.length - 1)
+    return { i, when: whenOf(series, i, hourly), dir: 'dn', down: true }
+  }
   const n = points.length - 1
   const end = live && hourly && e - n < 0.25 ? n - 1 : n
-  let dir = points[end]?.st
-  let i = end
-  if (dir) {
-    while (i > 0 && points[i - 1].st === dir) i--
-  } else {
-    i = live ? -1 : biggestRise(points)
-    dir = 'up'
+  const dir = points[end]?.st
+  if (!dir) {
+    const i = live ? -1 : biggestRise(points)
+    return i < 0 ? undefined : { i, when: whenOf(series, i, hourly), dir: 'up' }
   }
-  if (i < 0) return undefined
-  const t = series[i].t
-  const day = fmtDay(t.slice(0, 10))
-  const weekday = dateFmt(tag ?? 'en-US', { weekday: 'short', timeZone: 'UTC' }).format(new Date(t.slice(0, 10) + 'T12:00:00Z'))
-  const time = series.length > 24 ? `${weekday} ${t.slice(11, 16)}` : t.slice(11, 16)
-  return { i, when: hourly ? time : day, dir }
+  let i = end
+  for (let k = end - 1; k >= 0; k--) {
+    const p = points[k]
+    if (p.st === dir) i = k
+    else if (p.st || p.hi >= 1) break
+  }
+  return { i, when: whenOf(series, i, hourly), dir }
 }
 
 /** The bucket furthest above its usual, as a share of it; -1 when none is above. */
@@ -125,7 +142,7 @@ export function chartOf(a: ChartArgs): ChartIn {
     const { was: before, delta } = pairAt(cmp, p.visitors, i, done)
     return { i, name, tick, v, lo: full.lo, hi: full.hi, st, raw: p.visitors, was: before, delta }
   })
-  const started = startOf(points, hourly, live, e, a.cur.series)
+  const started = startOf(points, hourly, live, e, a.cur.series, a.downs)
   // The axis names every bucket of the period, the hours still to come too (a phone draws the whole day).
   const axis = a.cur.series.map((p, i) => ({ i, tick: tickOf(hourly, a.cur.series.length, Number(p.t.slice(11, 13)), p.t.slice(0, 10)) }))
   // A sale sits where it happened on the hours of the day, when the chart is by the hour and short enough to read them.

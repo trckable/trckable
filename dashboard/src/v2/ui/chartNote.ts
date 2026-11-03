@@ -13,7 +13,8 @@ export function chartNote(c: ChartIn, at: number | null, down = false): string {
     const p = c.points[at]
     return readOf(p.name, p.raw, c.compare.name, p.was, p.delta)
   }
-  if (down) return copy.downRightNow
+  // An outage in the chart's lane says it there; the line over the chart says it only when there is none.
+  if (down) return c.downs.length ? '' : copy.downRightNow
   // The usual range being built is said by the pill on the period row (UsualRange), never by a count against it.
   if (c.compare && c.compare.pct !== null) return copy.vsLine(signed(c.compare.pct), c.compare.name)
   return ''

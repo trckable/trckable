@@ -2642,6 +2642,7 @@ export default {
   'briefing.siteDown': (min: number, ongoing: boolean) => `sitio caído ${min} min${ongoing ? ' y contando' : ''}`,
   'briefing.beforeFirst': 'Antes de la primera visita',
   'briefing.started': (when: string) => `Desde ${when}`,
+  'briefing.downSince': (when: string) => `Caído desde ${when}`,
   'briefing.usualTag': 'habitual',
   'briefing.stop': 'Detener',
   'briefing.allNotes': 'Todas las notas',

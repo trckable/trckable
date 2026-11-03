@@ -8,7 +8,11 @@ export function segments(p: Pt[]): string[] {
   if (n < 2) return []
   const d: number[] = []
   for (let k = 0; k < n - 1; k++) d.push((p[k + 1][1] - p[k][1]) / (p[k + 1][0] - p[k][0] || 1))
-  const m: number[] = p.map((_, k) => (k === 0 ? d[0] : k === n - 1 ? d[n - 2] : d[k - 1] * d[k] <= 0 ? 0 : (d[k - 1] + d[k]) / 2))
+  const m: number[] = p.map((_, k) => {
+    if (k === 0) return d[0]
+    if (k === n - 1) return d[n - 2]
+    return d[k - 1] * d[k] <= 0 ? 0 : (d[k - 1] + d[k]) / 2
+  })
   for (let k = 0; k < n - 1; k++) {
     if (d[k] === 0) {
       m[k] = 0
