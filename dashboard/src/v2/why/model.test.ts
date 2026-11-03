@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Result } from '../../lib/api'
-import { explain } from './model'
+import { explain, movers } from './model'
 
 const result = (visitors: number, referrer: [string, number][], country: [string, number][] = []): Result =>
   ({
@@ -35,5 +35,20 @@ describe('explain', () => {
     const long = Array.from({ length: 10 }, (_, i): [string, number] => [`s${i}`, 50 - i])
     const w = explain(result(400, [['New', 60], ...long]), result(400, long), 'visitors')
     expect(w.causes.find((c) => c.value === 'New')?.was ?? 41).toBe(41)
+  })
+})
+
+describe('movers', () => {
+  it('ranks the movers of every table together, by size', () => {
+    const list = movers(result(300, [['Google', 100], ['Direct', 200]], [['US', 50], ['DE', 250]]), result(500, [['Google', 300], ['Direct', 200]], [['US', 250], ['DE', 250]]), 'visitors')
+    expect(list.map((c) => `${c.dim}:${c.value}:${c.diff}`)).toEqual(['referrer:Google:-200', 'country:US:-200'])
+  })
+  it('leaves out wobble and caps the list at eight', () => {
+    expect(movers(result(500, [['Google', 500]]), result(505, [['Google', 505]]), 'visitors')).toEqual([])
+    const many = (n: number) => Array.from({ length: 12 }, (_, i): [string, number] => [`s${i}`, n * (i + 1)])
+    expect(movers(result(1000, many(10)), result(2000, many(30)), 'visitors')).toHaveLength(8)
+  })
+  it('says nothing about too little', () => {
+    expect(movers(result(5, [['Google', 5]]), result(9, [['Google', 9]]), 'visitors')).toEqual([])
   })
 })
