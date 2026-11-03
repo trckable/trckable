@@ -93,59 +93,6 @@
   }
 }
 
-/* Tech's three leaders: a card each, and a tap on one filters by it. */
-.mk .kc.xtop {
-  font: inherit;
-  color: var(--mk-text);
-  text-align: left;
-  cursor: pointer;
-}
-.mk .kc.xtop:hover {
-  background: var(--mk-hover);
-}
-.mk .kc.xtop .kv {
-  display: flex;
-  align-items: baseline;
-  gap: var(--mk-s2);
-  flex-wrap: wrap;
-  min-width: 0;
-  white-space: normal;
-  overflow: visible;
-  overflow-wrap: anywhere;
-}
-.mk .kc.xtop .kv small {
-  font-size: 13px;
-  color: var(--mk-muted);
-}
-/* Compact: a small label, the name at reading size and the share beside it, no tall empty middle. */
-.mk .xkw .kcs.xtops .kc.xtop {
-  min-height: 0;
-  gap: 4px;
-  padding: var(--mk-s3) var(--mk-s4);
-}
-.mk .xkw .kcs.xtops .kc.xtop .kt {
-  margin: 0;
-  min-height: 0;
-  height: auto;
-  gap: 6px;
-  align-items: center;
-}
-.mk .xkw .kcs.xtops .kc.xtop .ki {
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-}
-.mk .xkw .kcs.xtops .kc.xtop .kv {
-  margin: 0;
-  font-size: 22px;
-  line-height: 1.2;
-}
-.mk .xkw .kcs.xtops .kc.xtop .kd {
-  margin: 0;
-  padding: 0;
-  font-size: 12px;
-}
-
 /* Search: clicks and impressions by day. */
 .mk .xschart {
   margin: var(--mk-s3) 0;
@@ -200,17 +147,6 @@
   margin-top: var(--mk-s1);
   font-size: 11px;
   color: var(--mk-faint);
-}
-
-/* On a phone the first leader takes the row and the other two share the one under it. */
-@media (--sm-down) {
-  .mk .xkw .xtops {
-    --fit-basis: calc((100% - var(--fit-gap)) / 2 - 0.5px);
-  }
-  .mk .xkw .xtops > :first-child {
-    flex-basis: 100%;
-    grid-column: 1 / -1;
-  }
 }
 
 /* Paths: the busiest routes as soft bands through three pages, then the list of routes. */

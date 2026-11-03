@@ -57,10 +57,10 @@ async function squeezed(page: Page): Promise<string[]> {
     const probe = document.createElement('span')
     probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap'
     document.body.appendChild(probe)
-    for (const card of document.querySelectorAll<HTMLElement>('#xp .kc')) {
+    for (const card of document.querySelectorAll<HTMLElement>('#xp .sum')) {
       if (card.scrollWidth > card.clientWidth + 1) out.push(`card overflows: ${card.textContent}`)
-      for (const v of card.querySelectorAll<HTMLElement>('.kv')) if (v.scrollWidth > v.clientWidth + 1) out.push(`number clipped: ${v.textContent}`)
-      for (const l of card.querySelectorAll<HTMLElement>('.kl')) {
+      for (const v of card.querySelectorAll<HTMLElement>('.sum-v')) if (v.scrollWidth > v.clientWidth + 1) out.push(`number clipped: ${v.textContent}`)
+      for (const l of card.querySelectorAll<HTMLElement>('.sum-l')) {
         const style = getComputedStyle(l)
         probe.style.font = style.font
         const longest = Math.max(0, ...(l.textContent ?? '').split(/\s+/).map((w) => ((probe.textContent = w), probe.getBoundingClientRect().width)))
@@ -93,11 +93,11 @@ for (const [width, height] of [
     }
     await page.locator('#xp .xdrawer-open').click()
     await items.nth(1).click() // Overview: the default section, What changed, has no cards
-    const cards = page.locator('#xp .kcs .kc')
+    const cards = page.locator('#xp .sumrow .sum')
     await expect(cards).toHaveCount(4)
     const tops = await cards.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)))
-    // The page has no rail beside the cards, so at 900 four fit across (squeezed() above says none is cramped); at 820 they stay two by two.
-    expect(new Set(tops).size, width < 900 ? 'two rows of two, not one row of four' : 'one row of four').toBe(width < 900 ? 2 : 1)
+    // The compact cards are narrow enough for four across from 768 px (squeezed() above says none is cramped).
+    expect(new Set(tops).size, 'one row of four').toBe(1)
   })
 }
 
@@ -112,9 +112,9 @@ for (const [width, height, rows] of [
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
     await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&x=overview&v=`)
     await expect(page.locator('#xp.on')).toBeVisible()
-    const cards = page.locator('#xp .kcs .kc')
+    const cards = page.locator('#xp .sumrow .sum')
     await expect(cards).toHaveCount(4)
-    const at = await cards.evaluateAll((els) => els.map((e) => ({ top: Math.round(e.getBoundingClientRect().top), value: Math.round((e.querySelector('.kv') as HTMLElement).getBoundingClientRect().top - e.getBoundingClientRect().top) })))
+    const at = await cards.evaluateAll((els) => els.map((e) => ({ top: Math.round(e.getBoundingClientRect().top), value: Math.round((e.querySelector('.sum-v') as HTMLElement).getBoundingClientRect().top - e.getBoundingClientRect().top) })))
     expect(new Set(at.map((c) => c.top)).size, 'rows').toBe(rows)
     expect(new Set(at.map((c) => c.value)).size, 'the number sits at one height in every card').toBe(1)
     expect(await squeezed(page)).toEqual([])

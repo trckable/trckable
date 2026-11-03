@@ -1,7 +1,6 @@
-// The figures of a page that is not Live or the Briefing, in one quiet row: a small name (with its explanation behind an
-// (i) when it has one) over the number, set as the dashboard's numbers are.
+// The figures of a page that is not Live or the Briefing: the one summary card, in a row.
 import type { ReactNode } from 'react'
-import './pageStats.css'
+import { SummaryCards } from './SummaryCards'
 
 export interface PageStat {
   label: ReactNode
@@ -9,14 +8,5 @@ export interface PageStat {
 }
 
 export function PageStats({ items }: { items: PageStat[] }) {
-  return (
-    <dl className="ps-stats">
-      {items.map((s, i) => (
-        <div key={i}>
-          <dt>{s.label}</dt>
-          <dd>{s.value}</dd>
-        </div>
-      ))}
-    </dl>
-  )
+  return <SummaryCards items={items.map((s, i) => ({ key: String(i), label: s.label, val: s.value }))} />
 }

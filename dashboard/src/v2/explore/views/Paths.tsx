@@ -6,7 +6,7 @@ import { midTruncate } from '../../../features/signals/surge'
 import { fmtFixed, fmtInt, fmtPct } from '../../../lib/format'
 import { EmptyTab } from './PeopleTable'
 import { XEmpty } from '../../ui/XBits'
-import { XIco } from '../../ui/XIcons'
+import { SummaryCards } from '../../ui/SummaryCards'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
 import { keyOf, layoutFlow, NODE_WIDTH, STEPS } from '../data/paths'
@@ -28,7 +28,6 @@ const state = (sel: string | null, key: string): string => {
 const name = (p: string): string => (p === '/' ? copy.homePage : p)
 
 interface Tile {
-  icon: string
   label: string
   val: string
   /** The value in full, when it is shortened. */
@@ -37,36 +36,19 @@ interface Tile {
 }
 
 function tiles(d: Paths): Tile[] {
-  const page = (icon: string, label: string, p: Paths['first']): Tile =>
-    p ? { icon, label, val: midTruncate(name(p.path), 22), hint: name(p.path), detail: copy.pathsVisitsOf(fmtInt(p.visits)) } : { icon, label, val: '–', detail: '' }
+  const page = (label: string, p: Paths['first']): Tile =>
+    p ? { label, val: midTruncate(name(p.path), 22), hint: name(p.path), detail: copy.pathsVisitsOf(fmtInt(p.visits)) } : { label, val: '–', detail: '' }
   return [
-    { icon: 'people', label: copy.pathsVisits, val: fmtInt(d.visits), detail: '' },
-    { icon: 'pages', label: copy.pathsPerVisit, val: fmtFixed(d.pages, 1), detail: '' },
-    page('click', copy.pathsFirst, d.first),
-    page('leave', copy.pathsLast, d.last),
+    { label: copy.pathsVisits, val: fmtInt(d.visits), detail: '' },
+    { label: copy.pathsPerVisit, val: fmtFixed(d.pages, 1), detail: '' },
+    page(copy.pathsFirst, d.first),
+    page(copy.pathsLast, d.last),
   ]
 }
 
-/** The same compact tiles as Tech's leaders (TopTiles), with nothing to tap. */
-function Tiles({ d }: { d: Paths }) {
-  return (
-    <div className="xkw">
-      <div className="kcs xk xtops">
-        {tiles(d).map((t) => (
-          <div key={t.label} className="kc ns xtop">
-            <div className="kt">
-              <span className="ki">
-                <XIco name={t.icon} className="" style={{ color: 'var(--mk-lime)' }} />
-              </span>
-              <span className="kl">{t.label}</span>
-            </div>
-            <div className="kv" title={t.hint}>{t.val}</div>
-            <div className="kd">{t.detail}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+/** The four numbers, the one summary card, as a block above the section's card. */
+export function PathsTiles({ d }: { d: Paths }) {
+  return <SummaryCards items={tiles(d).map((t) => ({ key: t.label, label: t.label, val: t.val, title: t.hint, sub: t.detail }))} />
 }
 
 function Flow({ d, sel, onPick }: { d: Paths; sel: string | null; onPick: (r: PathRoute) => void }) {
@@ -140,7 +122,6 @@ export function PathsView({ x, d }: { x: XCtx; d: Paths }) {
   const goals = d.goals && d.routes.some((r) => r.converted > 0)
   return (
     <>
-      <Tiles d={d} />
       {d.single > 0 && <p className="xpf-one">{copy.pathsOnePage(fmtPct(d.single / (d.visits || 1)))}</p>}
       <Flow d={d} sel={sel} onPick={pick} />
       <h4 className="xpl-h">{copy.pathsTop}</h4>

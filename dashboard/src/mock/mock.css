@@ -709,29 +709,6 @@ html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-
 .mk .xp.full .xs{max-width:none}
 .mk .xp.full .xnote{max-width:60em}
 }
-.mk .kcs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--mk-s4)}
-.mk .kc{position:relative;background:var(--mk-card);border:1px solid var(--mk-line);border-radius:var(--mk-r);padding:var(--mk-s4) var(--mk-s4) 0;overflow:hidden;display:flex;flex-direction:column;min-width:0}
-.mk .kc .kt{display:flex;align-items:center;gap:var(--mk-s2);min-height:28px;min-width:0}
-.mk .kc .ki{width:28px;height:28px;border-radius:8px;background:var(--mk-band);display:grid;place-items:center;flex:none}
-.mk .kc .ki svg{width:16px;height:16px}
-.mk .kc .kl{font-size:13px;color:var(--mk-muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.mk .kc .kn{margin-left:auto;font-size:12px;color:var(--mk-muted);white-space:nowrap;flex:none}
-.mk .kc .kn.up{color:var(--mk-lime)}
-.mk .kc .kn.dn{color:var(--mk-red)}
-.mk .kc .kv{font-size:32px;font-weight:700;letter-spacing:-.02em;margin:var(--mk-s3) 0 var(--mk-s2);font-variant-numeric:tabular-nums;color:var(--mk-text);line-height:1.1}
-.mk .kc .kv small{font-size:13px;color:var(--mk-muted);font-weight:500;margin-left:6px;letter-spacing:0}
-.mk .kc .ksp{display:block;width:calc(100% + var(--mk-s4) * 2);margin:auto calc(var(--mk-s4) * -1) 0;height:64px;flex:none}
-.mk .kcs.xk{margin:var(--mk-s3) 0}
-@container (--pane-max-600){
-.mk .kcs{grid-template-columns:1fr 1fr;gap:var(--mk-s3)}
-.mk .kc{padding:var(--mk-s3) var(--mk-s3) 0;border-radius:16px}
-.mk .kc .kt{flex-wrap:wrap;row-gap:2px}
-.mk .kc .ki{width:24px;height:24px}
-.mk .kc .kn{margin-left:0;flex-basis:100%;order:3}
-.mk .kc .kv{font-size:24px;margin:var(--mk-s2) 0}
-.mk .kc .ksp{height:40px;width:calc(100% + var(--mk-s3) * 2);margin:auto calc(var(--mk-s3) * -1) 0}
-
-}
 .mk .hero{padding-bottom:var(--mk-s4)}
 .mk .lcard .pb svg{display:block;width:100%;height:56px;margin-top:var(--mk-s2)}
 @media (--xs){
@@ -938,21 +915,14 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .sk-ring{width:64px;height:64px;border-radius:50%;margin:0}
 .mk .sk-c{width:150px;height:40px;margin:0}
 .mk .sk-chart{height:180px;margin:8px 0 0}
-.mk .sk-kc{height:177px}
-.mk .sk-kc .skl{flex:none}
-.mk .sk-sp{width:calc(100% + var(--mk-s4) * 2);height:64px;margin:auto calc(var(--mk-s4) * -1) 0;border-radius:0}
 @media (--xs){
 .mk .sk-hl{height:121px}
 .mk .sk-ring{width:44px;height:44px}
 .mk .sk-c{width:62px;height:14px}
 .mk .sk-chart{height:152px;margin:12px 0 0}
-.mk .sk-kc{height:155px}
-.mk .sk-sp{height:40px}
 }
 .mk .mk-toast{opacity:0;visibility:hidden;transition:transform .45s cubic-bezier(.2,1.3,.4,1),opacity .2s,visibility 0s .45s}
 .mk .mk-toast.on{opacity:1;visibility:visible;transition-delay:0s}
-@media (--xs){
-}
 .mk .cd{position:fixed;z-index:var(--z-drawer);left:50%;top:12vh;width:560px;max-width:calc(100vw - 32px);margin-left:-280px;max-height:76vh;background:var(--mk-card);border:1px solid var(--mk-line);border-radius:20px;display:none;flex-direction:column;box-shadow:0 30px 80px var(--mk-shc2)}
 .mk .cd.on{display:flex}
 /* A sheet always sits above the Explore panel (71) and its dimming (70): it is the thing in front, with its own dimming
@@ -1065,7 +1035,6 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .lon .lv:nth-child(n+8){display:none}
 .mk .lon{margin-top:var(--mk-s4)}
 }
-.mk .kc[data-k]{scroll-margin:96px}
 .mk .rpb{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 var(--mk-s3);margin-top:var(--mk-s3)}
 .mk .rpb svg{width:11px;height:11px}
 .mk .rpl{display:inline-block;text-align:center}
@@ -1143,14 +1112,6 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .xm.on::before{content:"";position:fixed;inset:0;background:var(--mk-scrim2);z-index:-1}
 .mk .xmi{min-height:48px}
 }
-@media (--xs){
-.mk .kcs.k3 .kc .ki{display:none}
-}
-@media (--xs){
-.mk .kc.ns .kt{flex-wrap:wrap;row-gap:2px}
-.mk .kc.ns .kn{margin-left:0;flex-basis:100%;order:3}
-.mk .kc.ns .kl{flex:1}
-}
 .mk .xp .mfr>span{width:128px}
 @media (--xs){
 .mk .xp .mfr>span{width:96px}
@@ -1184,10 +1145,6 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .xt.xc .xrw .mk-n{white-space:nowrap}
 .mk .xt.xc .xrw .mk-n .vg{margin-right:6px;vertical-align:1px}
 .mk .xt.xc .xrw .mk-n:last-child{color:var(--mk-text)}
-.mk .kc.ns{padding-bottom:var(--mk-s4)}
-.mk .kc.ns .kd{font-size:12px;color:var(--mk-muted);line-height:1.4}
-.mk .kc.ns .kv{margin-bottom:var(--mk-s1)}
-.mk .kcs.xk.k3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .mk .xedc{border:1px solid var(--mk-line);border-radius:var(--mk-r);background:var(--mk-card);padding:var(--mk-s3);display:flex;flex-direction:column;gap:var(--mk-s3);margin-bottom:var(--mk-s3)}
 .mk .xedr{display:flex;gap:var(--mk-s2);align-items:center;flex-wrap:wrap}
 .mk .xedr select{flex:1;min-width:160px}
@@ -1203,9 +1160,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .xri{position:relative}
 .mk .xri.on::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:2px;border-radius:2px;background:var(--mk-lime)}
 .mk .xsk{display:flex;flex-direction:column;gap:var(--mk-s2);margin-top:var(--mk-s3)}
-.mk .xsk .kcs{margin:0 0 var(--mk-s3)}
 .mk .sk{display:block;border-radius:10px;background:linear-gradient(90deg,var(--mk-sk3) 25%,var(--mk-sel) 50%,var(--mk-sk3) 75%);background-size:300% 100%;animation:mk-skm 1.2s linear infinite}
-.mk .sk.kcsk{height:132px;border-radius:var(--mk-r)}
 .mk .sk.sh{height:14px;width:30%;margin-bottom:var(--mk-s2)}
 .mk .sk.rw{height:36px}
 @keyframes mk-skm{from{background-position:100% 0}to{background-position:0 0}}
@@ -1230,9 +1185,6 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .xgrab{display:block;width:36px;height:4px;border-radius:2px;background:var(--mk-grab);margin:0 auto var(--mk-s2)}
 .mk .xmx{width:44px;height:44px}
 .mk .xmr{min-height:48px}
-.mk .kcs.xk.k3{gap:var(--mk-s2)}
-.mk .kcs.xk.k3 .kc{padding:var(--mk-s3) var(--mk-s3) var(--mk-s3)}
-.mk .xk .kc .kv{font-size:22px}
 }
 /* Round 11: the phone hero and the chart header, as the walkthrough has them. */
 .mk .whyb{display:none}
@@ -1621,10 +1573,6 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .app:has(.mk .tabbar){padding-bottom:calc(96px + env(safe-area-inset-bottom))}
 }
 /* Under 1000 px a card's note sits on a line of its own, so its label keeps the width. */
-@container (--pane-max-1000){
-.mk .kc .kt{flex-wrap:wrap;row-gap:2px}
-.mk .kc .kn{margin-left:0;flex-basis:100%;order:3}
-}
 /* The site menu: one line a site (a quiet one is grey, only a real problem is coloured), a finder with no border, All sites' total in line with the sites' numbers. */
 .mk .mk-dot.idle{background:var(--mk-faint)}
 .mk .mi .now.unverified,.mk .mi .now.state-word{font-size:12px;color:var(--mk-faint);white-space:nowrap}

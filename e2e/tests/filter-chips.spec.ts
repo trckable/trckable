@@ -54,7 +54,7 @@ async function open(page: Page, width: number) {
 
 const panel = (page: Page) => page.locator('#xp.on')
 const chips = (page: Page) => page.locator('#xp .xchip2')
-const visitors = (page: Page) => page.locator('#xp .kcs .kc').first().innerText()
+const visitors = (page: Page) => page.locator('#xp .sumrow .sum').first().innerText()
 
 for (const width of [1440, 390]) {
   test.describe(`at ${width}`, () => {
@@ -62,7 +62,7 @@ for (const width of [1440, 390]) {
       await open(page, width)
       await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=&x=overview`)
       await expect(panel(page)).toBeVisible()
-      await expect(page.locator('#xp .kcs .kc').first()).toBeVisible()
+      await expect(page.locator('#xp .sumrow .sum').first()).toBeVisible()
       const all = await visitors(page)
       await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=&x=overview&f=page%3A%2Fpricing`)
       await expect(chips(page)).toHaveCount(1)
