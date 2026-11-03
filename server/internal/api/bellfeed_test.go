@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -133,6 +134,9 @@ func TestBellFeedSources(t *testing.T) {
 	}
 	if goals == nil || goals["count"] != 3.0 {
 		t.Fatalf("three goals in an hour are one row: %v", goals)
+	}
+	if goals["visitor"] != strconv.FormatUint(902, 36) {
+		t.Fatalf("a goal row names the visitor who reached it last: %v", goals)
 	}
 	for _, r := range rows {
 		if r["kind"] == "down" && r["what"] == "quiet" {

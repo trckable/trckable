@@ -56,6 +56,11 @@ type bellRow struct {
 	Text     string  `json:"text,omitempty"`   // mention: its title; answer: the question; goal: the goal's name
 	Engine   string  `json:"engine,omitempty"`
 	First    bool    `json:"first,omitempty"`
+	// Goal and signup: the visitor who reached it last (base 36, as the journey takes it) and the second they did.
+	Visitor string `json:"visitor,omitempty"`
+	Seen    int64  `json:"seen,omitempty"`
+	// Mention: the post's own address.
+	Link string `json:"link,omitempty"`
 	// Milestone: the row as the milestone page tells it.
 	Milestone *sqlite.Milestone `json:"milestone,omitempty"`
 }
@@ -280,7 +285,7 @@ func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from in
 			ok = false
 		} else {
 			for _, m := range list {
-				out = append(out, bellRow{ID: "mention:" + strconv.FormatInt(m.ID, 10), Kind: "mention", Site: s.ID, At: m.PostedAt, Source: m.Source, Host: m.Host, Text: m.Title})
+				out = append(out, bellRow{ID: "mention:" + strconv.FormatInt(m.ID, 10), Kind: "mention", Site: s.ID, At: m.PostedAt, Source: m.Source, Host: m.Host, Text: m.Title, Link: m.URL})
 			}
 		}
 	}
@@ -370,6 +375,9 @@ func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from in
 					order = append(order, id)
 				}
 				row.Count += g.Count
+				if g.Last >= row.Seen && g.Visitor != 0 {
+					row.Seen, row.Visitor = g.Last, strconv.FormatUint(g.Visitor, 36)
+				}
 				row.At = max(row.At, at)
 			}
 			for _, id := range order {
