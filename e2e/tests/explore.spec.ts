@@ -124,7 +124,7 @@ const HOMES: Record<string, string[]> = {
   overview: ['overtime', 'hours'],
   pages: ['exits', 'groups', 'sells'],
   sources: ['earners'],
-  places: ['regions', 'cities', 'languages', 'revmap', 'people'],
+  places: ['places', 'revmap', 'people'],
   tech: ['bversion', 'screens'],
   results: ['retention', 'vsale', 'toconvert', 'flow'],
   sales: ['payments', 'customers'],

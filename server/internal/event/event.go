@@ -72,6 +72,10 @@ type Event struct {
 	// BrowserVersion is the browser and its major version ("Chrome 129").
 	BrowserVersion string `json:"bv,omitempty"`
 
+	// Timezone is the visitor's IANA time zone ("Europe/Berlin"). Never kept
+	// where the site drops region and city, or keeps no cookie.
+	Timezone string `json:"tz,omitempty"`
+
 	Goal  string            `json:"g,omitempty"`
 	Props map[string]string `json:"pr,omitempty"`
 

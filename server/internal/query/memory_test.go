@@ -23,7 +23,7 @@ func TestReportFitsSmallMemoryLimit(t *testing.T) {
 		SELECT 's1', i, i, TIMESTAMP '2026-09-01' + to_seconds(i % 2500000), TIMESTAMP '2026-09-01' + to_seconds(i % 2500000 + 60),
 		       TIMESTAMP '2026-01-01', 'Search', 'ref' || (i % 40000) || '.example.com', '/p/' || (i % 90000), '/x/' || (i % 90000),
 		       'c' || (i % 500), 's' || (i % 300), 'm' || (i % 20), 'C' || (i % 200), 'R' || (i % 3000), 'City' || (i % 30000),
-		       'Desktop', 'B' || (i % 40), 'OS' || (i % 30), 'l' || (i % 80), 3, 0, 1000, 60.0, 'v' || (i % 300), (300 + i % 2000)::USMALLINT
+		       'Desktop', 'B' || (i % 40), 'OS' || (i % 30), 'l' || (i % 80), 3, 0, 1000, 60.0, 'v' || (i % 300), (300 + i % 2000)::USMALLINT, 'Zone/' || (i % 40)
 		FROM range(600000) t(i)`); err != nil {
 		t.Fatal(err)
 	}

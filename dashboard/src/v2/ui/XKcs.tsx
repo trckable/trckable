@@ -2,6 +2,7 @@
 // (a number, its tag and what is usual) for search and speed.
 import { fmtPct } from '../../lib/format'
 import { copy } from '../explore/copy'
+import { Flag } from './Flag'
 import { Spark } from './KpiCard'
 import { RollText } from './RollText'
 import { XIco } from './XIcons'
@@ -49,7 +50,7 @@ export function XKcsPlain({ items, three }: { items: Xkc[]; three?: boolean }) {
     <div className="xkw">
     <div className={`kcs xk${three ? ' k3' : ''}`}>
       {items.map((k) => (
-        <div key={k.label} className={`kc ns ${k.tone === 'dn' ? 'dn' : ''}`}>
+        <div key={k.label} className={`kc ns ${k.tone === 'dn' ? 'dn' : ''}`} data-flag={k.flag ? '1' : undefined}>
           <div className="kt">
             <span className="ki">
               <XIco name={k.icon} className="" style={{ color: k.tone === 'dn' ? 'var(--mk-red)' : 'var(--mk-lime)' }} />
@@ -58,6 +59,7 @@ export function XKcsPlain({ items, three }: { items: Xkc[]; three?: boolean }) {
             <span className={`kn ${k.tone}`}>{k.tag}</span>
           </div>
           <div className="kv">
+            {k.flag && <Flag code={k.flag} width={26} />}
             <RollText text={k.val} />
             {k.unit && <small>{k.unit}</small>}
           </div>

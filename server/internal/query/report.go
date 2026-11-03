@@ -180,6 +180,7 @@ var sessionDims = map[string]string{
 	"browser":    "browser",
 	"os":         "os",
 	"language":   "language",
+	"timezone":   "timezone",
 
 	// A version only newer visits carry: the rest are Unknown, not missing.
 	"browser_version": "coalesce(browser_version, 'Unknown')",
@@ -202,7 +203,7 @@ var DefaultDims = []string{"channel", "referrer", "campaign", "entry_page", "cou
 // DeepDims are the ones only Full mode shows, and the ones its filter menu
 // offers. They ride along in the same GROUPING SETS scan, so asking for them
 // costs one wider scan rather than six more queries — but Core does not ask.
-var DeepDims = []string{"exit_page", "region", "city", "source", "medium", "language", "browser_version", "screen"}
+var DeepDims = []string{"exit_page", "region", "city", "source", "medium", "language", "timezone", "browser_version", "screen"}
 
 // dimsFor is the breakdowns one report computes.
 func dimsFor(deep bool) []string {

@@ -41,6 +41,7 @@ const CFG: Partial<Record<Tab, Cfg>> = {
   bversion: { head: copy.heads.version },
   screens: { head: copy.heads.screen },
   languages: { head: copy.heads.language },
+  timezones: { head: copy.heads.timezone },
 }
 
 function Note({ tab, x }: { tab: Tab; x: XCtx }) {

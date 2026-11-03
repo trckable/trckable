@@ -1,7 +1,7 @@
 // The report's answer, said as Explore's overview and tables. Pure: mapReport.test.ts.
 import type { KPIs, Report, Result, Row as ApiRow, ScrollReport } from '../../../lib/api'
 import { fmtDay, type ISODate } from '../../../lib/dates'
-import { countryName, fmtDuration, fmtFixed, fmtInt, fmtPct } from '../../../lib/format'
+import { countryName, fmtDuration, fmtFixed, fmtInt, fmtPct, languageName, zoneName } from '../../../lib/format'
 import { plainSpan } from '../../../lib/plainSpan'
 import { channelLabel } from '../../../lib/palette'
 import { baseEnough, tooFew } from '../../../lib/thin'
@@ -131,7 +131,8 @@ const TABLES: Partial<Record<Tab, TableCfg>> = {
   medium: { key: 'medium', dim: 'medium', name: (v) => v },
   bversion: { key: 'browser_version', dim: 'browser_version', name: (v) => v },
   screens: { key: 'screen', dim: 'screen', name: (v) => v },
-  languages: { key: 'language', dim: 'language', name: (v) => v },
+  languages: { key: 'language', dim: 'language', name: languageName },
+  timezones: { key: 'timezone', dim: 'timezone', name: zoneName },
 }
 
 /** A visit has one entry page but many pages and sections, and a sale belongs to the visit: nothing to attribute to those. */

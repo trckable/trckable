@@ -232,12 +232,12 @@ func TestAbsurdAgeIsRefused(t *testing.T) {
 // geoSpy records which IP was used for the location lookup.
 func geoSpy(h *Handler) *string {
 	var used string
-	h.Geo = func(ip string) (string, string, string) {
+	h.Geo = func(ip string) (string, string, string, string) {
 		used = ip
 		if ip == "80.78.64.1" {
-			return "AL", "Tirana", "Tirana"
+			return "AL", "Tirana", "Tirana", ""
 		}
-		return "US", "", ""
+		return "US", "", "", ""
 	}
 	return &used
 }

@@ -47,7 +47,9 @@ test.beforeAll(async () => {
 
 /** The table card open now (a table is a card of its section's page, filled in when it is scrolled to). */
 let cur = ''
-const card = (page: Page) => page.locator(`#xp [data-xcard="${cur}"]`)
+/** The places tables are one card, with a switch: the address names the one it opens on. */
+const PLACES = ['countries', 'regions', 'cities', 'timezones', 'languages']
+const card = (page: Page) => page.locator(`#xp [data-xcard="${PLACES.includes(cur) ? 'places' : cur}"]`)
 
 /** Opens one table of Explore over the fixture's last seven days (the period before it is the 23 people of the fixture). */
 async function open(page: Page, tab: string) {

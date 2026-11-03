@@ -269,6 +269,11 @@ var migrations = []string{
 	// apart from pages that were broken (404, 5xx), which stay in errors. Rows
 	// recorded before this release read zero here.
 	`ALTER TABLE crawler_hits ADD COLUMN blocked UBIGINT DEFAULT 0;`,
+	// 11: the visitor's time zone ("Europe/Berlin"), kept only where the site
+	// keeps region and city. Null on every row recorded before this release,
+	// which the reports call Unknown rather than guess.
+	`ALTER TABLE events ADD COLUMN timezone VARCHAR;
+	ALTER TABLE sessions ADD COLUMN timezone VARCHAR;`,
 }
 
 // tableSince is the migration that created each table added after the first

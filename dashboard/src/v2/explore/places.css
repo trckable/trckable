@@ -1,0 +1,74 @@
+/* The Places section: the map under the four numbers, and the switch over its tables. */
+.mk .xmap {
+  margin: 4px 0 14px;
+}
+.mk .xmap svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 320px;
+}
+.mk .kc .kv .cflag {
+  margin-right: 10px;
+  flex: none;
+}
+.mk .xmap path {
+  stroke: var(--mk-card);
+  stroke-width: 0.5;
+  transition: opacity 0.15s;
+}
+.mk .xmap svg:hover path:not(:hover) {
+  opacity: 0.6;
+}
+.mk .xmap path.has {
+  cursor: pointer;
+}
+.mk .xmap-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 22px;
+  font-size: 12.5px;
+  color: var(--mk-muted);
+}
+.mk .xmap-foot b {
+  color: var(--mk-text);
+  font-weight: 600;
+}
+.mk .xmap-scale {
+  display: flex;
+  gap: 2px;
+  flex: none;
+}
+.mk .xmap-scale i {
+  width: 18px;
+  height: 8px;
+  border-radius: 2px;
+}
+.mk .xplaces-tabs {
+  overflow-x: auto;
+  margin: 0 0 10px;
+  scrollbar-width: none;
+}
+.mk .xplaces-tabs::-webkit-scrollbar {
+  display: none;
+}
+.mk .xplaces-tabs .mk-seg {
+  width: max-content;
+  min-width: 100%;
+}
+/* The top country's name is words, not a figure: it takes a smaller size so a long name fits the tile. */
+.mk .kcs.xk:not(.k3) .kc[data-flag] .kv {
+  font-size: clamp(16px, 4.4cqi, 24px);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  white-space: normal;
+  line-height: 1.15;
+}
+.mk .xplaces-why {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}

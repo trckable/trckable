@@ -105,6 +105,29 @@ export function countryName(code: string) {
   }
 }
 
+const languageNames = (() => {
+  try {
+    return new Intl.DisplayNames([tag ?? 'en'], { type: 'language' })
+  } catch {
+    return null
+  }
+})()
+
+/** A language's name in the page's own language ("de" is German); the code itself when the browser does not know it. */
+export function languageName(code: string) {
+  if (!code) return 'Unknown'
+  try {
+    return languageNames?.of(code) ?? code
+  } catch {
+    return code
+  }
+}
+
+/** A time zone as a person says it: "Europe/Berlin" without the underscores of "America/New_York". */
+export function zoneName(zone: string) {
+  return zone.replace(/_/g, ' ')
+}
+
 /** How many decimals a currency has (2 for dollars, 0 for yen, 3 for dinars): what a typed amount is checked against. */
 export function currencyDigits(currency: string): number {
   try {

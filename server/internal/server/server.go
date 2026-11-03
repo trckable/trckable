@@ -152,9 +152,9 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 		Labels:   ctl,
 		ClientIP: ipResolver(cfg),
 		Now:      time.Now,
-		Geo: func(ip string) (string, string, string) {
+		Geo: func(ip string) (string, string, string, string) {
 			l := s.geo.Lookup(ip)
-			return l.Country, l.Region, l.City
+			return l.Country, l.Region, l.City, l.Timezone
 		},
 		Hosting: s.hosting,
 		Module: func(site, id string) bool {

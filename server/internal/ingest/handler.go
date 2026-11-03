@@ -101,7 +101,7 @@ func (s Site) Skip(path string) bool {
 func (s Site) SkipIP(ip string) bool { return ipfilter.Match(s.ExcludeIPs, ip) }
 
 // Geo resolves a client IP to a location (the IP is not kept).
-type Geo func(ip string) (country, region, city string)
+type Geo func(ip string) (country, region, city, zone string)
 
 // Seen records that a site is alive. Optional: without it the dashboard just
 // cannot say "live" next to a site's name.
@@ -529,9 +529,12 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 	}
 
 	if h.Geo != nil {
-		e.Country, e.Region, e.City = h.Geo(ip)
+		var zone string
+		e.Country, e.Region, e.City, zone = h.Geo(ip)
 		if site.NoCity { // "the country is always recorded; region and city are yours"
 			e.Region, e.City = "", ""
+		} else if !site.ConsentFree {
+			e.Timezone = normZone(zone)
 		}
 	}
 	if e.Country == "" && !proxied { // trusted edge header (Cloudflare) as a fallback
@@ -635,6 +638,28 @@ func parseID(s string) uint64 {
 		return 0
 	}
 	return v
+}
+
+// normZone keeps an IANA zone name ("Europe/Berlin", "America/Argentina/Buenos_Aires")
+// and drops anything else the browser or a script might send.
+func normZone(s string) string {
+	if s == "" || len(s) > 40 {
+		return ""
+	}
+	slash := false
+	for _, c := range s {
+		switch {
+		case c == '/':
+			slash = true
+		case c >= 'a' && c <= 'z', c >= 'A' && c <= 'Z', c >= '0' && c <= '9', c == '_', c == '-', c == '+':
+		default:
+			return ""
+		}
+	}
+	if !slash && s != "UTC" {
+		return ""
+	}
+	return s
 }
 
 func normLang(s string) string {

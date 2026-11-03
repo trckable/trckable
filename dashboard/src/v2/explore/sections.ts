@@ -19,7 +19,7 @@ const EVERY: Record<Section, Tab[]> = {
   pages: ['pages', 'exits', 'groups', 'sells'],
   sources: ['sources', 'quality', 'earners', 'referrers', 'utm'],
   search: ['search'],
-  places: ['countries', 'regions', 'cities', 'languages', 'revmap', 'people'],
+  places: ['countries', 'regions', 'cities', 'timezones', 'languages', 'revmap', 'people'],
   tech: ['devices', 'browsers', 'bversion', 'screens'],
   results: ['funnels', 'retention', 'vsale', 'toconvert', 'flow'],
   sales: ['sales', 'payments', 'customers'],
