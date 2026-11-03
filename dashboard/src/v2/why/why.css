@@ -637,3 +637,9 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .mk .xdrawer .xrail::after{display:none}
 /* The bar centres its name itself (flex); the list rule's top/transform would push it down. */
 .mk .xcards .mk-bar>span{top:auto;transform:none}
+/* Narrow cards: the change pill sits under the label, and a long label wraps instead of running out of the card. */
+@media (--sm-down){
+  .mk .xcards .xkw .kc .kt{flex-wrap:wrap}
+  .mk .xcards .xkw .kc .kl{flex:1 1 calc(100% - 44px);white-space:normal}
+  .mk .xcards .xkw .kc .kn{margin-left:32px}
+}

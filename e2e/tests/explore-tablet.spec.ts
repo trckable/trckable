@@ -92,7 +92,7 @@ for (const [width, height] of [
       expect(await squeezed(page), `section ${i}`).toEqual([])
     }
     await page.locator('#xp .xdrawer-open').click()
-    await items.first().click()
+    await items.nth(1).click() // Overview: the default section, What changed, has no cards
     const cards = page.locator('#xp .kcs .kc')
     await expect(cards).toHaveCount(4)
     const tops = await cards.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)))
@@ -110,7 +110,7 @@ for (const [width, height, rows] of [
   test(`Overview cards at ${width} px: ${rows} row${rows > 1 ? 's' : ''}, numbers level and whole`, async ({ page }) => {
     await page.setViewportSize({ width, height })
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-    await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
+    await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&x=overview&v=`)
     await expect(page.locator('#xp.on')).toBeVisible()
     const cards = page.locator('#xp .kcs .kc')
     await expect(cards).toHaveCount(4)
