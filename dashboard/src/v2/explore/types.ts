@@ -1,4 +1,4 @@
-import type { QualityRow } from './data/quality'
+import type { Main, QualityRow } from './data/quality'
 import type { Compare } from '../briefing/compare'
 import type { Filter } from '../../lib/api'
 
@@ -298,6 +298,10 @@ export interface SavedView {
 
 export interface Quality {
   say: string
+  /** The rate the rows are ranked and drawn by. */
+  main: Main
   goal: string | null
+  /** Payments are connected: the share who paid has a column. */
+  paid: boolean
   rows: QualityRow[]
 }
