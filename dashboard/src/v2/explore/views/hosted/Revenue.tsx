@@ -49,7 +49,7 @@ export function Earners({ x, report, first, onAttr }: { x: XCtx; report: Report;
 
 export function SalePages({ x, query }: { x: XCtx; query: ReportQuery }) {
   const key = `${x.site.id}|${query.from}|${query.to}|${query.attr ?? ''}|${query.testPayments ? 'test' : ''}|${JSON.stringify(query.filters ?? [])}`
-  const here = useLoad(key, () => extrasApi.pagesSell(x.site.id, query).then((d) => d.pages), true)
+  const here = useLoad(key, () => extrasApi.pagesSell(x.site.id, query).then((d) => d.pages ?? []), true)
   if (here.state === 'loading') return <Loading height={164} />
   if (here.state === 'error') return <XError title={extrasCopy.sells.failed} onRetry={here.retry} />
   const list = here.data
