@@ -7,7 +7,7 @@ import { session } from './session'
 const SHOTS = process.env.HN_SHOTS
 const AUTH = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
 const WIDTHS = [390, 463, 600, 700, 900, 1440]
-const CONTROLS = ['#siteBtn', '#sectionsBtn', '.hd .exb', '.hd .ib.bell', '.hd .account-btn', '.hd .ptop-chip', '.hd .ringb']
+const CONTROLS = ['#siteBtn', '#sectionsBtn', '.hd .exb', '.hd .ib.bell', '.hd .account-btn', '.hd .ptop-chip', '.hd .ringb:not(.sitegrp *)']
 
 let cookie = ''
 let longSite = ''
@@ -22,7 +22,9 @@ async function boxes(page: Page) {
   for (const sel of CONTROLS) {
     for (const el of await page.locator(sel).all()) {
       const b = await el.boundingBox()
-      if (b && b.width > 0) found.push({ sel, x: b.x, y: b.y, w: b.width, h: b.height })
+      // The site sits inside its pill (with the setup ring and the gear): the gap to the next control is measured from the pill's edge.
+      const pill = sel === '#siteBtn' ? await page.locator('.hd .sitegrp').boundingBox() : null
+      if (b && b.width > 0) found.push({ sel, x: pill?.x ?? b.x, y: b.y, w: pill?.width ?? b.width, h: b.height })
     }
   }
   return found.sort((a, b) => a.x - b.x)
@@ -44,16 +46,17 @@ for (const scheme of ['dark', 'light'] as const)
         const row = await boxes(page)
         expect(row.map((c) => c.sel), 'the controls on the row').toEqual(expect.arrayContaining(['#siteBtn', '.hd .ib.bell', '.hd .account-btn']))
         // The setup ring is a bare ring, not a box: it counts for the gaps and the centre line, not for the height.
-        const hs = new Set(row.filter((c) => c.sel !== '.hd .ringb').map((c) => Math.round(c.h * 10) / 10))
+        const hs = new Set(row.filter((c) => c.sel !== '.hd .ringb:not(.sitegrp *)').map((c) => Math.round(c.h * 10) / 10))
         expect([...hs], `one height ${JSON.stringify(row)}`).toHaveLength(1)
         if (w <= 700) expect([...hs][0]).toBe(40)
         const mids = row.map((c) => c.y + c.h / 2)
         expect(Math.max(...mids) - Math.min(...mids), `one centre line ${JSON.stringify(row)}`).toBeLessThanOrEqual(0.5)
-        // The right group (from the bell back to whatever sits before it) has one gap; with no spacer (600 and under) the site joins it.
+        // The right group (from the bell back to whatever sits before it) has one gap; the site's pill is as wide as its content and keeps at least that gap to it.
         const gaps = row.slice(1).map((c, i) => Math.round((c.x - row[i].x - row[i].w) * 10) / 10)
         const right = ['#sectionsBtn', '.hd .exb', '.hd .ptop-chip', '.hd .ib.bell', '.hd .account-btn']
-        const group = w <= 600 ? gaps : gaps.filter((_, i) => right.includes(row[i].sel) && right.includes(row[i + 1].sel))
+        const group = gaps.filter((_, i) => right.includes(row[i].sel) && right.includes(row[i + 1].sel))
         expect(new Set(group).size, `gaps ${JSON.stringify(gaps)} ${JSON.stringify(row)}`).toBe(1)
+        expect(gaps[0], 'the site keeps the gap').toBeGreaterThanOrEqual(12)
         expect(group.every((g) => g === 12), `gaps ${JSON.stringify(gaps)}`).toBe(true)
         const last = row[row.length - 1]
         expect(last.sel, 'the person is the last control at the right').toBe('.hd .account-btn')
