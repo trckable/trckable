@@ -122,7 +122,7 @@ test('on a phone the sections are a drawer, and nothing scrolls sideways', async
 // Nothing of the old Data page is without a home: each of its cards is a tab of a section, and opens without an error.
 const HOMES: Record<string, string[]> = {
   overview: ['overtime', 'hours'],
-  pages: ['exits', 'groups', 'sells'],
+  pages: ['paths', 'exits', 'groups', 'sells'],
   sources: ['earners'],
   places: ['places', 'revmap', 'people'],
   tech: ['bversion', 'screens'],

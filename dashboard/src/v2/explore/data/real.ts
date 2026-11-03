@@ -160,6 +160,10 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
       const [query_, pages, days, prev] = await Promise.all([more.searchReport(c.site.id, q, 'query', signal), more.searchReport(c.site.id, q, 'page', signal), more.searchReport(c.site.id, q, 'date', signal).catch(() => undefined), more.searchReport(c.site.id, { ...q, from: p.from, to: p.to, compare: undefined }, 'query', signal).catch(() => undefined)])
       return mapSearch({ query: query_, pages, days, prev })
     }
+    case 'paths': {
+      const r = await more.paths(c.site.id, q, signal)
+      return { ...r, first: r.first ?? null, last: r.last ?? null }
+    }
     case 'quality': {
       const report = await cachedReport(c.site.id, q, undefined, signal)
       // Named sources: each referring site, and Direct (which has no referrer, so it comes from the channels).

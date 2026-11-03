@@ -238,7 +238,7 @@ export interface Connected {
 export type HostedTab = 'highlights' | 'overtime' | 'hours' | 'revmap' | 'earners' | 'sells' | 'people' | 'payments' | 'customers' | 'retention' | 'vsale' | 'toconvert' | 'flow' | 'ai' | 'answers'
 
 /** The breakdowns only the deep report has: where people left, regions and cities, the parts of a campaign, language, browser version, screen width, page groups. */
-export type DeepTab = 'exits' | 'groups' | 'regions' | 'cities' | 'utmsource' | 'medium' | 'bversion' | 'screens' | 'languages' | 'timezones'
+export type DeepTab = 'paths' | 'exits' | 'groups' | 'regions' | 'cities' | 'utmsource' | 'medium' | 'bversion' | 'screens' | 'languages' | 'timezones'
 
 export type Tab = HostedTab | DeepTab | 'changed' | 'overview' | 'pages' | 'sources' | 'quality' | 'referrers' | 'utm' | 'search' | 'countries' | 'devices' | 'browsers' | 'funnels' | 'sales' | 'speed' | 'mentions' | 'outbound' | 'bots'
 
@@ -257,6 +257,7 @@ export interface Tabs {
   countries: Table
   devices: Table
   outbound: Table
+  paths: Paths
   exits: Table
   groups: Table
   regions: Table
@@ -294,6 +295,27 @@ export interface SavedView {
   id?: string
   name: string
   filters: Filter[]
+}
+
+/** How visitors move through the site: the routes of their first three pages, with the numbers above them. */
+export interface Paths {
+  visits: number
+  /** Visits that saw one page. */
+  single: number
+  /** Pages per visit, on average. */
+  pages: number
+  first: { path: string; visits: number } | null
+  last: { path: string; visits: number } | null
+  routes: PathRoute[]
+  /** Whether the site has goals, so a route can say how many of its visits reached one. */
+  goals: boolean
+}
+
+/** One route: its pages in order (fewer than three when the visit ended there), and its visits. */
+export interface PathRoute {
+  steps: string[]
+  visits: number
+  converted: number
 }
 
 export interface Quality {

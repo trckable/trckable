@@ -265,16 +265,21 @@ const (
 	exitKey  = "(exit)"
 )
 
-// pageFlow reads each visit's first three distinct-in-a-row pages.
-func pageFlow(ctx context.Context, conn *sql.Conn, cte string, args []any, p Params) (Flow, error) {
-	rows, err := conn.QueryContext(ctx, cte+`,
-		ev AS (
+// visitPages are the CTEs that read a visit's pages in order, a page loaded
+// again straight after itself (a reload) counted once: ev the pageviews of the
+// visits in s, d each with the page before it, o the pages in order, numbered
+// by n. It follows a cte that defines s and binds site, from and to.
+const visitPages = `ev AS (
 			SELECT session_id, ts, pageview_id, path FROM events
-			WHERE site_id = ? AND ts >= ? AND ts < ? + INTERVAL 1 DAY AND kind = 1
+			WHERE site_id = ? AND ts >= ? AND ts < ? + INTERVAL 1 DAY AND kind = 1 AND path IS NOT NULL
 			  AND session_id IN (SELECT session_id FROM s)),
 		d AS (SELECT *, lag(path) OVER (PARTITION BY session_id ORDER BY ts, pageview_id) AS prev FROM ev),
 		o AS (SELECT session_id, path, row_number() OVER (PARTITION BY session_id ORDER BY ts, pageview_id) AS n
-		      FROM d WHERE prev IS NULL OR prev <> path),
+		      FROM d WHERE prev IS NULL OR prev <> path)`
+
+// pageFlow reads each visit's first three distinct-in-a-row pages.
+func pageFlow(ctx context.Context, conn *sql.Conn, cte string, args []any, p Params) (Flow, error) {
+	rows, err := conn.QueryContext(ctx, cte+`, `+visitPages+`,
 		v AS (SELECT session_id, max(path) FILTER (n = 1) AS p1, max(path) FILTER (n = 2) AS p2, max(path) FILTER (n = 3) AS p3
 		      FROM o WHERE n <= 3 GROUP BY session_id)
 		SELECT p1, p2, p3, count(*) FROM v WHERE p1 IS NOT NULL GROUP BY ALL`,
