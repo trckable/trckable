@@ -15,7 +15,7 @@ import { biggestMover, whyContext } from './whyLine'
 /** Tables that already are cards with their own headings. */
 const BARE: Tab[] = ['changed', 'overview', 'funnels', 'speed', 'search', 'ai', 'sales']
 /** Charts and long rows that need the whole width. */
-const WIDE: Tab[] = ['pages', 'devices', 'sources', 'earners', 'highlights', 'overtime', 'hours', 'revmap', 'people', 'flow', 'vsale', 'retention', 'toconvert', 'quality', 'mentions', 'answers', 'buyers']
+const WIDE: Tab[] = ['pages', 'devices', 'sources', 'earners', 'highlights', 'overtime', 'hours', 'revmap', 'people', 'flow', 'vsale', 'retention', 'toconvert', 'quality', 'mentions', 'answers', 'payments', 'customers']
 const ROWS = 5
 
 function Card({ tab, x, c, open, onRead, onSay }: { tab: Tab; x: XCtx; c: DataCtx; open: boolean; onRead: () => void; onSay: (s: string | null) => void }) {

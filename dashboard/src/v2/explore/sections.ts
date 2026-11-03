@@ -22,7 +22,7 @@ const EVERY: Record<Section, Tab[]> = {
   places: ['countries', 'regions', 'cities', 'languages', 'revmap', 'people'],
   tech: ['devices', 'browsers', 'bversion', 'screens'],
   results: ['funnels', 'retention', 'vsale', 'toconvert', 'flow'],
-  sales: ['sales', 'buyers'],
+  sales: ['sales', 'payments', 'customers'],
   speed: ['speed'],
   mentions: ['mentions'],
   links: ['outbound', 'bots'],
@@ -70,7 +70,7 @@ export const ALL_TABS: Tab[] = SECTIONS.flatMap((s) => EVERY[s])
 export const isTab = (v: string | undefined): v is Tab => !!v && (ALL_TABS as string[]).includes(v) && offered(v as Tab)
 
 /** The tables that set two periods side by side; the rest read this period alone. */
-export const compares = (t: Tab) => !HOSTED.includes(t) && !['speed', 'outbound', 'mentions', 'answers', 'sales', 'buyers', 'quality'].includes(t)
+export const compares = (t: Tab) => !HOSTED.includes(t) && !['speed', 'outbound', 'mentions', 'answers', 'sales', 'quality'].includes(t)
 
 export const FILTER_DIMS: FilterDim[] = ['referrer', 'page', 'country', 'device']
 
@@ -78,4 +78,4 @@ export const FILTER_DIMS: FilterDim[] = ['referrer', 'page', 'country', 'device'
 export const ROW_DIM: Partial<Record<Tab, FilterDim>> = { pages: 'page', sources: 'referrer', referrers: 'referrer', utm: 'referrer', countries: 'country', devices: 'device' }
 
 /** The tabs whose numbers their own card reads (views/Hosted.tsx). */
-export const HOSTED: Tab[] = ['highlights', 'overtime', 'hours', 'revmap', 'earners', 'sells', 'people', 'buyers', 'retention', 'vsale', 'toconvert', 'flow', 'ai', 'answers']
+export const HOSTED: Tab[] = ['highlights', 'overtime', 'hours', 'revmap', 'earners', 'sells', 'people', 'payments', 'customers', 'retention', 'vsale', 'toconvert', 'flow', 'ai', 'answers']

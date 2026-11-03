@@ -1232,23 +1232,6 @@ export default {
   'extras.sells.note': 'Ein Verkauf zählt unter jeder Seite des Besuchs, der ihn gebracht hat.',
   'extras.sells.none': 'Noch kein Verkauf ist einer Seite gutgeschrieben.',
   'extras.sells.failed': 'Die Seiten, die verkaufen, ließen sich nicht lesen.',
-  'extras.buyers.tab': 'Letzte Käufer',
-  'extras.buyers.failed': 'Die letzten Käufer ließen sich nicht lesen.',
-  'extras.buyers.none': 'Keine Verkäufe in diesem Zeitraum.',
-  'extras.buyers.direct': 'Direkt',
-  'extras.buyers.paid': 'bezahlt',
-  'extras.buyers.visits': (n: number) => count(n, 'Besuch', 'Besuche'),
-  'extras.buyers.toBuy': (s: number) => {
-    const hours = s / 3600
-    if (hours < 1) return 'gleiche Stunde'
-    if (hours < 24) return 'gleicher Tag'
-    return count(Math.round(hours / 24), 'Tag', 'Tage')
-  },
-  'extras.buyers.ago': (s: number) => {
-    if (s < 3600) return `vor ${Math.max(1, Math.round(s / 60))} Min.`
-    if (s < 86400) return `vor ${Math.round(s / 3600)} Std.`
-    return `vor ${Math.round(s / 86400)} T`
-  },
 
   // journey
   'journey.dialog': 'Besucherpfad',
@@ -2317,7 +2300,6 @@ export default {
   'v2explore.sub.earners': 'Quellen, die zahlen',
   'v2explore.sub.sells': 'Seiten, die verkaufen',
   'v2explore.sub.people': 'Personen',
-  'v2explore.sub.buyers': 'Letzte Käufer',
   'v2explore.sub.retention': 'Bindung',
   'v2explore.sub.vsale': 'Vom Besuch zum Verkauf',
   'v2explore.sub.toconvert': 'Zeit bis zum Abschluss',
@@ -2485,7 +2467,23 @@ export default {
   'v2explore.kinds.refund': 'Rückerstattungen',
   'v2explore.kindLabel': 'Art des Verkaufs',
   'v2explore.saleCount': (n: number) => `${n} ${n === 1 ? 'Verkauf' : 'Verkäufe'}`,
-  'v2explore.latestBuyers': (n: number) => `Letzte ${n} ${n === 1 ? 'neuer Kunde' : 'neue Kunden'}`,
+  'v2explore.sub.payments': 'Zahlungen',
+  'v2explore.sub.customers': 'Kunden',
+  'v2explore.pay.count': (n: number) => `${n} ${n === 1 ? 'Zahlung' : 'Zahlungen'}`,
+  'v2explore.pay.customers': (n: number) => `${n} ${n === 1 ? 'Kunde' : 'Kunden'}`,
+  'v2explore.pay.none': 'Keine Zahlungen in diesem Zeitraum',
+  'v2explore.pay.noneCustomers': 'Keine Kunden in diesem Zeitraum',
+  'v2explore.pay.failed': 'Zahlungen konnten nicht geladen werden',
+  'v2explore.pay.more': 'Mehr zeigen',
+  'v2explore.pay.moreFailed': 'Weitere konnten nicht geladen werden.',
+  'v2explore.pay.retry': 'Erneut versuchen',
+  'v2explore.pay.open': 'Reise öffnen',
+  'v2explore.pay.unknown': 'Unbekannter Besucher',
+  'v2explore.pay.refunded': (m: string) => `${m} erstattet`,
+  'v2explore.pay.orders': (n: number) => `${n} ${n === 1 ? 'Bestellung' : 'Bestellungen'}`,
+  'v2explore.pay.firstSeen': (d: string) => `Zuerst gesehen ${d}`,
+  'v2explore.pay.lastOrder': (d: string) => `Letzte Bestellung ${d}`,
+  'v2explore.pay.byTotal': 'Nach Gesamtumsatz',
   'v2explore.net': 'netto',
   'v2explore.tags.new': 'neu',
   'v2explore.tags.upgrade': 'Upgrade',

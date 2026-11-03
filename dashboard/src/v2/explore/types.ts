@@ -233,7 +233,7 @@ export interface Connected {
 }
 
 /** Tables that bring their own numbers: the cards the old Full page had, each opened by its section as it was. */
-export type HostedTab = 'highlights' | 'overtime' | 'hours' | 'revmap' | 'earners' | 'sells' | 'people' | 'buyers' | 'retention' | 'vsale' | 'toconvert' | 'flow' | 'ai' | 'answers'
+export type HostedTab = 'highlights' | 'overtime' | 'hours' | 'revmap' | 'earners' | 'sells' | 'people' | 'payments' | 'customers' | 'retention' | 'vsale' | 'toconvert' | 'flow' | 'ai' | 'answers'
 
 /** The breakdowns only the deep report has: where people left, regions and cities, the parts of a campaign, language, browser version, screen width, page groups. */
 export type DeepTab = 'exits' | 'groups' | 'regions' | 'cities' | 'utmsource' | 'medium' | 'bversion' | 'screens' | 'languages'
@@ -277,7 +277,8 @@ export interface Tabs {
   earners: null
   sells: null
   people: null
-  buyers: null
+  payments: null
+  customers: null
   retention: null
   vsale: null
   toconvert: null

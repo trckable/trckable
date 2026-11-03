@@ -61,7 +61,7 @@ type reportCache struct {
 }
 
 type cacheEntry struct {
-	res  *query.Result
+	res  any // a *query.Result, or a *query.PayPage
 	exp  time.Time
 	site string
 	// ver is the site's commit count when the report was read. A live entry
@@ -207,7 +207,16 @@ func reportFail(w http.ResponseWriter, err error) {
 // the live kind. Requests for the same report that arrive while it is being
 // read wait for that one read instead of starting their own.
 func (a *API) cachedReport(r *http.Request, q *query.Q, p query.Params) (*query.Result, error) {
-	key := cacheKey(p)
+	v, err := a.cachedRead(r, p, cacheKey(p), func(ctx context.Context) (any, error) { return q.Report(ctx, p) })
+	if err != nil {
+		return nil, err
+	}
+	return v.(*query.Result), nil
+}
+
+// cachedRead is cachedReport for any read of the same period: key names the
+// question, read answers it.
+func (a *API) cachedRead(r *http.Request, p query.Params, key string, read func(context.Context) (any, error)) (any, error) {
 	now := a.Now()
 	live := p.To.After(now)
 	var ver uint64
@@ -226,26 +235,26 @@ func (a *API) cachedReport(r *http.Request, q *query.Q, p query.Params) (*query.
 	ch := a.flights.DoChan(key+"|"+strconv.FormatUint(ver, 10), func() (any, error) {
 		ctx, cancel := context.WithTimeout(base, reportTimeout)
 		defer cancel()
-		return a.readReport(ctx, q, p, key, now, live, ver)
+		return a.readReport(ctx, read, p, key, now, live, ver)
 	})
 	select {
 	case res := <-ch:
 		if res.Err != nil {
 			return nil, res.Err
 		}
-		return res.Val.(*query.Result), nil
+		return res.Val, nil
 	case <-r.Context().Done():
 		return nil, r.Context().Err()
 	}
 }
 
-func (a *API) readReport(ctx context.Context, q *query.Q, p query.Params, key string, now time.Time, live bool, ver uint64) (*query.Result, error) {
+func (a *API) readReport(ctx context.Context, read func(context.Context) (any, error), p query.Params, key string, now time.Time, live bool, ver uint64) (any, error) {
 	from, to := p.From.UnixMilli(), p.To.UnixMilli()
 	a.cache.mu.Lock()
 	sc := a.cache.site(p.Site)
 	seq, purges, epoch := sc.seq, sc.purges, a.cache.epoch
 	a.cache.mu.Unlock()
-	res, err := q.Report(ctx, p)
+	res, err := read(ctx)
 	if err != nil {
 		return nil, err
 	}
