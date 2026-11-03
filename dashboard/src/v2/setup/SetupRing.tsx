@@ -56,7 +56,8 @@ export function SetupRing({ site, onGoal, fresh = false, visited = false }: { si
       <button type="button" className="ringb" data-ring={mode} aria-haspopup="dialog" aria-expanded={open} aria-label={words} title={words} onClick={onRing}>
         {/* Done is the same tick as verified, so the pill shows one mark for both, not a ring and a seal. */}
         {mode === 'check' ? <span className="rseal"><Seal size={16} /></span> : <RingMark done={state.done} counted={state.counted} check={false} />}
-        {mode !== 'check' && <span className="rtext">{words}</span>}
+        {/* The count is enough in the pill; the full words stay its label. */}
+        {mode !== 'check' && <span className="rtext">{`${state.done}/${state.counted}`}</span>}
       </button>
       <div ref={menu} className={`mk-menu setupmenu${open ? ' on' : ''}`} role="dialog" aria-label={mode === 'check' ? copy.allSet : copy.title(state.done, state.counted)}>
         {open && (
