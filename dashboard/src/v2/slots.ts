@@ -26,6 +26,14 @@ export interface Teams {
   onReorder?: (ids: string[]) => void
 }
 
+/** The aggregate numbers behind a question about a card: what it counts, the period and the one it is compared with, and its rows (at most 20, never a visitor). */
+export interface AskContext {
+  metric: string
+  period: string
+  compare: string
+  rows: { name: string; now: number; before: number; delta: number }[]
+}
+
 export interface V2Extras {
   /** Where "Support" points on the setup screen: a build's own help page. The public product points at its issues. */
   supportUrl?: string
@@ -64,7 +72,7 @@ export interface V2Extras {
   /** What Sign out does, when it is more than ending this session. */
   signOut?: () => void
   /** Opens Peek and asks the question at once (a "Why?", a question typed into ⌘K): the answer is already coming when the panel is up. A build with no Peek leaves it out, and a "Why?" shows its text alone. */
-  askPeekNow?: (question: string) => void
+  askPeekNow?: (question: string, context?: AskContext) => void
   /** All sites: one more figure at the end of the team strip (a plan's ring). */
   teamStrip?: ReactNode
   /** All sites: one more line under a site's state in its row (over its plan's limit), by the site's id. */

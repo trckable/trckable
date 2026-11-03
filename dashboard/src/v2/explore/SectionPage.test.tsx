@@ -16,6 +16,11 @@ describe('a card and Peek', () => {
     const html = renderToStaticMarkup(<V2ExtrasContext.Provider value={{ askPeekNow: vi.fn() }}>{page()}</V2ExtrasContext.Provider>)
     expect(html).toContain('data-ask-peek')
   })
+  it('asks with the card numbers once, and the strip stays closed until pressed', () => {
+    const html = renderToStaticMarkup(<V2ExtrasContext.Provider value={{ askPeekNow: vi.fn() }}>{page()}</V2ExtrasContext.Provider>)
+    expect(html).toContain('aria-expanded="false"')
+    expect(html).not.toContain('data-why-line')
+  })
   it('shows nothing in a build with no Peek', () => {
     expect(renderToStaticMarkup(page())).not.toContain('data-ask-peek')
   })
