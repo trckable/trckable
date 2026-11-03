@@ -17,29 +17,3 @@
   font-size: 11.5px;
   font-weight: 600;
 }
-/* The busy moment as a small card: an amber mark, what and when, where from, then the chip and the close. */
-.surge-banner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 10px 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--mk-amber) 22%, var(--mk-line));
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--mk-amber) 7%, var(--mk-card));
-}
-.sbn-ico { position: relative; display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 10px; color: var(--mk-amber); background: color-mix(in srgb, var(--mk-amber) 16%, transparent); }
-/* While it lasts, a soft live dot on the mark. */
-.surge-banner[data-live] .sbn-ico::after { content: ""; position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; border-radius: 50%; background: var(--mk-amber); box-shadow: 0 0 0 2px var(--mk-card); }
-.sbn-txt { flex: 1 1 auto; min-width: 0; }
-.sbn-head { display: flex; align-items: baseline; gap: 8px; }
-.sbn-head b { font-weight: 650; }
-.sbn-when { color: var(--mk-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.sbn-sub { margin-top: 2px; color: var(--mk-muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sbn-sub .info { display: inline-block; max-width: 100%; vertical-align: middle; }
-.surge-banner-actions { display: flex; align-items: center; gap: 6px; flex: none; }
-.sbn-only { height: 30px; padding: 0 12px; border-radius: 99px; font-size: 12.5px; font-weight: 600; color: var(--mk-text); background: color-mix(in srgb, var(--mk-text) 7%, transparent); }
-.sbn-only[aria-pressed="true"] { color: var(--mk-bg); background: var(--mk-amber); }
-.sbn-close { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; color: var(--mk-muted); }
-.sbn-close:hover { color: var(--mk-text); background: color-mix(in srgb, var(--mk-text) 7%, transparent); }
-@media (--compact) { .surge-banner { flex-wrap: wrap; } .sbn-txt { flex-basis: calc(100% - 46px); } .surge-banner-actions { margin-left: 46px; } }
-

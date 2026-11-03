@@ -1,6 +1,6 @@
 // The surge card: the site is far busier than usual right now. What the server
 // finds is given by the browser here (its rules are tested in Go); the card, its
-// More, the story's See it and the way it comes up in Live and in Data are real.
+// Only and See it, the story (told from a notice) and the way it comes up in Live and in Data are real.
 //   SURGE_SHOTS=/some/folder  also takes the pictures for review.
 import { expect, test, type Page } from './fixtures'
 import { mkdirSync } from 'node:fs'
@@ -44,6 +44,7 @@ async function open(page: Page, view: 'live' | 'data', width = 1280, moment = su
 
 const card = (page: Page) => page.getByRole('complementary', { name: 'Busy' })
 const story = (page: Page) => page.getByRole('dialog', { name: 'The busy moment' })
+const tell = (page: Page) => page.evaluate((id) => window.dispatchEvent(new CustomEvent('trckable:surge-story', { detail: id })), surge.id)
 
 async function shoot(page: Page, name: string) {
   if (!SHOTS) return
@@ -56,13 +57,15 @@ async function shoot(page: Page, name: string) {
   }
 }
 
-test('the card comes up in Live and in Data: a number, a chip, one line, one button', async ({ page }) => {
+test('the card comes up in Live and in Data: a number, a chip, the source, two quiet actions', async ({ page }) => {
   await open(page, 'live')
   await expect(card(page)).toBeVisible({ timeout: 30_000 })
-  await expect(card(page).locator('.sg-count')).toHaveText('53')
-  await expect(card(page).locator('.sg-chip')).toHaveText('2.7× usual')
-  await expect(card(page).locator('.sg-source')).toContainText('Mostly from Facebook')
-  await expect(card(page).getByRole('button', { name: 'More' })).toBeVisible()
+  await expect(card(page)).toContainText('Busy right now')
+  await expect(card(page).locator('.bz-count')).toHaveText('53')
+  await expect(card(page).locator('.bz-chip')).toHaveText('2.7× usual')
+  await expect(card(page).locator('.bz-source')).toContainText('Facebook')
+  await expect(card(page).locator('.bz-page')).toHaveText('/blog/launch-post')
+  await expect(card(page).getByRole('button', { name: 'Only Facebook' })).toBeVisible()
   await expect(card(page).getByRole('button', { name: 'See it in Explore' })).toBeVisible()
   await shoot(page, 'surge-card')
   await open(page, 'data')
@@ -83,25 +86,6 @@ test('the entrance, in three frames', async ({ page }) => {
   }
 })
 
-test('More opens the story as a dialog; Escape closes it and focus comes back', async ({ page }) => {
-  await open(page, 'live')
-  await expect(card(page)).toBeVisible({ timeout: 30_000 })
-  const more = card(page).getByRole('button', { name: 'More' })
-  await more.click()
-  await expect(story(page)).toBeVisible()
-  await expect(story(page)).toContainText('20 → 53 in 15 min')
-  await expect(story(page)).toContainText('peak 53')
-  await expect(story(page)).toContainText('now 31')
-  await expect(story(page)).toContainText('Albania')
-  await expect(story(page)).toContainText('/blog/launch-post')
-  await expect(story(page)).toContainText('The exact post isn’t visible.')
-  await expect(story(page).getByRole('img', { name: /People online in the last hour/ })).toBeVisible()
-  await shoot(page, 'surge-story')
-  await page.keyboard.press('Escape')
-  await expect(story(page)).toHaveCount(0)
-  await expect(more).toBeFocused()
-})
-
 test('Live has no busy line, even when the server says the site is busier than usual', async ({ page }) => {
   const busier = {
     now: 53, baseline: true, usual: 20, low: 15, high: 25, state: 'busier', since: now - 15 * 60, rest: 1,
@@ -117,8 +101,9 @@ test('on a phone the story is a sheet that fills the screen; See it in Explore l
   await open(page, 'live', 390)
   await expect(card(page)).toBeVisible({ timeout: 30_000 })
   await shoot(page, 'surge-card')
-  await card(page).getByRole('button', { name: 'More' }).click()
+  await tell(page)
   await expect(story(page)).toBeVisible()
+  await expect(story(page)).toContainText('20 → 53 in 15 min')
   const box = await story(page).boundingBox()
   expect(box!.width).toBeGreaterThanOrEqual(389)
   expect(box!.height).toBeGreaterThanOrEqual((await page.evaluate(() => window.innerHeight)) - 1)
@@ -161,7 +146,7 @@ test('opened from a notification the story is one opaque card, at most 600px wid
   await card(page).getByRole('button', { name: 'Close' }).click()
   await expect(card(page)).toHaveCount(0)
   // What the notification list does: asks for the surge's story by its id.
-  await page.evaluate((id) => window.dispatchEvent(new CustomEvent('trckable:surge-story', { detail: id })), surge.id)
+  await tell(page)
   await expect(story(page)).toBeVisible()
   const look = await story(page).evaluate((el) => {
     const c = getComputedStyle(el)

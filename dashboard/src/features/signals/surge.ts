@@ -68,15 +68,6 @@ export function surgeFilter(s: Surge): Filter | null {
 /** Whether the source holds most of the people online. */
 const most = (s: Surge) => !!s.why.source_n && s.why.source_n * 2 > s.online
 
-/** The card's one line about who sent them: "Mostly from Facebook", or how many when it is not most. Empty with no source. */
-export function sourceLine(s: Surge): string {
-  const w = s.why
-  if (!w.source || !w.source_n) return ''
-  const direct = w.source_dim === 'channel' && w.source === 'Direct'
-  if (direct) return most(s) ? t.mostlyDirect : t.someDirect(w.source_n)
-  return most(s) ? t.mostly(w.source) : t.some(w.source_n, w.source)
-}
-
 /** The referring host whose icon sits beside the line, when the source is one. */
 /** Link-shim and mobile prefixes (l., m., lm.) are left off: l.facebook.com is Facebook's own icon and initial. */
 export const sourceHost = (s: Surge): string | null => (s.why.source_dim === 'referrer' && s.why.source_value ? s.why.source_value.replace(/^(www|l|m|lm|mobile|out)\./, '') : null)
@@ -181,12 +172,14 @@ export function seeInData(s: Surge, tz: string, now = new Date()): Partial<ViewS
 /** What the bell's "See it in Explore" does: the moment's days opened in Explore's panel, narrowed to what was asked for (the source that sent them). */
 export const seeInExplore = (s: Surge, tz: string, filters: Filter[], now = new Date()): Partial<ViewState> => ({ ...seeInData(s, tz, now), surge: undefined, xf: filters })
 
-/** What the button does from the landing page chip: the same moment, filtered to that page. */
-export const seePageInData = (s: Surge, tz: string, page: string, now = new Date()): Partial<ViewState> => ({ ...seeInData(s, tz, now), xf: [{ dim: 'page', value: page }] })
+/** What "Only Google" does from the card: the same moment, narrowed to the source that sent most of them. */
+export const seeSourceData = (s: Surge, tz: string, only: Filter, now = new Date()): Partial<ViewState> => ({ ...seeInData(s, tz, now), xf: [only] })
 
-/** The line over the numbers: when it was, how busy, who sent them and where they landed. */
-/** The busy moment's card: when (since or between), its peak and its source, each its own piece. */
-export function bannerParts(s: Surge, tz: string): { span: string; peak: string; source: string } {
-  const from = clock(s.started, tz)
-  return { span: s.ended ? t.spanBetween(from, clock(s.ended, tz)) : t.spanSince(from), peak: t.atPeak(s.online), source: s.why.source ? t.fromSource(s.why.source) : '' }
-}
+/** When the moment was: "since 16:38", or "16:38–17:20" once it is over. */
+export const busySpan = (s: Surge, tz: string): string => (s.ended ? t.spanBetween(clock(s.started, tz), clock(s.ended, tz)) : t.spanSince(clock(s.started, tz)))
+
+/** How many more people the source sends than it usually does; 0 when it is not above its usual. */
+export const sourceExtra = (s: Surge): number => Math.max(0, Math.round((s.why.source_n ?? 0) - s.why.source_usual))
+
+/** The people on the site: now while it lasts, the peak once it is over (its number is then no longer "now"). */
+export const busyCount = (s: Surge): number => (s.ended ? (s.story?.peak ?? s.online) : s.online)
