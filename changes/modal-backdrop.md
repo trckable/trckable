@@ -1,0 +1,1 @@
+- Dialogs: a lighter backdrop, more blur and less dark.
