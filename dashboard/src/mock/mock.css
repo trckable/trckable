@@ -1933,6 +1933,8 @@ html[data-motion='off'] .mk .mline-guide,html[data-motion='off'] .mk .mline-gdot
 /* Setup done ("All set") and verified are one tick in the pill: the same mark, the same slot, no words. */
 .mk .hd .sitegrp .ringb[data-ring=check]{width:34px;padding:0;justify-content:center}
 .mk .hd .ringb .rseal{display:grid;place-items:center;color:var(--mk-lime)}
+/* The setup ring draws its marks at 24px; the tick is the same 16px as the verified one beside other sites. */
+.mk .hd .ringb .rseal svg{width:16px;height:16px}
 /* On a narrow header the site name gives way, never the tick or the gear. */
 .mk .hd>div:has(#siteBtn) .sitegrp{width:100%;max-width:max-content}
 .mk .hd>div:has(#siteBtn) .sitegrp .sitechip{width:auto;flex:1 1 auto;min-width:0}
