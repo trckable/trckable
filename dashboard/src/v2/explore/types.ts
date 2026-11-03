@@ -23,6 +23,8 @@ export interface Row {
   rev?: number
   /** People from this row who reached the signup goal, where the site has one. */
   su?: number
+  /** Where the table is of entry or exit pages: the share of its visits that left after one page, 0 to 1. */
+  br?: number
 }
 
 /** A number, the range it usually sits in, and where it is now. */
@@ -90,6 +92,8 @@ export interface Overview {
   down: Down[]
   pages: Row[]
   sources: Row[]
+  /** How a visit went: engaged visits, pages per visit and time on site, each against the period before. */
+  visits: Xkc[]
   /** The people of the period: the whole a row's share is a share of. */
   of: number
 }
@@ -238,7 +242,7 @@ export interface Connected {
 export type HostedTab = 'highlights' | 'overtime' | 'hours' | 'revmap' | 'earners' | 'sells' | 'people' | 'payments' | 'customers' | 'retention' | 'vsale' | 'toconvert' | 'flow' | 'ai' | 'answers'
 
 /** The breakdowns only the deep report has: where people left, regions and cities, the parts of a campaign, language, browser version, screen width, page groups. */
-export type DeepTab = 'paths' | 'exits' | 'groups' | 'regions' | 'cities' | 'utmsource' | 'medium' | 'bversion' | 'screens' | 'languages' | 'timezones'
+export type DeepTab = 'paths' | 'entries' | 'exits' | 'groups' | 'regions' | 'cities' | 'utmsource' | 'medium' | 'bversion' | 'screens' | 'languages' | 'timezones'
 
 export type Tab = HostedTab | DeepTab | 'changed' | 'overview' | 'pages' | 'sources' | 'quality' | 'referrers' | 'utm' | 'search' | 'countries' | 'devices' | 'browsers' | 'funnels' | 'sales' | 'speed' | 'mentions' | 'outbound' | 'bots'
 
@@ -258,6 +262,7 @@ export interface Tabs {
   devices: Table
   outbound: Table
   paths: Paths
+  entries: Table
   exits: Table
   groups: Table
   regions: Table

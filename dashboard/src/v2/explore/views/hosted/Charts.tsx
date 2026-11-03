@@ -8,7 +8,7 @@ import { bucketLabel } from '../../../../charts/TimeChart'
 import { Loading } from '../../../../components/loading/Loading'
 import { deepCopy } from '../../../../features/cards/deepCopy'
 import { copy as chartCopy } from '../../../../features/fullcharts/copy'
-import { axisLabels, convertModel, flowModel, funnelModel, moneyMapModel, rhythmModel, sourcesModel, visitorsModel } from '../../../../features/fullcharts/model'
+import { axisLabels, convertModel, flowModel, funnelModel, moneyMapModel, rhythmModel, sourcesModel, visitorsModel, viewsModel } from '../../../../features/fullcharts/model'
 import { useCharts } from '../../../../features/fullcharts/useCharts'
 import { kitLater } from '../../../../charts/kitLater'
 import { fmtCompact, fmtInt } from '../../../../lib/format'
@@ -92,21 +92,28 @@ function RevMap({ x, rows }: { x: XCtx; rows: Row[] }) {
 
 function OverTime({ x, report, query }: { x: XCtx; report: Report; query: ReportQuery }) {
   const { charts, error, retry } = useCharts(x.site.id, query, report.bucket)
-  const [sub, setSub] = useState<'sources' | 'returning'>('sources')
+  const [sub, setSub] = useState<'sources' | 'returning' | 'views'>('sources')
   if (error && !charts) return <XError title={chartCopy.failedShort} hint={error} onRetry={retry} />
   const bucket = report.bucket
   const s = charts ? sourcesModel(charts, bucket) : null
   const v = charts ? visitorsModel(charts, bucket) : null
+  const pv = viewsModel(report.current.series ?? [], bucket)
   const labels = charts ? axisLabels(charts.labels, bucket) : []
   const tip = (i: number) => (charts ? bucketLabel(charts.labels[i], bucket, true) : '')
   return (
     <>
-      <XSub label={deepCopy.tab.overTime} attr="xot" value={sub} items={[{ key: 'sources', label: deepCopy.tab.sources }, { key: 'returning', label: deepCopy.tab.returning }]} onPick={setSub} />
+      <XSub label={deepCopy.tab.overTime} attr="xot" value={sub} items={[{ key: 'sources', label: deepCopy.tab.sources }, { key: 'returning', label: deepCopy.tab.returning }, { key: 'views', label: deepCopy.tab.views }]} onPick={setSub} />
       {sub === 'sources' ? (
         <XChart id="sources" title={chartCopy.sources.title} question={chartCopy.sources.question} loading={!s} empty={!!s && s.series.length === 0} table={s?.table ?? NONE} legend={s?.series.map((k) => ({ label: k.label, color: k.color }))}>
           {s && charts && <SeriesChart stacked series={s.series} labels={labels} label={chartCopy.sources.label(charts.labels.length)} fmt={fmtCompact} tipTitle={tip} height={210} />}
         </XChart>
-      ) : (
+      ) : null}
+      {sub === 'views' && (
+        <XChart id="views" title={chartCopy.views.title} question={chartCopy.views.question} table={pv.table} legend={pv.series.map((k) => ({ label: k.label, color: k.color, line: true }))}>
+          <SeriesChart series={pv.series} labels={pv.labels} label={chartCopy.views.label} fmt={fmtCompact} tipTitle={(i) => bucketLabel(report.current.series[i]?.t ?? '', bucket, true)} />
+        </XChart>
+      )}
+      {sub === 'returning' && (
         <XChart id="visitors" title={chartCopy.visitors.title} question={chartCopy.visitors.question} loading={!v} table={v?.table ?? NONE} legend={v?.series.map((k) => ({ label: k.label, color: k.color, line: true }))} foot={!!charts?.visitors.unknown && <XNote>{chartCopy.visitors.unknown(charts.visitors.unknown)}</XNote>}>
           {v && <SeriesChart series={v.series} labels={labels} label={chartCopy.visitors.label} fmt={fmtCompact} tipTitle={tip} />}
         </XChart>

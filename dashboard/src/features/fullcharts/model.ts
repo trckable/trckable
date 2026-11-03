@@ -53,6 +53,15 @@ export function visitorsModel(c: Charts, bucket: Bucket): { series: Series[]; ta
   }
 }
 
+/** Pageviews per bucket, from the report's own series. */
+export function viewsModel(points: { t: string; pageviews: number }[], bucket: Bucket): { series: Series[]; labels: string[]; table: TableData } {
+  return {
+    series: [{ label: copy.views.title, color: NEW_COLOR, values: points.map((p) => p.pageviews) }],
+    labels: axisLabels(points.map((p) => p.t), bucket),
+    table: { caption: copy.views.title, columns: [copy.sources.when, copy.views.title], rows: points.map((p) => [bucketLabel(p.t, bucket, true), fmtInt(p.pageviews)]) },
+  }
+}
+
 const stepLabel = (s: ConvStep) => {
   if (s.kind === 'visit') return copy.funnel.visit
   if (s.kind === 'sale') return copy.funnel.sale

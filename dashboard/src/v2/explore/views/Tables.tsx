@@ -30,6 +30,7 @@ const CFG: Partial<Record<Tab, Cfg>> = {
   utm: { head: copy.heads.campaign },
   browsers: { head: copy.heads.browser },
   outbound: { head: copy.heads.link, mono: true, unit: copy.heads.clicks },
+  entries: { head: copy.heads.entry, mono: true },
   exits: { head: copy.heads.exit, mono: true },
   groups: { head: copy.heads.group, mono: true },
   regions: { head: copy.heads.region },
@@ -78,7 +79,7 @@ export function Tables({ tab, x, d }: { tab: Tab; x: XCtx; d: Table }) {
       <PeopleTable
         noneAtAll={d.noneAtAll}
         x={x}
-        rows={tab === 'pages' || tab === 'exits' ? d.rows.map((r) => (r.name === '/' ? { ...r, name: copy.homePage } : r)) : d.rows}
+        rows={tab === 'pages' || tab === 'entries' || tab === 'exits' ? d.rows.map((r) => (r.name === '/' ? { ...r, name: copy.homePage } : r)) : d.rows}
         head={c.head}
         unit={c.unit}
         mono={c.mono}

@@ -49,6 +49,11 @@ export const copy = defineCopy('full', {
     returning: 'Returning',
     unknown: (n: number) => `${plural(n, 'visitor', 'visitors')} without a first-visit date (cookieless) are in neither line.`,
   },
+  views: {
+    title: 'Pageviews',
+    question: 'How many pages were read?',
+    label: 'Pageviews per bucket',
+  },
   rhythm: {
     title: 'Weekday × hour',
     question: 'When your visitors are here',
