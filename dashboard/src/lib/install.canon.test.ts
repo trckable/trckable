@@ -1,7 +1,7 @@
 // One source for every snippet: install.ts. This holds everything else to it.
 //
 // install.snippets.json is every method's code for the placeholder values the
-// docs use (the site's docs build rewrites its marked code blocks from
+// docs use, and the AI prompt for the methods that have a docs page (the site's docs build rewrites its marked code blocks from
 // this file and fails on any unmarked one that drifts). The READMEs and
 // `npx trckable init` are held to the same tag here.
 //
@@ -9,6 +9,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { scriptTag } from '../../../packages/trckable/src/init'
+import { aiPrompt } from '../features/install/copy'
 import { METHODS, tag, type Ctx } from './install'
 
 const ROOT = new URL('../../../', import.meta.url)
@@ -17,8 +18,12 @@ const FILE = new URL('./install.snippets.json', import.meta.url)
 /** The values every snippet in the docs and READMEs is written with. */
 export const CANON: Ctx = { host: 'https://stats.example.com', site: 'tkb_a1b2c3d4', domain: 'example.com', proxyKey: 'your-proxy-key' }
 
+/** The methods the docs give their own page, with the AI prompt each one is shown. */
+const PROMPTED = ['script', 'next', 'wordpress', 'shopify', 'ghost', 'webflow', 'framer', 'squarespace', 'wix', 'gtm', 'lovable']
+
 const canonical = () => ({
   ctx: CANON,
+  aiPrompts: Object.fromEntries(METHODS.filter((m) => PROMPTED.includes(m.id)).map((m) => [m.id, aiPrompt(CANON, m)])),
   methods: Object.fromEntries(
     METHODS.map((m) => [m.id, { name: m.name, code: m.code(CANON), ...(m.steps ? { steps: m.steps(CANON).map((s) => s.code) } : {}) }]),
   ),
