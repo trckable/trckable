@@ -111,6 +111,23 @@ export interface BounceGuide {
   causes: BounceCause[]
 }
 
+/** One route visitors took: its first pages in order (fewer than three when the visit ended there) and how many took it. */
+export interface PathsRoute {
+  steps: string[]
+  visits: number
+  converted: number
+}
+
+/** How visitors move through the site over a period. */
+export interface PathsReport {
+  visits: number
+  pages: number
+  first?: { path: string; visits: number }
+  last?: { path: string; visits: number }
+  routes: PathsRoute[]
+  goals: boolean
+}
+
 /** A robot on one errand, and how often it came. */
 export interface AiBot {
   name: string
@@ -303,6 +320,7 @@ export const more = {
   team: (signal?: AbortSignal) => call<{ sites: TeamRow[] }>('GET', '/team', undefined, signal),
   overview: (days: number, signal?: AbortSignal) => call<{ days: number; sites: SiteRow[] }>('GET', `/overview?days=${days}`, undefined, signal),
   scroll: (site: string, q: ReportQuery, signal?: AbortSignal) => call<ScrollReport>('GET', `/sites/${site}/report/scroll` + rangeQS(q) + '&limit=10', undefined, signal),
+  paths: (site: string, q: ReportQuery, signal?: AbortSignal) => call<PathsReport>('GET', `/sites/${site}/report/paths` + rangeQS(q), undefined, signal),
   aiSearch: (site: string, q: ReportQuery, limit: number, signal?: AbortSignal) =>
     call<AiSearchReport>('GET', `/sites/${site}/report/ai-search` + rangeQS(q) + `&limit=${limit}`, undefined, signal),
   aiSeen: (site: string) => call<{ visitor: boolean; crawler: boolean }>('GET', `/sites/${site}/report/ai-seen`),

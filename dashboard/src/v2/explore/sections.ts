@@ -16,7 +16,7 @@ const SECTIONS: Section[] = ALL_GROUPS.flatMap((g) => g.items)
 const EVERY: Record<Section, Tab[]> = {
   changed: ['changed'],
   overview: ['overview', 'highlights', 'overtime', 'hours'],
-  pages: ['pages', 'exits', 'groups', 'sells'],
+  pages: ['pages', 'paths', 'exits', 'groups', 'sells'],
   sources: ['sources', 'quality', 'earners', 'referrers', 'utm'],
   search: ['search'],
   places: ['countries', 'regions', 'cities', 'timezones', 'languages', 'revmap', 'people'],
@@ -70,7 +70,7 @@ export const ALL_TABS: Tab[] = SECTIONS.flatMap((s) => EVERY[s])
 export const isTab = (v: string | undefined): v is Tab => !!v && (ALL_TABS as string[]).includes(v) && offered(v as Tab)
 
 /** The tables that set two periods side by side; the rest read this period alone. */
-export const compares = (t: Tab) => !HOSTED.includes(t) && !['speed', 'outbound', 'mentions', 'answers', 'sales', 'quality'].includes(t)
+export const compares = (t: Tab) => !HOSTED.includes(t) && !['speed', 'outbound', 'mentions', 'answers', 'sales', 'quality', 'paths'].includes(t)
 
 export const FILTER_DIMS: FilterDim[] = ['referrer', 'page', 'country', 'device']
 

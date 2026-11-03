@@ -212,3 +212,97 @@
     grid-column: 1 / -1;
   }
 }
+
+/* Paths: the busiest routes as soft bands through three pages, then the list of routes. */
+.mk .xpf {
+  margin: var(--mk-s4) 0 var(--mk-s2);
+}
+.mk .xpf svg {
+  display: block;
+  overflow: visible;
+}
+.mk .xpf-band path {
+  fill: var(--mk-lime);
+  fill-opacity: 0.22;
+  cursor: pointer;
+  transition: fill-opacity 0.15s;
+}
+.mk .xpf-band:hover path {
+  fill-opacity: 0.4;
+}
+.mk .xpf-band.on path {
+  fill-opacity: 0.6;
+}
+.mk .xpf-band.dim path {
+  fill-opacity: 0.08;
+}
+.mk .xpf-node rect {
+  fill: var(--mk-muted);
+}
+.mk .xpf-node.left rect {
+  fill: var(--mk-faint);
+}
+.mk .xpf-node text {
+  font-size: 12px;
+  fill: var(--mk-text);
+  paint-order: stroke;
+  stroke: var(--mk-card);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.mk .xpf-node.left text {
+  fill: var(--mk-muted);
+}
+.mk .xpl-h {
+  margin: var(--mk-s4) 0 var(--mk-s2);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mk-muted);
+}
+.mk .xpl .xrw {
+  grid-template-columns: minmax(0, 1fr) 64px 52px;
+  gap: var(--mk-s3);
+  cursor: pointer;
+}
+.mk .xpl.goals .xrw {
+  grid-template-columns: minmax(0, 1fr) 64px 52px 110px;
+}
+.mk .xpl-steps {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mk .xpl-steps i,
+.mk .xpl-steps em {
+  font-style: normal;
+  color: var(--mk-faint);
+}
+.mk .xpl-share,
+.mk .xpl-conv {
+  text-align: right;
+  color: var(--mk-muted);
+}
+.mk .xpl-conv {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.mk .xpl .xrw.on {
+  background: color-mix(in srgb, var(--mk-lime) 12%, transparent);
+}
+.mk .xpl .xrw.dim {
+  opacity: 0.55;
+}
+@media (--xs) {
+  .mk .xpl .xrw {
+    grid-template-columns: minmax(0, 1fr) 44px;
+    gap: 8px;
+  }
+  .mk .xpl.goals .xrw {
+    grid-template-columns: minmax(0, 1fr) 44px;
+  }
+  .mk .xpl-share,
+  .mk .xpl-conv {
+    display: none;
+  }
+}
