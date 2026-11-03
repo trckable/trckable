@@ -4,15 +4,17 @@ import { setView } from '../../lib/url'
 import { signals } from './copy'
 import { askPermission, canNotify } from './notify'
 import { pref, setPref } from './prefs'
-import { seeInData, seePageInData, type Surge } from './surge'
+import { seeInData, seeSourceData, surgeFilter, type Surge } from './surge'
 
 export function useSurgeActions(surge: Surge, tz: string, done: () => void) {
   const see = () => {
     setView(seeInData(surge, tz))
     done()
   }
-  const seePage = (page: string) => {
-    setView(seePageInData(surge, tz, page))
+  const only = surgeFilter(surge)
+  const seeOnly = () => {
+    if (!only) return
+    setView(seeSourceData(surge, tz, only))
     done()
   }
   /** Offered to someone who has not decided, in a browser that can. */
@@ -23,5 +25,5 @@ export function useSurgeActions(surge: Surge, tz: string, done: () => void) {
       if (p === 'denied') toast(signals.blocked, 'warning')
     })
   }
-  return { see, seePage, canAsk, notify }
+  return { see, seeOnly, canAsk, notify }
 }

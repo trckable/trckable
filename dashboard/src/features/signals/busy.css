@@ -1,0 +1,358 @@
+/* The busy moment (BusyBody.tsx): one design for the card in the corner and the line over Explore.
+   Lime and grey only. Inside Explore the tokens are the mock's (--mk-*); in the corner, the page's own. */
+.bz {
+  --bz-lime: var(--mk-lime, var(--accent));
+  --bz-text: var(--mk-text, var(--text));
+  --bz-muted: var(--mk-muted, var(--text-3));
+  --bz-line: var(--mk-line, var(--raised-line));
+  min-width: 0;
+}
+.bz-dot {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bz-lime, var(--accent));
+}
+.bz-dot:not([data-live]) {
+  background: var(--mk-muted, var(--text-3));
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bz-dot[data-live]::after,
+  .bz-spark .dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: inherit;
+    animation: bz-pulse 1.8s ease-out infinite;
+  }
+}
+@keyframes bz-pulse {
+  from {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(3);
+  }
+}
+.bz-hero {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.bz-count {
+  font-family: var(--mono);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.bz-unit {
+  color: var(--bz-muted);
+  font-size: 13px;
+}
+.bz .bz-chip {
+  margin-left: auto;
+  background: color-mix(in srgb, var(--bz-lime) 16%, transparent);
+  color: var(--bz-lime);
+}
+.bz-spark {
+  position: relative;
+  height: 44px;
+  margin-right: 6px;
+}
+.bz-spark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.bz-spark .band {
+  fill: var(--bz-text);
+  fill-opacity: 0.08;
+}
+.bz-spark .ln {
+  fill: none;
+  stroke: var(--bz-lime);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.bz-spark .dot {
+  position: absolute;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--bz-lime);
+}
+.bz-where {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  font-size: 13.5px;
+}
+.bz-source {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  color: var(--bz-text);
+}
+.bz-source .ref-mark {
+  flex: none;
+  margin: 0;
+}
+.bz-src-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bz-bar {
+  flex: none;
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--bz-text) 10%, transparent);
+  overflow: hidden;
+}
+.bz-bar b {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--bz-lime);
+}
+.bz-plus {
+  color: var(--bz-lime);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.bz-page {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--bz-muted);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- the card in the corner ---- */
+.bz[data-layout='card'] {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.side-card:has(.bz) .side-ic {
+  width: 14px;
+  background: none;
+}
+.side-card:has(.bz) .side-when {
+  margin-left: 0;
+  margin-right: auto;
+}
+.side-card:has(.bz) .side-card-actions {
+  justify-content: space-between;
+}
+.bz-only,
+.bz-see {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.bz-only {
+  color: var(--text-3);
+}
+.bz-see {
+  margin-left: auto;
+  color: var(--text);
+  font-weight: 600;
+}
+.bz-only:hover,
+.bz-see:hover {
+  color: var(--accent);
+}
+.bz-only:focus-visible,
+.bz-see:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+@media (max-width: 560px) {
+  .bz-only,
+  .bz-see {
+    min-height: 44px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  /* A soft glow that pulses twice, then rests. */
+  .side-card:has(.bz) {
+    animation: side-in 0.5s var(--spring, cubic-bezier(0.34, 1.4, 0.5, 1)) both, bz-glow 1.8s ease-out 0.4s 2;
+  }
+  .side-deck:has(.bz) .side-ghost {
+    transform-origin: 50% 100%;
+    animation: bz-hop 0.9s cubic-bezier(0.3, 0.7, 0.4, 1) 0.7s 3;
+  }
+}
+@keyframes bz-glow {
+  0%,
+  100% {
+    box-shadow: var(--glass-shadow-pop, var(--raised-shadow));
+  }
+  45% {
+    box-shadow:
+      var(--glass-shadow-pop, var(--raised-shadow)),
+      0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent),
+      0 0 36px color-mix(in srgb, var(--accent) 38%, transparent);
+  }
+}
+@keyframes bz-hop {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  30% {
+    transform: translateY(-9px) scale(0.96, 1.06) rotate(-6deg);
+  }
+  55% {
+    transform: translateY(0) scale(1.06, 0.94);
+  }
+  75% {
+    transform: translateY(-3px) rotate(4deg);
+  }
+}
+
+/* ---- the line over Explore ---- */
+.surge-banner {
+  padding: 10px 10px 10px 14px;
+  border: 1px solid var(--mk-line);
+  border-radius: 14px;
+  background: var(--mk-card);
+}
+.bz[data-layout='row'] {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.bz[data-layout='row'] .bz-count {
+  font-size: 26px;
+}
+.bz[data-layout='row'] .bz-chip {
+  margin-left: 4px;
+}
+.bz[data-layout='row'] .bz-spark {
+  flex: none;
+  width: 90px;
+  height: 30px;
+}
+.bz[data-layout='row'] .bz-where {
+  flex: 1 1 auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.bz[data-layout='row'] .bz-page::before {
+  content: '·';
+  margin-right: 8px;
+  color: var(--bz-muted);
+}
+.bz-head {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 10px;
+}
+.bz-title {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.bz-title b {
+  font-weight: 650;
+}
+.bz-when {
+  color: var(--bz-muted);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.bz-trail {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 6px;
+  margin-left: auto;
+}
+.bz-pill {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--mk-text) 7%, transparent);
+  color: var(--mk-text);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.bz-pill[aria-pressed='true'] {
+  background: var(--mk-lime);
+  color: var(--mk-bg);
+}
+.bz-close {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: var(--mk-muted);
+}
+.bz-close:hover {
+  background: color-mix(in srgb, var(--mk-text) 7%, transparent);
+  color: var(--mk-text);
+}
+@media (--compact) {
+  .bz[data-layout='row'] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px 12px;
+  }
+  .bz[data-layout='row'] .bz-head {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .bz[data-layout='row'] .bz-trail {
+    grid-column: 2;
+    grid-row: 1;
+    margin-left: 0;
+  }
+  .bz[data-layout='row'] .bz-hero {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .bz[data-layout='row'] .bz-spark {
+    display: none;
+  }
+  .bz[data-layout='row'] .bz-where {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    flex-wrap: wrap;
+  }
+  .bz[data-layout='row'] .bz-page::before {
+    display: none;
+  }
+}

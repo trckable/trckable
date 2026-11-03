@@ -499,7 +499,7 @@
 .mk .xmv-bar::before{content:"";position:absolute;inset-block:-3px;inset-inline-start:50%;width:1px;background:color-mix(in srgb,var(--mk-text) 22%,transparent)}
 .mk .xmv-bar>i{position:absolute;top:0;bottom:0;border-radius:4px}
 .mk .xmv-bar>i.dn{right:50%;background:var(--mk-red)}
-.mk .xmv-bar>i.up{left:50%;background:var(--mk-soft,var(--mk-lime))}
+.mk .xmv-bar>i.up{left:50%;background:var(--mk-lime)}
 .mk .xmv-n{font-weight:650;font-variant-numeric:tabular-nums;text-align:end;white-space:nowrap}
 .mk .xmv-ask{display:block;margin-top:var(--mk-s3);padding:4px 6px;border:0;background:none;color:var(--mk-muted);font:inherit;font-size:12.5px;cursor:pointer}
 .mk .xmv-ask:hover{color:var(--mk-text)}

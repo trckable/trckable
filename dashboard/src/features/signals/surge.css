@@ -1,36 +1,7 @@
-/* The surge card (SurgeCard.tsx) and its story (SurgeModal.tsx). Loads with them,
+/* The surge story (SurgeModal.tsx). Loads with it,
    not with the first page. Every moving thing stops under reduced motion. */
 
-/* ---- the card ---- */
-.side-card:has(.sg-hero) .sg-hero {
-  position: relative;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.sg-count {
-  font-family: var(--mono);
-  font-size: 44px;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-}
-.sg-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  min-width: 0;
-}
+/* The chip: how many times the usual (the card, the line over Explore and the story). */
 .sg-chip {
   padding: 2px 8px;
   border-radius: 999px;
@@ -39,104 +10,6 @@
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
-}
-.sg-unit {
-  color: var(--text-3);
-  font-size: 12px;
-}
-.sg-source {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  color: var(--text-2);
-  font-size: 13.5px;
-}
-.sg-source .ref-mark {
-  flex: none;
-  margin: 0;
-}
-@media (prefers-reduced-motion: no-preference) {
-  /* A soft glow that pulses twice, then rests. */
-  .side-card:has(.sg-hero) {
-    animation: side-in 0.5s var(--spring, cubic-bezier(0.34, 1.4, 0.5, 1)) both, sg-glow 1.8s ease-out 0.4s 2;
-  }
-  .side-deck:has(.sg-hero) .side-ghost {
-    transform-origin: 50% 100%;
-    animation: sg-hop 0.9s cubic-bezier(0.3, 0.7, 0.4, 1) 0.7s 3;
-  }
-}
-@keyframes sg-glow {
-  0%,
-  100% {
-    box-shadow: var(--glass-shadow-pop, var(--raised-shadow));
-  }
-  45% {
-    box-shadow:
-      var(--glass-shadow-pop, var(--raised-shadow)),
-      0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent),
-      0 0 36px color-mix(in srgb, var(--accent) 38%, transparent);
-  }
-}
-@keyframes sg-hop {
-  0%,
-  100% {
-    transform: translateY(0) scale(1, 1);
-  }
-  30% {
-    transform: translateY(-9px) scale(0.96, 1.06) rotate(-6deg);
-  }
-  55% {
-    transform: translateY(0) scale(1.06, 0.94);
-  }
-  75% {
-    transform: translateY(-3px) rotate(4deg);
-  }
-}
-
-/* The card's small hour. */
-.sg-spark {
-  display: block;
-  width: calc(100% + 28px);
-  height: 56px;
-  box-sizing: border-box;
-  margin: 2px -14px 0;
-  padding: 0;
-  overflow: hidden;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
-}
-.sg-spark .usual {
-  stroke: var(--text-4, var(--text-3));
-  stroke-dasharray: 3 3;
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-.sg-spark .ln {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.sg-spark .pre {
-  fill: none;
-  stroke: var(--text-4, var(--text-3));
-  stroke-width: 1.4;
-  opacity: 0.6;
-}
-.sg-spark .ar {
-  fill: color-mix(in srgb, var(--accent) 18%, transparent);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .sg-spark .ln {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    animation: sgm-draw 1s ease-out 0.5s forwards;
-  }
-  .sg-spark .ar {
-    animation: fade-in 0.8s ease-out 0.9s both;
-  }
 }
 
 /* ---- the story ---- */
@@ -381,17 +254,6 @@
   font-size: 13px;
 }
 
-.sgm-landing {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  margin: 0;
-  font-size: 13px;
-}
-.sgm-landing .info {
-  min-width: 0;
-}
 .sgm-path {
   max-width: 100%;
   padding: 2px 8px;

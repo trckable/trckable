@@ -12,7 +12,7 @@ import { addDays } from '../../lib/dates'
 import { openSurgeStory } from './openStory'
 import SurgeCard from './SurgeCard'
 import SurgeModal from './SurgeModal'
-import { bannerParts, beats, clock, localHour, seeInData, deviceShare, honestLine, midTruncate, peakSlice, sourceHost, sourceLine, startSlice, surgeChip, surgeFilter, surgeNotice, type Story, type Surge } from './surge'
+import { beats, busyCount, busySpan, clock, localHour, seeInData, seeSourceData, deviceShare, honestLine, midTruncate, peakSlice, sourceExtra, sourceHost, startSlice, surgeChip, surgeFilter, surgeNotice, type Story, type Surge } from './surge'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -42,13 +42,16 @@ const surge: Surge = {
 }
 
 describe('what the card says', () => {
-  it('says who sent most of them in one line, and how many only when it is not most', () => {
-    expect(sourceLine(surge)).toBe('Mostly from Facebook')
-    expect(sourceLine({ ...surge, why: { ...surge.why, source_n: 20 } })).toBe('20 from Facebook')
-    expect(sourceLine({ ...surge, why: { ...surge.why, source: 'Direct', source_dim: 'channel', source_value: 'Direct', source_n: 40 } })).toBe('Mostly direct visits')
-    expect(sourceLine({ ...surge, why: { source_usual: 0, before: 0, minutes: 15 } })).toBe('')
+  it('says how many more than usual the source sends, the source icon host, and the chip', () => {
+    expect(sourceExtra(surge)).toBe(32)
+    expect(sourceExtra({ ...surge, why: { ...surge.why, source_n: 1 } })).toBe(0)
+    expect(sourceExtra({ ...surge, why: { source_usual: 0, before: 0, minutes: 15 } })).toBe(0)
     expect(sourceHost(surge)).toBe('facebook.com')
     expect(surgeChip(surge)).toBe('2.7× usual')
+  })
+  it('counts the people now while it lasts and the peak once it is over', () => {
+    expect(busyCount(surge)).toBe(53)
+    expect(busyCount({ ...surge, online: 30, ended: surge.started + 600 })).toBe(53)
   })
   it('filters to the source, and to nothing when there is none', () => {
     expect(surgeFilter(surge)).toEqual({ dim: 'referrer', value: 'l.facebook.com' })
@@ -129,9 +132,12 @@ describe('Explore landed on the moment', () => {
     const live = seeInData(surge, 'UTC', new Date((surge.started + 40 * 3600) * 1000))
     expect(live.to).toBe(localHour(surge.started + 40 * 3600, 'UTC').day)
   })
-  it('says when, how busy and who sent them, in one line', () => {
-    expect(bannerParts(over, 'UTC')).toEqual({ span: `${clock(over.started, 'UTC')}–${clock(over.started + 25 * 60, 'UTC')}`, peak: '53 at peak', source: 'from Facebook' })
-    expect(bannerParts(surge, 'UTC').span).toBe(`since ${clock(surge.started, 'UTC')}`)
+  it('says when it was: since, or between', () => {
+    expect(busySpan(over, 'UTC')).toBe(`${clock(over.started, 'UTC')}–${clock(over.started + 25 * 60, 'UTC')}`)
+    expect(busySpan(surge, 'UTC')).toBe(`since ${clock(surge.started, 'UTC')}`)
+  })
+  it('narrows the same days to the source that sent them', () => {
+    expect(seeSourceData(over, 'UTC', { dim: 'referrer', value: 'l.facebook.com' }, now)).toEqual({ ...seeInData(over, 'UTC', now), xf: [{ dim: 'referrer', value: 'l.facebook.com' }] })
   })
 })
 
@@ -142,41 +148,34 @@ describe('the surge card', () => {
     expect(card()).toBeNull()
   })
 
-  it('is a number, a chip, one line, a sneak peek and two buttons', async () => {
+  it('is one head, the people with a chip, the hour in small, the source, and two quiet actions', async () => {
     answer(surge)
     await draw()
-    expect(card()?.querySelector('.sg-count')?.textContent).toBe('53')
-    expect(card()?.querySelector('.sg-chip')?.textContent).toBe('2.7× usual')
-    expect(card()?.querySelector('.sg-source span:last-child')?.textContent).toBe('Mostly from Facebook')
-    expect(card()?.querySelector('svg.sg-spark')).not.toBeNull()
-    expect([...(card()?.querySelectorAll('.side-card-actions button') ?? [])].map((b) => b.textContent)).toEqual(['More', 'See it in Explore'])
+    expect(card()?.querySelector('.side-name')?.textContent).toBe('Busy right now')
+    expect(card()?.querySelector('.side-when')?.textContent).toBe(`since ${clock(surge.started, 'UTC')}`)
+    expect(card()?.querySelector('.side-card-title')).toBeNull()
+    expect(card()?.querySelector('.bz-count')?.textContent).toBe('53')
+    expect(card()?.querySelector('.bz-unit')?.textContent).toBe('people on the site')
+    expect(card()?.querySelector('.bz-chip')?.textContent).toBe('2.7× usual')
+    expect(card()?.querySelector('.bz-src-name')?.textContent).toBe('Facebook')
+    expect(card()?.querySelector('.bz-plus')?.textContent).toBe('+32')
+    expect(card()?.querySelector('.bz-page')?.textContent).toBe('/blog/launch-post')
+    expect(card()?.querySelector('.bz-spark svg')).not.toBeNull()
+    expect([...(card()?.querySelectorAll('.side-card-actions button') ?? [])].map((b) => b.textContent?.trim())).toEqual(['Only Facebook', 'See it in Explore'])
   })
 
-  it('the number opens the same dialog as More, and so does openSurgeStory(id) from outside', async () => {
+  it('Only Facebook opens the moment in Explore narrowed to that source, and puts the card away', async () => {
     answer(surge)
     await draw()
-    act(() => card()?.querySelector<HTMLButtonElement>('.sg-hero')?.click())
-    for (let i = 0; i < 40 && !document.body.querySelector('[role="dialog"]'); i++) await act(() => new Promise((r) => setTimeout(r, 25)))
-    expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('20 → 53 in 15 min')
-    act(() => {
-      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
-    })
-    expect(document.body.querySelector('[role="dialog"]')).toBeNull()
+    act(() => card()?.querySelector<HTMLButtonElement>('.bz-only')?.click())
+    expect(setView).toHaveBeenCalledWith(expect.objectContaining({ bucket: 'hour', xf: [{ dim: 'referrer', value: 'l.facebook.com' }], surge: surge.started }))
+    expect(localStorage.getItem('trckable:card:surge:surge_1')).toBe('1')
+  })
+
+  it('openSurgeStory(id) from outside opens the story dialog, and Escape closes it', async () => {
+    answer(surge)
+    await draw()
     act(() => openSurgeStory('surge_1'))
-    for (let i = 0; i < 40 && !document.body.querySelector('[role="dialog"]'); i++) await act(() => new Promise((r) => setTimeout(r, 25)))
-    const dlg = document.body.querySelector('[role="dialog"]')
-    expect(dlg?.querySelector('svg[role="img"]')).not.toBeNull()
-    expect(dlg?.querySelectorAll('.sgm-beats li').length).toBe(3)
-    expect(dlg?.querySelectorAll('.sgm-tile').length).toBe(4)
-  })
-
-  it('More opens the story as a dialog with the beats, the tiles and the honest line, and Escape closes it', async () => {
-    answer(surge)
-    await draw()
-    const more = [...document.body.querySelectorAll<HTMLButtonElement>('.side-card button')].find((b) => b.textContent === 'More')
-    act(() => {
-      more?.click()
-    })
     for (let i = 0; i < 40 && !document.body.querySelector('[role="dialog"]'); i++) await act(() => new Promise((r) => setTimeout(r, 25)))
     const dlg = document.body.querySelector('[role="dialog"]')
     expect(dlg?.getAttribute('aria-modal')).toBe('true')
@@ -187,7 +186,8 @@ describe('the surge card', () => {
     expect(dlg?.textContent).toContain('Phone')
     expect(dlg?.textContent).toContain('/blog/launch-post')
     expect(dlg?.textContent).toContain('The exact post isn’t visible.')
-    expect(dlg?.querySelector('svg[role="img"]')).not.toBeNull()
+    expect(dlg?.querySelectorAll('.sgm-beats li').length).toBe(3)
+    expect(dlg?.querySelectorAll('.sgm-tile').length).toBe(4)
     act(() => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
     })
@@ -197,7 +197,7 @@ describe('the surge card', () => {
   it('See it in Explore, on the card, opens the moment on Overview by the hour against a week earlier, and the card is put away for good', async () => {
     answer(surge)
     await draw()
-    const see = [...document.body.querySelectorAll<HTMLButtonElement>('.side-card .side-card-actions button')].find((b) => b.textContent === 'See it in Explore')
+    const see = document.body.querySelector<HTMLButtonElement>('.side-card .bz-see')
     act(() => {
       see?.click()
     })
@@ -291,9 +291,12 @@ describe('the line and the band on Explore', () => {
     })
     await act(() => new Promise((r) => setTimeout(r, 40)))
     expect(host.textContent).toContain('Busy moment')
-    expect(host.textContent).toContain('53 at peak · from Facebook → /blog/launch-post')
-    const [, only, back] = [...host.querySelectorAll('button')]
-    expect(host.querySelector('.sgm-path')?.getAttribute('aria-label')).toBe('/blog/launch-post')
+    expect(host.querySelector('.bz-when')?.textContent).toBe(`${clock(over.started, 'UTC')}–${clock(over.started + 25 * 60, 'UTC')}`)
+    expect(host.querySelector('.bz-count')?.textContent).toBe('53')
+    expect(host.querySelector('.bz-unit')?.textContent).toBe('people at the peak')
+    expect(host.querySelector('.bz-src-name')?.textContent).toBe('Facebook')
+    expect(host.querySelector('.bz-page')?.textContent).toBe('/blog/launch-post')
+    const [only, back] = [...host.querySelectorAll('button')]
     expect(only.textContent).toBe('Only Facebook')
     act(() => only.click())
     expect(setView).toHaveBeenCalledWith({ xf: [{ dim: 'referrer', value: 'l.facebook.com' }] })

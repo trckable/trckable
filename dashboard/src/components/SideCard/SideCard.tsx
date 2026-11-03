@@ -45,7 +45,8 @@ export interface SideCardProps {
   closeLabel: string
   /** Someone asked for it (a click): it does not wait behind a card that came up by itself. */
   asked?: boolean
-  title: ReactNode
+  /** The headline of the body; a card whose head already says what it is leaves it out. */
+  title?: ReactNode
   onClose: () => void
   actions: ReactNode
   children?: ReactNode
@@ -197,7 +198,7 @@ export function SideCard({ id, label, closeLabel, asked, title, onClose, actions
           </button>
         </header>
         <div className="side-body">
-          <b className="side-card-title">{title}</b>
+          {title && <b className="side-card-title">{title}</b>}
           {children}
           {chart}
         </div>

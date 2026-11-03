@@ -1,0 +1,1 @@
+The busy moment looks the same in the corner card and over Explore: people on the site, how many times the usual, the last hour in small and where it came from; the day chart no longer glows while the usual is still being learned, and rising rows in What changed are lime.

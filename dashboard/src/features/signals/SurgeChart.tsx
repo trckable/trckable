@@ -54,28 +54,3 @@ export function SurgeChart({ surge, tz }: { surge: Surge; tz: string }) {
     </figure>
   )
 }
-
-const SW = 280
-const SH = 46
-
-/** The card's small version: the same hour as a line that draws itself, the usual dashed. */
-export function SurgeSpark({ surge }: { surge: Surge }) {
-  const series = surge.story?.series
-  if (!series || series.length < 2) return null
-  const top = Math.max(...series, surge.usual, 1) * 1.1
-  const x = (i: number) => (i * SW) / (series.length - 1)
-  const y = (v: number) => SH - 3 - (v / top) * (SH - 6)
-  const pt = (v: number, i: number) => `${x(i).toFixed(1)} ${y(v).toFixed(1)}`
-  const line = series.map((v, i) => `${i ? 'L' : 'M'}${pt(v, i)}`).join(' ')
-  // The climb in lime from where it began; before it the line is faint.
-  const from = (surge.story && startSlice(surge.story)) ?? 0
-  const hot = series.map((v, i) => (i >= from ? `${i === from ? 'M' : 'L'}${pt(v, i)}` : '')).join(' ')
-  return (
-    <svg className="sg-spark line-fade" viewBox={`0 0 ${SW} ${SH}`} preserveAspectRatio="none" aria-hidden="true">
-      <line className="usual" x1="0" x2={SW} y1={y(surge.usual)} y2={y(surge.usual)} />
-      <path className="ar" d={`${hot} L${SW} ${SH} L${x(from).toFixed(1)} ${SH} Z`} />
-      <path className="pre" d={line} vectorEffect="non-scaling-stroke" />
-      <path className="ln" pathLength="1" d={hot} vectorEffect="non-scaling-stroke" />
-    </svg>
-  )
-}

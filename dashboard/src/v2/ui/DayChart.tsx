@@ -116,6 +116,8 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
   const gv = useGlide('chart:v', c.points.map((p) => p.v))
   const gp = useGlide('chart:was', (c.compare?.vals ?? []).slice(0, span))
   const pts = c.points.map((p, i) => ({ ...p, v: gv[i] ?? p.v }))
+  // A bucket is only called up or down where the site has a usual for it: while that is still being learned the line stays plain.
+  const judged = (p: ChartPoint) => (c.band && (c.usual[p.i]?.hi ?? 0) >= 1 ? p.st : '')
   const f0 = /* before the first visit: shade only, no line, no comparison */ firstData(c.bucket, pts.map((p) => p.v))
   const drawn = pts.slice(f0)
   // The usual of each bucket of the period (the hours still to come too) as a band; a bucket with no usual to speak of has none, and only a chart with no band at all draws the period before as a line.
@@ -216,7 +218,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
           <path d={`${line} L${geo[geo.length - 1][0]},${B} L${geo[0][0]},${B} Z`} fill={`url(#${fill})`} />
           <path d={line} fill="none" stroke="var(--mk-text)" strokeOpacity=".55" strokeWidth="2" strokeLinecap="round" />
           {pts.map((p, i) => {
-            if (!p.st || i < f0) return null
+            if (!judged(p) || i < f0) return null
             const k = i - f0
             return (
               <path
@@ -224,7 +226,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
                 className="chhot"
                 d={stretch(geo, segs, Math.max(0, k - 1), Math.min(geo.length - 1, k + 1))}
                 fill="none"
-                stroke={p.st === 'up' ? 'var(--mk-lime)' : 'var(--mk-red)'}
+                stroke={judged(p) === 'up' ? 'var(--mk-lime)' : 'var(--mk-red)'}
                 strokeWidth="2.6"
                 strokeLinecap="round"
               />
@@ -232,11 +234,11 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
           })}
           {c.live && (
             <g>
-              <circle cx={X(last.i)} cy={Y(last.v)} r="4" fill="none" stroke={DOT[last.st || 'none']} strokeWidth="1.5">
+              <circle cx={X(last.i)} cy={Y(last.v)} r="4" fill="none" stroke={DOT[judged(last) || 'none']} strokeWidth="1.5">
                 <animate attributeName="r" values="4;12" dur="1.8s" repeatCount="indefinite" />
                 <animate attributeName="opacity" values=".7;0" dur="1.8s" repeatCount="indefinite" />
               </circle>
-              <circle cx={X(last.i)} cy={Y(last.v)} r="4.5" fill={DOT[last.st || 'none']} stroke="var(--mk-card)" strokeWidth="2" />
+              <circle cx={X(last.i)} cy={Y(last.v)} r="4.5" fill={DOT[judged(last) || 'none']} stroke="var(--mk-card)" strokeWidth="2" />
             </g>
           )}
         </g>
