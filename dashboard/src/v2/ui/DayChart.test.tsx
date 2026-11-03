@@ -46,6 +46,6 @@ describe('the day chart while the usual is still being learned', () => {
     expect(lit(chart([null, null, null, null, null]))).toBe(0)
   })
   it('lights the buckets that rose above a usual that is there', () => {
-    expect(lit(chart(Array(5).fill({ lo: 2, hi: 6 })))).toBeGreaterThan(0)
+    expect(lit(chart(Array<{ lo: number; hi: number }>(5).fill({ lo: 2, hi: 6 })))).toBeGreaterThan(0)
   })
 })
