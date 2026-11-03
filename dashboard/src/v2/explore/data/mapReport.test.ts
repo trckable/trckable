@@ -9,6 +9,21 @@ const report = (cur: Result, prev?: Result): Report => ({ site: 's', timezone: '
 const money = (revenue: number): Money => ({ currency: 'USD', exponent: 2, revenue, refunds: 0, payments: 2, customers: 2, paying_visitors: 2, conversion: 0.01, revenue_per_visitor: 1, new_revenue: revenue, renewal_revenue: 0, new_gross: 0, upgrade_gross: 0, renewal_gross: 0, unattributed: 0, unconverted: 0 })
 const none = { uptime: null, now: '2026-10-16' }
 
+describe('the visit tiles and the entry and exit tables', () => {
+  it('says engaged visits, pages per visit and time on site against the period before', () => {
+    const o = mapOverview(report(result(100, { kpis: kpis(100, { avg_session_s: 90 }) }), result(100)), none)
+    expect(o.visits.map((k) => k.icon)).toEqual(['people', 'click', 'uptime'])
+    expect(o.visits[0]).toMatchObject({ val: '55', tag: '≈ same' })
+    expect(o.visits[2]).toMatchObject({ val: '1m 30s', tag: '+50%', tone: 'up' })
+  })
+  it('gives entry and exit rows the share of their visits that left after one page', () => {
+    const rows = [{ value: '/a', visitors: 10, sessions: 12, bounce_rate: 0.25 }, { value: '/b', visitors: 5 }]
+    const t = mapTable('entries', report(result(15, { dims: { entry_page: rows } })))
+    expect(t.rows.map((r) => [r.val, r.br])).toEqual([['/a', 0.25], ['/b', undefined]])
+    expect(mapTable('pages', report(result(15, { dims: { page: rows } }))).rows[0]?.br).toBeUndefined()
+  })
+})
+
 describe('the overview', () => {
   it('has four cards: people, views without a goal, uptime without revenue, and who left', () => {
     const o = mapOverview(report(result(100), result(100)), none)

@@ -7,6 +7,7 @@ export const deepCopy = defineCopy('cards.deep', {
     overTime: 'Over time',
     sources: 'Sources',
     returning: 'New vs returning',
+    views: 'Pageviews',
     hours: 'Hours',
     revenueMap: 'Revenue map',
     crawlers: 'Crawlers',

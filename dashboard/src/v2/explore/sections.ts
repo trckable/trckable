@@ -16,7 +16,7 @@ const SECTIONS: Section[] = ALL_GROUPS.flatMap((g) => g.items)
 const EVERY: Record<Section, Tab[]> = {
   changed: ['changed'],
   overview: ['overview', 'highlights', 'overtime', 'hours'],
-  pages: ['pages', 'paths', 'exits', 'groups', 'sells'],
+  pages: ['pages', 'paths', 'entries', 'exits', 'groups', 'sells'],
   sources: ['sources', 'quality', 'earners', 'referrers', 'utm'],
   search: ['search'],
   places: ['countries', 'regions', 'cities', 'timezones', 'languages', 'revmap', 'people'],

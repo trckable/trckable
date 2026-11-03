@@ -93,6 +93,18 @@
   }
 }
 
+/* Entry and exit pages: the share that left after one page is a column of its own, in a card as in the side panel. */
+.mk .xt.xl .xth,
+.mk .xt.xl .xrw {
+  grid-template-columns: var(--xcp);
+}
+@media (--xs) {
+  .mk .xt.xl .xth,
+  .mk .xt.xl .xrw {
+    grid-template-columns: var(--xcm);
+  }
+}
+
 /* Search: clicks and impressions by day. */
 .mk .xschart {
   margin: var(--mk-s3) 0;

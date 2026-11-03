@@ -80,6 +80,7 @@ export function mapOverview(r: Report, o: { money?: (minor: number) => string; u
   const rows = (dim: string, name: (v: string) => string) => rowsOf(cur.dims[dim], prev?.dims[dim], prev?.kpis.visitors, name)
   return {
     kcs,
+    visits: Object.values(mapVisits(cur, base ? prev : undefined)),
     per: perOf(r.bucket, series.length),
     shape: shapeOf(r, o.now, o.against),
     down: o.uptime?.down ?? [],
@@ -115,6 +116,9 @@ interface TableCfg {
   code?: boolean
 }
 
+/** The tables of where a visit began or ended: each row also says how many of its visits stopped there after one page. */
+const LEAVES = new Set(['entry_page', 'exit_page'])
+
 const TABLES: Partial<Record<Tab, TableCfg>> = {
   pages: { key: 'page', dim: 'page', name: (v) => v },
   sources: { key: 'channel', dim: 'channel', name: channelLabel },
@@ -123,6 +127,7 @@ const TABLES: Partial<Record<Tab, TableCfg>> = {
   countries: { key: 'country', dim: 'country', name: countryName, code: true },
   devices: { key: 'device', dim: 'device', name: (v) => v },
   browsers: { key: 'browser', name: (v) => v },
+  entries: { key: 'entry_page', dim: 'entry_page', name: (v) => v },
   exits: { key: 'exit_page', dim: 'exit_page', name: (v) => v },
   groups: { key: 'group', dim: 'group', name: (v) => v },
   regions: { key: 'region', dim: 'region', name: (v) => v },
@@ -156,7 +161,9 @@ export function mapTable(tab: Tab, r: Report): Table {
   }
   const signups = !!r.current.signup && !NO_SIGNUP.has(t.key)
   const joined = new Map((r.current.dims[t.key] ?? []).map((x) => [x.value, x.signups ?? 0]))
+  const bounced = LEAVES.has(t.key) ? new Map((r.current.dims[t.key] ?? []).map((x) => [x.value, x])) : null
   const extra = (v: string): Partial<Row> => ({
+    ...(bounced ? { br: (bounced.get(v)?.sessions ?? 0) > 0 ? bounced.get(v)?.bounce_rate ?? 0 : undefined } : {}),
     ...(t.code ? { code: v } : {}),
     ...(signups ? { su: joined.get(v) ?? 0 } : {}),
     ...(sales ? { cust: paid.get(v)?.customers ?? 0, rev: paid.get(v)?.revenue ?? 0 } : {}),
@@ -194,19 +201,29 @@ export function mapTops(r: Report): Top[] {
 /** Reading depth in whole percents (the report writes a share as 0 to 1 or 0 to 100). */
 const depthOf = (x: number) => Math.round(x <= 1 ? x * 100 : x)
 
+type Kp = { kpis: KPIs }
+
+const engagedOf = (k: KPIs) => Math.round(k.sessions * (1 - k.bounce_rate))
+
+/** One card of numbers: its value against the same number in the period before; a dash when the period had nothing to measure. */
+function visitCard(icon: string, label: string, val: string, cur: number | undefined, was: number | undefined, wasText: string): Xkc {
+  return cur === undefined ? { icon, label, val: '–', tag: '', tone: '', detail: '' } : { icon, label, val, ...changeOf(cur, was, copy.asUsual), detail: was ? copy.was(wasText) : '' }
+}
+
+/** How many visits stayed past the first page, how many pages one reads and how long it lasts: each against the period before. */
+export function mapVisits(now: Kp, before?: Kp): { engaged: Xkc; perVisit: Xkc; time: Xkc } {
+  const k = [now.kpis, before?.kpis] as const
+  return {
+    engaged: visitCard('people', copy.engage.engaged, fmtInt(engagedOf(k[0])), k[0].sessions > 0 ? engagedOf(k[0]) : undefined, k[1] && engagedOf(k[1]), fmtInt(k[1] ? engagedOf(k[1]) : 0)),
+    perVisit: visitCard('click', copy.engage.perVisit, fmtFixed(k[0].views_per_session, 1), k[0].sessions > 0 ? k[0].views_per_session : undefined, k[1]?.views_per_session, fmtFixed(k[1]?.views_per_session ?? 0, 1)),
+    time: visitCard('uptime', copy.engage.time, fmtDuration(k[0].avg_session_s), k[0].sessions > 0 ? k[0].avg_session_s : undefined, k[1]?.avg_session_s, fmtDuration(k[1]?.avg_session_s ?? 0)),
+  }
+}
+
 /** How people read the pages: five numbers, each against the period before. A number the period could not measure says a dash. */
 export function mapEngage(now: { kpis: KPIs; scroll?: ScrollReport }, before?: { kpis: KPIs; scroll?: ScrollReport }): Xkc[] {
   const read = (s?: ScrollReport) => (s && s.samples > 0 ? { avg: Math.round(s.avg), deep: depthOf(s.reached[2]) } : undefined)
-  const engaged = (k: KPIs) => Math.round(k.sessions * (1 - k.bounce_rate))
   const [a, b] = [read(now.scroll), before && read(before.scroll)]
-  const card = (icon: string, label: string, val: string, cur: number | undefined, was: number | undefined, wasText: string): Xkc =>
-    cur === undefined ? { icon, label, val: '–', tag: '', tone: '', detail: '' } : { icon, label, val, ...changeOf(cur, was, copy.asUsual), detail: was ? copy.was(wasText) : '' }
-  const k = [now.kpis, before?.kpis] as const
-  return [
-    card('pages', copy.engage.scroll, `${a?.avg}%`, a?.avg, b?.avg, `${b?.avg}%`),
-    card('uptime', copy.engage.time, fmtDuration(k[0].avg_session_s), k[0].sessions > 0 ? k[0].avg_session_s : undefined, k[1]?.avg_session_s, fmtDuration(k[1]?.avg_session_s ?? 0)),
-    card('goal', copy.engage.deep, `${a?.deep}%`, a?.deep, b?.deep, `${b?.deep}%`),
-    card('people', copy.engage.engaged, fmtInt(engaged(k[0])), k[0].sessions > 0 ? engaged(k[0]) : undefined, k[1] && engaged(k[1]), fmtInt(k[1] ? engaged(k[1]) : 0)),
-    card('click', copy.engage.perVisit, fmtFixed(k[0].views_per_session, 1), k[0].sessions > 0 ? k[0].views_per_session : undefined, k[1]?.views_per_session, fmtFixed(k[1]?.views_per_session ?? 0, 1)),
-  ]
+  const v = mapVisits(now, before)
+  return [visitCard('pages', copy.engage.scroll, `${a?.avg}%`, a?.avg, b?.avg, `${b?.avg}%`), v.time, visitCard('goal', copy.engage.deep, `${a?.deep}%`, a?.deep, b?.deep, `${b?.deep}%`), v.engaged, v.perVisit]
 }
