@@ -185,9 +185,8 @@ export const seeInExplore = (s: Surge, tz: string, filters: Filter[], now = new 
 export const seePageInData = (s: Surge, tz: string, page: string, now = new Date()): Partial<ViewState> => ({ ...seeInData(s, tz, now), xf: [{ dim: 'page', value: page }] })
 
 /** The line over the numbers: when it was, how busy, who sent them and where they landed. */
-export function bannerLine(s: Surge, tz: string): string {
+/** The busy moment's card: when (since or between), its peak and its source, each its own piece. */
+export function bannerParts(s: Surge, tz: string): { span: string; peak: string; source: string } {
   const from = clock(s.started, tz)
-  const span = s.ended ? t.spanBetween(from, clock(s.ended, tz)) : t.spanSince(from)
-  const w = s.why
-  return [t.bannerHead(span), t.atPeak(s.online), w.source ? t.fromSource(w.source) : ''].filter(Boolean).join(' · ')
+  return { span: s.ended ? t.spanBetween(from, clock(s.ended, tz)) : t.spanSince(from), peak: t.atPeak(s.online), source: s.why.source ? t.fromSource(s.why.source) : '' }
 }

@@ -72,7 +72,7 @@ export const signals = defineCopy('signals', {
     bandLabel: (times: string) => `Busy moment · ${times} usual`,
     spanBetween: (from: string, to: string) => `${from}–${to}`,
     spanSince: (from: string) => `since ${from}`,
-    bannerHead: (span: string) => `Busy moment ${span}`,
+    busyTitle: 'Busy moment',
     atPeak: (n: number) => `${n} at peak`,
     fromSource: (source: string) => `from ${source}`,
     only: (source: string) => `Only ${source}`,

@@ -1,0 +1,1 @@
+- Explore: a busy moment opens as a small card (an amber mark with a live dot while it lasts, what and when, where from), with an Only chip and a close, instead of a dashed strip of text.

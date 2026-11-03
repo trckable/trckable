@@ -571,7 +571,7 @@ export default {
   'signals.surge.bandLabel': (times: string) => `Hohe Aktivität · ${times} so viel wie üblich`,
   'signals.surge.spanBetween': (from: string, to: string) => `${from}–${to}`,
   'signals.surge.spanSince': (from: string) => `seit ${from}`,
-  'signals.surge.bannerHead': (span: string) => `Hoher Andrang ${span}`,
+  'signals.surge.busyTitle': 'Hoher Andrang',
   'signals.surge.atPeak': (n: number) => `${int(n)} auf dem Höhepunkt`,
   'signals.surge.fromSource': (source: string) => `von ${source}`,
   'signals.surge.only': (source: string) => `Nur ${source}`,
