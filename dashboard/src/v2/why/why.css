@@ -624,15 +624,9 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .mk .xp.xpage .xtitle svg{box-sizing:content-box;flex:none;width:17px;height:17px;padding:7px;color:var(--x-white);border-radius:11px;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,var(--x-white)),color-mix(in srgb,var(--c) 72%,var(--x-black)))}
 .mk .xrail .xri:not(.on) svg{opacity:.82}
 .mk .xrail .xri:hover svg{opacity:1}
-/* A tile answers the pointer: its icon lifts with a small spring. */
-.xtile svg{transition:filter .2s ease}
-/* On hover the tile stays put and its symbol comes alive: it draws itself in and settles with a small bounce. */
-.xtile svg>*{transform-box:fill-box;transform-origin:center}
+/* The tile and its coloured square stay put; the symbol inside moves (tileIcons.tsx). */
 .xtile:hover svg,.xtile:focus-visible svg{filter:brightness(1.08)}
-.xtile:hover svg>*,.xtile:focus-visible svg>*{animation:xglyph .7s cubic-bezier(.34,1.56,.64,1) both}
-@keyframes xglyph{0%{stroke-dasharray:80;stroke-dashoffset:80;transform:scale(.82)}60%{stroke-dasharray:80;stroke-dashoffset:0}99%{stroke-dasharray:80;stroke-dashoffset:0}100%{stroke-dasharray:none;transform:scale(1)}}
-.xtile:active svg>*{transform:scale(.92)}
-@media (prefers-reduced-motion:reduce){.xtile:hover svg>*,.xtile:focus-visible svg>*{animation:none}}
+.xtile svg{transition:filter .2s ease}
 .pop.xtiles-pop,.lpop.xtiles-pop{width:auto;max-width:calc(100vw - 16px)}
 /* As a sheet the tiles fill its width, up to a size that still reads as a grid; the button stays one square on every screen. */
 .pop.xtiles-pop.is-sheet{width:100%;max-width:none}.is-sheet .xtiles{width:100%;max-width:520px;margin-inline:auto}

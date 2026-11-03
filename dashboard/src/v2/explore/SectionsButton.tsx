@@ -1,10 +1,21 @@
 // Every section of Explore at a glance, from the header on Live and on Explore: a tile each, a tap opens that page.
+import { useState } from 'react'
 import { LayoutGrid } from 'lucide-react'
 import { Popover } from '../../kit/Popover'
-import { XIco } from '../ui/XIcons'
 import { copy } from './copy'
 import { openExplore } from './open'
-import { groups, TABS } from './sections'
+import { groups, TABS, type Section } from './sections'
+import { TileIcon } from '../why/tileIcons'
+
+function Tile({ section, onOpen }: { section: Section; onOpen: () => void }) {
+  const [on, setOn] = useState(false)
+  return (
+    <button type="button" className="xtile" data-xtile={section} onClick={onOpen} onPointerEnter={() => setOn(true)} onPointerLeave={() => setOn(false)} onFocus={() => setOn(true)} onBlur={() => setOn(false)}>
+      <TileIcon name={section} active={on} />
+      <span>{copy.names[section][0]}</span>
+    </button>
+  )
+}
 
 export function SectionsButton() {
   return (
@@ -21,10 +32,7 @@ export function SectionsButton() {
       {(close) => (
         <div className="xtiles">
           {groups().flatMap((g) => g.items).map((s) => (
-            <button key={s} type="button" className="xtile" data-xtile={s} onClick={() => { close(); openExplore(TABS[s][0]) }}>
-              <XIco name={s} />
-              <span>{copy.names[s][0]}</span>
-            </button>
+            <Tile key={s} section={s} onOpen={() => { close(); openExplore(TABS[s][0]) }} />
           ))}
         </div>
       )}
