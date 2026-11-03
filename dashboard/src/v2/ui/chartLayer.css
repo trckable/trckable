@@ -19,3 +19,8 @@
 
 /* A line that only says what a label is must not take the pointer from it (a nudged label can end up under its own line). */
 .mk .chlay-in .mp-tip:not(.kept),.mk .chlay-in .sm-tip,.mk .chlay-in .moment-tip{pointer-events:none}
+
+/* The stretches above or below usual glow a little, so the eye goes there first. */
+.chart .chhot{filter:drop-shadow(0 0 5px currentColor)}
+.chart .chhot[stroke*=lime]{color:color-mix(in srgb,var(--mk-lime) 55%,transparent)}
+.chart .chhot[stroke*=red]{color:color-mix(in srgb,var(--mk-red) 50%,transparent)}
