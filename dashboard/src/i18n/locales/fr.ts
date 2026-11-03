@@ -1274,6 +1274,8 @@ export default {
   'journey.stayed': (d: string) => `${d} sur la page`,
   'journey.goal': 'Objectif',
   'journey.payment': 'Paiement',
+  'journey.prop': (key: string, value: string) => `${key.charAt(0).toUpperCase()}${key.slice(1)}: ${value}`,
+  'journey.formKey': 'Formulaire',
   'journey.via': (provider: string) => `via ${provider}`,
   'journey.exit': 'Parti',
   'journey.here': 'Ici maintenant',
