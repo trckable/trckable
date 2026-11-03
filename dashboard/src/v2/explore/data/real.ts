@@ -3,7 +3,9 @@
 // saved views. Each section is asked for when it is opened.
 import { api, cachedReport, call, rangeQS, type Filter, type Report, type ReportQuery, type WebVitals } from '../../../lib/api'
 import { more } from '../../../lib/apiMore'
+import { brandOf } from '../../../lib/brandIcons'
 import { channelLabel } from '../../../lib/palette'
+import { copy } from '../copy'
 import { MIN_VITALS } from '../../../lib/api'
 import { queryOf } from '../../../lib/dashQuery'
 import { addDays, diffDays, fmtRange, todayIn, type Range } from '../../../lib/dates'
@@ -160,12 +162,14 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
     }
     case 'quality': {
       const report = await cachedReport(c.site.id, q, undefined, signal)
-      const top = (report.current.dims.channel ?? []).filter((r) => r.visitors > 0).slice(0, 6)
+      // Named sources: each referring site, and Direct (which has no referrer, so it comes from the channels).
+      const direct = (report.current.dims.channel ?? []).filter((r) => r.value === 'Direct' && r.visitors > 0).map((r) => ({ ...r, value: '' }))
+      const top = [...(report.current.dims.referrer ?? []).filter((r) => r.value && r.visitors > 0), ...direct].sort((a, b) => b.visitors - a.visitors).slice(0, 6)
       const goal = report.current.signup?.goal ?? report.current.goals?.[0]?.value ?? null
       const paid = !!report.current.money
       const main = mainOf(goal !== null, paid)
       const rows = await Promise.all(top.map(async (s): Promise<QualityRow> => {
-        const filters = [...c.filters, { dim: 'channel', value: s.value }]
+        const filters = [...c.filters, s.value ? { dim: 'referrer', value: s.value } : { dim: 'channel', value: 'Direct' }]
         const one = await cachedReport(c.site.id, { ...query(c, filters), compare: undefined, cfrom: undefined, cto: undefined, sofar: false }, undefined, signal)
         const page = one.current.dims.entry_page?.[0]?.value ?? null
         const reached = goal === null ? null : (one.current.goals ?? []).find((g) => g.value === goal)?.visitors ?? 0
@@ -173,7 +177,8 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
         const k = one.current.kpis
         return {
           value: s.value,
-          name: channelLabel(s.value),
+          name: s.value ? brandOf(s.value)?.name ?? s.value.replace(/^www\./, '') : copy.direct,
+          channel: s.value ? channelLabel(one.current.dims.channel?.[0]?.value ?? '') : '',
           people: s.visitors,
           page,
           engaged: k.sessions > 0 && s.visitors >= ENOUGH ? 1 - k.bounce_rate : null,

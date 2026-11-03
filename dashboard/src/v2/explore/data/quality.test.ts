@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { headline, mainOf, ranked, rateOf, type QualityRow } from './quality'
 
-const row = (o: Partial<QualityRow>): QualityRow => ({ value: 'x', name: 'X', people: 20, page: '/', engaged: null, goal: null, sales: null, lcp: null, ...o })
+const row = (o: Partial<QualityRow>): QualityRow => ({ value: 'x', name: 'X', channel: '', people: 20, page: '/', engaged: null, goal: null, sales: null, lcp: null, ...o })
 
 describe('channel quality', () => {
   it('says nothing about a rate from too few people', () => expect(rateOf(3, 6)).toBeNull())

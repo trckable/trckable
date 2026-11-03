@@ -9,6 +9,8 @@ export type Main = 'goal' | 'sales' | 'engaged'
 export interface QualityRow {
   value: string
   name: string
+  /** The channel the source belongs to (Search, Social...); empty for Direct, which is its own. */
+  channel: string
   people: number
   page: string | null
   /** The share who stay (did not leave at once), 0 to 1; null while the people are too few to say. */

@@ -20,7 +20,7 @@ export function Quality({ d }: { d: Model }) {
   const top = Math.max(0, ...d.rows.map((r) => rateFor(r, d.main) ?? 0))
   const mainName = { goal: copy.qReach(d.goal ?? ''), sales: copy.qPays, engaged: copy.qEngaged }[d.main]
   const tracks = ['minmax(0,1fr)', '64px', 'minmax(0,1.3fr)', ...(speed ? ['64px'] : []), ...(engaged ? ['64px'] : []), ...(pays ? ['64px'] : []), 'minmax(130px,1.2fr)'].join(' ')
-  const meta = (r: QualityRow) => [fmtInt(r.people), r.page ? midTruncate(r.page, 24) : null, r.lcp === null ? null : secs(r.lcp)].filter(Boolean).join(' · ')
+  const meta = (r: QualityRow) => [fmtInt(r.people), r.channel || null, r.page ? midTruncate(r.page, 24) : null, r.lcp === null ? null : secs(r.lcp)].filter(Boolean).join(' · ')
   return (
     <>
       <p className="xchg-say">{d.say}</p>
@@ -37,8 +37,8 @@ export function Quality({ d }: { d: Model }) {
         {d.rows.map((r) => {
           const rate = rateFor(r, d.main)
           return (
-            <button key={r.value} type="button" className="xrw" onClick={() => openExplore('sources', [{ dim: 'channel', value: r.value }])}>
-              <span className="xq-name"><SourceMark channel={r.value} size={18} />{r.name}</span>
+            <button key={r.value} type="button" className="xrw" onClick={() => openExplore('sources', [r.value ? { dim: 'referrer', value: r.value } : { dim: 'channel', value: 'Direct' }])}>
+              <span className="xq-name"><SourceMark channel={r.channel || 'Direct'} referrer={r.value || undefined} size={18} />{r.name}{r.channel && <small>{r.channel}</small>}</span>
               <span className="mk-n xq-col">{fmtInt(r.people)}</span>
               <span className="mono xqual-page xq-col" title={r.page ?? undefined}>{r.page ? midTruncate(r.page, 28) : NONE}</span>
               {speed && <span className={`mk-n xq-col${r.lcp !== null && r.lcp > SLOW_MS ? ' xqual-slow' : ''}`}>{secs(r.lcp)}</span>}

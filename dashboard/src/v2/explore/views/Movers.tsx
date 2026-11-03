@@ -17,7 +17,10 @@ const OPEN: Record<Dim, { tab: Tab; filter: string }> = {
 }
 
 /** A cause in words: no value is Direct, and the bare slash is the home page. */
-export const nameOf = (v: string) => (v === '/' ? copy.homePage : v ? midTruncate(v, 36) : copy.direct)
+export function nameOf(v: string): string {
+  if (v === '/') return copy.homePage
+  return v ? midTruncate(v, 36) : copy.direct
+}
 
 const pick = (c: Cause) => openExplore(OPEN[c.dim].tab, [{ dim: OPEN[c.dim].filter, value: c.value }])
 const signed = (n: number, fmt: (n: number) => string) => `${n < 0 ? '−' : '+'}${fmt(Math.abs(n))}`

@@ -14,7 +14,7 @@ describe('insightOf', () => {
 describe('long addresses', () => {
   it('keeps the start and the end of a long path', () => {
     const name = '/news/buxheti-per-arsimin-parauniversitar-kumbaro-nga-viti-i-ardhshem-1-mesues-ndihmes'
-    const line = insightOf([row(name, 237, 0, 'up')])!
+    const line = insightOf([row(name, 237, 0, 'up')]) ?? ''
     expect(line).toContain('…')
     expect(line).toContain('/news/buxheti')
     expect(line.length).toBeLessThan(90)

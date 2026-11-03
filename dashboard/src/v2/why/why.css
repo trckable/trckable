@@ -98,6 +98,7 @@
 .mk .xqual .xth span:nth-child(3){text-align:left}
 .mk .xqual .xq-name{display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mk .xcards .xqual .xth>:first-child{visibility:hidden}
+.mk .xqual .xq-name small{flex:none;font-size:12px;color:var(--mk-muted)}
 .mk .xqual .xq-meta{display:none}
 .mk .xqual-slow{color:var(--mk-red)}
 @media (--xs){
@@ -105,7 +106,7 @@
   .mk .xqual .xrw{grid-template-columns:minmax(0,1fr) 120px!important;grid-template-areas:"name rate" "meta meta";row-gap:2px;padding-block:var(--mk-s2)}
   .mk .xqual .xq-name{grid-area:name}
   .mk .xqual .xqual-rate{grid-area:rate}
-  .mk .xqual .xq-col{display:none}
+  .mk .xqual .xq-col,.mk .xqual .xq-name small{display:none}
   .mk .xqual .xq-meta{display:block;grid-area:meta;overflow:hidden;font-size:12px;color:var(--mk-muted);text-overflow:ellipsis;white-space:nowrap}
   .mk .xqual .xq-meta.xqual-slow{color:var(--mk-red)}
 }
