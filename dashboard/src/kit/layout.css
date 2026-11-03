@@ -58,6 +58,18 @@
   }
 }
 
+/* Explore's section opens beside its list of sections up to lg, so its content has room for two cards across, not four. */
+@media (--md-down) {
+  .mk .xp.full .sumrow:has(> :nth-child(3):last-child) {
+    --fit-basis: 180px;
+  }
+  .mk .xp.full .sumrow:has(> :nth-child(4):last-child),
+  .mk .xp.full .sumrow:has(> :nth-child(5):last-child),
+  .mk .xp.full .sumrow:has(> :nth-child(6):last-child) {
+    --fit-basis: calc((100% - var(--fit-gap)) / 2 - 0.5px);
+  }
+}
+
 /* The sheets a phone shows (a menu, the site list, the period, the bell, the account, a plan) sit in the header's stacking
    box, so it sits above the bottom bar: the last action of a sheet is never under the bar. */
 .mk .hd {

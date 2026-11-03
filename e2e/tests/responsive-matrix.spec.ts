@@ -190,7 +190,7 @@ const explore = (n: number): Go => async (page) => {
     await page.locator('#xp .xdrawer-open').click()
     await expect(page.locator('.xdrawer-box')).toBeVisible()
   }
-  await expect(items).toHaveCount(12)
+  await expect(items).toHaveCount(13)
   await items.nth(n).click()
   await settle(page)
 }

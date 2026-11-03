@@ -96,8 +96,8 @@ for (const [width, height] of [
     const cards = page.locator('#xp .sumrow .sum')
     await expect(cards).toHaveCount(4)
     const tops = await cards.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)))
-    // The page has no rail beside the cards, so at 900 four fit across (squeezed() above says none is cramped); at 820 they stay two by two.
-    expect(new Set(tops).size, width < 900 ? 'two rows of two, not one row of four' : 'one row of four').toBe(width < 900 ? 2 : 1)
+    // The compact cards are narrow enough for four across from 768 px (squeezed() above says none is cramped).
+    expect(new Set(tops).size, 'one row of four').toBe(1)
   })
 }
 
