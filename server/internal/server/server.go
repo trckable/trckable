@@ -156,7 +156,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 			l := s.geo.Lookup(ip)
 			return l.Country, l.Region, l.City, l.Timezone
 		},
-		Hosting: s.hosting,
+		Network: s.network,
 		Module: func(site, id string) bool {
 			set, err := (modules.Store{DB: ctl.DB}).Of(context.Background(), site)
 			return err != nil || set.Has(id) // unreadable: record rather than lose
@@ -776,20 +776,23 @@ func (s *Server) backfillSeen(ctx context.Context, store *duck.Store) {
 	}
 }
 
-// hosting reports whether ip is on a network that only hosts servers. The
-// network database is fetched the first time anyone asks, so an instance
-// where no site uses stricter filtering never downloads it.
-func (s *Server) hosting(ip string) bool {
+// network looks ip up once in the network database: whether it is on a
+// network that only hosts servers, and the provider's name. The database is
+// fetched the first time stricter filtering asks, never for the name alone
+// (see docs/networks.md), so an instance where no site filters strictly and
+// that did not fetch it records no provider.
+func (s *Server) network(ip string, strict bool) (hosting bool, name string) {
 	if s.asn == nil {
-		return false
+		return false, ""
 	}
 	if !s.asn.Ready() {
-		if ctx := s.bg.Load(); ctx != nil && s.asnStarted.CompareAndSwap(false, true) {
+		if ctx := s.bg.Load(); strict && ctx != nil && s.asnStarted.CompareAndSwap(false, true) {
 			go s.asn.Run(*ctx)
 		}
-		return false
+		return false, ""
 	}
-	return ingest.HostingASN(s.asn.ASN(ip))
+	asn, org := s.asn.Network(ip)
+	return ingest.HostingASN(asn), org
 }
 
 // place is an address's approximate place for a person to read ("Berlin, DE"),

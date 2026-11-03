@@ -32,7 +32,7 @@ func TestAccuracyDataCentreVisitsAreDroppedByDefault(t *testing.T) {
 		Sites:    s,
 		Salts:    ingest.NewSalts(nil),
 		ClientIP: ingest.RemoteIP,
-		Hosting:  func(ip string) bool { return ip == "203.0.113.50" }, // a data centre
+		Network:  func(ip string, _ bool) (bool, string) { return ip == "203.0.113.50", "" }, // a data centre
 		Now:      func() time.Time { return time.Date(2026, 9, 22, 12, 0, 0, 0, time.UTC) },
 	}
 	visit := func(addr string) {

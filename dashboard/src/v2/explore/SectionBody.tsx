@@ -9,9 +9,10 @@ import type { Loaded } from './data/useLoad'
 import type { Report } from '../../lib/api'
 import { Changed } from './views/Changed'
 import { HOSTED } from './sections'
-import type { Paths as PathsModel, Quality as QualityModel, HostedTab, Bot, Funnel, Mention, Overview as OverviewModel, Sales as SalesModel, Search as SearchModel, Speed as SpeedModel, Tab, Table } from './types'
+import type { Networks as NetworksModel, Paths as PathsModel, Quality as QualityModel, HostedTab, Bot, Funnel, Mention, Overview as OverviewModel, Sales as SalesModel, Search as SearchModel, Speed as SpeedModel, Tab, Table } from './types'
 import { Hosted } from './views/Hosted'
 import { Overview } from './views/Overview'
+import { Networks } from './views/Networks'
 import { PathsView } from './views/Paths'
 import { Quality } from './views/Quality'
 import { Results } from './views/Results'
@@ -34,6 +35,8 @@ function Shown({ tab, x, d }: { tab: Tab; x: XCtx; d: TabData }) {
       return <PathsView x={x} d={d as PathsModel} />
     case 'quality':
       return <Quality d={d as QualityModel} />
+    case 'networks':
+      return <Networks x={x} d={d as NetworksModel} />
     case 'search':
       return <Search x={x} d={d as SearchModel} />
     case 'funnels':

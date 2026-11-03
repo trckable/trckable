@@ -274,6 +274,11 @@ var migrations = []string{
 	// which the reports call Unknown rather than guess.
 	`ALTER TABLE events ADD COLUMN timezone VARCHAR;
 	ALTER TABLE sessions ADD COLUMN timezone VARCHAR;`,
+	// 12: the visitor's internet provider ("Deutsche Telekom"), kept only where
+	// the site keeps region and city and the instance has the network database.
+	// Null on every row recorded before this release or without that database.
+	`ALTER TABLE events ADD COLUMN network VARCHAR;
+	ALTER TABLE sessions ADD COLUMN network VARCHAR;`,
 }
 
 // tableSince is the migration that created each table added after the first

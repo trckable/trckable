@@ -71,9 +71,9 @@ func TestBotCountsLeaveOutWhatIsNotABot(t *testing.T) {
 func TestStrictFilteringCountsHosting(t *testing.T) {
 	h, _ := newHandler(t)
 	h.Sites = fakeSites{"tkb_test": {ID: "tkb_test", Domain: "site.com", BotStrict: true}}
-	h.Hosting = func(string) bool { return true }
+	h.Network = func(string, bool) (bool, string) { return true, "" }
 	post(h, `{"s":"tkb_test","k":"pv","u":"https://site.com/"}`, chromeUA) // from a data centre
-	h.Hosting = func(string) bool { return false }
+	h.Network = func(string, bool) (bool, string) { return false, "" }
 	post(h, `{"s":"tkb_test","k":"pv","u":"https://site.com/","id":"a"}`, chromeUA) // a visitor at home: kept
 	got := counts(h.Bots.Drain())
 	want := map[string]uint64{"tkb_test 2026-09-22 hosting": 1}

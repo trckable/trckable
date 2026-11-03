@@ -184,8 +184,11 @@ func (q Q) revenue(ctx context.Context, conn *sql.Conn, p Params, cte string, ct
 
 	// Revenue by every breakdown dimension, from the attributed session.
 	dims := DefaultDims
+	if p.Deep { // Networks tells how each provider's visitors convert
+		dims = append(append([]string{}, dims...), "network")
+	}
 	if p.LinkRevenue {
-		dims = append(append([]string{}, DefaultDims...), "link")
+		dims = append(append([]string{}, dims...), "link")
 	}
 	cols := make([]string, len(dims))
 	sets := make([]string, len(dims))

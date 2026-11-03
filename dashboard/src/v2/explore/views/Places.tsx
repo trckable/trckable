@@ -15,6 +15,7 @@ import type { XCtx } from '../ctx'
 import { EXPLORE_ROWS } from '../data/rows'
 import { useTab, type DataCtx } from '../data/useExplore'
 import { copy as words } from '../placesCopy'
+import { DbIp } from './DbIp'
 import { SectionBody } from '../SectionBody'
 import { shareOf } from '../../ui/XTable'
 import type { Row, Table, Tab, Xkc } from '../types'
@@ -128,6 +129,7 @@ export function PlacesCard({ x, c, tab: asked, onRead, onSay }: { x: XCtx; c: Da
       </div>
       <SectionBody tab={tab} x={cx} r={shown} still />
       {tab === 'timezones' && <XNote>{words.noteZones}</XNote>}
+      {tab !== 'languages' && <XNote><DbIp label={words.credit} /></XNote>}
       </div>
     </section>
     </>

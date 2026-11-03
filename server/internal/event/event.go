@@ -76,6 +76,11 @@ type Event struct {
 	// where the site drops region and city, or keeps no cookie.
 	Timezone string `json:"tz,omitempty"`
 
+	// Network is the visitor's internet provider ("Deutsche Telekom"), from the
+	// network database when the instance has one. Never kept where the site
+	// drops region and city, or keeps no cookie.
+	Network string `json:"nw,omitempty"`
+
 	Goal  string            `json:"g,omitempty"`
 	Props map[string]string `json:"pr,omitempty"`
 

@@ -14,7 +14,7 @@ var filterDimLabel = map[string]string{
 	"channel": "Channel", "referrer": "Referrer", "campaign": "Campaign",
 	"entry_page": "Entry page", "exit_page": "Exit page", "page": "Page", "group": "Section", "hostname": "Domain",
 	"country": "Country", "device": "Device", "browser": "Browser", "browser_version": "Browser version",
-	"screen": "Screen", "os": "OS", "region": "Region", "city": "City", "timezone": "Time zone", "language": "Language", "goal": "Goal", "utm_source": "utm_source", "utm_medium": "utm_medium",
+	"screen": "Screen", "os": "OS", "region": "Region", "city": "City", "timezone": "Time zone", "network": "Network", "language": "Language", "goal": "Goal", "utm_source": "utm_source", "utm_medium": "utm_medium",
 }
 
 // filterValue is a value as a chip reads it: a channel's or a country's name.

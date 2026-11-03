@@ -397,7 +397,12 @@ func TestReferrerSpamIsDropped(t *testing.T) {
 func TestStricterFilteringDropsDataCentres(t *testing.T) {
 	h, l := newHandler(t)
 	asked := 0
-	h.Hosting = func(ip string) bool { asked++; return ip == "203.0.113.77" }
+	h.Network = func(ip string, strict bool) (bool, string) {
+		if strict {
+			asked++
+		}
+		return ip == "203.0.113.77", ""
+	}
 
 	// A site that has stricter filtering off is not asked about at all.
 	post(h, `{"s":"tkb_test","k":"pv","u":"https://site.com/"}`, chrome)

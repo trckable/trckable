@@ -21,6 +21,7 @@ import { hourTable, stretchBand } from '../../briefing/usual'
 import { usualBand } from '../../briefing/useSlices'
 import type { Usual } from '../../briefing/model'
 import { funnelBuilt } from '../../setup/funnelBuilt'
+import { seeNetworks } from '../sections'
 import type { Down, SavedView, Tab } from '../types'
 import { basisOf, type Basis } from './basis'
 import { insightOf } from './insight'
@@ -29,6 +30,7 @@ import { EXPLORE_ROWS, LINKS_ROWS } from './rows'
 import { scaled, withSourceUsuals } from './scaled'
 import { mapEngage, mapOverview, mapTable, mapTops, optionsOf, type Uptime } from './mapReport'
 import { mapSlowCost } from './slowCost'
+import { mapNetworks } from './networks'
 import { mapBots, mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed } from './mapSections'
 import type { DataCtx, Meta, TabData } from './useExplore'
 import { dateFmt } from '../../../lib/format'
@@ -206,6 +208,12 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
       ])
       return { ...mapSpeed(cur, prev), cost: mapSlowCost(cost) }
     }
+    case 'networks': {
+      const report = await cachedReport(c.site.id, q, undefined, signal)
+      // A site that does not measure speed has no load times to show.
+      const speed = await more.vitals(c.site.id, q).catch(() => null)
+      return mapNetworks(report, speed)
+    }
     case 'mentions': {
       const r = await mentionsApi.list(c.site.id, periodFor(c), signal)
       return mapMentions(r.mentions, c.site.timezone, today)
@@ -249,6 +257,7 @@ export async function loadMeta(c: DataCtx): Promise<Meta> {
       () => [],
     ),
   ])
+  seeNetworks((report.current.dims.network ?? []).length > 0)
   return { connected: { rev: !!report.current.money, search, goals: (report.current.goals ?? []).length > 0 }, options: optionsOf(report.current), views: segments.map(viewOf), }
 }
 

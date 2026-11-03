@@ -1,0 +1,47 @@
+/* The Networks table: provider, visits, conversion, load time. */
+.mk .xnet .xth,
+.mk .xnet .xrw {
+  grid-template-columns: minmax(0, 1.2fr) 70px minmax(110px, 1fr) 70px !important;
+  gap: var(--mk-s3);
+  align-items: center;
+  text-align: left;
+}
+.mk .xnet.nospeed .xth,
+.mk .xnet.nospeed .xrw {
+  grid-template-columns: minmax(0, 1.2fr) 70px minmax(110px, 1fr) !important;
+}
+.mk .xnet .xth span:nth-child(2),
+.mk .xnet .xth span:nth-child(4) {
+  text-align: right;
+}
+.mk .xnet-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mk .xnet .xrw.on {
+  background: var(--mk-band);
+}
+.mk .xfade > .xchg-say + .xnet {
+  padding: var(--mk-s2) var(--mk-s4);
+  background: var(--mk-card);
+  border: 1px solid var(--mk-line);
+  border-radius: 16px;
+}
+.mk .xcp .xfade > .xchg-say + .xnet {
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+@media (--xs) {
+  .mk .xnet .xth,
+  .mk .xnet .xrw {
+    grid-template-columns: minmax(0, 1fr) 44px 64px 52px !important;
+    gap: 8px;
+  }
+  .mk .xnet.nospeed .xth,
+  .mk .xnet.nospeed .xrw {
+    grid-template-columns: minmax(0, 1fr) 44px 72px !important;
+  }
+}

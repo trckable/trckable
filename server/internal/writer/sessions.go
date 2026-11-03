@@ -42,7 +42,7 @@ type Session struct {
 	Country, Region, City                  string
 	Device, Browser, OS, Language          string
 	BrowserVersion                         string
-	Timezone                               string
+	Timezone, Network                      string
 	Screen                                 uint16 // the entry pageview's window width in pixels, 0 = unknown
 
 	Pageviews uint32
@@ -101,6 +101,7 @@ func (s *Session) add(e *event.Event) {
 	fill(&s.OS, e.OS)
 	fill(&s.Language, e.Language)
 	fill(&s.Timezone, e.Timezone)
+	fill(&s.Network, e.Network)
 	switch e.Kind {
 	case event.KindPageview:
 		if s.Pageviews == 0 { // entry pageview decides the source

@@ -47,7 +47,7 @@ describe('buildReport', () => {
   })
 
   it('the city is listed only when it is recorded and cookies are in use', () => {
-    expect(buildReport(input({ config: config({ record_city: true }) })).collected).toContain('Country, region and city')
+    expect(buildReport(input({ config: config({ record_city: true }) })).collected).toContain('Country, region, city and internet provider')
     expect(buildReport(input({ config: config({ record_city: true, consent_free: true }) })).collected).toContain('Country')
   })
 

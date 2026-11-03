@@ -97,8 +97,11 @@ func TestExcludedAddressIsNotLookedUp(t *testing.T) {
 	h, _ := newHandler(t)
 	h.Sites = ownerSites("203.0.113.0/24")
 	var asked []string
-	h.Geo = func(ip string) (string, string, string, string) { asked = append(asked, ip); return "DE", "", "", "" }
-	h.Hosting = func(ip string) bool { asked = append(asked, ip); return false }
+	h.Geo = func(ip string) (string, string, string, string) {
+		asked = append(asked, ip)
+		return "DE", "", "", ""
+	}
+	h.Network = func(ip string, _ bool) (bool, string) { asked = append(asked, ip); return false, "" }
 	postFrom(h, "203.0.113.50:1", visit, nil)
 	if len(asked) != 0 {
 		t.Fatalf("the address was used before it was dropped: %v", asked)
