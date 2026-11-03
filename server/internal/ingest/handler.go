@@ -101,10 +101,7 @@ func (s Site) Skip(path string) bool {
 func (s Site) SkipIP(ip string) bool { return ipfilter.Match(s.ExcludeIPs, ip) }
 
 // Geo resolves a client IP to a location (the IP is not kept).
-type Geo func(ip string) (country, region, city string)
-
-// Zone resolves a client IP to an IANA time zone name (the IP is not kept).
-type Zone func(ip string) string
+type Geo func(ip string) (country, region, city, zone string)
 
 // Seen records that a site is alive. Optional: without it the dashboard just
 // cannot say "live" next to a site's name.
@@ -146,8 +143,7 @@ type Handler struct {
 	// Hosting reports whether an address belongs to a network that only hosts
 	// servers. Used by stricter bot filtering; nil means unknown.
 	Hosting func(ip string) bool
-	Geo     Geo  // optional
-	Zone    Zone // optional: kept only where region and city are
+	Geo     Geo // optional
 	Now     func() time.Time
 	Stats   Stats
 	Seen    Seen // optional: records that a site is alive
@@ -533,13 +529,13 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 	}
 
 	if h.Geo != nil {
-		e.Country, e.Region, e.City = h.Geo(ip)
+		var zone string
+		e.Country, e.Region, e.City, zone = h.Geo(ip)
 		if site.NoCity { // "the country is always recorded; region and city are yours"
 			e.Region, e.City = "", ""
+		} else if !site.ConsentFree {
+			e.Timezone = normZone(zone)
 		}
-	}
-	if h.Zone != nil && !site.NoCity && !site.ConsentFree {
-		e.Timezone = normZone(h.Zone(ip))
 	}
 	if e.Country == "" && !proxied { // trusted edge header (Cloudflare) as a fallback
 		if cc := r.Header.Get("CF-IPCountry"); len(cc) == 2 && cc != "XX" {

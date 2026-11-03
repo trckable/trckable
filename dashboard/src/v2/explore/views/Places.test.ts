@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Table } from '../types'
-import { tiles } from './Places'
+import { tabs, tiles } from './Places'
 
 const row = (val: string, v: number, code?: string) => ({ val, name: code === 'DE' ? 'Germany' : val, v, c: 0, st: '' as const, ...(code ? { code } : {}) })
 const table = (rows: ReturnType<typeof row>[], of = 100): Table => ({ rows, of })
@@ -20,5 +20,14 @@ describe('the four numbers over the map', () => {
     const t = tiles(table([], 0), table([]), table([]))
     expect(t[1].detail).toBe('None yet')
     expect(t[3]).toMatchObject({ val: '–', detail: 'None yet' })
+  })
+})
+
+describe('the switch of tables', () => {
+  it('offers time zones only when a visit named one', () => {
+    expect(tabs(null)).not.toContain('timezones')
+    expect(tabs(table([]))).not.toContain('timezones')
+    expect(tabs(table([row('Unknown', 40)]))).not.toContain('timezones')
+    expect(tabs(table([row('Europe/Berlin', 40), row('Unknown', 5)]))).toContain('timezones')
   })
 })

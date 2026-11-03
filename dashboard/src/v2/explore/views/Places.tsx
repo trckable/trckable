@@ -28,6 +28,12 @@ export const isPlaceTab = (t: Tab): t is PlaceTab => (PLACE_TABS as readonly str
 
 const HEAD: Record<PlaceTab, string> = { countries: copy.heads.country, regions: copy.heads.region, cities: copy.heads.city, timezones: copy.heads.timezone, languages: copy.heads.language }
 
+/** The switch's tables: time zones only once a visit has named one (older visits, and sites that keep no region or city, have none to list). */
+export function tabs(zones: Table | null): PlaceTab[] {
+  const named = !!zones && zones.rows.some((r) => r.val !== '' && r.val.toLowerCase() !== 'unknown')
+  return PLACE_TABS.filter((t) => t !== 'timezones' || named)
+}
+
 /** How many places the period had: "100+" when the list was cut at what the report carries. */
 const count = (rows: Row[]) => `${fmtInt(rows.length)}${rows.length >= EXPLORE_ROWS ? '+' : ''}`
 
@@ -61,7 +67,7 @@ function TilesLoading() {
 }
 
 export function PlacesCard({ x, c, tab: asked, onRead, onSay }: { x: XCtx; c: DataCtx; tab: Tab; onRead: () => void; onSay: (s: string | null) => void }) {
-  const [tab, setTab] = useState<PlaceTab>(isPlaceTab(asked) ? asked : 'countries')
+  const [picked, setTab] = useState<PlaceTab>(isPlaceTab(asked) ? asked : 'countries')
   // The address names another of the tables: the switch follows.
   const [was, setWas] = useState(asked)
   if (asked !== was) {
@@ -71,6 +77,10 @@ export function PlacesCard({ x, c, tab: asked, onRead, onSay }: { x: XCtx; c: Da
   const rc = useTab('countries', c, true)
   const rr = useTab('regions', c, true)
   const rci = useTab('cities', c, true)
+  const rz = useTab('timezones', c, true)
+  const list = tabs(rz.state === 'ok' ? (rz.data as Table) : null)
+  // An address that names the time zones, with none to list, opens the countries.
+  const tab = list.includes(picked) ? picked : 'countries'
   const shown = useTab(tab, c, true)
   const said = rc.state === 'ok' ? ((rc.data as Table).say ?? null) : null
   useEffect(() => {
@@ -119,7 +129,7 @@ export function PlacesCard({ x, c, tab: asked, onRead, onSay }: { x: XCtx; c: Da
         rc.state !== 'error' && <TilesLoading />
       )}
       <div className="xplaces-tabs">
-        <SegmentedSwitch label={words.tabs} value={tab} onChange={setTab} items={PLACE_TABS.map((t) => ({ value: t, label: HEAD[t] }))} />
+        <SegmentedSwitch label={words.tabs} value={tab} onChange={setTab} items={list.map((t) => ({ value: t, label: HEAD[t] }))} />
       </div>
       <SectionBody tab={tab} x={cx} r={shown} still />
       {tab === 'timezones' && <XNote>{words.noteZones}</XNote>}
