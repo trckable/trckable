@@ -8,7 +8,7 @@ import type { Mention as ApiMention } from '../../../features/mentions/api'
 import { baseEnough } from '../../../lib/thin'
 import { copy } from '../copy'
 import type { Bot, Funnel, Goal, Grade, Mention, Row, Sale, Sales, Search, SearchRow, SlowPage, Speed, Step, Xkc } from '../types'
-import { statOf } from './stats'
+import { changeOf, statOf } from './stats'
 
 // ---- funnel and goals ----
 
@@ -70,44 +70,33 @@ export function mapSales(money: Money | undefined, label: string): Sales {
 const fmtK = (n: number) => (n >= 1000 ? `${fmtFixed(n / 1000, n >= 10000 ? 0 : 1)}k` : fmtInt(n))
 const pct1 = (x: number) => `${fmtFixed(x * 100, 1)}%`
 
-/** Position is the one number where lower is better: a move of half a place or more up is good, down is bad. */
-const movedOf = (pos: number, was: number): string => {
-  if (pos < was - 0.5) return 'up'
-  return pos > was + 0.5 ? 'dn' : ''
-}
-
-function tagOf(st: string): { tag: string; tone: Xkc['tone'] } {
-  if (st === 'up') return { tag: copy.aboveUsual, tone: 'up' }
-  return st === 'dn' ? { tag: copy.belowUsual, tone: 'dn' } : { tag: copy.asUsual, tone: '' }
-}
-
 const rowOf = (r: ApiSearchRow, name: string, fresh: boolean): SearchRow => ({ name, clicks: r.clicks, impr: r.impressions, ctr: r.ctr, pos: r.position, ...(fresh ? { fresh: true } : {}) })
 
-export function mapSearch(o: { query: SearchReport; pages: SearchReport; prev?: SearchReport }): Search {
+export function mapSearch(o: { query: SearchReport; pages: SearchReport; days?: SearchReport; prev?: SearchReport }): Search {
   const { query, pages, prev } = o
   const base = prev !== undefined && prev.clicks >= 5
-  const clicks = statOf(query.clicks, prev?.clicks, base)
-  const impr = statOf(query.impressions, prev?.impressions, base)
   const ctr = query.impressions ? query.clicks / query.impressions : 0
   const ctr0 = prev?.impressions ? prev.clicks / prev.impressions : 0
-  const ctrSt = base && ctr < ctr0 * 0.88 ? 'dn' : ''
   const pos = averagePosition(query.rows)
   const pos0 = prev ? averagePosition(prev.rows) : 0
-  const posSt = base ? movedOf(pos, pos0) : ''
-  // With nothing to count from (no period before, or one too thin), no usual is told: no tag, no range.
-  const kc = (icon: string, label: string, val: string, st: string, detail: string): Xkc => (base ? { icon, label, val, ...tagOf(st), detail } : { icon, label, val, tag: '', tone: '', detail: '' })
+  // With nothing to count from (no period before, or one too thin), no change is told.
+  const kc = (icon: string, label: string, val: string, now: number, was: number, was_: string, lowerBetter = false): Xkc => {
+    if (!base) return { icon, label, val, tag: '', tone: '', detail: '' }
+    return { icon, label, val, ...changeOf(now, was, copy.asUsual, lowerBetter), detail: copy.was(was_) }
+  }
   const known = new Set((prev?.rows ?? []).map((r) => r.key))
   return {
     on: true,
     enough: (query.rows?.length ?? 0) > 0 || query.clicks > 0,
     kcs: [
-      kc('click', copy.heads.clicks, fmtInt(query.clicks), clicks.st, `${copy.usual} ${fmtInt(clicks.lo)}–${fmtInt(clicks.hi)}`),
-      kc('people', copy.impressions, fmtK(query.impressions), impr.st, `${copy.usual} ${fmtK(impr.lo)}–${fmtK(impr.hi)}`),
-      kc('goal', copy.clickRate, pct1(ctr), ctrSt, `${copy.usual} ${pct1(ctr0 * 0.88)}–${pct1(ctr0 * 1.12)}`),
-      kc('uptime', copy.position, fmtFixed(pos, 1), posSt, `${copy.usual} ${fmtFixed(pos0, 1)}, ${copy.lowerBetter}`),
+      kc('click', copy.heads.clicks, fmtInt(query.clicks), query.clicks, prev?.clicks ?? 0, fmtInt(prev?.clicks ?? 0)),
+      kc('people', copy.impressions, fmtK(query.impressions), query.impressions, prev?.impressions ?? 0, fmtK(prev?.impressions ?? 0)),
+      kc('goal', copy.clickRate, pct1(ctr), ctr, ctr0, pct1(ctr0)),
+      kc('uptime', copy.position, fmtFixed(pos, 1), pos, pos0, fmtFixed(pos0, 1), true),
     ],
     queries: (query.rows ?? []).map((r) => rowOf(r, `“${r.key}”`, base && !known.has(r.key))),
     pages: (pages.rows ?? []).map((r) => rowOf(r, r.key, false)),
+    days: (o.days?.rows ?? []).map((r) => ({ date: r.key, clicks: r.clicks, impr: r.impressions })).sort((x, y) => x.date.localeCompare(y.date)),
   }
 }
 

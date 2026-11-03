@@ -29,6 +29,7 @@ export const aiCopy = defineCopy('aisearch', {
   noAssistants: 'None in this period.',
   ignored: (dims: string[]) => `Google can’t apply the ${dims.join(', ')} filter, so it’s left out here.`,
   noGoogle: 'No searches in this period.',
+  seeSearch: 'See all searches',
   setup: 'Connect crawler data',
   kind,
   pickAssistant: (name: string, host: string) => `${name}: filter by ${host}`,

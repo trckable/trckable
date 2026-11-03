@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Row } from '../../../lib/api'
-import { noteOf, rowsOf, statOf } from './stats'
+import { changeOf, noteOf, rowsOf, statOf } from './stats'
 
 const r = (value: string, visitors: number): Row => ({ value, visitors })
 
@@ -51,5 +51,21 @@ describe('noteOf', () => {
   it('says as usual inside the range, and nothing with nothing to compare', () => {
     expect(noteOf(statOf(100, 100), 'vs usual', 'as usual', '').t).toBe('as usual')
     expect(noteOf(statOf(100, undefined), 'vs usual', 'as usual', '').t).toBe('')
+  })
+})
+
+describe('changeOf', () => {
+  it('says the percent a number moved, good when it went the better way', () => {
+    expect(changeOf(120, 100, 'same')).toEqual({ tag: '+20%', tone: 'up' })
+    expect(changeOf(80, 100, 'same')).toEqual({ tag: '−20%', tone: 'dn' })
+  })
+  it('counts a lower number as the good way when asked (a position)', () => {
+    expect(changeOf(4, 5, 'same', true)).toEqual({ tag: '−20%', tone: 'up' })
+    expect(changeOf(6, 5, 'same', true)).toEqual({ tag: '+20%', tone: 'dn' })
+  })
+  it('says the given words when it held, and nothing without a period before', () => {
+    expect(changeOf(101, 100, 'same')).toEqual({ tag: 'same', tone: '' })
+    expect(changeOf(5, undefined, 'same')).toEqual({ tag: '', tone: '' })
+    expect(changeOf(5, 0, 'same')).toEqual({ tag: '', tone: '' })
   })
 })

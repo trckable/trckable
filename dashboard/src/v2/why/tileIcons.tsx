@@ -46,6 +46,12 @@ const ICONS: Record<string, ReactNode> = {
       <Part on={{ x: [0, 2, 0] }} off={{ x: 0 }}><path d="M18 3l3 3-3 3M18 15l3 3-3 3" /></Part>
     </>
   ),
+  search: (
+    <Part on={{ x: [0, 2.2, -1.6, 0], y: [0, -1.6, 1.4, 0] }} off={{ x: 0, y: 0 }}>
+      <circle cx="10.5" cy="10.5" r="5.5" />
+      <path d="M14.6 14.6L20 20" />
+    </Part>
+  ),
   places: (
     <>
       <circle cx="12" cy="12" r="8" />

@@ -1,4 +1,4 @@
-/* Highlights, the revenue tabs, Latest buyers and the AI panel: loaded with them, never with the first load. */
+/* Highlights, the revenue tabs and the AI panel: loaded with them, never with the first load. */
 .hl {
   display: grid;
   gap: 2px;
@@ -46,58 +46,6 @@
 .sp-note {
   margin: 12px 0 0;
   font-size: 13px;
-}
-
-/* ---- latest buyers ---- */
-.by {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.by-row {
-  display: grid;
-  gap: 3px;
-  padding: 9px 6px;
-  border-bottom: 1px solid var(--grid);
-}
-.by-row:last-child {
-  border-bottom: 0;
-}
-.by-top {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: baseline;
-}
-.by-amount {
-  color: var(--money);
-  font-size: 14px;
-  font-weight: 600;
-}
-.by-top .faint,
-.by-meta {
-  font-size: 11.5px;
-}
-.by-path {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--text-2);
-  font-size: 12.5px;
-}
-.by-path .dot {
-  flex: none;
-}
-
-@media (max-width: 640px) {
-  :root :is(.by-top .faint, .by-meta) {
-    font-size: 12px;
-  }
 }
 
 /* "Per visitor" is wider than a share: give its column the room. */

@@ -24,6 +24,8 @@ export const heatCopy = defineCopy('heatmap', {
   rageTip: 'Three clicks within a second',
   scrollTip: (pct: number, share: number) => `${Math.round(share * 100)}% scrolled past ${pct}%`,
   demo: 'Example data',
+  fewer: 'Fewer clicks',
+  more: 'More',
   frame: 'This page, as a plain document: nothing on it runs here.',
   // The card that suggests the module.
   card: {

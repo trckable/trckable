@@ -100,6 +100,12 @@ describe('the heatmap overlay', () => {
     expect(button('Desktop').disabled).toBe(false)
   })
 
+  it('reads the colour of the clicks in a legend, which goes with the layer', async () => {
+    await mount(<HeatOverlay site={site} path="/" query={{ from: 'a', to: 'b' }} onClose={() => undefined} />)
+    expect(q('.heat-legend')?.textContent).toBe('Fewer clicksMore')
+    await press('Clicks')
+    expect(q('.heat-legend')).toBeNull()
+  })
   it('hides a layer when its button is pressed, and the page itself', async () => {
     await mount(<HeatOverlay site={site} path="/" query={{ from: 'a', to: 'b' }} onClose={() => undefined} />)
     await press('Clicks')

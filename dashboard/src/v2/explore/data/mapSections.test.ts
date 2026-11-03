@@ -97,12 +97,12 @@ describe('search', () => {
     const prev = rep(60, 4000, [{ key: 'trckable', clicks: 60, impressions: 4000, ctr: 0.015, position: 3 }])
     const s = mapSearch({ query: q, pages: q, prev })
     expect(s.kcs.map((k) => [k.label, k.val, k.tag, k.tone])).toEqual([
-      ['Clicks', '120', 'higher', 'up'],
+      ['Clicks', '120', '+100%', 'up'],
       ['Impressions', '4.0k', '≈ same', ''],
-      ['Click rate', '3.0%', '≈ same', ''],
-      ['Position', '6.7', 'lower', 'dn'],
+      ['Click rate', '3.0%', '+100%', 'up'],
+      ['Avg position', '6.7', '+123%', 'dn'],
     ])
-    expect(s.kcs[0].detail).toBe('usual 45–76')
+    expect(s.kcs[0].detail).toBe('before 60')
   })
   it('marks a query that was not there before as new, in quotes', () => {
     const s = mapSearch({ query: q, pages: q, prev: rep(60, 4000, [{ key: 'trckable', clicks: 60, impressions: 4000, ctr: 0.015, position: 3 }]) })
@@ -111,11 +111,16 @@ describe('search', () => {
       ['“new one”', true],
     ])
   })
-  it('tells no usual when there is nothing to count from: no tag, no range', () => {
+  it('tells no change when there is nothing to count from: no tag, no before', () => {
     const none = mapSearch({ query: q, pages: q })
     expect(none.kcs.map((k) => [k.tag, k.detail])).toEqual([['', ''], ['', ''], ['', ''], ['', '']])
     const thin = mapSearch({ query: q, pages: q, prev: rep(3, 100, []) })
     expect(thin.kcs.every((k) => k.tag === '' && k.detail === '')).toBe(true)
+  })
+  it('reads the days oldest first, for the line', () => {
+    const days = rep(0, 0, [{ key: '2026-09-02', clicks: 5, impressions: 90, ctr: 0, position: 0 }, { key: '2026-09-01', clicks: 3, impressions: 70, ctr: 0, position: 0 }])
+    expect(mapSearch({ query: q, pages: q, days }).days).toEqual([{ date: '2026-09-01', clicks: 3, impr: 70 }, { date: '2026-09-02', clicks: 5, impr: 90 }])
+    expect(mapSearch({ query: q, pages: q }).days).toEqual([])
   })
   it('is not enough when Google has sent nobody', () => {
     expect(mapSearch({ query: rep(0, 0, null), pages: rep(0, 0, null) }).enough).toBe(false)

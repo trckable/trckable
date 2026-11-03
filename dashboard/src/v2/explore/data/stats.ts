@@ -45,3 +45,12 @@ export function noteOf(s: Stat, vs: string, usual: string, none: string): { c: s
   }
   return { c: '', t: s.c > 0.5 ? usual : none }
 }
+
+/** How much a number moved against the period before, as a card's tag: "+12%", the `same` words when it held, and which way is good (a lower number is the good way for a position). None without a period before to count from. */
+export function changeOf(v: number, was: number | undefined, same: string, lowerBetter = false): { tag: string; tone: Tone } {
+  if (was === undefined || was <= 0) return { tag: '', tone: '' }
+  const p = Math.round((v / was - 1) * 100)
+  if (Math.abs(p) < 2) return { tag: same, tone: '' }
+  const good = lowerBetter ? p < 0 : p > 0
+  return { tag: `${p > 0 ? '+' : '−'}${Math.abs(p)}%`, tone: good ? 'up' : 'dn' }
+}

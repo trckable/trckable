@@ -5,6 +5,7 @@ import { channelColor } from '../../../lib/palette'
 import { PageMap } from '../../ui/PageMap'
 import { ShareDonut } from '../../ui/ShareDonut'
 import { XNote } from '../../ui/XBits'
+import { XKcsPlain } from '../../ui/XKcs'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
 import { valueOf } from '../filters'
@@ -12,6 +13,7 @@ import { ROW_DIM } from '../sections'
 import type { Tab, Table } from '../types'
 import { PeopleTable } from './PeopleTable'
 import { rowWords } from '../pointer'
+import { TopTiles } from './TopTiles'
 
 interface Cfg {
   head: string
@@ -67,6 +69,8 @@ export function Tables({ tab, x, d }: { tab: Tab; x: XCtx; d: Table }) {
   const donut = tab === 'sources' && d.rows.length > 0 && <ShareDonut label={copy.people} people={d.of} parts={d.rows.map((r) => ({ key: r.val, name: r.name, v: r.v, color: channelColor(r.val) }))} />
   return (
     <>
+      {d.tops && d.tops.length > 0 && <TopTiles tops={d.tops} x={x} />}
+      {d.engage && <XKcsPlain items={d.engage} />}
       {d.say && <p className="xchg-say xsay-table">{d.say}</p>}
       {donut}
       {tab === 'pages' && d.rows.length > 1 && <PageMap label={copy.people} rows={d.rows.map((r) => ({ key: r.val, name: r.name === '/' ? copy.homePage : r.name, v: r.v }))} onPick={dim ? (k) => x.pick(dim, k) : undefined} />}

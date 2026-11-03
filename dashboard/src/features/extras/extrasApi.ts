@@ -1,5 +1,5 @@
 // The Data view's extras ask the server for three things beyond the report:
-// highlights, the pages that sell and the latest buyers. Kept out of lib/api
+// highlights, the pages that sell and the latest buyers (the briefing chart marks them). Kept out of lib/api
 // so the first load does not carry them.
 import { call, rangeQS, type ReportQuery, type Row } from '../../lib/api'
 
@@ -55,6 +55,33 @@ export interface Refunds {
   filtered?: boolean
 }
 
+/** One payment and who paid. The visitor id opens their journey; never a name, an email or a customer key. */
+export interface Payment {
+  id: string
+  at: string
+  amount: number
+  refunded?: number
+  kind: string
+  visitor?: string
+  channel?: string
+  referrer?: string
+  country?: string
+}
+
+/** One paying customer in the period: what they spent (net of refunds), how often, and the source that first brought them. */
+export interface Customer {
+  id: string
+  spent: number
+  orders: number
+  refunded?: number
+  visitor?: string
+  channel?: string
+  referrer?: string
+  country?: string
+  first_seen: string
+  last_order: string
+}
+
 /** The report's own selectors, and the two that change what is credited: test payments and the first-touch model. */
 const qs = (q: ReportQuery) => rangeQS(q) + (q.testPayments ? '&payments=test' : '') + (q.attr ? '&attr=first' : '')
 
@@ -63,5 +90,7 @@ export const extrasApi = {
   insights: (site: string, q: ReportQuery) => call<{ insights: Insight[] }>('GET', `/sites/${site}/insights` + qs({ ...q, filters: undefined })),
   pagesSell: (site: string, q: ReportQuery) => call<{ pages: Row[] }>('GET', `/sites/${site}/report/pages-sell` + qs(q)),
   buyers: (site: string, q: ReportQuery, n = 8) => call<{ buyers: Buyer[] }>('GET', `/sites/${site}/buyers` + qs(q) + `&n=${n}`),
+  payments: (site: string, q: ReportQuery, offset: number, n = 20) => call<{ payments: Payment[]; total: number }>('GET', `/sites/${site}/sales/payments` + qs(q) + `&n=${n}&offset=${offset}`),
+  customers: (site: string, q: ReportQuery, offset: number, n = 20) => call<{ customers: Customer[]; total: number }>('GET', `/sites/${site}/sales/customers` + qs(q) + `&n=${n}&offset=${offset}`),
   refunds: (site: string, q: ReportQuery, n = 4) => call<Refunds>('GET', `/sites/${site}/refunds` + qs(q) + `&n=${n}`),
 }

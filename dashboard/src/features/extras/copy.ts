@@ -41,23 +41,4 @@ export const extrasCopy = defineCopy('extras', {
     none: 'No sale is credited to a page yet.',
     failed: 'Couldn’t read the pages that sell.',
   },
-  buyers: {
-    tab: 'Latest buyers',
-    failed: 'Couldn’t read the latest buyers.',
-    none: 'No sales in this period.',
-    direct: 'Direct',
-    paid: 'paid',
-    visits: (n: number) => plural(n, 'visit', 'visits'),
-    toBuy: (s: number) => {
-      const hours = s / 3600
-      if (hours < 1) return 'same hour'
-      if (hours < 24) return 'same day'
-      return plural(Math.round(hours / 24), 'day', 'days')
-    },
-    ago: (s: number) => {
-      if (s < 3600) return `${Math.max(1, Math.round(s / 60))} min ago`
-      if (s < 86400) return `${Math.round(s / 3600)} h ago`
-      return `${Math.round(s / 86400)} d ago`
-    },
-  },
 })

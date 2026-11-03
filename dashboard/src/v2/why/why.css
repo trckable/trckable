@@ -316,33 +316,6 @@
 .mk .xsplit-keys button[aria-pressed=true]{background:var(--mk-hover);color:var(--mk-text)}
 .mk .xsplit-keys i{width:8px;height:8px;border-radius:50%}
 .mk .xsplit-keys b{color:var(--mk-text);font-variant-numeric:tabular-nums}
-/* Buyers: the way each one came, step by step. */
-.mk [data-xcard=buyers] .xsec>:first-child{display:none}
-.mk [data-xcard=buyers] .xfade>.xsec{position:absolute;top:13px;right:var(--mk-s4);padding:0;color:var(--mk-text);font-weight:600}
-.mk [data-xcard=buyers] .sale{gap:var(--mk-s2);padding-block:9px;padding-inline:0}
-.mk .bj{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:3px}
-.mk .bj>span{padding:2px 7px;border-radius:6px;background:var(--mk-band);font-size:12px;color:var(--mk-muted)}
-.mk .bj>span.from{color:var(--mk-text);font-weight:600}
-.mk .bj>span.end{background:var(--mk-limeD,var(--mk-hover));color:var(--mk-lime);font-weight:600}
-/* Buyers: who, the pages on the way, what they paid. */
-.mk .buyer{display:grid;grid-template-columns:36px minmax(170px,1fr) minmax(0,2fr) 72px;align-items:center;gap:var(--mk-s3);padding:11px var(--mk-s2);margin-inline:calc(var(--mk-s2) * -1);border-radius:12px;transition:background .15s}
-.mk .buyer:hover{background:var(--mk-band)}
-.mk .buyer-av{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;font-style:normal;font-weight:700;font-size:14px}
-.mk .buyer-who{display:flex;flex-direction:column;gap:1px;min-width:0}
-.mk .buyer-who b{overflow:hidden;font-size:13.5px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
-.mk .buyer-who small{font-size:12px;color:var(--mk-muted);white-space:nowrap}
-.mk .buyer-amt{font-size:15px;font-weight:650;text-align:right;font-variant-numeric:tabular-nums}
-.mk .buyer .bj{display:flex;flex-wrap:nowrap;align-items:center;gap:0;margin:0;min-width:0;overflow:hidden}
-.mk .buyer .bj>span{flex:0 1 auto;overflow:hidden;padding:3px 8px;border-radius:7px;background:var(--mk-band);font-size:12px;color:var(--mk-muted);text-overflow:ellipsis;white-space:nowrap}
-.mk .buyer:hover .bj>span{background:var(--mk-hover)}
-.mk .buyer .bj>span::after{content:none}
-.mk .buyer .bj>:not(:last-child){margin-right:14px;position:relative;overflow:visible}
-.mk .buyer .bj>span:not(:last-child)::after{content:"";position:absolute;top:50%;left:100%;width:14px;height:1px;background:var(--mk-line)}
-.mk .buyer .bj>em{flex:none;width:10px;height:10px;border-radius:50%;background:var(--mk-lime);box-shadow:0 0 0 3px color-mix(in srgb,var(--mk-lime) 20%,transparent)}
-@media (--xs){.mk .buyer{grid-template-columns:36px minmax(0,1fr) auto}.mk .buyer .bj{grid-column:2/-1;grid-row:2}}
-.mk .xcp .xfade>.buyer{padding:11px var(--mk-s2)!important;border-radius:12px}
-.mk .xcp .xfade>.buyer:hover{background:var(--mk-band)!important}
-.mk [data-xcard=buyers] .xfade>.xsec{top:14px;line-height:1.4}
 /* Overview: number cards with the change as a pill on their first line. */
 .mk .xcards .xkw .kt{flex-wrap:wrap;align-items:center}
 .mk .xcards .xkw .kn{margin-left:auto;padding:2px 7px;border-radius:999px;background:var(--mk-band);font-size:11.5px;white-space:nowrap}
@@ -609,6 +582,7 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .xtile[data-xtile=overview],.xri[data-xsec=overview],.xtitle[data-xtitle=overview]{--c:#4f8ef7}
 .xtile[data-xtile=pages],.xri[data-xsec=pages],.xtitle[data-xtitle=pages]{--c:#2fb8c6}
 .xtile[data-xtile=sources],.xri[data-xsec=sources],.xtitle[data-xtitle=sources]{--c:#f08a5d}
+.xtile[data-xtile=search],.xri[data-xsec=search],.xtitle[data-xtitle=search]{--c:#7fb83a}
 .xtile[data-xtile=places],.xri[data-xsec=places],.xtitle[data-xtitle=places]{--c:#34b37e}
 .xtile[data-xtile=tech],.xri[data-xsec=tech],.xtitle[data-xtitle=tech]{--c:#6c7a91}
 .xtile[data-xtile=results],.xri[data-xsec=results],.xtitle[data-xtitle=results]{--c:#e9668f}
@@ -636,3 +610,9 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .mk .xdrawer .xrail::after{display:none}
 /* The bar centres its name itself (flex); the list rule's top/transform would push it down. */
 .mk .xcards .mk-bar>span{top:auto;transform:none}
+/* Narrow cards: the change pill sits under the label, and a long label wraps instead of running out of the card. */
+@media (--sm-down){
+  .mk .xcards .xkw .kc .kt{flex-wrap:wrap}
+  .mk .xcards .xkw .kc .kl{flex:1 1 calc(100% - 44px);white-space:normal}
+  .mk .xcards .xkw .kc .kn{margin-left:32px}
+}

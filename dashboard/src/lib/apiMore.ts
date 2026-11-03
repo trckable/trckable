@@ -298,7 +298,7 @@ export const more = {
     call<{ connected: boolean; connection: SearchConnection; properties?: SearchProperty[] }>('PUT', `/sites/${site}/search-console`, body),
   deleteSearchConsole: (site: string) => act('DELETE', `/sites/${site}/search-console`),
   searchProperties: (site: string) => call<{ properties: SearchProperty[] }>('GET', `/sites/${site}/search-console/properties`),
-  searchReport: (site: string, q: ReportQuery, dim: 'query' | 'page', signal?: AbortSignal) =>
+  searchReport: (site: string, q: ReportQuery, dim: 'query' | 'page' | 'date', signal?: AbortSignal) =>
     call<SearchReport>('GET', `/sites/${site}/report/search` + rangeQS(q) + '&dim=' + dim, undefined, signal),
   team: (signal?: AbortSignal) => call<{ sites: TeamRow[] }>('GET', '/team', undefined, signal),
   overview: (days: number, signal?: AbortSignal) => call<{ days: number; sites: SiteRow[] }>('GET', `/overview?days=${days}`, undefined, signal),

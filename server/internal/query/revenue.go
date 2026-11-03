@@ -120,60 +120,10 @@ func (q Q) revenue(ctx context.Context, conn *sql.Conn, p Params, cte string, ct
 		return nil
 	}
 
-	tz, err := safeTZ(p.TZ)
+	sqlText, args, winFrom, err := attributedSQL(p, facts, cte, cteArgs)
 	if err != nil {
 		return err
 	}
-	evFrom := p.From.Add(-AttributionWindow)
-	for _, f := range facts {
-		if t := f.TouchAt.Add(-AttributionWindow); !f.TouchAt.IsZero() && t.Before(evFrom) {
-			evFrom = t
-		}
-	}
-	fwhere, fargs, err := filterWhere(p, evFrom, p.To)
-	if err != nil {
-		return err
-	}
-	scope := " WHERE converted"
-	if fwhere != "" {
-		scope = fwhere + " AND converted AND attributed"
-	}
-	winFrom := p.From.Add(-AttributionWindow)
-	for _, f := range facts { // renewals look back from their subscription's start
-		if t := f.TouchAt.Add(-AttributionWindow); !f.TouchAt.IsZero() && t.Before(winFrom) {
-			winFrom = t
-		}
-	}
-	// Both models weight a visit the same way — anything but Direct wins — and
-	// then take the latest or the earliest. The bonus is larger than any
-	// timestamp, so the preference always decides first.
-	when := "epoch_ms(c.start)"
-	if p.Attribution == FirstTouch {
-		when = "-epoch_ms(c.start)"
-	}
-	sqlText := cte + `,
-		f AS (SELECT * FROM p_facts),
-		cand AS (
-			SELECT * FROM sessions WHERE site_id = ? AND start >= ? AND start < ? AND visitor_id IN (SELECT visitor_id FROM f WHERE visitor_id <> 0)
-			UNION ALL
-			SELECT * FROM s_open WHERE site_id = ? AND start >= ? AND start < ? AND visitor_id IN (SELECT visitor_id FROM f WHERE visitor_id <> 0)
-		),
-		touch AS (
-			SELECT f.payment_id,
-			       max_by(c.session_id, (CASE WHEN coalesce(c.channel, 'Direct') <> 'Direct' THEN 4398046511104 ELSE 0 END) + ` + when + `) AS sid
-			FROM f JOIN cand c ON c.visitor_id = f.visitor_id AND c.start <= f.touch_at + INTERVAL 1 MINUTE AND c.start >= f.touch_at - INTERVAL 90 DAY
-			GROUP BY f.payment_id
-		),
-		a AS (
-			SELECT f.payment_id, f.visitor_id, f.paid_at, f.amount, f.refunded, f.customer, f.kind, f.change, f.converted, f.bill_country,
-			       t.sid IS NOT NULL AS attributed,
-			       ((f.paid_at AT TIME ZONE 'UTC') AT TIME ZONE '` + tz + `') AS lpaid,
-			       c.* EXCLUDE (site_id, visitor_id)
-			FROM f LEFT JOIN touch t USING (payment_id) LEFT JOIN cand c ON c.session_id = t.sid AND c.visitor_id = f.visitor_id
-		),
-		ar AS (SELECT * FROM a` + scope + `)`
-	args := append(append([]any{}, cteArgs...), p.Site, winFrom, p.To, p.Site, winFrom, p.To)
-	args = append(args, fargs...)
 
 	// Headline money.
 	if err := conn.QueryRowContext(ctx, sqlText+`
@@ -338,6 +288,69 @@ func (q Q) revenue(ctx context.Context, conn *sql.Conn, p Params, cte string, ct
 		sortDays(res.Days)
 	}
 	return nil
+}
+
+// attributedSQL is the query text every payment read starts from: the report's
+// sessions (with its filters), the payments' candidate visits, the visit each
+// payment is credited to, and `ar`, the payments the filters leave. args are the
+// text's parameters; winFrom is how far back the visits are read.
+func attributedSQL(p Params, facts []ledger.Fact, cte string, cteArgs []any) (sqlText string, args []any, winFrom time.Time, err error) {
+	tz, err := safeTZ(p.TZ)
+	if err != nil {
+		return "", nil, time.Time{}, err
+	}
+	evFrom := p.From.Add(-AttributionWindow)
+	for _, f := range facts {
+		if t := f.TouchAt.Add(-AttributionWindow); !f.TouchAt.IsZero() && t.Before(evFrom) {
+			evFrom = t
+		}
+	}
+	fwhere, fargs, err := filterWhere(p, evFrom, p.To)
+	if err != nil {
+		return "", nil, time.Time{}, err
+	}
+	scope := " WHERE converted"
+	if fwhere != "" {
+		scope = fwhere + " AND converted AND attributed"
+	}
+	winFrom = p.From.Add(-AttributionWindow)
+	for _, f := range facts { // renewals look back from their subscription's start
+		if t := f.TouchAt.Add(-AttributionWindow); !f.TouchAt.IsZero() && t.Before(winFrom) {
+			winFrom = t
+		}
+	}
+	// Both models weight a visit the same way — anything but Direct wins — and
+	// then take the latest or the earliest. The bonus is larger than any
+	// timestamp, so the preference always decides first.
+	when := "epoch_ms(c.start)"
+	if p.Attribution == FirstTouch {
+		when = "-epoch_ms(c.start)"
+	}
+	sqlText = cte + `,
+		f AS (SELECT * FROM p_facts),
+		cand AS (
+			SELECT * FROM sessions WHERE site_id = ? AND start >= ? AND start < ? AND visitor_id IN (SELECT visitor_id FROM f WHERE visitor_id <> 0)
+			UNION ALL
+			SELECT * FROM s_open WHERE site_id = ? AND start >= ? AND start < ? AND visitor_id IN (SELECT visitor_id FROM f WHERE visitor_id <> 0)
+		),
+		touch AS (
+			SELECT f.payment_id,
+			       max_by(c.session_id, (CASE WHEN coalesce(c.channel, 'Direct') <> 'Direct' THEN 4398046511104 ELSE 0 END) + ` + when + `) AS sid
+			FROM f JOIN cand c ON c.visitor_id = f.visitor_id AND c.start <= f.touch_at + INTERVAL 1 MINUTE AND c.start >= f.touch_at - INTERVAL 90 DAY
+			GROUP BY f.payment_id
+		),
+		a AS (
+			SELECT f.payment_id, f.visitor_id, f.paid_at, f.amount, f.refunded, f.customer, f.kind, f.change, f.converted, f.bill_country,
+			       t.sid IS NOT NULL AS attributed,
+			       ((f.paid_at AT TIME ZONE 'UTC') AT TIME ZONE '` + tz + `') AS lpaid,
+			       c.* EXCLUDE (site_id, visitor_id)
+			FROM f LEFT JOIN touch t USING (payment_id) LEFT JOIN cand c ON c.session_id = t.sid AND c.visitor_id = f.visitor_id
+		),
+		ar AS (SELECT * FROM a` + scope + `)`
+	args = append(append([]any{}, cteArgs...), p.Site, winFrom, p.To, p.Site, winFrom, p.To)
+	args = append(args, fargs...)
+
+	return sqlText, args, winFrom, nil
 }
 
 func loadFacts(ctx context.Context, conn *sql.Conn, facts []ledger.Fact) error {

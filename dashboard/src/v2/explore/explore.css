@@ -92,3 +92,95 @@
     max-width: none;
   }
 }
+
+/* Tech's three leaders: a card each, and a tap on one filters by it. */
+.mk .kc.xtop {
+  font: inherit;
+  color: var(--mk-text);
+  text-align: left;
+  cursor: pointer;
+}
+.mk .kc.xtop:hover {
+  background: var(--mk-hover);
+}
+.mk .kc.xtop .kv {
+  display: flex;
+  align-items: baseline;
+  gap: var(--mk-s2);
+  flex-wrap: wrap;
+  min-width: 0;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+.mk .kc.xtop .kv small {
+  font-size: 13px;
+  color: var(--mk-muted);
+}
+
+/* Search: clicks and impressions by day. */
+.mk .xschart {
+  margin: var(--mk-s3) 0;
+  padding: var(--mk-s3) var(--mk-s4);
+  border: 1px solid var(--mk-line);
+  border-radius: var(--mk-r);
+  background: var(--mk-card);
+}
+.mk .xschart-read {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mk-s1) var(--mk-s4);
+  font-size: 12px;
+  color: var(--mk-muted);
+}
+.mk .xschart-k {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.mk .xschart-k i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.mk .xschart-k b {
+  color: var(--mk-text);
+  font-weight: 600;
+}
+.mk .xschart-plot {
+  position: relative;
+  margin-top: var(--mk-s2);
+  touch-action: pan-y;
+}
+.mk .xschart-plot svg {
+  display: block;
+  width: 100%;
+  height: 150px;
+}
+.mk .xschart-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.mk .xschart-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--mk-s1);
+  font-size: 11px;
+  color: var(--mk-faint);
+}
+
+/* On a phone the first leader takes the row and the other two share the one under it. */
+@media (--sm-down) {
+  .mk .xkw .xtops {
+    --fit-basis: calc((100% - var(--fit-gap)) / 2 - 0.5px);
+  }
+  .mk .xkw .xtops > :first-child {
+    flex-basis: 100%;
+    grid-column: 1 / -1;
+  }
+}
