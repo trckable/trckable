@@ -1,5 +1,5 @@
 // The Data view's extras ask the server for three things beyond the report:
-// highlights, the pages that sell and the latest buyers. Kept out of lib/api
+// highlights, the pages that sell and the latest buyers (the briefing chart marks them). Kept out of lib/api
 // so the first load does not carry them.
 import { call, rangeQS, type ReportQuery, type Row } from '../../lib/api'
 

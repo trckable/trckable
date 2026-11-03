@@ -11,7 +11,6 @@ import { channelLabel } from '../../../../lib/palette'
 import { ago } from '../../../../features/cards/peopleModel'
 import { extrasApi, type Customer, type Payment } from '../../../../features/extras/extrasApi'
 import { fmtDate, fmtDayTime } from '../../../../features/journey/when'
-import { words } from '../../../../lib/errors'
 import { XEmpty, XError, XSec } from '../../../ui/XBits'
 import { Flag } from '../../../ui/Flag'
 import { copy } from '../../copy'
@@ -22,14 +21,15 @@ type Page<T> = { rows: T[]; total: number }
 /** Pages of one list: the first read again whenever the question changes, the next one appended. */
 function usePaged<T>(key: string, read: (offset: number) => Promise<Page<T>>) {
   const [got, setGot] = useState<{ key: string; rows: T[]; total: number } | null>(null)
-  const [error, setError] = useState<{ key: string; message: string } | null>(null)
+  const [error, setError] = useState<{ key: string } | null>(null)
   const [busy, setBusy] = useState(false)
+  const [moreFailedFor, setMoreFailedFor] = useState('')
   const [round, setRound] = useState(0)
   useEffect(() => {
     let live = true
     read(0).then(
       (p) => live && setGot({ key, rows: p.rows, total: p.total }),
-      (e: unknown) => live && setError({ key, message: words(e) }),
+      () => live && setError({ key }),
     )
     return () => {
       live = false
@@ -40,9 +40,10 @@ function usePaged<T>(key: string, read: (offset: number) => Promise<Page<T>>) {
   const more = () => {
     if (!got || busy) return
     setBusy(true)
+    setMoreFailedFor('')
     read(got.rows.length)
       .then((p) => setGot({ key, rows: [...got.rows, ...p.rows], total: p.total }))
-      .catch((e: unknown) => setError({ key, message: words(e) }))
+      .catch(() => setMoreFailedFor(key))
       .finally(() => setBusy(false))
   }
   const retry = () => {
@@ -50,7 +51,7 @@ function usePaged<T>(key: string, read: (offset: number) => Promise<Page<T>>) {
     setRound((n) => n + 1)
   }
   const here = got?.key === key ? got : null
-  return { rows: here?.rows ?? null, total: here?.total ?? 0, failed: error?.key === key, busy, more, retry }
+  return { rows: here?.rows ?? null, total: here?.total ?? 0, failed: error?.key === key, moreFailed: moreFailedFor === key && !!here, busy, more, retry }
 }
 
 const keyOf = (x: XCtx, q: ReportQuery, list: string) => `${list}|${x.site.id}|${q.from}|${q.to}|${q.attr ?? ''}|${q.testPayments ? 'test' : ''}|${JSON.stringify(q.filters ?? [])}`
@@ -92,12 +93,21 @@ function Place({ code }: { code?: string }) {
   )
 }
 
-const More = ({ shown, total, busy, onMore }: { shown: number; total: number; busy: boolean; onMore: () => void }) =>
-  shown < total ? (
-    <button type="button" className="mk-more" disabled={busy} onClick={onMore}>
-      {copy.pay.more}
-    </button>
-  ) : null
+function More({ shown, list }: { shown: number; list: { total: number; busy: boolean; moreFailed: boolean; more: () => void } }) {
+  if (shown >= list.total) return null
+  return (
+    <>
+      {list.moreFailed && (
+        <p className="mk-quiet" role="alert">
+          {copy.pay.moreFailed}
+        </p>
+      )}
+      <button type="button" className="mk-more" disabled={list.busy} onClick={list.more}>
+        {list.moreFailed ? copy.pay.retry : copy.pay.more}
+      </button>
+    </>
+  )
+}
 
 /** What a payment is called: a refund marks it, else a renewal, else new. */
 function tagOf(p: Payment): 'refund' | 'renewal' | 'new' {
@@ -127,7 +137,7 @@ export function Payments({ x, query, onPick }: { x: XCtx; query: ReportQuery; on
           <span className={`amt ${p.refunded ? 'neg' : ''}`}>+{x.money(p.amount)}</span>
         </Row>
       ))}
-      <More shown={list.rows.length} total={list.total} busy={list.busy} onMore={list.more} />
+      <More shown={list.rows.length} list={list} />
     </>
   )
 }
@@ -159,7 +169,7 @@ export function Customers({ x, query, onPick }: { x: XCtx; query: ReportQuery; o
           <span className="amt">{x.money(c.spent)}</span>
         </Row>
       ))}
-      <More shown={list.rows.length} total={list.total} busy={list.busy} onMore={list.more} />
+      <More shown={list.rows.length} list={list} />
     </>
   )
 }

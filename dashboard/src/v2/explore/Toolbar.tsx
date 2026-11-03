@@ -12,7 +12,7 @@ import { FILTER_DIMS, TABS } from './sections'
 import type { Connected, FilterDim, Option, Section, Tab } from './types'
 
 /** The tabs that read the payments. */
-const PAID: Tab[] = ['revmap', 'earners', 'sells', 'buyers', 'payments', 'customers', 'vsale', 'toconvert']
+const PAID: Tab[] = ['revmap', 'earners', 'sells', 'payments', 'customers', 'vsale', 'toconvert']
 
 export type MenuKey = 'pick' | 'views' | 'more'
 

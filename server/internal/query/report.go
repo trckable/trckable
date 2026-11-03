@@ -81,12 +81,6 @@ type Params struct {
 	// Buyers adds the latest sales with the way to each (Result.Buyers): this
 	// many, newest first. Only with Revenue on.
 	Buyers int
-	// PayList adds a page of every payment (Result.PayList): this many from
-	// PayOffset, newest first. Only with Revenue on.
-	PayList, PayOffset int
-	// CustList adds a page of the paying customers (Result.CustList): this
-	// many from CustOffset, the biggest spenders first. Only with Revenue on.
-	CustList, CustOffset int
 	// NewReferrers adds the referring sites that sent nobody before the period
 	// (Result.NewReferrers): this many, the busiest first.
 	NewReferrers int
@@ -166,10 +160,6 @@ type Result struct {
 	Sales        []SaleBucket     `json:"-"`                      // with Params.Sales: the payments per bucket
 	SalePages    []Row            `json:"-"`                      // with Params.SalePages: revenue per page the credited visit read
 	Buyers       []Buyer          `json:"-"`                      // with Params.Buyers: the latest sales and their way there
-	PayList      []PayRow         `json:"-"`                      // with Params.PayList: a page of payments
-	PayTotal     int              `json:"-"`                      // how many payments in all
-	CustList     []CustRow        `json:"-"`                      // with Params.CustList: a page of paying customers
-	CustTotal    int              `json:"-"`                      // how many paying customers in all
 	NewReferrers []NewReferrer    `json:"-"`                      // with Params.NewReferrers: sites that sent nobody before
 }
 

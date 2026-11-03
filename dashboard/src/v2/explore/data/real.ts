@@ -187,7 +187,7 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
       // A share here is of the clicks listed (the report names no total for them).
       return { rows, of: rows.reduce((p, x) => p + x.v, 0), noneAtAll }
     }
-    case 'highlights': case 'overtime': case 'hours': case 'revmap': case 'earners': case 'sells': case 'people': case 'buyers': case 'retention': case 'vsale': case 'toconvert': case 'flow': case 'ai': case 'answers':
+    case 'highlights': case 'overtime': case 'hours': case 'revmap': case 'earners': case 'sells': case 'people': case 'retention': case 'vsale': case 'toconvert': case 'flow': case 'ai': case 'answers':
       // These read their own numbers (views/Hosted.tsx).
       return null
     default: {

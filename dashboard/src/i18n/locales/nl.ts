@@ -1225,23 +1225,6 @@ export default {
   'extras.sells.note': 'Een verkoop telt mee bij elke pagina van het bezoek dat hem opleverde.',
   'extras.sells.none': 'Er is nog geen verkoop aan een pagina toegeschreven.',
   'extras.sells.failed': 'De pagina’s die verkopen konden niet worden gelezen.',
-  'extras.buyers.tab': 'Laatste kopers',
-  'extras.buyers.failed': 'De laatste kopers konden niet worden gelezen.',
-  'extras.buyers.none': 'Geen verkopen in deze periode.',
-  'extras.buyers.direct': 'Direct',
-  'extras.buyers.paid': 'betaald',
-  'extras.buyers.visits': (n: number) => count(n, 'bezoek', 'bezoeken'),
-  'extras.buyers.toBuy': (s: number) => {
-    const hours = s / 3600
-    if (hours < 1) return 'hetzelfde uur'
-    if (hours < 24) return 'dezelfde dag'
-    return count(Math.round(hours / 24), 'dag', 'dagen')
-  },
-  'extras.buyers.ago': (s: number) => {
-    if (s < 3600) return `${Math.max(1, Math.round(s / 60))} min geleden`
-    if (s < 86400) return `${Math.round(s / 3600)} u geleden`
-    return `${Math.round(s / 86400)} d geleden`
-  },
 
   // journey
   'journey.dialog': 'Route van de bezoeker',
@@ -2307,7 +2290,6 @@ export default {
   'v2explore.sub.earners': 'Bronnen die betalen',
   'v2explore.sub.sells': 'Pagina’s die verkopen',
   'v2explore.sub.people': 'Mensen',
-  'v2explore.sub.buyers': 'Laatste kopers',
   'v2explore.sub.retention': 'Retentie',
   'v2explore.sub.vsale': 'Bezoek tot verkoop',
   'v2explore.sub.toconvert': 'Tijd tot conversie',
@@ -2461,7 +2443,6 @@ export default {
   'v2explore.kinds.refund': 'Terugbetalingen',
   'v2explore.kindLabel': 'Soort verkoop',
   'v2explore.saleCount': (n: number) => count(n, 'verkoop', 'verkopen'),
-  'v2explore.latestBuyers': (n: number) => `Laatste ${n} ${n === 1 ? 'nieuwe klant' : 'nieuwe klanten'}`,
   'v2explore.sub.payments': 'Betalingen',
   'v2explore.sub.customers': 'Klanten',
   'v2explore.pay.count': (n: number) => `${n} ${n === 1 ? 'betaling' : 'betalingen'}`,
@@ -2470,6 +2451,8 @@ export default {
   'v2explore.pay.noneCustomers': 'Geen klanten in deze periode',
   'v2explore.pay.failed': 'Betalingen konden niet worden geladen',
   'v2explore.pay.more': 'Meer tonen',
+  'v2explore.pay.moreFailed': 'Meer laden is niet gelukt.',
+  'v2explore.pay.retry': 'Opnieuw proberen',
   'v2explore.pay.open': 'Open hun reis',
   'v2explore.pay.unknown': 'Onbekende bezoeker',
   'v2explore.pay.refunded': (m: string) => `${m} terugbetaald`,

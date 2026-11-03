@@ -1230,23 +1230,6 @@ export default {
   'extras.sells.note': 'Una vendita conta per ogni pagina della visita che l’ha generata.',
   'extras.sells.none': 'Nessuna vendita è ancora attribuita a una pagina.',
   'extras.sells.failed': 'Impossibile leggere le pagine che vendono.',
-  'extras.buyers.tab': 'Ultimi acquirenti',
-  'extras.buyers.failed': 'Impossibile leggere gli ultimi acquirenti.',
-  'extras.buyers.none': 'Nessuna vendita in questo periodo.',
-  'extras.buyers.direct': 'Diretto',
-  'extras.buyers.paid': 'a pagamento',
-  'extras.buyers.visits': (n: number) => count(n, 'visita', 'visite'),
-  'extras.buyers.toBuy': (s: number) => {
-    const hours = s / 3600
-    if (hours < 1) return 'stessa ora'
-    if (hours < 24) return 'stesso giorno'
-    return count(Math.round(hours / 24), 'giorno', 'giorni')
-  },
-  'extras.buyers.ago': (s: number) => {
-    if (s < 3600) return `${Math.max(1, Math.round(s / 60))} min fa`
-    if (s < 86400) return `${Math.round(s / 3600)} h fa`
-    return `${Math.round(s / 86400)} g fa`
-  },
 
   // journey
   'journey.dialog': 'Percorso del visitatore',
@@ -2307,7 +2290,6 @@ export default {
   'v2explore.sub.earners': 'Fonti che pagano',
   'v2explore.sub.sells': 'Pagine che vendono',
   'v2explore.sub.people': 'Persone',
-  'v2explore.sub.buyers': 'Ultimi acquirenti',
   'v2explore.sub.retention': 'Retention',
   'v2explore.sub.vsale': 'Dalla visita alla vendita',
   'v2explore.sub.toconvert': 'Tempo di conversione',
@@ -2461,7 +2443,6 @@ export default {
   'v2explore.kinds.refund': 'Rimborsi',
   'v2explore.kindLabel': 'Tipo di vendita',
   'v2explore.saleCount': (n: number) => `${n} ${n === 1 ? 'vendita' : 'vendite'}`,
-  'v2explore.latestBuyers': (n: number) => `Ultimi ${n} ${n === 1 ? 'nuovo cliente' : 'nuovi clienti'}`,
   'v2explore.sub.payments': 'Pagamenti',
   'v2explore.sub.customers': 'Clienti',
   'v2explore.pay.count': (n: number) => `${n} ${n === 1 ? 'pagamento' : 'pagamenti'}`,
@@ -2470,6 +2451,8 @@ export default {
   'v2explore.pay.noneCustomers': 'Nessun cliente in questo periodo',
   'v2explore.pay.failed': 'Impossibile caricare i pagamenti',
   'v2explore.pay.more': 'Mostra altro',
+  'v2explore.pay.moreFailed': 'Impossibile caricare altro.',
+  'v2explore.pay.retry': 'Riprova',
   'v2explore.pay.open': 'Apri il suo percorso',
   'v2explore.pay.unknown': 'Visitatore sconosciuto',
   'v2explore.pay.refunded': (m: string) => `${m} rimborsati`,

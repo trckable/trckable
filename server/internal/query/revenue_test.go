@@ -325,58 +325,82 @@ func TestBuyers(t *testing.T) {
 	})
 }
 
-// The payment lists: every payment newest first with its visitor and the source
-// that brought them, a refund marked, paged; and one row a customer, the
-// biggest spender first, with the source of their first payment.
+// The payment lists, read without a report: every payment newest first with its
+// visitor and the source that brought them, a refund marked, paged; and one row a
+// customer, the biggest spender first, with the source of their first payment.
 func TestPayLists(t *testing.T) {
 	both(t, func(t *testing.T, q Q) {
 		q = withPayments(q)
 		p := sep10
-		p.Bucket, p.Currency, p.Revenue, p.PayList, p.CustList = "hour", "USD", true, 3, 10
-		res, err := q.Report(context.Background(), p)
+		p.Bucket, p.Currency, p.Revenue = "hour", "USD", true
+		ctx := context.Background()
+		pay, err := q.PayList(ctx, p, false, 3, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
-		eq(t, "payments in all", res.PayTotal, 4)
-		eq(t, "a page", len(res.PayList), 3)
-		eq(t, "newest first", res.PayList[0].Amount, int64(5000))
-		eq(t, "its visitor, base 36", res.PayList[0].Visitor, "1")
-		eq(t, "its source", res.PayList[0].Referrer, "google.com")
-		eq(t, "its billing country", res.PayList[0].Country, "DE")
-		eq(t, "renewals are payments too", res.PayList[1].Kind, "renewal")
-		eq(t, "a renewal's visitor", res.PayList[1].Visitor, "3")
-		eq(t, "no visit known", res.PayList[2].Visitor, "")
-		eq(t, "no source for it", res.PayList[2].Channel, "")
-		p.PayOffset = 3
-		if res, _ = q.Report(context.Background(), p); len(res.PayList) != 1 || res.PayList[0].Refunded != 500 || res.PayList[0].Channel != "AI" {
-			t.Fatalf("second page, the refunded one: %+v", res.PayList)
+		eq(t, "payments in all", pay.Total, 4)
+		eq(t, "currency", pay.Currency, "USD")
+		eq(t, "a page", len(pay.Payments), 3)
+		eq(t, "newest first", pay.Payments[0].Amount, int64(5000))
+		eq(t, "its visitor, base 36", pay.Payments[0].Visitor, "1")
+		eq(t, "its source", pay.Payments[0].Referrer, "google.com")
+		eq(t, "its billing country", pay.Payments[0].Country, "DE")
+		eq(t, "renewals are payments too", pay.Payments[1].Kind, "renewal")
+		eq(t, "a renewal's visitor", pay.Payments[1].Visitor, "3")
+		eq(t, "no visit known", pay.Payments[2].Visitor, "")
+		eq(t, "no source for it", pay.Payments[2].Channel, "")
+		if pay, err = q.PayList(ctx, p, false, 3, 3); err != nil || len(pay.Payments) != 1 || pay.Payments[0].Refunded != 500 || pay.Payments[0].Channel != "AI" {
+			t.Fatalf("second page, the refunded one: %+v %v", pay, err)
 		}
-		eq(t, "customers in all", res.CustTotal, 4)
-		eq(t, "the biggest spender first", res.CustList[0].Spent, int64(5000))
-		eq(t, "orders", res.CustList[0].Orders, int64(1))
-		eq(t, "net of the refund", res.CustList[1].Spent, int64(1500))
-		eq(t, "refunded", res.CustList[1].Refunded, int64(500))
-		eq(t, "first source", res.CustList[1].Channel, "AI")
-		if res.CustList[0].ID == "" || res.CustList[0].ID == res.CustList[1].ID {
-			t.Fatalf("ids tell rows apart: %+v", res.CustList)
+		cust, err := q.PayList(ctx, p, true, 10, 0)
+		if err != nil {
+			t.Fatal(err)
 		}
-		// Not asked for, not read.
-		p.PayList, p.CustList = 0, 0
-		if res, _ = q.Report(context.Background(), p); res.PayList != nil || res.CustList != nil {
-			t.Fatalf("not asked for: %+v %+v", res.PayList, res.CustList)
+		eq(t, "customers in all", cust.Total, 4)
+		eq(t, "the biggest spender first", cust.Customers[0].Spent, int64(5000))
+		eq(t, "orders", cust.Customers[0].Orders, int64(1))
+		eq(t, "net of the refund", cust.Customers[1].Spent, int64(1500))
+		eq(t, "refunded", cust.Customers[1].Refunded, int64(500))
+		eq(t, "first source", cust.Customers[1].Channel, "AI")
+		if cust.Customers[0].ID == "" || cust.Customers[0].ID == cust.Customers[1].ID {
+			t.Fatalf("ids tell rows apart: %+v", cust.Customers)
+		}
+		// A filter applies to the visit that earned the payment.
+		p.Filters = []Filter{{Dim: "channel", Value: "AI"}}
+		if pay, err = q.PayList(ctx, p, false, 10, 0); err != nil || pay.Total != 1 || pay.Payments[0].Amount != 2000 {
+			t.Fatalf("filtered: %+v %v", pay, err)
 		}
 		// A customer who paid twice is one row.
-		p.From, p.To, p.CustList = time.Date(2026, 9, 10, 0, 0, 0, 0, time.UTC), time.Date(2027, 4, 1, 0, 0, 0, 0, time.UTC), 10
-		res, err = q.Report(context.Background(), p)
-		if err != nil {
+		p.Filters = nil
+		p.From, p.To = time.Date(2026, 9, 10, 0, 0, 0, 0, time.UTC), time.Date(2027, 4, 1, 0, 0, 0, 0, time.UTC)
+		if cust, err = q.PayList(ctx, p, true, 10, 0); err != nil {
 			t.Fatal(err)
 		}
-		for _, c := range res.CustList {
+		for _, c := range cust.Customers {
 			if c.Orders == 2 {
 				eq(t, "two orders, net", c.Spent, int64(3500))
 				return
 			}
 		}
-		t.Fatalf("B paid twice: %+v", res.CustList)
+		t.Fatalf("B paid twice: %+v", cust.Customers)
+	})
+}
+
+// A page is at most MaxPayPage rows and starts at most at MaxPayOffset; past the
+// end there is an empty page, not an error.
+func TestPayListCaps(t *testing.T) {
+	both(t, func(t *testing.T, q Q) {
+		q = withPayments(q)
+		p := sep10
+		p.Bucket, p.Currency, p.Revenue = "hour", "USD", true
+		ctx := context.Background()
+		pay, err := q.PayList(ctx, p, false, 10_000, -5)
+		if err != nil || len(pay.Payments) != 4 {
+			t.Fatalf("a huge page, a negative offset: %+v %v", pay, err)
+		}
+		pay, err = q.PayList(ctx, p, false, 3, 1_000_000)
+		if err != nil || len(pay.Payments) != 0 || pay.Total != 4 {
+			t.Fatalf("an offset past the cap: %+v %v", pay, err)
+		}
 	})
 }

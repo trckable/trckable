@@ -1,20 +1,24 @@
 package api
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/trckable/trckable/server/internal/query"
 )
 
-// payPage is how many rows a page of the payment lists holds at most.
-const payPage = 50
-
-// payList serves GET /api/v1/sites/{site}/sales/payments and /sales/customers: one page of
-// the period's payments (newest first) or paying customers (biggest spenders
-// first), read the way the report credits them (its attribution, its filters,
-// test payments when it asks for them), with the visitor each belongs to so a
-// row opens their journey. ?n= is the page size (at most 50), ?offset= where it
-// starts. Needs a payment provider connected. Never a name, an email or a
-// customer key; signed-in people only, the public share link serves neither.
+// payList serves GET /api/v1/sites/{site}/sales/payments and /sales/customers:
+// one page of the period's payments (newest first) or paying customers (biggest
+// spenders first), credited the way the report credits them (its attribution,
+// its filters, test payments when it asks for them), each with the visitor it
+// belongs to so a row opens their journey. ?n= is the page size (at most 50),
+// ?offset= where it starts (at most 10000). Needs a payment provider connected.
+// Readable by every signed-in member and by API keys that may read, as the
+// journey is; never a name, an email or a customer key. The public share link
+// serves neither. The first page is kept like a report; later pages are read
+// each time.
 func (a *API) payList(customers bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !a.needs(w, r, "revenue") {
@@ -31,33 +35,35 @@ func (a *API) payList(customers bool) http.HandlerFunc {
 			return
 		}
 		n, _ := strconv.Atoi(r.URL.Query().Get("n"))
-		if n <= 0 || n > payPage {
+		if n <= 0 || n > query.MaxPayPage {
 			n = 20
 		}
 		off, _ := strconv.Atoi(r.URL.Query().Get("offset"))
-		if off < 0 {
-			off = 0
+		if off < 0 || off > query.MaxPayOffset {
+			fail(w, http.StatusBadRequest, "offset is out of range")
+			return
 		}
 		p := ask.Params
-		p.Daily, p.Deep, p.Sales, p.Buyers = false, false, false, 0
-		if customers {
-			p.CustList, p.CustOffset = n, off
+		read := func(ctx context.Context) (any, error) { return q.PayList(ctx, p, customers, n, off) }
+		var v any
+		var err error
+		if off == 0 {
+			v, err = a.cachedRead(r, p, fmt.Sprintf("%s|pay|%t|%d", cacheKey(p), customers, n), read)
 		} else {
-			p.PayList, p.PayOffset = n, off
+			ctx, cancel := context.WithTimeout(r.Context(), reportTimeout)
+			defer cancel()
+			v, err = read(ctx)
 		}
-		res, err := a.cachedReport(r, q, p)
 		if err != nil {
 			reportFail(w, err)
 			return
 		}
-		out := map[string]any{}
+		page := v.(*query.PayPage)
+		out := map[string]any{"total": page.Total, "currency": page.Currency, "exponent": page.Exponent}
 		if customers {
-			out["customers"], out["total"] = orEmpty(res.CustList), res.CustTotal
+			out["customers"] = orEmpty(page.Customers)
 		} else {
-			out["payments"], out["total"] = orEmpty(res.PayList), res.PayTotal
-		}
-		if res.Money != nil {
-			out["currency"], out["exponent"] = res.Money.Currency, res.Money.Exponent
+			out["payments"] = orEmpty(page.Payments)
 		}
 		writeJSON(w, http.StatusOK, out)
 	}

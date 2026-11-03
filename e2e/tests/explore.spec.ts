@@ -127,7 +127,7 @@ const HOMES: Record<string, string[]> = {
   places: ['regions', 'cities', 'languages', 'revmap', 'people'],
   tech: ['bversion', 'screens'],
   results: ['retention', 'vsale', 'toconvert', 'flow'],
-  sales: ['payments', 'customers', 'buyers'],
+  sales: ['payments', 'customers'],
   ai: ['ai'],
 }
 

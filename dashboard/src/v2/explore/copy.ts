@@ -61,7 +61,7 @@ export const copy = defineCopy('v2explore', {
     ai: ['AI & search', 'Google, AI assistants and crawlers'],
     answers: ['Answers', 'What AI assistants say about you'],
   },
-  sub: { quality: 'Quality', changed: 'What changed', overview: 'Overview', pages: 'Pages', countries: 'Countries', funnels: 'Goals', sales: 'Sales', speed: 'Speed', mentions: 'Mentions', sources: 'Channels', referrers: 'Referrers', utm: 'UTMs', search: 'Search', devices: 'Devices', browsers: 'Browsers', outbound: 'Links', bots: 'Bots', exits: 'Exit pages', groups: 'Page groups', regions: 'Regions', cities: 'Cities', utmsource: 'UTM source', medium: 'UTM medium', bversion: 'Browser versions', screens: 'Screens', languages: 'Languages', highlights: 'Highlights', overtime: 'Over time', hours: 'Hours', revmap: 'Revenue map', earners: 'Sources that pay', sells: 'Pages that sell', people: 'People', buyers: 'Latest buyers', payments: 'Payments', customers: 'Customers', retention: 'Retention', vsale: 'Visit to sale', toconvert: 'Time to convert', flow: 'Flow', ai: 'AI & search', answers: 'Answers' },
+  sub: { quality: 'Quality', changed: 'What changed', overview: 'Overview', pages: 'Pages', countries: 'Countries', funnels: 'Goals', sales: 'Sales', speed: 'Speed', mentions: 'Mentions', sources: 'Channels', referrers: 'Referrers', utm: 'UTMs', search: 'Search', devices: 'Devices', browsers: 'Browsers', outbound: 'Links', bots: 'Bots', exits: 'Exit pages', groups: 'Page groups', regions: 'Regions', cities: 'Cities', utmsource: 'UTM source', medium: 'UTM medium', bversion: 'Browser versions', screens: 'Screens', languages: 'Languages', highlights: 'Highlights', overtime: 'Over time', hours: 'Hours', revmap: 'Revenue map', earners: 'Sources that pay', sells: 'Pages that sell', people: 'People', payments: 'Payments', customers: 'Customers', retention: 'Retention', vsale: 'Visit to sale', toconvert: 'Time to convert', flow: 'Flow', ai: 'AI & search', answers: 'Answers' },
   people: 'People',
   trackGoal: 'Track another goal',
   emptyHighlights: 'Nothing changed much',
@@ -200,8 +200,6 @@ export const copy = defineCopy('v2explore', {
   kindLabel: 'Kind of sale',
   saleCount: (n: number) => `${n} ${n === 1 ? 'sale' : 'sales'}`,
   allSales: 'All sales',
-  /** The buyers list is the latest few new customers, not every sale of the period: it says so. */
-  latestBuyers: (n: number) => `Latest ${n} new ${n === 1 ? 'customer' : 'customers'}`,
   net: 'net',
   pay: {
     count: (n: number) => `${n} ${n === 1 ? 'payment' : 'payments'}`,
@@ -210,6 +208,8 @@ export const copy = defineCopy('v2explore', {
     noneCustomers: 'No customers in this period',
     failed: 'Payments could not be loaded',
     more: 'Show more',
+    moreFailed: 'Could not load more.',
+    retry: 'Try again',
     open: 'Open their journey',
     unknown: 'Unknown visitor',
     refunded: (m: string) => `${m} refunded`,

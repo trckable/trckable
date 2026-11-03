@@ -8,7 +8,96 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/trckable/trckable/server/internal/fx"
 )
+
+// MaxPayOffset is how deep into a list a page may start.
+const MaxPayOffset = 10000
+
+// MaxPayPage is the most rows a page holds.
+const MaxPayPage = 50
+
+// PayPage is one page of the payment list or of the customer list, with how
+// many there are in all and the currency the amounts are in.
+type PayPage struct {
+	Payments  []PayRow
+	Customers []CustRow
+	Total     int
+	Currency  string
+	Exponent  int
+}
+
+// PayList reads one page of the period's payments (newest first) or paying
+// customers (biggest spender first), credited the way the report credits them
+// (its attribution, its filters, test payments when asked for). It reads only
+// the payments and the visits of those who paid: no KPIs, no breakdowns, no
+// chart, so a page costs a fraction of a report. offset is capped at
+// MaxPayOffset and the page at MaxPayPage.
+func (q Q) PayList(ctx context.Context, p Params, customers bool, limit, offset int) (*PayPage, error) {
+	out, err := q.payList(ctx, p, customers, limit, offset)
+	if err != nil && isOutOfMemory(err) {
+		out, err = q.payList(ctx, p, customers, limit, offset)
+	}
+	return out, err
+}
+
+func (q Q) payList(ctx context.Context, p Params, customers bool, limit, offset int) (*PayPage, error) {
+	if limit <= 0 || limit > MaxPayPage {
+		limit = MaxPayPage
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	if offset > MaxPayOffset {
+		offset = MaxPayOffset
+	}
+	if p.TZ == "" {
+		p.TZ = "UTC"
+	}
+	cur := p.Currency
+	if cur == "" {
+		cur = "USD"
+	}
+	out := &PayPage{Currency: cur, Exponent: fx.Exponent(cur)}
+	if err := acquireReport(ctx); err != nil {
+		return nil, err
+	}
+	defer releaseReport()
+	facts, enabled, err := q.Payments(ctx, p.Site, cur, p.From, p.To, p.Test)
+	if err != nil || !enabled || len(facts) == 0 {
+		return out, err
+	}
+	conn, err := q.DB.Conn(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	if err := q.loadOpen(ctx, conn, p.Site); err != nil {
+		return nil, err
+	}
+	defer func() {
+		_, _ = conn.ExecContext(context.Background(), `DROP TABLE IF EXISTS s_open`)
+		_, _ = conn.ExecContext(context.Background(), `DROP TABLE IF EXISTS p_facts`)
+	}()
+	if err := loadFacts(ctx, conn, facts); err != nil {
+		return nil, err
+	}
+	cte, cteArgs, err := sessionsCTE(p)
+	if err != nil {
+		return nil, err
+	}
+	sqlText, args, _, err := attributedSQL(p, facts, cte, cteArgs)
+	if err != nil {
+		return nil, err
+	}
+	if customers {
+		out.Customers, out.Total, err = custList(ctx, conn, sqlText, args, p.Site, limit, offset)
+	} else {
+		out.Payments, out.Total, err = payRows(ctx, conn, sqlText, args, p.Site, limit, offset)
+	}
+	return out, err
+}
 
 // PayRow is one payment as the Payments list shows it: what it was worth, who
 // paid (the visitor's own id, which opens their journey) and the source that
@@ -52,17 +141,17 @@ func visitorID(v uint64) string {
 	return strconv.FormatUint(v, 36)
 }
 
-// payList is a page of the period's payments, newest first, each read the way
+// payRows is a page of the period's payments, newest first, each read the way
 // the report credits it (its attribution and filters). A payment with no known
 // visit has an amount and a time only.
-func payList(ctx context.Context, conn *sql.Conn, sqlText string, args []any, p Params) ([]PayRow, int, error) {
+func payRows(ctx context.Context, conn *sql.Conn, sqlText string, args []any, site string, limit, offset int) ([]PayRow, int, error) {
 	var total int
 	if err := conn.QueryRowContext(ctx, sqlText+` SELECT count(*) FROM ar`, args...).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("payments count: %w", err)
 	}
 	rows, err := conn.QueryContext(ctx, sqlText+`
 		SELECT payment_id, paid_at, amount, refunded, kind, bill_country, visitor_id, attributed, coalesce(channel, 'Direct'), coalesce(referrer, '')
-		FROM ar ORDER BY paid_at DESC, payment_id LIMIT ? OFFSET ?`, append(append([]any{}, args...), p.PayList, p.PayOffset)...)
+		FROM ar ORDER BY paid_at DESC, payment_id LIMIT ? OFFSET ?`, append(append([]any{}, args...), limit, offset)...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("payments: %w", err)
 	}
@@ -77,7 +166,7 @@ func payList(ctx context.Context, conn *sql.Conn, sqlText string, args []any, p 
 		if err := rows.Scan(&pid, &at, &amount, &refunded, &kind, &country, &visitor, &attributed, &ch, &ref); err != nil {
 			return nil, 0, err
 		}
-		r := PayRow{ID: hashID(p.Site, pid), At: at.UTC(), Amount: amount, Refunded: refunded, Kind: kind, Visitor: visitorID(visitor), Country: country}
+		r := PayRow{ID: hashID(site, pid), At: at.UTC(), Amount: amount, Refunded: refunded, Kind: kind, Visitor: visitorID(visitor), Country: country}
 		if attributed {
 			r.Channel, r.Referrer = ch, ref
 		}
@@ -90,7 +179,7 @@ func payList(ctx context.Context, conn *sql.Conn, sqlText string, args []any, p 
 // first. A customer is the payment provider's own key (or the email hash, or
 // the single payment), so a returning buyer is one row; the source and the
 // visitor are those of their first payment that a visit is known for.
-func custList(ctx context.Context, conn *sql.Conn, sqlText string, args []any, p Params) ([]CustRow, int, error) {
+func custList(ctx context.Context, conn *sql.Conn, sqlText string, args []any, site string, limit, offset int) ([]CustRow, int, error) {
 	var total int
 	if err := conn.QueryRowContext(ctx, sqlText+` SELECT count(DISTINCT customer) FROM ar`, args...).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("customers count: %w", err)
@@ -105,7 +194,7 @@ func custList(ctx context.Context, conn *sql.Conn, sqlText string, args []any, p
 			       min(coalesce(first_seen, start)) AS seen
 			FROM ar GROUP BY customer)
 		SELECT customer, spent, orders, refunded, first_paid, last_paid, visitor, coalesce(ch, ''), coalesce(ref, ''), coalesce(country, ''), seen
-		FROM g ORDER BY spent DESC, first_paid, customer LIMIT ? OFFSET ?`, append(append([]any{}, args...), p.CustList, p.CustOffset)...)
+		FROM g ORDER BY spent DESC, first_paid, customer LIMIT ? OFFSET ?`, append(append([]any{}, args...), limit, offset)...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("customers: %w", err)
 	}
@@ -120,7 +209,7 @@ func custList(ctx context.Context, conn *sql.Conn, sqlText string, args []any, p
 		if err := rows.Scan(&cust, &spent, &orders, &refunded, &first, &last, &visitor, &ch, &ref, &country, &seen); err != nil {
 			return nil, 0, err
 		}
-		r := CustRow{ID: hashID(p.Site, cust), Spent: spent, Orders: orders, Refunded: refunded, Visitor: visitorID(visitor), Channel: ch, Referrer: ref, Country: country, FirstSeen: first.UTC(), LastOrder: last.UTC()}
+		r := CustRow{ID: hashID(site, cust), Spent: spent, Orders: orders, Refunded: refunded, Visitor: visitorID(visitor), Channel: ch, Referrer: ref, Country: country, FirstSeen: first.UTC(), LastOrder: last.UTC()}
 		if seen.Valid && seen.Time.Before(first) {
 			r.FirstSeen = seen.Time.UTC()
 		}
