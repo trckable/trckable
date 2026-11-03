@@ -1,0 +1,1 @@
+- Dialogs: the page stays visible behind them (light dim, small blur, no dark halo).
