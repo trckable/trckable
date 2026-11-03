@@ -11,6 +11,8 @@ export const heatCopy = defineCopy('heatmap', {
   views: (n: number) => `${fmtInt(n)} ${n === 1 ? 'view' : 'views'}`,
   none: 'Nothing counted for this page yet.',
   noneWidth: 'Nothing counted at this width.',
+  off: 'Heatmaps are off for this site.',
+  turnOn: 'Turn on heatmaps',
   loading: 'Loading',
   elements: 'Most clicked',
   forms: 'Forms',
@@ -22,6 +24,8 @@ export const heatCopy = defineCopy('heatmap', {
   rageTip: 'Three clicks within a second',
   scrollTip: (pct: number, share: number) => `${Math.round(share * 100)}% scrolled past ${pct}%`,
   demo: 'Example data',
+  fewer: 'Fewer clicks',
+  more: 'More',
   frame: 'This page, as a plain document: nothing on it runs here.',
   // The card that suggests the module.
   card: {

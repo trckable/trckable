@@ -1,4 +1,4 @@
-// Search: what Google says about the site, the four numbers and the queries (or pages) behind them.
+// Search: what Google says about the site, the four numbers, a line for each day and the queries (or pages) behind them.
 import { fmtFixed, fmtInt } from '../../../lib/format'
 import { XEmpty, XNote, XSub } from '../../ui/XBits'
 import { XKcsPlain } from '../../ui/XKcs'
@@ -9,6 +9,7 @@ import { Lock } from './Lock'
 import { SourceChip } from '../../../features/verified/SourceChip'
 import { proofFor } from '../../../features/verified/model'
 import type { Search as Model, SearchRow } from '../types'
+import { SearchChart } from './SearchChart'
 import { fmtK, pct1 } from './numbers'
 
 const cols = [{ h: copy.heads.clicks }, { h: copy.impr, hm: true }, { h: copy.ctr, hm: true }, { h: copy.pos }]
@@ -41,6 +42,7 @@ export function Search({ x, d }: { x: XCtx; d: Model }) {
   return (
     <>
       <XKcsPlain items={d.kcs} />
+      <SearchChart days={d.days} />
       {proofFor(x.site.verified, 'search') && (
         <XNote>
           <SourceChip verified={x.site.verified} slot="search" />

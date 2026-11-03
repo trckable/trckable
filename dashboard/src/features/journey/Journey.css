@@ -383,9 +383,18 @@ button.jr-chip:focus-visible {
   white-space: nowrap;
 }
 .jr-props {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  min-width: 0;
   font-size: 12px;
+}
+.jr-prop {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .jr-path {
   min-width: 0;

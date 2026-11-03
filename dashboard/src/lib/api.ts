@@ -349,7 +349,7 @@ export interface SearchRow {
 }
 export interface SearchReport {
   property: string
-  dim: 'query' | 'page'
+  dim: 'query' | 'page' | 'date'
   rows: SearchRow[] | null
   from: string
   to: string

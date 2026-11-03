@@ -92,7 +92,15 @@ export function Results({ x, d }: { x: XCtx; d: Funnel }) {
       {x.edit && <Editor x={x} d={d} />}
       {steps.length >= 2 && steps[0].v > 0 ? <XMiniFunnel steps={steps} leak={d.leak} ghost={d.ghost} leakPage={leakPage} onLeak={leakPage ? () => x.goWith('pages', 'page', leakPage) : undefined} onConnect={can('payment.manage') ? () => x.connect('rev') : undefined} /> : (
         <XEmpty title={copy.emptyFunnel} hint={copy.emptyFunnelHint}>
-          {!can('funnel.create') && <span className="mk-quiet">{lockCopy.ask}</span>}
+          {can('funnel.create') ? (
+            !x.edit && (
+              <button type="button" className="xb" onClick={() => x.setEdit(true)}>
+                {copy.addSteps}
+              </button>
+            )
+          ) : (
+            <span className="mk-quiet">{lockCopy.ask}</span>
+          )}
         </XEmpty>
       )}
       <XSec a={copy.goals} />

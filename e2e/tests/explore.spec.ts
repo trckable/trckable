@@ -242,3 +242,13 @@ test('the grid in the header lists every section, and a tile opens its page from
   await expect(page.locator('#xp [data-xcard="speed"]')).toBeVisible()
   await expect(page).toHaveURL(/x=speed/)
 })
+
+test('Search is a section of its own in the grid', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=live`)
+  await page.locator('#sectionsBtn').click()
+  await page.locator('[data-xtile="search"]').click()
+  await expect(page.locator('#xp [data-xcard="search"]')).toBeVisible()
+  await expect(page).toHaveURL(/x=search/)
+})

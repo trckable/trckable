@@ -1,16 +1,16 @@
 // The report's answer, said as Explore's overview and tables. Pure: mapReport.test.ts.
-import type { Report, Result, Row as ApiRow } from '../../../lib/api'
+import type { KPIs, Report, Result, Row as ApiRow, ScrollReport } from '../../../lib/api'
 import { fmtDay, type ISODate } from '../../../lib/dates'
-import { countryName, fmtFixed, fmtInt, fmtPct } from '../../../lib/format'
+import { countryName, fmtDuration, fmtFixed, fmtInt, fmtPct } from '../../../lib/format'
 import { plainSpan } from '../../../lib/plainSpan'
 import { channelLabel } from '../../../lib/palette'
 import { baseEnough, tooFew } from '../../../lib/thin'
 import { compareOf, whyNot } from '../../briefing/compare'
 import { sourceName } from '../../briefing/model'
 import { copy } from '../copy'
-import type { Down, FilterDim, Kc, Option, Overview, Row, Shape, Stat, Tab, Table } from '../types'
+import type { Down, FilterDim, Kc, Option, Overview, Row, Shape, Stat, Tab, Table, Top, Xkc } from '../types'
 import type { Basis } from './basis'
-import { noteOf, rowsOf, statOf } from './stats'
+import { changeOf, noteOf, rowsOf, statOf } from './stats'
 
 /** What the uptime card needs: the share of the period the site answered, and the incidents of the period. */
 export interface Uptime {
@@ -179,4 +179,33 @@ export function optionsOf(cur: Result): Partial<Record<FilterDim, Option[]>> {
     out[k] = rows.filter((r) => r.visitors > 0).map((r) => ({ val: r.value, name: o.name(r.value) }))
   }
   return out
+}
+
+/** The device, browser and system most people used: each one's share of the period's people. */
+export function mapTops(r: Report): Top[] {
+  const people = r.current.kpis.visitors
+  return (['device', 'browser', 'os'] as const).flatMap((dim) => {
+    const top = (r.current.dims[dim] ?? []).reduce<ApiRow | null>((best, x) => (x.visitors > (best?.visitors ?? 0) ? x : best), null)
+    return top && people > 0 ? [{ dim, val: top.value, share: top.visitors / people }] : []
+  })
+}
+
+/** Reading depth in whole percents (the report writes a share as 0 to 1 or 0 to 100). */
+const depthOf = (x: number) => Math.round(x <= 1 ? x * 100 : x)
+
+/** How people read the pages: five numbers, each against the period before. A number the period could not measure says a dash. */
+export function mapEngage(now: { kpis: KPIs; scroll?: ScrollReport }, before?: { kpis: KPIs; scroll?: ScrollReport }): Xkc[] {
+  const read = (s?: ScrollReport) => (s && s.samples > 0 ? { avg: Math.round(s.avg), deep: depthOf(s.reached[2]) } : undefined)
+  const engaged = (k: KPIs) => Math.round(k.sessions * (1 - k.bounce_rate))
+  const [a, b] = [read(now.scroll), before && read(before.scroll)]
+  const card = (icon: string, label: string, val: string, cur: number | undefined, was: number | undefined, wasText: string): Xkc =>
+    cur === undefined ? { icon, label, val: '–', tag: '', tone: '', detail: '' } : { icon, label, val, ...changeOf(cur, was, copy.asUsual), detail: was ? copy.was(wasText) : '' }
+  const k = [now.kpis, before?.kpis] as const
+  return [
+    card('pages', copy.engage.scroll, `${a?.avg}%`, a?.avg, b?.avg, `${b?.avg}%`),
+    card('uptime', copy.engage.time, fmtDuration(k[0].avg_session_s), k[0].sessions > 0 ? k[0].avg_session_s : undefined, k[1]?.avg_session_s, fmtDuration(k[1]?.avg_session_s ?? 0)),
+    card('goal', copy.engage.deep, `${a?.deep}%`, a?.deep, b?.deep, `${b?.deep}%`),
+    card('people', copy.engage.engaged, fmtInt(engaged(k[0])), k[0].sessions > 0 ? engaged(k[0]) : undefined, k[1] && engaged(k[1]), fmtInt(k[1] ? engaged(k[1]) : 0)),
+    card('click', copy.engage.perVisit, fmtFixed(k[0].views_per_session, 1), k[0].sessions > 0 ? k[0].views_per_session : undefined, k[1]?.views_per_session, fmtFixed(k[1]?.views_per_session ?? 0, 1)),
+  ]
 }

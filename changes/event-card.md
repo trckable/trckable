@@ -1,0 +1,1 @@
+Every notification in the bell opens its event: the visit behind a goal or signup (who, where from, the page and the way in), the sale, the outage with what the checks saw, or the post, with one link on to where it lives; setup, alert, answer and account notices now lead to their own settings.

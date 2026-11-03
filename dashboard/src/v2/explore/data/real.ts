@@ -25,13 +25,20 @@ import { insightOf } from './insight'
 import { headline, rateOf, type QualityRow } from './quality'
 import { EXPLORE_ROWS, LINKS_ROWS } from './rows'
 import { scaled, withSourceUsuals } from './scaled'
-import { mapOverview, mapTable, optionsOf, type Uptime } from './mapReport'
+import { mapEngage, mapOverview, mapTable, mapTops, optionsOf, type Uptime } from './mapReport'
 import { mapBots, mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed } from './mapSections'
 import type { DataCtx, Meta, TabData } from './useExplore'
 import { dateFmt } from '../../../lib/format'
 
 /** Explore asks for the deep report: the breakdowns of regions, cities, exit pages and the rest ride in the same read. */
 const query = (c: DataCtx, filters: Filter[] = c.filters): ReportQuery => ({ ...queryOf({ ...c.view, filters }, c.range), deep: true, limit: EXPLORE_ROWS })
+
+/** How people read, this period and the one before it (the reading depth is read for each; a site without it says a dash). */
+async function engagement(c: DataCtx, q: ReportQuery, report: Report, signal?: AbortSignal) {
+  const p = before(report)
+  const [cur, prev] = await Promise.all([more.scroll(c.site.id, q, signal).catch(() => undefined), report.previous ? more.scroll(c.site.id, { ...q, from: p.from, to: p.to, compare: undefined }, signal).catch(() => undefined) : undefined])
+  return mapEngage({ kpis: report.current.kpis, scroll: cur }, report.previous ? { kpis: report.previous.kpis, scroll: prev } : undefined)
+}
 
 /** The range the report compared with: the period before. */
 const before = (r: Report): Range => ({ from: r.previous_from ?? r.from, to: r.previous_to ?? r.to })
@@ -145,11 +152,11 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
     }
     case 'search': {
       const conn = await more.searchConsole(c.site.id)
-      if (!conn.connected) return { on: false, enough: false, kcs: [], queries: [], pages: [] }
+      if (!conn.connected) return { on: false, enough: false, kcs: [], queries: [], pages: [], days: [] }
       const report = await cachedReport(c.site.id, q, undefined, signal)
       const p = before(report)
-      const [query_, pages, prev] = await Promise.all([more.searchReport(c.site.id, q, 'query', signal), more.searchReport(c.site.id, q, 'page', signal), more.searchReport(c.site.id, { ...q, from: p.from, to: p.to, compare: undefined }, 'query', signal).catch(() => undefined)])
-      return mapSearch({ query: query_, pages, prev })
+      const [query_, pages, days, prev] = await Promise.all([more.searchReport(c.site.id, q, 'query', signal), more.searchReport(c.site.id, q, 'page', signal), more.searchReport(c.site.id, q, 'date', signal).catch(() => undefined), more.searchReport(c.site.id, { ...q, from: p.from, to: p.to, compare: undefined }, 'query', signal).catch(() => undefined)])
+      return mapSearch({ query: query_, pages, days, prev })
     }
     case 'quality': {
       const report = await cachedReport(c.site.id, q, undefined, signal)
@@ -191,8 +198,12 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
       // These read their own numbers (views/Hosted.tsx).
       return null
     default: {
-      const table = mapTable(tab, (await toBasis(c, await cachedReport(c.site.id, q, undefined, signal))).report)
-      return (tab === 'pages' || tab === 'countries') && c.view.compare !== 'none' ? { ...table, say: insightOf(table.rows) } : table
+      const raw = await cachedReport(c.site.id, q, undefined, signal)
+      const { report } = await toBasis(c, raw)
+      const table = mapTable(tab, report)
+      if (tab === 'devices') return { ...table, tops: mapTops(report) }
+      if (tab === 'pages') return { ...table, ...(c.view.compare !== 'none' ? { say: insightOf(table.rows) } : {}), engage: await engagement(c, q, raw, signal) }
+      return tab === 'countries' && c.view.compare !== 'none' ? { ...table, say: insightOf(table.rows) } : table
     }
   }
 }

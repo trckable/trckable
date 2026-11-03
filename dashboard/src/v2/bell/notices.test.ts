@@ -151,17 +151,14 @@ describe('the server’s list as the bell’s rows', () => {
   })
 
   it('tells Answers changes, the first time with its own words, and a budget that ran out at its own time', () => {
-    let opened = 0
     const out = fromFeed(
       [row({ id: 'a1', kind: 'answer', what: 'dropped', engine: 'openai', text: 'best analytics' }), row({ id: 'a2', kind: 'answer', what: 'seen', engine: 'anthropic', first: true }), row({ id: 'a3', kind: 'answer', what: 'paused', site: '', at: now - 5000 })],
       sites,
       now,
-      () => opened++,
     )
     expect(out.map((r) => r.title)).toEqual(['ChatGPT stopped naming you for “best analytics”', 'Peekaboo. Claude just named you.', 'Paused until the 1st: this month’s budget is used.'])
     expect(out[2].at).toBe(now - 5000)
-    out[0].open?.()
-    expect(opened).toBe(1)
+    expect(out[0].open).toBeUndefined()
   })
 })
 

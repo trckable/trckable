@@ -11,7 +11,7 @@ import { PeopleTable } from './PeopleTable'
 import { rowWords } from '../pointer'
 
 export function Overview({ x, d }: { x: XCtx; d: Model }) {
-  if (!x.site.last_event_at && d.of === 0 && x.filters.length === 0) return <Waiting />
+  if (!x.site.last_event_at && d.of === 0 && x.filters.length === 0) return <Waiting site={x.site} />
   return (
     <>
       <XKcs items={d.kcs} />

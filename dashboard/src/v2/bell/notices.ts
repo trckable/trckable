@@ -47,6 +47,11 @@ export interface Notice {
   bad?: boolean
   /** What the row says of the time in place of the clock of `at` ('' for none): "18:39–18:49" for an incident that ended. */
   when?: string
+  /** The visitor behind a goal or a signup (the journey's id) and the second it happened: the event card shows the visit. */
+  visitor?: string
+  exact?: number
+  /** A mention's post. */
+  link?: string
   /** Several notices drawn as one row (busy moments of different sites at the same time), newest first. */
   members?: Notice[]
 }
@@ -68,7 +73,7 @@ const startOf = (day: string): number => Math.floor(new Date(`${day}T00:00:00`).
  * The server's list as notices, in its order. A row keeps its id when the thing it tells goes on (a site that was down is
  * the same row once it is back, told "was down 10m" where it sat), and a row of a site the person has no longer is left out.
  */
-export function fromFeed(rows: FeedRow[], sites: Site[], now: number, open: () => void = () => undefined): Notice[] {
+export function fromFeed(rows: FeedRow[], sites: Site[], now: number): Notice[] {
   const out: Notice[] = []
   for (const r of rows) {
     const s = sites.find((x) => x.id === r.site)
@@ -90,7 +95,7 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number, open: () =
         break
       }
       case 'mention':
-        out.push({ ...base, kind: 'mention', title: copy.mention(r.source === 'hn' ? sourceName(r.host ?? '') : (r.host ?? '')), sub: r.text ?? '', source: r.host })
+        out.push({ ...base, kind: 'mention', title: copy.mention(r.source === 'hn' ? sourceName(r.host ?? '') : (r.host ?? '')), sub: r.text ?? '', source: r.host, link: r.link })
         break
       case 'answer': {
         const c = answersCopy
@@ -98,10 +103,10 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number, open: () =
         const started = r.first ? c.first(engine) : c.change.seen(engine, r.text ?? '')
         const title = r.what === 'dropped' ? c.change.dropped(engine, r.text ?? '') : started
         if (r.what === 'paused') {
-          out.push({ ...base, kind: 'answer', title: c.paused, sub: c.section[0], open })
+          out.push({ ...base, kind: 'answer', title: c.paused, sub: c.section[0] })
           break
         }
-        out.push({ ...base, kind: 'answer', title, sub: c.section[0], open })
+        out.push({ ...base, kind: 'answer', title, sub: c.section[0] })
         break
       }
       case 'milestone':
@@ -113,10 +118,10 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number, open: () =
         break
       }
       case 'signup':
-        out.push({ ...base, kind: 'signup', title: copy.signups(r.count ?? 1), sub: '' })
+        out.push({ ...base, kind: 'signup', title: copy.signups(r.count ?? 1), sub: '', visitor: r.visitor, exact: r.seen })
         break
       case 'goal':
-        out.push({ ...base, kind: 'goal', title: copy.goalReached(goalName(undefined, r.text ?? ''), r.count ?? 1), sub: '' })
+        out.push({ ...base, kind: 'goal', title: copy.goalReached(goalName(undefined, r.text ?? ''), r.count ?? 1), sub: '', visitor: r.visitor, exact: r.seen })
         break
       case 'alert': {
         const kind = (r.what ?? '') as AlertKind

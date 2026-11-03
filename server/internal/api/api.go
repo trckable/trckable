@@ -1154,7 +1154,8 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 	out := []siteListRow{}
 	for _, s := range rows {
 		b := brands[s.ID]
-		week, cookieless := 1, false
+		// A site whose settings cannot be read is told as cookieless: the careful side.
+		week, cookieless := 1, true
 		if c, err := a.Ctl.SiteConfig(r.Context(), s.ID); err == nil {
 			week, cookieless = c.WeekStart, c.ConsentFree
 		}

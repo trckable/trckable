@@ -1,4 +1,5 @@
 // A table of people for a section, or what to say when there is none.
+import type { ReactNode } from 'react'
 import { XEmpty } from '../../ui/XBits'
 import { XTable, type XTableProps } from '../../ui/XTable'
 import { copy } from '../copy'
@@ -18,7 +19,7 @@ export function PeopleTable({ x, noneAtAll, ...p }: { x: XCtx; noneAtAll?: boole
 }
 
 /** A table with no rows in the period: what is missing, why it may be, and the one thing to try. */
-export function EmptyTab({ x }: { x: XCtx }) {
+export function EmptyTab({ x, children }: { x: XCtx; children?: ReactNode }) {
   return (
     <XEmpty title={copy.emptyTab(x.tabName)} hint={x.widen ? copy.emptyTabShort : copy.emptyTabLater}>
       {x.widen && (
@@ -26,6 +27,7 @@ export function EmptyTab({ x }: { x: XCtx }) {
           {copy.widen}
         </button>
       )}
+      {children}
     </XEmpty>
   )
 }

@@ -205,6 +205,16 @@ function events(c: Ctx, id: string, limit: number) {
 function searchReport(c: Ctx, id: string, sp: URLSearchParams) {
   const q = parseQuery(sp)
   const g = reportOf(c, id, { ...q, filters: [{ dim: 'referrer', not: false, value: 'google.com' }] }).current.kpis.visitors
+  if (sp.get('dim') === 'date') {
+    // A row a day: what Google sent that day, and some sixteen to twenty-four times as many who saw the site listed.
+    const [a, b] = [dayIndex(c, q.from), dayIndex(c, q.to)]
+    const days = Array.from({ length: b - a + 1 }, (_, i) => {
+      const day = dateOf(c, a + i)
+      const clicks = reportOf(c, id, { ...q, from: day, to: day, compare: undefined, filters: [{ dim: 'referrer', not: false, value: 'google.com' }] }).current.kpis.visitors
+      return { key: day, clicks, impressions: Math.round(clicks * (16 + ((i * 7) % 9))), ctr: 0.05, position: 6 }
+    })
+    return { property: `sc-domain:${siteOf(id).name}`, dim: 'date', rows: days, from: q.from, to: q.to, clicks: days.reduce((p, x) => p + x.clicks, 0), impressions: days.reduce((p, x) => p + x.impressions, 0), preliminary_from: dateOf(c, END - 1), ignored_filters: null }
+  }
   const dim = sp.get('dim') === 'page' ? 'page' : 'query'
   // The scenario's search story (new query, one that rose, a better position, fewer clicks) belongs to the period that holds today.
   const now = q.to >= dateOf(c, END)

@@ -3,9 +3,9 @@
 .modal-back {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.22);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  background: rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   animation: fade-in 0.16s ease both;
   display: grid;
   place-items: center;
@@ -24,7 +24,7 @@
   background: var(--modal-surface);
   border: 1px solid var(--border-2);
   border-radius: 16px;
-  box-shadow: var(--shadow), 0 30px 80px rgb(0 0 0 / 0.35);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.28);
   padding: 24px;
   display: flex;
   flex-direction: column;

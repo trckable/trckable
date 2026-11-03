@@ -1,5 +1,5 @@
 // AI & Search in the section's frame: the assistants that sent people, the crawlers that read the pages and each page's
-// reads against the visitors sent; Google's searches are the Search tab of Sources, one tap away.
+// reads against the visitors sent; Google's searches are the Search section, one tap away.
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { XEmpty, XError, XSec } from '../../../ui/XBits'
 import { XCols, type CRow } from '../../../ui/XTable'
@@ -21,7 +21,7 @@ const ROWS = 12
 const SHORT = 6
 const KINDS = [{ k: 'answer', color: 'var(--mk-lime)' }, { k: 'train', color: 'var(--ch-2)' }, { k: 'index', color: 'var(--ch-3)' }]
 
-/** Google's own searches, a few lines: what showed the site and was clicked (all of them are in Sources, Search). */
+/** Google's own searches, a few lines: what showed the site and was clicked (all of them are in Search). */
 function GoogleLines({ x }: { x: XCtx }) {
   const [rep, setRep] = useState<SearchReport | null | 'off'>(null)
   const key = JSON.stringify([x.site.id, x.query.from, x.query.to, x.query.filters])
@@ -49,7 +49,14 @@ function GoogleLines({ x }: { x: XCtx }) {
   if (list.length === 0) return <XEmpty title={aiCopy.noGoogle} hint="" />
   const top = Math.max(1, ...list.map((r) => r.clicks))
   const rows: CRow[] = list.map((r) => ({ key: r.key, a: r.key, bar: r.clicks / top, c: [fmtInt(r.clicks)] }))
-  return <XCols first={aiCopy.search} cols={[{ h: aiCopy.clicks }]} rows={rows} xc="minmax(0,1fr) 84px" limit={6} onAll={x.showAll} />
+  return (
+    <>
+      <XCols first={aiCopy.search} cols={[{ h: aiCopy.clicks }]} rows={rows} xc="minmax(0,1fr) 84px" limit={6} onAll={x.showAll} />
+      <button type="button" className="mk-more" data-xsec="search" onClick={() => x.goTo('search')}>
+        {aiCopy.seeSearch} {'›'}
+      </button>
+    </>
+  )
 }
 
 export default function AiTab({ x }: { x: XCtx }) {

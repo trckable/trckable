@@ -1,11 +1,11 @@
-// Explore's ten sections in four groups, and the tables each one holds.
+// Explore's sections in four groups, and the tables each one holds.
 import { hasAnswers, hasMentions, isShared } from '../../lib/me'
 import type { FilterDim, Section, Tab } from './types'
 
 export type { Section, Tab } from './types'
 
 const ALL_GROUPS: { key: 'traffic' | 'audience' | 'results' | 'site'; items: Section[] }[] = [
-  { key: 'traffic', items: ['changed', 'overview', 'pages', 'sources'] },
+  { key: 'traffic', items: ['changed', 'overview', 'pages', 'sources', 'search'] },
   { key: 'audience', items: ['places', 'tech'] },
   { key: 'results', items: ['results', 'sales'] },
   { key: 'site', items: ['speed', 'mentions', 'links', 'ai', 'answers'] },
@@ -17,7 +17,8 @@ const EVERY: Record<Section, Tab[]> = {
   changed: ['changed'],
   overview: ['overview', 'highlights', 'overtime', 'hours'],
   pages: ['pages', 'exits', 'groups', 'sells'],
-  sources: ['sources', 'quality', 'earners', 'referrers', 'utm', 'search'],
+  sources: ['sources', 'quality', 'earners', 'referrers', 'utm'],
+  search: ['search'],
   places: ['countries', 'regions', 'cities', 'languages', 'revmap', 'people'],
   tech: ['devices', 'browsers', 'bversion', 'screens'],
   results: ['funnels', 'retention', 'vsale', 'toconvert', 'flow'],
@@ -50,6 +51,7 @@ const RELATED: Record<Section, Section[]> = {
   overview: ['pages', 'sources', 'places'],
   pages: ['sources', 'results', 'speed'],
   sources: ['places', 'results', 'sales'],
+  search: ['pages', 'sources'],
   places: ['tech', 'sources'],
   tech: ['places', 'speed'],
   results: ['pages', 'sales'],

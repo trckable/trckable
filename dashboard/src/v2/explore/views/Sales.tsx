@@ -63,7 +63,13 @@ export function Sales({ x, d }: { x: XCtx; d: Model }) {
   if (d.state === 'none')
     return (
       <>
-        <XEmpty title={copy.emptyProducts} hint={copy.emptyProductsHint} />
+        <XEmpty title={copy.emptyProducts} hint={copy.emptyProductsHint}>
+          {x.widen && (
+            <button type="button" className="xb" onClick={x.widen}>
+              {copy.widen}
+            </button>
+          )}
+        </XEmpty>
         <XNote>
           <SourceChip verified={x.site.verified} slot="revenue" />
         </XNote>

@@ -20,7 +20,7 @@ function Fact({ label, children, className }: { label: string; children: React.R
   )
 }
 
-function Place({ who }: { who: Identity }) {
+export function Place({ who }: { who: Identity }) {
   if (!who.country) return <span>{copy.unknownPlace}</span>
   return (
     <span title={countryName(who.country)}>
@@ -29,7 +29,7 @@ function Place({ who }: { who: Identity }) {
   )
 }
 
-function Tech({ who }: { who: Identity }) {
+export function Tech({ who }: { who: Identity }) {
   const parts = [who.device, who.browser, who.os].filter(Boolean)
   if (parts.length === 0) return <span>{copy.unknownDevice}</span>
   return (
