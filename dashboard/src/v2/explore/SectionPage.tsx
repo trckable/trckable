@@ -88,7 +88,7 @@ function Card({ tab, x, c, open, onRead, onSay }: { tab: Tab; x: XCtx; c: DataCt
 
 /** The soft light under the pointer: the card it is on takes the place. */
 function glow(e: PointerEvent<HTMLDivElement>) {
-  const card = (e.target as Element).closest<HTMLElement>('.xcp,.kc,.xcards .xfade>.x2>div')
+  const card = (e.target as Element).closest<HTMLElement>('.xcp,.xcards .xfade>.x2>div')
   if (!card) return
   const r = card.getBoundingClientRect()
   card.style.setProperty('--mx', `${e.clientX - r.left}px`)

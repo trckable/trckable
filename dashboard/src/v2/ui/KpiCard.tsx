@@ -2,7 +2,6 @@
 import { useId } from 'react'
 import { spark } from '../briefing/geometry'
 import { useGlide } from './glide'
-import './kpi.css'
 
 export function Spark({ vals, h = 64, lo, hi, className = 'ksp', name }: { vals: number[]; h?: number; lo?: number; hi?: number; className?: string; name?: string }) {
   const id = useId()

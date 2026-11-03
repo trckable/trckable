@@ -51,7 +51,7 @@ test('390: the last line of the page clears the bottom bar', async ({ page }) =>
 
 test('948: a card keeps its label whole', async ({ page }) => {
   await open(page, 948)
-  const cut = await page.evaluate(() => [...document.querySelectorAll('.kc .kl')].filter((l) => l.scrollWidth > l.clientWidth + 1).map((l) => l.textContent))
+  const cut = await page.evaluate(() => [...document.querySelectorAll('.sum .sum-l')].filter((l) => l.scrollWidth > l.clientWidth + 1).map((l) => l.textContent))
   expect(cut).toEqual([])
   await shot(page, 'tablet-948')
 })

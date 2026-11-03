@@ -72,7 +72,7 @@ test('Live to Explore: the page, the uptime card without a figure, and the perio
   // Explore opens on What changed; the key numbers are on Overview.
   await page.locator('#xp').getByRole('button', { name: 'Overview', exact: true }).click()
   // Uptime has nothing measured here, so its card shows a dash, not a made-up figure.
-  await expect(page.locator('#xp .kcs .kc[data-k="uptime"] .kv')).toHaveText('–')
+  await expect(page.locator('#xp .sumrow .sum[data-sum="uptime"] .sum-v')).toHaveText('–')
   // The range picker: Custom dates opens the calendar.
   await period.click()
   await page.locator('#xperMenu').getByRole('button', { name: /^Custom dates/ }).click()

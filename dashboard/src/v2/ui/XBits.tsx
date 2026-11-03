@@ -90,9 +90,9 @@ export function XSkeleton({ cards, label }: { cards: number; label: string }) {
   return (
     <div className="xsk" role="status" aria-label={label}>
       {cards > 0 && (
-        <div className={`kcs xk${cards === 3 ? ' k3' : ''}`}>
+        <div className="sumrow">
           {Array.from({ length: cards }, (_, i) => (
-            <i key={i} className="sk kcsk" />
+            <i key={i} className="sk sumsk" />
           ))}
         </div>
       )}

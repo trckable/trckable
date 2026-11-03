@@ -66,16 +66,9 @@ export function BriefingSkeleton({ label }: { label: string }) {
           </div>
           <i className="skl sk-chart" />
         </section>
-        <div className="kcs">
+        <div className="sumrow">
           {[0, 1, 2, 3].map((k) => (
-            <div className="kc sk-kc" key={k}>
-              <div className="kt">
-                <i className="skl" style={{ width: 28, height: 28, margin: 0 }} />
-                <i className="skl" style={{ width: 80, height: 14, margin: 0 }} />
-              </div>
-              <i className="skl" style={{ width: 96, height: 30, margin: '12px 0 8px' }} />
-              <i className="skl sk-sp" />
-            </div>
+            <i key={k} className="skl sumsk" />
           ))}
         </div>
         <div className="cards">

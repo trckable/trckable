@@ -21,6 +21,9 @@ export interface SumItem {
   at?: number
   /** The value in full, when it is shortened. */
   title?: string
+  /** A slim chart under the line: a sparkline or a share bar, in the card's colour. */
+  chart?: ReactNode
+  color?: string
   onClick?: () => void
   data?: string
 }
@@ -48,6 +51,7 @@ function Body({ k }: { k: SumItem }) {
           {k.sub}
         </div>
       )}
+      {k.chart && <div className="sum-c" style={k.color ? { color: k.color } : undefined}>{k.chart}</div>}
     </>
   )
 }

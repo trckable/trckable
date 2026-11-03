@@ -100,6 +100,10 @@
   box-shadow: 0 0 0 2px var(--mk-card);
   transform: translateX(-50%);
 }
+/* The row follows the width of its own pane, not the window. */
+.mk .xkw {
+  container: xkw / inline-size;
+}
 /* Four across when the pane is wide, two by two when it is narrow (three and five follow the shared row rules). */
 .mk .xkw .sumrow:has(> :nth-child(4):last-child) {
   --fit-basis: calc((100% - var(--fit-gap)) / 2 - 0.5px);
@@ -109,8 +113,9 @@
     --fit-basis: calc((100% - 3 * var(--fit-gap)) / 4 - 0.5px);
   }
 }
-.mk .sk.sumsk {
-  height: 80px;
+.mk .sumsk {
+  height: 96px;
+  margin: 0;
   border-radius: 12px;
 }
 /* In a section's list of cards the row stands above them, the whole width, with the gap the cards have between them. */
@@ -119,4 +124,29 @@
 }
 .mk .xcards > .xkw .sumrow {
   margin: 0;
+}
+/* The slim chart slot: a sparkline in the card's colour, or the share bar. */
+.mk .sum-c {
+  margin-top: 4px;
+  min-height: 24px;
+  color: var(--mk-lime);
+}
+.mk .sum-c svg {
+  display: block;
+  width: 100%;
+  height: 24px;
+}
+.mk .sum-share {
+  display: block;
+  height: 6px;
+  margin-top: 9px;
+  border-radius: 3px;
+  background: var(--mk-band);
+  overflow: hidden;
+}
+.mk .sum-share b {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--mk-blue);
 }
