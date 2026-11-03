@@ -248,10 +248,12 @@ func (a *API) pagesSell(w http.ResponseWriter, r *http.Request) {
 		reportFail(w, err)
 		return
 	}
-	out := map[string]any{"pages": res.SalePages}
-	if out["pages"] == nil {
-		out["pages"] = []query.Row{}
+	// A nil slice in an interface is not == nil, so the check is on the slice: none is [], never null.
+	pages := res.SalePages
+	if pages == nil {
+		pages = []query.Row{}
 	}
+	out := map[string]any{"pages": pages}
 	if res.Money != nil {
 		out["currency"], out["exponent"] = res.Money.Currency, res.Money.Exponent
 	}
