@@ -348,6 +348,9 @@ func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from in
 	}
 	if p.Goals {
 		names := a.goalNames(ctx, s.ID)
+		// A site that does not tell visitors apart (or whose setting cannot be read) names none.
+		cfg, cfgErr := a.Ctl.SiteConfig(ctx, s.ID)
+		named := cfgErr == nil && !cfg.ConsentFree
 		if list, err := q.GoalHours(ctx, s.ID, p.TZ, time.Unix(from, 0).UTC(), now.UTC(), 2000); err != nil {
 			ok = false
 		} else {
@@ -375,7 +378,7 @@ func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from in
 					order = append(order, id)
 				}
 				row.Count += g.Count
-				if g.Last >= row.Seen && g.Visitor != 0 {
+				if named && g.Last >= row.Seen && g.Visitor != 0 {
 					row.Seen, row.Visitor = g.Last, strconv.FormatUint(g.Visitor, 36)
 				}
 				row.At = max(row.At, at)
