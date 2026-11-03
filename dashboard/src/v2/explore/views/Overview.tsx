@@ -7,7 +7,6 @@ import { Waiting } from '../../ui/Waiting'
 import { XSec } from '../../ui/XBits'
 import { XKcs } from '../../ui/XKcs'
 import { XShape } from '../../ui/XShape'
-import { Downtime } from './Downtime'
 import { PeopleTable } from './PeopleTable'
 import { rowWords } from '../pointer'
 
@@ -34,7 +33,6 @@ export function Overview({ x, d }: { x: XCtx; d: Model }) {
           <PeopleTable x={x} rows={d.sources} head={copy.heads.source} selected={valueOf(x.filters, 'channel')} onPick={(r) => x.pick('channel', r.val)} dim="channel" limit={5} of={d.of} onAll={x.showAll} go={{ label: copy.showAllSources, section: 'sources', run: () => x.goTo('sources') }} />
         </div>
       </div>
-      <Downtime down={d.down} />
     </>
   )
 }
