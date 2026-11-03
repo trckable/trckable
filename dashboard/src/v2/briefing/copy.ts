@@ -47,6 +47,10 @@ export const copy = defineCopy('briefing', {
   quietSince: (when: string) => `Quiet since ${when}, nothing to report`,
   siteDown: (min: number, ongoing: boolean) => `site down ${min} min${ongoing ? ' and counting' : ''}`,
   beforeFirst: 'Before the first visit',
+  /** The pill at the top of the chart where the current run outside the usual began: "Started Mon 09:00". */
+  started: (when: string) => `Started ${when}`,
+  /** The band's name at its right end. */
+  usualTag: 'usual',
   // Sheets, the quiet states.
   allNotes: 'All notes',
   addNote: 'Add a note',
@@ -70,7 +74,6 @@ export const copy = defineCopy('briefing', {
   replay: 'Replay',
   replayTitle: 'Play the day back as a short story',
   stop: 'Stop',
-  traffic: 'Traffic',
   engagement: 'Engagement',
   uptime: 'Uptime',
   above: 'above normal',
@@ -97,9 +100,9 @@ export const copy = defineCopy('briefing', {
   downRightNow: 'down right now',
   rangeBuilding: (have: number, need: number) => `Usual range ${have}/${need} days`,
   rangeSoon: (date: string) => `Usual range · ready ${date}`,
-  downShort: (min: number, now: boolean) => (now ? 'down now' : `down ${min}m`),
-  downLabel: (min: number, now: boolean) => (now ? `down now · ${min} min` : `down ${min} min`),
-  downMany: (n: number, min: number) => `down ${n}× · ${min} min`,
+  downShort: (span: string, now: boolean) => (now ? 'down now' : `down ${span}`),
+  downLabel: (span: string, now: boolean) => (now ? `down now · ${span}` : `down ${span}`),
+  downMany: (n: number, span: string) => `down ${n}× · ${span}`,
   noteBtn: (n: number) => (n > 0 ? `Notes (${n})` : 'Notes'),
   // The four numbers.
   people: 'People',

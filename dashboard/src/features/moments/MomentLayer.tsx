@@ -15,7 +15,6 @@ import IncidentMarks from '../incidents/IncidentMarks'
 import MentionMarks from '../mentions/MentionMarks'
 import SourceMarkers from '../markers/SourceMarkers'
 import { SurgeBand } from '../signals/SurgeBand'
-import { LANE_H } from '../../charts/plot'
 import { copy } from './copy'
 import { HIT, HIT_MS } from './focus'
 import { iconOf } from './kinds'
@@ -30,9 +29,6 @@ import { WhyCard } from './WhyCard'
 import './moments.css'
 
 const TIP_W = 280
-/** The middle of the lane above the plot that the markers sit on. */
-const LANE = LANE_H / 2
-
 export interface LayerProps {
   g: ChartGeo
   site: Site
@@ -85,11 +81,10 @@ export default function MomentLayer(p: LayerProps) {
   return (
     <>
       <IncidentMarks g={g} site={p.site} labels={p.labels} bucket={p.bucket} />
-      <MentionMarks g={g} site={p.site} labels={p.labels} bucket={p.bucket} />
+      <MentionMarks g={g} site={p.site} labels={p.labels} bucket={p.bucket} taken={marks.map((m) => m.at)} />
       <SourceMarkers g={g} site={p.site} from={p.query.from} to={p.query.to} labels={p.labels} visitors={p.series.map((x) => x.visitors)} bucket={p.bucket} />
       {surge && <SurgeBand site={p.site.id} tz={p.site.timezone} started={surge} g={g} labels={p.labels} />}
-      {marks.length > 0 && <i className="moment-lane" aria-hidden="true" style={{ left: g.x(0), width: g.w - g.x(0), top: LANE }} />}
-      {day && <i className={`moment-day ${day.pin.kind}`} aria-hidden="true" style={{ left: g.x(day.i), width: Math.max(8, g.x(1) - g.x(0)), top: LANE_H, height: g.y(0) - LANE_H }} />}
+            {day && <i className={`moment-day ${day.pin.kind}`} aria-hidden="true" style={{ left: g.x(day.i), width: Math.max(8, g.x(1) - g.x(0)), top: g.top, height: g.y(0) - g.top }} />}
       <div role="group" aria-label={copy.moments} className="moment-marks">
         {marks.map((m) => {
           const Icon = iconOf(m.pin.kind)
@@ -99,7 +94,7 @@ export default function MomentLayer(p: LayerProps) {
               key={m.pin.id}
               type="button"
               className={`moment-mark ${m.pin.kind}${m.more.length ? ' many' : ''}${current?.pins[0].id === m.pin.id ? ' on' : ''}${hit && (m.pin.id === hit || m.more.some((q) => q.id === hit)) ? ' hit' : ''}`}
-              style={{ left: m.at, top: LANE }}
+              style={{ left: m.at, top: g.lane }}
               data-rv={m.at}
               aria-label={copy.marker(fmtDay(m.pin.day ?? ''), line, m.more.length)}
               aria-describedby={tip?.i === m.i ? id : undefined}
@@ -115,7 +110,7 @@ export default function MomentLayer(p: LayerProps) {
               }}
               onClick={() => click(m)}
             >
-              <Icon size={12} strokeWidth={2.25} aria-hidden="true" />
+              <Icon size={9} strokeWidth={2.5} aria-hidden="true" />
               {m.more.length > 0 && <i className="moment-n num" aria-hidden="true">{m.more.length > 98 ? '99+' : m.more.length + 1}</i>}
             </button>
           )
@@ -132,8 +127,8 @@ export default function MomentLayer(p: LayerProps) {
           onPick={(at) => openMark.set({ pins: current.pins, at })}
         />
       )}
-      {tip && <i className="moment-guide" aria-hidden="true" style={{ left: tip.at, top: LANE, height: g.y(0) - LANE }} />}
-      {tip && <MomentTip id={id} mark={tip} money={fmt} style={{ left: Math.max(4, Math.min(tip.at - TIP_W / 2, g.w - TIP_W - 4)), top: LANE + 18, maxWidth: TIP_W }} />}
+      {tip && <i className="moment-guide" aria-hidden="true" style={{ left: tip.at, top: g.top, height: g.lane - g.top }} />}
+      {tip && <MomentTip id={id} mark={tip} money={fmt} style={{ left: Math.max(4, Math.min(tip.at - TIP_W / 2, g.w - TIP_W - 4)), top: g.lane - 12, translate: '0 -100%', maxWidth: TIP_W }} />}
     </>
   )
 }

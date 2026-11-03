@@ -39,10 +39,16 @@ describe('the chart of a day', () => {
     expect(chartOf({ cur: res([0, 10]), prev: res([0, 0]), bucket: 'hour', unit: 'today', nowT: '2026-10-16T01:30' }).points[1].v).toBe(20)
     expect(chartOf({ cur: res([0, 10]), prev: res([0, 0]), bucket: 'hour', unit: 'today', nowT: '2026-10-16T01:05' }).points[1].v).toBe(10)
   })
-  it('labels the biggest rise above the band with its source', () => {
-    const c = chartOf({ cur: res([5, 5, 40, 5]), prev: res([5, 5, 5, 5]), bucket: 'hour', unit: 'yesterday', riseName: 'Hacker News' })
-    expect(c.rise?.i).toBe(2)
-    expect(c.rise?.text).toMatch(/^Hacker News · \d+(\.\d)?× a usual hour$/)
+  it('says where the run above its usual that reaches the end began', () => {
+    const c = chartOf({ cur: res([5, 5, 40, 41]), prev: res([5, 5, 5, 5]), bucket: 'hour', unit: 'yesterday' })
+    expect(c.started).toEqual({ i: 2, when: '02:00', dir: 'up' })
+  })
+  it('names the point of the biggest rise when the period is over and ends inside its usual', () => {
+    const c = chartOf({ cur: res([5, 5, 40, 5]), prev: res([5, 5, 5, 5]), bucket: 'hour', unit: 'yesterday' })
+    expect(c.started).toEqual({ i: 2, when: '02:00', dir: 'up' })
+  })
+  it('has no run to name while the live hour is inside its usual', () => {
+    expect(chartOf({ cur: res([5, 5, 5, 5]), prev: res([5, 5, 5, 5]), bucket: 'hour', unit: 'today', nowT: '2026-10-16T03:59' }).started).toBeUndefined()
   })
   it('has no band without enough of the period before', () => {
     expect(chartOf({ cur: res([1, 2, 3, 4]), prev: res([1]), bucket: 'hour', unit: 'yesterday' }).band).toBe(false)
@@ -103,8 +109,9 @@ describe('the period before on the chart', () => {
 
 describe('the label of the down stretches', () => {
   it('says one stretch by itself and several as one line, so labels never meet', () => {
-    expect(downLabel([{ a: 1, b: 2, min: 23, now: false }], false)).toBe('down 23 min')
-    expect(downLabel([{ a: 1, b: 2, min: 23, now: false }, { a: 5, b: 6, min: 23, now: false }], true)).toBe('down 2× · 46 min')
+    expect(downLabel([{ a: 1, b: 2, min: 23, now: false }], false)).toBe('down 23m')
+    expect(downLabel([{ a: 1, b: 2, min: 2580, now: false }], false)).toBe('down 1d 19h')
+    expect(downLabel([{ a: 1, b: 2, min: 23, now: false }, { a: 5, b: 6, min: 23, now: false }], true)).toBe('down 2× · 46m')
   })
 })
 

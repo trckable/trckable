@@ -46,8 +46,8 @@ test('the period chip switches the period and the comparison, and the chart and 
   await chip.click()
   await page.locator('#xperMenu').getByRole('button', { name: /^Last 7 days/ }).click()
   await expect(page).toHaveURL(/period=7d/)
-  // Compare: Before is the default, Off turns it off and the dashed line goes.
-  await expect(page.locator('svg#chart .chbefore')).toHaveCount(1)
+  // Compare: Before is the default (the usual band, or the dashed line where the site has no usual yet), Off turns it off and the dashed line goes.
+  await expect(page.locator('svg#chart .chusual, svg#chart .chbefore')).toHaveCount(1)
   await chip.click()
   const seg = page.locator('#xperMenu .mk-lseg').first()
   await expect(seg.locator('button.on').first()).toHaveText('Before')
@@ -63,7 +63,7 @@ test('the period chip switches the period and the comparison, and the chart and 
     await expect(seg).toBeVisible({ timeout: 1000 })
   }).toPass()
   await seg.getByRole('button', { name: 'Before' }).click()
-  await expect(page.locator('svg#chart .chbefore')).toHaveCount(1)
+  await expect(page.locator('svg#chart .chusual, svg#chart .chbefore')).toHaveCount(1)
   // The point under the pointer is read out next to it, with both numbers.
   const box = (await page.locator('svg#chart').boundingBox())!
   await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5)

@@ -21,6 +21,9 @@ export interface ChartGeo {
   y: (v: number) => number
   vals: number[]
   w: number
+  /** Where the plot begins, and the middle of the lane under it that the markers sit on (the chart's own box). */
+  top: number
+  lane: number
 }
 
 export interface Placed {
@@ -69,6 +72,12 @@ export function pickMarks(placed: Placed[], x: (i: number) => number, edge: [num
     else if (marks.length < max) marks.push({ i: p.i, at, pin: p.pin, more: [] })
   }
   return marks.sort((a, b) => a.i - b.i)
+}
+
+/** Where a marker goes on the lane: its own place, moved past any of those already there within `gap` pixels (to the side with room). */
+export function aside(at: number, taken: number[], gap = MARK_GAP): number {
+  for (const t of taken) if (Math.abs(t - at) < gap) at = t + (at >= t ? gap : -gap)
+  return at
 }
 
 /** The marker whose line is on show: the one pointed at or focused, and none while a card is open (one thing at a time: the marker is only lit then). */

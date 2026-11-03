@@ -306,7 +306,7 @@ describe('the line and the band on Explore', () => {
     const { SurgeBand } = await import('./SurgeBand')
     const hour = localHour(over.started, 'UTC').hour
     const labels = [-2, -1, 0, 1, 2].map((d) => `${hour.slice(0, 11)}${String(Number(hour.slice(11, 13)) + d).padStart(2, '0')}:00`)
-    const g = { x: (i: number) => 40 + i * 50, y: () => 200, vals: [], w: 400 }
+    const g = { x: (i: number) => 40 + i * 50, y: () => 200, vals: [], w: 400, top: 8, lane: 180 }
     await act(() => {
       root.render(<SurgeBand site="tkb_c" tz="UTC" started={over.started} g={g} labels={labels} />)
       return Promise.resolve()

@@ -51,7 +51,3 @@ const PLACES = [
   { name: 'Yandex', hosts: ['yandex.com', 'yandex.ru'] },
   { name: 'Baidu', hosts: ['baidu.com'] },
 ]
-
-const SHORT: Record<string, string> = { 'Hacker News': 'HN', Newsletter: 'News', ChatGPT: 'GPT' }
-/** The short name a phone has room for. */
-export const sourceShort = (name: string): string => SHORT[name] ?? name

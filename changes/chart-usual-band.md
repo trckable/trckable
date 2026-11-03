@@ -1,0 +1,1 @@
+The chart in the Briefing and in What changed shows your usual range as a soft band, with one lane under the plot for notes, sales, outages and moments, and a pill where the current run outside it started.

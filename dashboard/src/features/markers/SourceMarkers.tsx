@@ -12,7 +12,6 @@ import type { ReactNode } from 'react'
 import type { Bucket, Site } from '../../lib/api'
 import { fmtDay } from '../../lib/dates'
 import { readView, setView } from '../../lib/url'
-import { LANE_H } from '../../charts/plot'
 import type { ChartGeo } from '../moments/marks'
 import { copy } from './copy'
 import { biggest, cluster, place, type Jump } from './model'
@@ -25,7 +24,7 @@ import './markers.css'
 import { dateFmt } from '../../lib/format'
 
 const POP_W = 270
-/** Pixels above the baseline the pills sit at (the mentions' pins sit under them). */
+/** Pixels above the baseline the pills sit at . */
 const RISE = 54
 
 function Badge({ j }: { j: Jump }) {
@@ -50,11 +49,11 @@ export interface SourceMarkersProps {
 }
 
 /** The biggest jump's line goes in the chart's header row when it has one (the slot Briefing's chart leaves), else on the plot's own top-left. */
-function callout(text: ReactNode, left: number, width: number) {
+function callout(text: ReactNode, left: number, top: number, width: number) {
   const slot = document.getElementById('chCall')
   if (slot) return createPortal(text, slot)
   return (
-    <p className="sm-line" style={{ left, top: LANE_H + 2, maxWidth: width }}>
+    <p className="sm-line" style={{ left, top: top + 2, maxWidth: width }}>
       {text}
     </p>
   )
@@ -89,8 +88,8 @@ export default function SourceMarkers(p: SourceMarkersProps) {
     }
   }, [open])
   if (!marks.length && !lead) return null
-  // Its own row: under the moments' lane and over the mentions' pins, so none touches another.
-  const top = Math.max(LANE_H + 40, g.y(0) - RISE)
+  // Its own row, a little way up from the plot's foot and never in the plot's top edge.
+  const top = Math.max(g.top + 40, g.y(0) - RISE)
   const see = (j: Jump) => {
     const view = readView(new URLSearchParams(location.search))
     setView({ filters: [...view.filters.filter((f) => f.dim !== j.filter.dim), j.filter], day: undefined, ...(p.explore ? { v: 'explore' as const } : {}) })
@@ -104,7 +103,7 @@ export default function SourceMarkers(p: SourceMarkersProps) {
       {lead && callout(<>
         {copy.line(fmtDay(lead.day), lead.name, lead.added)}
         {tag && <> · {tag}</>}
-      </>, g.x(0) + 4, g.w - g.x(0) - 12)}
+      </>, g.x(0) + 4, g.top, g.w - g.x(0) - 12)}
       {marks.map((m) => (
         <button
           key={m.i}

@@ -517,9 +517,9 @@
 }
 .mp-pin .mention-mark {
   position: relative;
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 8px;
   box-shadow: 0 0 0 2px var(--surface);
 }
 .mp-pin.lit .mention-mark {

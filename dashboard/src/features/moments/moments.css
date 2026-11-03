@@ -1,22 +1,11 @@
 /* The moments on the chart (MomentLayer) and the card they open (WhyCard). The
-   markers sit on a thin lane above the plot, never on the line: a small ring
+   markers sit on the lane under the plot, never on the line: a small ring
    with a shape of its own inside, so it reads without its colour (the colour
    only says which kind); several on one day are one, its count beside the icon
    inside the ring, which is why no two touch (marks.ts). */
 .moment-marks {
   display: contents;
 }
-.chart-wrap:has(.moment-lane) .note-add {
-  top: 22px;
-}
-.moment-lane {
-  position: absolute;
-  z-index: 3;
-  height: 1px;
-  background: var(--border);
-  pointer-events: none;
-}
-/* The day the open card is about: a soft band from the lane to the axis, in the kind's colour. */
 .moment-day {
   --mk: var(--accent);
   position: absolute;
@@ -36,20 +25,20 @@
   justify-content: center;
   gap: 4px;
   box-sizing: border-box;
-  min-width: 20px;
-  height: 20px;
+  min-width: 14px;
+  height: 14px;
   margin: 0;
-  padding: 0 5px;
+  padding: 0 3px;
   transform: translate(-50%, -50%);
   border: 0;
-  border-radius: 6px;
+  border-radius: 7px;
   background: color-mix(in srgb, var(--text) 9%, var(--surface));
   color: var(--mk);
   cursor: pointer;
   transition: background-color 0.12s;
 }
 .moment-mark.many {
-  padding: 0 6px 0 5px;
+  padding: 0 4px 0 3px;
 }
 .moment-mark svg {
   flex: none;
@@ -120,7 +109,7 @@
 /* Markers that landed together are one, with how many: beside the icon, inside the ring. */
 .moment-n {
   color: var(--text-2);
-  font-size: 12px;
+  font-size: 10px;
   font-style: normal;
   font-weight: 600;
   line-height: 1;

@@ -5,7 +5,7 @@ import { tag } from '../../i18n'
 import { fmtDay } from '../../lib/dates'
 import { copy } from './copy'
 import type { ChartIn, Down } from '../ui/DayChart'
-import { mult, sourceShort, type Unit } from './model'
+import type { Unit } from './model'
 import { judge, type Band, type Judged } from './usual'
 import { dateFmt } from '../../lib/format'
 import { compareOf, learnOf, pairAt, sameGrain, startsOn } from './compare'
@@ -36,12 +36,6 @@ interface ChartArgs {
   unit: Unit
   /** The site's clock now, when the period includes it. */
   nowT?: string
-  /** The one source that jumped, for the label over the rise. */
-  riseName?: string
-  /** How many times its usual that source sent: the Briefing's own figure, so the label and the headline say the same. */
-  riseTimes?: number
-  /** What that multiple is against ("your usual", "the day before"). */
-  riseVs?: string
   downs?: Down[]
   notes?: { i: number; text: string }[]
   /** The usual band of each bucket of the period, when the site's own history says it (else the period before, a quarter either way). */
@@ -52,6 +46,40 @@ interface ChartArgs {
   overall?: Judged
   /** Sales to mark on the line, with when each was (the site's clock) and what it came to as written. */
   sales?: { at: string; text: string; neg?: boolean; size: number }[]
+}
+
+/** Where the run that is outside its usual right now began: the first bucket of the last stretch of the same verdict that reaches the end (a bucket barely begun does not count), with when, as the axis writes it. A period that is over and ends inside its usual has the point of its biggest rise instead. */
+function startOf(points: ChartIn['points'], hourly: boolean, live: boolean, e: number, series: Point[]): ChartIn['started'] {
+  const n = points.length - 1
+  const end = live && hourly && e - n < 0.25 ? n - 1 : n
+  let dir = points[end]?.st
+  let i = end
+  if (dir) {
+    while (i > 0 && points[i - 1].st === dir) i--
+  } else {
+    i = live ? -1 : biggestRise(points)
+    dir = 'up'
+  }
+  if (i < 0) return undefined
+  const t = series[i].t
+  const day = fmtDay(t.slice(0, 10))
+  const weekday = dateFmt(tag ?? 'en-US', { weekday: 'short', timeZone: 'UTC' }).format(new Date(t.slice(0, 10) + 'T12:00:00Z'))
+  const time = series.length > 24 ? `${weekday} ${t.slice(11, 16)}` : t.slice(11, 16)
+  return { i, when: hourly ? time : day, dir }
+}
+
+/** The bucket furthest above its usual, as a share of it; -1 when none is above. */
+function biggestRise(points: ChartIn['points']): number {
+  let best = -1
+  let bv = 0
+  points.forEach((p, i) => {
+    const x = (p.v - p.hi) / Math.max(p.hi, 1)
+    if (p.st === 'up' && x > bv) {
+      bv = x
+      best = i
+    }
+  })
+  return best
 }
 
 const bandFrom = (was: number[], i: number): Band => {
@@ -97,22 +125,7 @@ export function chartOf(a: ChartArgs): ChartIn {
     const { was: before, delta } = pairAt(cmp, p.visitors, i, done)
     return { i, name, tick, v, lo: full.lo, hi: full.hi, st, raw: p.visitors, was: before, delta }
   })
-  let best = -1
-  let bv = 0
-  points.forEach((p, i) => {
-    const x = (p.v - p.hi) / Math.max(p.hi, 1)
-    if (p.st === 'up' && x > bv) {
-      bv = x
-      best = i
-    }
-  })
-  const c0 = best >= 0 ? bandAt(best).c : 0
-  const ratio = best >= 0 && c0 > 0.5 ? points[best].v / c0 : 0
-  // A named source says the figure the headline says (its own people against its own usual); the whole site's hour has its own.
-  const named = a.riseName !== undefined && a.riseTimes !== undefined
-  const times = named ? (a.riseTimes ?? ratio) : ratio
-  const against = named ? (a.riseVs ?? 'your usual') : `a usual ${hourly ? 'hour' : 'day'}`
-  const rise = best >= 0 ? { i: best, text: `${a.riseName ?? copy.traffic} · ${times >= 1.3 ? `${mult(times)} ${against}` : 'above usual'}`, short: `${sourceShort(a.riseName ?? copy.traffic)} ${times >= 1.3 ? mult(times) : 'up'}` } : undefined
+  const started = startOf(points, hourly, live, e, a.cur.series)
   // The axis names every bucket of the period, the hours still to come too (a phone draws the whole day).
   const axis = a.cur.series.map((p, i) => ({ i, tick: tickOf(hourly, a.cur.series.length, Number(p.t.slice(11, 13)), p.t.slice(0, 10)) }))
   // A sale sits where it happened on the hours of the day, when the chart is by the hour and short enough to read them.
@@ -137,6 +150,7 @@ export function chartOf(a: ChartArgs): ChartIn {
     span,
     live,
     band,
+    usual: a.cur.series.map((_, i) => (a.bands ? a.bands[i] ?? null : bandFrom(was, i))).map((b) => (b ? { lo: b.lo, hi: b.hi } : null)),
     compare: cmp,
     noCompare,
     startsOn: starts,
@@ -147,6 +161,6 @@ export function chartOf(a: ChartArgs): ChartIn {
     bucket: a.bucket,
     downs: a.downs ?? [],
     notes: a.notes ?? [],
-    rise,
+    started,
   }
 }

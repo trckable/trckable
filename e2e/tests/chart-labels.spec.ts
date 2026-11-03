@@ -35,8 +35,10 @@ async function read(page: Page) {
     const marks = [...document.querySelectorAll('.chwrap .moment-mark')].filter(shown).map((e, i) => box(`moment mark ${i}`, e))
     const texts = [...svg.querySelectorAll('text:not([data-lbl])')].map((e) => box(`text ${e.textContent?.trim()}`, e)).filter((b) => b.r > b.l)
     const more = [...document.querySelectorAll('.lbl-more')].filter(shown).map((e) => box('more', e))
-    const first = svg.querySelectorAll('polyline')[0]?.getAttribute('points') ?? ''
-    const line = first.split(' ').map((p) => p.split(',').map(Number)).map(([x, y]) => [s.left + (x * s.width) / vb.width, s.top + (y * s.height) / vb.height])
+    // The line is the plot's one thick grey path, read off along its length.
+    const path = svg.querySelector<SVGPathElement>('path[stroke-width="2"]')
+    const len = path?.getTotalLength() ?? 0
+    const line = Array.from({ length: Math.ceil(len / 4) + 1 }, (_, k) => path!.getPointAtLength(Math.min(len, k * 4))).map((p) => [s.left + (p.x * s.width) / vb.width, s.top + (p.y * s.height) / vb.height])
     const rise = document.querySelector('svg#chart text.lbl')
     return {
       labels,
@@ -83,7 +85,7 @@ for (const width of [1440, 2000, 390]) {
     for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) expect(apart(all[i], all[j]), `${all[i].name} and ${all[j].name} overlap`).toBe(true)
     for (const b of [...r.labels, ...r.marks]) expect(onLine(b, r.line), `${b.name} is over the line`).toBe(false)
     for (const b of [...r.labels, ...r.marks, ...r.texts]) expect(b.l >= r.svg.l - 1 && b.r <= r.svg.r + 1, `${b.name} leaves the chart`).toBe(true)
-    // The main card's chart is tall enough for its lanes: markers, the period's label, then the plot.
+    // The main card's chart is tall enough for its plot and the lane under it.
     expect(r.svg.h).toBeGreaterThanOrEqual(width > 600 ? 260 : 130)
     expect(r.callInHeader, "the jump's line is in the header row").toBe(true)
     expect(r.oldLine, 'no line on the plot').toBe(0)
