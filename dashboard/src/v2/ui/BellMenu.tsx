@@ -4,6 +4,7 @@ import { X } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { MkPortal } from './Portal'
 import { useMenu } from './useMenu'
+import { reducedMotion } from '../../lib/motion'
 import { useTopLayerWhen } from '../../lib/topLayer'
 import { byDay } from '../bell/days'
 import { copy } from '../bell/copy'
@@ -167,10 +168,19 @@ export function BellMenu(p: BellProps) {
   const { onOpenChange } = p
   useEffect(() => onOpenChange?.(open), [open, onOpenChange])
   useTopLayerWhen(open && !p.sheet, menu)
+  // The number gives a small pop when it changes, so a new notice is seen arriving and not just there.
+  const dot = useRef<HTMLElement>(null)
+  const said = useRef(p.badge)
+  useEffect(() => {
+    if (said.current === p.badge) return
+    said.current = p.badge
+    if (p.unread && !reducedMotion() && typeof dot.current?.animate === 'function')
+      dot.current.animate([{ transform: 'scale(.7)' }, { transform: 'scale(1.12)' }, { transform: 'none' }], { duration: 240, easing: 'ease-out' })
+  }, [p.badge, p.unread])
   return (
     <div className="bellw" ref={attach} style={{ position: 'relative' }}>
       <button type="button" className={`ib bell${p.shaking ? " shake" : ""}`} id="bellBtn" data-bell="1" data-key="notes" title={p.title} aria-label={p.unread ? `${p.title} ${p.badge}` : p.title} aria-haspopup={p.sheet ? "dialog" : "menu"} aria-expanded={open} onClick={toggle} onPointerEnter={p.onWarm} onFocus={p.onWarm} onTouchStart={p.onWarm}>
-        <i className="bdot" id="bellDot" aria-hidden="true" style={p.unread ? undefined : { display: 'none' }}>
+        <i className={`bdot${p.unread ? '' : ' off'}`} id="bellDot" ref={dot} aria-hidden="true">
           {p.badge}
         </i>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
