@@ -635,3 +635,5 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 /* A soft line between the menu of sections and the page: strongest in the middle, fading out at both ends. */
 .mk .xp.xpage .xrail::after{content:"";position:absolute;top:0;bottom:0;right:calc(var(--rail-gap, 16px) * -1);width:1px;background:linear-gradient(to bottom,transparent,var(--mk-line) 18%,var(--mk-line) 82%,transparent);pointer-events:none}
 .mk .xdrawer .xrail::after{display:none}
+/* The bar centres its name itself (flex); the list rule's top/transform would push it down. */
+.mk .xcards .mk-bar>span{top:auto;transform:none}

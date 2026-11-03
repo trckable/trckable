@@ -10,3 +10,13 @@ describe('insightOf', () => {
   it('says nothing when nothing moved', () => expect(insightOf([row('/a', 49, 50, '')])).toBeNull())
   it('names a page that is new', () => expect(insightOf([row('/new', 12, 0, 'up')])).toBe('/new is new, with 12 people.'))
 })
+
+describe('long addresses', () => {
+  it('keeps the start and the end of a long path', () => {
+    const name = '/news/buxheti-per-arsimin-parauniversitar-kumbaro-nga-viti-i-ardhshem-1-mesues-ndihmes'
+    const line = insightOf([row(name, 237, 0, 'up')])!
+    expect(line).toContain('…')
+    expect(line).toContain('/news/buxheti')
+    expect(line.length).toBeLessThan(90)
+  })
+})
