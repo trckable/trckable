@@ -266,7 +266,7 @@
   cursor: pointer;
 }
 .mk .xpl.goals .xrw {
-  grid-template-columns: minmax(0, 1fr) 64px 52px 110px;
+  grid-template-columns: minmax(0, 1fr) 64px 52px 132px;
 }
 .mk .xpl-steps {
   overflow: hidden;

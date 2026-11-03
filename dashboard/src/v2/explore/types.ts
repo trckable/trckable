@@ -61,8 +61,6 @@ export interface Xkc {
   detail: string
   /** A country's flag shown before the number. */
   flag?: string
-  /** What the number stands for in full, when it is shortened. */
-  hint?: string
   /** Where the score sits from good to poor, 0 to 1: each grade takes a third. */
   at?: number
 }

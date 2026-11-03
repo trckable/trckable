@@ -58,7 +58,7 @@ export function XKcsPlain({ items, three }: { items: Xkc[]; three?: boolean }) {
             <span className="kl" title={k.label}>{k.label}</span>
             <span className={`kn ${k.tone}`}>{k.tag}</span>
           </div>
-          <div className="kv" title={k.hint}>
+          <div className="kv">
             {k.flag && <Flag code={k.flag} width={26} />}
             <RollText text={k.val} />
             {k.unit && <small>{k.unit}</small>}
