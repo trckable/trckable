@@ -43,7 +43,18 @@ export default function AnswersSettings({ site }: { site: Site }) {
   }, [site.id]) // eslint-disable-line react-hooks/exhaustive-deps -- loaded once per site
   if (setup === undefined) return null
   if (setup === null) return <p className="an-warn">{c.settings.failed}</p>
-  if (setup.engines.length === 0) return <p className="an-help">{c.settings.noEngine}</p>
+  if (setup.engines.length === 0) {
+    return (
+      <p className="an-help">
+        {c.settings.noEngine}{' '}
+        {!viewer && (
+          <a href={c.docs} target="_blank" rel="noreferrer">
+            {c.empty.setUp}
+          </a>
+        )}
+      </p>
+    )
+  }
   const changed = state(list, rivals, country) !== base
   const save = async () => {
     setBusy(true)

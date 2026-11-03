@@ -16,7 +16,6 @@ export const copy = defineCopy('crawlers', {
   title: 'AI assistants & crawlers',
   tabs: 'What the robot wanted',
   feed: 'How to feed this',
-  empty: 'Nothing yet. Robots never reach the browser script, so your server forwards them: see “How to feed this”.',
   over: (label: string) => `${label} over time`,
   none: (label: string) => `No ${label.toLowerCase()} in this period.`,
   errors: (n: string, many: boolean) => `${n} ${many ? 'requests' : 'request'} hit an error page`,

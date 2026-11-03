@@ -39,11 +39,13 @@ export const answersCopy = defineCopy('answers', {
   page: { path: 'Page', answers: 'Answers', read: 'AI read', sent: 'Sent', earned: 'Earned' },
   pageHints: { answers: 'Answers that linked this page', read: 'Times an AI crawler read the page', sent: 'Visitors an AI assistant sent', earned: 'Revenue those visitors made' },
   paused: 'Paused until the 1st: this month’s budget is used.',
+  docs: 'https://trckable.com/docs/answers/',
   empty: {
     noEngine: ['Answers needs an AI key', 'Add an OpenAI, Perplexity or Anthropic key to the server to ask the assistants about you.'],
     noQuestions: ['Ask what your buyers ask', 'Add a few questions and see if ChatGPT, Perplexity and Claude name you.'],
     firstRound: ['Asking now', 'The first answers arrive within half an hour. You can leave this page.'],
     addQuestions: 'Add questions',
+    setUp: 'How to set it up',
     pending: 'Waiting for the answers.',
   },
   first: (engine: string) => `Peekaboo. ${engine} just named you.`,

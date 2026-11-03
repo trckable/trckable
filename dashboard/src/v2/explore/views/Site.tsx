@@ -9,6 +9,28 @@ import { EmptyTab } from './PeopleTable'
 import type { XCtx } from '../ctx'
 import type { Bot, Mention, Speed as SpeedModel } from '../types'
 import { openAi } from '../../ui/AiHost'
+import { crawlerSetupAsked } from '../../../features/crawlers/ask'
+import { can } from '../../../lib/permissions'
+import { isOn } from '../../../lib/modules'
+import { openSettings } from '../../../lib/settings'
+import { useMods } from '../../../lib/useMods'
+import { runSetup } from '../../live/setupLinks'
+import { openExplore } from '../open'
+
+/** Nothing measured: with the switch off, an owner gets it; with it on, the wait is only for visits. */
+function SpeedEmpty({ x }: { x: XCtx }) {
+  const mods = useMods(x.site.id)
+  if (mods !== null && !isOn(mods, 'vitals') && can('site.settings')) {
+    return (
+      <XEmpty title={copy.speedOff} hint={copy.speedOffHint}>
+        <button type="button" className="xb" onClick={() => runSetup(x.site, 'speed')}>
+          {copy.turnOnSpeed}
+        </button>
+      </XEmpty>
+    )
+  }
+  return <XEmpty title={copy.emptySpeed} hint={copy.emptySpeedHint} />
+}
 
 export function Speed({ x, d }: { x: XCtx; d: SpeedModel }) {
   const max = Math.max(1, ...d.pages.map((p) => p.v))
@@ -41,7 +63,7 @@ export function Speed({ x, d }: { x: XCtx; d: SpeedModel }) {
     ],
   }))
   // Nothing at all to say; a site with a few visits keeps its cards, which tell how many more it takes.
-  if (rows.length === 0 && devices.length === 0 && !d.kcs.some((k) => k.detail && k.detail !== copy.nothingMeasured)) return <XEmpty title={copy.emptySpeed} hint={copy.emptySpeedHint} />
+  if (rows.length === 0 && devices.length === 0 && !d.kcs.some((k) => k.detail && k.detail !== copy.nothingMeasured)) return <SpeedEmpty x={x} />
   return (
     <>
       <XKcsPlain items={d.kcs} three />
@@ -53,7 +75,7 @@ export function Speed({ x, d }: { x: XCtx; d: SpeedModel }) {
       )}
       <XSec a={copy.slowest} b={copy.byLcp} />
       {rows.length === 0 ? (
-        <XEmpty title={copy.emptySpeed} hint={copy.emptySpeedHint} />
+        <SpeedEmpty x={x} />
       ) : (
         <XCols first={copy.heads.page} cols={[{ h: copy.lcp }, { h: copy.rating }]} rows={rows} xc="minmax(0,1fr) 64px 112px" xcm="minmax(0,1fr) 52px 104px" limit={x.limit} onAll={x.showAll} />
       )}
@@ -63,7 +85,17 @@ export function Speed({ x, d }: { x: XCtx; d: SpeedModel }) {
 }
 
 export function Mentions({ x, d }: { x: XCtx; d: Mention[] }) {
-  if (d.length === 0) return <XEmpty title={copy.emptyMentions} hint={copy.emptyMentionsHint} />
+  if (d.length === 0) {
+    return (
+      <XEmpty title={copy.emptyMentions} hint={copy.emptyMentionsHint}>
+        {can('site.settings') && (
+          <button type="button" className="xb" onClick={() => openSettings(x.site, 'mentions')}>
+            {copy.addWords}
+          </button>
+        )}
+      </XEmpty>
+    )
+  }
   const rows: CRow[] = d.map((m) => ({
     key: m.title,
     a: (
@@ -86,7 +118,24 @@ export function Mentions({ x, d }: { x: XCtx; d: Mention[] }) {
 }
 
 export function Bots({ x, d }: { x: XCtx; d: Bot[] }) {
-  if (d.length === 0) return <EmptyTab x={x} />
+  if (d.length === 0) {
+    return (
+      <EmptyTab x={x}>
+        {can('site.settings') && (
+          <button
+            type="button"
+            className="xb"
+            onClick={() => {
+              crawlerSetupAsked()
+              openExplore('ai')
+            }}
+          >
+            {copy.connectCrawlers}
+          </button>
+        )}
+      </EmptyTab>
+    )
+  }
   const total = d.reduce((p, b) => p + b.count, 0) || 1
   const max = Math.max(1, ...d.map((b) => b.count))
   const rows: CRow[] = d.map((b) => ({ key: b.name, a: b.name, bar: b.count / max, c: [fmtInt(b.count), `${Math.round((b.count / total) * 100)}%`] }))
