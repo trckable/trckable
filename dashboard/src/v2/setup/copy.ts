@@ -45,6 +45,7 @@ export const copy = defineCopy('setup', {
     sub: 'Sales and refunds',
     seen: (p: string) => `${p} found on your site`,
     connected: (p: string) => `${p} connected`,
+    waiting: (p: string) => `${p} connected, no sale yet`,
     go: 'Connect payments',
     goProvider: (p: string) => `Connect ${p}`,
   },

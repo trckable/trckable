@@ -50,7 +50,7 @@ const num = (d: SetupItem['detail'], k: string): number => {
 
 /** Payments' line: the connected provider, the one seen on the page, or what the step is for. */
 function payLine(it: SetupItem, provider: string): string {
-  if (it.done) return copy.payments.connected(provider)
+  if (it.done) return num(it.detail, 'sales') > 0 ? copy.payments.connected(provider) : copy.payments.waiting(provider)
   return str(it.detail, 'provider') === '' ? copy.payments.sub : copy.payments.seen(provider)
 }
 

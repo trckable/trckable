@@ -2968,6 +2968,7 @@ export default {
   'setup.payments.sub': 'Verkopen en terugbetalingen',
   'setup.payments.seen': (p: string) => `${p} gevonden op je site`,
   'setup.payments.connected': (p: string) => `${p} gekoppeld`,
+  'setup.payments.waiting': (p: string) => `${p} gekoppeld, nog geen verkoop`,
   'setup.payments.go': 'Betalingen koppelen',
   'setup.payments.goProvider': (p: string) => `${p} koppelen`,
   'setup.funnel.title': 'Een funnel',

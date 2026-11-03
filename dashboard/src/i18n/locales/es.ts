@@ -2961,6 +2961,7 @@ export default {
   'setup.payments.sub': 'Ventas y reembolsos',
   'setup.payments.seen': (p: string) => `${p} encontrado en tu sitio`,
   'setup.payments.connected': (p: string) => `${p} conectado`,
+  'setup.payments.waiting': (p: string) => `${p} conectado, aún sin ventas`,
   'setup.payments.go': 'Conectar pagos',
   'setup.payments.goProvider': (p: string) => `Conectar ${p}`,
   'setup.funnel.title': 'Un embudo',

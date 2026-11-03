@@ -2956,6 +2956,7 @@ export default {
   'setup.payments.sub': 'Ventes et remboursements',
   'setup.payments.seen': (p: string) => `${p} détecté sur votre site`,
   'setup.payments.connected': (p: string) => `${p} connecté`,
+  'setup.payments.waiting': (p: string) => `${p} connecté, pas encore de vente`,
   'setup.payments.go': 'Connecter les paiements',
   'setup.payments.goProvider': (p: string) => `Connecter ${p}`,
   'setup.funnel.title': 'Un entonnoir',
