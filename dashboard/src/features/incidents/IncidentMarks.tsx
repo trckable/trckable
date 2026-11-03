@@ -1,4 +1,4 @@
-// The incidents of the period on the main chart: a small mark under the axis
+// The incidents of the period on the main chart: a small mark on the lane under the plot
 // at the start of each, never over the line. Pointing at one (or focusing it)
 // says what it was in a line ("Down 3h 12m · not reachable"); clicking opens
 // the site's incident history. Several in one bucket are one mark. Drawn by the
@@ -50,7 +50,7 @@ export default function IncidentMarks({ g, site, labels, bucket }: { g: ChartGeo
   const [shown, setShown] = useState<number | null>(null)
   const id = useId()
   const open = marks.find(([i]) => i === shown)
-  const top = g.y(0)
+  const top = g.lane - 8
   return (
     <>
       {marks.map(([i, xs]) => {

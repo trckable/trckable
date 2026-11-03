@@ -6,7 +6,7 @@ import { useEffect, useId, useMemo, useState } from 'react'
 import type { Bucket, Site } from '../../lib/api'
 import { useNow } from '../incidents/useIncidents'
 import { bucketFor } from '../incidents/IncidentMarks'
-import type { ChartGeo } from '../moments/marks'
+import { aside as clear, type ChartGeo } from '../moments/marks'
 import type { Mention } from './api'
 import { copy } from './copy'
 import { page } from './pageCopy'
@@ -51,7 +51,7 @@ function Rows({ list, links }: { list: Mention[]; links?: boolean }) {
   )
 }
 
-export default function MentionMarks({ g, site, labels, bucket }: { g: ChartGeo; site: Site; labels: string[]; bucket: Bucket }) {
+export default function MentionMarks({ g, site, labels, bucket, taken }: { g: ChartGeo; site: Site; labels: string[]; bucket: Bucket; taken: number[] }) {
   const now = useNow()
   const got = useMentions(site.id, periodFor(labels, now), 0, !!site.mentions)
   const marks = useMemo(() => {
@@ -68,7 +68,7 @@ export default function MentionMarks({ g, site, labels, bucket }: { g: ChartGeo;
   const [kept, setKept] = useState<number | null>(null)
   const id = useId()
   const at = marks.find(([i]) => i === (kept ?? shown))
-  const top = g.y(0) - 24
+  const top = g.lane - 10
   useEffect(() => {
     if (kept === null) return
     const away = (e: PointerEvent) => !(e.target as Element).closest?.('.mp-tip, .mp-pin') && setKept(null)
@@ -93,9 +93,8 @@ export default function MentionMarks({ g, site, labels, bucket }: { g: ChartGeo;
           key={i}
           type="button"
           className={'mp-pin' + (list.length > 1 ? ' many' : '') + (lit ? ' lit' : '')}
-          style={{ left: `clamp(11px, ${g.x(i)}px, calc(100% - 11px))`, top }}
+          style={{ left: `clamp(11px, ${clear(g.x(i), taken, 36)}px, calc(100% - 11px))`, top }}
           data-rv={g.x(i)}
-          data-lbl="4"
           aria-label={list.length > 1 ? page.pinMany(list.length) : page.pin(titleOf(list[0]), list[0].visitors)}
           aria-describedby={at?.[0] === i ? id : undefined}
           onPointerDown={(e) => e.stopPropagation()}

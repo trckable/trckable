@@ -1,4 +1,4 @@
-// Today set against yesterday: the dashed line is the whole day before, hour 0 to 23, while the solid line stops at
+// Today against its usual: the soft band is the usual of the whole day, while the solid line stops at
 // the hour it is. The figures over the chart stay against the same hours (the report's own comparison).
 import { expect, test } from './fixtures'
 import { flowSession } from './flows-kit'
@@ -13,7 +13,7 @@ test.beforeAll(async () => {
   cookie = await flowSession()
 })
 
-test('with the comparison on, the dashed line runs the whole day before and the solid line stops at now', async ({ page }) => {
+test('with the comparison on, the usual band runs past now and the solid line stops there', async ({ page }) => {
   const asked: { sofar: boolean; whole: number; cut: number }[] = []
   page.on('response', async (res) => {
     const u = new URL(res.url())
@@ -37,16 +37,15 @@ test('with the comparison on, the dashed line runs the whole day before and the 
   await page.emulateMedia({ colorScheme: 'dark' })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/${STEADY_DOMAIN}?view=briefing&period=today&compare=previous&v=`)
-  const dashed = page.locator('svg#chart .chbefore')
-  await expect(dashed).toHaveCount(1)
+  // The usual is a band over the whole day, the hours still to come too.
+  const band = page.locator('svg#chart .chusual')
+  await expect(band).toHaveCount(1)
   await page.evaluate(() => document.fonts.ready)
   await page.waitForTimeout(1500)
-  const hours = (await dashed.getAttribute('points'))!.trim().split(/\s+/).length
-  expect(hours).toBeGreaterThanOrEqual(20)
-  // It reaches the right-hand end of the plot, though the hour is far from it.
-  const svg = (await page.locator('svg#chart').boundingBox())!
-  const line = (await dashed.boundingBox())!
-  expect(line.x + line.width).toBeGreaterThan(svg.x + svg.width * 0.85)
+  // It runs on past the hour it is (the dot), where the solid line stops.
+  const dot = (await page.locator('svg#chart circle[r="4.5"]').boundingBox())!
+  const range = (await band.boundingBox())!
+  expect(range.x + range.width).toBeGreaterThan(dot.x + dot.width + 20)
   await expect.poll(() => asked.some((a) => a.sofar && a.whole === 24 && a.cut < 24)).toBe(true)
   await page.screenshot({ path: '/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad/fullday-dark-1280.png' })
 })

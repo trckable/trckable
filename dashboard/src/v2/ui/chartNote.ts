@@ -2,6 +2,7 @@
 // right now), the point under the pointer, and the colour the standing line is written in. Pure: chart.test.ts.
 import { copy } from '../briefing/copy'
 import { readOf, signed } from '../briefing/compare'
+import { duration } from '../../features/incidents/model'
 import type { ChartIn } from './DayChart'
 
 /** The text over the chart: the standing note, or the point under the pointer. */
@@ -12,7 +13,8 @@ export function chartNote(c: ChartIn, at: number | null, down = false): string {
     const p = c.points[at]
     return readOf(p.name, p.raw, c.compare.name, p.was, p.delta)
   }
-  if (down) return copy.downRightNow
+  // An outage in the chart's lane says it there; the line over the chart says it only when there is none.
+  if (down) return c.downs.length ? '' : copy.downRightNow
   // The usual range being built is said by the pill on the period row (UsualRange), never by a count against it.
   if (c.compare && c.compare.pct !== null) return copy.vsLine(signed(c.compare.pct), c.compare.name)
   return ''
@@ -25,8 +27,10 @@ export function chartTone(c: ChartIn, at: number | null, down = false): 'up' | '
   return pct > 0 ? 'up' : 'dn'
 }
 
-/** The word beside the red of the chart's down stretches: one stretch says its own minutes, several say one line for all of them, so no two labels meet. */
+const span = (min: number) => duration(min * 60)
+
+/** The word under the red of the chart's down stretches: one stretch says its own minutes, several say one line for all of them, so no two labels meet. */
 export function downLabel(downs: ChartIn['downs'], short: boolean): string {
-  if (downs.length === 1) return short ? copy.downShort(downs[0].min, downs[0].now) : copy.downLabel(downs[0].min, downs[0].now)
-  return copy.downMany(downs.length, downs.reduce((n, d) => n + d.min, 0))
+  if (downs.length === 1) return short ? copy.downShort(span(downs[0].min), downs[0].now) : copy.downLabel(span(downs[0].min), downs[0].now)
+  return copy.downMany(downs.length, span(downs.reduce((n, d) => n + d.min, 0)))
 }

@@ -1,6 +1,7 @@
-// The period's visitors drawn the way the walkthrough draws it: a grey line, lit where it rose above its usual (and red
-// where it fell under), the period before as a thin dashed line beside it, the hours still to come shaded, and a dot
-// that pulses at "now". The line never runs into hours that have not happened. Hovering reads one point in the line above.
+// The period's visitors drawn the way the walkthrough draws it: a grey line over a soft band of its usual, lit where it
+// rose above the band (and red where it fell under), a pill where the run outside it began, the hours still to come
+// shaded, and a dot that pulses at "now". Everything that happened at a time (notes, sales, outages, the moments) sits in
+// one lane under the plot. The line never runs into hours that have not happened. Hovering reads one point in the line above.
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 import type { Bucket } from '../../lib/api'
@@ -57,9 +58,11 @@ export interface ChartIn {
   live: boolean
   /** Hours (with the part of the last one) passed so far; 0 when the period is over. */
   elapsed: number
-  /** Whether the site's own history is enough to call a bucket above or below its usual (the green and red stretches, the label over a rise). */
+  /** Whether the site's own history is enough to call a bucket above or below its usual (the band, the green and red stretches, the pill where a run began). */
   band: boolean
-  /** The period before, to draw as a dashed line and to say in one line; none when it has too little before it. */
+  /** The usual range of each bucket of the period, the hours still to come too; none where the site has no usual for it yet. */
+  usual: ({ lo: number; hi: number } | null)[]
+  /** The period before, to say in one line and, where the site has no usual yet, to draw as a dashed line; none when it has too little before it. */
   compare: Compare | null
   /** What is said instead when a comparison was asked for and there is too little before it: when it begins. */
   noCompare: string | null
@@ -72,16 +75,16 @@ export interface ChartIn {
   bucket: Bucket
   downs: Down[]
   notes: { i: number; text: string }[]
-  /** The label over the biggest rise: "Hacker News · 2.4× a usual hour". */
-  rise?: { i: number; text: string; short: string }
+  /** Where the run outside the usual began (or the biggest rise, once the period is over): the bucket, when as the axis writes it, and which way. */
+  started?: { i: number; when: string; dir: 'up' | 'dn'; down?: boolean }
   /** Sales on the line of the day: where on the axis (in buckets, with the part of the hour), and the amount as written. */
   sales?: { at: number; text: string; neg?: boolean }[]
 }
 
 /** The layer starts this far down the chart, under the line of words that sits on its top edge. */
 const LAYER_TOP = 26
-/** The lane under the markers' that the period's label ("Traffic · above usual") has to itself. */
-const LABEL_LANE = 20
+/** The lane under the plot, above the axis, that the notes, sales, outages and moments share. */
+const LANE = 26
 
 const DOT = { up: 'var(--mk-lime)', dn: 'var(--mk-red)', none: 'var(--mk-text)' }
 
@@ -102,10 +105,10 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
   const ph = W < 500
   const L = ph ? 8 : 36
   const Rr = ph ? 8 : 10
-  // With a layer over the plot, its markers have a lane of their own above it, and the period's label another under that.
-  // On a phone the plot is short, so the lanes above it are tight: the markers' lane only (the label over a rise sits in it).
-  const T = ph ? 14 + (layer ? LAYER_TOP + 4 : 0) : 30 + (layer ? LAYER_TOP + 6 + LABEL_LANE : 0)
-  const B = H - 22
+  // The plot starts under the pill that says where the run outside the usual began, and ends over the lane of markers.
+  const T = ph ? 28 : 34
+  const B = H - 22 - LANE
+  const lane = B + LANE / 2
   const span = Math.max(1, ph ? c.full : c.span)
   const X = (i: number) => L + ((W - L - Rr) * (i + 0.5)) / span
   const edge = (i: number) => L + ((W - L - Rr) * i) / span
@@ -115,8 +118,12 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
   const pts = c.points.map((p, i) => ({ ...p, v: gv[i] ?? p.v }))
   const f0 = /* before the first visit: shade only, no line, no comparison */ firstData(c.bucket, pts.map((p) => p.v))
   const drawn = pts.slice(f0)
-  const before = c.compare ? gp.map((v, i) => ({ i, v })).slice(f0) : []
-  const mx = Math.max(1, ...drawn.map((p) => p.v), ...before.map((p) => p.v)) * 1.15
+  // The usual of each bucket of the period (the hours still to come too) as a band; a bucket with no usual to speak of has none, and only a chart with no band at all draws the period before as a line.
+  const usual = c.usual.flatMap((u, i) => (u && c.band && i >= f0 && i < span && u.hi >= 1 ? [{ i, lo: u.lo, hi: u.hi }] : []))
+  const banded = usual.length > 1
+  const before = c.compare && !banded ? gp.map((v, i) => ({ i, v })).slice(f0) : []
+  const top = Math.max(1, ...drawn.map((p) => p.v), ...before.map((p) => p.v))
+  const mx = Math.max(top, Math.min(2 * top, ...(banded ? [Math.max(...usual.map((p) => p.hi))] : [0]))) * 1.15
   const Y = (v: number) => B - ((B - T) * v) / mx
   const step = niceStep(mx)
   const grid: number[] = []
@@ -126,15 +133,19 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
   const nowEdge = c.live ? edge(Math.min(c.elapsed, span)) : edge(span)
   const every = Math.max(1, Math.ceil(span / (ph ? 3 : 7)))
   const kfmt = (g: number) => (g >= 1000 ? `${g / 1000}k` : String(g))
-  const rise = c.rise && c.rise.i >= f0 && pts[c.rise.i] && !(ph && c.downs.length > 0) ? { p: pts[c.rise.i], text: ph ? c.rise.short : c.rise.text } : null
-  // On a phone a label that would run off the edge is written to the left of its line.
-  const flip = ph && rise !== null && X(rise.p.i) + 6 + rise.text.length * 8 > W - Rr - 4
+  const run = c.started && c.started.i >= f0 && pts[c.started.i] ? { p: pts[c.started.i], text: ph ? c.started.when : (c.started.down ? copy.downSince : copy.started)(c.started.when), dir: c.started.dir } : null
+  const pillW = run ? Math.round(run.text.length * 6.8 + 18) : 0
+  const pill = { w: pillW, h: 18, y: 4, x: run ? Math.max(L, Math.min(X(run.p.i) - pillW / 2, W - Rr - pillW)) : 0 }
   const ticks = c.axis.filter((p) => p.i < span && p.tick && p.i % every === 0)
   const geo: Pt[] = drawn.map((p) => [X(p.i), Y(p.v)])
   const segs = segments(geo)
   const line = geo.length ? stretch(geo, segs, 0, geo.length - 1) : ''
   const was: Pt[] = before.map((p) => [X(p.i), Y(p.v)])
-  const nameAt = beforeName(c.compare ? capital(c.compare.name).length : 0, before.map((p) => [X(p.i), Y(p.v)]), geo, W - Rr - 2)
+  const nameAt = beforeName(c.compare ? capital(c.compare.name).length : 0, was, geo, W - Rr - 2)
+  const hiLine: Pt[] = usual.map((p) => [X(p.i), Y(Math.min(p.hi, mx))])
+  const loLine = usual.map((p): Pt => [X(p.i), Y(p.lo)]).reverse()
+  const bandPath = banded ? `${stretch(hiLine, segments(hiLine), 0, hiLine.length - 1)}L${loLine[0][0]},${loLine[0][1]}${segments(loLine).join('')}Z` : ''
+  const usualAt = hiLine[hiLine.length - 1]
   useLabelLayout({ pts: geo })
   const chart = (
     <svg
@@ -161,6 +172,12 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
           )}
         </g>
       ))}
+      {banded && (
+        <>
+          <path className="chusual" d={bandPath} fill="var(--mk-text)" fillOpacity=".08" />
+          <text className="lbl lbl-halo" data-lbl="5" x={usualAt[0] - 2} y={usualAt[1] - 4} textAnchor="end" fill="var(--mk-axis)" fontSize="11">{copy.usualTag}</text>
+        </>
+      )}
       {c.compare && before.length > 1 && (
         <>
           <path className="chbefore" d={stretch(was, segments(was), 0, was.length - 1)} fill="none" stroke="var(--mk-muted)" strokeWidth="1.25" strokeDasharray="1 5" strokeLinecap="round" opacity=".75" />
@@ -171,10 +188,10 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
         const x1 = edge(d.a)
         const w = Math.max(3, edge(d.b) - x1)
         return (
-          <g key={d.a}>
-            <rect x={x1} y={T} width={w} height={B - T} fill="var(--mk-redB)" />
+          <g key={d.a} data-rv={x1}>
+            <rect x={x1} y={B + 2} width={w} height="4" rx="2" fill="var(--mk-red)" />
             {k === c.downs.length - 1 && (
-              <text x={Math.min(x1 + w + 5, W - 120)} y={T + 14} fill="var(--mk-red)" fontSize="12" fontWeight="600">
+              <text x={Math.max(L, Math.min(x1 + w / 2, W - Rr - 40))} y={B + LANE - 3} textAnchor="middle" fill="var(--mk-red)" fontSize="11" fontWeight="600">
                 {downLabel(c.downs, ph)}
               </text>
             )}
@@ -224,19 +241,19 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
           )}
         </g>
       )}
-      {rise && (
-        <g data-rv={X(rise.p.i)} data-rise="">
-          <line x1={X(rise.p.i)} x2={X(rise.p.i)} y1={Y(rise.p.v) - 7} y2={T - 4} stroke="var(--mk-lime)" strokeOpacity=".6" strokeDasharray="2 3" />
-          <circle cx={X(rise.p.i)} cy={Y(rise.p.v)} r="3.5" fill="var(--mk-lime)" />
-          <text className="lbl" data-lbl="2" x={flip ? X(rise.p.i) - 6 : Math.min(X(rise.p.i) + 6, W - Rr - rise.text.length * 7.4)} textAnchor={flip ? 'end' : undefined} y={T - 10} fill="var(--mk-lime)" fontSize="12" fontWeight="600">
-            {rise.text}
+      {run && (
+        <g data-rv={X(run.p.i)} data-run="">
+          <line x1={X(run.p.i)} x2={X(run.p.i)} y1={pill.y + pill.h} y2={B} stroke={run.dir === 'up' ? 'var(--mk-lime)' : 'var(--mk-red)'} strokeOpacity=".7" strokeDasharray="1.5 3.5" strokeLinecap="round" />
+          <rect x={pill.x} y={pill.y} width={pill.w} height={pill.h} rx={pill.h / 2} fill={run.dir === 'up' ? 'var(--mk-limeP)' : 'var(--mk-redP)'} stroke={run.dir === 'up' ? 'var(--mk-lime)' : 'var(--mk-red)'} strokeOpacity=".6" />
+          <text x={pill.x + pill.w / 2} y={pill.y + pill.h / 2 + 4} textAnchor="middle" fill={run.dir === 'up' ? 'var(--mk-lime)' : 'var(--mk-red)'} fontSize="11.5" fontWeight="600">
+            {run.text}
           </text>
         </g>
       )}
-      <SaleMarks sales={c.sales ?? []} ph={ph} edge={edge} B={B} />
-      <NoteMarks notes={c.notes} X={X} B={B} />
+      <SaleMarks sales={c.sales ?? []} edge={edge} cy={lane} />
+      <NoteMarks notes={c.notes} X={X} cy={lane} />
       {ticks.map((p) => (
-        <text key={p.i} x={ph ? Math.max(20, Math.min(W - 20, X(p.i))) : X(p.i)} y={B + 17} fill="var(--mk-axis)" fontSize="12" textAnchor="middle">
+        <text key={p.i} x={ph ? Math.max(20, Math.min(W - 20, X(p.i))) : X(p.i)} y={B + LANE + 17} fill="var(--mk-axis)" fontSize="12" textAnchor="middle">
           {p.tick}
         </text>
       ))}
@@ -257,7 +274,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
     <div className="chlay">
       {chart}
       {tip}
-      <div className="chlay-in">{layer({ x: X, y: (v: number) => Y(v) - LAYER_TOP, vals: pts.map((p) => p.v), w: W })}</div>
+      <div className="chlay-in">{layer({ x: X, y: (v: number) => Y(v) - LAYER_TOP, vals: pts.map((p) => p.v), w: W, top: T - LAYER_TOP, lane: lane - LAYER_TOP })}</div>
     </div>
   )
 }

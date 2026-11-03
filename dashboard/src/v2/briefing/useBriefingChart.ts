@@ -9,7 +9,6 @@ import { useNow } from '../../features/incidents/useIncidents'
 import type { ChartIn } from '../ui/DayChart'
 import { chartOf, siteNow } from './chart'
 import { againstName, wholeBefore } from './compare'
-import { copy } from './copy'
 import { useUptime, useUsual } from './hooks'
 import { moments } from './moments'
 import { unitOf } from './model'
@@ -132,7 +131,7 @@ export function useBriefingChart(o: ChartRead): BriefingChart | null {
       const last = cur.series.reduce((k, p, i) => (p.t.slice(0, 10) === n.day ? i : k), first)
       return [{ i: hourly ? Math.min(first + 12, last) : first, text: n.text }]
     })
-    const chart = chartOf({ cur, prev, against, bucket: shownBucket, unit, nowT: live ? clock : undefined, riseVs: copy.before[unit], downs, notes: marks, bands, overall: st, sales: money && buyers ? buyers.filter((b) => b.amount > 0).map((b) => ({ at: siteNow(site.timezone, new Date(b.at)), text: money(b.amount), size: b.amount })) : undefined })
+    const chart = chartOf({ cur, prev, against, bucket: shownBucket, unit, nowT: live ? clock : undefined, downs, notes: marks, bands, overall: st, sales: money && buyers ? buyers.filter((b) => b.amount > 0).map((b) => ({ at: siteNow(site.timezone, new Date(b.at)), text: money(b.amount), size: b.amount })) : undefined })
     const mo = hist.daily && !learning && !low ? moments({ totals, days, todayUp: unit === 'today' ? st === 'up' : false, from: Math.max(0, days.indexOf(range.from)), to: Math.max(0, days.indexOf(range.to)), elapsed: Math.round(nowHour * 60), today: unit === 'today', week: unit === 'week', filtered: false }) : { pills: [], record: null }
     return { chart, series: cur.series.slice(0, chart.points.length), bucket: shownBucket, record: mo.record, learning, low, hd, down: downNow && !!site.watched_since && !site.uptime_paused, ready: !hist.loading }
   }, [on, cur, prev, against, usual, unit, up.list, up.from0, downNow, site.timezone, site.watched_since, site.uptime_paused, range.to, range.from, shownBucket, nowSec, hist, hourly, today, notes, clock, buyers, money])

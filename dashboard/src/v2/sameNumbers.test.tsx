@@ -1,8 +1,7 @@
-// One multiple, said the same on every screen: the chart's label over the rise and Explore's row both count it from the same figure against the same usual (the one rule is timesUsual).
+// One multiple, said the same on every screen: Explore's row counts it from the same figure against the same usual (the one rule is timesUsual).
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { Point, Result } from '../lib/api'
-import { chartOf } from './briefing/chart'
 import { mult } from './briefing/model'
 import { timesUsual, type Band } from './briefing/usual'
 import { rowsOf } from './explore/data/stats'
@@ -23,13 +22,6 @@ describe('the same multiple on every screen', () => {
     expect(said).toBe('23×')
     expect(timesUsual(10, { c: 0.2, lo: 0, hi: 1 })).toBeNull()
     expect(timesUsual(10, null)).toBeNull()
-  })
-
-  it('the chart label over the rise says it, not the whole site hour', () => {
-    // The hour doubles for the whole site (2.5x a usual hour), but the label names the source: it carries the source's figure.
-    const c = chartOf({ cur: res([5, 5, 40, 5]), prev: res([5, 5, 16, 5]), bucket: 'hour', unit: 'today', riseName: 'Hacker News', riseTimes: times as number, riseVs: 'your usual' })
-    expect(c.rise?.text).toBe(`Hacker News · ${said} your usual`)
-    expect(c.rise?.short).toContain(said)
   })
 
   it('Explore row says it, once the row is told against the same usual', () => {

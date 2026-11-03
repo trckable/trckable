@@ -76,7 +76,7 @@ export function ChartBlock(p: ChartBlockProps) {
           </button>
         </div>
         <div className="chplot">
-          {p.chart.compare && (
+          {p.chart.compare && !p.chart.band && (
             <span className="chkey" aria-hidden="true">
               <span data-line="now">{copy.legendNow}</span>
               <span data-line="before">{capital(p.chart.compare.name)}</span>
