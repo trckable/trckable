@@ -1,0 +1,1 @@
+- Explore: names sit in the middle of their bars, and a picked row is a soft green fill instead of a hard green border.

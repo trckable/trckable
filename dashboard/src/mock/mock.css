@@ -216,8 +216,8 @@
 .mk button.xrw:hover .mk-bar{background:var(--mk-bandh)}
 .mk .xrw .mk-bar{height:24px;border-radius:8px;background:var(--mk-band);position:relative;overflow:hidden}
 .mk .xrw .mk-bar i{position:absolute;inset:0 auto 0 0;background:var(--mk-fill)}
-.mk .xrw .mk-bar span{position:absolute;left:9px;right:6px;top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mk .xrw.sel .mk-bar{box-shadow:inset 0 0 0 1px var(--mk-lime)}
+.mk .xrw .mk-bar span{position:absolute;left:9px;right:6px;top:50%;transform:translateY(-50%);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mk .xrw.sel .mk-bar{background:color-mix(in srgb,var(--mk-lime) 16%,var(--mk-band))}
 .mk .xrw .mk-n{text-align:right;font-variant-numeric:tabular-nums}
 .mk .xrw .d{text-align:right;font-size:12px;color:var(--mk-faint);font-variant-numeric:tabular-nums}
 .mk .xrw .d.up{color:var(--mk-lime)}
@@ -540,7 +540,6 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .xph{min-height:56px}
 .mk .xrw{min-height:48px;grid-template-columns:minmax(0,1fr) 56px 64px}
 .mk .xrw .mk-bar{height:32px}
-.mk .xrw .mk-bar span{top:6px}
 .mk .xth{grid-template-columns:minmax(0,1fr) 56px 64px}
 .mk .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:55;padding:var(--mk-s2) var(--mk-s2) calc(var(--mk-s2) + env(safe-area-inset-bottom));background:var(--mk-bar);border-top:1px solid var(--mk-line);gap:var(--mk-s1)}
 .mk .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:48px;border-radius:12px;color:var(--mk-muted);font-size:12px;font-weight:600;transition:transform .12s,background .15s,color .15s}
