@@ -43,6 +43,9 @@ export function splitOf(items: SetupItem[]): Split {
   return { todo: counted.filter((i) => !i.done), done: counted.filter((i) => i.done), more: r.more }
 }
 
+/** The setup steps without the ones the verified block already shows (Payments, Search): each source appears once. */
+export const withoutShown = (items: SetupItem[], shown: string[]): SetupItem[] => items.filter((i) => !shown.includes(i.id))
+
 /** A payment provider's id as its name; an unknown id is shown as it came. */
 export const providerName = (id: string): string => [...PAY_PROVIDERS, ...WEBHOOK_PROVIDERS].find((p) => p.id === id)?.name ?? id
 

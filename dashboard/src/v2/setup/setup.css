@@ -66,3 +66,9 @@ html[data-motion='off'] .mk .setupmenu .sfold svg{transition:none}
 
 .mk .setupmenu .sprow.locked{opacity:.55}
 .mk .setupmenu .sprow.locked .stick{color:var(--mk-muted)}
+/* The verified sources inside the one popup: the seal panel's own rows, without its side padding. */
+.mk .setupmenu .svf{display:grid;gap:6px}
+.mk .setupmenu .svf .vf-rows{padding:0}
+.mk .setupmenu .svf .vf-connect{margin:0;width:100%}
+.mk .setupmenu .svf .vf-txt b{font-size:12.5px}
+.mk .setupmenu .svf .vf-txt small{font-size:11.5px}

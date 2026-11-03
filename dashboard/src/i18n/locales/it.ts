@@ -2939,6 +2939,8 @@ export default {
   'briefing.paidStep': (after: string) => (after ? `Pagato dopo ${after}` : 'Pagato'),
   'setup.ring': (done: number, counted: number) => `${done}/${counted} configurato`,
   'setup.allSet': 'Tutto pronto',
+  'setup.allSetVerified': 'Tutto pronto · Verificato',
+  'setup.checks': (names: string) => `${names} controlla i tuoi numeri`,
   'setup.title': (done: number, counted: number) => `Configurazione · ${done} di ${counted}`,
   'setup.kind': 'Tipo di sito',
   'setup.moreActions': 'Altro',
