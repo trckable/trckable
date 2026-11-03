@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { more, type SetupItem, type SetupState, type SiteKind, type Verified } from '../../lib/apiMore'
 import { copy as vcopy } from '../../features/verified/copy'
-import { earned, lastChecked } from '../../features/verified/model'
+import { can } from '../../lib/permissions'
+import { earned, lastChecked, missing } from '../../features/verified/model'
 import { Sources, useVerified } from '../../features/verified/Sources'
 import { whenWords } from '../../features/verified/time'
 import { copy } from './copy'
-import { splitOf } from './model'
+import { splitOf, withoutShown } from './model'
 import { Pop } from './Pop'
 import { RingMark } from './RingMark'
 import { rowView, type RowCtx } from './rows'
@@ -53,10 +54,12 @@ export function SetupPanel({ state, x, onHide, locked, check, verified }: { stat
   const data = useVerified(verified, x.site, false, proven)
   const names = earned(data).map((k) => vcopy.names[k]).join(', ')
   const when = lastChecked(data)
+  // The verified block shows every source it can: the earned ones, and a Connect row for the rest where the person may connect.
+  const shown = [...earned(data), ...(can('site.settings') ? missing(data) : [])]
   const allSet = proven ? copy.allSetVerified : copy.allSet
   const head = check ? allSet : copy.title(state.done, state.counted)
   const toggle = (k: keyof typeof open) => setOpen({ ...open, [k]: !open[k] })
-  const { todo, done, more: extra } = splitOf(state.items)
+  const { todo, done, more: extra } = splitOf(proven ? withoutShown(state.items, shown) : state.items)
   const view = (it: SetupItem) => rowView(it, x, state.goal_suggestion)
   const rows = (items: SetupItem[]) => items.map((it) => <SetupRow key={it.id} row={view(it)} />)
   const waiting = (items: SetupItem[]) => items.map((it) => <SetupRow key={it.id} row={{ ...view(it), acts: [], sub: copy.locked, locked: true }} />)

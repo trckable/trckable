@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { SetupItem, SetupState } from '../../lib/apiMore'
-import { CHECK_FOR, installWaiting, isStale, visitMissed, STALE, wanted, splitOf, hiddenBy, hideId, left, paidWith, offset, percent, ringMode, rowsOf } from './model'
+import { CHECK_FOR, installWaiting, isStale, visitMissed, STALE, wanted, splitOf, hiddenBy, hideId, withoutShown, left, paidWith, offset, percent, ringMode, rowsOf } from './model'
 
 const item = (id: string, group: SetupItem['group'], o: Partial<SetupItem> = {}): SetupItem => ({ id, group, done: false, counted: group !== 'more', skipped: false, skippable: group === 'optional', ...o })
 const state = (done: number, counted: number): SetupState => ({ kind: { value: 'shop', chosen: false }, goal_suggestion: '', done, counted, all_set: counted > 0 && done === counted, items: [] })
@@ -135,5 +135,13 @@ describe('paidWith', () => {
   it('a provider only seen on the page is not a connection: Connect stays', () => {
     expect(paidWith(pay({ provider: 'stripe' }))).toBeUndefined()
     expect(paidWith(null)).toBeUndefined()
+  })
+})
+
+describe('each source once', () => {
+  it('drops the steps the verified block already shows', () => {
+    const items = [item('verified', 'core'), item('payments', 'optional'), item('search', 'optional'), item('funnel', 'optional')]
+    expect(withoutShown(items, ['payments', 'search']).map((i) => i.id)).toEqual(['verified', 'funnel'])
+    expect(withoutShown(items, ['payments']).map((i) => i.id)).toEqual(['verified', 'search', 'funnel'])
   })
 })
