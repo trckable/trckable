@@ -156,7 +156,7 @@ export function AnchoredPop({
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- arrow keys move between the choices inside it */}
       <div
         ref={box}
-        className={('pop anchored ' + className).trim()}
+        className={(`pop anchored ${sheet ? 'is-sheet ' : ''}` + className).trim()}
         role="dialog"
         popover="manual"
         aria-label={label}
