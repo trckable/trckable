@@ -2573,6 +2573,7 @@ export default {
   'v2explore.pathsLast': 'Ultima pagina principale',
   'v2explore.pathsVisitsOf': (n: string) => `${n} visite`,
   'v2explore.pathsLeft': 'Uscito',
+  'v2explore.pathsOnePage': (p: string) => `${p} è uscito dopo una pagina`,
   'v2explore.pathsTop': 'Percorsi principali',
   'v2explore.pathsFlow': 'I percorsi più seguiti nel sito',
   'v2explore.pathsConverted': (n: string) => `${n} con obiettivo`,

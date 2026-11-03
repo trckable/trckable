@@ -302,6 +302,8 @@ export interface SavedView {
 /** How visitors move through the site: the routes of their first three pages, with the numbers above them. */
 export interface Paths {
   visits: number
+  /** Visits that saw one page. */
+  single: number
   /** Pages per visit, on average. */
   pages: number
   first: { path: string; visits: number } | null

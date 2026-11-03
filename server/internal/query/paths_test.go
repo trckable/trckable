@@ -70,6 +70,7 @@ func TestPathsGroupVisitsByTheirFirstThreePages(t *testing.T) {
 		t.Fatal(err)
 	}
 	eq(t, "visits", res.Visits, int64(5))
+	eq(t, "one-page visits", res.Single, int64(1))
 	if r := routeOf(res.Routes, "/", "/pricing", "/signup"); r == nil || r.Visits != 2 || r.Converted != 1 {
 		t.Fatalf("a fourth page is not part of the route, and one of two reached the goal, got %+v", res.Routes)
 	}
@@ -126,5 +127,21 @@ func TestPathsOfAQuietSiteAreEmptyNotNull(t *testing.T) {
 	}
 	if res.Visits != 0 || res.Routes == nil || len(res.Routes) != 0 || res.First != nil {
 		t.Fatalf("nothing in the period, got %+v", res)
+	}
+}
+
+func TestPathsCountAReloadOnceAndAPageGoalAsConverted(t *testing.T) {
+	q := pathsQ(t, [][]string{{"/", "/", "/pricing"}, {"/", "/pricing", "/pricing"}, {"/blog"}}, []string{"US", "US", "US"})
+	p := sep10
+	p.PageGoals = []Group{{Name: "Saw pricing", Path: "/pricing"}}
+	res, err := q.Paths(context.Background(), p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r := routeOf(res.Routes, "/", "/pricing"); r == nil || r.Visits != 2 || r.Converted != 2 {
+		t.Fatalf("a reload is one step, and seeing a page goal's page converts, got %+v", res.Routes)
+	}
+	if r := routeOf(res.Routes, "/blog"); r == nil || r.Converted != 0 {
+		t.Fatalf("a visit that saw no goal page did not convert, got %+v", res.Routes)
 	}
 }

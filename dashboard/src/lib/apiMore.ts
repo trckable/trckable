@@ -121,6 +121,7 @@ export interface PathsRoute {
 /** How visitors move through the site over a period. */
 export interface PathsReport {
   visits: number
+  single: number
   pages: number
   first?: { path: string; visits: number }
   last?: { path: string; visits: number }

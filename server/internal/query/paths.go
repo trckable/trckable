@@ -2,7 +2,10 @@ package query
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
+	"strings"
 )
 
 // Paths: how visitors move through the site. Each visit is read as the first
@@ -34,7 +37,8 @@ type PathPage struct {
 // PathsResult is the period's routes with the numbers above them.
 type PathsResult struct {
 	Visits int64       `json:"visits"`
-	Pages  float64     `json:"pages"` // pages per visit, on average
+	Single int64       `json:"single"` // visits that saw one page
+	Pages  float64     `json:"pages"`  // pages per visit, on average
 	First  *PathPage   `json:"first,omitempty"`
 	Last   *PathPage   `json:"last,omitempty"`
 	Routes []PathRoute `json:"routes"`
@@ -70,7 +74,7 @@ func (q Q) paths(ctx context.Context, p Params) (*PathsResult, error) {
 	}
 	out := &PathsResult{Routes: []PathRoute{}}
 	err = conn.QueryRowContext(ctx, cte+`
-		SELECT count(*), coalesce(avg(pvs), 0) FROM s WHERE pvs > 0`, args...).Scan(&out.Visits, &out.Pages)
+		SELECT count(*), count(*) FILTER (pvs = 1), coalesce(avg(pvs), 0) FROM s WHERE pvs > 0`, args...).Scan(&out.Visits, &out.Single, &out.Pages)
 	if err != nil {
 		return nil, fmt.Errorf("paths totals: %w", err)
 	}
@@ -87,25 +91,44 @@ func (q Q) paths(ctx context.Context, p Params) (*PathsResult, error) {
 		err := conn.QueryRowContext(ctx, cte+`
 			SELECT `+c.col+`, count(*) FROM s WHERE `+c.col+` IS NOT NULL AND `+c.col+` <> ''
 			GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT 1`, args...).Scan(&pg.Path, &pg.Visits)
-		if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
 			continue // no page of that kind: the tile says nothing
+		}
+		if err != nil {
+			return nil, fmt.Errorf("paths %s: %w", c.col, err)
 		}
 		*c.to = &pg
 	}
-	// The first pageviews of each visit. A visit's pageviews may fall a little
-	// past the period's end, so a day's grace covers them.
-	rows, err := conn.QueryContext(ctx, cte+`, pv AS (
-			SELECT session_id, path, row_number() OVER (PARTITION BY session_id ORDER BY ts, seq) AS n
-			FROM events
-			WHERE site_id = ? AND ts >= ? AND ts < ? + INTERVAL 1 DAY AND kind = 1 AND path IS NOT NULL
-			  AND session_id IN (SELECT session_id FROM s)
+	// A visit converted when it reached an event goal, or saw a page that is a
+	// page goal: the report's own rule.
+	var seen []string
+	for _, g := range p.PageGoals {
+		if cond, ok := pageMatch(g, "path"); ok {
+			seen = append(seen, cond)
+		}
+	}
+	reached := `SELECT NULL::UBIGINT AS session_id WHERE false`
+	if len(seen) > 0 {
+		//nolint:gosec // conditions are built by pageMatch from quoted literals
+		reached = `SELECT DISTINCT session_id FROM events
+			WHERE site_id = ? AND ts >= ? AND ts < ? + INTERVAL 1 DAY AND kind = 1 AND path IS NOT NULL AND (` + strings.Join(seen, " OR ") + `)
+			  AND session_id IN (SELECT session_id FROM s)`
+	}
+	// The first pages of each visit (a reload counts once; a visit's pageviews
+	// may fall a little past the period's end, so a day's grace covers them).
+	all := append(append([]any{}, args...), p.Site, p.From, p.To)
+	if len(seen) > 0 {
+		all = append(all, p.Site, p.From, p.To)
+	}
+	//nolint:gosec // only constant fragments and pageMatch's quoted literals; values are bound as parameters
+	rows, err := conn.QueryContext(ctx, cte+`, `+visitPages+`, pg AS (`+reached+`
 		), t AS (
 			SELECT session_id, max(path) FILTER (n = 1) AS a, max(path) FILTER (n = 2) AS b, max(path) FILTER (n = 3) AS c
-			FROM pv WHERE n <= 3 GROUP BY session_id
+			FROM o WHERE n <= 3 GROUP BY session_id
 		)
-		SELECT t.a, t.b, t.c, count(*), count(*) FILTER (s.goals > 0)
+		SELECT t.a, t.b, t.c, count(*), count(*) FILTER (s.goals > 0 OR t.session_id IN (SELECT session_id FROM pg))
 		FROM t JOIN s USING (session_id) WHERE t.a IS NOT NULL
-		GROUP BY 1, 2, 3 ORDER BY 4 DESC, 1, 2, 3 LIMIT ?`, append(append([]any{}, args...), p.Site, p.From, p.To, limit)...)
+		GROUP BY 1, 2, 3 ORDER BY 4 DESC, 1, 2, 3 LIMIT ?`, append(all, limit)...)
 	if err != nil {
 		return nil, fmt.Errorf("paths: %w", err)
 	}

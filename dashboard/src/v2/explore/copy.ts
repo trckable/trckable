@@ -296,6 +296,7 @@ export const copy = defineCopy('v2explore', {
   pathsLast: 'Top last page',
   pathsVisitsOf: (n: string) => `${n} visits`,
   pathsLeft: 'Left',
+  pathsOnePage: (pct: string) => `${pct} left after one page`,
   pathsTop: 'Top paths',
   pathsFlow: 'The busiest routes through the site',
   pathsConverted: (n: string) => `${n} converted`,

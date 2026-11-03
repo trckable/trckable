@@ -31,5 +31,5 @@ func (a *API) paths(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res := v.(*query.PathsResult)
-	writeJSON(w, http.StatusOK, map[string]any{"visits": res.Visits, "pages": res.Pages, "first": res.First, "last": res.Last, "routes": res.Routes, "goals": p.Goals})
+	writeJSON(w, http.StatusOK, map[string]any{"visits": res.Visits, "single": res.Single, "pages": res.Pages, "first": res.First, "last": res.Last, "routes": res.Routes, "goals": p.Goals})
 }

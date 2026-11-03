@@ -2573,6 +2573,7 @@ export default {
   'v2explore.pathsLast': 'Meest gekozen laatste pagina',
   'v2explore.pathsVisitsOf': (n: string) => `${n} bezoeken`,
   'v2explore.pathsLeft': 'Vertrokken',
+  'v2explore.pathsOnePage': (p: string) => `${p} vertrok na één pagina`,
   'v2explore.pathsTop': 'Populairste paden',
   'v2explore.pathsFlow': 'De drukste routes door de site',
   'v2explore.pathsConverted': (n: string) => `${n} met doel`,

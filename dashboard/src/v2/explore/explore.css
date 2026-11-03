@@ -306,3 +306,9 @@
     display: none;
   }
 }
+
+.mk .xpf-one {
+  margin: var(--mk-s4) 0 0;
+  font-size: 13px;
+  color: var(--mk-muted);
+}

@@ -40,7 +40,7 @@ function tiles(d: Paths): Xkc[] {
 
 function Flow({ d, sel, onPick }: { d: Paths; sel: string | null; onPick: (r: PathRoute) => void }) {
   const { ref, w } = useWidth<HTMLDivElement>()
-  const flow = w >= FLOW_MIN ? layoutFlow(d.routes, w, FLOW_H) : null
+  const flow = w >= FLOW_MIN ? layoutFlow(d.routes.filter((r) => r.steps.length > 1), w, FLOW_H) : null
   const by = new Map(d.routes.map((r) => [keyOf(r), r]))
   const height = flow ? Math.max(FLOW_H, ...flow.nodes.map((n) => n.y + n.h)) : 0
   return (
@@ -110,6 +110,7 @@ export function PathsView({ x, d }: { x: XCtx; d: Paths }) {
   return (
     <>
       <XKcsPlain items={tiles(d)} />
+      {d.single > 0 && <p className="xpf-one">{copy.pathsOnePage(fmtPct(d.single / (d.visits || 1)))}</p>}
       <Flow d={d} sel={sel} onPick={pick} />
       <h4 className="xpl-h">{copy.pathsTop}</h4>
       <div className={`xt xpl${goals ? ' goals' : ''}`}>
