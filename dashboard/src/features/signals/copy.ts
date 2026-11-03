@@ -64,13 +64,15 @@ export const signals = defineCopy('signals', {
     landingOn: 'Landing on',
     startedNoSource: 'The climb began without a referring site we can see.',
     // The browser notice: at most one emoji.
-    // Data, landed on the moment: the band on the chart and the line over the numbers.
-    bandLabel: (times: string) => `Busy moment · ${times} usual`,
+    // Explore, landed on the moment: the marker on the chart and the tip it opens.
+    markNow: (n: number) => `Busy now · ${n}`,
+    markPeak: (n: number) => `Busy · ${n} at peak`,
+    tipNow: (n: number) => `${n} online now`,
+    tipPeak: (n: number) => `${n} at peak`,
     spanBetween: (from: string, to: string) => `${from}–${to}`,
     spanSince: (from: string) => `since ${from}`,
     busyTitle: 'Busy moment',
     only: (source: string) => `Only ${source}`,
-    backToday: 'Back to today',
     noticeTitle: (online: number, source: string) => `${online} people on your site right now${source ? `, mostly from ${source}` : ''} 🎉`,
     noticeBody: (domain: string) => `${domain} is busier than usual. Worth a look while it is happening.`,
   },

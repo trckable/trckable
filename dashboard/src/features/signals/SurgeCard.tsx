@@ -1,5 +1,5 @@
 // The card for a surge: the site is far busier than usual right now. One body for the busy moment
-// (BusyBody, shared with the line over Explore): the people on the site and how many times the usual, the last
+// (BusyBody): the people on the site and how many times the usual, the last
 // hour in small, and where it came from. Under a hairline, "Only Google" (Explore on the moment, narrowed to the
 // source) and "See it in Explore" (the moment's days on Overview, by the hour, against a week earlier). Calm: a soft
 // glow that pulses twice, no confetti, and none of it moves with reduced motion. The story (SurgeModal) is told from
@@ -60,7 +60,7 @@ function Card({ surge, tz }: { surge: Surge; tz: string }) {
           onClose={putAway}
           actions={<Actions only={surgeFilter(surge) && surge.why.source ? t.only(surge.why.source) : ''} onOnly={seeOnly} see={see} />}
         >
-          <BusyBody surge={surge} layout="card" />
+          <BusyBody surge={surge} />
         </SideCard>
       )}
       {story && <SurgeModal surge={surge} tz={tz} onClose={() => setStory(false)} onSee={putAway} />}

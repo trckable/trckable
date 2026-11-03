@@ -120,22 +120,27 @@ test('on a phone the story is a sheet that fills the screen; See it in Explore l
   await expect(card(page)).toHaveCount(0)
 })
 
-test('See it in Explore on the card opens Overview for the moment, by the hour against a week earlier, with numbers from that range', async ({ page }) => {
+test('See it in Explore on the card opens What changed for the moment, by the hour against a week earlier, with numbers from that range', async ({ page }) => {
   await open(page, 'live', 1280)
   await expect(card(page)).toBeVisible({ timeout: 30_000 })
   await card(page).getByRole('button', { name: 'See it in Explore' }).click()
-  await expect(page).toHaveURL(/[?&]x=overview/)
+  await expect(page).toHaveURL(/[?&]x=changed/)
   await expect(page).toHaveURL(new RegExp(`[?&]sg=${surge.started}`))
   await expect(page).toHaveURL(/[?&]bucket=hour/)
   await expect(page).toHaveURL(/[?&]compare=custom/)
   await expect(page).toHaveURL(/[?&]cfrom=/)
   await expect(page).not.toHaveURL(/[?&]xf=/)
-  // The line over the page that says it was opened on a busy moment, and the numbers of the range under it.
-  await expect(page.locator('#xp.on')).toBeVisible({ timeout: 20_000 })
-  await expect(page.locator('.surge-banner')).toBeVisible()
-  await expect(page.locator('#xp [data-xcard="overview"] .kcs .kc .kv').first()).toHaveText(/\d/)
-  // The chips on the line narrow Explore's own filters (xf), never the old f.
-  await page.locator('.surge-banner').getByRole('button', { name: /Facebook/ }).click()
+  // No line over the page: the moment is on the chart, a band behind the line, a marker on the lane and its tip, open once.
+  await expect(page.locator('.surge-banner')).toHaveCount(0)
+  await expect(page.locator('.surge-band').first()).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('.surge-mark').first()).toHaveText(/Busy/)
+  const tip = page.locator('.surge-tip').first()
+  await expect(tip).toBeVisible()
+  await tip.getByRole('button', { name: 'Close' }).click()
+  await expect(page.locator('.surge-tip')).toHaveCount(0)
+  await page.locator('.surge-mark').first().click()
+  // "Only Facebook" on the tip narrows Explore's own filters (xf), never the old f.
+  await page.locator('.surge-tip').getByRole('button', { name: /Facebook/ }).click()
   await expect(page).toHaveURL(/[?&]xf=/)
   await expect(page).not.toHaveURL(/[?&]f=/)
 })
