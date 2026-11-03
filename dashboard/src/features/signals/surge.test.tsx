@@ -12,7 +12,7 @@ import { addDays } from '../../lib/dates'
 import { openSurgeStory } from './openStory'
 import SurgeCard from './SurgeCard'
 import SurgeModal from './SurgeModal'
-import { bannerLine, beats, clock, localHour, seeInData, deviceShare, honestLine, midTruncate, peakSlice, sourceHost, sourceLine, startSlice, surgeChip, surgeFilter, surgeNotice, type Story, type Surge } from './surge'
+import { bannerParts, beats, clock, localHour, seeInData, deviceShare, honestLine, midTruncate, peakSlice, sourceHost, sourceLine, startSlice, surgeChip, surgeFilter, surgeNotice, type Story, type Surge } from './surge'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -130,8 +130,8 @@ describe('Explore landed on the moment', () => {
     expect(live.to).toBe(localHour(surge.started + 40 * 3600, 'UTC').day)
   })
   it('says when, how busy and who sent them, in one line', () => {
-    expect(bannerLine(over, 'UTC')).toBe(`Busy moment ${clock(over.started, 'UTC')}–${clock(over.started + 25 * 60, 'UTC')} · 53 at peak · from Facebook`)
-    expect(bannerLine(surge, 'UTC')).toContain(`since ${clock(surge.started, 'UTC')}`)
+    expect(bannerParts(over, 'UTC')).toEqual({ span: `${clock(over.started, 'UTC')}–${clock(over.started + 25 * 60, 'UTC')}`, peak: '53 at peak', source: 'from Facebook' })
+    expect(bannerParts(surge, 'UTC').span).toBe(`since ${clock(surge.started, 'UTC')}`)
   })
 })
 

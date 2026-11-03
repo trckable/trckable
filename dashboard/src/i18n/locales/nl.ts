@@ -561,7 +561,7 @@ export default {
   'signals.surge.bandLabel': (times: string) => `Drukte · ${times} het gebruikelijke`,
   'signals.surge.spanBetween': (from: string, to: string) => `${from}–${to}`,
   'signals.surge.spanSince': (from: string) => `sinds ${from}`,
-  'signals.surge.bannerHead': (span: string) => `Drukte ${span}`,
+  'signals.surge.busyTitle': 'Drukte',
   'signals.surge.atPeak': (n: number) => `${int(n)} op het hoogtepunt`,
   'signals.surge.fromSource': (source: string) => `van ${source}`,
   'signals.surge.only': (source: string) => `Alleen ${source}`,

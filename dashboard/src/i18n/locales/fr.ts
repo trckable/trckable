@@ -562,7 +562,7 @@ export default {
   'signals.surge.bandLabel': (times: string) => `Pic d’activité · ${times} le niveau habituel`,
   'signals.surge.spanBetween': (from: string, to: string) => `${from}–${to}`,
   'signals.surge.spanSince': (from: string) => `depuis ${from}`,
-  'signals.surge.bannerHead': (span: string) => `Pic d’activité ${span}`,
+  'signals.surge.busyTitle': 'Pic d’activité',
   'signals.surge.atPeak': (n: number) => `${int(n)} au plus fort`,
   'signals.surge.fromSource': (source: string) => `depuis ${source}`,
   'signals.surge.only': (source: string) => `Seulement ${source}`,
