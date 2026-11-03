@@ -63,6 +63,25 @@ function moversIn(cur: Result, prev: Result, d: Dim, m: Metric): Cause[] {
   return [...out.values()].filter((c) => c.diff !== 0).sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff))
 }
 
+const MAX_MOVERS = 8
+const ROW_PCT = 0.2 // a row must move by a fifth of its own size, or it is the usual wobble of a big row
+
+/**
+ * The biggest changes across every table at once, ranked by size. No per-row usual range exists in the report, so the
+ * rule is a noise floor: a row counts when it moved by at least a tenth of the total gap and 3% of the larger period,
+ * and by a fifth of its own size. Goals and sales have no breakdown in the report, so they are not listed here.
+ */
+export function movers(cur: Result, prev: Result, metric: Metric): Cause[] {
+  const now = totalOf(cur, metric)
+  const was = totalOf(prev, metric)
+  if (Math.max(now, was) < MIN_BASE[metric]) return []
+  const floor = Math.max(Math.abs(now - was) * 0.1, Math.max(now, was) * 0.03)
+  return DIMS.flatMap((d) => moversIn(cur, prev, d, metric))
+    .filter((c) => Math.abs(c.diff) >= floor && Math.abs(c.diff) >= Math.max(c.now, c.was) * ROW_PCT)
+    .sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff))
+    .slice(0, MAX_MOVERS)
+}
+
 /** When half of the gap had opened, along the two periods' series. */
 function whenOpened(cur: Result, prev: Result, m: Metric): { at: string; share: number } | null {
   if (m !== 'visitors' && m !== 'pageviews') return null

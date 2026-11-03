@@ -1,4 +1,4 @@
-// What changed: Overview's own cards, the one sentence that says what moved, and the biggest changes as steps from then to now.
+// What changed: Overview's own cards, the one sentence that says what moved, and the biggest changes of every table as one ranked list.
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { whenIdle } from '../../../lib/lazyLoad'
 import { useNotes } from '../../../features/notes/useNotes'
@@ -9,26 +9,15 @@ import { can } from '../../../lib/permissions'
 import { openSettings } from '../../../lib/settings'
 import { NotesSheet } from '../../ui/BriefingSheets'
 import { mult } from '../../briefing/model'
-import { Waterfall } from '../../ui/Waterfall'
-import { explain, type Cause, type Dim, type Metric } from '../../why/model'
+import { explain, movers, type Cause, type Metric } from '../../why/model'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
-import { openExplore } from '../open'
-import type { Overview as Model, Tab } from '../types'
+import type { Overview as Model } from '../types'
 import { Downtime } from './Downtime'
+import { MoverChips, MoverList, nameOf } from './Movers'
 
 const ChangedChart = lazy(() => import('./ChangedChart'))
 const NoteDialog = lazy(() => import('../../../components/NoteDialog').then((m) => ({ default: m.NoteDialog })))
-
-const OPEN: Record<Dim, { tab: Tab; filter: string }> = {
-  referrer: { tab: 'sources', filter: 'referrer' },
-  entry_page: { tab: 'pages', filter: 'page' },
-  country: { tab: 'countries', filter: 'country' },
-  device: { tab: 'devices', filter: 'device' },
-}
-
-/** A cause in words: no value is Direct, and the bare slash is the home page. */
-const nameOf = (v: string) => (v === '/' ? copy.homePage : v || copy.direct)
 
 function sentence(name: string, kind: string, pct: number | null, diff: number, top?: Cause): string {
   if (kind === 'few') return copy.sayFew
@@ -103,33 +92,22 @@ export function Changed({ x, d }: { x: XCtx; d: Model & { report: Report } }) {
   // Only where the chart can tell the same numbers as the cards: the whole site, not a share of it, and not on a shared page.
   const chart = !isShared() && x.filters.length === 0 && cur.series.length > 0 && cur.kpis.visitors > 0
   const w = prev ? explain(cur, prev, metric) : null
+  const list = prev ? movers(cur, prev, metric) : []
   const fmt = (n: number) => (metric === 'revenue' ? x.money(n) : fmtInt(n))
   return (
     <>
       <p className="xchg-say">{w ? sentence(copy.metric[metric], w.kind, w.pct, w.diff, w.causes[0]) : copy.sayChoose}</p>
+      <MoverChips list={list} metric={metric} fmt={fmt} />
       {chart && <ChartSlot x={x} report={d.report} notes={notes.notes} onNotes={() => setSheet(true)} />}
       <div className="xsec xchg-head">
-        <span>{copy.biggestChanges}</span>
+        <span>{copy.biggestChanges}<em className="xmv-note">{copy.moversNote}</em></span>
         <span className="xchg-kinds" role="group" aria-label={copy.explainNumber}>
           {metrics.map((m) => (
             <button key={m} type="button" aria-pressed={m === metric} className={m === metric ? 'on' : ''} onClick={() => setMetric(m)}>{copy.metric[m]}</button>
           ))}
         </span>
       </div>
-      {w && w.dim && w.causes.length > 0 ? (
-        <Waterfall
-          was={w.was}
-          wasLabel={copy.wasLabel}
-          nowLabel={copy.nowLabel}
-          fmt={fmt}
-          steps={[
-            ...w.causes.map((k) => ({ key: k.value, label: nameOf(k.value), onPick: () => openExplore(OPEN[k.dim].tab, [{ dim: OPEN[k.dim].filter, value: k.value }]) })).map((st, i) => ({ ...st, diff: w.causes[i].diff, title: `${st.label}: ${fmt(w.causes[i].was)} → ${fmt(w.causes[i].now)}` })),
-            ...(w.rest !== 0 ? [{ key: '__rest', label: copy.everythingElse, diff: w.rest }] : []),
-          ]}
-        />
-      ) : (
-        <div className="mk-quiet">{copy.nothingMoved}</div>
-      )}
+      {list.length > 0 ? <MoverList list={list} fmt={fmt} /> : <div className="mk-quiet">{copy.nothingMoved}</div>}
       <Downtime down={d.down} />
       <Tools site={x.site} to={x.query.to} notes={notes} sheet={sheet} setSheet={setSheet} />
     </>
