@@ -97,7 +97,7 @@ export function Changed({ x, d }: { x: XCtx; d: Model & { report: Report } }) {
   return (
     <>
       <p className="xchg-say">{w ? sentence(copy.metric[metric], w.kind, w.pct, w.diff, w.causes[0]) : copy.sayChoose}</p>
-      <MoverChips list={list} metric={metric} fmt={fmt} />
+      <MoverChips list={w?.causes ?? []} metric={metric} fmt={fmt} />
       {chart && <ChartSlot x={x} report={d.report} notes={notes.notes} onNotes={() => setSheet(true)} />}
       <div className="xsec xchg-head">
         <span>{copy.biggestChanges}<em className="xmv-note">{copy.moversNote}</em></span>

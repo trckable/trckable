@@ -64,6 +64,8 @@ function moversIn(cur: Result, prev: Result, d: Dim, m: Metric): Cause[] {
 }
 
 const MAX_MOVERS = 8
+/** Size for ranking: a drop on devices shows on phones and desktops alike and says little, so it counts half, as in explain. */
+const weight = (c: Cause) => Math.abs(c.diff) * (c.dim === 'device' ? 0.5 : 1)
 const ROW_PCT = 0.2 // a row must move by a fifth of its own size, or it is the usual wobble of a big row
 
 /**
@@ -78,7 +80,7 @@ export function movers(cur: Result, prev: Result, metric: Metric): Cause[] {
   const floor = Math.max(Math.abs(now - was) * 0.1, Math.max(now, was) * 0.03)
   return DIMS.flatMap((d) => moversIn(cur, prev, d, metric))
     .filter((c) => Math.abs(c.diff) >= floor && Math.abs(c.diff) >= Math.max(c.now, c.was) * ROW_PCT)
-    .sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff))
+    .sort((a, b) => weight(b) - weight(a))
     .slice(0, MAX_MOVERS)
 }
 
