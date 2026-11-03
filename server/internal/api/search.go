@@ -297,8 +297,8 @@ func (a *API) searchReport(w http.ResponseWriter, r *http.Request) {
 	if dim == "" {
 		dim = "query"
 	}
-	if dim != "query" && dim != "page" {
-		fail(w, http.StatusBadRequest, "dim must be query or page")
+	if dim != "query" && dim != "page" && dim != "date" {
+		fail(w, http.StatusBadRequest, "dim must be query, page or date")
 		return
 	}
 	filters, err := a.filtersOf(r.Context(), site, v)
@@ -307,6 +307,9 @@ func (a *API) searchReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q := gsc.Query{From: from, To: last, Dimension: dim, Limit: 100}
+	if dim == "date" {
+		q.Limit = 1000 // a row a day: a year of them
+	}
 	var ignored []string
 	for _, f := range filters {
 		// Google's data has one page and one device to ask about: "is not" and

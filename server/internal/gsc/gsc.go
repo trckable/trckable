@@ -261,10 +261,11 @@ type Row struct {
 }
 
 // Query asks what people searched for (dim "query"), which pages were shown
-// (dim "page"), or either one narrowed to a single page.
+// (dim "page"), or how each day went (dim "date"), any of them narrowed to a
+// single page.
 type Query struct {
 	From, To  time.Time // dates, inclusive; Search Console has no times
-	Dimension string    // "query" or "page"
+	Dimension string    // "query", "page" or "date"
 	Page      string    // optional: only this path
 	Device    string    // optional: DESKTOP, MOBILE or TABLET
 	Country   string    // optional: ISO 3166-1 alpha-3, lowercase
@@ -277,7 +278,7 @@ type Query struct {
 // preliminary and revises. Without it the newest days are always empty and
 // the integration looks broken; with it they are shown and labelled.
 func (c *Client) Search(ctx context.Context, property string, q Query) ([]Row, error) {
-	if q.Dimension != "query" && q.Dimension != "page" {
+	if q.Dimension != "query" && q.Dimension != "page" && q.Dimension != "date" {
 		return nil, fmt.Errorf("unknown dimension %q", q.Dimension)
 	}
 	if q.Limit <= 0 || q.Limit > 1000 {

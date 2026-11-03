@@ -198,3 +198,18 @@
     max-height: 30vh;
   }
 }
+
+.heat-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-3);
+}
+.heat-legend i {
+  width: 96px;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--heat) 12%, transparent), color-mix(in srgb, var(--heat) 55%, transparent), var(--heat));
+}

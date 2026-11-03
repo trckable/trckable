@@ -52,6 +52,13 @@ export default function HeatOverlay({ site, path, query, demo = false, onClose }
           <HeatSide map={map} />
         </div>
       )}
+      {map && !empty && layers.clicks && (
+        <div className="heat-legend" aria-hidden="true">
+          <span>{heatCopy.fewer}</span>
+          <i />
+          <span>{heatCopy.more}</span>
+        </div>
+      )}
     </Modal>
   )
 }

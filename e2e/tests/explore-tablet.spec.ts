@@ -83,9 +83,9 @@ for (const [width, height] of [
     await expect(page.locator('#xp.on')).toBeVisible()
     // Below the rail breakpoint the section list is a drawer, opened by its button and shut by a pick.
     const items = page.locator('.xdrawer-box .xri')
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 13; i++) {
       await page.locator('#xp .xdrawer-open').click()
-      await expect(items).toHaveCount(12)
+      await expect(items).toHaveCount(13)
       await items.nth(i).click()
       await expect(page.locator('.xdrawer-box')).toHaveCount(0)
       await expect(page.locator('#xp .xtb')).toBeVisible()

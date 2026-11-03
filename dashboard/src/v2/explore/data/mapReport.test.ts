@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { KPIs, Money, Report, Result } from '../../../lib/api'
-import { mapOverview, mapTable, optionsOf } from './mapReport'
+import { mapEngage, mapOverview, mapTable, mapTops, optionsOf } from './mapReport'
 
 const kpis = (visitors: number, extra: Partial<KPIs> = {}): KPIs => ({ visitors, sessions: visitors, pageviews: visitors * 2, bounce_rate: 0.45, avg_session_s: 60, views_per_session: 2, new_visitor_share: 0.5, ...extra })
 const hours = (xs: number[]) => xs.map((visitors, h) => ({ t: `2026-10-16T${String(h).padStart(2, '0')}:00`, visitors, pageviews: visitors * 2 }))
@@ -153,5 +153,45 @@ describe('the signups column', () => {
   it('gives none without a signup goal, and none to a section', () => {
     expect(mapTable('countries', report(result(100, { dims }))).rows[0].su).toBeUndefined()
     expect(mapTable('groups', report(result(100, { dims, signup: { goal: 'signup', visitors: 5 } }))).rows[0].su).toBeUndefined()
+  })
+})
+
+describe('the tech leaders', () => {
+  it('names the device, browser and system most people used, with their share of the people', () => {
+    const cur = result(100, { dims: { device: [{ value: 'Mobile', visitors: 30 }, { value: 'Desktop', visitors: 70 }], browser: [{ value: 'Safari', visitors: 55 }], os: [{ value: 'iOS', visitors: 40 }, { value: 'macOS', visitors: 41 }] } })
+    expect(mapTops(report(cur))).toEqual([
+      { dim: 'device', val: 'Desktop', share: 0.7 },
+      { dim: 'browser', val: 'Safari', share: 0.55 },
+      { dim: 'os', val: 'macOS', share: 0.41 },
+    ])
+  })
+  it('leaves out a kind the period has no rows for', () => {
+    expect(mapTops(report(result(100, { dims: { device: [{ value: 'Desktop', visitors: 10 }] } }))).map((t) => t.dim)).toEqual(['device'])
+    expect(mapTops(report(result(0)))).toEqual([])
+  })
+})
+
+describe('how people read', () => {
+  const scroll = (avg: number, reached: number) => ({ samples: 50, avg, reached: [0.9, 0.7, reached, 0.2] as [number, number, number, number] })
+  it('gives five numbers, each against the period before', () => {
+    const now = { kpis: kpis(100, { sessions: 100, bounce_rate: 0.4, avg_session_s: 90, views_per_session: 3 }), scroll: scroll(60, 0.3) }
+    const was = { kpis: kpis(100, { sessions: 100, bounce_rate: 0.5, avg_session_s: 60, views_per_session: 2 }), scroll: scroll(40, 0.2) }
+    const e = mapEngage(now, was)
+    expect(e.map((k) => [k.label, k.val, k.tag, k.tone])).toEqual([
+      ['Avg scroll', '60%', '+50%', 'up'],
+      ['Avg time', '1m 30s', '+50%', 'up'],
+      ['Deep scroll (75%+)', '30%', '+50%', 'up'],
+      ['Engaged visits', '60', '+20%', 'up'],
+      ['Pages per visit', '3.0', '+50%', 'up'],
+    ])
+    expect(e[0].detail).toBe('before 40%')
+  })
+  it('says a dash for what was not measured, and no change without a period before', () => {
+    const e = mapEngage({ kpis: kpis(100) })
+    expect(e[0]).toMatchObject({ val: '–', tag: '' })
+    expect(e[2]).toMatchObject({ val: '–', tag: '' })
+    expect(e[1].tag).toBe('')
+    const none = mapEngage({ kpis: kpis(0, { sessions: 0 }) })
+    expect(none.every((k) => k.val === '–')).toBe(true)
   })
 })
