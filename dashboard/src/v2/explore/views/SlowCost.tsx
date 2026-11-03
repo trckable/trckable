@@ -1,5 +1,5 @@
 // What slow pages cost: one sentence with the month's loss, the method in a muted line, and the three speed bands.
-import { fmtInt } from '../../../lib/format'
+import { fmtInt, fmtRatio } from '../../../lib/format'
 import { XCols, type CRow } from '../../ui/XTable'
 import { copy } from '../slowCostCopy'
 import type { XCtx } from '../ctx'
@@ -27,7 +27,7 @@ export function SlowCost({ x, d }: { x: XCtx; d: SlowCostModel }) {
       </>
     ),
     onPick: r.pages.length > 0 ? () => x.pickAny('page', r.pages) : undefined,
-    c: [fmtInt(r.visits), r.rate === null ? NONE : `${Math.round(r.rate * 1000) / 10}%`, r.lost > 0 ? <span className="xqual-slow">{say(r.lost)}</span> : NONE],
+    c: [fmtInt(r.visits), r.rate === null ? NONE : fmtRatio(r.rate, 1, 0), r.lost > 0 ? <span className="xqual-slow">{say(r.lost)}</span> : NONE],
   }))
   return (
     <>

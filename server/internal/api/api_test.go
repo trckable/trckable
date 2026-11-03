@@ -557,12 +557,12 @@ func TestWebVitalsEndToEnd(t *testing.T) {
 		g.event(t, e)
 	}
 	for i := range 10 {
-		for _, page := range []struct {
+		for k, page := range []struct {
 			path string
 			lcp  uint32
 		}{{"/fast", 1000}, {"/slow", 3000}} {
 			pvid := uint64(1000 + id)
-			ev(event.Event{Kind: event.KindPageview, TS: g.now.Add(-time.Hour).UnixMilli(), Visitor: uint64(i + 1), Pageview: pvid, Path: page.path, Device: "desktop"})
+			ev(event.Event{Kind: event.KindPageview, TS: g.now.Add(-time.Hour).UnixMilli() + int64(k)*1000, Visitor: uint64(i + 1), Pageview: pvid, Path: page.path, Device: "desktop"})
 			cls := 40 + uint32(i)
 			// The tab was left once before (a smaller, earlier report), then at the end.
 			ev(event.Event{Kind: event.KindEngagement, TS: g.now.Add(-time.Hour).UnixMilli(), Visitor: uint64(i + 1), Pageview: pvid,
@@ -618,8 +618,9 @@ func TestWebVitalsEndToEnd(t *testing.T) {
 		t.Fatalf("by device: %v", out["devices"])
 	}
 
-	// What slow pages cost: each visit sits in the band of its slowest page,
-	// here 3.0-3.9 s, so all ten are "needs work". No payments, so no money.
+	// What slow pages cost: each visit sits in the band of the page it landed
+	// on (/fast, a second before /slow), so all ten are "fast". No payments, so
+	// no money.
 	if code, _ := do(t, c, "PUT", base+"/modules/vitals", `{"enabled":false}`, csrf, "1"); code != 200 {
 		t.Fatal("could not turn the module off")
 	}
@@ -637,8 +638,8 @@ func TestWebVitalsEndToEnd(t *testing.T) {
 	if len(bands) != 3 || out["money"] != false || out["days"].(float64) < 1 {
 		t.Fatalf("slow-cost: %v", out)
 	}
-	if b := bands[1].(map[string]any); b["band"] != "mid" || b["visits"] != 10.0 {
-		t.Errorf("mid band: %v", bands[1])
+	if b := bands[2].(map[string]any); b["band"] != "fast" || b["visits"] != 10.0 {
+		t.Errorf("fast band: %v", bands[2])
 	}
 	if b := bands[0].(map[string]any); b["visits"] != 0.0 {
 		t.Errorf("slow band: %v", bands[0])

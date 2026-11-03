@@ -11,7 +11,8 @@ const SURE = 1.64
 
 /** What a visit is counted for, by what the site has: sales, then goals, then reading on. */
 function kindOf(r: SlowCostReport): SlowCostModel['kind'] {
-  if (r.money && r.bands.some((b) => b.orders > 0)) return 'money'
+  // A sale needs a price: payments with no revenue behind them cannot be told in money.
+  if (r.money && r.bands.some((b) => b.paid > 0) && r.bands.reduce((n, b) => n + b.revenue, 0) > 0) return 'money'
   return r.bands.some((b) => b.goals > 0) ? 'goals' : 'engaged'
 }
 
@@ -43,8 +44,9 @@ export function mapSlowCost(r: SlowCostReport | null): SlowCostModel | null {
   if (!r || r.bands.every((b) => b.visits === 0)) return null
   const kind = kindOf(r)
   const fast = r.bands.find((b) => b.band === 'fast')
-  const orders = r.bands.reduce((n, b) => n + b.orders, 0)
-  const order = kind === 'money' && orders > 0 ? r.bands.reduce((n, b) => n + b.revenue, 0) / orders : 1
+  // What a conversion is worth: the revenue per paying visit, the unit the rates count.
+  const paying = r.bands.reduce((n, b) => n + b.paid, 0)
+  const order = kind === 'money' ? r.bands.reduce((n, b) => n + b.revenue, 0) / paying : 1
   const scale = MONTH / Math.max(1, r.days)
   const rows: SlowCostRow[] = r.bands.map((b) => {
     const enough = b.visits >= MIN_BAND

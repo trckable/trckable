@@ -190,7 +190,7 @@ test('speed that no visit measured says so and lists no pages', async ({ page })
 })
 
 test('what needs payments shows no figures that are not there', async ({ page }) => {
-  for (const tab of ['sales', 'revmap', 'earners', 'sells', 'buyers', 'vsale', 'toconvert']) {
+  for (const tab of ['sales', 'revmap', 'earners', 'sells', 'payments', 'vsale', 'toconvert']) {
     await open(page, tab)
     const lock = card(page).locator('.lkc')
     await expect(lock, `${tab} asks for the payments`).toBeVisible()

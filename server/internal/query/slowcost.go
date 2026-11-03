@@ -41,13 +41,17 @@ type SlowCost struct {
 	Currency string     `json:"currency,omitempty"`
 	Exponent int        `json:"exponent,omitempty"`
 	Money    bool       `json:"money"`
+	// Days is how many days of the period have a measured page view: the stretch
+	// the counts cover, which the dashboard scales to a month.
+	Days int `json:"days"`
 }
 
 // bandSQL names the band an LCP in ms falls in.
 var bandSQL = fmt.Sprintf(`CASE WHEN lcp > %d THEN 'slow' WHEN lcp > %d THEN 'mid' ELSE 'fast' END`, SlowLCP, GoodLCP)
 
-// SlowCostFor reads the bands. A visit's speed is its slowest page view's LCP;
-// a visit with no measured page view is in no band.
+// SlowCostFor reads the bands. A visit's speed is the LCP of its first measured
+// page view, the page it landed on; a visit with no measured page view is in no
+// band.
 func (q Q) SlowCostFor(ctx context.Context, p Params) (*SlowCost, error) {
 	out, err := q.slowCost(ctx, p)
 	if err != nil && isOutOfMemory(err) {
@@ -70,6 +74,7 @@ func (q Q) slowCost(ctx context.Context, p Params) (*SlowCost, error) {
 	}
 	defer func() {
 		_, _ = conn.ExecContext(context.Background(), `DROP TABLE IF EXISTS sl_pv`)
+		_, _ = conn.ExecContext(context.Background(), `DROP TABLE IF EXISTS sl_sess`)
 		_, _ = conn.ExecContext(context.Background(), `DROP TABLE IF EXISTS sl_s`)
 		_, _ = conn.ExecContext(context.Background(), `DROP TABLE IF EXISTS p_facts`)
 		q.done(conn)
@@ -79,25 +84,29 @@ func (q Q) slowCost(ctx context.Context, p Params) (*SlowCost, error) {
 	if err != nil {
 		return nil, err
 	}
+	// The period's visits, filtered, read once; everything below reads this.
+	if _, err := conn.ExecContext(ctx, `CREATE OR REPLACE TEMP TABLE sl_sess AS `+cte+`
+		SELECT session_id, pvs, goals FROM s`, cargs...); err != nil {
+		return nil, fmt.Errorf("slow cost visits: %w", err)
+	}
 	// One row per page view that reported a paint, with the visit it belongs
-	// to. A browser reports again each time the page is hidden; the largest
-	// report is the final one (as in VitalsFor). Reports arrive after their
-	// page view, so a day's grace covers any real page.
-	args := append(append([]any{}, cargs...), p.From, p.To, p.Site, p.From, p.To)
-	if _, err := conn.ExecContext(ctx, `CREATE OR REPLACE TEMP TABLE sl_pv AS `+cte+`
-		SELECT any_value(e.session_id) AS sid, any_value(e.path) AS path, max(x.lcp_ms) AS lcp
+	// to and when. A browser reports again each time the page is hidden; the
+	// largest report is the final one (as in VitalsFor). Reports arrive after
+	// their page view, so a day's grace covers any real page.
+	if _, err := conn.ExecContext(ctx, `CREATE OR REPLACE TEMP TABLE sl_pv AS
+		SELECT any_value(e.session_id) AS sid, any_value(e.path) AS path, min(e.ts) AS ts, max(x.lcp_ms) AS lcp
 		FROM events e JOIN events x
 		  ON x.site_id = e.site_id AND x.pageview_id = e.pageview_id AND x.kind = 3 AND x.lcp_ms IS NOT NULL
 		 AND x.ts >= ? AND x.ts < ? + INTERVAL 1 DAY
 		WHERE e.site_id = ? AND e.ts >= ? AND e.ts < ? AND e.kind = 1 AND e.path IS NOT NULL
-		  AND e.session_id IN (SELECT session_id FROM s)
-		GROUP BY e.pageview_id`, args...); err != nil {
+		  AND e.session_id IN (SELECT session_id FROM sl_sess)
+		GROUP BY e.pageview_id`, p.From, p.To, p.Site, p.From, p.To); err != nil {
 		return nil, fmt.Errorf("slow cost page views: %w", err)
 	}
-	if _, err := conn.ExecContext(ctx, `CREATE OR REPLACE TEMP TABLE sl_s AS `+cte+`
-		SELECT s.session_id, s.pvs, s.goals, `+bandSQL+` AS band
-		FROM s JOIN (SELECT sid, max(lcp) AS lcp FROM sl_pv GROUP BY sid) m ON m.sid = s.session_id`, cargs...); err != nil {
-		return nil, fmt.Errorf("slow cost visits: %w", err)
+	if _, err := conn.ExecContext(ctx, `CREATE OR REPLACE TEMP TABLE sl_s AS
+		SELECT t.session_id, t.pvs, t.goals, `+bandSQL+` AS band
+		FROM sl_sess t JOIN (SELECT sid, arg_min(lcp, ts) AS lcp FROM sl_pv GROUP BY sid) m ON m.sid = t.session_id`); err != nil {
+		return nil, fmt.Errorf("slow cost bands: %w", err)
 	}
 
 	by := map[string]*SlowBand{"slow": {Band: "slow"}, "mid": {Band: "mid"}, "fast": {Band: "fast"}}
@@ -142,6 +151,13 @@ func (q Q) slowCost(ctx context.Context, p Params) (*SlowCost, error) {
 	}
 
 	out := &SlowCost{}
+	tz, err := safeTZ(p.TZ)
+	if err != nil {
+		return nil, err
+	}
+	if err := conn.QueryRowContext(ctx, `SELECT count(DISTINCT CAST((ts AT TIME ZONE 'UTC') AT TIME ZONE '`+tz+`' AS DATE)) FROM sl_pv`).Scan(&out.Days); err != nil {
+		return nil, fmt.Errorf("slow cost days: %w", err)
+	}
 	if q.Payments != nil && p.Revenue {
 		if err := q.slowMoney(ctx, conn, p, cte, cargs, by, out); err != nil {
 			return nil, err

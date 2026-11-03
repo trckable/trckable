@@ -458,6 +458,7 @@ export interface SlowCostReport {
   money: boolean
   /** Minor-unit digits of the currency, with money. */
   exponent?: number
+  /** How many days of the period have a speed measurement: what the figures cover. */
   days: number
 }
 

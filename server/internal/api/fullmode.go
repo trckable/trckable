@@ -248,20 +248,9 @@ func (a *API) slowCost(w http.ResponseWriter, r *http.Request) {
 		reportFail(w, err)
 		return
 	}
-	// The days the figures cover, for scaling them to a month: a period still
-	// running counts up to now.
-	end := p.To
-	if now := a.Now(); now.Before(end) {
-		end = now
-	}
-	days := end.Sub(p.From).Hours() / 24
-	writeJSON(w, http.StatusOK, struct {
-		*query.SlowCost
-		Days float64 `json:"days"`
-	}{v.(*query.SlowCost), max(days, 1)})
+	writeJSON(w, http.StatusOK, v)
 }
 
-// crawlers reports who crawled the site: AI answers, indexing and training.
 func (a *API) crawlers(w http.ResponseWriter, r *http.Request) {
 	q, p, ok := a.params(w, r)
 	if !ok {

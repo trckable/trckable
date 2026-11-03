@@ -35,18 +35,18 @@ func slowSite(t *testing.T, visits []slowVisit) Q {
 			VALUES ('s1', ?, ?, TIMESTAMP '2026-09-20 10:00:00', TIMESTAMP '2026-09-20 10:01:00', ?, ?, 'Desktop', ?, ?, 0, 60)`, v.id, v.id, v.channel, v.page, v.pvs, v.goals); err != nil {
 			t.Fatal(err)
 		}
-		for _, ms := range v.lcp {
+		for i, ms := range v.lcp {
 			seq++
 			pv := seq
 			if _, err := st.DB.ExecContext(ctx, `INSERT INTO events (seq, site_id, ts, kind, visitor_id, session_id, pageview_id, path)
-				VALUES (?, 's1', TIMESTAMP '2026-09-20 10:00:00', 1, ?, ?, ?, ?)`, seq*10+1, v.id, v.id, pv, v.page); err != nil {
+				VALUES (?, 's1', TIMESTAMP '2026-09-20 10:00:00' + to_seconds(?), 1, ?, ?, ?, ?)`, seq*10+1, i*10, v.id, v.id, pv, v.page); err != nil {
 				t.Fatal(err)
 			}
 			// Two reports of the same view: the larger one is the final one.
 			for _, m := range []int{ms / 2, ms} {
 				seq++
 				if _, err := st.DB.ExecContext(ctx, `INSERT INTO events (seq, site_id, ts, kind, visitor_id, session_id, pageview_id, lcp_ms)
-					VALUES (?, 's1', TIMESTAMP '2026-09-20 10:00:05', 3, ?, ?, ?, ?)`, seq*10+3, v.id, v.id, pv, m); err != nil {
+					VALUES (?, 's1', TIMESTAMP '2026-09-20 10:00:05' + to_seconds(?), 3, ?, ?, ?, ?)`, seq*10+3, i*10, v.id, v.id, pv, m); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -59,7 +59,7 @@ var slowPeriod = Params{Site: "s1", TZ: "UTC", Currency: "USD", From: time.Date(
 
 func slowVisits() []slowVisit {
 	return []slowVisit{
-		// Slow: /heavy, 5 s. One visit read a fast page after it, which does not make it fast.
+		// Slow: /heavy, 5 s. One visit read a fast page after it: it landed on a slow one.
 		{1, "/heavy", 1, 0, "Search", []int{5000}},
 		{2, "/heavy", 1, 0, "Search", []int{5000}},
 		{3, "/heavy", 2, 0, "Search", []int{5000, 800}},
@@ -70,7 +70,7 @@ func slowVisits() []slowVisit {
 		{7, "/mid", 1, 0, "Direct", []int{3000}},
 		// Fast: /quick, 1 s.
 		{8, "/quick", 2, 1, "Direct", []int{1000}},
-		{9, "/quick", 3, 0, "Direct", []int{1000}},
+		{9, "/quick", 3, 0, "Direct", []int{1000, 5000}}, // landed fast, then read a slow page: still fast
 		{10, "/quick", 1, 0, "Direct", []int{1000}},
 		// Not measured: in no band.
 		{11, "/none", 1, 0, "Direct", nil},
@@ -96,6 +96,7 @@ func TestSlowCostBands(t *testing.T) {
 		t.Fatal("money without a payment provider")
 	}
 	eq(t, "bands", len(c.Bands), 3)
+	eq(t, "days with speed data", c.Days, 1)
 	eq(t, "slowest first", c.Bands[0].Band, "slow")
 	s, m, f := band(c, "slow"), band(c, "mid"), band(c, "fast")
 	eq(t, "slow visits", s.Visits, int64(4))

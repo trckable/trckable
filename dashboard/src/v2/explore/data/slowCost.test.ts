@@ -19,6 +19,18 @@ describe('mapSlowCost', () => {
     expect(m?.rows[2].rate).toBe(0.05)
   })
 
+  it('prices a paying visit by its revenue, not by the payments it made', () => {
+    // Fast: 100 paying visits that made 300 payments for 600000: 6000 a paying visit.
+    const m = mapSlowCost(report([band('slow', 1000, { paid: 10, revenue: 60000, orders: 30 }), band('mid', 0), band('fast', 1000, { paid: 100, revenue: 600000, orders: 300 })], { money: true, exponent: 2 }))
+    // 1000 x (10% - 1%) x (660000 / 110) = 540000
+    expect(m?.lost).toBe(540000)
+  })
+
+  it('does not price in money when no revenue stands behind the sales', () => {
+    const m = mapSlowCost(report([band('slow', 100, { paid: 1, goals: 1 }), band('mid', 0), band('fast', 100, { paid: 30, goals: 30 })], { money: true }))
+    expect(m?.kind).toBe('goals')
+  })
+
   it('tells the month of a shorter period', () => {
     const r = report([band('slow', 100, { goals: 1 }), band('mid', 100, { goals: 5 }), band('fast', 400, { goals: 100 })], { days: 7 })
     // Slow loses 100 x (25% - 1%) = 24 in 7 days -> 103 in 30 (rounded to two figures); mid 100 x 20% = 20 -> 86.
