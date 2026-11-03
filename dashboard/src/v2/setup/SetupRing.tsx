@@ -65,6 +65,7 @@ export function SetupRing({ site, onGoal, fresh = false, visited = false }: { si
             state={state}
             check={mode === 'check'}
             locked={fresh && !visited}
+            verified={site.verified}
             x={{ site, onGoal, can: can('setup.run'), change: (fn) => void run(fn), close }}
             onHide={() => {
               hide(site.id, left(state))

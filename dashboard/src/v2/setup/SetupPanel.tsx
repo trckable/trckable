@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
-import { more, type SetupItem, type SetupState, type SiteKind } from '../../lib/apiMore'
+import { more, type SetupItem, type SetupState, type SiteKind, type Verified } from '../../lib/apiMore'
+import { copy as vcopy } from '../../features/verified/copy'
+import { earned, lastChecked } from '../../features/verified/model'
+import { Sources, useVerified } from '../../features/verified/Sources'
+import { whenWords } from '../../features/verified/time'
 import { copy } from './copy'
 import { splitOf } from './model'
 import { Pop } from './Pop'
@@ -43,8 +47,14 @@ function Fold({ label, open, onToggle, children }: { label: string; open: boolea
 }
 
 /** The panel: the next step as a card, the other open steps as rows, the done ones and the extras one line each, and who sees it. */
-export function SetupPanel({ state, x, onHide, locked, check }: { state: SetupState; x: RowCtx; onHide: () => void; /** Everything counted is done: the header's tick and words. */ check: boolean; /** Install is still open: the steps after it show, and wait. */ locked?: boolean }) {
+export function SetupPanel({ state, x, onHide, locked, check, verified }: { state: SetupState; x: RowCtx; onHide: () => void; /** The site's verified sources: when it has any, they are one block of this popup, not a second popup. */ verified?: Verified; /** Everything counted is done: the header's tick and words. */ check: boolean; /** Install is still open: the steps after it show, and wait. */ locked?: boolean }) {
   const [open, setOpen] = useState({ done: false, more: false })
+  const proven = earned(verified).length > 0
+  const data = useVerified(verified, x.site, false, proven)
+  const names = earned(data).map((k) => vcopy.names[k]).join(', ')
+  const when = lastChecked(data)
+  const allSet = proven ? copy.allSetVerified : copy.allSet
+  const head = check ? allSet : copy.title(state.done, state.counted)
   const toggle = (k: keyof typeof open) => setOpen({ ...open, [k]: !open[k] })
   const { todo, done, more: extra } = splitOf(state.items)
   const view = (it: SetupItem) => rowView(it, x, state.goal_suggestion)
@@ -54,12 +64,20 @@ export function SetupPanel({ state, x, onHide, locked, check }: { state: SetupSt
     <>
       <div className="shead">
         <RingMark done={state.done} counted={state.counted} check={check} />
-        <b>{check ? copy.allSet : copy.title(state.done, state.counted)}</b>
+        <span className="stxt">
+          <b>{head}</b>
+          {check && proven && <small>{copy.checks(names)}</small>}
+        </span>
       </div>
       {todo.length > 0 && (
         <div className="sgrp">
           <NextCard row={view(todo[0])} />
           {locked ? waiting(todo.slice(1)) : rows(todo.slice(1))}
+        </div>
+      )}
+      {proven && (
+        <div className="svf">
+          <Sources data={data} site={x.site} viewer={false} close={x.close} />
         </div>
       )}
       {done.length > 0 && (
@@ -73,6 +91,7 @@ export function SetupPanel({ state, x, onHide, locked, check }: { state: SetupSt
         </Fold>
       )}
       <Kind state={state} x={x} />
+      {proven && when && <div className="spfoot">{vcopy.checked(whenWords(when))}</div>}
       <div className="spfoot">
         <span>{copy.only}</span>
         <button type="button" onClick={onHide}>

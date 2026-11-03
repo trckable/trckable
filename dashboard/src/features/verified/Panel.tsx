@@ -2,15 +2,13 @@
 // it says, a tick), one dashed Connect row for each kind not earned yet (Payments,
 // Search), and when it was last checked. The owner's panel asks the server again
 // when it opens, so "synced 2 h ago" is as fresh as the click.
-import { Plus } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { more, type Verified, type VerifiedSource } from '../../lib/apiMore'
-import { can } from '../../lib/permissions'
-import { openSettings } from '../../lib/settings'
+import type { Verified } from '../../lib/apiMore'
 import { copy } from './copy'
-import { SourceMark, Seal, Tick } from './Marks'
-import { earned, lastChecked, missing, providerName, tabOf, working, type Kind } from './model'
-import { agoWords, dayWords, whenWords } from './time'
+import { Seal } from './Marks'
+import { earned, lastChecked } from './model'
+import { Sources, useVerified } from './Sources'
+import { whenWords } from './time'
+import './panel.css'
 
 interface Props {
   verified?: Verified
@@ -20,46 +18,9 @@ interface Props {
   close: () => void
 }
 
-const kindOf = (s: VerifiedSource): Kind => (s.kind === 'gsc' ? 'search' : 'payments')
-
-/** The line under a badge's name, for who is reading. */
-function detailOf(s: VerifiedSource, viewer: boolean): string {
-  const provider = providerName(s.provider)
-  if (kindOf(s) === 'search') return viewer ? copy.okSearchViewer(agoWords(s.checked)) : copy.okSearch(dayWords(s.since), agoWords(s.checked))
-  return viewer ? copy.okPaymentsViewer(provider) : copy.okPayments(agoWords(s.checked))
-}
-
-function Row({ s, viewer }: { s: VerifiedSource; viewer: boolean }) {
-  return (
-    <li className="vf-row">
-      <span className="vf-ico">
-        <SourceMark s={s} size={16} />
-      </span>
-      <span className="vf-txt">
-        <b>{copy.names[kindOf(s)]}</b>
-        <small>{detailOf(s, viewer)}</small>
-      </span>
-      <span className="vf-state ok">
-        <Tick size={14} />
-      </span>
-    </li>
-  )
-}
-
 export default function Panel({ verified, site, viewer, brand, close }: Props) {
-  const [fresh, setFresh] = useState<Verified | undefined>(undefined)
-  useEffect(() => {
-    if (viewer || !site) return
-    let live = true
-    more.verified(site.id).then((v) => live && setFresh(v)).catch(() => {})
-    return () => {
-      live = false
-    }
-  }, [viewer, site])
-  const data = fresh ?? verified
-  const rows = working(data)
+  const data = useVerified(verified, site, viewer)
   const names = earned(data).map((k) => copy.names[k]).join(', ')
-  const connect = !viewer && !!site && can('site.settings') ? missing(data) : []
   const when = lastChecked(data)
   return (
     <div className="vf-panel">
@@ -72,32 +33,7 @@ export default function Panel({ verified, site, viewer, brand, close }: Props) {
           <small>{viewer ? copy.viewerSub(names) : copy.sub}</small>
         </span>
       </div>
-      <ul className="vf-rows">
-        {rows.map((s) => (
-          <Row key={s.kind} s={s} viewer={viewer} />
-        ))}
-      </ul>
-      {site &&
-        connect.map((k) => (
-          <button
-            key={k}
-            type="button"
-            className="vf-connect"
-            onClick={() => {
-              close()
-              openSettings(site, tabOf(k))
-            }}
-          >
-            <span className="vf-ico">
-              <Plus size={16} strokeWidth={2} aria-hidden="true" />
-            </span>
-            <span className="vf-txt">
-              <b>{copy.names[k]}</b>
-              <small>{copy.connectWhat[k]}</small>
-            </span>
-            <span className="vf-btn">{copy.connect}</span>
-          </button>
-        ))}
+      <Sources data={data} site={site} viewer={viewer} close={close} />
       <div className="vf-foot">
         <span>{when ? copy.checked(whenWords(when)) : ''}</span>
         {viewer && brand && (
