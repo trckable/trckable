@@ -557,12 +557,12 @@ func TestWebVitalsEndToEnd(t *testing.T) {
 		g.event(t, e)
 	}
 	for i := range 10 {
-		for _, page := range []struct {
+		for k, page := range []struct {
 			path string
 			lcp  uint32
 		}{{"/fast", 1000}, {"/slow", 3000}} {
 			pvid := uint64(1000 + id)
-			ev(event.Event{Kind: event.KindPageview, TS: g.now.Add(-time.Hour).UnixMilli(), Visitor: uint64(i + 1), Pageview: pvid, Path: page.path, Device: "desktop"})
+			ev(event.Event{Kind: event.KindPageview, TS: g.now.Add(-time.Hour).UnixMilli() + int64(k)*1000, Visitor: uint64(i + 1), Pageview: pvid, Path: page.path, Device: "desktop"})
 			cls := 40 + uint32(i)
 			// The tab was left once before (a smaller, earlier report), then at the end.
 			ev(event.Event{Kind: event.KindEngagement, TS: g.now.Add(-time.Hour).UnixMilli(), Visitor: uint64(i + 1), Pageview: pvid,
@@ -616,6 +616,33 @@ func TestWebVitalsEndToEnd(t *testing.T) {
 	devices, _ := out["devices"].([]any)
 	if len(devices) != 1 || devices[0].(map[string]any)["n"] != 20.0 {
 		t.Fatalf("by device: %v", out["devices"])
+	}
+
+	// What slow pages cost: each visit sits in the band of the page it landed
+	// on (/fast, a second before /slow), so all ten are "fast". No payments, so
+	// no money.
+	if code, _ := do(t, c, "PUT", base+"/modules/vitals", `{"enabled":false}`, csrf, "1"); code != 200 {
+		t.Fatal("could not turn the module off")
+	}
+	if code, _ := do(t, c, "GET", base+"/report/slow-cost?from=2026-09-22&to=2026-09-22", ""); code != http.StatusNotFound {
+		t.Fatalf("slow-cost answered with the module off: %d", code)
+	}
+	if code, _ := do(t, c, "PUT", base+"/modules/vitals", `{"enabled":true}`, csrf, "1"); code != 200 {
+		t.Fatal("could not turn the module on")
+	}
+	code, out = do(t, c, "GET", base+"/report/slow-cost?from=2026-09-22&to=2026-09-22", "")
+	if code != 200 {
+		t.Fatalf("slow-cost: %d %v", code, out)
+	}
+	bands, _ := out["bands"].([]any)
+	if len(bands) != 3 || out["money"] != false || out["days"].(float64) < 1 {
+		t.Fatalf("slow-cost: %v", out)
+	}
+	if b := bands[2].(map[string]any); b["band"] != "fast" || b["visits"] != 10.0 {
+		t.Errorf("fast band: %v", bands[2])
+	}
+	if b := bands[0].(map[string]any); b["visits"] != 0.0 {
+		t.Errorf("slow band: %v", bands[0])
 	}
 }
 

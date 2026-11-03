@@ -31,6 +31,8 @@ export interface XCtx {
   showAll: () => void
   /** A row was tapped: filter by it, or take the filter off when it is the one on. */
   pick: (dim: string, value: string) => void
+  /** Filters by any of these values of one dimension, or takes the filter off when they are the ones on. */
+  pickAny: (dim: string, values: string[]) => void
   clearFilters: () => void
   goTo: (tab: Tab) => void
   /** Goes to a section with this one thing filtered. */

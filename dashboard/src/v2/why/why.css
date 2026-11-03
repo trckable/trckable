@@ -16,6 +16,7 @@
 .mk .xchg-kinds button{background:none;border:0;border-radius:8px;padding:4px 9px;color:var(--mk-muted);font:inherit;font-size:12.5px;cursor:pointer}
 .mk .xchg-kinds button.on{background:var(--mk-card2);color:var(--mk-text)}
 .mk .xchg-rest{margin:var(--mk-s2) 0 0;font-size:13px;opacity:.65}
+.mk .xslow-how{margin:0 0 var(--mk-s3);font-size:12px;color:var(--mk-faint)}
 .mk .xchg-tools{display:flex;gap:var(--mk-s2);margin-top:var(--mk-s5)}
 .mk .view-pane{animation:view-in .14s ease-out}
 .mk .view-pane[hidden]{animation:none}

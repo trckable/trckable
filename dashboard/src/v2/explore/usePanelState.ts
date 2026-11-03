@@ -5,7 +5,7 @@ import { useCallback, useState } from 'react'
 import type { Filter } from '../../lib/api'
 import { setView } from '../../lib/url'
 import type { Custom } from './ctx'
-import { toggled, without } from './filters'
+import { toggled, toggledAny, without } from './filters'
 import type { Ask } from './open'
 import { TABS } from './sections'
 import type { MenuKey } from './Toolbar'
@@ -48,6 +48,7 @@ export function usePanelState(ask: Ask) {
       set({ n: FIRST, menu: null })
     },
     pick: (dim: string, value: string) => narrow(toggled(filters, dim, value)),
+    pickAny: (dim: string, values: string[]) => narrow(toggledAny(filters, dim, values)),
     remove: (dim: string) => narrow(without(filters, dim)),
     clear: () => narrow([], { menu: null }),
     apply: (next: Filter[]) => narrow(next, { menu: null }),

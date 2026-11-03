@@ -69,6 +69,7 @@ export default function PanelContent(p: ContentProps) {
     limit: s.n,
     showAll: () => set({ n: 9999 }),
     pick: act.pick,
+    pickAny: act.pickAny,
     clearFilters: act.clear,
     goTo: act.tab,
     goWith: act.goWith,

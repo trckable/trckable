@@ -60,7 +60,7 @@ export interface SavedFunnel {
 
 export * from './api'
 export { siteState, type SiteState } from '../features/sitestatus/status'
-import type { APIKey, Added, Alert, Annotation, Brand, Cohorts, CrawlerReport, FunnelResult, FunnelStep, Health, Heatmap, InstallCheck, JourneyResult, ModuleInfo, PaidStep, PayConnection, Person, PersonFound, PersonPayment, Profile, Provider, ReportQuery, ReportSchedule, ReportSchedules, ScriptInfo, ScrollReport, SearchConnection, SearchProperty, SearchReport, Segment, Share, ShareLook, Site, SiteAccessList, SiteConfig, SiteRow, TwoStep, Verified, WebVitals, Widget, WidgetLook } from './api'
+import type { APIKey, Added, Alert, Annotation, Brand, Cohorts, CrawlerReport, FunnelResult, FunnelStep, Health, Heatmap, InstallCheck, JourneyResult, ModuleInfo, PaidStep, PayConnection, Person, PersonFound, PersonPayment, Profile, Provider, ReportQuery, ReportSchedule, ReportSchedules, ScriptInfo, ScrollReport, SearchConnection, SearchProperty, SearchReport, Segment, Share, ShareLook, Site, SiteAccessList, SiteConfig, SiteRow, SlowCostReport, TwoStep, Verified, WebVitals, Widget, WidgetLook } from './api'
 
 /** A phone signed in to the account with its own token (never shown). */
 export interface Device {
@@ -327,6 +327,7 @@ export const more = {
   aiSeen: (site: string) => call<{ visitor: boolean; crawler: boolean }>('GET', `/sites/${site}/report/ai-seen`),
   crawlers: (site: string, q: ReportQuery) => call<CrawlerReport>('GET', `/sites/${site}/report/crawlers` + rangeQS(q)),
   vitals: (site: string, q: ReportQuery) => call<WebVitals>('GET', `/sites/${site}/report/vitals` + rangeQS(q)),
+  slowCost: (site: string, q: ReportQuery) => call<SlowCostReport>('GET', `/sites/${site}/report/slow-cost` + rangeQS(q)),
   retention: (site: string, q: ReportQuery) => call<Cohorts>('GET', `/sites/${site}/report/retention` + rangeQS(q)),
   setModule: (site: string, id: string, enabled: boolean) =>
     call<{ modules: ModuleInfo[]; script: ScriptInfo }>('PUT', `/sites/${site}/modules/${id}`, { enabled }),

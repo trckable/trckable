@@ -437,6 +437,31 @@ export interface WebVitals {
   devices?: { value: string; n: number; lcp_ms?: number | null; cls_1k?: number | null; inp_ms?: number | null }[]
 }
 
+/** One speed band of the period: how many visits had their slowest page in it and what they did. */
+export interface SlowBandReport {
+  band: 'slow' | 'mid' | 'fast'
+  visits: number
+  /** Visits that reached a goal, that read more than a page or reached a goal, and that were credited with a payment. */
+  goals: number
+  engaged: number
+  paid: number
+  /** Net of refunds, minor units, and how many payments. */
+  revenue: number
+  orders: number
+  /** The band's own pages, busiest first. */
+  pages?: string[]
+}
+
+/** What slow pages cost: the bands, slowest first. `money` is true once payments are connected. */
+export interface SlowCostReport {
+  bands: SlowBandReport[]
+  money: boolean
+  /** Minor-unit digits of the currency, with money. */
+  exponent?: number
+  /** How many days of the period have a speed measurement: what the figures cover. */
+  days: number
+}
+
 /** A score built from fewer page views than this is not shown: three visits are not a 75th percentile. */
 export const MIN_VITALS = 5
 

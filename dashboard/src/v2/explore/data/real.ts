@@ -28,6 +28,7 @@ import { ENOUGH, headline, mainOf, ranked, rateOf, type QualityRow } from './qua
 import { EXPLORE_ROWS, LINKS_ROWS } from './rows'
 import { scaled, withSourceUsuals } from './scaled'
 import { mapEngage, mapOverview, mapTable, mapTops, optionsOf, type Uptime } from './mapReport'
+import { mapSlowCost } from './slowCost'
 import { mapBots, mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed } from './mapSections'
 import type { DataCtx, Meta, TabData } from './useExplore'
 import { dateFmt } from '../../../lib/format'
@@ -198,8 +199,12 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
       const p = before(report)
       // A site that does not measure speed has none to show.
       const none: WebVitals = { samples: 0, good: 0 }
-      const [cur, prev] = await Promise.all([more.vitals(c.site.id, q).catch(() => none), more.vitals(c.site.id, { ...q, from: p.from, to: p.to, compare: undefined }).catch(() => undefined)])
-      return mapSpeed(cur, prev)
+      const [cur, prev, cost] = await Promise.all([
+        more.vitals(c.site.id, q).catch(() => none),
+        more.vitals(c.site.id, { ...q, from: p.from, to: p.to, compare: undefined }).catch(() => undefined),
+        more.slowCost(c.site.id, q).catch(() => null),
+      ])
+      return { ...mapSpeed(cur, prev), cost: mapSlowCost(cost) }
     }
     case 'mentions': {
       const r = await mentionsApi.list(c.site.id, periodFor(c), signal)
