@@ -3,8 +3,9 @@
 import { CircleDollarSign, Target } from 'lucide-react'
 import { fmtDuration, fmtMoney } from '../../lib/format'
 import { truncateMiddle } from '../../lib/visitor'
+import { SourceMark } from '../../components/visitor/SourceMark'
 import { copy } from './copy'
-import type { PageNode, StoryNode } from './model'
+import type { PageNode, Prop, StoryNode } from './model'
 import type { OnFilter } from './SourceChip'
 import { fmtTime, isoOf } from './when'
 
@@ -14,6 +15,26 @@ function When({ at, offset, first }: { at: number; offset: number; first: boolea
     <time className="jr-when num" dateTime={isoOf(at)} title={fmtTime(at)}>
       {text}
     </time>
+  )
+}
+
+// A value that is a bare site address gets its own mark.
+const SITE = /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}(\/\S*)?$/i
+const siteOf = (v: string) => (SITE.test(v) ? v.replace(/^https?:\/\//i, '').replace(/^www\./i, '').split(/[/?#]/)[0] : '')
+
+function Props({ props }: { props: Prop[] }) {
+  return (
+    <span className="jr-props">
+      {props.map((p) => {
+        const site = siteOf(p.value)
+        return (
+          <span key={p.key} className="jr-prop faint">
+            {site && <SourceMark channel="Referral" referrer={site} size={14} />}
+            <span>{copy.prop(p.key === 'form' ? copy.formKey : p.key, p.value)}</span>
+          </span>
+        )
+      })}
+    </span>
   )
 }
 
@@ -60,7 +81,7 @@ export function TimelineNode({ n, index, first, live, currency, onFilter }: { n:
           <Target size={14} strokeWidth={2} aria-hidden="true" />
           <span className="jr-kind">{copy.goal}</span>
           <b className="jr-goal">{n.goal}</b>
-          {n.props && <span className="faint num jr-props">{n.props}</span>}
+          {n.props && <Props props={n.props} />}
         </div>
       )}
       {n.kind === 'payment' && (

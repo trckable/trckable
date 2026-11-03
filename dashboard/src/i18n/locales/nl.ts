@@ -1273,6 +1273,8 @@ export default {
   'journey.stayed': (d: string) => `${d} op de pagina`,
   'journey.goal': 'Doel',
   'journey.payment': 'Betaling',
+  'journey.prop': (key: string, value: string) => `${key}: ${value}`,
+  'journey.formKey': 'Formulier',
   'journey.via': (provider: string) => `via ${provider}`,
   'journey.exit': 'Vertrokken',
   'journey.here': 'Nu hier',

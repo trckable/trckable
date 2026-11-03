@@ -44,6 +44,8 @@ export const copy = defineCopy('journey', {
   stayed: (d: string) => `${d} on page`,
   goal: 'Goal',
   payment: 'Payment',
+  prop: (key: string, value: string) => `${key}: ${value}`,
+  formKey: 'Form',
   via: (provider: string) => `via ${provider}`,
   exit: 'Left',
   here: 'Here now',

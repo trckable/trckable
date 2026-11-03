@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { JourneyResult, JourneyVisit } from '../../lib/api'
 import { hueOf, truncateMiddle } from '../../lib/visitor'
-import { buildStory, nodesOf, visitFor, type PageNode } from './model'
+import { buildStory, nodesOf, propsOf, visitFor, type PageNode } from './model'
 
 const at = (min: number) => new Date(Date.UTC(2026, 8, 27, 12, min)).toISOString()
 const visit = (start: number, end: number, events: JourneyVisit['events'], extra: Partial<JourneyVisit> = {}): JourneyVisit => ({
@@ -116,5 +116,20 @@ describe('helpers', () => {
     expect(hueOf('7quilypk')).toBe(hueOf('7quilypk'))
     expect(hueOf('7quilypk')).toBeGreaterThanOrEqual(0)
     expect(hueOf('7quilypk')).toBeLessThan(360)
+  })
+})
+
+describe('goal properties', () => {
+  it('reads them as pairs and drops a form that is just the page', () => {
+    expect(propsOf('{"form":"/","Site":"example.com"}', '/')).toEqual([{ key: 'Site', value: 'example.com' }])
+    expect(propsOf('{"form":"signup"}', '/')).toEqual([{ key: 'form', value: 'signup' }])
+    expect(propsOf('{"form":"/"}', '/')).toBeUndefined()
+    expect(propsOf('not json', '/')).toBeUndefined()
+    expect(propsOf(undefined, '/')).toBeUndefined()
+  })
+
+  it('compares the form to the page the goal happened on', () => {
+    const v = visit(0, 5, [pv(0, '/scan'), { at: at(1), kind: 'goal', goal: 'Site scan', props: '{"form":"/scan","Site":"example.com"}' }])
+    expect(nodesOf(v, [], 'v').find((n) => n.kind === 'goal')).toMatchObject({ props: [{ key: 'Site', value: 'example.com' }] })
   })
 })

@@ -21,13 +21,36 @@ export interface PageNode {
   exit: boolean
 }
 
+/** One detail a goal carries, as it reads: "Site: example.com". */
+export interface Prop {
+  key: string
+  value: string
+}
+
+/** A goal's properties (a JSON object as text) as readable pairs. A form's own
+ *  path is dropped when it is the page the goal happened on: nothing new. */
+export function propsOf(raw: string | undefined, path: string): Prop[] | undefined {
+  if (!raw) return undefined
+  let obj: unknown
+  try {
+    obj = JSON.parse(raw)
+  } catch {
+    return undefined
+  }
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return undefined
+  const out = Object.entries(obj as Record<string, unknown>)
+    .map(([key, v]) => ({ key, value: typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' ? String(v) : '' }))
+    .filter((p) => p.value !== '' && !(p.key === 'form' && p.value === path))
+  return out.length ? out : undefined
+}
+
 export interface GoalNode {
   kind: 'goal'
   key: string
   at: number
   offset: number
   goal: string
-  props?: string
+  props?: Prop[]
 }
 
 export interface PayNode {
@@ -108,15 +131,17 @@ export function nodesOf(v: JourneyVisit, payments: Payment[], vkey: string): Sto
   const out: StoryNode[] = []
   // A visit whose events are all engagement pings arrives with none (null).
   const events = [...(v.events ?? [])].sort((a, b) => ms(a.at) - ms(b.at))
+  let lastPath = ''
   events.forEach((e, i) => {
     const at = ms(e.at)
     const offset = Math.max(0, (at - start) / 1000)
     const key = `${vkey}-${i}`
     if (e.kind === 'goal') {
-      out.push({ kind: 'goal', key, at, offset, goal: e.label || e.goal || '', props: e.props || undefined })
+      out.push({ kind: 'goal', key, at, offset, goal: e.label || e.goal || '', props: propsOf(e.props, e.path || lastPath) })
       return
     }
     const path = e.path ?? ''
+    lastPath = path
     const last = out[out.length - 1]
     if (last && last.kind === 'page' && last.path === path) {
       last.count++

@@ -179,6 +179,23 @@ describe('goals', () => {
     expect(goals[1]).toMatchObject({ n: 'newsletter', p: { form: '/pricing' } })
   })
 
+  it('adds only the fields marked data-trckable-keep, never a private one, cut to 100 characters', async () => {
+    win.document.body.innerHTML = `
+      <form id="scan">
+        <input name="url" data-trckable-keep="Site" value="  example.com ">
+        <input name="q" data-trckable-keep value="${'x'.repeat(150)}">
+        <input type="password" name="pw" data-trckable-keep="pw" value="secret">
+        <input type="email" name="mail" data-trckable-keep value="a@b.co">
+        <input type="hidden" name="h" data-trckable-keep value="v">
+        <input name="other" value="not kept">
+      </form>`
+    tracker()
+    win.document.querySelector('#scan')!.dispatchEvent(new win.Event('submit', { bubbles: true, cancelable: true }) as any)
+    await flush()
+    const p = byKind('g')[0].p
+    expect(p).toEqual({ Site: 'example.com', q: 'x'.repeat(100), form: 'scan' })
+  })
+
   it('tracks outbound links and downloads automatically', async () => {
     win.document.body.innerHTML =
       '<a id="out" href="https://github.com/trckable/trckable">gh</a><a id="dl" href="/files/guide.pdf">pdf</a><a id="in" href="/about">about</a>'

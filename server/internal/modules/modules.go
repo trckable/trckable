@@ -211,6 +211,8 @@ var All = []Module{
 			"A goal each time a form is sent: signups, contact forms, newsletters",
 			"Named after the form (its id or where it posts), or data-trckable-form",
 			"Only forms the browser accepted: one refused on the spot is not counted",
+			"A field marked data-trckable-keep (or =\"label\") adds its value to the goal, never a password, email, phone or hidden field",
+			"A field marked data-trckable-keep (or =\"label\") adds its value to the goal, never a password, email, phone or hidden field",
 		},
 		Costs: []string{
 			"Adds {bytes} to the browser script",
