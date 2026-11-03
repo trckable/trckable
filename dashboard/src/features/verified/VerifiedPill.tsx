@@ -45,7 +45,7 @@ export function VerifiedPill({ verified, site, viewer, brand = true, seal }: Pil
         title={copy.sealLabel(names)}
         onClick={() => setOpen((o) => !o)}
       >
-        <Seal size={seal ? 12 : 14} />
+        <Seal size={seal ? 16 : 14} />
         {!seal && <span className="vf-pill-text">{copy.sealLabel(names)}</span>}
       </button>
       {open && (

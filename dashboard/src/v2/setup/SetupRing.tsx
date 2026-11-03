@@ -5,6 +5,7 @@ import type { Site } from '../../lib/apiMore'
 import { isShared } from '../../lib/me'
 import { can } from '../../lib/permissions'
 import { useTopLayerWhen } from '../../lib/topLayer'
+import { Seal } from '../../features/verified/Marks'
 import { earned } from '../../features/verified/model'
 import { VerifiedPill } from '../../features/verified/VerifiedPill'
 import { useMenu } from '../ui/useMenu'
@@ -53,8 +54,9 @@ export function SetupRing({ site, onGoal, fresh = false, visited = false }: { si
   return (
     <div className="ringw" ref={attach}>
       <button type="button" className="ringb" data-ring={mode} aria-haspopup="dialog" aria-expanded={open} aria-label={words} title={words} onClick={onRing}>
-        <RingMark done={state.done} counted={state.counted} check={mode === 'check'} />
-        <span className="rtext">{words}</span>
+        {/* Done is the same tick as verified, so the pill shows one mark for both, not a ring and a seal. */}
+        {mode === 'check' ? <span className="rseal"><Seal size={16} /></span> : <RingMark done={state.done} counted={state.counted} check={false} />}
+        {mode !== 'check' && <span className="rtext">{words}</span>}
       </button>
       <div ref={menu} className={`mk-menu setupmenu${open ? ' on' : ''}`} role="dialog" aria-label={mode === 'check' ? copy.allSet : copy.title(state.done, state.counted)}>
         {open && (
