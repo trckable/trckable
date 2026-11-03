@@ -1,0 +1,122 @@
+/* The one summary card (SummaryCards.tsx): a row that fills its width, a compact card in it. */
+.mk .sumrow {
+  margin: var(--mk-s3) 0;
+}
+.mk .sum {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 14px var(--mk-s4);
+  border: 1px solid var(--mk-line);
+  border-radius: 12px;
+  background: var(--mk-card);
+  color: var(--mk-text);
+  font: inherit;
+  text-align: left;
+}
+.mk .sum.tap {
+  cursor: pointer;
+}
+.mk .sum.tap:hover {
+  background: var(--mk-hover);
+}
+.mk .sum-l {
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mk-muted);
+}
+.mk .sum-v {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px var(--mk-s2);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+.mk .sum-v .cflag {
+  align-self: center;
+  flex: none;
+}
+.mk .sum-v small {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--mk-muted);
+}
+/* The change: one style in every row, followed by what it is against. */
+.mk .sum-n {
+  margin-right: 0.4em;
+  font-weight: 500;
+  color: var(--mk-muted);
+}
+.mk .sum-n.up {
+  color: var(--mk-lime);
+}
+.mk .sum-n.dn {
+  color: var(--mk-red);
+}
+.mk .sum-d {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--mk-muted);
+}
+/* Speed: the score on its good, needs-work and poor thirds. */
+.mk .sum-g {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  margin: 4px 0;
+}
+.mk .sum-g i {
+  height: 6px;
+  border-radius: 3px;
+}
+.mk .sum-g i:nth-child(1) {
+  background: color-mix(in srgb, var(--mk-lime) 55%, transparent);
+}
+.mk .sum-g i:nth-child(2) {
+  background: color-mix(in srgb, var(--x-amber) 45%, transparent);
+}
+.mk .sum-g i:nth-child(3) {
+  background: color-mix(in srgb, var(--mk-red) 45%, transparent);
+}
+.mk .sum-g b {
+  position: absolute;
+  top: -3px;
+  width: 4px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--mk-text);
+  box-shadow: 0 0 0 2px var(--mk-card);
+  transform: translateX(-50%);
+}
+/* Four across when the pane is wide, two by two when it is narrow (three and five follow the shared row rules). */
+.mk .xkw .sumrow:has(> :nth-child(4):last-child) {
+  --fit-basis: calc((100% - var(--fit-gap)) / 2 - 0.5px);
+}
+@container xkw (--pane-min-701) {
+  .mk .xkw .sumrow:has(> :nth-child(4):last-child) {
+    --fit-basis: calc((100% - 3 * var(--fit-gap)) / 4 - 0.5px);
+  }
+}
+.mk .sk.sumsk {
+  height: 80px;
+  border-radius: 12px;
+}
+/* In a section's list of cards the row stands above them, the whole width, with the gap the cards have between them. */
+.mk .xcards > .xkw {
+  grid-column: 1 / -1;
+}
+.mk .xcards > .xkw .sumrow {
+  margin: 0;
+}

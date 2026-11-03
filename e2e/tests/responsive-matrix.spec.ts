@@ -133,7 +133,7 @@ async function audit(page: Page, chart: { min: number; max: number } | null): Pr
     probe.remove()
 
     // A row of cards fills its row: from the first card's edge to the last one's, on every row.
-    for (const grid of document.querySelectorAll<HTMLElement>('.kcs, .lcards, .mk-fit')) {
+    for (const grid of document.querySelectorAll<HTMLElement>('.kcs, .lcards, .sumrow, .mk-fit')) {
       if (!shown(grid)) continue
       const kids = [...grid.children].filter((c) => shown(c) && getComputedStyle(c).position !== 'absolute' && c.getBoundingClientRect().width > 0)
       if (kids.length < 2) continue

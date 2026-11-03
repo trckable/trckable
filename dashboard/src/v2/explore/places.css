@@ -8,10 +8,6 @@
   height: auto;
   max-height: 320px;
 }
-.mk .kc .kv .cflag {
-  margin-right: 10px;
-  flex: none;
-}
 .mk .xmap path {
   stroke: var(--mk-card);
   stroke-width: 0.5;
@@ -57,15 +53,6 @@
 .mk .xplaces-tabs .mk-seg {
   width: max-content;
   min-width: 100%;
-}
-/* The top country's name is words, not a figure: it takes a smaller size so a long name fits the tile. */
-.mk .kcs.xk:not(.k3) .kc[data-flag] .kv {
-  font-size: clamp(16px, 4.4cqi, 24px);
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  white-space: normal;
-  line-height: 1.15;
 }
 .mk .xplaces-why {
   display: flex;

@@ -1143,14 +1143,6 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .xm.on::before{content:"";position:fixed;inset:0;background:var(--mk-scrim2);z-index:-1}
 .mk .xmi{min-height:48px}
 }
-@media (--xs){
-.mk .kcs.k3 .kc .ki{display:none}
-}
-@media (--xs){
-.mk .kc.ns .kt{flex-wrap:wrap;row-gap:2px}
-.mk .kc.ns .kn{margin-left:0;flex-basis:100%;order:3}
-.mk .kc.ns .kl{flex:1}
-}
 .mk .xp .mfr>span{width:128px}
 @media (--xs){
 .mk .xp .mfr>span{width:96px}
@@ -1184,10 +1176,6 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .xt.xc .xrw .mk-n{white-space:nowrap}
 .mk .xt.xc .xrw .mk-n .vg{margin-right:6px;vertical-align:1px}
 .mk .xt.xc .xrw .mk-n:last-child{color:var(--mk-text)}
-.mk .kc.ns{padding-bottom:var(--mk-s4)}
-.mk .kc.ns .kd{font-size:12px;color:var(--mk-muted);line-height:1.4}
-.mk .kc.ns .kv{margin-bottom:var(--mk-s1)}
-.mk .kcs.xk.k3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .mk .xedc{border:1px solid var(--mk-line);border-radius:var(--mk-r);background:var(--mk-card);padding:var(--mk-s3);display:flex;flex-direction:column;gap:var(--mk-s3);margin-bottom:var(--mk-s3)}
 .mk .xedr{display:flex;gap:var(--mk-s2);align-items:center;flex-wrap:wrap}
 .mk .xedr select{flex:1;min-width:160px}
@@ -1230,8 +1218,6 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .xgrab{display:block;width:36px;height:4px;border-radius:2px;background:var(--mk-grab);margin:0 auto var(--mk-s2)}
 .mk .xmx{width:44px;height:44px}
 .mk .xmr{min-height:48px}
-.mk .kcs.xk.k3{gap:var(--mk-s2)}
-.mk .kcs.xk.k3 .kc{padding:var(--mk-s3) var(--mk-s3) var(--mk-s3)}
 .mk .xk .kc .kv{font-size:22px}
 }
 /* Round 11: the phone hero and the chart header, as the walkthrough has them. */

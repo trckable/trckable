@@ -427,17 +427,7 @@
 .mk .kg i:nth-child(3){background:color-mix(in srgb,var(--mk-red) 45%,transparent)}
 .mk .kg b{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:var(--mk-text);box-shadow:0 0 0 2px var(--mk-card);transform:translateX(-50%)}
 /* Plain score cards: left aligned like the Overview's, the scale across the card. */
-.mk .xcards .kc.ns{display:flex;flex-direction:column;align-items:stretch;text-align:left;justify-content:flex-start}
-.mk .xcards .kc.ns .kt{justify-content:flex-start}
-.mk .xcards .kc.ns .kv{justify-content:flex-start;text-align:left;margin-block:var(--mk-s2) 0}
-.mk .xcards .kc.ns .kd{text-align:left}
-.mk .xcards .kg{width:100%}
 .mk .xcards .xkw .kn{width:fit-content!important;max-width:max-content;align-self:center}
-@media (--xs){
-  .mk .xcards .kcs.k3{grid-template-columns:minmax(0,1fr)!important}
-  .mk .xcards .kc.ns .kt{flex-wrap:nowrap}
-  .mk .xcards .kc.ns .kn{margin-left:auto}
-}
 /* Bars that carry a rating. */
 .mk .xcards .mk-bar.g-good>i{background:linear-gradient(90deg,color-mix(in srgb,var(--mk-lime) 62%,transparent),color-mix(in srgb,var(--mk-lime) 28%,transparent))!important}
 .mk .xcards .mk-bar.g-mid>i{background:linear-gradient(90deg,color-mix(in srgb,var(--x-amber) 62%,transparent),color-mix(in srgb,var(--x-amber) 28%,transparent))!important}

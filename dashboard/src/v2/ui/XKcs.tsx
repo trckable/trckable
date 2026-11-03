@@ -1,10 +1,10 @@
-// The cards at the top of an Explore section: the walkthrough's four numbers with their line, and a plainer card
-// (a number, its tag and what is usual) for search and speed.
+// The walkthrough's four numbers with their line, and the plain summary row of search, places, speed and pages.
 import { fmtPct } from '../../lib/format'
 import { copy } from '../explore/copy'
 import { Flag } from './Flag'
 import { Spark } from './KpiCard'
 import { RollText } from './RollText'
+import { SummaryCards } from './SummaryCards'
 import { XIco } from './XIcons'
 import type { Kc, Xkc } from '../explore/types'
 
@@ -45,34 +45,20 @@ export function XKcs({ items }: { items: Kc[] }) {
   )
 }
 
-export function XKcsPlain({ items, three }: { items: Xkc[]; three?: boolean }) {
+export function XKcsPlain({ items }: { items: Xkc[] }) {
   return (
-    <div className="xkw">
-    <div className={`kcs xk${three ? ' k3' : ''}`}>
-      {items.map((k) => (
-        <div key={k.label} className={`kc ns ${k.tone === 'dn' ? 'dn' : ''}`} data-flag={k.flag ? '1' : undefined}>
-          <div className="kt">
-            <span className="ki">
-              <XIco name={k.icon} className="" style={{ color: k.tone === 'dn' ? 'var(--mk-red)' : 'var(--mk-lime)' }} />
-            </span>
-            <span className="kl" title={k.label}>{k.label}</span>
-            <span className={`kn ${k.tone}`}>{k.tag}</span>
-          </div>
-          <div className="kv">
-            {k.flag && <Flag code={k.flag} width={26} />}
-            <RollText text={k.val} />
-            {k.unit && <small>{k.unit}</small>}
-          </div>
-          {k.at !== undefined && (
-            <div className="kg" aria-hidden="true">
-              <i /><i /><i />
-              <b style={{ left: `${k.at * 100}%` }} />
-            </div>
-          )}
-          <div className="kd">{k.detail}</div>
-        </div>
-      ))}
-    </div>
-    </div>
+    <SummaryCards
+      items={items.map((k) => ({
+        key: k.label,
+        label: k.label,
+        val: k.val,
+        unit: k.unit,
+        tag: k.tag,
+        tone: k.tone,
+        sub: k.detail,
+        flag: k.flag && <Flag code={k.flag} width={22} />,
+        at: k.at,
+      }))}
+    />
   )
 }

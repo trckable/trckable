@@ -57,10 +57,10 @@ async function squeezed(page: Page): Promise<string[]> {
     const probe = document.createElement('span')
     probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap'
     document.body.appendChild(probe)
-    for (const card of document.querySelectorAll<HTMLElement>('#xp .kc')) {
+    for (const card of document.querySelectorAll<HTMLElement>('#xp .kc, #xp .sum')) {
       if (card.scrollWidth > card.clientWidth + 1) out.push(`card overflows: ${card.textContent}`)
-      for (const v of card.querySelectorAll<HTMLElement>('.kv')) if (v.scrollWidth > v.clientWidth + 1) out.push(`number clipped: ${v.textContent}`)
-      for (const l of card.querySelectorAll<HTMLElement>('.kl')) {
+      for (const v of card.querySelectorAll<HTMLElement>('.kv, .sum-v')) if (v.scrollWidth > v.clientWidth + 1) out.push(`number clipped: ${v.textContent}`)
+      for (const l of card.querySelectorAll<HTMLElement>('.kl, .sum-l')) {
         const style = getComputedStyle(l)
         probe.style.font = style.font
         const longest = Math.max(0, ...(l.textContent ?? '').split(/\s+/).map((w) => ((probe.textContent = w), probe.getBoundingClientRect().width)))

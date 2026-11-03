@@ -186,7 +186,7 @@ test('speed that no visit measured says so and lists no pages', async ({ page })
   await open(page, 'speed')
   await expect(card(page).locator('.xempty')).toContainText('No page measured yet')
   await expect(card(page).locator('.xt .xrw')).toHaveCount(0)
-  await expect(card(page).locator('.kcs .kc')).toHaveCount(0)
+  await expect(card(page).locator('.sumrow .sum')).toHaveCount(0)
 })
 
 test('what needs payments shows no figures that are not there', async ({ page }) => {

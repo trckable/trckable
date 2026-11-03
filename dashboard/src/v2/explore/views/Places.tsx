@@ -57,9 +57,9 @@ export function tiles(c: Table, r: Table, ci: Table): Xkc[] {
 function TilesLoading() {
   return (
     <div className="xkw" aria-hidden="true">
-      <div className="kcs xk">
+      <div className="sumrow">
         {[0, 1, 2, 3].map((i) => (
-          <i key={i} className="sk kcsk" />
+          <i key={i} className="sk sumsk" />
         ))}
       </div>
     </div>
@@ -108,6 +108,8 @@ export function PlacesCard({ x, c, tab: asked, onRead, onSay }: { x: XCtx; c: Da
   const ready = rc.state === 'ok' && rr.state === 'ok' && rci.state === 'ok'
   const cx: XCtx = { ...x, tabName: copy.sub[tab] }
   return (
+    <>
+    {ready ? <XKcsPlain items={tiles(rc.data as Table, rr.data as Table, rci.data as Table)} /> : rc.state !== 'error' && <TilesLoading />}
     <section id="xc-places" data-xcard="places" className="xcp wide xcp-in">
       <div className="xcp-b">
         {why && <div className="xplaces-why">{why}</div>}
@@ -116,17 +118,10 @@ export function PlacesCard({ x, c, tab: asked, onRead, onSay }: { x: XCtx; c: Da
             {mover ? (mover.delta > 0 ? copy.whyRose : copy.whyFell)(mover.name, fmtInt(mover.before), fmtInt(mover.now), `${mover.delta > 0 ? '+' : '−'}${fmtInt(Math.abs(mover.delta))}`) : copy.whyNone}
           </p>
         )}
-      {ready ? (
-        <>
-          <XKcsPlain items={tiles(rc.data as Table, rr.data as Table, rci.data as Table)} />
-          {(rc.data as Table).rows.length > 0 && (
-            <Suspense fallback={<Loading height={190} />}>
-              <PlacesMap rows={(rc.data as Table).rows} onPick={(code) => x.pick('country', code)} />
-            </Suspense>
-          )}
-        </>
-      ) : (
-        rc.state !== 'error' && <TilesLoading />
+      {ready && (rc.data as Table).rows.length > 0 && (
+        <Suspense fallback={<Loading height={190} />}>
+          <PlacesMap rows={(rc.data as Table).rows} onPick={(code) => x.pick('country', code)} />
+        </Suspense>
       )}
       <div className="xplaces-tabs">
         <SegmentedSwitch label={words.tabs} value={tab} onChange={setTab} items={list.map((t) => ({ value: t, label: HEAD[t] }))} />
@@ -135,5 +130,6 @@ export function PlacesCard({ x, c, tab: asked, onRead, onSay }: { x: XCtx; c: Da
       {tab === 'timezones' && <XNote>{words.noteZones}</XNote>}
       </div>
     </section>
+    </>
   )
 }

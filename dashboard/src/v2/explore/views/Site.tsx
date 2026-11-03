@@ -66,7 +66,7 @@ export function Speed({ x, d }: { x: XCtx; d: SpeedModel }) {
   if (rows.length === 0 && devices.length === 0 && !d.kcs.some((k) => k.detail && k.detail !== copy.nothingMeasured)) return <SpeedEmpty x={x} />
   return (
     <>
-      <XKcsPlain items={d.kcs} three />
+      <XKcsPlain items={d.kcs} />
       {devices.length > 0 && (
         <>
           <XSec a={copy.byDevice} b={copy.byLcp} />

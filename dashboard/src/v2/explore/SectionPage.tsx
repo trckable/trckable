@@ -10,7 +10,10 @@ import { useTab, type DataCtx } from './data/useExplore'
 import { SectionBody } from './SectionBody'
 import { isPlaceTab, PlacesCard } from './views/Places'
 import { HOSTED, relatedTo, TABS } from './sections'
-import type { Row, Section, Tab } from './types'
+import type { Paths as PathsModel, Row, Section, Tab, Table } from './types'
+import { XKcsPlain } from '../ui/XKcs'
+import { PathsTiles } from './views/Paths'
+import { TopTiles } from './views/TopTiles'
 import { biggestMover, whyContext } from './whyLine'
 
 /** Tables that already are cards with their own headings. */
@@ -66,7 +69,12 @@ function Card({ tab, x, c, open, onRead, onSay }: { tab: Tab; x: XCtx; c: DataCt
     </p>
   )
   const cx: XCtx = { ...x, slim: true, tabName: copy.sub[tab], limit: bare ? x.limit : n, showAll: bare ? x.showAll : () => setN(9999) }
+  const lead = ok && !bare ? (r.data as Table) : null
   return (
+    <>
+    {lead?.tops && lead.tops.length > 0 && <TopTiles tops={lead.tops} x={x} />}
+    {lead?.engage && <XKcsPlain items={lead.engage} />}
+    {tab === 'paths' && ok && <PathsTiles d={r.data as unknown as PathsModel} />}
     <section ref={box} id={`xc-${tab}`} data-xcard={tab} className={`${bare ? 'xcp-bare' : 'xcp'}${bare || WIDE.includes(tab) ? ' wide' : ''}${seen ? ' xcp-in' : ''}`}>
       {!bare && <h3 className="xcp-h">{copy.sub[tab]}{why}</h3>}
       {strip}
@@ -74,6 +82,7 @@ function Card({ tab, x, c, open, onRead, onSay }: { tab: Tab; x: XCtx; c: DataCt
       {bare && why && <div className="xcp-foot">{why}</div>}
       {bare && strip}
     </section>
+    </>
   )
 }
 
