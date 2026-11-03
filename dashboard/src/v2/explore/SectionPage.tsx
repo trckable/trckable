@@ -1,6 +1,7 @@
 // A section as one page: all its tables as cards, read as they come into view, so nothing hides behind a tab.
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
-import { CircleHelp } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
+import { fmtInt } from '../../lib/format'
 import { isShared } from '../../lib/me'
 import { useV2Extras } from '../slots'
 import { copy } from './copy'
@@ -8,7 +9,8 @@ import type { XCtx } from './ctx'
 import { useTab, type DataCtx } from './data/useExplore'
 import { SectionBody } from './SectionBody'
 import { HOSTED, relatedTo, TABS } from './sections'
-import type { Section, Tab } from './types'
+import type { Row, Section, Tab } from './types'
+import { biggestMover, whyContext } from './whyLine'
 
 /** Tables that already are cards with their own headings. */
 const BARE: Tab[] = ['changed', 'overview', 'funnels', 'speed', 'search', 'ai', 'sales']
@@ -42,20 +44,34 @@ function Card({ tab, x, c, open, onRead, onSay }: { tab: Tab; x: XCtx; c: DataCt
   }, [seen])
   const bare = BARE.includes(tab)
   const { askPeekNow } = useV2Extras()
-  // Peek's "Why?": a short question, since Peek already knows the page, the period and the filters; once the card has answered, where the build has Peek. A card with nothing in it hides it in the CSS.
+  // Peek's "Why?": a short question, since Peek already knows the page, the period and the filters, with the card's own numbers beside it; once the card has answered, where the build has Peek. The card's biggest mover shows at once, before any answer. A card with nothing in it hides it in the CSS.
   const canAsk = askPeekNow && !isShared() && (ok || (seen && HOSTED.includes(tab)))
+  const [asked, setAsked] = useState(false)
+  const rows = ok ? ((r.data as { rows?: Row[] }).rows ?? []) : []
+  const ask = () => {
+    if (!asked && askPeekNow) askPeekNow(copy.cardAsk(copy.sub[tab]), whyContext(rows, { metric: 'visitors', period: `${x.query.from} to ${x.query.to}`, compare: x.view.compare }))
+    setAsked(!asked)
+  }
   const why = canAsk && (
-    <button type="button" className="xcp-why" data-ask-peek="1" onClick={() => askPeekNow(copy.cardAsk(copy.sub[tab]))}>
-      <CircleHelp size={13} strokeWidth={1.9} aria-hidden="true" />
+    <button type="button" className="xcp-why" data-ask-peek="1" aria-expanded={asked} onClick={ask}>
+      <Sparkles size={13} strokeWidth={1.9} aria-hidden="true" />
       {copy.cardWhy}
     </button>
+  )
+  const mover = biggestMover(rows)
+  const strip = canAsk && asked && rows.length > 0 && (
+    <p className="xcp-line" data-why-line="1">
+      {mover ? (mover.delta > 0 ? copy.whyRose : copy.whyFell)(mover.name === '/' ? copy.homePage : mover.name, fmtInt(mover.before), fmtInt(mover.now), `${mover.delta > 0 ? '+' : '−'}${fmtInt(Math.abs(mover.delta))}`) : copy.whyNone}
+    </p>
   )
   const cx: XCtx = { ...x, slim: true, tabName: copy.sub[tab], limit: bare ? x.limit : n, showAll: bare ? x.showAll : () => setN(9999) }
   return (
     <section ref={box} id={`xc-${tab}`} data-xcard={tab} className={`${bare ? 'xcp-bare' : 'xcp'}${bare || WIDE.includes(tab) ? ' wide' : ''}${seen ? ' xcp-in' : ''}`}>
       {!bare && <h3 className="xcp-h">{copy.sub[tab]}{why}</h3>}
+      {strip}
       {seen ? <div className={`xcp-b${ok && (r as { stale?: boolean }).stale ? ' is-stale' : ''}`} aria-busy={ok && !!(r as { stale?: boolean }).stale}><SectionBody tab={tab} x={cx} r={r} still /></div> : <div className="xcp-wait" />}
       {bare && why && <div className="xcp-foot">{why}</div>}
+      {bare && strip}
     </section>
   )
 }

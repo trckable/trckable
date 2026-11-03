@@ -563,6 +563,7 @@
 .mk .xcp-h:has(.xcp-why){display:flex;align-items:center;justify-content:space-between;gap:var(--mk-s2)}
 .mk .xcp-why{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border:0;border-radius:8px;background:none;color:var(--mk-muted);font:inherit;font-size:12px;font-weight:500;cursor:pointer}
 .mk .xcp-why:hover,.mk .xcp-why:focus-visible{background:var(--mk-band);color:var(--mk-text)}
+.mk .xcp-line{margin:0 0 var(--mk-s2);padding:var(--mk-s2) var(--mk-s3);border-radius:10px;background:var(--mk-band);color:var(--mk-text);font-size:13px}
 .mk .xcp-foot{display:flex;justify-content:flex-end;padding-top:var(--mk-s2)}
 .mk .xcp:has(.xempty,.lkc) .xcp-why,.mk .xcp-bare:has(.xempty,.lkc) .xcp-why{display:none}
 .mk .xnext{display:flex;flex-wrap:wrap;gap:var(--mk-s2);margin-top:var(--mk-s4)}
