@@ -7,7 +7,15 @@ import type { Site } from '../../lib/api'
 import { answersCopy as c } from './copy'
 
 export function NoEngine() {
-  return <XEmpty title={c.empty.noEngine[0]} hint={c.empty.noEngine[1]} />
+  return (
+    <XEmpty title={c.empty.noEngine[0]} hint={c.empty.noEngine[1]}>
+      {can('answers.manage') && (
+        <a className="xb" href={c.docs} target="_blank" rel="noreferrer">
+          {c.empty.setUp}
+        </a>
+      )}
+    </XEmpty>
+  )
 }
 
 export function NoQuestions({ site }: { site: Site }) {

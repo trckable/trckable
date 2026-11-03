@@ -11,6 +11,8 @@ export const heatCopy = defineCopy('heatmap', {
   views: (n: number) => `${fmtInt(n)} ${n === 1 ? 'view' : 'views'}`,
   none: 'Nothing counted for this page yet.',
   noneWidth: 'Nothing counted at this width.',
+  off: 'Heatmaps are off for this site.',
+  turnOn: 'Turn on heatmaps',
   loading: 'Loading',
   elements: 'Most clicked',
   forms: 'Forms',

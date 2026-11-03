@@ -136,5 +136,4 @@ export const copy = defineCopy('briefing', {
   loading: 'Reading the numbers',
   // A site before its first visit.
   freshLabel: 'Waiting for the first visit',
-  empty: 'Nothing to tell yet: no visits in this period.',
 })

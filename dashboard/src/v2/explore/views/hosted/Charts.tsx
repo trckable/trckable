@@ -16,6 +16,9 @@ import type { Report, ReportQuery, Row } from '../../../../lib/api'
 import { type Heatmap, more } from '../../../../lib/apiMore'
 import { XEmpty, XError, XNote, XSub } from '../../../ui/XBits'
 import { FunnelShape } from '../../../ui/FunnelShape'
+import { laterCopy } from '../../../../features/cards/copyLater'
+import { can } from '../../../../lib/permissions'
+import { copy } from '../../copy'
 import type { XCtx } from '../../ctx'
 import { XChart } from './XChart'
 import '../../../../charts/charts.css'
@@ -26,6 +29,25 @@ export type ChartTab = 'over-time' | 'hours' | 'revenue-map' | 'visit-to-sale' |
 
 const HOURS = Array.from({ length: 24 }, (_, h) => chartCopy.rhythm.hour(h))
 const NONE = { caption: '', columns: [], rows: [] }
+
+/** A chart with nothing to draw: payments not connected, the one step; otherwise a longer period when there is one. */
+function NoneYet({ x }: { x: XCtx }) {
+  const connect = !x.conn.rev && can('payment.manage')
+  return (
+    <XEmpty title={kitLater.empty} hint="">
+      {connect && (
+        <button type="button" className="xb" onClick={() => x.connect('rev')}>
+          {laterCopy.noRevenueAction}
+        </button>
+      )}
+      {!connect && x.widen && (
+        <button type="button" className="xb" onClick={x.widen}>
+          {copy.widen}
+        </button>
+      )}
+    </XEmpty>
+  )
+}
 
 function Hours({ x, query }: { x: XCtx; query: ReportQuery }) {
   const [data, setData] = useState<{ key: string; h: Heatmap | null } | null>(null)
@@ -108,7 +130,7 @@ function Steps({ x, report, query, tab }: { x: XCtx; report: Report; query: Repo
   if (!charts) return <Loading height={190} />
   if (tab === 'visit-to-sale') {
     const steps = charts.conversion ?? []
-    if (steps.length < 2 || !steps[0].visitors) return <XEmpty title={kitLater.empty} hint="" />
+    if (steps.length < 2 || !steps[0].visitors) return <NoneYet x={x} />
     const m = funnelModel(steps)
     return (
       <XChart id="funnel" title={chartCopy.funnel.title} question={chartCopy.funnel.question} table={m.table} foot={<XNote>{chartCopy.funnel.foot}</XNote>}>
@@ -117,7 +139,7 @@ function Steps({ x, report, query, tab }: { x: XCtx; report: Report; query: Repo
     )
   }
   const spans = charts.to_convert
-  if (!spans || !spans.some((s) => s.sales > 0)) return <XEmpty title={kitLater.empty} hint="" />
+  if (!spans || !spans.some((s) => s.sales > 0)) return <NoneYet x={x} />
   const m = convertModel(spans)
   const c = chartCopy.convert
   return (

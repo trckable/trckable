@@ -1,7 +1,11 @@
 // The page's one answer: how the site is right now (Up, Down for 9m, Quiet for 2h) and the period's uptime beside it, one
 // line of what happened, and the four figures the incident rows below add up to. Only the time we were watching counts.
 import { Figure } from '../../figures/Figure'
+import type { Site } from '../../lib/api'
 import { fmtInt } from '../../lib/format'
+import { can } from '../../lib/permissions'
+import { openSettings } from '../../lib/settings'
+import { waiting } from '../../v2/copy'
 import { copy } from './copy'
 import { duration, isDown, tooShort, uptimeOf, type Standing } from './model'
 import { PageStats } from '../../v2/ui/PageStats'
@@ -44,7 +48,7 @@ function uptimeText(f: Figures, w: Watch): { value: string; short: string } {
   return { value: up ? up.pct.toFixed(1) + '%' : copy.notWatched, short }
 }
 
-export function Hero({ now, at, f, w, over }: { now: Standing; at: number; f: Figures; w: Watch; over: string }) {
+export function Hero({ now, at, f, w, over, site }: { now: Standing; at: number; f: Figures; w: Watch; over: string; site?: Site }) {
   if (w.span <= 0) {
     return (
       <section className="inc-hero" aria-label={copy.title}>
@@ -53,6 +57,11 @@ export function Hero({ now, at, f, w, over }: { now: Standing; at: number; f: Fi
           <span className="inc-pct">{copy.notWatched}</span>
         </p>
         <p className="inc-line">{copy.notWatchedNote(w.since ?? '')}</p>
+        {site && can('site.settings') && (
+          <button type="button" className="xb" onClick={() => openSettings(site, 'install')}>
+            {waiting.check}
+          </button>
+        )}
       </section>
     )
   }
