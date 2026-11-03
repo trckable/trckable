@@ -12,6 +12,7 @@ import { ROW_DIM } from '../sections'
 import type { Tab, Table } from '../types'
 import { PeopleTable } from './PeopleTable'
 import { rowWords } from '../pointer'
+import { deviceIcon } from '../tabIcons'
 
 interface Cfg {
   head: string
@@ -84,6 +85,7 @@ export function Tables({ tab, x, d }: { tab: Tab; x: XCtx; d: Table }) {
         unit={c.unit}
         mono={c.mono}
         flags={c.flags}
+        icon={tab === 'devices' ? (r) => deviceIcon(r.val) : undefined}
         selected={valueOf(x.filters, dim)}
         onPick={dim ? (r) => x.pick(dim, r.val) : undefined}
         dim={dim}

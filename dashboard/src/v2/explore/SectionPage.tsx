@@ -14,6 +14,7 @@ import type { Paths as PathsModel, Row, Section, Tab, Table } from './types'
 import { XKcsPlain } from '../ui/XKcs'
 import { PathsTiles } from './views/Paths'
 import { TopTiles } from './views/TopTiles'
+import { TAB_ICONS } from './tabIcons'
 import { biggestMover, whyContext } from './whyLine'
 
 /** Tables that already are cards with their own headings. */
@@ -68,6 +69,7 @@ function Card({ tab, x, c, open, onRead, onSay }: { tab: Tab; x: XCtx; c: DataCt
       {mover ? (mover.delta > 0 ? copy.whyRose : copy.whyFell)(mover.name === '/' ? copy.homePage : mover.name, fmtInt(mover.before), fmtInt(mover.now), `${mover.delta > 0 ? '+' : '−'}${fmtInt(Math.abs(mover.delta))}`) : copy.whyNone}
     </p>
   )
+  const Ico = TAB_ICONS[tab]
   const cx: XCtx = { ...x, slim: true, tabName: copy.sub[tab], limit: bare ? x.limit : n, showAll: bare ? x.showAll : () => setN(9999) }
   const lead = ok && !bare ? (r.data as Table) : null
   return (
@@ -76,7 +78,7 @@ function Card({ tab, x, c, open, onRead, onSay }: { tab: Tab; x: XCtx; c: DataCt
     {lead?.engage && <XKcsPlain items={lead.engage} />}
     {tab === 'paths' && ok && <PathsTiles d={r.data as unknown as PathsModel} />}
     <section ref={box} id={`xc-${tab}`} data-xcard={tab} className={`${bare ? 'xcp-bare' : 'xcp'}${bare || WIDE.includes(tab) ? ' wide' : ''}${seen ? ' xcp-in' : ''}`}>
-      {!bare && <h3 className="xcp-h">{copy.sub[tab]}{why}</h3>}
+      {!bare && <h3 className="xcp-h">{Ico ? <span className="xcp-t"><Ico size={14} aria-hidden="true" />{copy.sub[tab]}</span> : copy.sub[tab]}{why}</h3>}
       {strip}
       {seen ? <div className={`xcp-b${ok && (r as { stale?: boolean }).stale ? ' is-stale' : ''}`} aria-busy={ok && !!(r as { stale?: boolean }).stale}><SectionBody tab={tab} x={cx} r={r} still /></div> : <div className="xcp-wait" />}
       {bare && why && <div className="xcp-foot">{why}</div>}

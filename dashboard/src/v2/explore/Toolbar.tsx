@@ -9,6 +9,7 @@ import { copy } from './copy'
 import { chipName, dimWord } from './filters'
 import { MoreMenu, PickMenu, type ViewsProps } from './menus'
 import { FILTER_DIMS, TABS } from './sections'
+import { TAB_ICONS } from './tabIcons'
 import type { Connected, FilterDim, Option, Section, Tab } from './types'
 
 /** The tabs that read the payments. */
@@ -122,7 +123,7 @@ export function Toolbar(p: ToolbarProps) {
       </div>
       {p.noTabs && <p className="xpage-desc">{copy.names[p.section][1]}</p>}
       <Chips p={p} />
-      {!p.noTabs && tabs.length > 1 && <XSub label={name} attr="xtab" value={p.tab} items={tabs.map((t) => ({ key: t, label: copy.sub[t], dot: (t === 'search' && !p.conn.search) || (!p.conn.rev && PAID.includes(t)) ? copy.notConnected : undefined }))} onPick={p.onTab} />}
+      {!p.noTabs && tabs.length > 1 && <XSub label={name} attr="xtab" value={p.tab} items={tabs.map((t) => ({ key: t, label: copy.sub[t], icon: TAB_ICONS[t], dot: (t === 'search' && !p.conn.search) || (!p.conn.rev && PAID.includes(t)) ? copy.notConnected : undefined }))} onPick={p.onTab} />}
     </>
   )
 }
