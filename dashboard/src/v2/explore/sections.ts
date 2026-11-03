@@ -21,7 +21,7 @@ const EVERY: Record<Section, Tab[]> = {
   places: ['countries', 'regions', 'cities', 'languages', 'revmap', 'people'],
   tech: ['devices', 'browsers', 'bversion', 'screens'],
   results: ['funnels', 'retention', 'vsale', 'toconvert', 'flow'],
-  sales: ['sales', 'buyers'],
+  sales: ['sales', 'payments', 'customers', 'buyers'],
   speed: ['speed'],
   mentions: ['mentions'],
   links: ['outbound', 'bots'],
@@ -76,4 +76,4 @@ export const FILTER_DIMS: FilterDim[] = ['referrer', 'page', 'country', 'device'
 export const ROW_DIM: Partial<Record<Tab, FilterDim>> = { pages: 'page', sources: 'referrer', referrers: 'referrer', utm: 'referrer', countries: 'country', devices: 'device' }
 
 /** The tabs whose numbers their own card reads (views/Hosted.tsx). */
-export const HOSTED: Tab[] = ['highlights', 'overtime', 'hours', 'revmap', 'earners', 'sells', 'people', 'buyers', 'retention', 'vsale', 'toconvert', 'flow', 'ai', 'answers']
+export const HOSTED: Tab[] = ['highlights', 'overtime', 'hours', 'revmap', 'earners', 'sells', 'people', 'buyers', 'payments', 'customers', 'retention', 'vsale', 'toconvert', 'flow', 'ai', 'answers']

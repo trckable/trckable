@@ -389,7 +389,7 @@ func cacheKey(p query.Params) string {
 	for _, g := range p.PageGoals {
 		gs = append(gs, "goal:"+g.Name+"="+g.Path)
 	}
-	return fmt.Sprintf("%s|%d|%d|%s|%s|%v|%v|%v|%s|%s|%v|%v|%v|%s|%s|%v|%v|%d|%d|%d|%v|%s", p.Site, p.From.Unix(), p.To.Unix(), p.TZ, p.Bucket, p.SundayWeeks, p.Daily, p.Deep, strings.Join(fs, "&"), p.Currency, p.Test, p.Revenue, p.Goals, p.Attribution, strings.Join(gs, "&"), p.Sales, p.SalePages, p.Limit, p.Buyers, p.NewReferrers, p.LinkRevenue, p.SignupGoal)
+	return fmt.Sprintf("%s|%d|%d|%s|%s|%v|%v|%v|%s|%s|%v|%v|%v|%s|%s|%v|%v|%d|%d|%d|%v|%s|%d|%d|%d|%d", p.Site, p.From.Unix(), p.To.Unix(), p.TZ, p.Bucket, p.SundayWeeks, p.Daily, p.Deep, strings.Join(fs, "&"), p.Currency, p.Test, p.Revenue, p.Goals, p.Attribution, strings.Join(gs, "&"), p.Sales, p.SalePages, p.Limit, p.Buyers, p.NewReferrers, p.LinkRevenue, p.SignupGoal, p.PayList, p.PayOffset, p.CustList, p.CustOffset)
 }
 
 // shareReportRange is the longest period a public link may ask for.

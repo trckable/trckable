@@ -324,3 +324,59 @@ func TestBuyers(t *testing.T) {
 		}
 	})
 }
+
+// The payment lists: every payment newest first with its visitor and the source
+// that brought them, a refund marked, paged; and one row a customer, the
+// biggest spender first, with the source of their first payment.
+func TestPayLists(t *testing.T) {
+	both(t, func(t *testing.T, q Q) {
+		q = withPayments(q)
+		p := sep10
+		p.Bucket, p.Currency, p.Revenue, p.PayList, p.CustList = "hour", "USD", true, 3, 10
+		res, err := q.Report(context.Background(), p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		eq(t, "payments in all", res.PayTotal, 4)
+		eq(t, "a page", len(res.PayList), 3)
+		eq(t, "newest first", res.PayList[0].Amount, int64(5000))
+		eq(t, "its visitor, base 36", res.PayList[0].Visitor, "1")
+		eq(t, "its source", res.PayList[0].Referrer, "google.com")
+		eq(t, "its billing country", res.PayList[0].Country, "DE")
+		eq(t, "renewals are payments too", res.PayList[1].Kind, "renewal")
+		eq(t, "a renewal's visitor", res.PayList[1].Visitor, "3")
+		eq(t, "no visit known", res.PayList[2].Visitor, "")
+		eq(t, "no source for it", res.PayList[2].Channel, "")
+		p.PayOffset = 3
+		if res, _ = q.Report(context.Background(), p); len(res.PayList) != 1 || res.PayList[0].Refunded != 500 || res.PayList[0].Channel != "AI" {
+			t.Fatalf("second page, the refunded one: %+v", res.PayList)
+		}
+		eq(t, "customers in all", res.CustTotal, 4)
+		eq(t, "the biggest spender first", res.CustList[0].Spent, int64(5000))
+		eq(t, "orders", res.CustList[0].Orders, int64(1))
+		eq(t, "net of the refund", res.CustList[1].Spent, int64(1500))
+		eq(t, "refunded", res.CustList[1].Refunded, int64(500))
+		eq(t, "first source", res.CustList[1].Channel, "AI")
+		if res.CustList[0].ID == "" || res.CustList[0].ID == res.CustList[1].ID {
+			t.Fatalf("ids tell rows apart: %+v", res.CustList)
+		}
+		// Not asked for, not read.
+		p.PayList, p.CustList = 0, 0
+		if res, _ = q.Report(context.Background(), p); res.PayList != nil || res.CustList != nil {
+			t.Fatalf("not asked for: %+v %+v", res.PayList, res.CustList)
+		}
+		// A customer who paid twice is one row.
+		p.From, p.To, p.CustList = time.Date(2026, 9, 10, 0, 0, 0, 0, time.UTC), time.Date(2027, 4, 1, 0, 0, 0, 0, time.UTC), 10
+		res, err = q.Report(context.Background(), p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, c := range res.CustList {
+			if c.Orders == 2 {
+				eq(t, "two orders, net", c.Spent, int64(3500))
+				return
+			}
+		}
+		t.Fatalf("B paid twice: %+v", res.CustList)
+	})
+}

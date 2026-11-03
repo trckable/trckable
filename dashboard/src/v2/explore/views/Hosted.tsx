@@ -20,12 +20,14 @@ const AnswersTab = lazy(() => import('../../../features/answers/AnswersTab'))
 const Earners = lazy(() => import('./hosted/Revenue').then((m) => ({ default: m.Earners })))
 const SalePages = lazy(() => import('./hosted/Revenue').then((m) => ({ default: m.SalePages })))
 const Buyers = lazy(() => import('./hosted/Lines').then((m) => ({ default: m.Buyers })))
+const Payments = lazy(() => import('./hosted/PayLists').then((m) => ({ default: m.Payments })))
+const Customers = lazy(() => import('./hosted/PayLists').then((m) => ({ default: m.Customers })))
 const People = lazy(() => import('./hosted/Lines').then((m) => ({ default: m.People })))
 const HighlightLines = lazy(() => import('./hosted/Lines').then((m) => ({ default: m.HighlightLines })))
 const Retention = lazy(() => import('./hosted/Retention').then((m) => ({ default: m.XRetention })))
 const JourneyDialog = lazy(() => import('../../../features/journey/JourneyDialog').then((m) => ({ default: m.JourneyDialog })))
 
-const PAID: HostedTab[] = ['revmap', 'earners', 'sells', 'buyers', 'vsale', 'toconvert']
+const PAID: HostedTab[] = ['revmap', 'earners', 'sells', 'buyers', 'payments', 'customers', 'vsale', 'toconvert']
 const CHART: Partial<Record<HostedTab, ChartTab>> = { overtime: 'over-time', hours: 'hours', revmap: 'revenue-map', vsale: 'visit-to-sale', toconvert: 'to-convert', flow: 'flow' }
 
 function Highlighted({ x }: { x: XCtx }) {
@@ -60,6 +62,8 @@ export function Hosted({ tab, x }: { tab: HostedTab; x: XCtx }) {
       {tab === 'earners' && <Earners x={x} report={report} first={first} onAttr={setFirst} />}
       {tab === 'sells' && <SalePages x={x} query={q} />}
       {tab === 'buyers' && <Buyers x={x} query={q} />}
+      {tab === 'payments' && <Payments x={x} query={q} onPick={setVisitor} />}
+      {tab === 'customers' && <Customers x={x} query={q} onPick={setVisitor} />}
       {tab === 'retention' && <Retention x={x} query={q} />}
       {tab === 'people' && <People x={x} onPick={setVisitor} />}
       {tab === 'ai' && <AiTab x={x} />}

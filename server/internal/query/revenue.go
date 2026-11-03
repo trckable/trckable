@@ -232,6 +232,17 @@ func (q Q) revenue(ctx context.Context, conn *sql.Conn, p Params, cte string, ct
 		}
 	}
 
+	if p.PayList > 0 {
+		if res.PayList, res.PayTotal, err = payList(ctx, conn, sqlText, args, p); err != nil {
+			return err
+		}
+	}
+	if p.CustList > 0 {
+		if res.CustList, res.CustTotal, err = custList(ctx, conn, sqlText, args, p); err != nil {
+			return err
+		}
+	}
+
 	// Revenue by every breakdown dimension, from the attributed session.
 	dims := DefaultDims
 	if p.LinkRevenue {
