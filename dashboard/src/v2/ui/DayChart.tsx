@@ -1,7 +1,7 @@
 // The period's visitors drawn the way the walkthrough draws it: a grey line, lit where it rose above its usual (and red
 // where it fell under), the period before as a thin dashed line beside it, the hours still to come shaded, and a dot
 // that pulses at "now". The line never runs into hours that have not happened. Hovering reads one point in the line above.
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 import type { Bucket } from '../../lib/api'
 import { copy } from '../briefing/copy'
@@ -16,6 +16,7 @@ import { useGlide } from './glide'
 import { FutureHatch } from './FutureHatch'
 import { NoteMarks, SaleMarks, firstData } from './ChartMarks'
 import { useLabelLayout } from './labelLayout'
+import { segments, stretch, type Pt } from './smooth'
 import './chartLayer.css'
 
 export interface ChartPoint {
@@ -120,7 +121,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
   const step = niceStep(mx)
   const grid: number[] = []
   for (let g = 0; g < mx; g += step) grid.push(g)
-  const line = drawn.map((p) => `${X(p.i)},${Y(p.v)}`).join(' ')
+  const fill = `chf${useId().replace(/\W/g, '')}`
   const last = pts[pts.length - 1]
   const nowEdge = c.live ? edge(Math.min(c.elapsed, span)) : edge(span)
   const every = Math.max(1, Math.ceil(span / (ph ? 3 : 7)))
@@ -129,7 +130,10 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
   // On a phone a label that would run off the edge is written to the left of its line.
   const flip = ph && rise !== null && X(rise.p.i) + 6 + rise.text.length * 8 > W - Rr - 4
   const ticks = c.axis.filter((p) => p.i < span && p.tick && p.i % every === 0)
-  const geo = drawn.map((p) => [X(p.i), Y(p.v)])
+  const geo: Pt[] = drawn.map((p) => [X(p.i), Y(p.v)])
+  const segs = segments(geo)
+  const line = geo.length ? stretch(geo, segs, 0, geo.length - 1) : ''
+  const was: Pt[] = before.map((p) => [X(p.i), Y(p.v)])
   const nameAt = beforeName(c.compare ? capital(c.compare.name).length : 0, before.map((p) => [X(p.i), Y(p.v)]), geo, W - Rr - 2)
   useLabelLayout({ pts: geo })
   const chart = (
@@ -149,7 +153,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
     >
       {grid.map((g) => (
         <g key={g}>
-          <line x1={L} x2={W - Rr} y1={Y(g)} y2={Y(g)} stroke="var(--mk-grid)" />
+          <line x1={L} x2={W - Rr} y1={Y(g)} y2={Y(g)} stroke="var(--mk-grid)" strokeDasharray={g ? '2 5' : undefined} />
           {!ph && (
             <text x={0} y={Y(g) + 4} fill="var(--mk-axis)" fontSize="12">
               {kfmt(g)}
@@ -159,7 +163,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
       ))}
       {c.compare && before.length > 1 && (
         <>
-          <polyline className="chbefore" points={before.map((p) => `${X(p.i)},${Y(p.v)}`).join(' ')} fill="none" stroke="var(--mk-muted)" strokeWidth="1.25" strokeDasharray="4 4" strokeLinecap="round" strokeLinejoin="round" opacity=".8" />
+          <path className="chbefore" d={stretch(was, segments(was), 0, was.length - 1)} fill="none" stroke="var(--mk-muted)" strokeWidth="1.25" strokeDasharray="1 5" strokeLinecap="round" opacity=".75" />
           {nameAt && <text className="lbl lbl-halo" data-lbl="5" style={{ opacity: at !== null && pts[at] && Math.abs(pts[at].i - before[before.length - 1].i) <= 2 ? 0 : undefined }} x={nameAt.x} y={nameAt.y} textAnchor="end" fill="var(--mk-axis)" fontSize="12">{capital(c.compare.name)}</text>}
         </>
       )}
@@ -186,30 +190,44 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
       {c.live && <FutureHatch x={nowEdge} y={T} width={Math.max(0, W - Rr - nowEdge)} height={B - T} />}
       {drawn.length > 0 && (
         <g>
-          <polygon points={`${X(drawn[0].i)},${B} ${line} ${X(last.i)},${B}`} fill="var(--mk-areafill)" />
-          <polyline points={line} fill="none" stroke="var(--mk-muted)" strokeWidth="2" strokeLinejoin="round" />
-          {pts.map((p, i) =>
-            p.st && i >= f0 ? (
-              <polyline
+          <defs>
+            <linearGradient id={fill} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stopColor="var(--mk-lime)" stopOpacity=".16" />
+              <stop offset="1" stopColor="var(--mk-lime)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={`${line} L${geo[geo.length - 1][0]},${B} L${geo[0][0]},${B} Z`} fill={`url(#${fill})`} />
+          <path d={line} fill="none" stroke="var(--mk-text)" strokeOpacity=".55" strokeWidth="2" strokeLinecap="round" />
+          {pts.map((p, i) => {
+            if (!p.st || i < f0) return null
+            const k = i - f0
+            return (
+              <path
                 key={p.i}
-                points={[Math.max(f0, i - 1), i, Math.min(pts.length - 1, i + 1)].map((j) => `${X(pts[j].i)},${Y(pts[j].v)}`).join(' ')}
+                className="chhot"
+                d={stretch(geo, segs, Math.max(0, k - 1), Math.min(geo.length - 1, k + 1))}
                 fill="none"
                 stroke={p.st === 'up' ? 'var(--mk-lime)' : 'var(--mk-red)'}
-                strokeWidth="2.4"
-                strokeLinejoin="round"
+                strokeWidth="2.6"
+                strokeLinecap="round"
               />
-            ) : null,
-          )}
+            )
+          })}
           {c.live && (
-            <circle cx={X(last.i)} cy={Y(last.v)} r="4.5" fill={DOT[last.st || 'none']}>
-              <animate attributeName="r" values="4;7;4" dur="1.6s" repeatCount="indefinite" />
-            </circle>
+            <g>
+              <circle cx={X(last.i)} cy={Y(last.v)} r="4" fill="none" stroke={DOT[last.st || 'none']} strokeWidth="1.5">
+                <animate attributeName="r" values="4;12" dur="1.8s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values=".7;0" dur="1.8s" repeatCount="indefinite" />
+              </circle>
+              <circle cx={X(last.i)} cy={Y(last.v)} r="4.5" fill={DOT[last.st || 'none']} stroke="var(--mk-card)" strokeWidth="2" />
+            </g>
           )}
         </g>
       )}
       {rise && (
         <g data-rv={X(rise.p.i)} data-rise="">
-          <line x1={X(rise.p.i)} x2={X(rise.p.i)} y1={Y(rise.p.v) - 6} y2={T - 6} stroke="var(--mk-lime)" />
+          <line x1={X(rise.p.i)} x2={X(rise.p.i)} y1={Y(rise.p.v) - 7} y2={T - 4} stroke="var(--mk-lime)" strokeOpacity=".6" strokeDasharray="2 3" />
+          <circle cx={X(rise.p.i)} cy={Y(rise.p.v)} r="3.5" fill="var(--mk-lime)" />
           <text className="lbl" data-lbl="2" x={flip ? X(rise.p.i) - 6 : Math.min(X(rise.p.i) + 6, W - Rr - rise.text.length * 7.4)} textAnchor={flip ? 'end' : undefined} y={T - 10} fill="var(--mk-lime)" fontSize="12" fontWeight="600">
             {rise.text}
           </text>
