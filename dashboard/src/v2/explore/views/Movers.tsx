@@ -1,6 +1,7 @@
 // What changed: the biggest changes of every table as one ranked list, a bar from the centre for each, and the top three as chips.
 import { isShared } from '../../../lib/me'
 import { countryName } from '../../../lib/format'
+import { midTruncate } from '../../../features/signals/surge'
 import { Flag } from '../../ui/Flag'
 import { useV2Extras } from '../../slots'
 import type { Cause, Dim, Metric } from '../../why/model'
@@ -16,7 +17,7 @@ const OPEN: Record<Dim, { tab: Tab; filter: string }> = {
 }
 
 /** A cause in words: no value is Direct, and the bare slash is the home page. */
-export const nameOf = (v: string) => (v === '/' ? copy.homePage : v || copy.direct)
+export const nameOf = (v: string) => (v === '/' ? copy.homePage : v ? midTruncate(v, 36) : copy.direct)
 
 const pick = (c: Cause) => openExplore(OPEN[c.dim].tab, [{ dim: OPEN[c.dim].filter, value: c.value }])
 const signed = (n: number, fmt: (n: number) => string) => `${n < 0 ? '−' : '+'}${fmt(Math.abs(n))}`
@@ -48,7 +49,7 @@ export function MoverList({ list, fmt }: { list: Cause[]; fmt: (n: number) => st
     <>
       <div className="xmv">
         {list.map((c) => (
-          <button key={`${c.dim}:${c.value}`} type="button" className="xmv-row" title={`${nameOf(c.value)}: ${fmt(c.was)} → ${fmt(c.now)}`} onClick={() => pick(c)}>
+          <button key={`${c.dim}:${c.value}`} type="button" className="xmv-row" title={`${c.value || copy.direct}: ${fmt(c.was)} → ${fmt(c.now)}`} onClick={() => pick(c)}>
             <span className="xmv-name">
               {c.dim === 'country' && c.value && <><Flag code={c.value} />{' '}</>}
               {label(c)} <em>{copy.dimWord[c.dim]}</em>
