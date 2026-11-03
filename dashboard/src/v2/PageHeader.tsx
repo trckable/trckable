@@ -11,6 +11,7 @@ import { appVersion, isShared, updateChecks } from '../lib/me'
 import { useLatest } from '../lib/update'
 import { SectionsButton } from './explore/SectionsButton'
 import { can } from '../lib/permissions'
+import { Settings } from 'lucide-react'
 import { pressed } from '../lib/keys'
 import { navigate } from '../lib/url'
 import { openSettings } from '../lib/settings'
@@ -128,8 +129,18 @@ export function PageHeader(p: PageHeaderProps) {
             )}
           </>
         )}
-        site={p.identity ? null : <SiteChip p={siteMenu} />}
-        ring={p.identity || !site ? null : <SetupRing site={site} onGoal={p.onGoal ?? (() => openFind(pal.create))} fresh={!!p.waiting} visited={!!p.visited} />}
+        site={p.identity ? null : (
+          // The site, its setup and its settings in one pill: the gear is one click, not the menu and a hover on its dots.
+          <div className="sitegrp">
+            <SiteChip p={siteMenu} />
+            {site && <SetupRing site={site} onGoal={p.onGoal ?? (() => openFind(pal.create))} fresh={!!p.waiting} visited={!!p.visited} />}
+            {site && can('site.settings') && !isShared() && (
+              <button type="button" className="sitegear" aria-label={copy.settings} title={copy.settings} onClick={() => openSettings(site)}>
+                <Settings size={15} strokeWidth={1.9} aria-hidden="true" />
+              </button>
+            )}
+          </div>
+        )}
         views={here && !p.identity && !p.waiting ? <SegmentedSwitch id="views" label={copy.view} value={here} onChange={(t) => void switchTab(t, here)} items={[{ value: 'live', label: copy.live, title: copy.liveTitle, dot: down ? 'down' : 'ok', count: online ?? undefined }, { value: 'briefing', label: copy.exploreTab, title: copy.briefingTitle }]} /> : null}
         period={
           <>

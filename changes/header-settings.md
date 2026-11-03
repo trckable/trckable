@@ -1,0 +1,1 @@
+- Header: the site, its setup and a settings gear sit in one pill, so settings are one click away.
