@@ -117,6 +117,34 @@
   font-size: 13px;
   color: var(--mk-muted);
 }
+/* Compact: a small label, the name at reading size and the share beside it, no tall empty middle. */
+.mk .xkw .kcs.xtops .kc.xtop {
+  min-height: 0;
+  gap: 4px;
+  padding: var(--mk-s3) var(--mk-s4);
+}
+.mk .xkw .kcs.xtops .kc.xtop .kt {
+  margin: 0;
+  min-height: 0;
+  height: auto;
+  gap: 6px;
+  align-items: center;
+}
+.mk .xkw .kcs.xtops .kc.xtop .ki {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+}
+.mk .xkw .kcs.xtops .kc.xtop .kv {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+}
+.mk .xkw .kcs.xtops .kc.xtop .kd {
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+}
 
 /* Search: clicks and impressions by day. */
 .mk .xschart {
