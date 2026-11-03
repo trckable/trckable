@@ -3308,5 +3308,5 @@ export default {
   'v2places.mapLabel': 'Visitantes por país',
   'v2places.mapFoot': (n: string) => `${n} países · toca uno para filtrar`,
   'v2places.mapVisitors': (n: string) => `${n} visitantes`,
-  'v2places.noteZones': 'Las zonas horarias vienen del navegador del visitante, y solo en sitios que guardan región y ciudad.',
+  'v2places.noteZones': 'Las zonas horarias vienen del lugar de la visita, y solo en sitios que guardan región y ciudad.',
 } satisfies Messages

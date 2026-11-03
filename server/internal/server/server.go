@@ -156,6 +156,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 			l := s.geo.Lookup(ip)
 			return l.Country, l.Region, l.City
 		},
+		Zone:    func(ip string) string { return s.geo.Lookup(ip).Timezone },
 		Hosting: s.hosting,
 		Module: func(site, id string) bool {
 			set, err := (modules.Store{DB: ctl.DB}).Of(context.Background(), site)

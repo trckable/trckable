@@ -1,7 +1,11 @@
 // The Places section as one card: four numbers over a map of where people are, and under them the table of countries,
 // regions, cities, time zones or languages.
 import { lazy, Suspense, useEffect, useState } from 'react'
+import { Sparkles } from 'lucide-react'
 import { fmtInt } from '../../../lib/format'
+import { isShared } from '../../../lib/me'
+import { useV2Extras } from '../../slots'
+import { biggestMover, whyContext } from '../whyLine'
 import { Loading } from '../../../components/loading/Loading'
 import { XKcsPlain } from '../../ui/XKcs'
 import { XNote } from '../../ui/XBits'
@@ -76,11 +80,32 @@ export function PlacesCard({ x, c, tab: asked, onRead, onSay }: { x: XCtx; c: Da
     // Each answer moves the time the page says it was read, and the section's one line is the countries'.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rc.state, said])
+  // Peek's "Why?", as the other cards have it: a short question with the card's own numbers beside it, and the biggest mover under it.
+  const { askPeekNow } = useV2Extras()
+  const [open, setOpen] = useState(false)
+  const rows = shown.state === 'ok' ? (shown.data as Table).rows : []
+  const mover = biggestMover(rows)
+  const ask = () => {
+    if (!open && askPeekNow) askPeekNow(copy.cardAsk(copy.sub[tab]), whyContext(rows, { metric: 'visitors', period: `${x.query.from} to ${x.query.to}`, compare: x.view.compare }))
+    setOpen(!open)
+  }
+  const why = askPeekNow && !isShared() && shown.state === 'ok' && (
+    <button type="button" className="xcp-why" data-ask-peek="1" aria-expanded={open} onClick={ask}>
+      <Sparkles size={13} strokeWidth={1.9} aria-hidden="true" />
+      {copy.cardWhy}
+    </button>
+  )
   const ready = rc.state === 'ok' && rr.state === 'ok' && rci.state === 'ok'
   const cx: XCtx = { ...x, tabName: copy.sub[tab] }
   return (
     <section id="xc-places" data-xcard="places" className="xcp wide xcp-in">
       <div className="xcp-b">
+        {why && <div className="xplaces-why">{why}</div>}
+        {why && open && rows.length > 0 && (
+          <p className="xcp-line" data-why-line="1">
+            {mover ? (mover.delta > 0 ? copy.whyRose : copy.whyFell)(mover.name, fmtInt(mover.before), fmtInt(mover.now), `${mover.delta > 0 ? '+' : '−'}${fmtInt(Math.abs(mover.delta))}`) : copy.whyNone}
+          </p>
+        )}
       {ready ? (
         <>
           <XKcsPlain items={tiles(rc.data as Table, rr.data as Table, rci.data as Table)} />

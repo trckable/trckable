@@ -67,3 +67,8 @@
   white-space: normal;
   line-height: 1.15;
 }
+.mk .xplaces-why {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}

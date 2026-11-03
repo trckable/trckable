@@ -3315,5 +3315,5 @@ export default {
   'v2places.mapLabel': 'Visitatori per paese',
   'v2places.mapFoot': (n: string) => `${n} paesi · tocca per filtrare`,
   'v2places.mapVisitors': (n: string) => `${n} visitatori`,
-  'v2places.noteZones': 'I fusi orari arrivano dal browser del visitatore, e solo sui siti che conservano regione e città.',
+  'v2places.noteZones': 'I fusi orari arrivano dal luogo della visita, e solo sui siti che conservano regione e città.',
 } satisfies Messages

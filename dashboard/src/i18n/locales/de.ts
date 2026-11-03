@@ -3305,5 +3305,5 @@ export default {
   'v2places.mapLabel': 'Besucher nach Land',
   'v2places.mapFoot': (n: string) => `${n} Länder · zum Filtern antippen`,
   'v2places.mapVisitors': (n: string) => `${n} Besucher`,
-  'v2places.noteZones': 'Zeitzonen kommen aus dem Browser des Besuchers, und nur bei Seiten, die Region und Stadt speichern.',
+  'v2places.noteZones': 'Zeitzonen stammen vom Ort des Besuchs, und nur bei Seiten, die Region und Stadt speichern.',
 } satisfies Messages

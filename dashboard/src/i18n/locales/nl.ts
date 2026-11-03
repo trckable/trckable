@@ -3315,5 +3315,5 @@ export default {
   'v2places.mapLabel': 'Bezoekers per land',
   'v2places.mapFoot': (n: string) => `${n} landen · tik op een land om te filteren`,
   'v2places.mapVisitors': (n: string) => `${n} bezoekers`,
-  'v2places.noteZones': 'Tijdzones komen uit de browser van de bezoeker, en alleen op sites die regio en stad bewaren.',
+  'v2places.noteZones': 'Tijdzones komen van de plaats van het bezoek, en alleen op sites die regio en stad bewaren.',
 } satisfies Messages

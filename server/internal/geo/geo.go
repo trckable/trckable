@@ -41,6 +41,9 @@ type Location struct {
 	Country string // ISO 3166-1 alpha-2
 	Region  string
 	City    string
+	// Timezone is the IANA zone of the place ("Europe/Berlin"), when the
+	// database carries one.
+	Timezone string
 }
 
 // DB is a hot-swappable geo database.
@@ -114,6 +117,9 @@ type record struct {
 	City struct {
 		Names map[string]string `maxminddb:"names"`
 	} `maxminddb:"city"`
+	Location struct {
+		TimeZone string `maxminddb:"time_zone"`
+	} `maxminddb:"location"`
 }
 
 // Lookup resolves ip. It returns a zero Location when unavailable.
@@ -130,7 +136,7 @@ func (g *DB) Lookup(ip string) Location {
 	if err := r.Lookup(addr.Unmap()).Decode(&rec); err != nil {
 		return Location{}
 	}
-	loc := Location{Country: rec.Country.ISOCode, City: rec.City.Names["en"]}
+	loc := Location{Country: rec.Country.ISOCode, City: rec.City.Names["en"], Timezone: rec.Location.TimeZone}
 	if len(rec.Subdivisions) > 0 {
 		loc.Region = rec.Subdivisions[0].Names["en"]
 	}

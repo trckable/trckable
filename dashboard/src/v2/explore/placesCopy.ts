@@ -14,5 +14,5 @@ export const copy = defineCopy('v2places', {
   mapLabel: 'Visitors by country',
   mapFoot: (n: string) => `${n} countries · tap one to filter`,
   mapVisitors: (n: string) => `${n} visitors`,
-  noteZones: 'Time zones come from the visitor’s browser, and only on sites that keep region and city.',
+  noteZones: 'Time zones come from where the visit was placed, and only on sites that keep region and city.',
 })

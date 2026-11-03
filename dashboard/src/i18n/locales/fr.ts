@@ -3303,5 +3303,5 @@ export default {
   'v2places.mapLabel': 'Visiteurs par pays',
   'v2places.mapFoot': (n: string) => `${n} pays · touchez-en un pour filtrer`,
   'v2places.mapVisitors': (n: string) => `${n} visiteurs`,
-  'v2places.noteZones': 'Les fuseaux horaires viennent du navigateur du visiteur, et seulement sur les sites qui gardent région et ville.',
+  'v2places.noteZones': 'Les fuseaux horaires viennent du lieu de la visite, et seulement sur les sites qui gardent région et ville.',
 } satisfies Messages

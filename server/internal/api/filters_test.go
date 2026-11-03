@@ -160,7 +160,7 @@ func TestFilterWordsAreTheChipsWords(t *testing.T) {
 		{Dim: "device", Op: "not", Value: "Mobile"},
 		{Dim: "channel", Value: "AI"}, {Dim: "entry_page", Op: "not", Value: "/pricing"}, {Dim: "region", Value: "Bavaria"},
 	})
-	want := "Country is United States or Germany; Device is not Mobile; Channel is AI assistants; Entry page is not /pricing; region is Bavaria"
+	want := "Country is United States or Germany; Device is not Mobile; Channel is AI assistants; Entry page is not /pricing; Region is Bavaria"
 	if got != want {
 		t.Errorf("got  %q\nwant %q", got, want)
 	}

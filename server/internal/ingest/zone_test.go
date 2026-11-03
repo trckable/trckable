@@ -22,8 +22,9 @@ func TestTimezoneFollowsRegionAndCity(t *testing.T) {
 	} {
 		h, l := newHandler(t)
 		geoSpy(h)
+		h.Zone = func(string) string { return tc.zone }
 		h.Sites = fakeSites{"tkb_test": {ID: "tkb_test", Domain: "site.com", ProxyKey: "tkb_px_secret", NoCity: tc.noCity, ConsentFree: tc.free}}
-		if w := proxied(h, `{"s":"tkb_test","k":"pv","u":"https://site.com/","id":"a","v":"k3j2.m1a2b3","z":"`+tc.zone+`"}`, "tkb_px_secret"); w.Code != http.StatusAccepted {
+		if w := proxied(h, `{"s":"tkb_test","k":"pv","u":"https://site.com/","id":"a","v":"k3j2.m1a2b3","x":1}`, "tkb_px_secret"); w.Code != http.StatusAccepted {
 			t.Fatalf("status %d", w.Code)
 		}
 		e, _ := lastEvent(t, l)
