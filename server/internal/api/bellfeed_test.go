@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -133,6 +134,9 @@ func TestBellFeedSources(t *testing.T) {
 	}
 	if goals == nil || goals["count"] != 3.0 {
 		t.Fatalf("three goals in an hour are one row: %v", goals)
+	}
+	if goals["visitor"] != strconv.FormatUint(902, 36) {
+		t.Fatalf("a goal row names the visitor who reached it last: %v", goals)
 	}
 	for _, r := range rows {
 		if r["kind"] == "down" && r["what"] == "quiet" {
@@ -309,4 +313,31 @@ func TestBellFeedPinsDownAndKeepsIdsShort(t *testing.T) {
 	if down != 1 {
 		t.Fatalf("down rows: %d", down)
 	}
+}
+
+// A consent-free site does not tell visitors apart: its goal rows name no visitor.
+func TestBellFeedConsentFreeNamesNoVisitor(t *testing.T) {
+	g := newRig(t)
+	ctx := context.Background()
+	owner := client()
+	g.setup(t, owner)
+	c, err := g.ctl.SiteConfig(ctx, g.site)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.ConsentFree = true
+	if err := g.ctl.SetSiteConfig(ctx, g.site, c); err != nil {
+		t.Fatal(err)
+	}
+	g.event(t, event.Event{Kind: event.KindGoal, Goal: "newsletter", EventID: 8101, TS: g.now.Add(-3 * time.Hour).UnixMilli(), Visitor: 5, Path: "/"})
+	g.waitApplied(t, 1)
+	for _, r := range feedOf(t, g, owner) {
+		if r["kind"] == "goal" {
+			if r["visitor"] != nil || r["seen"] != nil {
+				t.Fatalf("a consent-free site names no visitor: %v", r)
+			}
+			return
+		}
+	}
+	t.Fatal("no goal row")
 }

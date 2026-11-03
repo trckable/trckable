@@ -7,6 +7,7 @@ import { signals } from '../../features/signals/copy'
 import type { Surge } from '../../features/signals/surge'
 import { mentionsPath } from '../../features/mentions/route'
 import { navigate, readView, setView, writeView } from '../../lib/url'
+import { openAccount } from '../../lib/account'
 import { openSettings } from '../../lib/settings'
 import { toast } from '../../components/Toast'
 import { can as allowed } from '../../lib/permissions'
@@ -14,6 +15,7 @@ import { BellMenu, type BellRow, type RowAction } from '../ui/BellMenu'
 import { brandOf } from '../../lib/brandIcons'
 import { alertOf, setAlertOn } from './alertState'
 import { copy } from './copy'
+import { hasCard } from './eventModel'
 import { timeOf, whenOf } from './days'
 import { ALL, GROUPS, apply, readFilter, saveFilter, unreadGroups, type Filter } from './filter'
 import { badge, rowsOf, settle, unreadCount, type Notice, type NoticeRow } from './notices'
@@ -22,6 +24,7 @@ import { OPEN_GAP_MS, type useNotices } from './useNotices'
 import { QUERY } from '../../kit/breakpoints'
 
 const MilestoneSheet = lazyLoad(() => import('./MilestoneSheet'))
+const EventCard = lazyLoad(() => import('./EventCard'))
 const SurgeModal = lazyLoad(() => import('../../features/signals/SurgeModal'))
 
 /** Explore on the row's site: opened in place when that site is in view, else its page is opened with Explore on. */
@@ -30,12 +33,19 @@ function exploreOn(n: Notice, site: Site | null, tab: Parameters<typeof openExpl
   else navigate(`/${encodeURIComponent(n.site)}${writeView({ ...readView(new URLSearchParams()), xp: tab, xf: filters })}`)
 }
 
-function go(n: Notice, site: Site | null) {
+function go(n: Notice, site: Site | null, sites: Site[]) {
   const base = '/' + encodeURIComponent(n.site)
+  const own = sites.find((x) => (n.siteId ? x.id === n.siteId : x.domain === n.site))
   if (n.kind === 'sale') exploreOn(n, site, 'sales')
   else if (n.kind === 'signup' || n.kind === 'goal') exploreOn(n, site, 'overview')
   else if (n.kind === 'down' || n.kind === 'up') navigate(`${base}/incidents`)
   else if (n.kind === 'spike') navigate(`${base}?view=live`)
+  else if (n.kind === 'answer') exploreOn(n, site, 'answers')
+  else if (n.kind === 'setup' && own) openSettings(own, 'install')
+  else if (n.kind === 'alert' && own) openSettings(own, 'alerts', n.alert ? { focus: `alert:${n.alert}` } : undefined)
+  else if (n.kind === 'failed' && own) openSettings(own, 'payments')
+  else if (n.kind === 'plan') openAccount('sites')
+  else if (n.kind === 'team') openAccount('people')
   else if (n.kind === 'mention') navigate(mentionsPath(n.site))
   else navigate(`${base}?view=briefing&period=${n.kind === 'weekly' ? '7d' : 'today'}`)
 }
@@ -71,6 +81,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
   const [sheet, setSheet] = useState(() => window.matchMedia(QUERY.xs).matches)
   const [told, setTold] = useState<Milestone | null>(null)
   const [busy, setBusy] = useState<Notice | null>(null)
+  const [card, setCard] = useState<Notice | null>(null)
   const [open, setOpen] = useState(false)
   // Rows put away while the menu is open leave it at once; the rest of a change waits for nothing and moves nothing.
   const [gone, setGone] = useState(NONE)
@@ -186,7 +197,8 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
         if (n?.milestone && site && n.site === site.domain) setTold(n.milestone)
         else if (n?.busy && !n.open) setBusy(n)
         else if (n?.open) n.open()
-        else if (n) go(n, site)
+        else if (n && hasCard(n) && sites.some((x) => (n.siteId ? x.id === n.siteId : x.domain === n.site))) setCard(n)
+        else if (n) go(n, site, sites)
       }}
       onAll={markAll}
       archive={archive && { rows: old, load: archive.load, loading: archive.loading, none: archive.words.none }}
@@ -197,6 +209,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
         <MilestoneSheet site={site} m={told} onClose={() => setTold(null)} />
       </Suspense>
     )}
+    {card && <EventStory n={card} sites={sites} site={site} onClose={() => setCard(null)} />}
     {busy && <BusyStory n={busy} sites={sites} site={site} onClose={() => setBusy(null)} />}
     </>
   )
@@ -214,6 +227,25 @@ function BusyStory({ n, sites, site, onClose }: { n: Notice; sites: Site[]; site
   return (
     <Suspense fallback={null}>
       <SurgeModal surge={surge} site={s.id} tz={s.timezone} head={signals.surge.busyHead(n.site, whenOf(n.at, undefined, s.timezone))} explore={{ filters: n.source ? [{ dim: 'referrer', value: n.source }] : [], go }} onClose={onClose} onSee={() => undefined} />
+    </Suspense>
+  )
+}
+
+/** A notice's own card, with one way on: the page the event lives on (where a tap on the row went before the card). */
+function EventStory({ n, sites, site, onClose }: { n: Notice; sites: Site[]; site: Site | null; onClose: () => void }) {
+  const s = sites.find((x) => (n.siteId ? x.id === n.siteId : x.domain === n.site))
+  if (!s) return null
+  return (
+    <Suspense fallback={null}>
+      <EventCard
+        n={n}
+        site={s}
+        onClose={onClose}
+        onSee={() => {
+          onClose()
+          go(n, site, sites)
+        }}
+      />
     </Suspense>
   )
 }

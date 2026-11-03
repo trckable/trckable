@@ -5,7 +5,6 @@
 // bell that mounts again, or a page that has just loaded, starts with it.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Site } from '../../lib/api'
-import { openExplore } from '../explore/open'
 import { currentEmail, isShared } from '../../lib/me'
 import { useV2Extras } from '../slots'
 import { onNowAnswer } from '../../features/live/api'
@@ -39,7 +38,7 @@ export function useNotices(sites: Site[]) {
   const can = !isShared()
   // What the sites say of themselves (a site with no visit yet) is drawn from the sites; the rest is the server's list.
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000))
-  const items = useMemo(() => withFeed(arrange([...fromFeed(rows, sites, now, () => openExplore('answers')), ...fromSetup(sites, now)], now), extra), [rows, sites, now, extra])
+  const items = useMemo(() => withFeed(arrange([...fromFeed(rows, sites, now), ...fromSetup(sites, now)], now), extra), [rows, sites, now, extra])
   const sitesKey = keyOf(sites)
   const ctx = useRef({ sites })
   const last = useRef(0)
