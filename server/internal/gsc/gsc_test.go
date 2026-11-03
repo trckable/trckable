@@ -239,6 +239,12 @@ func TestSearchAsksForWhatTheReportShows(t *testing.T) {
 	if pages[0].Key != "/pricing" || pages[1].Key != "/" {
 		t.Errorf("pages are shown as trckable's paths: %+v", pages)
 	}
+	if _, err := c.Search(ctx, "sc-domain:example.com", Query{From: from, To: to, Dimension: "date"}); err != nil {
+		t.Errorf("a row a day was refused: %v", err)
+	}
+	if got := g.lastQuery["dimensions"].([]any)[0]; got != "date" {
+		t.Errorf("dimension = %v", got)
+	}
 	if _, err := c.Search(ctx, "sc-domain:example.com", Query{Dimension: "country"}); err == nil {
 		t.Error("an unknown dimension was sent to Google")
 	}

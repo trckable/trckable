@@ -609,6 +609,7 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .xtile[data-xtile=overview],.xri[data-xsec=overview],.xtitle[data-xtitle=overview]{--c:#4f8ef7}
 .xtile[data-xtile=pages],.xri[data-xsec=pages],.xtitle[data-xtitle=pages]{--c:#2fb8c6}
 .xtile[data-xtile=sources],.xri[data-xsec=sources],.xtitle[data-xtitle=sources]{--c:#f08a5d}
+.xtile[data-xtile=search],.xri[data-xsec=search],.xtitle[data-xtitle=search]{--c:#7fb83a}
 .xtile[data-xtile=places],.xri[data-xsec=places],.xtitle[data-xtitle=places]{--c:#34b37e}
 .xtile[data-xtile=tech],.xri[data-xsec=tech],.xtitle[data-xtitle=tech]{--c:#6c7a91}
 .xtile[data-xtile=results],.xri[data-xsec=results],.xtitle[data-xtitle=results]{--c:#e9668f}
@@ -636,3 +637,9 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .mk .xdrawer .xrail::after{display:none}
 /* The bar centres its name itself (flex); the list rule's top/transform would push it down. */
 .mk .xcards .mk-bar>span{top:auto;transform:none}
+/* Narrow cards: the change pill sits under the label, and a long label wraps instead of running out of the card. */
+@media (--sm-down){
+  .mk .xcards .xkw .kc .kt{flex-wrap:wrap}
+  .mk .xcards .xkw .kc .kl{flex:1 1 calc(100% - 44px);white-space:normal}
+  .mk .xcards .xkw .kc .kn{margin-left:32px}
+}

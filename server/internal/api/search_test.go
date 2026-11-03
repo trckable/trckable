@@ -115,6 +115,16 @@ func TestSearchConsoleEndToEnd(t *testing.T) {
 		t.Fatalf("the same report asked Google %d times within the hour", n)
 	}
 
+	if code, _ := do(t, c, "GET", base+"/report/search?from=2026-09-01&to=2026-09-21&dim=date", ""); code != 200 {
+		t.Fatalf("the daily report: %d", code)
+	}
+	if q := *last; q["dimensions"].([]any)[0] != "date" || q["rowLimit"] != float64(1000) {
+		t.Fatalf("Google was asked for %v, not one row a day", q)
+	}
+	if code, _ := do(t, c, "GET", base+"/report/search?dim=country", ""); code != 400 {
+		t.Fatalf("an unknown dimension: %d", code)
+	}
+
 	if code, out := do(t, c, "PUT", base+"/search-console", `{"property":"https://not-mine.com/"}`, csrf, "1"); code != 400 || !strings.Contains(out["error"].(string), "reader@proj") {
 		t.Fatalf("a property the account cannot read: %d %v", code, out)
 	}
