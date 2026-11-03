@@ -1923,9 +1923,9 @@ html[data-motion='off'] .mk .mline-guide,html[data-motion='off'] .mk .mline-gdot
 /* The site pill: the site, its setup ring and its settings, one border around them. */
 .mk .hd .sitegrp{display:flex;align-items:center;min-width:0;border:1px solid var(--mk-line);background:var(--mk-card);border-radius:12px;height:36px}
 .mk .hd .sitegrp .mk-chip{border:0;background:none;min-width:0}
-.mk .hd .sitegrp .ringw{border-left:1px solid var(--mk-line);height:100%;display:flex;align-items:center}
+.mk .hd .sitegrp .ringw{height:100%;display:flex;align-items:center}
 .mk .hd .sitegrp .ringb{border:0;background:none;height:100%}
-.mk .hd .sitegrp .sitegear{display:grid;place-items:center;width:34px;height:100%;border-left:1px solid var(--mk-line);color:var(--mk-muted);border-radius:0 12px 12px 0;flex:none}
+.mk .hd .sitegrp .sitegear{display:grid;place-items:center;width:34px;height:100%;color:var(--mk-muted);border-radius:0 12px 12px 0;flex:none}
 .mk .hd .sitegrp .sitegear:hover{color:var(--mk-text);background:color-mix(in srgb,var(--mk-text) 5%,transparent)}
 /* In the site pill the tick takes a slot as wide as the gear's, at the gear's size. */
 .mk .hd .sitegrp .ringw.seal-slot{width:34px;margin-left:0}
@@ -1939,5 +1939,8 @@ html[data-motion='off'] .mk .mline-guide,html[data-motion='off'] .mk .mline-gdot
 .mk .hd>div:has(#siteBtn) .sitegrp{width:100%;max-width:max-content}
 .mk .hd>div:has(#siteBtn) .sitegrp .sitechip{width:auto;flex:1 1 auto;min-width:0}
 .mk .hd .sitegrp .ringw,.mk .hd .sitegrp .sitegear{flex:none}
+/* The pill's parts part with one soft line that fades at both ends, as beside the Explore sections menu. */
+.mk .hd .sitegrp .team-btn{border:0;background:none}
+.mk .hd .sitegrp :is(.teamchip+#siteBtn,.ringw,.sitegear),.mk .hd .sitegrp :is(.teamchip+#siteBtn,.sitegear):hover{background-image:linear-gradient(to bottom,transparent,var(--mk-line) 25%,var(--mk-line) 75%,transparent);background-size:1px 100%;background-position:left;background-repeat:no-repeat}
 /* A phone keeps the header to the site and its tick: settings are in the site menu there, so the name keeps its room. */
 @media (--compact){.mk .hd .sitegrp .sitegear{display:none}}
