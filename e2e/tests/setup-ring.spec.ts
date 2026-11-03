@@ -45,7 +45,7 @@ test('the ring opens a panel and an action lands on the place that does it', asy
   await open(page)
   const ring = page.locator('.ringb')
   await expect(ring).toBeVisible({ timeout: 15_000 })
-  await expect(ring).toContainText('set up')
+  await expect(ring).toHaveAttribute('aria-label', /set up/)
   // Right of the site switcher.
   const site_ = await page.locator('.hd #siteBtn').boundingBox()
   const at = await ring.boundingBox()
@@ -85,18 +85,18 @@ test('Not for me on Payments lowers what counts and moves the row to More', asyn
   page.on('request', (r) => r.method() === 'GET' && /\/setup$/.test(new URL(r.url()).pathname) && reads.push(r.url()))
   await page.locator('.ringb').click({ timeout: 15_000 })
   const panel = page.locator('.setupmenu.on')
-  await expect(page.locator('.ringb .rtext')).toHaveText('0/4 set up')
+  await expect(page.locator('.ringb .rtext')).toHaveText('0/4')
   // Open for a while, the panel does not ask again and again (one look at most for opening it).
   await page.waitForTimeout(10_000)
   expect(reads.length, 'checklist reads while the panel is open').toBeLessThanOrEqual(2)
   await panel.locator('[data-step="payments"]').getByRole('button', { name: 'More' }).click()
   await panel.getByRole('menuitem', { name: 'I don’t sell online' }).click()
-  await expect(page.locator('.ringb .rtext')).toHaveText('0/3 set up')
+  await expect(page.locator('.ringb .rtext')).toHaveText('0/3')
   await expect(panel.locator('[data-step="payments"]')).toHaveCount(0)
   await panel.getByRole('button', { name: /More you can add/ }).click()
   await expect(panel.locator('[data-step="payments"] button', { hasText: 'Bring back' })).toBeVisible()
   await panel.locator('[data-step="payments"] button', { hasText: 'Bring back' }).click()
-  await expect(page.locator('.ringb .rtext')).toHaveText('0/4 set up')
+  await expect(page.locator('.ringb .rtext')).toHaveText('0/4')
 })
 
 test('the step menu and the site type menu open under their buttons, inside the window', async ({ page, request }) => {
