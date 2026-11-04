@@ -6,6 +6,7 @@ import { QUERY } from '../../kit/breakpoints'
 import { copy } from './copy'
 import { askOf } from './open'
 import { pageDetails } from './pageStore'
+import { ChangedChart } from './views/chartChunk'
 import type { ContentProps } from './PanelContent'
 
 const PanelContent = lazy(() => import('./PanelContent'))
@@ -20,6 +21,8 @@ export function ExplorePage(p: Omit<ContentProps, 'ask' | 'full'>) {
     m.addEventListener('change', on)
     return () => m.removeEventListener('change', on)
   }, [])
+  // The What changed chart's code comes down beside the page's own, not after the cards.
+  useEffect(() => ChangedChart.preload(), [])
   const { xp, xf, filters } = p.view
   const details = pageDetails.use()
   const ask = askOf({ xp: xp ?? 'changed', xf, filters }) ?? { tab: 'changed' as const, filters: [] }

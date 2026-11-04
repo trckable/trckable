@@ -1,6 +1,5 @@
 // What changed: Overview's own cards, the one sentence that says what moved, and the biggest changes of every table as one ranked list.
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { whenIdle } from '../../../lib/lazyLoad'
 import { useNotes } from '../../../features/notes/useNotes'
 import type { Report, Site } from '../../../lib/api'
 import { fmtInt } from '../../../lib/format'
@@ -12,11 +11,11 @@ import { mult } from '../../briefing/model'
 import { explain, movers, type Cause, type Metric } from '../../why/model'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
+import { ChangedChart } from './chartChunk'
 import type { Overview as Model } from '../types'
 import { Downtime } from './Downtime'
 import { MoverChips, MoverList, nameOf } from './Movers'
 
-const ChangedChart = lazy(() => import('./ChangedChart'))
 const NoteDialog = lazy(() => import('../../../components/NoteDialog').then((m) => ({ default: m.NoteDialog })))
 
 function sentence(name: string, kind: string, pct: number | null, diff: number, top?: Cause): string {
@@ -69,15 +68,11 @@ function Tools({ site, to, notes, sheet, setSheet }: { site: Site; to: string; n
 
 /** The chart's place: its height is held from the first paint, so the cards under it do not move when it arrives. */
 function ChartSlot({ x, report, notes, onNotes }: { x: XCtx; report: Report; notes: { day: string; text: string }[]; onNotes: () => void }) {
-  const [go, setGo] = useState(false)
-  useEffect(() => whenIdle(() => setGo(true)), [])
   return (
     <div className="xchg-chart">
-      {go && (
-        <Suspense fallback={null}>
-          <ChangedChart x={x} report={report} notes={notes} onNotes={onNotes} />
-        </Suspense>
-      )}
+      <Suspense fallback={<i className="sk" />}>
+        <ChangedChart x={x} report={report} notes={notes} onNotes={onNotes} />
+      </Suspense>
     </div>
   )
 }
