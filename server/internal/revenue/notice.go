@@ -371,22 +371,40 @@ func (s *Service) linkedVisitor(ctx context.Context, tx *sql.Tx, sc ledger.Scope
 // charge's running total), so what is compared is the payment's total refunded
 // so far, the way the reports count it, never the events.
 func (s *Service) refundNotice(ctx context.Context, tx *sql.Tx, sc ledger.Scope, raw string, at int64) (n Notice, ok bool, err error) {
-	var pid, cur string
-	var gross int64
-	err = tx.QueryRowContext(ctx, `SELECT id, currency, gross FROM pay_payments WHERE site_id = ?1 AND provider = ?2 AND test = 0
+	var pid, cur, chargeCur string
+	var gross, chargeAmt int64
+	err = tx.QueryRowContext(ctx, `SELECT id, currency, gross, charge_amount, charge_currency FROM pay_payments WHERE site_id = ?1 AND provider = ?2 AND test = 0
 		AND (id = ?3 OR id IN (SELECT payment_id FROM pay_aliases WHERE site_id = ?1 AND provider = ?2 AND alias = ?3))`, sc.Site, sc.Provider, raw).
-		Scan(&pid, &cur, &gross)
+		Scan(&pid, &cur, &gross, &chargeAmt, &chargeCur)
 	if err == sql.ErrNoRows {
 		return n, false, nil
 	}
 	if err != nil {
 		return n, false, err
 	}
-	var sum, cum int64
-	err = tx.QueryRowContext(ctx, `SELECT coalesce(sum(CASE WHEN cumulative = 0 THEN amount END), 0), coalesce(max(CASE WHEN cumulative = 1 THEN amount END), 0)
-		FROM pay_refunds WHERE site_id = ?1 AND provider = ?2 AND status = 'succeeded'
-		AND (payment_id = ?3 OR payment_id IN (SELECT alias FROM pay_aliases WHERE site_id = ?1 AND provider = ?2 AND payment_id = ?3))`, sc.Site, sc.Provider, pid).Scan(&sum, &cum)
+	// Each refund in the payment's own units, as the ledger counts it.
+	rows, err := tx.QueryContext(ctx, `SELECT amount, cumulative, currency, at FROM pay_refunds WHERE site_id = ?1 AND provider = ?2 AND status = 'succeeded'
+		AND (payment_id = ?3 OR payment_id IN (SELECT alias FROM pay_aliases WHERE site_id = ?1 AND provider = ?2 AND payment_id = ?3))`, sc.Site, sc.Provider, pid)
 	if err != nil {
+		return n, false, err
+	}
+	var sum, cum int64
+	for rows.Next() {
+		var amt, cumulative, rat int64
+		var rc string
+		if err := rows.Scan(&amt, &cumulative, &rc, &rat); err != nil {
+			rows.Close()
+			return n, false, err
+		}
+		amt = ledger.InPaymentCurrency(ctx, s.Rates, sc.Provider, cur, chargeCur, gross, chargeAmt, rc, amt, rat)
+		if cumulative == 1 {
+			cum = max(cum, amt)
+		} else {
+			sum += amt
+		}
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
 		return n, false, err
 	}
 	total := min(max(sum, cum), gross)

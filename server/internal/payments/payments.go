@@ -79,6 +79,11 @@ type Payment struct {
 	Visitor        uint64
 	Kind           string
 	Country        string // billing country (ISO 3166 alpha-2) when the payload names one
+	// What the buyer was charged, when that differs from Currency/Gross (a
+	// provider that settles in the merchant's currency but charges and refunds
+	// in the buyer's). Refunds in that currency are scaled to the stored amount.
+	ChargeAmount   int64
+	ChargeCurrency string
 }
 
 // Hint attaches facts to a payment known by id.

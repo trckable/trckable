@@ -44,8 +44,8 @@ func Apply(ctx context.Context, tx *sql.Tx, sc Scope, ev payments.Event) error {
 		cur := strings.ToUpper(p.Currency)
 		if _, err := tx.ExecContext(ctx, `
 			INSERT INTO pay_payments (site_id, provider, id, connection_id, test, paid_at, currency, gross, tax,
-			                          customer_id, subscription_id, email_hash, visitor_id, kind, country, version)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			                          customer_id, subscription_id, email_hash, visitor_id, kind, country, charge_amount, charge_currency, version)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT (site_id, provider, id) DO UPDATE SET
 				test            = excluded.test OR test,
 				paid_at         = CASE WHEN excluded.version >= version THEN excluded.paid_at ELSE paid_at END,
@@ -58,9 +58,11 @@ func Apply(ctx context.Context, tx *sql.Tx, sc Scope, ev payments.Event) error {
 				visitor_id      = CASE WHEN excluded.visitor_id <> 0 AND (excluded.version >= version OR visitor_id = 0) THEN excluded.visitor_id ELSE visitor_id END,
 				kind            = CASE WHEN excluded.version >= version THEN excluded.kind ELSE kind END,
 				country         = CASE WHEN excluded.country <> '' AND (excluded.version >= version OR country = '') THEN excluded.country ELSE country END,
+				charge_amount   = CASE WHEN excluded.version >= version THEN excluded.charge_amount ELSE charge_amount END,
+				charge_currency = CASE WHEN excluded.version >= version THEN excluded.charge_currency ELSE charge_currency END,
 				version         = max(version, excluded.version)`,
 			sc.Site, sc.Provider, p.ID, sc.Connection, test, p.PaidAt, cur, p.Gross, p.Tax,
-			p.CustomerID, p.SubscriptionID, emailHash(sc.EmailKey, p.Email), int64(p.Visitor), kindOr(p.Kind), payments.CountryCode(p.Country), v); err != nil { //nolint:gosec // visitor ids are stored bit for bit in SQLite's signed integer and read back the same way
+			p.CustomerID, p.SubscriptionID, emailHash(sc.EmailKey, p.Email), int64(p.Visitor), kindOr(p.Kind), payments.CountryCode(p.Country), p.ChargeAmount, strings.ToUpper(p.ChargeCurrency), v); err != nil { //nolint:gosec // visitor ids are stored bit for bit in SQLite's signed integer and read back the same way
 			return err
 		}
 	}
@@ -214,14 +216,15 @@ func FactsRefundedIn(ctx context.Context, db *sql.DB, rates *fx.Rates, site, cur
 func facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency string, from, to time.Time, test bool, extra string, extraArgs []any) ([]Fact, error) {
 	type pay struct {
 		provider, id, cur, customer, sub, email, kind, country string
-		paid, gross                                            int64
+		paid, gross, chargeAmt                                 int64
+		chargeCur                                              string
 		tax                                                    sql.NullInt64
 		visitor                                                int64
 		test                                                   bool
 	}
 	key := func(provider, id string) string { return provider + "\x00" + id }
 	//nolint:gosec // extra is one of this package's own fixed clauses (all values bound), never text from a request
-	rows, err := db.QueryContext(ctx, `SELECT provider, id, paid_at, currency, gross, tax, customer_id, subscription_id, email_hash, visitor_id, kind, test, country
+	rows, err := db.QueryContext(ctx, `SELECT provider, id, paid_at, currency, gross, tax, customer_id, subscription_id, email_hash, visitor_id, kind, test, country, charge_amount, charge_currency
 		FROM pay_payments WHERE site_id = ? AND paid_at >= ? AND paid_at < ? AND (test = 0 OR ?)`+extra+` ORDER BY paid_at, provider, id`,
 		append([]any{site, from.UnixMilli(), to.UnixMilli(), test}, extraArgs...)...)
 	if err != nil {
@@ -230,7 +233,7 @@ func facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency stri
 	var ps []pay
 	for rows.Next() {
 		var p pay
-		if err := rows.Scan(&p.provider, &p.id, &p.paid, &p.cur, &p.gross, &p.tax, &p.customer, &p.sub, &p.email, &p.visitor, &p.kind, &p.test, &p.country); err != nil {
+		if err := rows.Scan(&p.provider, &p.id, &p.paid, &p.cur, &p.gross, &p.tax, &p.customer, &p.sub, &p.email, &p.visitor, &p.kind, &p.test, &p.country, &p.chargeAmt, &p.chargeCur); err != nil {
 			rows.Close()
 			return nil, err
 		}
@@ -312,11 +315,11 @@ func facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency stri
 	// the total then without saying so again) is taken out of that total;
 	// one that failed before it is already out.
 	evs := map[string][]refEv{} // provider\0payment id -> its refunds and lost disputes
-	if err := each(ctx, db, `SELECT provider, payment_id, amount, cumulative, status, version, at FROM pay_refunds
+	if err := each(ctx, db, `SELECT provider, payment_id, amount, cumulative, status, version, at, currency FROM pay_refunds
 		WHERE site_id = ? AND status IN ('succeeded', 'failed') AND payment_id IN (SELECT value FROM json_each(?))`, []any{site, jsonList(keys)}, func(r *sql.Rows) error {
 		var prov, k, status string
 		var e refEv
-		if err := r.Scan(&prov, &k, &e.amount, &e.cum, &status, &e.version, &e.at); err != nil {
+		if err := r.Scan(&prov, &k, &e.amount, &e.cum, &status, &e.version, &e.at, &e.cur); err != nil {
 			return err
 		}
 		pid, ok := owner[key(prov, k)]
@@ -329,11 +332,11 @@ func facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency stri
 	}); err != nil {
 		return nil, err
 	}
-	if err := each(ctx, db, `SELECT provider, payment_id, amount, at FROM pay_disputes
+	if err := each(ctx, db, `SELECT provider, payment_id, amount, at, currency FROM pay_disputes
 		WHERE site_id = ? AND status = 'lost' AND payment_id IN (SELECT value FROM json_each(?))`, []any{site, jsonList(keys)}, func(r *sql.Rows) error {
 		var prov, k string
 		var e refEv
-		if err := r.Scan(&prov, &k, &e.amount, &e.at); err != nil {
+		if err := r.Scan(&prov, &k, &e.amount, &e.at, &e.cur); err != nil {
 			return err
 		}
 		e.lost = true
@@ -343,6 +346,16 @@ func facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency stri
 		return nil
 	}); err != nil {
 		return nil, err
+	}
+
+	// Refunds and disputes in another currency than the payment is stored in.
+	for _, p := range ps {
+		k := key(p.provider, p.id)
+		for i := range evs[k] {
+			e := evs[k][i]
+			evs[k][i].amount = InPaymentCurrency(ctx, rates, p.provider, p.cur, p.chargeCur, p.gross, p.chargeAmt, e.cur, e.amount, e.at)
+			evs[k][i].cur = ""
+		}
 	}
 
 	// Resolve subscription and customer per payment, then their links.
@@ -692,6 +705,28 @@ func Reset(ctx context.Context, tx *sql.Tx, site string) error {
 type refEv struct {
 	at, amount, version int64
 	cum, failed, lost   bool
+	cur                 string // the currency of amount; empty means the payment's own
+}
+
+// InPaymentCurrency puts a refund or dispute amount (in currency cur, at a
+// moment in unix ms) into the units its payment is stored in. The payment's
+// own currency is as sent. The buyer's charge currency (a provider that
+// settles in the merchant's currency but refunds in the buyer's) is scaled by
+// what share of the charge it is, never through a rate. Any other currency is
+// converted at the rate of the day it happened. The result is not capped.
+func InPaymentCurrency(ctx context.Context, rates *fx.Rates, provider, payCur, chargeCur string, gross, chargeAmt int64, cur string, amount, at int64) int64 {
+	ec := strings.ToUpper(cur)
+	switch {
+	case ec == "" || ec == strings.ToUpper(payCur):
+		return amount
+	case chargeAmt > 0 && ec == strings.ToUpper(chargeCur):
+		return MulDiv(min(amount, chargeAmt), gross, chargeAmt)
+	}
+	v, ok := rates.Convert(ctx, RoundDiv(amount, payments.AmountScale(provider, ec)), ec, payCur, time.UnixMilli(at).UTC().Format("2006-01-02"))
+	if !ok {
+		return amount // no rate yet: the next report corrects itself
+	}
+	return v * payments.AmountScale(provider, payCur)
 }
 
 // refundedAt is how much of a payment had gone back (tax included, not capped)

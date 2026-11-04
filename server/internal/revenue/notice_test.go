@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/trckable/trckable/server/internal/ledger"
+	"github.com/trckable/trckable/server/internal/payments"
 )
 
 // A rig with a Stripe connection that records every notice.
@@ -287,5 +290,38 @@ func TestConnectingTellsNothingAboutThePast(t *testing.T) {
 	g.wait()
 	if len(g.told) != 0 {
 		t.Fatalf("told about the past: %+v", g.told)
+	}
+}
+
+// A Dodo sale charged in pesos and settled in dollars is refunded in pesos:
+// the notice tells the share of the sale that went back, in dollars.
+func TestRefundNoticeScalesTheChargeCurrency(t *testing.T) {
+	g := newNoticeRig(t)
+	now := time.Now()
+	sale := fmt.Sprintf(`{"type":"payment.succeeded","timestamp":%q,"data":{"payment_id":"pay_mx","status":"succeeded","total_amount":11694,"tax":0,"currency":"MXN",
+		"settlement_amount":599,"settlement_tax":0,"settlement_currency":"USD","created_at":%q,"metadata":{}}}`, now.Format(time.RFC3339), now.Format(time.RFC3339))
+	refund := fmt.Sprintf(`{"type":"refund.succeeded","timestamp":%q,"data":{"refund_id":"re_1","payment_id":"pay_mx","amount":2000,"currency":"MXN","status":"succeeded","created_at":%q}}`,
+		now.Format(time.RFC3339), now.Format(time.RFC3339))
+	sc := ledger.Scope{Site: g.site, Provider: "dodo"}
+	tx, err := g.st.DB.BeginTx(context.Background(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+	for _, b := range []string{sale, refund} {
+		ev, err := payments.Registry["dodo"].Parse([]byte(b))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := ledger.Apply(context.Background(), tx, sc, ev); err != nil {
+			t.Fatal(err)
+		}
+	}
+	n, ok, err := g.svc.refundNotice(context.Background(), tx, sc, "pay_mx", now.UnixMilli())
+	if err != nil || !ok {
+		t.Fatalf("notice: %v %v", ok, err)
+	}
+	if n.Amount != 102 || n.Currency != "USD" || n.Words("") != "Refund · −$1.02" {
+		t.Fatalf("notice: %+v %q", n, n.Words(""))
 	}
 }
