@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Loading } from '../../components/loading/Loading'
 import { toast } from '../../components/Toast'
 import { Segmented } from '../../kit'
+import { SummaryCards, type SumItem } from '../../v2/ui/SummaryCards'
 import { fmtCompact, fmtInt } from '../../lib/format'
 import { can, rolesOf } from '../../lib/permissions'
 import { PERIODS, type Days } from './api'
@@ -26,24 +27,12 @@ function useFlash() {
 
 export function Strip({ cards }: { cards: CardView[] }) {
   const h = header(cards)
+  const views: SumItem[] = h.views.length
+    ? h.views.map((v) => ({ key: v.platform, data: 'channel-views', label: copy.views, val: fmtCompact(v.views), sub: v.name }))
+    : [{ key: 'views', data: 'channel-views', label: copy.views, val: '—' }]
   return (
-    <div className="ch-strip">
-      <div data-k="channel-views">
-        <span className="tm-k">{copy.views}</span>
-        <span className="ch-by">
-          {h.views.length === 0 && <b className="num tm-big">—</b>}
-          {h.views.map((v) => (
-            <span key={v.platform} className="ch-one">
-              <b className="num tm-big">{fmtCompact(v.views)}</b>
-              <small>{v.name}</small>
-            </span>
-          ))}
-        </span>
-      </div>
-      <div data-k="channel-accounts">
-        <span className="tm-k">{copy.accounts}</span>
-        <b className="num tm-big">{fmtInt(h.accounts)}</b>
-      </div>
+    <div className="mk mk-body">
+      <SummaryCards items={[...views, { key: 'accounts', data: 'channel-accounts', label: copy.accounts, val: fmtInt(h.accounts) }]} />
     </div>
   )
 }

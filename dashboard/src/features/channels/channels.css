@@ -1,14 +1,8 @@
-/* Channels on the team overview (features/channels). Theme tokens only; shares .tm-k, .tm-big, .tm-more, .tm-item with the overview. */
+/* Channels on the team overview (features/channels). Theme tokens only; shares .tm-more, .tm-item with the overview. */
 .ch-sec { display: grid; gap: 14px; margin-top: 14px; }
 .ch-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 24px; }
 .ch-head h2 { margin: 0 0 2px; font-size: 20px; letter-spacing: -0.02em; }
 .ch-head p { margin: 0; max-width: 62ch; font-size: 14px; line-height: 1.45; }
-.ch-strip { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); border: 1px solid var(--border); border-radius: 16px; background: linear-gradient(180deg, color-mix(in srgb, var(--text) 3.5%, var(--surface)), var(--surface)); box-shadow: var(--shadow-soft); }
-.ch-strip > div { display: grid; gap: 2px; align-content: start; padding: 16px 20px; min-width: 0; }
-.ch-strip > * + * { border-left: 1px solid var(--border); }
-.ch-by { display: flex; flex-wrap: wrap; gap: 4px 28px; }
-.ch-one { display: grid; gap: 0; }
-.ch-one small { font-size: 13px; color: var(--text-3); }
 .ch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 .ch-card { display: grid; gap: 10px; align-content: start; padding: 16px 16px 14px 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow-soft); min-width: 0; }
 .ch-card header { display: flex; align-items: center; gap: 10px; }
@@ -39,9 +33,6 @@
 @media (--xs) {
   .ch-sec { gap: 12px; }
   .ch-head h2 { font-size: 18px; }
-  .ch-strip { grid-template-columns: minmax(0, 1fr); border-radius: 14px; }
-  .ch-strip > div { padding: 12px 14px; }
-  .ch-strip > * + * { border-left: 0; border-top: 1px solid var(--border); }
   .ch-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .ch-num b { font-size: 24px; }
 }

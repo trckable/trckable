@@ -93,7 +93,7 @@ for (const [width, height] of [
     }
     await page.locator('#xp .xdrawer-open').click()
     await items.nth(1).click() // Overview: the default section, What changed, has no cards
-    const cards = page.locator('#xp .sumrow .sum')
+    const cards = page.locator('#xp .sumrow').first().locator('.sum') // the four numbers; the visits row follows
     await expect(cards).toHaveCount(4)
     const tops = await cards.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)))
     // The compact cards are narrow enough for four across from 768 px (squeezed() above says none is cramped).
@@ -112,7 +112,7 @@ for (const [width, height, rows] of [
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
     await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&x=overview&v=`)
     await expect(page.locator('#xp.on')).toBeVisible()
-    const cards = page.locator('#xp .sumrow .sum')
+    const cards = page.locator('#xp .sumrow').first().locator('.sum') // the four numbers; the visits row follows
     await expect(cards).toHaveCount(4)
     const at = await cards.evaluateAll((els) => els.map((e) => ({ top: Math.round(e.getBoundingClientRect().top), value: Math.round((e.querySelector('.sum-v') as HTMLElement).getBoundingClientRect().top - e.getBoundingClientRect().top) })))
     expect(new Set(at.map((c) => c.top)).size, 'rows').toBe(rows)

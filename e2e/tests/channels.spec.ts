@@ -50,7 +50,7 @@ test('connect, see the card, and disconnect deletes it', async ({ page }) => {
   await expect(card).toContainText('Monitoring 1 account')
   await expect(card).toContainText('@makerstudio')
   // Views by platform in the header; no total across them.
-  await expect(sec.locator('[data-k="channel-accounts"]')).toContainText('1')
+  await expect(sec.locator('[data-sum="channel-accounts"]')).toContainText('1')
   await expect(page).not.toHaveURL(/channel=/)
 
   await card.getByRole('button', { name: 'More for YouTube' }).click()

@@ -1,0 +1,1 @@
+One summary card on every page: All sites, Channels, Settings Health and the share-link preview use it, the setup screen no longer loads the old Briefing look while it opens, and the old tile styles are gone.

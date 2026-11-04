@@ -48,15 +48,15 @@ test('All sites: totals are the rows, sorts, states and the ⋯ menu', async ({ 
   const nums = async (sel: string) => (await page.locator(sel).allTextContents()).map((t) => Number(t.replace(/\D/g, '')) || 0)
   const sum = (a: number[]) => a.reduce((n, v) => n + v, 0)
   const rowsToday = sum(await nums('.tm-row[data-site] .c-n b'))
-  expect(Number((await page.locator('[data-k=today]').textContent())!.replace(/\D/g, ''))).toBe(rowsToday)
+  expect(Number((await page.locator('[data-sum=today] .sum-v').textContent())!.replace(/\D/g, ''))).toBe(rowsToday)
   const rowsNow = sum(await nums('.tm-row[data-site] .tm-live'))
-  expect(Number((await page.locator('[data-k=online]').textContent())!.replace(/\D/g, ''))).toBe(rowsNow)
+  expect(Number((await page.locator('[data-sum=online] .sum-v').textContent())!.replace(/\D/g, ''))).toBe(rowsNow)
 
   // States, in the list's words: quiet, not verified, receiving.
   await expect(row(small)).toContainText('quiet 10h')
   await expect(row(empty)).toContainText('Not verified')
   await expect(row(busy)).toContainText('Receiving')
-  expect(await page.locator('[data-k=attention]').textContent()).toMatch(/^[1-9]/)
+  expect(await page.locator('[data-sum=attention] .sum-v').textContent()).toMatch(/^[1-9]/)
   await expect(page.locator('[data-k=briefing]')).toContainText('need')
 
   // Attention puts the sites that need a look first; Traffic orders by today.

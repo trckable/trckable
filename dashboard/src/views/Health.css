@@ -72,16 +72,6 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--up) 20%, transparent);
 }
 
-.htiles {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-}
-.htile .kit-sub {
-  align-items: flex-start;
-  line-height: 1.35;
-}
-
 .card.hcard {
   gap: 12px;
 }
@@ -185,9 +175,6 @@
 }
 
 @media (max-width: 760px) {
-  .htiles {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .health-hero {
     grid-template-columns: auto 1fr;
   }
