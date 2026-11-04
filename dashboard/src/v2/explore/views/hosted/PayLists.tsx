@@ -66,7 +66,7 @@ const keyOf = (x: XCtx, q: ReportQuery, list: string) => `${list}|${x.site.id}|$
 const sourceOf = (channel?: string, referrer?: string) => (channel ? [channelLabel(channel), referrer].filter(Boolean).join(' · ') : '')
 
 /** The buyer's face: their journey face when a visit is linked, else their country's flag, else their initials. Never a question mark. */
-function Who({ visitor, country, name }: { visitor?: string; country?: string; name: string }) {
+export function Who({ visitor, country, name }: { visitor?: string; country?: string; name: string }) {
   if (visitor) return <Avatar id={visitor} size={32} />
   return (
     <span className="xface" aria-hidden="true">

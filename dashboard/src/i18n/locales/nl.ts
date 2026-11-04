@@ -2540,6 +2540,7 @@ export default {
   'v2explore.sum.avg': 'Gem. bestelling',
   'v2explore.sum.refunds': 'Terugbetalingen',
   'v2explore.buyersFrom': 'Waar kopers vandaan komen',
+  'v2explore.unknownPlace': 'Onbekend',
   'v2explore.tags.new': 'nieuw',
   'v2explore.tags.upgrade': 'upgrade',
   'v2explore.tags.renewal': 'verlenging',

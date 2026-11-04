@@ -123,7 +123,7 @@ export const extrasApi = {
   insights: (site: string, q: ReportQuery) => call<{ insights: Insight[] }>('GET', `/sites/${site}/insights` + qs({ ...q, filters: undefined })),
   pagesSell: (site: string, q: ReportQuery) => call<{ pages: Row[] }>('GET', `/sites/${site}/report/pages-sell` + qs(q)),
   buyers: (site: string, q: ReportQuery, n = 8) => call<{ buyers: Buyer[] }>('GET', `/sites/${site}/buyers` + qs(q) + `&n=${n}`),
-  payments: (site: string, q: ReportQuery, offset: number, n = 20) => call<{ payments: Payment[]; total: number; currency: string }>('GET', `/sites/${site}/sales/payments` + qs(q) + `&n=${n}&offset=${offset}`),
+  payments: (site: string, q: ReportQuery, offset: number, n = 20) => call<{ payments: Payment[]; total: number; currency: string; countries: { country: string; revenue: number }[] }>('GET', `/sites/${site}/sales/payments` + qs(q) + `&n=${n}&offset=${offset}`),
   customers: (site: string, q: ReportQuery, offset: number, n = 20) => call<{ customers: Customer[]; total: number; currency: string }>('GET', `/sites/${site}/sales/customers` + qs(q) + `&n=${n}&offset=${offset}`),
   customer: (site: string, id: string, q: ReportQuery) => call<CustomerDetail>('GET', `/sites/${site}/sales/customers/${encodeURIComponent(id)}` + qs(q)),
   refunds: (site: string, q: ReportQuery, n = 4) => call<Refunds>('GET', `/sites/${site}/refunds` + qs(q) + `&n=${n}`),

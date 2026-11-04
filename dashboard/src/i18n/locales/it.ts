@@ -2540,6 +2540,7 @@ export default {
   'v2explore.sum.avg': 'Ordine medio',
   'v2explore.sum.refunds': 'Rimborsi',
   'v2explore.buyersFrom': 'Da dove vengono gli acquirenti',
+  'v2explore.unknownPlace': 'Sconosciuto',
   'v2explore.tags.new': 'nuova',
   'v2explore.tags.upgrade': 'upgrade',
   'v2explore.tags.renewal': 'rinnovo',

@@ -2543,6 +2543,7 @@ export default {
   'v2explore.sum.avg': 'Ø Bestellung',
   'v2explore.sum.refunds': 'Erstattungen',
   'v2explore.buyersFrom': 'Woher Käufer kommen',
+  'v2explore.unknownPlace': 'Unbekannt',
   'v2explore.tags.new': 'neu',
   'v2explore.tags.upgrade': 'Upgrade',
   'v2explore.tags.renewal': 'Verlängerung',

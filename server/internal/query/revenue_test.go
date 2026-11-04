@@ -26,8 +26,8 @@ func withPayments(q Q) Q {
 	facts := []ledger.Fact{
 		{Provider: "stripe", ID: "pa", PaidAt: at(10, 15, 5), Amount: 5000, Visitor: 1, Customer: "stripe:ca", Kind: "one_time", Converted: true, Country: "DE", Currency: "EUR"},
 		{Provider: "stripe", ID: "pb", PaidAt: at(10, 11, 30), Amount: 2000, Refunded: 500, Visitor: 2, Customer: "stripe:cb", Kind: "subscription", Converted: true},
-		{Provider: "stripe", ID: "px", PaidAt: at(10, 12, 30), Amount: 1000, Customer: "stripe:cx", Kind: "one_time", Converted: true},
-		{Provider: "paddle", ID: "pc", PaidAt: at(10, 13, 0), Amount: 700, Visitor: 3, Customer: "paddle:cc", Kind: "renewal", Converted: true},
+		{Provider: "stripe", ID: "px", PaidAt: at(10, 12, 30), Amount: 1000, Customer: "stripe:cx", Kind: "one_time", Converted: true, Country: "GB"},
+		{Provider: "paddle", ID: "pc", PaidAt: at(10, 13, 0), Amount: 700, Visitor: 3, Customer: "paddle:cc", Kind: "renewal", Converted: true, Country: "FR"},
 		{Provider: "stripe", ID: "pd", PaidAt: at(11, 3, 0), Amount: 3000, Visitor: 4, Customer: "stripe:cd", Kind: "one_time", Converted: true},
 		// B's renewal 200 days later is still earned by B's AI visit.
 		{Provider: "stripe", ID: "pb2", PaidAt: at(10, 11, 30).AddDate(0, 0, 200), TouchAt: at(10, 11, 30), Amount: 2000, Visitor: 2, Customer: "stripe:cb", Kind: "renewal", Converted: true},
@@ -344,7 +344,17 @@ func TestPayLists(t *testing.T) {
 		eq(t, "newest first", pay.Payments[0].Amount, int64(5000))
 		eq(t, "its visitor, base 36", pay.Payments[0].Visitor, "1")
 		eq(t, "its source", pay.Payments[0].Referrer, "google.com")
-		eq(t, "its billing country", pay.Payments[0].Country, "DE")
+		eq(t, "the linked visit's country beats the billing one", pay.Payments[1].Country, "US")
+		eq(t, "an unlinked payment has the provider's country", pay.Payments[2].Country, "GB")
+		got := map[string]int64{}
+		for _, c := range pay.Countries {
+			got[c.Country] = c.Revenue
+		}
+		eq(t, "unlinked money counts by its billing country", got["GB"], int64(1000))
+		eq(t, "no money is left to a billing country a visit overrides", got["FR"], int64(0))
+		if got["DE"] < 5000 {
+			t.Fatalf("the linked payment counts for its visit's country: %+v", pay.Countries)
+		}
 		eq(t, "its provider", pay.Payments[0].Provider, "stripe")
 		eq(t, "paid in another currency", pay.Payments[0].Currency, "EUR")
 		eq(t, "the site's own currency is not repeated", pay.Payments[2].Currency, "")

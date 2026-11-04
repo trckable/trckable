@@ -36,26 +36,28 @@ function Cards({ x, d }: { x: XCtx; d: Model }) {
   return <SummaryCards items={items} />
 }
 
-/** Where the paying visits came from: the biggest five countries by revenue, each with its share of the widest. */
+/** Where the money came from: the biggest countries by revenue (the server sends five), the unknown last, each with its share of the widest. */
 function Countries({ x, list }: { x: XCtx; list: Model['countries'] }) {
   if (list.length === 0) return null
-  const top = list.slice(0, 5)
+  const top = list
   const widest = Math.max(1, ...top.map((c) => c.amt))
   const rows: CRow[] = top.map((c) => ({
     key: c.code,
-    a: (
+    a: c.code ? (
       <>
         <Flag code={c.code} /> {countryName(c.code)}
       </>
+    ) : (
+      copy.unknownPlace
     ),
     bar: c.amt / widest,
-    onPick: () => x.pick('country', c.code),
+    onPick: c.code ? () => x.pick('country', c.code) : undefined,
     c: [x.money(c.amt)],
   }))
   return (
     <>
       <XSec a={copy.buyersFrom} />
-      <XCols first={copy.heads.country} cols={[{ h: copy.heads.revenue }]} rows={rows} xc="minmax(0,1fr) 84px" xcm="minmax(0,1fr) 72px" limit={5} onAll={x.showAll} />
+      <XCols first={copy.heads.country} cols={[{ h: copy.heads.revenue }]} rows={rows} xc="minmax(0,1fr) 84px" xcm="minmax(0,1fr) 72px" limit={list.length} onAll={x.showAll} />
     </>
   )
 }

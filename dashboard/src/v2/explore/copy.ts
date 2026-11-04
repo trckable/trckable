@@ -212,6 +212,7 @@ export const copy = defineCopy('v2explore', {
   net: 'net',
   sum: { net: 'Net revenue', orders: 'Orders', customers: 'Customers', avg: 'Average order', refunds: 'Refunds' },
   buyersFrom: 'Where buyers are from',
+  unknownPlace: 'Unknown',
   pay: {
     count: (n: number) => `${n} ${n === 1 ? 'payment' : 'payments'}`,
     customers: (n: number) => `${n} ${n === 1 ? 'customer' : 'customers'}`,

@@ -26,6 +26,7 @@ type PayPage struct {
 	Payments  []PayRow
 	Customers []CustRow
 	Total     int
+	Countries []CountryRev
 	Currency  string
 	Exponent  int
 }
@@ -93,12 +94,59 @@ func (q Q) payList(ctx context.Context, p Params, customers bool, limit, offset 
 	if err != nil {
 		return nil, err
 	}
+	if out.Countries, err = countryRevenue(ctx, conn, sqlText, args); err != nil {
+		return nil, err
+	}
 	if customers {
 		out.Customers, out.Total, err = custList(ctx, conn, sqlText, args, p.Site, limit, offset)
 	} else {
 		out.Payments, out.Total, err = payRows(ctx, conn, sqlText, args, p.Site, cur, facts, limit, offset)
 	}
 	return out, err
+}
+
+// MaxPayCountries is how many named countries the revenue split lists.
+const MaxPayCountries = 5
+
+// CountryRev is what one country paid in the period, net of refunds. An empty
+// Country is the payments no country is known for.
+type CountryRev struct {
+	Country string `json:"country"`
+	Revenue int64  `json:"revenue"`
+}
+
+// countryRevenue splits the period's net revenue by country over every
+// payment, linked to a visit or not: the linked visit's country, else the one
+// the provider named, else unknown. The biggest MaxPayCountries come first and
+// the unknown ones last, only when there is money in them.
+func countryRevenue(ctx context.Context, conn *sql.Conn, sqlText string, args []any) ([]CountryRev, error) {
+	rows, err := conn.QueryContext(ctx, sqlText+`
+		SELECT coalesce(nullif(country, ''), nullif(bill_country, ''), '') AS c, sum(amount - refunded) AS rev
+		FROM ar GROUP BY c ORDER BY rev DESC, c`, args...)
+	if err != nil {
+		return nil, fmt.Errorf("revenue by country: %w", err)
+	}
+	defer rows.Close()
+	out := []CountryRev{}
+	var unknown int64
+	for rows.Next() {
+		var c string
+		var rev int64
+		if err := rows.Scan(&c, &rev); err != nil {
+			return nil, err
+		}
+		switch {
+		case rev <= 0:
+		case c == "":
+			unknown = rev
+		case len(out) < MaxPayCountries:
+			out = append(out, CountryRev{Country: c, Revenue: rev})
+		}
+	}
+	if unknown > 0 {
+		out = append(out, CountryRev{Revenue: unknown})
+	}
+	return out, rows.Err()
 }
 
 // PayRow is one payment as the Payments list shows it: what it was worth, who
@@ -169,7 +217,7 @@ func payRows(ctx context.Context, conn *sql.Conn, sqlText string, args []any, si
 		return nil, 0, fmt.Errorf("payments count: %w", err)
 	}
 	rows, err := conn.QueryContext(ctx, sqlText+`
-		SELECT payment_id, paid_at, amount, refunded, kind, coalesce(nullif(bill_country, ''), country, ''), visitor_id, attributed, coalesce(channel, 'Direct'), coalesce(referrer, ''), customer
+		SELECT payment_id, paid_at, amount, refunded, kind, coalesce(nullif(country, ''), nullif(bill_country, ''), ''), visitor_id, attributed, coalesce(channel, 'Direct'), coalesce(referrer, ''), customer
 		FROM ar ORDER BY paid_at DESC, payment_id LIMIT ? OFFSET ?`, append(append([]any{}, args...), limit, offset)...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("payments: %w", err)
@@ -219,7 +267,7 @@ func custList(ctx context.Context, conn *sql.Conn, sqlText string, args []any, s
 			       coalesce(arg_min(visitor_id, paid_at) FILTER (visitor_id <> 0), 0) AS visitor,
 			       arg_min(coalesce(channel, 'Direct'), paid_at) FILTER (attributed) AS ch,
 			       arg_min(coalesce(referrer, ''), paid_at) FILTER (attributed) AS ref,
-			       arg_min(coalesce(nullif(bill_country, ''), country), paid_at) FILTER (coalesce(nullif(bill_country, ''), country, '') <> '') AS country,
+			       arg_min(coalesce(nullif(bill_country, ''), country), paid_at) FILTER (coalesce(nullif(country, ''), nullif(bill_country, ''), '') <> '') AS country,
 			       min(coalesce(first_seen, start)) AS seen
 			FROM ar GROUP BY customer)
 		SELECT customer, spent, orders, refunded, first_paid, last_paid, visitor, coalesce(ch, ''), coalesce(ref, ''), coalesce(country, ''), seen

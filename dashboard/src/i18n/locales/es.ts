@@ -2546,6 +2546,7 @@ export default {
   'v2explore.sum.avg': 'Pedido medio',
   'v2explore.sum.refunds': 'Reembolsos',
   'v2explore.buyersFrom': 'De dónde vienen los compradores',
+  'v2explore.unknownPlace': 'Desconocido',
   'v2explore.tags.new': 'nueva',
   'v2explore.tags.upgrade': 'mejora',
   'v2explore.tags.renewal': 'renovación',

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { CrawlerReport, FunnelResult, Money, Report, SearchReport, WebVitals } from '../../../lib/api'
 import type { Mention as ApiMention } from '../../../features/mentions/api'
-import { gradeOf, leakOf, mapBots, mapFunnel, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed, stepsOf } from './mapSections'
+import { gradeOf, leakOf, mapBots, mapFunnel, mapLinks, mapMentions, mapSales, salesCountries, mapSearch, mapSpeed, stepsOf } from './mapSections'
 
 const step = (value: string, visitors: number): FunnelResult => ({ kind: 'page', value, visitors, rate: 1, of_total: 1, median_s: 0, dropped: 0 })
 const kpis = { visitors: 100, sessions: 100, pageviews: 200, bounce_rate: 0.4, avg_session_s: 60, views_per_session: 2, new_visitor_share: 0.5 }
@@ -224,5 +224,19 @@ describe('the funnel an old address names', () => {
     expect(paid.map((s) => s.kind)).toEqual(['page', 'page', 'goal', 'paid'])
     expect(stepsOf(paid, pages, undefined, true)).toEqual(paid)
     expect(stepsOf(undefined, pages, { value: 'signup' }, false).some((s) => s.kind === 'paid')).toBe(false)
+  })
+})
+
+describe('salesCountries', () => {
+  it('uses the payments split with the unknown last, else the visits that paid', () => {
+    expect(salesCountries([{ country: 'de', revenue: 500 }, { country: '', revenue: 200 }, { country: 'FR', revenue: 0 }])).toEqual([{ code: 'DE', amt: 500 }, { code: '', amt: 200 }])
+    expect(salesCountries(undefined, [{ value: 'US', revenue: 9 }, { value: 'Other', revenue: 4 }])).toEqual([{ code: 'US', amt: 9 }])
+  })
+})
+
+describe('salesCountries', () => {
+  it('uses the payments split with the unknown last, else the visits that paid', () => {
+    expect(salesCountries([{ country: 'de', revenue: 500 }, { country: '', revenue: 200 }, { country: 'FR', revenue: 0 }])).toEqual([{ code: 'DE', amt: 500 }, { code: '', amt: 200 }])
+    expect(salesCountries(undefined, [{ value: 'US', revenue: 9 }, { value: 'Other', revenue: 4 }])).toEqual([{ code: 'US', amt: 9 }])
   })
 })
