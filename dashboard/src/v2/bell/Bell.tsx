@@ -66,14 +66,20 @@ const NONE: ReadonlySet<string> = new Set()
  * person can see (see `settle`): a new row takes its place in the order, and `fresh` names the rows that just arrived.
  */
 function useOpenRows(src: NoticeRow[], open: boolean, gone: ReadonlySet<string>) {
-  const [state, setState] = useState({ src, open, gone, rows: src, fresh: NONE })
+  const [state, setState] = useState({ src, open, gone, rows: src, fresh: NONE, lit: NONE })
   if (state.src !== src || state.open !== open || state.gone !== gone) {
-    const rows = open && state.open ? settle(state.rows, src, gone) : src
+    const live = open && state.open
+    const rows = live ? settle(state.rows, src, gone) : src
     const before = new Set(state.rows.map((r) => r.id))
-    const fresh = open && state.open ? new Set(rows.filter((r) => !before.has(r.id)).map((r) => r.id)) : NONE
-    setState({ src, open, gone, rows, fresh })
+    const fresh = live ? new Set(rows.filter((r) => !before.has(r.id)).map((r) => r.id)) : NONE
+    // Opening reads everything at once (the badge is clear for good); the dots of what was unread stay until it shuts.
+    const lit = open ? new Set([...(live ? state.lit : NONE), ...src.filter((r) => r.unread && (!live || fresh.has(r.id))).map((r) => r.id)]) : NONE
+    setState({ src, open, gone, rows, fresh, lit })
   }
-  return state
+  const rows = state.lit.size ? state.rows.map((r) => (state.lit.has(r.id) && !r.unread ? { ...r, unread: true } : r)) : state.rows
+  // A row that was opened is read: its dot goes out at once.
+  const unlight = (ids: string[]) => setState((s) => ({ ...s, lit: new Set([...s.lit].filter((id) => !ids.includes(id))) }))
+  return { rows, fresh: state.fresh, unlight }
 }
 
 export function Bell({ site, notices }: { site: Site | null; notices: ReturnType<typeof useNotices> }) {
@@ -91,7 +97,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
   }, [])
   // The rows the menu lists, and the badge counted from those same rows (none counted until the whole list is there).
   const src = useMemo(() => rowsOf(items, read), [items, read])
-  const { rows: listed, fresh } = useOpenRows(src, open, gone)
+  const { rows: listed, fresh, unlight } = useOpenRows(src, open, gone)
   const [filter, setFilter] = useState<Filter>(readFilter)
   const choose = (f: Filter) => {
     setFilter(f)
@@ -102,6 +108,12 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
   useEffect(() => {
     if (open) refresh(OPEN_GAP_MS, true)
   }, [open, refresh])
+  // An open panel has been seen: what is unread in it (and what arrives while it is open) is read at once, here first and
+  // told to the server after, so no read of the list that is already on its way can bring the badge back.
+  const hasUnread = notices.ready && src.some((r) => r.unread)
+  useEffect(() => {
+    if (open && hasUnread) markAll()
+  }, [open, hasUnread, markAll])
   const warm = useCallback(() => refresh(OPEN_GAP_MS, true), [refresh])
   useEffect(() => {
     const q = window.matchMedia(QUERY.xs)
@@ -193,6 +205,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
         const group = listed.find((x) => x.members?.some((m) => m.id === id))
         const n = (group?.members ?? [...listed, ...(archive?.items ?? [])]).find((x) => x.id === id)
         mark(group?.members ? group.members.map((m) => m.id) : id)
+        unlight(group?.members ? [group.id, ...group.members.map((m) => m.id)] : [id])
         for (const m of group?.members ?? [n]) m?.read?.()
         if (n?.milestone && site && n.site === site.domain) setTold(n.milestone)
         else if (n?.busy && !n.open) setBusy(n)
@@ -200,7 +213,10 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
         else if (n && hasCard(n) && sites.some((x) => (n.siteId ? x.id === n.siteId : x.domain === n.site))) setCard(n)
         else if (n) go(n, site, sites)
       }}
-      onAll={markAll}
+      onAll={() => {
+        markAll()
+        unlight(listed.map((r) => r.id))
+      }}
       archive={archive && { rows: old, load: archive.load, loading: archive.loading, none: archive.words.none }}
       onSettings={() => site && openSettings(site, 'alerts')}
     />

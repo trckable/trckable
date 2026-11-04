@@ -154,6 +154,10 @@ export function useNotices(sites: Site[]) {
     send(items.map((i) => i.id))
   }, [send, items, bellMore])
   // Ready when the whole list can be drawn at once: the server's rows, what the account has read (or the list of last time, with this browser's marks) and the build's own rows.
-  const ready = loaded && (synced || kept) && (bellMore?.ready ?? true)
+  const complete = loaded && (synced || kept) && (bellMore?.ready ?? true)
+  // Once the whole list has been drawn it stays drawn: a read of it again (here or in a build's own list) never brings the placeholder back.
+  const [was, setWas] = useState(complete)
+  if (complete && !was) setWas(true)
+  const ready = complete || was
   return { items, read, refresh, mark, markAll, can, ready, sites, dismiss: bellMore?.dismiss, archive: bellMore?.archive }
 }

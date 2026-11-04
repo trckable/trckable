@@ -65,7 +65,7 @@ describe('the bell’s list', () => {
     await act(() => new Promise((r) => setTimeout(r, 20)))
     const before = ids(m.host)
     act(() => m.host.querySelector<HTMLButtonElement>('[data-id="down:i1"] .nf')?.click())
-    expect(post).toHaveBeenCalledWith(['down:i1'])
+    expect(post.mock.calls.flat(2)).toContain('down:i1') // read when the panel opened
     open() // a row opened shuts the menu
     expect(m.host.querySelector('[data-id="down:i1"] .nfd')?.classList.contains('off')).toBe(true)
     expect(ids(m.host)).toEqual(before)
