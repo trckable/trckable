@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -95,12 +96,19 @@ func (dodo) Parse(body []byte) (Event, error) {
 			kind = KindSubscription // renewals are recognised by the ledger (a later payment of the same subscription)
 		}
 		cur, gross, tax := p.Currency, p.TotalAmount, p.Tax
+		var chargeAmount int64
+		var chargeCur string
 		if p.SettlementAmount > 0 && p.SettlementCurrency != "" {
 			cur, gross, tax = p.SettlementCurrency, p.SettlementAmount, p.SettlementTax
+			if !strings.EqualFold(p.Currency, p.SettlementCurrency) {
+				// Dodo refunds and disputes arrive in the buyer's currency.
+				chargeAmount, chargeCur = p.TotalAmount, p.Currency
+			}
 		}
 		vis := visitorFrom(p.Metadata)
 		ev.Payments = append(ev.Payments, Payment{ID: p.PaymentID, PaidAt: rfc3339ms(p.CreatedAt), Currency: cur, Gross: gross, Tax: tax,
-			CustomerID: p.Customer.CustomerID, SubscriptionID: p.SubscriptionID, Email: p.Customer.Email, Visitor: vis, Kind: kind})
+			CustomerID: p.Customer.CustomerID, SubscriptionID: p.SubscriptionID, Email: p.Customer.Email, Visitor: vis, Kind: kind,
+			ChargeAmount: chargeAmount, ChargeCurrency: chargeCur})
 		ev.Links = links(vis, p.Customer.CustomerID, p.SubscriptionID)
 
 	case "refund.succeeded", "refund.failed":

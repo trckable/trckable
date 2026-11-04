@@ -1131,6 +1131,12 @@ var migrations = []string{
 	);
 	CREATE INDEX IF NOT EXISTS alert_fires_site ON alert_fires (site_id, at);
 	CREATE INDEX IF NOT EXISTS alert_fires_at ON alert_fires (at);`,
+	// 83: what the buyer was charged, when the stored amount is in another
+	// currency (the merchant's settlement): refunds and disputes arrive in the
+	// charge currency and are scaled by their share of it. Zero and empty mean
+	// the stored amount is the charge.
+	`ALTER TABLE pay_payments ADD COLUMN charge_amount INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE pay_payments ADD COLUMN charge_currency TEXT NOT NULL DEFAULT '';`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
