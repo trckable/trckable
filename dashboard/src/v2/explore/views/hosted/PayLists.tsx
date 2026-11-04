@@ -16,7 +16,7 @@ import { XEmpty, XError, XSec } from '../../../ui/XBits'
 import { Flag } from '../../../ui/Flag'
 import { copy } from '../../copy'
 import type { XCtx } from '../../ctx'
-import { customerName } from './customerModel'
+import { customerName, methodLabel } from './customerModel'
 
 const LINK_DOCS = 'https://trckable.com/docs/gumroad-paypal/#link-a-checkout-to-the-visit'
 const CustomerSheet = lazy(() => import('./CustomerSheet'))
@@ -142,7 +142,7 @@ export function Payments({ x, query, onPick }: { x: XCtx; query: ReportQuery; on
               {p.visitor ? nameOf(p.visitor) : strangerName(p)} <span className={`mk-tag ${tagOf(p)}`}>{copy.tags[tagOf(p)]}</span>
             </div>
             <div className="mk-quiet" style={{ fontSize: '12px' }} title={fmtDayTime(Date.parse(p.at))}>
-              {[sourceOf(p.channel, p.referrer), ago(now - Date.parse(p.at)), p.refunded ? copy.pay.refunded(x.money(p.refunded)) : ''].filter(Boolean).join(' · ')}
+              {[p.product, sourceOf(p.channel, p.referrer), ago(now - Date.parse(p.at)), p.refunded ? copy.pay.refunded(x.money(p.refunded)) : ''].filter(Boolean).join(' · ')}
             </div>
             {!p.visitor && (
               <div className="mk-quiet" style={{ fontSize: '12px' }}>
@@ -153,7 +153,10 @@ export function Payments({ x, query, onPick }: { x: XCtx; query: ReportQuery; on
               </div>
             )}
           </span>
-          <span className={`amt ${p.refunded ? 'neg' : ''}`}>+{x.money(p.amount)}</span>
+          <span className="amtcol">
+            <span className={`amt ${p.refunded ? 'neg' : ''}`}>+{x.money(p.amount)}</span>
+            {p.method && <div className="mk-quiet">{methodLabel(p.method, copy.methods)}</div>}
+          </span>
         </Row>
       ))}
       <More shown={list.rows.length} list={list} />

@@ -343,7 +343,7 @@ func attributedSQL(p Params, facts []ledger.Fact, cte string, cteArgs []any) (sq
 			GROUP BY f.payment_id
 		),
 		a AS (
-			SELECT f.payment_id, f.visitor_id, f.paid_at, f.amount, f.refunded, f.customer, f.kind, f.change, f.converted, f.bill_country,
+			SELECT f.payment_id, f.visitor_id, f.paid_at, f.amount, f.refunded, f.customer, f.kind, f.change, f.converted, f.bill_country, f.product, f.method,
 			       t.sid IS NOT NULL AS attributed,
 			       ((f.paid_at AT TIME ZONE 'UTC') AT TIME ZONE '` + tz + `') AS lpaid,
 			       c.* EXCLUDE (site_id, visitor_id)
@@ -359,7 +359,7 @@ func attributedSQL(p Params, facts []ledger.Fact, cte string, cteArgs []any) (sq
 func loadFacts(ctx context.Context, conn *sql.Conn, facts []ledger.Fact) error {
 	if _, err := conn.ExecContext(ctx, `CREATE OR REPLACE TEMP TABLE p_facts (
 		payment_id VARCHAR, visitor_id UBIGINT, paid_at TIMESTAMP, touch_at TIMESTAMP, amount BIGINT, refunded BIGINT,
-		customer VARCHAR, kind VARCHAR, change VARCHAR, converted BOOLEAN, bill_country VARCHAR)`); err != nil {
+		customer VARCHAR, kind VARCHAR, change VARCHAR, converted BOOLEAN, bill_country VARCHAR, product VARCHAR, method VARCHAR)`); err != nil {
 		return err
 	}
 	if len(facts) == 0 {
@@ -379,7 +379,7 @@ func loadFacts(ctx context.Context, conn *sql.Conn, facts []ledger.Fact) error {
 			if touch.IsZero() {
 				touch = f.PaidAt
 			}
-			if err := app.AppendRow(f.Provider+":"+f.ID, f.Visitor, f.PaidAt.UTC(), touch.UTC(), amount, refunded, f.Customer, f.Kind, f.Change, f.Converted, f.Country); err != nil {
+			if err := app.AppendRow(f.Provider+":"+f.ID, f.Visitor, f.PaidAt.UTC(), touch.UTC(), amount, refunded, f.Customer, f.Kind, f.Change, f.Converted, f.Country, f.Product, f.Method); err != nil {
 				app.Close()
 				return err
 			}

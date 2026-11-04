@@ -44,8 +44,8 @@ func Apply(ctx context.Context, tx *sql.Tx, sc Scope, ev payments.Event) error {
 		cur := strings.ToUpper(p.Currency)
 		if _, err := tx.ExecContext(ctx, `
 			INSERT INTO pay_payments (site_id, provider, id, connection_id, test, paid_at, currency, gross, tax,
-			                          customer_id, subscription_id, email_hash, visitor_id, kind, country, charge_amount, charge_currency, version)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			                          customer_id, subscription_id, email_hash, visitor_id, kind, country, charge_amount, charge_currency, product, method, version)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT (site_id, provider, id) DO UPDATE SET
 				test            = excluded.test OR test,
 				paid_at         = CASE WHEN excluded.version >= version THEN excluded.paid_at ELSE paid_at END,
@@ -60,16 +60,18 @@ func Apply(ctx context.Context, tx *sql.Tx, sc Scope, ev payments.Event) error {
 				country         = CASE WHEN excluded.country <> '' AND (excluded.version >= version OR country = '') THEN excluded.country ELSE country END,
 				charge_amount   = CASE WHEN excluded.version >= version THEN excluded.charge_amount ELSE charge_amount END,
 				charge_currency = CASE WHEN excluded.version >= version THEN excluded.charge_currency ELSE charge_currency END,
+				product         = CASE WHEN excluded.product <> '' AND (excluded.version >= version OR product = '') THEN excluded.product ELSE product END,
+				method          = CASE WHEN excluded.method <> '' AND (excluded.version >= version OR method = '') THEN excluded.method ELSE method END,
 				version         = max(version, excluded.version)`,
 			sc.Site, sc.Provider, p.ID, sc.Connection, test, p.PaidAt, cur, p.Gross, p.Tax,
-			p.CustomerID, p.SubscriptionID, emailHash(sc.EmailKey, p.Email), int64(p.Visitor), kindOr(p.Kind), payments.CountryCode(p.Country), p.ChargeAmount, strings.ToUpper(p.ChargeCurrency), v); err != nil { //nolint:gosec // visitor ids are stored bit for bit in SQLite's signed integer and read back the same way
+			p.CustomerID, p.SubscriptionID, emailHash(sc.EmailKey, p.Email), int64(p.Visitor), kindOr(p.Kind), payments.CountryCode(p.Country), p.ChargeAmount, strings.ToUpper(p.ChargeCurrency), payments.ProductName(p.Product), payments.MethodCode(p.Method), v); err != nil { //nolint:gosec // visitor ids are stored bit for bit in SQLite's signed integer and read back the same way
 			return err
 		}
 	}
 	for _, h := range ev.Hints {
 		if _, err := tx.ExecContext(ctx, `
-			INSERT INTO pay_hints (site_id, provider, payment_id, source, tax, visitor_id, customer_id, subscription_id, kind, from_plan, to_plan, country, version)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			INSERT INTO pay_hints (site_id, provider, payment_id, source, tax, visitor_id, customer_id, subscription_id, kind, from_plan, to_plan, country, product, method, version)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT (site_id, provider, payment_id, source) DO UPDATE SET
 				tax             = coalesce(CASE WHEN excluded.version >= version THEN excluded.tax END, tax, excluded.tax),
 				visitor_id      = CASE WHEN excluded.visitor_id <> 0 THEN excluded.visitor_id ELSE visitor_id END,
@@ -79,8 +81,10 @@ func Apply(ctx context.Context, tx *sql.Tx, sc Scope, ev payments.Event) error {
 				from_plan       = CASE WHEN excluded.from_plan <> '' THEN excluded.from_plan ELSE from_plan END,
 				to_plan         = CASE WHEN excluded.to_plan <> '' THEN excluded.to_plan ELSE to_plan END,
 				country         = CASE WHEN excluded.country <> '' THEN excluded.country ELSE country END,
+				product         = CASE WHEN excluded.product <> '' THEN excluded.product ELSE product END,
+				method          = CASE WHEN excluded.method <> '' THEN excluded.method ELSE method END,
 				version         = max(version, excluded.version)`,
-			sc.Site, sc.Provider, h.PaymentID, h.Source, h.Tax, int64(h.Visitor), h.CustomerID, h.SubscriptionID, h.Kind, h.FromPlan, h.ToPlan, payments.CountryCode(h.Country), v); err != nil { //nolint:gosec // visitor ids are stored bit for bit in SQLite's signed integer and read back the same way
+			sc.Site, sc.Provider, h.PaymentID, h.Source, h.Tax, int64(h.Visitor), h.CustomerID, h.SubscriptionID, h.Kind, h.FromPlan, h.ToPlan, payments.CountryCode(h.Country), payments.ProductName(h.Product), payments.MethodCode(h.Method), v); err != nil { //nolint:gosec // visitor ids are stored bit for bit in SQLite's signed integer and read back the same way
 			return err
 		}
 	}
@@ -179,6 +183,8 @@ type Fact struct {
 	Change    string     // what the payment was beyond its kind: "upgrade" (a renewal-sized payment that moved the customer to another plan) or "new" (a first one-time purchase)
 	Converted bool       // false: no FX rate yet (excluded from sums until one arrives)
 	Country   string     // billing country (ISO 3166 alpha-2) when the provider named one, else empty
+	Product   string     // what was bought, when the provider named it, else empty
+	Method    string     // how it was paid (a payments.Method code), when the provider said, else empty
 	Refunds   []RefundAt // each refund and lost dispute at its own time, in the site currency; they add up to Refunded
 	Currency  string     // the currency it was paid in
 	NoRate    bool       // not converted, and the ECB publishes no rate for Currency at all
@@ -215,16 +221,16 @@ func FactsRefundedIn(ctx context.Context, db *sql.DB, rates *fx.Rates, site, cur
 
 func facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency string, from, to time.Time, test bool, extra string, extraArgs []any) ([]Fact, error) {
 	type pay struct {
-		provider, id, cur, customer, sub, email, kind, country string
-		paid, gross, chargeAmt                                 int64
-		chargeCur                                              string
-		tax                                                    sql.NullInt64
-		visitor                                                int64
-		test                                                   bool
+		provider, id, cur, customer, sub, email, kind, country, product, method string
+		paid, gross, chargeAmt                                                  int64
+		chargeCur                                                               string
+		tax                                                                     sql.NullInt64
+		visitor                                                                 int64
+		test                                                                    bool
 	}
 	key := func(provider, id string) string { return provider + "\x00" + id }
 	//nolint:gosec // extra is one of this package's own fixed clauses (all values bound), never text from a request
-	rows, err := db.QueryContext(ctx, `SELECT provider, id, paid_at, currency, gross, tax, customer_id, subscription_id, email_hash, visitor_id, kind, test, country, charge_amount, charge_currency
+	rows, err := db.QueryContext(ctx, `SELECT provider, id, paid_at, currency, gross, tax, customer_id, subscription_id, email_hash, visitor_id, kind, test, country, charge_amount, charge_currency, product, method
 		FROM pay_payments WHERE site_id = ? AND paid_at >= ? AND paid_at < ? AND (test = 0 OR ?)`+extra+` ORDER BY paid_at, provider, id`,
 		append([]any{site, from.UnixMilli(), to.UnixMilli(), test}, extraArgs...)...)
 	if err != nil {
@@ -233,7 +239,7 @@ func facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency stri
 	var ps []pay
 	for rows.Next() {
 		var p pay
-		if err := rows.Scan(&p.provider, &p.id, &p.paid, &p.cur, &p.gross, &p.tax, &p.customer, &p.sub, &p.email, &p.visitor, &p.kind, &p.test, &p.country, &p.chargeAmt, &p.chargeCur); err != nil {
+		if err := rows.Scan(&p.provider, &p.id, &p.paid, &p.cur, &p.gross, &p.tax, &p.customer, &p.sub, &p.email, &p.visitor, &p.kind, &p.test, &p.country, &p.chargeAmt, &p.chargeCur, &p.product, &p.method); err != nil {
 			rows.Close()
 			return nil, err
 		}
@@ -279,14 +285,15 @@ func facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency stri
 		visitor             int64
 		customer, sub, kind string
 		country             string
+		product, method     string
 	}
 	hints := map[string]*hint{} // provider\0payment id
-	if err := each(ctx, db, `SELECT provider, payment_id, tax, visitor_id, customer_id, subscription_id, kind, country, version FROM pay_hints
+	if err := each(ctx, db, `SELECT provider, payment_id, tax, visitor_id, customer_id, subscription_id, kind, country, product, method, version FROM pay_hints
 		WHERE site_id = ? AND payment_id IN (SELECT value FROM json_each(?))`, []any{site, jsonList(keys)}, func(r *sql.Rows) error {
-		var prov, k, cus, sub, kind, country string
+		var prov, k, cus, sub, kind, country, product, method string
 		var tax sql.NullInt64
 		var vis, ver int64
-		if err := r.Scan(&prov, &k, &tax, &vis, &cus, &sub, &kind, &country, &ver); err != nil {
+		if err := r.Scan(&prov, &k, &tax, &vis, &cus, &sub, &kind, &country, &product, &method, &ver); err != nil {
 			return err
 		}
 		pid, ok := owner[key(prov, k)]
@@ -302,7 +309,7 @@ func facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency stri
 			h.tax, h.taxV = tax, ver
 		}
 		h.visitor, h.customer, h.sub, h.kind = maxI(h.visitor, vis), maxS(h.customer, cus), maxS(h.sub, sub), maxS(h.kind, kind)
-		h.country = maxS(h.country, country)
+		h.country, h.product, h.method = maxS(h.country, country), maxS(h.product, product), maxS(h.method, method)
 		return nil
 	}); err != nil {
 		return nil, err
@@ -526,6 +533,7 @@ func facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency stri
 			})
 		}
 		f.Country = payments.CountryCode(cmp.Or(p.country, h.country))
+		f.Product, f.Method = cmp.Or(p.product, h.product), cmp.Or(p.method, h.method)
 		if !f.Converted {
 			f.NoRate = !rates.Publishes(ctx, p.cur) || !rates.Publishes(ctx, currency)
 		}

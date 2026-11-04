@@ -56,3 +56,9 @@ export function spanOf(ms: number): Span {
 
 /** What a row is called: the provider's name, else "Customer". */
 export const customerName = (name: string | undefined, fallback: string) => (name && name.trim() ? name.trim() : fallback)
+
+/** How a payment was paid, in the person's words: the label of its code, "Other" for a code the list doesn't know, nothing when the provider didn't say. */
+export function methodLabel(method: string | undefined, labels: Record<string, string>): string {
+  if (!method) return ''
+  return labels[method] ?? labels.other
+}

@@ -24,7 +24,7 @@ import (
 func withPayments(q Q) Q {
 	at := func(d, h, m int) time.Time { return time.Date(2026, 9, d, h, m, 0, 0, time.UTC) }
 	facts := []ledger.Fact{
-		{Provider: "stripe", ID: "pa", PaidAt: at(10, 15, 5), Amount: 5000, Visitor: 1, Customer: "stripe:ca", Kind: "one_time", Converted: true, Country: "DE"},
+		{Provider: "stripe", ID: "pa", PaidAt: at(10, 15, 5), Amount: 5000, Visitor: 1, Customer: "stripe:ca", Kind: "one_time", Converted: true, Country: "DE", Product: "Pro plan", Method: "card"},
 		{Provider: "stripe", ID: "pb", PaidAt: at(10, 11, 30), Amount: 2000, Refunded: 500, Visitor: 2, Customer: "stripe:cb", Kind: "subscription", Converted: true},
 		{Provider: "stripe", ID: "px", PaidAt: at(10, 12, 30), Amount: 1000, Customer: "stripe:cx", Kind: "one_time", Converted: true},
 		{Provider: "paddle", ID: "pc", PaidAt: at(10, 13, 0), Amount: 700, Visitor: 3, Customer: "paddle:cc", Kind: "renewal", Converted: true},
@@ -345,6 +345,9 @@ func TestPayLists(t *testing.T) {
 		eq(t, "its visitor, base 36", pay.Payments[0].Visitor, "1")
 		eq(t, "its source", pay.Payments[0].Referrer, "google.com")
 		eq(t, "its billing country", pay.Payments[0].Country, "DE")
+		eq(t, "its product", pay.Payments[0].Product, "Pro plan")
+		eq(t, "its method", pay.Payments[0].Method, "card")
+		eq(t, "no product or method named", pay.Payments[1].Product+pay.Payments[1].Method, "")
 		eq(t, "renewals are payments too", pay.Payments[1].Kind, "renewal")
 		eq(t, "a renewal's visitor", pay.Payments[1].Visitor, "3")
 		eq(t, "no visit known", pay.Payments[2].Visitor, "")

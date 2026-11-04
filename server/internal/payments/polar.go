@@ -58,7 +58,10 @@ func (polar) Parse(body []byte) (Event, error) {
 			CustomerID        string         `json:"customer_id"`
 			SubscriptionID    string         `json:"subscription_id"`
 			Metadata          map[string]any `json:"metadata"`
-			Customer          *struct {
+			Product           *struct {
+				Name string `json:"name"`
+			} `json:"product"`
+			Customer *struct {
 				Email    string         `json:"email"`
 				Metadata map[string]any `json:"metadata"`
 			} `json:"customer"`
@@ -91,7 +94,7 @@ func (polar) Parse(body []byte) (Event, error) {
 				kind = KindUpgrade
 			}
 			ev.Payments = append(ev.Payments, Payment{ID: o.ID, PaidAt: rfc3339ms(o.CreatedAt), Currency: o.Currency, Gross: o.TotalAmount, Tax: ptr(o.TaxAmount),
-				CustomerID: o.CustomerID, SubscriptionID: o.SubscriptionID, Email: email, Visitor: vis, Kind: kind, Country: polarCountry(o.BillingAddress)})
+				CustomerID: o.CustomerID, SubscriptionID: o.SubscriptionID, Email: email, Visitor: vis, Kind: kind, Country: polarCountry(o.BillingAddress), Product: polarProduct(o.Product)})
 		}
 		if back := o.RefundedAmount + o.RefundedTaxAmount; back > 0 {
 			ev.Refunds = append(ev.Refunds, Refund{ID: "cum:" + o.ID, PaymentID: o.ID, Amount: back, Currency: o.Currency, Status: RefundSucceeded, At: ev.At, Cumulative: true})
@@ -132,4 +135,13 @@ func polarCountry(a *struct {
 		return ""
 	}
 	return CountryCode(a.Country)
+}
+
+func polarProduct(p *struct {
+	Name string `json:"name"`
+}) string {
+	if p == nil {
+		return ""
+	}
+	return ProductName(p.Name)
 }

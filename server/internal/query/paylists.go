@@ -112,6 +112,8 @@ type PayRow struct {
 	Channel  string    `json:"channel,omitempty"`
 	Referrer string    `json:"referrer,omitempty"`
 	Country  string    `json:"country,omitempty"` // the billing country the provider named
+	Product  string    `json:"product,omitempty"` // what was bought, as the provider names it
+	Method   string    `json:"method,omitempty"`  // how it was paid: card, paypal, apple_pay, google_pay, bank, crypto or other
 	// Name is what the payment provider calls the buyer, set by the API for a
 	// payment with no known visit, for people who may see it. Never stored.
 	Name string `json:"name,omitempty"`
@@ -164,7 +166,7 @@ func payRows(ctx context.Context, conn *sql.Conn, sqlText string, args []any, si
 		return nil, 0, fmt.Errorf("payments count: %w", err)
 	}
 	rows, err := conn.QueryContext(ctx, sqlText+`
-		SELECT payment_id, paid_at, amount, refunded, kind, bill_country, visitor_id, attributed, coalesce(channel, 'Direct'), coalesce(referrer, ''), customer
+		SELECT payment_id, paid_at, amount, refunded, kind, bill_country, product, method, visitor_id, attributed, coalesce(channel, 'Direct'), coalesce(referrer, ''), customer
 		FROM ar ORDER BY paid_at DESC, payment_id LIMIT ? OFFSET ?`, append(append([]any{}, args...), limit, offset)...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("payments: %w", err)
@@ -172,15 +174,15 @@ func payRows(ctx context.Context, conn *sql.Conn, sqlText string, args []any, si
 	defer rows.Close()
 	out := []PayRow{}
 	for rows.Next() {
-		var pid, kind, country, ch, ref, cust string
+		var pid, kind, country, product, method, ch, ref, cust string
 		var at time.Time
 		var amount, refunded int64
 		var visitor uint64
 		var attributed bool
-		if err := rows.Scan(&pid, &at, &amount, &refunded, &kind, &country, &visitor, &attributed, &ch, &ref, &cust); err != nil {
+		if err := rows.Scan(&pid, &at, &amount, &refunded, &kind, &country, &product, &method, &visitor, &attributed, &ch, &ref, &cust); err != nil {
 			return nil, 0, err
 		}
-		r := PayRow{ID: hashID(site, pid), At: at.UTC(), Amount: amount, Refunded: refunded, Kind: kind, Visitor: visitorID(visitor), Country: country, Customer: cust}
+		r := PayRow{ID: hashID(site, pid), At: at.UTC(), Amount: amount, Refunded: refunded, Kind: kind, Visitor: visitorID(visitor), Country: country, Product: product, Method: method, Customer: cust}
 		if attributed {
 			r.Channel, r.Referrer = ch, ref
 		}

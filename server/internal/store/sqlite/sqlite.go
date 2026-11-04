@@ -1137,6 +1137,13 @@ var migrations = []string{
 	// the stored amount is the charge.
 	`ALTER TABLE pay_payments ADD COLUMN charge_amount INTEGER NOT NULL DEFAULT 0;
 	ALTER TABLE pay_payments ADD COLUMN charge_currency TEXT NOT NULL DEFAULT '';`,
+	// 84: what was bought and how it was paid, when the provider says (a hint
+	// carries them for providers that name them on a separate event). Empty
+	// means the payload didn't say.
+	`ALTER TABLE pay_payments ADD COLUMN product TEXT NOT NULL DEFAULT '';
+	ALTER TABLE pay_payments ADD COLUMN method TEXT NOT NULL DEFAULT '';
+	ALTER TABLE pay_hints ADD COLUMN product TEXT NOT NULL DEFAULT '';
+	ALTER TABLE pay_hints ADD COLUMN method TEXT NOT NULL DEFAULT '';`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
