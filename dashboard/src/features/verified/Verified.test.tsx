@@ -89,11 +89,11 @@ describe('the seal', () => {
 describe('the badges', () => {
   it('names the source behind a card, and drops it when the source stops working', () => {
     draw(<SourceChip verified={on} slot="revenue" />)
-    expect(host.querySelector('.vf-chip')?.textContent).toContain('Payments verified')
+    expect(host.querySelector('.vf-mark')?.getAttribute('aria-label')).toContain('Payments verified')
     draw(<SourceChip verified={on} slot="search" />)
-    expect(host.querySelector('.vf-chip')?.textContent).toContain('Search verified')
+    expect(host.querySelector('.vf-mark')?.getAttribute('aria-label')).toContain('Search verified')
     draw(<SourceChip verified={off} slot="revenue" />)
-    expect(host.querySelector('.vf-chip')).toBeNull()
+    expect(host.querySelector('.vf-mark')).toBeNull()
   })
 
   it('puts a small seal beside a site only while one of its sources works', () => {
