@@ -59,6 +59,7 @@ type Service struct {
 	bg       sync.WaitGroup
 	syncing  atomic.Bool // a SyncAll is going: the next tick skips
 	details  detailsCache
+	products productCache // product names read from a provider by id
 
 	reprocessFn func(ctx context.Context, site string) (int, error) // tests replace Reprocess
 }
@@ -624,6 +625,12 @@ func (s *Service) Process(ctx context.Context) (int, error) {
 			}
 			return total, nil
 		}
+		// Product names are read before the transaction opens, never inside it.
+		asks := map[productKey]bool{}
+		for _, it := range items {
+			wantProducts(asks, it.sc, it.body)
+		}
+		names := s.productNames(ctx, asks)
 		// One transaction per batch: one fsync for 200 events, all or nothing.
 		tx, err := s.DB.BeginTx(ctx, nil)
 		if err != nil {
@@ -649,6 +656,7 @@ func (s *Service) Process(ctx context.Context) (int, error) {
 			if perr != nil {
 				msg = "parse: " + perr.Error()
 			} else {
+				fillProducts(&ev, it.sc.Connection, names)
 				if !it.sc.Test && !ev.Test {
 					br := brought{sc: it.sc, refunds: map[string]int64{}}
 					for _, p := range ev.Payments {
@@ -749,6 +757,13 @@ func (s *Service) Process(ctx context.Context) (int, error) {
 func (s *Service) Reprocess(ctx context.Context, site string) (int, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	// Product names come first, one read per distinct product, before the
+	// transaction opens.
+	asks := map[productKey]bool{}
+	if err := s.eachInbox(ctx, site, func(sc ledger.Scope, body []byte) { wantProducts(asks, sc, body) }); err != nil {
+		return 0, err
+	}
+	names := s.productNames(ctx, asks)
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return 0, err
@@ -786,6 +801,7 @@ func (s *Service) Reprocess(ctx context.Context, site string) (int, error) {
 	rows.Close()
 	for _, it := range items {
 		if ev, err := payments.Registry[it.sc.Provider].Parse(it.body); err == nil {
+			fillProducts(&ev, it.sc.Connection, names)
 			if err := ledger.Apply(ctx, tx, it.sc, ev); err != nil {
 				return 0, err
 			}
@@ -803,6 +819,26 @@ func (s *Service) Reprocess(ctx context.Context, site string) (int, error) {
 		s.OnChange(site)
 	}
 	return len(items), nil
+}
+
+// eachInbox calls fn for every applied notice of a site.
+func (s *Service) eachInbox(ctx context.Context, site string, fn func(sc ledger.Scope, body []byte)) error {
+	rows, err := s.DB.QueryContext(ctx, `SELECT i.body, c.provider, c.id FROM pay_inbox i JOIN pay_connections c ON c.id = i.connection_id
+		WHERE c.site_id = ? AND i.processed_at IS NOT NULL ORDER BY i.id`, site)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var body []byte
+		var sc ledger.Scope
+		if err := rows.Scan(&body, &sc.Provider, &sc.Connection); err != nil {
+			return err
+		}
+		sc.Site = site
+		fn(sc, body)
+	}
+	return rows.Err()
 }
 
 // ---- reconciliation ----

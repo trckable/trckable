@@ -40,8 +40,8 @@ func TestDodoNamesProductAndMethod(t *testing.T) {
 	}
 	p = firstPayment(t, "dodo", `{"type":"payment.succeeded","timestamp":"2026-11-04T06:37:00Z","data":{"payment_id":"pay_2","status":"succeeded",
 		"total_amount":1000,"currency":"USD","created_at":"2026-11-04T06:37:00Z","product_cart":[{"product_id":"pdt_1","quantity":1}],"metadata":{}}}`)
-	if p.Product != "" || p.Method != "" {
-		t.Fatalf("a payload that doesn't say stays empty: %q %q", p.Product, p.Method)
+	if p.Product != "" || p.Method != "" || p.ProductID != "pdt_1" {
+		t.Fatalf("a payload that doesn't say stays empty, with the id kept for a lookup: %q %q %q", p.Product, p.Method, p.ProductID)
 	}
 }
 

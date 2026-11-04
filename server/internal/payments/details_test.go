@@ -49,3 +49,30 @@ func TestDodoCustomerDetails(t *testing.T) {
 		t.Fatal("stripe has no details capability yet")
 	}
 }
+
+// A Dodo product is read by id: its name, trimmed; an unknown id is a 404 and
+// a failing API is an error, both left to the caller to treat as no name.
+func TestDodoProductName(t *testing.T) {
+	noWait(t)
+	f := newFake(t, func(w http.ResponseWriter, r *http.Request, _ []byte) {
+		switch r.URL.Path {
+		case "/products/pdt_1":
+			jsonAnswer(w, 200, `{"product_id":"pdt_1","name":"  Starter\n plan "}`)
+		case "/products/pdt_err":
+			jsonAnswer(w, 500, `{"message":"boom"}`)
+		default:
+			jsonAnswer(w, 404, `{"message":"not found"}`)
+		}
+	})
+	api := &DodoAPI{TestURL: f.srv.URL}
+	ctx := context.Background()
+	if n, err := api.ProductName(ctx, "k", true, "pdt_1"); err != nil || n != "Starter plan" {
+		t.Fatalf("hit: %q %v", n, err)
+	}
+	if _, err := api.ProductName(ctx, "k", true, "pdt_gone"); statusOf(err) != 404 {
+		t.Fatalf("miss: %v", err)
+	}
+	if n, err := api.ProductName(ctx, "k", true, "pdt_err"); err == nil || n != "" {
+		t.Fatalf("error: %q %v", n, err)
+	}
+}

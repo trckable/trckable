@@ -106,3 +106,22 @@ func (a *DodoAPI) CustomerDetails(ctx context.Context, key string, test bool, cu
 }
 
 var _ Detailer = (*DodoAPI)(nil)
+
+// Namer is an optional capability of a provider's API: the name of a product
+// from its id, for providers whose payments name only the id.
+type Namer interface {
+	ProductName(ctx context.Context, key string, test bool, productID string) (string, error)
+}
+
+// ProductName reads a Dodo product's name.
+func (a *DodoAPI) ProductName(ctx context.Context, key string, test bool, productID string) (string, error) {
+	var p struct {
+		Name string `json:"name"`
+	}
+	if err := call(ctx, "GET", a.base(test)+"/products/"+url.PathEscape(productID), dodoHdr(key), nil, &p); err != nil {
+		return "", dodoProblem(ctx, err, test)
+	}
+	return ProductName(p.Name), nil
+}
+
+var _ Namer = (*DodoAPI)(nil)
