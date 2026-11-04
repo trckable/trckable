@@ -71,6 +71,9 @@ it before opening a pull request: CI does, and tells you what failed.
 - **One change per pull request.** A fix and a clean-up are two pull requests.
 - **Behaviour changes come with a test.** A bug fix gets a test that fails
   without the fix.
+- **Money rules carry a version.** A change to what a provider's `Parse`
+  returns or to how the ledger counts money bumps `payments.RulesVersion`, so
+  stored payments are re-read automatically on the next start.
 - **A changelog note.** Anything people will notice gets one new file,
   `changes/<slug>.md` holding one line (see `changes/README.md`), in the same
   pull request; do not edit `CHANGELOG.md`, so pull requests never conflict

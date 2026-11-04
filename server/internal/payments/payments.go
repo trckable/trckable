@@ -18,6 +18,9 @@
 //   - Hints add facts learned elsewhere (tax from a checkout session, the
 //     visitor from checkout metadata) without needing the payment to exist
 //     yet: out-of-order webhooks resolve themselves.
+//
+// Changing what a Parse returns or how the ledger counts money means bumping
+// RulesVersion (rules.go), so stored payments are re-read on the next start.
 package payments
 
 import (
