@@ -19,7 +19,7 @@ for (const size of [
     await expect(ring).toBeVisible({ timeout: 20_000 })
     await expect(ring).toHaveAttribute('aria-label', /^0\/\d+ set up/)
     await ring.click()
-    await expect(page.locator('.setupmenu .snext')).toContainText('Install', { timeout: 15_000 })
+    await expect(page.locator('.setupmenu [data-step="verified"]')).toContainText('Install', { timeout: 15_000 })
     await page.keyboard.press('Escape')
     const reads: string[] = []
     page.on('request', (r) => r.method() === 'GET' && /\/setup$/.test(new URL(r.url()).pathname) && reads.push(r.url()))
@@ -28,7 +28,7 @@ for (const size of [
     await expect(ring).not.toHaveAttribute('aria-label', /^0\/\d+ set up/, { timeout: 20_000 })
     await ring.click()
     await expect(page.locator('.setupmenu.on')).toBeVisible()
-    await expect(page.locator('.setupmenu .snext')).not.toContainText('Install')
+    await expect(page.locator('.setupmenu')).not.toContainText('Install')
     await expect(page.locator('.setupmenu')).not.toContainText('Waiting for the first visit')
     // One look for the visit and none stormed.
     expect(reads.length).toBeLessThanOrEqual(3)

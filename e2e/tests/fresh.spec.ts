@@ -32,7 +32,7 @@ test('before the first visit: the setup screen, Not verified, a locked ring, no 
   await expect(page.locator('.xchg-say, .sumrow')).toHaveCount(0)
   // The ring: Install is the step to do, the ones after it wait.
   await page.locator('.ringb').click()
-  await expect(page.locator('.setupmenu .snext')).toContainText('Install', { timeout: 15_000 })
+  await expect(page.locator('.setupmenu [data-step="verified"]')).toContainText('Install', { timeout: 15_000 })
   await expect(page.locator('.setupmenu .sprow.locked').first()).toBeVisible()
   await page.keyboard.press('Escape')
   // One card says where it stands. The server cannot reach the suite's site: it says so, and never "found".
