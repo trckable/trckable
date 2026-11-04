@@ -3,12 +3,16 @@ package revenue
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
+	"time"
+
+	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
 func metaRules(t *testing.T, g *rig) (string, bool) {
 	t.Helper()
-	v, ok, err := g.st.Meta(context.Background(), rulesKey)
+	v, ok, err := g.st.Meta(context.Background(), rulesKey+g.site)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,11 +70,42 @@ func TestRecalcFailureKeepsOldVersionAndRetries(t *testing.T) {
 	}
 }
 
-func TestRecalcWithoutConnectionsOnlySavesVersion(t *testing.T) {
-	g := newRig(t, t.TempDir(), "instance key for tests")
-	g.svc.reprocessFn = func(context.Context, string) (int, error) { t.Fatal("no site to read"); return 0, nil }
-	g.svc.recalcTo(context.Background(), 3)
-	if v, _ := metaRules(t, g); v != "3" {
-		t.Fatalf("saved version %q, want 3", v)
+func TestRecalcRetriesOnlyTheFailedSite(t *testing.T) {
+	n := newNoticeRig(t)
+	ctx := context.Background()
+	other, _, _ := n.st.EnsureSite(ctx, sqlite.DefaultAccount, "two.example")
+	if _, err := n.svc.Connect(ctx, ConnectRequest{Site: other, Provider: "stripe", Secret: "whsec_two", PublicBase: "http://localhost:8080"}); err != nil {
+		t.Fatal(err)
+	}
+	var seen []string
+	n.svc.reprocessFn = func(_ context.Context, site string) (int, error) {
+		seen = append(seen, site)
+		if site == other {
+			return 0, errors.New("broken")
+		}
+		return 0, nil
+	}
+	n.svc.recalcTo(ctx, 3)
+	seen = nil
+	n.svc.recalcTo(ctx, 3)
+	if len(seen) != 1 || seen[0] != other {
+		t.Fatalf("second start re-read %v, want only the failed site", seen)
+	}
+}
+
+func TestRecalcKeepsALiveWebhooksNotice(t *testing.T) {
+	n := newNoticeRig(t)
+	ctx := context.Background()
+	body := []byte(fmt.Sprintf(`{"id":"evt_live","type":"payment_intent.succeeded","created":%d,"livemode":true,"data":{"object":{"id":"pi_live","amount_received":4900,"currency":"usd"}}}`, time.Now().Unix()))
+	if code := n.post(t, n.path, stripeSigned("whsec_test", body, time.Now()), body); code != 200 {
+		t.Fatalf("webhook: %d", code)
+	}
+	n.svc.recalcTo(ctx, 3) // arrives before the processor has applied it
+	if _, err := n.svc.Process(ctx); err != nil {
+		t.Fatal(err)
+	}
+	n.wait()
+	if len(n.told) != 1 {
+		t.Fatalf("notices told: %d, want 1", len(n.told))
 	}
 }

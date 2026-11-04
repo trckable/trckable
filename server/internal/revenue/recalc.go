@@ -2,38 +2,28 @@ package revenue
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"log/slog"
 	"strconv"
 
 	"github.com/trckable/trckable/server/internal/payments"
+	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
-// rulesKey is the meta key holding the payments.RulesVersion the stored
-// payments were last read with.
-const rulesKey = "pay_rules_version"
+// rulesKey is the meta key prefix holding, per site, the payments.RulesVersion
+// that site's stored payments were last read with.
+const rulesKey = "pay_rules_version:"
 
-// RecalcIfStale reads every site's payments again when the rules that count
-// them changed since they were last read (see payments.RulesVersion), one site
-// at a time, then remembers the new version. It tells nobody: Reprocess only
-// rebuilds the ledger, it announces no payment. A site that fails keeps the
-// old version stored, so the next start tries again; Reprocess rebuilds from
-// the inbox in one transaction, so running it twice is harmless.
+// RecalcIfStale reads a site's payments again when the rules that count them
+// changed since they were last read (see payments.RulesVersion), one site at a
+// time, and remembers the version per site. It tells nobody: Reprocess only
+// rebuilds the ledger from rows already applied, it announces no payment. A
+// site that fails keeps its old version, so only it is tried again at the
+// next start; Reprocess rebuilds in one transaction, so a second run is harmless.
 func (s *Service) RecalcIfStale(ctx context.Context) {
 	s.recalcTo(ctx, payments.RulesVersion)
 }
 
 func (s *Service) recalcTo(ctx context.Context, want int) {
-	var raw string
-	err := s.DB.QueryRowContext(ctx, `SELECT value FROM meta WHERE key = ?`, rulesKey).Scan(&raw)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		slog.Warn("payments: couldn't read the rules version", "err", err)
-		return
-	}
-	if have, _ := strconv.Atoi(raw); err == nil && have >= want {
-		return
-	}
 	rows, err := s.DB.QueryContext(ctx, `SELECT DISTINCT site_id FROM pay_connections ORDER BY site_id`)
 	if err != nil {
 		slog.Warn("payments: couldn't list sites to recalculate", "err", err)
@@ -55,26 +45,28 @@ func (s *Service) recalcTo(ctx context.Context, want int) {
 		slog.Warn("payments: couldn't list sites to recalculate", "err", err)
 		return
 	}
-	failed := 0
+	st := &sqlite.Store{DB: s.DB}
 	for _, id := range sites {
 		if ctx.Err() != nil {
 			return
 		}
+		raw, _, err := st.Meta(ctx, rulesKey+id)
+		if err != nil {
+			slog.Warn("payments: couldn't read the rules version", "site", id, "err", err)
+			continue
+		}
+		if have, _ := strconv.Atoi(raw); have >= want {
+			continue
+		}
 		n, err := s.reprocess(ctx, id)
 		if err != nil {
-			failed++
 			slog.Warn("payments: recalculating a site failed, will retry at the next start", "site", id, "err", err)
 			continue
 		}
 		slog.Info("payments: recalculated a site after the counting rules changed", "site", id, "events", n)
-	}
-	if failed > 0 {
-		return
-	}
-	if _, err := s.DB.ExecContext(ctx,
-		`INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
-		rulesKey, strconv.Itoa(want)); err != nil {
-		slog.Warn("payments: couldn't save the rules version", "err", err)
+		if err := st.SetMeta(ctx, rulesKey+id, strconv.Itoa(want)); err != nil {
+			slog.Warn("payments: couldn't save the rules version", "site", id, "err", err)
+		}
 	}
 }
 
