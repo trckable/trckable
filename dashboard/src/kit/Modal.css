@@ -3,9 +3,10 @@
 .modal-back {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.12);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  background: rgba(0, 0, 0, 0.45);
+  /* The prefixed line first: the build's CSS minifier drops the plain one when it comes before it. */
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   animation: fade-in 0.16s ease both;
   display: grid;
   place-items: center;
