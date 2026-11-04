@@ -175,7 +175,7 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal, soon?: 
     }
     case 'sales': {
       const report = await cachedReport(c.site.id, q, undefined, signal)
-      return mapSales(report.current.money, fmtRange(c.range, today))
+      return mapSales(report.current.money, fmtRange(c.range, today), report.current.revenue_dims?.country ?? [])
     }
     case 'search': {
       const conn = await more.searchConsole(c.site.id)

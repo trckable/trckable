@@ -11,21 +11,22 @@ import { nameOf } from '../../../../lib/visitor'
 import { channelLabel } from '../../../../lib/palette'
 import { ago } from '../../../../features/cards/peopleModel'
 import { extrasApi, type Customer, type Payment } from '../../../../features/extras/extrasApi'
-import { fmtDate, fmtDayTime } from '../../../../features/journey/when'
+import { fmtDate } from '../../../../features/journey/when'
 import { XEmpty, XError, XSec } from '../../../ui/XBits'
 import { Flag } from '../../../ui/Flag'
 import { copy } from '../../copy'
 import type { XCtx } from '../../ctx'
-import { customerName } from './customerModel'
+import { providerName } from '../../../../features/verified/model'
+import { customerName, initialsOf } from './customerModel'
 
 const LINK_DOCS = 'https://trckable.com/docs/gumroad-paypal/#link-a-checkout-to-the-visit'
 const CustomerSheet = lazy(() => import('./CustomerSheet'))
 
-type Page<T> = { rows: T[]; total: number }
+type Page<T> = { rows: T[]; total: number; currency?: string }
 
 /** Pages of one list: the first read again whenever the question changes, the next one appended. */
 function usePaged<T>(key: string, read: (offset: number) => Promise<Page<T>>) {
-  const [got, setGot] = useState<{ key: string; rows: T[]; total: number } | null>(null)
+  const [got, setGot] = useState<{ key: string; rows: T[]; total: number; currency?: string } | null>(null)
   const [error, setError] = useState<{ key: string } | null>(null)
   const [busy, setBusy] = useState(false)
   const [moreFailedFor, setMoreFailedFor] = useState('')
@@ -33,7 +34,7 @@ function usePaged<T>(key: string, read: (offset: number) => Promise<Page<T>>) {
   useEffect(() => {
     let live = true
     read(0).then(
-      (p) => live && setGot({ key, rows: p.rows, total: p.total }),
+      (p) => live && setGot({ key, rows: p.rows, total: p.total, currency: p.currency }),
       () => live && setError({ key }),
     )
     return () => {
@@ -47,7 +48,7 @@ function usePaged<T>(key: string, read: (offset: number) => Promise<Page<T>>) {
     setBusy(true)
     setMoreFailedFor('')
     read(got.rows.length)
-      .then((p) => setGot({ key, rows: [...got.rows, ...p.rows], total: p.total }))
+      .then((p) => setGot({ key, rows: [...got.rows, ...p.rows], total: p.total, currency: p.currency }))
       .catch(() => setMoreFailedFor(key))
       .finally(() => setBusy(false))
   }
@@ -56,7 +57,7 @@ function usePaged<T>(key: string, read: (offset: number) => Promise<Page<T>>) {
     setRound((n) => n + 1)
   }
   const here = got?.key === key ? got : null
-  return { rows: here?.rows ?? null, total: here?.total ?? 0, failed: error?.key === key, moreFailed: moreFailedFor === key && !!here, busy, more, retry }
+  return { rows: here?.rows ?? null, total: here?.total ?? 0, currency: here?.currency ?? '', failed: error?.key === key, moreFailed: moreFailedFor === key && !!here, busy, more, retry }
 }
 
 const keyOf = (x: XCtx, q: ReportQuery, list: string) => `${list}|${x.site.id}|${q.from}|${q.to}|${q.attr ?? ''}|${q.testPayments ? 'test' : ''}|${JSON.stringify(q.filters ?? [])}`
@@ -64,37 +65,39 @@ const keyOf = (x: XCtx, q: ReportQuery, list: string) => `${list}|${x.site.id}|$
 /** Where the visitor came from: the channel, then the referring site. Nothing when no visit is known. */
 const sourceOf = (channel?: string, referrer?: string) => (channel ? [channelLabel(channel), referrer].filter(Boolean).join(' · ') : '')
 
-function Who({ visitor }: { visitor?: string }) {
+/** The buyer's face: their journey face when a visit is linked, else their country's flag, else their initials. Never a question mark. */
+function Who({ visitor, country, name }: { visitor?: string; country?: string; name: string }) {
   if (visitor) return <Avatar id={visitor} size={32} />
   return (
     <span className="xface" aria-hidden="true">
-      ?
+      {country ? <Flag code={country} width={20} /> : initialsOf(name)}
     </span>
   )
 }
 
-function Row({ visitor, onPick, children }: { visitor?: string; onPick: (v: string) => void; children: ReactNode }) {
+function Row({ visitor, country, name, onPick, children }: { visitor?: string; country?: string; name: string; onPick: (v: string) => void; children: ReactNode }) {
   if (!visitor)
     return (
       <div className="sale">
-        <Who />
+        <Who country={country} name={name} />
         {children}
       </div>
     )
   return (
     <button type="button" className="sale xbtn" title={copy.pay.open} onClick={() => onPick(visitor)}>
-      <Who visitor={visitor} />
+      <Who visitor={visitor} name={name} />
       {children}
     </button>
   )
 }
 
-function Place({ code }: { code?: string }) {
-  if (!code) return null
+/** The amount, and under it one muted line: what the buyer paid in when that is not the site's currency, then when. */
+function Amount({ cls, text, note }: { cls: string; text: string; note: string }) {
   return (
-    <>
-      <Flag code={code} /> {countryName(code)}
-    </>
+    <span className="rt">
+      <span className={cls}>{text}</span>
+      <span className="mk-quiet">{note}</span>
+    </span>
   )
 }
 
@@ -128,41 +131,45 @@ function tagOf(p: Payment): 'refund' | 'renewal' | 'new' {
 
 export function Payments({ x, query, onPick }: { x: XCtx; query: ReportQuery; onPick: (visitor: string) => void }) {
   const [now] = useState(() => Date.now())
-  const list = usePaged(keyOf(x, query, 'pay'), (offset) => extrasApi.payments(x.site.id, query, offset).then((d) => ({ rows: d.payments, total: d.total })))
+  const list = usePaged(keyOf(x, query, 'pay'), (offset) => extrasApi.payments(x.site.id, query, offset).then((d) => ({ rows: d.payments, total: d.total, currency: d.currency })))
   if (list.failed && !list.rows) return <XError title={copy.pay.failed} onRetry={list.retry} />
   if (!list.rows) return <Loading height={164} />
   if (list.rows.length === 0) return <XEmpty title={copy.pay.none} hint="" />
   return (
     <>
       <XSec a={copy.pay.count(list.total)} />
-      {list.rows.map((p: Payment) => (
-        <Row key={p.id} visitor={p.visitor} onPick={onPick}>
-          <span className="gn">
-            <div>
-              {p.visitor ? nameOf(p.visitor) : strangerName(p)} <span className={`mk-tag ${tagOf(p)}`}>{copy.tags[tagOf(p)]}</span>
-            </div>
-            <div className="mk-quiet" style={{ fontSize: '12px' }} title={fmtDayTime(Date.parse(p.at))}>
-              {[sourceOf(p.channel, p.referrer), ago(now - Date.parse(p.at)), p.refunded ? copy.pay.refunded(x.money(p.refunded)) : ''].filter(Boolean).join(' · ')}
-            </div>
-            {!p.visitor && (
-              <div className="mk-quiet" style={{ fontSize: '12px' }}>
-                {copy.pay.unlinked} ·{' '}
-                <a href={LINK_DOCS} target="_blank" rel="noreferrer">
-                  {copy.pay.unlinkedHow}
-                </a>
+      {list.rows.map((p: Payment) => {
+        const who = p.visitor ? nameOf(p.visitor) : strangerName(p)
+        return (
+          <Row key={p.id} visitor={p.visitor} country={p.country} name={who} onPick={onPick}>
+            <span className="gn">
+              <div>
+                {who} <span className={`mk-tag ${tagOf(p)}`}>{copy.tags[tagOf(p)]}</span>
               </div>
-            )}
-          </span>
-          <span className={`amt ${p.refunded ? 'neg' : ''}`}>+{x.money(p.amount)}</span>
-        </Row>
-      ))}
+              <div className="mk-quiet" style={{ fontSize: '12px' }}>
+                {[p.country ? countryName(p.country) : '', providerName(p.provider), sourceOf(p.channel, p.referrer), p.refunded ? copy.pay.refunded(x.money(p.refunded)) : ''].filter(Boolean).join(' · ')}
+              </div>
+              {!p.visitor && (
+                <div className="mk-quiet" style={{ fontSize: '12px' }}>
+                  {copy.pay.unlinked} ·{' '}
+                  <a href={LINK_DOCS} target="_blank" rel="noreferrer">
+                    {copy.pay.unlinkedHow}
+                  </a>
+                </div>
+              )}
+            </span>
+            <Amount cls={`amt ${p.refunded ? 'neg' : ''}`} text={`+${x.money(p.amount)}`} note={[p.currency ? `${p.currency} → ${list.currency}` : '', ago(now - Date.parse(p.at))].filter(Boolean).join(' · ')} />
+          </Row>
+        )
+      })}
       <More shown={list.rows.length} list={list} />
     </>
   )
 }
 
 export function Customers({ x, query, onPick }: { x: XCtx; query: ReportQuery; onPick: (visitor: string) => void }) {
-  const list = usePaged(keyOf(x, query, 'cust'), (offset) => extrasApi.customers(x.site.id, query, offset).then((d) => ({ rows: d.customers, total: d.total })))
+  const list = usePaged(keyOf(x, query, 'cust'), (offset) => extrasApi.customers(x.site.id, query, offset).then((d) => ({ rows: d.customers, total: d.total, currency: d.currency })))
+  const [now] = useState(() => Date.now())
   const [open, setOpen] = useState<Customer | null>(null)
   if (list.failed && !list.rows) return <XError title={copy.pay.failed} onRetry={list.retry} />
   if (!list.rows) return <Loading height={164} />
@@ -170,26 +177,24 @@ export function Customers({ x, query, onPick }: { x: XCtx; query: ReportQuery; o
   return (
     <>
       <XSec a={copy.pay.customers(list.total)} b={copy.pay.byTotal} />
-      {list.rows.map((c: Customer) => (
-        <button key={c.id} type="button" className="sale xbtn" title={copy.pay.openCustomer} onClick={() => setOpen(c)}>
-          <Who visitor={c.visitor} />
-          <span className="gn">
-            <div>{c.visitor ? nameOf(c.visitor) : strangerName(c)}</div>
-            <div className="mk-quiet" style={{ fontSize: '12px' }}>
-              {[copy.pay.orders(c.orders), sourceOf(c.channel, c.referrer), c.visitor ? '' : copy.pay.unlinked].filter(Boolean).join(' · ')}
-            </div>
-            <div className="mk-quiet" style={{ fontSize: '12px' }}>
-              {copy.pay.firstSeen(fmtDate(Date.parse(c.first_seen)))} · {copy.pay.lastOrder(fmtDate(Date.parse(c.last_order)))}
-            </div>
-            {c.country && (
+      {list.rows.map((c: Customer) => {
+        const who = c.visitor ? nameOf(c.visitor) : strangerName(c)
+        return (
+          <button key={c.id} type="button" className="sale xbtn" title={copy.pay.openCustomer} onClick={() => setOpen(c)}>
+            <Who visitor={c.visitor} country={c.country} name={who} />
+            <span className="gn">
+              <div>{who}</div>
               <div className="mk-quiet" style={{ fontSize: '12px' }}>
-                <Place code={c.country} />
+                {[c.country ? countryName(c.country) : '', copy.pay.orders(c.orders), sourceOf(c.channel, c.referrer), c.visitor ? '' : copy.pay.unlinked].filter(Boolean).join(' · ')}
               </div>
-            )}
-          </span>
-          <span className="amt">{x.money(c.spent)}</span>
-        </button>
-      ))}
+              <div className="mk-quiet" style={{ fontSize: '12px' }}>
+                {copy.pay.firstSeen(fmtDate(Date.parse(c.first_seen)))} · {copy.pay.lastOrder(fmtDate(Date.parse(c.last_order)))}
+              </div>
+            </span>
+            <Amount cls="amt" text={x.money(c.spent)} note={ago(now - Date.parse(c.last_order))} />
+          </button>
+        )
+      })}
       <More shown={list.rows.length} list={list} />
       {open && (
         <Suspense fallback={null}>

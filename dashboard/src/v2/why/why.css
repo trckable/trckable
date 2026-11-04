@@ -317,9 +317,6 @@
 .mk .ttc-r b{color:var(--mk-text);text-align:right;font-variant-numeric:tabular-nums}
 /* Sales: the net, the split, the keys. */
 .mk .xsplit{display:flex;flex-direction:column;gap:var(--mk-s3);margin-bottom:var(--mk-s3)}
-.mk .xsplit-net{display:flex;align-items:baseline;flex-wrap:wrap;gap:var(--mk-s2)}
-.mk .xsplit-net>b{font-size:34px;font-weight:650;line-height:1.1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.mk .xsplit-net>span{color:var(--mk-muted);font-size:13px}
 .mk .xsplit-bar{display:flex;gap:3px;height:14px}
 .mk .xsplit-bar i{flex-basis:6px;min-width:6px;border-radius:5px;transition:opacity .15s}
 .mk .xsplit-bar i.off{opacity:.2}

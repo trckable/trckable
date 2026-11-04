@@ -163,6 +163,12 @@ export interface Sales {
   /** What the section can say: no payments connected, nothing to sell here, or the list. */
   state: 'connect' | 'none' | 'ok'
   sales: Sale[]
+  /** Payments, paying customers and money paid back in the period (minor units). */
+  orders: number
+  customers: number
+  refunds: number
+  /** The countries visits that paid came from, biggest revenue first. */
+  countries: { code: string; amt: number }[]
 }
 
 export interface Step {

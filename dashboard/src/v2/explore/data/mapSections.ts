@@ -1,6 +1,6 @@
 // The other sections' answers, said as Explore's models. Pure: mapSections.test.ts.
 import { MIN_VITALS } from '../../../lib/api'
-import type { CrawlerReport, FunnelResult, FunnelStep, Money, PaidStep, Report, SearchReport, SearchRow as ApiSearchRow, WebVitals } from '../../../lib/api'
+import type { CrawlerReport, FunnelResult, Row as ApiRow, FunnelStep, Money, PaidStep, Report, SearchReport, SearchRow as ApiSearchRow, WebVitals } from '../../../lib/api'
 import { fmtDay } from '../../../lib/dates'
 import { fmtFixed, fmtInt, dateFmt } from '../../../lib/format'
 import { averagePosition } from '../../../lib/searchPosition'
@@ -58,11 +58,12 @@ export function mapFunnel(o: { cur: FunnelResult[]; prev?: FunnelResult[]; repor
 // ---- sales ----
 
 /** What the period earned, by kind: there is no list of single sales to read, so each kind is one line. The kinds are what was paid and the refunds come off as their own line, so the lines add up to the period's net revenue (what the Briefing and the buyers say). A period with no payment says there are none. */
-export function mapSales(money: Money | undefined, label: string): Sales {
-  if (!money) return { state: 'connect', sales: [] }
+export function mapSales(money: Money | undefined, label: string, byCountry: ApiRow[] = []): Sales {
+  const countries = byCountry.filter((r) => (r.revenue ?? 0) > 0 && /^[A-Za-z]{2}$/.test(r.value)).map((r) => ({ code: r.value.toUpperCase(), amt: r.revenue ?? 0 }))
+  if (!money) return { state: 'connect', sales: [], orders: 0, customers: 0, refunds: 0, countries }
   const one = (kind: Sale['kind'], text: string, amt: number): Sale[] => (amt === 0 ? [] : [{ kind, label: text, from: '', country: '', device: '', when: label, amt }])
   const sales = [...one('new', copy.salesNew, money.new_gross), ...one('upgrade', copy.salesUpgrade, money.upgrade_gross), ...one('renewal', copy.salesRenewal, money.renewal_gross), ...one('refund', copy.salesRefund, -money.refunds)]
-  return { state: money.payments === 0 && sales.length === 0 ? 'none' : 'ok', sales }
+  return { state: money.payments === 0 && sales.length === 0 ? 'none' : 'ok', sales, orders: money.payments, customers: money.customers, refunds: money.refunds, countries }
 }
 
 // ---- search ----

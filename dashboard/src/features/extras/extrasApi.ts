@@ -66,6 +66,10 @@ export interface Payment {
   channel?: string
   referrer?: string
   country?: string
+  /** The payment provider's id (stripe, dodo, ...). */
+  provider?: string
+  /** What the buyer paid in, only when it is not the site's currency. */
+  currency?: string
   /** The payment provider's name for a buyer with no known visit (or their email); only for a signed-in person, read live, never stored. */
   name?: string
   /** The provider has them as a customer, named or not. */
@@ -119,8 +123,8 @@ export const extrasApi = {
   insights: (site: string, q: ReportQuery) => call<{ insights: Insight[] }>('GET', `/sites/${site}/insights` + qs({ ...q, filters: undefined })),
   pagesSell: (site: string, q: ReportQuery) => call<{ pages: Row[] }>('GET', `/sites/${site}/report/pages-sell` + qs(q)),
   buyers: (site: string, q: ReportQuery, n = 8) => call<{ buyers: Buyer[] }>('GET', `/sites/${site}/buyers` + qs(q) + `&n=${n}`),
-  payments: (site: string, q: ReportQuery, offset: number, n = 20) => call<{ payments: Payment[]; total: number }>('GET', `/sites/${site}/sales/payments` + qs(q) + `&n=${n}&offset=${offset}`),
-  customers: (site: string, q: ReportQuery, offset: number, n = 20) => call<{ customers: Customer[]; total: number }>('GET', `/sites/${site}/sales/customers` + qs(q) + `&n=${n}&offset=${offset}`),
+  payments: (site: string, q: ReportQuery, offset: number, n = 20) => call<{ payments: Payment[]; total: number; currency: string }>('GET', `/sites/${site}/sales/payments` + qs(q) + `&n=${n}&offset=${offset}`),
+  customers: (site: string, q: ReportQuery, offset: number, n = 20) => call<{ customers: Customer[]; total: number; currency: string }>('GET', `/sites/${site}/sales/customers` + qs(q) + `&n=${n}&offset=${offset}`),
   customer: (site: string, id: string, q: ReportQuery) => call<CustomerDetail>('GET', `/sites/${site}/sales/customers/${encodeURIComponent(id)}` + qs(q)),
   refunds: (site: string, q: ReportQuery, n = 4) => call<Refunds>('GET', `/sites/${site}/refunds` + qs(q) + `&n=${n}`),
 }

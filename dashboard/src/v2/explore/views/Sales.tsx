@@ -1,27 +1,71 @@
 // Sales: the net and its split by kind, then each sale with who it came from and what it earned, newest first.
-import { RollText } from '../../ui/RollText'
-import { XEmpty, XNote } from '../../ui/XBits'
+import { XEmpty, XNote, XSec } from '../../ui/XBits'
+import { fmtInt } from '../../../lib/format'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
 import { Lock } from './Lock'
 import { SourceChip } from '../../../features/verified/SourceChip'
+import { SummaryCards } from '../../ui/SummaryCards'
+import { XCols, type CRow } from '../../ui/XTable'
+import { Flag } from '../../ui/Flag'
+import { countryName } from '../../../lib/format'
 import type { Sale, Sales as Model } from '../types'
 
 const KINDS = ['new', 'upgrade', 'renewal', 'refund'] as const
 const COLOR: Record<(typeof KINDS)[number], string> = { new: 'var(--mk-lime)', upgrade: 'var(--ch-2)', renewal: 'var(--ch-3)', refund: 'var(--mk-red)' }
 
 /** The net as the headline, and one bar split by kind: each part filters the list, the picked part again clears it. */
+function NetLabel({ x }: { x: XCtx }) {
+  return (
+    <>
+      {x.kind ? copy.kinds[x.kind as Sale['kind']] : copy.sum.net} <SourceChip verified={x.site.verified} slot="revenue" />
+    </>
+  )
+}
+
+function Cards({ x, d }: { x: XCtx; d: Model }) {
+  const total = d.sales.reduce((p, s) => p + s.amt, 0)
+  const net = x.kind ? d.sales.filter((s) => s.kind === x.kind).reduce((p, s) => p + s.amt, 0) : total
+  const items = [
+    { key: 'net', label: <NetLabel x={x} />, val: x.money(net) },
+    { key: 'orders', label: copy.sum.orders, val: fmtInt(d.orders) },
+    { key: 'customers', label: copy.sum.customers, val: fmtInt(d.customers) },
+    ...(d.orders > 0 ? [{ key: 'avg', label: copy.sum.avg, val: x.money(Math.round((total + d.refunds) / d.orders)) }] : []),
+    ...(d.refunds > 0 ? [{ key: 'refunds', label: copy.sum.refunds, val: x.money(d.refunds), tone: 'dn' as const }] : []),
+  ]
+  return <SummaryCards items={items} />
+}
+
+/** Where the paying visits came from: the biggest five countries by revenue, each with its share of the widest. */
+function Countries({ x, list }: { x: XCtx; list: Model['countries'] }) {
+  if (list.length === 0) return null
+  const top = list.slice(0, 5)
+  const widest = Math.max(1, ...top.map((c) => c.amt))
+  const rows: CRow[] = top.map((c) => ({
+    key: c.code,
+    a: (
+      <>
+        <Flag code={c.code} /> {countryName(c.code)}
+      </>
+    ),
+    bar: c.amt / widest,
+    onPick: () => x.pick('country', c.code),
+    c: [x.money(c.amt)],
+  }))
+  return (
+    <>
+      <XSec a={copy.buyersFrom} />
+      <XCols first={copy.heads.country} cols={[{ h: copy.heads.revenue }]} rows={rows} xc="minmax(0,1fr) 84px" xcm="minmax(0,1fr) 72px" limit={5} onAll={x.showAll} />
+    </>
+  )
+}
+
+/** One bar split by kind: each part filters the list, the picked part again clears it. */
 function Split({ x, sales }: { x: XCtx; sales: Sale[] }) {
-  const net = sales.filter((s) => !x.kind || s.kind === x.kind).reduce((p, s) => p + s.amt, 0)
   const parts = KINDS.map((k) => ({ k, amt: sales.filter((s) => s.kind === k).reduce((p, s) => p + s.amt, 0) })).filter((p) => p.amt !== 0)
   const all = parts.reduce((p, s) => p + Math.abs(s.amt), 0) || 1
   return (
     <div className="xsplit">
-      <div className="xsplit-net">
-        <b><RollText text={x.money(net)} /></b>
-        <span>{x.kind ? copy.kinds[x.kind as Sale['kind']] : copy.net}</span>
-        <SourceChip verified={x.site.verified} slot="revenue" />
-      </div>
       <div className="xsplit-bar" aria-hidden="true">
         {parts.map((p) => (
           <i key={p.k} className={x.kind && x.kind !== p.k ? 'off' : ''} style={{ flexGrow: Math.abs(p.amt) / all, background: COLOR[p.k] }} />
@@ -81,7 +125,9 @@ export function Sales({ x, d }: { x: XCtx; d: Model }) {
   const lines = same ? null : list.slice(0, x.limit).map((s, i) => <Line key={`${i}${s.when}`} s={s} money={x.money} />)
   return (
     <>
+      <Cards x={x} d={d} />
       <Split x={x} sales={d.sales} />
+      <Countries x={x} list={d.countries} />
       {list.length === 0 ? (
         <XEmpty title={copy.emptyKind} hint={copy.emptyKindHint}>
           {x.kind && (
