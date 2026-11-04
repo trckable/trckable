@@ -1428,27 +1428,6 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .mi.team.manage{color:var(--mk-muted);font-size:13px}
 .mk .mi.team>svg{margin-left:auto;color:var(--mk-lime)}
 .mk .mk-menu.teams{width:260px}
-/* A dialog opened from a sheet takes its place: the sheet is back when the dialog closes. */
-/* They fade away over the dialog's own 160 ms fade in (and back, when it closes), never a cut: a cut showed the bare
-   page through the dialog's half-grown backdrop for a frame. */
-.mk .cd {
-  transition: opacity 0.16s ease, visibility 0s;
-}
-body[data-modal] .mk .xscrim,
-body[data-modal] .mk .xscrim.on,
-body[data-modal] .mk .xp,
-body[data-modal] .mk .xp.on {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity 0.16s ease, visibility 0s 0.16s;
-}
-/* A sheet is put away at once (a dialog takes its place; the sheet is back when it closes). */
-body[data-modal] .mk .cd {
-  visibility: hidden;
-  pointer-events: none;
-}
-
 /* Fields have no border: a soft fill, the full width of their row, 36 to 40 px tall; focus is a ring. */
 .mk .palbox input,.mk .mk-menu input,.mk .pmenu .dates input,.mk .xp select,.mk .xp input[type=text],.mk .irow input,.mk .fresh-pick select{color:var(--mk-text)}
 .mk .palbox input,.mk .mk-menu input,.mk .irow input{width:100%;height:40px}

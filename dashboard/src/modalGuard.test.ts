@@ -75,4 +75,16 @@ describe('dialogs', () => {
     expect(rule).toContain('background: var(--modal-surface)')
     expect(rule).not.toContain('backdrop-filter')
   })
+
+  it('sit over the page: one shared backdrop, and nothing puts the page away while a dialog is open', () => {
+    const css = readFileSync(join(SRC, 'kit/Modal.css'), 'utf8')
+    const back = css.match(/\n\.modal-back \{[^}]*\}/)?.[0] ?? ''
+    expect(back).toContain('background: rgba(0, 0, 0, 0.25)')
+    expect(back).toContain('backdrop-filter: blur(4px)')
+    // A dialog dims and blurs the page; it never hides, empties or inerts it (the Explore panel, the Briefing's sheets, a list).
+    expect(readFileSync(join(SRC, 'kit/Modal.tsx'), 'utf8')).not.toMatch(/dataset\.modal|body\.setAttribute|body\.inert/)
+    const all = [...files(SRC, '.css'), ...files(SRC, '.tsx'), ...files(SRC, '.ts')].filter((f) => !f.endsWith('modalGuard.test.ts'))
+    const hiding = all.filter((f) => /body\[data-modal\]|body:has\(\.modal-back[^)]*\)[^{]*\{[^}]*(visibility|display|opacity)/.test(readFileSync(f, 'utf8')))
+    expect(hiding.map((f) => f.slice(SRC.length + 1))).toEqual([])
+  })
 })

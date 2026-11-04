@@ -1,0 +1,1 @@
+Every dialog and sheet (the bell's cards, Settings, the search box's windows) now opens over the page you are on, which stays in place under the dimmed, blurred backdrop: Explore no longer goes blank behind them.

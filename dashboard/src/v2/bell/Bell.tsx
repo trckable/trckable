@@ -86,7 +86,7 @@ function useOpenRows(src: NoticeRow[], open: boolean, gone: ReadonlySet<string>)
 export function Bell({ site, notices }: { site: Site | null; notices: ReturnType<typeof useNotices> }) {
   const { items, read, refresh, mark, markAll, can, dismiss, archive } = notices
   const [sheet, setSheet] = useState(() => window.matchMedia(QUERY.xs).matches)
-  const [told, setTold] = useState<Milestone | null>(null)
+  const [told, setTold] = useState<{ m: Milestone; site: Site } | null>(null)
   const [busy, setBusy] = useState<Notice | null>(null)
   const [card, setCard] = useState<Notice | null>(null)
   const [open, setOpen] = useState(false)
@@ -208,7 +208,8 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
         mark(group?.members ? group.members.map((m) => m.id) : id)
         unlight(group?.members ? [group.id, ...group.members.map((m) => m.id)] : [id])
         for (const m of group?.members ?? [n]) m?.read?.()
-        if (n?.milestone && site && n.site === site.domain) setTold(n.milestone)
+        const own = n && sites.find((x) => (n.siteId ? x.id === n.siteId : x.domain === n.site))
+        if (n?.milestone && own) setTold({ m: n.milestone, site: own })
         else if (n?.busy && !n.open) setBusy(n)
         else if (n?.open) n.open()
         else if (n && hasCard(n) && sites.some((x) => (n.siteId ? x.id === n.siteId : x.domain === n.site))) setCard(n)
@@ -221,9 +222,9 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
       archive={archive && { rows: old, load: archive.load, loading: archive.loading, none: archive.words.none }}
       onSettings={() => site && openSettings(site, 'alerts')}
     />
-    {told && site && (
+    {told && (
       <Suspense fallback={null}>
-        <MilestoneSheet site={site} m={told} onClose={() => setTold(null)} />
+        <MilestoneSheet site={told.site} m={told.m} onClose={() => setTold(null)} />
       </Suspense>
     )}
     {card && <EventStory n={card} sites={sites} site={site} onClose={() => setCard(null)} />}

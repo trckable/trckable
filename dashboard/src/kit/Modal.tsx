@@ -22,12 +22,10 @@ if (typeof document !== 'undefined')
     stack[stack.length - 1].close()
   })
 
-/** Everything below the topmost replacing dialog is put away: out of sight, out of reach. A sheet of the page (the
- *  Briefing's drawers) is put away too while a dialog is open: body[data-modal] says so to its styles. */
+/** Every dialog below the topmost replacing dialog is put away: out of sight, out of reach. The page itself is never
+ *  put away: a dialog sits on top of it (a panel, a sheet, a list stay where they are, under the backdrop). */
 function settle() {
   const top = stack.map((s) => s.over).lastIndexOf(false)
-  if (top === -1) delete document.body.dataset.modal
-  else document.body.dataset.modal = ''
   stack.forEach((s, i) => {
     const el = s.back()
     if (!el) return
