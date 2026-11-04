@@ -82,8 +82,6 @@ export default function PanelContent(p: ContentProps) {
     setSdim: (sdim) => set({ sdim }),
     edit: s.edit,
     setEdit: (edit) => set({ edit }),
-    addAs: s.addAs,
-    setAddAs: (addAs) => set({ addAs }),
     custom: s.custom,
     addCustom: act.addCustom,
     removeCustom: act.removeCustom,

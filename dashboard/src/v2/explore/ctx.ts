@@ -46,10 +46,8 @@ export interface XCtx {
   setSdim: (d: 'q' | 'p') => void
   edit: boolean
   setEdit: (on: boolean) => void
-  addAs: 'step' | 'goal'
-  setAddAs: (k: 'step' | 'goal') => void
   custom: Custom
-  addCustom: (page: string) => void
+  addCustom: (page: string, kind: 'step' | 'goal') => void
   removeCustom: (kind: 'step' | 'goal', i: number) => void
   pageDetails: () => void
 }

@@ -1,76 +1,16 @@
 // Goals & funnels: the funnel as bars with where people leave, the goals under it, and the card to change the funnel.
-import { XEmpty, XSec, XSub } from '../../ui/XBits'
+import { Plus } from 'lucide-react'
+import { XSec } from '../../ui/XBits'
 import { SuggestedGoal } from '../../goals/SuggestedGoal'
 import { XGoals, XMiniFunnel } from '../../ui/XFunnel'
 import { can } from '../../../lib/permissions'
 import { lockCopy } from '../../ui/lockCopy'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
+import { FunnelEditor } from './FunnelEditor'
 import { Lock } from './Lock'
 import { SavedFunnels } from './SavedFunnels'
 import type { Funnel, Goal, Step } from '../types'
-
-function Editor({ x, d }: { x: XCtx; d: Funnel }) {
-  const { steps, goals } = x.custom
-  return (
-    <div className="xedc">
-      <div className="xedr">
-        <select id="xPg" aria-label={copy.heads.page} defaultValue={d.pages[0]?.name}>
-          {d.pages.map((p) => (
-            <option key={p.name}>{p.name}</option>
-          ))}
-        </select>
-        <XSub
-          label={copy.addAs}
-          attr="xet"
-          value={x.addAs}
-          items={[
-            { key: 'step', label: copy.step },
-            { key: 'goal', label: copy.goal },
-          ]}
-          onPick={x.setAddAs}
-        />
-        <button
-          type="button"
-          className="xb p"
-          id="xAdd"
-          onClick={() => {
-            const v = (document.getElementById('xPg') as HTMLSelectElement | null)?.value
-            if (v) x.addCustom(v)
-          }}
-        >
-          {copy.add}
-        </button>
-      </div>
-      {steps.length + goals.length > 0 && (
-        <div className="xchips">
-          {steps.map((n, i) => (
-            <span key={`s${n}`} className="xchip2">
-              {copy.stepChip(n)}
-              <button type="button" data-xdel={`s${i}`} aria-label={copy.removeStep(n)} onClick={() => x.removeCustom('step', i)}>
-                {'×'}
-              </button>
-            </span>
-          ))}
-          {goals.map((n, i) => (
-            <span key={`g${n}`} className="xchip2">
-              {copy.goalChip(n)}
-              <button type="button" data-xdel={`g${i}`} aria-label={copy.removeGoal(n)} onClick={() => x.removeCustom('goal', i)}>
-                {'×'}
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-      <div className="xedf">
-        <span>{copy.countsFrom}</span>
-        <button type="button" className="xb" id="xSaveF" onClick={() => x.setEdit(false)}>
-          {copy.done}
-        </button>
-      </div>
-    </div>
-  )
-}
 
 export function Results({ x, d }: { x: XCtx; d: Funnel }) {
   const page = (n: string) => d.pages.find((p) => p.name === n)
@@ -89,19 +29,21 @@ export function Results({ x, d }: { x: XCtx; d: Funnel }) {
         )}
       </div>
       <SavedFunnels site={x.site.id} spec={d.spec} />
-      {x.edit && <Editor x={x} d={d} />}
+      {x.edit && <FunnelEditor x={x} d={d} />}
       {steps.length >= 2 && steps[0].v > 0 ? <XMiniFunnel steps={steps} leak={d.leak} ghost={d.ghost} leakPage={leakPage} onLeak={leakPage ? () => x.goWith('pages', 'page', leakPage) : undefined} onConnect={can('payment.manage') ? () => x.connect('rev') : undefined} /> : (
-        <XEmpty title={copy.emptyFunnel} hint={copy.emptyFunnelHint}>
+        <div className="xfe">
+          <span>{copy.emptyFunnel}</span>
           {can('funnel.create') ? (
             !x.edit && (
               <button type="button" className="xb" onClick={() => x.setEdit(true)}>
-                {copy.addSteps}
+                <Plus aria-hidden="true" />
+                {copy.addStep}
               </button>
             )
           ) : (
             <span className="mk-quiet">{lockCopy.ask}</span>
           )}
-        </XEmpty>
+        </div>
       )}
       <XSec a={copy.goals} />
       {!d.goalsOn && <Lock k="goals" x={x} />}

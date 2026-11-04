@@ -148,7 +148,7 @@ export function Modal({
    *  (a window whose first control is a close button that should not glow). */
   focus?: 'first' | 'box'
   className?: string
-  /** A question about the dialog beneath (a confirmation): it shows over it instead of replacing it. */
+  /** Shows over what is beneath (a confirmation over its dialog, a sheet over the page it was opened from) instead of putting it away. */
   over?: boolean
   children?: ReactNode
 }) {

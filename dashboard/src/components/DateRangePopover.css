@@ -103,8 +103,8 @@
     inset: 0;
     z-index: 19;
     background: color-mix(in srgb, var(--bg) 45%, transparent);
-    backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
     animation: fade 0.18s var(--ease) both;
   }
 }

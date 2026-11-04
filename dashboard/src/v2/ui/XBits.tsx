@@ -1,7 +1,7 @@
 // The small parts of an Explore page: a titled line, a quiet note, an empty message, a row that asks to connect, the
 // segmented switch inside a section, and the loading shape.
 import { useEffect, useRef, type ReactNode } from 'react'
-import { CircleAlert, type LucideIcon } from 'lucide-react'
+import { CircleAlert, Inbox, type LucideIcon } from 'lucide-react'
 import { copy } from '../explore/copy'
 
 export function XSec({ a, b }: { a: ReactNode; b?: ReactNode }) {
@@ -18,6 +18,7 @@ export const XNote = ({ children }: { children: ReactNode }) => <div className="
 export function XEmpty({ title, hint, children }: { title: string; hint: string; children?: ReactNode }) {
   return (
     <div className="xempty">
+      <Inbox aria-hidden="true" />
       <b>{title}</b>
       <span>{hint}</span>
       {children}

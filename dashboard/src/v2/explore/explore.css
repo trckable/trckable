@@ -262,3 +262,188 @@
   font-size: 13px;
   color: var(--mk-muted);
 }
+
+/* The card to change the funnel: no panel of its own, it rides on the card's surface and is set apart by space. */
+.mk .xedc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mk-s3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.mk .xfs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mk-s2);
+}
+.mk .xfsi {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mk-s2);
+}
+.mk .xfar {
+  color: var(--mk-muted);
+}
+.mk .xfst {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  height: 32px;
+  padding: 0 4px 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--mk-field);
+  font-size: 13px;
+}
+.mk .xfst > b {
+  color: var(--mk-muted);
+  font-weight: 600;
+  font-size: 12px;
+}
+.mk .xfst > svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: var(--mk-muted);
+}
+.mk .xfst .nm {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mk .xfst button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: var(--mk-muted);
+}
+.mk .xfst button svg {
+  width: 14px;
+  height: 14px;
+}
+.mk .xfst button:hover {
+  background: var(--mk-hover);
+  color: var(--mk-text);
+}
+.mk .xfst:not(:has(button)) {
+  padding-right: 12px;
+}
+.mk .xfadd {
+  gap: 4px;
+  border: 0;
+  background: var(--mk-field);
+}
+.mk .xfadd svg,
+.mk .xfe .xb svg {
+  width: 14px;
+  height: 14px;
+}
+.mk .xfpk {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mk-s2);
+}
+.mk .xp .xfpk input[type='text'] {
+  width: 100%;
+  max-width: 320px;
+  border: 0;
+  background: var(--mk-field);
+  padding: 0 12px;
+}
+.mk .xfpl {
+  display: flex;
+  flex-direction: column;
+  max-height: 220px;
+  overflow: auto;
+}
+.mk .xfpr {
+  display: flex;
+  align-items: center;
+  gap: var(--mk-s2);
+  border-radius: 10px;
+}
+.mk .xfpr:hover {
+  background: var(--mk-hover);
+}
+.mk .xfpn {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--mk-s2);
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 var(--mk-s2);
+  text-align: left;
+  font-size: 13px;
+}
+.mk .xfpn svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: var(--mk-muted);
+}
+.mk .xfpn .nm {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mk .xfpg {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: var(--mk-muted);
+}
+.mk .xfpg:hover {
+  color: var(--mk-text);
+}
+.mk .xfpg svg {
+  width: 14px;
+  height: 14px;
+}
+.mk .xfe {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mk-s3);
+  color: var(--mk-muted);
+  font-size: 13px;
+}
+@media (--xs) {
+  .mk .xfst {
+    height: 36px;
+  }
+  .mk .xfst button {
+    width: 32px;
+    height: 32px;
+  }
+  .mk .xfpn {
+    min-height: 44px;
+  }
+  .mk .xfpg {
+    width: 44px;
+    height: 44px;
+  }
+  .mk .xp .xfpk input[type='text'] {
+    max-width: none;
+  }
+}
+.mk .xedf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mk-s3);
+  font-size: 12px;
+  color: var(--mk-muted);
+}
