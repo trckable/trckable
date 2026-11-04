@@ -1,7 +1,7 @@
 // The bell's list: what happened that a person would want to hear of, put together from what the server already
 // records (incidents, milestones, mentions). Pure; read marks are kept by useNotices.
 import { goalName } from '../../lib/goalName'
-import { lineOf } from '../../features/milestones/words'
+import { lineOf, tileLabel } from '../../features/milestones/words'
 import type { Alert, Milestone, Site } from '../../lib/api'
 import { answersCopy } from '../../features/answers/copy'
 import { STALE_DAYS } from '../../features/install/journey'
@@ -110,7 +110,7 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number): Notice[] 
         break
       }
       case 'milestone':
-        if (r.milestone && r.day) out.push({ ...base, kind: 'milestone', title: lineOf(r.milestone, true), sub: '', at: startOf(r.day), day: r.day, milestone: r.milestone })
+        if (r.milestone && r.day) out.push({ ...base, kind: 'milestone', title: lineOf(r.milestone, true) || tileLabel(r.milestone, true), sub: '', at: startOf(r.day), day: r.day, milestone: r.milestone })
         break
       case 'sale': {
         const n = r.count ?? 1
@@ -121,7 +121,7 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number): Notice[] 
         out.push({ ...base, kind: 'signup', title: copy.signups(r.count ?? 1), sub: '', visitor: r.visitor, exact: r.seen })
         break
       case 'goal':
-        out.push({ ...base, kind: 'goal', title: copy.goalReached(goalName(undefined, r.text ?? ''), r.count ?? 1), sub: '', visitor: r.visitor, exact: r.seen })
+        out.push({ ...base, kind: 'goal', title: copy.goalCount(goalName(undefined, r.text ?? ''), r.count ?? 1), sub: copy.goalSub, visitor: r.visitor, exact: r.seen })
         break
       case 'alert': {
         const kind = (r.what ?? '') as AlertKind
@@ -131,7 +131,20 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number): Notice[] 
       }
     }
   }
-  return out
+  return alone(out)
+}
+
+/** The same family of milestone on the same site and day is one row, the highest number (the others are what led to it). */
+function alone(list: Notice[]): Notice[] {
+  const top = new Map<string, Notice>()
+  for (const n of list) {
+    const m = n.milestone
+    if (!m) continue
+    const key = `${n.siteId ?? n.site}:${m.kind}:${n.day}`
+    const best = top.get(key)
+    if (!best || (best.milestone?.value ?? 0) < m.value) top.set(key, n)
+  }
+  return list.filter((n) => !n.milestone || top.get(`${n.siteId ?? n.site}:${n.milestone.kind}:${n.day}`) === n)
 }
 
 const ALERT_TITLE: Partial<Record<AlertKind, (d: string) => string>> = { threshold: copy.alertThreshold, disk: copy.alertDisk }

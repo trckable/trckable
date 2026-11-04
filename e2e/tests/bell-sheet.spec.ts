@@ -43,11 +43,11 @@ test.beforeAll(async () => {
   cookie = await session()
 })
 
-async function open(page: Page, width: number) {
+async function open(page: Page, width: number, own = String(width)) {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   // Read marks belong to the account, which both widths share: each has its own steps.
   const site = await siteIdOf(page, HISTORY_DOMAIN)
-  await mockFeed(page, () => [milestone(site, `${width}-100`, 100, 2), milestone(site, `${width}-1000`, 1000, 1)])
+  await mockFeed(page, () => [milestone(site, `${own}-100`, 100, 2), milestone(site, `${own}-1000`, 1000, 1)])
   await page.setViewportSize({ width, height: 844 })
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&v=`)
 }
@@ -73,7 +73,7 @@ for (const width of [390, 1440]) {
 }
 
 test('on a phone the list is a dialog named for the bell', async ({ page }) => {
-  await open(page, 390)
+  await open(page, 390, 'dialog') // its own rows: opening reads them for the account
   await page.locator('#bellBtn').click()
   await expect(page.getByRole('dialog', { name: 'Notifications' })).toBeVisible()
 })

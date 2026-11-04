@@ -97,4 +97,42 @@ describe('the bell after a row is opened', () => {
     expect(rows(again.host)).toEqual([expect.stringMatching(DOWN)])
     again.stop()
   })
+
+  it('keeps the list drawn, node for node, when it is read again while open', async () => {
+    const m = mount({ bell: [] }, [site])
+    open()
+    await flush()
+    const before = [...m.host.querySelectorAll('.nfw')]
+    expect(before).toHaveLength(1)
+    vi.mocked(more.notifications).mockResolvedValue({ notifications: [{ ...down }] })
+    m.draw()
+    await flush()
+    expect(m.host.querySelector('.nfs')).toBeNull()
+    expect([...m.host.querySelectorAll('.nfw')]).toEqual(before)
+    expect(before[0].isConnected).toBe(true)
+    m.stop()
+  })
+
+  it('keeps the badge at nothing after the panel was open, even when a read answers before the mark lands', async () => {
+    const badge = () => document.querySelector('#bellDot')?.className
+    vi.spyOn(more, 'bellRead').mockResolvedValue({ read: [] })
+    vi.spyOn(more, 'markBellRead').mockReturnValue(new Promise(() => undefined)) // the server never answers the mark
+    const m = mount({ bell: [] }, [site])
+    await flush()
+    await act(() => new Promise((r) => setTimeout(r, 3100)))
+    expect(badge()).not.toContain('off')
+    open()
+    await flush()
+    open() // shut
+    await flush()
+    expect(badge()).toContain('off')
+    // A poll answers with the same list, the account's read list still without the mark.
+    await act(() => window.dispatchEvent(new Event('focus')))
+    open()
+    await flush()
+    open()
+    await flush()
+    expect(badge()).toContain('off')
+    m.stop()
+  })
 })

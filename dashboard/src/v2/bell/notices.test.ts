@@ -138,9 +138,17 @@ describe('the server’s list as the bell’s rows', () => {
     expect(n.at).not.toBe(1_700_000_999)
   })
 
+  it('never tells a goal without its number, and keeps one milestone of a family and day', () => {
+    const [g] = fromFeed([row({ id: 'goal:s1:dl:d', kind: 'goal', count: 126, text: 'file_download' })], sites, now)
+    expect(g.title).toBe('File download: 126')
+    const m = (value: number) => ({ kind: 'visitors', step: String(value), value, day: '2026-10-30', created_at: 1, new: true, shared: false }) as never
+    const out = fromFeed([row({ id: 'mile:s1:visitors:100', kind: 'milestone', day: '2026-10-30', milestone: m(100) }), row({ id: 'mile:s1:visitors:1000', kind: 'milestone', day: '2026-10-30', milestone: m(1000) })], sites, now)
+    expect(out.map((n) => n.id)).toEqual(['mile:s1:visitors:1000'])
+  })
+
   it('tells sales, signups and goals of an hour as one row with their count', () => {
     const out = fromFeed([row({ id: 'sale:s1:h', kind: 'sale', count: 3, amount: 4500, currency: 'USD', exponent: 2 }), row({ id: 'signup:s1:h', kind: 'signup', count: 2 }), row({ id: 'goal:s1:g:h', kind: 'goal', count: 1, text: 'Newsletter' })], sites, now)
-    expect(out.map((r) => r.title)).toEqual(['3 sales', '2 new signups', 'Newsletter reached'])
+    expect(out.map((r) => r.title)).toEqual(['3 sales', '2 new signups', 'Newsletter: 1'])
     expect(out[0].sub).toContain('45')
   })
 
