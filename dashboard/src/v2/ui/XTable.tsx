@@ -50,6 +50,8 @@ export interface XTableProps {
   unit?: string
   mono?: boolean
   flags?: boolean
+  /** A small picture before a row's name, if it has one. */
+  mark?: (r: Row) => ReactNode
   /** The filter value picked now, and what a tapped row does; without it the rows are plain. */
   selected?: string | null
   onPick?: (r: Row) => void
@@ -64,7 +66,7 @@ export interface XTableProps {
   go?: { label: string; run: () => void; section?: string }
 }
 
-export function XTable({ rows, head, unit = copy.people, mono, flags, selected, onPick, dim, limit, of, money, onAll, go }: XTableProps) {
+export function XTable({ rows, head, unit = copy.people, mono, flags, mark, selected, onPick, dim, limit, of, money, onAll, go }: XTableProps) {
   const paid = !!money && rows.some((r) => r.rev !== undefined)
   const signups = rows.some((r) => r.su !== undefined)
   const left = rows.some((r) => r.br !== undefined)
@@ -92,7 +94,7 @@ export function XTable({ rows, head, unit = copy.people, mono, flags, selected, 
           <>
             <span className="mk-bar">
               <i style={{ width: `${(r.v / max) * 100}%` }} />
-              <span className={mono ? 'mono' : ''}>{flags && r.code && <><Flag code={r.code} />{' '}</>}{r.name}</span>
+              <span className={mono ? 'mono' : ''}>{flags && r.code && <><Flag code={r.code} />{' '}</>}{mark?.(r)}{r.name}</span>
             </span>
             <span className="mk-n">{fmtInt(r.v)}</span>
             <span className={`d ${d.tone}`}>{d.text}</span>

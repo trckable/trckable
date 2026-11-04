@@ -1,7 +1,7 @@
 // The small parts of an Explore page: a titled line, a quiet note, an empty message, a row that asks to connect, the
 // segmented switch inside a section, and the loading shape.
 import { useEffect, useRef, type ReactNode } from 'react'
-import { CircleAlert } from 'lucide-react'
+import { CircleAlert, type LucideIcon } from 'lucide-react'
 import { copy } from '../explore/copy'
 
 export function XSec({ a, b }: { a: ReactNode; b?: ReactNode }) {
@@ -43,6 +43,8 @@ interface SubItem<T extends string> {
   key: T
   label: string
   dot?: string
+  /** A small icon before the label. */
+  icon?: LucideIcon
 }
 
 /** Two to four views of one thing, side by side: the tabs of a section, the kinds of sale. */
@@ -77,6 +79,7 @@ export function XSub<T extends string>({ items, value, label, attr, onPick }: { 
     <div ref={strip} className="xsub" role="tablist" aria-label={label} style={{ '--n': items.length } as React.CSSProperties}>
       {items.map((x) => (
         <button key={x.key} type="button" role="tab" aria-selected={x.key === value} {...{ [`data-${attr}`]: x.key }} className={x.key === value ? 'on' : ''} onClick={() => onPick(x.key)}>
+          {x.icon && <x.icon size={14} aria-hidden="true" />}
           {x.label}
           {x.dot && <i className="xdot" title={x.dot} />}
         </button>
