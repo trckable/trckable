@@ -8,7 +8,7 @@ import { TimelineNode } from './TimelineNode'
 import { fmtDayShort, fmtTime, isoOf } from './when'
 import { Flag } from '../../v2/ui/Flag'
 
-export function VisitCard({ v, currency, onFilter }: { v: VisitStory; currency: string; onFilter?: OnFilter }) {
+export function VisitCard({ v, currency, zone, onFilter }: { v: VisitStory; currency: string; zone?: string; onFilter?: OnFilter }) {
   const headId = `jr-${v.key}`
   return (
     <li className={v.live ? 'jr-visit live' : 'jr-visit'} aria-labelledby={headId}>
@@ -16,7 +16,7 @@ export function VisitCard({ v, currency, onFilter }: { v: VisitStory; currency: 
         <h3 id={headId}>
           <span className="jr-visit-no">{copy.visit(v.number)}</span>
           <time className="num" dateTime={isoOf(v.start)}>
-            {copy.dayTime(fmtDayShort(v.start), fmtTime(v.start))}
+            {copy.dayTime(fmtDayShort(v.start, zone), fmtTime(v.start, zone))}
           </time>
         </h3>
         <SourceChip channel={v.channel} referrer={v.referrer} at={v.start} onFilter={onFilter} />
@@ -39,7 +39,7 @@ export function VisitCard({ v, currency, onFilter }: { v: VisitStory; currency: 
       {v.nodes.length === 0 && <p className="faint jr-none">{copy.noPages}</p>}
       <ol className="jr-timeline" aria-label={copy.visitEvents(v.number)}>
         {v.nodes.map((n, i) => (
-          <TimelineNode key={n.key} n={n} index={i} first={i === 0} live={v.live} currency={currency} onFilter={onFilter} />
+          <TimelineNode key={n.key} n={n} index={i} first={i === 0} live={v.live} currency={currency} zone={zone} onFilter={onFilter} />
         ))}
       </ol>
       {v.more > 0 && <p className="faint jr-none">{copy.moreEvents(v.more)}</p>}

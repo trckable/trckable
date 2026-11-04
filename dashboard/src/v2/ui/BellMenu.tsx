@@ -33,6 +33,8 @@ export interface BellRow {
   title: string
   /** What else is said under the title. */
   sub: string
+  /** The zone its times are written in (the site's); the day it is listed under is a day there. */
+  zone?: string
   /** The row's time ('' for none). */
   time: string
   unread: boolean
@@ -135,9 +137,12 @@ function List(p: BellProps & { close: () => void; bare?: boolean }) {
         {empty && <BellEmpty p={p} close={p.close} old={old} onOld={() => { p.archive?.load(); setOld(true) }} />}
         {rows.length === 0 && !waiting && !empty && <div className="xnone">{old && p.archive ? p.archive.none : p.none}</div>}
         {!waiting &&
-          byDay(rows).map((d) => (
+          byDay(rows, undefined, (r) => r.zone).map((d) => (
             <Fragment key={d.day}>
-              <h3 className="nfdy">{d.label}</h3>
+              <h3 className="nfdy">
+                {d.label}
+                {d.zone && <span className="nfzn">{copy.zoneNote(d.zone)}</span>}
+              </h3>
               {d.rows.map((n) => (
                 <Row key={n.id} n={n} p={p} close={p.close} />
               ))}

@@ -6,7 +6,7 @@ import type { Alert, Milestone, Site } from '../../lib/api'
 import { answersCopy } from '../../features/answers/copy'
 import { STALE_DAYS } from '../../features/install/journey'
 import { sourceName } from '../briefing/model'
-import { duration } from '../../features/incidents/model'
+import { duration, startOfDay } from '../../features/incidents/model'
 import { clock } from '../../lib/site'
 import { fmtFixed, fmtInt, fmtMoney } from '../../lib/format'
 import type { FeedRow } from './feed'
@@ -41,6 +41,8 @@ export interface Notice {
   source?: string
   /** The site's id, when the notice knows it (else it is found by its domain). */
   siteId?: string
+  /** The site's time zone: every time the notice tells is written in it, as Live writes it (the viewer's own when the site is not known). */
+  zone?: string
   /** The alert it came from, when that is not the kind's own (an alert the person can mute or change for the site). */
   alert?: AlertKind
   /** Still going: drawn red. */
@@ -68,8 +70,8 @@ export function fromSetup(sites: Site[], now: number): Notice[] {
   })
 }
 
-/** The start of a calendar day in this browser's zone, as unix seconds: where a row kept by the day sits in the list. */
-const startOf = (day: string): number => Math.floor(new Date(`${day}T00:00:00`).getTime() / 1000)
+/** The start of a calendar day in the site's zone (this browser's when there is none), as unix seconds: where a row kept by the day sits in the list. */
+const startOf = (day: string, zone?: string): number => (zone ? startOfDay(day, zone) : Math.floor(new Date(`${day}T00:00:00`).getTime() / 1000))
 
 /**
  * The server's list as notices, in its order. A row keeps its id when the thing it tells goes on (a site that was down is
@@ -81,8 +83,9 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number): Notice[] 
     const s = sites.find((x) => x.id === r.site)
     const d = s?.domain ?? r.domain ?? ''
     if (r.site && (sites.length > 0 ? !s : !d)) continue
-    const base = { id: r.id, site: d, siteId: r.site || undefined, at: r.at }
-    const hm = (t: number) => clock(new Date(t * 1000), '')
+    const zone = s?.timezone || undefined
+    const base = { id: r.id, site: d, siteId: r.site || undefined, at: r.at, zone }
+    const hm = (t: number) => clock(new Date(t * 1000), zone ?? '')
     switch (r.kind) {
       case 'down': {
         const over = r.ended != null && r.ended <= now
@@ -112,7 +115,7 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number): Notice[] 
         break
       }
       case 'milestone':
-        if (r.milestone && r.day) out.push({ ...base, kind: 'milestone', title: lineOf(r.milestone, true) || tileLabel(r.milestone, true), sub: '', at: startOf(r.day), day: r.day, milestone: r.milestone })
+        if (r.milestone && r.day) out.push({ ...base, kind: 'milestone', title: lineOf(r.milestone, true) || tileLabel(r.milestone, true), sub: '', at: startOf(r.day, zone), day: r.day, milestone: r.milestone })
         break
       case 'sale': {
         const n = r.count ?? 1

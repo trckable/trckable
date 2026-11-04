@@ -23,9 +23,9 @@ export function EventDown({ n, site }: { n: Notice; site: Site }) {
   return (
     <dl className="ev-facts">
       <dt>{t.started}</dt>
-      <dd className="num">{whenOf(x.started_at, now)}</dd>
+      <dd className="num">{whenOf(x.started_at, now, site.timezone)}</dd>
       <dt>{t.backUp}</dt>
-      <dd className="num">{x.ended_at === null ? t.stillDown : whenOf(x.ended_at, now)}</dd>
+      <dd className="num">{x.ended_at === null ? t.stillDown : whenOf(x.ended_at, now, site.timezone)}</dd>
       <dt>{x.ended_at === null ? t.soFar : t.lasted}</dt>
       <dd className="num">{duration(lasted(x, now))}</dd>
       <dt>{t.checks}</dt>

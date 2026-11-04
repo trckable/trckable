@@ -2686,6 +2686,7 @@ export default {
   'bell.mention': (host: string) => `Nuova menzione su ${host}`,
   'bell.busy': (d: string) => `${d} è molto visitato`,
   'bell.onlineN': (n: string) => `${n} online`,
+  'bell.zoneNote': (z: string) => `orari in ${z}`,
   'bell.allDay': 'Tutto il giorno',
   'bell.sales': (n: number) => (n === 1 ? 'Nuova vendita' : `${n} vendite`),
   'bell.signups': (n: number) => (n === 1 ? 'Nuova iscrizione' : `${n} nuove iscrizioni`),

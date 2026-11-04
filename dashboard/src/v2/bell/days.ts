@@ -1,13 +1,13 @@
 // The bell's days: the rows are listed under "Today", "Yesterday" and "Tue 20 Oct", each row with only its time. The day
-// is the viewer's own (their zone, not UTC). Pure; `now` and `zone` are for tests.
+// is a day of the site's zone (the viewer's own when there is none). Pure; `now` is for tests.
 import { dayWords } from '../dayWords'
-import { dateFmt } from '../../lib/format'
+import { browserZone, dateFmt } from '../../lib/format'
 import { clock } from '../../lib/site'
 import { copy } from './copy'
 
 /** The calendar day ("2026-10-20") of a moment in a zone (the viewer's own when none is given). */
 export function dayOf(at: number, zone?: string): string {
-  return dateFmt('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: zone }).format(new Date(at * 1000))
+  return dateFmt('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: zone || undefined }).format(new Date(at * 1000))
 }
 
 /** The clock of a moment as the app writes it everywhere ("09:10"), in the viewer's zone. */
@@ -32,19 +32,23 @@ export function whenOf(at: number, now = Date.now() / 1000, zone?: string): stri
 export interface Day<T> {
   day: string
   label: string
+  /** The zone its times are written in, when that is not the viewer's own: told once, under the heading. */
+  zone?: string
   rows: T[]
 }
 
-/** The rows (newest first) under their days, in the order given: "Today", "Yesterday", then the date. */
-export function byDay<T extends { at: number }>(rows: readonly T[], now = Date.now() / 1000, zone?: string): Day<T>[] {
-  const today = dayOf(now, zone)
-  const yesterday = before(today)
+/** The rows (newest first) under their days, in the order given: "Today", "Yesterday", then the date. A row's day is a day of its own zone (one zone for all, or a function of the row; else the viewer's), so rows of sites in different zones sit under their own days. */
+export function byDay<T extends { at: number }>(rows: readonly T[], now = Date.now() / 1000, zone?: string | ((r: T) => string | undefined)): Day<T>[] {
+  const mine = browserZone()
   const out: Day<T>[] = []
   for (const r of rows) {
-    const day = dayOf(r.at, zone)
+    const z = typeof zone === 'function' ? zone(r) : zone
+    const shown = z && z !== mine ? z : undefined
+    const today = dayOf(now, z)
+    const day = dayOf(r.at, z)
     const last = out[out.length - 1]
-    if (last && last.day === day) last.rows.push(r)
-    else out.push({ day, label: headingOf(day, today, yesterday), rows: [r] })
+    if (last && last.day === day && last.zone === shown) last.rows.push(r)
+    else out.push({ day, label: headingOf(day, today, before(today)), zone: shown, rows: [r] })
   }
   return out
 }

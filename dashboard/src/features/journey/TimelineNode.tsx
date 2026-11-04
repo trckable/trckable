@@ -9,10 +9,10 @@ import type { PageNode, Prop, StoryNode } from './model'
 import type { OnFilter } from './SourceChip'
 import { fmtTime, isoOf } from './when'
 
-function When({ at, offset, first }: { at: number; offset: number; first: boolean }) {
-  const text = first ? fmtTime(at) : copy.offset(fmtDuration(offset))
+function When({ at, offset, first, zone }: { at: number; offset: number; first: boolean; zone?: string }) {
+  const text = first ? fmtTime(at, zone) : copy.offset(fmtDuration(offset))
   return (
-    <time className="jr-when num" dateTime={isoOf(at)} title={fmtTime(at)}>
+    <time className="jr-when num" dateTime={isoOf(at)} title={fmtTime(at, zone)}>
       {text}
     </time>
   )
@@ -70,7 +70,7 @@ function nodeClass(n: StoryNode, here: boolean): string {
   return 'jr-node page'
 }
 
-export function TimelineNode({ n, index, first, live, currency, onFilter }: { n: StoryNode; index: number; first: boolean; live: boolean; currency: string; onFilter?: OnFilter }) {
+export function TimelineNode({ n, index, first, live, currency, zone, onFilter }: { n: StoryNode; index: number; first: boolean; live: boolean; currency: string; zone?: string; onFilter?: OnFilter }) {
   const here = live && n.kind === 'page' && n.exit
   return (
     <li className={nodeClass(n, here)} style={{ ['--i' as string]: String(Math.min(index, 12)) }}>
@@ -94,7 +94,7 @@ export function TimelineNode({ n, index, first, live, currency, onFilter }: { n:
         </div>
       )}
       <span className="jr-meta">
-        <When at={n.at} offset={n.offset} first={first} />
+        <When at={n.at} offset={n.offset} first={first} zone={zone} />
         {n.kind === 'page' && n.engagedS > 0 && <span className="faint num">{copy.stayed(fmtDuration(n.engagedS))}</span>}
       </span>
     </li>

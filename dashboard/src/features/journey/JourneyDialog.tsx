@@ -15,7 +15,7 @@ import { useJourney, type JourneyState } from './useJourney'
 import { VisitCard } from './VisitCard'
 import './Journey.css'
 
-function Body({ state, titleId, onFilter }: { state: JourneyState; titleId: string; onFilter?: OnFilter }) {
+function Body({ state, titleId, zone, onFilter }: { state: JourneyState; titleId: string; zone: string; onFilter?: OnFilter }) {
   if (state.status === 'loading') {
     return (
       <>
@@ -45,11 +45,11 @@ function Body({ state, titleId, onFilter }: { state: JourneyState; titleId: stri
     <>
       <IdentityHead who={who} titleId={titleId} />
       {who.live && <LiveNow path={who.currentPath} />}
-      <IdentityFacts who={who} currency={currency} onFilter={onFilter} />
+      <IdentityFacts who={who} currency={currency} zone={zone} onFilter={onFilter} />
       {story.visits.length === 0 && <p className="faint">{copy.empty}</p>}
       <ol className="jr-visits" aria-label={copy.visitsLabel}>
         {story.visits.map((v) => (
-          <VisitCard key={v.key} v={v} currency={currency} onFilter={onFilter} />
+          <VisitCard key={v.key} v={v} currency={currency} zone={zone} onFilter={onFilter} />
         ))}
       </ol>
       {story.truncated && <p className="faint">{copy.older}</p>}
@@ -74,7 +74,7 @@ export function JourneyDialog({ site, visitor, query, onClose, onFilter }: { sit
           <X size={16} strokeWidth={2} aria-hidden="true" />
         </button>
       </div>
-      <Body state={state} titleId={titleId} onFilter={pick} />
+      <Body state={state} titleId={titleId} zone={site.timezone} onFilter={pick} />
     </Modal>
   )
 }
