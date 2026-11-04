@@ -1,5 +1,4 @@
-// Notes, end to end, on the Briefing: the sheet that lists them, the form that adds one (it takes the sheet's place, never
-// stacks on it), editing in place, deleting with a way back, Cancel, Escape, a click outside, a failing server, a double click.
+// Notes, end to end, on the Briefing: the sheet that lists them, the form that adds one (it opens over the sheet, which waits under the backdrop), editing in place, deleting with a way back, Cancel, Escape, a click outside, a failing server, a double click.
 import { expect, test, type Page } from './fixtures'
 import { flowSession, LOOKS, openFlow, overlays } from './flows-kit'
 
@@ -22,13 +21,19 @@ async function openNotes(page: Page) {
 
 for (const look of LOOKS) {
   test.describe(`${look.width}px, ${look.scheme}`, () => {
-    test(`Add a note takes the sheet's place, and Cancel and Escape go back to it`, async ({ page }) => {
+    test(`Add a note opens over the sheet, and Cancel and Escape go back to it`, async ({ page }) => {
       await openFlow(page, cookie, look)
       await openNotes(page)
       await sheet(page).getByRole('button', { name: 'Add a note' }).click()
       await expect(form(page)).toBeVisible()
-      // One overlay in sight: the form. The sheet waits underneath, out of sight and out of reach.
-      expect(await overlays(page)).toEqual(['Add a note'])
+      // The form opens over the sheet, which stays in place under the backdrop and out of reach: a click on it lands on the backdrop.
+      expect(await overlays(page)).toEqual(['All notes', 'Add a note'])
+      expect(
+        await sheet(page).evaluate((el) => {
+          const r = el.getBoundingClientRect()
+          return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.closest('.modal-back') !== null
+        }),
+      ).toBe(true)
       await form(page).getByRole('button', { name: 'Cancel' }).click()
       await expect(form(page)).toHaveCount(0)
       expect(await overlays(page)).toEqual(['All notes'])
