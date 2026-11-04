@@ -1,7 +1,35 @@
-import { Check, Lock, MoreHorizontal } from 'lucide-react'
+import { AtSign, Bot, Check, Code, CreditCard, Download, EyeOff, Filter, Gauge, Globe, Link, Lock, MoreHorizontal, MousePointerClick, Search, Smartphone, Target, Users, type LucideIcon } from 'lucide-react'
 import { copy } from './copy'
 import { Pop } from './Pop'
 import type { RowAct, RowView } from './rows'
+
+const ICONS: Record<string, LucideIcon> = {
+  verified: Code,
+  goal: Target,
+  locale: Globe,
+  funnel: Filter,
+  payments: CreditCard,
+  search: Search,
+  crawlers: Bot,
+  proxy: Link,
+  own_visits: EyeOff,
+  vitals: Gauge,
+  heatmaps: MousePointerClick,
+  ga: Download,
+  team: Users,
+  phone: Smartphone,
+  mentions: AtSign,
+}
+
+/** The step's icon in a small tinted chip. */
+function Chip({ id }: { id: string }) {
+  const Icon = ICONS[id] ?? Code
+  return (
+    <span className="schip2" aria-hidden="true">
+      <Icon size={15} />
+    </span>
+  )
+}
 
 const menuOf = (acts: RowAct[]) => acts.map((a) => ({ label: a.label, run: a.run }))
 
@@ -12,6 +40,7 @@ export function SetupRow({ row }: { row: RowView }) {
   if (!main) {
     return (
       <div className={`sprow${row.done ? ' done' : ''}${row.locked ? ' locked' : ''}`} data-step={row.id} title={tip}>
+        <Chip id={row.id} />
         <b className="stitle">{row.title}</b>
         {row.done && <Check size={14} className="stick" aria-hidden="true" />}
         {row.locked && <Lock size={13} className="stick" aria-hidden="true" />}
@@ -21,6 +50,7 @@ export function SetupRow({ row }: { row: RowView }) {
   return (
     <div className="sprow click" data-step={row.id} title={tip}>
       <button type="button" className="sgo" onClick={main.run}>
+        <Chip id={row.id} />
         <b className="stitle">{row.title}</b>
         <span className="sword">{main.label}</span>
       </button>
