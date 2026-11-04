@@ -350,6 +350,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}/refunds", a.authed(a.refunds))
 	handle("GET /api/v1/sites/{site}/sales/payments", a.authed(a.payList(false)))
 	handle("GET /api/v1/sites/{site}/sales/customers", a.authed(a.payList(true)))
+	handle("GET /api/v1/sites/{site}/sales/customers/{id}", a.authed(a.customerDetail))
 	handle("GET /api/v1/sites/{site}/export.csv", a.authed(a.export))
 	handle("GET /api/v1/sites/{site}/events", a.authed(a.recent))
 	handle("GET /api/v1/sites/{site}/live", a.authed(a.live))

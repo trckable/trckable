@@ -66,6 +66,10 @@ export interface Payment {
   channel?: string
   referrer?: string
   country?: string
+  /** The payment provider's name for a buyer with no known visit (or their email); only for a signed-in person, read live, never stored. */
+  name?: string
+  /** The provider has them as a customer, named or not. */
+  known?: boolean
 }
 
 /** One paying customer in the period: what they spent (net of refunds), how often, and the source that first brought them. */
@@ -80,6 +84,31 @@ export interface Customer {
   country?: string
   first_seen: string
   last_order: string
+  /** As Payment.name. */
+  name?: string
+  known?: boolean
+}
+
+/** One license key a customer holds, as the provider reports it. Only the last four characters of the key. */
+export interface LicenseKey {
+  last4: string
+  status: string
+  /** Activations in use, and the most allowed (absent: no limit). */
+  used: number
+  limit?: number
+  /** When the key was issued: the purchase. */
+  created_at?: string
+  expires_at?: string
+  /** When each current activation was made, oldest first. */
+  activations: string[]
+}
+
+/** One customer opened: their payments in the period and, when the provider says, who they are and the license keys they hold. */
+export interface CustomerDetail {
+  name?: string
+  email?: string
+  payments: { id: string; at: string; amount: number; refunded?: number; kind: string }[]
+  licenses: LicenseKey[]
 }
 
 /** The report's own selectors, and the two that change what is credited: test payments and the first-touch model. */
@@ -92,5 +121,6 @@ export const extrasApi = {
   buyers: (site: string, q: ReportQuery, n = 8) => call<{ buyers: Buyer[] }>('GET', `/sites/${site}/buyers` + qs(q) + `&n=${n}`),
   payments: (site: string, q: ReportQuery, offset: number, n = 20) => call<{ payments: Payment[]; total: number }>('GET', `/sites/${site}/sales/payments` + qs(q) + `&n=${n}&offset=${offset}`),
   customers: (site: string, q: ReportQuery, offset: number, n = 20) => call<{ customers: Customer[]; total: number }>('GET', `/sites/${site}/sales/customers` + qs(q) + `&n=${n}&offset=${offset}`),
+  customer: (site: string, id: string, q: ReportQuery) => call<CustomerDetail>('GET', `/sites/${site}/sales/customers/${encodeURIComponent(id)}` + qs(q)),
   refunds: (site: string, q: ReportQuery, n = 4) => call<Refunds>('GET', `/sites/${site}/refunds` + qs(q) + `&n=${n}`),
 }

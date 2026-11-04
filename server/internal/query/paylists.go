@@ -112,6 +112,13 @@ type PayRow struct {
 	Channel  string    `json:"channel,omitempty"`
 	Referrer string    `json:"referrer,omitempty"`
 	Country  string    `json:"country,omitempty"` // the billing country the provider named
+	// Name is what the payment provider calls the buyer, set by the API for a
+	// payment with no known visit, for people who may see it. Never stored.
+	Name string `json:"name,omitempty"`
+	// Known says the provider has this buyer as a customer, with or without a name.
+	Known bool `json:"known,omitempty"`
+	// Customer is the ledger's key for the buyer; it stays on the server.
+	Customer string `json:"-"`
 }
 
 // CustRow is one paying customer: what they spent in the period, how often, the
@@ -127,7 +134,14 @@ type CustRow struct {
 	Country   string    `json:"country,omitempty"`
 	FirstSeen time.Time `json:"first_seen"`
 	LastOrder time.Time `json:"last_order"`
+	Name      string    `json:"name,omitempty"`  // as PayRow.Name
+	Known     bool      `json:"known,omitempty"` // as PayRow.Known
+	Customer  string    `json:"-"`               // as PayRow.Customer
 }
+
+// HashID is the id the lists give a payment or a customer: a hash of the
+// site and the key, so the key itself never leaves the server.
+func HashID(site, key string) string { return hashID(site, key) }
 
 func hashID(site, key string) string {
 	sum := sha256.Sum256([]byte(site + "\x00" + key))
@@ -150,7 +164,7 @@ func payRows(ctx context.Context, conn *sql.Conn, sqlText string, args []any, si
 		return nil, 0, fmt.Errorf("payments count: %w", err)
 	}
 	rows, err := conn.QueryContext(ctx, sqlText+`
-		SELECT payment_id, paid_at, amount, refunded, kind, bill_country, visitor_id, attributed, coalesce(channel, 'Direct'), coalesce(referrer, '')
+		SELECT payment_id, paid_at, amount, refunded, kind, bill_country, visitor_id, attributed, coalesce(channel, 'Direct'), coalesce(referrer, ''), customer
 		FROM ar ORDER BY paid_at DESC, payment_id LIMIT ? OFFSET ?`, append(append([]any{}, args...), limit, offset)...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("payments: %w", err)
@@ -158,15 +172,15 @@ func payRows(ctx context.Context, conn *sql.Conn, sqlText string, args []any, si
 	defer rows.Close()
 	out := []PayRow{}
 	for rows.Next() {
-		var pid, kind, country, ch, ref string
+		var pid, kind, country, ch, ref, cust string
 		var at time.Time
 		var amount, refunded int64
 		var visitor uint64
 		var attributed bool
-		if err := rows.Scan(&pid, &at, &amount, &refunded, &kind, &country, &visitor, &attributed, &ch, &ref); err != nil {
+		if err := rows.Scan(&pid, &at, &amount, &refunded, &kind, &country, &visitor, &attributed, &ch, &ref, &cust); err != nil {
 			return nil, 0, err
 		}
-		r := PayRow{ID: hashID(site, pid), At: at.UTC(), Amount: amount, Refunded: refunded, Kind: kind, Visitor: visitorID(visitor), Country: country}
+		r := PayRow{ID: hashID(site, pid), At: at.UTC(), Amount: amount, Refunded: refunded, Kind: kind, Visitor: visitorID(visitor), Country: country, Customer: cust}
 		if attributed {
 			r.Channel, r.Referrer = ch, ref
 		}
@@ -209,7 +223,7 @@ func custList(ctx context.Context, conn *sql.Conn, sqlText string, args []any, s
 		if err := rows.Scan(&cust, &spent, &orders, &refunded, &first, &last, &visitor, &ch, &ref, &country, &seen); err != nil {
 			return nil, 0, err
 		}
-		r := CustRow{ID: hashID(site, cust), Spent: spent, Orders: orders, Refunded: refunded, Visitor: visitorID(visitor), Channel: ch, Referrer: ref, Country: country, FirstSeen: first.UTC(), LastOrder: last.UTC()}
+		r := CustRow{ID: hashID(site, cust), Spent: spent, Orders: orders, Refunded: refunded, Visitor: visitorID(visitor), Channel: ch, Referrer: ref, Country: country, FirstSeen: first.UTC(), LastOrder: last.UTC(), Customer: cust}
 		if seen.Valid && seen.Time.Before(first) {
 			r.FirstSeen = seen.Time.UTC()
 		}

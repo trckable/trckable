@@ -74,3 +74,16 @@ visitor id, with the dot written as an underscore, for example
 `trckable_k3j2_m1a2b3` (the same form Stripe's `client_reference_id` takes).
 For a subscription set the same value as the subscription's `custom_id`:
 its payments follow it.
+
+## Link a checkout to the visit
+
+A payment with no visit linked still counts in your revenue, but it cannot say which page or source brought the buyer. Checkouts made by trckable's own tracker are linked for you. A checkout your server creates, or an overlay you open yourself, needs the visitor passed along.
+
+Read the value of the `trckable_vid` cookie in the browser (it looks like `k3j2.m1a2b3`: the visitor's id and when they were first seen, both in base 36) and send it with the checkout:
+
+- Stripe, Polar, Dodo Payments: put it in the checkout's `metadata` as `{ "trckable_vid": "<value>" }`.
+- Lemon Squeezy: the checkout's custom data (`checkout_data.custom`). Paddle: the transaction's `custom_data`. The key is `trckable_vid` in both.
+- Stripe also reads `client_reference_id`, Polar `reference_id`, and checkout links `?reference_id=` or `?metadata_trckable_vid=`. These fields are shared with other tools, so they only count in the form `trckable_<id>_<firstseen>`, for example `trckable_k3j2_m1a2b3`.
+- Gumroad: add `?trckable_vid=<value>` to the product link, as above.
+
+The visit is linked from the next payment on; earlier payments stay unlinked.
