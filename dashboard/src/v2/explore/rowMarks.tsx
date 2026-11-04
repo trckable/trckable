@@ -92,25 +92,6 @@ const LOGOS: [RegExp, () => ReactNode][] = [
       </Logo>
     ),
   ],
-  [
-    /^windows/,
-    () => (
-      <Logo>
-        <path fill="#00a4ef" d="M3 5.5 10.5 4.5v6.5H3ZM11.5 4.4 21 3v8h-9.5ZM3 12h7.5v6.5L3 17.5ZM11.5 12H21v8l-9.5-1.4Z" />
-      </Logo>
-    ),
-  ],
-  [
-    /^android/,
-    () => (
-      <Logo>
-        <path d="M5 16a7 7 0 0 1 14 0Z" fill="#3ddc84" />
-        <path d="m7 6 1.8 2.5M17 6l-1.8 2.5" stroke="#3ddc84" strokeWidth="1.4" strokeLinecap="round" />
-        <circle cx="9.2" cy="12.8" r=".9" fill="#fff" />
-        <circle cx="14.8" cy="12.8" r=".9" fill="#fff" />
-      </Logo>
-    ),
-  ],
 ]
 
 /** A logo by the name of a browser or a system, if one is drawn. */
