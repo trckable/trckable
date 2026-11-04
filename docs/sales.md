@@ -41,4 +41,4 @@ shared pages.
 
 When trckable changes how payments are counted, every site with a payment
 connection is read again in the background, one at a time. Nothing is sent
-about it. You can still run Settings → Revenue → Recalculate payments yourself.
+about it. You can still run Recalculate payments item in Settings → Revenue yourself.

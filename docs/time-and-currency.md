@@ -11,5 +11,5 @@ step is done.
 - **Currency** is the one revenue is shown in. A payment in another currency
   is converted at the rate of the day it was paid.
 
-Change either later in Settings. The step counts as done once the time zone or
+The step counts as done once the time zone or
 currency is not UTC/USD, or you confirmed them.

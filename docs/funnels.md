@@ -15,7 +15,7 @@ The funnel is one card. Steps are numbered chips, for example
 2. Pick a page, or use the flag button on a row to add it as a goal.
 3. Repeat, then choose **Done**.
 
-Remove a step with the × on its chip. A new funnel counts from today on, and
+Remove a step you added with the × on its chip. A new funnel counts from today on, and
 the card says so beside Done.
 
 An empty funnel shows one line and **+ Add step**. If you can only view the
