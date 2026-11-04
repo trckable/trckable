@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useWidth } from '../../../charts/useWidth'
 import { midTruncate } from '../../../features/signals/surge'
-import { fmtFixed, fmtInt, fmtPct } from '../../../lib/format'
+import { fmtInt, fmtPct } from '../../../lib/format'
 import { EmptyTab } from './PeopleTable'
 import { XEmpty } from '../../ui/XBits'
 import { SummaryCards } from '../../ui/SummaryCards'
@@ -45,7 +45,6 @@ function tiles(d: Paths): Tile[] {
     p ? { label, val: midTruncate(name(p.path), 22), hint: name(p.path), detail: copy.pathsVisitsOf(fmtInt(p.visits)) } : { label, val: '–', detail: '' }
   return [
     { label: copy.pathsVisits, val: fmtInt(d.visits), detail: '' },
-    { label: copy.pathsPerVisit, val: fmtFixed(d.pages, 1), detail: '' },
     page(copy.pathsFirst, d.first),
     page(copy.pathsLast, d.last),
   ]

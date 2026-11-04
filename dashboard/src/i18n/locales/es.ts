@@ -2640,7 +2640,6 @@ export default {
   'v2explore.qEngBest': (n: string, p: number) => `${n} retiene mejor a las personas: el ${p} % está activo.`,
   'v2explore.qTooFew': 'Aún hay muy pocas personas para decir qué fuente es la mejor.',
   'v2explore.pathsVisits': 'Visitas',
-  'v2explore.pathsPerVisit': 'Páginas por visita',
   'v2explore.pathsFirst': 'Primera página principal',
   'v2explore.pathsLast': 'Última página principal',
   'v2explore.pathsVisitsOf': (n: string) => `${n} visitas`,
