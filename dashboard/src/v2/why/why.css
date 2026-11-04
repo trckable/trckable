@@ -181,7 +181,8 @@
 .mk .xcp .xchg-say{font-size:15px!important;margin:0 0 var(--mk-s3)!important}
 /* Nothing to show: slim, half width, last. */
 .mk .xcards>.xcp:has(.xempty){order:9;grid-column:auto}
-.mk .xcards>.xcp:has(.xempty) .xcp-b{padding-block:var(--mk-s2)}
+/* An empty card: as much room under the message as the heading takes above it, so it sits in the middle. */
+.mk .xcards>.xcp:has(.xempty) .xcp-b{padding-block:var(--mk-s2) calc(var(--mk-s2) + 30px)}
 @media (--sm-down){.mk .xcards{grid-template-columns:minmax(0,1fr)}}
 .mk .xpage-desc{margin:calc(var(--mk-s1,4px) * -1) 0 var(--mk-s4);font-size:14px;color:var(--mk-muted)}
 .mk .xcards{grid-auto-flow:dense}
