@@ -337,6 +337,7 @@ export const more = {
     call<PayConnection>('POST', `/sites/${site}/payments`, body),
   disconnectPayments: (site: string, id: string) => act('DELETE', `/sites/${site}/payments/${id}`),
   syncPayments: (site: string, id: string) => call<{ added: number }>('POST', `/sites/${site}/payments/${id}/sync`),
+  reprocessPayments: (site: string) => call<{ events: number }>('POST', `/sites/${site}/payments/reprocess`),
   setPaymentSecret: (site: string, id: string, secret: string) => act('PATCH', `/sites/${site}/payments/${id}`, { secret }),
   paymentSecret: (site: string, id: string) => call<{ secret: string }>('GET', `/sites/${site}/payments/${id}/secret`),
   createKey: (name: string) => call<{ key: APIKey; secret: string }>('POST', '/keys', { name }),

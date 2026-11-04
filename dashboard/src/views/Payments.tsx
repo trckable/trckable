@@ -257,6 +257,27 @@ function ConnectionRow({ site, c, provider, onChange }: { site: Site; c: PayConn
               {busy === 'sync' ? 'Checking…' : 'Check for missed payments'}
             </button>
           )}
+          {can('payment.manage') && (
+            <button
+              type="button"
+              role="menuitem"
+              disabled={!!busy}
+              onClick={async () => {
+                close()
+                const ok = await ask({
+                  title: 'Recalculate payments?',
+                  body: 'The saved payment notices of the last 30 days are read again with the current rules, so amounts, refunds and links come out as today’s version counts them. Nothing is sent to the provider.',
+                  confirmLabel: 'Recalculate',
+                  busyLabel: 'Recalculating…',
+                  done: 'Payments recalculated',
+                  run: () => more.reprocessPayments(site.id),
+                })
+                if (ok) onChange()
+              }}
+            >
+              Recalculate payments
+            </button>
+          )}
           <button type="button" role="menuitem" onClick={() => {
             close()
             setManual(true)
