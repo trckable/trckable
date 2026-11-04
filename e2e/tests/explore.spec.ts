@@ -119,6 +119,15 @@ test('on a phone the sections are a drawer, and nothing scrolls sideways', async
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })
 
+test('Payments and Customers are entries of the section list, and open their own table', async ({ page }) => {
+  await open(page, 1440)
+  await pick(page, /^Customers/)
+  await expect(page).toHaveURL(/x=customers/)
+  await expect(page.locator('#xp [data-xcard="customers"]')).toBeVisible()
+  await expect(page.locator('#xp .xrail [data-xtab="customers"]')).toHaveAttribute('aria-current', 'page')
+  await expect(page.locator('#xp .xrail [data-xsec="sales"]')).not.toHaveAttribute('aria-current', 'page')
+})
+
 // Nothing of the old Data page is without a home: each of its cards is a tab of a section, and opens without an error.
 const HOMES: Record<string, string[]> = {
   overview: ['overtime', 'hours'],
