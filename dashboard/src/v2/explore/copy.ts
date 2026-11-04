@@ -15,6 +15,7 @@ export const copy = defineCopy('v2explore', {
   side: 'Back to side panel',
   sections: 'Sections',
   railLabel: 'Explore sections',
+  railToggle: 'Show or hide the tables under Sales',
   filter: '+ Filter',
   filters: 'Filters',
   views: 'Views',

@@ -9,6 +9,10 @@
   background: var(--raised-well);
 }
 .kit-seg button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
   min-width: 34px;
   min-height: 28px;
   padding: 0 9px;
