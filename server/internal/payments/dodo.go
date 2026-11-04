@@ -65,15 +65,20 @@ func (dodo) Parse(body []byte) (Event, error) {
 	switch e.Type {
 	case "payment.succeeded":
 		var p struct {
-			PaymentID      string         `json:"payment_id"`
-			Status         string         `json:"status"`
-			TotalAmount    int64          `json:"total_amount"`
-			Tax            *int64         `json:"tax"`
-			Currency       string         `json:"currency"`
-			SubscriptionID string         `json:"subscription_id"`
-			CreatedAt      string         `json:"created_at"`
-			Metadata       map[string]any `json:"metadata"`
-			Customer       struct {
+			PaymentID   string `json:"payment_id"`
+			Status      string `json:"status"`
+			TotalAmount int64  `json:"total_amount"`
+			Tax         *int64 `json:"tax"`
+			Currency    string `json:"currency"`
+			// What the merchant receives, in their own currency: the buyer's
+			// total above may be in a local currency Dodo showed them.
+			SettlementAmount   int64          `json:"settlement_amount"`
+			SettlementTax      *int64         `json:"settlement_tax"`
+			SettlementCurrency string         `json:"settlement_currency"`
+			SubscriptionID     string         `json:"subscription_id"`
+			CreatedAt          string         `json:"created_at"`
+			Metadata           map[string]any `json:"metadata"`
+			Customer           struct {
 				CustomerID string `json:"customer_id"`
 				Email      string `json:"email"`
 			} `json:"customer"`
@@ -89,8 +94,12 @@ func (dodo) Parse(body []byte) (Event, error) {
 		if p.SubscriptionID != "" {
 			kind = KindSubscription // renewals are recognised by the ledger (a later payment of the same subscription)
 		}
+		cur, gross, tax := p.Currency, p.TotalAmount, p.Tax
+		if p.SettlementAmount > 0 && p.SettlementCurrency != "" {
+			cur, gross, tax = p.SettlementCurrency, p.SettlementAmount, p.SettlementTax
+		}
 		vis := visitorFrom(p.Metadata)
-		ev.Payments = append(ev.Payments, Payment{ID: p.PaymentID, PaidAt: rfc3339ms(p.CreatedAt), Currency: p.Currency, Gross: p.TotalAmount, Tax: p.Tax,
+		ev.Payments = append(ev.Payments, Payment{ID: p.PaymentID, PaidAt: rfc3339ms(p.CreatedAt), Currency: cur, Gross: gross, Tax: tax,
 			CustomerID: p.Customer.CustomerID, SubscriptionID: p.SubscriptionID, Email: p.Customer.Email, Visitor: vis, Kind: kind})
 		ev.Links = links(vis, p.Customer.CustomerID, p.SubscriptionID)
 

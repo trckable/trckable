@@ -1,0 +1,1 @@
+- Dodo Payments: revenue is the amount you receive (the settlement in your currency), not the buyer's local-currency total converted back. A $5.99 sale paid in pesos now shows $5.99.
