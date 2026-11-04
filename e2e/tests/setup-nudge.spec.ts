@@ -30,7 +30,7 @@ test('skip payments: the revenue prompt goes, bring it back: it shows again', as
   await expect(page.locator('.lbottom.money')).toHaveCount(0)
   await expect(page.locator('.lrev')).toHaveCount(0)
   await page.screenshot({ path: `${SHOTS}/nudge-skipped.png` })
-  await panel.getByRole('button', { name: /More you can add/ }).click()
+  await panel.getByRole('button', { name: /^More \(/ }).click()
   await panel.locator('[data-step="payments"] button', { hasText: 'Bring back' }).click()
   await expect(lock).toBeVisible()
   await page.screenshot({ path: `${SHOTS}/nudge-back.png` })
