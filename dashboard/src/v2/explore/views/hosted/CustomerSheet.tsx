@@ -1,6 +1,6 @@
 // One paying customer opened from the Customers list: who they are (what the payment provider says, read live when this opens and
 // never stored), their totals and payments in the period, and, only when the provider has license keys for them, a Licenses block.
-// A dialog on a desktop, a bottom sheet on a phone. Its own chunk: nobody downloads it before opening a customer.
+// A dialog on a desktop, a bottom sheet on a phone, `over` the list it was opened from: that page stays in place beneath the backdrop. Its own chunk: nobody downloads it before opening a customer.
 import { X } from 'lucide-react'
 import { Loading } from '../../../../components/loading/Loading'
 import { Modal } from '../../../../kit/Modal'
@@ -101,7 +101,7 @@ export default function CustomerSheet({ x, query, c, onJourney, onClose }: { x: 
   const visitor = c.visitor
   const name = customerName(detail?.name || c.name, copy.pay.customer)
   return (
-    <Modal label={copy.pay.customer} className="cust-dialog" keepSize={false} onClose={onClose}>
+    <Modal label={copy.pay.customer} className="cust-dialog" keepSize={false} over onClose={onClose}>
       <div className="mk">
         <button type="button" className="modal-close cs-close" aria-label={copy.cust.close} onClick={onClose}>
           <X size={16} strokeWidth={2} aria-hidden="true" />
