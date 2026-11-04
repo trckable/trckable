@@ -18,10 +18,11 @@ export function silence(s: Site, now = Date.now()): string {
   return s.last_event_at ? span(now / 1000 - s.last_event_at) : ''
 }
 
-/** A moment as people say it: the time today, else the day and time. Times are 24 hours, as everywhere in the app. */
-export function when(unix: number): string {
+/** A moment as people say it, in the site's zone (the viewer's own when none): the time today, else the day and time. Times are 24 hours, as everywhere in the app. */
+export function when(unix: number, zone?: string): string {
   const d = new Date(unix * 1000)
-  const today = d.toDateString() === new Date().toDateString()
-  if (today) return clock(d, '')
-  return `${dateFmt(tag, { weekday: 'short', day: 'numeric', month: 'short' }).format(d)}, ${clock(d, '')}`
+  const z = zone || undefined
+  const dayIn = (x: Date) => dateFmt('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: z }).format(x)
+  if (dayIn(d) === dayIn(new Date())) return clock(d, z ?? '')
+  return `${dateFmt(tag, { weekday: 'short', day: 'numeric', month: 'short', timeZone: z }).format(d)}, ${clock(d, z ?? '')}`
 }

@@ -25,4 +25,14 @@ describe('date formatting', () => {
       .filter((f) => banned.test(readFileSync(join(root, f), 'utf8')))
     expect(strays).toEqual([])
   })
+
+  // Times of a site's data are written in the site's zone, as Live writes them: these files pass the zone to every formatter.
+  it('writes site-data times in the site’s zone', () => {
+    const siteTimes = ['features/sitestatus/time.ts', 'features/verified/time.ts', 'features/signals/saleLine.ts', 'features/journey/when.ts', 'v2/bell/days.ts']
+    const missing = siteTimes.filter((f) => {
+      const src = readFileSync(join(root, f), 'utf8')
+      return src.split('dateFmt(').slice(1).some((call) => !call.split('\n')[0].includes('timeZone'))
+    })
+    expect(missing).toEqual([])
+  })
 })

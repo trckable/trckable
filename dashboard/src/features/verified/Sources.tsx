@@ -14,13 +14,13 @@ import './panel.css'
 const kindOf = (s: VerifiedSource): Kind => (s.kind === 'gsc' ? 'search' : 'payments')
 
 /** The line under a badge's name, for who is reading. */
-function detailOf(s: VerifiedSource, viewer: boolean): string {
+function detailOf(s: VerifiedSource, viewer: boolean, zone?: string): string {
   const provider = providerName(s.provider)
-  if (kindOf(s) === 'search') return viewer ? copy.okSearchViewer(agoWords(s.checked)) : copy.okSearch(dayWords(s.since), agoWords(s.checked))
+  if (kindOf(s) === 'search') return viewer ? copy.okSearchViewer(agoWords(s.checked)) : copy.okSearch(dayWords(s.since, zone), agoWords(s.checked))
   return viewer ? copy.okPaymentsViewer(provider) : copy.okPayments(agoWords(s.checked))
 }
 
-function Row({ s, viewer }: { s: VerifiedSource; viewer: boolean }) {
+function Row({ s, viewer, zone }: { s: VerifiedSource; viewer: boolean; zone?: string }) {
   return (
     <li className="vf-row">
       <span className="vf-ico">
@@ -28,7 +28,7 @@ function Row({ s, viewer }: { s: VerifiedSource; viewer: boolean }) {
       </span>
       <span className="vf-txt">
         <b>{copy.names[kindOf(s)]}</b>
-        <small>{detailOf(s, viewer)}</small>
+        <small>{detailOf(s, viewer, zone)}</small>
       </span>
       <span className="vf-state ok">
         <Tick size={14} />
@@ -51,13 +51,13 @@ export function useVerified(verified: Verified | undefined, site: { id: string }
   return fresh ?? verified
 }
 
-export function Sources({ data, site, viewer, close }: { data: Verified | undefined; site?: { id: string; domain: string }; viewer: boolean; close: () => void }) {
+export function Sources({ data, site, viewer, close }: { data: Verified | undefined; site?: { id: string; domain: string; timezone?: string }; viewer: boolean; close: () => void }) {
   const connect = !viewer && !!site && can('site.settings') ? missing(data) : []
   return (
     <>
       <ul className="vf-rows">
         {working(data).map((s) => (
-          <Row key={s.kind} s={s} viewer={viewer} />
+          <Row key={s.kind} s={s} viewer={viewer} zone={site?.timezone} />
         ))}
       </ul>
       {site &&

@@ -5,11 +5,12 @@ import type { Sale } from '../../lib/api'
 import { fmtMoney, dateFmt } from '../../lib/format'
 import { signals } from './copy'
 
-const time = (ms: number) => dateFmt(undefined, { hour: '2-digit', minute: '2-digit' }).format(ms)
+const time = (ms: number, zone?: string) => dateFmt(undefined, { hour: '2-digit', minute: '2-digit', timeZone: zone || undefined }).format(ms)
 
-export function saleLine(s: Sale): string {
+/** `zone` is the site's: a late sale's own time is told in it. */
+export function saleLine(s: Sale, zone?: string): string {
   if (!s.text) return signals.sale('+' + fmtMoney(s.amount, s.currency, s.exponent))
-  return s.late ? signals.late(s.text, time(s.ts)) : s.text
+  return s.late ? signals.late(s.text, time(s.ts, zone)) : s.text
 }
 
 /** Arriving now and adding money: what the chime and the Live pulse are for. */

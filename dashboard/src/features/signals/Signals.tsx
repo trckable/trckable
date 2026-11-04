@@ -23,7 +23,7 @@ export interface SignalsProps {
 
 export default function Signals(p: SignalsProps) {
   useTabCount(p.online)
-  useSaleToast(p.sales)
+  useSaleToast(p.sales, p.site.timezone)
   useSignupToast(p.visits, p.signup)
   useNotices(p)
   return (

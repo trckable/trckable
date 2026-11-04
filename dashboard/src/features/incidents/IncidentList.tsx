@@ -54,10 +54,10 @@ function Note({ site, x, onSaved }: { site: string; x: Incident; onSaved: (x: In
 /** What the checks saw of a quiet spell: the page is only said to have answered when a look after the last visit found it so. */
 const seenOf = (x: Incident) => (x.cause.endsWith('page answered') ? `${copy.seenQuiet} ${copy.seenAnswered}` : copy.seenQuiet)
 
-function Row({ x, now, domain, onSaved }: { x: Incident; now: number; domain?: string; onSaved: (x: Incident) => void }) {
+function Row({ x, now, domain, zone, onSaved }: { x: Incident; now: number; domain?: string; zone?: string; onSaved: (x: Incident) => void }) {
   const kind = isDown(x) ? copy.down : copy.quiet
   const span = duration(lasted(x, now))
-  const range = x.ended_at ? copy.from(when(x.started_at), when(x.ended_at)) : copy.ongoing(when(x.started_at))
+  const range = x.ended_at ? copy.from(when(x.started_at, zone), when(x.ended_at, zone)) : copy.ongoing(when(x.started_at, zone))
   const title = (x.ended_at ? copy.row : copy.rowOpen)(kind, span)
   const saw = isDown(x) ? x.cause : seenOf(x)
   return (
@@ -76,12 +76,12 @@ function Row({ x, now, domain, onSaved }: { x: Incident; now: number; domain?: s
   )
 }
 
-export function IncidentList({ domain, list, now, edit }: { domain?: string; list: Incident[]; now: number; edit: (x: Incident) => void }) {
+export function IncidentList({ domain, zone, list, now, edit }: { domain?: string; zone?: string; list: Incident[]; now: number; edit: (x: Incident) => void }) {
   return (
     <section aria-label={copy.list}>
       <ul className="inc-rows">
         {list.map((x) => (
-          <Row key={x.id} x={x} now={now} domain={domain} onSaved={edit} />
+          <Row key={x.id} x={x} now={now} domain={domain} zone={zone} onSaved={edit} />
         ))}
       </ul>
     </section>
