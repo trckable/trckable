@@ -8,7 +8,7 @@ export type Loaded<T> = { state: 'loading' } | { state: 'error'; message: string
 
 const LOADING = { state: 'loading' } as const
 
-export function useLoad<T>(key: string, run: (signal: AbortSignal) => Promise<T>, on: boolean): Loaded<T> {
+export function useLoad<T>(key: string, run: (signal: AbortSignal, soon: (data: T) => void) => Promise<T>, on: boolean): Loaded<T> {
   const [got, setGot] = useState<{ key: string; r: Loaded<T> } | null>(null)
   const [round, setRound] = useState(0)
   const retry = useCallback(() => setRound((n) => n + 1), [])
@@ -20,7 +20,7 @@ export function useLoad<T>(key: string, run: (signal: AbortSignal) => Promise<T>
   useEffect(() => {
     if (!on) return
     const ctl = new AbortController()
-    run(ctl.signal).then(
+    run(ctl.signal, (data) => !ctl.signal.aborted && setGot({ key: at, r: { state: 'ok', data } })).then(
       (data) => !ctl.signal.aborted && setGot({ key: at, r: { state: 'ok', data } }),
       (e: unknown) => !ctl.signal.aborted && setGot({ key: at, r: { state: 'error', message: messageOf(e), retry } }),
     )

@@ -21,9 +21,36 @@ export interface DataCtx {
 
 export type TabData = Tabs[Tab]
 
+const keyFor = (tab: Tab, c: DataCtx) =>
+  [c.site.id, c.range.from, c.range.to, c.view.compare, c.view.cfrom, c.view.cto, c.view.test, keyOf(c.filters), (c.view.funnel ?? []).map((s) => s.kind + s.value).join(','), tab].join('|')
+
+/** Cards read ahead while the browser is idle, kept for this long: a card that scrolls into view takes the answer instead of asking again. */
+const KEEP_MS = 30_000
+const ahead = new Map<string, { at: number; p: Promise<TabData> }>()
+// A refresh asks again: nothing read ahead may answer it.
+if (typeof window !== 'undefined') window.addEventListener('trckable:refresh', () => ahead.clear())
+
+/** Starts the read of a card that is not on screen yet. */
+export function readAhead(tab: Tab, c: DataCtx) {
+  const key = keyFor(tab, c)
+  const old = ahead.get(key)
+  if (old && Date.now() - old.at < KEEP_MS) return
+  const p = loadTab(tab, c, new AbortController().signal)
+  ahead.set(key, { at: Date.now(), p })
+  p.catch(() => ahead.delete(key))
+}
+
 export function useTab(tab: Tab, c: DataCtx, on: boolean): Loaded<TabData> {
-  const key = [c.site.id, c.range.from, c.range.to, c.view.compare, c.view.cfrom, c.view.cto, c.view.test, keyOf(c.filters), (c.view.funnel ?? []).map((s) => s.kind + s.value).join(','), tab].join('|')
-  return useLoad<TabData>(key, (signal) => loadTab(tab, c, signal), on)
+  const key = keyFor(tab, c)
+  return useLoad<TabData>(
+    key,
+    (signal, soon) => {
+      const got = ahead.get(key)
+      ahead.delete(key)
+      return got && Date.now() - got.at < KEEP_MS ? got.p : loadTab(tab, c, signal, soon)
+    },
+    on,
+  )
 }
 
 export interface Meta {

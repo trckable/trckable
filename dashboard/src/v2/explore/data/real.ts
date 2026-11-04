@@ -37,6 +37,8 @@ import { dateFmt } from '../../../lib/format'
 
 /** Explore asks for the deep report: the breakdowns of regions, cities, exit pages and the rest ride in the same read. */
 const query = (c: DataCtx, filters: Filter[] = c.filters): ReportQuery => ({ ...queryOf({ ...c.view, filters }, c.range), deep: true, limit: EXPLORE_ROWS })
+/** Overview and What changed read only pages, sources and the other plain breakdowns, never the deep ones, so they ask for the lighter report and it comes back sooner. */
+const plainQuery = (c: DataCtx): ReportQuery => ({ ...query(c), deep: false })
 
 /** How people read, this period and the one before it (the reading depth is read for each; a site without it says a dash). */
 async function engagement(c: DataCtx, q: ReportQuery, report: Report, signal?: AbortSignal) {
@@ -79,10 +81,14 @@ async function usualOf(c: DataCtx): Promise<Usual | null> {
 }
 
 /** One day is told against the Briefing's usual, not against all of the day before: the earlier day's figures are scaled to it (a day still going is only partly there). Longer periods keep the period before, and say so. */
-async function toBasis(c: DataCtx, r: Report): Promise<{ report: Report; basis: Basis }> {
+async function toBasis(c: DataCtx, r: Report, early: Early | null): Promise<{ report: Report; basis: Basis }> {
   const basis = basisOf({ range: c.range, filters: c.filters, compare: c.view.compare })
   if (basis !== 'usual') return { report: r, basis }
-  const [u, got] = await Promise.all([usualOf(c), usualHours(c, r)])
+  const pre = early ?? earlyOf(c)
+  // The sources' usuals go out with the other two reads, not after them.
+  const top = (r.current.dims.referrer ?? []).filter((x) => x.value && x.value.replace(/^www\./, '') !== c.site.domain.replace(/^www\./, '')).slice(0, 6)
+  const asked = (r.previous?.kpis.visitors ?? 0) > 0 ? Promise.all(top.map((x) => usualBand(c.site.id, c.range.to, [{ dim: 'referrer', value: x.value }]))) : Promise.resolve([])
+  const [u, got, bands] = await Promise.all([pre.usual, usualHours(c, r, pre.history), asked])
   const hours = got?.people ?? null
   const was = r.previous?.kpis.visitors ?? 0
   // The hours of the weeks before come first, as in the Briefing; the server's usual for the day is the other way to it.
@@ -90,8 +96,6 @@ async function toBasis(c: DataCtx, r: Report): Promise<{ report: Report; basis: 
   if (!r.previous || usual === null || was <= 0) return { report: r, basis: usual === null ? 'previous' : 'usual' }
   const scaledPrev = scaled(r.previous, usual / was, got?.money)
   // The sources the Briefing tells apart are told against the same usual here (the top six, as there).
-  const top = (r.current.dims.referrer ?? []).filter((x) => x.value && x.value.replace(/^www\./, '') !== c.site.domain.replace(/^www\./, '')).slice(0, 6)
-  const bands = await Promise.all(top.map((x) => usualBand(c.site.id, c.range.to, [{ dim: 'referrer', value: x.value }])))
   const usuals = new Map<string, number>()
   top.forEach((x, i) => {
     const b = bands[i]
@@ -100,11 +104,24 @@ async function toBasis(c: DataCtx, r: Report): Promise<{ report: Report; basis: 
   return { report: { ...r, previous: withSourceUsuals(scaledPrev, usuals) }, basis: 'usual' }
 }
 
+type History = ReturnType<typeof historyOf>
+/** The two reads the usual needs from the site and the day alone, started with the report instead of after it. */
+interface Early {
+  usual: Promise<Usual | null>
+  history: History
+}
+const earlyOf = (c: DataCtx): Early => ({ usual: usualOf(c), history: historyOf(c) })
+function historyOf(c: DataCtx) {
+  if (c.range.from !== c.range.to) return Promise.resolve(null)
+  const today = todayIn(c.site.timezone)
+  return readHistory(c.site.id, addDays(today, -56), addDays(today, -1), 'hour').catch(() => null)
+}
+
 /** What the same hours of the last eight weeks brought, the part of the day that has happened (as the Briefing counts it). */
-async function usualHours(c: DataCtx, r: Report): Promise<{ people: number; money: number } | null> {
+async function usualHours(c: DataCtx, r: Report, history: History): Promise<{ people: number; money: number } | null> {
   if (c.range.from !== c.range.to || r.bucket !== 'hour') return null
   const today = todayIn(c.site.timezone)
-  const hist = await readHistory(c.site.id, addDays(today, -56), addDays(today, -1), 'hour').catch(() => null)
+  const hist = await history
   const table = hist ? hourTable(hist, today) : null
   if (!table) return null
   const clock = siteNow(c.site.timezone, new Date())
@@ -125,20 +142,25 @@ const periodFor = (c: DataCtx): Period => {
   return days <= 90 ? '90d' : '1y'
 }
 
-export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promise<TabData> {
+export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal, soon?: (d: TabData) => void): Promise<TabData> {
   const q = query(c)
   const today = todayIn(c.site.timezone)
   switch (tab) {
     case 'changed':
     {
       // Measured against the same period as the changes below it: the cards and the table have to agree.
-      const [report, uptime] = await Promise.all([cachedReport(c.site.id, q, undefined, signal), periodUptime(c)])
+      const [report, uptime] = await Promise.all([cachedReport(c.site.id, plainQuery(c), undefined, signal), periodUptime(c)])
       return { ...mapOverview(report, { money: c.money, uptime, now: today, basis: 'previous', against: againstName(c.view.period, c.view.compare === 'none' ? 'previous' : c.view.compare, c.range) }), report }
     }
     case 'overview': {
-      const [raw, uptime] = await Promise.all([cachedReport(c.site.id, q, undefined, signal), periodUptime(c)])
-      const { report, basis } = await toBasis(c, raw)
-      return mapOverview(report, { money: c.money, uptime, now: today, basis, against: c.view.compare === 'none' ? undefined : againstName(c.view.period, c.view.compare, c.range) })
+      const pre = basisOf({ range: c.range, filters: c.filters, compare: c.view.compare }) === 'usual' ? earlyOf(c) : null
+      const [raw, uptime] = await Promise.all([cachedReport(c.site.id, plainQuery(c), undefined, signal), periodUptime(c)])
+      const against = c.view.compare === 'none' ? undefined : againstName(c.view.period, c.view.compare, c.range)
+      const cards = (report: Report, basis: Basis) => mapOverview(report, { money: c.money, uptime, now: today, basis, against })
+      // The cards show from the plain report at once; the numbers told against the usual replace them when they are here.
+      if (pre) soon?.(cards(raw, 'previous'))
+      const { report, basis } = await toBasis(c, raw, pre)
+      return cards(report, basis)
     }
     case 'funnels': {
       const report = await cachedReport(c.site.id, q, undefined, signal)
@@ -233,7 +255,7 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal): Promis
       return null
     default: {
       const raw = await cachedReport(c.site.id, q, undefined, signal)
-      const { report } = await toBasis(c, raw)
+      const { report } = await toBasis(c, raw, null)
       const table = mapTable(tab, report)
       if (tab === 'devices') return { ...table, tops: mapTops(report) }
       if (tab === 'pages') return { ...table, ...(c.view.compare !== 'none' ? { say: insightOf(table.rows) } : {}), engage: await engagement(c, q, raw, signal) }

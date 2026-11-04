@@ -534,7 +534,8 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .mk .xcards .xrw:focus:not(:focus-visible){outline:none;box-shadow:none}
 .mk .xcards .xrw:active{transform:none}
 /* The phone's quality table: no room for Lands on, and the last heading whole. */
-.mk .xchg-chart{min-height:320px;margin-top:var(--mk-s4)}
+.mk .xchg-chart{min-height:320px;margin-top:var(--mk-s4);display:flex;flex-direction:column}
+.mk .xchg-chart>.sk{flex:1;display:block}
 @media (--xl){.mk .xchg-chart{min-height:302px}}
 @media (--sm){.mk .xchg-chart{min-height:280px}}
 @media (--xs){.mk .xchg-chart{min-height:200px}}

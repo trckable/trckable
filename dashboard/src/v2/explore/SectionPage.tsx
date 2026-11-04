@@ -2,11 +2,12 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { Sparkles } from 'lucide-react'
 import { fmtInt } from '../../lib/format'
+import { whenIdle } from '../../lib/lazyLoad'
 import { isShared } from '../../lib/me'
 import { useV2Extras } from '../slots'
 import { copy } from './copy'
 import type { XCtx } from './ctx'
-import { useTab, type DataCtx } from './data/useExplore'
+import { readAhead, useTab, type DataCtx } from './data/useExplore'
 import { SectionBody } from './SectionBody'
 import { isPlaceTab, PlacesCard } from './views/Places'
 import { HOSTED, relatedTo, TABS } from './sections'
@@ -116,6 +117,13 @@ export function SectionPage({ section, tab, x, c, onRead }: { section: Section; 
     return () => cancelAnimationFrame(f)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab])
+  // Once the first card has its answer, the next two read theirs while the browser is idle; they still draw when they come into view.
+  useEffect(() => {
+    if (answered !== section) return
+    return whenIdle(() => cards.slice(1, 3).forEach((t) => !isPlaceTab(t) && !HOSTED.includes(t) && readAhead(t, c)))
+    // The cards are the section's; the context is read when the idle moment comes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answered, section])
   return (
     <>
       {say && <p className="xchg-say xsay-page">{say}</p>}
