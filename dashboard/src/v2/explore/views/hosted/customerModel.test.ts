@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { customerName, initialsOf, licenseView, spanOf } from './customerModel'
+import { customerName, initialsOf, licenseView, methodLabel, spanOf } from './customerModel'
 
 const key = { last4: 'D3F9', status: 'active', used: 2, limit: 3, created_at: '2026-10-01T10:00:00Z', activations: ['2026-10-05T10:00:00Z', '2026-10-02T10:00:00Z'] }
 
@@ -48,5 +48,15 @@ describe('initialsOf', () => {
     expect(initialsOf('Ada Lovelace')).toBe('AL')
     expect(initialsOf('ada@example.com')).toBe('AD')
     expect(initialsOf('')).toBe('·')
+  })
+})
+
+describe('methodLabel', () => {
+  const labels = { card: 'Card', other: 'Other' }
+  it('names a known code, files an unknown one under other, and says nothing when empty', () => {
+    expect(methodLabel('card', labels)).toBe('Card')
+    expect(methodLabel('upi', labels)).toBe('Other')
+    expect(methodLabel('', labels)).toBe('')
+    expect(methodLabel(undefined, labels)).toBe('')
   })
 })

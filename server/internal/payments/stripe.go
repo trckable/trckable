@@ -1,10 +1,12 @@
 package payments
 
 import (
+	"cmp"
 	"encoding/json"
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -89,6 +91,7 @@ func (stripe) Parse(body []byte) (Event, error) {
 			ReceiptEmail   string          `json:"receipt_email"`
 			Invoice        json.RawMessage `json:"invoice"` // pre-Basil only
 			LatestCharge   json.RawMessage `json:"latest_charge"`
+			MethodTypes    []string        `json:"payment_method_types"`
 		}
 		if err := json.Unmarshal(obj, &pi); err != nil {
 			return ev, err
@@ -98,7 +101,7 @@ func (stripe) Parse(body []byte) (Event, error) {
 		}
 		cus, vis := idOf(pi.Customer), visitorFrom(pi.Metadata)
 		ev.Payments = append(ev.Payments, Payment{ID: pi.ID, PaidAt: ev.At, Currency: pi.Currency, Gross: pi.AmountReceived,
-			CustomerID: cus, Visitor: vis, Email: pi.ReceiptEmail})
+			CustomerID: cus, Visitor: vis, Email: pi.ReceiptEmail, Method: stripeMethod(pi.MethodTypes)})
 		if inv := idOf(pi.Invoice); inv != "" {
 			ev.Aliases = append(ev.Aliases, Alias{Alias: inv, PaymentID: pi.ID})
 		}
@@ -245,7 +248,20 @@ func (stripe) Parse(body []byte) (Event, error) {
 				}
 			}
 		}
-		ev.Hints = append(ev.Hints, Hint{PaymentID: in.ID, Source: "invoice:" + in.ID, Tax: tax, Visitor: vis, CustomerID: cus, SubscriptionID: sub, Kind: kind, FromPlan: from, ToPlan: to, Country: invoiceCountry(in.CustomerAddr)})
+		product := ""
+		for _, l := range in.Lines.Data {
+			if l.Amount > 0 {
+				name := ""
+				if l.Price != nil {
+					name = l.Price.Nickname
+				} else if l.Plan != nil {
+					name = l.Plan.Nickname
+				}
+				product = lineProduct(l.Description, name)
+				break
+			}
+		}
+		ev.Hints = append(ev.Hints, Hint{PaymentID: in.ID, Source: "invoice:" + in.ID, Tax: tax, Visitor: vis, CustomerID: cus, SubscriptionID: sub, Kind: kind, FromPlan: from, ToPlan: to, Country: invoiceCountry(in.CustomerAddr), Product: product})
 		if pi := idOf(in.PaymentIntent); pi != "" {
 			ev.Aliases = append(ev.Aliases, Alias{Alias: in.ID, PaymentID: pi})
 		}
@@ -385,4 +401,28 @@ func invoiceCountry(a *struct {
 		return ""
 	}
 	return CountryCode(a.Country)
+}
+
+// stripeMethod is how a payment intent was paid, when it can only have been
+// paid one way; an intent that allowed several says nothing of which.
+func stripeMethod(types []string) string {
+	if len(types) != 1 {
+		return ""
+	}
+	return MethodCode(types[0])
+}
+
+// lineProduct is the product an invoice line names. Stripe words a line
+// "2 × Pro (at $10.00 / month)": the name is what sits between the quantity and
+// the price. A line with no such shape is kept as written, else the price's
+// nickname.
+func lineProduct(description, nickname string) string {
+	d := strings.TrimSpace(description)
+	if i := strings.Index(d, " × "); i > 0 && strings.Trim(d[:i], "0123456789") == "" {
+		d = d[i+len(" × "):]
+		if j := strings.LastIndex(d, " (at "); j > 0 {
+			d = d[:j]
+		}
+	}
+	return ProductName(cmp.Or(d, nickname))
 }

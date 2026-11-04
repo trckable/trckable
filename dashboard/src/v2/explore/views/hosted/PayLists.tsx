@@ -17,7 +17,7 @@ import { Flag } from '../../../ui/Flag'
 import { copy } from '../../copy'
 import type { XCtx } from '../../ctx'
 import { providerName } from '../../../../features/verified/model'
-import { customerName, initialsOf } from './customerModel'
+import { customerName, initialsOf, methodLabel } from './customerModel'
 
 const LINK_DOCS = 'https://trckable.com/docs/gumroad-paypal/#link-a-checkout-to-the-visit'
 const CustomerSheet = lazy(() => import('./CustomerSheet'))
@@ -147,7 +147,7 @@ export function Payments({ x, query, onPick }: { x: XCtx; query: ReportQuery; on
                 {who} <span className={`mk-tag ${tagOf(p)}`}>{copy.tags[tagOf(p)]}</span>
               </div>
               <div className="mk-quiet" style={{ fontSize: '12px' }}>
-                {[p.country ? countryName(p.country) : '', providerName(p.provider), sourceOf(p.channel, p.referrer), p.refunded ? copy.pay.refunded(x.money(p.refunded)) : ''].filter(Boolean).join(' · ')}
+                {[p.country ? countryName(p.country) : '', providerName(p.provider), p.product, sourceOf(p.channel, p.referrer), p.refunded ? copy.pay.refunded(x.money(p.refunded)) : ''].filter(Boolean).join(' · ')}
               </div>
               {!p.visitor && (
                 <div className="mk-quiet" style={{ fontSize: '12px' }}>
@@ -158,7 +158,7 @@ export function Payments({ x, query, onPick }: { x: XCtx; query: ReportQuery; on
                 </div>
               )}
             </span>
-            <Amount cls={`amt ${p.refunded ? 'neg' : ''}`} text={`+${x.money(p.amount)}`} note={[p.currency ? `${p.currency} → ${list.currency}` : '', ago(now - Date.parse(p.at))].filter(Boolean).join(' · ')} />
+            <Amount cls={`amt ${p.refunded ? 'neg' : ''}`} text={`+${x.money(p.amount)}`} note={[p.currency ? `${p.currency} → ${list.currency}` : '', methodLabel(p.method, copy.methods), ago(now - Date.parse(p.at))].filter(Boolean).join(' · ')} />
           </Row>
         )
       })}

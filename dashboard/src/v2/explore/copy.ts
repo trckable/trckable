@@ -256,6 +256,7 @@ export const copy = defineCopy('v2explore', {
     device: (n: number) => `Device ${n}`,
     live: 'Read from your payment provider when you open this. Not stored.',
   },
+  methods: { card: 'Card', paypal: 'PayPal', apple_pay: 'Apple Pay', google_pay: 'Google Pay', bank: 'Bank', crypto: 'Crypto', other: 'Other' },
   tags: { new: 'new', upgrade: 'upgrade', renewal: 'renewal', refund: 'refund' },
   queries: 'Queries',
   pagesTab: 'Pages',

@@ -182,8 +182,11 @@ func (gumroad) Parse(body []byte) (Event, error) {
 		kind = KindSubscription
 	}
 	cus := fieldStr(m, "purchaser_id")
+	card, _ := m["card"].(map[string]any)
+	method := MethodCode(fieldStr(card, "type"))
 	ev.Payments = append(ev.Payments, Payment{ID: id, PaidAt: paid, Currency: cur, Gross: price,
-		CustomerID: cus, SubscriptionID: sub, Email: fieldStr(m, "email"), Visitor: vis, Kind: kind})
+		CustomerID: cus, SubscriptionID: sub, Email: fieldStr(m, "email"), Visitor: vis, Kind: kind,
+		Product: ProductName(fieldStr(m, "product_name")), Method: method})
 	ev.Links = links(vis, cus, sub)
 	if refunded {
 		// The ping gives no refunded amount: the whole sale goes back.
