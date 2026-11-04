@@ -1461,12 +1461,13 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on:not(.xpage),.
 .mk .hd[data-stuck=true] #views .spill::after{opacity:1}
 .mk .hd::before{inset:0 var(--mk-s4);border-top-color:transparent;border-top-left-radius:0;border-top-right-radius:0}
 .mk .hd{transition:padding .25s ease,margin-bottom .25s ease}
-.mk .hd .logo,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:height .25s ease,width .25s ease}
+.mk .hd .logo,.mk .hd .sitegrp,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:height .25s ease,width .25s ease}
 .mk .hd[data-stuck=true]{--mk-h:28px;--hpb:10px;padding-top:var(--hpb);margin-bottom:22px}
 .mk .hd[data-stuck=true] .logo{width:28px;height:28px}
+.mk .hd[data-stuck=true] .sitegrp{height:32px}
 @media (pointer:coarse){.mk .hd[data-stuck=true]{--mk-h:40px}}
 }
-@media (prefers-reduced-motion:reduce){.mk .hd #views .spill::after,.mk .hd,.mk .hd .logo,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:none}}
+@media (prefers-reduced-motion:reduce){.mk .hd #views .spill::after,.mk .hd,.mk .hd .logo,.mk .hd .sitegrp,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:none}}
 
 /* The site chip carries the site's mark; its dot shows only for a site that is down (red) or not receiving data (amber), never green. Live keeps the one pulsing dot, still when motion is reduced. */
 .mk .sitechip .mkwrap{position:relative;display:inline-flex;flex:none}
