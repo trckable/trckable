@@ -1,8 +1,11 @@
-// The small picture before a row of Tech: a device's icon, a browser's or a system's logo (drawn here, so nothing is fetched).
-import { Globe, Monitor, Smartphone, Tablet, TabletSmartphone, type LucideIcon } from 'lucide-react'
+// The small picture before a row of Tech, Sources and Referrers: a device's icon, a browser's, a system's or a site's mark (drawn here, so nothing is fetched).
+import { BadgeDollarSign, Globe, Link, Mail, Monitor, MousePointer, Search, Smartphone, Sparkles, Tablet, TabletSmartphone, Users, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { brandOf } from '../../lib/brandIcons'
 import { pageIcon } from './pageIcon'
 import type { Row, Tab } from './types'
+
+export const plain = (I: LucideIcon) => <I size={16} className="xrowico" aria-hidden="true" />
 
 const DEVICES: Record<string, LucideIcon> = { desktop: Monitor, mobile: Smartphone, tablet: Tablet }
 
@@ -95,15 +98,27 @@ const LOGOS: [RegExp, () => ReactNode][] = [
   ],
 ]
 
+const CHANNELS: Record<string, LucideIcon> = { Direct: MousePointer, Search, Social: Users, AI: Sparkles, Email: Mail, Referral: Link, Paid: BadgeDollarSign }
+
+/** A referring site by its mark from lib/brandIcons (the one the Quality table draws), a globe when none is known. */
+function siteMark(host: string): ReactNode {
+  const brand = brandOf(host)
+  if (!brand) return plain(Globe)
+  return (
+    <svg className="xrowico mark" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" role="img" aria-label={brand.name}>
+      <path d={brand.d} />
+    </svg>
+  )
+}
+
 /** A logo by the name of a browser or a system, if one is drawn. */
 function logoOf(name: string): ReactNode {
   const n = name.toLowerCase()
   return LOGOS.find(([re]) => re.test(n))?.[1]()
 }
 
-export const plain = (I: LucideIcon) => <I size={16} className="xrowico" aria-hidden="true" />
 
-/** What a table's row wears before its name: a device icon, a browser's logo (a globe when none is drawn). */
+/** What a table's row wears before its name: a device icon, a browser's logo (a globe when none is drawn), a channel's icon, a referring site's mark. */
 export function rowMark(tab: Tab, r: Row): ReactNode {
   if (tab === 'devices') {
     const d = DEVICES[r.val.toLowerCase()]
@@ -111,5 +126,10 @@ export function rowMark(tab: Tab, r: Row): ReactNode {
   }
   if (tab === 'pages' || tab === 'entries' || tab === 'exits' || tab === 'groups') return plain(pageIcon(r.val))
   if (tab === 'browsers' || tab === 'bversion') return logoOf(r.name) ?? plain(Globe)
+  if (tab === 'sources') {
+    const c = CHANNELS[r.val]
+    return c ? plain(c) : null
+  }
+  if (tab === 'referrers') return siteMark(r.val)
   return null
 }
