@@ -78,7 +78,7 @@ function Card({ tab, x, c, open, onRead, onSay }: { tab: Tab; x: XCtx; c: DataCt
     {lead?.engage && <XKcsPlain items={lead.engage} />}
     {tab === 'paths' && ok && <PathsTiles d={r.data as unknown as PathsModel} />}
     <section ref={box} id={`xc-${tab}`} data-xcard={tab} className={`${bare ? 'xcp-bare' : 'xcp'}${bare || WIDE.includes(tab) ? ' wide' : ''}${seen ? ' xcp-in' : ''}`}>
-      {!bare && <h3 className="xcp-h">{Ico ? <span className="xcp-t"><Ico size={14} aria-hidden="true" />{copy.sub[tab]}</span> : copy.sub[tab]}{why}</h3>}
+      {!bare && <h3 className="xcp-h">{Ico ? <span className="xcp-t"><i className="xcp-chip"><Ico size={14} aria-hidden="true" /></i>{copy.sub[tab]}</span> : copy.sub[tab]}{why}</h3>}
       {strip}
       {seen ? <div className={`xcp-b${ok && (r as { stale?: boolean }).stale ? ' is-stale' : ''}`} aria-busy={ok && !!(r as { stale?: boolean }).stale}><SectionBody tab={tab} x={cx} r={r} still /></div> : <div className="xcp-wait" />}
       {bare && why && <div className="xcp-foot">{why}</div>}
