@@ -352,7 +352,8 @@ func facts(ctx context.Context, db *sql.DB, rates *fx.Rates, site, currency stri
 	for _, p := range ps {
 		k := key(p.provider, p.id)
 		for i := range evs[k] {
-			evs[k][i].amount = inPaymentCurrency(ctx, rates, p.provider, p.cur, p.chargeCur, p.gross, p.chargeAmt, evs[k][i])
+			e := evs[k][i]
+			evs[k][i].amount = InPaymentCurrency(ctx, rates, p.provider, p.cur, p.chargeCur, p.gross, p.chargeAmt, e.cur, e.amount, e.at)
 			evs[k][i].cur = ""
 		}
 	}
@@ -707,26 +708,25 @@ type refEv struct {
 	cur                 string // the currency of amount; empty means the payment's own
 }
 
-// inPaymentCurrency puts a refund or dispute amount into the units the payment
-// is stored in. The payment's own currency is as sent. The buyer's charge
-// currency (a provider that settles in the merchant's but refunds in the
-// buyer's) is scaled by what share of the charge it is, never through a rate.
-// Any other currency is converted at the rate of the day it happened. The
-// result is not capped here.
-func inPaymentCurrency(ctx context.Context, rates *fx.Rates, provider, cur, chargeCur string, gross, chargeAmt int64, e refEv) int64 {
-	ec := strings.ToUpper(e.cur)
+// InPaymentCurrency puts a refund or dispute amount (in currency cur, at a
+// moment in unix ms) into the units its payment is stored in. The payment's
+// own currency is as sent. The buyer's charge currency (a provider that
+// settles in the merchant's currency but refunds in the buyer's) is scaled by
+// what share of the charge it is, never through a rate. Any other currency is
+// converted at the rate of the day it happened. The result is not capped.
+func InPaymentCurrency(ctx context.Context, rates *fx.Rates, provider, payCur, chargeCur string, gross, chargeAmt int64, cur string, amount, at int64) int64 {
+	ec := strings.ToUpper(cur)
 	switch {
-	case ec == "" || ec == strings.ToUpper(cur):
-		return e.amount
+	case ec == "" || ec == strings.ToUpper(payCur):
+		return amount
 	case chargeAmt > 0 && ec == strings.ToUpper(chargeCur):
-		return MulDiv(min(e.amount, chargeAmt), gross, chargeAmt)
+		return MulDiv(min(amount, chargeAmt), gross, chargeAmt)
 	}
-	from, to := payments.AmountScale(provider, ec), payments.AmountScale(provider, cur)
-	v, ok := rates.Convert(ctx, RoundDiv(e.amount, from), ec, cur, time.UnixMilli(e.at).UTC().Format("2006-01-02"))
+	v, ok := rates.Convert(ctx, RoundDiv(amount, payments.AmountScale(provider, ec)), ec, payCur, time.UnixMilli(at).UTC().Format("2006-01-02"))
 	if !ok {
-		return e.amount // no rate yet: the next report corrects itself
+		return amount // no rate yet: the next report corrects itself
 	}
-	return v * to
+	return v * payments.AmountScale(provider, payCur)
 }
 
 // refundedAt is how much of a payment had gone back (tax included, not capped)
