@@ -10,9 +10,10 @@ import { openAddSite } from '../../lib/account'
 import { can } from '../../lib/permissions'
 import { fmtInt, fmtMoney } from '../../lib/format'
 import { useV2Extras } from '../../v2/slots'
+import { SummaryCards, type SumItem } from '../../v2/ui/SummaryCards'
 import { briefing } from './briefing'
 import { copy } from './copy'
-import { sorted, teamSite, tone, totals, type Sort, type TeamSite } from './model'
+import { sorted, sumTone, teamSite, tone, totals, type Sort, type TeamSite } from './model'
 import { TeamTable } from './TeamTable'
 import { useTeam } from './useTeam'
 import '../../mock/mock.css'
@@ -24,27 +25,15 @@ function Strip({ sites }: { sites: TeamSite[] }) {
   const t = totals(sites)
   const { teamStrip } = useV2Extras()
   const d = t.versus ? t.versus.today / t.versus.usual - 1 : null
+  const items: SumItem[] = [
+    { key: 'online', data: 'online', label: copy.online, val: fmtInt(t.online), flag: <i className={'tm-dot' + (t.online ? ' on' : '')} aria-hidden="true" /> },
+    { key: 'today', data: 'today', label: copy.today, val: fmtInt(t.today), ...(d !== null && { tag: (d >= 0 ? '+' : '−') + fmtInt(Math.abs(d) * 100) + '%', tone: sumTone(tone(d)), sub: copy.vsUsual }) },
+    ...(t.revenue ? [{ key: 'revenue', data: 'revenue', label: copy.revenue, val: fmtMoney(t.revenue.minor, t.revenue.currency, t.revenue.exponent) }] : []),
+    { key: 'attention', data: 'attention', label: copy.attention, val: String(t.attention.length || copy.allFine) },
+  ]
   return (
-    <div className="tm-strip">
-      <div>
-        <span className="tm-k">{copy.online}</span>
-        <b className="num tm-big" data-k="online"><i className={'tm-dot' + (t.online ? ' on' : '')} aria-hidden="true" />{fmtInt(t.online)}</b>
-      </div>
-      <div>
-        <span className="tm-k">{copy.today}</span>
-        <b className="num tm-big" data-k="today">{fmtInt(t.today)}</b>
-        {d !== null && <small className={tone(d)}>{(d >= 0 ? '↑ +' : '↓ −') + fmtInt(Math.abs(d) * 100) + '% ' + copy.vsUsual}</small>}
-      </div>
-      {t.revenue && (
-        <div>
-          <span className="tm-k">{copy.revenue}</span>
-          <b className="num tm-big" data-k="revenue">{fmtMoney(t.revenue.minor, t.revenue.currency, t.revenue.exponent)}</b>
-        </div>
-      )}
-      <div>
-        <span className="tm-k">{copy.attention}</span>
-        <b className={'num tm-big' + (t.attention.length ? ' warn' : '')} data-k="attention">{t.attention.length || copy.allFine}</b>
-      </div>
+    <div className="mk mk-body">
+      <SummaryCards items={items} />
       {teamStrip}
     </div>
   )

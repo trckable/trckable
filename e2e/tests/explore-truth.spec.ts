@@ -134,7 +134,7 @@ for (const [tab, want] of tableOf) {
 test('the overview cards and its two lists equal the hand count', async ({ page }) => {
   await open(page, 'overview')
   const cards = card(page).locator('.sumrow .sum')
-  await expect(cards).toHaveCount(4)
+  await expect(cards).toHaveCount(7) // the four numbers, then the three of the visits
   // 37 people against 23 before is 61% more; 49 views; no money and no checks: nothing is made up for them.
   const people = cards.nth(0)
   await expect(people.locator('.sum-v')).toHaveText('37')

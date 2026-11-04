@@ -4,15 +4,6 @@
 .tm-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; max-width: 100%; }
 .tm-head h1 { margin: 0 0 2px; font-size: 26px; letter-spacing: -0.03em; }
 .tm-head p { margin: 0; max-width: 62ch; font-size: 15px; line-height: 1.45; }
-.tm-strip { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--border); border-radius: 16px; background: linear-gradient(180deg, color-mix(in srgb, var(--text) 3.5%, var(--surface)), var(--surface)); box-shadow: var(--shadow-soft); }
-.tm-strip > div { display: grid; gap: 2px; align-content: start; padding: 16px 20px; min-width: 0; }
-.tm-strip > * + * { border-left: 1px solid var(--border); }
-.tm-k { font-size: 13px; color: var(--text-3); }
-.tm-big { font-size: 28px; font-weight: 600; letter-spacing: -0.03em; display: flex; align-items: center; gap: 10px; }
-.tm-big.warn { color: var(--warn); }
-.tm-strip small { font-size: 13px; color: var(--text-3); }
-.tm-strip small.up { color: var(--up); }
-.tm-strip small.low { color: var(--warn); }
 .tm-dot, .tm-live i { width: 8px; height: 8px; border-radius: 50%; background: var(--text-4); flex: none; }
 .tm-dot.on, .tm-live.on i { background: var(--accent); box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent); animation: tm-pulse 2s ease-out infinite; }
 @keyframes tm-pulse { 100% { box-shadow: 0 0 0 8px transparent; } }
@@ -62,13 +53,7 @@
   .tm-page { gap: 14px; }
   .tm-head h1 { font-size: 22px; }
   .tm-head p { font-size: 14px; }
-  .tm-strip { grid-auto-flow: row; grid-template-columns: 1fr 1fr; border-radius: 14px; }
-  .tm-strip > div { padding: 12px 14px; }
-  .tm-strip > * + * { border-left: 0; }
-  .tm-strip > :nth-child(even) { border-left: 1px solid var(--border); }
-  .tm-strip > :nth-child(n + 3) { border-top: 1px solid var(--border); }
-  .tm-big { font-size: 22px; }
-  .tm-more { width: 40px; height: 44px; }
+    .tm-more { width: 40px; height: 44px; }
   .tm-row, .tm-table.paid .tm-row { grid-template-columns: minmax(0, 1fr) 64px 60px 40px; gap: 8px; padding: 6px 2px 6px 14px; }
   .tm-headrow, .tm-row .c-now, .tm-row .c-chg, .tm-row .c-src, .tm-row .c-rev.c-n { display: none; }
   .tm-row .c-n .tm-chip { display: inline-block; }

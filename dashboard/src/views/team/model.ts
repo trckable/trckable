@@ -44,6 +44,9 @@ export function tone(c: number): 'low' | 'up' | '' {
   return c >= 0.15 ? 'up' : ''
 }
 
+/** The summary card's word for a change: the team model's low is the card's dn. */
+export const sumTone = (t: 'low' | 'up' | ''): '' | 'up' | 'dn' => (t === 'low' ? 'dn' : t)
+
 export type Sort = 'attention' | 'traffic' | 'change'
 
 const ORDER: Record<DotState, number> = { stopped: 0, new: 1, quiet: 2, now: 3, live: 3 }

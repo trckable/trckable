@@ -2,8 +2,8 @@
 // log: events flowing, how far behind the writer is, what the disk holds and
 // how long that lasts, whether backups are being made, and whether payments
 // are arriving.
-import { Activity, ArchiveRestore, CircleCheck, CloudUpload, Cpu, CreditCard, HardDrive, Inbox, RefreshCcw, TriangleAlert, Webhook } from 'lucide-react'
-import { Card } from '../kit'
+import { ArchiveRestore, CircleCheck, CloudUpload, Cpu, CreditCard, RefreshCcw, TriangleAlert, Webhook } from 'lucide-react'
+import { SummaryCards } from '../v2/ui/SummaryCards'
 import { type Health as H } from '../lib/api'
 import { useHealth } from './useHealth'
 import { HealthLive } from './HealthLive'
@@ -105,18 +105,6 @@ function Pill({ tone, children }: { tone: Tone; children: React.ReactNode }) {
   return <span className={'hpill ' + tone}>{children}</span>
 }
 
-function Tile({ icon: Icon, label, value, sub, tone }: { icon: typeof Cpu; label: string; value: string; sub: string; tone?: Tone }) {
-  const kit = tone === 'warn' || tone === 'bad' ? tone : undefined
-  return (
-    <Card className="htile" icon={<Icon size={15} strokeWidth={1.8} />} tone={kit} title={label}>
-      <span className="kit-val">
-        <b className="num">{value}</b>
-      </span>
-      <span className="kit-sub">{sub}</span>
-    </Card>
-  )
-}
-
 function Item({ icon: Icon, label, hint, children }: { icon: typeof Cpu; label: string; hint: string; children: React.ReactNode }) {
   return (
     <div className="hitem">
@@ -172,22 +160,25 @@ export function HealthSettings() {
         <HealthLive at={at} err={err} />
       </section>
 
-      <div className="htiles">
-        <Tile icon={Activity} label="Events since boot" value={fmtInt(h.events.accepted)} sub={`${fmtInt(h.events.bots)} bots · ${fmtInt(h.events.rejected)} rejected`} />
-        <Tile
-          icon={Inbox}
-          label="Writer"
-          value={h.events.lag > 0 ? `${fmtInt(h.events.lag)} behind` : 'Up to date'}
-          sub={h.events.lag > 0 ? 'Safe in the log, not yet in reports' : 'Everything saved is in reports'}
-          tone={lagTone}
+      <div className="mk mk-body">
+        <SummaryCards
+          items={[
+            { key: 'events', label: 'Events since boot', val: fmtInt(h.events.accepted), sub: `${fmtInt(h.events.bots)} bots · ${fmtInt(h.events.rejected)} rejected` },
+            {
+              key: 'writer',
+              label: 'Writer',
+              val: h.events.lag > 0 ? `${fmtInt(h.events.lag)} behind` : 'Up to date',
+              sub: h.events.lag > 0 ? 'Safe in the log, not yet in reports' : 'Everything saved is in reports',
+            },
+            {
+              key: 'memory',
+              label: 'Memory',
+              val: bytes(h.memory_bytes),
+              sub: h.memory_source === 'rss' ? 'The whole process, analytics included' : 'Go runtime only (no RSS here)',
+            },
+            { key: 'stored', label: 'Stored', val: bytes(h.store.bytes_used), sub: `${fmtInt(h.store.events)} events${h.store.bytes_per_event ? ` · ${h.store.bytes_per_event.toFixed(0)} B each` : ''}` },
+          ]}
         />
-        <Tile
-          icon={Cpu}
-          label="Memory"
-          value={bytes(h.memory_bytes)}
-          sub={h.memory_source === 'rss' ? 'The whole process, analytics included' : 'Go runtime only (no RSS here)'}
-        />
-        <Tile icon={HardDrive} label="Stored" value={bytes(h.store.bytes_used)} sub={`${fmtInt(h.store.events)} events${h.store.bytes_per_event ? ` · ${h.store.bytes_per_event.toFixed(0)} B each` : ''}`} />
       </div>
 
       <section className="card hcard">

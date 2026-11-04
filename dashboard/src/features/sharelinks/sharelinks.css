@@ -221,10 +221,19 @@
   background: var(--surface);
   min-width: 0;
 }
+.sl-tile span {
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
 .sl-tile b {
   color: var(--text);
-  font-family: var(--mono);
-  font-size: 11px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
 .sl-tile b.money,
 .sl-panel i.money,
@@ -549,8 +558,7 @@ button.sl-flag:hover {
 @media (max-width: 640px) {
   :root :is(
     .sl-frame,
-    .sl-top b,
-    .sl-tile b
+    .sl-top b
   ) {
     font-size: 12px;
   }
