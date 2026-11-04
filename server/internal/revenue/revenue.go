@@ -584,168 +584,177 @@ func (s *Service) Run(ctx context.Context) {
 	}
 }
 
-// Process applies pending inbox rows to the ledger; returns how many.
+// Process applies pending inbox rows to the ledger; returns how many. The
+// names of products a provider only gives by id are read first, outside the
+// ledger lock, a batch at a time: a slow provider never holds the lock.
 func (s *Service) Process(ctx context.Context) (int, error) {
+	total := 0
+	for {
+		names := s.pendingProductNames(ctx)
+		n, err := s.processBatch(ctx, names)
+		total += n
+		if err != nil || n == 0 {
+			return total, err
+		}
+	}
+}
+
+// processBatch applies up to 200 pending inbox rows under the ledger lock,
+// with no network reads, and returns how many; zero means nothing is waiting.
+func (s *Service) processBatch(ctx context.Context, names map[productKey]string) (int, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	total := 0
-	for {
-		rows, err := s.DB.QueryContext(ctx, `SELECT i.id, i.body, c.site_id, c.provider, c.id, c.mode FROM pay_inbox i
-			JOIN pay_connections c ON c.id = i.connection_id WHERE i.processed_at IS NULL ORDER BY i.id LIMIT 200`)
+	rows, err := s.DB.QueryContext(ctx, `SELECT i.id, i.body, c.site_id, c.provider, c.id, c.mode FROM pay_inbox i
+		JOIN pay_connections c ON c.id = i.connection_id WHERE i.processed_at IS NULL ORDER BY i.id LIMIT 200`)
+	if err != nil {
+		return total, err
+	}
+	type item struct {
+		id   int64
+		body []byte
+		sc   ledger.Scope
+	}
+	var items []item
+	for rows.Next() {
+		var it item
+		var mode string
+		if err := rows.Scan(&it.id, &it.body, &it.sc.Site, &it.sc.Provider, &it.sc.Connection, &mode); err != nil {
+			rows.Close()
+			return total, err
+		}
+		it.sc.Test, it.sc.EmailKey = mode == "test", s.emailKey
+		items = append(items, it)
+	}
+	rows.Close()
+	if len(items) == 0 {
+		// Payments that waited for their invoice are told now, or when the wait is over.
+		held, err := s.releaseHeld(ctx)
 		if err != nil {
 			return total, err
 		}
-		type item struct {
-			id   int64
-			body []byte
-			sc   ledger.Scope
-		}
-		var items []item
-		for rows.Next() {
-			var it item
-			var mode string
-			if err := rows.Scan(&it.id, &it.body, &it.sc.Site, &it.sc.Provider, &it.sc.Connection, &mode); err != nil {
-				rows.Close()
-				return total, err
-			}
-			it.sc.Test, it.sc.EmailKey = mode == "test", s.emailKey
-			items = append(items, it)
-		}
-		rows.Close()
-		if len(items) == 0 {
-			// Payments that waited for their invoice are told now, or when the wait is over.
-			held, err := s.releaseHeld(ctx)
-			if err != nil {
-				return total, err
-			}
-			if s.OnNotice != nil {
-				for _, h := range held {
-					s.OnNotice(h.Site, h.N)
-				}
-			}
-			return total, nil
-		}
-		// Product names are read before the transaction opens, never inside it.
-		asks := map[productKey]bool{}
-		for _, it := range items {
-			wantProducts(asks, it.sc, it.body)
-		}
-		names := s.productNames(ctx, asks)
-		// One transaction per batch: one fsync for 200 events, all or nothing.
-		tx, err := s.DB.BeginTx(ctx, nil)
-		if err != nil {
-			return total, err
-		}
-		sites := map[string]bool{}
-		type announced struct {
-			site string
-			n    Notice
-		}
-		var told []announced
-		// What each event brought, asked before Apply writes it: a payment the
-		// ledger already has is not news, and afterwards every one exists.
-		type brought struct {
-			sc      ledger.Scope
-			pays    []payments.Payment
-			refunds map[string]int64 // payment id as the refund names it -> when
-		}
-		var batch []brought
-		for _, it := range items {
-			ev, perr := payments.Registry[it.sc.Provider].Parse(it.body)
-			msg := ""
-			if perr != nil {
-				msg = "parse: " + perr.Error()
-			} else {
-				fillProducts(&ev, it.sc.Connection, names)
-				if !it.sc.Test && !ev.Test {
-					br := brought{sc: it.sc, refunds: map[string]int64{}}
-					for _, p := range ev.Payments {
-						var seen int
-						_ = tx.QueryRowContext(ctx, `SELECT count(*) FROM pay_payments WHERE site_id = ? AND provider = ? AND id = ?`,
-							it.sc.Site, it.sc.Provider, p.ID).Scan(&seen)
-						if seen == 0 {
-							br.pays = append(br.pays, p)
-						}
-					}
-					for _, r := range ev.Refunds {
-						if r.Status == payments.RefundSucceeded && r.PaymentID != "" {
-							br.refunds[r.PaymentID] = max(br.refunds[r.PaymentID], r.At)
-						}
-					}
-					if len(br.pays)+len(br.refunds) > 0 {
-						batch = append(batch, br)
-					}
-				}
-				if err := ledger.Apply(ctx, tx, it.sc, ev); err != nil {
-					tx.Rollback()
-					return total, err
-				}
-				// A notice about someone who was erased: the money is kept, the
-				// payload with their address is not.
-				gone, err := erasedEvent(ctx, tx, it.sc, ev)
-				if err != nil {
-					tx.Rollback()
-					return total, err
-				}
-				if gone {
-					if _, err := tx.ExecContext(ctx, `DELETE FROM pay_inbox WHERE id = ?`, it.id); err != nil {
-						tx.Rollback()
-						return total, err
-					}
-					sites[it.sc.Site] = true
-					continue
-				}
-			}
-			if _, err := tx.ExecContext(ctx, `UPDATE pay_inbox SET processed_at = ?, error = ? WHERE id = ?`, s.Now().UnixMilli(), msg, it.id); err != nil {
-				tx.Rollback()
-				return total, err
-			}
-			sites[it.sc.Site] = true
-		}
-		for _, br := range batch {
-			for _, p := range br.pays {
-				n, ok, err := s.payNotice(ctx, tx, br.sc, p)
-				if err != nil {
-					tx.Rollback()
-					return total, err
-				}
-				if ok {
-					told = append(told, announced{br.sc.Site, n})
-				}
-			}
-			for raw, at := range br.refunds {
-				n, ok, err := s.refundNotice(ctx, tx, br.sc, raw, at)
-				if err != nil {
-					tx.Rollback()
-					return total, err
-				}
-				if ok {
-					told = append(told, announced{br.sc.Site, n})
-				}
-			}
-		}
-		for site := range sites {
-			if _, err := forgetErased(ctx, tx, site); err != nil {
-				tx.Rollback()
-				return total, err
-			}
-		}
-		if err := tx.Commit(); err != nil {
-			return total, err
-		}
-		total += len(items)
-		if s.OnChange != nil {
-			for site := range sites {
-				s.OnChange(site)
-			}
-		}
-		// Only after the commit: what is told is what the ledger has.
 		if s.OnNotice != nil {
-			for _, a := range told {
-				s.OnNotice(a.site, a.n)
+			for _, h := range held {
+				s.OnNotice(h.Site, h.N)
+			}
+		}
+		return total, nil
+	}
+	// One transaction per batch: one fsync for 200 events, all or nothing.
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return total, err
+	}
+	sites := map[string]bool{}
+	type announced struct {
+		site string
+		n    Notice
+	}
+	var told []announced
+	// What each event brought, asked before Apply writes it: a payment the
+	// ledger already has is not news, and afterwards every one exists.
+	type brought struct {
+		sc      ledger.Scope
+		pays    []payments.Payment
+		refunds map[string]int64 // payment id as the refund names it -> when
+	}
+	var batch []brought
+	for _, it := range items {
+		ev, perr := payments.Registry[it.sc.Provider].Parse(it.body)
+		msg := ""
+		if perr != nil {
+			msg = "parse: " + perr.Error()
+		} else {
+			fillProducts(&ev, it.sc.Connection, names)
+			if !it.sc.Test && !ev.Test {
+				br := brought{sc: it.sc, refunds: map[string]int64{}}
+				for _, p := range ev.Payments {
+					var seen int
+					_ = tx.QueryRowContext(ctx, `SELECT count(*) FROM pay_payments WHERE site_id = ? AND provider = ? AND id = ?`,
+						it.sc.Site, it.sc.Provider, p.ID).Scan(&seen)
+					if seen == 0 {
+						br.pays = append(br.pays, p)
+					}
+				}
+				for _, r := range ev.Refunds {
+					if r.Status == payments.RefundSucceeded && r.PaymentID != "" {
+						br.refunds[r.PaymentID] = max(br.refunds[r.PaymentID], r.At)
+					}
+				}
+				if len(br.pays)+len(br.refunds) > 0 {
+					batch = append(batch, br)
+				}
+			}
+			if err := ledger.Apply(ctx, tx, it.sc, ev); err != nil {
+				tx.Rollback()
+				return total, err
+			}
+			// A notice about someone who was erased: the money is kept, the
+			// payload with their address is not.
+			gone, err := erasedEvent(ctx, tx, it.sc, ev)
+			if err != nil {
+				tx.Rollback()
+				return total, err
+			}
+			if gone {
+				if _, err := tx.ExecContext(ctx, `DELETE FROM pay_inbox WHERE id = ?`, it.id); err != nil {
+					tx.Rollback()
+					return total, err
+				}
+				sites[it.sc.Site] = true
+				continue
+			}
+		}
+		if _, err := tx.ExecContext(ctx, `UPDATE pay_inbox SET processed_at = ?, error = ? WHERE id = ?`, s.Now().UnixMilli(), msg, it.id); err != nil {
+			tx.Rollback()
+			return total, err
+		}
+		sites[it.sc.Site] = true
+	}
+	for _, br := range batch {
+		for _, p := range br.pays {
+			n, ok, err := s.payNotice(ctx, tx, br.sc, p)
+			if err != nil {
+				tx.Rollback()
+				return total, err
+			}
+			if ok {
+				told = append(told, announced{br.sc.Site, n})
+			}
+		}
+		for raw, at := range br.refunds {
+			n, ok, err := s.refundNotice(ctx, tx, br.sc, raw, at)
+			if err != nil {
+				tx.Rollback()
+				return total, err
+			}
+			if ok {
+				told = append(told, announced{br.sc.Site, n})
 			}
 		}
 	}
+	for site := range sites {
+		if _, err := forgetErased(ctx, tx, site); err != nil {
+			tx.Rollback()
+			return total, err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return total, err
+	}
+	total += len(items)
+	if s.OnChange != nil {
+		for site := range sites {
+			s.OnChange(site)
+		}
+	}
+	// Only after the commit: what is told is what the ledger has.
+	if s.OnNotice != nil {
+		for _, a := range told {
+			s.OnNotice(a.site, a.n)
+		}
+	}
+	return total, nil
 }
 
 // Reprocess rebuilds a site's ledger from its inbox in one transaction.
@@ -755,15 +764,16 @@ func (s *Service) Process(ctx context.Context) (int, error) {
 // back. Then nothing is reset: the notices that are left are applied again on
 // top of the ledger, which only ever upserts, and older rows stay as they are.
 func (s *Service) Reprocess(ctx context.Context, site string) (int, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	// Product names come first, one read per distinct product, before the
-	// transaction opens.
+	// Product names are read first, outside the ledger lock: one read per
+	// distinct product, within a time budget. A name still missing is filled
+	// when its product next arrives or at a later pass.
 	asks := map[productKey]bool{}
 	if err := s.eachInbox(ctx, site, func(sc ledger.Scope, body []byte) { wantProducts(asks, sc, body) }); err != nil {
 		return 0, err
 	}
-	names := s.productNames(ctx, asks)
+	names := s.productNames(ctx, asks, 0)
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return 0, err

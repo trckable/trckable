@@ -14,11 +14,13 @@ import (
 // not be read is asked for again after noneTTL.
 const productTTL = 24 * time.Hour
 
-// productTimeout bounds one read of a product, so a slow provider never holds
-// up the ledger, and productsPerPass how many different products one pass asks
-// for: the rest are named by a later pass.
+// productTimeout bounds one read of a product, productBudget all the reads of
+// one pass, and productsPerPass how many different products Process asks for:
+// the rest are named by a later pass. The one-time rebuild has no count cap.
+// None of it runs under the ledger lock.
 const (
 	productTimeout  = 4 * time.Second
+	productBudget   = 10 * time.Second
 	productsPerPass = 40
 )
 
@@ -81,8 +83,11 @@ func wantProducts(asks map[productKey]bool, sc ledger.Scope, body []byte) {
 // productNames reads the name of each asked product once, from the cache or
 // the provider with the connection's own key. A failure leaves the name empty
 // and is remembered for a minute: the payment is stored without a product, and
-// nothing waits on it. Call it before the ledger's transaction opens.
-func (s *Service) productNames(ctx context.Context, asks map[productKey]bool) map[productKey]string {
+// nothing waits on it. Call it before the ledger lock is taken. max caps the
+// reads (0: no cap); the whole call stops after productBudget.
+func (s *Service) productNames(ctx context.Context, asks map[productKey]bool, max int) map[productKey]string {
+	ctx, stop := context.WithTimeout(ctx, productBudget)
+	defer stop()
 	names := map[productKey]string{}
 	conns := map[string]Connection{}
 	reads := 0
@@ -100,7 +105,7 @@ func (s *Service) productNames(ctx context.Context, asks map[productKey]bool) ma
 			conns[k.conn] = c
 		}
 		namer, can := payments.Remotes[c.Provider].(payments.Namer)
-		if !can || c.apiKey == "" || reads >= productsPerPass {
+		if !can || c.apiKey == "" || (max > 0 && reads >= max) || ctx.Err() != nil {
 			continue
 		}
 		reads++
@@ -125,4 +130,24 @@ func fillProducts(ev *payments.Event, conn string, names map[productKey]string) 
 			p.Product = payments.ProductName(names[productKey{conn, p.ProductID}])
 		}
 	}
+}
+
+// pendingProductNames reads the product names the next batch of waiting inbox
+// rows needs, without the ledger lock.
+func (s *Service) pendingProductNames(ctx context.Context) map[productKey]string {
+	rows, err := s.DB.QueryContext(ctx, `SELECT i.body, c.provider, c.id FROM pay_inbox i
+		JOIN pay_connections c ON c.id = i.connection_id WHERE i.processed_at IS NULL ORDER BY i.id LIMIT 200`)
+	if err != nil {
+		return nil
+	}
+	asks := map[productKey]bool{}
+	for rows.Next() {
+		var body []byte
+		var sc ledger.Scope
+		if rows.Scan(&body, &sc.Provider, &sc.Connection) == nil {
+			wantProducts(asks, sc, body)
+		}
+	}
+	rows.Close()
+	return s.productNames(ctx, asks, productsPerPass)
 }

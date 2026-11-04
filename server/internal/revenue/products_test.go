@@ -110,3 +110,68 @@ func TestDodoProductNameFromAPI(t *testing.T) {
 		t.Fatalf("after a day: %d reads", starter.Load())
 	}
 }
+
+// A Dodo that never answers a product read holds up neither the ledger lock
+// (KeyMismatch takes it) nor the payment, which is stored without a name.
+func TestHangingProductReadDoesNotHoldLock(t *testing.T) {
+	g := newRig(t, t.TempDir(), "instance key for tests")
+	ctx := context.Background()
+	asked := make(chan struct{}, 4)
+	release := make(chan struct{})
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/webhooks":
+			if r.Method == "POST" {
+				_, _ = io.WriteString(w, `{"id":"wh_1"}`)
+				return
+			}
+			_, _ = io.WriteString(w, `{"data":[],"done":true}`)
+		case "/webhooks/wh_1/secret":
+			_, _ = io.WriteString(w, `{"secret":"whsec_ZG9kby1zZWNyZXQtZm9yLXRlc3Rz"}`)
+		case "/products/pdt_1":
+			asked <- struct{}{}
+			select {
+			case <-release:
+			case <-r.Context().Done():
+			}
+		default:
+			_, _ = io.WriteString(w, `{"items":[]}`)
+		}
+	}))
+	t.Cleanup(srv.Close)
+	t.Cleanup(func() { close(release) })
+	payments.Remotes["dodo"] = &payments.DodoAPI{TestURL: srv.URL}
+	t.Cleanup(func() { payments.Remotes["dodo"] = &payments.DodoAPI{} })
+	t.Cleanup(g.svc.Wait)
+	c, err := g.svc.Connect(ctx, ConnectRequest{Site: g.site, Provider: "dodo", Mode: "test", APIKey: "dodo_key", PublicBase: "https://stats.example"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	g.svc.Wait()
+	body := `{"type":"payment.succeeded","timestamp":"2026-11-04T06:37:00Z","data":{"payment_id":"pay_1","status":"succeeded",
+		"total_amount":1000,"currency":"USD","created_at":"2026-11-04T06:37:00Z","product_cart":[{"product_id":"pdt_1","quantity":1}],"metadata":{}}}`
+	if _, err := g.svc.DB.ExecContext(ctx, `INSERT INTO pay_inbox (connection_id, event_key, received_at, body) VALUES (?, 'k:1', 1, ?)`, c.ID, body); err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() { _, err := g.svc.Process(ctx); done <- err }()
+	select {
+	case <-asked:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the product was never asked for")
+	}
+	locked := make(chan struct{})
+	go func() { g.svc.KeyMismatch(); close(locked) }()
+	select {
+	case <-locked:
+	case <-time.After(time.Second):
+		t.Fatal("the ledger lock is held while a product is read")
+	}
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	var p string
+	if err := g.svc.DB.QueryRowContext(ctx, `SELECT product FROM pay_payments WHERE id = 'pay_1'`).Scan(&p); err != nil || p != "" {
+		t.Fatalf("payment stored with product %q, %v", p, err)
+	}
+}
