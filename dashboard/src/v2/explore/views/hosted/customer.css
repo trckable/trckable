@@ -85,7 +85,7 @@
   margin: 14px 0 0;
   font-size: 12px;
 }
-@media (max-width: 560px) {
+@media (--xs-down) {
   .modal-back:has(> .cust-dialog) {
     padding: 0;
     place-items: end stretch;

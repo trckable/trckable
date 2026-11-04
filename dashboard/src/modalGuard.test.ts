@@ -24,6 +24,7 @@ const NOT_MODAL = new Set([
   'components/AnchoredPop.tsx',
   'components/ShortcutsHost.tsx',
   'features/hints/HintHost.tsx',
+  'features/signals/SurgeBand.tsx',
 ])
 // Full-screen surfaces of the dashboard's own (a palette, a drawer, the first-run page): not dialogs of the Modal kind.
 const OWN_SURFACE = new Set(['v2/explore/Rail.tsx', 'features/mentions/Detail.tsx', 'features/onboarding/Onboarding.tsx', 'v2/ui/Palette.tsx', 'v2/ui/BellMenu.tsx', 'v2/briefing/ChartBlock.tsx'])
@@ -40,6 +41,8 @@ const OWN_CHROME: Record<string, string> = {
   'features/milestones/ShareSheet.tsx': 'a two-column sheet: the card and its side actions share one grid',
   'features/milestones/Timeline.tsx': 'the milestones window: its own scroll region and a full screen on a phone',
   'components/CardModal/CardModal.tsx': 'a story card: tinted kind header and its own action row',
+  'v2/bell/EventCard.tsx': 'the event card: its header is the event, with a corner close, and its one action is the row\'s own link',
+  'v2/explore/views/hosted/CustomerSheet.tsx': 'the customer sheet: its header is the customer (name, email, country) and it is a bottom sheet on a phone',
 }
 
 describe('dialogs', () => {
