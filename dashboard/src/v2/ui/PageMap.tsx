@@ -1,11 +1,14 @@
 // The site at a glance: one tile a page, as big as the people it had. A tap filters by that page.
 import { useWidth } from '../../charts/useWidth'
+import type { LucideIcon } from 'lucide-react'
 import { fmtInt } from '../../lib/format'
 
 export interface Tile {
   key: string
   name: string
   v: number
+  /** A small icon before the name. */
+  icon?: LucideIcon
 }
 
 export interface Placed extends Tile {
@@ -39,7 +42,10 @@ export function PageMap({ rows, label, onPick, height = 210 }: { rows: Tile[]; l
         <button key={t.key} type="button" className="pm-t" title={`${t.name}: ${fmtInt(t.v)}`} onClick={() => onPick?.(t.key)} style={{ left: t.x, top: t.y, width: t.w, height: t.h, animationDelay: `${i * 35}ms`, background: `color-mix(in srgb, var(--mk-soft) ${Math.round(14 + (t.v / top) * 52)}%, var(--mk-card))` }}>
           {t.w > 58 && t.h > 34 && (
             <>
-              <span className="mono">{t.name}</span>
+              <span className="mono">
+                {t.icon && <t.icon size={14} className="pm-ico" aria-hidden="true" />}
+                {t.name}
+              </span>
               <b>{fmtInt(t.v)}</b>
             </>
           )}

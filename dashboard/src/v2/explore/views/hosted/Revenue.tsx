@@ -14,6 +14,8 @@ import { DIM_LABEL } from '../../../../features/overview/dimLabels'
 import { extrasApi } from '../../../../features/extras/extrasApi'
 import { extrasCopy } from '../../../../features/extras/copy'
 import { copy } from '../../copy'
+import { pageIcon } from '../../pageIcon'
+import { plain } from '../../rowMarks'
 import type { XCtx } from '../../ctx'
 
 const DIMS = ['channel', 'referrer', 'campaign', 'entry_page'] as const
@@ -66,7 +68,7 @@ export function SalePages({ x, query }: { x: XCtx; query: ReportQuery }) {
   const list = here.data
   if (list.length === 0) return <XEmpty title={extrasCopy.sells.none} hint={extrasCopy.sells.note} />
   const top = Math.max(1, ...list.map((r) => r.revenue ?? 0))
-  const rows: CRow[] = list.map((r) => ({ key: r.value, a: !r.value || r.value === '/' ? copy.homePage : r.value, bar: (r.revenue ?? 0) / top, mono: true, onPick: () => x.pick('page', r.value), c: [fmtInt(r.customers ?? 0), x.money(r.revenue ?? 0)] }))
+  const rows: CRow[] = list.map((r) => ({ key: r.value, a: <>{plain(pageIcon(r.value))}{!r.value || r.value === '/' ? copy.homePage : r.value}</>, bar: (r.revenue ?? 0) / top, mono: true, onPick: () => x.pick('page', r.value), c: [fmtInt(r.customers ?? 0), x.money(r.revenue ?? 0)] }))
   return (
     <>
       <XCols first={extrasCopy.sells.page} cols={[{ h: laterCopy.customers, hm: true }, { h: copy.heads.revenue }]} rows={rows} xc="minmax(0,1fr) 84px 84px" xcm="minmax(0,1fr) 72px" limit={x.limit} onAll={x.showAll} />

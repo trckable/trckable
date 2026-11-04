@@ -1,6 +1,7 @@
 // The small picture before a row of Tech: a device's icon, a browser's or a system's logo (drawn here, so nothing is fetched).
 import { Globe, Monitor, Smartphone, Tablet, TabletSmartphone, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { pageIcon } from './pageIcon'
 import type { Row, Tab } from './types'
 
 const DEVICES: Record<string, LucideIcon> = { desktop: Monitor, mobile: Smartphone, tablet: Tablet }
@@ -100,7 +101,7 @@ function logoOf(name: string): ReactNode {
   return LOGOS.find(([re]) => re.test(n))?.[1]()
 }
 
-const plain = (I: LucideIcon) => <I size={16} className="xrowico" aria-hidden="true" />
+export const plain = (I: LucideIcon) => <I size={16} className="xrowico" aria-hidden="true" />
 
 /** What a table's row wears before its name: a device icon, a browser's logo (a globe when none is drawn). */
 export function rowMark(tab: Tab, r: Row): ReactNode {
@@ -108,6 +109,7 @@ export function rowMark(tab: Tab, r: Row): ReactNode {
     const d = DEVICES[r.val.toLowerCase()]
     return d ? plain(r.val.toLowerCase() === 'tablet' ? TabletSmartphone : d) : null
   }
+  if (tab === 'pages' || tab === 'entries' || tab === 'exits' || tab === 'groups') return plain(pageIcon(r.val))
   if (tab === 'browsers' || tab === 'bversion') return logoOf(r.name) ?? plain(Globe)
   return null
 }

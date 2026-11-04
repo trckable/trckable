@@ -12,6 +12,7 @@ import { ROW_DIM } from '../sections'
 import type { Tab, Table } from '../types'
 import { PeopleTable } from './PeopleTable'
 import { rowWords } from '../pointer'
+import { pageIcon } from '../pageIcon'
 import { rowMark } from '../rowMarks'
 
 interface Cfg {
@@ -71,7 +72,7 @@ export function Tables({ tab, x, d }: { tab: Tab; x: XCtx; d: Table }) {
     <>
       {d.say && <p className="xchg-say xsay-table">{d.say}</p>}
       {donut}
-      {tab === 'pages' && d.rows.length > 1 && <PageMap label={copy.people} rows={d.rows.map((r) => ({ key: r.val, name: r.name === '/' ? copy.homePage : r.name, v: r.v }))} onPick={dim ? (k) => x.pick(dim, k) : undefined} />}
+      {tab === 'pages' && d.rows.length > 1 && <PageMap label={copy.people} rows={d.rows.map((r) => ({ key: r.val, name: r.name === '/' ? copy.homePage : r.name, v: r.v, icon: pageIcon(r.val) }))} onPick={dim ? (k) => x.pick(dim, k) : undefined} />}
       {(tab === 'devices' || tab === 'browsers' || tab === 'screens') && d.rows.length > 0 && (
         <div className="xsplit-bar xdev" role="img" aria-label={d.rows.map((r) => `${r.name} ${fmtInt(r.v)}`).join(', ')}>
           {d.rows.map((r, i) => <i key={r.val} title={`${r.name}: ${fmtInt(r.v)}`} style={{ flexGrow: r.v, background: `color-mix(in srgb, var(--mk-soft) ${Math.max(22, 100 - i * 16)}%, transparent)` }} />)}
