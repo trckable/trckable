@@ -21,6 +21,7 @@ export const copy = defineCopy('v2.live', {
   nowWord: 'now',
   topSources: 'Top sources right now',
   noVisitors: 'No visitors right now.',
+  noneToday: 'No visitors yet today.',
   revenueToday: 'Revenue today',
   connect: 'Connect',
   onSite: 'On the site right now',

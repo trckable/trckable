@@ -2887,6 +2887,7 @@ export default {
   'v2.live.nowWord': 'nu',
   'v2.live.topSources': 'Topbronnen op dit moment',
   'v2.live.noVisitors': 'Op dit moment geen bezoekers.',
+  'v2.live.noneToday': 'Vandaag nog geen bezoekers.',
   'v2.live.revenueToday': 'Omzet vandaag',
   'v2.live.connect': 'Koppelen',
   'v2.live.onSite': 'Nu op de site',

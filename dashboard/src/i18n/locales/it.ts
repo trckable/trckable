@@ -2887,6 +2887,7 @@ export default {
   'v2.live.nowWord': 'ora',
   'v2.live.topSources': 'Fonti principali in questo momento',
   'v2.live.noVisitors': 'Nessun visitatore in questo momento.',
+  'v2.live.noneToday': 'Ancora nessun visitatore oggi.',
   'v2.live.revenueToday': 'Ricavi di oggi',
   'v2.live.connect': 'Collega',
   'v2.live.onSite': 'Sul sito in questo momento',

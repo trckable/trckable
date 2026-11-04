@@ -1,0 +1,1 @@
+Live: a down site in the site list says how long it has been down, not how long since its last visit; the Analytics card says when nobody has come today; Live no longer asks for Mentions on sites that have them switched off.

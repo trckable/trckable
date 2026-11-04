@@ -2877,6 +2877,7 @@ export default {
   'v2.live.nowWord': 'jetzt',
   'v2.live.topSources': 'Top-Quellen gerade jetzt',
   'v2.live.noVisitors': 'Gerade keine Besucher.',
+  'v2.live.noneToday': 'Heute noch keine Besucher.',
   'v2.live.revenueToday': 'Umsatz heute',
   'v2.live.connect': 'Verbinden',
   'v2.live.onSite': 'Gerade auf der Website',

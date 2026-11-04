@@ -2880,6 +2880,7 @@ export default {
   'v2.live.nowWord': 'ahora',
   'v2.live.topSources': 'Fuentes principales ahora mismo',
   'v2.live.noVisitors': 'Sin visitantes ahora mismo.',
+  'v2.live.noneToday': 'Aún no hay visitantes hoy.',
   'v2.live.revenueToday': 'Ingresos de hoy',
   'v2.live.connect': 'Conectar',
   'v2.live.onSite': 'En el sitio ahora mismo',
