@@ -185,12 +185,12 @@ const explore = (n: number): Go => async (page) => {
   await expect(page.locator('#xp.on')).toBeVisible()
   // (The drawer is drawn on top of the page, outside #xp.)
   const wide = await page.locator('#xp.full').count()
-  const items = page.locator(wide ? '#xp .xrail .xri' : '.xdrawer-box .xri')
+  const items = page.locator(wide ? '#xp .xrail .xri:not(.sub)' : '.xdrawer-box .xri:not(.sub)')
   if (!wide) {
     await page.locator('#xp .xdrawer-open').click()
     await expect(page.locator('.xdrawer-box')).toBeVisible()
   }
-  await expect(items).toHaveCount(13)
+  await expect(items).toHaveCount(11)
   await items.nth(n).click()
   await settle(page)
 }
@@ -215,7 +215,7 @@ const PAGES: [string, Go, boolean][] = [
   ['The bell', opened('.bellw .ib.bell'), false],
   ['The account menu', opened('.account-btn'), false],
   ['The palette', async (page) => { await briefing(HISTORY_DOMAIN, '7d')(page); await page.keyboard.press('Control+k'); await expect(page.locator('.pal .palbox')).toBeVisible(); await settle(page) }, false],
-  ...Array.from({ length: 12 }, (_, i): [string, Go, boolean] => [`Explore, section ${i + 1}`, explore(i), false]),
+  ...Array.from({ length: 11 }, (_, i): [string, Go, boolean] => [`Explore, section ${i + 1}`, explore(i), false]),
   ['404', at(() => `${API}/no-such-page-here`, 'body'), false],
 ]
 

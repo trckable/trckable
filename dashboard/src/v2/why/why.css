@@ -558,6 +558,8 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .xtile[data-xtile=results],.xri[data-xsec=results],.xtitle[data-xtitle=results]{--c:#e9668f}
 .xtile[data-xtile=sales],.xri[data-xsec=sales],.xtitle[data-xtitle=sales]{--c:#d9a62e}
 .xtile[data-xtile=speed],.xri[data-xsec=speed],.xtitle[data-xtitle=speed]{--c:#ef6a5a}
+.xri[data-xtab=payments]{--c:#d9a62e}
+.xri[data-xtab=customers]{--c:#f08a5d}
 .xtile[data-xtile=mentions],.xri[data-xsec=mentions],.xtitle[data-xtitle=mentions]{--c:#c26bdc}
 .xtile[data-xtile=links],.xri[data-xsec=links],.xtitle[data-xtitle=links]{--c:#3f9fd8}
 .xtile[data-xtile=ai],.xri[data-xsec=ai],.xtitle[data-xtitle=ai]{--c:#7a6cf0}
@@ -580,3 +582,22 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .mk .xdrawer .xrail::after{display:none}
 /* The bar centres its name itself (flex); the list rule's top/transform would push it down. */
 .mk .xcards .mk-bar>span{top:auto;transform:none}
+
+/* Sales folds Payments and Customers under it: open while you are in them, a chevron opens or closes it anywhere else. */
+.mk .xrail .xrg{position:relative;display:flex}
+.mk .xrail .xrg .xri{padding-inline-end:36px}
+.mk .xrail .xchev{all:unset;box-sizing:border-box;position:absolute;inset-inline-end:4px;top:50%;display:grid;place-items:center;width:28px;height:28px;margin-top:-14px;border-radius:8px;cursor:pointer;color:var(--mk-muted);transition:background .15s ease,color .15s ease}
+.mk .xrail .xchev:hover,.mk .xrail .xchev:focus-visible{background:var(--mk-band);color:var(--mk-text)}
+.mk .xrail .xchev svg{transition:transform .15s ease}
+.mk .xrail .xchev[data-open] svg{transform:rotate(90deg)}
+.mk .xrail .xkids{display:grid;grid-template-rows:1fr;transition:grid-template-rows .15s ease,visibility 0s}
+.mk .xrail .xkids[data-closed]{grid-template-rows:0fr;visibility:hidden;transition:grid-template-rows .15s ease,visibility 0s .15s}
+.mk .xrail .xkids-in{position:relative;display:flex;flex-direction:column;gap:2px;min-height:0;overflow:hidden;padding:2px 4px 0}
+.mk .xrail .xkids-in::before{content:"";position:absolute;inset-inline-start:23px;top:0;bottom:6px;width:1px;background:var(--mk-line)}
+.mk .xrail .xri.sub{min-height:36px;padding-inline-start:calc(var(--mk-s3) + 22px)}
+.mk .xrail .xri.sub svg{width:13px;height:13px;padding:4px;border-radius:7px}
+@media (prefers-reduced-motion:reduce){.mk .xrail .xkids,.mk .xrail .xkids[data-closed],.mk .xrail .xchev svg{transition:none}}
+[data-motion='off'] .mk .xrail .xkids,[data-motion='off'] .mk .xrail .xkids[data-closed],[data-motion='off'] .mk .xrail .xchev svg{transition:none}
+/* Every segmented switch centres its label exactly: one line box, flex centre, no baseline offset. */
+.mk :is(.mk-seg,.xsub) button{display:inline-flex;align-items:center;justify-content:center;padding-block:0;line-height:1;text-align:center}
+.mk :is(.mk-seg,.xsub) button>*{line-height:1}

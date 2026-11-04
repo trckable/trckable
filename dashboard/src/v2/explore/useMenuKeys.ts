@@ -64,7 +64,7 @@ export function useMenuKeys(body: RefObject<HTMLElement | null>, s: PanelState, 
         return
       }
       if (a.classList.contains('xri') && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-        const list = [...(el()?.querySelectorAll<HTMLElement>('.xrail .xri') ?? [])]
+        const list = [...(el()?.querySelectorAll<HTMLElement>('.xrail .xri') ?? [])].filter((b) => !b.closest('[data-closed]'))
         const i = list.indexOf(a)
         e.preventDefault()
         list[(i + (e.key === 'ArrowDown' ? 1 : -1) + list.length) % list.length]?.focus()

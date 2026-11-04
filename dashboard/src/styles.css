@@ -411,6 +411,10 @@ h2 {
   border: 1px solid var(--border);
 }
 .seg button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
   height: 34px;
   padding: 0 14px;
   border: 0;
@@ -2034,6 +2038,10 @@ body[data-mode] .card.overview {
   background: var(--surface-2);
 }
 .seg button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
   height: 32px;
   padding: 0 12px;
   border: 0;

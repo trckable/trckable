@@ -999,7 +999,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .xrail .xgl{padding-top:var(--mk-s4)}
 .mk .xrail .xgl:first-child{padding-top:0}
 .mk .xri{min-height:36px;color:var(--mk-muted)}
-.mk .xrail .xri.sub{padding-inline-start:calc(var(--mk-s3) + 26px)}
+.mk .xrail .xri.sub{padding-inline-start:calc(var(--mk-s3) + 18px)}
 .mk .xri.on{color:var(--mk-text)}
 .mk .xp.full .xpw{display:none}
 .mk .xp.full .xlay .xtb{margin-top:var(--mk-s4)}
