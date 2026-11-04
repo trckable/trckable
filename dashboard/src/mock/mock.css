@@ -1038,7 +1038,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .xp .mk-more:hover{color:var(--mk-text)}
 .mk .xempty{display:flex;flex-direction:column;align-items:flex-start;gap:var(--mk-s2);padding:var(--mk-s5) 0;color:var(--mk-muted);font-size:13px}
 .mk .xempty b{color:var(--mk-text);font-weight:600;font-size:14px}
-.mk .xerr svg{width:20px;height:20px;color:var(--mk-muted)}
+.mk .xempty svg{width:20px;height:20px;color:var(--mk-muted)}
 .mk .xnote .xb{height:34px}
 .mk .xt.xc .xrw .two{min-width:0;display:flex;flex-direction:column;gap:2px;padding:var(--mk-s1) 0}
 .mk .xt.xc .xrw .two .mtt{font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px}
@@ -1052,12 +1052,6 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .xt.xc .xrw .mk-n{white-space:nowrap}
 .mk .xt.xc .xrw .mk-n .vg{margin-right:6px;vertical-align:1px}
 .mk .xt.xc .xrw .mk-n:last-child{color:var(--mk-text)}
-.mk .xedc{border:1px solid var(--mk-line);border-radius:var(--mk-r);background:var(--mk-card);padding:var(--mk-s3);display:flex;flex-direction:column;gap:var(--mk-s3);margin-bottom:var(--mk-s3)}
-.mk .xedr{display:flex;gap:var(--mk-s2);align-items:center;flex-wrap:wrap}
-.mk .xedr select{flex:1;min-width:160px}
-.mk .xedr .xsub{margin:0}
-.mk .xedc .xchips{margin:0}
-.mk .xedf{display:flex;align-items:center;justify-content:space-between;gap:var(--mk-s3);font-size:13px;color:var(--mk-muted)}
 .mk .xmr{display:flex;align-items:center;min-height:40px;padding:0 var(--mk-s1) 0 var(--mk-s3);font-size:14px}
 .mk .xmr .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mk .xmx{width:36px;height:36px;border-radius:10px;color:var(--mk-muted);font-size:18px;line-height:1}
@@ -1077,14 +1071,11 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 @media (--xs){
 .mk .xsub{display:flex;width:100%;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scroll-padding:0 var(--mk-s3)}
 .mk .xsub button{flex:1 0 auto;height:44px;font-size:13px;overflow:visible;text-overflow:clip;scroll-snap-align:center}
-.mk .xedr .xsub{width:auto;flex:1}
 .mk .xchip2{height:36px}
 .mk .xchip2 button{width:32px;height:32px}
 .mk .xclr{height:36px}
 .mk .xp .mk-more{height:48px}
 .mk .xnote .xb{height:44px}
-.mk .xedr select{flex:1 1 100%}
-.mk .xedr .xb{height:44px}
 .mk .xp .xt.xc .xth,.mk .xp .xt.xc .xrw,.mk .xp.full .xt.xc .xth,.mk .xp.full .xt.xc .xrw{grid-template-columns:var(--xcm)}
 .mk .xt.xc .hm,.mk .xp.full .xt.xc .cv{display:none}
 .mk .xt.xc .ph{display:inline}
