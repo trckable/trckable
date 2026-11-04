@@ -27,7 +27,7 @@ export const copy = defineCopy('setup', {
   },
   own: { title: 'Your own visits left out', sub: 'So your clicks don’t count', go: 'Add my IP' },
   locale: {
-    title: 'Timezone and currency',
+    title: 'Time & currency',
     right: 'That’s right',
     change: 'Change',
     values: (tz: string, cur: string) => `${tz} · ${cur}`,

@@ -3011,7 +3011,7 @@ export default {
   'setup.own.title': 'Vos propres visites exclues',
   'setup.own.sub': 'Pour que vos clics ne comptent pas',
   'setup.own.go': 'Ajouter mon IP',
-  'setup.locale.title': 'Fuseau horaire et devise',
+  'setup.locale.title': 'Heure et devise',
   'setup.locale.right': 'C’est bon',
   'setup.locale.change': 'Modifier',
   'setup.goal.title': 'Un objectif défini',

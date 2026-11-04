@@ -3023,7 +3023,7 @@ export default {
   'setup.own.title': 'Je eigen bezoeken uitgesloten',
   'setup.own.sub': 'Zodat je klikken niet meetellen',
   'setup.own.go': 'Mijn IP toevoegen',
-  'setup.locale.title': 'Tijdzone en valuta',
+  'setup.locale.title': 'Tijd & valuta',
   'setup.locale.right': 'Klopt',
   'setup.locale.change': 'Wijzigen',
   'setup.goal.title': 'Een doel gemarkeerd',
