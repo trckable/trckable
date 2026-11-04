@@ -7,7 +7,7 @@ import type { Row, Tab } from './types'
 const DEVICES: Record<string, LucideIcon> = { desktop: Monitor, mobile: Smartphone, tablet: Tablet }
 
 const Logo = ({ children }: { children: ReactNode }) => (
-  <svg className="xrowico logo" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+  <svg className="xrowico mark" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
     {children}
   </svg>
 )
