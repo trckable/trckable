@@ -19,7 +19,7 @@ export function VisitCard({ v, currency, onFilter }: { v: VisitStory; currency: 
             {copy.dayTime(fmtDayShort(v.start), fmtTime(v.start))}
           </time>
         </h3>
-        <SourceChip channel={v.channel} referrer={v.referrer} onFilter={onFilter} />
+        <SourceChip channel={v.channel} referrer={v.referrer} at={v.start} onFilter={onFilter} />
         <span className="jr-visit-meta faint">
           {v.country && (
             <span title={countryName(v.country)}>

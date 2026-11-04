@@ -226,7 +226,7 @@ test('a click on Live opens that table of Explore, and Back returns to Live', as
   await expect(page).not.toHaveURL(/x=speed/)
 })
 
-test('a source on Live opens Sources narrowed to it, and Back returns to Live', async ({ page }) => {
+test('a source on Live opens its Overview, and Back returns to Live', async ({ page }) => {
   await page.route('**/api/v1/sites/*/now*', async (route) => {
     const res = await route.fetch()
     await route.fulfill({ response: res, json: { ...(await res.json()), sources: [{ channel: 'Direct', visitors: 5 }] } })
@@ -236,11 +236,11 @@ test('a source on Live opens Sources narrowed to it, and Back returns to Live', 
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=live`)
   await page.locator('.lsn-go').first().click()
   await expect(page.locator('#xp .xchip2')).toContainText('Direct')
-  await expect(page.locator('#xp [data-xcard="sources"]')).toBeVisible()
-  await expect(page).toHaveURL(/x=sources/)
+  await expect(page).toHaveURL(/x=overview/)
+  await expect(page).not.toHaveURL(/x=changed/)
   await page.goBack()
   await expect(page).toHaveURL(/view=live/)
-  await expect(page).not.toHaveURL(/x=sources/)
+  await expect(page).not.toHaveURL(/x=overview/)
 })
 
 test('the grid in the header lists every section, and a tile opens its page from Live', async ({ page }) => {

@@ -117,8 +117,24 @@ test('actions: filter by the source, copy id in the menu, Escape closes', async 
   await page.keyboard.press('Escape')
   await dialog.getByRole('list', { name: 'Visit 2, what they did' }).locator('xpath=..').locator('.jr-chip').click()
   await expect(dialog).toBeHidden()
-  await expect(page).toHaveURL(/f=referrer(%3A|:)google\.com/)
-  await expect(page).not.toHaveURL(/view=live/)
+  // The source opens Explore's Overview for that referrer, never What changed.
+  await expect(page).toHaveURL(/x=overview/)
+  await expect(page).toHaveURL(/xf=referrer(%3A|:)google\.com/)
+  await expect(page).not.toHaveURL(/view=live|x=changed/)
+  await expect(page.getByText('Too little yet to compare fairly.')).toHaveCount(0)
+})
+
+test('a visit’s source opens its Overview over a period that holds the visit, with numbers', async ({ page }) => {
+  const dialog = await openJourney(page)
+  // Visit 1 came three days ago, direct; the real visitor of this run came direct too, so the numbers are not empty.
+  await dialog.getByRole('list', { name: 'Visit 1, what they did' }).locator('xpath=..').locator('.jr-chip').click()
+  await expect(dialog).toBeHidden()
+  await expect(page).toHaveURL(/x=overview/)
+  await expect(page).toHaveURL(/xf=channel(%3A|:)Direct/)
+  await expect(page).toHaveURL(/period=7d/)
+  const cards = page.locator('.sumrow .sum').first()
+  await expect(cards).toBeVisible()
+  await expect(cards.locator('.sum-v')).not.toHaveText(/^0$|^—$|^$/)
 })
 
 test('on a phone it is a bottom sheet', async ({ page }) => {

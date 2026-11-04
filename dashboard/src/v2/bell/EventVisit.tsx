@@ -7,6 +7,11 @@ import { SourceChip } from '../../features/journey/SourceChip'
 import { useJourney } from '../../features/journey/useJourney'
 import type { Site } from '../../lib/api'
 import { nameOf } from '../../lib/visitor'
+import { SummaryCards, type SumItem } from '../ui/SummaryCards'
+import { fmtInt } from '../../lib/format'
+import { fmtSpan } from './eventModel'
+import { pageIcon } from '../explore/pageIcon'
+import '../../features/journey/Journey.css'
 import { dayOf } from './days'
 import { eventCopy as t } from './eventCopy'
 import { trailTo, visitAt } from './eventModel'
@@ -15,6 +20,16 @@ import type { Notice } from './notices'
 const JourneyDialog = lazy(() => import('../../features/journey/JourneyDialog').then((m) => ({ default: m.JourneyDialog })))
 
 const DAY = 86400
+
+/** What the visit says about the way to it, where it is known: how long since they first came, the visits and the pages before. */
+function tiles(first: number, visits: number, pages: number, at: number): SumItem[] {
+  const since = Math.round((at * 1000 - first) / 1000)
+  const out: SumItem[] = []
+  if (first > 0 && since > 0) out.push({ key: 'since', label: t.toConvert, val: fmtSpan(since) })
+  if (visits > 0) out.push({ key: 'visits', label: t.visitsBefore, val: fmtInt(visits) })
+  if (pages > 0) out.push({ key: 'pages', label: t.pagesSeen, val: fmtInt(pages) })
+  return out
+}
 
 function Visit({ n, site, visitor }: { n: Notice; site: Site; visitor: string }) {
   const at = n.exact ?? n.at
@@ -53,15 +68,24 @@ function Visit({ n, site, visitor }: { n: Notice; site: Site; visitor: string })
           <SourceChip channel={v.channel} referrer={v.referrer} />
         </dd>
       </dl>
+      <div className="mk ev-sum">
+        <SummaryCards items={tiles(state.story.identity.firstSeen, v.number - 1, trail.seen, at)} />
+      </div>
       {trail.before.length > 0 && (
         <div>
           <p className="ev-note">{t.path}</p>
           <ol className="ev-path" aria-label={t.path}>
-            {[...trail.before, trail.page].map((p, i) => (
-              <li key={i}>
-                <code title={p}>{p}</code>
-              </li>
-            ))}
+            {[...trail.before, trail.page].map((p, i) => {
+              const Icon = pageIcon(p)
+              return (
+                <li key={i}>
+                  <span className="jr-chip">
+                    <Icon size={14} strokeWidth={2} aria-hidden="true" />
+                    <code title={p}>{p}</code>
+                  </span>
+                </li>
+              )
+            })}
           </ol>
         </div>
       )}

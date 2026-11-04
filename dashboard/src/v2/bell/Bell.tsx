@@ -2,6 +2,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import type { Filter as ApiFilter, Milestone, Site } from '../../lib/api'
 import { openExplore } from '../explore/open'
+import { viewOf } from '../explore/thing'
 import { lazyLoad } from '../../lib/lazyLoad'
 import { signals } from '../../features/signals/copy'
 import type { Surge } from '../../features/signals/surge'
@@ -247,6 +248,13 @@ function BusyStory({ n, sites, site, onClose }: { n: Notice; sites: Site[]; site
   )
 }
 
+/** A goal's or signup's card leads to that goal's report, over a period that holds the event. */
+function seeGoal(n: Notice, goal: string, s: Site, site: Site | null) {
+  const patch = viewOf({ kind: 'goal', value: goal }, { visit: { at: (n.exact ?? n.at) * 1000, tz: s.timezone } })
+  if (site?.id === s.id) setView(patch)
+  else navigate(`/${encodeURIComponent(s.domain)}${writeView({ ...readView(new URLSearchParams()), ...patch })}`)
+}
+
 /** A notice's own card, with one way on: the page the event lives on (where a tap on the row went before the card). */
 function EventStory({ n, sites, site, onClose }: { n: Notice; sites: Site[]; site: Site | null; onClose: () => void }) {
   const s = sites.find((x) => (n.siteId ? x.id === n.siteId : x.domain === n.site))
@@ -259,7 +267,8 @@ function EventStory({ n, sites, site, onClose }: { n: Notice; sites: Site[]; sit
         onClose={onClose}
         onSee={() => {
           onClose()
-          go(n, site, sites)
+          if (n.goal) seeGoal(n, n.goal, s, site)
+          else go(n, site, sites)
         }}
       />
     </Suspense>

@@ -2,6 +2,7 @@
 // evidence (the visit behind a goal, a signup or a sale; the outage; the post), and one quiet link leads on to the page the
 // event lives on. A bottom sheet on a phone (the shared dialog). Its own chunk: only a tap on a row loads it.
 import { ArrowRight, X } from 'lucide-react'
+import { XIco } from '../ui/XIcons'
 import { Modal } from '../../kit/Modal'
 import type { Site } from '../../lib/api'
 import { EventDown } from './EventDown'
@@ -22,7 +23,9 @@ function Body({ n, site }: { n: Notice; site: Site }) {
 
 function seeOf(n: Notice): string {
   if (n.kind === 'down' || n.kind === 'up') return t.seeIncidents
-  return n.kind === 'mention' ? t.seeMentions : t.seeExplore
+  if (n.kind === 'mention') return t.seeMentions
+  if (n.goal) return n.kind === 'signup' ? t.seeSignups : t.seeGoal
+  return t.seeExplore
 }
 
 /** `onSee` leads on to where the event lives (the row's own page); the card closes with it. */
@@ -33,6 +36,7 @@ export default function EventCard({ n, site, onSee, onClose }: { n: Notice; site
         <X size={16} strokeWidth={2} aria-hidden="true" />
       </button>
       <h2 className="ev-head">
+        {(n.kind === 'signup' || n.kind === 'goal') && <XIco name="results" className="ev-tile" />}
         {[n.title, n.title.includes(n.site) ? '' : n.site, whenOf(n.exact ?? n.at)].filter(Boolean).join(' · ')}
       </h2>
       <div className="ev-body">

@@ -83,7 +83,7 @@ export function IdentityFacts({ who, currency, onFilter }: { who: Identity; curr
           {who.source && (
             <span className="jr-credit">
               <span className="faint">{copy.creditedTo}</span>
-              <SourceChip channel={who.source.channel} referrer={who.source.referrer} onFilter={onFilter} />
+              <SourceChip channel={who.source.channel} referrer={who.source.referrer} at={who.lastSeen} onFilter={onFilter} />
             </span>
           )}
         </Fact>

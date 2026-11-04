@@ -45,7 +45,7 @@ describe('a busy row in the bell', () => {
     const go = [...document.querySelectorAll<HTMLButtonElement>('.surge-modal .btn.primary')]
     expect(go.map((b) => b.textContent)).toEqual(['See it in Explore'])
     act(() => go[0].click())
-    expect(set).toHaveBeenCalledWith(expect.objectContaining({ xp: 'changed', xf: [{ dim: 'referrer', value: 'l.facebook.com' }] }))
+    expect(set).toHaveBeenCalledWith(expect.objectContaining({ xp: 'overview', xf: [{ dim: 'referrer', value: 'l.facebook.com' }] }))
     m.stop()
   })
 })
