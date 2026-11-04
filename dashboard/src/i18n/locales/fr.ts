@@ -2410,6 +2410,7 @@ export default {
   'v2explore.emptyTabShort': 'La période est courte : les 30 derniers jours montrent davantage de ce qu’ont fait les visiteurs.',
   'v2explore.emptyTabLater': 'Cela se remplit à mesure que les visiteurs arrivent.',
   'v2explore.widen': 'Voir les 30 derniers jours',
+  'v2explore.railToggle': 'Afficher ou masquer les tableaux sous Ventes',
   'v2explore.emptySearch': 'Pas encore assez de trafic Google',
   'v2explore.emptySearchHint': 'Les données de recherche s’affichent dès que cette période compte plus de visites venues de Google.',
   'v2explore.emptySpeed': 'Aucune page mesurée pour l’instant',

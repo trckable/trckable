@@ -35,3 +35,14 @@ export function trailTo(v: VisitStory, at: number): Trail {
   const page = seen[seen.length - 1] ?? v.nodes.find((n) => n.kind === 'page')?.path ?? ''
   return { page, before: seen.slice(-TRAIL - 1, -1), seen: seen.length }
 }
+
+/** A span in seconds as people say it: "12m", "3h 5m", "1d 23h". */
+export function fmtSpan(s: number): string {
+  const m = Math.floor(s / 60)
+  if (m < 1) return '<1m'
+  if (m < 60) return `${m}m`
+  const h = Math.floor(m / 60)
+  if (h < 24) return m % 60 ? `${h}h ${m % 60}m` : `${h}h`
+  const d = Math.floor(h / 24)
+  return h % 24 ? `${d}d ${h % 24}h` : `${d}d`
+}
