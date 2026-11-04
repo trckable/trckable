@@ -101,7 +101,7 @@ func (stripe) Parse(body []byte) (Event, error) {
 		}
 		cus, vis := idOf(pi.Customer), visitorFrom(pi.Metadata)
 		ev.Payments = append(ev.Payments, Payment{ID: pi.ID, PaidAt: ev.At, Currency: pi.Currency, Gross: pi.AmountReceived,
-			CustomerID: cus, Visitor: vis, Email: pi.ReceiptEmail, Method: stripeMethod(pi.MethodTypes)})
+			CustomerID: cus, Visitor: vis, Email: pi.ReceiptEmail, Method: stripeMethod(pi.LatestCharge, pi.MethodTypes)})
 		if inv := idOf(pi.Invoice); inv != "" {
 			ev.Aliases = append(ev.Aliases, Alias{Alias: inv, PaymentID: pi.ID})
 		}
@@ -403,9 +403,19 @@ func invoiceCountry(a *struct {
 	return CountryCode(a.Country)
 }
 
-// stripeMethod is how a payment intent was paid, when it can only have been
-// paid one way; an intent that allowed several says nothing of which.
-func stripeMethod(types []string) string {
+// stripeMethod is how a payment intent was paid: its charge says when the
+// payload carries it, else the one type the intent allowed; an intent that
+// allowed several says nothing of which.
+func stripeMethod(charge json.RawMessage, types []string) string {
+	// An expanded charge says how it was paid; the bare id of one does not.
+	var ch struct {
+		Details struct {
+			Type string `json:"type"`
+		} `json:"payment_method_details"`
+	}
+	if json.Unmarshal(charge, &ch) == nil && ch.Details.Type != "" {
+		return MethodCode(ch.Details.Type)
+	}
 	if len(types) != 1 {
 		return ""
 	}
@@ -418,6 +428,9 @@ func stripeMethod(types []string) string {
 // nickname.
 func lineProduct(description, nickname string) string {
 	d := strings.TrimSpace(description)
+	if m := remainingTime.FindStringSubmatch(d); m != nil {
+		return ProductName(m[1]) // a plan change's charge for the new plan
+	}
 	if i := strings.Index(d, " × "); i > 0 && strings.Trim(d[:i], "0123456789") == "" {
 		d = d[i+len(" × "):]
 		if j := strings.LastIndex(d, " (at "); j > 0 {

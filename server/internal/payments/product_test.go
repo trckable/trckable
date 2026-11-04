@@ -17,7 +17,7 @@ func firstPayment(t *testing.T, provider string, body string) Payment {
 func TestMethodCode(t *testing.T) {
 	for in, want := range map[string]string{
 		"": "", "card": "card", "Credit": "card", "visa": "card", "paypal": "paypal", "apple_pay": "apple_pay", "Google Pay": "google_pay",
-		"sepa_debit": "bank", "us_bank_account": "bank", "ideal": "bank", "crypto": "crypto", "upi": "other", "link": "other",
+		"sepa_debit": "bank", "bancontact_card": "bank", "przelewy24": "bank", "unknown": "", "None": "", "offline": "", "us_bank_account": "bank", "ideal": "bank", "crypto": "crypto", "upi": "other", "link": "other",
 	} {
 		if got := MethodCode(in); got != want {
 			t.Errorf("MethodCode(%q) = %q, want %q", in, got, want)
@@ -61,6 +61,18 @@ func TestStripeNamesMethodAndLineProduct(t *testing.T) {
 	if err != nil || len(ev.Hints) != 1 || ev.Hints[0].Product != "Pro plan" {
 		t.Fatalf("invoice product: %v %+v", err, ev.Hints)
 	}
+	ev, err = Registry["stripe"].Parse([]byte(`{"id":"evt_4","type":"invoice.paid","created":1758500000,"livemode":true,"data":{"object":
+		{"id":"in_2","billing_reason":"subscription_update","customer":"cus_1","amount_paid":2000,"lines":{"data":[
+		{"amount":-900,"description":"Unused time on 1 × Pro (at $9.00 / month) after 16 Oct"},
+		{"amount":2900,"description":"Remaining time on 1 × Business (at $29.00 / month) after 16 Oct"}]}}}}`))
+	if err != nil || len(ev.Hints) != 1 || ev.Hints[0].Product != "Business" {
+		t.Fatalf("proration product: %v %+v", err, ev.Hints)
+	}
+	p = firstPayment(t, "stripe", `{"id":"evt_5","type":"payment_intent.succeeded","created":1758500000,"livemode":true,"data":{"object":
+		{"id":"pi_3","amount_received":1000,"currency":"usd","payment_method_types":["card","link"],"latest_charge":{"id":"ch_1","payment_method_details":{"type":"paypal"}}}}}`)
+	if p.Method != "paypal" {
+		t.Fatalf("an expanded charge names the method: %q", p.Method)
+	}
 	for in, want := range map[string]string{"Pro (at home)": "Pro (at home)", "1 × Team (at $9.00 / year)": "Team", "": "Plan"} {
 		if got := lineProduct(in, "Plan"); got != want {
 			t.Errorf("lineProduct(%q) = %q, want %q", in, got, want)
@@ -94,9 +106,9 @@ func TestGumroadNamesProductAndMethod(t *testing.T) {
 
 func TestPaddleNamesProductAndMethod(t *testing.T) {
 	p := firstPayment(t, "paddle", `{"event_id":"e1","event_type":"transaction.completed","occurred_at":"2026-11-04T06:37:00Z","data":{"id":"txn_1","status":"completed","currency_code":"USD",
-		"billed_at":"2026-11-04T06:37:00Z","items":[{"price":{"name":"Monthly"},"product":{"name":"Pro"}}],
-		"payments":[{"method_details":{"type":"card"}},{"method_details":{"type":"apple_pay"}}],
-		"details":{"totals":{"tax":"0","total":"1000","grand_total":"1000"}}}}`)
+		"billed_at":"2026-11-04T06:37:00Z","items":[{"price":{"name":"Monthly"}}],
+		"payments":[{"status":"error","method_details":{"type":"card"}},{"status":"captured","method_details":{"type":"apple_pay"}}],
+		"details":{"line_items":[{"product":{"name":"Pro"}}],"totals":{"tax":"0","total":"1000","grand_total":"1000"}}}}`)
 	if p.Product != "Pro" || p.Method != "apple_pay" {
 		t.Fatalf("got %q %q", p.Product, p.Method)
 	}

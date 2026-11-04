@@ -165,8 +165,8 @@ type PayRow struct {
 	Provider string    `json:"provider,omitempty"` // the payment provider's id
 	// Currency is what the buyer paid in, only when it is not the site's currency.
 	Currency string `json:"currency,omitempty"`
-	Product  string    `json:"product,omitempty"` // what was bought, as the provider names it
-	Method   string    `json:"method,omitempty"`  // how it was paid: card, paypal, apple_pay, google_pay, bank, crypto or other
+	Product  string `json:"product,omitempty"` // what was bought, as the provider names it
+	Method   string `json:"method,omitempty"`  // how it was paid: card, paypal, apple_pay, google_pay, bank, crypto or other
 	// Name is what the payment provider calls the buyer, set by the API for a
 	// payment with no known visit, for people who may see it. Never stored.
 	Name string `json:"name,omitempty"`

@@ -138,7 +138,7 @@ func MethodCode(s string) string {
 	s = strings.ToLower(strings.TrimSpace(s))
 	s = strings.NewReplacer("-", "_", " ", "_").Replace(s)
 	switch s {
-	case "":
+	case "", "unknown", "none", "offline":
 		return ""
 	case "card", "credit", "credit_card", "debit", "debit_card", "visa", "mastercard", "amex", "american_express", "discover", "diners", "jcb", "unionpay", "cartes_bancaires":
 		return MethodCard
@@ -148,7 +148,7 @@ func MethodCode(s string) string {
 		return MethodApplePay
 	case "google_pay", "googlepay":
 		return MethodGooglePay
-	case "bank", "bank_transfer", "ach", "ach_debit", "sepa", "sepa_debit", "us_bank_account", "ideal", "bancontact", "eps", "giropay", "sofort", "p24", "wire", "wire_transfer", "direct_debit", "bacs_debit":
+	case "bank", "bank_transfer", "ach", "ach_debit", "sepa", "sepa_debit", "us_bank_account", "ideal", "bancontact", "eps", "giropay", "sofort", "p24", "bancontact_card", "przelewy24", "sepa_bank_transfer", "bank_redirect", "wire", "wire_transfer", "direct_debit", "bacs_debit":
 		return MethodBank
 	case "crypto", "bitcoin", "cryptocurrency":
 		return MethodCrypto

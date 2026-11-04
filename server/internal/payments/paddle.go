@@ -1,7 +1,6 @@
 package payments
 
 import (
-	"cmp"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -88,11 +87,9 @@ func (paddle) Parse(body []byte) (Event, error) {
 				Price struct {
 					Name string `json:"name"`
 				} `json:"price"`
-				Product struct {
-					Name string `json:"name"`
-				} `json:"product"`
 			} `json:"items"`
 			Payments []struct {
+				Status        string `json:"status"`
 				MethodDetails struct {
 					Type string `json:"type"`
 				} `json:"method_details"`
@@ -100,6 +97,11 @@ func (paddle) Parse(body []byte) (Event, error) {
 			BilledAt  string `json:"billed_at"`
 			CreatedAt string `json:"created_at"`
 			Details   struct {
+				LineItems []struct {
+					Product struct {
+						Name string `json:"name"`
+					} `json:"product"`
+				} `json:"line_items"`
 				Totals struct {
 					Tax        amount `json:"tax"`
 					Total      amount `json:"total"`
@@ -132,11 +134,19 @@ func (paddle) Parse(body []byte) (Event, error) {
 		}
 		vis := visitorFrom(t.CustomData)
 		product, method := "", ""
-		if len(t.Items) > 0 {
-			product = cmp.Or(t.Items[0].Product.Name, t.Items[0].Price.Name)
+		if len(t.Details.LineItems) > 0 {
+			product = t.Details.LineItems[0].Product.Name
 		}
+		// Attempts are listed newest first: the one that was captured paid.
 		if len(t.Payments) > 0 {
-			method = MethodCode(t.Payments[len(t.Payments)-1].MethodDetails.Type) // the last attempt is the one that paid
+			pay := t.Payments[0]
+			for _, a := range t.Payments {
+				if a.Status == "captured" {
+					pay = a
+					break
+				}
+			}
+			method = MethodCode(pay.MethodDetails.Type)
 		}
 		ev.Payments = append(ev.Payments, Payment{ID: t.ID, PaidAt: paidAt, Currency: t.CurrencyCode, Gross: gross, Tax: ptr(int64(t.Details.Totals.Tax)),
 			CustomerID: t.CustomerID, SubscriptionID: t.SubscriptionID, Visitor: vis, Kind: kind, Product: ProductName(product), Method: method})
