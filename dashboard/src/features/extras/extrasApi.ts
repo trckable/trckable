@@ -70,6 +70,10 @@ export interface Payment {
   provider?: string
   /** What the buyer paid in, only when it is not the site's currency. */
   currency?: string
+  /** What was bought, as the provider names it, when it does. */
+  product?: string
+  /** How it was paid: card, paypal, apple_pay, google_pay, bank, crypto or other; absent when the provider doesn't say. */
+  method?: string
   /** The payment provider's name for a buyer with no known visit (or their email); only for a signed-in person, read live, never stored. */
   name?: string
   /** The provider has them as a customer, named or not. */

@@ -63,3 +63,9 @@ export function initialsOf(name: string): string {
   const letters = parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0] ?? '').slice(0, 2)
   return letters.toUpperCase() || '·'
 }
+
+/** How a payment was paid, in the person's words: the label of its code, "Other" for a code the list doesn't know, nothing when the provider didn't say. */
+export function methodLabel(method: string | undefined, labels: Record<string, string>): string {
+  if (!method) return ''
+  return Object.hasOwn(labels, method) ? labels[method] : labels.other
+}

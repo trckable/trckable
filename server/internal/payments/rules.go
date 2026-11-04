@@ -9,4 +9,4 @@ package payments
 // Bump it by one in the same change that alters what any Parse returns or how
 // the ledger counts an amount, a refund, a dispute or tax. A change that does
 // not alter any figure (a new test, a comment) leaves it as it is.
-const RulesVersion = 2
+const RulesVersion = 3

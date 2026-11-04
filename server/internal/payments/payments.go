@@ -87,6 +87,8 @@ type Payment struct {
 	// in the buyer's). Refunds in that currency are scaled to the stored amount.
 	ChargeAmount   int64
 	ChargeCurrency string
+	Product        string // what was bought, as the provider names it (at most ProductMax characters), when the payload says
+	Method         string // how it was paid: one of the Method codes, empty when the payload doesn't say
 }
 
 // Hint attaches facts to a payment known by id.
@@ -101,6 +103,57 @@ type Hint struct {
 	FromPlan       string // upgrade: the plan left and the plan taken, when the payload names them
 	ToPlan         string
 	Country        string // billing country, as Payment.Country
+	Product        string // as Payment.Product
+	Method         string // as Payment.Method
+}
+
+// ProductMax is the most characters of a product name that are kept.
+const ProductMax = 120
+
+// The payment methods a payment can name; anything else a provider sends is
+// MethodOther, and a payload that doesn't say leaves it empty.
+const (
+	MethodCard      = "card"
+	MethodPayPal    = "paypal"
+	MethodApplePay  = "apple_pay"
+	MethodGooglePay = "google_pay"
+	MethodBank      = "bank"
+	MethodCrypto    = "crypto"
+	MethodOther     = "other"
+)
+
+// ProductName is a product name as stored: trimmed, on one line, cut to
+// ProductMax characters.
+func ProductName(s string) string {
+	s = strings.Join(strings.Fields(s), " ")
+	if r := []rune(s); len(r) > ProductMax {
+		s = strings.TrimSpace(string(r[:ProductMax]))
+	}
+	return s
+}
+
+// MethodCode is a provider's payment method as one of the Method codes, or
+// empty when it names none.
+func MethodCode(s string) string {
+	s = strings.ToLower(strings.TrimSpace(s))
+	s = strings.NewReplacer("-", "_", " ", "_").Replace(s)
+	switch s {
+	case "", "unknown", "none", "offline":
+		return ""
+	case "card", "credit", "credit_card", "debit", "debit_card", "visa", "mastercard", "amex", "american_express", "discover", "diners", "jcb", "unionpay", "cartes_bancaires":
+		return MethodCard
+	case "paypal":
+		return MethodPayPal
+	case "apple_pay", "applepay":
+		return MethodApplePay
+	case "google_pay", "googlepay":
+		return MethodGooglePay
+	case "bank", "bank_transfer", "ach", "ach_debit", "sepa", "sepa_debit", "us_bank_account", "ideal", "bancontact", "eps", "giropay", "sofort", "p24", "bancontact_card", "przelewy24", "sepa_bank_transfer", "bank_redirect", "wire", "wire_transfer", "direct_debit", "bacs_debit":
+		return MethodBank
+	case "crypto", "bitcoin", "cryptocurrency":
+		return MethodCrypto
+	}
+	return MethodOther
 }
 
 // CountryCode is a provider's country as an upper-case ISO 3166 alpha-2 code,

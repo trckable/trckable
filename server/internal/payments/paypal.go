@@ -274,6 +274,15 @@ func upID(ls []payPalLink) string {
 	return ""
 }
 
+// payPalSaleMethod is how a sale was paid: one under a billing agreement is
+// charged to the buyer's PayPal account; the webhook says nothing for others.
+func payPalSaleMethod(agreement string) string {
+	if agreement == "" {
+		return ""
+	}
+	return MethodPayPal
+}
+
 func (paypal) Parse(body []byte) (Event, error) {
 	var e struct {
 		ID         string          `json:"id"`
@@ -340,7 +349,7 @@ func (paypal) Parse(body []byte) (Event, error) {
 		if s.BillingAgreement != "" {
 			kind = KindSubscription // later payments of one subscription are recognised by the ledger as renewals
 		}
-		ev.Payments = append(ev.Payments, Payment{ID: s.ID, PaidAt: paid, Currency: cur, Gross: n, Tax: tax, SubscriptionID: s.BillingAgreement, Visitor: vis, Kind: kind})
+		ev.Payments = append(ev.Payments, Payment{ID: s.ID, PaidAt: paid, Currency: cur, Gross: n, Tax: tax, SubscriptionID: s.BillingAgreement, Visitor: vis, Kind: kind, Method: payPalSaleMethod(s.BillingAgreement)})
 		ev.Links = links(vis, "", s.BillingAgreement)
 
 	case "BILLING.SUBSCRIPTION.ACTIVATED":

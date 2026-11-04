@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -56,6 +57,10 @@ func (lemonSqueezy) Parse(body []byte) (Event, error) {
 				CreatedAt      string `json:"created_at"`
 				UpdatedAt      string `json:"updated_at"`
 				TestMode       bool   `json:"test_mode"`
+				CardBrand      string `json:"card_brand"`
+				FirstOrderItem struct {
+					ProductName string `json:"product_name"`
+				} `json:"first_order_item"`
 			} `json:"attributes"`
 		} `json:"data"`
 	}
@@ -77,7 +82,7 @@ func (lemonSqueezy) Parse(body []byte) (Event, error) {
 		id := "order:" + e.Data.ID
 		if paid && a.Total > 0 {
 			ev.Payments = append(ev.Payments, Payment{ID: id, PaidAt: rfc3339ms(a.CreatedAt), Currency: a.Currency, Gross: a.Total, Tax: ptr(a.Tax),
-				CustomerID: cus, Email: a.UserEmail, Visitor: vis})
+				CustomerID: cus, Email: a.UserEmail, Visitor: vis, Product: ProductName(a.FirstOrderItem.ProductName)})
 		}
 		if a.RefundedAmount > 0 {
 			ev.Refunds = append(ev.Refunds, Refund{ID: "cum:" + id, PaymentID: id, Amount: a.RefundedAmount, Currency: a.Currency, Status: RefundSucceeded, At: at, Cumulative: true})
@@ -103,7 +108,7 @@ func (lemonSqueezy) Parse(body []byte) (Event, error) {
 		}
 		if paid && a.Total > 0 {
 			ev.Payments = append(ev.Payments, Payment{ID: id, PaidAt: rfc3339ms(a.CreatedAt), Currency: a.Currency, Gross: a.Total, Tax: ptr(a.Tax),
-				CustomerID: cus, SubscriptionID: sub, Email: a.UserEmail, Visitor: vis, Kind: kind})
+				CustomerID: cus, SubscriptionID: sub, Email: a.UserEmail, Visitor: vis, Kind: kind, Method: lemonMethod(a.CardBrand)})
 		}
 		if a.RefundedAmount > 0 {
 			ev.Refunds = append(ev.Refunds, Refund{ID: "cum:" + id, PaymentID: id, Amount: a.RefundedAmount, Currency: a.Currency, Status: RefundSucceeded, At: at, Cumulative: true})
@@ -111,6 +116,15 @@ func (lemonSqueezy) Parse(body []byte) (Event, error) {
 		ev.Links = links(vis, cus, sub)
 	}
 	return ev, nil
+}
+
+// lemonMethod is how a subscription invoice was paid: Lemon Squeezy names only
+// the card brand, so a brand means a card and no brand says nothing.
+func lemonMethod(brand string) string {
+	if strings.TrimSpace(brand) == "" {
+		return ""
+	}
+	return MethodCard
 }
 
 func idStr(n int64) string {

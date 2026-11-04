@@ -88,9 +88,20 @@ func (paddle) Parse(body []byte) (Event, error) {
 					Name string `json:"name"`
 				} `json:"price"`
 			} `json:"items"`
+			Payments []struct {
+				Status        string `json:"status"`
+				MethodDetails struct {
+					Type string `json:"type"`
+				} `json:"method_details"`
+			} `json:"payments"`
 			BilledAt  string `json:"billed_at"`
 			CreatedAt string `json:"created_at"`
 			Details   struct {
+				LineItems []struct {
+					Product struct {
+						Name string `json:"name"`
+					} `json:"product"`
+				} `json:"line_items"`
 				Totals struct {
 					Tax        amount `json:"tax"`
 					Total      amount `json:"total"`
@@ -122,8 +133,23 @@ func (paddle) Parse(body []byte) (Event, error) {
 			kind = KindSubscription
 		}
 		vis := visitorFrom(t.CustomData)
+		product, method := "", ""
+		if len(t.Details.LineItems) > 0 {
+			product = t.Details.LineItems[0].Product.Name
+		}
+		// Attempts are listed newest first: the one that was captured paid.
+		if len(t.Payments) > 0 {
+			pay := t.Payments[0]
+			for _, a := range t.Payments {
+				if a.Status == "captured" {
+					pay = a
+					break
+				}
+			}
+			method = MethodCode(pay.MethodDetails.Type)
+		}
 		ev.Payments = append(ev.Payments, Payment{ID: t.ID, PaidAt: paidAt, Currency: t.CurrencyCode, Gross: gross, Tax: ptr(int64(t.Details.Totals.Tax)),
-			CustomerID: t.CustomerID, SubscriptionID: t.SubscriptionID, Visitor: vis, Kind: kind})
+			CustomerID: t.CustomerID, SubscriptionID: t.SubscriptionID, Visitor: vis, Kind: kind, Product: ProductName(product), Method: method})
 		ev.Links = links(vis, t.CustomerID, t.SubscriptionID)
 		// The plan taken, when the transaction lists a single price.
 		if kind == KindUpgrade && len(t.Items) == 1 && t.Items[0].Price.Name != "" {
