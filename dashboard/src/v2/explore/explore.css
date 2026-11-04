@@ -28,7 +28,9 @@
 .mk button.sale.xbtn{width:100%;text-align:left}
 .mk button.sale.xbtn:hover{background:var(--mk-faintbg3)}
 .mk .sale .xdt{width:8px;height:8px;border-radius:50%;flex:none}
-.mk .sale .xface{width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;font-weight:700}
+.mk .sale .xface{width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--mk-faintbg3);color:var(--mk-muted);overflow:hidden}
+.mk .sale .rt{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:0;text-align:right}
+.mk .sale .rt .mk-quiet{font-size:11px;white-space:nowrap}
 .mk .xsec{flex-wrap:wrap;gap:var(--mk-s2)}
 .mk .xsec>span:last-child{display:flex;align-items:center;gap:var(--mk-s3)}
 .mk .xlg{display:flex;flex-wrap:wrap;gap:var(--mk-s3);font-size:12px;color:var(--mk-muted)}

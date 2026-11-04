@@ -58,11 +58,11 @@ export function mapFunnel(o: { cur: FunnelResult[]; prev?: FunnelResult[]; repor
 // ---- sales ----
 
 /** What the period earned, by kind: there is no list of single sales to read, so each kind is one line. The kinds are what was paid and the refunds come off as their own line, so the lines add up to the period's net revenue (what the Briefing and the buyers say). A period with no payment says there are none. */
-export function mapSales(money: Money | undefined, label: string): Sales {
-  if (!money) return { state: 'connect', sales: [] }
+export function mapSales(money: Money | undefined, label: string, countries: Sales['countries'] = []): Sales {
+  if (!money) return { state: 'connect', sales: [], orders: 0, customers: 0, refunds: 0, countries }
   const one = (kind: Sale['kind'], text: string, amt: number): Sale[] => (amt === 0 ? [] : [{ kind, label: text, from: '', country: '', device: '', when: label, amt }])
   const sales = [...one('new', copy.salesNew, money.new_gross), ...one('upgrade', copy.salesUpgrade, money.upgrade_gross), ...one('renewal', copy.salesRenewal, money.renewal_gross), ...one('refund', copy.salesRefund, -money.refunds)]
-  return { state: money.payments === 0 && sales.length === 0 ? 'none' : 'ok', sales }
+  return { state: money.payments === 0 && sales.length === 0 ? 'none' : 'ok', sales, orders: money.payments, customers: money.customers, refunds: money.refunds, countries }
 }
 
 // ---- search ----
@@ -176,4 +176,10 @@ export function mapMentions(list: ApiMention[], tz: string, today: string): Ment
     .filter((m) => m.kind !== 'comment')
     .toSorted((a, b) => b.posted_at - a.posted_at)
     .map((m) => ({ title: m.title, src: SOURCES[m.source] ?? m.host, pts: m.points ?? null, cm: m.comments ?? null, when: whenOf(m.posted_at, tz, today) }))
+}
+
+/** The money by country from the payments list's own split (every payment counts); a shared link cannot read it, so the report's visits-that-paid split stands in. */
+export function salesCountries(split: { country: string; revenue: number }[] | undefined, dims: { value: string; revenue?: number }[] = []): Sales['countries'] {
+  if (split) return split.filter((r) => r.revenue > 0).map((r) => ({ code: r.country.toUpperCase(), amt: r.revenue }))
+  return dims.filter((r) => (r.revenue ?? 0) > 0 && /^[A-Za-z]{2}$/.test(r.value)).map((r) => ({ code: r.value.toUpperCase(), amt: r.revenue ?? 0 }))
 }

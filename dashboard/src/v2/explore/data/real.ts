@@ -3,6 +3,7 @@
 // saved views. Each section is asked for when it is opened.
 import { api, cachedReport, call, rangeQS, type Filter, type Report, type ReportQuery, type WebVitals } from '../../../lib/api'
 import { more } from '../../../lib/apiMore'
+import { extrasApi } from '../../../features/extras/extrasApi'
 import { brandOf } from '../../../lib/brandIcons'
 import { channelLabel } from '../../../lib/palette'
 import { copy } from '../copy'
@@ -31,7 +32,7 @@ import { scaled, withSourceUsuals } from './scaled'
 import { mapEngage, mapOverview, mapTable, mapTops, optionsOf, type Uptime } from './mapReport'
 import { mapSlowCost } from './slowCost'
 import { mapNetworks } from './networks'
-import { mapBots, mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, mapSearch, mapSpeed } from './mapSections'
+import { mapBots, mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, salesCountries, mapSearch, mapSpeed } from './mapSections'
 import type { DataCtx, Meta, TabData } from './useExplore'
 import { dateFmt } from '../../../lib/format'
 
@@ -175,7 +176,8 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal, soon?: 
     }
     case 'sales': {
       const report = await cachedReport(c.site.id, q, undefined, signal)
-      return mapSales(report.current.money, fmtRange(c.range, today))
+      const split = await extrasApi.payments(c.site.id, q, 0, 1).then((d) => d.countries, () => undefined)
+      return mapSales(report.current.money, fmtRange(c.range, today), salesCountries(split, report.current.revenue_dims?.country ?? []))
     }
     case 'search': {
       const conn = await more.searchConsole(c.site.id)

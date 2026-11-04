@@ -65,7 +65,7 @@ func (a *API) payList(customers bool) http.HandlerFunc {
 			page = a.withNames(r.Context(), r.PathValue("site"), page)
 			w.Header().Set("Cache-Control", "no-store")
 		}
-		out := map[string]any{"total": page.Total, "currency": page.Currency, "exponent": page.Exponent}
+		out := map[string]any{"total": page.Total, "currency": page.Currency, "exponent": page.Exponent, "countries": orEmpty(page.Countries)}
 		if customers {
 			out["customers"] = orEmpty(page.Customers)
 		} else {

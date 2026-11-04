@@ -56,3 +56,10 @@ export function spanOf(ms: number): Span {
 
 /** What a row is called: the provider's name, else "Customer". */
 export const customerName = (name: string | undefined, fallback: string) => (name && name.trim() ? name.trim() : fallback)
+
+/** Up to two capital letters from a name or an email's start: the buyer's mark when there is no flag or face. */
+export function initialsOf(name: string): string {
+  const parts = name.replace(/@.*$/, '').split(/[\s._-]+/).filter(Boolean)
+  const letters = parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0] ?? '').slice(0, 2)
+  return letters.toUpperCase() || '·'
+}

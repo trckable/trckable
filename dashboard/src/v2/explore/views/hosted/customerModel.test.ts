@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { customerName, licenseView, spanOf } from './customerModel'
+import { customerName, initialsOf, licenseView, spanOf } from './customerModel'
 
 const key = { last4: 'D3F9', status: 'active', used: 2, limit: 3, created_at: '2026-10-01T10:00:00Z', activations: ['2026-10-05T10:00:00Z', '2026-10-02T10:00:00Z'] }
 
@@ -40,5 +40,13 @@ describe('customerName', () => {
     expect(customerName(' Ada ', 'Customer')).toBe('Ada')
     expect(customerName('', 'Customer')).toBe('Customer')
     expect(customerName(undefined, 'Customer')).toBe('Customer')
+  })
+})
+
+describe('initialsOf', () => {
+  it('takes the first and last name, or the start of one word, never nothing', () => {
+    expect(initialsOf('Ada Lovelace')).toBe('AL')
+    expect(initialsOf('ada@example.com')).toBe('AD')
+    expect(initialsOf('')).toBe('·')
   })
 })
