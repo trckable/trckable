@@ -22,6 +22,8 @@ import { ManualSetup } from './PaymentsManual'
 import { ProviderMark } from './ProviderMark'
 import './Payments.css'
 
+const RECALCULATE = 'Recalculate payments'
+
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'CHF', 'JPY', 'SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'INR', 'BRL', 'MXN', 'SGD', 'NZD', 'ZAR']
 
 type Data = { connections: PayConnection[]; providers: Provider[]; webhook_base: string; key_error?: string }
@@ -275,7 +277,7 @@ function ConnectionRow({ site, c, provider, onChange }: { site: Site; c: PayConn
                 if (ok) onChange()
               }}
             >
-              Recalculate payments
+              {RECALCULATE}
             </button>
           )}
           <button type="button" role="menuitem" onClick={() => {
