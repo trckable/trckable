@@ -88,6 +88,7 @@ type Payment struct {
 	ChargeAmount   int64
 	ChargeCurrency string
 	Product        string // what was bought, as the provider names it (at most ProductMax characters), when the payload says
+	ProductID      string // the provider's id of what was bought, when the payload carries only that: the name is read from the provider's API (Namer)
 	Method         string // how it was paid: one of the Method codes, empty when the payload doesn't say
 }
 

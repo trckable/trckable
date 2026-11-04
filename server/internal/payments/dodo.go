@@ -85,6 +85,7 @@ func (dodo) Parse(body []byte) (Event, error) {
 			ProductCart        []struct {
 				Name        string `json:"name"`
 				ProductName string `json:"product_name"`
+				ProductID   string `json:"product_id"`
 			} `json:"product_cart"`
 			Customer struct {
 				CustomerID string `json:"customer_id"`
@@ -113,13 +114,19 @@ func (dodo) Parse(body []byte) (Event, error) {
 			}
 		}
 		vis := visitorFrom(p.Metadata)
-		product := p.ProductName
-		if product == "" && len(p.ProductCart) > 0 {
-			product = cmp.Or(p.ProductCart[0].Name, p.ProductCart[0].ProductName)
+		product, productID := p.ProductName, ""
+		if len(p.ProductCart) > 0 {
+			if product == "" {
+				product = cmp.Or(p.ProductCart[0].Name, p.ProductCart[0].ProductName)
+			}
+			productID = p.ProductCart[0].ProductID
+		}
+		if product != "" {
+			productID = ""
 		}
 		ev.Payments = append(ev.Payments, Payment{ID: p.PaymentID, PaidAt: rfc3339ms(p.CreatedAt), Currency: cur, Gross: gross, Tax: tax,
 			CustomerID: p.Customer.CustomerID, SubscriptionID: p.SubscriptionID, Email: p.Customer.Email, Visitor: vis, Kind: kind,
-			ChargeAmount: chargeAmount, ChargeCurrency: chargeCur, Product: ProductName(product), Method: MethodCode(p.PaymentMethod)})
+			ChargeAmount: chargeAmount, ChargeCurrency: chargeCur, Product: ProductName(product), ProductID: productID, Method: MethodCode(p.PaymentMethod)})
 		ev.Links = links(vis, p.Customer.CustomerID, p.SubscriptionID)
 
 	case "refund.succeeded", "refund.failed":
