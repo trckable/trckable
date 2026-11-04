@@ -17,7 +17,6 @@ export interface PanelState {
   kind: string
   sdim: 'q' | 'p'
   edit: boolean
-  addAs: 'step' | 'goal'
   custom: Custom
   menu: MenuKey | null
   manage: boolean
@@ -26,7 +25,7 @@ export interface PanelState {
 const FIRST = 12
 
 export function usePanelState(ask: Ask) {
-  const [s, setS] = useState<PanelState>(() => ({ n: FIRST, kind: '', sdim: 'q', edit: false, addAs: 'step', custom: { steps: [], goals: [] }, menu: null, manage: false }))
+  const [s, setS] = useState<PanelState>(() => ({ n: FIRST, kind: '', sdim: 'q', edit: false, custom: { steps: [], goals: [] }, menu: null, manage: false }))
   const set = useCallback((p: Partial<PanelState>) => setS((o) => ({ ...o, ...p })), [])
   const { tab, filters } = ask
   const narrow = (next: Filter[], more: Partial<PanelState> = {}) => {
@@ -54,8 +53,8 @@ export function usePanelState(ask: Ask) {
     apply: (next: Filter[]) => narrow(next, { menu: null }),
     menu: (k: MenuKey) => set({ menu: s.menu === k ? null : k, manage: false }),
     shut: () => set({ menu: null, manage: false }),
-    addCustom: (page: string) => {
-      const key = s.addAs === 'goal' ? 'goals' : 'steps'
+    addCustom: (page: string, kind: 'step' | 'goal') => {
+      const key = kind === 'goal' ? 'goals' : 'steps'
       if (s.custom[key].includes(page)) return
       set({ custom: { ...s.custom, [key]: [...s.custom[key], page] } })
     },
