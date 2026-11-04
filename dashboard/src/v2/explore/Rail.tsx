@@ -3,22 +3,38 @@ import { Fragment, useEffect, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { XIco } from '../ui/XIcons'
 import { copy } from './copy'
-import { groups } from './sections'
-import type { Connected, Section } from './types'
+import { groups, listedTabs, TABS } from './sections'
+import { TAB_ICONS } from './tabIcons'
+import type { Connected, Section, Tab } from './types'
 
-export function Rail({ section, conn, onPick }: { section: Section; conn: Connected; onPick: (s: Section) => void }) {
+export function Rail({ section, tab, conn, onPick, onTab }: { section: Section; tab: Tab; conn: Connected; onPick: (s: Section) => void; onTab: (t: Tab) => void }) {
   return (
     <nav className="xrail" aria-label={copy.railLabel}>
       {groups().map((g) => (
         <Fragment key={g.key}>
           <div className="xgl">{copy.groups[g.key]}</div>
-          {g.items.map((k) => (
-            <button key={k} type="button" data-xsec={k} className={`xri${k === section ? ' on' : ''}`} aria-current={k === section ? 'page' : undefined} title={copy.names[k][0]} onClick={() => onPick(k)}>
-              <XIco name={k} />
-              <span className="nm">{copy.names[k][0]}</span>
-              {k === 'sales' && !conn.rev && <span className="xtag">{copy.connectTag}</span>}
-            </button>
-          ))}
+          {g.items.map((k) => {
+            const subs = listedTabs(k)
+            const on = k === section && !subs.includes(tab)
+            return (
+              <Fragment key={k}>
+                <button type="button" data-xsec={k} className={`xri${on ? ' on' : ''}`} aria-current={on ? 'page' : undefined} title={copy.names[k][0]} onClick={() => (subs.length > 0 ? onTab(TABS[k][0]) : onPick(k))}>
+                  <XIco name={k} />
+                  <span className="nm">{copy.names[k][0]}</span>
+                  {k === 'sales' && !conn.rev && <span className="xtag">{copy.connectTag}</span>}
+                </button>
+                {subs.map((t) => {
+                  const Ico = TAB_ICONS[t]
+                  return (
+                    <button key={t} type="button" data-xtab={t} className={`xri sub${t === tab ? ' on' : ''}`} aria-current={t === tab ? 'page' : undefined} onClick={() => onTab(t)}>
+                      {Ico && <Ico className="xi" strokeWidth={1.7} aria-hidden="true" />}
+                      <span className="nm">{copy.sub[t]}</span>
+                    </button>
+                  )
+                })}
+              </Fragment>
+            )
+          })}
         </Fragment>
       ))}
     </nav>

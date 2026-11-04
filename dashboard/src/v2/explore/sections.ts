@@ -51,6 +51,10 @@ export const groups = () => ALL_GROUPS.map((g) => ({ ...g, items: g.items.filter
 
 export const sectionOf = (t: Tab): Section => SECTIONS.find((s) => EVERY[s].includes(t)) ?? 'overview'
 
+/** Tables the section list shows as their own entries, under their section (the section's own tab strip is unchanged). */
+const LISTED: Partial<Record<Section, Tab[]>> = { sales: ['payments', 'customers'] }
+export const listedTabs = (s: Section): Tab[] => (LISTED[s] ?? []).filter(offered)
+
 /** Where a section leads next: the sections that answer the question it raises. */
 const RELATED: Record<Section, Section[]> = {
   changed: ['overview', 'pages', 'sources'],
