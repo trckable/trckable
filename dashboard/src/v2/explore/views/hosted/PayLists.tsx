@@ -1,7 +1,8 @@
 // The Sales section's two lists of money: every payment, newest first, and every paying customer, the biggest spender first.
-// Each row names the visitor (their face and name, as in a journey) and the source that brought them; a tap opens their journey.
+// Each row names the visitor (their face and name, as in a journey) or, with no visit linked, the name the payment provider gives the buyer, and the source that brought them.
+// A payment with a visit opens their journey; a customer opens a sheet (with a way on to their journey).
 // Read a page at a time ("Show more"). Signed-in people only: the shared link never reaches these.
-import { useEffect, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Avatar } from '../../../../components/visitor/Avatar'
 import { Loading } from '../../../../components/loading/Loading'
 import type { ReportQuery } from '../../../../lib/api'
@@ -15,6 +16,10 @@ import { XEmpty, XError, XSec } from '../../../ui/XBits'
 import { Flag } from '../../../ui/Flag'
 import { copy } from '../../copy'
 import type { XCtx } from '../../ctx'
+import { customerName } from './customerModel'
+
+const LINK_DOCS = 'https://trckable.com/docs/gumroad-paypal/#link-a-checkout-to-the-visit'
+const CustomerSheet = lazy(() => import('./CustomerSheet'))
 
 type Page<T> = { rows: T[]; total: number }
 
@@ -109,6 +114,12 @@ function More({ shown, list }: { shown: number; list: { total: number; busy: boo
   )
 }
 
+/** A buyer with no visit: the provider's name or email, "Customer" when it has them without one, else unknown. */
+function strangerName(r: { name?: string; known?: boolean }): string {
+  if (!r.known) return copy.pay.unknown
+  return customerName(r.name, copy.pay.customer)
+}
+
 /** What a payment is called: a refund marks it, else a renewal, else new. */
 function tagOf(p: Payment): 'refund' | 'renewal' | 'new' {
   if (p.refunded) return 'refund'
@@ -128,11 +139,19 @@ export function Payments({ x, query, onPick }: { x: XCtx; query: ReportQuery; on
         <Row key={p.id} visitor={p.visitor} onPick={onPick}>
           <span className="gn">
             <div>
-              {p.visitor ? nameOf(p.visitor) : copy.pay.unknown} <span className={`mk-tag ${tagOf(p)}`}>{copy.tags[tagOf(p)]}</span>
+              {p.visitor ? nameOf(p.visitor) : strangerName(p)} <span className={`mk-tag ${tagOf(p)}`}>{copy.tags[tagOf(p)]}</span>
             </div>
             <div className="mk-quiet" style={{ fontSize: '12px' }} title={fmtDayTime(Date.parse(p.at))}>
               {[sourceOf(p.channel, p.referrer), ago(now - Date.parse(p.at)), p.refunded ? copy.pay.refunded(x.money(p.refunded)) : ''].filter(Boolean).join(' · ')}
             </div>
+            {!p.visitor && (
+              <div className="mk-quiet" style={{ fontSize: '12px' }}>
+                {copy.pay.unlinked} ·{' '}
+                <a href={LINK_DOCS} target="_blank" rel="noreferrer">
+                  {copy.pay.unlinkedHow}
+                </a>
+              </div>
+            )}
           </span>
           <span className={`amt ${p.refunded ? 'neg' : ''}`}>+{x.money(p.amount)}</span>
         </Row>
@@ -144,6 +163,7 @@ export function Payments({ x, query, onPick }: { x: XCtx; query: ReportQuery; on
 
 export function Customers({ x, query, onPick }: { x: XCtx; query: ReportQuery; onPick: (visitor: string) => void }) {
   const list = usePaged(keyOf(x, query, 'cust'), (offset) => extrasApi.customers(x.site.id, query, offset).then((d) => ({ rows: d.customers, total: d.total })))
+  const [open, setOpen] = useState<Customer | null>(null)
   if (list.failed && !list.rows) return <XError title={copy.pay.failed} onRetry={list.retry} />
   if (!list.rows) return <Loading height={164} />
   if (list.rows.length === 0) return <XEmpty title={copy.pay.noneCustomers} hint="" />
@@ -151,11 +171,12 @@ export function Customers({ x, query, onPick }: { x: XCtx; query: ReportQuery; o
     <>
       <XSec a={copy.pay.customers(list.total)} b={copy.pay.byTotal} />
       {list.rows.map((c: Customer) => (
-        <Row key={c.id} visitor={c.visitor} onPick={onPick}>
+        <button key={c.id} type="button" className="sale xbtn" title={copy.pay.openCustomer} onClick={() => setOpen(c)}>
+          <Who visitor={c.visitor} />
           <span className="gn">
-            <div>{c.visitor ? nameOf(c.visitor) : copy.pay.unknown}</div>
+            <div>{c.visitor ? nameOf(c.visitor) : strangerName(c)}</div>
             <div className="mk-quiet" style={{ fontSize: '12px' }}>
-              {[copy.pay.orders(c.orders), sourceOf(c.channel, c.referrer)].filter(Boolean).join(' · ')}
+              {[copy.pay.orders(c.orders), sourceOf(c.channel, c.referrer), c.visitor ? '' : copy.pay.unlinked].filter(Boolean).join(' · ')}
             </div>
             <div className="mk-quiet" style={{ fontSize: '12px' }}>
               {copy.pay.firstSeen(fmtDate(Date.parse(c.first_seen)))} · {copy.pay.lastOrder(fmtDate(Date.parse(c.last_order)))}
@@ -167,9 +188,23 @@ export function Customers({ x, query, onPick }: { x: XCtx; query: ReportQuery; o
             )}
           </span>
           <span className="amt">{x.money(c.spent)}</span>
-        </Row>
+        </button>
       ))}
       <More shown={list.rows.length} list={list} />
+      {open && (
+        <Suspense fallback={null}>
+          <CustomerSheet
+            x={x}
+            query={query}
+            c={open}
+            onClose={() => setOpen(null)}
+            onJourney={(v) => {
+              setOpen(null)
+              onPick(v)
+            }}
+          />
+        </Suspense>
+      )}
     </>
   )
 }

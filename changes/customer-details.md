@@ -1,0 +1,1 @@
+Sales shows the name your payment provider has for a buyer who has no visit linked, instead of "Unknown visitor", and a customer opens a sheet with their payments and, where the provider keeps license keys (Dodo Payments), each key's status, activations and devices, read live and never stored.

@@ -58,6 +58,7 @@ type Service struct {
 	mu       sync.Mutex // serialises ledger writes (processor, reprocess)
 	bg       sync.WaitGroup
 	syncing  atomic.Bool // a SyncAll is going: the next tick skips
+	details  detailsCache
 
 	reprocessFn func(ctx context.Context, site string) (int, error) // tests replace Reprocess
 }

@@ -14,3 +14,7 @@ With Form submissions on, a field marked `data-trckable-keep="site"` adds what w
 ## Internet provider
 
 Where the instance has the network database, a visit also keeps the name of the visitor's internet provider ("Deutsche Telekom"), under the same switch as region and city: with Region and city off, or in cookieless mode, it is not kept. The privacy report and the privacy-policy paragraph say so. See [networks](networks.md).
+
+## Customer names and license keys
+
+Sales → Customers shows a buyer's name and email, and the license keys they hold, when your payment provider can say (Dodo Payments today). They are read live from your provider when you open the list or a customer, kept in the server's memory for ten minutes and never stored: trckable keeps only the keyed hash of the email it always kept. A license key is shown by its last four characters only. Signed-in people see them; API keys and shared links never do.

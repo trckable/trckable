@@ -16,7 +16,9 @@ import (
 // belongs to so a row opens their journey. ?n= is the page size (at most 50),
 // ?offset= where it starts (at most 10000). Needs a payment provider connected.
 // Readable by every signed-in member and by API keys that may read, as the
-// journey is; never a name, an email or a customer key. The public share link
+// journey is; never an email or a customer key. A signed-in person (not a key)
+// also gets the provider's name for a buyer with no known visit, read live and
+// never stored (the first 25 such buyers of a page). The public share link
 // serves neither. The first page is kept like a report; later pages are read
 // each time.
 func (a *API) payList(customers bool) http.HandlerFunc {
@@ -59,6 +61,10 @@ func (a *API) payList(customers bool) http.HandlerFunc {
 			return
 		}
 		page := v.(*query.PayPage)
+		if hasPerson(r) {
+			page = a.withNames(r.Context(), r.PathValue("site"), page)
+			w.Header().Set("Cache-Control", "no-store")
+		}
 		out := map[string]any{"total": page.Total, "currency": page.Currency, "exponent": page.Exponent}
 		if customers {
 			out["customers"] = orEmpty(page.Customers)
