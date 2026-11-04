@@ -2409,6 +2409,7 @@ export default {
   'v2explore.emptyTabShort': 'Dit is een korte periode: de laatste 30 dagen laten meer zien van wat mensen deden.',
   'v2explore.emptyTabLater': 'Het vult zich zodra bezoekers komen.',
   'v2explore.widen': 'Toon de laatste 30 dagen',
+  'v2explore.railToggle': 'Tabellen onder Verkoop tonen of verbergen',
   'v2explore.emptySearch': 'Nog niet genoeg verkeer van Google',
   'v2explore.emptySearchHint': 'Zoekgegevens verschijnen zodra deze periode meer bezoeken van Google heeft.',
   'v2explore.emptySpeed': 'Nog geen pagina gemeten',

@@ -8,8 +8,10 @@ import { useJourney } from '../../features/journey/useJourney'
 import type { Site } from '../../lib/api'
 import { nameOf } from '../../lib/visitor'
 import { SummaryCards, type SumItem } from '../ui/SummaryCards'
-import { fmtDuration, fmtInt } from '../../lib/format'
+import { fmtInt } from '../../lib/format'
+import { fmtSpan } from './eventModel'
 import { pageIcon } from '../explore/pageIcon'
+import '../../features/journey/Journey.css'
 import { dayOf } from './days'
 import { eventCopy as t } from './eventCopy'
 import { trailTo, visitAt } from './eventModel'
@@ -23,7 +25,7 @@ const DAY = 86400
 function tiles(first: number, visits: number, pages: number, at: number): SumItem[] {
   const since = Math.round((at * 1000 - first) / 1000)
   const out: SumItem[] = []
-  if (first > 0 && since > 0) out.push({ key: 'since', label: t.toConvert, val: fmtDuration(since) })
+  if (first > 0 && since > 0) out.push({ key: 'since', label: t.toConvert, val: fmtSpan(since) })
   if (visits > 0) out.push({ key: 'visits', label: t.visitsBefore, val: fmtInt(visits) })
   if (pages > 0) out.push({ key: 'pages', label: t.pagesSeen, val: fmtInt(pages) })
   return out
@@ -66,7 +68,7 @@ function Visit({ n, site, visitor }: { n: Notice; site: Site; visitor: string })
           <SourceChip channel={v.channel} referrer={v.referrer} />
         </dd>
       </dl>
-      <div className="mk" style={{ background: 'transparent', minHeight: 0, height: 'auto', flex: 'none' }}>
+      <div className="mk ev-sum">
         <SummaryCards items={tiles(state.story.identity.firstSeen, v.number - 1, trail.seen, at)} />
       </div>
       {trail.before.length > 0 && (

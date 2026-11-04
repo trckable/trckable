@@ -156,3 +156,23 @@
   outline-offset: 2px;
   border-radius: 6px;
 }
+
+/* The goal's tile in the title: the section tile's colour and round gradient (Explore's sidebar), sized for the line. */
+.ev-head .ev-tile {
+  --c: #e9668f;
+  box-sizing: content-box;
+  width: 15px;
+  height: 15px;
+  padding: 6px;
+  margin-inline-end: 10px;
+  vertical-align: middle;
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--c) 92%, #fff), color-mix(in srgb, var(--c) 72%, #000));
+}
+/* The tiles sit on the card as they are: the shared row, without the page's own padding or ground. */
+.ev-sum.mk {
+  max-width: none;
+  padding: 0;
+  background: none;
+}
