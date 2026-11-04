@@ -988,7 +988,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .xsub button svg{flex:none;opacity:.7}
 .mk .xsub button.on svg{opacity:1}
 .mk .xcp-t{display:inline-flex;align-items:center;gap:8px}
-.mk .xcp-chip{--c:#6c7a91;display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;border-radius:7px;color:#fff;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,#fff),color-mix(in srgb,var(--c) 72%,#000))}
+.mk .xcp-chip{--c:#6c7a91;display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;border-radius:7px;color:var(--mk-tile-ink);background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,var(--mk-tile-lift)),color-mix(in srgb,var(--c) 72%,var(--mk-tile-shade)))}
 .mk [data-xcard=pages] .xcp-chip,.mk [data-xcard=paths] .xcp-chip,.mk [data-xcard=entries] .xcp-chip,.mk [data-xcard=exits] .xcp-chip,.mk [data-xcard=groups] .xcp-chip,.mk [data-xcard=sells] .xcp-chip{--c:#2fb8c6}
 .mk .mk-bar .xrowico{width:16px;height:16px;display:inline-block;vertical-align:-3px;margin-right:6px;color:var(--mk-text)}
 .mk .xsub[data-more=end]{-webkit-mask-image:linear-gradient(90deg,currentColor calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,currentColor calc(100% - 28px),transparent)}
