@@ -132,7 +132,10 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
           <div className="lhead">
             <span key={beat} className={`mk-pulse ${pulseClass}`} />
             <span className="lt">{copy.live}</span>
-            <span className="mk-quiet lm">{copy.window(at(now))}</span>
+            <span className="mk-quiet lm">
+              <span className="lm-long">{copy.window(at(now))}</span>
+              <span className="lm-short">{copy.windowShort(at(now))}</span>
+            </span>
             <ChartSwitch mode={mode} onChange={pick} />
             {bar}
           </div>

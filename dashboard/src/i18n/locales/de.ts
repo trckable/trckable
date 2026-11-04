@@ -2867,6 +2867,7 @@ export default {
   'v2.live.viewsAt': (n: number) => n === 1 ? '1 Aufruf' : `${int(n)} Aufrufe`,
   'v2.live.minsLabel': (n: number) => `Aufrufe pro Minute in den letzten 30 Minuten: ${n} insgesamt`,
   'v2.live.window': (at: string) => `Letzte 30 Minuten · ${at}`,
+  'v2.live.windowShort': (at: string) => `Letzte 30 Min. · ${at}`,
   'v2.live.onlineNow': 'Gerade auf der Seite',
   'v2.live.visitors30': 'Gekommen in den letzten 30 Min.',
   'v2.live.change': (up: boolean, pct: number) => `${up ? '+' : '−'}${pct} % gegenüber den 30 Minuten davor`,

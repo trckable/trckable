@@ -10,6 +10,7 @@ export const copy = defineCopy('v2.live', {
   peopleLabel: 'People on the site each minute over the last 30 minutes',
   minsLabel: (n: number) => `Views per minute over the last 30 minutes: ${n} in all`,
   window: (at: string) => `Last 30 minutes · ${at}`,
+  windowShort: (at: string) => `Last 30 min · ${at}`,
   onlineNow: 'On the site now',
   onlineWord: 'online now',
   visitors30: 'Came in the last 30 min',
