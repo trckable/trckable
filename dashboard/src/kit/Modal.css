@@ -3,7 +3,7 @@
 .modal-back {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.25);
   /* The prefixed line first: the build's CSS minifier drops the plain one when it comes before it. */
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
