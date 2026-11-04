@@ -14,6 +14,7 @@ import type { XCtx } from '../ctx'
 import { ChangedChart } from './chartChunk'
 import type { Overview as Model } from '../types'
 import { Downtime } from './Downtime'
+import { XKcs } from '../../ui/XKcs'
 import { MoverChips, MoverList, nameOf } from './Movers'
 
 const NoteDialog = lazy(() => import('../../../components/NoteDialog').then((m) => ({ default: m.NoteDialog })))
@@ -77,6 +78,38 @@ function ChartSlot({ x, report, notes, onNotes }: { x: XCtx; report: Report; not
   )
 }
 
+/** Too little to compare: the period's own numbers, the one line that says why there is no comparison, and the one way to widen the period. */
+function Plain({ x, d }: { x: XCtx; d: Model }) {
+  return (
+    <>
+      <XKcs items={d.kcs} />
+      <p className="xchg-few">{copy.fewHere}</p>
+      {x.widen && (
+        <button type="button" className="xb" onClick={x.widen}>
+          {copy.widen}
+        </button>
+      )}
+    </>
+  )
+}
+
+/** The biggest changes of every table: which number to explain, and the ranked list. */
+function Biggest({ metrics, metric, setMetric, list, fmt }: { metrics: Metric[]; metric: Metric; setMetric: (m: Metric) => void; list: Cause[]; fmt: (n: number) => string }) {
+  return (
+    <>
+      <div className="xsec xchg-head">
+        <span>{copy.biggestChanges}<em className="xmv-note">{copy.moversNote}</em></span>
+        <span className="xchg-kinds" role="group" aria-label={copy.explainNumber}>
+          {metrics.map((m) => (
+            <button key={m} type="button" aria-pressed={m === metric} className={m === metric ? 'on' : ''} onClick={() => setMetric(m)}>{copy.metric[m]}</button>
+          ))}
+        </span>
+      </div>
+      {list.length > 0 ? <MoverList list={list} fmt={fmt} /> : <div className="mk-quiet">{copy.nothingMoved}</div>}
+    </>
+  )
+}
+
 export function Changed({ x, d }: { x: XCtx; d: Model & { report: Report } }) {
   const cur = { ...d.report.current, series: d.report.current.series ?? [] }
   const prev = d.report.previous ? { ...d.report.previous, series: d.report.previous.series ?? [] } : undefined
@@ -89,20 +122,13 @@ export function Changed({ x, d }: { x: XCtx; d: Model & { report: Report } }) {
   const w = prev ? explain(cur, prev, metric) : null
   const list = prev ? movers(cur, prev, metric) : []
   const fmt = (n: number) => (metric === 'revenue' ? x.money(n) : fmtInt(n))
+  const few = w?.kind === 'few' && list.length === 0
   return (
     <>
       <p className="xchg-say">{w ? sentence(copy.metric[metric], w.kind, w.pct, w.diff, w.causes[0]) : copy.sayChoose}</p>
       <MoverChips list={w?.causes ?? []} metric={metric} fmt={fmt} />
       {chart && <ChartSlot x={x} report={d.report} notes={notes.notes} onNotes={() => setSheet(true)} />}
-      <div className="xsec xchg-head">
-        <span>{copy.biggestChanges}<em className="xmv-note">{copy.moversNote}</em></span>
-        <span className="xchg-kinds" role="group" aria-label={copy.explainNumber}>
-          {metrics.map((m) => (
-            <button key={m} type="button" aria-pressed={m === metric} className={m === metric ? 'on' : ''} onClick={() => setMetric(m)}>{copy.metric[m]}</button>
-          ))}
-        </span>
-      </div>
-      {list.length > 0 ? <MoverList list={list} fmt={fmt} /> : <div className="mk-quiet">{copy.nothingMoved}</div>}
+      {few ? <Plain x={x} d={d} /> : <Biggest metrics={metrics} metric={metric} setMetric={setMetric} list={list} fmt={fmt} />}
       <Downtime down={d.down} />
       <Tools site={x.site} to={x.query.to} notes={notes} sheet={sheet} setSheet={setSheet} />
     </>

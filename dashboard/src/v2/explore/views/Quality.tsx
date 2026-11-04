@@ -5,7 +5,7 @@ import { midTruncate } from '../../../features/signals/surge'
 import { fmtInt } from '../../../lib/format'
 import type { Quality as Model } from '../types'
 import { copy } from '../copy'
-import { openExplore } from '../open'
+import { openThing } from '../thing'
 import { ENOUGH, rateFor, SLOW_MS, type QualityRow } from '../data/quality'
 
 const NONE = '–'
@@ -37,7 +37,7 @@ export function Quality({ d }: { d: Model }) {
         {d.rows.map((r) => {
           const rate = rateFor(r, d.main)
           return (
-            <button key={r.value} type="button" className="xrw" onClick={() => openExplore('sources', [r.value ? { dim: 'referrer', value: r.value } : { dim: 'channel', value: 'Direct' }])}>
+            <button key={r.value} type="button" className="xrw" onClick={() => openThing({ kind: 'source', channel: 'Direct', referrer: r.value })}>
               <span className="xq-name"><SourceMark channel={r.channel || 'Direct'} referrer={r.value || undefined} size={18} />{r.name}{r.channel && <small>{r.channel}</small>}</span>
               <span className="mk-n xq-col">{fmtInt(r.people)}</span>
               <span className="mono xqual-page xq-col" title={r.page ?? undefined}>{r.page ? midTruncate(r.page, 28) : NONE}</span>

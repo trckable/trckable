@@ -61,9 +61,9 @@ export function JourneyDialog({ site, visitor, query, onClose, onFilter }: { sit
   const state = useJourney(site.id, visitor, query)
   const titleId = useId()
   const pick: OnFilter | undefined = onFilter
-    ? (dim, value) => {
+    ? (thing, at) => {
         onClose()
-        onFilter(dim, value)
+        onFilter(thing, at)
       }
     : undefined
   return (

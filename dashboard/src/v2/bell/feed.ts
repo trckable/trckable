@@ -31,6 +31,8 @@ export interface FeedRow {
   /** Goal and signup: the visitor who reached it last (the journey's id) and the second they did. */
   visitor?: string
   seen?: number
+  /** Goal and signup: the goal's own key. */
+  goal?: string
   /** Mention: the post's own address. */
   link?: string
   milestone?: Milestone

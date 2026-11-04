@@ -14,7 +14,7 @@ import { countryName, fmtDuration } from '../../../lib/format'
 import { useNarrow } from '../../../lib/useNarrow'
 import { channelLabel } from '../../../lib/palette'
 import { nameOf } from '../../../lib/visitor'
-import { openExplore } from '../../explore/open'
+import { openThing } from '../../explore/thing'
 import { copy } from '../copy'
 import { GlobeCrowd } from './GlobeCrowd'
 import { agoOf } from './geo'
@@ -30,7 +30,7 @@ const ago = (ms: number) => {
 }
 const sourceOf = (r: Row) => (r.referrer ? r.referrer.replace(/^www\./, '') : channelLabel(r.channel || 'Direct'))
 const pageOf = (r: Row) => (r.kind === 'goal' ? `${jcopy.goal}: ${r.label || r.goal}` : (r.path ?? '/'))
-const explore = (r: Row) => r.kind === 'pageview' && r.path && openExplore('pages', [{ dim: 'page', value: r.path }])
+const explore = (r: Row) => r.kind === 'pageview' && r.path && openThing({ kind: 'page', value: r.path }, { visit: { at: r.ts } })
 
 interface Extra {
   os?: string

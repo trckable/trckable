@@ -169,10 +169,10 @@ export function seeInData(s: Surge, tz: string, now = new Date()): Partial<ViewS
 }
 
 /** What the bell's "See it in Explore" does: the moment's days opened in Explore's panel, narrowed to what was asked for (the source that sent them). */
-export const seeInExplore = (s: Surge, tz: string, filters: Filter[], now = new Date()): Partial<ViewState> => ({ ...seeInData(s, tz, now), surge: undefined, xf: filters })
+export const seeInExplore = (s: Surge, tz: string, filters: Filter[], now = new Date()): Partial<ViewState> => ({ ...seeInData(s, tz, now), surge: undefined, xf: filters, ...(filters.length ? { xp: 'overview' } : {}) })
 
-/** What "Only Google" does from the card: the same moment, narrowed to the source that sent most of them. */
-export const seeSourceData = (s: Surge, tz: string, only: Filter, now = new Date()): Partial<ViewState> => ({ ...seeInData(s, tz, now), xf: [only] })
+/** What "Only Google" does from the card: the same moment, narrowed to the source that sent most of them, on the report that tells about that source. */
+export const seeSourceData = (s: Surge, tz: string, only: Filter, now = new Date()): Partial<ViewState> => ({ ...seeInData(s, tz, now), xp: 'overview', xf: [only] })
 
 /** When the moment was: "since 16:38", or "16:38–17:20" once it is over. */
 export const busySpan = (s: Surge, tz: string): string => (s.ended ? t.spanBetween(clock(s.started, tz), clock(s.ended, tz)) : t.spanSince(clock(s.started, tz)))

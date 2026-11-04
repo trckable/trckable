@@ -289,6 +289,7 @@ export const copy = defineCopy('v2explore', {
   metric: { visitors: 'People', pageviews: 'Pageviews', signups: 'Signups', revenue: 'Revenue' },
   theHomePage: 'the home page',
   sayFew: 'Too little yet to compare fairly.',
+  fewHere: 'Here are the numbers for this period. A longer period gives something to compare.',
   sayFlat: 'No real change.',
   sayMix: (name: string) => `${name} held, but where they come from changed.`,
   sayNew: (name: string) => `${name} are new this period.`,

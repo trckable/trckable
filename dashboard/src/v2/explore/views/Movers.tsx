@@ -6,15 +6,9 @@ import { Flag } from '../../ui/Flag'
 import { useV2Extras } from '../../slots'
 import type { Cause, Dim, Metric } from '../../why/model'
 import { copy } from '../copy'
-import { openExplore } from '../open'
-import type { Tab } from '../types'
+import { openThing, type Thing } from '../thing'
 
-const OPEN: Record<Dim, { tab: Tab; filter: string }> = {
-  referrer: { tab: 'sources', filter: 'referrer' },
-  entry_page: { tab: 'pages', filter: 'page' },
-  country: { tab: 'countries', filter: 'country' },
-  device: { tab: 'devices', filter: 'device' },
-}
+const KIND = { referrer: 'referrer', entry_page: 'page', country: 'country', device: 'device' } as const satisfies Record<Dim, Thing['kind']>
 
 /** A cause in words: no value is Direct, and the bare slash is the home page. */
 export function nameOf(v: string): string {
@@ -22,7 +16,7 @@ export function nameOf(v: string): string {
   return v ? midTruncate(v, 36) : copy.direct
 }
 
-const pick = (c: Cause) => openExplore(OPEN[c.dim].tab, [{ dim: OPEN[c.dim].filter, value: c.value }])
+const pick = (c: Cause) => openThing(c.dim === 'referrer' && !c.value ? { kind: 'channel', value: 'Direct' } : { kind: KIND[c.dim], value: c.value })
 const signed = (n: number, fmt: (n: number) => string) => `${n < 0 ? '−' : '+'}${fmt(Math.abs(n))}`
 const kind = (c: Cause) => (c.diff < 0 ? 'dn' : 'up')
 /** A country by its name beside its flag; anything else as it is called. */

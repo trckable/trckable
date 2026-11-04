@@ -41,7 +41,7 @@ function Props({ props }: { props: Prop[] }) {
 function PageBody({ n, here, onFilter }: { n: PageNode; here: boolean; onFilter?: OnFilter }) {
   const short = truncateMiddle(n.path || '/')
   const path = onFilter ? (
-    <button type="button" className="jr-path num" title={copy.filterPage(n.path)} onClick={() => onFilter('page', n.path)}>
+    <button type="button" className="jr-path num" title={copy.filterPage(n.path)} onClick={() => onFilter({ kind: 'page', value: n.path }, n.at)}>
       {short}
     </button>
   ) : (
