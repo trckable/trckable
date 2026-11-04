@@ -3,6 +3,7 @@
 // never What changed, and a click that comes from a visit or from Live opens a period that holds that visit.
 import type { Filter } from '../../lib/api'
 import { diffDays, todayIn, type ISODate } from '../../lib/dates'
+import { browserZone } from '../../lib/format'
 import { setView, type ViewState } from '../../lib/url'
 import { openExplore } from './open'
 import type { Tab } from './types'
@@ -30,7 +31,7 @@ export function targetOf(t: Thing, tab?: Tab): Target {
   return { tab: tab ?? (t.kind === 'goal' ? 'funnels' : 'overview'), filters: [filterOf(t)] }
 }
 
-const here = () => Intl.DateTimeFormat().resolvedOptions().timeZone
+const here = browserZone
 
 /** The period that holds a moment (unix ms) as of `now`: Today when it was today and Today has enough in it, otherwise the smallest of the last 7, 30 or 90 days, or 12 months, that holds it. */
 export function periodHolding(at: number, tz: string, todayVisitors?: number, now = new Date()): Pick<ViewState, 'period'> {
