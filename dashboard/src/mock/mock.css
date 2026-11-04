@@ -1437,6 +1437,8 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 
 /* Live's sample revenue card sits in an auto-width column and its size containment shrinks it to nothing: give it room so its Connect button is never cut. */
 .mk .lbottom.money .lrev{min-width:240px}
+/* Revenue today: its label and amount centred in their column. */
+.mk .lrev:has(.lmoney){display:flex;flex-direction:column;align-items:center;text-align:center}
 /* The account menu is a sheet on a phone: its desktop place (below the button) must not win over the sheet's bottom edge whichever stylesheet loaded last. */
 @media (--xs){:root .mk .hd .account-menu .pop.menu.more-menu{top:auto}}
 
