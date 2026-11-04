@@ -21,7 +21,7 @@ export function useSettingsAddress(sites: Site[] | null, path: string, params: U
     }
     if (open) return
     const site = routeOf(sites, path).site
-    if (site) openSettings(site, named, undefined, { replace: true })
+    if (site) openSettings(site, named)
   }, [sites, path, named, open])
   return open
 }

@@ -19,7 +19,9 @@ export function useBootAddress({ state, sites, gated, path, params, shared }: Wh
     const s = sites.find((x) => x.id === params.get('site'))
     if (!s) return
     const { tab, extra } = settingsTarget(params.get('tab'))
-    openSettings(s, tab, params.get('visitor') ? { ...extra, visitor: params.get('visitor') ?? '' } : extra, { replace: true })
+    // The old address is no page: the site's dashboard takes its place in the history, and the dialog opens on it.
+    navigate('/' + encodeURIComponent(s.domain), { replace: true })
+    openSettings(s, tab, params.get('visitor') ? { ...extra, visitor: params.get('visitor') ?? '' } : extra)
   }, [state, sites, gated, path, params])
 
   // Keep the address bar honest about the screen shown.

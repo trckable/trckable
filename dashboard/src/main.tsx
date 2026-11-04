@@ -176,16 +176,10 @@ function App() {
     page = null; // an unknown address (/settings among them), on its way to the main dashboard
   else
     page = (
-      <>
-        <SiteHost key={site.id} site={site} sites={boot.sites} />
-        {/* Settings open over the dashboard they belong to. */}
-        {settingsOpen?.site === site.id && (
-          <Suspense fallback={null}>
-            <SettingsDialog sites={boot.sites} site={site} tab={settingsOpen.tab} onSites={refreshSites} />
-          </Suspense>
-        )}
-      </>
+      <SiteHost key={site.id} site={site} sites={boot.sites} />
     );
+  // Settings open over whichever page is showing (a dashboard, a sub page, All sites), which stays as it is.
+  const settingsSite = settingsOpen && boot.sites.find((s) => s.id === settingsOpen.site);
   return (
     <div className="app">
       {page}
@@ -198,6 +192,11 @@ function App() {
       <ShortcutsHost />
       <ConfirmHost />
       <Toasts /><Hints />
+      {settingsOpen && settingsSite && (
+        <Suspense fallback={null}>
+          <SettingsDialog sites={boot.sites} site={settingsSite} tab={settingsOpen.tab} onSites={refreshSites} />
+        </Suspense>
+      )}
       {accountTab && (
         <Suspense fallback={null}>
         <AccountDialog
