@@ -11,6 +11,7 @@ import { copy } from '../copy'
 import type { XCtx } from '../ctx'
 import { keyOf, layoutFlow, NODE_WIDTH, STEPS } from '../data/paths'
 import { valueOf } from '../filters'
+import { pageIcon } from '../pageIcon'
 import type { PathRoute, Paths } from '../types'
 
 /** Routes the list shows before "Show all". */
@@ -24,6 +25,10 @@ const state = (sel: string | null, key: string): string => {
   if (sel === null) return ''
   return sel === key ? ' on' : ' dim'
 }
+
+/** The page icon's size in the flow, and the gap after it. */
+const ICON = 14
+const ICON_GAP = 4
 
 const name = (p: string): string => (p === '/' ? copy.homePage : p)
 
@@ -68,10 +73,14 @@ function Flow({ d, sel, onPick }: { d: Paths; sel: string | null; onPick: (r: Pa
           ))}
           {flow.nodes.map((n) => {
             const last = n.col === flow.cols - 1
+            const Ico = n.page === null ? null : pageIcon(n.page)
+            const at = last ? n.x - 6 : n.x + NODE_WIDTH + 6
+            const shift = Ico ? ICON + ICON_GAP : 0
             return (
               <g key={n.key} className={n.page === null ? 'xpf-node left' : 'xpf-node'}>
                 <rect x={n.x} y={n.y} width={NODE_WIDTH} height={n.h} rx={2} />
-                <text x={last ? n.x - 6 : n.x + NODE_WIDTH + 6} y={n.y + n.h / 2} dy="0.35em" textAnchor={last ? 'end' : 'start'}>
+                {Ico && <Ico x={last ? at - ICON : at} y={n.y + n.h / 2 - ICON / 2} size={ICON} aria-hidden="true" />}
+                <text x={last ? at - shift : at + shift} y={n.y + n.h / 2} dy="0.35em" textAnchor={last ? 'end' : 'start'}>
                   {n.page === null ? copy.pathsLeft : midTruncate(name(n.page), 22)}
                 </text>
               </g>

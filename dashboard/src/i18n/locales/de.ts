@@ -3041,7 +3041,7 @@ export default {
   'setup.own.title': 'Deine eigenen Besuche ausgeschlossen',
   'setup.own.sub': 'Damit deine Klicks nicht zählen',
   'setup.own.go': 'Meine IP hinzufügen',
-  'setup.locale.title': 'Zeitzone und Währung',
+  'setup.locale.title': 'Zeit & Währung',
   'setup.locale.right': 'Stimmt so',
   'setup.locale.change': 'Ändern',
   'setup.goal.title': 'Ein Ziel gesetzt',

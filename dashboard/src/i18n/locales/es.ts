@@ -3044,7 +3044,7 @@ export default {
   'setup.own.title': 'Tus propias visitas excluidas',
   'setup.own.sub': 'Para que tus clics no cuenten',
   'setup.own.go': 'Añadir mi IP',
-  'setup.locale.title': 'Zona horaria y moneda',
+  'setup.locale.title': 'Hora y moneda',
   'setup.locale.right': 'Está bien',
   'setup.locale.change': 'Cambiar',
   'setup.goal.title': 'Un objetivo marcado',

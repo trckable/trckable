@@ -3051,7 +3051,7 @@ export default {
   'setup.own.title': 'Le tue visite escluse',
   'setup.own.sub': 'Così i tuoi clic non contano',
   'setup.own.go': 'Aggiungi il mio IP',
-  'setup.locale.title': 'Fuso orario e valuta',
+  'setup.locale.title': 'Ora e valuta',
   'setup.locale.right': 'Va bene',
   'setup.locale.change': 'Cambia',
   'setup.goal.title': 'Un obiettivo impostato',

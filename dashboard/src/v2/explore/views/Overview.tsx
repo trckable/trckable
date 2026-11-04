@@ -9,6 +9,7 @@ import { XKcs, XKcsPlain } from '../../ui/XKcs'
 import { XShape } from '../../ui/XShape'
 import { PeopleTable } from './PeopleTable'
 import { rowWords } from '../pointer'
+import { rowMark } from '../rowMarks'
 
 export function Overview({ x, d }: { x: XCtx; d: Model }) {
   if (!x.site.last_event_at && d.of === 0 && x.filters.length === 0) return <Waiting site={x.site} />
@@ -27,7 +28,7 @@ export function Overview({ x, d }: { x: XCtx; d: Model }) {
       <div className="x2">
         <div>
           <XSec a={copy.topPages} b={rowWords().filter} />
-          <PeopleTable x={x} rows={d.pages} head={copy.heads.page} mono selected={valueOf(x.filters, 'page')} onPick={(r) => x.pick('page', r.val)} dim="page" limit={5} of={d.of} onAll={x.showAll} go={{ label: copy.showAllPages, section: 'pages', run: () => x.goTo('pages') }} />
+          <PeopleTable x={x} rows={d.pages} head={copy.heads.page} mono mark={(r) => rowMark('pages', r)} selected={valueOf(x.filters, 'page')} onPick={(r) => x.pick('page', r.val)} dim="page" limit={5} of={d.of} onAll={x.showAll} go={{ label: copy.showAllPages, section: 'pages', run: () => x.goTo('pages') }} />
         </div>
         <div>
           <XSec a={copy.topSources} />
