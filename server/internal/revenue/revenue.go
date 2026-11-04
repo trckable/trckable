@@ -58,6 +58,8 @@ type Service struct {
 	mu       sync.Mutex // serialises ledger writes (processor, reprocess)
 	bg       sync.WaitGroup
 	syncing  atomic.Bool // a SyncAll is going: the next tick skips
+
+	reprocessFn func(ctx context.Context, site string) (int, error) // tests replace Reprocess
 }
 
 // Wait blocks until background work started by Connect (the backfill) is
@@ -552,6 +554,8 @@ func (s *Service) Run(ctx context.Context) {
 	defer syncT.Stop()
 	defer fxT.Stop()
 	go s.refreshFX(ctx)
+	// After an upgrade that changed how amounts are counted, read them again.
+	go s.RecalcIfStale(ctx)
 	go func() { // first reconciliation shortly after boot
 		select {
 		case <-ctx.Done():
@@ -759,7 +763,7 @@ func (s *Service) Reprocess(ctx context.Context, site string) (int, error) {
 		}
 	}
 	rows, err := tx.QueryContext(ctx, `SELECT i.body, c.provider, c.id, c.mode FROM pay_inbox i JOIN pay_connections c ON c.id = i.connection_id
-		WHERE c.site_id = ? ORDER BY i.id`, site)
+		WHERE c.site_id = ? AND i.processed_at IS NOT NULL ORDER BY i.id`, site)
 	if err != nil {
 		return 0, err
 	}
