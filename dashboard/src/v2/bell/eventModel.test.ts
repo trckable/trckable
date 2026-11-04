@@ -37,7 +37,7 @@ describe('visitAt', () => {
 describe('trailTo', () => {
   const v = visit('v', 0, 100_000, [page('/', 1000), page('/blog', 5000), page('/pricing', 9000), page('/signup', 20_000)])
   it('is the page it happened on and the way there, oldest first', () => {
-    expect(trailTo(v, 10)).toEqual({ page: '/pricing', before: ['/', '/blog'] })
+    expect(trailTo(v, 10)).toEqual({ page: '/pricing', before: ['/', '/blog'], seen: 3 })
   })
   it('keeps only the last few pages', () => {
     const long = visit('l', 0, 1e6, Array.from({ length: 9 }, (_, i) => page(`/p${i}`, 1000 * (i + 1))))

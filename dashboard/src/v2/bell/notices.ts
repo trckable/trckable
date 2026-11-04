@@ -50,6 +50,8 @@ export interface Notice {
   /** The visitor behind a goal or a signup (the journey's id) and the second it happened: the event card shows the visit. */
   visitor?: string
   exact?: number
+  /** The goal's own key, for a goal or a signup: the filter that narrows Explore to it. */
+  goal?: string
   /** A mention's post. */
   link?: string
   /** Several notices drawn as one row (busy moments of different sites at the same time), newest first. */
@@ -118,10 +120,10 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number): Notice[] 
         break
       }
       case 'signup':
-        out.push({ ...base, kind: 'signup', title: copy.signups(r.count ?? 1), sub: '', visitor: r.visitor, exact: r.seen })
+        out.push({ ...base, kind: 'signup', title: copy.signups(r.count ?? 1), sub: '', visitor: r.visitor, exact: r.seen, goal: r.goal })
         break
       case 'goal':
-        out.push({ ...base, kind: 'goal', title: copy.goalCount(goalName(undefined, r.text ?? ''), r.count ?? 1), sub: copy.goalSub, visitor: r.visitor, exact: r.seen })
+        out.push({ ...base, kind: 'goal', title: copy.goalCount(goalName(undefined, r.text ?? ''), r.count ?? 1), sub: copy.goalSub, visitor: r.visitor, exact: r.seen, goal: r.goal })
         break
       case 'alert': {
         const kind = (r.what ?? '') as AlertKind

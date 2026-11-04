@@ -59,6 +59,8 @@ type bellRow struct {
 	// Goal and signup: the visitor who reached it last (base 36, as the journey takes it) and the second they did.
 	Visitor string `json:"visitor,omitempty"`
 	Seen    int64  `json:"seen,omitempty"`
+	// Goal and signup: the goal's own key, the value Explore narrows by.
+	Goal string `json:"goal,omitempty"`
 	// Mention: the post's own address.
 	Link string `json:"link,omitempty"`
 	// Milestone: the row as the milestone page tells it.
@@ -370,7 +372,7 @@ func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from in
 				}
 				row := rows[id]
 				if row == nil {
-					row = &bellRow{ID: id, Kind: kind, Site: s.ID, At: at, Text: g.Goal}
+					row = &bellRow{ID: id, Kind: kind, Site: s.ID, At: at, Text: g.Goal, Goal: g.Goal}
 					if n := names[g.Goal]; n != "" {
 						row.Text = n
 					}

@@ -137,7 +137,7 @@ describe('Explore landed on the moment', () => {
     expect(busySpan(surge, 'UTC')).toBe(`since ${clock(surge.started, 'UTC')}`)
   })
   it('narrows the same days to the source that sent them', () => {
-    expect(seeSourceData(over, 'UTC', { dim: 'referrer', value: 'l.facebook.com' }, now)).toEqual({ ...seeInData(over, 'UTC', now), xf: [{ dim: 'referrer', value: 'l.facebook.com' }] })
+    expect(seeSourceData(over, 'UTC', { dim: 'referrer', value: 'l.facebook.com' }, now)).toEqual({ ...seeInData(over, 'UTC', now), xp: 'overview', xf: [{ dim: 'referrer', value: 'l.facebook.com' }] })
   })
 })
 

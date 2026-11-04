@@ -20,7 +20,7 @@ import { useKeymap } from '../lib/keys'
 import { useLiveCount, useSiteDown } from '../features/live/liveLink'
 import { filterOps } from '../features/header/filterOps'
 import { DomainSwitch } from '../features/header/HeaderTools'
-import { filterFrom } from '../features/journey/filterFrom'
+import { openThing } from '../v2/explore/thing'
 import { GuideModal } from '../features/bounce/b'
 import { rangeQS } from '../lib/api'
 import { MilestonesSlot } from '../features/milestones/MilestonesSlot'
@@ -164,7 +164,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
       {!liveView && !waiting && <DomainSwitch seen={cur?.hosts ? cur.dims.hostname : null} filters={view.xf ?? view.filters} site={site.domain} narrow={narrow} onPick={filterOps.domain} />}
       {journey && mods !== null && shows(mods, 'cards', 'journey') && (
         <Suspense fallback={null}>
-          <JourneyDialog site={site} visitor={journey} query={query} onClose={() => setJourney(null)} onFilter={(dim, value) => filterFrom(view, dim, value)} />
+          <JourneyDialog site={site} visitor={journey} query={query} onClose={() => setJourney(null)} onFilter={(thing, at) => openThing(thing, { visit: { at, tz: site.timezone, todayVisitors: view.period === 'today' ? cur?.kpis.visitors : undefined } })} />
         </Suspense>
       )}
       {addGoals && shows(mods, 'cards', 'goals') && (

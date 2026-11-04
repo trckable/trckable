@@ -11,6 +11,7 @@ import { useLoad } from '../data/useLoad'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
 import type { HostedTab } from '../types'
+import { openThing } from '../thing'
 import { Lock } from './Lock'
 import type { ChartTab } from './hosted/Charts'
 
@@ -72,9 +73,9 @@ export function Hosted({ tab, x }: { tab: HostedTab; x: XCtx }) {
           visitor={visitor}
           query={q}
           onClose={() => setVisitor(null)}
-          onFilter={(dim, value) => {
+          onFilter={(thing, at) => {
             setVisitor(null)
-            x.pick(dim, value)
+            openThing(thing, { visit: { at, tz: x.site.timezone } })
           }}
         />
       )}

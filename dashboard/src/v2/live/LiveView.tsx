@@ -166,7 +166,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
           <div className={`lbottom${data.revenue || askRevenue || holdRevenue ? ' money' : ''}`}>
             <div className="lsrc">
               <span className="ll">{copy.topSources}</span>
-              <SourceRows parts={src.parts} color={colorOf} />
+              <SourceRows parts={src.parts} color={colorOf} timezone={timezone} todayVisitors={data?.today?.visitors ?? 0} />
             </div>
             {data.revenue ? (
               <div className="lrev">
