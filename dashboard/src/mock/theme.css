@@ -339,3 +339,10 @@ body:has(.modal-back) .mk .tabbar{z-index:30}
     background: var(--mk-line);
   }
 }
+
+/* The section tile (Explore's sidebar, the bell's goal): white ink, lifted and shaded toward white and black; the same in both themes. */
+:root {
+  --mk-tile-ink: #fff;
+  --mk-tile-lift: #fff;
+  --mk-tile-shade: #000;
+}

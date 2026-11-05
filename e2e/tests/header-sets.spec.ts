@@ -113,7 +113,11 @@ for (const [width, scheme] of [[1440, 'dark'], [390, 'dark'], [2000, 'light']] a
       checked++
       const bad = await page.evaluate(() =>
         [...document.querySelectorAll<HTMLElement>('#xp .xrail, .xdrawer-box, #xpBody')].flatMap((box) => {
-          const rects = [...box.querySelectorAll<HTMLElement>('.xrail button, .xdrawer-box button, .xsec button')].map((b) => ({ b, r: b.getBoundingClientRect() })).filter((x) => x.r.width > 0)
+          // The fold's chevron sits inside its section's row by design, and a closed fold's items are not drawn.
+          const rects = [...box.querySelectorAll<HTMLElement>('.xrail button, .xdrawer-box button, .xsec button')]
+            .filter((b) => !b.classList.contains('xchev') && getComputedStyle(b).visibility !== 'hidden')
+            .map((b) => ({ b, r: b.getBoundingClientRect() }))
+            .filter((x) => x.r.width > 0)
           const out: string[] = []
           rects.forEach(({ b, r }, i) => {
             if (b.scrollWidth > b.clientWidth + 1) out.push(`clipped: ${b.textContent}`)

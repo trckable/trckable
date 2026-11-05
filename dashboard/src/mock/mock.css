@@ -988,7 +988,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .xsub button svg{flex:none;opacity:.7}
 .mk .xsub button.on svg{opacity:1}
 .mk .xcp-t{display:inline-flex;align-items:center;gap:8px}
-.mk .xcp-chip{--c:#6c7a91;display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;border-radius:7px;color:#fff;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,#fff),color-mix(in srgb,var(--c) 72%,#000))}
+.mk .xcp-chip{--c:#6c7a91;display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;border-radius:7px;color:var(--mk-tile-ink);background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,var(--mk-tile-lift)),color-mix(in srgb,var(--c) 72%,var(--mk-tile-shade)))}
 .mk [data-xcard=pages] .xcp-chip,.mk [data-xcard=paths] .xcp-chip,.mk [data-xcard=entries] .xcp-chip,.mk [data-xcard=exits] .xcp-chip,.mk [data-xcard=groups] .xcp-chip,.mk [data-xcard=sells] .xcp-chip{--c:#2fb8c6}
 .mk .mk-bar .xrowico{width:16px;height:16px;display:inline-block;vertical-align:-3px;margin-right:6px;color:var(--mk-text)}
 .mk .xsub[data-more=end]{-webkit-mask-image:linear-gradient(90deg,currentColor calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,currentColor calc(100% - 28px),transparent)}
@@ -1464,12 +1464,13 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on:not(.xpage),.
 .mk .hd[data-stuck=true] #views .spill::after{opacity:1}
 .mk .hd::before{inset:0 var(--mk-s4);border-top-color:transparent;border-top-left-radius:0;border-top-right-radius:0}
 .mk .hd{transition:padding .25s ease,margin-bottom .25s ease}
-.mk .hd .logo,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:height .25s ease,width .25s ease}
+.mk .hd .logo,.mk .hd .sitegrp,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:height .25s ease,width .25s ease}
 .mk .hd[data-stuck=true]{--mk-h:28px;--hpb:10px;padding-top:var(--hpb);margin-bottom:22px}
 .mk .hd[data-stuck=true] .logo{width:28px;height:28px}
+.mk .hd[data-stuck=true] .sitegrp{height:32px}
 @media (pointer:coarse){.mk .hd[data-stuck=true]{--mk-h:40px}}
 }
-@media (prefers-reduced-motion:reduce){.mk .hd #views .spill::after,.mk .hd,.mk .hd .logo,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:none}}
+@media (prefers-reduced-motion:reduce){.mk .hd #views .spill::after,.mk .hd,.mk .hd .logo,.mk .hd .sitegrp,.mk .hd .mk-chip,.mk .hd .ib,.mk .hd .pill,.mk .hd .mk-seg,.mk .hd .account-menu .account-btn{transition:none}}
 
 /* The site chip carries the site's mark; its dot shows only for a site that is down (red) or not receiving data (amber), never green. Live keeps the one pulsing dot, still when motion is reduced. */
 .mk .sitechip .mkwrap{position:relative;display:inline-flex;flex:none}

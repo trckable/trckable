@@ -35,9 +35,9 @@ for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark
     await page.goto(`${API}/${STEADY_DOMAIN}?view=briefing&period=30d&v=`)
     const chips = page.locator('.chwrap .moment-mark')
     await expect(chips.first()).toBeVisible({ timeout: 20_000 })
-    // One pill each: 20px high, no two touching.
+    // One pill each: 16px high, no two touching.
     const boxes = await chips.evaluateAll((els) => els.map((e) => { const b = e.getBoundingClientRect(); return { l: b.left, r: b.right, h: b.height } }))
-    for (const b of boxes) expect(Math.round(b.h)).toBe(20)
+    for (const b of boxes) expect(Math.round(b.h)).toBe(16)
     const sorted = [...boxes].sort((a, b) => a.l - b.l)
     for (let i = 1; i < sorted.length; i++) expect(sorted[i].l).toBeGreaterThan(sorted[i - 1].r)
     await expect(page.locator('.moment-guide')).toHaveCount(0)

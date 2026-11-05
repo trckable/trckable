@@ -64,7 +64,8 @@ test('a card that rests on a source wears its seal in Explore', async ({ page })
   await stripeSale(page.request, site.id)
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto(`${API}/${site.domain}?view=briefing&period=30d&x=sales`)
-  await expect(page.locator('#xp .vf-chip')).toContainText('Payments verified', { timeout: 20_000 })
+  // The seal is a small mark by the number; its name is its label.
+  await expect(page.locator('#xp .vf-mark').first()).toHaveAttribute('aria-label', /Payments verified/, { timeout: 20_000 })
 })
 
 test('AI & search keeps Google beside the assistants and the crawlers', async ({ page }) => {
@@ -147,5 +148,5 @@ test('a note is a flag on the chart, with its words', async ({ page }) => {
   const made = await page.request.post(`${API}/api/v1/sites/${id}/annotations`, { headers: H, data: { day: day(2), text } })
   expect(made.status()).toBe(201)
   await open(page, '?view=briefing&period=7d')
-  await expect(page.locator(`svg#chart path[fill="var(--mk-amber)"] title`).filter({ hasText: text })).toHaveCount(1, { timeout: 20_000 })
+  await expect(page.locator(`svg#chart g:has(> circle[fill="var(--mk-amber)"]) > title`).filter({ hasText: text })).toHaveCount(1, { timeout: 20_000 })
 })

@@ -19,7 +19,9 @@ function files(dir) {
   })
 }
 
-const mine = [join(root, 'mock/mock.css'), ...files(join(root, 'v2')).filter((f) => !f.endsWith('.css') || f.includes('/v2/'))]
+// Brand marks keep the brand's own colours in both themes: these files are exempt.
+const BRAND = new Set(['v2/explore/rowMarks.tsx'])
+const mine = [join(root, 'mock/mock.css'), ...files(join(root, 'v2')).filter((f) => (!f.endsWith('.css') || f.includes('/v2/')) && !BRAND.has(f.slice(root.length)))]
 let count = 0
 const where = []
 for (const f of mine) {
