@@ -4,11 +4,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
-	"strings"
 	"time"
-
-	"golang.org/x/text/language"
-	"golang.org/x/text/language/display"
 
 	"github.com/trckable/trckable/server/internal/cards"
 	"github.com/trckable/trckable/server/internal/query"
@@ -184,15 +180,6 @@ func duration(s float64) string {
 		return fmt.Sprintf("%dm %02ds", sec/60, sec%60)
 	}
 	return fmt.Sprintf("%dh %02dm", sec/3600, sec%3600/60)
-}
-
-// countryName is a country's English name from its two-letter code; "" for anything else.
-func countryName(code string) string {
-	r, err := language.ParseRegion(strings.ToUpper(code))
-	if err != nil || !r.IsCountry() {
-		return ""
-	}
-	return display.English.Regions().Name(r)
 }
 
 func cardWordsOf(res *query.Result, domain string, p cardPeriod, metric string) cardNumbers {
