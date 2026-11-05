@@ -63,6 +63,17 @@ if (!existsSync(LABELS)) {
   )
   writeFileSync(LABELS, rows.join('\n') + '\n')
 }
+// A site AI reached: assistants that sent people (and the pages they landed on), for ai-search.spec.ts, which adds the crawlers' hits itself.
+export const AI_DOMAIN = 'ai.example'
+const AI = join(DATA, 'ai.ndjson')
+if (!existsSync(AI)) {
+  const noon = Math.floor(Date.now() / 86_400_000) * 86_400_000 + 12 * 3_600_000
+  const from = { 'chatgpt.com': 14, 'claude.ai': 5, 'perplexity.ai': 3, 'google.com': 6 }
+  const rows = Object.entries(from).flatMap(([ref, n]) =>
+    Array.from({ length: n }, (_, i) => JSON.stringify({ ts: new Date(noon - (1 + (i % 3)) * 86_400_000 + i * 60_000).toISOString(), path: i % 2 ? '/pricing' : '/guide', visitor: `ai-${ref}-${i}`, referrer: ref })),
+  )
+  writeFileSync(AI, rows.join('\n') + '\n')
+}
 // Every figure counted by hand (truth-fixture.ts): explore-truth.spec.ts holds each table of Explore to it.
 export { TRUTH_DOMAIN }
 const TRUTH = join(DATA, 'truth.ndjson')
@@ -102,7 +113,7 @@ export default defineConfig({
   webServer: [
     {
       // example.com first (the suite's own site), then the one with history, then the server.
-      command: `sh -c '"${BIN}" site add example.com && "${BIN}" site add ${HISTORY_DOMAIN} && "${BIN}" import ${HISTORY_DOMAIN} "${HISTORY}" && "${BIN}" site add ${BUSY_DOMAIN} && "${BIN}" import ${BUSY_DOMAIN} "${BUSY}" && "${BIN}" site add ${STEADY_DOMAIN} && "${BIN}" import ${STEADY_DOMAIN} "${STEADY}" && "${BIN}" site add ${LABELS_DOMAIN} && "${BIN}" import ${LABELS_DOMAIN} "${LABELS}" && "${BIN}" site add ${TRUTH_DOMAIN} && "${BIN}" import ${TRUTH_DOMAIN} "${TRUTH}" && exec "${BIN}" serve'`,
+      command: `sh -c '"${BIN}" site add example.com && "${BIN}" site add ${HISTORY_DOMAIN} && "${BIN}" import ${HISTORY_DOMAIN} "${HISTORY}" && "${BIN}" site add ${BUSY_DOMAIN} && "${BIN}" import ${BUSY_DOMAIN} "${BUSY}" && "${BIN}" site add ${STEADY_DOMAIN} && "${BIN}" import ${STEADY_DOMAIN} "${STEADY}" && "${BIN}" site add ${LABELS_DOMAIN} && "${BIN}" import ${LABELS_DOMAIN} "${LABELS}" && "${BIN}" site add ${AI_DOMAIN} && "${BIN}" import ${AI_DOMAIN} "${AI}" && "${BIN}" site add ${TRUTH_DOMAIN} && "${BIN}" import ${TRUTH_DOMAIN} "${TRUTH}" && exec "${BIN}" serve'`,
       url: `${API}/readyz`,
       reuseExistingServer: false,
       env: {
