@@ -48,3 +48,15 @@ func TestLeaderboardClips(t *testing.T) {
 		t.Fatalf("not clipped: %d", len(got))
 	}
 }
+
+// The overview's chart has no edge: it is clear at both sides of the card, full inside, and has no end dot.
+func TestOverviewChartFades(t *testing.T) {
+	if fade(0) != 0 || fade(W) != 0 || fade(W/2) != 1 || fade(fadeEdge*W/2) <= 0 || fade(fadeEdge*W/2) >= 1 {
+		t.Fatalf("fade: %v %v %v", fade(0), fade(W), fade(W/2))
+	}
+	s := Spec{Template: "overview", Theme: Themes["dark"], Series: []float64{1, 5, 3, 9}}
+	svg, err := s.SVG()
+	if err != nil || strings.Contains(string(svg), "<circle cx=\"1") && strings.Contains(string(svg), `r="6"`) {
+		t.Fatalf("end dot: %v", err)
+	}
+}

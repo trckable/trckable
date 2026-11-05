@@ -2,6 +2,7 @@ package cards
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"text/template"
 	"unicode"
@@ -9,7 +10,7 @@ import (
 
 // The overview: the site's own numbers are the picture. A tile with the
 // site's initial and its domain on top, the period at the far end, the big
-// number with its change, a smooth area of the period, up to three small
+// number with its change, a smooth area of the period across the whole card, fading out at both sides, up to three small
 // numbers under it, and trckable small in the corner. Words: Domain, Foot
 // (the period), Big, Label, Change and Dir, Series, Stats.
 
@@ -38,24 +39,53 @@ func init() {
 	Templates["overview"] = Template{Shapes: shapes, Runs: overviewRuns, Data: overviewChart}
 }
 
-// smooth is a line through the points as cubic curves (Catmull-Rom), never
-// leaving the band between lo and hi, so a peak does not overshoot.
-func smooth(xs, ys []float64, lo, hi float64) string {
-	var b strings.Builder
-	fmt.Fprintf(&b, "M%.1f %.1f", xs[0], ys[0])
+// fadeEdge is how much of the card's width, at each side, the chart fades over.
+const fadeEdge = 0.09
+
+// curve is the points as a smooth line (Catmull-Rom curves, never leaving the
+// band between lo and hi, so a peak does not overshoot), sampled every couple
+// of pixels: x only ever grows along it.
+func curve(xs, ys []float64, lo, hi float64) (px, py []float64) {
+	px, py = []float64{xs[0]}, []float64{ys[0]}
+	at := func(k int) int { return min(max(k, 0), len(xs)-1) }
 	for i := 0; i < len(xs)-1; i++ {
-		at := func(k int) int { return min(max(k, 0), len(xs)-1) }
 		p0, p1, p2, p3 := at(i-1), i, i+1, at(i+2)
-		c1y := min(max(ys[p1]+(ys[p2]-ys[p0])/6, lo), hi)
-		c2y := min(max(ys[p2]-(ys[p3]-ys[p1])/6, lo), hi)
-		fmt.Fprintf(&b, "C%.1f %.1f %.1f %.1f %.1f %.1f", xs[p1]+(xs[p2]-xs[p0])/6, c1y, xs[p2]-(xs[p3]-xs[p1])/6, c2y, xs[p2], ys[p2])
+		ax, bx := xs[p1]+(xs[p2]-xs[p0])/6, xs[p2]-(xs[p3]-xs[p1])/6
+		ay, by := min(max(ys[p1]+(ys[p2]-ys[p0])/6, lo), hi), min(max(ys[p2]-(ys[p3]-ys[p1])/6, lo), hi)
+		n := max(int((xs[p2]-xs[p1])/2), 4)
+		for k := 1; k <= n; k++ {
+			t := float64(k) / float64(n)
+			u := 1 - t
+			px = append(px, u*u*u*xs[p1]+3*u*u*t*ax+3*u*t*t*bx+t*t*t*xs[p2])
+			py = append(py, u*u*u*ys[p1]+3*u*u*t*ay+3*u*t*t*by+t*t*t*ys[p2])
+		}
 	}
-	return b.String()
+	return px, py
 }
 
-// overviewChart is the series as a filled area with a line on it and a dot
-// on its last point; a flat or empty one is a baseline, never a division by
-// zero.
+// yAt is the line's height at x, between its samples.
+func yAt(px, py []float64, x float64) float64 {
+	k := sort.SearchFloat64s(px, x)
+	switch {
+	case k <= 0:
+		return py[0]
+	case k >= len(px):
+		return py[len(py)-1]
+	}
+	f := (x - px[k-1]) / max(px[k]-px[k-1], 1e-9)
+	return py[k-1] + f*(py[k]-py[k-1])
+}
+
+// fade is 0 at the card's edges and 1 from fadeEdge of its width inwards, eased.
+func fade(x float64) float64 {
+	t := min(max(min(x, W-x)/(fadeEdge*W), 0), 1)
+	return t * t * (3 - 2*t)
+}
+
+// overviewChart is the series as an area with a line on it, across the whole
+// card and fading out into it at both sides: no edge anywhere. A flat or empty
+// series is a baseline, never a division by zero. The fill is cut into thin
+// strips, each with its own share of the fade (the rasteriser has no masks).
 func overviewChart(s Spec, f Frame) string {
 	pts := s.Series
 	if len(pts) < 2 {
@@ -66,19 +96,40 @@ func overviewChart(s Spec, f Frame) string {
 		top = max(top, v)
 	}
 	xs, ys := make([]float64, len(pts)), make([]float64, len(pts))
-	step := float64(right-left) / float64(len(pts)-1)
+	step := float64(W) / float64(len(pts)-1)
 	for i, v := range pts {
-		xs[i], ys[i] = float64(left)+float64(i)*step, chartBase
+		xs[i], ys[i] = float64(i)*step, chartBase
 		if top > 0 {
 			ys[i] = chartBase - max(v, 0)/top*(chartBase-chartTop)
 		}
 	}
-	d := smooth(xs, ys, chartTop, chartBase)
-	n := len(xs) - 1
-	return `<defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="` + f.Ink + `" stop-opacity="0.34"/><stop offset="1" stop-color="` + f.Ink + `" stop-opacity="0"/></linearGradient></defs>` +
-		fmt.Sprintf(`<path d="%s L%d %.0f L%d %.0f Z" fill="url(#area)"/>`, d, right, chartBase, left, chartBase) +
-		fmt.Sprintf(`<path d="%s" fill="none" stroke="%s" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`, d, f.Ink) +
-		fmt.Sprintf(`<circle cx="%.1f" cy="%.1f" r="11" fill="%s" fill-opacity="0.25"/><circle cx="%.1f" cy="%.1f" r="6" fill="%s"/>`, xs[n], ys[n], f.Ink, xs[n], ys[n], f.Ink)
+	px, py := curve(xs, ys, chartTop, chartBase)
+	var b strings.Builder
+	fmt.Fprintf(&b, `<defs><linearGradient id="area" gradientUnits="userSpaceOnUse" x1="0" y1="%.0f" x2="0" y2="%.0f"><stop offset="0" stop-color="%s" stop-opacity="0.34"/><stop offset="1" stop-color="%s" stop-opacity="0"/></linearGradient>`, chartTop, chartBase, f.Ink, f.Ink)
+	fmt.Fprintf(&b, `<linearGradient id="edge" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="%d" y2="0"><stop offset="0" stop-color="%s" stop-opacity="0"/><stop offset="%.2f" stop-color="%s"/><stop offset="%.2f" stop-color="%s"/><stop offset="1" stop-color="%s" stop-opacity="0"/></linearGradient></defs>`, W, f.Ink, fadeEdge, f.Ink, 1-fadeEdge, f.Ink, f.Ink)
+	const strip = 3
+	for x0 := 0; x0 < W; x0 += strip {
+		x1 := x0 + strip
+		var d strings.Builder
+		fmt.Fprintf(&d, "M%d %.1f", x0, yAt(px, py, float64(x0)))
+		for k := range px {
+			if px[k] > float64(x0) && px[k] < float64(x1) {
+				fmt.Fprintf(&d, "L%.1f %.1f", px[k], py[k])
+			}
+		}
+		fmt.Fprintf(&d, "L%d %.1f L%d %.0f L%d %.0f Z", x1, yAt(px, py, float64(x1)), x1, chartBase, x0, chartBase)
+		fmt.Fprintf(&b, `<path d="%s" fill="url(#area)" fill-opacity="%.3f"/>`, d.String(), fade(float64(x0+x1)/2))
+	}
+	var line strings.Builder
+	for k := range px {
+		cmd := "L"
+		if k == 0 {
+			cmd = "M"
+		}
+		fmt.Fprintf(&line, "%s%.1f %.1f", cmd, px[k], py[k])
+	}
+	fmt.Fprintf(&b, `<path d="%s" fill="none" stroke="url(#edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`, line.String())
+	return b.String()
 }
 
 func overviewRuns(s Spec) []Run {
