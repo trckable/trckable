@@ -1,7 +1,7 @@
 // AI & Search in the section's frame: the assistants that sent people, the crawlers that read the pages and each page's
 // reads against the visitors sent; Google's searches are the Search section, one tap away.
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { XEmpty, XError, XSec } from '../../../ui/XBits'
+import { XEmpty, XError, XNote, XSec } from '../../../ui/XBits'
 import { XCols, type CRow } from '../../../ui/XTable'
 import { Loading } from '../../../../components/loading/Loading'
 import { fmtInt } from '../../../../lib/format'
@@ -37,7 +37,7 @@ function GoogleLines({ x }: { x: XCtx }) {
   }, [key])
   if (rep === 'off') {
     return (
-      <XEmpty title={aiCopy.connectLabel} hint="">
+      <XEmpty title={aiCopy.connectLabel} hint={aiCopy.connectHint}>
         <button type="button" className="xb" onClick={() => x.connect('search')}>
           {aiCopy.connect}
         </button>
@@ -89,6 +89,7 @@ export default function AiTab({ x }: { x: XCtx }) {
       <div className="x2">
         <div>
           <XSec a={aiCopy.assistants} />
+          <XNote>{aiCopy.whyAssistants}</XNote>
           {people.length === 0 ? (
             <XEmpty title={aiCopy.noAssistants} hint="" />
           ) : (
@@ -105,12 +106,14 @@ export default function AiTab({ x }: { x: XCtx }) {
         </div>
         <div>
           <XSec a={aiCopy.google} />
+          <XNote>{aiCopy.whyGoogle}</XNote>
           <GoogleLines x={x} />
         </div>
       </div>
       <XSec a={aiCopy.crawlers} b={fmtInt(rep.bots.reduce((n, b) => n + b.hits, 0))} />
+      <XNote>{aiCopy.whyBots}</XNote>
       {crawlers.length === 0 ? (
-        <XEmpty title={aiCopy.noAssistants} hint="">
+        <XEmpty title={aiCopy.noAssistants} hint={aiCopy.setupHint}>
           <button type="button" className="xb" onClick={() => setSetup(true)}>
             {aiCopy.setup}
           </button>
@@ -131,6 +134,7 @@ export default function AiTab({ x }: { x: XCtx }) {
       {reads.length > 0 && (
         <>
           <XSec a={aiCopy.pages} />
+          <XNote>{aiCopy.whyPages}</XNote>
           <XCols first={aiCopy.page} cols={[{ h: copy.heads.read }, { h: copy.heads.sent }]} rows={reads} xc="minmax(0,1fr) 72px 72px" limit={pageRows} onAll={() => setPageRows(ROWS)} />
         </>
       )}
