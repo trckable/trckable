@@ -27,11 +27,11 @@ function Cards({ x, d }: { x: XCtx; d: Model }) {
   const total = d.sales.reduce((p, s) => p + s.amt, 0)
   const net = x.kind ? d.sales.filter((s) => s.kind === x.kind).reduce((p, s) => p + s.amt, 0) : total
   const items = [
-    { key: 'net', label: <NetLabel x={x} />, val: x.money(net) },
-    { key: 'orders', label: copy.sum.orders, val: fmtInt(d.orders) },
-    { key: 'customers', label: copy.sum.customers, val: fmtInt(d.customers) },
-    ...(d.orders > 0 ? [{ key: 'avg', label: copy.sum.avg, val: x.money(Math.round((total + d.refunds) / d.orders)) }] : []),
-    ...(d.refunds > 0 ? [{ key: 'refunds', label: copy.sum.refunds, val: x.money(d.refunds), tone: 'dn' as const }] : []),
+    { key: 'net', icon: 'sales', label: <NetLabel x={x} />, val: x.money(net) },
+    { key: 'orders', icon: 'cart', label: copy.sum.orders, val: fmtInt(d.orders) },
+    { key: 'customers', icon: 'people', label: copy.sum.customers, val: fmtInt(d.customers) },
+    ...(d.orders > 0 ? [{ key: 'avg', icon: 'overview', label: copy.sum.avg, val: x.money(Math.round((total + d.refunds) / d.orders)) }] : []),
+    ...(d.refunds > 0 ? [{ key: 'refunds', icon: 'undo', label: copy.sum.refunds, val: x.money(d.refunds), tone: 'dn' as const }] : []),
   ]
   return <SummaryCards items={items} />
 }

@@ -47,10 +47,10 @@ export default function LinksPage({ site, header }: { site: Site; header: ReactN
         {rows.length > 0 && (
           <PageStats
             items={[
-              { label: copy.statLinks, value: fmtInt(rows.length) },
-              { label: <>{copy.visitors} <LinksTip text={copy.sumNote} /></>, value: fmtInt(rows.reduce((n, l) => n + l.visitors, 0)) },
-              ...(data?.goals ? [{ label: copy.statGoals, value: fmtInt(rows.reduce((n, l) => n + l.goals, 0)) }] : []),
-              ...(money && rows.some((l) => l.revenue) ? [{ label: copy.statRevenue, value: fmtMoney(rows.reduce((n, l) => n + (l.revenue ?? 0), 0), money.currency, money.exponent) }] : []),
+              { icon: 'links', label: copy.statLinks, value: fmtInt(rows.length) },
+              { icon: 'people', label: <>{copy.visitors} <LinksTip text={copy.sumNote} /></>, value: fmtInt(rows.reduce((n, l) => n + l.visitors, 0)) },
+              ...(data?.goals ? [{ icon: 'goal', label: copy.statGoals, value: fmtInt(rows.reduce((n, l) => n + l.goals, 0)) }] : []),
+              ...(money && rows.some((l) => l.revenue) ? [{ icon: 'sales', label: copy.statRevenue, value: fmtMoney(rows.reduce((n, l) => n + (l.revenue ?? 0), 0), money.currency, money.exponent) }] : []),
             ]}
           />
         )}

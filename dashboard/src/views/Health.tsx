@@ -163,20 +163,20 @@ export function HealthSettings() {
       <div className="mk mk-body">
         <SummaryCards
           items={[
-            { key: 'events', label: 'Events since boot', val: fmtInt(h.events.accepted), sub: `${fmtInt(h.events.bots)} bots · ${fmtInt(h.events.rejected)} rejected` },
+            { key: 'events', icon: 'uptime', label: 'Events since boot', val: fmtInt(h.events.accepted), sub: `${fmtInt(h.events.bots)} bots · ${fmtInt(h.events.rejected)} rejected` },
             {
-              key: 'writer',
+              key: 'writer', icon: 'setup',
               label: 'Writer',
               val: h.events.lag > 0 ? `${fmtInt(h.events.lag)} behind` : 'Up to date',
               sub: h.events.lag > 0 ? 'Safe in the log, not yet in reports' : 'Everything saved is in reports',
             },
             {
-              key: 'memory',
+              key: 'memory', icon: 'chip',
               label: 'Memory',
               val: bytes(h.memory_bytes),
               sub: h.memory_source === 'rss' ? 'The whole process, analytics included' : 'Go runtime only (no RSS here)',
             },
-            { key: 'stored', label: 'Stored', val: bytes(h.store.bytes_used), sub: `${fmtInt(h.store.events)} events${h.store.bytes_per_event ? ` · ${h.store.bytes_per_event.toFixed(0)} B each` : ''}` },
+            { key: 'stored', icon: 'layers', label: 'Stored', val: bytes(h.store.bytes_used), sub: `${fmtInt(h.store.events)} events${h.store.bytes_per_event ? ` · ${h.store.bytes_per_event.toFixed(0)} B each` : ''}` },
           ]}
         />
       </div>

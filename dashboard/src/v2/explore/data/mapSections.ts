@@ -90,9 +90,9 @@ export function mapSearch(o: { query: SearchReport; pages: SearchReport; days?: 
     enough: (query.rows?.length ?? 0) > 0 || query.clicks > 0,
     kcs: [
       kc('click', copy.heads.clicks, fmtInt(query.clicks), query.clicks, prev?.clicks ?? 0, fmtInt(prev?.clicks ?? 0)),
-      kc('people', copy.impressions, fmtK(query.impressions), query.impressions, prev?.impressions ?? 0, fmtK(prev?.impressions ?? 0)),
-      kc('goal', copy.clickRate, pct1(ctr), ctr, ctr0, pct1(ctr0)),
-      kc('uptime', copy.position, fmtFixed(pos, 1), pos, pos0, fmtFixed(pos0, 1), true),
+      kc('eye', copy.impressions, fmtK(query.impressions), query.impressions, prev?.impressions ?? 0, fmtK(prev?.impressions ?? 0)),
+      kc('percent', copy.clickRate, pct1(ctr), ctr, ctr0, pct1(ctr0)),
+      kc('hash', copy.position, fmtFixed(pos, 1), pos, pos0, fmtFixed(pos0, 1), true),
     ],
     queries: (query.rows ?? []).map((r) => rowOf(r, `“${r.key}”`, base && !known.has(r.key))),
     pages: (pages.rows ?? []).map((r) => rowOf(r, r.key, false)),

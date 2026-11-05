@@ -28,11 +28,11 @@ function useFlash() {
 export function Strip({ cards }: { cards: CardView[] }) {
   const h = header(cards)
   const views: SumItem[] = h.views.length
-    ? h.views.map((v) => ({ key: v.platform, data: 'channel-views', label: copy.views, val: fmtCompact(v.views), sub: v.name }))
-    : [{ key: 'views', data: 'channel-views', label: copy.views, val: '—' }]
+    ? h.views.map((v) => ({ key: v.platform, data: 'channel-views', icon: 'eye', label: copy.views, val: fmtCompact(v.views), sub: v.name }))
+    : [{ key: 'views', data: 'channel-views', icon: 'eye', label: copy.views, val: '—' }]
   return (
     <div className="mk mk-body">
-      <SummaryCards items={[...views, { key: 'accounts', data: 'channel-accounts', label: copy.accounts, val: fmtInt(h.accounts) }]} />
+      <SummaryCards items={[...views, { key: 'accounts', data: 'channel-accounts', icon: 'people', label: copy.accounts, val: fmtInt(h.accounts) }]} />
     </div>
   )
 }
