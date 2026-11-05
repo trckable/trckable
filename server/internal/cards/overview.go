@@ -2,7 +2,6 @@ package cards
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 	"text/template"
 	"unicode"
@@ -30,9 +29,7 @@ const (
 func init() {
 	shapes := template.Must(template.New("overview").Funcs(template.FuncMap{
 		"ghost": func(f Frame, x, y, k float64) map[string]any { return map[string]any{"F": f, "X": x, "Y": y, "K": k} },
-	}).Parse(`<defs><radialGradient id="glow" cx="1080" cy="0" r="620" gradientUnits="userSpaceOnUse">` +
-		`<stop offset="0" stop-color="{{.Ink}}" stop-opacity="0.30"/><stop offset="1" stop-color="{{.Ink}}" stop-opacity="0"/></radialGradient></defs>` +
-		`<rect width="1200" height="630" fill="{{.BG}}"/><rect width="1200" height="630" fill="url(#glow)"/>` +
+	}).Parse(`<rect width="1200" height="630" fill="{{.BG}}"/>` +
 		`<rect x="88" y="70" width="52" height="52" rx="15" fill="{{.Ink}}" fill-opacity="0.2"/>` +
 		`{{template "ghost" ghost . 892 520 0.6}}`))
 	template.Must(shapes.New("ghost").Parse(Ghost))
@@ -63,29 +60,11 @@ func curve(xs, ys []float64, lo, hi float64) (px, py []float64) {
 	return px, py
 }
 
-// yAt is the line's height at x, between its samples.
-func yAt(px, py []float64, x float64) float64 {
-	k := sort.SearchFloat64s(px, x)
-	switch {
-	case k <= 0:
-		return py[0]
-	case k >= len(px):
-		return py[len(py)-1]
-	}
-	f := (x - px[k-1]) / max(px[k]-px[k-1], 1e-9)
-	return py[k-1] + f*(py[k]-py[k-1])
-}
-
-// fade is 0 at the card's edges and 1 from fadeEdge of its width inwards, eased.
-func fade(x float64) float64 {
-	t := min(max(min(x, W-x)/(fadeEdge*W), 0), 1)
-	return t * t * (3 - 2*t)
-}
-
 // overviewChart is the series as an area with a line on it, across the whole
 // card and fading out into it at both sides: no edge anywhere. A flat or empty
-// series is a baseline, never a division by zero. The fill is cut into thin
-// strips, each with its own share of the fade (the rasteriser has no masks).
+// series is a baseline, never a division by zero. The rasteriser has no masks,
+// so the sides are covered with the card's own background fading in, and the
+// glow (part of that background) is laid over it all afterwards.
 func overviewChart(s Spec, f Frame) string {
 	pts := s.Series
 	if len(pts) < 2 {
@@ -104,22 +83,6 @@ func overviewChart(s Spec, f Frame) string {
 		}
 	}
 	px, py := curve(xs, ys, chartTop, chartBase)
-	var b strings.Builder
-	fmt.Fprintf(&b, `<defs><linearGradient id="area" gradientUnits="userSpaceOnUse" x1="0" y1="%.0f" x2="0" y2="%.0f"><stop offset="0" stop-color="%s" stop-opacity="0.34"/><stop offset="1" stop-color="%s" stop-opacity="0"/></linearGradient>`, chartTop, chartBase, f.Ink, f.Ink)
-	fmt.Fprintf(&b, `<linearGradient id="edge" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="%d" y2="0"><stop offset="0" stop-color="%s" stop-opacity="0"/><stop offset="%.2f" stop-color="%s"/><stop offset="%.2f" stop-color="%s"/><stop offset="1" stop-color="%s" stop-opacity="0"/></linearGradient></defs>`, W, f.Ink, fadeEdge, f.Ink, 1-fadeEdge, f.Ink, f.Ink)
-	const strip = 3
-	for x0 := 0; x0 < W; x0 += strip {
-		x1 := x0 + strip
-		var d strings.Builder
-		fmt.Fprintf(&d, "M%d %.1f", x0, yAt(px, py, float64(x0)))
-		for k := range px {
-			if px[k] > float64(x0) && px[k] < float64(x1) {
-				fmt.Fprintf(&d, "L%.1f %.1f", px[k], py[k])
-			}
-		}
-		fmt.Fprintf(&d, "L%d %.1f L%d %.0f L%d %.0f Z", x1, yAt(px, py, float64(x1)), x1, chartBase, x0, chartBase)
-		fmt.Fprintf(&b, `<path d="%s" fill="url(#area)" fill-opacity="%.3f"/>`, d.String(), fade(float64(x0+x1)/2))
-	}
 	var line strings.Builder
 	for k := range px {
 		cmd := "L"
@@ -128,7 +91,25 @@ func overviewChart(s Spec, f Frame) string {
 		}
 		fmt.Fprintf(&line, "%s%.1f %.1f", cmd, px[k], py[k])
 	}
-	fmt.Fprintf(&b, `<path d="%s" fill="none" stroke="url(#edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`, line.String())
+	d := line.String()
+	edge := fadeEdge * W
+	band := fmt.Sprintf(`y="%.0f" height="%.0f"`, chartTop-14, chartBase-chartTop+16)
+	var b strings.Builder
+	fmt.Fprintf(&b, `<defs><linearGradient id="area" gradientUnits="userSpaceOnUse" x1="0" y1="%.0f" x2="0" y2="%.0f"><stop offset="0" stop-color="%s" stop-opacity="0.34"/><stop offset="1" stop-color="%s" stop-opacity="0"/></linearGradient>`, chartTop, chartBase, f.Ink, f.Ink)
+	fmt.Fprintf(&b, `<linearGradient id="edge" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="%d" y2="0"><stop offset="0" stop-color="%s" stop-opacity="0"/><stop offset="%.2f" stop-color="%s"/><stop offset="%.2f" stop-color="%s"/><stop offset="1" stop-color="%s" stop-opacity="0"/></linearGradient>`, W, f.Ink, fadeEdge, f.Ink, 1-fadeEdge, f.Ink, f.Ink)
+	// The background fading in over each side, eased like a smoothstep.
+	for _, side := range []struct{ id, x1, x2 string }{{"left", "0", fmt.Sprint(edge)}, {"right", fmt.Sprint(W), fmt.Sprint(W - edge)}} {
+		fmt.Fprintf(&b, `<linearGradient id="%s" gradientUnits="userSpaceOnUse" x1="%s" y1="0" x2="%s" y2="0">`, side.id, side.x1, side.x2)
+		for _, t := range []float64{0, 0.25, 0.5, 0.75, 1} {
+			fmt.Fprintf(&b, `<stop offset="%.2f" stop-color="%s" stop-opacity="%.3f"/>`, t, f.BG, 1-t*t*(3-2*t))
+		}
+		b.WriteString(`</linearGradient>`)
+	}
+	fmt.Fprintf(&b, `<radialGradient id="glow" cx="1080" cy="0" r="620" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="%s" stop-opacity="0.30"/><stop offset="1" stop-color="%s" stop-opacity="0"/></radialGradient></defs>`, f.Ink, f.Ink)
+	fmt.Fprintf(&b, `<path d="%s L%d %.0f L0 %.0f Z" fill="url(#area)"/>`, d, W, chartBase, chartBase)
+	fmt.Fprintf(&b, `<rect x="0" %s width="%.0f" fill="url(#left)"/><rect x="%.0f" %s width="%.0f" fill="url(#right)"/>`, band, edge, W-edge, band, edge)
+	fmt.Fprintf(&b, `<rect width="%d" height="%d" fill="url(#glow)"/>`, W, H)
+	fmt.Fprintf(&b, `<path d="%s" fill="none" stroke="url(#edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`, d)
 	return b.String()
 }
 
