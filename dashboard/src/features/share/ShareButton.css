@@ -18,3 +18,11 @@
     display: none;
   }
 }
+/* A phone's header is full: the square gives up some width (down to a foldable's cover screen). */
+@container (--pane-max-600) {
+  .mk .hd .mk-chip.share-chip {
+    width: 32px;
+    min-width: 32px;
+    margin-left: -4px;
+  }
+}
