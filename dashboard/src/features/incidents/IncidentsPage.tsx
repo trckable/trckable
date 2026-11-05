@@ -80,7 +80,7 @@ export default function IncidentsPage({ site, header }: { site: Site; header: Re
               site={site}
             />
             <Timeline list={list} from={range.from} to={range.to} tz={site.timezone} now={now} watchedSince={site.watched_since} paused={period.pausedSpans} since={since} />
-            {list.length > 0 && <IncidentList domain={site.domain} list={list} now={now} edit={(x) => setEdited((e) => ({ ...e, [x.id]: x }))} />}
+            {list.length > 0 && <IncidentList domain={site.domain} zone={site.timezone} list={list} now={now} edit={(x) => setEdited((e) => ({ ...e, [x.id]: x }))} />}
             {list.length === 0 && span > 0 && (
               <p className="inc-empty">
                 <Check size={16} strokeWidth={2.25} aria-hidden="true" />

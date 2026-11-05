@@ -57,17 +57,17 @@ export function IdentityHead({ who, titleId }: { who: Identity; titleId: string 
   )
 }
 
-export function IdentityFacts({ who, currency, onFilter }: { who: Identity; currency: string; onFilter?: OnFilter }) {
+export function IdentityFacts({ who, currency, zone, onFilter }: { who: Identity; currency: string; zone?: string; onFilter?: OnFilter }) {
   return (
     <dl className="jr-facts">
       <Fact label={copy.firstSeen}>
         <time className="num" dateTime={isoOf(who.firstSeen)}>
-          {fmtDate(who.firstSeen)}
+          {fmtDate(who.firstSeen, zone)}
         </time>
       </Fact>
       <Fact label={copy.lastSeen}>
         <time className="num" dateTime={isoOf(who.lastSeen)}>
-          {fmtDayTime(who.lastSeen)}
+          {fmtDayTime(who.lastSeen, zone)}
         </time>
       </Fact>
       <Fact label={copy.visits}>

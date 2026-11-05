@@ -5,7 +5,7 @@ import { copy } from './copy'
 import { downCopy } from './downCopy'
 import { when } from './time'
 
-export function ProbeList({ probes }: { probes: ProbeLook[] }) {
+export function ProbeList({ probes, zone }: { probes: ProbeLook[]; zone?: string }) {
   return probes.map((p) => {
     const kind = lookKind(p)
     const Icon = icons[kind]
@@ -13,7 +13,7 @@ export function ProbeList({ probes }: { probes: ProbeLook[] }) {
     <li key={p.at} className={kind} data-probe={p.at}>
       <Icon size={15} strokeWidth={2.25} aria-hidden="true" />
       <span>
-        <b>{when(p.at)}</b> {p.blocked ? `${downCopy.blockedLook} · ${p.status}` : p.error || (p.status ? copy.answered(p.status, p.ms ?? 0) : copy.noAnswer)}
+        <b>{when(p.at, zone)}</b> {p.blocked ? `${downCopy.blockedLook} · ${p.status}` : p.error || (p.status ? copy.answered(p.status, p.ms ?? 0) : copy.noAnswer)}
       </span>
     </li>
     )

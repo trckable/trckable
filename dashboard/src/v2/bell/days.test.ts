@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { browserZone } from '../../lib/format'
 import { byDay, dayOf, timeOf } from './days'
 
 // 18 Oct 2026, 07:10 UTC is 09:10 in Tirane (UTC+2) and 03:10 in New York (UTC-4).
@@ -31,5 +32,26 @@ describe('the bell’s days', () => {
     expect(byDay([])).toEqual([])
     const now = Date.UTC(2026, 10, 1, 10) / 1000
     expect(byDay([row('a', now - 86_400)], now, 'UTC')[0].label).toBe('Yesterday')
+  })
+
+  it('writes a site’s time in the site’s zone and lists it under the site’s day, whatever the viewer’s zone', () => {
+    const t = Date.UTC(2026, 9, 18, 17, 27) / 1000
+    expect(timeOf(t, 'UTC')).toBe('17:27')
+    const late = Date.UTC(2026, 9, 17, 23, 30) / 1000
+    const now = Date.UTC(2026, 9, 18, 12) / 1000
+    const days = byDay([row('a', late)], now, () => 'UTC')
+    expect(days[0].label).toBe('Yesterday')
+    expect(byDay([row('a', late)], now, () => 'Europe/Tirane')[0].label).toBe('Today')
+  })
+
+  it('names the zone once per day group when it is not the viewer’s own, and keeps sites of two zones apart', () => {
+    const t = Date.UTC(2026, 9, 18, 10) / 1000
+    const zone = (r: { id: string }) => (r.id === 'b' ? 'Pacific/Auckland' : browserZone())
+    const days = byDay([row('a', t), row('b', t - 60), row('c', t - 120)], t + 60, zone)
+    expect(days.map((d) => [d.zone, d.rows.map((r) => r.id)])).toEqual([
+      [undefined, ['a']],
+      ['Pacific/Auckland', ['b']],
+      [undefined, ['c']],
+    ])
   })
 })

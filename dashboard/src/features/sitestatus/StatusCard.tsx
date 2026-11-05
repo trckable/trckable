@@ -56,17 +56,17 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
         <b className="sgm-count">{ageOf(site)}</b>
         <span className="sgm-meta">
           <span className="sg-chip">{chip}</span>
-          <span className="sgm-jump">{downSince ? copy.downSince(when(downSince)) : copy.sinceVisit(when(last))}</span>
+          <span className="sgm-jump">{downSince ? copy.downSince(when(downSince, site.timezone)) : copy.sinceVisit(when(last, site.timezone))}</span>
         </span>
       </header>
       <p className="sgm-honest muted">{probed ? downCopy.bar(site.down_cause ?? '') : causeOf(rows, down)}</p>
       {site.probe_blocked_since && <p className="sgm-honest muted">{downCopy.blocked}</p>}
-      {last > 0 && recent && <GapChart slices={recent.slices} last={when(last)} at={slotOf(last, recent.now)} />}
+      {last > 0 && recent && <GapChart slices={recent.slices} last={when(last, site.timezone)} at={slotOf(last, recent.now)} />}
       <div className="sgm-tiles">
         <section className="sgm-tile" aria-label={copy.tileVisit}>
           <h3>{copy.tileVisit}</h3>
           <p className="sgm-row">
-            <span>{last > 0 ? when(last) : copy.noPage}</span>
+            <span>{last > 0 ? when(last, site.timezone) : copy.noPage}</span>
           </p>
           <p className="sgm-row">{recent?.path ? <code>{recent.path}</code> : <span className="faint">{copy.noPage}</span>}</p>
         </section>
@@ -81,7 +81,7 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
         <section className="sgm-tile status-checks" aria-label={copy.tileChecks} aria-live="polite" aria-busy={state.phase === 'checking'}>
           <h3>{copy.tileChecks}</h3>
           <ul>
-            <ProbeList probes={probes} />
+            <ProbeList probes={probes} zone={site.timezone} />
             {state.phase === 'checking' && probes.length === 0 && (
               <li className="wait">
                 <span className="btn-spin" aria-hidden="true" />
@@ -104,7 +104,7 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
       <div className="sgm-actions">
         {mute.have && (mute.on ? (
           <span className="status-muted">
-            {copy.muted(when(mute.until))} · <button type="button" className="linkish" onClick={() => void mute.undo()}>{copy.undo}</button>
+            {copy.muted(when(mute.until, site.timezone))} · <button type="button" className="linkish" onClick={() => void mute.undo()}>{copy.undo}</button>
           </span>
         ) : (
           <button type="button" className="btn ghost" onClick={() => void mute.mute()}>
@@ -184,7 +184,7 @@ function Back({ site }: { site: Site }) {
   }
   return (
     <div className="status-float">
-      <a className="status-badge back" href={incidentsPath(site.domain)} title={copy.back(when(gap.back), spanLong(gap.back - gap.since))} onClick={(e) => { e.preventDefault(); navigate(incidentsPath(site.domain)) }}>
+      <a className="status-badge back" href={incidentsPath(site.domain)} title={copy.back(when(gap.back, site.timezone), spanLong(gap.back - gap.since))} onClick={(e) => { e.preventDefault(); navigate(incidentsPath(site.domain)) }}>
         <Check size={15} strokeWidth={2.25} aria-hidden="true" />
         {copy.backBadge(spanLong(gap.back - gap.since))}
       </a>

@@ -24,7 +24,7 @@ function After({ ms }: { ms: number }) {
   return <>{AFTER[s.unit](s.n)}</>
 }
 
-function Key({ v }: { v: LicenseView }) {
+function Key({ v, zone }: { v: LicenseView; zone: string }) {
   const c = copy.cust
   return (
     <li className="cs-key">
@@ -46,7 +46,7 @@ function Key({ v }: { v: LicenseView }) {
         <div className="cs-devices">
           {v.devices.map((d) => (
             <span key={d.n} className="cs-device">
-              {c.device(d.n)} · {fmtDate(d.at)}
+              {c.device(d.n)} · {fmtDate(d.at, zone)}
             </span>
           ))}
         </div>
@@ -63,8 +63,8 @@ function Body({ x, c, detail }: { x: XCtx; c: Customer; detail: CustomerDetail }
         items={[
           { key: 'spent', label: copy.cust.spent, val: x.money(c.spent) },
           { key: 'orders', label: copy.cust.orders, val: String(c.orders) },
-          { key: 'first', label: copy.cust.first, val: fmtDate(Date.parse(c.first_seen)) },
-          { key: 'last', label: copy.cust.last, val: fmtDate(Date.parse(c.last_order)) },
+          { key: 'first', label: copy.cust.first, val: fmtDate(Date.parse(c.first_seen), x.site.timezone) },
+          { key: 'last', label: copy.cust.last, val: fmtDate(Date.parse(c.last_order), x.site.timezone) },
         ]}
       />
       {detail.payments.length > 0 && (
@@ -73,7 +73,7 @@ function Body({ x, c, detail }: { x: XCtx; c: Customer; detail: CustomerDetail }
           <ul className="cs-list">
             {detail.payments.map((p) => (
               <li key={p.id} className="cs-pay">
-                <span>{fmtDate(Date.parse(p.at))}</span>
+                <span>{fmtDate(Date.parse(p.at), x.site.timezone)}</span>
                 <span className="mk-quiet">{p.refunded ? copy.pay.refunded(x.money(p.refunded)) : ''}</span>
                 <b className={p.refunded ? 'neg' : ''}>{x.money(p.amount)}</b>
               </li>
@@ -86,7 +86,7 @@ function Body({ x, c, detail }: { x: XCtx; c: Customer; detail: CustomerDetail }
           <h3 className="cs-h">{copy.cust.licenses}</h3>
           <ul className="cs-list">
             {keys.map((v, i) => (
-              <Key key={`${v.last4}${i}`} v={v} />
+              <Key key={`${v.last4}${i}`} v={v} zone={x.site.timezone} />
             ))}
           </ul>
         </section>

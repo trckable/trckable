@@ -121,7 +121,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
   /** What the row says of the time: nothing for a row of several, "All day" for what is kept by the day, else its span or its clock. */
   const whenOfRow = (n: Notice): string => {
     if (n.members) return ''
-    return n.day ? copy.allDay : (n.when ?? timeOf(n.at))
+    return n.day ? copy.allDay : (n.when ?? timeOf(n.at, n.zone))
   }
   /** The row names its site when the person has several, unless its words already do. */
   const manySites = (n: Notice): boolean => !!n.site && sites.length > 1 && !n.title.includes(n.site) && !n.sub?.includes(n.site)
@@ -132,11 +132,12 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
     title: n.title,
     sub: [n.sub, manySites(n) ? n.site : ''].filter(Boolean).join(' · '),
     time: whenOfRow(n),
+    zone: n.zone ?? n.members?.[0]?.zone,
     unread: n.unread,
     bad: n.bad,
     source: n.source,
     label: n.source ? [n.title, n.sub, brandName(n.source), whenOfRow(n)].filter(Boolean).join(', ') : undefined,
-    lines: n.members?.map((m) => ({ id: m.id, text: `${m.site} · ${timeOf(m.at)}` })),
+    lines: n.members?.map((m) => ({ id: m.id, text: `${m.site} · ${timeOf(m.at, m.zone)}` })),
     actions: actionsOf(n, archived),
   })
   // A site the account no longer has is no filter.

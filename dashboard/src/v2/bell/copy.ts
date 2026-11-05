@@ -18,6 +18,7 @@ export const copy = defineCopy('bell', {
   busy: (d: string) => `${d} is busy`,
   onlineN: (n: string) => `${n} online`,
   allDay: 'All day',
+  zoneNote: (z: string) => `times in ${z}`,
   sales: (n: number) => (n === 1 ? 'New sale' : `${n} sales`),
   signups: (n: number) => (n === 1 ? 'New signup' : `${n} new signups`),
   goalCount: (goal: string, n: number) => `${goal}: ${n}`,
