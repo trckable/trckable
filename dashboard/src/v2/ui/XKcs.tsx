@@ -12,6 +12,7 @@ export function XKcs({ items }: { items: Kc[] }) {
       items={items.map((k) => ({
         key: k.icon,
         data: k.icon,
+        icon: k.icon,
         label: k.label,
         val: k.val,
         unit: k.unit,
@@ -41,7 +42,8 @@ export function XKcsPlain({ items }: { items: Xkc[] }) {
         tag: k.tag,
         tone: k.tone,
         sub: k.detail,
-        flag: k.flag && <Flag code={k.flag} width={22} />,
+        icon: k.flag ? undefined : k.icon,
+        mark: k.flag && <Flag code={k.flag} width={22} />,
         at: k.at,
       }))}
     />

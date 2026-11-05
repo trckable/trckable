@@ -21,6 +21,27 @@
 .mk .sum.tap:hover {
   background: var(--mk-hover);
 }
+.mk .sum-h {
+  display: flex;
+  align-items: center;
+  gap: var(--mk-s2);
+  min-width: 0;
+  margin-bottom: 2px;
+}
+.mk .sum-i {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--mk-blue) 14%, transparent);
+  color: var(--mk-blue);
+}
+.mk .sum-i svg {
+  width: 16px;
+  height: 16px;
+}
 .mk .sum-l {
   min-width: 0;
   font-size: 11px;
@@ -28,6 +49,11 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--mk-muted);
+}
+.mk .sum-l.cut {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .mk .sum-v {
   display: flex;
@@ -42,9 +68,14 @@
   line-height: 1.25;
   font-variant-numeric: tabular-nums;
 }
-.mk .sum-v .cflag {
+.mk .sum-v .cflag,
+.mk .sum-v .xrowico {
   align-self: center;
   flex: none;
+}
+.mk .sum-v .xrowico {
+  width: 20px;
+  height: 20px;
 }
 .mk .sum-v small {
   font-size: 13px;

@@ -81,10 +81,10 @@ export function Hero({ now, at, f, w, over, site }: { now: Standing; at: number;
       <div className="inc-figs">
         <PageStats
           items={[
-            { label: <>{copy.statUptime} <Tip text={uptimeTip} /></>, value: u.value },
-            { label: copy.statIncidents, value: fmtInt(f.count) },
-            { label: <>{copy.statAffected} <Tip text={copy.affectedNote} /></>, value: f.seconds > 0 ? duration(f.seconds) : '0m' },
-            ...(f.lostSome ? [{ label: <>{copy.statLost} <Tip text={copy.lostNote} align="right" /></>, value: copy.lostStat(fmtInt(f.lost)) }] : []),
+            { icon: 'uptime', label: <>{copy.statUptime} <Tip text={uptimeTip} /></>, value: u.value },
+            { icon: 'milestone', label: copy.statIncidents, value: fmtInt(f.count) },
+            { icon: 'clock', label: <>{copy.statAffected} <Tip text={copy.affectedNote} /></>, value: f.seconds > 0 ? duration(f.seconds) : '0m' },
+            ...(f.lostSome ? [{ icon: 'people', label: <>{copy.statLost} <Tip text={copy.lostNote} align="right" /></>, value: copy.lostStat(fmtInt(f.lost)) }] : []),
           ]}
         />
       </div>

@@ -1,6 +1,7 @@
 // The one summary card: a small uppercase label, the number under it, one muted line under that (the change, then what it is against).
 // Every row of number tiles above a table or a page uses this, so they all look the same.
 import type { ReactNode } from 'react'
+import { Ico } from './icons'
 import { RollText } from './RollText'
 import type { Tone } from '../explore/types'
 import './summary.css'
@@ -15,8 +16,10 @@ export interface SumItem {
   tone?: Tone
   /** What the number is of or against. */
   sub?: string
-  /** A country's flag shown before the number. */
-  flag?: ReactNode
+  /** A small picture of the icon set in a soft square before the label. */
+  icon?: string
+  /** A country's flag, a device's mark or a status dot shown before the number. */
+  mark?: ReactNode
   /** Where the score sits from good to poor, 0 to 1. */
   at?: number
   /** The value in full, when it is shortened. */
@@ -33,9 +36,12 @@ const ARROW = { '': '', up: '↑ ', dn: '↓ ' }
 function Body({ k }: { k: SumItem }) {
   return (
     <>
-      <div className="sum-l" title={typeof k.label === 'string' ? k.label : undefined}>{k.label}</div>
+      <div className="sum-h">
+        {k.icon && <span className="sum-i"><Ico name={k.icon} /></span>}
+        <div className={typeof k.label === 'string' ? 'sum-l cut' : 'sum-l'} title={typeof k.label === 'string' ? k.label : undefined}>{k.label}</div>
+      </div>
       <div className="sum-v" title={k.title}>
-        {k.flag}
+        {k.mark}
         <RollText text={k.val} />
         {k.unit && <small>{k.unit}</small>}
       </div>

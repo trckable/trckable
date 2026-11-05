@@ -59,11 +59,11 @@ export function mapOverview(r: Report, o: { money?: (minor: number) => string; u
     { icon: 'people', label: copy.people, val: fmtInt(people.v), note: pe(people), vals: series.map((p) => p.visitors), st: people.st === 'dn' ? 'dn' : '' },
     goal && gs
       ? { icon: 'goal', label: cap(goal.label || goal.value), val: fmtInt(goal.visitors), note: pe(gs), vals: [], share: people.v ? goal.visitors / people.v : 0, col: 'var(--mk-blue)', st: gs.st === 'dn' ? 'dn' : '' }
-      : { icon: 'click', label: copy.kc.views, val: fmtInt(views.v), note: pe(views), vals: series.map((p) => p.pageviews), col: 'var(--mk-blue)', st: views.st === 'dn' ? 'dn' : '' },
+      : { icon: 'eye', label: copy.kc.views, val: fmtInt(views.v), note: pe(views), vals: series.map((p) => p.pageviews), col: 'var(--mk-blue)', st: views.st === 'dn' ? 'dn' : '' },
   ]
   if (cur.money && o.money) {
     const m = statOf(cur.money.revenue, prev?.money?.revenue, base)
-    kcs.push({ icon: 'money', label: copy.kc.money, val: o.money(cur.money.revenue), unit: copy.net, note: pe(m), vals: series.map((p) => p.revenue ?? 0), st: m.st === 'dn' ? 'dn' : '' })
+    kcs.push({ icon: 'sales', label: copy.kc.money, val: o.money(cur.money.revenue), unit: copy.net, note: pe(m), vals: series.map((p) => p.revenue ?? 0), st: m.st === 'dn' ? 'dn' : '' })
   } else kcs.push(uptimeKc(o.uptime))
   const worse = !tooFew(cur.kpis.sessions) && base && cur.kpis.bounce_rate > (prev?.kpis.bounce_rate ?? 1) + 0.04
   kcs.push({
@@ -214,9 +214,9 @@ function visitCard(icon: string, label: string, val: string, cur: number | undef
 export function mapVisits(now: Kp, before?: Kp): { engaged: Xkc; perVisit: Xkc; time: Xkc } {
   const k = [now.kpis, before?.kpis] as const
   return {
-    engaged: visitCard('people', copy.engage.engaged, fmtInt(engagedOf(k[0])), k[0].sessions > 0 ? engagedOf(k[0]) : undefined, k[1] && engagedOf(k[1]), fmtInt(k[1] ? engagedOf(k[1]) : 0)),
-    perVisit: visitCard('click', copy.engage.perVisit, fmtFixed(k[0].views_per_session, 1), k[0].sessions > 0 ? k[0].views_per_session : undefined, k[1]?.views_per_session, fmtFixed(k[1]?.views_per_session ?? 0, 1)),
-    time: visitCard('uptime', copy.engage.time, fmtDuration(k[0].avg_session_s), k[0].sessions > 0 ? k[0].avg_session_s : undefined, k[1]?.avg_session_s, fmtDuration(k[1]?.avg_session_s ?? 0)),
+    engaged: visitCard('spark', copy.engage.engaged, fmtInt(engagedOf(k[0])), k[0].sessions > 0 ? engagedOf(k[0]) : undefined, k[1] && engagedOf(k[1]), fmtInt(k[1] ? engagedOf(k[1]) : 0)),
+    perVisit: visitCard('layers', copy.engage.perVisit, fmtFixed(k[0].views_per_session, 1), k[0].sessions > 0 ? k[0].views_per_session : undefined, k[1]?.views_per_session, fmtFixed(k[1]?.views_per_session ?? 0, 1)),
+    time: visitCard('clock', copy.engage.time, fmtDuration(k[0].avg_session_s), k[0].sessions > 0 ? k[0].avg_session_s : undefined, k[1]?.avg_session_s, fmtDuration(k[1]?.avg_session_s ?? 0)),
   }
 }
 
@@ -225,5 +225,5 @@ export function mapEngage(now: { kpis: KPIs; scroll?: ScrollReport }, before?: {
   const read = (s?: ScrollReport) => (s && s.samples > 0 ? { avg: Math.round(s.avg), deep: depthOf(s.reached[2]) } : undefined)
   const [a, b] = [read(now.scroll), before && read(before.scroll)]
   const v = mapVisits(now, before)
-  return [visitCard('pages', copy.engage.scroll, `${a?.avg}%`, a?.avg, b?.avg, `${b?.avg}%`), v.time, visitCard('goal', copy.engage.deep, `${a?.deep}%`, a?.deep, b?.deep, `${b?.deep}%`), v.engaged, v.perVisit]
+  return [visitCard('scroll', copy.engage.scroll, `${a?.avg}%`, a?.avg, b?.avg, `${b?.avg}%`), v.time, visitCard('scroll', copy.engage.deep, `${a?.deep}%`, a?.deep, b?.deep, `${b?.deep}%`), v.engaged, v.perVisit]
 }

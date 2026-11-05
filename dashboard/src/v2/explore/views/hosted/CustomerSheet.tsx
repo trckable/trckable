@@ -61,10 +61,10 @@ function Body({ x, c, detail }: { x: XCtx; c: Customer; detail: CustomerDetail }
     <>
       <SummaryCards
         items={[
-          { key: 'spent', label: copy.cust.spent, val: x.money(c.spent) },
-          { key: 'orders', label: copy.cust.orders, val: String(c.orders) },
-          { key: 'first', label: copy.cust.first, val: fmtDate(Date.parse(c.first_seen), x.site.timezone) },
-          { key: 'last', label: copy.cust.last, val: fmtDate(Date.parse(c.last_order), x.site.timezone) },
+          { key: 'spent', icon: 'sales', label: copy.cust.spent, val: x.money(c.spent) },
+          { key: 'orders', icon: 'cart', label: copy.cust.orders, val: String(c.orders) },
+          { key: 'first', icon: 'calendar', label: copy.cust.first, val: fmtDate(Date.parse(c.first_seen), x.site.timezone) },
+          { key: 'last', icon: 'clock', label: copy.cust.last, val: fmtDate(Date.parse(c.last_order), x.site.timezone) },
         ]}
       />
       {detail.payments.length > 0 && (

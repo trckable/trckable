@@ -12,7 +12,7 @@ const none = { uptime: null, now: '2026-10-16' }
 describe('the visit tiles and the entry and exit tables', () => {
   it('says engaged visits, pages per visit and time on site against the period before', () => {
     const o = mapOverview(report(result(100, { kpis: kpis(100, { avg_session_s: 90 }) }), result(100)), none)
-    expect(o.visits.map((k) => k.icon)).toEqual(['people', 'click', 'uptime'])
+    expect(o.visits.map((k) => k.icon)).toEqual(['spark', 'layers', 'clock'])
     expect(o.visits[0]).toMatchObject({ val: '55', tag: '≈ same' })
     expect(o.visits[2]).toMatchObject({ val: '1m 30s', tag: '+50%', tone: 'up' })
   })
@@ -27,7 +27,7 @@ describe('the visit tiles and the entry and exit tables', () => {
 describe('the overview', () => {
   it('has four cards: people, views without a goal, uptime without revenue, and who left', () => {
     const o = mapOverview(report(result(100), result(100)), none)
-    expect(o.kcs.map((k) => k.icon)).toEqual(['people', 'click', 'uptime', 'leave'])
+    expect(o.kcs.map((k) => k.icon)).toEqual(['people', 'eye', 'uptime', 'leave'])
     expect(o.kcs[0]).toMatchObject({ val: '100', note: { c: '', t: '≈ same' } })
   })
   it('says how far people are from usual against the period before', () => {
@@ -39,7 +39,7 @@ describe('the overview', () => {
     const cur = result(100, { goals: [{ value: 'signup', label: 'signed up', visitors: 12 }], money: money(30500) })
     const o = mapOverview(report(cur, result(100)), { ...none, money: (m) => `$${m / 100}` })
     expect(o.kcs[1]).toMatchObject({ icon: 'goal', label: 'Signed up', val: '12' })
-    expect(o.kcs[2]).toMatchObject({ icon: 'money', val: '$305', unit: 'net' })
+    expect(o.kcs[2]).toMatchObject({ icon: 'sales', val: '$305', unit: 'net' })
   })
   it('says what the incident record found', () => {
     const o = mapOverview(report(result(100)), { ...none, uptime: { pct: 99.5, down: [{ from: '11:40', to: '12:03', min: 23 }], lost: 1380 } })
