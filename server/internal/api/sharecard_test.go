@@ -2,7 +2,9 @@ package api
 
 import (
 	"context"
+	"image"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -56,6 +58,14 @@ func TestCardRoute(t *testing.T) {
 			t.Fatalf("%s: %d %s", q, code, ct)
 		}
 	}
+	for _, q := range []string{"?metric=engaged&stats=page,source,country", "?metric=pageviews&stats=bounce,<x>,visitors&theme=light"} {
+		if code, ct, body := get(t, owner, card+q); code != http.StatusOK || ct != "image/png" || !strings.HasPrefix(body, "\x89PNG") {
+			t.Fatalf("%s: %d %s", q, code, ct)
+		}
+	}
+	if code, _, body := get(t, owner, card+"?format=json&metric=engaged"); code != http.StatusOK || !strings.Contains(body, `"metric":"engaged"`) {
+		t.Fatalf("json engaged: %d %s", code, body)
+	}
 	if code, _, body := get(t, owner, card+"?format=json&metric=revenue"); code != http.StatusOK || !strings.Contains(body, `"metric":"visitors"`) {
 		t.Fatalf("json: %d %s", code, body)
 	}
@@ -77,7 +87,7 @@ func TestCardOverview(t *testing.T) {
 		Dims: map[string][]query.Row{"country": {{Value: "DE", Visitors: 60}}},
 	}
 	n := cardWordsOf(res, "example.com", cardPeriodOf("7d"), "")
-	n.overview(res, &query.Result{KPIs: query.KPIs{Visitors: 100}})
+	n.overview(res, &query.Result{KPIs: query.KPIs{Visitors: 100}}, "", noIcon)
 	if n.change != "+12%" || n.dir != 1 || len(n.stats) != 3 {
 		t.Fatalf("%+v", n)
 	}
@@ -85,19 +95,19 @@ func TestCardOverview(t *testing.T) {
 		t.Fatalf("stats: %v", got)
 	}
 	n = cardWordsOf(res, "example.com", cardPeriodOf("7d"), "")
-	n.overview(res, &query.Result{KPIs: query.KPIs{Visitors: 200}})
+	n.overview(res, &query.Result{KPIs: query.KPIs{Visitors: 200}}, "", noIcon)
 	if n.change != "-44%" || n.dir != -1 {
 		t.Fatalf("fall: %+v", n)
 	}
 	// Zero engaged visits and no time: those two are left off, the country stays.
 	n = cardWordsOf(res, "example.com", cardPeriodOf("7d"), "")
-	n.overview(&query.Result{KPIs: query.KPIs{Visitors: 5, Sessions: 5, BounceRate: 1}, Dims: res.Dims}, nil)
+	n.overview(&query.Result{KPIs: query.KPIs{Visitors: 5, Sessions: 5, BounceRate: 1}, Dims: res.Dims}, nil, "", noIcon)
 	if len(n.stats) != 1 || n.stats[0].Label != "Top country" {
 		t.Fatalf("zeros: %+v", n.stats)
 	}
 	// Nothing before it, nothing in it: no change and no numbers that are not true.
 	n = cardWordsOf(&query.Result{}, "example.com", cardPeriodOf("7d"), "")
-	n.overview(&query.Result{Dims: map[string][]query.Row{"country": {{Value: "ZZZ", Visitors: 3}}}}, nil)
+	n.overview(&query.Result{Dims: map[string][]query.Row{"country": {{Value: "ZZZ", Visitors: 3}}}}, nil, "", noIcon)
 	if n.change != "" || n.dir != 0 || len(n.stats) != 0 {
 		t.Fatalf("empty: %+v", n)
 	}
@@ -163,5 +173,84 @@ func TestCardIcon(t *testing.T) {
 	}
 	if g.api.cardIcon(ctx, g.site, "nope.example.org") == nil {
 		t.Fatal("the owner's icon is not used")
+	}
+}
+
+func noIcon(string) image.Image { return nil }
+
+// The picked stats: unknown ids, repeats and the card's own big number are
+// left out, three at most, in the order asked; nothing usable is the default.
+func TestCardStatsOf(t *testing.T) {
+	for _, c := range []struct{ raw, metric, want string }{
+		{"", "visitors", "engaged,avgtime,country"},
+		{"nope,<x>,,", "visitors", "engaged,avgtime,country"},
+		{"page,source,country,bounce", "visitors", "page,source,country"},
+		{"page,page,visitors,source", "visitors", "page,source"},
+		{"", "engaged", "avgtime,country"},
+		{"pageviews", "pageviews", "engaged,avgtime,country"},
+		{" bounce , page ", "revenue", "bounce,page"},
+	} {
+		if got := strings.Join(cardStatsOf(c.raw, c.metric), ","); got != c.want {
+			t.Errorf("%q on %s: %s, want %s", c.raw, c.metric, got, c.want)
+		}
+	}
+}
+
+// Every metric is a card's big number with its own chart; an unknown one,
+// and revenue without money, is visitors.
+func TestCardMetrics(t *testing.T) {
+	res := &query.Result{
+		KPIs:   query.KPIs{Visitors: 100, Sessions: 80, Pageviews: 300, BounceRate: 0.25},
+		Series: []query.Point{{Visitors: 10, Pageviews: 20, Bounce: 0.5}, {Visitors: 40, Pageviews: 90}},
+		Money:  &query.Money{Currency: "USD", Exponent: 2, Revenue: 5000},
+	}
+	for metric, want := range map[string][3]string{
+		"visitors": {"visitors", "100", "10,40"}, "pageviews": {"pageviews", "300", "20,90"},
+		"engaged": {"engaged", "60", "5,40"}, "revenue": {"revenue", "$50", "0,0"}, "bogus": {"visitors", "100", "10,40"},
+	} {
+		n := cardWordsOf(res, "example.com", cardPeriodOf("7d"), metric)
+		var series []string
+		for _, v := range n.series {
+			series = append(series, strconv.FormatFloat(v, 'f', -1, 64))
+		}
+		if n.Metric != want[0] || n.Big != want[1] || strings.Join(series, ",") != want[2] {
+			t.Errorf("%s: %s %s %v", metric, n.Metric, n.Big, series)
+		}
+	}
+	if n := cardWordsOf(res, "example.com", cardPeriodOf("7d"), "engaged"); n.Label != "engaged visits" || !strings.Contains(n.Post, "60 engaged visits") {
+		t.Fatalf("%+v", n)
+	}
+}
+
+// The small numbers follow the pick: page, source (with the icon the cache
+// has), bounce and revenue, each only where it is true; the metric is never repeated.
+func TestCardPickedStats(t *testing.T) {
+	res := &query.Result{
+		KPIs: query.KPIs{Visitors: 100, Sessions: 80, Pageviews: 300, BounceRate: 0.25, AvgSessionS: 30},
+		Dims: map[string][]query.Row{
+			"entry_page": {{Value: "/pricing", Visitors: 40}}, "referrer": {{Value: "news.example.org", Visitors: 30}},
+			"country": {{Value: "DE", Visitors: 50}},
+		},
+		Money: &query.Money{Currency: "USD", Exponent: 2, Revenue: 5000},
+	}
+	icon := image.NewRGBA(image.Rect(0, 0, 2, 2))
+	var asked string
+	get := func(host string) image.Image { asked = host; return icon }
+	n := cardWordsOf(res, "example.com", cardPeriodOf("7d"), "pageviews")
+	n.overview(res, nil, "page,source,bounce", get)
+	if len(n.stats) != 3 || n.stats[0].Value != "/pricing" || n.stats[1].Icon == nil || asked != "news.example.org" || n.stats[2].Value != "25%" {
+		t.Fatalf("%+v", n.stats)
+	}
+	n = cardWordsOf(res, "example.com", cardPeriodOf("7d"), "visitors")
+	n.overview(res, nil, "country,revenue,visitors", noIcon)
+	if len(n.stats) != 2 || n.stats[0].Flag != "DE" || n.stats[1].Value != "$50" {
+		t.Fatalf("%+v", n.stats)
+	}
+	// No money, no source, no page: those are left off.
+	res.Money, res.Dims = nil, nil
+	n = cardWordsOf(res, "example.com", cardPeriodOf("7d"), "visitors")
+	n.overview(res, nil, "revenue,page,pageviews", noIcon)
+	if len(n.stats) != 1 || n.stats[0].Label != "Pageviews" {
+		t.Fatalf("%+v", n.stats)
 	}
 }

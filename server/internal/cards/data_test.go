@@ -2,6 +2,7 @@ package cards
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/binary"
 	"image"
 	"image/color"
@@ -148,6 +149,59 @@ func TestDecodeIcon(t *testing.T) {
 	for _, bad := range [][]byte{nil, []byte("<svg/>"), {0, 0, 1, 0, 1, 0, 4, 4}, append(entry(slices.Clone(dir), 5000, 22), 1, 2, 3)} {
 		if DecodeIcon(bad) != nil {
 			t.Errorf("%q is no icon", bad)
+		}
+	}
+}
+
+// A stat that is a site draws its icon in a square before the name, and the
+// cache key tells a card with the icon from one without.
+func TestOverviewStatIcon(t *testing.T) {
+	_, th := ThemeOf("dark")
+	icon := image.NewRGBA(image.Rect(0, 0, 16, 16))
+	draw.Draw(icon, icon.Bounds(), &image.Uniform{color.RGBA{0, 0, 220, 255}}, image.Point{}, draw.Src)
+	s := Spec{Template: "overview", Theme: th, Domain: "example.com", Big: "9", Label: "pageviews", Series: []float64{1, 5, 3, 9},
+		Stats: []Stat{{Value: "/pricing", Label: "Top page"}, {Value: "news.example.org", Label: "Top source", Icon: icon}}}
+	b, err := s.PNG()
+	if err != nil {
+		t.Fatal(err)
+	}
+	img, err := png.Decode(bytes.NewReader(b))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c := color.RGBAModel.Convert(img.At(left+statStep+flagBoxH/2, statValueY-flagBoxH/2+2)).(color.RGBA); c.B < 200 || c.R > 40 {
+		t.Fatalf("icon: %v", c)
+	}
+	bare := s
+	bare.Stats = []Stat{s.Stats[0], {Value: "news.example.org", Label: "Top source"}}
+	if s.Key() == bare.Key() {
+		t.Fatal("the key ignores the icon")
+	}
+}
+
+// A WebP icon is an icon (the server keeps them).
+func TestDecodeIconWebP(t *testing.T) {
+	b, _ := base64.StdEncoding.DecodeString("UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==")
+	if img := DecodeIcon(b); img == nil {
+		t.Fatal("webp")
+	}
+}
+
+// A long value is cut to its room, wide letters sooner than narrow ones, and a short one is left whole.
+func TestFit(t *testing.T) {
+	for _, c := range []struct {
+		in   string
+		room float64
+		want string
+	}{
+		{"Germany", 222, "Germany"},
+		{"United Kingdom", 222, "United Kingd…"},
+		{"/pricing/team/enterprise", 222, "/pricing/tea…"},
+		{"MMMMMMMMMM", 222, "MMMMMMM…"},
+		{"", 10, ""},
+	} {
+		if got := fit(c.in, c.room); got != c.want {
+			t.Errorf("%q: %q, want %q", c.in, got, c.want)
 		}
 	}
 }

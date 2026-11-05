@@ -303,6 +303,9 @@
     align-items: center;
     gap: 6px;
   }
+  :root .sd-stats-btn {
+    min-height: var(--ph-hit);
+  }
   :root .sd-tool {
     width: var(--ph-hit);
     height: var(--ph-hit);

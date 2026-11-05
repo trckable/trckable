@@ -15,6 +15,7 @@ import (
 	"image"
 	"math"
 	"strconv"
+	"strings"
 	"text/template"
 )
 
@@ -73,8 +74,12 @@ type Spec struct {
 }
 
 // Stat is one small number: its value and what it is, as words. Flag is a
-// country's two-letter code when the value is that country, "" otherwise.
-type Stat struct{ Value, Label, Flag string }
+// country's two-letter code when the value is that country, "" otherwise;
+// Icon is a site's icon when the value is that site (nil: none to draw).
+type Stat struct {
+	Value, Label, Flag string
+	Icon               image.Image
+}
 
 // Item is one leaderboard line: what it is and its count, as words.
 type Item struct {
@@ -114,7 +119,16 @@ func luminance(hex string) float64 {
 
 // Key identifies what a card draws, for a cache.
 func (s Spec) Key() string {
-	return fmt.Sprintf("%s|%v|%s|%s|%s|%s|%s|%v|%v|%s|%d|%v", s.Template, s.Theme, s.ink(), s.Domain, s.Big, s.Label, s.Foot, s.Rows, s.Series, s.Change, s.Dir, s.Stats)
+	return fmt.Sprintf("%s|%v|%s|%s|%s|%s|%s|%v|%v|%s|%d|%s", s.Template, s.Theme, s.ink(), s.Domain, s.Big, s.Label, s.Foot, s.Rows, s.Series, s.Change, s.Dir, statsKey(s.Stats))
+}
+
+// statsKey is the small numbers as text, an icon as a mark that there is one.
+func statsKey(stats []Stat) string {
+	var b strings.Builder
+	for _, st := range stats {
+		fmt.Fprintf(&b, "%s/%s/%s/%t;", st.Value, st.Label, st.Flag, st.Icon != nil)
+	}
+	return b.String()
 }
 
 // Span is a piece of a text line in one weight and colour.

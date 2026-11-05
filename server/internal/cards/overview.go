@@ -37,20 +37,36 @@ func init() {
 	Templates["overview"] = Template{Shapes: shapes, Runs: overviewRuns, Data: overviewChart, Pics: overviewPics}
 }
 
-// overviewPics are the site's icon in its tile, and the flag of a stat that
-// is a country, both only when there is a picture to draw.
+// overviewPics are the site's icon in its tile, and the flag (or the icon) of
+// a stat that is a country (or a site), each only when there is a picture to draw.
 func overviewPics(s Spec) []Pic {
 	var pics []Pic
 	if s.Icon != nil {
 		pics = append(pics, Pic{Img: s.Icon, Box: image.Rect(left+6, tileY+6, left+tile-6, tileY+tile-6), Radius: 8})
 	}
 	for i, st := range s.Stats[:min(len(s.Stats), MaxStats)] {
-		if f := Flag(st.Flag); f != nil {
-			x := left + i*statStep
-			pics = append(pics, Pic{Img: f, Box: image.Rect(x, statValueY-flagBoxH+2, x+flagBoxW, statValueY+2), Radius: 4})
+		x := left + i*statStep
+		if f := st.pic(); f != nil {
+			pics = append(pics, Pic{Img: f, Box: image.Rect(x, statValueY-flagBoxH+2, x+st.picW(), statValueY+2), Radius: 4})
 		}
 	}
 	return pics
+}
+
+// pic is the picture beside a stat's value: its flag, else its icon.
+func (st Stat) pic() image.Image {
+	if f := Flag(st.Flag); f != nil {
+		return f
+	}
+	return st.Icon
+}
+
+// picW is that picture's width: a flag is wider than tall, an icon square.
+func (st Stat) picW() int {
+	if Flag(st.Flag) != nil {
+		return flagBoxW
+	}
+	return flagBoxH
 }
 
 // A flag beside a country's name, and the room the name leaves for it.
@@ -58,7 +74,42 @@ const (
 	flagBoxW = 36
 	flagBoxH = 27
 	flagGap  = 12
+	statGap  = 18 // the room a stat leaves between itself and the next
 )
+
+// fit keeps a stat's value inside its room (px, at the value's size): its
+// letters are measured by class, not by the font, and it ends in an ellipsis
+// when it does not fit.
+func fit(s string, room float64) string {
+	const em = 32.0
+	width := func(r rune) float64 {
+		switch {
+		case strings.ContainsRune("il.,:;'|!/ ft1jI-", r):
+			return 0.32 * em
+		case strings.ContainsRune("mwMW@", r):
+			return 0.84 * em
+		case unicode.IsUpper(r):
+			return 0.64 * em
+		}
+		return 0.56 * em
+	}
+	runes := []rune(s)
+	total := 0.0
+	for _, r := range runes {
+		total += width(r)
+	}
+	if total <= room {
+		return s
+	}
+	w := 0.0
+	for i, r := range runes {
+		if w+width(r)+0.9*em > room { // the ellipsis needs room too
+			return string(runes[:i]) + "…"
+		}
+		w += width(r)
+	}
+	return s
+}
 
 // fadeEdge is how much of the card's width, at each side, the chart fades over.
 const fadeEdge = 0.09
@@ -173,12 +224,13 @@ func overviewRuns(s Spec) []Run {
 	}...)
 	for i, st := range s.Stats[:min(len(s.Stats), MaxStats)] {
 		x := left + i*statStep
-		value := x
-		if Flag(st.Flag) != nil {
-			value += flagBoxW + flagGap
+		value, room := x, statStep-statGap
+		if st.pic() != nil {
+			value += st.picW() + flagGap
+			room -= st.picW() + flagGap
 		}
 		runs = append(runs,
-			Run{X: value, Y: statValueY, Px: 32, Spans: []Span{{Text: clip(st.Value, 16), Bold: true, Ink: s.Theme.FG}}},
+			Run{X: value, Y: statValueY, Px: 32, Spans: []Span{{Text: fit(st.Value, float64(room)), Bold: true, Ink: s.Theme.FG}}},
 			Run{X: x, Y: statLabelY, Px: 21, Spans: []Span{{Text: st.Label, Ink: s.Theme.Muted}}},
 		)
 	}

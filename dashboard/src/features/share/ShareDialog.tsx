@@ -9,7 +9,7 @@ import type { Site } from '../../lib/api'
 import { can } from '../../lib/permissions'
 import { Modal } from '../../kit/Modal'
 import { toast } from '../../components/Toast'
-import { ACCENTS, cardUrl, fileName, type CardWords, type Look, type Metric, type Period } from './card'
+import { ACCENTS, DEFAULT_STATS, METRICS, cardUrl, fileName, statsWith, type CardWords, type Look, type Period } from './card'
 import { Actions, type Act } from './Actions'
 import { copy } from './copy'
 import { copyImage, saveImage, shareImage } from './image'
@@ -21,13 +21,12 @@ import { Periods } from './Periods'
 import './ShareDialog.css'
 import { fail } from '../../components/toastBus'
 
-const METRICS: Metric[] = ['visitors', 'revenue']
-
 export default function ShareDialog({ site: first, sites, period = '7d', onClose }: { site: Site; sites: Site[]; period?: Period; onClose: () => void }) {
   const [siteId, setSiteId] = useState(first.id)
   const site = sites.find((s) => s.id === siteId) ?? first
-  const [look, setLook] = useState<Look>({ template: 'overview', period, metric: 'visitors', theme: 'dark', accent: ACCENTS[0] })
-  const set = (l: Partial<Look>) => setLook((x) => ({ ...x, ...l }))
+  const [look, setLook] = useState<Look>({ template: 'overview', period, metric: 'visitors', stats: DEFAULT_STATS, theme: 'dark', accent: ACCENTS[0] })
+  // A new big number is not shown again among the small ones.
+  const set = (l: Partial<Look>) => setLook((x) => (l.metric ? { ...x, ...l, stats: statsWith(l.stats ?? x.stats, l.metric) } : { ...x, ...l }))
   const [words, setWords] = useState<CardWords | null>(null)
   const [busy, setBusy] = useState<Act | null>(null)
   const [done, setDone] = useState<Act | null>(null)
@@ -75,7 +74,7 @@ export default function ShareDialog({ site: first, sites, period = '7d', onClose
       setBusy(null)
     }
   }
-  const metrics = words?.revenue ? METRICS : []
+  const metrics = METRICS.filter((m) => m !== 'revenue' || words?.revenue)
 
   return (
     <Modal label={copy.title} className="sd-modal" onClose={onClose}>
@@ -104,7 +103,7 @@ export default function ShareDialog({ site: first, sites, period = '7d', onClose
         <div className="sd-body">
           <Templates value={look.template} onChange={(t) => set({ template: t })} />
           <Periods value={look.period} onChange={(p) => set({ period: p })} className="sd-period is-body" />
-          <Toolbar site={site} sites={sites.length ? sites : [site]} onSite={setSiteId} look={look} set={set} metrics={metrics} />
+          <Toolbar site={site} sites={sites.length ? sites : [site]} onSite={setSiteId} look={look} set={set} metrics={metrics} revenue={words?.revenue ?? false} />
           <Preview site={site.id} look={look} words={words} />
           <Actions post={look.template === 'post'} busy={busy} done={done} onAct={(a) => void go(a)} />
         </div>
