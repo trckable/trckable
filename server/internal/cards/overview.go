@@ -31,7 +31,7 @@ func init() {
 	shapes := template.Must(template.New("overview").Funcs(template.FuncMap{
 		"ghost": func(f Frame, x, y, k float64) map[string]any { return map[string]any{"F": f, "X": x, "Y": y, "K": k} },
 	}).Parse(`<rect width="1200" height="630" fill="{{.BG}}"/>` +
-		`<rect x="88" y="70" width="52" height="52" rx="15" fill="{{.Ink}}" fill-opacity="0.2"/>` +
+		`{{if not .Icon}}<rect x="88" y="70" width="52" height="52" rx="15" fill="{{.Ink}}" fill-opacity="0.2"/>{{end}}` +
 		`{{template "ghost" ghost . 892 520 0.6}}`))
 	template.Must(shapes.New("ghost").Parse(Ghost))
 	Templates["overview"] = Template{Shapes: shapes, Runs: overviewRuns, Data: overviewChart, Pics: overviewPics}
@@ -42,7 +42,7 @@ func init() {
 func overviewPics(s Spec) []Pic {
 	var pics []Pic
 	if s.Icon != nil {
-		pics = append(pics, Pic{Img: s.Icon, Box: image.Rect(left+6, tileY+6, left+tile-6, tileY+tile-6), Radius: 8})
+		pics = append(pics, Pic{Img: s.Icon, Box: image.Rect(left, tileY, left+tile, tileY+tile), Radius: 12})
 	}
 	for i, st := range s.Stats[:min(len(s.Stats), MaxStats)] {
 		x := left + i*statStep
