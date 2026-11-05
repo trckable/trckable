@@ -26,6 +26,15 @@ test('Live says which mention is sending people right now', async ({ page }) => 
   test.slow()
   await page.context().addCookies([{ name: 'trckable_session', value: await session('mentions-live'), url: API }])
   await page.route('**/api/v1/sites/*/mentions?*', (r) => r.fulfill({ json: answer(mentions) }))
+  // Live asks only where Mentions is on: the instance (from /me) and the site.
+  await page.route(/\/api\/v1\/me(\?|$)/, async (r) => r.fulfill({ json: { ...(await (await r.fetch()).json()), mentions: true } }))
+  await page.route('**/api/v1/sites', async (r) => {
+    if (r.request().method() !== 'GET') return r.continue()
+    const res = await r.fetch()
+    const body = (await res.json()) as { sites: Record<string, unknown>[] }
+    for (const s of body.sites) s.mentions = true
+    await r.fulfill({ response: res, json: body })
+  })
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=live`)
   await expect(page.locator('.mention-chip')).toContainText('From Hacker News now', { timeout: 20_000 })
   await expect(page.locator('.mention-chip')).toContainText('1,212')

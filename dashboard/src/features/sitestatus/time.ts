@@ -13,9 +13,10 @@ export function span(secs: number): string {
   return `${Math.floor(s / 86400)}d`
 }
 
-/** How long since the last visit, short; empty before the first. */
+/** How long a site has been quiet (since its last visit) or down (since the check first failed), short; empty before the first visit. */
 export function silence(s: Site, now = Date.now()): string {
-  return s.last_event_at ? span(now / 1000 - s.last_event_at) : ''
+  const since = s.down_since || s.last_event_at
+  return since ? span(now / 1000 - since) : ''
 }
 
 /** A moment as people say it: the time today, else the day and time. Times are 24 hours, as everywhere in the app. */
