@@ -1331,6 +1331,8 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .hd .mk-chip,.mk .hd .ib,.mk .hd .bellw .ib.bell,.mk .hd .account-menu .account-btn{box-sizing:border-box;height:var(--hc);min-height:var(--hc)}
 .mk .hd .ib,.mk .hd .bellw .ib.bell,.mk .hd .account-menu .account-btn{width:var(--hc);flex:none;border:1px solid var(--mk-line);background:var(--mk-card);border-radius:var(--mk-rc);color:var(--mk-muted)}
 .mk .hd .ib:hover,.mk .hd .bellw .ib.bell:hover,.mk .hd .account-menu .account-btn:hover{background:var(--mk-hovbg);border-color:var(--mk-bord2)}
+/* Open: a button whose menu is showing stays lit, like the usage pill. */
+.mk .hd .ib[aria-expanded="true"],.mk .hd .bellw .ib.bell[aria-expanded="true"],.mk .hd .account-menu .account-btn[aria-expanded="true"]{background:var(--mk-hovbg);border-color:var(--mk-bord2);color:var(--mk-text)}
 .mk .hd .account-menu .account-btn .acct-dot{top:-3px;right:-3px}
 .mk .hd .logo{align-self:center}
 .mk .hd>div:has(#siteBtn){min-width:0}
