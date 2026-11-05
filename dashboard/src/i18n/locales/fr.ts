@@ -2635,7 +2635,6 @@ export default {
   'v2explore.qEngBest': (n: string, p: number) => `${n} retient le mieux les personnes : ${p} % sont actives.`,
   'v2explore.qTooFew': 'Trop peu de personnes pour dire quelle source est la meilleure.',
   'v2explore.pathsVisits': 'Visites',
-  'v2explore.pathsPerVisit': 'Pages par visite',
   'v2explore.pathsFirst': 'Première page principale',
   'v2explore.pathsLast': 'Dernière page principale',
   'v2explore.pathsVisitsOf': (n: string) => `${n} visites`,

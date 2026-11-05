@@ -2634,7 +2634,6 @@ export default {
   'v2explore.qEngBest': (n: string, p: number) => `${n} houdt mensen het best vast: ${p} % is betrokken.`,
   'v2explore.qTooFew': 'Nog te weinig mensen om te zeggen welke bron het beste is.',
   'v2explore.pathsVisits': 'Bezoeken',
-  'v2explore.pathsPerVisit': 'Pagina’s per bezoek',
   'v2explore.pathsFirst': 'Meest gekozen eerste pagina',
   'v2explore.pathsLast': 'Meest gekozen laatste pagina',
   'v2explore.pathsVisitsOf': (n: string) => `${n} bezoeken`,

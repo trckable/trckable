@@ -28,7 +28,8 @@ function GoogleLines({ x }: { x: XCtx }) {
   useEffect(() => {
     const ac = new AbortController()
     more
-      .searchReport(x.site.id, x.query, 'query', ac.signal)
+      .searchConsole(x.site.id)
+      .then((c): Promise<SearchReport | 'off'> => (c.connected ? more.searchReport(x.site.id, x.query, 'query', ac.signal) : Promise.resolve('off' as const)))
       .then(setRep)
       .catch((e: unknown) => !ac.signal.aborted && setRep(/not connected|module is off/i.test(messageOf(e)) ? 'off' : null))
     return () => ac.abort()
@@ -76,7 +77,7 @@ export default function AiTab({ x }: { x: XCtx }) {
   const hit = Math.max(1, ...rep.bots.map((b) => b.hits))
   const crawlers: CRow[] = rep.bots.slice(0, ROWS).map((b) => ({ key: `${b.name}/${b.kind}`, a: `${b.name} · ${aiCopy.kind[b.kind] ?? b.kind}`, bar: b.hits / hit, c: [fmtInt(b.hits), <FailedCell blocked={b.blocked ?? 0} broken={b.errors ?? 0} />] }))
   const kinds = KINDS.map((k) => ({ ...k, n: rep.bots.filter((b) => b.kind === k.k).reduce((n, b) => n + b.hits, 0) })).filter((k) => k.n > 0)
-  const pages = rep.pages.filter((p) => p.read > 0 || p.flag).slice(0, ROWS)
+  const pages = [...rep.pages].filter((p) => p.read > 0 || p.flag).sort((a, b) => b.read - a.read).slice(0, ROWS)
   const read = Math.max(1, ...pages.map((p) => p.read))
   const reads: CRow[] = pages.map((p) => ({ key: p.path, a: p.flag ? <>{p.path} <em className="xflag">{aiCopy.flag[p.flag]}</em></> : p.path, bar: p.read / read, mono: true, onPick: () => x.pick('page', p.path), c: [fmtInt(p.read), fmtInt(p.sent)] }))
   return (

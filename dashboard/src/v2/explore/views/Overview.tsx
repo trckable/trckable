@@ -28,7 +28,7 @@ export function Overview({ x, d }: { x: XCtx; d: Model }) {
       <div className="x2">
         <div>
           <XSec a={copy.topPages} b={rowWords().filter} />
-          <PeopleTable x={x} rows={d.pages} head={copy.heads.page} mono mark={(r) => rowMark('pages', r)} selected={valueOf(x.filters, 'page')} onPick={(r) => x.pick('page', r.val)} dim="page" limit={5} of={d.of} onAll={x.showAll} go={{ label: copy.showAllPages, section: 'pages', run: () => x.goTo('pages') }} />
+          <PeopleTable x={x} rows={d.pages.map((r) => (r.name === '/' ? { ...r, name: copy.homePage } : r))} head={copy.heads.page} mono mark={(r) => rowMark('pages', r)} selected={valueOf(x.filters, 'page')} onPick={(r) => x.pick('page', r.val)} dim="page" limit={5} of={d.of} onAll={x.showAll} go={{ label: copy.showAllPages, section: 'pages', run: () => x.goTo('pages') }} />
         </div>
         <div>
           <XSec a={copy.topSources} />

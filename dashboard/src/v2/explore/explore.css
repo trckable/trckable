@@ -100,9 +100,27 @@
 .mk .xt.xl .xrw {
   grid-template-columns: var(--xcp);
 }
+.mk .xp.full .xt.xl .xth,
+.mk .xp.full .xt.xl .xrw {
+  grid-template-columns: minmax(0, 1fr) 56px 72px 56px;
+}
 @media (--xs) {
   .mk .xt.xl .xth,
-  .mk .xt.xl .xrw {
+  .mk .xt.xl .xrw,
+  .mk .xp.full .xt.xl .xth,
+  .mk .xp.full .xt.xl .xrw {
+    grid-template-columns: var(--xcm);
+  }
+}
+
+/* A wide card shows no share column: its tables lay out without that track, so the last column ends at the card's edge. */
+.mk .xcards .xcp.wide .xt.xc .xth,
+.mk .xcards .xcp.wide .xt.xc .xrw {
+  grid-template-columns: var(--xcn);
+}
+@media (--xs) {
+  .mk .xcards .xcp.wide .xt.xc .xth,
+  .mk .xcards .xcp.wide .xt.xc .xrw {
     grid-template-columns: var(--xcm);
   }
 }

@@ -313,7 +313,7 @@
 .mk .xcards .kit-band{opacity:.24}
 .mk .xcards .kit-band.lit{opacity:.8}
 /* Time to convert: filled rows. */
-.mk .ttc{display:flex;flex-direction:column;gap:6px}
+.mk .ttc{display:flex;flex-direction:column;gap:6px;padding-top:36px}
 .mk .ttc-r{display:grid;grid-template-columns:56px 1fr 44px;align-items:center;gap:var(--mk-s2);font-size:12.5px;color:var(--mk-muted)}
 .mk .ttc-r b{color:var(--mk-text);text-align:right;font-variant-numeric:tabular-nums}
 /* Sales: the net, the split, the keys. */

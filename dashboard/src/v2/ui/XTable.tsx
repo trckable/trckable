@@ -75,9 +75,11 @@ export function XTable({ rows, head, unit = copy.people, mono, flags, mark, sele
   // The side panel has no share column and no conversion: the name keeps its room.
   const panel = ['minmax(0,1fr) 70px 96px', ...(left ? ['72px'] : []), ...(signups ? ['64px'] : []), ...(paid ? ['84px'] : [])].join(' ')
   const narrow = ['minmax(0,1fr) 52px 64px', ...(left ? ['52px'] : []), ...(signups ? ['52px'] : [])].join(' ')
+  // A card hides the share column: the same columns without its track, so the last column ends flush with the card.
+  const bare = ['minmax(0,1fr) 70px 96px', ...(left ? ['72px'] : []), ...(signups ? ['64px'] : []), ...(paid ? ['64px 84px'] : [])].join(' ')
   const max = Math.max(1, ...rows.map((r) => Math.max(r.v, r.c)))
   return (
-    <div className={`xt${paid || signups || left ? ' xc' : ''}${left ? ' xl' : ''}${signups ? ' xsu' : ''}`} style={paid || signups || left ? ({ '--xc': wide, '--xcp': panel, '--xcm': narrow } as React.CSSProperties) : undefined}>
+    <div className={`xt${paid || signups || left ? ' xc' : ''}${left ? ' xl' : ''}${signups ? ' xsu' : ''}`} style={paid || signups || left ? ({ '--xc': wide, '--xcn': bare, '--xcp': panel, '--xcm': narrow } as React.CSSProperties) : undefined}>
       <div className="xth">
         <span>{head}</span>
         <span>{unit}</span>
