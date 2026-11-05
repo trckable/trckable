@@ -47,7 +47,7 @@ func TestCardEmpty(t *testing.T) {
 // or accent says; no other account's site; nobody signed out.
 func TestCardRoute(t *testing.T) {
 	g := newRig(t)
-	noOutbound(t)
+	noOutbound(t, g)
 	owner := client()
 	g.setup(t, owner)
 	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
@@ -104,22 +104,34 @@ func TestCardOverview(t *testing.T) {
 }
 
 // noOutbound keeps a test off the internet: the icon fetches go to a stand-in.
-func noOutbound(t *testing.T) *atomic.Int32 {
+// A lookup runs in the background, so the real client comes back only once
+// none is left.
+func noOutbound(t *testing.T, g *rig) {
 	t.Helper()
 	var hits atomic.Int32
 	srv := iconServer(t, &hits)
 	old := refIconClient
 	refIconClient = func() *http.Client { return toServer(srv, 2*time.Second) }
-	t.Cleanup(func() { refIconClient = old })
-	return &hits
+	t.Cleanup(func() {
+		for range 200 {
+			g.api.refIcons.mu.Lock()
+			n := len(g.api.refIcons.pending)
+			g.api.refIcons.mu.Unlock()
+			if n == 0 {
+				break
+			}
+			time.Sleep(20 * time.Millisecond)
+		}
+		refIconClient = old
+	})
 }
 
 // The card's tile takes the owner's icon first, else the site's favicon; the
 // card never waits for the fetch (the first one has the initial), and a site
 // with no usable icon keeps the initial.
 func TestCardIcon(t *testing.T) {
-	noOutbound(t)
 	g := newRig(t)
+	noOutbound(t, g)
 	ctx := context.Background()
 	warm := func(host string) {
 		t.Helper()
