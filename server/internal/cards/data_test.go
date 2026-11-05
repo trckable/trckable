@@ -121,8 +121,8 @@ func TestDecodeIcon(t *testing.T) {
 	}
 	entry := func(dir []byte, size, off int) []byte {
 		e := []byte{4, 4, 0, 0, 1, 0, 32, 0}
-		e = binary.LittleEndian.AppendUint32(e, uint32(size))
-		return append(dir, binary.LittleEndian.AppendUint32(e, uint32(off))...)
+		e = binary.LittleEndian.AppendUint32(e, uint32(size)) //nolint:gosec // a test icon's few bytes
+		return append(dir, binary.LittleEndian.AppendUint32(e, uint32(off))...) //nolint:gosec // as above
 	}
 	dir := []byte{0, 0, 1, 0, 1, 0}
 	if img := DecodeIcon(append(entry(slices.Clone(dir), p.Len(), 22), p.Bytes()...)); img == nil {
