@@ -1,6 +1,6 @@
 // The small row above the preview: which site, light or dark, the accent,
-// the number; and apart, the one thing to do with it.
-import { Check, Copy, Download, Moon, Sun } from 'lucide-react'
+// the number.
+import { Moon, Sun } from 'lucide-react'
 import type { Site } from '../../lib/api'
 import { Select } from '../../components/Select'
 import { SiteMark } from '../../components/SiteMark'
@@ -14,19 +14,6 @@ type Props = {
   look: Look
   set: (l: Partial<Look>) => void
   metrics: Metric[]
-}
-
-/** The one thing to do: download the PNG, or copy the post. */
-export function GoButton({ post, busy, done, onGo }: { post: boolean; busy: boolean; done: boolean; onGo: () => void }) {
-  const GoIcon = post ? Copy : Download
-  return (
-    <button type="button" className="btn primary sd-go" disabled={busy} title={post ? copy.copyText : copy.downloadTitle} onClick={onGo}>
-      {busy && <span className="btn-spin" aria-hidden="true" />}
-      {!busy && done && <Check size={16} strokeWidth={2.4} aria-hidden="true" />}
-      {!busy && !done && <GoIcon size={16} strokeWidth={1.9} aria-hidden="true" />}
-      {post ? copy.copyText : copy.download}
-    </button>
-  )
 }
 
 export function Toolbar({ site, sites, onSite, look, set, metrics }: Props) {

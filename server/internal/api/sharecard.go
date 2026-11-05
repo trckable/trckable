@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+	"math"
 	"net/http"
 	"time"
 
@@ -12,14 +14,14 @@ import (
 // dialog shows it and downloads it, so preview and file are one picture.
 //
 //	GET /api/v1/sites/{site}/card
-//	t        spotlight | leaderboard | dashboard (default spotlight)
+//	t        overview | leaderboard (default overview)
 //	period   24h | 7d | 30d (default 7d)
 //	metric   visitors | pageviews | revenue (default visitors)
 //	theme    dark | light
 //	accent   #rrggbb
 //	format   png (default) | json: the numbers in words and a post's text
 //
-// Only totals, top pages and a chart: never a visitor. Revenue is in a card
+// Only totals, top pages, a chart and the top country: never a visitor. Revenue is in a card
 // only where the report would show it to this reader (the module on, a
 // payment provider connected); asked for anywhere else it is visitors.
 
@@ -38,6 +40,9 @@ type cardNumbers struct {
 	Post      string `json:"post"`
 	rows      []cards.Item
 	series    []float64
+	change    string // the people against the period before: "+12%", "" when there is none
+	dir       int
+	stats     []cards.Stat
 	domain    string
 	visitors  int64
 	pageviews int64
@@ -52,7 +57,8 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	v := r.URL.Query()
-	n, ok := a.cardRead(w, r, q, r.PathValue("site"), cardPeriodOf(v.Get("period")), v.Get("metric"))
+	tpl := cardTemplateOf(v.Get("t"))
+	n, ok := a.cardRead(w, r, q, r.PathValue("site"), cardPeriodOf(v.Get("period")), v.Get("metric"), tpl == "overview" && v.Get("format") != "json")
 	if !ok {
 		return
 	}
@@ -63,8 +69,9 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 	}
 	_, theme := cards.ThemeOf(v.Get("theme"))
 	spec := cards.Spec{
-		Template: cardTemplateOf(v.Get("t")), Theme: theme, Accent: v.Get("accent"),
+		Template: tpl, Theme: theme, Accent: v.Get("accent"),
 		Domain: n.domain, Big: n.Big, Label: n.Label, Foot: n.Foot, Series: n.series,
+		Change: n.change, Dir: n.dir, Stats: n.stats,
 	}
 	if spec.Template == "leaderboard" {
 		spec.Label, spec.Rows = cardWords.topPages, n.rows
@@ -86,8 +93,9 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 }
 
 // cardRead reads the period's report the way the dashboard does, and turns
-// it into the card's words.
-func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site string, p cardPeriod, metric string) (cardNumbers, bool) {
+// it into the card's words; with overview, also the small numbers and the
+// change against the period before.
+func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site string, p cardPeriod, metric string, overview bool) (cardNumbers, bool) {
 	si, err := a.Ctl.SiteInfo(r.Context(), site)
 	if err != nil {
 		fail(w, http.StatusNotFound, "site not found")
@@ -117,7 +125,62 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 		reportFail(w, err)
 		return cardNumbers{}, false
 	}
-	return cardWordsOf(res, si.Domain, p, metric), true
+	n := cardWordsOf(res, si.Domain, p, metric)
+	if overview {
+		// Only the totals of the period before: no money, goals or groups to scan.
+		before := fairPrevious(params, a.Now())
+		before.Revenue, before.Goals, before.Groups, before.PageGoals, before.Limit = false, false, nil, nil, 1
+		if prev, err := a.cachedReport(ask, q, before); err == nil {
+			n.overview(res, prev)
+		} else {
+			n.overview(res, nil)
+		}
+	}
+	return n, true
+}
+
+// overview sets what only the overview card draws: the change of the people
+// against the period before (nothing when that had none), and the engaged
+// visits, the average time and the top country.
+func (n *cardNumbers) overview(res, prev *query.Result) {
+	if prev != nil && prev.KPIs.Visitors > 0 && n.Metric == "visitors" {
+		d := float64(n.visitors-prev.KPIs.Visitors) / float64(prev.KPIs.Visitors) * 100
+		n.dir = 1
+		switch {
+		case math.Round(d) < 0:
+			n.dir = -1
+		case math.Round(d) == 0:
+			n.dir = 0
+		}
+		if n.dir != 0 {
+			n.change = fmt.Sprintf("%+.0f%%", d)
+		}
+	}
+	// A number with nothing behind it (no engaged visit, no time on the site) is left off.
+	k := res.KPIs
+	if engaged := int64(math.Round(float64(k.Sessions) * (1 - k.BounceRate))); engaged > 0 {
+		n.stats = append(n.stats, cards.Stat{Value: number(engaged), Label: cardWords.engaged})
+	}
+	if k.AvgSessionS >= 0.5 {
+		n.stats = append(n.stats, cards.Stat{Value: duration(k.AvgSessionS), Label: cardWords.avgTime})
+	}
+	if top := res.Dims["country"]; len(top) > 0 && top[0].Visitors > 0 {
+		if name := countryName(top[0].Value); name != "" {
+			n.stats = append(n.stats, cards.Stat{Value: name, Label: cardWords.topCountry})
+		}
+	}
+}
+
+// duration is a session's length the way the dashboard writes it: 45s, 3m 12s.
+func duration(s float64) string {
+	sec := int64(math.Round(s))
+	switch {
+	case sec < 60:
+		return fmt.Sprintf("%ds", sec)
+	case sec < 3600:
+		return fmt.Sprintf("%dm %02ds", sec/60, sec%60)
+	}
+	return fmt.Sprintf("%dh %02dm", sec/3600, sec%3600/60)
 }
 
 func cardWordsOf(res *query.Result, domain string, p cardPeriod, metric string) cardNumbers {

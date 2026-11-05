@@ -5,13 +5,17 @@ import "fmt"
 // The share card's words, in one place for when translations come.
 var cardWords = struct {
 	visitors, pageviews, revenue, topPages, noVisits, counted string
+	engaged, avgTime, topCountry                              string
 }{
-	visitors:  "visitors",
-	pageviews: "pageviews",
-	revenue:   "revenue",
-	topPages:  "Top pages",
-	noVisits:  "No visits yet",
-	counted:   "Counted with trckable",
+	visitors:   "visitors",
+	pageviews:  "pageviews",
+	revenue:    "revenue",
+	topPages:   "Top pages",
+	noVisits:   "No visits yet",
+	counted:    "Counted with trckable",
+	engaged:    "Engaged visits",
+	avgTime:    "Avg time",
+	topCountry: "Top country",
 }
 
 // cardPeriod is one of the dialog's three periods.
@@ -36,10 +40,10 @@ func cardPeriodOf(s string) cardPeriod {
 
 func cardTemplateOf(s string) string {
 	switch s {
-	case "leaderboard", "dashboard":
+	case "leaderboard":
 		return s
 	}
-	return "spotlight"
+	return "overview"
 }
 
 // cardPost is a short text update: the picked number first, then the

@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"fmt"
 	"html"
+	"math"
 	"strconv"
 	"text/template"
 )
@@ -26,12 +27,13 @@ const (
 type Theme struct {
 	BG, FG, Muted string
 	Accent, Money string // the default accent, and the one for money
+	Down          string // a fall, in words next to a number
 }
 
 // Themes: dark by default, and light.
 var Themes = map[string]Theme{
-	"dark":  {BG: "#0b0d10", FG: "#f5f7fa", Muted: "#8b95a3", Accent: "#b8ff3c", Money: "#ffb547"},
-	"light": {BG: "#fafaf7", FG: "#0b0d10", Muted: "#5c6470", Accent: "#487f00", Money: "#9c5a00"},
+	"dark":  {BG: "#0b0d10", FG: "#f5f7fa", Muted: "#8b95a3", Accent: "#b8ff3c", Money: "#ffb547", Down: "#ff8a80"},
+	"light": {BG: "#fafaf7", FG: "#0b0d10", Muted: "#5c6470", Accent: "#487f00", Money: "#9c5a00", Down: "#c0352b"},
 }
 
 // ThemeOf is a theme by name, dark for anything unknown.
@@ -58,7 +60,16 @@ type Spec struct {
 	// lines (at most a handful) and a chart's points, any scale.
 	Rows   []Item
 	Series []float64
+	// Change is the overview's big number against the period before ("+12%",
+	// "" when there is nothing to compare), Dir its sign (1, -1 or 0); Stats
+	// are the small numbers under the chart, at most MaxStats.
+	Change string
+	Dir    int
+	Stats  []Stat
 }
+
+// Stat is one small number: its value and what it is, as words.
+type Stat struct{ Value, Label string }
 
 // Item is one leaderboard line: what it is and its count, as words.
 type Item struct {
@@ -66,17 +77,39 @@ type Item struct {
 	Share       float64 // 0–1: the bar's length against the top line
 }
 
-// ink is the accent in use.
+// ink is the accent in use: the one asked for when it can be seen on the
+// card's background (a pale green on a light card cannot), else the theme's.
 func (s Spec) ink() string {
-	if validHex(s.Accent) {
+	if validHex(s.Accent) && contrast(s.Accent, s.Theme.BG) >= 1.8 {
 		return s.Accent
 	}
 	return s.Theme.Accent
 }
 
+// contrast is the ratio of the relative luminances of two #rrggbb colours (1 to 21).
+func contrast(a, b string) float64 {
+	la, lb := luminance(a), luminance(b)
+	if la < lb {
+		la, lb = lb, la
+	}
+	return (la + 0.05) / (lb + 0.05)
+}
+
+func luminance(hex string) float64 {
+	c := rgb(hex)
+	lin := func(v uint8) float64 {
+		x := float64(v) / 255
+		if x <= 0.03928 {
+			return x / 12.92
+		}
+		return math.Pow((x+0.055)/1.055, 2.4)
+	}
+	return 0.2126*lin(c.R) + 0.7152*lin(c.G) + 0.0722*lin(c.B)
+}
+
 // Key identifies what a card draws, for a cache.
 func (s Spec) Key() string {
-	return fmt.Sprintf("%s|%v|%s|%s|%s|%s|%s|%v|%v", s.Template, s.Theme, s.ink(), s.Domain, s.Big, s.Label, s.Foot, s.Rows, s.Series)
+	return fmt.Sprintf("%s|%v|%s|%s|%s|%s|%s|%v|%v|%s|%d|%v", s.Template, s.Theme, s.ink(), s.Domain, s.Big, s.Label, s.Foot, s.Rows, s.Series, s.Change, s.Dir, s.Stats)
 }
 
 // Span is a piece of a text line in one weight and colour.
@@ -92,6 +125,7 @@ type Run struct {
 	X, Y  int
 	Px    float64
 	End   bool
+	Mid   bool // X is the middle of the line
 	Spans []Span
 }
 
@@ -166,6 +200,8 @@ func (s Spec) SVG() ([]byte, error) {
 		anchor := ""
 		if r.End {
 			anchor = ` text-anchor="end"`
+		} else if r.Mid {
+			anchor = ` text-anchor="middle"`
 		}
 		fmt.Fprintf(out, `<text x="%d" y="%d" font-size="%s"%s>`, r.X, r.Y, strconv.FormatFloat(r.Px, 'f', -1, 64), anchor)
 		for _, sp := range r.Spans {

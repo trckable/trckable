@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { accentsFor, cardUrl, fileName, type Look } from './card'
+import { accentsFor, cardUrl, fileName, periodOf, type Look } from './card'
 
 const look: Look = { template: 'leaderboard', period: '24h', metric: 'visitors', theme: 'light', accent: '#4f8cff' }
 
@@ -14,6 +14,9 @@ describe('cardUrl', () => {
     expect(Object.fromEntries(u.searchParams)).toEqual({ period: '24h', metric: 'visitors', format: 'json' })
   })
   it('names the file', () => expect(fileName('example.com', look)).toBe('trckable-example.com-leaderboard-24h.png'))
+  it('takes the page\'s period as the nearest card period', () => {
+    expect([periodOf('today'), periodOf('yesterday'), periodOf('7d'), periodOf('30d'), periodOf('90d'), periodOf('custom'), periodOf()]).toEqual(['24h', '24h', '7d', '30d', '30d', '30d', '30d'])
+  })
   it('puts the site colour first, once', () => {
     expect(accentsFor('#123ABC')[0]).toBe('#123abc')
     expect(accentsFor('#b8ff3c')).toHaveLength(5)

@@ -7,16 +7,18 @@ import (
 	"testing"
 )
 
-// Both data templates draw with data, without it, and with a flat line.
+// The data templates draw with data, without it, and with a flat line.
 func TestDataTemplatesRender(t *testing.T) {
 	_, th := ThemeOf("light")
 	for _, s := range []Spec{
 		{Template: "leaderboard", Theme: th, Domain: "example.com", Label: "Top pages", Foot: "Last 7 days",
 			Rows: []Item{{Name: "/", Value: "1,200", Share: 1}, {Name: "/pricing", Value: "300", Share: 0.25}}},
 		{Template: "leaderboard", Theme: th, Domain: "example.com", Label: "Top pages", Big: "No visits yet"},
-		{Template: "dashboard", Theme: th, Domain: "example.com", Big: "1,200", Label: "visitors", Series: []float64{1, 5, 3, 9}},
-		{Template: "dashboard", Theme: th, Domain: "example.com", Big: "0", Label: "visitors", Series: []float64{0, 0, 0}},
-		{Template: "dashboard", Theme: th, Domain: "example.com", Big: "0", Label: "visitors"},
+		{Template: "overview", Theme: th, Domain: "example.com", Big: "1,200", Label: "visitors", Foot: "Last 7 days", Change: "+12%", Dir: 1, Series: []float64{1, 5, 3, 9},
+			Stats: []Stat{{"900", "Engaged visits"}, {"2m 10s", "Avg time"}, {"Germany", "Top country"}}},
+		{Template: "overview", Theme: th, Domain: "example.com", Big: "0", Label: "visitors", Change: "-5%", Dir: -1, Series: []float64{0, 0, 0}},
+		{Template: "overview", Theme: th, Domain: "example.com", Big: "0", Label: "visitors"},
+		{Template: "overview", Theme: Themes["dark"], Domain: "example.com", Big: "7", Label: "visitors", Series: []float64{2, 2}},
 	} {
 		b, err := s.PNG()
 		if err != nil {
@@ -44,5 +46,14 @@ func TestLeaderboardClips(t *testing.T) {
 	}
 	if got := []rune(runs[4].Spans[0].Text); len(got) != 48 {
 		t.Fatalf("not clipped: %d", len(got))
+	}
+}
+
+// The overview's chart has no edge: its line fades at both sides, and there is no end dot.
+func TestOverviewChartFades(t *testing.T) {
+	s := Spec{Template: "overview", Theme: Themes["dark"], Series: []float64{1, 5, 3, 9}}
+	svg, err := s.SVG()
+	if err != nil || strings.Contains(string(svg), `r="11"`) || !strings.Contains(string(svg), `stroke="url(#edge)"`) {
+		t.Fatalf("chart: %v", err)
 	}
 }

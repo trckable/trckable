@@ -1,4 +1,4 @@
-// The look of a site's share links, from Share → Link: a logo, a colour, the
+// The look of a site's share links, from the header's Share → Link: a logo, a colour, the
 // "Hide trckable branding" switch and a domain; then the link, opened by
 // someone with no account, wears it. An SVG with script in it is refused.
 import { expect, test } from './fixtures'
@@ -30,8 +30,8 @@ test('a link wears the owner\'s logo and colour, and hides trckable\'s name', as
   await page.request.post(`${API}/api/e`, { headers: { 'Content-Type': 'text/plain', 'User-Agent': ua }, data: JSON.stringify({ s: site, k: 'pv', u: `https://${domain}/`, r: '', w: 1400 }) })
   await expect.poll(async () => ((await (await page.request.get(`${API}/api/v1/sites`)).json()).sites as { id: string; last_event_at?: number }[]).find((x) => x.id === site)?.last_event_at ?? 0, { timeout: 15_000 }).toBeGreaterThan(0)
 
-  await page.goto(`${API}/settings?site=${site}&tab=sharing`)
-  await page.getByRole('button', { name: 'Share your numbers' }).click()
+  await page.goto(`${API}/${domain}?view=briefing`)
+  await page.locator('.share-chip').click()
   const dialog = page.getByRole('dialog', { name: 'Share your numbers' })
   await dialog.locator('.sd-linkbtn').click()
   const look = dialog.locator('.sd-look')

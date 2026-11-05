@@ -1,11 +1,11 @@
 // What the dialog asks the server for: a card is one address, so the preview
 // and the download are the same picture.
-export type Template = 'spotlight' | 'leaderboard' | 'dashboard' | 'post'
+export type Template = 'overview' | 'leaderboard' | 'post'
 export type Period = '24h' | '7d' | '30d'
 export type Metric = 'visitors' | 'pageviews' | 'revenue'
 export type Theme = 'dark' | 'light'
 
-export const TEMPLATES: Template[] = ['spotlight', 'leaderboard', 'dashboard', 'post']
+export const TEMPLATES: Template[] = ['overview', 'leaderboard', 'post']
 export const PERIODS: Period[] = ['24h', '7d', '30d']
 /** The swatches: the site's own colour first, when it has one. */
 export const ACCENTS = ['#b8ff3c', '#4f8cff', '#ff5ca8', '#ffb547', '#2dd4bf']
@@ -25,6 +25,10 @@ export function cardUrl(site: string, l: Look, format: 'png' | 'json' = 'png'): 
   }
   return `/api/v1/sites/${encodeURIComponent(site)}/card?${p}`
 }
+
+/** The card's period for the page's: a day is the last 24 hours, a week or a month is itself, anything longer is a month. */
+const PAGE_PERIOD = new Map<string, Period>([['today', '24h'], ['yesterday', '24h'], ['7d', '7d']])
+export const periodOf = (page?: string): Period => PAGE_PERIOD.get(page ?? '') ?? '30d'
 
 export const fileName = (domain: string, l: Look) => `trckable-${domain}-${l.template}-${l.period}.png`
 

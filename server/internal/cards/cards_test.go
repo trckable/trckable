@@ -82,3 +82,19 @@ func TestCardLogoMatchesTheBrand(t *testing.T) {
 		}
 	}
 }
+
+// An accent that cannot be seen on the card's background is the theme's own.
+func TestAccentMustShow(t *testing.T) {
+	s := spec("light")
+	s.Accent = "#b8ff3c"
+	if s.ink() != Themes["light"].Accent {
+		t.Fatalf("pale green on light: %s", s.ink())
+	}
+	s.Accent = "#ff00aa"
+	if s.ink() != "#ff00aa" {
+		t.Fatalf("a visible accent is kept: %s", s.ink())
+	}
+	if d := spec("dark"); d.ink() != Themes["dark"].Accent {
+		t.Fatalf("dark default: %s", d.ink())
+	}
+}
