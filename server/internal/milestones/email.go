@@ -33,7 +33,7 @@ func (w Words) Headline(domain string) string {
 	switch {
 	case w.Kind == Pageviews && w.Big == words.first:
 		return fmt.Sprintf(mailFirstView, domain)
-	case w.Kind == Visitors, w.Kind == Pageviews, w.Kind == Countries:
+	case w.Kind == Visitors, w.Kind == Pageviews, w.Kind == Countries, w.Kind == SearchClicks, w.Kind == AIVisits:
 		return fmt.Sprintf(mailCrossed, domain, w.Line())
 	case w.Kind == FirstGoal:
 		return fmt.Sprintf(mailFirstGoal, domain)
@@ -72,7 +72,7 @@ func sinceFirst(m sqlite.Milestone, list []sqlite.Milestone) string {
 // nextStep is the step after m on its ladder, 0 at the top or for a family
 // without one (an amount of money is never named).
 func nextStep(m sqlite.Milestone) float64 {
-	if m.Kind != Visitors && m.Kind != Pageviews && m.Kind != Countries {
+	if m.Kind != Visitors && m.Kind != Pageviews && m.Kind != Countries && m.Kind != SearchClicks && m.Kind != AIVisits {
 		return 0
 	}
 	for _, v := range Steps[m.Kind] {

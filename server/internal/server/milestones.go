@@ -38,7 +38,7 @@ func (s *Server) checkMilestones(ctx context.Context) {
 			return
 		}
 		siteCtx, cancel := context.WithTimeout(ctx, siteWork)
-		fresh, err := milestones.Check(siteCtx, q, s.ctl, site, now)
+		fresh, err := milestones.Check(siteCtx, q, s.ctl, site, now, s.api.SearchDays)
 		cancel()
 		if err != nil {
 			slog.Warn("milestones check failed", "site", site.ID, "err", err)

@@ -14,6 +14,7 @@ type MilestoneDay struct {
 	Pageviews int64
 	Goals     bool  // any goal reached that day
 	Countries int64 // countries seen for the first time that day
+	AI        int64 // unique visitors AI assistants sent (the AI & search tab's assistants)
 }
 
 // MilestoneDays reads a site's history day by day, up to but not including
@@ -26,13 +27,14 @@ func (q Q) MilestoneDays(ctx context.Context, site, tz, before string) ([]Milest
 	// The zone was checked against the zone database by safeTZ; every value
 	// is bound as a parameter.
 	local := `CAST(((start AT TIME ZONE 'UTC') AT TIME ZONE '` + tz + `') AS DATE)`
-	//nolint:gosec // see above
+	//nolint:gosec // see above; aiAssistantSQL is built from constants in aisearch.go
 	rows, err := q.DB.QueryContext(ctx, `WITH s AS (
-			SELECT `+local+` AS d, visitor_id, pvs, goals, country FROM sessions WHERE site_id = ?
+			SELECT `+local+` AS d, visitor_id, pvs, goals, country, channel, referrer, utm_source FROM sessions WHERE site_id = ?
 		), f AS (
 			SELECT min(d) AS d FROM s WHERE coalesce(country, '') <> '' GROUP BY country
 		), c AS (SELECT d, count(*) AS n FROM f GROUP BY d)
-		SELECT strftime(s.d, '%Y-%m-%d'), count(DISTINCT s.visitor_id), sum(s.pvs), max(s.goals) > 0, coalesce(any_value(c.n), 0)
+		SELECT strftime(s.d, '%Y-%m-%d'), count(DISTINCT s.visitor_id), sum(s.pvs), max(s.goals) > 0, coalesce(any_value(c.n), 0),
+			count(DISTINCT CASE WHEN s.channel = '`+channelAI+`' AND (`+aiAssistantSQL+`) IS NOT NULL THEN s.visitor_id END)
 		FROM s LEFT JOIN c ON c.d = s.d
 		WHERE s.d < CAST(? AS DATE)
 		GROUP BY s.d ORDER BY s.d`, site, before)
@@ -43,7 +45,7 @@ func (q Q) MilestoneDays(ctx context.Context, site, tz, before string) ([]Milest
 	var out []MilestoneDay
 	for rows.Next() {
 		var d MilestoneDay
-		if err := rows.Scan(&d.Day, &d.Visitors, &d.Pageviews, &d.Goals, &d.Countries); err != nil {
+		if err := rows.Scan(&d.Day, &d.Visitors, &d.Pageviews, &d.Goals, &d.Countries, &d.AI); err != nil {
 			return nil, err
 		}
 		out = append(out, d)

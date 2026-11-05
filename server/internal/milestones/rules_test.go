@@ -72,7 +72,7 @@ func TestFirstLookBackIsQuiet(t *testing.T) {
 	h[200].Visitors = 300
 	h[150].Goal = true
 	h[300].Sale, h[300].Revenue = true, 150
-	plan := Plan(Reached(h, "EUR"), "")
+	plan := Plan(Reached(h, "EUR", nil), "", nil)
 	loud := map[string]string{}
 	records := 0
 	for _, m := range plan {
@@ -104,7 +104,7 @@ func TestFirstLookBackIsQuiet(t *testing.T) {
 func TestLaterChecksOnlyAddTheNew(t *testing.T) {
 	h := days("2026-01-01", 40, 20)
 	h[39].Visitors = 400 // 780 before it: 1,000 is crossed on the last day
-	plan := keys(Plan(Reached(h, ""), h[38].Day))
+	plan := keys(Plan(Reached(h, "", nil), h[38].Day, nil))
 	if plan["visitors/1000"].Quiet != false || plan["visitors/100"].Quiet != true {
 		t.Fatalf("plan: %+v", plan)
 	}
@@ -112,7 +112,7 @@ func TestLaterChecksOnlyAddTheNew(t *testing.T) {
 		t.Fatalf("the new record day: %+v", plan)
 	}
 	// The same history checked again a day later adds no record day.
-	again := keys(Plan(Reached(h, ""), h[39].Day))
+	again := keys(Plan(Reached(h, "", nil), h[39].Day, nil))
 	if _, ok := again["record_day/"+h[39].Day]; ok {
 		t.Fatalf("a record day stored twice: %+v", again)
 	}
@@ -121,7 +121,7 @@ func TestLaterChecksOnlyAddTheNew(t *testing.T) {
 func TestNextSteps(t *testing.T) {
 	h := days("2026-01-01", 10, 741)
 	h[0].Countries, h[0].Revenue = 12, 80
-	next := NextSteps(h, "USD", "2026-01-11")
+	next := NextSteps(h, "USD", "2026-01-11", nil)
 	want := "[{visitors 10000 7410  741} {pageviews 25000 14820  1482} {countries 25 12  1.2} {revenue 100 80 USD 8}]"
 	if fmt.Sprint(next) != want {
 		t.Fatalf("next: %v", next)
@@ -180,7 +180,7 @@ func TestCelebrated(t *testing.T) {
 func TestUpgradeDoesNotFlood(t *testing.T) {
 	h := days("2026-01-01", 100, 100) // 10,000 visitors: 250, 500, 2.5k, 5k all passed
 	checked := h[98].Day
-	for _, m := range Plan(Reached(h, ""), checked) {
+	for _, m := range Plan(Reached(h, "", nil), checked, nil) {
 		if m.Kind == RecordDay {
 			continue
 		}
@@ -192,13 +192,13 @@ func TestUpgradeDoesNotFlood(t *testing.T) {
 		}
 	}
 	// The one crossed on the last day is a round step: still a moment.
-	if k := keys(Plan(Reached(h, ""), checked)); k["visitors/10000"].Quiet {
+	if k := keys(Plan(Reached(h, "", nil), checked, nil)); k["visitors/10000"].Quiet {
 		t.Fatalf("a round step crossed after the last check must be loud: %+v", k["visitors/10000"])
 	}
 	// An in-between step crossed after the last check is quiet too.
 	g := days("2026-01-01", 40, 20)
 	g[39].Visitors = 1800 // 780 -> 2,560: crosses 1,000 and 2,500 on the last day
-	k := keys(Plan(Reached(g, ""), g[38].Day))
+	k := keys(Plan(Reached(g, "", nil), g[38].Day, nil))
 	if k["visitors/2500"].Quiet != true || k["visitors/1000"].Quiet != false {
 		t.Fatalf("plan: %+v", k)
 	}
@@ -207,7 +207,7 @@ func TestUpgradeDoesNotFlood(t *testing.T) {
 // The first look back gives the moment to the highest celebrated step.
 func TestFirstLookBackPicksARoundStep(t *testing.T) {
 	h := days("2026-01-01", 60, 60) // 3,600 visitors: 2,500 is the top step, 1,000 the top round one
-	for _, m := range Plan(Reached(h, ""), "") {
+	for _, m := range Plan(Reached(h, "", nil), "", nil) {
 		if m.Kind == Visitors && !m.Quiet && m.Step != "1000" {
 			t.Fatalf("moment on %s", m.Step)
 		}

@@ -42,7 +42,7 @@ func TestMilestonesFromTheCheck(t *testing.T) {
 		sites, _ := g.ctl.MilestoneSites(ctx)
 		for _, s := range sites {
 			if s.ID == g.site {
-				fresh, err := milestones.Check(ctx, *g.api.Query(), g.ctl, s, now)
+				fresh, err := milestones.Check(ctx, *g.api.Query(), g.ctl, s, now, nil)
 				if err != nil {
 					t.Fatal(err)
 				}

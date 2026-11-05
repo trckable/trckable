@@ -894,7 +894,7 @@ export interface InstallCheck {
 }
 
 /** A moment the data shows: a visitor step, the best day, a first. */
-export type MilestoneKind = 'visitors' | 'pageviews' | 'record_day' | 'countries' | 'first_goal' | 'first_sale' | 'revenue'
+export type MilestoneKind = 'visitors' | 'pageviews' | 'record_day' | 'countries' | 'first_goal' | 'first_sale' | 'revenue' | 'search_clicks' | 'ai_visits'
 export interface Milestone {
   kind: MilestoneKind
   step: string
