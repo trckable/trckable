@@ -2,7 +2,12 @@ package cards
 
 import (
 	"bytes"
+	"encoding/binary"
+	"image"
+	"image/color"
+	"image/draw"
 	"image/png"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -15,7 +20,7 @@ func TestDataTemplatesRender(t *testing.T) {
 			Rows: []Item{{Name: "/", Value: "1,200", Share: 1}, {Name: "/pricing", Value: "300", Share: 0.25}}},
 		{Template: "leaderboard", Theme: th, Domain: "example.com", Label: "Top pages", Big: "No visits yet"},
 		{Template: "overview", Theme: th, Domain: "example.com", Big: "1,200", Label: "visitors", Foot: "Last 7 days", Change: "+12%", Dir: 1, Series: []float64{1, 5, 3, 9},
-			Stats: []Stat{{"900", "Engaged visits"}, {"2m 10s", "Avg time"}, {"Germany", "Top country"}}},
+			Stats: []Stat{{Value: "900", Label: "Engaged visits"}, {Value: "2m 10s", Label: "Avg time"}, {Value: "Germany", Label: "Top country", Flag: "DE"}}},
 		{Template: "overview", Theme: th, Domain: "example.com", Big: "0", Label: "visitors", Change: "-5%", Dir: -1, Series: []float64{0, 0, 0}},
 		{Template: "overview", Theme: th, Domain: "example.com", Big: "0", Label: "visitors"},
 		{Template: "overview", Theme: Themes["dark"], Domain: "example.com", Big: "7", Label: "visitors", Series: []float64{2, 2}},
@@ -55,5 +60,94 @@ func TestOverviewChartFades(t *testing.T) {
 	svg, err := s.SVG()
 	if err != nil || strings.Contains(string(svg), `r="11"`) || !strings.Contains(string(svg), `stroke="url(#edge)"`) {
 		t.Fatalf("chart: %v", err)
+	}
+}
+
+// The site's icon fills the overview's tile and the top country gets its
+// flag; with neither, the tile keeps the initial and the name stands alone.
+func TestOverviewIconAndFlag(t *testing.T) {
+	_, th := ThemeOf("dark")
+	icon := image.NewRGBA(image.Rect(0, 0, 16, 16))
+	draw.Draw(icon, icon.Bounds(), &image.Uniform{color.RGBA{0, 200, 0, 255}}, image.Point{}, draw.Src)
+	s := Spec{Template: "overview", Theme: th, Domain: "example.com", Big: "1,200", Label: "visitors", Series: []float64{1, 5, 3, 9},
+		Stats: []Stat{{Value: "900", Label: "Engaged visits"}, {Value: "2m 10s", Label: "Avg time"}, {Value: "Germany", Label: "Top country", Flag: "DE"}}, Icon: icon}
+	at := func(s Spec, x, y int) color.RGBA {
+		b, err := s.PNG()
+		if err != nil {
+			t.Fatal(err)
+		}
+		img, err := png.Decode(bytes.NewReader(b))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return color.RGBAModel.Convert(img.At(x, y)).(color.RGBA)
+	}
+	// The middle of the tile, and the middle of the flag's red band.
+	if c := at(s, left+tile/2, tileY+tile/2); c != (color.RGBA{0, 200, 0, 255}) {
+		t.Fatalf("tile: %v", c)
+	}
+	if c := at(s, left+2*statStep+flagBoxW/2, statValueY-flagBoxH/2+2); c.R < 200 || c.G > 40 {
+		t.Fatalf("flag: %v", c)
+	}
+	// Without them the tile is the translucent square, and where the flag was (its name gone too) is bare.
+	s.Icon, s.Stats[2].Flag, s.Stats[2].Value = nil, "", ""
+	if c := at(s, left+tile-4, tileY+tile/2); c == (color.RGBA{0, 200, 0, 255}) {
+		t.Fatalf("the icon is still there: %v", c)
+	}
+	if c := at(s, left+2*statStep+flagBoxW/2, statValueY-flagBoxH/2+2); c.R > 100 {
+		t.Fatalf("a flag with no flag: %v", c)
+	}
+}
+
+func TestFlags(t *testing.T) {
+	if f := Flag("de"); f == nil || f.Bounds().Dx() != flagW || f.Bounds().Dy() != flagH {
+		t.Fatalf("de: %v", f)
+	}
+	for _, code := range []string{"", "ZZ", "XYZ"} {
+		if Flag(code) != nil {
+			t.Errorf("%q has no flag", code)
+		}
+	}
+}
+
+// Icons come as PNG, or in an .ico file as a PNG or a bitmap; anything else is no icon.
+func TestDecodeIcon(t *testing.T) {
+	src := image.NewNRGBA(image.Rect(0, 0, 4, 4))
+	draw.Draw(src, src.Bounds(), &image.Uniform{color.NRGBA{200, 0, 0, 255}}, image.Point{}, draw.Src)
+	var p bytes.Buffer
+	_ = png.Encode(&p, src)
+	if img := DecodeIcon(p.Bytes()); img == nil || img.Bounds().Dx() != 4 {
+		t.Fatalf("png: %v", img)
+	}
+	entry := func(dir []byte, size, off int) []byte {
+		e := []byte{4, 4, 0, 0, 1, 0, 32, 0}
+		e = binary.LittleEndian.AppendUint32(e, uint32(size))                   //nolint:gosec // a test icon's few bytes
+		return append(dir, binary.LittleEndian.AppendUint32(e, uint32(off))...) //nolint:gosec // as above
+	}
+	dir := []byte{0, 0, 1, 0, 1, 0}
+	if img := DecodeIcon(append(entry(slices.Clone(dir), p.Len(), 22), p.Bytes()...)); img == nil {
+		t.Fatal("ico with a png")
+	}
+	// A 4 × 4, 32-bit bitmap with its mask (the height counts both).
+	dib := binary.LittleEndian.AppendUint32(nil, 40)
+	dib = binary.LittleEndian.AppendUint32(dib, 4)
+	dib = binary.LittleEndian.AppendUint32(dib, 8)
+	dib = append(dib, 1, 0, 32, 0)
+	dib = append(dib, make([]byte, 24)...)
+	for range 16 {
+		dib = append(dib, 0, 0, 200, 255) // BGRA
+	}
+	dib = append(dib, make([]byte, 16)...) // the mask
+	img := DecodeIcon(append(entry(slices.Clone(dir), len(dib), 22), dib...))
+	if img == nil {
+		t.Fatal("ico with a bitmap")
+	}
+	if r, g, b, _ := img.At(1, 1).RGBA(); r>>8 < 190 || g != 0 || b != 0 {
+		t.Fatalf("bitmap pixel: %d %d %d", r>>8, g, b)
+	}
+	for _, bad := range [][]byte{nil, []byte("<svg/>"), {0, 0, 1, 0, 1, 0, 4, 4}, append(entry(slices.Clone(dir), 5000, 22), 1, 2, 3)} {
+		if DecodeIcon(bad) != nil {
+			t.Errorf("%q is no icon", bad)
+		}
 	}
 }

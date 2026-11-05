@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"fmt"
 	"html"
+	"image"
 	"math"
 	"strconv"
 	"text/template"
@@ -66,10 +67,14 @@ type Spec struct {
 	Change string
 	Dir    int
 	Stats  []Stat
+	// Icon is the site's own icon for the overview's tile (nil: its initial
+	// in a tile instead).
+	Icon image.Image
 }
 
-// Stat is one small number: its value and what it is, as words.
-type Stat struct{ Value, Label string }
+// Stat is one small number: its value and what it is, as words. Flag is a
+// country's two-letter code when the value is that country, "" otherwise.
+type Stat struct{ Value, Label, Flag string }
 
 // Item is one leaderboard line: what it is and its count, as words.
 type Item struct {
@@ -138,6 +143,9 @@ type Template struct {
 	// line), after Shapes; nil for a template without any. Its output is SVG
 	// built from numbers only: no word of the spec goes into it.
 	Data func(Spec, Frame) string
+	// Pics are the pictures laid over the shapes (a site's icon, a flag);
+	// nil for a template without any. Drawn in the PNG only.
+	Pics func(Spec) []Pic
 }
 
 // Templates are the designs there are, by name. A feature adds its own at

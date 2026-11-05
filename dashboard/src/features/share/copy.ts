@@ -29,6 +29,7 @@ export const copy = defineCopy('share', {
   actions: 'What to do with the picture',
   button: 'Share',
   buttonTitle: 'Share a picture of these numbers',
+  menuItem: 'Share a picture',
   copyText: 'Copy',
   copied: 'Copied',
   saved: 'Saved',

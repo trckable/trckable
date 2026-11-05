@@ -2,6 +2,7 @@ package cards
 
 import (
 	"fmt"
+	"image"
 	"strings"
 	"text/template"
 	"unicode"
@@ -33,8 +34,31 @@ func init() {
 		`<rect x="88" y="70" width="52" height="52" rx="15" fill="{{.Ink}}" fill-opacity="0.2"/>` +
 		`{{template "ghost" ghost . 892 520 0.6}}`))
 	template.Must(shapes.New("ghost").Parse(Ghost))
-	Templates["overview"] = Template{Shapes: shapes, Runs: overviewRuns, Data: overviewChart}
+	Templates["overview"] = Template{Shapes: shapes, Runs: overviewRuns, Data: overviewChart, Pics: overviewPics}
 }
+
+// overviewPics are the site's icon in its tile, and the flag of a stat that
+// is a country, both only when there is a picture to draw.
+func overviewPics(s Spec) []Pic {
+	var pics []Pic
+	if s.Icon != nil {
+		pics = append(pics, Pic{Img: s.Icon, Box: image.Rect(left+6, tileY+6, left+tile-6, tileY+tile-6), Radius: 8})
+	}
+	for i, st := range s.Stats[:min(len(s.Stats), MaxStats)] {
+		if f := Flag(st.Flag); f != nil {
+			x := left + i*statStep
+			pics = append(pics, Pic{Img: f, Box: image.Rect(x, statValueY-flagBoxH+2, x+flagBoxW, statValueY+2), Radius: 4})
+		}
+	}
+	return pics
+}
+
+// A flag beside a country's name, and the room the name leaves for it.
+const (
+	flagBoxW = 36
+	flagBoxH = 27
+	flagGap  = 12
+)
 
 // fadeEdge is how much of the card's width, at each side, the chart fades over.
 const fadeEdge = 0.09
@@ -136,18 +160,25 @@ func overviewRuns(s Spec) []Run {
 		}
 		line = append(line, Span{Text: "   " + s.Change, Bold: true, Ink: ink})
 	}
-	runs := []Run{
-		{X: left + tile/2, Y: tileY + 37, Px: 30, Mid: true, Spans: []Span{{Text: initial, Bold: true, Ink: s.ink()}}},
+	var runs []Run
+	if s.Icon == nil {
+		runs = append(runs, Run{X: left + tile/2, Y: tileY + 37, Px: 30, Mid: true, Spans: []Span{{Text: initial, Bold: true, Ink: s.ink()}}})
+	}
+	runs = append(runs, []Run{
 		{X: left + tile + 18, Y: tileY + 36, Px: 30, Spans: []Span{{Text: clip(s.Domain, 34), Ink: s.Theme.FG}}},
 		{X: right, Y: tileY + 35, Px: 24, End: true, Spans: []Span{{Text: s.Foot, Ink: s.Theme.Muted}}},
 		{X: left - 5, Y: 262, Px: big, Spans: []Span{{Text: s.Big, Bold: true, Ink: s.Theme.FG}}},
 		{X: left, Y: 316, Px: 32, Spans: line},
 		{X: right, Y: footY, Px: 28, End: true, Spans: []Span{{Text: "trck", Bold: true, Ink: s.Theme.FG}, {Text: "able.com", Ink: s.Theme.Muted}}},
-	}
+	}...)
 	for i, st := range s.Stats[:min(len(s.Stats), MaxStats)] {
 		x := left + i*statStep
+		value := x
+		if Flag(st.Flag) != nil {
+			value += flagBoxW + flagGap
+		}
 		runs = append(runs,
-			Run{X: x, Y: statValueY, Px: 32, Spans: []Span{{Text: clip(st.Value, 16), Bold: true, Ink: s.Theme.FG}}},
+			Run{X: value, Y: statValueY, Px: 32, Spans: []Span{{Text: clip(st.Value, 16), Bold: true, Ink: s.Theme.FG}}},
 			Run{X: x, Y: statLabelY, Px: 21, Spans: []Span{{Text: st.Label, Ink: s.Theme.Muted}}},
 		)
 	}

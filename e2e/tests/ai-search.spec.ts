@@ -1,158 +1,121 @@
-// AI & Search, against a trckabled with the demo data (skipped unless
-// TRCKABLE_A11Y_URL points at one):
-//   TRCKABLE_A11Y_URL=http://localhost:8799 npx playwright test ai-search --project=chromium --workers=1
-// One tab in Who came with three columns, a click that filters, the setup
-// sheet from the crawler column, and (with TRCKABLE_SHOTS) the pictures.
-import { expect, test, type Page } from './fixtures'
-import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+// AI & Search in Explore: the section opens, each part says in one line what it is, Google's part says what connecting it
+// brings (Search Console is not connected here), and the assistants' tiles and the crawlers' and pages' lists carry what the
+// site saw: the assistants are visits with their referrers (ai.example in playwright.config.ts), the crawlers are posted to
+// /api/crawl the way a site's own server does it, with the site's proxy key.
+import { existsSync, openSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { expect, test, type Page } from './fixtures'
+import { flowSession } from './flows-kit'
+import { AI_DOMAIN, API } from '../playwright.config'
 
-const BASE = process.env.TRCKABLE_A11Y_URL
-const EMAIL = process.env.TRCKABLE_A11Y_EMAIL ?? 'me@site.com'
-const PASSWORD = process.env.TRCKABLE_A11Y_PASSWORD ?? 'correct horse battery'
-const SHOTS = process.env.TRCKABLE_SHOTS // a folder: screenshots, for review
+let cookie = ''
 
-test.skip(!BASE, 'set TRCKABLE_A11Y_URL to a running trckabled with data')
+const UA = (bot: string) => `Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; ${bot}; +https://example.com/bot)`
+// Who read what: two training crawlers and two answering ones, one of them refused once.
+const CRAWLS = [
+  { bot: 'GPTBot/1.2', path: '/pricing', times: 3 },
+  { bot: 'GPTBot/1.2', path: '/guide', times: 2 },
+  { bot: 'ClaudeBot/1.0', path: '/pricing', times: 2 },
+  { bot: 'PerplexityBot/1.0', path: '/guide', times: 1 },
+  { bot: 'ChatGPT-User/1.0', path: '/guide', times: 1 },
+  { bot: 'ClaudeBot/1.0', path: '/private', times: 1, status: 403 },
+]
 
-async function session(): Promise<string> {
-  const file = join(tmpdir(), `trckable-aisearch-${new URL(BASE!).port}-${process.ppid}`)
+test.beforeAll(async () => {
+  cookie = await flowSession()
+  // Every worker runs this: the first one posts the hits, the others wait for it (a hit counted twice would change every number).
+  const mark = join(process.env.TRCKABLE_DATA_DIR!, 'ai-crawls')
   try {
-    openSync(file + '.lock', 'wx')
+    openSync(mark + '.lock', 'wx')
   } catch {
-    for (let i = 0; i < 300 && !existsSync(file); i++) await new Promise((r) => setTimeout(r, 100))
-    return readFileSync(file, 'utf8')
+    for (let i = 0; i < 300 && !existsSync(mark); i++) await new Promise((r) => setTimeout(r, 100))
+    return
   }
-  const res = await fetch(BASE + '/api/v1/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: EMAIL, password: PASSWORD }) })
-  const value = /trckable_session=([^;]+)/.exec(res.headers.get('set-cookie') ?? '')?.[1]
-  if (!res.ok || !value) throw new Error(`sign in: ${res.status}`)
-  writeFileSync(file, value)
-  return value
-}
-
-async function open(page: Page, width = 1280) {
-  await page.setViewportSize({ width, height: 900 })
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.context().addCookies([{ name: 'trckable_session', value: await session(), url: BASE! }])
-  await page.goto(BASE + '/')
-  const site = await page.evaluate(async () => {
-    const s = (await (await fetch('/api/v1/sites')).json()).sites[0]
-    return { id: s.id as string, domain: s.domain as string }
-  })
-  await page.goto(`${BASE}/${site.domain}?mode=full`)
-  const who = page.locator('[data-card=who]')
-  await who.getByRole('tab', { name: 'AI & Search', exact: true }).click({ timeout: 20_000 })
-  await expect(who.getByRole('group', { name: 'AI crawlers' })).toBeVisible({ timeout: 20_000 })
-  return { site, who }
-}
-
-test('the three columns, and a page row that filters the dashboard', async ({ page }) => {
-  const { who } = await open(page)
-  const cols = who.locator('.ais-col')
-  await expect(cols).toHaveCount(3)
-  await expect(cols.nth(1).locator('.bl-row').first()).toContainText(/ChatGPT|Claude|Perplexity|Gemini|Copilot/)
-  await expect(cols.nth(2).locator('.bl-row').first()).toBeVisible()
-  const row = who.locator('.ais-pg-main').first()
-  await expect(row).toHaveAttribute('aria-label', /AI read this [\d,]+ times?, sent [\d,]+ visitors?/)
-  await row.click()
-  await expect(page).toHaveURL(/[?&]f=page/)
-})
-
-test('Connect crawler data: three steps, the code carries the site, and nothing about a visitor', async ({ page }) => {
-  const { site } = await open(page)
-  // The demo site has robots: open the same sheet from the Crawlers tab.
-  await page.locator('[data-card=who]').getByRole('tab', { name: 'Crawlers' }).click()
-  await page.getByRole('button', { name: 'How to feed this' }).click()
-  const sheet = page.getByRole('dialog')
-  await expect(sheet.getByText('Step 1 of 3')).toBeVisible()
-  await sheet.getByRole('button', { name: /Cloudflare/ }).click()
-  await expect(sheet.getByText('Step 2 of 3')).toBeVisible()
-  await expect(sheet.locator('pre.code').first()).toContainText('waitUntil')
-  await expect(sheet.locator('pre.code').first()).toContainText(site.id)
-  await expect(sheet.getByRole('button', { name: 'Copy the code' })).toBeVisible()
-  await expect(sheet.getByRole('button', { name: 'Copy key' })).toBeVisible()
-  await sheet.getByRole('button', { name: 'Show all' }).click()
-  await expect(sheet.getByRole('button', { name: 'Show less' })).toBeVisible()
-  await sheet.getByRole('button', { name: 'Back' }).click()
-  await sheet.getByRole('button', { name: /Nginx/ }).click()
-  await expect(sheet.locator('pre.code')).toHaveCount(2)
-  await sheet.getByRole('button', { name: 'Back' }).click()
-  await sheet.getByRole('button', { name: /Caddy/ }).click()
-  await expect(sheet.locator('pre.code').first()).toContainText('jq -c --unbuffered')
-  expect(await sheet.innerText()).not.toMatch(/cookie|x-forwarded|remote_addr/i)
-  await sheet.getByRole('button', { name: 'I’ve added it' }).click()
-  await expect(sheet.getByText('Step 3 of 3')).toBeVisible()
-  await expect(sheet.getByRole('status')).toBeVisible()
-  await page.keyboard.press('Escape')
-  await expect(sheet).toHaveCount(0)
-})
-
-test('Connect crawler data on a phone: the footer fits, nothing scrolls sideways, buttons are 44px', async ({ page }) => {
-  await open(page, 390)
-  await page.setViewportSize({ width: 390, height: 844 })
-  for (const scheme of ['dark', 'light']) {
-    await page.evaluate((s) => document.documentElement.setAttribute('data-theme', s), scheme)
-    await page.locator('[data-card=who]').getByRole('tab', { name: 'Crawlers', exact: true }).click()
-    await page.getByRole('button', { name: 'How to feed this' }).click()
-    const sheet = page.getByRole('dialog')
-    await sheet.getByRole('button', { name: /Cloudflare/ }).click()
-    for (const step of [2, 3]) {
-      if (step === 3) await sheet.getByRole('button', { name: 'I’ve added it' }).click()
-      await expect(sheet.getByText(`Step ${step} of 3`)).toBeVisible()
-      const boxes = await sheet.locator('.dialog-actions').locator('> *').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().toJSON()))
-      for (const b of boxes) expect(b.height, `${scheme} step ${step}`).toBeGreaterThanOrEqual(24)
-      for (const b of await sheet.locator('.dialog-actions > .btn').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) expect(b).toBeGreaterThanOrEqual(44)
-      for (let i = 0; i < boxes.length; i++)
-        for (let j = i + 1; j < boxes.length; j++) {
-          const a = boxes[i]
-          const c = boxes[j]
-          const apart = a.right <= c.left + 0.5 || c.right <= a.left + 0.5 || a.bottom <= c.top + 0.5 || c.bottom <= a.top + 0.5
-          expect(apart, `${scheme} step ${step}: footer items ${i} and ${j} overlap`).toBe(true)
-        }
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-      expect(await sheet.evaluate((d) => d.scrollWidth <= d.clientWidth)).toBe(true)
-      for (const h of await sheet.locator('.cs-body .btn, .cs-body .cs-link').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) expect(h).toBeGreaterThanOrEqual(44)
+  const sites = (await (await fetch(`${API}/api/v1/sites`, { headers: { Cookie: `trckable_session=${cookie}` } })).json()) as { sites: { id: string; domain: string; proxy_key: string }[] }
+  const site = sites.sites.find((s) => s.domain === AI_DOMAIN)!
+  for (const c of CRAWLS) {
+    for (let i = 0; i < c.times; i++) {
+      // The same robot asking for the same page in the same second is one hit: a repeat waits for the next second.
+      if (i > 0) await new Promise((r) => setTimeout(r, 1100))
+      const res = await fetch(`${API}/api/crawl`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Trckable-Proxy-Key': site.proxy_key },
+        body: JSON.stringify({ s: site.id, u: `https://${AI_DOMAIN}${c.path}?n=${i}`, ua: UA(c.bot), st: c.status ?? 200 }),
+      })
+      expect(res.status, `${c.bot} ${c.path}`).toBe(202)
     }
-    await page.keyboard.press('Escape')
-    await expect(sheet).toHaveCount(0)
   }
+  writeFileSync(mark, 'done')
 })
 
-test('pictures: dark and light at 1280, and 390', async ({ page }) => {
-  test.skip(!SHOTS, 'set TRCKABLE_SHOTS to a folder')
-  for (const [scheme, width] of [['dark', 1280], ['light', 1280], ['dark', 390]] as const) {
-    await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' })
-    const { who } = await open(page, width)
-    await page.evaluate((s) => document.documentElement.setAttribute('data-theme', s), scheme)
-    await who.scrollIntoViewIfNeeded()
-    await page.waitForTimeout(600)
-    await who.screenshot({ path: join(SHOTS!, `ai-search-${scheme}-${width}.png`) })
-  }
-})
+async function open(page: Page, width = 1440) {
+  await page.setViewportSize({ width, height: width < 500 ? 844 : 900 })
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  await page.goto(`${API}/${AI_DOMAIN}?view=briefing&period=30d&x=ai`)
+  const card = page.locator('#xp [data-xcard="ai"]')
+  await expect(card).toBeVisible({ timeout: 20_000 })
+  await expect(card.locator('.xai-tile').first()).toBeVisible({ timeout: 20_000 })
+  return card
+}
 
-test('pictures: Search Console answering, the two badges, and the setup sheet', async ({ page }) => {
-  test.skip(!SHOTS, 'set TRCKABLE_SHOTS to a folder')
-  // Search Console cannot be reached from a demo server: it answers here with fixed rows, and one page it ranks that no AI crawler reads.
-  await page.route('**/report/search?*', (route) =>
-    route.fulfill({ json: { rows: [{ key: 'self hosted analytics', clicks: 120, impressions: 2400, ctr: 0.05, position: 4.2 }, { key: 'privacy friendly analytics', clicks: 64, impressions: 1900, ctr: 0.034, position: 6.8 }], clicks: 184, impressions: 4300 } }),
-  )
-  await page.route('**/report/ai-search?*', async (route) => {
-    const res = await route.fetch()
-    const body = await res.json()
-    body.google = true
-    body.pages = [...body.pages.slice(0, 3), { path: '/guide/self-hosting', read: 0, sent: 0, clicks: 80, flag: 'unread' }]
-    await route.fulfill({ response: res, json: body })
+for (const width of [1440, 390]) {
+  test(`AI & Search opens and says what each part is, ${width}px`, async ({ page }) => {
+    const card = await open(page, width)
+    await expect(card).not.toContainText('Couldn’t read AI & Search')
+    // One plain line under each section's heading.
+    const sections = [
+      ['AI assistants', 'People who clicked a link to you inside an AI assistant’s answer.'],
+      ['Google', 'The Google searches that brought people to you, by clicks.'],
+      ['Crawlers', 'AI bots that read your pages to learn about you, and how often.'],
+      ['Pages', 'Which pages AI bots read, and how many visits each one then sent.'],
+    ] as const
+    for (const [title, line] of sections) {
+      const head = card.locator('.xsec', { hasText: title }).first()
+      await expect(head, title).toBeVisible()
+      await expect(head.locator('xpath=following-sibling::div[contains(@class,"xnote")][1]'), title).toContainText(line)
+    }
   })
-  const { who } = await open(page)
-  await expect(who.locator('.ais-flag.unread')).toBeVisible()
-  await who.scrollIntoViewIfNeeded()
-  await who.screenshot({ path: join(SHOTS!, 'ai-search-badges-1280.png') })
-  await who.locator('.ais-flag.unread').hover()
-  await expect(page.getByRole('tooltip')).toContainText('80 clicks')
-  await who.screenshot({ path: join(SHOTS!, 'ai-search-badge-tooltip-1280.png') })
-  await page.mouse.move(0, 0)
-  await who.getByRole('tab', { name: 'Crawlers' }).click()
-  await page.getByRole('button', { name: 'How to feed this' }).click()
-  await expect(page.getByRole('dialog')).toBeVisible()
-  await page.screenshot({ path: join(SHOTS!, 'ai-search-setup-sheet-1280.png') })
+}
+
+test('Google not connected says what connecting it brings, and offers the way', async ({ page }) => {
+  const card = await open(page)
+  const empty = card.locator('.xempty', { hasText: 'Connect Search Console' })
+  await expect(empty).toBeVisible()
+  await expect(empty).toContainText('Then this shows the Google searches that brought people to you.')
+  await expect(empty.getByRole('button', { name: 'Connect', exact: true })).toBeVisible()
+})
+
+test('the assistants that sent people are tiles, biggest first, with bars in proportion', async ({ page }) => {
+  const card = await open(page)
+  const tiles = card.locator('.xai-tile')
+  await expect(tiles.first()).toContainText(/ChatGPT\s*14/)
+  await expect(tiles.nth(1)).toContainText(/Claude\s*5/)
+  await expect(tiles.nth(2)).toContainText(/Perplexity\s*3/)
+  const widths = await tiles.locator('u').evaluateAll((els) => els.map((e) => (e as HTMLElement).getBoundingClientRect().width))
+  expect(widths[0]).toBeGreaterThan(widths[1])
+  expect(widths[1]).toBeGreaterThan(widths[2])
+})
+
+test('the crawlers are listed with their hits, what was refused, and the pages they read', async ({ page }) => {
+  const card = await open(page)
+  const crawlers = card.locator('.xsec', { hasText: 'Crawlers' }).first()
+  await expect(crawlers).toContainText('10') // 3 + 2 + 2 + 1 + 1 + 1 hits in all
+  const rows = card.locator('.xt', { has: page.getByText('Blocked / failed') }).locator('.xrw')
+  await expect(rows.filter({ hasText: /^OpenAI · training/ })).toContainText('5')
+  const claude = rows.filter({ hasText: /^Anthropic · training/ })
+  await expect(claude).toContainText('3')
+  await expect(claude).toContainText('1') // the one refused
+  await expect(rows.filter({ hasText: /^Perplexity · answers/ })).toBeVisible()
+  // The pages they read: the reads, then the visits AI sent (ChatGPT, Claude and Perplexity: 10 to /pricing, 12 to /guide).
+  const pages = card.locator('.xt', { has: page.getByText('AI reads') }).locator('.xrw')
+  await expect(pages).toHaveCount(3)
+  await expect(pages.filter({ hasText: '/pricing' })).toHaveText(/\/pricing\s*5\s*10/)
+  await expect(pages.filter({ hasText: '/guide' })).toHaveText(/\/guide\s*4\s*12/)
+  await expect(pages.filter({ hasText: '/private' })).toHaveText(/\/private\s*1\s*0/) // asked for once, refused, and nobody came from it
+})
+
+test('a page row filters the dashboard to that page', async ({ page }) => {
+  const card = await open(page)
+  await card.locator('.xrw', { hasText: '/pricing' }).click()
+  await expect(page).toHaveURL(/xf=page/)
 })

@@ -1,8 +1,10 @@
 // What the toolbar's four menus hold: the sections, the filters (a dimension, then its values), the saved views, and
 // the rest (this page's details, the table as a file, a link).
+import { Share2 } from 'lucide-react'
 import { Fragment } from 'react'
 import { XGl, XGrab, XMi, XSep } from '../ui/XMenu'
 import { XIco } from '../ui/XIcons'
+import { copy as shareCopy } from '../../features/share/copy'
 import { copy } from './copy'
 import { groups } from './sections'
 import { can } from '../../lib/permissions'
@@ -64,7 +66,7 @@ function ViewTail(p: ViewsProps) {
   )
 }
 
-export function MoreMenu({ views, details, onDetails, onCsv, onCopy, onMail }: { views: ViewsProps; details: boolean; onDetails: () => void; onCsv: () => void; onCopy: () => void; onMail?: () => void }) {
+export function MoreMenu({ views, details, onDetails, onCsv, onCopy, onMail, onShare }: { views: ViewsProps; details: boolean; onDetails: () => void; onCsv: () => void; onCopy: () => void; onMail?: () => void; onShare?: () => void }) {
   return (
     <>
       <XGrab />
@@ -75,6 +77,7 @@ export function MoreMenu({ views, details, onDetails, onCsv, onCopy, onMail }: {
         <ViewTail {...views} />
         <XSep />
       </div>
+      {onShare && <XMi data={{ 'data-share': '1' }} icon={<Share2 size={16} strokeWidth={1.75} aria-hidden="true" />} name={shareCopy.menuItem} onClick={onShare} />}
       {details && <XMi data={{ 'data-pgd': '1' }} name={copy.pageDetails} desc={copy.pageDetailsHint} onClick={onDetails} />}
       <XMi id="xCsv" name={copy.exportCsv} desc={copy.exportHint} disabled={!can('data.export')} title={can('data.export') ? undefined : copy.exportDenied} onClick={onCsv} />
       {onMail && <XMi data={{ 'data-mail': '1' }} name={copy.emailPreview} desc={copy.emailPreviewHint} onClick={onMail} />}

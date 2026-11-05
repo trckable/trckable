@@ -29,6 +29,8 @@ export const QUERY = {
   narrow: under(NARROW),
   // The page's compact header and chrome (bottom bar, 16 px sides) run to 700 px, with a band of 601 to 700 inside it that keeps the desktop header on one wrapped row.
   compact: '(max-width: 700px)',
+  /** Where the header has no room for Share: it is the ⋯ menu's "Share a picture" instead. */
+  handheld: under(768),
   roomy: '(min-width: 701px)',
   /** Room for Explore's menu beside its numbers; under it the menu is a drawer. */
   rail: '(min-width: 1024px)',

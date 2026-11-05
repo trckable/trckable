@@ -4,7 +4,9 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/trckable/trckable/server/internal/query"
 )
@@ -45,6 +47,7 @@ func TestCardEmpty(t *testing.T) {
 // or accent says; no other account's site; nobody signed out.
 func TestCardRoute(t *testing.T) {
 	g := newRig(t)
+	noOutbound(t, g)
 	owner := client()
 	g.setup(t, owner)
 	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
@@ -97,5 +100,68 @@ func TestCardOverview(t *testing.T) {
 	n.overview(&query.Result{Dims: map[string][]query.Row{"country": {{Value: "ZZZ", Visitors: 3}}}}, nil)
 	if n.change != "" || n.dir != 0 || len(n.stats) != 0 {
 		t.Fatalf("empty: %+v", n)
+	}
+}
+
+// noOutbound keeps a test off the internet: the icon fetches go to a stand-in.
+// A lookup runs in the background, so the real client comes back only once
+// none is left.
+func noOutbound(t *testing.T, g *rig) {
+	t.Helper()
+	var hits atomic.Int32
+	srv := iconServer(t, &hits)
+	old := refIconClient
+	refIconClient = func() *http.Client { return toServer(srv, 2*time.Second) }
+	t.Cleanup(func() {
+		for range 200 {
+			g.api.refIcons.mu.Lock()
+			n := len(g.api.refIcons.pending)
+			g.api.refIcons.mu.Unlock()
+			if n == 0 {
+				break
+			}
+			time.Sleep(20 * time.Millisecond)
+		}
+		refIconClient = old
+	})
+}
+
+// The card's tile takes the owner's icon first, else the site's favicon; the
+// card never waits for the fetch (the first one has the initial), and a site
+// with no usable icon keeps the initial.
+func TestCardIcon(t *testing.T) {
+	g := newRig(t)
+	noOutbound(t, g)
+	ctx := context.Background()
+	warm := func(host string) {
+		t.Helper()
+		for range 100 {
+			if _, known := g.api.refIcons.get(host, g.api.Now()); known {
+				return
+			}
+			time.Sleep(30 * time.Millisecond)
+		}
+		t.Fatalf("%s was never looked up", host)
+	}
+	if g.api.cardIcon(ctx, g.site, "icons.example.org") != nil {
+		t.Fatal("the card waited for the fetch")
+	}
+	warm("icons.example.org")
+	if img := g.api.cardIcon(ctx, g.site, "icons.example.org"); img == nil {
+		t.Fatal("the favicon is not used")
+	}
+	g.api.cardIcon(ctx, g.site, "nope.example.org")
+	warm("nope.example.org")
+	for _, domain := range []string{"nope.example.org", "svg.example.org", "localhost", "127.0.0.1", ""} {
+		if g.api.cardIcon(ctx, g.site, domain) != nil {
+			t.Errorf("%q has no icon to draw", domain)
+		}
+	}
+	// The owner's own icon wins, with no lookup at all.
+	if err := g.ctl.SetBrandIcon(ctx, g.site, "image/png", onePixel); err != nil {
+		t.Fatal(err)
+	}
+	if g.api.cardIcon(ctx, g.site, "nope.example.org") == nil {
+		t.Fatal("the owner's icon is not used")
 	}
 }

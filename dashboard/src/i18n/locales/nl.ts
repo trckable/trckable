@@ -412,6 +412,7 @@ export default {
   'share.actions': 'Wat je met de afbeelding kunt doen',
   'share.button': 'Delen',
   'share.buttonTitle': 'Een afbeelding van deze cijfers delen',
+  'share.menuItem': 'Een afbeelding delen',
   'share.copyText': 'Kopiëren',
   'share.copied': 'Gekopieerd',
   'share.saved': 'Opgeslagen',

@@ -425,6 +425,7 @@ export default {
   'share.actions': 'Qué hacer con la imagen',
   'share.button': 'Compartir',
   'share.buttonTitle': 'Compartir una imagen de estos números',
+  'share.menuItem': 'Compartir una imagen',
   'share.copyText': 'Copiar',
   'share.copied': 'Copiado',
   'share.saved': 'Guardado',

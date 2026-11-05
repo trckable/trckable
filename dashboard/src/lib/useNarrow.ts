@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 /** Whether a media query matches, kept up to date. */
-function useMedia(query: string) {
+export function useMedia(query: string) {
   const [on, setOn] = useState(() => typeof matchMedia === 'function' && matchMedia(query).matches)
   useEffect(() => {
     const mq = matchMedia(query)
