@@ -82,7 +82,7 @@ for (const [width, height] of [
     await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
     await expect(page.locator('#xp.on')).toBeVisible()
     // Below the rail breakpoint the section list is a drawer, opened by its button and shut by a pick.
-    const items = page.locator('.xdrawer-box .xri')
+    const items = page.locator('.xdrawer-box .xri:not(.sub)')
     for (let i = 0; i < 13; i++) {
       await page.locator('#xp .xdrawer-open').click()
       await expect(items).toHaveCount(13)

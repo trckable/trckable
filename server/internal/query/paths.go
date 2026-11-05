@@ -13,13 +13,10 @@ import (
 // route. It reads only the visits and their first pageviews: no KPIs, no
 // breakdowns, no chart, so it costs a fraction of a report.
 
-// pathSteps is how many pages of a visit a route holds.
-const pathSteps = 3
-
 // PathsShown is the most routes one answer lists.
 const PathsShown = 50
 
-// PathRoute is one route: the pages in order (fewer than pathSteps when the
+// PathRoute is one route: the pages in order (fewer than three when the
 // visit ended there), how many visits took it and how many of them reached a
 // goal.
 type PathRoute struct {
