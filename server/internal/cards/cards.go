@@ -170,7 +170,9 @@ var Templates = map[string]Template{}
 // width in a scaled group (Stroke), which the rasteriser does not scale.
 type Frame struct {
 	BG, FG, Muted, Ink string
-	raster             bool
+	// Icon: the site has its own icon, drawn bare, so no tinted tile behind it.
+	Icon   bool
+	raster bool
 }
 
 // Stroke is width w inside a group scaled by k.
@@ -182,7 +184,7 @@ func (f Frame) Stroke(w, k float64) float64 {
 }
 
 func (s Spec) frame(raster bool) Frame {
-	return Frame{BG: s.Theme.BG, FG: s.Theme.FG, Muted: s.Theme.Muted, Ink: s.ink(), raster: raster}
+	return Frame{BG: s.Theme.BG, FG: s.Theme.FG, Muted: s.Theme.Muted, Ink: s.ink(), Icon: s.Icon != nil, raster: raster}
 }
 
 func (s Spec) template() (Template, error) {
