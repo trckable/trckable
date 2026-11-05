@@ -13,9 +13,9 @@ import (
 const searchHistory = 480
 
 // SearchDays is Google's clicks per day for a site, for the Search Console
-// milestone: nil, nil when Search Console is not connected, so a site
+// milestone, finalized days only (milestones.Finalized): nil, nil when Search Console is not connected, so a site
 // without it simply has none. It reads through the hour's cache the reports
-// share. The last row is the data's own last day, two or three days back.
+// share. The last row is the last day Google no longer revises.
 func (a *API) SearchDays(ctx context.Context, site string) ([]milestones.ClickDay, error) {
 	c, err := a.Ctl.SearchConsoleOf(ctx, site)
 	if err != nil || c.Property == "" {
@@ -41,5 +41,5 @@ func (a *API) SearchDays(ctx context.Context, site string) ([]milestones.ClickDa
 	for _, r := range rows {
 		out = append(out, milestones.ClickDay{Day: r.Key, Clicks: r.Clicks})
 	}
-	return out, nil
+	return milestones.Finalized(out, last.Format(time.DateOnly)), nil
 }

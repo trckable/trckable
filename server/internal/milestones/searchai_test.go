@@ -176,3 +176,29 @@ func TestSearchAndAIWords(t *testing.T) {
 		t.Fatalf("headline %q", h)
 	}
 }
+
+// A day Google may still revise never counts: a step that only the newest
+// days would reach is not reached, and the last day used is the last final one.
+func TestSearchClicksIgnorePreliminaryDays(t *testing.T) {
+	clicks := clickDays("2026-10-01", 28, 7) // 196 over the 28 days through 2026-10-28
+	for _, d := range []string{"2026-10-29", "2026-10-30", "2026-10-31"} {
+		clicks = append(clicks, ClickDay{Day: d, Clicks: 100})
+	}
+	// Today is 2026-11-01: the last three days are preliminary, so 10-28 is the last one used.
+	final := Finalized(clicks, "2026-11-01")
+	if last := final[len(final)-1].Day; last != "2026-10-28" {
+		t.Fatalf("last final day %s, want 2026-10-28", last)
+	}
+	if _, ok := keys(searchCrossings(final))["search_clicks/250"]; ok {
+		t.Fatal("a step reached only through preliminary days")
+	}
+	for _, n := range NextSteps(nil, "", "2026-11-01", final) {
+		if n.Kind == SearchClicks && (n.Now != 196 || n.Step != 250) {
+			t.Fatalf("next %+v, want 196 of 250", n)
+		}
+	}
+	// Once those days are final the step is reached, dated on the day it was.
+	if k := keys(searchCrossings(Finalized(clicks, "2026-11-05"))); k["search_clicks/250"].Day != "2026-10-29" {
+		t.Fatalf("with the days final: %+v", k)
+	}
+}

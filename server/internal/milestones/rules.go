@@ -120,6 +120,29 @@ type ClickDay struct {
 // searchWindow is how many days of clicks one reading adds up.
 const searchWindow = 28
 
+// searchPreliminary is how many of the newest days Google still revises
+// (the report marks them preliminary): a milestone never rests on them,
+// because the number could later drop.
+const searchPreliminary = 3
+
+// Finalized keeps the days Google no longer revises: those before today
+// less searchPreliminary days (today is YYYY-MM-DD, the site's time). The
+// last day left is the one a milestone is dated on.
+func Finalized(clicks []ClickDay, today string) []ClickDay {
+	t, err := time.Parse(time.DateOnly, today)
+	if err != nil {
+		return nil
+	}
+	cut := t.AddDate(0, 0, -searchPreliminary).Format(time.DateOnly)
+	var out []ClickDay
+	for _, c := range clicks {
+		if c.Day < cut {
+			out = append(out, c)
+		}
+	}
+	return out
+}
+
 // windowed gives, for every calendar day from the first with clicks to the
 // last, the clicks of the 28 days ending that day. A day Google has no row
 // for counts as none. The last day is the data's own, not today.
