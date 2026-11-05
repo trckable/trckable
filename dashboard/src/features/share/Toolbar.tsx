@@ -1,11 +1,12 @@
 // The small row above the preview: which site, light or dark, the accent,
-// the number.
+// the number, the small numbers.
 import { Moon, Sun } from 'lucide-react'
 import type { Site } from '../../lib/api'
 import { Select } from '../../components/Select'
 import { SiteMark } from '../../components/SiteMark'
 import { accentsFor, type Look, type Metric } from './card'
 import { copy } from './copy'
+import { StatsPick } from './StatsPick'
 
 type Props = {
   site: Site
@@ -14,9 +15,10 @@ type Props = {
   look: Look
   set: (l: Partial<Look>) => void
   metrics: Metric[]
+  revenue: boolean
 }
 
-export function Toolbar({ site, sites, onSite, look, set, metrics }: Props) {
+export function Toolbar({ site, sites, onSite, look, set, metrics, revenue }: Props) {
   const post = look.template === 'post'
   const nextTheme = look.theme === 'dark' ? 'light' : 'dark'
   const ThemeIcon = look.theme === 'dark' ? Moon : Sun
@@ -29,7 +31,7 @@ export function Toolbar({ site, sites, onSite, look, set, metrics }: Props) {
           </option>
         ))}
       </Select>
-      {metrics.length > 1 && (
+      {look.template !== 'leaderboard' && (
         <div className="seg small" role="group" aria-label={copy.metric}>
           {metrics.map((m) => (
             <button key={m} type="button" aria-pressed={look.metric === m} onClick={() => set({ metric: m })}>
@@ -38,6 +40,7 @@ export function Toolbar({ site, sites, onSite, look, set, metrics }: Props) {
           ))}
         </div>
       )}
+      {look.template === 'overview' && <StatsPick look={look} revenue={revenue} set={set} />}
       {!post && (
         <>
           <button type="button" className="btn icon sd-tool" title={copy[look.theme]} aria-label={copy[nextTheme]} onClick={() => set({ theme: nextTheme })}>
