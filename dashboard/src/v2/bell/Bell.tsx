@@ -4,8 +4,6 @@ import type { Filter as ApiFilter, Milestone, Site } from '../../lib/api'
 import { openExplore } from '../explore/open'
 import { viewOf } from '../explore/thing'
 import { lazyLoad } from '../../lib/lazyLoad'
-import { signals } from '../../features/signals/copy'
-import type { Surge } from '../../features/signals/surge'
 import { mentionsPath } from '../../features/mentions/route'
 import { navigate, readView, setView, writeView } from '../../lib/url'
 import { openAccount } from '../../lib/account'
@@ -17,16 +15,17 @@ import { brandOf } from '../../lib/brandIcons'
 import { alertOf, setAlertOn } from './alertState'
 import { copy } from './copy'
 import { hasCard } from './eventModel'
-import { timeOf, whenOf } from './days'
+import { timeOf } from './days'
 import { ALL, GROUPS, apply, readFilter, saveFilter, unreadGroups, type Filter } from './filter'
-import { badge, rowsOf, settle, unreadCount, type Notice, type NoticeRow } from './notices'
+import { badge, rowsOf, unreadCount, type Notice } from './notices'
+import { NONE, useOpenRows } from './useOpenRows'
+import { BusyStory } from './BusyStory'
 import { useBellAlert } from './useBellAlert'
 import { OPEN_GAP_MS, type useNotices } from './useNotices'
 import { QUERY } from '../../kit/breakpoints'
 
 const MilestoneSheet = lazyLoad(() => import('./MilestoneSheet'))
 const EventCard = lazyLoad(() => import('./EventCard'))
-const SurgeModal = lazyLoad(() => import('../../features/signals/SurgeModal'))
 
 /** Explore on the row's site: opened in place when that site is in view, else its page is opened with Explore on. */
 function exploreOn(n: Notice, site: Site | null, tab: Parameters<typeof openExplore>[0], filters?: ApiFilter[]) {
@@ -51,37 +50,8 @@ function go(n: Notice, site: Site | null, sites: Site[]) {
   else navigate(`${base}?view=briefing&period=${n.kind === 'weekly' ? '7d' : 'today'}`)
 }
 
-/** A busy notice as the surge the story is told of: its numbers; the rest is read from what was stored (useFullSurge). */
-function surgeOf(n: Notice): Surge {
-  const { visitors, factor } = n.busy ?? { visitors: 0, factor: 0 }
-  return { id: n.id, started: n.at, online: visitors, usual: factor > 0 ? visitors / factor : 0, times: factor, why: { source: n.source, source_dim: n.source ? 'referrer' : undefined, source_value: n.source, source_usual: 0, before: 0, minutes: 0 } }
-}
-
 /** The source as a person says it: the brand's name, else the host. */
 const brandName = (host: string) => brandOf(host)?.name ?? host
-
-const NONE: ReadonlySet<string> = new Set()
-
-/**
- * The rows the menu draws. Shut, they are the list as it stands. Open, a change in the list behind them changes nothing the
- * person can see (see `settle`): a new row takes its place in the order, and `fresh` names the rows that just arrived.
- */
-function useOpenRows(src: NoticeRow[], open: boolean, gone: ReadonlySet<string>) {
-  const [state, setState] = useState({ src, open, gone, rows: src, fresh: NONE, lit: NONE })
-  if (state.src !== src || state.open !== open || state.gone !== gone) {
-    const live = open && state.open
-    const rows = live ? settle(state.rows, src, gone) : src
-    const before = new Set(state.rows.map((r) => r.id))
-    const fresh = live ? new Set(rows.filter((r) => !before.has(r.id)).map((r) => r.id)) : NONE
-    // Opening reads everything at once (the badge is clear for good); the dots of what was unread stay until it shuts.
-    const lit = open ? new Set([...(live ? state.lit : NONE), ...src.filter((r) => r.unread && (!live || fresh.has(r.id))).map((r) => r.id)]) : NONE
-    setState({ src, open, gone, rows, fresh, lit })
-  }
-  const rows = state.lit.size ? state.rows.map((r) => (state.lit.has(r.id) && !r.unread ? { ...r, unread: true } : r)) : state.rows
-  // A row that was opened is read: its dot goes out at once.
-  const unlight = (ids: string[]) => setState((s) => ({ ...s, lit: new Set([...s.lit].filter((id) => !ids.includes(id))) }))
-  return { rows, fresh: state.fresh, unlight }
-}
 
 export function Bell({ site, notices }: { site: Site | null; notices: ReturnType<typeof useNotices> }) {
   const { items, read, refresh, mark, markAll, can, dismiss, archive } = notices
@@ -231,22 +201,6 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
     {card && <EventStory n={card} sites={sites} site={site} onClose={() => setCard(null)} />}
     {busy && <BusyStory n={busy} sites={sites} site={site} onClose={() => setBusy(null)} />}
     </>
-  )
-}
-
-/** A busy row's story, with one way on: Explore on that site, at that time, narrowed to the source that sent them. */
-function BusyStory({ n, sites, site, onClose }: { n: Notice; sites: Site[]; site: Site | null; onClose: () => void }) {
-  const s = sites.find((x) => (n.siteId ? x.id === n.siteId : x.domain === n.site))
-  if (!s) return null
-  const surge = surgeOf(n)
-  const go = (patch: Parameters<typeof setView>[0]) => {
-    if (site?.id === s.id) setView(patch)
-    else navigate(`/${encodeURIComponent(s.domain)}${writeView({ ...readView(new URLSearchParams()), ...patch })}`)
-  }
-  return (
-    <Suspense fallback={null}>
-      <SurgeModal surge={surge} site={s.id} tz={s.timezone} head={signals.surge.busyHead(n.site, whenOf(n.at, undefined, s.timezone))} explore={{ filters: n.source ? [{ dim: 'referrer', value: n.source }] : [], go }} onClose={onClose} onSee={() => undefined} />
-    </Suspense>
   )
 }
 

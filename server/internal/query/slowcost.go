@@ -46,8 +46,9 @@ type SlowCost struct {
 	Days int `json:"days"`
 }
 
-// bandSQL names the band an LCP in ms falls in.
-var bandSQL = fmt.Sprintf(`CASE WHEN lcp > %d THEN 'slow' WHEN lcp > %d THEN 'mid' ELSE 'fast' END`, SlowLCP, GoodLCP)
+// bandSQL names the band an LCP in ms falls in; its two placeholders take
+// SlowLCP and GoodLCP, in that order.
+const bandSQL = `CASE WHEN lcp > ? THEN 'slow' WHEN lcp > ? THEN 'mid' ELSE 'fast' END`
 
 // SlowCostFor reads the bands. A visit's speed is the LCP of its first measured
 // page view, the page it landed on; a visit with no measured page view is in no
@@ -105,7 +106,7 @@ func (q Q) slowCost(ctx context.Context, p Params) (*SlowCost, error) {
 	}
 	if _, err := conn.ExecContext(ctx, `CREATE OR REPLACE TEMP TABLE sl_s AS
 		SELECT t.session_id, t.pvs, t.goals, `+bandSQL+` AS band
-		FROM sl_sess t JOIN (SELECT sid, arg_min(lcp, ts) AS lcp FROM sl_pv GROUP BY sid) m ON m.sid = t.session_id`); err != nil {
+		FROM sl_sess t JOIN (SELECT sid, arg_min(lcp, ts) AS lcp FROM sl_pv GROUP BY sid) m ON m.sid = t.session_id`, SlowLCP, GoodLCP); err != nil {
 		return nil, fmt.Errorf("slow cost bands: %w", err)
 	}
 
@@ -132,7 +133,7 @@ func (q Q) slowCost(ctx context.Context, p Params) (*SlowCost, error) {
 	// enough to mean something.
 	prows, err := conn.QueryContext(ctx, `SELECT path, `+bandSQL+` AS band FROM (
 			SELECT path, quantile_cont(lcp, 0.75) AS lcp, count(*) AS n FROM sl_pv GROUP BY path HAVING count(*) >= 3
-		) ORDER BY n DESC, path`)
+		) ORDER BY n DESC, path`, SlowLCP, GoodLCP)
 	if err != nil {
 		return nil, fmt.Errorf("slow cost pages: %w", err)
 	}

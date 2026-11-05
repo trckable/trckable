@@ -76,11 +76,12 @@ test('All sites: totals are the rows, sorts, states and the ⋯ menu', async ({ 
   await page.goto(`${API}/sites`)
   await row(busy).waitFor()
 
-  // The ⋯ menu opens the site's settings over its dashboard.
+  // The ⋯ menu opens the site's settings over the page it is on, which stays as it is.
   await row(busy).getByRole('button', { name: /^More for / }).click()
   await page.getByRole('menuitem', { name: 'Site settings' }).click()
   await expect(page.getByRole('dialog')).toBeVisible({ timeout: 20_000 })
-  await expect(page).toHaveURL(new RegExp(`/${busy.domain.replace(/\./g, '\\.')}`))
+  await expect(page).toHaveURL(/\/sites\?settings=site/)
+  await expect(page.getByRole('dialog')).toContainText(busy.domain)
 
   await page.unrouteAll({ behavior: 'ignoreErrors' })
   for (const s of [busy, small, empty]) await page.request.delete(`${API}/api/v1/sites/${s.id}`, { headers: H, data: { domain: s.domain } })

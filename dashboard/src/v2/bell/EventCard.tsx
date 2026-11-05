@@ -12,6 +12,7 @@ import { EventVisit } from './EventVisit'
 import { whenOf } from './days'
 import { eventCopy as t } from './eventCopy'
 import type { Notice } from './notices'
+import '../../mock/theme.css'
 import './event.css'
 
 function Body({ n, site }: { n: Notice; site: Site }) {

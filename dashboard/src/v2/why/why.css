@@ -436,8 +436,10 @@
 .mk .xmv-chip.dn{background:color-mix(in srgb,var(--mk-red) 16%,transparent)}
 .mk .xmv-chip.up{background:color-mix(in srgb,var(--mk-lime) 16%,transparent)}
 .mk .xmv-chip b{font-weight:650;font-variant-numeric:tabular-nums}
-.mk .xmv-chip.dn b,.mk .xmv-n.dn{color:var(--mk-red)}
-.mk .xmv-chip.up b,.mk .xmv-n.up{color:var(--mk-lime)}
+.mk .xmv-chip.dn b{color:color-mix(in srgb,var(--mk-red) 78%,var(--mk-text))}
+.mk .xmv-chip.up b{color:color-mix(in srgb,var(--mk-lime) 78%,var(--mk-text))}
+.mk .xmv-n.dn{color:var(--mk-red)}
+.mk .xmv-n.up{color:var(--mk-lime)}
 .mk .xmv{display:flex;flex-direction:column;padding-top:var(--mk-s2)}
 .mk .xmv-row{display:grid;grid-template-columns:minmax(0,1.2fr) 130px minmax(160px,1fr) 64px;align-items:center;gap:var(--mk-s3);padding:8px 6px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;text-align:start;cursor:pointer}
 .mk .xmv-row:hover{background:var(--mk-band)}
