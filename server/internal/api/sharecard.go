@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"fmt"
+	"image"
 	"math"
 	"net/http"
 	"time"
@@ -72,6 +74,9 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 		Template: tpl, Theme: theme, Accent: v.Get("accent"),
 		Domain: n.domain, Big: n.Big, Label: n.Label, Foot: n.Foot, Series: n.series,
 		Change: n.change, Dir: n.dir, Stats: n.stats,
+	}
+	if tpl == "overview" {
+		spec.Icon = a.cardIcon(r.Context(), r.PathValue("site"), n.domain)
 	}
 	if spec.Template == "leaderboard" {
 		spec.Label, spec.Rows = cardWords.topPages, n.rows
@@ -166,9 +171,35 @@ func (n *cardNumbers) overview(res, prev *query.Result) {
 	}
 	if top := res.Dims["country"]; len(top) > 0 && top[0].Visitors > 0 {
 		if name := countryName(top[0].Value); name != "" {
-			n.stats = append(n.stats, cards.Stat{Value: name, Label: cardWords.topCountry})
+			n.stats = append(n.stats, cards.Stat{Value: name, Label: cardWords.topCountry, Flag: top[0].Value})
 		}
 	}
+}
+
+// cardIcon is the picture for the card's tile: the icon the owner set for
+// the site, else the site's own favicon from the cache the referrer icons
+// use (fetched there, never here: the card does not wait for it, so the first
+// card after a cold start has the initial and the next one the icon). nil is
+// the initial in the tile.
+func (a *API) cardIcon(ctx context.Context, site, domain string) image.Image {
+	if _, data, err := a.Ctl.BrandIcon(ctx, site); err == nil {
+		if img := cards.DecodeIcon(data); img != nil {
+			return img
+		}
+	}
+	host, ok := refHost(domain)
+	if !ok {
+		return nil
+	}
+	e, known := a.refIcons.get(host, a.Now())
+	if !known {
+		a.lookup(host)
+		return nil
+	}
+	if e.typ == "" {
+		return nil
+	}
+	return cards.DecodeIcon(e.data)
 }
 
 // duration is a session's length the way the dashboard writes it: 45s, 3m 12s.

@@ -61,6 +61,11 @@ func (s Spec) PNG() ([]byte, error) {
 	icon.Draw(rasterx.NewDasher(W, H, rasterx.NewScannerGV(W, H, img, img.Bounds())), 1)
 
 	t, _ := s.template()
+	if t.Pics != nil {
+		for _, p := range t.Pics(s) {
+			drawPic(img, p)
+		}
+	}
 	for _, r := range t.Runs(s) {
 		if err := drawRun(img, r); err != nil {
 			return nil, err
