@@ -154,6 +154,7 @@ export function V2View(p: V2Props) {
         onGoal={p.onGoal}
         onGoalsChanged={p.onGoalsChanged}
         period={null}
+        shareFor={p.view.period}
       />
       <main id="main" className="vfade">
         {p.waiting ? <FreshSlot site={p.site} visits={p.live.stream.visits} /> : shown}

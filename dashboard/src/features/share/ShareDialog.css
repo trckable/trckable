@@ -19,10 +19,11 @@
 }
 .sd-body {
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr) auto;
+  grid-template-columns: 200px minmax(0, 1fr);
   grid-template-areas:
-    'tpl tools go'
-    'tpl prev prev';
+    'tpl tools'
+    'tpl prev'
+    'tpl go';
   column-gap: 20px;
   row-gap: 14px;
   align-items: start;
@@ -33,7 +34,7 @@
 .sd-toolbar {
   grid-area: tools;
 }
-.sd-go {
+.sd-actions {
   grid-area: go;
 }
 .sd-preview {
@@ -94,7 +95,7 @@
 .sd-toolbar {
   grid-area: tools;
 }
-.sd-go {
+.sd-actions {
   grid-area: go;
 }
 .sd-preview {
@@ -186,7 +187,13 @@
 .sd-swatch[aria-checked='true'] {
   box-shadow: 0 0 0 2px var(--text);
 }
-.sd-go {
+.sd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.sd-act {
   height: 34px;
 }
 .sd-preview {
@@ -387,14 +394,22 @@
     white-space: nowrap;
     font-weight: 600;
   }
-  :root .sd-go {
+  :root .sd-actions {
     position: sticky;
     bottom: 0;
-    width: 100%;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding-top: 2px;
+    box-shadow: 0 -10px 14px var(--surface);
+  }
+  :root .sd-act {
+    flex: 1 1 0;
+    min-width: 0;
     height: var(--ph-sheet-row);
     justify-content: center;
-    font-size: var(--ph-text);
-    box-shadow: 0 -10px 14px var(--surface);
+    padding-inline: 8px;
+    font-size: var(--ph-text-2);
+    white-space: nowrap;
   }
 }
 /* The look of the links: logo, colour, switch and domain, under the link. */

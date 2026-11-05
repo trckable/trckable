@@ -36,7 +36,7 @@ func TestCardEmpty(t *testing.T) {
 	if n.HasData || len(n.rows) != 0 || n.Big != "0" || !strings.Contains(n.Post, "counting has begun") {
 		t.Fatalf("%+v", n)
 	}
-	if cardPeriodOf("nope").label != "Last 7 days" || cardTemplateOf("x") != "spotlight" {
+	if cardPeriodOf("nope").label != "Last 7 days" || cardTemplateOf("x") != "overview" || cardTemplateOf("leaderboard") != "leaderboard" {
 		t.Fatal("defaults")
 	}
 }
@@ -48,7 +48,7 @@ func TestCardRoute(t *testing.T) {
 	owner := client()
 	g.setup(t, owner)
 	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
-	for _, q := range []string{"", "?t=leaderboard&theme=light", "?t=dashboard&period=30d&accent=%22%2F%3E%3Cscript%3E", "?t=%3Cx%3E&metric=revenue&period=99d&accent=%23ff00zz"} {
+	for _, q := range []string{"", "?t=leaderboard&theme=light", "?t=overview&period=30d&accent=%22%2F%3E%3Cscript%3E", "?t=%3Cx%3E&metric=revenue&period=99d&accent=%23ff00zz"} {
 		if code, ct, body := get(t, owner, card+q); code != http.StatusOK || ct != "image/png" || !strings.HasPrefix(body, "\x89PNG") {
 			t.Fatalf("%s: %d %s", q, code, ct)
 		}
@@ -63,5 +63,33 @@ func TestCardRoute(t *testing.T) {
 	theirs, _ := g.ctl.CreateSite(context.Background(), acc, "theirs.com", "")
 	if code, _, _ := get(t, owner, g.srv.URL+"/api/v1/sites/"+theirs+"/card"); code != http.StatusNotFound {
 		t.Fatalf("another account's site: %d", code)
+	}
+}
+
+// The overview card's small numbers: the change against the period before,
+// engaged visits, average time and the top country, each only where it is true.
+func TestCardOverview(t *testing.T) {
+	res := &query.Result{
+		KPIs: query.KPIs{Visitors: 112, Sessions: 200, BounceRate: 0.4, AvgSessionS: 192},
+		Dims: map[string][]query.Row{"country": {{Value: "DE", Visitors: 60}}},
+	}
+	n := cardWordsOf(res, "example.com", cardPeriodOf("7d"), "")
+	n.overview(res, &query.Result{KPIs: query.KPIs{Visitors: 100}})
+	if n.change != "+12%" || n.dir != 1 || len(n.stats) != 3 {
+		t.Fatalf("%+v", n)
+	}
+	if got := []string{n.stats[0].Value, n.stats[1].Value, n.stats[2].Value}; got[0] != "120" || got[1] != "3m 12s" || got[2] != "Germany" {
+		t.Fatalf("stats: %v", got)
+	}
+	n = cardWordsOf(res, "example.com", cardPeriodOf("7d"), "")
+	n.overview(res, &query.Result{KPIs: query.KPIs{Visitors: 200}})
+	if n.change != "-44%" || n.dir != -1 {
+		t.Fatalf("fall: %+v", n)
+	}
+	// Nothing before it, nothing in it: no change and no numbers that are not true.
+	n = cardWordsOf(&query.Result{}, "example.com", cardPeriodOf("7d"), "")
+	n.overview(&query.Result{Dims: map[string][]query.Row{"country": {{Value: "ZZZ", Visitors: 3}}}}, nil)
+	if n.change != "" || n.dir != 0 || len(n.stats) != 0 {
+		t.Fatalf("empty: %+v", n)
 	}
 }

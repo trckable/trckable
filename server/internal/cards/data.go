@@ -6,11 +6,9 @@ import (
 	"text/template"
 )
 
-// The two templates that draw numbers as well as words: a leaderboard (a
-// title and up to five lines with bars) and a dashboard (a big number over
-// its chart). Words: Domain on top, Label (the leaderboard's title, the
-// dashboard's "visitors"), Big (the dashboard's number, the leaderboard's
-// line when it has none), Foot.
+// The leaderboard draws numbers as well as words: a title and up to five
+// lines with bars. Words: Domain on top, Label (the title), Big (the line
+// when it has none), Foot.
 
 // MaxRows is how many lines a leaderboard shows.
 const MaxRows = 5
@@ -36,7 +34,6 @@ const (
 func init() {
 	plain := template.Must(template.New("plain").Parse(`<rect width="1200" height="630" fill="{{.BG}}"/>`))
 	Templates["leaderboard"] = Template{Shapes: plain, Runs: leaderRuns, Data: leaderBars}
-	Templates["dashboard"] = Template{Shapes: plain, Runs: dashRuns, Data: dashChart}
 }
 
 // clip keeps a line inside its room: n runes, then an ellipsis.
@@ -84,52 +81,4 @@ func leaderRuns(s Spec) []Run {
 		)
 	}
 	return runs
-}
-
-const (
-	chartTop    = 336.0
-	chartBottom = 482.0
-)
-
-// dashChart is the series as a filled line; a flat or empty one is a
-// baseline, never a division by zero.
-func dashChart(s Spec, f Frame) string {
-	pts := s.Series
-	if len(pts) < 2 {
-		pts = []float64{0, 0}
-	}
-	top := 0.0
-	for _, v := range pts {
-		top = max(top, v)
-	}
-	step := float64(right-left) / float64(len(pts)-1)
-	var line strings.Builder
-	for i, v := range pts {
-		y := chartBottom
-		if top > 0 {
-			y = chartBottom - max(v, 0)/top*(chartBottom-chartTop)
-		}
-		cmd := "L"
-		if i == 0 {
-			cmd = "M"
-		}
-		fmt.Fprintf(&line, "%s%.1f %.1f", cmd, float64(left)+float64(i)*step, y)
-	}
-	d := line.String()
-	return fmt.Sprintf(`<path d="%s L%d %.0f L%d %.0f Z" fill="%s" fill-opacity="0.14"/>`, d, right, chartBottom, left, chartBottom, f.Ink) +
-		fmt.Sprintf(`<path d="%s" fill="none" stroke="%s" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`, d, f.Ink)
-}
-
-func dashRuns(s Spec) []Run {
-	big := 88.0
-	if len([]rune(s.Big)) > 10 {
-		big = 68
-	}
-	return []Run{
-		{X: left, Y: domainY, Px: 28, Spans: []Span{{Text: s.Domain, Ink: s.Theme.Muted}}},
-		{X: left - 3, Y: 236, Px: big, Spans: []Span{{Text: s.Big, Bold: true, Ink: s.ink()}}},
-		{X: left, Y: 284, Px: 30, Spans: []Span{{Text: s.Label, Ink: s.Theme.FG}}},
-		{X: left, Y: footY, Px: 26, Spans: []Span{{Text: s.Foot, Ink: s.Theme.Muted}}},
-		Mark(s),
-	}
 }

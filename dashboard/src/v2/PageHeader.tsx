@@ -10,6 +10,7 @@ import { AccountMenu } from '../components/AccountMenu'
 import { appVersion, isShared, updateChecks } from '../lib/me'
 import { useLatest } from '../lib/update'
 import { SectionsButton } from './explore/SectionsButton'
+import { ShareButton } from '../features/share/ShareButton'
 import { can } from '../lib/permissions'
 import { Settings } from 'lucide-react'
 import { pressed } from '../lib/keys'
@@ -42,6 +43,8 @@ export interface PageHeaderProps {
   tab?: 'live' | 'briefing'
   /** The period, beside them (the Briefing's). */
   period?: ReactNode
+  /** The Briefing's period id ("7d", "today"): the picture Share makes is of that stretch. */
+  shareFor?: string
   /** What the ⌘K list knows about the page, beyond the sites and the tables. */
   data?: Report | null
   onAsk?: () => void
@@ -148,7 +151,14 @@ export function PageHeader(p: PageHeaderProps) {
             {site && <DomainPicker />}
           </>
         }
-        goals={site && !p.waiting && !p.identity && !isShared() ? <SectionsButton /> : null}
+        goals={
+          site && !p.waiting && !p.identity && !isShared() ? (
+            <>
+              {here === 'briefing' && <ShareButton site={site} sites={p.sites} period={p.shareFor} />}
+              <SectionsButton />
+            </>
+          ) : null
+        }
         explore={p.waiting ? null : <ExploreChip label="Search" kbd="⌘K" onClick={() => setFind(true)} />}
         extras={slots.headerExtra}
         bell={p.identity ? null : <Bell site={site} notices={notices} />}

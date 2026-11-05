@@ -73,7 +73,7 @@ func (s Spec) PNG() ([]byte, error) {
 	return out.Bytes(), nil
 }
 
-// drawRun sets one line: its spans side by side, ending at X for End.
+// drawRun sets one line: its spans side by side, ending at X for End, centred on it for Mid.
 func drawRun(img *image.RGBA, r Run) error {
 	faces := make([]font.Face, len(r.Spans))
 	width := fixed.Int26_6(0)
@@ -92,6 +92,8 @@ func drawRun(img *image.RGBA, r Run) error {
 	dot := fixed.P(r.X, r.Y)
 	if r.End {
 		dot.X -= width
+	} else if r.Mid {
+		dot.X -= width / 2
 	}
 	for i, sp := range r.Spans {
 		if sp.Text == "" || !validHex(sp.Ink) {

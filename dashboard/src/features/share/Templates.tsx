@@ -1,9 +1,9 @@
-// The dialog's left column: the four kinds of card.
-import { BarChart3, LayoutDashboard, MessageSquareText, Sparkles, type LucideIcon } from 'lucide-react'
+// The dialog's left column: the kinds of card.
+import { BarChart3, LayoutDashboard, MessageSquareText, type LucideIcon } from 'lucide-react'
 import { TEMPLATES, type Template } from './card'
 import { copy } from './copy'
 
-const ICONS: Record<Template, LucideIcon> = { spotlight: Sparkles, leaderboard: BarChart3, dashboard: LayoutDashboard, post: MessageSquareText }
+const ICONS: Record<Template, LucideIcon> = { overview: LayoutDashboard, leaderboard: BarChart3, post: MessageSquareText }
 
 export function Templates({ value, onChange }: { value: Template; onChange: (t: Template) => void }) {
   return (
