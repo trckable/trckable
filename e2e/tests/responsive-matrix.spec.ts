@@ -180,6 +180,8 @@ const at = (url: () => string, ready: string): Go => async (page) => {
 }
 
 // Explore's page on one section of its list (the rail at wide widths, the drawer on a phone).
+// The sections of the Explore list (the folded Payments and Customers are not counted).
+const SECTIONS = 13
 const explore = (n: number): Go => async (page) => {
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
   await expect(page.locator('#xp.on')).toBeVisible()
@@ -190,7 +192,7 @@ const explore = (n: number): Go => async (page) => {
     await page.locator('#xp .xdrawer-open').click()
     await expect(page.locator('.xdrawer-box')).toBeVisible()
   }
-  await expect(items).toHaveCount(11)
+  await expect(items).toHaveCount(SECTIONS)
   await items.nth(n).click()
   await settle(page)
 }
@@ -215,7 +217,7 @@ const PAGES: [string, Go, boolean][] = [
   ['The bell', opened('.bellw .ib.bell'), false],
   ['The account menu', opened('.account-btn'), false],
   ['The palette', async (page) => { await briefing(HISTORY_DOMAIN, '7d')(page); await page.keyboard.press('Control+k'); await expect(page.locator('.pal .palbox')).toBeVisible(); await settle(page) }, false],
-  ...Array.from({ length: 11 }, (_, i): [string, Go, boolean] => [`Explore, section ${i + 1}`, explore(i), false]),
+  ...Array.from({ length: SECTIONS }, (_, i): [string, Go, boolean] => [`Explore, section ${i + 1}`, explore(i), false]),
   ['404', at(() => `${API}/no-such-page-here`, 'body'), false],
 ]
 

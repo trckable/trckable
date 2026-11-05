@@ -34,7 +34,7 @@ async function withPayments(page: Page) {
 }
 
 test('the list of tabs was read', () => {
-  expect(TABS).toEqual(expect.arrayContaining(['overview', 'sells', 'earners', 'buyers', 'sales', 'pages']))
+  expect(TABS).toEqual(expect.arrayContaining(['overview', 'sells', 'earners', 'payments', 'customers', 'sales', 'pages']))
 })
 
 // One small test per sheet and range; the page's own #xp.on is the ready signal.
