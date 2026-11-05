@@ -10,7 +10,7 @@ import { AccountMenu } from '../components/AccountMenu'
 import { appVersion, isShared, updateChecks } from '../lib/me'
 import { useLatest } from '../lib/update'
 import { SectionsButton } from './explore/SectionsButton'
-import { ShareButton } from '../features/share/ShareButton'
+import { SHARE_EVENT, ShareButton } from '../features/share/ShareButton'
 import { can } from '../lib/permissions'
 import { Settings } from 'lucide-react'
 import { pressed } from '../lib/keys'
@@ -170,9 +170,9 @@ export function PageHeader(p: PageHeaderProps) {
                 {copy.settings}
               </button>
             )}
-            {/* Share and Filter have their own buttons on a page that is not Live or the Briefing: the key is theirs there. */}
-            {here && site && !isShared() && !viewer && (
-              <button type="button" className="sr" data-key="share" tabIndex={-1} aria-hidden="true" onClick={() => openSettings(site, 'sharing')}>
+            {/* On the Briefing the key opens the same sheet as the Share button; elsewhere it opens Settings → Sharing. */}
+            {here && site && !isShared() && (here === 'briefing' || !viewer) && (
+              <button type="button" className="sr" data-key="share" tabIndex={-1} aria-hidden="true" onClick={() => (here === 'briefing' ? window.dispatchEvent(new Event(SHARE_EVENT)) : openSettings(site, 'sharing'))}>
                 {copy.share}
               </button>
             )}

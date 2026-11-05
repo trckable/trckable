@@ -66,3 +66,11 @@ for (const [width, colorScheme] of [[1440, 'dark'], [1440, 'light'], [390, 'dark
     await expect(page.locator('#xp')).toBeVisible()
   })
 }
+
+test('the page\'s Share key opens the same sheet', async ({ page }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  await page.goto(`${API}/${STEADY_DOMAIN}?view=briefing&period=30d`)
+  await expect(page.locator('#xp')).toBeVisible({ timeout: 20_000 })
+  await page.locator('[data-key=share]').evaluate((el: HTMLElement) => el.click())
+  await expect(page.getByRole('dialog', { name: 'Share your numbers' })).toBeVisible()
+})

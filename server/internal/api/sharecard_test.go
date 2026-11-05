@@ -86,6 +86,12 @@ func TestCardOverview(t *testing.T) {
 	if n.change != "-44%" || n.dir != -1 {
 		t.Fatalf("fall: %+v", n)
 	}
+	// Zero engaged visits and no time: those two are left off, the country stays.
+	n = cardWordsOf(res, "example.com", cardPeriodOf("7d"), "")
+	n.overview(&query.Result{KPIs: query.KPIs{Visitors: 5, Sessions: 5, BounceRate: 1}, Dims: res.Dims}, nil)
+	if len(n.stats) != 1 || n.stats[0].Label != "Top country" {
+		t.Fatalf("zeros: %+v", n.stats)
+	}
 	// Nothing before it, nothing in it: no change and no numbers that are not true.
 	n = cardWordsOf(&query.Result{}, "example.com", cardPeriodOf("7d"), "")
 	n.overview(&query.Result{Dims: map[string][]query.Row{"country": {{Value: "ZZZ", Visitors: 3}}}}, nil)

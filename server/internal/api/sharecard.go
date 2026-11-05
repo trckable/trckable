@@ -156,12 +156,13 @@ func (n *cardNumbers) overview(res, prev *query.Result) {
 			n.change = fmt.Sprintf("%+.0f%%", d)
 		}
 	}
+	// A number with nothing behind it (no engaged visit, no time on the site) is left off.
 	k := res.KPIs
-	if k.Sessions > 0 {
-		n.stats = append(n.stats,
-			cards.Stat{Value: number(int64(math.Round(float64(k.Sessions) * (1 - k.BounceRate)))), Label: cardWords.engaged},
-			cards.Stat{Value: duration(k.AvgSessionS), Label: cardWords.avgTime},
-		)
+	if engaged := int64(math.Round(float64(k.Sessions) * (1 - k.BounceRate))); engaged > 0 {
+		n.stats = append(n.stats, cards.Stat{Value: number(engaged), Label: cardWords.engaged})
+	}
+	if k.AvgSessionS >= 0.5 {
+		n.stats = append(n.stats, cards.Stat{Value: duration(k.AvgSessionS), Label: cardWords.avgTime})
 	}
 	if top := res.Dims["country"]; len(top) > 0 && top[0].Visitors > 0 {
 		if name := countryName(top[0].Value); name != "" {
