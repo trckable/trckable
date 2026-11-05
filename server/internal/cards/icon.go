@@ -13,6 +13,7 @@ import (
 
 	"golang.org/x/image/bmp"
 	xdraw "golang.org/x/image/draw"
+	_ "golang.org/x/image/webp" // a WebP: the server keeps those as icons too
 )
 
 // Pic is a picture on a card: where it goes, and how round its corners are.
@@ -23,7 +24,7 @@ type Pic struct {
 	Radius int
 }
 
-// DecodeIcon reads a site's icon (PNG, JPEG, GIF or ICO), nil for anything
+// DecodeIcon reads a site's icon (PNG, JPEG, GIF, WebP or ICO), nil for anything
 // else or anything that does not decode.
 func DecodeIcon(data []byte) image.Image {
 	if len(data) > 6 && binary.LittleEndian.Uint32(data) == 0x00010000 {

@@ -6,6 +6,8 @@ import "fmt"
 var cardWords = struct {
 	visitors, pageviews, revenue, topPages, noVisits, counted string
 	engaged, avgTime, topCountry                              string
+	engagedVisits, statPageviews, statVisitors, bounce        string
+	topPage, topSource, statRevenue                           string
 }{
 	visitors:   "visitors",
 	pageviews:  "pageviews",
@@ -16,6 +18,14 @@ var cardWords = struct {
 	engaged:    "Engaged visits",
 	avgTime:    "Avg time",
 	topCountry: "Top country",
+
+	engagedVisits: "engaged visits",
+	statPageviews: "Pageviews",
+	statVisitors:  "Visitors",
+	bounce:        "Bounce rate",
+	topPage:       "Top page",
+	topSource:     "Top source",
+	statRevenue:   "Revenue",
 }
 
 // cardPeriod is one of the dialog's three periods.

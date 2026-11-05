@@ -18,12 +18,13 @@ import (
 //	GET /api/v1/sites/{site}/card
 //	t        overview | leaderboard (default overview)
 //	period   24h | 7d | 30d (default 7d)
-//	metric   visitors | pageviews | revenue (default visitors)
+//	metric   visitors | pageviews | engaged | revenue (default visitors)
+//	stats    up to three small numbers under the chart, comma-separated (see cardStatIDs); default engaged,avgtime,country
 //	theme    dark | light
 //	accent   #rrggbb
 //	format   png (default) | json: the numbers in words and a post's text
 //
-// Only totals, top pages, a chart and the top country: never a visitor. Revenue is in a card
+// Only totals, top pages, a chart and the top country, page or source: never a visitor. Revenue is in a card
 // only where the report would show it to this reader (the module on, a
 // payment provider connected); asked for anywhere else it is visitors.
 
@@ -48,6 +49,7 @@ type cardNumbers struct {
 	domain    string
 	visitors  int64
 	pageviews int64
+	engaged   int64
 	money     string
 }
 
@@ -60,7 +62,7 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 	}
 	v := r.URL.Query()
 	tpl := cardTemplateOf(v.Get("t"))
-	n, ok := a.cardRead(w, r, q, r.PathValue("site"), cardPeriodOf(v.Get("period")), v.Get("metric"), tpl == "overview" && v.Get("format") != "json")
+	n, ok := a.cardRead(w, r, q, r.PathValue("site"), cardPeriodOf(v.Get("period")), v.Get("metric"), v.Get("stats"), tpl == "overview" && v.Get("format") != "json")
 	if !ok {
 		return
 	}
@@ -100,7 +102,7 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 // cardRead reads the period's report the way the dashboard does, and turns
 // it into the card's words; with overview, also the small numbers and the
 // change against the period before.
-func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site string, p cardPeriod, metric string, overview bool) (cardNumbers, bool) {
+func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site string, p cardPeriod, metric, stats string, overview bool) (cardNumbers, bool) {
 	si, err := a.Ctl.SiteInfo(r.Context(), site)
 	if err != nil {
 		fail(w, http.StatusNotFound, "site not found")
@@ -136,18 +138,18 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 		before := fairPrevious(params, a.Now())
 		before.Revenue, before.Goals, before.Groups, before.PageGoals, before.Limit = false, false, nil, nil, 1
 		if prev, err := a.cachedReport(ask, q, before); err == nil {
-			n.overview(res, prev)
+			n.overview(res, prev, stats, a.refIconOf)
 		} else {
-			n.overview(res, nil)
+			n.overview(res, nil, stats, a.refIconOf)
 		}
 	}
 	return n, true
 }
 
 // overview sets what only the overview card draws: the change of the people
-// against the period before (nothing when that had none), and the engaged
-// visits, the average time and the top country.
-func (n *cardNumbers) overview(res, prev *query.Result) {
+// against the period before (nothing when that had none), and the small
+// numbers the reader picked (stats: see cardStatsOf).
+func (n *cardNumbers) overview(res, prev *query.Result, stats string, icon func(host string) image.Image) {
 	if prev != nil && prev.KPIs.Visitors > 0 && n.Metric == "visitors" {
 		d := float64(n.visitors-prev.KPIs.Visitors) / float64(prev.KPIs.Visitors) * 100
 		n.dir = 1
@@ -162,16 +164,9 @@ func (n *cardNumbers) overview(res, prev *query.Result) {
 		}
 	}
 	// A number with nothing behind it (no engaged visit, no time on the site) is left off.
-	k := res.KPIs
-	if engaged := int64(math.Round(float64(k.Sessions) * (1 - k.BounceRate))); engaged > 0 {
-		n.stats = append(n.stats, cards.Stat{Value: number(engaged), Label: cardWords.engaged})
-	}
-	if k.AvgSessionS >= 0.5 {
-		n.stats = append(n.stats, cards.Stat{Value: duration(k.AvgSessionS), Label: cardWords.avgTime})
-	}
-	if top := res.Dims["country"]; len(top) > 0 && top[0].Visitors > 0 {
-		if name := countryName(top[0].Value); name != "" {
-			n.stats = append(n.stats, cards.Stat{Value: name, Label: cardWords.topCountry, Flag: top[0].Value})
+	for _, id := range cardStatsOf(stats, n.Metric) {
+		if st, ok := n.stat(id, res, icon); ok {
+			n.stats = append(n.stats, st)
 		}
 	}
 }
@@ -188,6 +183,16 @@ func (a *API) cardIcon(ctx context.Context, site, domain string) image.Image {
 		}
 	}
 	host, ok := refHost(domain)
+	if !ok {
+		return nil
+	}
+	return a.refIconOf(host)
+}
+
+// refIconOf is a site's favicon from the referrer-icon cache, nil when there
+// is none (yet: an unknown host is fetched in the background, never waited for).
+func (a *API) refIconOf(site string) image.Image {
+	host, ok := refHost(site)
 	if !ok {
 		return nil
 	}
@@ -216,7 +221,7 @@ func duration(s float64) string {
 
 func cardWordsOf(res *query.Result, domain string, p cardPeriod, metric string) cardNumbers {
 	n := cardNumbers{
-		domain: domain, visitors: res.KPIs.Visitors, pageviews: res.KPIs.Pageviews,
+		domain: domain, visitors: res.KPIs.Visitors, pageviews: res.KPIs.Pageviews, engaged: engagedOf(res.KPIs),
 		Revenue: res.Money != nil, HasData: res.KPIs.Visitors > 0, Foot: p.label,
 	}
 	if res.Money != nil {
@@ -224,17 +229,19 @@ func cardWordsOf(res *query.Result, domain string, p cardPeriod, metric string) 
 	}
 	// Anything not allowed or not known is visitors: revenue never slips in.
 	n.Metric = "visitors"
-	if metric == "pageviews" || (metric == "revenue" && n.Revenue) {
+	if metric == "pageviews" || metric == "engaged" || (metric == "revenue" && n.Revenue) {
 		n.Metric = metric
 	}
 	for _, pt := range res.Series {
-		n.series = append(n.series, float64(pointOf(pt, n.Metric)))
+		n.series = append(n.series, pointOf(pt, n.Metric))
 	}
 	switch n.Metric {
 	case "revenue":
 		n.Big, n.Label = n.money, cardWords.revenue
 	case "pageviews":
 		n.Big, n.Label = number(n.pageviews), cardWords.pageviews
+	case "engaged":
+		n.Big, n.Label = number(n.engaged), cardWords.engagedVisits
 	default:
 		n.Big, n.Label = number(n.visitors), cardWords.visitors
 	}
@@ -252,12 +259,22 @@ func cardWordsOf(res *query.Result, domain string, p cardPeriod, metric string) 
 	return n
 }
 
-func pointOf(pt query.Point, metric string) int64 {
+// pointOf is one chart bucket's number for the metric. Engaged visits are
+// not counted per bucket: the bucket's visitors less its bounce rate, which
+// draws the same shape.
+func pointOf(pt query.Point, metric string) float64 {
 	switch metric {
 	case "revenue":
-		return pt.Revenue
+		return float64(pt.Revenue)
 	case "pageviews":
-		return pt.Pageviews
+		return float64(pt.Pageviews)
+	case "engaged":
+		return float64(pt.Visitors) * (1 - pt.Bounce)
 	}
-	return pt.Visitors
+	return float64(pt.Visitors)
+}
+
+// engagedOf is the visits that did more than bounce.
+func engagedOf(k query.KPIs) int64 {
+	return int64(math.Round(float64(k.Sessions) * (1 - k.BounceRate)))
 }
