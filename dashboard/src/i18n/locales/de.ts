@@ -422,6 +422,7 @@ export default {
   'share.actions': 'Was du mit dem Bild tun kannst',
   'share.button': 'Teilen',
   'share.buttonTitle': 'Ein Bild dieser Zahlen teilen',
+  'share.menuItem': 'Ein Bild teilen',
   'share.copyText': 'Kopieren',
   'share.copied': 'Kopiert',
   'share.saved': 'Gespeichert',

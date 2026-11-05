@@ -1,4 +1,4 @@
-/* The header's Share chip: the search's quiet fill, its words at a wide header, a square with only the symbol below. */
+/* The header's Share chip: the search's quiet fill, its words at a wide header, a square with only the symbol below (a phone has no chip: Share is in the page's ⋯ menu). */
 .mk .hd .mk-chip.share-chip {
   flex: none;
   border-color: transparent;
@@ -16,13 +16,5 @@
   }
   .mk .hd .mk-chip.share-chip .t2 {
     display: none;
-  }
-}
-/* A phone's header is full: the square gives up some width (down to a foldable's cover screen). */
-@container (--pane-max-600) {
-  .mk .hd .mk-chip.share-chip {
-    width: 32px;
-    min-width: 32px;
-    margin-left: -4px;
   }
 }

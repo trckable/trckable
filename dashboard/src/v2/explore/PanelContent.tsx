@@ -6,7 +6,10 @@ import { fmtMoney } from '../../lib/format'
 import { addDays, type Range } from '../../lib/dates'
 import { queryOf } from '../../lib/dashQuery'
 import { EXPLORE_ROWS } from './data/rows'
+import { QUERY } from '../../kit/breakpoints'
 import { isShared } from '../../lib/me'
+import { useMedia } from '../../lib/useNarrow'
+import { SHARE_EVENT } from '../../features/share/ShareButton'
 import { can } from '../../lib/permissions'
 import { openSettings } from '../../lib/settings'
 import { setView, type ViewState } from '../../lib/url'
@@ -44,6 +47,7 @@ export interface ContentProps {
 }
 
 export default function PanelContent(p: ContentProps) {
+  const handheld = useMedia(QUERY.handheld)
   const { tab, filters } = p.ask
   const { s, set, act } = usePanelState(p.ask)
   const c: DataCtx = { site: p.site, range: p.range, view: p.view, filters, money: p.money }
@@ -148,6 +152,10 @@ export default function PanelContent(p: ContentProps) {
             act.shut()
             a.copyLink()
           }}
+          onShare={handheld && !isShared() ? () => {
+            act.shut()
+            window.dispatchEvent(new Event(SHARE_EVENT))
+          } : undefined}
           onMail={can('note.write') && !isShared() ? () => {
             act.shut()
             setMail(true)

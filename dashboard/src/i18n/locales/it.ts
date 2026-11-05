@@ -419,6 +419,7 @@ export default {
   'share.actions': 'Cosa fare con l’immagine',
   'share.button': 'Condividi',
   'share.buttonTitle': 'Condividi un’immagine di questi numeri',
+  'share.menuItem': 'Condividi un’immagine',
   'share.copyText': 'Copia',
   'share.copied': 'Copiato',
   'share.saved': 'Salvato',
