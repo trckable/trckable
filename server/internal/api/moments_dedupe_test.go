@@ -35,7 +35,7 @@ func TestMilestoneMomentsAreNeverRepeated(t *testing.T) {
 		sites, _ := g.ctl.MilestoneSites(ctx)
 		for _, s := range sites {
 			if s.ID == g.site {
-				if _, err := milestones.Check(ctx, *g.api.Query(), g.ctl, s, now); err != nil {
+				if _, err := milestones.Check(ctx, *g.api.Query(), g.ctl, s, now, nil); err != nil {
 					t.Fatal(err)
 				}
 			}

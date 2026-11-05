@@ -3,6 +3,7 @@ package milestones
 import (
 	"context"
 	"database/sql"
+	"log/slog"
 	"math"
 	"strings"
 	"time"
@@ -36,7 +37,7 @@ func History(ctx context.Context, q query.Q, ctl *sql.DB, site, tz, currency, be
 	byDay := map[string]*Day{}
 	days := make([]Day, 0, len(rows))
 	for _, r := range rows {
-		days = append(days, Day{Day: r.Day, Visitors: float64(r.Visitors), Pageviews: float64(r.Pageviews), Countries: float64(r.Countries), Goal: r.Goals})
+		days = append(days, Day{Day: r.Day, Visitors: float64(r.Visitors), Pageviews: float64(r.Pageviews), Countries: float64(r.Countries), Goal: r.Goals, AI: float64(r.AI)})
 	}
 	sales, err := paidByDay(ctx, ctl, site, tz, currency, before)
 	if err != nil {
@@ -93,10 +94,14 @@ func paidByDay(ctx context.Context, db *sql.DB, site, tz, currency, before strin
 	return out, nil
 }
 
+// Clicks reads Google's clicks per day for a site: nil when Search Console is
+// not connected. The job keeps going without it when Google does not answer.
+type Clicks func(ctx context.Context, site string) ([]ClickDay, error)
+
 // Check runs one site's check if its last finished day has not been
 // checked, and returns the milestones it added that are new (not quiet).
 // Running it again for the same day does nothing.
-func Check(ctx context.Context, q query.Q, ctl *sqlite.Store, site sqlite.MilestoneSite, now time.Time) ([]sqlite.Milestone, error) {
+func Check(ctx context.Context, q query.Q, ctl *sqlite.Store, site sqlite.MilestoneSite, now time.Time, clicks Clicks) ([]sqlite.Milestone, error) {
 	today, yesterday, due := Due(site, now)
 	if !due {
 		return nil, nil
@@ -105,7 +110,22 @@ func Check(ctx context.Context, q query.Q, ctl *sqlite.Store, site sqlite.Milest
 	if err != nil {
 		return nil, err
 	}
-	plan := Plan(Reached(days, site.Currency), site.Day)
+	var searched []ClickDay
+	if clicks != nil {
+		if searched, err = clicks(ctx, site.ID); err != nil {
+			slog.Warn("milestones: search clicks not read", "site", site.ID, "err", err)
+			searched = nil
+		}
+	}
+	known, err := ctl.Milestones(ctx, site.ID, "")
+	if err != nil {
+		return nil, err
+	}
+	stored := map[string]bool{}
+	for _, m := range known {
+		stored[m.Kind] = true
+	}
+	plan := Plan(Reached(days, site.Currency, searched), site.Day, stored)
 	for i := range plan {
 		// The first goal is told by name: the goal that was reached on that day.
 		if plan[i].Kind == FirstGoal {

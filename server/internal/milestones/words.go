@@ -14,6 +14,7 @@ import (
 // these are the server's, kept in one place the same way.
 var words = struct {
 	visitors, pageviews, firstPageview, countries, record, revenue, revenueHidden, revenueReached, milestone, firstGoal, firstSale, first string
+	searchClicks, aiVisits                                                                                                                string
 	alertTitle, made, pageTitle, reached                                                                                                  string
 }{
 	visitors:       "visitors",
@@ -28,6 +29,8 @@ var words = struct {
 	firstGoal:      "First goal",
 	firstSale:      "First sale",
 	first:          "First",
+	searchClicks:   "Google Search clicks · 28 days",
+	aiVisits:       "visits from AI assistants",
 	alertTitle:     "Milestone reached",
 	made:           "Made with trckable",
 	pageTitle:      "%s on %s",
@@ -56,6 +59,10 @@ func Say(m sqlite.Milestone, showAmount bool) Words {
 		}
 	case Countries:
 		w.Big, w.Label = Number(m.Value), words.countries
+	case SearchClicks:
+		w.Big, w.Label = Number(m.Value), words.searchClicks
+	case AIVisits:
+		w.Big, w.Label = Number(m.Value), words.aiVisits
 	case RecordDay:
 		w.Big, w.Label = Number(m.Value), words.record
 	case FirstGoal:

@@ -75,7 +75,7 @@ export function lineOf(m: Milestone, revenue: boolean): string {
   if (m.kind === 'first_goal' || m.kind === 'first_sale') return L[m.kind]
   if (!w.big) return L.firstPageview
   if (m.kind === 'revenue') return showsBig(m, revenue) ? L.revenue(w.big) : L.revenueQuiet
-  if (m.kind === 'visitors' || m.kind === 'pageviews' || m.kind === 'record_day' || m.kind === 'countries') return L[m.kind](w.big)
+  if (m.kind === 'visitors' || m.kind === 'pageviews' || m.kind === 'record_day' || m.kind === 'countries' || m.kind === 'search_clicks' || m.kind === 'ai_visits') return L[m.kind](w.big)
   return ''
 }
 
