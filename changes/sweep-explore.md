@@ -1,0 +1,1 @@
+Explore: the entry and exit pages' Left column sits in its own column, wide cards end their last column at the card's edge, the Time to convert rows clear the Table button, and Overview names the home page like Pages does.

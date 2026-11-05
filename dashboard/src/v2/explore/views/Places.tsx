@@ -38,9 +38,9 @@ export function tabs(zones: Table | null): PlaceTab[] {
 /** How many places the period had: "100+" when the list was cut at what the report carries. */
 const count = (rows: Row[]) => `${fmtInt(rows.length)}${rows.length >= EXPLORE_ROWS ? '+' : ''}`
 
-function tile(label: string, rows: Row[], kept: boolean): Xkc {
-  if (rows.length > 0) return { icon: 'places', label, val: count(rows), tag: '', tone: '', detail: words.tileWith }
-  return { icon: 'places', label, val: '–', tag: '', tone: '', detail: kept ? words.tileNone : words.tileNotKept }
+function tile(icon: string, label: string, rows: Row[], kept: boolean): Xkc {
+  if (rows.length > 0) return { icon, label, val: count(rows), tag: '', tone: '', detail: words.tileWith }
+  return { icon, label, val: '–', tag: '', tone: '', detail: kept ? words.tileNone : words.tileNotKept }
 }
 
 /** The four numbers. Regions and cities say "not recorded" only when people came and none of them was placed. */
@@ -48,9 +48,9 @@ export function tiles(c: Table, r: Table, ci: Table): Xkc[] {
   const top = c.rows[0]
   const kept = c.rows.length === 0 || r.rows.length > 0 || ci.rows.length > 0
   return [
-    tile(words.tileCountries, c.rows, true),
-    tile(words.tileRegions, r.rows, kept),
-    tile(words.tileCities, ci.rows, kept),
+    tile('countries', words.tileCountries, c.rows, true),
+    tile('map', words.tileRegions, r.rows, kept),
+    tile('building', words.tileCities, ci.rows, kept),
     { icon: 'places', label: words.tileTop, val: top ? top.name : '–', flag: top?.code, tag: '', tone: '', detail: top ? words.topShare(shareOf(top.v, c.of)) : words.tileNone },
   ]
 }

@@ -16,8 +16,8 @@ export function agoWords(unix: number, now = Date.now()): string {
   return rtf.format(0, 'second')
 }
 
-/** "15 Oct, 14:32". */
-export const whenWords = (unix: number): string => dateFmt(tag, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(unix * 1000)
+/** "15 Oct, 14:32", in the site's zone (the viewer's own when none). */
+export const whenWords = (unix: number, zone?: string): string => dateFmt(tag, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: zone || undefined }).format(unix * 1000)
 
 /** "3 Oct". */
-export const dayWords = (unix: number): string => dateFmt(tag, { day: 'numeric', month: 'short' }).format(unix * 1000)
+export const dayWords = (unix: number, zone?: string): string => dateFmt(tag, { day: 'numeric', month: 'short', timeZone: zone || undefined }).format(unix * 1000)

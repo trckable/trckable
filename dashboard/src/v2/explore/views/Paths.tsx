@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useWidth } from '../../../charts/useWidth'
 import { midTruncate } from '../../../features/signals/surge'
-import { fmtFixed, fmtInt, fmtPct } from '../../../lib/format'
+import { fmtInt, fmtPct } from '../../../lib/format'
 import { EmptyTab } from './PeopleTable'
 import { XEmpty } from '../../ui/XBits'
 import { SummaryCards } from '../../ui/SummaryCards'
@@ -33,6 +33,7 @@ const ICON_GAP = 4
 const name = (p: string): string => (p === '/' ? copy.homePage : p)
 
 interface Tile {
+  icon: string
   label: string
   val: string
   /** The value in full, when it is shortened. */
@@ -41,19 +42,18 @@ interface Tile {
 }
 
 function tiles(d: Paths): Tile[] {
-  const page = (label: string, p: Paths['first']): Tile =>
-    p ? { label, val: midTruncate(name(p.path), 22), hint: name(p.path), detail: copy.pathsVisitsOf(fmtInt(p.visits)) } : { label, val: '–', detail: '' }
+  const page = (icon: string, label: string, p: Paths['first']): Tile =>
+    p ? { icon, label, val: midTruncate(name(p.path), 22), hint: name(p.path), detail: copy.pathsVisitsOf(fmtInt(p.visits)) } : { icon, label, val: '–', detail: '' }
   return [
-    { label: copy.pathsVisits, val: fmtInt(d.visits), detail: '' },
-    { label: copy.pathsPerVisit, val: fmtFixed(d.pages, 1), detail: '' },
-    page(copy.pathsFirst, d.first),
-    page(copy.pathsLast, d.last),
+    { icon: 'people', label: copy.pathsVisits, val: fmtInt(d.visits), detail: '' },
+    page('sources', copy.pathsFirst, d.first),
+    page('leave', copy.pathsLast, d.last),
   ]
 }
 
 /** The four numbers, the one summary card, as a block above the section's card. */
 export function PathsTiles({ d }: { d: Paths }) {
-  return <SummaryCards items={tiles(d).map((t) => ({ key: t.label, label: t.label, val: t.val, title: t.hint, sub: t.detail }))} />
+  return <SummaryCards items={tiles(d).map((t) => ({ key: t.label, icon: t.icon, label: t.label, val: t.val, title: t.hint, sub: t.detail }))} />
 }
 
 function Flow({ d, sel, onPick }: { d: Paths; sel: string | null; onPick: (r: PathRoute) => void }) {

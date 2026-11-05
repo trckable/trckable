@@ -323,7 +323,6 @@ export const copy = defineCopy('v2explore', {
   qEngBest: (name: string, pct: number) => `${name} holds people best: ${pct}% are engaged.`,
   qTooFew: 'Too few people yet to say which source is best.',
   pathsVisits: 'Visits',
-  pathsPerVisit: 'Pages per visit',
   pathsFirst: 'Top first page',
   pathsLast: 'Top last page',
   pathsVisitsOf: (n: string) => `${n} visits`,

@@ -88,6 +88,27 @@ const PATHS: Record<string, ReactNode> = {
   ),
   results: <path d="M4 5h16l-6 8v6l-4-2v-4z" />,
   links: <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />,
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M12 7.5V12l3 2" />
+    </>
+  ),
+  layers: <path d="M12 4l8 4-8 4-8-4zM4 12l8 4 8-4M4 16l8 4 8-4" />,
+  scroll: <path d="M12 4v14M7 13l5 5 5-5" />,
+  eye: (
+    <>
+      <path d="M3 12c2.5-4.5 5.5-6.5 9-6.5s6.5 2 9 6.5c-2.5 4.5-5.5 6.5-9 6.5S5.5 16.5 3 12z" />
+      <circle cx="12" cy="12" r="2.5" />
+    </>
+  ),
+  percent: <path d="M18 6L6 18M8 9a1.5 1.5 0 1 0 0-.1M16 17a1.5 1.5 0 1 0 0-.1" />,
+  hash: <path d="M9 4L7 20M17 4l-2 16M4 9h16M3 15h16" />,
+  map: <path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2zM9 4v14M15 6v14" />,
+  building: <path d="M6 20V5h8v15M14 10h4v10M3 20h18M9 9h2M9 13h2" />,
+  calendar: <path d="M5 6h14v14H5zM5 10h14M9 4v4M15 4v4" />,
+  undo: <path d="M9 6L4 11l5 5M4 11h9a6 6 0 0 1 0 8h-3" />,
+  chip: <path d="M7 7h10v10H7zM10 10h4v4h-4zM10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4" />,
   milestone: <path d="M6 21V4M6 5h11l-2 4 2 4H6" />,
 }
 

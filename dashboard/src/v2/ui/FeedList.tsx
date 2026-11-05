@@ -19,6 +19,8 @@ import './feedRow.css'
 
 /** Under this width (px) the list drops the visitor's name and the word Replay, so the page keeps the room. */
 const NARROW = 480
+/** Under this width (px) the visitor's name and where they came from no longer fit side by side: the source goes under the name. */
+const STACK = 560
 
 /** How long ago the row's last activity was, short: "12s", "3m". */
 export const agoShort = (ms: number) => (ms < 60_000 ? `${Math.max(0, Math.floor(ms / 1000))}s` : `${Math.floor(ms / 60_000)}m`)
@@ -35,6 +37,7 @@ export function FeedList({ rows, up, signup, clock, empty, onVisitor, cookieless
     setAbove(el.scrollTop > 4)
     // A narrow card gives its width to the page: the visitor's name and the Replay word step aside (feedRow.css).
     el.toggleAttribute('data-narrow', el.clientWidth < NARROW)
+    el.toggleAttribute('data-stack', el.clientWidth >= NARROW && el.clientWidth < STACK)
   }, [])
   useEffect(() => {
     const el = box.current

@@ -3,10 +3,11 @@ import type { ReactNode } from 'react'
 import { SummaryCards } from './SummaryCards'
 
 export interface PageStat {
+  icon?: string
   label: ReactNode
   value: string
 }
 
 export function PageStats({ items }: { items: PageStat[] }) {
-  return <SummaryCards items={items.map((s, i) => ({ key: String(i), label: s.label, val: s.value }))} />
+  return <SummaryCards items={items.map((s, i) => ({ key: String(i), icon: s.icon, label: s.label, val: s.value }))} />
 }

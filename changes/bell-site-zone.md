@@ -1,0 +1,1 @@
+The bell writes every time in the site's time zone, as Live does: its rows, its Today and Yesterday groups, the event, surge and visitor cards. When the site's zone is not yours, the day group says so once.

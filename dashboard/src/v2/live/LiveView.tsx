@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { onlineNow } from '../../lib/live'
-import { isShared } from '../../lib/me'
+import { hasMentions, isShared } from '../../lib/me'
 import { can } from '../../lib/permissions'
 import { openSettings } from '../../lib/settings'
 import { tag } from '../../i18n'
@@ -132,7 +132,10 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
           <div className="lhead">
             <span key={beat} className={`mk-pulse ${pulseClass}`} />
             <span className="lt">{copy.live}</span>
-            <span className="mk-quiet lm">{copy.window(at(now))}</span>
+            <span className="mk-quiet lm">
+              <span className="lm-long">{copy.window(at(now))}</span>
+              <span className="lm-short">{copy.windowShort(at(now))}</span>
+            </span>
             <ChartSwitch mode={mode} onChange={pick} />
             {bar}
           </div>
@@ -147,7 +150,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
               {ch && <span className={`mk-ld ${ch.up ? 'up' : 'dn'}`}>{copy.change(ch.up, ch.pct)}</span>}
             </div>
           </div>
-          {!isShared() && !feed.sample && (
+          {!isShared() && !feed.sample && !!whole?.mentions && hasMentions() && (
             <Suspense fallback={null}>
               <MentionChip site={site} domain={whole?.domain} />
             </Suspense>

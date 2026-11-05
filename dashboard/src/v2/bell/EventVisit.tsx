@@ -25,9 +25,9 @@ const DAY = 86400
 function tiles(first: number, visits: number, pages: number, at: number): SumItem[] {
   const since = Math.round((at * 1000 - first) / 1000)
   const out: SumItem[] = []
-  if (first > 0 && since > 0) out.push({ key: 'since', label: t.toConvert, val: fmtSpan(since) })
-  if (visits > 0) out.push({ key: 'visits', label: t.visitsBefore, val: fmtInt(visits) })
-  if (pages > 0) out.push({ key: 'pages', label: t.pagesSeen, val: fmtInt(pages) })
+  if (first > 0 && since > 0) out.push({ key: 'since', icon: 'clock', label: t.toConvert, val: fmtSpan(since) })
+  if (visits > 0) out.push({ key: 'visits', icon: 'people', label: t.visitsBefore, val: fmtInt(visits) })
+  if (pages > 0) out.push({ key: 'pages', icon: 'pages', label: t.pagesSeen, val: fmtInt(pages) })
   return out
 }
 

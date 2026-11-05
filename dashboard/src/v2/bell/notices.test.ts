@@ -120,6 +120,14 @@ describe('the server’s list as the bell’s rows', () => {
     expect(fromFeed([row({ id: 'down:i1', kind: 'down', at: now - 60, ended: now + 60 })], sites, now)[0].kind).toBe('down')
   })
 
+  it('writes a row’s time in the site’s zone, as Live does', () => {
+    const at = Date.UTC(2026, 9, 18, 17, 27) / 1000
+    const berlin = [{ id: 's1', domain: 'a.com', timezone: 'Europe/Berlin' }] as Site[]
+    const utc = [{ id: 's1', domain: 'a.com', timezone: 'UTC' }] as Site[]
+    expect(fromFeed([row({ id: 'd', kind: 'down', at })], utc, at + 60)[0]).toMatchObject({ zone: 'UTC', title: 'a.com down since 17:27' })
+    expect(fromFeed([row({ id: 'd', kind: 'down', at })], berlin, at + 60)[0].title).toBe('a.com down since 19:27')
+  })
+
   it('leaves out a row of a site the person does not have', () => {
     expect(fromFeed([row({ id: 'x', kind: 'mention', site: 'zz' })], sites, now)).toEqual([])
   })

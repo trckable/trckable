@@ -1,7 +1,7 @@
 // AI & Search in the section's frame: the assistants that sent people, the crawlers that read the pages and each page's
 // reads against the visitors sent; Google's searches are the Search section, one tap away.
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { XEmpty, XError, XSec } from '../../../ui/XBits'
+import { XEmpty, XError, XNote, XSec } from '../../../ui/XBits'
 import { XCols, type CRow } from '../../../ui/XTable'
 import { Loading } from '../../../../components/loading/Loading'
 import { fmtInt } from '../../../../lib/format'
@@ -28,7 +28,8 @@ function GoogleLines({ x }: { x: XCtx }) {
   useEffect(() => {
     const ac = new AbortController()
     more
-      .searchReport(x.site.id, x.query, 'query', ac.signal)
+      .searchConsole(x.site.id)
+      .then((c): Promise<SearchReport | 'off'> => (c.connected ? more.searchReport(x.site.id, x.query, 'query', ac.signal) : Promise.resolve('off' as const)))
       .then(setRep)
       .catch((e: unknown) => !ac.signal.aborted && setRep(/not connected|module is off/i.test(messageOf(e)) ? 'off' : null))
     return () => ac.abort()
@@ -37,7 +38,7 @@ function GoogleLines({ x }: { x: XCtx }) {
   }, [key])
   if (rep === 'off') {
     return (
-      <XEmpty title={aiCopy.connectLabel} hint="">
+      <XEmpty title={aiCopy.connectLabel} hint={aiCopy.connectHint}>
         <button type="button" className="xb" onClick={() => x.connect('search')}>
           {aiCopy.connect}
         </button>
@@ -76,7 +77,7 @@ export default function AiTab({ x }: { x: XCtx }) {
   const hit = Math.max(1, ...rep.bots.map((b) => b.hits))
   const crawlers: CRow[] = rep.bots.slice(0, ROWS).map((b) => ({ key: `${b.name}/${b.kind}`, a: `${b.name} · ${aiCopy.kind[b.kind] ?? b.kind}`, bar: b.hits / hit, c: [fmtInt(b.hits), <FailedCell blocked={b.blocked ?? 0} broken={b.errors ?? 0} />] }))
   const kinds = KINDS.map((k) => ({ ...k, n: rep.bots.filter((b) => b.kind === k.k).reduce((n, b) => n + b.hits, 0) })).filter((k) => k.n > 0)
-  const pages = rep.pages.filter((p) => p.read > 0 || p.flag).slice(0, ROWS)
+  const pages = [...rep.pages].filter((p) => p.read > 0 || p.flag).sort((a, b) => b.read - a.read).slice(0, ROWS)
   const read = Math.max(1, ...pages.map((p) => p.read))
   const reads: CRow[] = pages.map((p) => ({ key: p.path, a: p.flag ? <>{p.path} <em className="xflag">{aiCopy.flag[p.flag]}</em></> : p.path, bar: p.read / read, mono: true, onPick: () => x.pick('page', p.path), c: [fmtInt(p.read), fmtInt(p.sent)] }))
   return (
@@ -89,6 +90,7 @@ export default function AiTab({ x }: { x: XCtx }) {
       <div className="x2">
         <div>
           <XSec a={aiCopy.assistants} />
+          <XNote>{aiCopy.whyAssistants}</XNote>
           {people.length === 0 ? (
             <XEmpty title={aiCopy.noAssistants} hint="" />
           ) : (
@@ -105,12 +107,14 @@ export default function AiTab({ x }: { x: XCtx }) {
         </div>
         <div>
           <XSec a={aiCopy.google} />
+          <XNote>{aiCopy.whyGoogle}</XNote>
           <GoogleLines x={x} />
         </div>
       </div>
       <XSec a={aiCopy.crawlers} b={fmtInt(rep.bots.reduce((n, b) => n + b.hits, 0))} />
+      <XNote>{aiCopy.whyBots}</XNote>
       {crawlers.length === 0 ? (
-        <XEmpty title={aiCopy.noAssistants} hint="">
+        <XEmpty title={aiCopy.noAssistants} hint={aiCopy.setupHint}>
           <button type="button" className="xb" onClick={() => setSetup(true)}>
             {aiCopy.setup}
           </button>
@@ -131,6 +135,7 @@ export default function AiTab({ x }: { x: XCtx }) {
       {reads.length > 0 && (
         <>
           <XSec a={aiCopy.pages} />
+          <XNote>{aiCopy.whyPages}</XNote>
           <XCols first={aiCopy.page} cols={[{ h: copy.heads.read }, { h: copy.heads.sent }]} rows={reads} xc="minmax(0,1fr) 72px 72px" limit={pageRows} onAll={() => setPageRows(ROWS)} />
         </>
       )}

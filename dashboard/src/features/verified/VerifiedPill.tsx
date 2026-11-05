@@ -17,7 +17,7 @@ const Pop = lazyLoad(() => import('./Pop'))
 export interface PillProps {
   verified?: Verified
   /** The site on screen; for a shared page, nothing to ask Settings about. */
-  site?: { id: string; domain: string }
+  site?: { id: string; domain: string; timezone?: string }
   /** Someone reading a shared link: their copy, no Connect, no fresh read. */
   viewer?: boolean
   /** A link that hides trckable's name also leaves out the link back. */

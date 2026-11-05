@@ -69,6 +69,7 @@ export function AnalyticsCard({ today, lists, timezone }: Props) {
           </p>
         )}
         {!lists && <CardSkeleton kind="rows" />}
+        {lists && !(today && today.visitors > 0) && rows.length === 0 && <p className="mk-quiet">{copy.noneToday}</p>}
         <div className="lbars">
           {rows.map((r, i) => (
             <div className={`lbar${i === 0 ? ' top' : ''}`} key={r.key}>

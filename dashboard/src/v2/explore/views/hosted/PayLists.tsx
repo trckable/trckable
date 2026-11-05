@@ -188,7 +188,7 @@ export function Customers({ x, query, onPick }: { x: XCtx; query: ReportQuery; o
                 {[c.country ? countryName(c.country) : '', copy.pay.orders(c.orders), sourceOf(c.channel, c.referrer), c.visitor ? '' : copy.pay.unlinked].filter(Boolean).join(' · ')}
               </div>
               <div className="mk-quiet" style={{ fontSize: '12px' }}>
-                {copy.pay.firstSeen(fmtDate(Date.parse(c.first_seen)))} · {copy.pay.lastOrder(fmtDate(Date.parse(c.last_order)))}
+                {copy.pay.firstSeen(fmtDate(Date.parse(c.first_seen), x.site.timezone))} · {copy.pay.lastOrder(fmtDate(Date.parse(c.last_order), x.site.timezone))}
               </div>
             </span>
             <Amount cls="amt" text={x.money(c.spent)} note={ago(now - Date.parse(c.last_order))} />

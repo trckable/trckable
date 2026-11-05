@@ -606,6 +606,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 @media (hover:none){.mk .nfw .nfx{opacity:1}}
 /* The day a run of rows belongs to, and a row that is still going. */
 .mk .nfdy{margin:0;padding:var(--mk-s3) var(--mk-s3) var(--mk-s1);font-size:11px;font-weight:500;letter-spacing:.02em;color:var(--mk-faint)}
+.mk .nfdy .nfzn{margin-inline-start:var(--mk-s2);font-weight:400}
 /* Several in one row: the sites listed under the title, each its own button. */
 .mk .nf.grp{cursor:default}
 .mk .nfn{text-align:left;font-size:13px;color:var(--mk-text);padding:2px 0;min-height:28px}
@@ -1282,6 +1283,9 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 /* Live's left card: the two top cards are one height; the chart takes whatever room the content leaves. The two big numbers are one pair. */
 .mk .lnow .lhead{flex-wrap:nowrap;gap:var(--mk-s3)}
 .mk .lnow .lhead .lm{margin:0 auto 0 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk .lnow .lhead .lm-short{display:none}
+@media (--xs){.mk .lnow .lhead{gap:var(--mk-s2)}.mk .lnow .lhead .lm-long{display:none}.mk .lnow .lhead .lm-short{display:inline}}
+@media (--narrow){.mk .lnow .lhead .gsw>span{display:none}}
 .mk .lnow .lfig{display:flex;flex-direction:row;flex-wrap:wrap;align-items:flex-end;gap:var(--mk-s3) var(--mk-s6)}
 .mk .lnow .lfig>div,.mk .lnow .lfig>div:nth-child(2){display:flex;flex-direction:column;flex-wrap:nowrap;align-items:flex-start;gap:var(--mk-s1);order:0;margin:0;text-align:left}
 .mk .lnow .lfig .ll{order:0;font-size:13px}

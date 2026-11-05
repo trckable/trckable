@@ -17,7 +17,21 @@
 /* The page is what the row is about: it takes the room the other cells leave (at least 14 characters), in its normal weight; the device is its icon. */
 .mk .lfeed .lv { gap: var(--mk-s2); }
 .mk .lfeed .lv .pg { flex: 1 1 0; min-width: 14ch; }
-.mk .lfeed .lv .src { flex: 0 1 auto; max-width: 96px; }
+.mk .lfeed .lv .src { flex: 0 1 auto; max-width: 96px; min-width: 10ch; }
+.mk .lfeed .lv .vn { min-width: 8ch; }
+/* Too tight for the name and the source on one line: the source sits under the name, and neither is cut short. */
+.mk .lfeed[data-stack] .lv { display: grid; grid-template-columns: auto auto minmax(8ch, 18ch) minmax(14ch, 1fr) auto auto auto auto; column-gap: var(--mk-s2); row-gap: 0; align-items: center; }
+.mk .lfeed[data-stack] .lv > * { grid-row: 1 / span 2; }
+.mk .lfeed[data-stack] .lv .mk-dot { grid-column: 1; }
+.mk .lfeed[data-stack] .lv .v-avatar { grid-column: 2; }
+.mk .lfeed[data-stack] .lv .cc { grid-column: 5; }
+.mk .lfeed[data-stack] .lv .tm { grid-column: 6; }
+.mk .lfeed[data-stack] .lv .dv { grid-column: 7; }
+.mk .lfeed[data-stack] .lv .mk-rp { grid-column: 8; }
+.mk .lfeed[data-stack] .lv .vn { grid-column: 3; grid-row: 1; align-self: end; max-width: none; }
+.mk .lfeed[data-stack] .lv .src { grid-column: 3; grid-row: 2; align-self: start; max-width: none; min-width: 0; }
+.mk .lfeed[data-stack] .lv .pg { grid-column: 4; min-width: 14ch; }
+
 .mk .lfeed .lv .dv { display: inline-grid; place-items: center; width: 18px; flex: none; }
 .mk .lfeed[data-narrow] .lv .vn { display: none; }
 .mk .lfeed[data-narrow] .lv .mk-rp { width: 18px; }

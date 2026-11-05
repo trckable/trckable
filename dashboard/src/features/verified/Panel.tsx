@@ -12,7 +12,7 @@ import './panel.css'
 
 interface Props {
   verified?: Verified
-  site?: { id: string; domain: string }
+  site?: { id: string; domain: string; timezone?: string }
   viewer: boolean
   brand: boolean
   close: () => void
@@ -35,7 +35,7 @@ export default function Panel({ verified, site, viewer, brand, close }: Props) {
       </div>
       <Sources data={data} site={site} viewer={viewer} close={close} />
       <div className="vf-foot">
-        <span>{when ? copy.checked(whenWords(when)) : ''}</span>
+        <span>{when ? copy.checked(whenWords(when, site?.timezone)) : ''}</span>
         {viewer && brand && (
           <a href="https://trckable.com/?ref=verified" target="_blank" rel="noopener">
             {copy.verifyOwn} →

@@ -26,10 +26,10 @@ function Strip({ sites }: { sites: TeamSite[] }) {
   const { teamStrip } = useV2Extras()
   const d = t.versus ? t.versus.today / t.versus.usual - 1 : null
   const items: SumItem[] = [
-    { key: 'online', data: 'online', label: copy.online, val: fmtInt(t.online), flag: <i className={'tm-dot' + (t.online ? ' on' : '')} aria-hidden="true" /> },
-    { key: 'today', data: 'today', label: copy.today, val: fmtInt(t.today), ...(d !== null && { tag: (d >= 0 ? '+' : '−') + fmtInt(Math.abs(d) * 100) + '%', tone: sumTone(tone(d)), sub: copy.vsUsual }) },
-    ...(t.revenue ? [{ key: 'revenue', data: 'revenue', label: copy.revenue, val: fmtMoney(t.revenue.minor, t.revenue.currency, t.revenue.exponent) }] : []),
-    { key: 'attention', data: 'attention', label: copy.attention, val: String(t.attention.length || copy.allFine) },
+    { key: 'online', data: 'online', icon: 'people', label: copy.online, val: fmtInt(t.online), mark: <i className={'tm-dot' + (t.online ? ' on' : '')} aria-hidden="true" /> },
+    { key: 'today', data: 'today', icon: 'overview', label: copy.today, val: fmtInt(t.today), ...(d !== null && { tag: (d >= 0 ? '+' : '−') + fmtInt(Math.abs(d) * 100) + '%', tone: sumTone(tone(d)), sub: copy.vsUsual }) },
+    ...(t.revenue ? [{ key: 'revenue', data: 'revenue', icon: 'sales', label: copy.revenue, val: fmtMoney(t.revenue.minor, t.revenue.currency, t.revenue.exponent) }] : []),
+    { key: 'attention', data: 'attention', icon: 'goal', label: copy.attention, val: String(t.attention.length || copy.allFine) },
   ]
   return (
     <div className="mk mk-body">
