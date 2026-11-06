@@ -96,6 +96,15 @@ const countryNames = (() => {
   }
 })()
 
+// Codes we show differently from the data's code: Kosovo comes in as XK but is shown as KS.
+const shownCodes: Record<string, string> = { XK: 'KS' }
+
+// countryCode is a country's two-letter code as people see it; data, flags and exports keep the original.
+export function countryCode(code: string) {
+  const c = code.toUpperCase()
+  return shownCodes[c] ?? c
+}
+
 export function countryName(code: string) {
   if (!code || code.length !== 2) return code || 'Unknown'
   try {

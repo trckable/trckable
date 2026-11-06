@@ -5,7 +5,7 @@ import type { Row } from '../../features/live/model'
 import { copy as off } from '../../features/cookieless/copy'
 import { why } from '../../features/cookieless/why'
 import { useLeaving } from '../../features/live/useLeaving'
-import { countryName } from '../../lib/format'
+import { countryCode, countryName } from '../../lib/format'
 import { Flag } from './Flag'
 import { channelLabel } from '../../lib/palette'
 import { Avatar } from '../../components/visitor/Avatar'
@@ -73,7 +73,7 @@ export function FeedList({ rows, up, signup, clock, empty, onVisitor, cookieless
               {r.country?.length === 2 ? (
                 <>
                   <Flag code={r.country} />
-                  <span className="ccn">{r.country.toUpperCase()}</span>
+                  <span className="ccn">{countryCode(r.country)}</span>
                 </>
               ) : (
                 '\u2014'
