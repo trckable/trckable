@@ -2,6 +2,8 @@ package cards
 
 import (
 	"fmt"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/opentype"
 	"image"
 	"strings"
 	"text/template"
@@ -77,30 +79,61 @@ const (
 	statGap  = 18 // the room a stat leaves between itself and the next
 )
 
-// fit keeps a stat's value inside its room (px, at the value's size): its
-// letters are measured by class, not by the font, and it ends in an ellipsis
-// when it does not fit.
-func fit(s string, room float64) string {
-	const em = 42.0 // the stat value's size
-	width := func(r rune) float64 {
-		switch {
-		case strings.ContainsRune("il.,:;'|!/ ft1jI-", r):
-			return 0.32 * em
-		case strings.ContainsRune("mwMW@", r):
-			return 0.84 * em
-		case unicode.IsUpper(r):
-			return 0.64 * em
+// The stat value's size, and the smallest it shrinks to before it is cut;
+// markX is where trckable's mark (the ghost, then the name) begins.
+const (
+	statPx    = 42.0
+	statMinPx = 26.0
+	markX     = 892
+)
+
+// fitStat is a stat's value and the size it is drawn at: whole at the full
+// size when it fits, else smaller until it fits, and cut only when even the
+// smallest size is too wide (a long country such as "United Kingdom").
+func fitStat(s string, room float64) (string, float64) {
+	for px := statPx; px > statMinPx; px -= 2 {
+		if wide(s, px) <= room {
+			return s, px
 		}
-		return 0.56 * em
 	}
-	runes := []rune(s)
-	total := 0.0
-	for _, r := range runes {
-		total += width(r)
+	return fit(s, room, statMinPx), statMinPx
+}
+
+// wide is how wide s is in the bold font at size em; by letter class when the
+// font cannot be read.
+func wide(s string, em float64) float64 {
+	if loadFonts() == nil {
+		if fc, err := opentype.NewFace(boldF, &opentype.FaceOptions{Size: em, DPI: 72, Hinting: font.HintingNone}); err == nil {
+			return float64(font.MeasureString(fc, s)) / 64
+		}
 	}
-	if total <= room {
+	w := 0.0
+	for _, r := range s {
+		w += letterW(r, em)
+	}
+	return w
+}
+
+func letterW(r rune, em float64) float64 {
+	switch {
+	case strings.ContainsRune("il.,:;'|!/ ft1jI-", r):
+		return 0.32 * em
+	case strings.ContainsRune("mwMW@", r):
+		return 0.84 * em
+	case unicode.IsUpper(r):
+		return 0.64 * em
+	}
+	return 0.56 * em
+}
+
+// fit keeps s inside its room (px, at size em), ending in an ellipsis when it
+// does not fit.
+func fit(s string, room, em float64) string {
+	width := func(r rune) float64 { return letterW(r, em) }
+	if wide(s, em) <= room {
 		return s
 	}
+	runes := []rune(s)
 	w := 0.0
 	for i, r := range runes {
 		if w+width(r)+0.9*em > room { // the ellipsis needs room too
@@ -224,15 +257,25 @@ func overviewRuns(s Spec) []Run {
 	if !s.NoBrand {
 		runs = append(runs, Run{X: right, Y: footY, Px: 28, End: true, Spans: []Span{{Text: "trck", Bold: true, Ink: s.Theme.FG}, {Text: "able.com", Ink: s.Theme.Muted}}})
 	}
-	for i, st := range s.Stats[:min(len(s.Stats), MaxStats)] {
+	shown := s.Stats[:min(len(s.Stats), MaxStats)]
+	for i, st := range shown {
 		x := left + i*statStep
 		value, room := x, statStep-statGap
+		if i == len(shown)-1 {
+			// The last one may use the free space up to trckable's mark (or the edge).
+			end := right
+			if !s.NoBrand {
+				end = markX - statGap
+			}
+			room = end - x
+		}
 		if st.pic() != nil {
 			value += st.picW() + flagGap
 			room -= st.picW() + flagGap
 		}
+		text, px := fitStat(st.Value, float64(room))
 		runs = append(runs,
-			Run{X: value, Y: statValueY, Px: 42, Spans: []Span{{Text: fit(st.Value, float64(room)), Bold: true, Ink: s.Theme.FG}}},
+			Run{X: value, Y: statValueY, Px: px, Spans: []Span{{Text: text, Bold: true, Ink: s.Theme.FG}}},
 			Run{X: x, Y: statLabelY, Px: 24, Spans: []Span{{Text: st.Label, Ink: s.Theme.Muted}}},
 		)
 	}

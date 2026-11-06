@@ -200,8 +200,15 @@ func TestFit(t *testing.T) {
 		{"MMMMMMMMMM", 222, "MMMMM…"},
 		{"", 10, ""},
 	} {
-		if got := fit(c.in, c.room); got != c.want {
+		if got := fit(c.in, c.room, statPx); got != c.want {
 			t.Errorf("%q: %q, want %q", c.in, got, c.want)
 		}
+	}
+	// A stat shrinks before it is cut: a long country fits whole and smaller.
+	if text, px := fitStat("United Kingdom", markX-statGap-(left+2*statStep)-flagBoxW-flagGap); text != "United Kingdom" || px >= statPx || px < statMinPx {
+		t.Errorf("United Kingdom: %q at %v", text, px)
+	}
+	if text, px := fitStat("59%", 176); text != "59%" || px != statPx {
+		t.Errorf("59%%: %q at %v", text, px)
 	}
 }
