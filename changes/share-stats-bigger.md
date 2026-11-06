@@ -1,0 +1,1 @@
+- Share picture: the small stats under the chart are bigger and easier to read.

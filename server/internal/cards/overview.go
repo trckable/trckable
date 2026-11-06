@@ -22,8 +22,8 @@ const (
 	tileY      = 70
 	chartTop   = 352.0
 	chartBase  = 486.0
-	statValueY = 532
-	statLabelY = 560
+	statValueY = 540
+	statLabelY = 572
 	statStep   = 250
 )
 
@@ -71,8 +71,8 @@ func (st Stat) picW() int {
 
 // A flag beside a country's name, and the room the name leaves for it.
 const (
-	flagBoxW = 36
-	flagBoxH = 27
+	flagBoxW = 44
+	flagBoxH = 33
 	flagGap  = 12
 	statGap  = 18 // the room a stat leaves between itself and the next
 )
@@ -81,7 +81,7 @@ const (
 // letters are measured by class, not by the font, and it ends in an ellipsis
 // when it does not fit.
 func fit(s string, room float64) string {
-	const em = 32.0
+	const em = 42.0 // the stat value's size
 	width := func(r rune) float64 {
 		switch {
 		case strings.ContainsRune("il.,:;'|!/ ft1jI-", r):
@@ -230,8 +230,8 @@ func overviewRuns(s Spec) []Run {
 			room -= st.picW() + flagGap
 		}
 		runs = append(runs,
-			Run{X: value, Y: statValueY, Px: 32, Spans: []Span{{Text: fit(st.Value, float64(room)), Bold: true, Ink: s.Theme.FG}}},
-			Run{X: x, Y: statLabelY, Px: 21, Spans: []Span{{Text: st.Label, Ink: s.Theme.Muted}}},
+			Run{X: value, Y: statValueY, Px: 42, Spans: []Span{{Text: fit(st.Value, float64(room)), Bold: true, Ink: s.Theme.FG}}},
+			Run{X: x, Y: statLabelY, Px: 24, Spans: []Span{{Text: st.Label, Ink: s.Theme.Muted}}},
 		)
 	}
 	return runs
