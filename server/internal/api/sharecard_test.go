@@ -254,3 +254,36 @@ func TestCardPickedStats(t *testing.T) {
 		t.Fatalf("%+v", n.stats)
 	}
 }
+
+// A paid site may take trckable off its pictures; a locked one (the "Powered
+// by" rule) cannot, in the picture or in what the server stores.
+func TestCardBrandFollowsLookAndLock(t *testing.T) {
+	g := newRig(t)
+	noOutbound(t, g)
+	owner := client()
+	g.setup(t, owner)
+	base := g.srv.URL + "/api/v1/sites/" + g.site
+	card := func() string { _, _, b := get(t, owner, base+"/card"); return b }
+	card() // the first picture warms the site's icon: the next ones are the same
+	branded := card()
+	if code, l := do(t, owner, "PUT", base+"/share-look", `{"hide_brand":true}`, csrf, "1"); code != 200 || l["hide_brand"] != true || l["brand_locked"] != false {
+		t.Fatalf("unlocked set: %d %v", code, l)
+	}
+	if card() == branded {
+		t.Fatal("an unlocked site's choice did not change the picture")
+	}
+	g.api.PoweredBy = func(context.Context, string) bool { return true }
+	if card() != branded {
+		t.Fatal("a locked site's picture lost the brand")
+	}
+	if code, l := do(t, owner, "GET", base+"/share-look", ""); code != 200 || l["brand_locked"] != true {
+		t.Fatalf("look: %d %v", code, l)
+	}
+	if code, l := do(t, owner, "PUT", base+"/share-look", `{"hide_brand":true}`, csrf, "1"); code != 200 || l["hide_brand"] != false {
+		t.Fatalf("a locked site stored hide_brand: %d %v", code, l)
+	}
+	g.api.PoweredBy = nil
+	if code, l := do(t, owner, "GET", base+"/share-look", ""); code != 200 || l["hide_brand"] != false {
+		t.Fatalf("still stored: %v", l)
+	}
+}

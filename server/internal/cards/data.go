@@ -67,8 +67,8 @@ func leaderRuns(s Spec) []Run {
 		{X: left, Y: domainY, Px: 28, Spans: []Span{{Text: s.Domain, Ink: s.Theme.Muted}}},
 		{X: left, Y: 184, Px: 40, Spans: []Span{{Text: s.Label, Bold: true, Ink: s.Theme.FG}}},
 		{X: left, Y: footY, Px: 26, Spans: []Span{{Text: s.Foot, Ink: s.Theme.Muted}}},
-		Mark(s),
 	}
+	runs = append(runs, Marks(s)...)
 	list := rows(s)
 	if len(list) == 0 {
 		return append(runs, Run{X: left, Y: rowTop + 32, Px: 30, Spans: []Span{{Text: s.Big, Ink: s.Theme.Muted}}})

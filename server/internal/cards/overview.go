@@ -32,7 +32,7 @@ func init() {
 		"ghost": func(f Frame, x, y, k float64) map[string]any { return map[string]any{"F": f, "X": x, "Y": y, "K": k} },
 	}).Parse(`<rect width="1200" height="630" fill="{{.BG}}"/>` +
 		`{{if not .Icon}}<rect x="88" y="70" width="52" height="52" rx="15" fill="{{.Ink}}" fill-opacity="0.2"/>{{end}}` +
-		`{{template "ghost" ghost . 892 520 0.6}}`))
+		`{{if not .NoBrand}}{{template "ghost" ghost . 892 520 0.6}}{{end}}`))
 	template.Must(shapes.New("ghost").Parse(Ghost))
 	Templates["overview"] = Template{Shapes: shapes, Runs: overviewRuns, Data: overviewChart, Pics: overviewPics}
 }
@@ -220,8 +220,10 @@ func overviewRuns(s Spec) []Run {
 		{X: right, Y: tileY + 35, Px: 24, End: true, Spans: []Span{{Text: s.Foot, Ink: s.Theme.Muted}}},
 		{X: left - 5, Y: 262, Px: big, Spans: []Span{{Text: s.Big, Bold: true, Ink: s.Theme.FG}}},
 		{X: left, Y: 316, Px: 32, Spans: line},
-		{X: right, Y: footY, Px: 28, End: true, Spans: []Span{{Text: "trck", Bold: true, Ink: s.Theme.FG}, {Text: "able.com", Ink: s.Theme.Muted}}},
 	}...)
+	if !s.NoBrand {
+		runs = append(runs, Run{X: right, Y: footY, Px: 28, End: true, Spans: []Span{{Text: "trck", Bold: true, Ink: s.Theme.FG}, {Text: "able.com", Ink: s.Theme.Muted}}})
+	}
 	for i, st := range s.Stats[:min(len(s.Stats), MaxStats)] {
 		x := left + i*statStep
 		value, room := x, statStep-statGap

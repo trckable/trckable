@@ -351,7 +351,7 @@ func (a *API) shareInfoWith(w http.ResponseWriter, r *http.Request, sh sqlite.Sh
 		"color":      mark,
 		"accent":     look.Color, // the page's own colour, only when the owner chose one
 		"logo_url":   shareLogoURL(look),
-		"hide_brand": look.HideBrand,
+		"hide_brand": look.HideBrand && !a.brandLocked(r.Context(), sh.SiteID),
 		"icon_url":   shareIconURL(brand),
 		"cookieless": cfg.ConsentFree,
 		"name":       sh.Name,
@@ -506,5 +506,5 @@ func shareToken(path string) string {
 // pages: the password page asks before anything else is known.
 func (a *API) hidesBrand(r *http.Request, token string) bool {
 	site := a.Ctl.ShareSiteForToken(r.Context(), token)
-	return site != "" && a.Ctl.ShareLookOf(r.Context(), site).HideBrand
+	return site != "" && a.hidesBrandOf(r.Context(), site)
 }

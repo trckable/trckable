@@ -1,12 +1,13 @@
 // The small row above the preview: which site, light or dark, the accent,
 // the number, the small numbers.
-import { Moon, Sun } from 'lucide-react'
+import { EyeOff, Moon, Sun } from 'lucide-react'
 import type { Site } from '../../lib/api'
 import { Select } from '../../components/Select'
 import { SiteMark } from '../../components/SiteMark'
 import { accentsFor, type Look, type Metric } from './card'
 import { copy } from './copy'
 import { StatsPick } from './StatsPick'
+import type { Look as SiteLook } from './useLook'
 
 type Props = {
   site: Site
@@ -16,9 +17,11 @@ type Props = {
   set: (l: Partial<Look>) => void
   metrics: Metric[]
   revenue: boolean
+  /** The site's share look: its hide-branding choice, and whether the plan locks it. */
+  brand: SiteLook
 }
 
-export function Toolbar({ site, sites, onSite, look, set, metrics, revenue }: Props) {
+export function Toolbar({ site, sites, onSite, look, set, metrics, revenue, brand }: Props) {
   const post = look.template === 'post'
   const nextTheme = look.theme === 'dark' ? 'light' : 'dark'
   const ThemeIcon = look.theme === 'dark' ? Moon : Sun
@@ -46,6 +49,11 @@ export function Toolbar({ site, sites, onSite, look, set, metrics, revenue }: Pr
           <button type="button" className="btn icon sd-tool" title={copy[look.theme]} aria-label={copy[nextTheme]} onClick={() => set({ theme: nextTheme })}>
             <ThemeIcon size={16} strokeWidth={1.8} aria-hidden="true" />
           </button>
+          {brand.look && !brand.look.brand_locked && (
+            <button type="button" className="btn icon sd-tool" title={copy.hideBrand} aria-label={copy.hideBrand} aria-pressed={brand.look.hide_brand} onClick={brand.edit.flip}>
+              <EyeOff size={16} strokeWidth={1.8} aria-hidden="true" />
+            </button>
+          )}
           <div className="sd-swatches" role="radiogroup" aria-label={copy.accent}>
             {accentsFor(site.color).map((c) => (
               <button key={c} type="button" role="radio" aria-checked={look.accent === c} aria-label={c} className="sd-swatch" style={{ backgroundColor: c }} onClick={() => set({ accent: c })} />

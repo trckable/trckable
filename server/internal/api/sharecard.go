@@ -76,6 +76,7 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 		Template: tpl, Theme: theme, Accent: v.Get("accent"),
 		Domain: n.domain, Big: n.Big, Label: n.Label, Foot: n.Foot, Series: n.series,
 		Change: n.change, Dir: n.dir, Stats: n.stats,
+		NoBrand: a.hidesBrandOf(r.Context(), r.PathValue("site")),
 	}
 	if tpl == "overview" {
 		spec.Icon = a.cardIcon(r.Context(), r.PathValue("site"), n.domain)
