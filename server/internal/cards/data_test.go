@@ -195,9 +195,9 @@ func TestFit(t *testing.T) {
 		want string
 	}{
 		{"Germany", 222, "Germany"},
-		{"United Kingdom", 222, "United Kingd…"},
-		{"/pricing/team/enterprise", 222, "/pricing/tea…"},
-		{"MMMMMMMMMM", 222, "MMMMMMM…"},
+		{"United Kingdom", 222, "United Ki…"},
+		{"/pricing/team/enterprise", 222, "/pricing/…"},
+		{"MMMMMMMMMM", 222, "MMMMM…"},
 		{"", 10, ""},
 	} {
 		if got := fit(c.in, c.room); got != c.want {
