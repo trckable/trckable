@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { delta, fmtMoney, fmtMoneyAxis } from './format'
+import { countryCode, delta, fmtMoney, fmtMoneyAxis } from './format'
 
 describe('delta, where it says nothing or too much', () => {
   it('caps a change over ten times as "10x+"', () => {
@@ -52,5 +52,13 @@ describe('fmtMoney', () => {
     expect(fmtMoney(574_500, 'EUR', 2)).toBe('€5,745')
     expect(fmtMoney(6800, 'EUR', 2)).toBe('€68')
     expect(fmtMoney(6850, 'EUR', 2)).toBe('€68.50')
+  })
+})
+
+describe('countryCode', () => {
+  it('shows Kosovo as KS and other codes as they are', () => {
+    expect(countryCode('xk')).toBe('KS')
+    expect(countryCode('XK')).toBe('KS')
+    expect(countryCode('de')).toBe('DE')
   })
 })

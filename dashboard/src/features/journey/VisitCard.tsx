@@ -1,5 +1,5 @@
 // One visit: when, where from, on what, and the timeline of what they did.
-import { countryName, fmtDuration } from '../../lib/format'
+import { countryCode, countryName, fmtDuration } from '../../lib/format'
 import { DeviceIcon } from '../../components/visitor/DeviceIcon'
 import { copy } from './copy'
 import type { VisitStory } from './model'
@@ -23,7 +23,7 @@ export function VisitCard({ v, currency, zone, onFilter }: { v: VisitStory; curr
         <span className="jr-visit-meta faint">
           {v.country && (
             <span title={countryName(v.country)}>
-              <Flag code={v.country} /> {v.country}
+              <Flag code={v.country} /> {countryCode(v.country)}
             </span>
           )}
           {v.device && (

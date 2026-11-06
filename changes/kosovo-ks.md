@@ -1,0 +1,1 @@
+- Kosovo shows as KS (not XK) in the Live feed and visit cards.
