@@ -50,10 +50,12 @@ export function LookPanel({ state }: { state: Look }) {
           </button>
         )}
       </div>
-      <label className="sd-toggle">
-        <span>{copy.hideBrand}</span>
-        <Switch on={look.hide_brand} label={copy.hideBrand} onChange={edit.flip} />
-      </label>
+      {!look.brand_locked && (
+        <label className="sd-toggle">
+          <span>{copy.hideBrand}</span>
+          <Switch on={look.hide_brand} label={copy.hideBrand} onChange={edit.flip} />
+        </label>
+      )}
       <label className="field">
         <span className="sd-look-label">
           {copy.domain}

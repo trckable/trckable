@@ -17,6 +17,7 @@ import { LinkPanel } from './LinkPanel'
 import { Preview } from './Preview'
 import { Templates } from './Templates'
 import { Toolbar } from './Toolbar'
+import { useLook } from './useLook'
 import { Periods } from './Periods'
 import './ShareDialog.css'
 import { fail } from '../../components/toastBus'
@@ -27,6 +28,9 @@ export default function ShareDialog({ site: first, sites, period = '7d', onClose
   const [look, setLook] = useState<Look>({ template: 'overview', period, metric: 'visitors', stats: DEFAULT_STATS, theme: 'dark', accent: ACCENTS[0] })
   // A new big number is not shown again among the small ones.
   const set = (l: Partial<Look>) => setLook((x) => (l.metric ? { ...x, ...l, stats: statsWith(l.stats ?? x.stats, l.metric) } : { ...x, ...l }))
+  const brand = useLook(site.id)
+  // The picture asks with the site's choice, so it is drawn again when that flips.
+  const shown: Look = { ...look, hideBrand: brand.look && !brand.look.brand_locked ? brand.look.hide_brand : undefined }
   const [words, setWords] = useState<CardWords | null>(null)
   const [busy, setBusy] = useState<Act | null>(null)
   const [done, setDone] = useState<Act | null>(null)
@@ -58,7 +62,7 @@ export default function ShareDialog({ site: first, sites, period = '7d', onClose
   const go = async (act: Act) => {
     setBusy(act)
     try {
-      const url = cardUrl(site.id, look)
+      const url = cardUrl(site.id, shown)
       if (act === 'text') {
         await navigator.clipboard.writeText(words?.post ?? '')
         toast(copy.copied)
@@ -103,8 +107,8 @@ export default function ShareDialog({ site: first, sites, period = '7d', onClose
         <div className="sd-body">
           <Templates value={look.template} onChange={(t) => set({ template: t })} />
           <Periods value={look.period} onChange={(p) => set({ period: p })} className="sd-period is-body" />
-          <Toolbar site={site} sites={sites.length ? sites : [site]} onSite={setSiteId} look={look} set={set} metrics={metrics} revenue={words?.revenue ?? false} />
-          <Preview site={site.id} look={look} words={words} />
+          <Toolbar site={site} sites={sites.length ? sites : [site]} onSite={setSiteId} look={look} set={set} metrics={metrics} revenue={words?.revenue ?? false} brand={brand} />
+          <Preview site={site.id} look={shown} words={words} />
           <Actions post={look.template === 'post'} busy={busy} done={done} onAct={(a) => void go(a)} />
         </div>
       )}

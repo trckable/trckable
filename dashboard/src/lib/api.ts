@@ -770,6 +770,8 @@ export interface ShareInfo {
 export interface ShareLook {
   color: string
   hide_brand: boolean
+  /** The plan keeps trckable's name on the pictures and pages: the switch is not offered. */
+  brand_locked?: boolean
   domain: string
   /** The domain was verified, so it is served; until then it is pending. */
   domain_ok: boolean

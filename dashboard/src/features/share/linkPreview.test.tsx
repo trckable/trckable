@@ -33,3 +33,9 @@ describe('the preview of the shared page', () => {
     expect(html).toContain('reports.acme.com')
   })
 })
+
+describe('a locked brand', () => {
+  it('keeps trckable on the preview even if hide_brand was stored', () => {
+    expect(draw({ hide_brand: true, brand_locked: true })).toContain('tkb-logo')
+  })
+})

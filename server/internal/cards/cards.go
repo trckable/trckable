@@ -71,6 +71,8 @@ type Spec struct {
 	// Icon is the site's own icon for the overview's tile (nil: its initial
 	// in a tile instead).
 	Icon image.Image
+	// NoBrand leaves trckable's ghost and name off the card.
+	NoBrand bool
 }
 
 // Stat is one small number: its value and what it is, as words. Flag is a
@@ -119,7 +121,7 @@ func luminance(hex string) float64 {
 
 // Key identifies what a card draws, for a cache.
 func (s Spec) Key() string {
-	return fmt.Sprintf("%s|%v|%s|%s|%s|%s|%s|%v|%v|%s|%d|%s", s.Template, s.Theme, s.ink(), s.Domain, s.Big, s.Label, s.Foot, s.Rows, s.Series, s.Change, s.Dir, statsKey(s.Stats))
+	return fmt.Sprintf("%s|%v|%s|%s|%s|%s|%s|%v|%v|%s|%d|%s|%t", s.Template, s.Theme, s.ink(), s.Domain, s.Big, s.Label, s.Foot, s.Rows, s.Series, s.Change, s.Dir, statsKey(s.Stats), s.NoBrand)
 }
 
 // statsKey is the small numbers as text, an icon as a mark that there is one.
@@ -171,8 +173,10 @@ var Templates = map[string]Template{}
 type Frame struct {
 	BG, FG, Muted, Ink string
 	// Icon: the site has its own icon, drawn bare, so no tinted tile behind it.
-	Icon   bool
-	raster bool
+	Icon bool
+	// NoBrand: no ghost.
+	NoBrand bool
+	raster  bool
 }
 
 // Stroke is width w inside a group scaled by k.
@@ -184,7 +188,7 @@ func (f Frame) Stroke(w, k float64) float64 {
 }
 
 func (s Spec) frame(raster bool) Frame {
-	return Frame{BG: s.Theme.BG, FG: s.Theme.FG, Muted: s.Theme.Muted, Ink: s.ink(), Icon: s.Icon != nil, raster: raster}
+	return Frame{BG: s.Theme.BG, FG: s.Theme.FG, Muted: s.Theme.Muted, Ink: s.ink(), Icon: s.Icon != nil, NoBrand: s.NoBrand, raster: raster}
 }
 
 func (s Spec) template() (Template, error) {

@@ -19,9 +19,13 @@ const Ghost = `<g transform="translate({{.X}},{{.Y}}) scale({{.K}},{{.K}})">` +
 	`<path d="` + logoLine + `" fill="none" stroke="{{.F.FG}}" stroke-width="{{.F.Stroke 3.2 .K}}" stroke-linecap="round" stroke-linejoin="round"/>` +
 	`</g>`
 
-// Mark is trckable's name, bottom right: bold "trck", plain "able".
-func Mark(s Spec) Run {
-	return Run{X: padRight, Y: footY, Px: 32, End: true, Spans: []Span{{Text: "trck", Bold: true, Ink: s.Theme.FG}, {Text: "able", Ink: s.Theme.Muted}}}
+// Marks is trckable's name, bottom right: bold "trck", plain "able"; no
+// line at all on a card without the brand.
+func Marks(s Spec) []Run {
+	if s.NoBrand {
+		return nil
+	}
+	return []Run{{X: padRight, Y: footY, Px: 32, End: true, Spans: []Span{{Text: "trck", Bold: true, Ink: s.Theme.FG}, {Text: "able", Ink: s.Theme.Muted}}}}
 }
 
 // The spotlight: one big number in the card's colour and what it is, small
@@ -31,7 +35,7 @@ func init() {
 		"ghost": func(f Frame, x, y, k float64) map[string]any { return map[string]any{"F": f, "X": x, "Y": y, "K": k} },
 	}).Parse(`<rect width="1200" height="630" fill="{{.BG}}"/>` +
 		`<path d="M88 500l160-34 120 18 140-50 120 12 160-84 324-92" fill="none" stroke="{{.Ink}}" stroke-opacity="0.34" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>` +
-		`{{template "ghost" ghost . 1032 72 1.1}}`))
+		`{{if not .NoBrand}}{{template "ghost" ghost . 1032 72 1.1}}{{end}}`))
 	template.Must(shapes.New("ghost").Parse(Ghost))
 	Templates["spotlight"] = Template{Shapes: shapes, Runs: spotlightRuns}
 }
@@ -50,8 +54,8 @@ func spotlightRuns(s Spec) []Run {
 		{X: padLeft, Y: domainY, Px: 28, Spans: []Span{{Text: s.Domain, Ink: s.Theme.Muted}}},
 		{X: padLeft - 4, Y: 316, Px: big, Spans: []Span{{Text: s.Big, Bold: true, Ink: s.ink()}}},
 		{X: padLeft, Y: footY, Px: 26, Spans: []Span{{Text: s.Foot, Ink: s.Theme.Muted}}},
-		Mark(s),
 	}
+	runs = append(runs, Marks(s)...)
 	if s.Label != "" {
 		runs = append(runs, Run{X: padLeft, Y: 372, Px: 34, Spans: []Span{{Text: s.Label, Ink: s.Theme.Muted}}})
 	}

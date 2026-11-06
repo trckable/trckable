@@ -16,7 +16,7 @@ export const PERIODS: Period[] = ['24h', '7d', '30d']
 /** The swatches: the site's own colour first, when it has one. */
 export const ACCENTS = ['#b8ff3c', '#4f8cff', '#ff5ca8', '#ffb547', '#2dd4bf']
 
-export type Look = { template: Template; period: Period; metric: Metric; stats: Stat[]; theme: Theme; accent: string }
+export type Look = { template: Template; period: Period; metric: Metric; stats: Stat[]; theme: Theme; accent: string; /** The site's hide-branding choice, only where it can change the picture: it makes the address new when it flips. */ hideBrand?: boolean }
 
 /** The numbers in words, and the post's text. */
 export type CardWords = { metric: Metric; big: string; label: string; foot: string; revenue: boolean; has_data: boolean; post: string }
@@ -29,6 +29,7 @@ export function cardUrl(site: string, l: Look, format: 'png' | 'json' = 'png'): 
     p.set('theme', l.theme)
     p.set('accent', l.accent)
     p.set('stats', l.stats.join(','))
+    if (l.hideBrand !== undefined) p.set('brand', l.hideBrand ? '0' : '1')
   }
   return `/api/v1/sites/${encodeURIComponent(site)}/card?${p}`
 }

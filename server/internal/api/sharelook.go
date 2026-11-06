@@ -71,13 +71,25 @@ func (a *API) shareLookAnswer(w http.ResponseWriter, r *http.Request, site strin
 		logo = "/api/v1/sites/" + site + "/share-logo?v=" + strconv.FormatInt(l.LogoAt, 10)
 	}
 	out := map[string]any{
-		"color": l.Color, "hide_brand": l.HideBrand, "domain": l.Domain, "domain_ok": l.DomainOK, "logo_url": logo,
+		"color": l.Color, "hide_brand": l.HideBrand, "brand_locked": a.brandLocked(r.Context(), site), "domain": l.Domain, "domain_ok": l.DomainOK, "logo_url": logo,
 		"target": hostOnly(a.publicBase(r)), // what the domain's CNAME points at
 	}
 	if l.Domain != "" && !l.DomainOK {
 		out["verify_name"], out["verify_value"] = verifyName(l.Domain), l.DomainToken
 	}
 	writeJSON(w, http.StatusOK, out)
+}
+
+// brandLocked says trckable's name stays on the site's pictures and pages:
+// the same rule as the "Powered by" link.
+func (a *API) brandLocked(ctx context.Context, site string) bool {
+	return a.PoweredBy != nil && a.PoweredBy(ctx, site)
+}
+
+// hidesBrandOf says whether the site's pictures and pages leave trckable's
+// name off: the owner chose so and the plan allows it.
+func (a *API) hidesBrandOf(ctx context.Context, site string) bool {
+	return a.Ctl.ShareLookOf(ctx, site).HideBrand && !a.brandLocked(ctx, site)
 }
 
 // verifyName is where the TXT record that proves a domain goes.
@@ -119,7 +131,9 @@ func (a *API) setShareLook(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusTooManyRequests, "the domain was changed many times today: try again tomorrow")
 		return
 	}
-	err = a.Ctl.SetShareLook(r.Context(), site, strings.TrimSpace(in.Color), in.HideBrand, domain, a.ShareDomainSkipVerify)
+	// The server holds the lock, not only the dashboard: a locked site never stores it.
+	hide := in.HideBrand && !a.brandLocked(r.Context(), site)
+	err = a.Ctl.SetShareLook(r.Context(), site, strings.TrimSpace(in.Color), hide, domain, a.ShareDomainSkipVerify)
 	if busy(w, err) {
 		return
 	}
