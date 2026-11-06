@@ -506,5 +506,5 @@ func shareToken(path string) string {
 // pages: the password page asks before anything else is known.
 func (a *API) hidesBrand(r *http.Request, token string) bool {
 	site := a.Ctl.ShareSiteForToken(r.Context(), token)
-	return site != "" && a.hidesBrandOf(r.Context(), site)
+	return site != "" && a.HidesBrand(r.Context(), site)
 }

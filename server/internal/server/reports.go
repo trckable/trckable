@@ -287,7 +287,7 @@ func (s *Server) reportData(ctx context.Context, q *query.Q, sc sqlite.ReportSch
 // wear it: an SVG logo is left out (mail clients and PDF do not draw it).
 func (s *Server) reportBrand(ctx context.Context, site, name string) reports.Brand {
 	look := s.ctl.ShareLookOf(ctx, site)
-	b := reports.Brand{Name: name, Color: look.Color, HideBrand: look.HideBrand}
+	b := reports.Brand{Name: name, Color: look.Color, HideBrand: s.api != nil && s.api.HidesBrand(ctx, site)}
 	if b.Color == "" {
 		b.Color = s.ctl.ShareBrand(ctx, site).Color
 	}

@@ -207,3 +207,25 @@ func TestDueSchedulesAreSentOncePerPeriodToEachAddress(t *testing.T) {
 	case <-time.After(300 * time.Millisecond):
 	}
 }
+
+// A site whose plan keeps trckable's name keeps it on its reports too, even
+// with "hide" stored from before; an unlocked site's choice holds.
+func TestReportBrandFollowsTheLock(t *testing.T) {
+	s := newTestServer(t, config.Config{BaseURL: "https://dash.example.com"})
+	ctx := context.Background()
+	site, err := s.ctl.CreateSite(ctx, sqlite.DefaultAccount, "acme.com", "Acme")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.ctl.SetShareLook(ctx, site, "", true, "", false); err != nil {
+		t.Fatal(err)
+	}
+	if !s.reportBrand(ctx, site, "Acme").HideBrand {
+		t.Fatal("an unlocked site's report kept trckable's name")
+	}
+	s.api.PoweredBy = func(context.Context, string) bool { return true }
+	t.Cleanup(func() { s.api.PoweredBy = nil })
+	if s.reportBrand(ctx, site, "Acme").HideBrand {
+		t.Fatal("a locked site's report lost trckable's name")
+	}
+}

@@ -86,9 +86,9 @@ func (a *API) brandLocked(ctx context.Context, site string) bool {
 	return a.PoweredBy != nil && a.PoweredBy(ctx, site)
 }
 
-// hidesBrandOf says whether the site's pictures and pages leave trckable's
+// HidesBrand says whether the site's pictures, pages and reports leave trckable's
 // name off: the owner chose so and the plan allows it.
-func (a *API) hidesBrandOf(ctx context.Context, site string) bool {
+func (a *API) HidesBrand(ctx context.Context, site string) bool {
 	return a.Ctl.ShareLookOf(ctx, site).HideBrand && !a.brandLocked(ctx, site)
 }
 
