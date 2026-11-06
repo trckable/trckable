@@ -16,7 +16,7 @@ const BARS = [38, 52, 44, 70, 58, 82, 66, 90, 74, 96]
 export function LinkPreview({ site, state }: { site: Site; state: Look }) {
   const { look, domain } = state
   const logo = look?.logo_url ?? ''
-  const hide = look?.hide_brand ?? false
+  const hide = (look?.hide_brand ?? false) && !look?.brand_locked
   const host = domain.trim() || (globalThis.location?.host ?? '')
   const mark = look?.color || site.color
   return (
