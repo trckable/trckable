@@ -563,3 +563,28 @@
   flex: none;
   font-size: 12px;
 }
+
+/* Wide screens: every control in the head and the toolbar is one height (36px),
+   so the period, Link, close, site, number, Stats and theme buttons line up. */
+@media (min-width: 641px) {
+  .sd-modal {
+    --sd-ctl: 36px;
+  }
+  .sd-modal :is(.sd-head, .sd-toolbar) :is(.btn, .select) {
+    height: var(--sd-ctl);
+    min-height: var(--sd-ctl);
+    font-size: 13px;
+  }
+  .sd-modal :is(.sd-head, .sd-toolbar) .btn.icon {
+    width: var(--sd-ctl);
+  }
+  .sd-modal :is(.sd-head, .sd-toolbar) .seg.small {
+    box-sizing: border-box;
+    height: var(--sd-ctl);
+    align-items: center;
+  }
+  .sd-modal :is(.sd-head, .sd-toolbar) .seg.small button {
+    height: 100%;
+    font-size: 13px;
+  }
+}
