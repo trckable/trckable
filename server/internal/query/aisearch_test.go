@@ -249,7 +249,9 @@ func TestAISearchAssistantsAreKnownAndAddUp(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	eq(t, "no assistants", len(e.Assistants), 0)
+	// s2's robots read the site, so ChatGPT is listed for what it read, with nobody sent.
+	eq(t, "only the assistant its robots read for", len(e.Assistants), 1)
+	eq(t, "it sent nobody", e.Assistants[0].Visitors, int64(0))
 	eq(t, "no header", e.Visitors, int64(0))
 }
 
@@ -306,6 +308,8 @@ func TestCrawlBlockedAndBroken(t *testing.T) {
 	if got.Hits != 35 || got.Blocked != 15 || got.Errors != 8 {
 		t.Fatalf("OpenAI: want 35 hits, 15 blocked, 8 errors; got %+v", got)
 	}
+	eq(t, "the broken pages are told per page", pageOf(r, "/docs").Errors, int64(6))
+	eq(t, "a page with none", pageOf(r, "/ok").Errors, int64(0))
 	for _, b := range r.Bots {
 		if b.Name == "Anthropic" && (b.Blocked != 0 || b.Errors != 0) {
 			t.Fatalf("Anthropic had no failures: %+v", b)

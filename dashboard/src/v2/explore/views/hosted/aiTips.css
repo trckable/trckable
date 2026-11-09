@@ -1,0 +1,63 @@
+/* AI & Search: the assistants' return line and the tips under "How to improve". */
+.mk .xai-ret {
+  margin-left: var(--mk-s2);
+  color: var(--mk-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.mk .xai-ret.low {
+  color: var(--mk-red);
+}
+.mk .xtips {
+  display: grid;
+  gap: var(--mk-s2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mk .xtip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--mk-s3);
+  align-items: center;
+  padding: var(--mk-s3);
+  border-radius: 12px;
+  background: var(--mk-band);
+}
+.mk .xtip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mk-red);
+}
+.mk .xtip b {
+  font-weight: 600;
+}
+.mk .xtip p {
+  margin: 2px 0 0;
+  color: var(--mk-muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+@media (--xs-down) {
+  .mk .xai-ret {
+    display: block;
+    margin: 1px 0 0;
+    white-space: normal;
+  }
+  .mk .xcards .mk-bar:has(.xai-ret) {
+    height: auto;
+    min-height: 32px;
+  }
+  .mk .xcards .mk-bar > span:has(.xai-ret) {
+    padding-block: 4px;
+    white-space: normal;
+  }
+  .mk .xtip {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .mk .xtip .xb {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

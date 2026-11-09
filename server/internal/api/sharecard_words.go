@@ -16,8 +16,8 @@ var cardWords = struct {
 	changedFew, changedFlat, changedMix, changedNew, changedRose, changedFell, changedMostly, changedLed string
 	changedPeople, homePage, theHomePage, direct, changedTitle                                           string
 	// The other pictures.
-	searchTitle, searchClicks, searchImpressions, aiTitle, aiVisits, aiMentions, goalsTitle, salesTitle, salesRevenue, salesOrders string
-	noChanged, noSearch, noAI, noGoals, noSales, noMilestone                                                                       string
+	searchTitle, searchClicks, searchImpressions, aiTitle, aiVisits, aiMentions, aiRequests, aiPerVisitor, aiTop, aiRequestsOf, goalsTitle, salesTitle, salesRevenue, salesOrders string
+	noChanged, noSearch, noAI, noGoals, noSales, noMilestone                                                                                                                      string
 }{
 	visitors:   "visitors",
 	pageviews:  "pageviews",
@@ -56,6 +56,10 @@ var cardWords = struct {
 	aiTitle:           "AI and mentions",
 	aiVisits:          "Visits from AI assistants",
 	aiMentions:        "Mentions",
+	aiRequests:        "AI bot requests",
+	aiPerVisitor:      "Bots per visitor",
+	aiTop:             "Top company",
+	aiRequestsOf:      "requests",
 	goalsTitle:        "Top goals",
 	salesTitle:        "Sales",
 	salesRevenue:      "Revenue",

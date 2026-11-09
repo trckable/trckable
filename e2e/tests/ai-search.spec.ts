@@ -1,5 +1,5 @@
 // AI & Search in Explore: the section opens, each part says in one line what it is, Google's part says what connecting it
-// brings (Search Console is not connected here), and the assistants' tiles and the crawlers' and pages' lists carry what the
+// brings (Search Console is not connected here), and the headline, the assistants' rows and the crawlers' and pages' lists carry what the
 // site saw: the assistants are visits with their referrers (ai.example in playwright.config.ts), the crawlers are posted to
 // /api/crawl the way a site's own server does it, with the site's proxy key.
 import { existsSync, openSync, writeFileSync } from 'node:fs'
@@ -48,13 +48,13 @@ test.beforeAll(async () => {
   writeFileSync(mark, 'done')
 })
 
-async function open(page: Page, width = 1440) {
+async function open(page: Page, width = 1440, domain = AI_DOMAIN) {
   await page.setViewportSize({ width, height: width < 500 ? 844 : 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(`${API}/${AI_DOMAIN}?view=briefing&period=30d&x=ai`)
+  await page.goto(`${API}/${domain}?view=briefing&period=30d&x=ai`)
   const card = page.locator('#xp [data-xcard="ai"]')
   await expect(card).toBeVisible({ timeout: 20_000 })
-  await expect(card.locator('.xai-tile').first()).toBeVisible({ timeout: 20_000 })
+  await expect(card.locator('[data-sum="sent"]')).toBeVisible({ timeout: 20_000 })
   return card
 }
 
@@ -64,7 +64,7 @@ for (const width of [1440, 390]) {
     await expect(card).not.toContainText('Couldn’t read AI & Search')
     // One plain line under each section's heading.
     const sections = [
-      ['AI assistants', 'People who clicked a link to you inside an AI assistant’s answer.'],
+      ['Assistants: what they read, what they send', 'Fetches are what the assistant’s robots read of your site. Visitors are people who clicked a link to you in its answers.'],
       ['Google', 'The Google searches that brought people to you, by clicks.'],
       ['Crawlers', 'AI bots that read your pages to learn about you, and how often.'],
       ['Pages', 'Which pages AI bots read, and how many visits each one then sent.'],
@@ -85,15 +85,37 @@ test('Google not connected says what connecting it brings, and offers the way', 
   await expect(empty.getByRole('button', { name: 'Connect', exact: true })).toBeVisible()
 })
 
-test('the assistants that sent people are tiles, biggest first, with bars in proportion', async ({ page }) => {
+test('the headline says what AI reads against the people who come, and the busiest company', async ({ page }) => {
   const card = await open(page)
-  const tiles = card.locator('.xai-tile')
-  await expect(tiles.first()).toContainText(/ChatGPT\s*14/)
-  await expect(tiles.nth(1)).toContainText(/Claude\s*5/)
-  await expect(tiles.nth(2)).toContainText(/Perplexity\s*3/)
-  const widths = await tiles.locator('u').evaluateAll((els) => els.map((e) => (e as HTMLElement).getBoundingClientRect().width))
-  expect(widths[0]).toBeGreaterThan(widths[1])
-  expect(widths[1]).toBeGreaterThan(widths[2])
+  // 10 AI hits in all (3 + 2 + 2 + 1 + 1 + 1), OpenAI the busiest with 6.
+  await expect(card.locator('[data-sum="requests"]')).toContainText('10')
+  await expect(card.locator('[data-sum="per"]')).toContainText('×')
+  await expect(card.locator('[data-sum="top"]')).toContainText('OpenAI')
+  await expect(card.locator('[data-sum="top"]')).toContainText('6 requests')
+  await expect(card.locator('[data-sum="sent"]')).toContainText('22') // ChatGPT 14, Claude 5, Perplexity 3
+})
+
+test('each assistant shows what its robots read against the people it sent, biggest first', async ({ page }) => {
+  const card = await open(page)
+  const table = card.locator('.xt', { has: page.getByText('Fetches', { exact: true }) })
+  const rows = table.locator('.xrw')
+  await expect(rows.first()).toContainText(/ChatGPT/)
+  await expect(rows.first()).toContainText('1 visitor per 1 fetch') // 6 reads, 14 people: never "per 0"
+  await expect(rows.first()).toHaveText(/6\s*14$/)
+  await expect(rows.nth(1)).toContainText(/Claude/)
+  await expect(rows.nth(1)).toHaveText(/3\s*5$/)
+  await expect(rows.nth(2)).toContainText(/Perplexity/)
+  await expect(rows.nth(2)).toHaveText(/1\s*3$/)
+})
+
+test('How to improve names what the numbers show, with one action each', async ({ page }) => {
+  const card = await open(page)
+  const tips = card.locator('[data-ai-tips] [data-tip]')
+  // The refused request is too few to be a finding; nothing here is broken or ignored enough to say, so the list may be empty.
+  await expect(card.locator('[data-tip="blocked"]')).toHaveCount(0)
+  const n = await tips.count()
+  expect(n).toBeLessThanOrEqual(3)
+  for (let i = 0; i < n; i++) await expect(tips.nth(i).getByRole('button')).toHaveCount(1)
 })
 
 test('the crawlers are listed with their hits, what was refused, and the pages they read', async ({ page }) => {
@@ -118,4 +140,17 @@ test('a page row filters the dashboard to that page', async ({ page }) => {
   const card = await open(page)
   await card.locator('.xrw', { hasText: '/pricing' }).click()
   await expect(page).toHaveURL(/xf=page/)
+})
+
+test('without crawler data only the visitors show, and the one tip is to connect it', async ({ page }) => {
+  // example.com has had no crawler reported: nothing to compare the visitors with, so no zeros are drawn.
+  const card = await open(page, 1440, 'example.com')
+  await expect(card.locator('[data-sum="sent"]')).toBeVisible()
+  await expect(card.locator('[data-sum="requests"]')).toHaveCount(0)
+  await expect(card.locator('[data-sum="per"]')).toHaveCount(0)
+  const tips = card.locator('[data-ai-tips] [data-tip]')
+  await expect(tips).toHaveCount(1)
+  await expect(tips.first()).toHaveAttribute('data-tip', 'connect')
+  await tips.first().getByRole('button', { name: 'Connect crawler data' }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
 })

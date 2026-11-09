@@ -4,9 +4,9 @@ import { useEffect, useRef, type ReactNode } from 'react'
 import { CircleAlert, Inbox, type LucideIcon } from 'lucide-react'
 import { copy } from '../explore/copy'
 
-export function XSec({ a, b }: { a: ReactNode; b?: ReactNode }) {
+export function XSec({ a, b, id }: { a: ReactNode; b?: ReactNode; id?: string }) {
   return (
-    <div className="xsec">
+    <div className="xsec" id={id}>
       <span>{a}</span>
       {b !== undefined && <span>{b}</span>}
     </div>
