@@ -64,6 +64,8 @@ type Layout struct {
 	// Numbers (three cards in a row) and the grid (two by two).
 	NumTop, NumH            int
 	NumPx                   float64
+	NumStack                bool // the cards stand in a column, between NumTop and NumBottom
+	NumBottom               int
 	GridTop, GridH, GridGap int
 	GridPx                  float64
 
@@ -122,15 +124,15 @@ func layoutFor(f Format) Layout {
 		l.Tile, l.TileR, l.StatStep = 68, 20, (f.W-184)/3
 		l.DomainY, l.FootY, l.TileY = 215, 1790, 180
 		l.BigY, l.LabelY = 720, 806
-		l.ChartTop, l.ChartBase = 900, 1330
-		l.StatValueY, l.StatLabelY = 1470, 1520
+		l.ChartTop, l.ChartBase = 920, 1420
+		l.StatValueY, l.StatLabelY = 1580, 1632
 		l.MarkX, l.GhostX, l.GhostY = f.W-400, float64(f.W-400), float64(1790-47)
 		l.SpotBigY, l.SpotLabelY, l.LineLo, l.LineHi = 960, 1050, 1540, 1120
 		l.CornerGhostX, l.CornerGhostY = float64(f.W)-206, 180
-		l.NumTop, l.NumH, l.NumPx = 940, 330, 84
-		l.GridTop, l.GridH, l.GridGap, l.GridPx = 540, 420, 28, 104
-		l.TitleY, l.RowTop, l.RowStep, l.RowH = 440, 540, 220, 168
-		l.TitlePx, l.RowPx, l.BarGap = 70, 46, 170
+		l.NumTop, l.NumH, l.NumPx, l.NumStack, l.NumBottom = 900, 340, 100, true, 1700
+		l.GridTop, l.GridH, l.GridGap, l.GridPx = 540, 520, 28, 120
+		l.TitleY, l.RowTop, l.RowStep, l.RowH = 440, 540, 240, 184
+		l.TitlePx, l.RowPx, l.BarGap = 70, 52, 170
 	}
 	l.LineW, l.CornerGhostK, l.GhostK = 7*l.K, 1.1*l.K, 0.6*l.K
 	return l

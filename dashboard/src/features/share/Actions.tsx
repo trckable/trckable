@@ -8,7 +8,7 @@ import { canCopyImage, canShareImage } from './image'
 
 export type Act = 'share' | 'copy' | 'save' | 'text'
 
-type Props = { post: boolean; busy: Act | null; done: Act | null; onAct: (a: Act) => void }
+type Props = { post: boolean; /** The picture's pixel size, on the download button. */ size: string; busy: Act | null; done: Act | null; onAct: (a: Act) => void }
 
 function ActButton({ act, label, title, primary, Icon, p }: { act: Act; label: string; title: string; primary?: boolean; Icon: typeof Copy; p: Props }) {
   const working = p.busy === act
@@ -35,7 +35,7 @@ export function Actions(p: Props) {
   return (
     <div className="sd-actions" role="group" aria-label={copy.actions}>
       {share && <ActButton act="share" label={copy.share} title={copy.shareTitle} primary Icon={Share2} p={p} />}
-      <ActButton act="save" label={copy.download} title={copy.downloadTitle} primary={!share} Icon={Download} p={p} />
+      <ActButton act="save" label={copy.download(p.size)} title={copy.downloadTitle} primary={!share} Icon={Download} p={p} />
       {canCopyImage() && <ActButton act="copy" label={copy.copyImage} title={copy.copyImage} Icon={ImageIcon} p={p} />}
     </div>
   )

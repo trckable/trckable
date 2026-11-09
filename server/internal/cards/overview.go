@@ -23,10 +23,10 @@ func init() {
 	shapes := template.Must(template.New("overview").Funcs(template.FuncMap{
 		"ghost": func(f Frame, x, y, k float64) map[string]any { return map[string]any{"F": f, "X": x, "Y": y, "K": k} },
 	}).Parse(`<rect width="{{.L.W}}" height="{{.L.H}}" fill="{{.BG}}"/>` +
-		`{{if not .Icon}}<rect x="{{.L.Left}}" y="{{.L.TileY}}" width="{{.L.Tile}}" height="{{.L.Tile}}" rx="{{.L.TileR}}" fill="{{.Ink}}" fill-opacity="0.2"/>{{end}}` +
+		`{{if and .Named (not .Icon)}}<rect x="{{.L.Left}}" y="{{.L.TileY}}" width="{{.L.Tile}}" height="{{.L.Tile}}" rx="{{.L.TileR}}" fill="{{.Ink}}" fill-opacity="0.2"/>{{end}}` +
 		`{{if not .NoBrand}}{{template "ghost" ghost . .L.GhostX .L.GhostY .L.GhostK}}{{end}}`))
 	template.Must(shapes.New("ghost").Parse(Ghost))
-	Templates["overview"] = Template{Shapes: shapes, Runs: overviewRuns, Data: overviewChart, Pics: overviewPics}
+	Templates["overview"] = Template{Shapes: shapes, Runs: overviewRuns, Data: overviewChart, Pics: overviewPics, Glows: true}
 }
 
 // overviewPics are the site's icon in its tile, and the flag (or the icon) of
@@ -198,10 +198,12 @@ func overviewChart(s Spec, f Frame) string {
 		}
 		b.WriteString(`</linearGradient>`)
 	}
-	fmt.Fprintf(&b, `<radialGradient id="glow" cx="%.0f" cy="0" r="%.0f" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="%s" stop-opacity="0.30"/><stop offset="1" stop-color="%s" stop-opacity="0"/></radialGradient></defs>`, W*0.9, 620*l.K, f.Ink, f.Ink)
+	b.WriteString(`</defs>`)
 	fmt.Fprintf(&b, `<path d="%s L%d %.0f L0 %.0f Z" fill="url(#area)"/>`, d, l.W, chartBase, chartBase)
 	fmt.Fprintf(&b, `<rect x="0" %s width="%.0f" fill="url(#left)"/><rect x="%.0f" %s width="%.0f" fill="url(#right)"/>`, band, edge, W-edge, band, edge)
-	fmt.Fprintf(&b, `<rect width="%d" height="%d" fill="url(#glow)"/>`, l.W, l.H)
+	if f.Bg == "gradient" {
+		b.WriteString(glow(f))
+	}
 	fmt.Fprintf(&b, `<path d="%s" fill="none" stroke="url(#edge)" stroke-width="%.1f" stroke-linecap="round" stroke-linejoin="round"/>`, d, 5*l.K)
 	b.WriteString(pills(s))
 	return b.String()
@@ -276,7 +278,7 @@ func overviewHead(s Spec) []Run {
 	}
 	line := []Span{{Text: fitWith(false, s.Label, room-float64(l.n(160)), l.px(32)), Ink: s.Theme.Muted}}
 	var runs []Run
-	if s.Icon == nil {
+	if s.Icon == nil && s.Domain != "" {
 		runs = append(runs, Run{X: l.Left + l.Tile/2, Y: l.TileY + l.n(37), Px: l.px(30), Mid: true, Spans: []Span{{Text: initial, Bold: true, Ink: s.ink()}}})
 	}
 	// The domain gets what the period's pill leaves it.

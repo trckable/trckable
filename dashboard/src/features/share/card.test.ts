@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FORMATS, accentsFor, cardUrl, comparing, fileName, formatOf, periodOf, statsFor, statsWith, toggleStat, type Look } from './card'
+import { FORMATS, accentsFor, cardUrl, comparing, fileName, formatOf, periodOf, statsFor, statsWith, toggleStat, BACKGROUNDS, PICTURES, TOPICS, hasOf, missing, picturesOf, type CardWords, type Look } from './card'
 
 const look: Look = { template: 'leaderboard', shape: 'link', period: '24h', metric: 'visitors', stats: ['engaged', 'avgtime', 'country'], theme: 'light', accent: '#4f8cff', compare: false }
 
@@ -62,4 +62,38 @@ describe('shape', () => {
     expect(q('square')).toHaveProperty('shape', 'square')
     expect(fileName('example.com', { ...look, shape: 'story', period: 'all' })).toBe('trckable-example.com-leaderboard-story-all.png')
   })
+})
+
+describe('look options', () => {
+  const q = (l: Partial<Look>) => Object.fromEntries(new URL(cardUrl('s', { ...look, ...l }), 'http://x').searchParams)
+  it('asks only for what differs from the default', () => {
+    expect(q({})).not.toHaveProperty('bg')
+    expect(q({ bg: 'gradient' })).not.toHaveProperty('bg')
+    expect(q({ bg: 'grid' })).toHaveProperty('bg', 'grid')
+    expect(q({ hideDate: true })).toHaveProperty('date', '0')
+    expect(q({ hideName: true })).toHaveProperty('name', '0')
+    expect(q({ hideDate: false, hideName: false })).not.toHaveProperty('date')
+  })
+  it('keeps them in the thumbnail, and out of the words', () => {
+    expect(Object.fromEntries(new URL(cardUrl('s', { ...look, bg: 'solid', hideName: true }, 'thumb'), 'http://x').searchParams)).toMatchObject({ thumb: '1', bg: 'solid', name: '0' })
+    expect(q({})).not.toHaveProperty('format')
+    expect(Object.fromEntries(new URL(cardUrl('s', { ...look, bg: 'solid' }, 'json'), 'http://x').searchParams)).not.toHaveProperty('bg')
+    expect(BACKGROUNDS).toEqual(['gradient', 'solid', 'grid'])
+  })
+})
+
+describe('the gallery by what the site has', () => {
+  const words = (w: Partial<CardWords>): CardWords => ({ metric: 'visitors', big: '', label: '', foot: '', revenue: false, has_data: true, has_sources: true, has_places: true, has_tech: true, post: '', ...w })
+  const disabled = (w: CardWords | null) => PICTURES.filter((p) => missing(p, hasOf(w))).map((p) => p.id)
+  it('has none disabled while the words are not in yet, nor when the site is busy', () => {
+    expect(disabled(null)).toEqual([])
+    expect(disabled(words({}))).toEqual([])
+  })
+  it('disables the sources and the places on their own, and everything but the post with no visit', () => {
+    expect(disabled(words({ has_sources: false }))).toEqual(['sources', 'topsource'])
+    expect(disabled(words({ has_places: false }))).toEqual(['places', 'topplace'])
+    expect(disabled(words({ has_tech: false }))).toEqual(['devices', 'browsers'])
+    expect(disabled(words({ has_data: false, has_sources: false, has_places: false, has_tech: false }))).toEqual(PICTURES.filter((p) => p.id !== 'post').map((p) => p.id))
+  })
+  it('lists every topic with a picture', () => expect(TOPICS.every((t) => picturesOf(t).length > 0)).toBe(true))
 })

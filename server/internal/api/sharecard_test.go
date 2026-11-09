@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/trckable/trckable/server/internal/cards"
 	"github.com/trckable/trckable/server/internal/query"
 )
 
@@ -381,5 +382,88 @@ func TestCardThumb(t *testing.T) {
 	}
 	if _, _, body := get(t, owner, card+"?t=overview"); len(body) < 2000 {
 		t.Fatal("the full picture is still drawn")
+	}
+}
+
+// Each list picture holds the top five of its breakdown, a hero the first line, and a picture with nothing behind
+// it says "Needs a visit in this period" instead of a zero or a dash.
+func TestCardTopicModels(t *testing.T) {
+	busy := &query.Result{KPIs: query.KPIs{Visitors: 100}, Dims: map[string][]query.Row{
+		"referrer": {{Value: "google.com", Visitors: 60}, {Value: "x.com", Visitors: 30}, {Value: "a.com", Visitors: 5}, {Value: "b.com", Visitors: 3}, {Value: "c.com", Visitors: 2}, {Value: "d.com", Visitors: 1}},
+		"country":  {{Value: "US", Visitors: 50}, {Value: "DE", Visitors: 50}, {Value: "ZZ", Visitors: 5}},
+		"device":   {{Value: "Desktop", Visitors: 75}, {Value: "Mobile", Visitors: 25}},
+		"browser":  {{Value: "Chrome", Visitors: 80}},
+	}}
+	var n cardNumbers
+	n.listsOf(busy)
+	if got := n.lists["sources"]; len(got) != cards.MaxRows || got[0].Name != "google.com" || got[0].Share != 1 || got[1].Share != 0.5 {
+		t.Errorf("sources: %+v", got)
+	}
+	if got := n.lists["places"]; len(got) != 2 || got[0].Name == "US" {
+		t.Errorf("places (names, unknown left out): %+v", got)
+	}
+	if got := n.lists["devices"]; len(got) != 2 || got[0].Value != "75%" || got[1].Value != "25%" {
+		t.Errorf("devices: %+v", got)
+	}
+	var spec cards.Spec
+	n.pictureOf(&spec, "topsource")
+	if spec.Template != "spotlight" || spec.Big != "google.com" || spec.Label != "Most visitors came from" {
+		t.Errorf("hero: %+v", spec)
+	}
+	spec = cards.Spec{}
+	n.pictureOf(&spec, "browsers")
+	if spec.Template != "leaderboard" || len(spec.Rows) != 1 || spec.Label != "Top browsers" {
+		t.Errorf("browsers: %+v", spec)
+	}
+
+	// None: every picture says what it needs, none shows a zero or a dash.
+	var none cardNumbers
+	none.listsOf(&query.Result{})
+	for _, tpl := range []string{"overview", "numbers", "leaderboard", "sources", "places", "browsers", "devices", "toppage", "topsource", "topplace"} {
+		spec = cards.Spec{Big: "0", Rows: nil}
+		none.pictureOf(&spec, tpl)
+		if spec.Big != "Needs a visit in this period" || len(spec.Rows) != 0 || len(spec.Stats) != 0 {
+			t.Errorf("%s with none: %+v", tpl, spec)
+		}
+	}
+
+	// A little: one source is a list of one and a hero.
+	var some cardNumbers
+	some.listsOf(&query.Result{Dims: map[string][]query.Row{"referrer": {{Value: "google.com", Visitors: 1}}}})
+	if len(some.lists["sources"]) != 1 || len(some.lists["places"]) != 0 {
+		t.Errorf("partial: %+v", some.lists)
+	}
+}
+
+// The new pictures, backgrounds, and the hidden name and date are drawn at the right size, as thumbnails too.
+func TestCardTopicRoutes(t *testing.T) {
+	g := newRig(t)
+	noOutbound(t, g)
+	owner := client()
+	g.setup(t, owner)
+	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
+	for _, tpl := range []string{"sources", "places", "browsers", "devices", "toppage", "topsource", "topplace"} {
+		for shape, want := range map[string]image.Point{"link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}} {
+			code, ct, body := get(t, owner, card+"?t="+tpl+"&shape="+shape+"&bg=grid&date=0&name=0")
+			cfg, _, err := image.DecodeConfig(strings.NewReader(body))
+			if code != http.StatusOK || ct != "image/png" || err != nil || cfg.Width != want.X || cfg.Height != want.Y {
+				t.Errorf("%s %s: %d %s %dx%d (%v)", tpl, shape, code, ct, cfg.Width, cfg.Height, err)
+			}
+		}
+		code, _, body := get(t, owner, card+"?t="+tpl+"&thumb=1&bg=solid")
+		cfg, _, err := image.DecodeConfig(strings.NewReader(body))
+		if code != http.StatusOK || err != nil || cfg.Width != 360 {
+			t.Errorf("%s thumb: %d %d (%v)", tpl, code, cfg.Width, err)
+		}
+	}
+	// A background is its own picture, not the cached gradient.
+	_, _, a := get(t, owner, card+"?t=overview&thumb=1&bg=gradient")
+	_, _, b := get(t, owner, card+"?t=overview&thumb=1&bg=grid")
+	_, _, c := get(t, owner, card+"?t=overview&thumb=1&name=0&date=0")
+	if a == b || a == c {
+		t.Error("the look options do not change the picture")
+	}
+	if code, _, body := get(t, owner, card+"?format=json"); code != http.StatusOK || !strings.Contains(body, `"has_sources"`) {
+		t.Errorf("json: %d %s", code, body)
 	}
 }

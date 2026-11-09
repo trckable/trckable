@@ -1,7 +1,7 @@
 // What to share: the gallery. Pictures in groups by topic, each a live thumbnail (drawn when it scrolls into view); a
 // picture the site cannot make yet is disabled, with one line saying why.
 import { MessageSquareText } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { PICTURES, TOPICS, cardUrl, missing, type Look, type Need, type Picture, type Template } from './card'
 import { copy } from './copy'
 
@@ -32,7 +32,7 @@ function Thumb({ site, look, id, off }: { site: string; look: Look; id: Template
 
 export function CardSection({ site, look, has, pictures = PICTURES, onChange }: Props) {
   return (
-    <div className="sd-gallery" role="radiogroup" aria-label={copy.templates}>
+    <div className="sd-gallery" role="radiogroup" aria-label={copy.templates} style={{ '--ring': look.accent } as CSSProperties}>
       {TOPICS.map((topic) => {
         const list = pictures.filter((p) => p.topic === topic)
         if (!list.length) return null

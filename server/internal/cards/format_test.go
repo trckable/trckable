@@ -181,3 +181,63 @@ func TestPicturesCloseTheGap(t *testing.T) {
 		}
 	}
 }
+
+// Every background, with or without the site's name and date, draws at every size and differs from the others.
+func TestBackgroundsAndHiddenParts(t *testing.T) {
+	for _, f := range Formats {
+		for _, tpl := range []string{"overview", "numbers", "grid", "leaderboard", "spotlight"} {
+			seen := map[string]bool{}
+			for _, bg := range append([]string{""}, Backgrounds...) {
+				s := sample(tpl, f.ID, "dark")
+				s.Bg = bg
+				if _, err := s.PNG(); err != nil {
+					t.Fatalf("%s %s %q: %v", f.ID, tpl, bg, err)
+				}
+				seen[s.Key()] = true
+			}
+			if len(seen) != len(Backgrounds) { // "" is the gradient
+				t.Errorf("%s %s: %d distinct keys, want %d", f.ID, tpl, len(seen), len(Backgrounds))
+			}
+			s := sample(tpl, f.ID, "light")
+			s.Domain, s.Foot = "", ""
+			if _, err := s.PNG(); err != nil {
+				t.Errorf("%s %s without name and date: %v", f.ID, tpl, err)
+			}
+			for _, r := range Templates[tpl].Runs(s) {
+				for _, sp := range r.Spans {
+					if sp.Text == "?" {
+						t.Errorf("%s %s: an initial without a name", f.ID, tpl)
+					}
+				}
+			}
+		}
+	}
+}
+
+// The story fills its height: the numbers stand one under the other and the lowest content reaches the foot.
+func TestStoryFillsItsHeight(t *testing.T) {
+	l := layoutFor(FormatOf("story"))
+	for n := 1; n <= MaxStats; n++ {
+		s := sample("numbers", "story", "dark")
+		s.Stats = s.Stats[:n]
+		bs := numberBoxes(s)
+		if len(bs) != n || bs[0].w != l.Right-l.Left {
+			t.Fatalf("%d cards: %+v", n, bs)
+		}
+	}
+	s := sample("numbers", "story", "dark")
+	bs := numberBoxes(s)
+	if bottom := bs[len(bs)-1].y + bs[len(bs)-1].h; bottom < l.H*85/100 {
+		t.Errorf("numbers end at %d of %d", bottom, l.H)
+	}
+	g := gridBoxes(sample("grid", "story", "dark"))
+	if bottom := g[len(g)-1].y + g[len(g)-1].h; bottom < l.H*75/100 {
+		t.Errorf("grid ends at %d of %d", bottom, l.H)
+	}
+	if bottom := l.RowTop + 4*l.RowStep + l.RowH; bottom < l.H*85/100 {
+		t.Errorf("rows end at %d of %d", bottom, l.H)
+	}
+	if l.StatLabelY < l.H*80/100 {
+		t.Errorf("stats at %d of %d", l.StatLabelY, l.H)
+	}
+}

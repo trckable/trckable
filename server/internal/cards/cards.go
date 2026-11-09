@@ -69,6 +69,22 @@ type Spec struct {
 	Icon image.Image
 	// NoBrand leaves trckable's ghost and name off the card.
 	NoBrand bool
+	// Bg is the background: "gradient" (the default: the accent's soft light
+	// in the corner), "solid" or "grid" (faint lines). A card with no Domain
+	// shows no site name and no tile; one with no Foot, no date.
+	Bg string
+}
+
+// Backgrounds are the ones a card can have; anything else is the gradient.
+var Backgrounds = []string{"gradient", "solid", "grid"}
+
+func (s Spec) bg() string {
+	for _, b := range Backgrounds {
+		if s.Bg == b {
+			return b
+		}
+	}
+	return Backgrounds[0]
 }
 
 // Stat is one small number: its value and what it is, as words. Flag is a
@@ -117,7 +133,7 @@ func luminance(hex string) float64 {
 
 // Key identifies what a card draws, for a cache.
 func (s Spec) Key() string {
-	return fmt.Sprintf("%s|%s|%v|%s|%s|%s|%s|%s|%v|%v|%s|%d|%s|%t", s.Template, FormatOf(s.Format).ID, s.Theme, s.ink(), s.Domain, s.Big, s.Label, s.Foot, s.Rows, s.Series, s.Change, s.Dir, statsKey(s.Stats), s.NoBrand)
+	return fmt.Sprintf("%s|%s|%v|%s|%s|%s|%s|%s|%v|%v|%s|%d|%s|%t|%s", s.Template, FormatOf(s.Format).ID, s.Theme, s.ink(), s.Domain, s.Big, s.Label, s.Foot, s.Rows, s.Series, s.Change, s.Dir, statsKey(s.Stats), s.NoBrand, s.bg())
 }
 
 // statsKey is the small numbers as text, an icon as a mark that there is one.
@@ -158,6 +174,9 @@ type Template struct {
 	// Pics are the pictures laid over the shapes (a site's icon, a flag);
 	// nil for a template without any. Drawn in the PNG only.
 	Pics func(Spec) []Pic
+	// Glows: the template draws the background's light itself (over its
+	// chart); the others get it from the engine, under their data.
+	Glows bool
 }
 
 // Templates are the designs there are, by name. A feature adds its own at
@@ -170,6 +189,10 @@ type Frame struct {
 	BG, FG, Muted, Ink string
 	// Icon: the site has its own icon, drawn bare, so no tinted tile behind it.
 	Icon bool
+	// Named: the card shows the site's name (and so its tile).
+	Named bool
+	// Bg is the background, see Spec.Bg.
+	Bg string
 	// NoBrand: no ghost.
 	NoBrand bool
 	// L is where the blocks sit on this card's format.
@@ -186,7 +209,7 @@ func (f Frame) Stroke(w, k float64) float64 {
 }
 
 func (s Spec) frame(raster bool) Frame {
-	return Frame{BG: s.Theme.BG, FG: s.Theme.FG, Muted: s.Theme.Muted, Ink: s.ink(), Icon: s.Icon != nil, NoBrand: s.NoBrand, L: s.layout(), raster: raster}
+	return Frame{BG: s.Theme.BG, FG: s.Theme.FG, Muted: s.Theme.Muted, Ink: s.ink(), Icon: s.Icon != nil, Named: s.Domain != "", Bg: s.bg(), NoBrand: s.NoBrand, L: s.layout(), raster: raster}
 }
 
 func (s Spec) template() (Template, error) {
@@ -207,6 +230,13 @@ func (s Spec) shapes(raster bool) ([]byte, error) {
 	fmt.Fprintf(&b, `<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d">`, l.W, l.H, l.W, l.H)
 	if err := t.Shapes.Execute(&b, s.frame(raster)); err != nil {
 		return nil, err
+	}
+	f := s.frame(raster)
+	if f.Bg == "grid" {
+		b.WriteString(gridLines(f))
+	}
+	if f.Bg == "gradient" && !t.Glows {
+		b.WriteString(glow(f))
 	}
 	if t.Data != nil {
 		b.WriteString(t.Data(s, s.frame(raster)))
@@ -250,4 +280,18 @@ func validHex(s string) bool {
 	}
 	_, err := strconv.ParseUint(s[1:], 16, 32)
 	return err == nil
+}
+
+// gridLines is the grid background: faint lines, every 60 units at the link preview's scale.
+func gridLines(f Frame) string {
+	l := f.L
+	step := l.n(60)
+	var d strings.Builder
+	for x := step; x < l.W; x += step {
+		fmt.Fprintf(&d, "M%d 0L%d %d", x, x, l.H)
+	}
+	for y := step; y < l.H; y += step {
+		fmt.Fprintf(&d, "M0 %dL%d %d", y, l.W, y)
+	}
+	return fmt.Sprintf(`<path d="%s" fill="none" stroke="%s" stroke-opacity="0.07" stroke-width="%.1f"/>`, d.String(), f.FG, 1.5*l.K)
 }

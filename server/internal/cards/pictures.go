@@ -19,9 +19,9 @@ const MaxGrid = 4
 
 func init() {
 	// The overview's shapes (tile, ghost) are the numbers picture's too.
-	Templates["numbers"] = Template{Shapes: Templates["overview"].Shapes, Runs: numbersRuns, Data: numbersData, Pics: numbersPics}
+	Templates["numbers"] = Template{Shapes: Templates["overview"].Shapes, Runs: numbersRuns, Data: numbersData, Pics: numbersPics, Glows: true}
 	plain := template.Must(template.New("grid").Parse(`<rect width="{{.L.W}}" height="{{.L.H}}" fill="{{.BG}}"/>`))
-	Templates["grid"] = Template{Shapes: plain, Runs: gridRuns, Data: gridData}
+	Templates["grid"] = Template{Shapes: plain, Runs: gridRuns, Data: gridData, Glows: true}
 }
 
 // cardBox is one rounded card of numbers, its left and top and size.
@@ -36,6 +36,16 @@ func numberBoxes(s Spec) []cardBox {
 		return nil
 	}
 	gap := l.n(16)
+	if l.NumStack {
+		// A tall card (the story) has the cards one under the other, centred in the room they have.
+		h := min((l.NumBottom-l.NumTop-(n-1)*gap)/n, l.NumH)
+		top := l.NumTop + (l.NumBottom-l.NumTop-n*h-(n-1)*gap)/2
+		boxes := make([]cardBox, n)
+		for i := range boxes {
+			boxes[i] = cardBox{l.Left, top + i*(h+gap), l.Right - l.Left, h}
+		}
+		return boxes
+	}
 	w := (l.Right - l.Left - (n-1)*gap) / n
 	boxes := make([]cardBox, n)
 	for i := range boxes {
@@ -70,6 +80,9 @@ func gridBoxes(s Spec) []cardBox {
 // glow is the soft light in the top right corner, over the background.
 func glow(f Frame) string {
 	l := f.L
+	if f.Bg != "gradient" {
+		return ""
+	}
 	return fmt.Sprintf(`<defs><radialGradient id="glow" cx="%.0f" cy="0" r="%.0f" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="%s" stop-opacity="0.30"/><stop offset="1" stop-color="%s" stop-opacity="0"/></radialGradient></defs><rect width="%d" height="%d" fill="url(#glow)"/>`, float64(l.W)*0.9, 620*l.K, f.Ink, f.Ink, l.W, l.H)
 }
 
