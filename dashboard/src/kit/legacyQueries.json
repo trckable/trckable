@@ -49,7 +49,7 @@
  "features/onboarding/onboarding.css": 2,
  "features/reports/reportDialog.css": 1,
  "features/reports/reports.css": 1,
- "features/share/ShareDialog.css": 2,
+ "features/share/ShareDialog.css": 1,
  "features/sharelinks/sharelinks.css": 2,
  "features/signals/surge.css": 1,
  "features/sitestatus/StatusCard.css": 2,
@@ -76,5 +76,5 @@
  "views/Widgets.css": 5,
  "views/account/people.css": 4,
  "views/account/peoplePop.css": 2,
- "views/team/team.css": 2
+ "views/team/team.css": 1
 }

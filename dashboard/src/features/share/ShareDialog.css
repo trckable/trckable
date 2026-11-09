@@ -205,7 +205,7 @@
 }
 /* A phone: a bottom sheet, the preview first, one row of cards, and the
    download button held at the bottom. */
-@media (max-width: 640px) {
+@media (--xs) {
   .modal-back:has(> .sd-modal) {
     padding: 0;
     place-items: end stretch;
@@ -566,7 +566,7 @@
 
 /* Wide screens: every control in the head and the toolbar is one height (36px),
    so the period, Link, close, site, number, Stats and theme buttons line up. */
-@media (min-width: 641px) {
+@media (--sm-up) {
   .sd-modal {
     --sd-ctl: 36px;
   }
