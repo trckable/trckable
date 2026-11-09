@@ -107,3 +107,29 @@
   border-color: var(--accent);
   color: var(--accent);
 }
+/* The domain field's mark: the favicon fades in over the letter once it has loaded. */
+.domain-mark {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+.domain-mark-icon {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.domain-mark[data-state='icon'] .domain-mark-icon {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .domain-mark-icon {
+    transition: none;
+  }
+}
+.domain-mark .site-mark.letter {
+  transition: opacity 0.25s ease;
+}
+.domain-mark[data-state='icon'] .site-mark.letter {
+  opacity: 0;
+}

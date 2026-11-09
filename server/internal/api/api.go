@@ -145,6 +145,7 @@ type API struct {
 	search     *searchState
 	searchOnce sync.Once
 	loginRate  *attempts
+	favicons   faviconCache
 	once       sync.Once
 	stopping   chan struct{} // closed by Stop: live streams end so a restart need not wait for them
 	patterns   []string      // every route Routes registered
@@ -250,6 +251,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/overview", a.authed(a.overview))
 	handle("GET /api/v1/team", a.authed(a.team))
 	handle("POST /api/v1/sites", a.authed(a.createSite))
+	handle("GET /api/v1/favicon", a.authed(a.previewFavicon))
 	handle("GET /api/v1/sites/{site}", a.authed(a.site))
 	handle("PATCH /api/v1/sites/{site}", a.authed(a.updateSite))
 	handle("GET /api/v1/sites/{site}/icon", a.authed(a.siteIcon))
@@ -1242,6 +1244,7 @@ func (a *API) createSite(w http.ResponseWriter, r *http.Request) {
 	}
 	a.defaultAlerts(r.Context(), principalOf(r).account, id)
 	si, _ := a.Ctl.SiteInfo(r.Context(), id)
+	a.startIcon(id, si.Domain)
 	a.tellOwners(r, notice.SiteAdded, id, notice.Vars{"domain": si.Domain})
 	writeJSON(w, http.StatusCreated, si)
 }

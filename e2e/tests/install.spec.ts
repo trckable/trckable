@@ -82,6 +82,26 @@ test('Create key and Add someone keep their look on hover', async ({ page }) => 
 
 // The Install step of Add a site is small: it fits one screen at 1440x900 with no scrolling of its own, has one
 // primary action (which checks, then goes on to Revenue) and a quiet Later.
+// The domain field's mark is the letter until the site's favicon has loaded, then the favicon.
+// The server's fetch is stood in for at the browser (it reaches public hosts only).
+test('the Add a site field shows the favicon once it loads, and the letter when there is none', async ({ page }) => {
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64')
+  await page.route('**/api/v1/favicon?*', (route) =>
+    route.request().url().includes('plain.test') ? route.fulfill({ status: 404, body: 'no favicon' }) : route.fulfill({ status: 200, contentType: 'image/png', body: png }),
+  )
+  await signIn(page)
+  await page.goto(`${API}/example.com?add=site`)
+  const wizard = page.getByRole('dialog', { name: 'Add a site' })
+  await expect(wizard).toBeVisible({ timeout: 15_000 })
+  const mark = wizard.locator('.domain-mark')
+  await expect(mark).toHaveAttribute('data-state', 'letter')
+  await wizard.getByLabel('Domain').fill('icon-site.test')
+  await expect(mark).toHaveAttribute('data-state', 'icon')
+  await wizard.getByLabel('Domain').fill('plain.test')
+  await expect(mark).toHaveAttribute('data-state', 'letter')
+  await expect(mark.locator('img')).toHaveCount(0)
+})
+
 test('the Install step fits 1440x900 without scrolling, with one primary action', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await signIn(page)
