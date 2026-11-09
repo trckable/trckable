@@ -13,26 +13,8 @@ import (
 // MaxRows is how many lines a leaderboard shows.
 const MaxRows = 5
 
-// The grid every template shares: 88 px in from the sides (about 7% of
-// the width), the domain on its top line, the foot on the bottom margin.
-const (
-	padLeft  = 88
-	padRight = W - 88
-	domainY  = 128
-	footY    = 556
-)
-
-const (
-	rowTop  = 222
-	rowStep = 58
-	rowH    = 44
-	left    = padLeft
-	right   = padRight
-	barGap  = 150 // the counts sit right of the bars, never on them
-)
-
 func init() {
-	plain := template.Must(template.New("plain").Parse(`<rect width="1200" height="630" fill="{{.BG}}"/>`))
+	plain := template.Must(template.New("plain").Parse(`<rect width="{{.L.W}}" height="{{.L.H}}" fill="{{.BG}}"/>`))
 	Templates["leaderboard"] = Template{Shapes: plain, Runs: leaderRuns, Data: leaderBars}
 }
 
@@ -53,31 +35,36 @@ func rows(s Spec) []Item {
 }
 
 func leaderBars(s Spec, f Frame) string {
+	l := f.L
 	var b strings.Builder
 	for i, it := range rows(s) {
 		share := min(max(it.Share, 0), 1)
-		w := 24 + share*float64(right-left-24-barGap)
-		fmt.Fprintf(&b, `<rect x="%d" y="%d" width="%.1f" height="%d" rx="12" fill="%s" fill-opacity="0.18"/>`, left, rowTop+i*rowStep, w, rowH, f.Ink)
+		w := float64(l.n(24)) + share*float64(l.Right-l.Left-l.n(24)-l.BarGap)
+		fmt.Fprintf(&b, `<rect x="%d" y="%d" width="%.1f" height="%d" rx="%d" fill="%s" fill-opacity="0.18"/>`, l.Left, l.RowTop+i*l.RowStep, w, l.RowH, l.RowH*12/44, f.Ink)
 	}
 	return b.String()
 }
 
 func leaderRuns(s Spec) []Run {
+	l := s.layout()
+	room := float64(l.Right - l.Left)
 	runs := []Run{
-		{X: left, Y: domainY, Px: 28, Spans: []Span{{Text: s.Domain, Ink: s.Theme.Muted}}},
-		{X: left, Y: 184, Px: 40, Spans: []Span{{Text: s.Label, Bold: true, Ink: s.Theme.FG}}},
-		{X: left, Y: footY, Px: 26, Spans: []Span{{Text: s.Foot, Ink: s.Theme.Muted}}},
+		{X: l.Left, Y: l.DomainY, Px: l.px(28), Spans: []Span{{Text: fitWith(false, s.Domain, room, l.px(28)), Ink: s.Theme.Muted}}},
+		{X: l.Left, Y: l.TitleY, Px: l.TitlePx, Spans: []Span{{Text: fitWith(true, s.Label, room, l.TitlePx), Bold: true, Ink: s.Theme.FG}}},
+		{X: l.Left, Y: l.FootY, Px: l.px(26), Spans: []Span{{Text: fitWith(false, s.Foot, room-float64(l.n(260)), l.px(26)), Ink: s.Theme.Muted}}},
 	}
 	runs = append(runs, Marks(s)...)
 	list := rows(s)
 	if len(list) == 0 {
-		return append(runs, Run{X: left, Y: rowTop + 32, Px: 30, Spans: []Span{{Text: s.Big, Ink: s.Theme.Muted}}})
+		return append(runs, Run{X: l.Left, Y: l.RowTop + l.RowH*32/44, Px: l.px(30), Spans: []Span{{Text: fitWith(false, s.Big, room, l.px(30)), Ink: s.Theme.Muted}}})
 	}
 	for i, it := range list {
-		y := rowTop + i*rowStep + 31
+		y := l.RowTop + i*l.RowStep + l.RowH*31/44
+		valueW := measure(true, it.Value, l.RowPx)
+		name := fitWith(false, it.Name, room-float64(l.n(20))-valueW-float64(l.n(24)), l.RowPx)
 		runs = append(runs,
-			Run{X: left + 20, Y: y, Px: 26, Spans: []Span{{Text: clip(it.Name, 48), Ink: s.Theme.FG}}},
-			Run{X: right, Y: y, Px: 26, End: true, Spans: []Span{{Text: it.Value, Bold: true, Ink: s.Theme.FG}}},
+			Run{X: l.Left + l.n(20), Y: y, Px: l.RowPx, Spans: []Span{{Text: name, Ink: s.Theme.FG}}},
+			Run{X: l.Right, Y: y, Px: l.RowPx, End: true, Spans: []Span{{Text: it.Value, Bold: true, Ink: s.Theme.FG}}},
 		)
 	}
 	return runs

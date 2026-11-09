@@ -1,5 +1,5 @@
-// Package cards draws share cards: 1200 × 630 pictures for link previews
-// and posts, as SVG (for a page to show) and as PNG (for everything that
+// Package cards draws share cards: pictures for link previews and posts, in
+// the sizes of Formats (1200 × 630 unless asked otherwise), as SVG (for a page to show) and as PNG (for everything that
 // does not read SVG). A card is a template, a theme, an accent colour and
 // its words; each template lays out its shapes and its text once, and both
 // formats are drawn from that one layout, so they cannot drift apart.
@@ -17,12 +17,6 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
-)
-
-// W and H are a card's size in pixels: what link previews use.
-const (
-	W = 1200
-	H = 630
 )
 
 // Theme is a card's colours, before its accent.
@@ -51,7 +45,9 @@ func ThemeOf(name string) (string, Theme) {
 // it, a foot line, and the site's domain on top).
 type Spec struct {
 	Template string
-	Theme    Theme
+	// Format is a Formats id; "" is the link preview.
+	Format string
+	Theme  Theme
 	// Accent is a #rrggbb colour; "" is the theme's own.
 	Accent string
 	Domain string
@@ -121,7 +117,7 @@ func luminance(hex string) float64 {
 
 // Key identifies what a card draws, for a cache.
 func (s Spec) Key() string {
-	return fmt.Sprintf("%s|%v|%s|%s|%s|%s|%s|%v|%v|%s|%d|%s|%t", s.Template, s.Theme, s.ink(), s.Domain, s.Big, s.Label, s.Foot, s.Rows, s.Series, s.Change, s.Dir, statsKey(s.Stats), s.NoBrand)
+	return fmt.Sprintf("%s|%s|%v|%s|%s|%s|%s|%s|%v|%v|%s|%d|%s|%t", s.Template, FormatOf(s.Format).ID, s.Theme, s.ink(), s.Domain, s.Big, s.Label, s.Foot, s.Rows, s.Series, s.Change, s.Dir, statsKey(s.Stats), s.NoBrand)
 }
 
 // statsKey is the small numbers as text, an icon as a mark that there is one.
@@ -176,7 +172,9 @@ type Frame struct {
 	Icon bool
 	// NoBrand: no ghost.
 	NoBrand bool
-	raster  bool
+	// L is where the blocks sit on this card's format.
+	L      Layout
+	raster bool
 }
 
 // Stroke is width w inside a group scaled by k.
@@ -188,7 +186,7 @@ func (f Frame) Stroke(w, k float64) float64 {
 }
 
 func (s Spec) frame(raster bool) Frame {
-	return Frame{BG: s.Theme.BG, FG: s.Theme.FG, Muted: s.Theme.Muted, Ink: s.ink(), Icon: s.Icon != nil, NoBrand: s.NoBrand, raster: raster}
+	return Frame{BG: s.Theme.BG, FG: s.Theme.FG, Muted: s.Theme.Muted, Ink: s.ink(), Icon: s.Icon != nil, NoBrand: s.NoBrand, L: s.layout(), raster: raster}
 }
 
 func (s Spec) template() (Template, error) {
@@ -205,7 +203,8 @@ func (s Spec) shapes(raster bool) ([]byte, error) {
 		return nil, err
 	}
 	var b bytes.Buffer
-	fmt.Fprintf(&b, `<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d">`, W, H, W, H)
+	l := s.layout()
+	fmt.Fprintf(&b, `<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d">`, l.W, l.H, l.W, l.H)
 	if err := t.Shapes.Execute(&b, s.frame(raster)); err != nil {
 		return nil, err
 	}

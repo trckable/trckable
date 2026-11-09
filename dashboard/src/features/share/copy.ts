@@ -18,6 +18,13 @@ export const copy = defineCopy('share', {
     leaderboard: { name: 'Leaderboard', hint: 'Top pages' },
     post: { name: 'Social post', hint: 'A quick text' },
   },
+  shape: 'Size',
+  shapes: {
+    link: { name: 'Link', hint: 'Link preview, 1.91:1: X, LinkedIn' },
+    square: { name: 'Square', hint: 'Square, 1:1: Instagram, LinkedIn' },
+    story: { name: 'Story', hint: 'Story, 9:16: phone stories' },
+    wide: { name: 'Wide', hint: 'Wide, 16:9: slides, YouTube' },
+  },
   site: 'Site',
   light: 'Light card',
   dark: 'Dark card',

@@ -56,9 +56,10 @@ func (s Spec) PNG() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	img := image.NewRGBA(image.Rect(0, 0, W, H))
-	icon.SetTarget(0, 0, W, H)
-	icon.Draw(rasterx.NewDasher(W, H, rasterx.NewScannerGV(W, H, img, img.Bounds())), 1)
+	l := s.layout()
+	img := image.NewRGBA(image.Rect(0, 0, l.W, l.H))
+	icon.SetTarget(0, 0, float64(l.W), float64(l.H))
+	icon.Draw(rasterx.NewDasher(l.W, l.H, rasterx.NewScannerGV(l.W, l.H, img, img.Bounds())), 1)
 
 	t, _ := s.template()
 	if t.Pics != nil {

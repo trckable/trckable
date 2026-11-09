@@ -28,7 +28,7 @@ func TestPNGRenders(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if r := img.Bounds(); r.Dx() != W || r.Dy() != H {
+		if r := img.Bounds(); r.Dx() != 1200 || r.Dy() != 630 {
 			t.Fatalf("%s: %v", theme, r)
 		}
 		bg := rgb(s.Theme.BG)

@@ -287,3 +287,25 @@ func TestCardBrandFollowsLookAndLock(t *testing.T) {
 		t.Fatalf("still stored: %v", l)
 	}
 }
+
+// The card comes in the size asked for with shape, for each template; an
+// unknown shape is the link preview.
+func TestCardShapeSizes(t *testing.T) {
+	g := newRig(t)
+	noOutbound(t, g)
+	owner := client()
+	g.setup(t, owner)
+	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
+	for shape, want := range map[string]image.Point{"": {1200, 630}, "link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}, "nope": {1200, 630}} {
+		for _, tpl := range []string{"overview", "leaderboard"} {
+			code, _, body := get(t, owner, card+"?t="+tpl+"&shape="+shape)
+			if code != http.StatusOK {
+				t.Fatalf("%s %s: %d", tpl, shape, code)
+			}
+			cfg, _, err := image.DecodeConfig(strings.NewReader(body))
+			if err != nil || cfg.Width != want.X || cfg.Height != want.Y {
+				t.Errorf("%s %s: %dx%d (%v), want %v", tpl, shape, cfg.Width, cfg.Height, err, want)
+			}
+		}
+	}
+}

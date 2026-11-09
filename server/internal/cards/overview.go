@@ -19,22 +19,12 @@ import (
 // MaxStats is how many small numbers sit under the chart.
 const MaxStats = 3
 
-const (
-	tile       = 52
-	tileY      = 70
-	chartTop   = 352.0
-	chartBase  = 486.0
-	statValueY = 540
-	statLabelY = 572
-	statStep   = 250
-)
-
 func init() {
 	shapes := template.Must(template.New("overview").Funcs(template.FuncMap{
 		"ghost": func(f Frame, x, y, k float64) map[string]any { return map[string]any{"F": f, "X": x, "Y": y, "K": k} },
-	}).Parse(`<rect width="1200" height="630" fill="{{.BG}}"/>` +
-		`{{if not .Icon}}<rect x="88" y="70" width="52" height="52" rx="15" fill="{{.Ink}}" fill-opacity="0.2"/>{{end}}` +
-		`{{if not .NoBrand}}{{template "ghost" ghost . 892 520 0.6}}{{end}}`))
+	}).Parse(`<rect width="{{.L.W}}" height="{{.L.H}}" fill="{{.BG}}"/>` +
+		`{{if not .Icon}}<rect x="{{.L.Left}}" y="{{.L.TileY}}" width="{{.L.Tile}}" height="{{.L.Tile}}" rx="{{.L.TileR}}" fill="{{.Ink}}" fill-opacity="0.2"/>{{end}}` +
+		`{{if not .NoBrand}}{{template "ghost" ghost . .L.GhostX .L.GhostY .L.GhostK}}{{end}}`))
 	template.Must(shapes.New("ghost").Parse(Ghost))
 	Templates["overview"] = Template{Shapes: shapes, Runs: overviewRuns, Data: overviewChart, Pics: overviewPics}
 }
@@ -42,14 +32,15 @@ func init() {
 // overviewPics are the site's icon in its tile, and the flag (or the icon) of
 // a stat that is a country (or a site), each only when there is a picture to draw.
 func overviewPics(s Spec) []Pic {
+	l := s.layout()
 	var pics []Pic
 	if s.Icon != nil {
-		pics = append(pics, Pic{Img: s.Icon, Box: image.Rect(left, tileY, left+tile, tileY+tile), Radius: 12})
+		pics = append(pics, Pic{Img: s.Icon, Box: image.Rect(l.Left, l.TileY, l.Left+l.Tile, l.TileY+l.Tile), Radius: l.n(12)})
 	}
 	for i, st := range s.Stats[:min(len(s.Stats), MaxStats)] {
-		x := left + i*statStep
+		x := l.Left + i*l.StatStep
 		if f := st.pic(); f != nil {
-			pics = append(pics, Pic{Img: f, Box: image.Rect(x, statValueY-flagBoxH+2, x+st.picW(), statValueY+2), Radius: 4})
+			pics = append(pics, Pic{Img: f, Box: image.Rect(x, l.StatValueY-l.flagH()+2, x+st.picW(l), l.StatValueY+2), Radius: l.n(4)})
 		}
 	}
 	return pics
@@ -64,12 +55,15 @@ func (st Stat) pic() image.Image {
 }
 
 // picW is that picture's width: a flag is wider than tall, an icon square.
-func (st Stat) picW() int {
+func (st Stat) picW(l Layout) int {
 	if Flag(st.Flag) != nil {
-		return flagBoxW
+		return l.n(flagBoxW)
 	}
-	return flagBoxH
+	return l.flagH()
 }
+
+// flagH is the height of a flag, and the side of an icon, on this format.
+func (l Layout) flagH() int { return l.n(flagBoxH) }
 
 // A flag beside a country's name, and the room the name leaves for it.
 const (
@@ -79,24 +73,23 @@ const (
 	statGap  = 18 // the room a stat leaves between itself and the next
 )
 
-// The stat value's size, and the smallest it shrinks to before it is cut;
-// markX is where trckable's mark (the ghost, then the name) begins.
+// The stat value's size, and the smallest it shrinks to before it is cut
+// (at the link preview's scale; the layout's mark starts at MarkX).
 const (
 	statPx    = 42.0
 	statMinPx = 26.0
-	markX     = 892
 )
 
 // fitStat is a stat's value and the size it is drawn at: whole at the full
 // size when it fits, else smaller until it fits, and cut only when even the
 // smallest size is too wide (a long country such as "United Kingdom").
-func fitStat(s string, room float64) (string, float64) {
-	for px := statPx; px > statMinPx; px -= 2 {
+func fitStat(s string, room float64, k float64) (string, float64) {
+	for px := statPx * k; px > statMinPx*k; px -= 2 {
 		if wide(s, px) <= room {
 			return s, px
 		}
 	}
-	return fit(s, room, statMinPx), statMinPx
+	return fitWith(true, s, room, statMinPx*k), statMinPx * k
 }
 
 // wide is how wide s is in the bold font at size em; by letter class when the
@@ -133,24 +126,6 @@ func letterW(r rune, em float64) float64 {
 	return 0.56 * em
 }
 
-// fit keeps s inside its room (px, at size em), ending in an ellipsis when it
-// does not fit.
-func fit(s string, room, em float64) string {
-	width := func(r rune) float64 { return letterW(r, em) }
-	if wide(s, em) <= room {
-		return s
-	}
-	runes := []rune(s)
-	w := 0.0
-	for i, r := range runes {
-		if w+width(r)+0.9*em > room { // the ellipsis needs room too
-			return string(runes[:i]) + "…"
-		}
-		w += width(r)
-	}
-	return s
-}
-
 // fadeEdge is how much of the card's width, at each side, the chart fades over.
 const fadeEdge = 0.09
 
@@ -181,6 +156,9 @@ func curve(xs, ys []float64, lo, hi float64) (px, py []float64) {
 // so the sides are covered with the card's own background fading in, and the
 // glow (part of that background) is laid over it all afterwards.
 func overviewChart(s Spec, f Frame) string {
+	l := f.L
+	W := float64(l.W)
+	chartTop, chartBase := l.ChartTop, l.ChartBase
 	pts := s.Series
 	if len(pts) < 2 {
 		pts = []float64{0, 0}
@@ -190,7 +168,7 @@ func overviewChart(s Spec, f Frame) string {
 		top = max(top, v)
 	}
 	xs, ys := make([]float64, len(pts)), make([]float64, len(pts))
-	step := float64(W) / float64(len(pts)-1)
+	step := W / float64(len(pts)-1)
 	for i, v := range pts {
 		xs[i], ys[i] = float64(i)*step, chartBase
 		if top > 0 {
@@ -208,23 +186,23 @@ func overviewChart(s Spec, f Frame) string {
 	}
 	d := line.String()
 	edge := fadeEdge * W
-	band := fmt.Sprintf(`y="%.0f" height="%.0f"`, chartTop-14, chartBase-chartTop+16)
+	band := fmt.Sprintf(`y="%.0f" height="%.0f"`, chartTop-14*l.K, chartBase-chartTop+16*l.K)
 	var b strings.Builder
 	fmt.Fprintf(&b, `<defs><linearGradient id="area" gradientUnits="userSpaceOnUse" x1="0" y1="%.0f" x2="0" y2="%.0f"><stop offset="0" stop-color="%s" stop-opacity="0.34"/><stop offset="1" stop-color="%s" stop-opacity="0"/></linearGradient>`, chartTop, chartBase, f.Ink, f.Ink)
-	fmt.Fprintf(&b, `<linearGradient id="edge" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="%d" y2="0"><stop offset="0" stop-color="%s" stop-opacity="0"/><stop offset="%.2f" stop-color="%s"/><stop offset="%.2f" stop-color="%s"/><stop offset="1" stop-color="%s" stop-opacity="0"/></linearGradient>`, W, f.Ink, fadeEdge, f.Ink, 1-fadeEdge, f.Ink, f.Ink)
+	fmt.Fprintf(&b, `<linearGradient id="edge" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="%d" y2="0"><stop offset="0" stop-color="%s" stop-opacity="0"/><stop offset="%.2f" stop-color="%s"/><stop offset="%.2f" stop-color="%s"/><stop offset="1" stop-color="%s" stop-opacity="0"/></linearGradient>`, l.W, f.Ink, fadeEdge, f.Ink, 1-fadeEdge, f.Ink, f.Ink)
 	// The background fading in over each side, eased like a smoothstep.
-	for _, side := range []struct{ id, x1, x2 string }{{"left", "0", fmt.Sprint(edge)}, {"right", fmt.Sprint(W), fmt.Sprint(W - edge)}} {
+	for _, side := range []struct{ id, x1, x2 string }{{"left", "0", fmt.Sprint(edge)}, {"right", fmt.Sprint(l.W), fmt.Sprint(W - edge)}} {
 		fmt.Fprintf(&b, `<linearGradient id="%s" gradientUnits="userSpaceOnUse" x1="%s" y1="0" x2="%s" y2="0">`, side.id, side.x1, side.x2)
 		for _, t := range []float64{0, 0.25, 0.5, 0.75, 1} {
 			fmt.Fprintf(&b, `<stop offset="%.2f" stop-color="%s" stop-opacity="%.3f"/>`, t, f.BG, 1-t*t*(3-2*t))
 		}
 		b.WriteString(`</linearGradient>`)
 	}
-	fmt.Fprintf(&b, `<radialGradient id="glow" cx="1080" cy="0" r="620" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="%s" stop-opacity="0.30"/><stop offset="1" stop-color="%s" stop-opacity="0"/></radialGradient></defs>`, f.Ink, f.Ink)
-	fmt.Fprintf(&b, `<path d="%s L%d %.0f L0 %.0f Z" fill="url(#area)"/>`, d, W, chartBase, chartBase)
+	fmt.Fprintf(&b, `<radialGradient id="glow" cx="%.0f" cy="0" r="%.0f" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="%s" stop-opacity="0.30"/><stop offset="1" stop-color="%s" stop-opacity="0"/></radialGradient></defs>`, W*0.9, 620*l.K, f.Ink, f.Ink)
+	fmt.Fprintf(&b, `<path d="%s L%d %.0f L0 %.0f Z" fill="url(#area)"/>`, d, l.W, chartBase, chartBase)
 	fmt.Fprintf(&b, `<rect x="0" %s width="%.0f" fill="url(#left)"/><rect x="%.0f" %s width="%.0f" fill="url(#right)"/>`, band, edge, W-edge, band, edge)
-	fmt.Fprintf(&b, `<rect width="%d" height="%d" fill="url(#glow)"/>`, W, H)
-	fmt.Fprintf(&b, `<path d="%s" fill="none" stroke="url(#edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`, d)
+	fmt.Fprintf(&b, `<rect width="%d" height="%d" fill="url(#glow)"/>`, l.W, l.H)
+	fmt.Fprintf(&b, `<path d="%s" fill="none" stroke="url(#edge)" stroke-width="%.1f" stroke-linecap="round" stroke-linejoin="round"/>`, d, 5*l.K)
 	b.WriteString(pills(s))
 	return b.String()
 }
@@ -233,22 +211,23 @@ func overviewChart(s Spec, f Frame) string {
 // after the label, green for a rise and red for a fall. Only boxes, sized to
 // the words they hold; the words are the runs'.
 const (
-	pillPad    = 16
-	periodPx   = 24.0
-	changePx   = 28.0
-	changeBase = 316
+	pillPad  = 16
+	periodPx = 24.0
+	changePx = 28.0
 )
 
 // periodBox is where the period's pill sits and how wide it is: its text ends at right.
 func periodBox(s Spec) (x, y, w, h int) {
-	w = int(measure(false, s.Foot, periodPx)) + 2*pillPad
-	return right + pillPad - w, tileY + 35 - 30, w, 44
+	l := s.layout()
+	w = int(measure(false, s.Foot, l.px(periodPx))) + 2*l.n(pillPad)
+	return l.Right + l.n(pillPad) - w, l.TileY + l.n(35-30), w, l.n(44)
 }
 
 // changeBox is the comparison's pill, after the label on its line.
 func changeBox(s Spec) (x, y, w, h int) {
-	w = int(measure(true, s.Change, changePx)) + 2*pillPad + 4
-	return left + int(measure(false, s.Label, 32)) + 22, changeBase - 34, w, 46
+	l := s.layout()
+	w = int(measure(true, s.Change, l.px(changePx))) + 2*l.n(pillPad) + l.n(4)
+	return l.Left + int(measure(false, s.Label, l.px(32))) + l.n(22), l.LabelY - l.n(34), w, l.n(46)
 }
 
 func pills(s Spec) string {
@@ -273,6 +252,8 @@ func pillInk(s Spec) string {
 }
 
 func overviewRuns(s Spec) []Run {
+	l := s.layout()
+	room := float64(l.Right - l.Left)
 	big := 136.0
 	switch n := len([]rune(s.Big)); {
 	case n > 12:
@@ -280,6 +261,7 @@ func overviewRuns(s Spec) []Run {
 	case n > 8:
 		big = 108
 	}
+	big = fitPx(s.Big, big*l.K*l.Display, 24, room)
 	initial := "?"
 	for _, r := range s.Domain {
 		if unicode.IsLetter(r) || unicode.IsDigit(r) {
@@ -287,44 +269,46 @@ func overviewRuns(s Spec) []Run {
 			break
 		}
 	}
-	line := []Span{{Text: s.Label, Ink: s.Theme.Muted}}
+	line := []Span{{Text: fitWith(false, s.Label, room-float64(l.n(160)), l.px(32)), Ink: s.Theme.Muted}}
 	var runs []Run
 	if s.Icon == nil {
-		runs = append(runs, Run{X: left + tile/2, Y: tileY + 37, Px: 30, Mid: true, Spans: []Span{{Text: initial, Bold: true, Ink: s.ink()}}})
+		runs = append(runs, Run{X: l.Left + l.Tile/2, Y: l.TileY + l.n(37), Px: l.px(30), Mid: true, Spans: []Span{{Text: initial, Bold: true, Ink: s.ink()}}})
 	}
+	// The domain gets what the period's pill leaves it.
+	domainRoom := room - float64(l.Tile+l.n(18)) - measure(false, s.Foot, l.px(periodPx)) - float64(l.n(48))
 	runs = append(runs, []Run{
-		{X: left + tile + 18, Y: tileY + 36, Px: 30, Spans: []Span{{Text: clip(s.Domain, 34), Ink: s.Theme.FG}}},
-		{X: right, Y: tileY + 35, Px: periodPx, End: true, Spans: []Span{{Text: s.Foot, Ink: s.Theme.Muted}}},
-		{X: left - 5, Y: 262, Px: big, Spans: []Span{{Text: s.Big, Bold: true, Ink: s.Theme.FG}}},
-		{X: left, Y: changeBase, Px: 32, Spans: line},
+		{X: l.Left + l.Tile + l.n(18), Y: l.TileY + l.n(36), Px: l.px(30), Spans: []Span{{Text: fitWith(false, clip(s.Domain, 34), domainRoom, l.px(30)), Ink: s.Theme.FG}}},
+		{X: l.Right, Y: l.TileY + l.n(35), Px: l.px(periodPx), End: true, Spans: []Span{{Text: s.Foot, Ink: s.Theme.Muted}}},
+		{X: l.Left - l.n(5), Y: l.BigY, Px: big, Spans: []Span{{Text: s.Big, Bold: true, Ink: s.Theme.FG}}},
+		{X: l.Left, Y: l.LabelY, Px: l.px(32), Spans: line},
 	}...)
 	if s.Change != "" && s.Dir != 0 {
 		x, _, _, _ := changeBox(s)
-		runs = append(runs, Run{X: x + pillPad + 2, Y: changeBase - 1, Px: changePx, Spans: []Span{{Text: s.Change, Bold: true, Ink: pillInk(s)}}})
+		runs = append(runs, Run{X: x + l.n(pillPad) + l.n(2), Y: l.LabelY - 1, Px: l.px(changePx), Spans: []Span{{Text: s.Change, Bold: true, Ink: pillInk(s)}}})
 	}
 	if !s.NoBrand {
-		runs = append(runs, Run{X: right, Y: footY, Px: 28, End: true, Spans: []Span{{Text: "trck", Bold: true, Ink: s.Theme.FG}, {Text: "able.com", Ink: s.Theme.Muted}}})
+		runs = append(runs, Run{X: l.Right, Y: l.FootY, Px: l.px(28), End: true, Spans: []Span{{Text: "trck", Bold: true, Ink: s.Theme.FG}, {Text: "able.com", Ink: s.Theme.Muted}}})
 	}
 	shown := s.Stats[:min(len(s.Stats), MaxStats)]
 	for i, st := range shown {
-		x := left + i*statStep
-		value, room := x, statStep-statGap
+		x := l.Left + i*l.StatStep
+		value, room := x, l.StatStep-l.n(statGap)
 		if i == len(shown)-1 {
 			// The last one may use the free space up to trckable's mark (or the edge).
-			end := right
-			if !s.NoBrand {
-				end = markX - statGap
+			end := l.Right
+			if !s.NoBrand && l.GhostY < float64(l.StatLabelY)+8 { // the mark shares the stats' line
+				end = l.MarkX - l.n(statGap)
 			}
 			room = end - x
 		}
 		if st.pic() != nil {
-			value += st.picW() + flagGap
-			room -= st.picW() + flagGap
+			value += st.picW(l) + l.n(flagGap)
+			room -= st.picW(l) + l.n(flagGap)
 		}
-		text, px := fitStat(st.Value, float64(room))
+		text, px := fitStat(st.Value, float64(room), l.K)
 		runs = append(runs,
-			Run{X: value, Y: statValueY, Px: px, Spans: []Span{{Text: text, Bold: true, Ink: s.Theme.FG}}},
-			Run{X: x, Y: statLabelY, Px: 24, Spans: []Span{{Text: st.Label, Ink: s.Theme.Muted}}},
+			Run{X: value, Y: l.StatValueY, Px: px, Spans: []Span{{Text: text, Bold: true, Ink: s.Theme.FG}}},
+			Run{X: x, Y: l.StatLabelY, Px: l.px(24), Spans: []Span{{Text: fitWith(false, st.Label, float64(l.StatStep-l.n(statGap)), l.px(24)), Ink: s.Theme.Muted}}},
 		)
 	}
 	return runs

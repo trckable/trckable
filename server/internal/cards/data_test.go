@@ -50,8 +50,9 @@ func TestLeaderboardClips(t *testing.T) {
 	if n := len(runs) - 4; n != 2*MaxRows {
 		t.Fatalf("%d row runs", n)
 	}
-	if got := []rune(runs[4].Spans[0].Text); len(got) != 48 {
-		t.Fatalf("not clipped: %d", len(got))
+	got := runs[4].Spans[0].Text
+	if !strings.HasSuffix(got, "…") || measure(false, got, L.RowPx) > float64(L.Right-L.Left) {
+		t.Fatalf("not clipped: %q", got)
 	}
 }
 
@@ -84,18 +85,18 @@ func TestOverviewIconAndFlag(t *testing.T) {
 		return color.RGBAModel.Convert(img.At(x, y)).(color.RGBA)
 	}
 	// The middle of the tile, and the middle of the flag's red band.
-	if c := at(s, left+tile/2, tileY+tile/2); c != (color.RGBA{0, 200, 0, 255}) {
+	if c := at(s, L.Left+L.Tile/2, L.TileY+L.Tile/2); c != (color.RGBA{0, 200, 0, 255}) {
 		t.Fatalf("tile: %v", c)
 	}
-	if c := at(s, left+2*statStep+flagBoxW/2, statValueY-flagBoxH/2+2); c.R < 200 || c.G > 40 {
+	if c := at(s, L.Left+2*L.StatStep+flagBoxW/2, L.StatValueY-flagBoxH/2+2); c.R < 200 || c.G > 40 {
 		t.Fatalf("flag: %v", c)
 	}
 	// Without them the tile is the translucent square, and where the flag was (its name gone too) is bare.
 	s.Icon, s.Stats[2].Flag, s.Stats[2].Value = nil, "", ""
-	if c := at(s, left+tile-4, tileY+tile/2); c == (color.RGBA{0, 200, 0, 255}) {
+	if c := at(s, L.Left+L.Tile-4, L.TileY+L.Tile/2); c == (color.RGBA{0, 200, 0, 255}) {
 		t.Fatalf("the icon is still there: %v", c)
 	}
-	if c := at(s, left+2*statStep+flagBoxW/2, statValueY-flagBoxH/2+2); c.R > 100 {
+	if c := at(s, L.Left+2*L.StatStep+flagBoxW/2, L.StatValueY-flagBoxH/2+2); c.R > 100 {
 		t.Fatalf("a flag with no flag: %v", c)
 	}
 }
@@ -169,7 +170,7 @@ func TestOverviewStatIcon(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c := color.RGBAModel.Convert(img.At(left+statStep+flagBoxH/2, statValueY-flagBoxH/2+2)).(color.RGBA); c.B < 200 || c.R > 40 {
+	if c := color.RGBAModel.Convert(img.At(L.Left+L.StatStep+flagBoxH/2, L.StatValueY-flagBoxH/2+2)).(color.RGBA); c.B < 200 || c.R > 40 {
 		t.Fatalf("icon: %v", c)
 	}
 	bare := s
@@ -187,28 +188,32 @@ func TestDecodeIconWebP(t *testing.T) {
 	}
 }
 
-// A long value is cut to its room, wide letters sooner than narrow ones, and a short one is left whole.
+// L is the link preview's layout, where these tests look for pixels.
+var L = layoutFor(FormatOf(""))
+
+// A long value is cut to its room as the real font sets it, and a short one is left whole.
 func TestFit(t *testing.T) {
 	for _, c := range []struct {
 		in   string
 		room float64
-		want string
+		cut  bool
 	}{
-		{"Germany", 222, "Germany"},
-		{"United Kingdom", 222, "United Ki…"},
-		{"/pricing/team/enterprise", 222, "/pricing/…"},
-		{"MMMMMMMMMM", 222, "MMMMM…"},
-		{"", 10, ""},
+		{"Germany", 222, false},
+		{"United Kingdom", 222, true},
+		{"/pricing/team/enterprise", 222, true},
+		{"MMMMMMMMMM", 222, true},
+		{"", 10, false},
 	} {
-		if got := fit(c.in, c.room, statPx); got != c.want {
-			t.Errorf("%q: %q, want %q", c.in, got, c.want)
+		got := fitWith(true, c.in, c.room, statPx)
+		if c.cut != (got != c.in) || measure(true, got, statPx) > c.room || (c.cut && !strings.HasSuffix(got, "…")) {
+			t.Errorf("%q: %q in %v", c.in, got, c.room)
 		}
 	}
 	// A stat shrinks before it is cut: a long country fits whole and smaller.
-	if text, px := fitStat("United Kingdom", markX-statGap-(left+2*statStep)-flagBoxW-flagGap); text != "United Kingdom" || px >= statPx || px < statMinPx {
+	if text, px := fitStat("United Kingdom", float64(L.MarkX-statGap-(L.Left+2*L.StatStep)-flagBoxW-flagGap), 1); text != "United Kingdom" || px >= statPx || px < statMinPx {
 		t.Errorf("United Kingdom: %q at %v", text, px)
 	}
-	if text, px := fitStat("59%", 176); text != "59%" || px != statPx {
+	if text, px := fitStat("59%", 176, 1); text != "59%" || px != statPx {
 		t.Errorf("59%%: %q at %v", text, px)
 	}
 }
