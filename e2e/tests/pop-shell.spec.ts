@@ -43,12 +43,14 @@ const MENUS = [
   { name: 'bell', button: '#bellBtn', box: '#bellMenu.on' },
   { name: 'account', button: '[data-key="user"]', box: '.pop.more-menu' },
   { name: 'apps', button: '#sectionsBtn', box: '.xtiles-pop' },
+  { name: 'sites', button: '#siteBtn', box: '#siteMenu.on' },
+  { name: 'period', button: '.pwrap .pill', box: '.pmenu.on', view: 'briefing' },
 ]
 
 for (const theme of ['dark', 'light'] as const) {
   for (const width of [1280, 390]) {
     test(`${theme}, ${width} px: the bell, the account menu and the apps share one frame`, async ({ page }) => {
-      test.setTimeout(90_000)
+      test.setTimeout(120_000)
       const cookie = await session()
       await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
       const siteId = await siteIdOf(page, HISTORY_DOMAIN)
@@ -57,10 +59,10 @@ for (const theme of ['dark', 'light'] as const) {
       await page.emulateMedia({ colorScheme: theme })
       await page.setViewportSize({ width, height: 844 })
       await page.addInitScript((t) => localStorage.setItem('trckable:theme', t), theme)
-      await page.goto(`${API}/${HISTORY_DOMAIN}?view=live&v=`)
-      await expect(page.locator('#bellDot')).toBeVisible({ timeout: 20_000 })
       const frames: Record<string, Record<string, string>> = {}
       for (const m of MENUS) {
+        await page.goto(`${API}/${HISTORY_DOMAIN}?view=${m.view ?? 'live'}&v=`)
+        await expect(page.locator('#bellDot')).toBeVisible({ timeout: 20_000 })
         await page.locator(m.button).click()
         const box = page.locator(`${m.box}, aside.cd.on`).first()
         await expect(box).toBeVisible()
@@ -70,12 +72,17 @@ for (const theme of ['dark', 'light'] as const) {
           const s = getComputedStyle(el)
           return { radius: s.borderTopLeftRadius, border: s.borderTopWidth + ' ' + s.borderTopColor, padding: s.paddingTop + ' ' + s.paddingLeft, shadow: s.boxShadow, background: s.backgroundColor, width: s.width }
         })
+        if (width <= 600) {
+          // A sheet: the colours and the top corners are the shell's; its placement and padding are the sheet's.
+          const { background, radius } = frames[m.name];
+          frames[m.name] = { background, radius }
+        }
         await page.keyboard.press('Escape')
         await page.mouse.click(5, 5)
         await expect(box).toBeHidden()
       }
-      if (width > 600) {
-        for (const [name, f] of Object.entries(frames)) expect(f, name).toEqual(frames.bell)
+      for (const [name, f] of Object.entries(frames)) {
+        expect(f, name).toEqual(width <= 600 ? frames.account : frames.bell)
       }
     })
   }

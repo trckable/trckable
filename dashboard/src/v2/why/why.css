@@ -396,7 +396,7 @@
 }
 @media (--xs){
   .mk .xp.xpage .xlay .xtb,.mk .xp.xpage .xtb{margin-top:-24px}
-  .mk .xp.xpage .xperiod *{border-color:transparent!important;background-color:transparent!important;box-shadow:none!important}
+  .mk .xp.xpage .xperiod :not(.mk-menu, .mk-menu *){border-color:transparent!important;background-color:transparent!important;box-shadow:none!important}
   .mk .xp.xpage .xperiod .pwrap>*{padding-left:0}
 }
 .mk .xdev{height:18px;margin-bottom:var(--mk-s3)}
