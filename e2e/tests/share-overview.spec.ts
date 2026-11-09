@@ -125,6 +125,7 @@ for (const width of [1440, 390]) test(`the sheet picks the big number and the sm
   const dialog = page.getByRole('dialog', { name: 'Share your numbers' })
   await expect(dialog).toBeVisible()
   const img = dialog.locator('.sd-preview img')
+  await dialog.getByRole('button', { name: /^Numbers/ }).click()
   const param = async (name: string) => new URL((await img.getAttribute('src'))!, API).searchParams.get(name)
   expect(await param('metric')).toBe('visitors')
   expect(await param('stats')).toBe('engaged,avgtime,country')

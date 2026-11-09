@@ -1,31 +1,33 @@
-// Share your numbers: pick a card on the left, see it in the middle, tune it
-// in the row above, then share, copy or save it. The card is drawn on the
-// server from the site's totals, top pages, chart and top country (never a
-// visitor), and revenue is in it only where the report would show it. A
-// read-only link is the "Link" corner.
-import { Link2, Share2, X } from 'lucide-react'
+// Share your numbers: the picture on the left, the panel on the right (what to share, the period, the numbers,
+// the look, then download or copy). The picture is drawn on the server from the site's totals, top pages, chart
+// and top country (never a visitor), and revenue is in it only where the report would show it. A read-only link is
+// the Link corner.
+import { Link2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { Site } from '../../lib/api'
 import { can } from '../../lib/permissions'
 import { Modal } from '../../kit/Modal'
 import { toast } from '../../components/Toast'
-import { ACCENTS, DEFAULT_STATS, METRICS, cardUrl, fileName, statsWith, type CardWords, type Look, type Period } from './card'
+import { fmtRange, todayIn } from '../../lib/dates'
+import { ACCENTS, DEFAULT_STATS, METRICS, cardUrl, comparing, fileName, statsWith, type CardWords, type Look, type Period } from './card'
 import { Actions, type Act } from './Actions'
 import { copy } from './copy'
 import { copyImage, saveImage, shareImage } from './image'
 import { LinkPanel } from './LinkPanel'
 import { Preview } from './Preview'
-import { Templates } from './Templates'
-import { Toolbar } from './Toolbar'
+import { CardSection } from './CardSection'
+import { LookSection } from './LookSection'
+import { NumbersSection } from './NumbersSection'
+import { PeriodSection } from './PeriodSection'
+import { Section } from './Section'
 import { useLook } from './useLook'
-import { Periods } from './Periods'
 import './ShareDialog.css'
 import { fail } from '../../components/toastBus'
 
 export default function ShareDialog({ site: first, sites, period = '7d', onClose }: { site: Site; sites: Site[]; period?: Period; onClose: () => void }) {
   const [siteId, setSiteId] = useState(first.id)
   const site = sites.find((s) => s.id === siteId) ?? first
-  const [look, setLook] = useState<Look>({ template: 'overview', period, metric: 'visitors', stats: DEFAULT_STATS, theme: 'dark', accent: ACCENTS[0] })
+  const [look, setLook] = useState<Look>({ template: 'overview', period, compare: false, metric: 'visitors', stats: DEFAULT_STATS, theme: 'dark', accent: ACCENTS[0] })
   // A new big number is not shown again among the small ones.
   const set = (l: Partial<Look>) => setLook((x) => (l.metric ? { ...x, ...l, stats: statsWith(l.stats ?? x.stats, l.metric) } : { ...x, ...l }))
   const brand = useLook(site.id)
@@ -35,6 +37,8 @@ export default function ShareDialog({ site: first, sites, period = '7d', onClose
   const [busy, setBusy] = useState<Act | null>(null)
   const [done, setDone] = useState<Act | null>(null)
   const [linking, setLinking] = useState(false)
+  const [open, setOpen] = useState('card')
+  const toggle = (id: string) => setOpen((o) => (o === id ? '' : id))
 
   // The words: whether revenue may be picked, and the post's text. Revenue
   // is never the default; asked for where it is not allowed, the server
@@ -52,7 +56,7 @@ export default function ShareDialog({ site: first, sites, period = '7d', onClose
     return () => {
       stale = true
     }
-  }, [site.id, look.period, look.metric]) // eslint-disable-line react-hooks/exhaustive-deps -- the words depend on these three only
+  }, [site.id, look.period, look.range?.from, look.range?.to, look.compare, look.metric]) // eslint-disable-line react-hooks/exhaustive-deps -- the words depend on these only
   useEffect(() => {
     if (!done) return
     const t = setTimeout(() => setDone(null), 1600)
@@ -78,24 +82,20 @@ export default function ShareDialog({ site: first, sites, period = '7d', onClose
       setBusy(null)
     }
   }
+  const today = todayIn(site.timezone)
   const metrics = METRICS.filter((m) => m !== 'revenue' || words?.revenue)
+
+  const periodSummary = [look.period === 'custom' && look.range ? fmtRange(look.range, today) : copy.periods[look.period], comparing(look) ? copy.compare : ''].filter(Boolean).join(' · ')
+  const numbersSummary = look.template === 'leaderboard' ? copy.template.leaderboard.hint : copy.metrics[look.metric]
 
   return (
     <Modal label={copy.title} className="sd-modal" onClose={onClose}>
       <span className="sd-handle" aria-hidden="true" />
       <div className="sd-head">
-        <span className="modal-badge" aria-hidden="true">
-          <Share2 size={18} strokeWidth={1.75} />
-        </span>
-        <div className="sd-title">
-          <h2>{copy.title}</h2>
-          <span className="faint">{copy.subtitle}</span>
-        </div>
-        {!linking && <Periods value={look.period} onChange={(p) => set({ period: p })} className="sd-period is-head" />}
+        <h2>{copy.title}</h2>
         {can('share.manage') && (
-          <button type="button" className="btn sd-linkbtn" aria-pressed={linking} title={copy.linkTitle} onClick={() => setLinking((x) => !x)}>
+          <button type="button" className="btn icon" aria-pressed={linking} title={copy.linkTitle} aria-label={copy.link} onClick={() => setLinking((x) => !x)}>
             <Link2 size={16} strokeWidth={1.8} aria-hidden="true" />
-            <span className="label">{copy.link}</span>
           </button>
         )}
         <button type="button" className="btn icon sd-close" aria-label={copy.close} onClick={onClose}>
@@ -105,11 +105,26 @@ export default function ShareDialog({ site: first, sites, period = '7d', onClose
       {linking && <LinkPanel site={site} onBack={() => setLinking(false)} />}
       {!linking && (
         <div className="sd-body">
-          <Templates value={look.template} onChange={(t) => set({ template: t })} />
-          <Periods value={look.period} onChange={(p) => set({ period: p })} className="sd-period is-body" />
-          <Toolbar site={site} sites={sites.length ? sites : [site]} onSite={setSiteId} look={look} set={set} metrics={metrics} revenue={words?.revenue ?? false} brand={brand} />
-          <Preview site={site.id} look={shown} words={words} />
-          <Actions post={look.template === 'post'} busy={busy} done={done} onAct={(a) => void go(a)} />
+          <div className="sd-stage">
+            <Preview site={site.id} look={shown} words={words} />
+          </div>
+          <div className="sd-panel">
+            <Section id="card" title={copy.whatToShare} summary={copy.template[look.template].name} open={open === 'card'} onToggle={() => toggle('card')}>
+              <CardSection value={look.template} onChange={(t) => set({ template: t })} />
+            </Section>
+            <Section id="period" title={copy.period} summary={periodSummary} open={open === 'period'} onToggle={() => toggle('period')}>
+              <PeriodSection look={look} tz={site.timezone} set={set} />
+            </Section>
+            {look.template !== 'post' && (
+              <Section id="numbers" title={copy.numbers} summary={numbersSummary} open={open === 'numbers'} onToggle={() => toggle('numbers')}>
+                <NumbersSection look={look} metrics={metrics} revenue={words?.revenue ?? false} set={set} />
+              </Section>
+            )}
+            <Section id="look" title={copy.lookTitle} summary={copy[look.theme]} open={open === 'look'} onToggle={() => toggle('look')}>
+              <LookSection site={site} sites={sites.length ? sites : [site]} onSite={setSiteId} look={look} set={set} brand={brand} />
+            </Section>
+            <Actions post={look.template === 'post'} busy={busy} done={done} onAct={(a) => void go(a)} />
+          </div>
         </div>
       )}
     </Modal>

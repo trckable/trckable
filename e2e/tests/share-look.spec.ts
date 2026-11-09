@@ -33,7 +33,7 @@ test('a link wears the owner\'s logo and colour, and hides trckable\'s name', as
   await page.goto(`${API}/${domain}?view=briefing`)
   await page.locator('.share-chip').click()
   const dialog = page.getByRole('dialog', { name: 'Share your numbers' })
-  await dialog.locator('.sd-linkbtn').click()
+  await dialog.getByRole('button', { name: 'Link', exact: true }).click()
   const look = dialog.locator('.sd-look')
   await expect(look).toBeVisible()
 

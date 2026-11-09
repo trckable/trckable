@@ -1,139 +1,36 @@
-/* Share your numbers: the cards on the left, the preview and its row. */
+/* Share your numbers: the picture is the hero on the left; on the right a
+   300px panel of sections, one open at a time, each closed one a line long.
+   On a phone the panel goes under the picture and the dialog is a sheet. */
 .modal.sd-modal {
-  width: min(980px, 100%);
+  width: min(1040px, 100%);
+}
+.sd-handle {
+  display: none;
 }
 .sd-head {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
-.sd-title {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-  margin-right: auto;
-}
-.sd-title h2 {
-  margin: 0;
+.sd-head h2 {
+  margin: 0 auto 0 0;
   font-size: 18px;
 }
 .sd-body {
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
-  grid-template-areas:
-    'tpl tools'
-    'tpl prev'
-    'tpl go';
-  column-gap: 20px;
-  row-gap: 14px;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
   align-items: start;
 }
-.sd-templates {
-  grid-area: tpl;
-}
-.sd-toolbar {
-  grid-area: tools;
-}
-.sd-actions {
-  grid-area: go;
-}
-.sd-preview {
-  grid-area: prev;
-}
-.sd-period.is-body,
-.sd-handle {
-  display: none;
-}
-.sd-templates {
-  display: grid;
-  align-content: start;
-  gap: 8px;
-}
-.sd-template {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 10px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: transparent;
-  color: var(--text);
-  text-align: left;
-  transition: background 0.15s, border-color 0.15s;
-}
-@media (hover: hover) {
-  .sd-template:hover {
-    background: var(--surface-2);
-  }
-}
-.sd-template[aria-checked='true'] {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-}
-.sd-template-icon {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  background: var(--surface-2);
-  color: var(--text-2);
-}
-.sd-template[aria-checked='true'] .sd-template-icon {
-  color: var(--accent);
-}
-.sd-template-text {
-  display: grid;
-  min-width: 0;
-  font-size: 13px;
-}
-.sd-template-text span {
-  color: var(--text-2);
-  font-size: 12px;
-}
-.sd-main {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 10px;
+.sd-stage {
+  position: sticky;
+  top: 0;
   min-width: 0;
 }
-.sd-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+.sd-panel {
+  display: grid;
   gap: 8px;
-}
-.sd-site {
-  max-width: 220px;
-}
-.sd-tool {
-  width: 34px;
-  height: 34px;
-}
-.sd-swatches {
-  display: flex;
-  gap: 5px;
-}
-.sd-swatch {
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: 2px solid var(--bg);
-  border-radius: 50%;
-  box-shadow: 0 0 0 1px var(--border-2);
-}
-.sd-swatch[aria-checked='true'] {
-  box-shadow: 0 0 0 2px var(--text);
-}
-.sd-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
-}
-.sd-act {
-  height: 34px;
+  min-width: 0;
 }
 .sd-preview {
   display: grid;
@@ -171,6 +68,118 @@
   line-height: 1.5;
   white-space: pre-wrap;
 }
+
+/* A section: its title and, closed, one line of what it is set to. */
+.sd-sec {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.sd-sec-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'title chev' 'sum chev';
+  align-items: center;
+  column-gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  text-align: left;
+}
+.sd-sec-head b {
+  grid-area: title;
+  font-size: 13px;
+}
+.sd-sec-sum {
+  grid-area: sum;
+  overflow: hidden;
+  color: var(--text-2);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sd-sec-head svg {
+  grid-area: chev;
+  color: var(--text-2);
+  transition: transform 0.15s;
+}
+.sd-sec.is-open > .sd-sec-head svg {
+  transform: rotate(180deg);
+}
+.sd-sec.is-open .sd-sec-sum {
+  display: none;
+}
+.sd-sec-body {
+  display: grid;
+  gap: 10px;
+  padding: 2px 12px 12px;
+}
+.sd-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: none;
+  color: var(--text);
+  font-size: 13px;
+}
+.sd-chip[aria-pressed='true'],
+.sd-chip[aria-checked='true'] {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.sd-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+.sd-hint {
+  margin: 0;
+  font-size: 12px;
+}
+.sd-swatches {
+  display: flex;
+  gap: 5px;
+}
+.sd-swatch {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--border-2);
+}
+.sd-swatch[aria-checked='true'] {
+  box-shadow: 0 0 0 2px var(--text);
+}
+.sd-site {
+  max-width: 100%;
+}
+.sd-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+.sd-actions .sd-act {
+  justify-content: center;
+  height: 36px;
+}
+.sd-actions-more {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
 .sd-link {
   display: grid;
   gap: 12px;
@@ -203,8 +212,9 @@
 .sd-manage {
   font-size: 12px;
 }
-/* A phone: a bottom sheet, the preview first, one row of cards, and the
-   download button held at the bottom. */
+
+/* A phone: a bottom sheet, the picture first with the panel under it, and the
+   main action held at the bottom. */
 @media (--xs) {
   .modal-back:has(> .sd-modal) {
     padding: 0;
@@ -228,23 +238,10 @@
     border-radius: 3px;
     background: var(--border-2);
   }
-  .sd-head {
-    gap: 8px;
-  }
-  .sd-head .modal-badge,
-  .sd-title .faint,
-  .sd-period.is-head,
-  .sd-linkbtn .label {
-    display: none;
-  }
-  .sd-title {
-    flex: 1 1 0;
-  }
-  .sd-title h2 {
+  .sd-head h2 {
     font-size: 17px;
   }
-  :root .sd-linkbtn,
-  :root .sd-close {
+  :root .sd-head .btn {
     width: var(--ph-hit);
     height: var(--ph-hit);
     padding: 0;
@@ -252,66 +249,16 @@
   }
   .sd-body {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: 'prev' 'tpl' 'period' 'tools' 'go';
-    row-gap: 12px;
+    gap: 12px;
+  }
+  .sd-stage {
+    position: static;
   }
   .sd-preview {
     padding: 8px;
   }
-  .sd-period.is-body {
-    display: flex;
-    grid-area: period;
-  }
-  .sd-period.is-body button {
-    flex: 1;
-  }
-  .sd-templates,
-  .sd-toolbar {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-    margin: 0 -16px;
-    padding: 0 16px;
-  }
-  .sd-templates::-webkit-scrollbar,
-  .sd-toolbar::-webkit-scrollbar {
-    display: none;
-  }
-  .sd-toolbar > * {
-    flex: none;
-  }
-  .sd-site {
-    max-width: 160px;
-  }
-  :root .sd-template {
-    flex: none;
-    gap: 6px;
+  :root .sd-chip {
     min-height: var(--ph-hit);
-    padding: 6px 14px 6px 10px;
-    border-radius: 999px;
-  }
-  :root .sd-template-icon {
-    width: 24px;
-    height: 24px;
-    background: none;
-  }
-  :root .sd-template-text {
-    font-size: var(--ph-text-2);
-  }
-  :root .sd-toolbar {
-    align-items: center;
-    gap: 6px;
-  }
-  :root .sd-stats-btn {
-    min-height: var(--ph-hit);
-  }
-  :root .sd-tool {
-    width: var(--ph-hit);
-    height: var(--ph-hit);
-  }
-  :root .sd-swatches {
-    gap: 0;
   }
   :root .sd-swatch {
     width: var(--ph-hit);
@@ -326,32 +273,9 @@
     outline-offset: -10px;
     box-shadow: none;
   }
-  :root .sd-site {
-    max-width: 190px;
-  }
-  .sd-template-text span {
-    display: none;
-  }
-  .sd-template-text b {
-    white-space: nowrap;
-    font-weight: 600;
-  }
-  :root .sd-actions {
-    position: sticky;
-    bottom: 0;
-    flex-wrap: nowrap;
-    gap: 8px;
-    padding-top: 2px;
-    box-shadow: 0 -10px 14px var(--surface);
-  }
-  :root .sd-act {
-    flex: 1 1 0;
-    min-width: 0;
+  :root .sd-actions .sd-act {
     height: var(--ph-sheet-row);
-    justify-content: center;
-    padding-inline: 8px;
     font-size: var(--ph-text-2);
-    white-space: nowrap;
   }
 }
 /* The look of the links: logo, colour, switch and domain, under the link. */
@@ -564,27 +488,3 @@
   font-size: 12px;
 }
 
-/* Wide screens: every control in the head and the toolbar is one height (36px),
-   so the period, Link, close, site, number, Stats and theme buttons line up. */
-@media (--sm-up) {
-  .sd-modal {
-    --sd-ctl: 36px;
-  }
-  .sd-modal :is(.sd-head, .sd-toolbar) :is(.btn, .select) {
-    height: var(--sd-ctl);
-    min-height: var(--sd-ctl);
-    font-size: 13px;
-  }
-  .sd-modal :is(.sd-head, .sd-toolbar) .btn.icon {
-    width: var(--sd-ctl);
-  }
-  .sd-modal :is(.sd-head, .sd-toolbar) .seg.small {
-    box-sizing: border-box;
-    height: var(--sd-ctl);
-    align-items: center;
-  }
-  .sd-modal :is(.sd-head, .sd-toolbar) .seg.small button {
-    height: 100%;
-    font-size: 13px;
-  }
-}

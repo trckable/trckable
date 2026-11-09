@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { accentsFor, cardUrl, fileName, periodOf, statsFor, statsWith, toggleStat, type Look } from './card'
+import { accentsFor, cardUrl, comparing, fileName, periodOf, statsFor, statsWith, toggleStat, type Look } from './card'
 
-const look: Look = { template: 'leaderboard', period: '24h', metric: 'visitors', stats: ['engaged', 'avgtime', 'country'], theme: 'light', accent: '#4f8cff' }
+const look: Look = { template: 'leaderboard', period: '24h', metric: 'visitors', stats: ['engaged', 'avgtime', 'country'], theme: 'light', accent: '#4f8cff', compare: false }
 
 describe('cardUrl', () => {
   it('asks for the picture with every choice', () => {
@@ -12,6 +12,21 @@ describe('cardUrl', () => {
   it('asks for the words without the look', () => {
     const u = new URL(cardUrl('s', look, 'json'), 'http://x')
     expect(Object.fromEntries(u.searchParams)).toEqual({ period: '24h', metric: 'visitors', format: 'json' })
+  })
+  it('asks for a custom range with its two days, and for the comparison only when it is on', () => {
+    const q = (l: Look) => Object.fromEntries(new URL(cardUrl('s', l), 'http://x').searchParams)
+    expect(q({ ...look, period: 'custom', range: { from: '2026-10-01', to: '2026-10-31' } })).toMatchObject({ period: 'custom', from: '2026-10-01', to: '2026-10-31' })
+    expect(q({ ...look, period: 'all' })).not.toHaveProperty('from')
+    expect(q(look)).not.toHaveProperty('compare')
+    expect(q({ ...look, compare: true })).toHaveProperty('compare', '1')
+    expect(q({ ...look, compare: true, period: 'all' })).not.toHaveProperty('compare') // nothing comes before all time
+  })
+  it('compares only where there is a period before', () => {
+    expect([comparing({ compare: true, period: '30d' }), comparing({ compare: true, period: 'all' }), comparing({ compare: false, period: '7d' })]).toEqual([true, false, false])
+  })
+  it('names the file for a preset and for a custom range', () => {
+    expect(fileName('example.com', { ...look, period: 'custom', range: { from: '2026-10-01', to: '2026-10-31' } })).toBe('trckable-example.com-leaderboard-2026-10-01_2026-10-31.png')
+    expect(fileName('example.com', { ...look, period: 'all' })).toBe('trckable-example.com-leaderboard-all.png')
   })
   it('names the file', () => expect(fileName('example.com', look)).toBe('trckable-example.com-leaderboard-24h.png'))
   it('takes the page\'s period as the nearest card period', () => {

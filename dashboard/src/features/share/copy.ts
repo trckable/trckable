@@ -4,11 +4,15 @@ import { defineCopy } from '../../i18n'
 
 export const copy = defineCopy('share', {
   title: 'Share your numbers',
-  subtitle: 'A picture of your numbers, ready to post.',
   close: 'Close',
   period: 'Period',
   templates: 'Card',
-  periods: { '24h': '24 hours', '7d': '7 days', '30d': '30 days' },
+  periods: { '24h': '24 hours', '7d': '7 days', '30d': '30 days', all: 'All time', custom: 'Custom range' },
+  whatToShare: 'What to share',
+  numbers: 'Numbers',
+  lookTitle: 'Look',
+  compare: 'Compare',
+  compareHint: 'Against the period just before',
   template: {
     overview: { name: 'Overview', hint: 'People, trend, top stats' },
     leaderboard: { name: 'Leaderboard', hint: 'Top pages' },
