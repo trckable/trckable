@@ -70,7 +70,7 @@ async function periodUptime(c: DataCtx): Promise<Uptime> {
   const today = todayIn(site.timezone)
   const down: Down[] = r.incidents.map((x) => {
     const end = x.ended_at ?? now
-    return { from: clock(x.started_at, site.timezone, today), to: clock(end, site.timezone, today), min: Math.round((end - x.started_at) / 60) }
+    return { from: clock(x.started_at, site.timezone, today), to: clock(end, site.timezone, today), min: end - x.started_at < 60 ? 0 : Math.round((end - x.started_at) / 60) }
   })
   return { pct: uptimeOf(to - from, lost, r.quiet_tracked, r.summary.paused)?.pct ?? null, down, lost }
 }

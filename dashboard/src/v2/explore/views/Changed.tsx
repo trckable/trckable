@@ -8,7 +8,7 @@ import { can } from '../../../lib/permissions'
 import { openSettings } from '../../../lib/settings'
 import { NotesSheet } from '../../ui/BriefingSheets'
 import { mult } from '../../briefing/model'
-import { explain, movers, type Cause, type Metric } from '../../why/model'
+import { explain, movers, type Cause, type Metric, type Why } from '../../why/model'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
 import { ChangedChart } from './chartChunk'
@@ -29,6 +29,11 @@ function sentence(name: string, kind: string, pct: number | null, diff: number, 
   // "Mostly" only when it is more than half of the move.
   const place = top.value === '/' ? copy.theHomePage : nameOf(top.value)
   return (diff !== 0 && top.diff / diff > 0.5 ? copy.sayMostly : copy.sayLed)(moved, place)
+}
+
+/** One number under its floor: the line names it, with both figures, and leaves the rest of the page as it is. */
+function fewOf(w: Why, fmt: (n: number) => string): string {
+  return w.now === 0 && w.was === 0 ? copy.sayNone[w.metric] : copy.sayFewOf(copy.metric[w.metric], fmt(w.now), fmt(w.was))
 }
 
 /** The daily email's lines from the same numbers: the sentence, the four cards, and the biggest changes. */
@@ -94,7 +99,7 @@ function Plain({ x, d }: { x: XCtx; d: Model }) {
 }
 
 /** The biggest changes of every table: which number to explain, and the ranked list. */
-function Biggest({ metrics, metric, setMetric, list, fmt }: { metrics: Metric[]; metric: Metric; setMetric: (m: Metric) => void; list: Cause[]; fmt: (n: number) => string }) {
+function Biggest({ metrics, metric, setMetric, list, fmt, few }: { metrics: Metric[]; metric: Metric; setMetric: (m: Metric) => void; list: Cause[]; fmt: (n: number) => string; few: boolean }) {
   return (
     <>
       <div className="xsec xchg-head">
@@ -105,7 +110,8 @@ function Biggest({ metrics, metric, setMetric, list, fmt }: { metrics: Metric[];
           ))}
         </span>
       </div>
-      {list.length > 0 ? <MoverList list={list} fmt={fmt} /> : <div className="mk-quiet">{copy.nothingMoved}</div>}
+      {list.length > 0 && <MoverList list={list} fmt={fmt} />}
+      {list.length === 0 && !few && <div className="mk-quiet">{copy.nothingMoved}</div>}
     </>
   )
 }
@@ -122,13 +128,16 @@ export function Changed({ x, d }: { x: XCtx; d: Model & { report: Report } }) {
   const w = prev ? explain(cur, prev, metric) : null
   const list = prev ? movers(cur, prev, metric) : []
   const fmt = (n: number) => (metric === 'revenue' ? x.money(n) : fmtInt(n))
-  const few = w?.kind === 'few' && list.length === 0
+  // The whole period is too little only when the people of both periods are: one number under its floor says so for itself.
+  const whole = !!prev && explain(cur, prev, 'visitors').kind === 'few' && list.length === 0
+  const say = w?.kind === 'few' && !whole ? fewOf(w, fmt) : w ? sentence(copy.metric[metric], w.kind, w.pct, w.diff, w.causes[0]) : copy.sayChoose
   return (
     <>
-      <p className="xchg-say">{w ? sentence(copy.metric[metric], w.kind, w.pct, w.diff, w.causes[0]) : copy.sayChoose}</p>
+      <p className="xchg-say">{say}</p>
       <MoverChips list={w?.causes ?? []} metric={metric} fmt={fmt} />
       {chart && <ChartSlot x={x} report={d.report} notes={notes.notes} onNotes={() => setSheet(true)} />}
-      {few ? <Plain x={x} d={d} /> : <Biggest metrics={metrics} metric={metric} setMetric={setMetric} list={list} fmt={fmt} />}
+      <Biggest metrics={metrics} metric={metric} setMetric={setMetric} list={list} fmt={fmt} few={w?.kind === 'few'} />
+      {whole && <Plain x={x} d={d} />}
       <Downtime down={d.down} />
       <Tools site={x.site} to={x.query.to} notes={notes} sheet={sheet} setSheet={setSheet} />
     </>

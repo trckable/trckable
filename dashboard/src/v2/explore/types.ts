@@ -34,6 +34,8 @@ export interface Stat {
   lo: number
   hi: number
   st: Tone
+  /** False when the period before was too thin to measure against: nothing is said to match it. */
+  base?: false
 }
 
 /** A card with a line behind its number. */
