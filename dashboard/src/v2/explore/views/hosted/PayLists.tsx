@@ -3,12 +3,11 @@
 // A payment with a visit opens their journey; a customer opens a sheet (with a way on to their journey).
 // Read a page at a time ("Show more"). Signed-in people only: the shared link never reaches these.
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
+import { Unlink } from 'lucide-react'
 import { Avatar } from '../../../../components/visitor/Avatar'
 import { Loading } from '../../../../components/loading/Loading'
 import type { ReportQuery } from '../../../../lib/api'
-import { countryName } from '../../../../lib/format'
 import { nameOf } from '../../../../lib/visitor'
-import { channelLabel } from '../../../../lib/palette'
 import { ago } from '../../../../features/cards/peopleModel'
 import { extrasApi, type Customer, type Payment } from '../../../../features/extras/extrasApi'
 import { fmtDate } from '../../../../features/journey/when'
@@ -16,8 +15,9 @@ import { XEmpty, XError, XSec } from '../../../ui/XBits'
 import { Flag } from '../../../ui/Flag'
 import { copy } from '../../copy'
 import type { XCtx } from '../../ctx'
-import { providerName } from '../../../../features/verified/model'
-import { customerName, initialsOf, methodLabel } from './customerModel'
+import { customerName, initialsOf } from './customerModel'
+import { CountryMark, MethodMark, ProviderTag, SourceTag, UnlinkedMark } from './PayMeta'
+import './payrows.css'
 
 const LINK_DOCS = 'https://trckable.com/docs/gumroad-paypal/#link-a-checkout-to-the-visit'
 const CustomerSheet = lazy(() => import('./CustomerSheet'))
@@ -62,12 +62,9 @@ function usePaged<T>(key: string, read: (offset: number) => Promise<Page<T>>) {
 
 const keyOf = (x: XCtx, q: ReportQuery, list: string) => `${list}|${x.site.id}|${q.from}|${q.to}|${q.attr ?? ''}|${q.testPayments ? 'test' : ''}|${JSON.stringify(q.filters ?? [])}`
 
-/** Where the visitor came from: the channel, then the referring site. Nothing when no visit is known. */
-const sourceOf = (channel?: string, referrer?: string) => (channel ? [channelLabel(channel), referrer].filter(Boolean).join(' · ') : '')
-
 /** The buyer's face: their journey face when a visit is linked, else their country's flag, else their initials. Never a question mark. */
 export function Who({ visitor, country, name }: { visitor?: string; country?: string; name: string }) {
-  if (visitor) return <Avatar id={visitor} size={32} />
+  if (visitor) return <Avatar id={visitor} size={36} />
   return (
     <span className="xface" aria-hidden="true">
       {country ? <Flag code={country} width={20} /> : initialsOf(name)}
@@ -78,13 +75,13 @@ export function Who({ visitor, country, name }: { visitor?: string; country?: st
 function Row({ visitor, country, name, onPick, children }: { visitor?: string; country?: string; name: string; onPick: (v: string) => void; children: ReactNode }) {
   if (!visitor)
     return (
-      <div className="sale">
+      <div className="sale xpr">
         <Who country={country} name={name} />
         {children}
       </div>
     )
   return (
-    <button type="button" className="sale xbtn" title={copy.pay.open} onClick={() => onPick(visitor)}>
+    <button type="button" className="sale xpr" title={copy.pay.open} onClick={() => onPick(visitor)}>
       <Who visitor={visitor} name={name} />
       {children}
     </button>
@@ -92,11 +89,14 @@ function Row({ visitor, country, name, onPick, children }: { visitor?: string; c
 }
 
 /** The amount, and under it one muted line: what the buyer paid in when that is not the site's currency, then when. */
-function Amount({ cls, text, note }: { cls: string; text: string; note: string }) {
+function Amount({ cls, text, note, mark }: { cls: string; text: string; note: string; mark?: ReactNode }) {
   return (
     <span className="rt">
       <span className={cls}>{text}</span>
-      <span className="mk-quiet">{note}</span>
+      <span className="mk-quiet">
+        {mark}
+        {note}
+      </span>
     </span>
   )
 }
@@ -146,19 +146,26 @@ export function Payments({ x, query, onPick }: { x: XCtx; query: ReportQuery; on
               <div>
                 {who} <span className={`mk-tag ${tagOf(p)}`}>{copy.tags[tagOf(p)]}</span>
               </div>
-              <div className="mk-quiet" style={{ fontSize: '12px' }}>
-                {[p.country ? countryName(p.country) : '', providerName(p.provider), p.product, sourceOf(p.channel, p.referrer), p.refunded ? copy.pay.refunded(x.money(p.refunded)) : ''].filter(Boolean).join(' · ')}
+              <div className="mk-quiet xpmeta">
+                <CountryMark code={p.country} />
+                <ProviderTag id={p.provider} />
+                <SourceTag channel={p.channel} referrer={p.referrer} />
+                {p.product && <span>{p.product}</span>}
+                {p.refunded ? <span>{copy.pay.refunded(x.money(p.refunded))}</span> : null}
               </div>
               {!p.visitor && (
-                <div className="mk-quiet" style={{ fontSize: '12px' }}>
-                  {copy.pay.unlinked} ·{' '}
-                  <a href={LINK_DOCS} target="_blank" rel="noreferrer">
-                    {copy.pay.unlinkedHow}
-                  </a>
+                <div className="mk-quiet xplink">
+                  <Unlink size={13} strokeWidth={1.8} aria-hidden="true" />
+                  <span>
+                    {copy.pay.unlinked} ·{' '}
+                    <a href={LINK_DOCS} target="_blank" rel="noreferrer">
+                      {copy.pay.unlinkedHow}
+                    </a>
+                  </span>
                 </div>
               )}
             </span>
-            <Amount cls={`amt ${p.refunded ? 'neg' : ''}`} text={`+${x.money(p.amount)}`} note={[p.currency ? `${p.currency} → ${list.currency}` : '', methodLabel(p.method, copy.methods), ago(now - Date.parse(p.at))].filter(Boolean).join(' · ')} />
+            <Amount cls={`amt ${p.refunded ? 'neg' : ''}`} text={`+${x.money(p.amount)}`} note={[p.currency ? `${p.currency} → ${list.currency}` : '', ago(now - Date.parse(p.at))].filter(Boolean).join(' · ')} mark={<MethodMark method={p.method} />} />
           </Row>
         )
       })}
@@ -180,14 +187,17 @@ export function Customers({ x, query, onPick }: { x: XCtx; query: ReportQuery; o
       {list.rows.map((c: Customer) => {
         const who = c.visitor ? nameOf(c.visitor) : strangerName(c)
         return (
-          <button key={c.id} type="button" className="sale xbtn" title={copy.pay.openCustomer} onClick={() => setOpen(c)}>
+          <button key={c.id} type="button" className="sale xpr" title={copy.pay.openCustomer} onClick={() => setOpen(c)}>
             <Who visitor={c.visitor} country={c.country} name={who} />
             <span className="gn">
               <div>{who}</div>
-              <div className="mk-quiet" style={{ fontSize: '12px' }}>
-                {[c.country ? countryName(c.country) : '', copy.pay.orders(c.orders), sourceOf(c.channel, c.referrer), c.visitor ? '' : copy.pay.unlinked].filter(Boolean).join(' · ')}
+              <div className="mk-quiet xpmeta">
+                <CountryMark code={c.country} />
+                <SourceTag channel={c.channel} referrer={c.referrer} />
+                <span>{copy.pay.orders(c.orders)}</span>
+                {!c.visitor && <UnlinkedMark />}
               </div>
-              <div className="mk-quiet" style={{ fontSize: '12px' }}>
+              <div className="mk-quiet xpmeta">
                 {copy.pay.firstSeen(fmtDate(Date.parse(c.first_seen), x.site.timezone))} · {copy.pay.lastOrder(fmtDate(Date.parse(c.last_order), x.site.timezone))}
               </div>
             </span>
