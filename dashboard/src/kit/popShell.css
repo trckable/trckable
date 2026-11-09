@@ -1,4 +1,4 @@
-/* The shell of the header's menus: the bell, the usage pill, the apps and the account. Its colours and spacing are tokens, so a menu
+/* The shell of the header's menus: the bell, the apps and the account. Its colours and spacing are tokens, so a menu
    draws none of its own. */
 .pshell {
   --pop-bg: var(--mk-card2);
