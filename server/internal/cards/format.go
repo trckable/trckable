@@ -94,31 +94,31 @@ func layoutFor(f Format) Layout {
 	}
 	switch f.ID {
 	case "square":
-		l.K, l.Display = 1, 1.2
+		l.K, l.Display = 1.15, 1.4
 		l.Left, l.Right = 88, f.W-88
-		l.Tile, l.TileR, l.StatStep = 52, 15, (f.W-176)/3
-		l.DomainY, l.FootY, l.TileY = 140, 1000, 100
-		l.BigY, l.LabelY = 400, 466
-		l.ChartTop, l.ChartBase = 540, 800
-		l.StatValueY, l.StatLabelY = 890, 930
-		l.MarkX, l.GhostX, l.GhostY = f.W-308, float64(f.W-308), float64(1000-36)
-		l.SpotBigY, l.SpotLabelY, l.LineLo, l.LineHi = 520, 590, 920, 680
-		l.CornerGhostX, l.CornerGhostY = float64(f.W)-168, 100
+		l.Tile, l.TileR, l.StatStep = 60, 17, (f.W-176)/3
+		l.DomainY, l.FootY, l.TileY = 150, 1024, 100
+		l.BigY, l.LabelY = 420, 492
+		l.ChartTop, l.ChartBase = 570, 850
+		l.StatValueY, l.StatLabelY = 920, 962
+		l.MarkX, l.GhostX, l.GhostY = f.W-354, float64(f.W-354), float64(1024-41)
+		l.SpotBigY, l.SpotLabelY, l.LineLo, l.LineHi = 560, 640, 940, 660
+		l.CornerGhostX, l.CornerGhostY = float64(f.W)-186, 100
 		l.TitleY, l.RowTop, l.RowStep, l.RowH = 250, 310, 124, 100
-		l.TitlePx, l.RowPx, l.BarGap = 52, 34, 150
+		l.TitlePx, l.RowPx, l.BarGap = 58, 38, 160
 	case "story":
-		l.K, l.Display = 1.05, 1.3
+		l.K, l.Display = 1.3, 1.55
 		l.Left, l.Right = 92, f.W-92
-		l.Tile, l.TileR, l.StatStep = 55, 16, (f.W-184)/3
-		l.DomainY, l.FootY, l.TileY = 200, 1780, 180
-		l.BigY, l.LabelY = 700, 780
-		l.ChartTop, l.ChartBase = 880, 1280
-		l.StatValueY, l.StatLabelY = 1430, 1476
-		l.MarkX, l.GhostX, l.GhostY = f.W-324, float64(f.W-324), float64(1780-38)
-		l.SpotBigY, l.SpotLabelY, l.LineLo, l.LineHi = 940, 1020, 1500, 1120
-		l.CornerGhostX, l.CornerGhostY = float64(f.W)-176, 180
-		l.TitleY, l.RowTop, l.RowStep, l.RowH = 430, 520, 220, 168
-		l.TitlePx, l.RowPx, l.BarGap = 60, 40, 158
+		l.Tile, l.TileR, l.StatStep = 68, 20, (f.W-184)/3
+		l.DomainY, l.FootY, l.TileY = 215, 1790, 180
+		l.BigY, l.LabelY = 720, 806
+		l.ChartTop, l.ChartBase = 900, 1330
+		l.StatValueY, l.StatLabelY = 1470, 1520
+		l.MarkX, l.GhostX, l.GhostY = f.W-400, float64(f.W-400), float64(1790-47)
+		l.SpotBigY, l.SpotLabelY, l.LineLo, l.LineHi = 960, 1050, 1540, 1120
+		l.CornerGhostX, l.CornerGhostY = float64(f.W)-206, 180
+		l.TitleY, l.RowTop, l.RowStep, l.RowH = 440, 540, 220, 168
+		l.TitlePx, l.RowPx, l.BarGap = 70, 46, 170
 	}
 	l.LineW, l.CornerGhostK, l.GhostK = 7*l.K, 1.1*l.K, 0.6*l.K
 	return l
