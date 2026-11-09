@@ -24,3 +24,13 @@
 .chart .chhot{filter:drop-shadow(0 0 5px currentColor)}
 .chart .chhot[stroke*=lime]{color:color-mix(in srgb,var(--mk-lime) 55%,transparent)}
 .chart .chhot[stroke*=red]{color:color-mix(in srgb,var(--mk-red) 50%,transparent)}
+
+/* What the plot shows (people, the outcome's bars, the faces), named in its top right corner; it has no height of its own. */
+.mk .chout{position:absolute;top:2px;left:36px;z-index:1;display:flex;gap:var(--mk-s3);font-size:12px;white-space:nowrap;color:var(--mk-muted);pointer-events:none}
+.mk .chout span{display:inline-flex;align-items:center;gap:6px}
+.mk .chout span::before{content:'';flex:none}
+.mk .chout [data-mark=line]::before{width:14px;border-top:2px solid var(--mk-text);opacity:.55}
+.mk .chout [data-mark=bar]::before{width:8px;height:10px;border-radius:2px;background:var(--mk-amber);opacity:.6}
+.mk .chout [data-mark=bar][data-kind=views]::before{background:var(--mk-text);opacity:.2}
+.mk .chout [data-mark=face]::before{width:10px;height:10px;border-radius:50%;background:var(--mk-card2);border:1px solid var(--mk-amber)}
+@container (--pane-max-600){.mk .chout{gap:8px;font-size:11px;left:8px}.mk .chout [data-mark=line]{display:none}}

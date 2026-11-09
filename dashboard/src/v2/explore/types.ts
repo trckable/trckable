@@ -1,5 +1,4 @@
 import type { Main, QualityRow } from './data/quality'
-import type { Compare } from '../briefing/compare'
 import type { Filter } from '../../lib/api'
 
 // What Explore draws. Each section reads one of these, made from the API's answers (data/).
@@ -69,13 +68,8 @@ export interface Xkc {
   at?: number
 }
 
+/** The chart over Overview is drawn from the report itself; the overview keeps only what it says when there is no comparison. */
 export interface Shape {
-  pts: number[]
-  x: [string, string, string]
-  /** What each point is called on hover: "Oct 6", "Oct 6 14:00". */
-  names: string[]
-  /** The period before, bucket for bucket; none when it has too little behind it to draw. */
-  before: Compare | null
   /** Why the comparison draws nothing when it was asked for and the period before has too little behind it. */
   why: string | null
 }
@@ -281,7 +275,7 @@ export type Section = 'changed' | 'overview' | 'pages' | 'sources' | 'search' | 
 /** Every section's answer for one site, period and set of filters. */
 export interface Tabs {
   changed: Overview & { report: import('../../lib/api').Report }
-  overview: Overview
+  overview: Overview & { report: import('../../lib/api').Report }
   pages: Table
   sources: Table
   quality: Quality

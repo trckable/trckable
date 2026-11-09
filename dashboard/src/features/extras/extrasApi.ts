@@ -35,6 +35,12 @@ export interface Buyer {
   country?: string
 }
 
+/** One person who reached the signup goal: when, and their own id (the journey's). Never a name or an email. */
+export interface Convert {
+  at: string
+  visitor: string
+}
+
 /** One payment paid back. Never a name, an email or an id. */
 export interface Refund {
   id: string
@@ -127,6 +133,7 @@ export const extrasApi = {
   insights: (site: string, q: ReportQuery) => call<{ insights: Insight[] }>('GET', `/sites/${site}/insights` + qs({ ...q, filters: undefined })),
   pagesSell: (site: string, q: ReportQuery) => call<{ pages: Row[] }>('GET', `/sites/${site}/report/pages-sell` + qs(q)),
   buyers: (site: string, q: ReportQuery, n = 8) => call<{ buyers: Buyer[] }>('GET', `/sites/${site}/buyers` + qs(q) + `&n=${n}`),
+  converts: (site: string, q: ReportQuery, n = 20) => call<{ converts: Convert[] }>('GET', `/sites/${site}/converts` + qs(q) + `&n=${n}`),
   payments: (site: string, q: ReportQuery, offset: number, n = 20) => call<{ payments: Payment[]; total: number; currency: string; countries: { country: string; revenue: number }[] }>('GET', `/sites/${site}/sales/payments` + qs(q) + `&n=${n}&offset=${offset}`),
   customers: (site: string, q: ReportQuery, offset: number, n = 20) => call<{ customers: Customer[]; total: number; currency: string }>('GET', `/sites/${site}/sales/customers` + qs(q) + `&n=${n}&offset=${offset}`),
   customer: (site: string, id: string, q: ReportQuery) => call<CustomerDetail>('GET', `/sites/${site}/sales/customers/${encodeURIComponent(id)}` + qs(q)),

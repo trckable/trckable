@@ -1,6 +1,6 @@
 // The report's answer, said as Explore's overview and tables. Pure: mapReport.test.ts.
 import type { KPIs, Report, Result, Row as ApiRow, ScrollReport } from '../../../lib/api'
-import { fmtDay, type ISODate } from '../../../lib/dates'
+import type { ISODate } from '../../../lib/dates'
 import { countryName, fmtDuration, fmtFixed, fmtInt, fmtPct, languageName, zoneName } from '../../../lib/format'
 import { plainSpan } from '../../../lib/plainSpan'
 import { channelLabel } from '../../../lib/palette'
@@ -28,20 +28,11 @@ function perOf(bucket: Report['bucket'], points: number): string {
   return bucket
 }
 
-function shapeOf(r: Report, now: ISODate, against?: string): Shape | null {
-  const pts = (r.current.series ?? []).map((p) => p.visitors)
-  if (pts.length < 2) return null
-  const name = (i: number) => {
-    const t = r.current.series[i].t
-    return r.bucket === 'hour' ? `${fmtDay(t.slice(0, 10))} ${t.slice(11, 16)}` : fmtDay(t.slice(0, 10))
-  }
-  const label = (i: number) => {
-    const t = r.current.series[i].t
-    return r.bucket === 'hour' ? t.slice(11, 16) : fmtDay(t.slice(0, 10))
-  }
-  const last = r.to === now && r.bucket === 'hour' ? copy.now : label(pts.length - 1)
-  const before = against ? compareOf(r.current.series ?? [], r.previous?.series, pts.length, against) : null
-  return { pts, x: [label(0), label(Math.floor(pts.length / 2)), last], names: pts.map((_, i) => name(i)), before, why: against && !before ? whyNot(r.current.series ?? [], r.previous?.series) : null }
+function shapeOf(r: Report, against?: string): Shape | null {
+  const series = r.current.series ?? []
+  if (series.length < 2) return null
+  const before = against ? compareOf(series, r.previous?.series, series.length, against) : null
+  return { why: against && !before ? whyNot(series, r.previous?.series) : null }
 }
 
 /** The overview's four cards: people, a goal (or views), money (or uptime), and who left after one page. */
@@ -82,7 +73,7 @@ export function mapOverview(r: Report, o: { money?: (minor: number) => string; u
     kcs,
     visits: Object.values(mapVisits(cur, base ? prev : undefined)),
     per: perOf(r.bucket, series.length),
-    shape: shapeOf(r, o.now, o.against),
+    shape: shapeOf(r, o.against),
     down: o.uptime?.down ?? [],
     pages: rows('page', (v) => v),
     // The channels, as the Sources tab lists them: a direct visit has no referrer, so a list of referrers would leave it out.

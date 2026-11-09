@@ -13,13 +13,20 @@ import { niceStep } from '../briefing/geometry'
 import type { ChartGeo } from '../../features/moments/marks'
 import { useGlide } from './glide'
 import { FutureHatch } from './FutureHatch'
-import { NoteMarks, SaleMarks, firstData } from './ChartMarks'
+import { NoteMarks, firstData } from './ChartMarks'
+import { OutcomeBars, OutcomeFaces, OutcomeKey } from './ChartOutcome'
 import { useLabelLayout } from './labelLayout'
 import { segments, stretch, type Pt } from './smooth'
 import type { ChartIn, ChartPoint } from './dayChartTypes'
 import './chartLayer.css'
 
 export type { ChartIn, ChartPoint, Down } from './dayChartTypes'
+
+/** The boxes the line's own labels take (its usual, the period before's name): a face keeps clear of them. */
+const keepOf = (usual: Pt | undefined, name: { x: number; y: number } | null | undefined, chars: number) => [
+  ...(usual ? [{ l: usual[0] - 44, r: usual[0], t: usual[1] - 18, b: usual[1] }] : []),
+  ...(name ? [{ l: name.x - chars * 7, r: name.x, t: name.y - 14, b: name.y + 2 }] : []),
+]
 
 /** The layer starts this far down the chart, under the line of words that sits on its top edge. */
 const LAYER_TOP = 26
@@ -44,7 +51,8 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
   const { W, H } = size
   const ph = W < 500
   const L = ph ? 8 : 36
-  const Rr = ph ? 8 : 10
+  // The bars have an axis of their own at the right, except on a phone, which draws them without one.
+  const Rr = ph ? 8 : 10 + (c.bars ? 38 : 0)
   // The plot starts under the pill that says where the run outside the usual began, and ends over the lane of markers.
   const T = ph ? 28 : 34
   const B = H - 22 - LANE
@@ -114,6 +122,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
           )}
         </g>
       ))}
+      {c.bars && <OutcomeBars bars={c.bars} g={{ X, T, B, L, W, Rr, span, axis: !ph }} />}
       {banded && (
         <>
           <path className="chusual" d={bandPath} fill="var(--mk-text)" fillOpacity=".08" />
@@ -192,7 +201,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
           </text>
         </g>
       )}
-      <SaleMarks sales={c.sales ?? []} edge={edge} cy={lane} />
+      {c.faces && <OutcomeFaces faces={c.faces} id={fill} X={X} Y={(i) => (pts[i] ? Y(pts[i].v) : null)} top={T} gap={ph ? 22 : 28} keep={keepOf(usualAt, nameAt, c.compare ? capital(c.compare.name).length : 0)} />}
       <NoteMarks notes={c.notes} X={X} cy={lane} />
       {ticks.map((p) => (
         <text key={p.i} x={ph ? Math.max(20, Math.min(W - 20, X(p.i))) : X(p.i)} y={B + LANE + 17} fill="var(--mk-axis)" fontSize="12" textAnchor="middle">
@@ -210,12 +219,13 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
   )
   // The point under the pointer, read out next to it: "13:00 · 42 people · yesterday 31 · +35%".
   const hover = at !== null ? pts[at] : undefined
-  const tip = <Tip width={W} at={hover ? { x: X(hover.i), y: Y(hover.v), body: readOf(hover.name, hover.raw, c.compare?.name ?? null, hover.was, hover.delta) } : null} />
-  if (!layer) return <>{chart}{tip}</>
+  const tip = <Tip width={W} at={hover ? { x: X(hover.i), y: Y(hover.v), body: readOf(hover.name, hover.raw, c.compare?.name ?? null, hover.was, hover.delta) + (c.bars?.vals[hover.i] ? ` · ${c.bars.read(c.bars.vals[hover.i])}` : '') } : null} />
+  if (!layer) return <>{chart}{tip}<OutcomeKey c={c} /></>
   return (
     <div className="chlay">
       {chart}
       {tip}
+      <OutcomeKey c={c} />
       <div className="chlay-in">{layer({ x: X, y: (v: number) => Y(v) - LAYER_TOP, vals: pts.map((p) => p.v), w: W, top: T - LAYER_TOP, lane: lane - LAYER_TOP })}</div>
     </div>
   )

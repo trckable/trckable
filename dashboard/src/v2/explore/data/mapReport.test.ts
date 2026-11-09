@@ -47,9 +47,9 @@ describe('the overview', () => {
     expect(o.down).toHaveLength(1)
     expect(mapOverview(report(result(100)), none).kcs[2]).toMatchObject({ val: '–', note: { t: 'checks are off' } })
   })
-  it('draws the shape of the period from the series, ending at now on today', () => {
+  it('has a shape of the period only when the series has two points or more', () => {
     const o = mapOverview(report(result(100)), none)
-    expect(o.shape).toMatchObject({ pts: [1, 2, 3, 4], x: ['00:00', '02:00', 'now'], before: null })
+    expect(o.shape).toEqual({ why: null })
     expect(o.per).toBe('hour')
     expect(mapOverview(report(result(100, { series: hours([5]) })), none).shape).toBeNull()
   })
@@ -146,15 +146,13 @@ describe('the deep tables', () => {
 describe('the shape of the period against the one before', () => {
   const day = (i: number, visitors: number) => ({ t: `2026-10-${String(i + 1).padStart(2, '0')}T00:00`, visitors, pageviews: visitors })
   const series = (xs: number[]) => xs.map((v, i) => day(i, v))
-  it('carries the period before, bucket for bucket, and names each point', () => {
+  it('says nothing about a comparison that can be drawn', () => {
     const r = report({ ...result(100), series: series([5, 6, 7, 8]) }, { ...result(100), series: series([4, 4, 4, 4]) })
-    const s = mapOverview(r, { ...none, against: 'last month' }).shape
-    expect(s?.before?.vals).toEqual([4, 4, 4, 4])
-    expect(s?.names).toHaveLength(4)
+    expect(mapOverview(r, { ...none, against: 'last month' }).shape?.why).toBeNull()
   })
-  it('draws nothing before when no comparison is asked for', () => {
-    const r = report({ ...result(100), series: series([5, 6, 7, 8]) }, { ...result(100), series: series([4, 4, 4, 4]) })
-    expect(mapOverview(r, none).shape?.before).toBeNull()
+  it('says why when the period before has too little behind it', () => {
+    const r = report({ ...result(100), series: series([5, 6, 7, 8]) }, { ...result(100), series: series([4]) })
+    expect(mapOverview(r, { ...none, against: 'last month' }).shape?.why).toEqual(expect.any(String))
   })
 })
 

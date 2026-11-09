@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 )
 
 // Signup is how many people reached the site's signup goal in the period.
@@ -34,6 +35,11 @@ func signups(ctx context.Context, conn *sql.Conn, p Params, cte string, args []a
 	if sg.Visitors == 0 {
 		return nil
 	}
+	if p.Converts > 0 {
+		if res.Converts, err = converts(ctx, conn, cte, args, p.Converts); err != nil {
+			return err
+		}
+	}
 	dims := dimsFor(p.Deep)
 	for i := 0; i < len(dims); i += breakdownChunk {
 		if err := signupChunk(ctx, conn, cte, args, distinct, dims[i:min(i+breakdownChunk, len(dims))], res.Dims); err != nil {
@@ -41,6 +47,35 @@ func signups(ctx context.Context, conn *sql.Conn, p Params, cte string, args []a
 		}
 	}
 	return nil
+}
+
+// Convert is one person who reached the signup goal: the visit that did, by
+// its start, and the visitor's own id (base 36, as the journey uses it). Never
+// a name or an email.
+type Convert struct {
+	At      time.Time `json:"at"`
+	Visitor string    `json:"visitor"`
+}
+
+// converts is the latest people to reach the goal, one row each (their
+// earliest visit of the period that did), newest first.
+func converts(ctx context.Context, conn *sql.Conn, cte string, args []any, n int) ([]Convert, error) {
+	rows, err := conn.QueryContext(ctx, cte+` SELECT visitor_id, min(start) AS at FROM ss GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT ?`, append(append([]any{}, args...), n)...)
+	if err != nil {
+		return nil, fmt.Errorf("converts: %w", err)
+	}
+	defer rows.Close()
+	out := []Convert{}
+	for rows.Next() {
+		var v uint64
+		var c Convert
+		if err := rows.Scan(&v, &c.At); err != nil {
+			return nil, err
+		}
+		c.At, c.Visitor = c.At.UTC(), visitorID(v)
+		out = append(out, c)
+	}
+	return out, rows.Err()
 }
 
 // signupChunk is groupedChunk over the visits that signed up: it fills each

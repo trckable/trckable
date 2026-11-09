@@ -87,6 +87,9 @@ type Params struct {
 	// SignupGoal is the goal that counts as a signup (a custom goal's key or a
 	// page goal's name). Empty: the site has none, and nothing is counted.
 	SignupGoal string
+	// Converts adds the latest people to reach the signup goal (Result.Converts):
+	// this many, newest first. Only with a SignupGoal.
+	Converts int
 }
 
 // KPIs are the headline numbers.
@@ -161,6 +164,7 @@ type Result struct {
 	SalePages    []Row            `json:"-"`                      // with Params.SalePages: revenue per page the credited visit read
 	Buyers       []Buyer          `json:"-"`                      // with Params.Buyers: the latest sales and their way there
 	NewReferrers []NewReferrer    `json:"-"`                      // with Params.NewReferrers: sites that sent nobody before
+	Converts     []Convert        `json:"-"`                      // with Params.Converts: the latest people to reach the signup goal
 }
 
 // sessionDims maps API dimension names to sessions columns (the whitelist).

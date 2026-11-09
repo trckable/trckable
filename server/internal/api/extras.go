@@ -360,3 +360,39 @@ func (a *API) refunds(w http.ResponseWriter, r *http.Request) {
 	out["count_90d"] = ledger.CountRefunds(ledger.RefundsIn(p.Site, facts, p.To.Add(-refundWindow), p.To))
 	writeJSON(w, http.StatusOK, out)
 }
+
+// converts serves GET /api/v1/sites/{site}/converts: the latest people to reach
+// the site's signup goal in the period (at most 50, newest first), each with
+// when and the visitor's own id, for the faces on the chart. The report's own
+// reading: its filters. Empty without a signup goal. Never a name or an email.
+func (a *API) converts(w http.ResponseWriter, r *http.Request) {
+	if !a.needs(w, r, "goals") {
+		return
+	}
+	q := a.Query()
+	if q == nil {
+		w.Header().Set("Retry-After", "2")
+		fail(w, http.StatusServiceUnavailable, "analytics store warming up")
+		return
+	}
+	ask := a.parse(w, r, r.PathValue("site"), false)
+	if ask == nil {
+		return
+	}
+	n, _ := strconv.Atoi(r.URL.Query().Get("n"))
+	if n <= 0 || n > query.MaxPayPage {
+		n = 20
+	}
+	p := ask.Params
+	p.Daily, p.Deep, p.Sales, p.Buyers, p.Converts = false, false, false, 0, n
+	res, err := a.cachedReport(r, q, p)
+	if err != nil {
+		reportFail(w, err)
+		return
+	}
+	out := res.Converts
+	if out == nil {
+		out = []query.Convert{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"converts": out})
+}
