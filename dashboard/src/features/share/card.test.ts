@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { accentsFor, cardUrl, comparing, fileName, periodOf, statsFor, statsWith, toggleStat, type Look } from './card'
+import { FORMATS, accentsFor, cardUrl, comparing, fileName, formatOf, periodOf, statsFor, statsWith, toggleStat, type Look } from './card'
 
-const look: Look = { template: 'leaderboard', period: '24h', metric: 'visitors', stats: ['engaged', 'avgtime', 'country'], theme: 'light', accent: '#4f8cff', compare: false }
+const look: Look = { template: 'leaderboard', shape: 'link', period: '24h', metric: 'visitors', stats: ['engaged', 'avgtime', 'country'], theme: 'light', accent: '#4f8cff', compare: false }
 
 describe('cardUrl', () => {
   it('asks for the picture with every choice', () => {
@@ -48,5 +48,18 @@ describe('cardUrl', () => {
     expect(statsFor('visitors', true)).toContain('revenue')
     expect(statsWith(['engaged', 'country'], 'engaged')).toEqual(['country'])
     expect(statsWith(['engaged'], 'engaged')).toEqual(['avgtime', 'country'])
+  })
+})
+
+describe('shape', () => {
+  it('lists the sizes the server draws, the link preview first', () => {
+    expect(FORMATS.map((f) => [f.id, f.w, f.h])).toEqual([['link', 1200, 630], ['square', 1080, 1080], ['story', 1080, 1920], ['wide', 1600, 900]])
+    expect(formatOf('story')).toMatchObject({ w: 1080, h: 1920 })
+  })
+  it('asks for a shape only when it is not the link preview, and names the file by it', () => {
+    const q = (shape: Look['shape']) => Object.fromEntries(new URL(cardUrl('s', { ...look, shape }), 'http://x').searchParams)
+    expect(q('link')).not.toHaveProperty('shape')
+    expect(q('square')).toHaveProperty('shape', 'square')
+    expect(fileName('example.com', { ...look, shape: 'story', period: 'all' })).toBe('trckable-example.com-leaderboard-story-all.png')
   })
 })

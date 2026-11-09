@@ -1,6 +1,10 @@
 package cards
 
-import "text/template"
+import (
+	"fmt"
+	"strings"
+	"text/template"
+)
 
 // The ghost: the same paths as dashboard/src/brand/logo.ts, the one
 // definition of the logo (TestCardLogoMatchesTheBrand keeps them equal).
@@ -25,7 +29,8 @@ func Marks(s Spec) []Run {
 	if s.NoBrand {
 		return nil
 	}
-	return []Run{{X: padRight, Y: footY, Px: 32, End: true, Spans: []Span{{Text: "trck", Bold: true, Ink: s.Theme.FG}, {Text: "able", Ink: s.Theme.Muted}}}}
+	l := s.layout()
+	return []Run{{X: l.Right, Y: l.FootY, Px: l.px(32), End: true, Spans: []Span{{Text: "trck", Bold: true, Ink: s.Theme.FG}, {Text: "able", Ink: s.Theme.Muted}}}}
 }
 
 // The spotlight: one big number in the card's colour and what it is, small
@@ -33,14 +38,35 @@ func Marks(s Spec) []Run {
 func init() {
 	shapes := template.Must(template.New("spotlight").Funcs(template.FuncMap{
 		"ghost": func(f Frame, x, y, k float64) map[string]any { return map[string]any{"F": f, "X": x, "Y": y, "K": k} },
-	}).Parse(`<rect width="1200" height="630" fill="{{.BG}}"/>` +
-		`<path d="M88 500l160-34 120 18 140-50 120 12 160-84 324-92" fill="none" stroke="{{.Ink}}" stroke-opacity="0.34" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>` +
-		`{{if not .NoBrand}}{{template "ghost" ghost . 1032 72 1.1}}{{end}}`))
+		"line":  spotLine,
+	}).Parse(`<rect width="{{.L.W}}" height="{{.L.H}}" fill="{{.BG}}"/>` +
+		`<path d="{{line .L}}" fill="none" stroke="{{.Ink}}" stroke-opacity="0.34" stroke-width="{{.L.LineW}}" stroke-linecap="round" stroke-linejoin="round"/>` +
+		`{{if not .NoBrand}}{{template "ghost" ghost . .L.CornerGhostX .L.CornerGhostY .L.CornerGhostK}}{{end}}`))
 	template.Must(shapes.New("ghost").Parse(Ghost))
 	Templates["spotlight"] = Template{Shapes: shapes, Runs: spotlightRuns}
 }
 
+// spotLine is the faint rising line behind the number, from the left margin
+// to the right one, between the layout's low and high.
+func spotLine(l Layout) string {
+	xs := []float64{0, 160, 280, 420, 540, 700, 1024}
+	ys := []float64{500, 466, 484, 434, 446, 362, 270}
+	var b strings.Builder
+	for i := range xs {
+		cmd := "L"
+		if i == 0 {
+			cmd = "M"
+		}
+		x := float64(l.Left) + xs[i]/1024*float64(l.Right-l.Left)
+		y := l.LineLo - (500-ys[i])/230*(l.LineLo-l.LineHi)
+		fmt.Fprintf(&b, "%s%.1f %.1f", cmd, x, y)
+	}
+	return b.String()
+}
+
 func spotlightRuns(s Spec) []Run {
+	l := s.layout()
+	room := float64(l.Right - l.Left)
 	big := 152.0
 	switch n := len([]rune(s.Big)); {
 	case n > 16:
@@ -50,14 +76,15 @@ func spotlightRuns(s Spec) []Run {
 	case n > 7:
 		big = 120
 	}
+	big = fitPx(s.Big, big*l.K*l.Display, 24, room)
 	runs := []Run{
-		{X: padLeft, Y: domainY, Px: 28, Spans: []Span{{Text: s.Domain, Ink: s.Theme.Muted}}},
-		{X: padLeft - 4, Y: 316, Px: big, Spans: []Span{{Text: s.Big, Bold: true, Ink: s.ink()}}},
-		{X: padLeft, Y: footY, Px: 26, Spans: []Span{{Text: s.Foot, Ink: s.Theme.Muted}}},
+		{X: l.Left, Y: l.DomainY, Px: l.px(28), Spans: []Span{{Text: fitWith(false, s.Domain, room-float64(l.n(160)), l.px(28)), Ink: s.Theme.Muted}}},
+		{X: l.Left - l.n(4), Y: l.SpotBigY, Px: big, Spans: []Span{{Text: s.Big, Bold: true, Ink: s.ink()}}},
+		{X: l.Left, Y: l.FootY, Px: l.px(26), Spans: []Span{{Text: fitWith(false, s.Foot, room-float64(l.n(260)), l.px(26)), Ink: s.Theme.Muted}}},
 	}
 	runs = append(runs, Marks(s)...)
 	if s.Label != "" {
-		runs = append(runs, Run{X: padLeft, Y: 372, Px: 34, Spans: []Span{{Text: s.Label, Ink: s.Theme.Muted}}})
+		runs = append(runs, Run{X: l.Left, Y: l.SpotLabelY, Px: l.px(34), Spans: []Span{{Text: fitWith(false, s.Label, room, l.px(34)), Ink: s.Theme.Muted}}})
 	}
 	return runs
 }

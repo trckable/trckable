@@ -27,7 +27,7 @@ import { fail } from '../../components/toastBus'
 export default function ShareDialog({ site: first, sites, period = '7d', onClose }: { site: Site; sites: Site[]; period?: Period; onClose: () => void }) {
   const [siteId, setSiteId] = useState(first.id)
   const site = sites.find((s) => s.id === siteId) ?? first
-  const [look, setLook] = useState<Look>({ template: 'overview', period, compare: false, metric: 'visitors', stats: DEFAULT_STATS, theme: 'dark', accent: ACCENTS[0] })
+  const [look, setLook] = useState<Look>({ template: 'overview', shape: 'link', period, compare: false, metric: 'visitors', stats: DEFAULT_STATS, theme: 'dark', accent: ACCENTS[0] })
   // A new big number is not shown again among the small ones.
   const set = (l: Partial<Look>) => setLook((x) => (l.metric ? { ...x, ...l, stats: statsWith(l.stats ?? x.stats, l.metric) } : { ...x, ...l }))
   const brand = useLook(site.id)

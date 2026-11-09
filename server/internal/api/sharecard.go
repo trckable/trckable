@@ -22,6 +22,7 @@ import (
 //	compare  1: the change against the period just before, in a pill (off by default; not for all time)
 //	metric   visitors | pageviews | engaged | revenue (default visitors)
 //	stats    up to three small numbers under the chart, comma-separated (see cardStatIDs); default engaged,avgtime,country
+//	shape    link | square | story | wide: the picture's size (cards.Formats; default link, 1200 × 630)
 //	theme    dark | light
 //	accent   #rrggbb
 //	format   png (default) | json: the numbers in words and a post's text
@@ -76,7 +77,7 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 	}
 	_, theme := cards.ThemeOf(v.Get("theme"))
 	spec := cards.Spec{
-		Template: tpl, Theme: theme, Accent: v.Get("accent"),
+		Template: tpl, Format: cards.FormatOf(v.Get("shape")).ID, Theme: theme, Accent: v.Get("accent"),
 		Domain: n.domain, Big: n.Big, Label: n.Label, Foot: n.Foot, Series: n.series,
 		Change: n.change, Dir: n.dir, Stats: n.stats,
 		NoBrand: a.HidesBrand(r.Context(), r.PathValue("site")),

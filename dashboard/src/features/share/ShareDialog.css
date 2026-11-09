@@ -35,7 +35,7 @@
 .sd-preview {
   display: grid;
   place-items: center;
-  aspect-ratio: 1200 / 630;
+  max-height: min(72vh, 680px); /* a tall picture (story) stands inside the stage, whole */
   padding: 20px;
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -45,8 +45,11 @@
 }
 .sd-preview img {
   display: block;
-  width: 100%;
+  max-width: 100%;
+  max-height: calc(min(72vh, 680px) - 40px);
+  width: auto;
   height: auto;
+  min-height: 0;
   border-radius: 10px;
   box-shadow: 0 14px 32px rgb(0 0 0 / 0.3);
   transition: opacity 0.2s;

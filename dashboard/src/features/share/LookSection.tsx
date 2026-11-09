@@ -3,7 +3,7 @@ import { Select } from '../../components/Select'
 import { SiteMark } from '../../components/SiteMark'
 import { Switch } from '../../components/Switch'
 import type { Site } from '../../lib/api'
-import { accentsFor, type Look } from './card'
+import { FORMATS, accentsFor, type Look } from './card'
 import { copy } from './copy'
 import type { Look as SiteLook } from './useLook'
 
@@ -24,6 +24,13 @@ export function LookSection({ site, sites, onSite, look, set, brand }: Props) {
       )}
       {!post && (
         <>
+          <div className="sd-chips" role="radiogroup" aria-label={copy.shape}>
+            {FORMATS.map((f) => (
+              <button key={f.id} type="button" role="radio" aria-checked={look.shape === f.id} className="sd-chip" title={copy.shapes[f.id].hint} onClick={() => set({ shape: f.id })}>
+                {copy.shapes[f.id].name}
+              </button>
+            ))}
+          </div>
           <div className="sd-chips" role="radiogroup" aria-label={copy.lookTitle}>
             {(['dark', 'light'] as const).map((th) => (
               <button key={th} type="button" role="radio" aria-checked={look.theme === th} className="sd-chip" onClick={() => set({ theme: th })}>

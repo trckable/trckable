@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { PeriodSection } from './PeriodSection'
 import type { Look } from './card'
 
-const base: Look = { template: 'overview', period: '30d', compare: false, metric: 'visitors', stats: ['engaged'], theme: 'dark', accent: '#b8ff3c' }
+const base: Look = { template: 'overview', shape: 'link', period: '30d', compare: false, metric: 'visitors', stats: ['engaged'], theme: 'dark', accent: '#b8ff3c' }
 const draw = (l: Partial<Look>) => renderToStaticMarkup(<PeriodSection look={{ ...base, ...l }} tz="UTC" set={() => undefined} />)
 
 describe('the period section', () => {
