@@ -17,7 +17,13 @@ describe('returnPer', () => {
     expect(returnPer(undefined, 5)).toEqual({ kind: 'none' })
     expect(returnPer(0, 0)).toEqual({ kind: 'none' })
   })
-  it('never says fewer than one fetch', () => expect(returnPer(2, 5)).toEqual({ kind: 'per', n: 1 }))
+  it('shows no ratio on few fetches, or when visitors are as many as fetches', () => {
+    expect(returnPer(49, 1)).toEqual({ kind: 'none' })
+    expect(returnPer(50, 1)).toEqual({ kind: 'per', n: 50 })
+    expect(returnPer(60, 60)).toEqual({ kind: 'none' })
+    expect(returnPer(60, 90)).toEqual({ kind: 'none' })
+    expect(returnPer(49, 0)).toEqual({ kind: 'none' })
+  })
   it('calls out only a big reader that credits little', () => {
     expect(lowReturn(returnPer(68_000, 58), 68_000)).toBe(true)
     expect(lowReturn(returnPer(238_000, 2591), 238_000)).toBe(false)
@@ -40,6 +46,11 @@ describe('tipsOf', () => {
     expect(ids(bot(30, 10_000))).toEqual([]) // 0.3%
     const t = tipsOf(bot(30, 100), true)[0]
     expect(t).toEqual({ id: 'broken', company: 'OpenAI', errors: 30, pages: [{ path: '/old', n: 30 }] })
+  })
+  it('with a filter on, no assistant is judged by a ratio', () => {
+    const r = rep({ bots: [{ name: 'Anthropic', kind: 'train', hits: 5000 }], assistants: [{ name: 'Claude', visitors: 0, company: 'Anthropic', fetches: 5000 }] })
+    expect(ids(r)).toEqual(['credit'])
+    expect(tipsOf(r, true, true)).toEqual([])
   })
   it('a search engine\'s broken pages are not AI\'s', () => {
     expect(ids(rep({ bots: [{ name: 'Google', kind: 'index', hits: 100, errors: 90 }] }))).toEqual([])

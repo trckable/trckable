@@ -52,6 +52,7 @@ export const aiCopy = defineCopy('aisearch', {
   /** Under an assistant's name: what its robots read for each person it sent. */
   returnPer: (n: number) => `1 visitor per ${fmtInt(n)} ${n === 1 ? 'fetch' : 'fetches'}`,
   returnNobody: 'Read you, sent nobody',
+  noCompare: 'Robots can’t be filtered; clear filters to compare.',
   noRobots: 'Without crawler data only the visitors show, not what each assistant reads.',
   headline: {
     requests: 'AI bot requests',
@@ -89,7 +90,7 @@ export const aiCopy = defineCopy('aisearch', {
       go: 'See the crawlers',
     },
     unread: {
-      title: (n: number) => `${fmtInt(n)} ${n === 1 ? 'page' : 'pages'} Google ranks ${n === 1 ? 'was' : 'were'} never read by AI`,
+      title: (n: number) => `Among your top pages, ${fmtInt(n)} Google ranks ${n === 1 ? 'was' : 'were'} never read by AI`,
       why: (pages: string) => `No AI bot fetched these in this period: ${pages}. Check your robots.txt and sitemap.`,
       go: 'List the pages',
     },

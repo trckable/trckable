@@ -10,6 +10,8 @@ export const MIN_FETCHES = 500
 export const FETCHES_PER_VISITOR = 500
 /** Requests turned away by the server or CDN before they are worth a tip. */
 export const MIN_BLOCKED = 20
+/** Under this many fetches a ratio is noise, and with more visitors than fetches it says nothing: only the two numbers show. */
+export const MIN_RATIO_FETCHES = 50
 export const MAX_TIPS = 3
 const SHOWN = 3
 
@@ -18,8 +20,10 @@ export type Return = { kind: 'none' } | { kind: 'nobody' } | { kind: 'per'; n: n
 /** Fetches per visitor sent: nothing to say without fetches (no robot data, or a robot that never came), "nobody" when it read and sent no one. */
 export function returnPer(fetches: number | undefined, visitors: number): Return {
   if (!fetches || fetches <= 0) return { kind: 'none' }
+  if (fetches < MIN_RATIO_FETCHES) return { kind: 'none' }
   if (visitors <= 0) return { kind: 'nobody' }
-  return { kind: 'per', n: Math.max(1, Math.round(fetches / visitors)) }
+  if (visitors >= fetches) return { kind: 'none' }
+  return { kind: 'per', n: Math.round(fetches / visitors) }
 }
 
 /** An assistant that reads a lot and credits little: the point where the ratio is worth a warning colour. */
@@ -44,7 +48,8 @@ function byCompany(rep: AiSearchReport) {
 }
 
 /** At most MAX_TIPS, most useful first. Without crawler data there is one: to connect it (and nothing at all for someone who cannot). */
-export function tipsOf(rep: AiSearchReport, canConnect: boolean): Tip[] {
+/** `filtered`: a dashboard filter is on, which narrows the visitors but not the robots, so no ratio of the two is told. */
+export function tipsOf(rep: AiSearchReport, canConnect: boolean, filtered = false): Tip[] {
   if (rep.bots.length === 0) return canConnect ? [{ id: 'connect' }] : []
   const tips: Tip[] = []
   const companies = byCompany(rep)
@@ -55,7 +60,7 @@ export function tipsOf(rep: AiSearchReport, canConnect: boolean): Tip[] {
     tips.push({ id: 'broken', company: broken[0], errors: broken[1].errors, pages: pages.map((p) => ({ path: p.path, n: p.errors ?? 0 })) })
   }
 
-  const credit = rep.assistants
+  const credit = filtered ? undefined : rep.assistants
     .filter((a) => a.company && (a.fetches ?? 0) >= MIN_FETCHES && a.visitors * FETCHES_PER_VISITOR <= (a.fetches ?? 0))
     .sort((a, b) => (b.fetches ?? 0) - (a.fetches ?? 0))[0]
   if (credit) {

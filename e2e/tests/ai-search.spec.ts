@@ -100,7 +100,7 @@ test('each assistant shows what its robots read against the people it sent, bigg
   const table = card.locator('.xt', { has: page.getByText('Fetches', { exact: true }) })
   const rows = table.locator('.xrw')
   await expect(rows.first()).toContainText(/ChatGPT/)
-  await expect(rows.first()).toContainText('1 visitor per 1 fetch') // 6 reads, 14 people: never "per 0"
+  await expect(rows.first()).not.toContainText('visitor per') // 6 reads is too few for a ratio: only the two numbers
   await expect(rows.first()).toHaveText(/6\s*14$/)
   await expect(rows.nth(1)).toContainText(/Claude/)
   await expect(rows.nth(1)).toHaveText(/3\s*5$/)

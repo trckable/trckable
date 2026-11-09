@@ -39,6 +39,7 @@ export default function AiTab({ x }: { x: XCtx }) {
   }, [])
   if (rep === undefined) return <Loading height={180} />
   if (rep === null) return <XError title={aiCopy.failed} onRetry={reload} />
+  const filtered = x.filters.length > 0
   const hit = Math.max(1, ...rep.bots.map((b) => b.hits))
   const crawlers: CRow[] = rep.bots.slice(0, ROWS).map((b) => ({ key: `${b.name}/${b.kind}`, a: `${b.name} · ${aiCopy.kind[b.kind] ?? b.kind}`, bar: b.hits / hit, c: [fmtInt(b.hits), <FailedCell blocked={b.blocked ?? 0} broken={b.errors ?? 0} />] }))
   const kinds = KINDS.map((k) => ({ ...k, n: rep.bots.filter((b) => b.kind === k.k).reduce((n, b) => n + b.hits, 0) })).filter((k) => k.n > 0)
@@ -52,9 +53,9 @@ export default function AiTab({ x }: { x: XCtx }) {
           <AnswersLine x={x} />
         </Suspense>
       )}
-      <AiHeadline rep={rep} />
-      <AiAssistants rep={rep} x={x} />
-      <AiTips tips={tipsOf(rep, can('site.settings'))} go={{ connect: () => setSetup(true), page: (p) => x.pick('page', p), section: toSection }} />
+      <AiHeadline rep={rep} filtered={filtered} />
+      <AiAssistants rep={rep} x={x} filtered={filtered} />
+      <AiTips tips={tipsOf(rep, can('site.settings'), filtered)} go={{ connect: () => setSetup(true), page: (p) => x.pick('page', p), section: toSection }} />
       <XSec a={aiCopy.google} />
       <XNote>{aiCopy.whyGoogle}</XNote>
       <GoogleLines x={x} />
