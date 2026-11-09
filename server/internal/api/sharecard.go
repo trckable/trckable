@@ -170,7 +170,7 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "image/png")
-	_, _ = w.Write(png)
+	_, _ = w.Write(png) //nolint:gosec // a PNG the server drew, not markup
 }
 
 // cardRead reads the period's report the way the dashboard does, and turns
