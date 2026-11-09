@@ -404,6 +404,7 @@ export default {
   'share.topics.overview': 'Overzicht',
   'share.topics.pages': 'Pagina’s',
   'share.topics.text': 'Tekst',
+  'share.why.data': 'Vereist een bezoek in deze periode',
   'share.why.revenue': 'Vereist een gekoppelde betaalprovider',
   'share.template.numbers.name': 'Groot getal',
   'share.template.numbers.hint': 'Bezoekers en drie cijfers, zonder grafiek',

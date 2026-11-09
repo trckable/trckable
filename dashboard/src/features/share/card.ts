@@ -6,7 +6,7 @@ export type Template = 'overview' | 'numbers' | 'grid' | 'leaderboard' | 'post'
 /** A group of pictures in the gallery. */
 export type Topic = 'overview' | 'pages' | 'text'
 /** What a picture needs of the site; without it the picture is shown disabled, with the reason. */
-export type Need = 'revenue'
+export type Need = 'revenue' | 'data'
 export type Period = '24h' | '7d' | '30d' | 'all' | 'custom'
 export type Metric = 'visitors' | 'pageviews' | 'engaged' | 'revenue'
 /** The small numbers under the chart: the ones that are also a metric are not offered while it is the big number. */
@@ -23,8 +23,8 @@ export const formatOf = (shape: Shape) => FORMATS.find((f) => f.id === shape) ??
 export type Picture = { id: Template; topic: Topic; need?: Need }
 export const PICTURES: Picture[] = [
   { id: 'overview', topic: 'overview' },
-  { id: 'numbers', topic: 'overview' },
-  { id: 'grid', topic: 'overview' },
+  { id: 'numbers', topic: 'overview', need: 'data' },
+  { id: 'grid', topic: 'overview', need: 'data' },
   { id: 'leaderboard', topic: 'pages' },
   { id: 'post', topic: 'text' },
 ]
@@ -47,7 +47,7 @@ export type Look = { template: Template; shape: Shape; period: Period; /** A cus
 /** The numbers in words, and the post's text. */
 export type CardWords = { metric: Metric; big: string; label: string; foot: string; revenue: boolean; has_data: boolean; post: string }
 
-export function cardUrl(site: string, l: Look, format: 'png' | 'json' = 'png'): string {
+export function cardUrl(site: string, l: Look, format: 'png' | 'json' | 'thumb' = 'png'): string {
   const p = new URLSearchParams({ period: l.period, metric: l.metric })
   if (l.period === 'custom' && l.range) {
     p.set('from', l.range.from)
@@ -55,6 +55,7 @@ export function cardUrl(site: string, l: Look, format: 'png' | 'json' = 'png'): 
   }
   if (format === 'json') p.set('format', 'json')
   else {
+    if (format === 'thumb') p.set('thumb', '1')
     if (comparing(l)) p.set('compare', '1')
     p.set('t', l.template)
     if (l.shape !== 'link') p.set('shape', l.shape)

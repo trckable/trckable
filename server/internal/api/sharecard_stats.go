@@ -77,15 +77,13 @@ func (n *cardNumbers) stat(id string, res *query.Result, icon func(host string) 
 // cardGridIDs are the grid's four numbers: fixed, never money.
 var cardGridIDs = []string{"visitors", "pageviews", "engaged", "avgtime"}
 
-// gridOf is the grid's numbers. One with nothing behind it (no engaged
-// visit, no time on the site) is a dash, so the picture keeps its shape.
+// gridOf is the grid's numbers: only the ones with something true to say
+// (a picture to share never shows a dash), and the picture closes the gap.
 func (n *cardNumbers) gridOf(res *query.Result, icon func(host string) image.Image) {
 	for _, id := range cardGridIDs {
-		st, ok := n.stat(id, res, icon)
-		if !ok {
-			st.Value = "–"
+		if st, ok := n.stat(id, res, icon); ok {
+			n.grid = append(n.grid, st)
 		}
-		n.grid = append(n.grid, st)
 	}
 }
 

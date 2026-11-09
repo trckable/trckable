@@ -27,7 +27,8 @@ func init() {
 // cardBox is one rounded card of numbers, its left and top and size.
 type cardBox struct{ x, y, w, h int }
 
-// numberBoxes are the numbers picture's cards: as many as there are stats, in a row.
+// numberBoxes are the numbers picture's cards: as many as there are stats,
+// sharing the row between them (a missing stat leaves no gap).
 func numberBoxes(s Spec) []cardBox {
 	l := s.layout()
 	n := min(len(s.Stats), MaxStats)
@@ -35,7 +36,7 @@ func numberBoxes(s Spec) []cardBox {
 		return nil
 	}
 	gap := l.n(16)
-	w := (l.Right - l.Left - (MaxStats-1)*gap) / MaxStats
+	w := (l.Right - l.Left - (n-1)*gap) / n
 	boxes := make([]cardBox, n)
 	for i := range boxes {
 		boxes[i] = cardBox{l.Left + i*(w+gap), l.NumTop, w, l.NumH}
@@ -43,14 +44,25 @@ func numberBoxes(s Spec) []cardBox {
 	return boxes
 }
 
-// gridBoxes are the grid's cells, two by two.
+// gridBoxes are the grid's cells, two by two. The area is always filled: one
+// number takes all of it, two share it in one row, three are two and a wide
+// one, four are the four cells.
 func gridBoxes(s Spec) []cardBox {
 	l := s.layout()
 	n := min(len(s.Stats), MaxGrid)
+	rows := (n + 1) / 2
+	if n == 0 {
+		return nil
+	}
+	area := 2*l.GridH + l.GridGap
+	h := (area - (rows-1)*l.GridGap) / rows
 	w := (l.Right - l.Left - l.GridGap) / 2
 	boxes := make([]cardBox, n)
 	for i := range boxes {
-		boxes[i] = cardBox{l.Left + i%2*(w+l.GridGap), l.GridTop + i/2*(l.GridH+l.GridGap), w, l.GridH}
+		boxes[i] = cardBox{l.Left + i%2*(w+l.GridGap), l.GridTop + i/2*(h+l.GridGap), w, h}
+		if n%2 == 1 && i == n-1 {
+			boxes[i].x, boxes[i].w = l.Left, l.Right-l.Left
+		}
 	}
 	return boxes
 }

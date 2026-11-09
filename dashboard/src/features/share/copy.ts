@@ -28,7 +28,7 @@ export const copy = defineCopy('share', {
     wide: { name: 'Wide', hint: 'Wide, 16:9: slides, YouTube' },
   },
   topics: { overview: 'Overview', pages: 'Pages', text: 'Text' },
-  why: { revenue: 'Needs a connected payment provider' },
+  why: { revenue: 'Needs a connected payment provider', data: 'Needs a visit in this period' },
   site: 'Site',
   light: 'Light card',
   dark: 'Dark card',

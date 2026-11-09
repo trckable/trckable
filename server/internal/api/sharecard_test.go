@@ -310,19 +310,19 @@ func TestCardShapeSizes(t *testing.T) {
 	}
 }
 
-// The grid is four numbers whatever the site has: nothing behind one is a
-// dash, never money, and a busy period fills all four.
+// The grid holds the numbers that are true: nothing behind one leaves it out
+// (never a dash), never money, and a busy period fills all four.
 func TestCardGridModel(t *testing.T) {
 	var n cardNumbers
 	n.gridOf(&query.Result{}, func(string) image.Image { return nil })
-	if len(n.grid) != 4 {
-		t.Fatalf("%d numbers", len(n.grid))
+	if len(n.grid) != 0 {
+		t.Fatalf("no data: %+v", n.grid)
 	}
-	for _, st := range n.grid {
-		if st.Value != "–" || st.Label == "" {
-			t.Errorf("no data: %+v", st)
-		}
+	n.gridOf(&query.Result{KPIs: query.KPIs{Visitors: 3, Pageviews: 5}}, func(string) image.Image { return nil })
+	if len(n.grid) != 2 || n.grid[0].Value != "3" || n.grid[1].Value != "5" {
+		t.Fatalf("a little data: %+v", n.grid)
 	}
+	n = cardNumbers{}
 	busy := &query.Result{KPIs: query.KPIs{Visitors: 1200, Pageviews: 3400, Sessions: 1500, BounceRate: 0.4, AvgSessionS: 134}}
 	n = cardNumbers{money: "$9"}
 	n.gridOf(busy, func(string) image.Image { return nil })
@@ -362,5 +362,24 @@ func TestCardOverviewPictures(t *testing.T) {
 				t.Errorf("%s %s: %dx%d (%v)", tpl, shape, cfg.Width, cfg.Height, err)
 			}
 		}
+	}
+}
+
+// A thumbnail is the same picture 360 px wide, and the full size is untouched.
+func TestCardThumb(t *testing.T) {
+	g := newRig(t)
+	noOutbound(t, g)
+	owner := client()
+	g.setup(t, owner)
+	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
+	for tpl, want := range map[string]image.Point{"overview": {360, 189}, "numbers": {360, 189}, "grid": {360, 189}, "leaderboard": {360, 189}} {
+		code, _, body := get(t, owner, card+"?t="+tpl+"&thumb=1")
+		cfg, _, err := image.DecodeConfig(strings.NewReader(body))
+		if code != http.StatusOK || err != nil || cfg.Width != want.X || cfg.Height != want.Y {
+			t.Errorf("%s: %d %dx%d (%v)", tpl, code, cfg.Width, cfg.Height, err)
+		}
+	}
+	if _, _, body := get(t, owner, card+"?t=overview"); len(body) < 2000 {
+		t.Fatal("the full picture is still drawn")
 	}
 }

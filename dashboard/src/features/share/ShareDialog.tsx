@@ -9,7 +9,7 @@ import { can } from '../../lib/permissions'
 import { Modal } from '../../kit/Modal'
 import { toast } from '../../components/Toast'
 import { fmtRange, todayIn } from '../../lib/dates'
-import { ACCENTS, DEFAULT_STATS, METRICS, cardUrl, comparing, fileName, hasNumbers, picturesOf, statsWith, type CardWords, type Look, type Period, type Topic } from './card'
+import { ACCENTS, DEFAULT_STATS, METRICS, cardUrl, comparing, fileName, hasNumbers, missing, PICTURES, picturesOf, statsWith, type CardWords, type Look, type Period, type Topic } from './card'
 import { Actions, type Act } from './Actions'
 import { copy } from './copy'
 import { copyImage, saveImage, shareImage } from './image'
@@ -53,6 +53,9 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
         if (stale || !w) return
         setWords(w)
         if (w.metric !== look.metric) set({ metric: w.metric })
+        // A picture the period cannot fill (no visit in it) gives way to the overview.
+        const now = PICTURES.find((p) => p.id === look.template)
+        if (now && missing(now, { revenue: w.revenue, data: w.has_data })) set({ template: 'overview' })
       })
       .catch(() => undefined)
     return () => {
@@ -84,6 +87,7 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
       setBusy(null)
     }
   }
+  const has = { revenue: words?.revenue ?? false, data: words?.has_data ?? true }
   const today = todayIn(site.timezone)
   const metrics = METRICS.filter((m) => m !== 'revenue' || words?.revenue)
 
@@ -112,7 +116,7 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
           </div>
           <div className="sd-panel">
             <Section id="card" title={copy.whatToShare} summary={copy.template[look.template].name} open={open === 'card'} onToggle={() => toggle('card')}>
-              <CardSection site={site.id} look={shown} has={{ revenue: words?.revenue ?? false }} onChange={(t) => set({ template: t })} />
+              <CardSection site={site.id} look={shown} has={has} onChange={(t) => set({ template: t })} />
             </Section>
             <Section id="period" title={copy.period} summary={periodSummary} open={open === 'period'} onToggle={() => toggle('period')}>
               <PeriodSection look={look} tz={site.timezone} set={set} />

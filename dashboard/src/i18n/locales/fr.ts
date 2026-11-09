@@ -405,6 +405,7 @@ export default {
   'share.topics.overview': 'Aperçu',
   'share.topics.pages': 'Pages',
   'share.topics.text': 'Texte',
+  'share.why.data': 'Nécessite une visite sur cette période',
   'share.why.revenue': 'Nécessite un prestataire de paiement connecté',
   'share.template.numbers.name': 'Grand chiffre',
   'share.template.numbers.hint': 'Visiteurs et trois chiffres, sans courbe',

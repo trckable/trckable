@@ -411,6 +411,7 @@ export default {
   'share.topics.overview': 'Panoramica',
   'share.topics.pages': 'Pagine',
   'share.topics.text': 'Testo',
+  'share.why.data': 'Richiede una visita in questo periodo',
   'share.why.revenue': 'Richiede un fornitore di pagamenti collegato',
   'share.template.numbers.name': 'Numero grande',
   'share.template.numbers.hint': 'Visitatori e tre dati, senza grafico',

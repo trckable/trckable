@@ -25,11 +25,15 @@ import (
 //	shape    link | square | story | wide: the picture's size (cards.Formats; default link, 1200 × 630)
 //	theme    dark | light
 //	accent   #rrggbb
+//	thumb    1: a small picture (360 px wide) for the dialog's strip; the shape is the link preview's
 //	format   png (default) | json: the numbers in words and a post's text
 //
 // Only totals, top pages, a chart and the top country, page or source: never a visitor. Revenue is in a card
 // only where the report would show it to this reader (the module on, a
 // payment provider connected); asked for anywhere else it is visitors.
+
+// cardThumbW is a thumbnail's width in pixels: twice what the strip shows, for sharp screens.
+const cardThumbW = 360
 
 // cardRenders caps the pictures drawn at once, so a burst of previews
 // cannot take the server's CPU.
@@ -102,7 +106,14 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 	case <-r.Context().Done():
 		return
 	}
-	png, err := spec.PNG()
+	var png []byte
+	var err error
+	if v.Get("thumb") == "1" {
+		// A strip of small pictures to choose from: drawn once, kept.
+		png, err = pngCache.get(spec.Key()+"|thumb", func() ([]byte, error) { return spec.Thumb(cardThumbW) })
+	} else {
+		png, err = spec.PNG()
+	}
 	<-cardRenders
 	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())

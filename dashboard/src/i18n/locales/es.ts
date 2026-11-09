@@ -417,6 +417,7 @@ export default {
   'share.topics.overview': 'Resumen',
   'share.topics.pages': 'Páginas',
   'share.topics.text': 'Texto',
+  'share.why.data': 'Necesita una visita en este periodo',
   'share.why.revenue': 'Necesita un proveedor de pagos conectado',
   'share.template.numbers.name': 'Número grande',
   'share.template.numbers.hint': 'Visitantes y tres datos, sin gráfico',

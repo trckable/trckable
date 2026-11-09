@@ -21,11 +21,11 @@ function useSeen() {
   return { ref, seen }
 }
 
-function Thumb({ site, look, id }: { site: string; look: Look; id: Template }) {
+function Thumb({ site, look, id, off }: { site: string; look: Look; id: Template; off: boolean }) {
   const { ref, seen } = useSeen()
   return (
     <span ref={ref} className="sd-thumb">
-      {id === 'post' ? <MessageSquareText size={22} strokeWidth={1.6} aria-hidden="true" /> : seen && <img src={cardUrl(site, { ...look, template: id, shape: 'link' })} alt="" loading="lazy" decoding="async" />}
+      {id === 'post' ? <MessageSquareText size={22} strokeWidth={1.6} aria-hidden="true" /> : seen && !off && <img src={cardUrl(site, { ...look, template: id, shape: 'link' }, 'thumb')} alt="" loading="lazy" decoding="async" />}
     </span>
   )
 }
@@ -44,7 +44,7 @@ export function CardSection({ site, look, has, pictures = PICTURES, onChange }: 
                 const lacks = missing(p, has)
                 return (
                   <button key={p.id} type="button" role="radio" aria-checked={look.template === p.id} disabled={!!lacks} className="sd-pic" title={lacks ? copy.why[lacks] : copy.template[p.id].hint} onClick={() => onChange(p.id)}>
-                    <Thumb site={site} look={look} id={p.id} />
+                    <Thumb site={site} look={look} id={p.id} off={!!lacks} />
                     <b>{copy.template[p.id].name}</b>
                     {lacks && <small>{copy.why[lacks]}</small>}
                   </button>

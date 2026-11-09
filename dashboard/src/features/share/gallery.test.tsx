@@ -4,7 +4,7 @@ import { CardSection } from './CardSection'
 import { PICTURES, missing, picturesOf, type Look, type Picture } from './card'
 
 const look: Look = { template: 'numbers', shape: 'link', period: '7d', compare: false, metric: 'visitors', stats: ['engaged'], theme: 'dark', accent: '#b8ff3c' }
-const has = { revenue: false }
+const has = { revenue: false, data: true }
 
 describe('gallery', () => {
   it('lists the Overview pictures first, the picked one checked, each with its own thumbnail address', () => {
@@ -19,10 +19,17 @@ describe('gallery', () => {
     const html = renderToStaticMarkup(<CardSection site="s1" look={{ ...look, shape: 'story' }} has={has} onChange={() => undefined} />)
     expect(html).not.toContain('shape=')
   })
+  it('asks for the small picture, and for none of a picture the period cannot fill', () => {
+    const html = renderToStaticMarkup(<CardSection site="s1" look={look} has={{ revenue: false, data: false }} onChange={() => undefined} />)
+    expect(html).toContain('thumb=1')
+    expect(html).not.toContain('t=numbers&amp;')
+    expect(html).not.toContain('t=grid&amp;')
+    expect(html).toContain('Needs a visit in this period')
+  })
   it('shows a picture the site cannot make disabled, with the reason', () => {
     const sales: Picture = { id: 'grid', topic: 'overview', need: 'revenue' }
-    expect(missing(sales, { revenue: false })).toBe('revenue')
-    expect(missing(sales, { revenue: true })).toBeNull()
+    expect(missing(sales, { revenue: false, data: true })).toBe('revenue')
+    expect(missing(sales, { revenue: true, data: true })).toBeNull()
     const html = renderToStaticMarkup(<CardSection site="s1" look={look} has={has} pictures={[...PICTURES.filter((p) => p.id !== 'grid'), sales]} onChange={() => undefined} />)
     expect(html).toMatch(/<button[^>]*disabled[^>]*>/)
     expect(html).toContain('Needs a connected payment provider')
