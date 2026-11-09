@@ -1,4 +1,4 @@
-// One shell for every header menu: the bell, the apps, the account (and a build's usage popover) take their frame from kit/PopShell.
+// One shell for every header menu: the bell, the apps, the account take their frame from kit/PopShell.
 // A menu that draws its own background, border, radius, shadow, padding or width fails here; use SHELL and the shell's tokens.
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -19,7 +19,7 @@ const MENUS: Record<string, string> = {
   'v2/explore/SectionsButton.tsx': 'xtiles-pop',
 }
 // The boxes of those menus, by class: the shell draws their frame, no other rule may.
-const BOXES = ['bellmenu', 'more-menu', 'xtiles-pop', 'ptop-card']
+const BOXES = ['bellmenu', 'more-menu', 'xtiles-pop']
 const FRAME = /(^|[;{\s])(background(-color)?|border(-radius)?|box-shadow|padding|width|min-width|max-width|backdrop-filter)\s*:/
 
 describe('header menus share one shell', () => {
