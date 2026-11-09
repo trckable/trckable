@@ -130,7 +130,8 @@ export function Changed({ x, d }: { x: XCtx; d: Model & { report: Report } }) {
   const fmt = (n: number) => (metric === 'revenue' ? x.money(n) : fmtInt(n))
   // The whole period is too little only when the people of both periods are: one number under its floor says so for itself.
   const whole = !!prev && explain(cur, prev, 'visitors').kind === 'few' && list.length === 0
-  const say = w?.kind === 'few' && !whole ? fewOf(w, fmt) : w ? sentence(copy.metric[metric], w.kind, w.pct, w.diff, w.causes[0]) : copy.sayChoose
+  let say = copy.sayChoose
+  if (w) say = w.kind === 'few' && !whole ? fewOf(w, fmt) : sentence(copy.metric[metric], w.kind, w.pct, w.diff, w.causes[0])
   return (
     <>
       <p className="xchg-say">{say}</p>
