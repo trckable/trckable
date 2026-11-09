@@ -86,7 +86,11 @@ describe('Explore sections and the gallery', () => {
   it('maps each section with a picture to its topic, and the others to none', () => {
     expect(['changed', 'overview', 'pages', 'sources', 'search', 'places', 'tech', 'results', 'sales', 'ai'].map((s) => topicOfSection(s))).toEqual(['changed', 'overview', 'pages', 'sources', 'search', 'places', 'tech', 'goals', 'sales', 'ai'])
     for (const s of ['speed', 'links', 'mentions', 'answers']) expect(topicOfSection(s)).toBeUndefined()
-    for (const s of ['changed', 'results', 'sales', 'ai']) expect(picturesOf(topicOfSection(s)!).length).toBeGreaterThan(0)
+    for (const s of ['changed', 'results', 'sales', 'ai']) {
+      const topic = topicOfSection(s)
+      expect(topic).toBeDefined()
+      expect(picturesOf(topic ?? 'overview').length).toBeGreaterThan(0)
+    }
   })
 })
 

@@ -42,6 +42,20 @@ const cardThumbW = 360
 // cannot take the server's CPU.
 var cardRenders = make(chan struct{}, 2)
 
+// thumbRenders is the thumbnails' own small pool, so the strip of pictures a dialog asks for at once
+// never queues ahead of the picture a person is saving.
+var thumbRenders = make(chan struct{}, 1)
+
+// takeRender waits for a free place in pool; false when the request went away first.
+func takeRender(ctx context.Context, pool chan struct{}) bool {
+	select {
+	case pool <- struct{}{}:
+		return true
+	case <-ctx.Done():
+		return false
+	}
+}
+
 // cardNumbers is what the cards and the post say.
 type cardNumbers struct {
 	Metric  string `json:"metric"`
@@ -130,20 +144,27 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 	if v.Get("name") == "0" {
 		spec.Domain, spec.Icon = "", nil
 	}
-	select {
-	case cardRenders <- struct{}{}:
-	case <-r.Context().Done():
-		return
-	}
 	var png []byte
 	var err error
 	if v.Get("thumb") == "1" {
-		// A strip of small pictures to choose from: drawn once, kept.
-		png, err = pngCache.get(spec.Key()+"|thumb", func() ([]byte, error) { return spec.Thumb(cardThumbW) })
+		// A strip of small pictures to choose from: drawn once, kept; a kept one needs no slot.
+		png, err = pngCache.get(spec.Key()+"|thumb", func() ([]byte, error) {
+			if !takeRender(r.Context(), thumbRenders) {
+				return nil, r.Context().Err()
+			}
+			defer func() { <-thumbRenders }()
+			return spec.Thumb(cardThumbW)
+		})
 	} else {
+		if !takeRender(r.Context(), cardRenders) {
+			return
+		}
 		png, err = spec.PNG()
+		<-cardRenders
 	}
-	<-cardRenders
+	if r.Context().Err() != nil {
+		return
+	}
 	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
