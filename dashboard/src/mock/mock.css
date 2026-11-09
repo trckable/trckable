@@ -1106,7 +1106,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
    avatar's right edge like the walkthrough's menus and takes their colours. */
 .mk .hd .account-menu{position:relative;flex:none}
 .mk .hd .account-menu .account-btn{padding:0;border:0;background:none;box-shadow:none;display:grid;place-items:center;border-radius:50%}
-.mk .hd .account-menu .more-menu{right:0;left:auto;top:calc(100% + var(--pop-gap,var(--mk-s2)));z-index:var(--z-menu)}
+.mk .hd .account-menu .more-menu{right:0;left:auto;top:calc(100% + var(--pop-gap));z-index:var(--z-menu)}
 /* "Why?" beside "Replay": two buttons in a line, aligned at the top so the line is as tall as the walkthrough's one. */
 /* A period being read: the page of the last one stays, dimmed, until the new one is whole. */
 .mk-hold{display:contents}

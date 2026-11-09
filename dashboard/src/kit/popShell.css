@@ -1,5 +1,5 @@
 /* The shell of the header's menus: the bell, the usage pill, the apps and the account. Its colours and spacing are tokens, so a menu
-   draws none of its own. It is spelled html:root so it holds over the lazy menu sheets and the older per-menu rules. */
+   draws none of its own. */
 .pshell {
   --pop-bg: var(--mk-card2);
   --pop-line: var(--mk-line);
@@ -9,13 +9,14 @@
   --pop-selected: var(--mk-bandh);
   --pop-shadow: 0 20px 50px var(--mk-shc);
   --pop-radius: 12px;
-  --pop-pad: var(--mk-s2);
-  --pop-gap: var(--mk-s2);
+  --pop-pad: 8px;
+  --pop-gap: 8px;
   --pop-w: 380px;
   --pop-tile-radius: 10px;
   --pop-tile-bg: color-mix(in srgb, currentColor 14%, transparent);
 }
-html:root .pshell {
+/* Four :root: it must outrank the older frame rules on .pop (styles.css, glass.css), which it replaces for these menus. */
+:root:root:root:root .pshell {
   box-sizing: border-box;
   width: var(--pop-w);
   max-width: calc(100vw - 16px);
@@ -30,10 +31,6 @@ html:root .pshell {
   overflow: auto;
   overscroll-behavior: contain;
 }
-/* Under its button: the same gap in every menu that opens beside its button (the ones placed by the page, not by AnchoredPop). */
-html:root .pshell[data-below] {
-  top: calc(100% + var(--pop-gap));
-}
 
 /* The head: the title at the left, its actions at the right. It runs to the frame's edges. */
 .pshell-head,
@@ -41,8 +38,8 @@ html:root .pshell[data-below] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--mk-s3);
-  padding: var(--pop-pad) var(--mk-s3);
+  gap: 12px;
+  padding: var(--pop-pad) 12px;
   margin-inline: calc(var(--pop-pad) * -1);
 }
 .pshell-head {
@@ -57,7 +54,7 @@ html:root .pshell[data-below] {
 .pshell-acts {
   display: inline-flex;
   align-items: center;
-  gap: var(--mk-s3);
+  gap: 12px;
 }
 /* The foot: a divider, one thing at each end, one text style. */
 .pshell-foot {
@@ -85,11 +82,16 @@ html:root .pshell[data-below] {
   border-radius: 4px;
 }
 
-/* On a phone the menus are sheets from the bottom edge (their own rules); the shell keeps its colours and the sheet's top corners. */
-@media (max-width: 640px) {
-  html:root .pshell {
+/* On a phone the menus are sheets from the bottom edge (their own placement rules); the shell gives them the width and the top corners. */
+@media (--xs) {
+  :root:root:root:root .pshell {
     width: auto;
     max-width: none;
+  }
+  :root:root:root:root .pop.pshell {
+    padding: 6px 8px max(14px, env(safe-area-inset-bottom));
+    border-radius: 20px 20px 0 0;
+    border-bottom: 0;
   }
 }
 
