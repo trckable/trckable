@@ -6,6 +6,7 @@ import (
 	"image"
 	"math"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/cards"
@@ -17,7 +18,8 @@ import (
 //
 //	GET /api/v1/sites/{site}/card
 //	t        overview | leaderboard (default overview)
-//	period   24h | 7d | 30d (default 7d)
+//	period   24h | 7d | 30d | all | custom (default 7d); custom takes from and to (YYYY-MM-DD). A period ends on the last full day or hour
+//	compare  1: the change against the period just before, in a pill (off by default; not for all time)
 //	metric   visitors | pageviews | engaged | revenue (default visitors)
 //	stats    up to three small numbers under the chart, comma-separated (see cardStatIDs); default engaged,avgtime,country
 //	theme    dark | light
@@ -43,7 +45,8 @@ type cardNumbers struct {
 	Post      string `json:"post"`
 	rows      []cards.Item
 	series    []float64
-	change    string // the people against the period before: "+12%", "" when there is none
+	change    string // the pick against the period before: "+12%", "" when there is none
+	vs        string // what it is against ("previous 30 days"), said after the change
 	dir       int
 	stats     []cards.Stat
 	domain    string
@@ -62,7 +65,7 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 	}
 	v := r.URL.Query()
 	tpl := cardTemplateOf(v.Get("t"))
-	n, ok := a.cardRead(w, r, q, r.PathValue("site"), cardPeriodOf(v.Get("period")), v.Get("metric"), v.Get("stats"), tpl == "overview" && v.Get("format") != "json")
+	n, ok := a.cardRead(w, r, q, r.PathValue("site"), v, tpl == "overview" && v.Get("format") != "json")
 	if !ok {
 		return
 	}
@@ -103,7 +106,7 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 // cardRead reads the period's report the way the dashboard does, and turns
 // it into the card's words; with overview, also the small numbers and the
 // change against the period before.
-func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site string, p cardPeriod, metric, stats string, overview bool) (cardNumbers, bool) {
+func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site string, v url.Values, overview bool) (cardNumbers, bool) {
 	si, err := a.Ctl.SiteInfo(r.Context(), site)
 	if err != nil {
 		fail(w, http.StatusNotFound, "site not found")
@@ -114,18 +117,21 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 		loc = time.UTC
 	}
 	now := a.Now().In(loc)
-	today := now.Format("2006-01-02")
+	p := resolvePeriod(v.Get("period"), v.Get("from"), v.Get("to"), now, time.Unix(si.CreatedAt, 0), v.Get("compare") == "1")
 	ask := r.Clone(r.Context())
-	ask.URL.RawQuery = "from=" + now.AddDate(0, 0, 1-p.days).Format("2006-01-02") + "&to=" + today
+	if p.hours > 0 {
+		ask.URL.RawQuery = "from=" + now.AddDate(0, 0, -1).Format("2006-01-02") + "&to=" + now.Format("2006-01-02")
+	} else {
+		ask.URL.RawQuery = "from=" + p.from.Format("2006-01-02") + "&to=" + p.to.Format("2006-01-02")
+	}
 	parsed := a.parse(w, ask, site, true)
 	if parsed == nil {
 		return cardNumbers{}, false
 	}
 	params := parsed.Params
 	if p.hours > 0 {
-		// The last full hours up to this one: the hour buckets of a day and
-		// a bit, cut to exactly 24 of them.
-		end := now.Truncate(time.Hour).Add(time.Hour)
+		// The last 24 full hours: the hour now is still running, so it is left out.
+		end := now.Truncate(time.Hour)
 		params.From, params.To, params.Bucket = end.Add(-time.Duration(p.hours)*time.Hour).UTC(), end.UTC(), "hour"
 	}
 	res, err := a.cachedReport(ask, q, params)
@@ -133,16 +139,23 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 		reportFail(w, err)
 		return cardNumbers{}, false
 	}
-	n := cardWordsOf(res, si.Domain, p, metric)
+	n := cardWordsOf(res, si.Domain, p, v.Get("metric"))
 	if overview {
-		// Only the totals of the period before: no money, goals or groups to scan.
-		before := fairPrevious(params, a.Now())
-		before.Revenue, before.Goals, before.Groups, before.PageGoals, before.Limit = false, false, nil, nil, 1
-		if prev, err := a.cachedReport(ask, q, before); err == nil {
-			n.overview(res, prev, stats, a.refIconOf)
-		} else {
-			n.overview(res, nil, stats, a.refIconOf)
+		var prev *query.Result
+		if p.vs != "" {
+			// Only the totals of the period just before it, the same length: no money, goals or groups to scan.
+			before := params
+			before.From, before.To = previousStart(params.From, params.To, loc).UTC(), params.From
+			if p.hours > 0 {
+				before.From = params.From.Add(-params.To.Sub(params.From))
+			}
+			before.Revenue, before.Goals, before.Groups, before.PageGoals, before.Limit = false, false, nil, nil, 1
+			if got, err := a.cachedReport(ask, q, before); err == nil {
+				prev = got
+			}
 		}
+		n.vs = p.vs
+		n.overview(res, prev, v.Get("stats"), a.refIconOf)
 	}
 	return n, true
 }
@@ -151,8 +164,8 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 // against the period before (nothing when that had none), and the small
 // numbers the reader picked (stats: see cardStatsOf).
 func (n *cardNumbers) overview(res, prev *query.Result, stats string, icon func(host string) image.Image) {
-	if prev != nil && prev.KPIs.Visitors > 0 && n.Metric == "visitors" {
-		d := float64(n.visitors-prev.KPIs.Visitors) / float64(prev.KPIs.Visitors) * 100
+	if before, now := compared(n.Metric, prev, n); prev != nil && before > 0 {
+		d := float64(now-before) / float64(before) * 100
 		n.dir = 1
 		switch {
 		case math.Round(d) < 0:
@@ -162,6 +175,9 @@ func (n *cardNumbers) overview(res, prev *query.Result, stats string, icon func(
 		}
 		if n.dir != 0 {
 			n.change = fmt.Sprintf("%+.0f%%", d)
+			if n.vs != "" {
+				n.change += " vs " + n.vs
+			}
 		}
 	}
 	// A number with nothing behind it (no engaged visit, no time on the site) is left off.
@@ -170,6 +186,22 @@ func (n *cardNumbers) overview(res, prev *query.Result, stats string, icon func(
 			n.stats = append(n.stats, st)
 		}
 	}
+}
+
+// compared is the picked number before and now, for the metrics that have one before (revenue is not read for it).
+func compared(metric string, prev *query.Result, n *cardNumbers) (before, now int64) {
+	if prev == nil {
+		return 0, 0
+	}
+	switch metric {
+	case "visitors":
+		return prev.KPIs.Visitors, n.visitors
+	case "pageviews":
+		return prev.KPIs.Pageviews, n.pageviews
+	case "engaged":
+		return engagedOf(prev.KPIs), n.engaged
+	}
+	return 0, 0
 }
 
 // cardIcon is the picture for the card's tile: the icon the owner set for

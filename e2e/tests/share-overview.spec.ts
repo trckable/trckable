@@ -21,7 +21,7 @@ async function openFromMenu(page: Page) {
   await page.getByRole('menuitem', { name: 'Share a picture' }).click()
 }
 
-for (const [width, colorScheme] of [[1440, 'dark'], [1440, 'light'], [390, 'dark']] as const) {
+for (const [width, colorScheme] of [[1440, 'dark'], [1440, 'light'], [390, 'dark'], [390, 'light']] as const) {
   test(`Share opens over the Overview and hands out the picture, ${width}px ${colorScheme}`, async ({ page }) => {
     await page.emulateMedia({ colorScheme })
     await page.setViewportSize({ width, height: width < 500 ? 844 : 900 })
@@ -125,6 +125,7 @@ for (const width of [1440, 390]) test(`the sheet picks the big number and the sm
   const dialog = page.getByRole('dialog', { name: 'Share your numbers' })
   await expect(dialog).toBeVisible()
   const img = dialog.locator('.sd-preview img')
+  await dialog.getByRole('button', { name: /^Numbers/ }).click()
   const param = async (name: string) => new URL((await img.getAttribute('src'))!, API).searchParams.get(name)
   expect(await param('metric')).toBe('visitors')
   expect(await param('stats')).toBe('engaged,avgtime,country')

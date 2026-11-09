@@ -1,0 +1,1 @@
+Share your numbers is a picture with a panel beside it: pick the period (7 days, 30 days, all time or a custom range), switch on Compare for a green or red change pill, and the picture's dates are the real ones and end on the last full day.

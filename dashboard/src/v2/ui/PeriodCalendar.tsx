@@ -98,7 +98,7 @@ function Month({
   )
 }
 
-export function Calendar({ p, onBack, onApply }: { p: PeriodChipProps; onBack: () => void; onApply: (a: ISODate, b: ISODate) => void }) {
+export function Calendar({ p, onBack, onApply }: { p: Pick<PeriodChipProps, 'customRange' | 'today' | 'grain'>; onBack: () => void; onApply: (a: ISODate, b: ISODate) => void }) {
   const [a, setA] = useState<ISODate | null>(p.customRange.from)
   const [b, setB] = useState<ISODate | null>(p.customRange.to)
   const [step, setStep] = useState<'start' | 'end'>('start')

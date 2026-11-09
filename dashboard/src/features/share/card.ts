@@ -1,7 +1,7 @@
 // What the dialog asks the server for: a card is one address, so the preview
 // and the download are the same picture.
 export type Template = 'overview' | 'leaderboard' | 'post'
-export type Period = '24h' | '7d' | '30d'
+export type Period = '24h' | '7d' | '30d' | 'all' | 'custom'
 export type Metric = 'visitors' | 'pageviews' | 'engaged' | 'revenue'
 /** The small numbers under the chart: the ones that are also a metric are not offered while it is the big number. */
 export type Stat = 'engaged' | 'avgtime' | 'pageviews' | 'visitors' | 'bounce' | 'country' | 'page' | 'source' | 'revenue'
@@ -12,19 +12,24 @@ export const METRICS: Metric[] = ['visitors', 'pageviews', 'engaged', 'revenue']
 export const STATS: Stat[] = ['engaged', 'avgtime', 'pageviews', 'visitors', 'bounce', 'country', 'page', 'source', 'revenue']
 export const MAX_STATS = 3
 export const DEFAULT_STATS: Stat[] = ['engaged', 'avgtime', 'country']
-export const PERIODS: Period[] = ['24h', '7d', '30d']
+export const PERIODS: Period[] = ['24h', '7d', '30d', 'all', 'custom']
 /** The swatches: the site's own colour first, when it has one. */
 export const ACCENTS = ['#b8ff3c', '#4f8cff', '#ff5ca8', '#ffb547', '#2dd4bf']
 
-export type Look = { template: Template; period: Period; metric: Metric; stats: Stat[]; theme: Theme; accent: string; /** The site's hide-branding choice, only where it can change the picture: it makes the address new when it flips. */ hideBrand?: boolean }
+export type Look = { template: Template; period: Period; /** A custom range's first and last day. */ range?: { from: string; to: string }; /** The change against the period just before, in a pill. Off by default; nothing before all time. */ compare: boolean; metric: Metric; stats: Stat[]; theme: Theme; accent: string; /** The site's hide-branding choice, only where it can change the picture: it makes the address new when it flips. */ hideBrand?: boolean }
 
 /** The numbers in words, and the post's text. */
 export type CardWords = { metric: Metric; big: string; label: string; foot: string; revenue: boolean; has_data: boolean; post: string }
 
 export function cardUrl(site: string, l: Look, format: 'png' | 'json' = 'png'): string {
   const p = new URLSearchParams({ period: l.period, metric: l.metric })
+  if (l.period === 'custom' && l.range) {
+    p.set('from', l.range.from)
+    p.set('to', l.range.to)
+  }
   if (format === 'json') p.set('format', 'json')
   else {
+    if (comparing(l)) p.set('compare', '1')
     p.set('t', l.template)
     p.set('theme', l.theme)
     p.set('accent', l.accent)
@@ -34,11 +39,14 @@ export function cardUrl(site: string, l: Look, format: 'png' | 'json' = 'png'): 
   return `/api/v1/sites/${encodeURIComponent(site)}/card?${p}`
 }
 
+/** Whether the picture carries a comparison: asked for, and there is a period before (not for all time). */
+export const comparing = (l: Pick<Look, 'compare' | 'period'>) => l.compare && l.period !== 'all'
+
 /** The card's period for the page's: a day is the last 24 hours, a week or a month is itself, anything longer is a month. */
 const PAGE_PERIOD = new Map<string, Period>([['today', '24h'], ['yesterday', '24h'], ['7d', '7d']])
 export const periodOf = (page?: string): Period => PAGE_PERIOD.get(page ?? '') ?? '30d'
 
-export const fileName = (domain: string, l: Look) => `trckable-${domain}-${l.template}-${l.period}.png`
+export const fileName = (domain: string, l: Look) => `trckable-${domain}-${l.template}-${l.period === 'custom' && l.range ? `${l.range.from}_${l.range.to}` : l.period}.png`
 
 /** The accent on the card: a swatch, or the theme's own when none fits the light card. */
 export const accentsFor = (color?: string) => (color && /^#[0-9a-f]{6}$/i.test(color) && !ACCENTS.includes(color.toLowerCase()) ? [color.toLowerCase(), ...ACCENTS] : ACCENTS)

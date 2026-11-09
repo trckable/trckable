@@ -101,9 +101,16 @@ func fitStat(s string, room float64) (string, float64) {
 
 // wide is how wide s is in the bold font at size em; by letter class when the
 // font cannot be read.
-func wide(s string, em float64) float64 {
+func wide(s string, em float64) float64 { return measure(true, s, em) }
+
+// measure is the width of s at size em in the bold or the regular font.
+func measure(bold bool, s string, em float64) float64 {
 	if loadFonts() == nil {
-		if fc, err := opentype.NewFace(boldF, &opentype.FaceOptions{Size: em, DPI: 72, Hinting: font.HintingNone}); err == nil {
+		f := plainF
+		if bold {
+			f = boldF
+		}
+		if fc, err := opentype.NewFace(f, &opentype.FaceOptions{Size: em, DPI: 72, Hinting: font.HintingNone}); err == nil {
 			return float64(font.MeasureString(fc, s)) / 64
 		}
 	}
@@ -218,7 +225,51 @@ func overviewChart(s Spec, f Frame) string {
 	fmt.Fprintf(&b, `<rect x="0" %s width="%.0f" fill="url(#left)"/><rect x="%.0f" %s width="%.0f" fill="url(#right)"/>`, band, edge, W-edge, band, edge)
 	fmt.Fprintf(&b, `<rect width="%d" height="%d" fill="url(#glow)"/>`, W, H)
 	fmt.Fprintf(&b, `<path d="%s" fill="none" stroke="url(#edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`, d)
+	b.WriteString(pills(s))
 	return b.String()
+}
+
+// The pills: the period at the top, behind its dates, and the comparison
+// after the label, green for a rise and red for a fall. Only boxes, sized to
+// the words they hold; the words are the runs'.
+const (
+	pillPad    = 16
+	periodPx   = 24.0
+	changePx   = 28.0
+	changeBase = 316
+)
+
+// periodBox is where the period's pill sits and how wide it is: its text ends at right.
+func periodBox(s Spec) (x, y, w, h int) {
+	w = int(measure(false, s.Foot, periodPx)) + 2*pillPad
+	return right + pillPad - w, tileY + 35 - 30, w, 44
+}
+
+// changeBox is the comparison's pill, after the label on its line.
+func changeBox(s Spec) (x, y, w, h int) {
+	w = int(measure(true, s.Change, changePx)) + 2*pillPad + 4
+	return left + int(measure(false, s.Label, 32)) + 22, changeBase - 34, w, 46
+}
+
+func pills(s Spec) string {
+	var b strings.Builder
+	if s.Foot != "" {
+		x, y, w, h := periodBox(s)
+		fmt.Fprintf(&b, `<rect x="%d" y="%d" width="%d" height="%d" rx="%d" fill="%s" fill-opacity="0.14"/>`, x, y, w, h, h/2, s.Theme.Muted)
+	}
+	if s.Change != "" && s.Dir != 0 {
+		x, y, w, h := changeBox(s)
+		fmt.Fprintf(&b, `<rect x="%d" y="%d" width="%d" height="%d" rx="%d" fill="%s" fill-opacity="0.18"/>`, x, y, w, h, h/2, pillInk(s))
+	}
+	return b.String()
+}
+
+// pillInk is the comparison's colour: green for a rise, red for a fall.
+func pillInk(s Spec) string {
+	if s.Dir < 0 {
+		return s.Theme.Down
+	}
+	return s.Theme.Up
 }
 
 func overviewRuns(s Spec) []Run {
@@ -237,23 +288,20 @@ func overviewRuns(s Spec) []Run {
 		}
 	}
 	line := []Span{{Text: s.Label, Ink: s.Theme.Muted}}
-	if s.Change != "" {
-		ink := s.ink()
-		if s.Dir < 0 {
-			ink = s.Theme.Down
-		}
-		line = append(line, Span{Text: "   " + s.Change, Bold: true, Ink: ink})
-	}
 	var runs []Run
 	if s.Icon == nil {
 		runs = append(runs, Run{X: left + tile/2, Y: tileY + 37, Px: 30, Mid: true, Spans: []Span{{Text: initial, Bold: true, Ink: s.ink()}}})
 	}
 	runs = append(runs, []Run{
 		{X: left + tile + 18, Y: tileY + 36, Px: 30, Spans: []Span{{Text: clip(s.Domain, 34), Ink: s.Theme.FG}}},
-		{X: right, Y: tileY + 35, Px: 24, End: true, Spans: []Span{{Text: s.Foot, Ink: s.Theme.Muted}}},
+		{X: right, Y: tileY + 35, Px: periodPx, End: true, Spans: []Span{{Text: s.Foot, Ink: s.Theme.Muted}}},
 		{X: left - 5, Y: 262, Px: big, Spans: []Span{{Text: s.Big, Bold: true, Ink: s.Theme.FG}}},
-		{X: left, Y: 316, Px: 32, Spans: line},
+		{X: left, Y: changeBase, Px: 32, Spans: line},
 	}...)
+	if s.Change != "" && s.Dir != 0 {
+		x, _, _, _ := changeBox(s)
+		runs = append(runs, Run{X: x + pillPad + 2, Y: changeBase - 1, Px: changePx, Spans: []Span{{Text: s.Change, Bold: true, Ink: pillInk(s)}}})
+	}
 	if !s.NoBrand {
 		runs = append(runs, Run{X: right, Y: footY, Px: 28, End: true, Spans: []Span{{Text: "trck", Bold: true, Ink: s.Theme.FG}, {Text: "able.com", Ink: s.Theme.Muted}}})
 	}

@@ -29,13 +29,13 @@ const (
 type Theme struct {
 	BG, FG, Muted string
 	Accent, Money string // the default accent, and the one for money
-	Down          string // a fall, in words next to a number
+	Up, Down      string // a rise and a fall, in the pill next to a number
 }
 
 // Themes: dark by default, and light.
 var Themes = map[string]Theme{
-	"dark":  {BG: "#0b0d10", FG: "#f5f7fa", Muted: "#8b95a3", Accent: "#b8ff3c", Money: "#ffb547", Down: "#ff8a80"},
-	"light": {BG: "#fafaf7", FG: "#0b0d10", Muted: "#5c6470", Accent: "#487f00", Money: "#9c5a00", Down: "#c0352b"},
+	"dark":  {BG: "#0b0d10", FG: "#f5f7fa", Muted: "#8b95a3", Accent: "#b8ff3c", Money: "#ffb547", Up: "#4ade80", Down: "#ff8a80"},
+	"light": {BG: "#fafaf7", FG: "#0b0d10", Muted: "#5c6470", Accent: "#487f00", Money: "#9c5a00", Up: "#15803d", Down: "#c0352b"},
 }
 
 // ThemeOf is a theme by name, dark for anything unknown.
