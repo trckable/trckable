@@ -29,6 +29,8 @@ for (const [width, colorScheme] of [[1280, 'dark'], [390, 'light']] as const) {
     } else await page.locator('.share-chip').click()
     const dialog = page.getByRole('dialog', { name: 'Share your numbers' })
     await expect(dialog).toBeVisible()
+    // On a phone the sheet opens on the section the menu was in; the Overview is one tap away.
+    if (width < 768) await dialog.getByRole('radiogroup', { name: 'Card' }).getByRole('radio', { name: /Overview/ }).click()
     await dialog.getByRole('button', { name: /^Look/ }).click()
     const img = dialog.locator('.sd-preview img.sd-img:not(.is-out, .is-loader)')
     const size = () => img.evaluate((el: HTMLImageElement) => (el.complete ? `${el.naturalWidth}x${el.naturalHeight}` : ''))

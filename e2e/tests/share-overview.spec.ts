@@ -35,6 +35,8 @@ for (const [width, colorScheme] of [[1440, 'dark'], [1440, 'light'], [390, 'dark
     else await page.locator('.share-chip').click()
     const dialog = page.getByRole('dialog', { name: 'Share your numbers' })
     await expect(dialog).toBeVisible()
+    // On a phone the sheet opens on the section the menu was in; the Overview is one tap away.
+    if (width < 768) await dialog.getByRole('radiogroup', { name: 'Card' }).getByRole('radio', { name: /Overview/ }).click()
     const res = await card
     expect(res.status()).toBe(200)
     expect(res.headers()['content-type']).toBe('image/png')
@@ -126,6 +128,8 @@ for (const width of [1440, 390]) test(`the sheet picks the big number and the sm
   else await page.locator('.share-chip').click()
   const dialog = page.getByRole('dialog', { name: 'Share your numbers' })
   await expect(dialog).toBeVisible()
+  // On a phone the sheet opens on the section the menu was in; the Overview is one tap away.
+  if (width < 768) await dialog.getByRole('radiogroup', { name: 'Card' }).getByRole('radio', { name: /Overview/ }).click()
   // The newest request: the image still loading when there is one, else the settled one.
   const img = dialog.locator('.sd-preview img.sd-img:not(.is-out)').last()
   await dialog.getByRole('button', { name: /^Numbers/ }).click()
