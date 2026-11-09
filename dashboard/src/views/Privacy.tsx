@@ -154,6 +154,11 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
           </p>
         </details>
         {free && <span className="faint eu-note">Visitors get the smaller, storage-free script within the hour.</span>}
+        {!free && (
+          <span className="faint eu-note" data-testid="cookie-mode-note">
+            Cookie mode is on. It adds new vs returning visitors and journeys, and in the EU it needs a consent banner.
+          </span>
+        )}
       </section>
 
       {!free && <Consent site={site} config={c} on={!!mods?.consent} onSave={save} onOn={() => setMods((m) => ({ ...m, consent: true }))} />}

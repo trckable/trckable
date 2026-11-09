@@ -7,6 +7,10 @@ Settings → Data & privacy → Privacy report states what the site is set to co
 
 Where the server has an AI key for Answers, the "Where the data is" part adds one line: "Answers sends your questions to OpenAI, Perplexity and Anthropic. Nothing about your visitors." It names only the assistants that are on. See [answers](answers.md).
 
+## Cookieless by default
+
+A new site starts cookieless: the script sets no cookie and writes nothing to the browser's storage (the offline queue in [when your server is down](offline-queue.md) is cookie mode only), and a visitor is counted by a hash of the site, IP address and browser that changes every day. The daily salt behind that hash is deleted at the day change (UTC), so only today's exists. New vs returning visitors and journeys show "Off: cookieless mode" until you turn cookie mode on in Settings → Data & privacy; in the EU that needs a consent banner. Sites created before this change keep the setting they had.
+
 ## Form fields kept in a goal
 
 With Form submissions on, a field marked `data-trckable-keep="site"` adds what was typed in it to that form's goal, so the goal can say which site was scanned or which plan was picked. It is opt-in per field: nothing is read from a field you did not mark. Use one lowercase word without spaces for the label (the server lowercases it and drops a label with a space). At most 9 fields are kept, each cut to 100 characters. Only text, url, search and number fields, selects, text areas and chosen checkboxes or radios count. Never sent, even when marked: passwords, email addresses, phone numbers, card numbers, one-time codes, hidden fields, files, and any value containing an @.

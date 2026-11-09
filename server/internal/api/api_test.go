@@ -87,6 +87,12 @@ func newRig(t *testing.T) *rig {
 		close(done)
 	}()
 	site, _ := ctl.CreateSite(ctx, sqlite.DefaultAccount, "site.com", "")
+	// New sites start cookieless; these tests follow visitors, so this one uses cookies.
+	cfg, _ := ctl.SiteConfig(ctx, site)
+	cfg.ConsentFree = false
+	if err := ctl.SetSiteConfig(ctx, site, cfg); err != nil {
+		t.Fatal(err)
+	}
 	box, _ := secrets.New([]byte("api test instance key"))
 	ctl.Sealer = box
 	rev, err := revenue.New(ctx, ctl.DB, box)

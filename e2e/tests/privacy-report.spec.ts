@@ -13,20 +13,22 @@ test('privacy report: the sheet reads the site\'s real settings', async ({ page,
   const made = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain } })
   const site = ((await made.json()) as { id: string }).id
 
+  // A new site starts cookieless; the sheet says a banner is usually not needed.
   await page.goto(`${API}/settings?site=${site}&tab=privacy`)
   await page.locator('#privacy-report').getByRole('button', { name: 'View' }).click()
   const sheet = page.getByRole('dialog', { name: `Privacy report: ${domain}` })
-  await expect(sheet).toContainText('trckable_vid')
-  await expect(sheet).toContainText('Yes. This site sets a cookie')
+  await expect(sheet).toContainText('Usually not')
   await expect(sheet).toContainText('This is not legal advice')
   await expect(sheet).toContainText(`## Analytics on ${domain}`)
   await sheet.getByRole('button', { name: 'Close' }).click()
   await expect(sheet).toHaveCount(0)
 
-  // Cookieless mode changes what the report says.
+  // Cookie mode changes what the report says.
   const cur = (await (await page.request.get(`${API}/api/v1/sites/${site}/config`, { headers: H })).json()) as Record<string, unknown>
-  await page.request.put(`${API}/api/v1/sites/${site}/config`, { headers: H, data: { ...cur, consent_free: true } })
+  await page.request.put(`${API}/api/v1/sites/${site}/config`, { headers: H, data: { ...cur, consent_free: false } })
   await page.goto(`${API}/settings?site=${site}&tab=privacy`)
   await page.locator('#privacy-report').getByRole('button', { name: 'View' }).click()
-  await expect(page.getByRole('dialog', { name: `Privacy report: ${domain}` })).toContainText('Usually not')
+  const withCookie = page.getByRole('dialog', { name: `Privacy report: ${domain}` })
+  await expect(withCookie).toContainText('trckable_vid')
+  await expect(withCookie).toContainText('Yes. This site sets a cookie')
 })

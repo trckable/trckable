@@ -1,0 +1,1 @@
+New sites start cookieless: no cookie, nothing stored in the browser, visitors counted by a daily hash. Cookie mode is an opt-in in Settings, Data & privacy, with a note that it needs a consent banner in the EU. Sites you already have keep their setting. The daily salt is now deleted at the day change, so only today's exists.

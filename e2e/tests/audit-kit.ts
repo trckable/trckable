@@ -49,12 +49,23 @@ export async function signIn(page: Page) {
 }
 
 /** A site of its own, signed in. `first` sends the one visit that takes the dashboard past "waiting for the first visit". */
-export async function newSite(page: Page, prefix: string, first = true): Promise<TestSite> {
+/** Opts a site into cookie mode (a new site starts cookieless): the specs that follow a visitor across pages and days need it. */
+export async function useCookies(request: APIRequestContext, site: string, headers: Record<string, string> = H) {
+  const url = `${API}/api/v1/sites/${site}/config`
+  const cfg = (await (await request.get(url, { headers })).json()) as Record<string, unknown>
+  expect((await request.put(url, { headers, data: { ...cfg, consent_free: false, honor_dnt: false, record_city: true } })).ok()).toBe(true)
+}
+
+/** A new site starts cookieless. `cookies` (the default here, so the specs that
+ * follow visitors across days keep working) turns cookie mode on, the way the
+ * Cookieless switch does. */
+export async function newSite(page: Page, prefix: string, first = true, cookies = true): Promise<TestSite> {
   await signIn(page)
   const domain = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.example.org`
   const made = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain } })
   expect(made.status()).toBe(201)
   const site = { id: ((await made.json()) as { id: string }).id, domain }
+  if (cookies) await useCookies(page.request, site.id)
   if (first) {
     expect((await visit(page.request, site, '/first')).ok()).toBe(true)
     await waitForEvents(page.request, site, 1)

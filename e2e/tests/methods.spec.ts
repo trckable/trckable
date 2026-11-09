@@ -40,6 +40,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { METHODS, tag, type Ctx, type Method } from '../../dashboard/src/lib/install'
 import { API, TOKEN } from '../playwright.config'
+import { useCookies } from './audit-kit'
 import { PORT, origin } from '../ports'
 
 const PKG = fileURLToPath(new URL('../../packages/trckable/', import.meta.url))
@@ -56,6 +57,7 @@ test.beforeAll(async ({ request }) => {
   const s = await (await request.get('/_site')).json()
   site = s.site
   key = s.key
+  await useCookies(request, site, { Authorization: `Bearer ${TOKEN}`, 'X-Trckable-Request': '1' }) // new sites start cookieless; this one follows visitors
 })
 
 const ctxFor = (domain = 'example.com'): Ctx => ({ host: HOST, site, domain, proxyKey: key })

@@ -6,6 +6,7 @@
 import { createHmac } from 'node:crypto'
 import { expect, test, type APIRequestContext } from './fixtures'
 import { API, TOKEN } from '../playwright.config'
+import { useCookies } from './audit-kit'
 import { PORT, origin } from '../ports'
 
 type Ev = { seq: number; kind: string; path: string; visitor: string; session: string; channel?: string }
@@ -16,6 +17,7 @@ const PROXY = origin(PORT.proxy)
 let site = ''
 test.beforeAll(async ({ request }) => {
   site = (await (await request.get('/_site')).json()).site
+  await useCookies(request, site, { Authorization: `Bearer ${TOKEN}`, 'X-Trckable-Request': '1' }) // new sites start cookieless; this one follows visitors
 })
 
 async function events(request: APIRequestContext, prefix: string): Promise<Ev[]> {

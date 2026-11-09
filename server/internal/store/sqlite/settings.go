@@ -92,11 +92,13 @@ type Group struct {
 // stops being a summary.
 const MaxGroups = 30
 
-// DefaultSiteConfig is what a new site gets. Stricter bot filtering is on:
-// a browser running in a data centre is a script, and counting it makes every
-// number wrong. A site that wants those visits back turns it off.
+// DefaultSiteConfig is what a new site gets. It starts cookieless: no cookie,
+// no storage, visitors counted by a daily hash. Cookie mode is the opt-in.
+// Stricter bot filtering is on: a browser running in a data centre is a
+// script, and counting it makes every number wrong. A site that wants those
+// visits back turns it off.
 func DefaultSiteConfig() SiteConfig {
-	return SiteConfig{RecordCity: true, WeekStart: 1, BotStrict: true}
+	return SiteConfig{RecordCity: true, WeekStart: 1, BotStrict: true, ConsentFree: true}
 }
 
 // SiteConfig reads a site's configuration, falling back to the defaults.
@@ -115,7 +117,11 @@ func (s *Store) SiteConfig(ctx context.Context, site string) (SiteConfig, error)
 		FROM site_settings WHERE site_id = ?`, site).
 		Scan(&paths, &ips, &dnt, &city, &c.RetentionDays, &c.WeekStart, &strict, &free, &groups, &banner, &pageGoals)
 	if err != nil {
-		return c, nil // no row yet: the defaults are the answer, not an error
+		// No row: a site from before new sites started cookieless (CreateSite
+		// writes one now). It keeps the cookie mode it always had, as ingest
+		// reads it.
+		c.ConsentFree = false
+		return c, nil
 	}
 	c.HonorDNT, c.RecordCity, c.BotStrict, c.ConsentFree = dnt == 1, city == 1, strict == 1, free == 1
 	c.Banner = readBanner(banner)
