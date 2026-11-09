@@ -2,17 +2,20 @@ import formats from './formats.json'
 
 // What the dialog asks the server for: a card is one address, so the preview
 // and the download are the same picture.
-export type Template = 'overview' | 'numbers' | 'grid' | 'leaderboard' | 'post'
+export type Template = 'overview' | 'numbers' | 'grid' | 'leaderboard' | 'toppage' | 'sources' | 'topsource' | 'places' | 'topplace' | 'devices' | 'browsers' | 'post'
 /** A group of pictures in the gallery. */
-export type Topic = 'overview' | 'pages' | 'text'
+export type Topic = 'overview' | 'sources' | 'pages' | 'places' | 'tech' | 'text'
 /** What a picture needs of the site; without it the picture is shown disabled, with the reason. */
-export type Need = 'revenue' | 'data'
+export type Need = 'revenue' | 'data' | 'sources' | 'places' | 'tech'
 export type Period = '24h' | '7d' | '30d' | 'all' | 'custom'
 export type Metric = 'visitors' | 'pageviews' | 'engaged' | 'revenue'
 /** The small numbers under the chart: the ones that are also a metric are not offered while it is the big number. */
 export type Stat = 'engaged' | 'avgtime' | 'pageviews' | 'visitors' | 'bounce' | 'country' | 'page' | 'source' | 'revenue'
 export type Theme = 'dark' | 'light'
 /** The picture's size: the link preview (1.91:1), square, story (9:16) or wide (16:9). */
+/** The background of the picture. */
+export type Bg = 'gradient' | 'solid' | 'grid'
+export const BACKGROUNDS: Bg[] = ['gradient', 'solid', 'grid']
 export type Shape = 'link' | 'square' | 'story' | 'wide'
 
 /** The sizes, from the one list the server draws by (formats.json, kept equal to cards.Formats). */
@@ -22,13 +25,20 @@ export const formatOf = (shape: Shape) => FORMATS.find((f) => f.id === shape) ??
 /** The gallery: every picture, in its topic. A topic's pictures come first-to-last as listed. */
 export type Picture = { id: Template; topic: Topic; need?: Need }
 export const PICTURES: Picture[] = [
-  { id: 'overview', topic: 'overview' },
+  { id: 'overview', topic: 'overview', need: 'data' },
   { id: 'numbers', topic: 'overview', need: 'data' },
   { id: 'grid', topic: 'overview', need: 'data' },
-  { id: 'leaderboard', topic: 'pages' },
+  { id: 'sources', topic: 'sources', need: 'sources' },
+  { id: 'topsource', topic: 'sources', need: 'sources' },
+  { id: 'leaderboard', topic: 'pages', need: 'data' },
+  { id: 'toppage', topic: 'pages', need: 'data' },
+  { id: 'places', topic: 'places', need: 'places' },
+  { id: 'topplace', topic: 'places', need: 'places' },
+  { id: 'devices', topic: 'tech', need: 'tech' },
+  { id: 'browsers', topic: 'tech', need: 'tech' },
   { id: 'post', topic: 'text' },
 ]
-export const TOPICS: Topic[] = ['overview', 'pages', 'text']
+export const TOPICS: Topic[] = ['overview', 'sources', 'pages', 'places', 'tech', 'text']
 export const picturesOf = (t: Topic) => PICTURES.filter((p) => p.topic === t)
 /** What the picture lacks on this site, if anything (it is then disabled, saying why). */
 export const missing = (p: Picture, has: Record<Need, boolean>): Need | null => (p.need && !has[p.need] ? p.need : null)
@@ -42,10 +52,13 @@ export const PERIODS: Period[] = ['24h', '7d', '30d', 'all', 'custom']
 /** The swatches: the site's own colour first, when it has one. */
 export const ACCENTS = ['#b8ff3c', '#4f8cff', '#ff5ca8', '#ffb547', '#2dd4bf']
 
-export type Look = { template: Template; shape: Shape; period: Period; /** A custom range's first and last day. */ range?: { from: string; to: string }; /** The change against the period just before, in a pill. Off by default; nothing before all time. */ compare: boolean; metric: Metric; stats: Stat[]; theme: Theme; accent: string; /** The site's hide-branding choice, only where it can change the picture: it makes the address new when it flips. */ hideBrand?: boolean }
+export type Look = { template: Template; shape: Shape; period: Period; /** A custom range's first and last day. */ range?: { from: string; to: string }; /** The change against the period just before, in a pill. Off by default; nothing before all time. */ compare: boolean; metric: Metric; stats: Stat[]; theme: Theme; accent: string; /** The site's hide-branding choice, only where it can change the picture: it makes the address new when it flips. */ hideBrand?: boolean; /** The background; the gradient when missing. */ bg?: Bg; /** Leave the period off the picture. */ hideDate?: boolean; /** Leave the site's name off the picture. */ hideName?: boolean }
 
 /** The numbers in words, and the post's text. */
-export type CardWords = { metric: Metric; big: string; label: string; foot: string; revenue: boolean; has_data: boolean; post: string }
+export type CardWords = { metric: Metric; big: string; label: string; foot: string; revenue: boolean; has_data: boolean; has_sources: boolean; has_places: boolean; has_tech: boolean; post: string }
+
+/** What the site has to show, by what a picture needs. */
+export const hasOf = (w: CardWords | null): Record<Need, boolean> => ({ revenue: w?.revenue ?? false, data: w?.has_data ?? true, sources: w?.has_sources ?? true, places: w?.has_places ?? true, tech: w?.has_tech ?? true })
 
 export function cardUrl(site: string, l: Look, format: 'png' | 'json' | 'thumb' = 'png'): string {
   const p = new URLSearchParams({ period: l.period, metric: l.metric })
@@ -61,6 +74,9 @@ export function cardUrl(site: string, l: Look, format: 'png' | 'json' | 'thumb' 
     if (l.shape !== 'link') p.set('shape', l.shape)
     p.set('theme', l.theme)
     p.set('accent', l.accent)
+    if (l.bg && l.bg !== 'gradient') p.set('bg', l.bg)
+    if (l.hideDate) p.set('date', '0')
+    if (l.hideName) p.set('name', '0')
     p.set('stats', l.stats.join(','))
     if (l.hideBrand !== undefined) p.set('brand', l.hideBrand ? '0' : '1')
   }

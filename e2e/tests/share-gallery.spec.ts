@@ -34,10 +34,10 @@ for (const [width, colorScheme] of [[1280, 'dark'], [390, 'light']] as const) {
     const pics = dialog.getByRole('radiogroup', { name: 'Card' })
     for (const name of ['Overview', 'Big number', 'In numbers', 'Leaderboard']) await expect(pics.getByRole('radio', { name })).toBeEnabled()
     await expect(pics.getByRole('radio', { name: /Overview/ })).toHaveAttribute('aria-checked', 'true')
-    await expect.poll(() => pics.locator('.sd-thumb img').evaluateAll((l) => l.every((i) => (i as HTMLImageElement).complete && (i as HTMLImageElement).naturalWidth === 1200))).toBe(true)
+    await expect.poll(() => pics.locator('.sd-thumb img').evaluateAll((l) => l.every((i) => (i as HTMLImageElement).complete && (i as HTMLImageElement).naturalWidth === 360))).toBe(true)
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/gallery-${width}-${colorScheme}.png` })
 
-    const img = dialog.locator('.sd-preview img')
+    const img = dialog.locator('.sd-preview img.sd-img:not(.is-out, .is-loader)')
     const size = () => img.evaluate((el: HTMLImageElement) => (el.complete ? `${el.naturalWidth}x${el.naturalHeight}` : ''))
     for (const [name, id] of [['Big number', 'numbers'], ['In numbers', 'grid'], ['Overview', 'overview']] as const) {
       await pics.getByRole('radio', { name: new RegExp(name) }).click()
@@ -46,7 +46,7 @@ for (const [width, colorScheme] of [[1280, 'dark'], [390, 'light']] as const) {
         await dialog.getByRole('radio', { name: label }).click()
         await expect.poll(size).toBe(dims)
         const file = page.waitForEvent('download')
-        await dialog.getByRole('button', { name: 'Download PNG' }).click()
+        await dialog.getByRole('button', { name: /^Download \d+×\d+$/ }).click()
         expect((await file).suggestedFilename()).toBe(`trckable-${STEADY_DOMAIN}-${id}${shape === 'link' ? '' : `-${shape}`}-7d.png`)
       }
       await dialog.getByRole('button', { name: /^What to share/ }).click()

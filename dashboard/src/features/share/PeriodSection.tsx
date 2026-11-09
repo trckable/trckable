@@ -27,6 +27,7 @@ export function PeriodSection({ look, tz, set }: { look: Look; tz: string; set: 
           </button>
         ))}
       </div>
+      <p className="sd-hint faint sd-note">{look.period === '24h' ? copy.fullHours : copy.fullDays}</p>
       {picking && (
         <Calendar
           p={{ customRange: range, today, grain: GRAIN }}

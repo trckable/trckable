@@ -9,7 +9,7 @@ import { can } from '../../lib/permissions'
 import { Modal } from '../../kit/Modal'
 import { toast } from '../../components/Toast'
 import { fmtRange, todayIn } from '../../lib/dates'
-import { ACCENTS, DEFAULT_STATS, METRICS, cardUrl, comparing, fileName, hasNumbers, missing, PICTURES, picturesOf, statsWith, type CardWords, type Look, type Period, type Topic } from './card'
+import { ACCENTS, DEFAULT_STATS, METRICS, cardUrl, comparing, fileName, formatOf, hasNumbers, hasOf, missing, PICTURES, picturesOf, statsWith, type CardWords, type Look, type Period, type Topic } from './card'
 import { Actions, type Act } from './Actions'
 import { copy } from './copy'
 import { copyImage, saveImage, shareImage } from './image'
@@ -55,7 +55,7 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
         if (w.metric !== look.metric) set({ metric: w.metric })
         // A picture the period cannot fill (no visit in it) gives way to the overview.
         const now = PICTURES.find((p) => p.id === look.template)
-        if (now && missing(now, { revenue: w.revenue, data: w.has_data })) set({ template: 'overview' })
+        if (now && missing(now, hasOf(w))) set({ template: 'overview' })
       })
       .catch(() => undefined)
     return () => {
@@ -87,7 +87,8 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
       setBusy(null)
     }
   }
-  const has = { revenue: words?.revenue ?? false, data: words?.has_data ?? true }
+  const has = hasOf(words)
+  const px = formatOf(look.shape)
   const today = todayIn(site.timezone)
   const metrics = METRICS.filter((m) => m !== 'revenue' || words?.revenue)
 
@@ -115,21 +116,23 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
             <Preview site={site.id} look={shown} words={words} />
           </div>
           <div className="sd-panel">
-            <Section id="card" title={copy.whatToShare} summary={copy.template[look.template].name} open={open === 'card'} onToggle={() => toggle('card')}>
-              <CardSection site={site.id} look={shown} has={has} onChange={(t) => set({ template: t })} />
-            </Section>
-            <Section id="period" title={copy.period} summary={periodSummary} open={open === 'period'} onToggle={() => toggle('period')}>
-              <PeriodSection look={look} tz={site.timezone} set={set} />
-            </Section>
-            {hasNumbers(look.template) && (
-              <Section id="numbers" title={copy.numbers} summary={numbersSummary} open={open === 'numbers'} onToggle={() => toggle('numbers')}>
-                <NumbersSection look={look} metrics={metrics} revenue={words?.revenue ?? false} set={set} />
+            <div className="sd-sections">
+              <Section id="card" title={copy.whatToShare} summary={copy.template[look.template].name} open={open === 'card'} onToggle={() => toggle('card')}>
+                <CardSection site={site.id} look={shown} has={has} onChange={(t) => set({ template: t })} />
               </Section>
-            )}
-            <Section id="look" title={copy.lookTitle} summary={copy[look.theme]} open={open === 'look'} onToggle={() => toggle('look')}>
-              <LookSection site={site} sites={sites.length ? sites : [site]} onSite={setSiteId} look={look} set={set} brand={brand} />
-            </Section>
-            <Actions post={look.template === 'post'} busy={busy} done={done} onAct={(a) => void go(a)} />
+              <Section id="period" title={copy.period} summary={periodSummary} open={open === 'period'} onToggle={() => toggle('period')}>
+                <PeriodSection look={look} tz={site.timezone} set={set} />
+              </Section>
+              {hasNumbers(look.template) && (
+                <Section id="numbers" title={copy.numbers} summary={numbersSummary} open={open === 'numbers'} onToggle={() => toggle('numbers')}>
+                  <NumbersSection look={look} metrics={metrics} revenue={words?.revenue ?? false} set={set} />
+                </Section>
+              )}
+              <Section id="look" title={copy.lookTitle} summary={copy[look.theme]} open={open === 'look'} onToggle={() => toggle('look')}>
+                <LookSection site={site} sites={sites.length ? sites : [site]} onSite={setSiteId} look={look} set={set} brand={brand} />
+              </Section>
+            </div>
+            <Actions post={look.template === 'post'} size={`${px.w}×${px.h}`} busy={busy} done={done} onAct={(a) => void go(a)} />
           </div>
         </div>
       )}

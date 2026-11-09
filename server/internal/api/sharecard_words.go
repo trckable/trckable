@@ -17,7 +17,7 @@ var cardWords = struct {
 	pageviews:  "pageviews",
 	revenue:    "revenue",
 	topPages:   "Top pages",
-	noVisits:   "No visits yet",
+	noVisits:   "Needs a visit in this period",
 	counted:    "Counted with trckable",
 	engaged:    "Engaged visits",
 	avgTime:    "Avg time",
@@ -61,6 +61,12 @@ func cardPeriodOf(s string) cardPeriod {
 func cardTemplateOf(s string) string {
 	switch s {
 	case "leaderboard", "numbers", "grid":
+		return s
+	}
+	if _, ok := cardLists[s]; ok {
+		return s
+	}
+	if _, ok := cardHeroes[s]; ok {
 		return s
 	}
 	return "overview"

@@ -17,13 +17,16 @@ import (
 // dialog shows it and downloads it, so preview and file are one picture.
 //
 //	GET /api/v1/sites/{site}/card
-//	t        overview | numbers | grid | leaderboard (default overview). numbers is the overview without its chart, grid is four numbers, two by two
+//	t        overview | numbers | grid | leaderboard (the top pages) | sources | places | browsers | devices (top five with bars) | toppage | topsource | topplace (one hero) (default overview). numbers is the overview without its chart, grid is four numbers, two by two
 //	period   24h | 7d | 30d | all | custom (default 7d); custom takes from and to (YYYY-MM-DD). A period ends on the last full day or hour
 //	compare  1: the change against the period just before, in a pill (off by default; not for all time)
 //	metric   visitors | pageviews | engaged | revenue (default visitors)
 //	stats    up to three small numbers under the chart, comma-separated (see cardStatIDs); default engaged,avgtime,country
 //	shape    link | square | story | wide: the picture's size (cards.Formats; default link, 1200 × 630)
 //	theme    dark | light
+//	bg       gradient (default) | solid | grid
+//	date     0: no period on the picture
+//	name     0: no site name (and no tile) on the picture
 //	accent   #rrggbb
 //	thumb    1: a small picture (360 px wide) for the dialog's strip; the shape is the link preview's
 //	format   png (default) | json: the numbers in words and a post's text
@@ -41,25 +44,30 @@ var cardRenders = make(chan struct{}, 2)
 
 // cardNumbers is what the cards and the post say.
 type cardNumbers struct {
-	Metric    string `json:"metric"`
-	Big       string `json:"big"`
-	Label     string `json:"label"`
-	Foot      string `json:"foot"`
-	Revenue   bool   `json:"revenue"` // revenue may be picked
-	HasData   bool   `json:"has_data"`
-	Post      string `json:"post"`
-	rows      []cards.Item
-	grid      []cards.Stat // the grid's four numbers
-	series    []float64
-	change    string // the pick against the period before: "+12%", "" when there is none
-	vs        string // what it is against ("previous 30 days"), said after the change
-	dir       int
-	stats     []cards.Stat
-	domain    string
-	visitors  int64
-	pageviews int64
-	engaged   int64
-	money     string
+	Metric  string `json:"metric"`
+	Big     string `json:"big"`
+	Label   string `json:"label"`
+	Foot    string `json:"foot"`
+	Revenue bool   `json:"revenue"` // revenue may be picked
+	HasData bool   `json:"has_data"`
+	Post    string `json:"post"`
+	// What the other topics have to show, so the dialog can disable a picture with nothing behind it.
+	HasSources bool `json:"has_sources"`
+	HasPlaces  bool `json:"has_places"`
+	HasTech    bool `json:"has_tech"`
+	rows       []cards.Item
+	lists      map[string][]cards.Item // the top five of each list picture, by its t
+	grid       []cards.Stat            // the grid's four numbers
+	series     []float64
+	change     string // the pick against the period before: "+12%", "" when there is none
+	vs         string // what it is against ("previous 30 days"), said after the change
+	dir        int
+	stats      []cards.Stat
+	domain     string
+	visitors   int64
+	pageviews  int64
+	engaged    int64
+	money      string
 }
 
 func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +97,7 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 		Template: tpl, Format: cards.FormatOf(v.Get("shape")).ID, Theme: theme, Accent: v.Get("accent"),
 		Domain: n.domain, Big: n.Big, Label: n.Label, Foot: n.Foot, Series: n.series,
 		Change: n.change, Dir: n.dir, Stats: n.stats,
-		NoBrand: a.HidesBrand(r.Context(), r.PathValue("site")),
+		NoBrand: a.HidesBrand(r.Context(), r.PathValue("site")), Bg: v.Get("bg"),
 	}
 	if tpl == "grid" {
 		spec.Label, spec.Stats, spec.Change, spec.Dir, spec.Series = cardWords.gridTitle[periodKey(v.Get("period"))], n.grid, "", 0, nil
@@ -97,9 +105,12 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 	if tpl == "overview" || tpl == "numbers" {
 		spec.Icon = a.cardIcon(r.Context(), r.PathValue("site"), n.domain)
 	}
-	if spec.Template == "leaderboard" {
-		spec.Label, spec.Rows = cardWords.topPages, n.rows
-		spec.Big = cardWords.noVisits
+	n.pictureOf(&spec, tpl)
+	if v.Get("date") == "0" {
+		spec.Foot = ""
+	}
+	if v.Get("name") == "0" {
+		spec.Domain, spec.Icon = "", nil
 	}
 	select {
 	case cardRenders <- struct{}{}:
@@ -302,16 +313,10 @@ func cardWordsOf(res *query.Result, domain string, p cardPeriod, metric string) 
 	default:
 		n.Big, n.Label = number(n.visitors), cardWords.visitors
 	}
-	top := res.Dims["entry_page"]
-	for _, row := range top {
-		if len(n.rows) == cards.MaxRows {
-			break
-		}
-		if row.Value == "" || top[0].Visitors == 0 {
-			continue
-		}
-		n.rows = append(n.rows, cards.Item{Name: row.Value, Value: number(row.Visitors), Share: float64(row.Visitors) / float64(top[0].Visitors)})
-	}
+	n.listsOf(res)
+	n.rows = n.lists["leaderboard"]
+	n.HasSources, n.HasPlaces = len(n.lists["sources"]) > 0, len(n.lists["places"]) > 0
+	n.HasTech = len(n.lists["devices"]) > 0 || len(n.lists["browsers"]) > 0
 	n.Post = cardPost(n, p)
 	return n
 }

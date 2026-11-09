@@ -1,18 +1,19 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { CardSection } from './CardSection'
-import { PICTURES, missing, picturesOf, type Look, type Picture } from './card'
+import { PICTURES, TOPICS, missing, picturesOf, type Look, type Picture } from './card'
 
 const look: Look = { template: 'numbers', shape: 'link', period: '7d', compare: false, metric: 'visitors', stats: ['engaged'], theme: 'dark', accent: '#b8ff3c' }
-const has = { revenue: false, data: true }
+const has = { revenue: false, data: true, sources: true, places: true, tech: true }
 
 describe('gallery', () => {
   it('lists the Overview pictures first, the picked one checked, each with its own thumbnail address', () => {
     const html = renderToStaticMarkup(<CardSection site="s1" look={look} has={has} onChange={() => undefined} />)
     expect(picturesOf('overview').map((p) => p.id)).toEqual(['overview', 'numbers', 'grid'])
+    expect(TOPICS.map((t) => picturesOf(t).length)).toEqual([3, 2, 2, 2, 2, 1])
     expect(html.match(/role="radio"/g)).toHaveLength(PICTURES.length)
     expect(html).toMatch(/aria-checked="true"[^>]*>(?:(?!<button).)*Big number/s)
-    for (const t of ['overview', 'numbers', 'grid', 'leaderboard']) expect(html).toContain(`t=${t}&amp;`)
+    for (const t of ['overview', 'numbers', 'grid', 'sources', 'topsource', 'leaderboard', 'toppage', 'places', 'topplace', 'devices', 'browsers']) expect(html).toContain(`t=${t}&amp;`)
     expect(html).not.toContain('t=post&amp;') // a post is text, not a picture
   })
   it('draws every thumbnail as the link preview, whatever size is picked', () => {
@@ -20,16 +21,22 @@ describe('gallery', () => {
     expect(html).not.toContain('shape=')
   })
   it('asks for the small picture, and for none of a picture the period cannot fill', () => {
-    const html = renderToStaticMarkup(<CardSection site="s1" look={look} has={{ revenue: false, data: false }} onChange={() => undefined} />)
+    const html = renderToStaticMarkup(<CardSection site="s1" look={look} has={{ revenue: false, data: false, sources: true, places: true, tech: false }} onChange={() => undefined} />)
     expect(html).toContain('thumb=1')
     expect(html).not.toContain('t=numbers&amp;')
     expect(html).not.toContain('t=grid&amp;')
+    for (const t of ['overview', 'leaderboard', 'devices']) expect(html).not.toContain(`t=${t}&amp;`)
     expect(html).toContain('Needs a visit in this period')
+    const none = renderToStaticMarkup(<CardSection site="s1" look={look} has={{ revenue: false, data: false, sources: false, places: false, tech: false }} onChange={() => undefined} />)
+    expect(none).not.toContain('thumb=1')
+    expect(none).toContain('Needs a visit from another site')
+    expect(none).toContain('Needs a visit from a known country')
+    expect(none).toContain('Needs a visit with a known browser')
   })
   it('shows a picture the site cannot make disabled, with the reason', () => {
     const sales: Picture = { id: 'grid', topic: 'overview', need: 'revenue' }
-    expect(missing(sales, { revenue: false, data: true })).toBe('revenue')
-    expect(missing(sales, { revenue: true, data: true })).toBeNull()
+    expect(missing(sales, { revenue: false, data: true, sources: true, places: true, tech: true })).toBe('revenue')
+    expect(missing(sales, { revenue: true, data: true, sources: true, places: true, tech: true })).toBeNull()
     const html = renderToStaticMarkup(<CardSection site="s1" look={look} has={has} pictures={[...PICTURES.filter((p) => p.id !== 'grid'), sales]} onChange={() => undefined} />)
     expect(html).toMatch(/<button[^>]*disabled[^>]*>/)
     expect(html).toContain('Needs a connected payment provider')

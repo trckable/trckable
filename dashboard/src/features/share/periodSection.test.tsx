@@ -14,4 +14,10 @@ describe('the period section', () => {
   it('has the comparison off by default', () => expect(draw({})).toMatch(/aria-checked="false"[^>]*aria-label="Compare"|aria-label="Compare"[^>]*aria-checked="false"/))
   it('has the comparison on when asked for', () => expect(draw({ compare: true })).toMatch(/aria-checked="true"/))
   it('has no comparison for all time: nothing comes before it', () => expect(draw({ period: 'all' })).not.toContain('Compare'))
+  it('says the days are full ones, up to yesterday; for 24 hours, the last full 24', () => {
+    expect(draw({})).toContain('Full days, up to yesterday')
+    expect(draw({ period: 'all' })).toContain('Full days, up to yesterday')
+    expect(draw({ period: '24h' })).toContain('The last full 24 hours')
+    expect(draw({ period: '24h' })).not.toContain('up to yesterday')
+  })
 })
