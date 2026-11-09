@@ -83,11 +83,10 @@ function ChartSlot({ x, report, notes, onNotes }: { x: XCtx; report: Report; not
   )
 }
 
-/** Too little to compare: the period's own numbers, the one line that says why there is no comparison, and the one way to widen the period. */
-function Plain({ x, d }: { x: XCtx; d: Model }) {
+/** Too little to compare: the one line that says why there is no comparison, and the one way to widen the period. */
+function Plain({ x }: { x: XCtx }) {
   return (
     <>
-      <XKcs items={d.kcs} />
       <p className="xchg-few">{copy.fewHere}</p>
       {x.widen && (
         <button type="button" className="xb" onClick={x.widen}>
@@ -137,8 +136,9 @@ export function Changed({ x, d }: { x: XCtx; d: Model & { report: Report } }) {
       <p className="xchg-say">{say}</p>
       <MoverChips list={w?.causes ?? []} metric={metric} fmt={fmt} />
       {chart && <ChartSlot x={x} report={d.report} notes={notes.notes} onNotes={() => setSheet(true)} />}
+      <XKcs items={d.kcs} />
       <Biggest metrics={metrics} metric={metric} setMetric={setMetric} list={list} fmt={fmt} few={w?.kind === 'few'} />
-      {whole && <Plain x={x} d={d} />}
+      {whole && <Plain x={x} />}
       <Downtime down={d.down} />
       <Tools site={x.site} to={x.query.to} notes={notes} sheet={sheet} setSheet={setSheet} />
     </>

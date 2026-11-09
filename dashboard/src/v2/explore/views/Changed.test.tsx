@@ -28,7 +28,9 @@ const report = { current: result(233, [['google.com', 200], ['x.com', 33]]), pre
 const thin = { current: result(4, []), previous: result(3, []) } as unknown as Report
 
 const x = { site: { id: 's1', domain: 'site.com' }, filters: [{ key: 'source', value: 'google' }], query: { from: '2026-10-11', to: '2026-11-09' }, money: (n: number) => `$${n}`, widen: vi.fn() } as unknown as XCtx
-const model = (r: Report) => ({ kcs: [], per: 'day', shape: null, down: [], pages: [], sources: [], visits: [], of: 0, report: r }) as unknown as Overview & { report: Report }
+const kc = (icon: string, label: string, val: string, t: string, c: string) => ({ icon, label, val, note: { t, c }, vals: [1, 2, 3], st: c === 'dn' ? 'dn' : '' })
+const kcs = [kc('people', 'People', '233', '+1%', 'up'), kc('views', 'Pageviews', '466', '-4%', 'dn'), kc('signups', 'Sign-ups', '0', copy.tooLittleBefore, ''), kc('sales', 'Money', '$0', '+2%', 'up')]
+const model = (r: Report) => ({ kcs, per: 'day', shape: null, down: [], pages: [], sources: [], visits: [], of: 0, report: r }) as unknown as Overview & { report: Report }
 
 let root: Root
 let host: HTMLDivElement
@@ -64,5 +66,23 @@ describe('what changed, one number under its floor', () => {
     expect(said()).toBe(copy.sayFew)
     expect(host.textContent).toContain(copy.fewHere)
     expect(host.querySelectorAll('.xchg-kinds button').length).toBeGreaterThan(1)
+  })
+})
+
+describe('what changed, the number cards', () => {
+  it('shows the four cards with their changes above the biggest changes in the normal comparison', () => {
+    show(report)
+    const cards = [...host.querySelectorAll('.sum')]
+    expect(cards.map((c) => c.querySelector('.sum-l')?.textContent)).toEqual(['People', 'Pageviews', 'Sign-ups', 'Money'])
+    expect(cards[0].querySelector('.sum-n')?.textContent).toContain('+1%')
+    expect(cards[1].querySelector('.sum-n')?.textContent).toContain('-4%')
+    expect(cards[2].querySelector('.sum-n')?.textContent).toContain(copy.tooLittleBefore)
+    const head = host.querySelector('.xchg-head') as Element
+    expect(cards[0].compareDocumentPosition(head) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('shows them once in the too-little state', () => {
+    show(thin)
+    expect(host.querySelectorAll('.sum').length).toBe(4)
   })
 })
