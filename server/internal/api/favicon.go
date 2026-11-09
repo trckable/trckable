@@ -150,7 +150,7 @@ func (a *API) previewFavicon(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", iconType(data))
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Cache-Control", "private, max-age=3600")
-	_, _ = w.Write(data)
+	_, _ = w.Write(data) //nolint:gosec // an image fetched from the site, sent with its own type and nosniff
 }
 
 // startIcon gives a new site its favicon in the background: a failure is
