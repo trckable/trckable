@@ -1,0 +1,95 @@
+/* Sales > Payments and Customers: roomy rows, one grid for both lists, marks in place of words. */
+.mk .sale.xpr,
+.mk .xcp .xfade > .sale.xpr.xpr {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin: 0 0 4px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.mk button.sale.xpr {
+  cursor: pointer;
+}
+.mk button.sale.xpr:hover {
+  background: var(--mk-faintbg3);
+}
+.mk .xcp .sale.xpr .xface,
+.mk .sale.xpr .xface,
+.mk .sale.xpr .v-avatar {
+  width: 36px !important; /* a face scales with the phone's mark size: here both are one size, so the names line up */
+  height: 36px !important;
+  border-radius: 50%;
+}
+.mk .xcp .sale.xpr .gn,
+.mk .xcp .sale.xpr .gn > div {
+  min-width: 0;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mk .sale.xpr .gn {
+  display: grid;
+  gap: 4px;
+}
+/* The meta line: marks side by side, then the text that has no mark. */
+.mk .sale.xpr .xpmeta {
+  display: flex;
+  align-items: center;
+  gap: var(--mk-s2);
+  min-width: 0;
+  font-size: 12px;
+}
+.mk .sale.xpr .xpmeta > span:not(.xpm) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mk .sale.xpr .xpm {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  line-height: 0;
+}
+.mk .sale.xpr .xpm .prov-mark {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+}
+.mk .sale.xpr .xpm .prov-mark svg {
+  width: 14px;
+  height: 14px;
+}
+.mk .sale.xpr .xplink {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.mk .sale.xpr .rt .mk-quiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+@media (max-width: 480px) {
+  .mk .sale.xpr,
+  .mk .xcp .xfade > .sale.xpr.xpr {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    gap: var(--mk-s2);
+    padding: 9px 8px;
+  }
+  .mk .sale.xpr .xface,
+  .mk .sale.xpr .v-avatar {
+    width: 32px !important;
+    height: 32px !important;
+  }
+}
