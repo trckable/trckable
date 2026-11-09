@@ -20,7 +20,6 @@ function ShapeIcon({ w, h }: { w: number; h: number }) {
 }
 
 export function LookSection({ site, sites, onSite, look, set, brand }: Props) {
-  const post = look.template === 'post'
   return (
     <>
       {sites.length > 1 && (
@@ -32,50 +31,46 @@ export function LookSection({ site, sites, onSite, look, set, brand }: Props) {
           ))}
         </Select>
       )}
-      {!post && (
-        <>
-          <div className="sd-chips" role="radiogroup" aria-label={copy.shape}>
-            {FORMATS.map((f) => (
-              <button key={f.id} type="button" role="radio" aria-checked={look.shape === f.id} className="sd-chip" title={copy.shapes[f.id].hint} onClick={() => set({ shape: f.id })}>
-                <ShapeIcon w={f.w} h={f.h} />
-                {copy.shapes[f.id].name}
-              </button>
-            ))}
-          </div>
-          <div className="sd-chips" role="radiogroup" aria-label={copy.lookTitle}>
-            {(['dark', 'light'] as const).map((th) => (
-              <button key={th} type="button" role="radio" aria-checked={look.theme === th} className="sd-chip" onClick={() => set({ theme: th })}>
-                {copy[th]}
-              </button>
-            ))}
-          </div>
-          <div className="sd-swatches" role="radiogroup" aria-label={copy.accent}>
-            {accentsFor(site.color).map((c) => (
-              <button key={c} type="button" role="radio" aria-checked={look.accent === c} aria-label={c} className="sd-swatch" style={{ backgroundColor: c }} onClick={() => set({ accent: c })} />
-            ))}
-          </div>
-          <div className="sd-chips" role="radiogroup" aria-label={copy.background}>
-            {BACKGROUNDS.map((b) => (
-              <button key={b} type="button" role="radio" aria-checked={(look.bg ?? 'gradient') === b} className="sd-chip" onClick={() => set({ bg: b })}>
-                {copy.backgrounds[b]}
-              </button>
-            ))}
-          </div>
-          <div className="sd-row">
-            <span>{copy.showDate}</span>
-            <Switch on={!look.hideDate} label={copy.showDate} onChange={() => set({ hideDate: !look.hideDate })} />
-          </div>
-          <div className="sd-row">
-            <span>{copy.showName}</span>
-            <Switch on={!look.hideName} label={copy.showName} onChange={() => set({ hideName: !look.hideName })} />
-          </div>
-          {brand.look && !brand.look.brand_locked && (
-            <div className="sd-row">
-              <span>{copy.hideBrand}</span>
-              <Switch on={brand.look.hide_brand} label={copy.hideBrand} onChange={brand.edit.flip} />
-            </div>
-          )}
-        </>
+      <div className="sd-chips" role="radiogroup" aria-label={copy.shape}>
+        {FORMATS.map((f) => (
+          <button key={f.id} type="button" role="radio" aria-checked={look.shape === f.id} className="sd-chip" title={copy.shapes[f.id].hint} onClick={() => set({ shape: f.id })}>
+            <ShapeIcon w={f.w} h={f.h} />
+            {copy.shapes[f.id].name}
+          </button>
+        ))}
+      </div>
+      <div className="sd-chips" role="radiogroup" aria-label={copy.lookTitle}>
+        {(['dark', 'light'] as const).map((th) => (
+          <button key={th} type="button" role="radio" aria-checked={look.theme === th} className="sd-chip" onClick={() => set({ theme: th })}>
+            {copy[th]}
+          </button>
+        ))}
+      </div>
+      <div className="sd-swatches" role="radiogroup" aria-label={copy.accent}>
+        {accentsFor(site.color).map((c) => (
+          <button key={c} type="button" role="radio" aria-checked={look.accent === c} aria-label={c} className="sd-swatch" style={{ backgroundColor: c }} onClick={() => set({ accent: c })} />
+        ))}
+      </div>
+      <div className="sd-chips" role="radiogroup" aria-label={copy.background}>
+        {BACKGROUNDS.map((b) => (
+          <button key={b} type="button" role="radio" aria-checked={(look.bg ?? 'gradient') === b} className="sd-chip" onClick={() => set({ bg: b })}>
+            {copy.backgrounds[b]}
+          </button>
+        ))}
+      </div>
+      <div className="sd-row">
+        <span>{copy.showDate}</span>
+        <Switch on={!look.hideDate} label={copy.showDate} onChange={() => set({ hideDate: !look.hideDate })} />
+      </div>
+      <div className="sd-row">
+        <span>{copy.showName}</span>
+        <Switch on={!look.hideName} label={copy.showName} onChange={() => set({ hideName: !look.hideName })} />
+      </div>
+      {brand.look && !brand.look.brand_locked && (
+        <div className="sd-row">
+          <span>{copy.hideBrand}</span>
+          <Switch on={brand.look.hide_brand} label={copy.hideBrand} onChange={brand.edit.flip} />
+        </div>
       )}
     </>
   )

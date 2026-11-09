@@ -6,21 +6,31 @@ import type { Site } from '../../lib/api'
 import { QUERY } from '../../kit/breakpoints'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { useMedia } from '../../lib/useNarrow'
-import { periodOf } from './card'
+import { periodOf, type Period, type Topic } from './card'
 import { copy } from './copy'
 import './ShareButton.css'
 
 /** The page's Share key, and the ⋯ menu's "Share a picture" on a phone, open the sheet through this. */
 export const SHARE_EVENT = 'trckable:share'
 
+/** What a section asks of the sheet: its own topic and the page's period. */
+export type ShareAsk = { topic?: Topic; period?: Period }
+
+/** Opens the sheet, on a topic and period when the page has them. */
+export const openShare = (ask?: ShareAsk) => window.dispatchEvent(new CustomEvent<ShareAsk | undefined>(SHARE_EVENT, { detail: ask }))
+
 const ShareDialog = lazyLoad(() => import('./ShareDialog'))
 
 export function ShareButton({ site, sites, period }: { site: Site; sites: Site[]; period?: string }) {
   const [open, setOpen] = useState(false)
+  const [ask, setAsk] = useState<ShareAsk>()
   // A phone's header has no room for it: Share is in the page's ⋯ menu there, and this only holds the sheet.
   const handheld = useMedia(QUERY.handheld)
   useEffect(() => {
-    const on = () => setOpen(true)
+    const on = (e: Event) => {
+      setAsk((e as CustomEvent<ShareAsk | undefined>).detail)
+      setOpen(true)
+    }
     window.addEventListener(SHARE_EVENT, on)
     return () => window.removeEventListener(SHARE_EVENT, on)
   }, [])
@@ -34,7 +44,7 @@ export function ShareButton({ site, sites, period }: { site: Site; sites: Site[]
       )}
       {open && (
         <Suspense fallback={null}>
-          <ShareDialog site={site} sites={sites} period={periodOf(period)} onClose={() => setOpen(false)} />
+          <ShareDialog site={site} sites={sites} period={ask?.period ?? periodOf(period)} topic={ask?.topic} onClose={() => setOpen(false)} />
         </Suspense>
       )}
     </>

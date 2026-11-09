@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FORMATS, accentsFor, cardUrl, comparing, fileName, formatOf, periodOf, statsFor, statsWith, toggleStat, BACKGROUNDS, PICTURES, TOPICS, hasOf, missing, picturesOf, type CardWords, type Look } from './card'
+import { FORMATS, accentsFor, cardUrl, comparing, fileName, formatOf, periodOf, statsFor, statsWith, toggleStat, BACKGROUNDS, PICTURES, TOPICS, topicOfSection, hasOf, missing, picturesOf, type CardWords, type Look } from './card'
 
 const look: Look = { template: 'leaderboard', shape: 'link', period: '24h', metric: 'visitors', stats: ['engaged', 'avgtime', 'country'], theme: 'light', accent: '#4f8cff', compare: false }
 
@@ -9,9 +9,9 @@ describe('cardUrl', () => {
     expect(u.pathname).toBe('/api/v1/sites/s%201/card')
     expect(Object.fromEntries(u.searchParams)).toEqual({ period: '24h', metric: 'visitors', t: 'leaderboard', theme: 'light', accent: '#4f8cff', stats: 'engaged,avgtime,country' })
   })
-  it('asks for the words without the look', () => {
+  it('asks for the words with the picture they are for, and without the look', () => {
     const u = new URL(cardUrl('s', look, 'json'), 'http://x')
-    expect(Object.fromEntries(u.searchParams)).toEqual({ period: '24h', metric: 'visitors', format: 'json' })
+    expect(Object.fromEntries(u.searchParams)).toEqual({ period: '24h', metric: 'visitors', format: 'json', t: 'leaderboard' })
   })
   it('asks for a custom range with its two days, and for the comparison only when it is on', () => {
     const q = (l: Look) => Object.fromEntries(new URL(cardUrl('s', l), 'http://x').searchParams)
@@ -82,6 +82,14 @@ describe('look options', () => {
   })
 })
 
+describe('Explore sections and the gallery', () => {
+  it('maps each section with a picture to its topic, and the others to none', () => {
+    expect(['changed', 'overview', 'pages', 'sources', 'search', 'places', 'tech', 'results', 'sales', 'ai'].map((s) => topicOfSection(s))).toEqual(['changed', 'overview', 'pages', 'sources', 'search', 'places', 'tech', 'goals', 'sales', 'ai'])
+    for (const s of ['speed', 'links', 'mentions', 'answers']) expect(topicOfSection(s)).toBeUndefined()
+    for (const s of ['changed', 'results', 'sales', 'ai']) expect(picturesOf(topicOfSection(s)!).length).toBeGreaterThan(0)
+  })
+})
+
 describe('the gallery by what the site has', () => {
   const words = (w: Partial<CardWords>): CardWords => ({ metric: 'visitors', big: '', label: '', foot: '', revenue: true, has_data: true, has_sources: true, has_places: true, has_tech: true, has_changed: true, has_search: true, has_ai: true, has_goals: true, has_milestone: true, post: '', ...w })
   const disabled = (w: CardWords | null) => PICTURES.filter((p) => missing(p, hasOf(w))).map((p) => p.id)
@@ -102,7 +110,7 @@ describe('the gallery by what the site has', () => {
     expect(disabled(words({ has_goals: false }))).toEqual(['goals'])
     expect(disabled(words({ revenue: false }))).toEqual(['sales'])
     expect(disabled(words({ has_milestone: false }))).toEqual(['milestone'])
-    expect(disabled(words({ has_data: false, has_sources: false, has_places: false, has_tech: false, has_changed: false, has_search: false, has_ai: false, has_goals: false, has_milestone: false, revenue: false }))).toEqual(PICTURES.filter((p) => p.id !== 'post').map((p) => p.id))
+    expect(disabled(words({ has_data: false, has_sources: false, has_places: false, has_tech: false, has_changed: false, has_search: false, has_ai: false, has_goals: false, has_milestone: false, revenue: false }))).toEqual(PICTURES.map((p) => p.id))
   })
   it('never starts on a report picture, and sales is the last to be asked for', () => {
     expect(picturesOf('overview')[0].id).toBe('overview')

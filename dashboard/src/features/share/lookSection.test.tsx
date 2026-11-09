@@ -18,18 +18,14 @@ describe('hide branding switch', () => {
     expect(draw(lookOf({ hide_brand: true }))).toMatch(/aria-checked="true"/)
   })
   it('is not offered when the plan locks it', () => expect(draw(lookOf({ brand_locked: true }))).not.toContain(BRAND))
-  it('is not there on a post, or before the look is loaded', () => {
-    expect(draw(lookOf({}), 'post')).not.toContain(BRAND)
-    expect(draw(lookOf(null))).not.toContain(BRAND)
-  })
+  it('is not there before the look is loaded', () => expect(draw(lookOf(null))).not.toContain(BRAND))
 })
 
 describe('size', () => {
-  it('offers the four sizes, the picked one checked, but not on a post', () => {
+  it('offers the four sizes, the picked one checked', () => {
     const html = draw(lookOf({}))
     expect(html.match(/aria-label="Size"/g)).toHaveLength(1)
     expect(html).toContain('Square')
     expect(html).toContain('Story')
-    expect(draw(lookOf({}), 'post')).not.toContain('Square')
   })
 })

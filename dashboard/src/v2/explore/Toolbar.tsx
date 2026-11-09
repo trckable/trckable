@@ -1,10 +1,12 @@
 // The row under the header: which section, and the rest in ⋯; then what is filtered, and the section's
 // own tabs. On a phone each menu is a sheet.
+import { Share2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Filter } from '../../lib/api'
 import { XSub } from '../ui/XBits'
 import { XIco } from '../ui/XIcons'
 import { XMenu } from '../ui/XMenu'
+import { copy as shareCopy } from '../../features/share/copy'
 import { copy } from './copy'
 import { chipName, dimWord } from './filters'
 import { MoreMenu, PickMenu, type ViewsProps } from './menus'
@@ -41,8 +43,10 @@ interface ToolbarProps {
   onCopy: () => void
   /** Opens the daily email as it will read; absent where the person cannot set it. */
   onMail?: () => void
-  /** Opens the Share sheet, where the header has no room for its button (a phone); absent elsewhere. */
+  /** Opens the Share sheet from the ⋯ menu, where the header has no room for its button (a phone); absent elsewhere. */
   onShare?: () => void
+  /** Opens the Share sheet on this section, from an icon left of ⋯; absent on a phone, in a shared page and where the section has no picture. */
+  onShareIcon?: () => void
 }
 
 function Caret() {
@@ -109,6 +113,11 @@ export function Toolbar(p: ToolbarProps) {
         <span className="sp" />
         {p.updated}
         {p.period && <span className="xperiod">{p.period}</span>}
+        {p.onShareIcon && (
+          <button type="button" className="xb xshare" aria-label={shareCopy.button} title={shareCopy.buttonTitle} onClick={p.onShareIcon}>
+            <Share2 size={15} strokeWidth={1.75} aria-hidden="true" />
+          </button>
+        )}
         <XMenu
           id="more"
           cls="r"

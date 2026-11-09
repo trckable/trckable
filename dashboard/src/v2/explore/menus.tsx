@@ -70,6 +70,7 @@ export function MoreMenu({ views, details, onDetails, onCsv, onCopy, onMail, onS
   return (
     <>
       <XGrab />
+      {onShare && <XMi data={{ 'data-share': '1' }} icon={<Share2 size={16} strokeWidth={1.75} aria-hidden="true" />} name={shareCopy.menuItem} onClick={onShare} />}
       <div>
         <XGl>{copy.views}</XGl>
         <ViewRows {...views} />
@@ -77,7 +78,6 @@ export function MoreMenu({ views, details, onDetails, onCsv, onCopy, onMail, onS
         <ViewTail {...views} />
         <XSep />
       </div>
-      {onShare && <XMi data={{ 'data-share': '1' }} icon={<Share2 size={16} strokeWidth={1.75} aria-hidden="true" />} name={shareCopy.menuItem} onClick={onShare} />}
       {details && <XMi data={{ 'data-pgd': '1' }} name={copy.pageDetails} desc={copy.pageDetailsHint} onClick={onDetails} />}
       <XMi id="xCsv" name={copy.exportCsv} desc={copy.exportHint} disabled={!can('data.export')} title={can('data.export') ? undefined : copy.exportDenied} onClick={onCsv} />
       {onMail && <XMi data={{ 'data-mail': '1' }} name={copy.emailPreview} desc={copy.emailPreviewHint} onClick={onMail} />}

@@ -9,7 +9,8 @@ import { EXPLORE_ROWS } from './data/rows'
 import { QUERY } from '../../kit/breakpoints'
 import { isShared } from '../../lib/me'
 import { useMedia } from '../../lib/useNarrow'
-import { SHARE_EVENT } from '../../features/share/ShareButton'
+import { openShare } from '../../features/share/ShareButton'
+import { periodOf, topicOfSection } from '../../features/share/card'
 import { can } from '../../lib/permissions'
 import { openSettings } from '../../lib/settings'
 import { setView, type ViewState } from '../../lib/url'
@@ -99,6 +100,11 @@ export default function PanelContent(p: ContentProps) {
     else if (s.menu && !t.closest('.xw')) act.shut()
   }
   useEffect(() => keys.afterRender())
+  // The sheet opens on this section's pictures and the page's period.
+  const share = () => {
+    act.shut()
+    openShare({ topic: topicOfSection(section), period: periodOf(p.view.period) })
+  }
   const content = (
       <>
         <Toolbar
@@ -152,10 +158,8 @@ export default function PanelContent(p: ContentProps) {
             act.shut()
             a.copyLink()
           }}
-          onShare={handheld && !isShared() ? () => {
-            act.shut()
-            window.dispatchEvent(new Event(SHARE_EVENT))
-          } : undefined}
+          onShare={handheld && !isShared() ? share : undefined}
+          onShareIcon={!handheld && !isShared() && topicOfSection(section) ? share : undefined}
           onMail={can('note.write') && !isShared() ? () => {
             act.shut()
             setMail(true)

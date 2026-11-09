@@ -3,13 +3,14 @@
 // and top country (never a visitor), and revenue is in it only where the report would show it. A read-only link is
 // the Link corner.
 import { Link2, X } from 'lucide-react'
+import { more } from '../../lib/apiMore'
 import { useEffect, useState } from 'react'
 import type { Site } from '../../lib/api'
 import { can } from '../../lib/permissions'
 import { Modal } from '../../kit/Modal'
 import { toast } from '../../components/Toast'
 import { fmtRange, todayIn } from '../../lib/dates'
-import { ACCENTS, DEFAULT_STATS, METRICS, cardUrl, comparing, fileName, formatOf, hasNumbers, hasOf, missing, PICTURES, picturesOf, statsWith, type CardWords, type Look, type Period, type Topic } from './card'
+import { ACCENTS, DEFAULT_STATS, METRICS, cardUrl, comparing, fileName, formatOf, hasNumbers, hasOf, missing, PICTURES, picturesOf, statsWith, type CardWords, type Look, type Mode, type Period, type Topic } from './card'
 import { Actions, type Act } from './Actions'
 import { copy } from './copy'
 import { copyImage, saveImage, shareImage } from './image'
@@ -19,6 +20,7 @@ import { CardSection } from './CardSection'
 import { LookSection } from './LookSection'
 import { NumbersSection } from './NumbersSection'
 import { PeriodSection } from './PeriodSection'
+import { ModeSwitch } from './ModeSwitch'
 import { Section } from './Section'
 import { useLook } from './useLook'
 import './ShareDialog.css'
@@ -39,6 +41,7 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
   const [busy, setBusy] = useState<Act | null>(null)
   const [done, setDone] = useState<Act | null>(null)
   const [linking, setLinking] = useState(false)
+  const [mode, setMode] = useState<Mode>('picture')
   const [open, setOpen] = useState('card')
   const toggle = (id: string) => setOpen((o) => (o === id ? '' : id))
 
@@ -61,7 +64,7 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
     return () => {
       stale = true
     }
-  }, [site.id, look.period, look.range?.from, look.range?.to, look.compare, look.metric]) // eslint-disable-line react-hooks/exhaustive-deps -- the words depend on these only
+  }, [site.id, look.period, look.range?.from, look.range?.to, look.compare, look.metric, look.template]) // eslint-disable-line react-hooks/exhaustive-deps -- the words depend on these only
   useEffect(() => {
     if (!done) return
     const t = setTimeout(() => setDone(null), 1600)
@@ -75,6 +78,16 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
       if (act === 'text') {
         await navigator.clipboard.writeText(words?.post ?? '')
         toast(copy.copied)
+      } else if (act === 'link') {
+        // The public link that exists; one is never made by a click on Copy.
+        const link = (await more.shares(site.id)).shares.find((x) => x.url && !x.has_password && !x.revenue && !x.expires_at)
+        if (!link?.url) {
+          toast(copy.noLink)
+          setLinking(true)
+          return
+        }
+        await navigator.clipboard.writeText(link.url)
+        toast(copy.linkCopied)
       } else if (act === 'copy') {
         await copyImage(url)
         toast(copy.imageCopied)
@@ -113,10 +126,11 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
       {!linking && (
         <div className="sd-body">
           <div className="sd-stage">
-            <Preview site={site.id} look={shown} words={words} />
+            <Preview site={site.id} look={shown} words={words} mode={mode} />
           </div>
           <div className="sd-panel">
             <div className="sd-sections">
+              <ModeSwitch mode={mode} onChange={setMode} />
               <Section id="card" title={copy.whatToShare} summary={copy.template[look.template].name} open={open === 'card'} onToggle={() => toggle('card')}>
                 <CardSection site={site.id} look={shown} has={has} onChange={(t) => set({ template: t })} />
               </Section>
@@ -128,11 +142,11 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
                   <NumbersSection look={look} metrics={metrics} revenue={words?.revenue ?? false} set={set} />
                 </Section>
               )}
-              <Section id="look" title={copy.lookTitle} summary={copy[look.theme]} open={open === 'look'} onToggle={() => toggle('look')}>
+              {mode === 'picture' && <Section id="look" title={copy.lookTitle} summary={copy[look.theme]} open={open === 'look'} onToggle={() => toggle('look')}>
                 <LookSection site={site} sites={sites.length ? sites : [site]} onSite={setSiteId} look={look} set={set} brand={brand} />
-              </Section>
+              </Section>}
             </div>
-            <Actions post={look.template === 'post'} size={`${px.w}×${px.h}`} busy={busy} done={done} onAct={(a) => void go(a)} />
+            <Actions post={mode === 'text'} link={can('share.manage')} size={`${px.w}×${px.h}`} busy={busy} done={done} onAct={(a) => void go(a)} />
           </div>
         </div>
       )}
