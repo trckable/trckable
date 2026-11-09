@@ -396,7 +396,7 @@
 }
 @media (--xs){
   .mk .xp.xpage .xlay .xtb,.mk .xp.xpage .xtb{margin-top:-24px}
-  .mk .xp.xpage .xperiod *{border-color:transparent!important;background-color:transparent!important;box-shadow:none!important}
+  .mk .xp.xpage .xperiod :not(.mk-menu, .mk-menu *){border-color:transparent!important;background-color:transparent!important;box-shadow:none!important}
   .mk .xp.xpage .xperiod .pwrap>*{padding-left:0}
 }
 .mk .xdev{height:18px;margin-bottom:var(--mk-s3)}
@@ -543,14 +543,14 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .mk .xp.xpage>.xsk{margin-top:0}
 /* The header's grid of sections. */
 .xtiles-pop{overflow-x:hidden!important}
-.xtiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:8px;width:min(372px,calc(100vw - 48px));box-sizing:border-box}
+.xtiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;box-sizing:border-box}
 .xtile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:84px;padding:10px 6px;border:0;border-radius:12px;background:none;color:var(--mk-text);font:inherit;font-size:12px;line-height:1.25;text-align:center;cursor:pointer;transition:background .15s ease}
-.xtile:hover,.xtile:focus-visible{background:var(--mk-band)}
+.xtile:hover,.xtile:focus-visible{background:var(--pop-hover,var(--mk-band))}
 .xtile svg{width:20px;height:20px;flex:none}
 .xtile{min-height:76px}
 /* Each section its own colour, as an app grid has: soft glass on the card, the same in both themes. */
 .xtile{--c:var(--mk-lime);transition:background .15s ease,transform .15s ease}
-.xtile svg{width:42px;height:42px;padding:10px;border-radius:13px;color:var(--x-white);box-sizing:border-box;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,var(--x-white)),color-mix(in srgb,var(--c) 72%,var(--x-black)));box-shadow:0 4px 12px color-mix(in srgb,var(--c) 28%,transparent),inset 0 1px 0 var(--x-gloss)}
+.xtile svg{width:42px;height:42px;padding:10px;border-radius:var(--pop-tile-radius,13px);color:var(--x-white);box-sizing:border-box;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,var(--x-white)),color-mix(in srgb,var(--c) 72%,var(--x-black)));box-shadow:0 4px 12px color-mix(in srgb,var(--c) 28%,transparent),inset 0 1px 0 var(--x-gloss)}
 .xtile[data-xtile=changed],.xri[data-xsec=changed],.xtitle[data-xtitle=changed]{--c:#8b7cf6}
 .xtile[data-xtile=overview],.xri[data-xsec=overview],.xtitle[data-xtitle=overview]{--c:#4f8ef7}
 .xtile[data-xtile=pages],.xri[data-xsec=pages],.xtitle[data-xtitle=pages]{--c:#2fb8c6}
@@ -576,9 +576,8 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 /* The tile and its coloured square stay put; the symbol inside moves (tileIcons.tsx). */
 .xtile:hover svg,.xtile:focus-visible svg{filter:brightness(1.08)}
 .xtile svg{transition:filter .2s ease}
-.pop.xtiles-pop,.lpop.xtiles-pop{width:auto;max-width:calc(100vw - 16px)}
 /* As a sheet the tiles fill its width, up to a size that still reads as a grid; the button stays one square on every screen. */
-.pop.xtiles-pop.is-sheet{width:100%;max-width:none}.is-sheet .xtiles{width:100%;max-width:520px;margin-inline:auto}
+.is-sheet .xtiles{width:100%;max-width:520px;margin-inline:auto}
 .mk .hd .mk-chip.xtiles-btn{flex:none;justify-content:center;width:40px;min-width:40px;max-width:40px;padding:0}
 /* A soft line between the menu of sections and the page: strongest in the middle, fading out at both ends. */
 .mk .xp.xpage .xrail::after{content:"";position:absolute;top:0;bottom:0;right:calc(var(--rail-gap, 16px) * -1);width:1px;background:linear-gradient(to bottom,transparent,var(--mk-line) 18%,var(--mk-line) 82%,transparent);pointer-events:none}

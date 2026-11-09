@@ -4,7 +4,7 @@
 .mk .dompick-btn:hover, .mk .dompick-btn[aria-expanded='true'] { background: var(--mk-hovbg); color: var(--mk-text); }
 .mk .dompick-btn svg { flex: none; }
 .mk .dompick-now { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mk .mk-menu.dompick-menu { width: 260px; max-height: min(60vh, 420px); padding: var(--mk-s2); overflow: auto; overscroll-behavior: contain; }
+.mk .mk-menu.dompick-menu { --pop-w: 260px; max-height: min(60vh, 420px); }
 .mk .dom-list { display: flex; flex-direction: column; gap: 2px; }
 .mk .dom-list input { margin-bottom: var(--mk-s1); }
 .mk .dom-row { gap: var(--mk-s2); }

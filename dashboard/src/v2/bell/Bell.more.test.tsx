@@ -55,8 +55,8 @@ describe('a build’s own list in the bell', () => {
     menu(m.host, 0)
     act(() => item(m.host, 'Archive')?.click())
     expect(m.notices.dismiss).toHaveBeenCalledWith('away')
-    expect(m.host.querySelectorAll('.nff button')).toHaveLength(2) // the footer is one quiet row: the archive and the alert settings
-    const show = m.host.querySelector<HTMLButtonElement>('.nff [aria-pressed]')
+    expect(m.host.querySelectorAll('.pshell-foot button')).toHaveLength(2) // the footer is one quiet row: the archive and the alert settings
+    const show = m.host.querySelector<HTMLButtonElement>('.pshell-foot [aria-pressed]')
     act(() => show?.click())
     expect(m.notices.archive.load).toHaveBeenCalled()
     expect(m.host.textContent).toContain('old one')
@@ -114,7 +114,7 @@ describe('a row’s ⋯ for an alert', () => {
 describe('the filter', () => {
   const down = n('down:i1', false, { kind: 'down', site: 'a.com', siteId: 's1' })
   const sale = n('m1', false, { kind: 'milestone', site: 'b.com', siteId: 's2' })
-  const filterBtn = (host: HTMLElement) => host.querySelector<HTMLButtonElement>('.nfh .nfq')
+  const filterBtn = (host: HTMLElement) => host.querySelector<HTMLButtonElement>('.pshell-head .nfq')
   const radio = (label: string) => [...document.querySelectorAll<HTMLButtonElement>('[role=menuitemradio]')].find((b) => b.textContent?.startsWith(label))
   const choose = (host: HTMLElement, label: string) => {
     act(() => filterBtn(host)?.click())

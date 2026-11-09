@@ -1,6 +1,7 @@
 // Every section of Explore at a glance, from the header on Live and on Explore: a tile each, a tap opens that page.
 import { useState } from 'react'
 import { LayoutGrid } from 'lucide-react'
+import { SHELL } from '../../kit/PopShell'
 import { Popover } from '../../kit/Popover'
 import { copy } from './copy'
 import { openExplore } from './open'
@@ -21,7 +22,7 @@ export function SectionsButton() {
   return (
     <Popover
       label={copy.sections}
-      className="lpop xtiles-pop mk-tokens"
+      className={`lpop xtiles-pop ${SHELL}`}
       maxHeight={520}
       trigger={(t) => (
         <button {...t} type="button" className="mk-chip xtiles-btn" id="sectionsBtn" title={copy.sections} aria-label={copy.sections}>

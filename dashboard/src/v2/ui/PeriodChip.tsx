@@ -1,5 +1,6 @@
 // The period, as the header says it ("Today · Fri 16 Oct", and what it is set against), and its menu: five periods, More,
 // the comparison, and a calendar for custom dates. The menu is a sheet from the bottom on a phone.
+import { SHELL } from '../../kit/PopShell'
 import { useRef, useState, type KeyboardEvent } from 'react'
 import { bucketsFor, diffDays, type ISODate } from '../../lib/dates'
 import { rangeWords } from '../dayWords'
@@ -121,7 +122,7 @@ export function PeriodChip(p: PeriodChipProps) {
           </svg>
         </button>
       )}
-      <div ref={menu} className={`mk-menu pmenu${open ? ' on' : ''}${cal ? ' cal' : ''}`} id={`${base}Menu`}>
+      <div ref={menu} className={`mk-menu pmenu ${SHELL}${open ? ' on' : ''}${cal ? ' cal' : ''}`} id={`${base}Menu`}>
         {open && cal && (
           <Calendar
             p={p}

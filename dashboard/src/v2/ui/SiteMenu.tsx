@@ -1,5 +1,6 @@
 // The site in the header, and the list that opens from it (SiteList): the current team's sites with today's visitors, a finder
 // for a long list, and what belongs to this site. A build with teams puts their square before the site. The check beside the name says when something independent vouches for the numbers.
+import { SHELL } from '../../kit/PopShell'
 import { Suspense, useCallback, useRef, useState, type ReactNode } from 'react'
 import type { Site } from '../../lib/api'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
@@ -95,7 +96,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
           <path d="M3 4.5 6 7.5 9 4.5" stroke="var(--mk-muted)" fill="none" strokeWidth="1.5" />
         </svg>
       </button>
-      <div ref={menu} className={`mk-menu sites${open ? ' on' : ''}`} id="siteMenu" role={open ? 'dialog' : undefined} aria-label={open ? copy.sites : undefined}>
+      <div ref={menu} className={`mk-menu sites ${SHELL}${open ? ' on' : ''}`} id="siteMenu" role={open ? 'dialog' : undefined} aria-label={open ? copy.sites : undefined}>
         {open && told.length > 0 && (
           <button type="button" className="site-why" data-site-why="1" aria-expanded={why} onClick={() => setWhy((w) => !w)}>
             <i aria-hidden="true" />

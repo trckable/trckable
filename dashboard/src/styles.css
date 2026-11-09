@@ -2595,7 +2595,7 @@ body {
   background: transparent;
 }
 :root .pop.menu.more-menu button[role='menuitem']:is([data-act], :focus-visible) {
-  background: radial-gradient(120px 60px at var(--x, 50%) var(--y, 50%), var(--pane-sheen), transparent 70%), var(--pane-row);
+  background: var(--pop-selected, var(--pane-row));
 }
 :root .pop.menu.more-menu:has([data-act]) button[role='menuitem']:focus-visible:not([data-act]) {
   background: transparent;

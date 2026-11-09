@@ -75,7 +75,7 @@ for (const width of [1440, 390, 360]) {
     await expect(menu.locator('.nf')).toHaveCount(4)
 
     // Days, then rows with only their time.
-    await expect(menu.locator('.nfdy')).toHaveText(['Today', 'Yesterday', /^\w{3} \d{1,2} \w{3}/])
+    await expect(menu.locator('.nfdy')).toHaveText([/^Today/, /^Yesterday/, /^\w{3} \d{1,2} \w{3}/]) // each day may carry its zone note (#700)
     const titles = await menu.locator('.nft b').allTextContents()
     expect(titles[0]).toMatch(/^history\.example down since \d\d:\d\d$/)
     expect(titles[1]).toBe('history.example was down 10m')
@@ -83,7 +83,7 @@ for (const width of [1440, 390, 360]) {
     await expect(menu.locator('.nf').nth(1).locator('.nfw-t')).toHaveText(/^\d\d:\d\d–\d\d:\d\d$/)
 
     // The footer is one link.
-    await expect(menu.locator('.nff button')).toHaveCount(1)
+    await expect(menu.locator('.pshell-foot button')).toHaveCount(1)
 
     // Nothing runs off the side at this width.
     const fits = await menu.evaluate((el) => {

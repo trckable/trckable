@@ -34,6 +34,6 @@ for (const width of [1280, 390]) {
     await expect(fb).toHaveAttribute('aria-label', /Facebook/)
     await expect(fb.locator('.nfb.up')).toBeVisible()
     await expect(page.locator('.nf', { has: page.getByRole('img', { name: 'Google' }) })).toBeVisible()
-    await expect(page.locator('.nff button')).toHaveCount(1) // no archive here: just the alert settings
+    await expect(page.locator('.pshell-foot button')).toHaveCount(1) // no archive here: just the alert settings
   })
 }
