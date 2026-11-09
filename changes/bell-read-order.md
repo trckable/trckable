@@ -1,1 +1,1 @@
-The bell reads only what you open: opening the panel no longer marks everything read, a milestone keeps its place when the sites load, and rows of the same second keep one fixed order.
+The bell reads only what you open: opening the panel no longer marks everything read (this reverses the 4 Nov rule); only the opened row, or Mark all read, is read. The badge counts every unread notice whatever the filter shows. A milestone keeps its place when the sites load, and rows of the same second keep one fixed order.

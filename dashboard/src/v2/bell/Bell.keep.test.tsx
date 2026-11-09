@@ -144,4 +144,17 @@ describe('the bell after a row is opened', () => {
     expect(badge()).toBe('3')
     again.stop()
   }, 20_000)
+
+  it('the badge counts every unread notice, not only the ones the filter lists', async () => {
+    localStorage.setItem('trckable.bell.filter', JSON.stringify({ group: 'down', site: '' }))
+    vi.spyOn(more, 'bellRead').mockResolvedValue({ read: [] })
+    const m = mount({ bell: [hosted('p1', now - 10), hosted('p2', now - 11)] }, [site])
+    await flush()
+    await act(() => new Promise((r) => setTimeout(r, 3100)))
+    open()
+    await flush()
+    expect(rows(m.host)).toEqual([expect.stringMatching(DOWN)]) // the filter lists one kind
+    expect(document.querySelector('#bellDot')?.textContent).toBe('3') // the badge is the total
+    m.stop()
+  }, 20_000)
 })
