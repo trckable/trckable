@@ -12,6 +12,12 @@ var cardWords = struct {
 	engagedVisits, statPageviews, statVisitors, bounce        string
 	topPage, topSource, statRevenue                           string
 	gridTitle                                                 map[string]string // by period
+	// What changed: the dashboard's words (explore/copy.ts).
+	changedFew, changedFlat, changedMix, changedNew, changedRose, changedFell, changedMostly, changedLed string
+	changedPeople, homePage, theHomePage, direct, changedTitle                                           string
+	// The other pictures.
+	searchTitle, searchClicks, searchImpressions, aiTitle, aiVisits, aiMentions, goalsTitle, salesTitle, salesRevenue, salesOrders string
+	noChanged, noSearch, noAI, noGoals, noSales, noMilestone                                                                       string
 }{
 	visitors:   "visitors",
 	pageviews:  "pageviews",
@@ -30,7 +36,37 @@ var cardWords = struct {
 	topPage:       "Top page",
 	topSource:     "Top source",
 	statRevenue:   "Revenue",
-	gridTitle:     map[string]string{"24h": "Today in numbers", "7d": "This week in numbers", "30d": "This month in numbers", "all": "All time in numbers", "custom": "Your numbers"},
+	changedFew:    "Too little yet to compare fairly.",
+	changedFlat:   "No real change.",
+	changedMix:    "%s held, but where they come from changed.",
+	changedNew:    "%s are new this period.",
+	changedRose:   "rose",
+	changedFell:   "fell",
+	changedMostly: "%s, mostly from %s.",
+	changedLed:    "%s, led by %s.",
+	changedPeople: "People",
+	changedTitle:  "What changed",
+	homePage:      "Home page",
+	theHomePage:   "the home page",
+	direct:        "Direct",
+
+	searchTitle:       "Found on Google",
+	searchClicks:      "Clicks",
+	searchImpressions: "Impressions",
+	aiTitle:           "AI and mentions",
+	aiVisits:          "Visits from AI assistants",
+	aiMentions:        "Mentions",
+	goalsTitle:        "Top goals",
+	salesTitle:        "Sales",
+	salesRevenue:      "Revenue",
+	salesOrders:       "Orders",
+	noChanged:         "Needs a period before this one with visits",
+	noSearch:          "No searches in this period",
+	noAI:              "No AI visits or mentions in this period",
+	noGoals:           "No goals reached in this period",
+	noSales:           "No sales in this period",
+	noMilestone:       "No milestone in this period",
+	gridTitle:         map[string]string{"24h": "Today in numbers", "7d": "This week in numbers", "30d": "This month in numbers", "all": "All time in numbers", "custom": "Your numbers"},
 }
 
 // cardPeriod is what a card covers: one of the dialog's presets, a custom
@@ -60,7 +96,10 @@ func cardPeriodOf(s string) cardPeriod {
 
 func cardTemplateOf(s string) string {
 	switch s {
-	case "leaderboard", "numbers", "grid":
+	case "leaderboard", "numbers", "grid", "milestone":
+		return s
+	}
+	if _, ok := cardDigests[s]; ok {
 		return s
 	}
 	if _, ok := cardLists[s]; ok {

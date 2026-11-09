@@ -21,6 +21,13 @@ func sample(tpl, format, theme string) Spec {
 			s.Rows = append(s.Rows, Item{Name: n, Value: "12,345", Share: 0.8})
 		}
 	}
+	if tpl == "digest" {
+		s.Label, s.Big, s.Change, s.Dir, s.Series = "Visitors rose 124%, mostly from news.ycombinator.com and a very long list of others", "", "", 0, nil
+		s.Stats = append(s.Stats, Stat{Value: "$12,345.67", Label: "Revenue"})
+		for _, n := range []string{"news.ycombinator.com", "/pricing/team/enterprise/with/a/very/long/path/that/goes/on", "Germany"} {
+			s.Rows = append(s.Rows, Item{Name: n, Value: "+12,345", Share: 0.8})
+		}
+	}
 	return s
 }
 
@@ -239,5 +246,69 @@ func TestStoryFillsItsHeight(t *testing.T) {
 	}
 	if l.StatLabelY < l.H*80/100 {
 		t.Errorf("stats at %d of %d", l.StatLabelY, l.H)
+	}
+}
+
+// The digest holds a title, cards and lines in any mix: every part inside the card, none on top of another, and an empty one still says its line.
+func TestDigestParts(t *testing.T) {
+	for _, f := range Formats {
+		l := layoutFor(f)
+		for nc := 0; nc <= MaxGrid; nc++ {
+			for nr := 0; nr <= MaxRows; nr++ {
+				s := sample("digest", f.ID, "dark")
+				s.Stats, s.Rows = s.Stats[:nc], append([]Item{}, s.Rows...)
+				for len(s.Rows) < nr {
+					s.Rows = append(s.Rows, Item{Name: "/x", Value: "1", Share: 0.5})
+				}
+				s.Rows = s.Rows[:nr]
+				if nc+nr == 0 {
+					s.Big = "Nothing to show"
+				}
+				p := digestPlanOf(s)
+				bottom := p.rowTop
+				if nr > 0 {
+					bottom += (len(p.rows)-1)*p.rowStep + l.RowH
+				}
+				prev := p.emptyTop
+				for _, c := range p.cards {
+					bottom = max(bottom, c.y+c.h)
+					if c.y < prev || c.x < l.Left || c.x+c.w > l.Right {
+						t.Errorf("%s %d cards %d rows: card %+v outside", f.ID, nc, nr, c)
+					}
+				}
+				if bottom > l.FootY || len(p.cards) != nc {
+					t.Errorf("%s %d cards %d rows: ends at %d, foot %d (%d cards)", f.ID, nc, nr, bottom, l.FootY, len(p.cards))
+				}
+				if nc > 0 && nr > 0 && p.cards[0].y+p.cards[0].h > p.rowTop {
+					t.Errorf("%s %d cards %d rows: cards over the lines", f.ID, nc, nr)
+				}
+				if _, err := s.PNG(); err != nil {
+					t.Errorf("%s %d cards %d rows: %v", f.ID, nc, nr, err)
+				}
+				if len(digestRuns(s)) == 0 {
+					t.Errorf("%s: no text", f.ID)
+				}
+			}
+		}
+	}
+}
+
+// A sentence is broken into the lines it has room for, the last ending in an ellipsis when it must.
+func TestWrapWords(t *testing.T) {
+	room := 400.0
+	got := wrapWords("Visitors rose 24%, mostly from Google and a few other places", room, 40, 2)
+	if len(got) != 2 {
+		t.Fatalf("%q", got)
+	}
+	for _, line := range got {
+		if measure(true, line, 40) > room {
+			t.Errorf("%q is too wide", line)
+		}
+	}
+	if got := wrapWords("Short", room, 40, 2); len(got) != 1 || got[0] != "Short" {
+		t.Errorf("%q", got)
+	}
+	if got := wrapWords("", room, 40, 2); len(got) != 1 {
+		t.Errorf("%q", got)
 	}
 }

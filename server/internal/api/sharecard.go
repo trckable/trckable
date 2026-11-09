@@ -17,7 +17,7 @@ import (
 // dialog shows it and downloads it, so preview and file are one picture.
 //
 //	GET /api/v1/sites/{site}/card
-//	t        overview | numbers | grid | leaderboard (the top pages) | sources | places | browsers | devices (top five with bars) | toppage | topsource | topplace (one hero) (default overview). numbers is the overview without its chart, grid is four numbers, two by two
+//	t        overview | numbers | grid | leaderboard (the top pages) | sources | places | browsers | devices (top five with bars) | toppage | topsource | topplace (one hero) | changed | search | ai | goals | sales (a title, number cards and lines) | milestone (the biggest of the period) (default overview). numbers is the overview without its chart, grid is four numbers, two by two
 //	period   24h | 7d | 30d | all | custom (default 7d); custom takes from and to (YYYY-MM-DD). A period ends on the last full day or hour
 //	compare  1: the change against the period just before, in a pill (off by default; not for all time)
 //	metric   visitors | pageviews | engaged | revenue (default visitors)
@@ -55,19 +55,27 @@ type cardNumbers struct {
 	HasSources bool `json:"has_sources"`
 	HasPlaces  bool `json:"has_places"`
 	HasTech    bool `json:"has_tech"`
-	rows       []cards.Item
-	lists      map[string][]cards.Item // the top five of each list picture, by its t
-	grid       []cards.Stat            // the grid's four numbers
-	series     []float64
-	change     string // the pick against the period before: "+12%", "" when there is none
-	vs         string // what it is against ("previous 30 days"), said after the change
-	dir        int
-	stats      []cards.Stat
-	domain     string
-	visitors   int64
-	pageviews  int64
-	engaged    int64
-	money      string
+	// And the report pictures: a period before to compare with, Search Console connected, AI visits or mentions, a goal reached, a milestone.
+	HasChanged   bool              `json:"has_changed"`
+	HasSearch    bool              `json:"has_search"`
+	HasAI        bool              `json:"has_ai"`
+	HasGoals     bool              `json:"has_goals"`
+	HasMilestone bool              `json:"has_milestone"`
+	digests      map[string]digest // the digest pictures, by t
+	milestone    *milestoneLine
+	rows         []cards.Item
+	lists        map[string][]cards.Item // the top five of each list picture, by its t
+	grid         []cards.Stat            // the grid's four numbers
+	series       []float64
+	change       string // the pick against the period before: "+12%", "" when there is none
+	vs           string // what it is against ("previous 30 days"), said after the change
+	dir          int
+	stats        []cards.Stat
+	domain       string
+	visitors     int64
+	pageviews    int64
+	engaged      int64
+	money        string
 }
 
 func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
@@ -150,6 +158,7 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 	}
 	now := a.Now().In(loc)
 	p := resolvePeriod(v.Get("period"), v.Get("from"), v.Get("to"), now, time.Unix(si.CreatedAt, 0), v.Get("compare") == "1")
+	reading := cardReading{r: r, q: q, loc: loc, site: site, domain: si.Domain}
 	ask := r.Clone(r.Context())
 	if p.hours > 0 {
 		ask.URL.RawQuery = "from=" + now.AddDate(0, 0, -1).Format("2006-01-02") + "&to=" + now.Format("2006-01-02")
@@ -172,19 +181,12 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 		return cardNumbers{}, false
 	}
 	n := cardWordsOf(res, si.Domain, p, v.Get("metric"))
+	reading.ask, reading.res, reading.params = ask, res, params
 	if overview {
 		var prev *query.Result
 		if p.vs != "" {
-			// Only the totals of the period just before it, the same length: no money, goals or groups to scan.
-			before := params
-			before.From, before.To = previousStart(params.From, params.To, loc).UTC(), params.From
-			if p.hours > 0 {
-				before.From = params.From.Add(-params.To.Sub(params.From))
-			}
-			before.Revenue, before.Goals, before.Groups, before.PageGoals, before.Limit = false, false, nil, nil, 1
-			if got, err := a.cachedReport(ask, q, before); err == nil {
-				prev = got
-			}
+			// Only the totals of the period just before it, the same length.
+			prev = a.previousReport(reading, p.hours > 0, true)
 		}
 		n.vs = p.vs
 		n.overview(res, prev, v.Get("stats"), a.refIconOf)
@@ -192,6 +194,7 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 	if kind == "grid" {
 		n.gridOf(res, a.refIconOf)
 	}
+	a.pictures(reading, &n, p.hours > 0, kind)
 	return n, true
 }
 

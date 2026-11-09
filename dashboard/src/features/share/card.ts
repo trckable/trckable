@@ -2,11 +2,11 @@ import formats from './formats.json'
 
 // What the dialog asks the server for: a card is one address, so the preview
 // and the download are the same picture.
-export type Template = 'overview' | 'numbers' | 'grid' | 'leaderboard' | 'toppage' | 'sources' | 'topsource' | 'places' | 'topplace' | 'devices' | 'browsers' | 'post'
+export type Template = 'overview' | 'numbers' | 'grid' | 'leaderboard' | 'toppage' | 'sources' | 'topsource' | 'places' | 'topplace' | 'devices' | 'browsers' | 'changed' | 'search' | 'ai' | 'goals' | 'sales' | 'milestone' | 'post'
 /** A group of pictures in the gallery. */
-export type Topic = 'overview' | 'sources' | 'pages' | 'places' | 'tech' | 'text'
+export type Topic = 'overview' | 'changed' | 'sources' | 'pages' | 'places' | 'tech' | 'search' | 'ai' | 'goals' | 'sales' | 'milestone' | 'text'
 /** What a picture needs of the site; without it the picture is shown disabled, with the reason. */
-export type Need = 'revenue' | 'data' | 'sources' | 'places' | 'tech'
+export type Need = 'revenue' | 'data' | 'sources' | 'places' | 'tech' | 'changed' | 'search' | 'ai' | 'goals' | 'milestone'
 export type Period = '24h' | '7d' | '30d' | 'all' | 'custom'
 export type Metric = 'visitors' | 'pageviews' | 'engaged' | 'revenue'
 /** The small numbers under the chart: the ones that are also a metric are not offered while it is the big number. */
@@ -28,6 +28,7 @@ export const PICTURES: Picture[] = [
   { id: 'overview', topic: 'overview', need: 'data' },
   { id: 'numbers', topic: 'overview', need: 'data' },
   { id: 'grid', topic: 'overview', need: 'data' },
+  { id: 'changed', topic: 'changed', need: 'changed' },
   { id: 'sources', topic: 'sources', need: 'sources' },
   { id: 'topsource', topic: 'sources', need: 'sources' },
   { id: 'leaderboard', topic: 'pages', need: 'data' },
@@ -36,9 +37,14 @@ export const PICTURES: Picture[] = [
   { id: 'topplace', topic: 'places', need: 'places' },
   { id: 'devices', topic: 'tech', need: 'tech' },
   { id: 'browsers', topic: 'tech', need: 'tech' },
+  { id: 'search', topic: 'search', need: 'search' },
+  { id: 'ai', topic: 'ai', need: 'ai' },
+  { id: 'goals', topic: 'goals', need: 'goals' },
+  { id: 'sales', topic: 'sales', need: 'revenue' },
+  { id: 'milestone', topic: 'milestone', need: 'milestone' },
   { id: 'post', topic: 'text' },
 ]
-export const TOPICS: Topic[] = ['overview', 'sources', 'pages', 'places', 'tech', 'text']
+export const TOPICS: Topic[] = ['overview', 'changed', 'sources', 'pages', 'places', 'tech', 'search', 'ai', 'goals', 'sales', 'milestone', 'text']
 export const picturesOf = (t: Topic) => PICTURES.filter((p) => p.topic === t)
 /** What the picture lacks on this site, if anything (it is then disabled, saying why). */
 export const missing = (p: Picture, has: Record<Need, boolean>): Need | null => (p.need && !has[p.need] ? p.need : null)
@@ -55,10 +61,10 @@ export const ACCENTS = ['#b8ff3c', '#4f8cff', '#ff5ca8', '#ffb547', '#2dd4bf']
 export type Look = { template: Template; shape: Shape; period: Period; /** A custom range's first and last day. */ range?: { from: string; to: string }; /** The change against the period just before, in a pill. Off by default; nothing before all time. */ compare: boolean; metric: Metric; stats: Stat[]; theme: Theme; accent: string; /** The site's hide-branding choice, only where it can change the picture: it makes the address new when it flips. */ hideBrand?: boolean; /** The background; the gradient when missing. */ bg?: Bg; /** Leave the period off the picture. */ hideDate?: boolean; /** Leave the site's name off the picture. */ hideName?: boolean }
 
 /** The numbers in words, and the post's text. */
-export type CardWords = { metric: Metric; big: string; label: string; foot: string; revenue: boolean; has_data: boolean; has_sources: boolean; has_places: boolean; has_tech: boolean; post: string }
+export type CardWords = { metric: Metric; big: string; label: string; foot: string; revenue: boolean; has_data: boolean; has_sources: boolean; has_places: boolean; has_tech: boolean; has_changed: boolean; has_search: boolean; has_ai: boolean; has_goals: boolean; has_milestone: boolean; post: string }
 
 /** What the site has to show, by what a picture needs. */
-export const hasOf = (w: CardWords | null): Record<Need, boolean> => ({ revenue: w?.revenue ?? false, data: w?.has_data ?? true, sources: w?.has_sources ?? true, places: w?.has_places ?? true, tech: w?.has_tech ?? true })
+export const hasOf = (w: CardWords | null): Record<Need, boolean> => ({ revenue: w?.revenue ?? false, data: w?.has_data ?? true, sources: w?.has_sources ?? true, places: w?.has_places ?? true, tech: w?.has_tech ?? true, changed: w?.has_changed ?? true, search: w?.has_search ?? true, ai: w?.has_ai ?? true, goals: w?.has_goals ?? true, milestone: w?.has_milestone ?? true })
 
 export function cardUrl(site: string, l: Look, format: 'png' | 'json' | 'thumb' = 'png'): string {
   const p = new URLSearchParams({ period: l.period, metric: l.metric })
