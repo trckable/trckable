@@ -1,25 +1,34 @@
-// What the foot's status opens: the sites that stopped (down first, then quiet). One site opens its panel
-// at once; several are a short list, each row opening its own panel, with a way back.
-import { ChevronLeft } from 'lucide-react'
-import { useState } from 'react'
+// What the foot's status and the site menu's bar open: the sites that stopped (down first, then quiet), a short list.
+// While a report is open the panel the list sits in steps out of its way (StatusCard.css). A row opens that site's report in a modal (StatusModal); a single site is still a row, never an inline panel.
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import type { Site } from '../../lib/api'
 import { StateDot } from '../sites/StateDot'
 import { copy } from './copy'
-import { StatusPanel } from './StatusCard'
 import { statusOf } from './status'
 import { plainSpan } from '../../lib/plainSpan'
 import { silence } from './time'
+import './StatusCard.css'
+
+const StatusModal = lazy(() => import('./StatusModal'))
 
 const age = (s: Site) => (s.down_since ? plainSpan(Date.now() / 1000 - s.down_since) : silence(s))
 
 export default function StatusList({ sites }: { sites: Site[] }) {
-  const [pick, setPick] = useState<Site | null>(sites.length === 1 ? sites[0] : null)
-  if (!pick) {
-    return (
-      <ul className="status-list">
+  const [pick, setPick] = useState<Site | null>(null)
+  // The row that opened the report: its panel is out of sight while the report is open, so focus goes back to it by hand once it closes.
+  const from = useRef<HTMLElement | null>(null)
+  useEffect(() => {
+    if (!pick) from.current?.focus()
+  }, [pick])
+  return (
+    <>
+      <ul className={pick ? 'status-list picked' : 'status-list'}>
         {sites.map((s) => (
           <li key={s.id}>
-            <button type="button" className="status-row" data-nav onClick={() => setPick(s)}>
+            <button type="button" className="status-row" data-nav aria-haspopup="dialog" onClick={(e) => {
+                from.current = e.currentTarget
+                setPick(s)
+              }}>
               <StateDot site={s} />
               <b>{s.name || s.domain}</b>
               <span className="faint">{copy.badge(statusOf(s) === 'down', age(s))}</span>
@@ -27,17 +36,11 @@ export default function StatusList({ sites }: { sites: Site[] }) {
           </li>
         ))}
       </ul>
-    )
-  }
-  return (
-    <>
-      {sites.length > 1 && (
-        <button type="button" className="btn ghost status-back" data-nav onClick={() => setPick(null)}>
-          <ChevronLeft size={14} strokeWidth={2} aria-hidden="true" />
-          {copy.listBack}
-        </button>
+      {pick && (
+        <Suspense fallback={null}>
+          <StatusModal site={pick} onClose={() => setPick(null)} />
+        </Suspense>
       )}
-      <StatusPanel site={pick} last={pick.last_event_at ?? 0} down={statusOf(pick) === 'down'} />
     </>
   )
 }

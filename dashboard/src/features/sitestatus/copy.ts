@@ -11,6 +11,7 @@ export const copy = defineCopy('sitestatus', {
   chipDown: 'Down',
   chipCheck: 'Check fails',
   chipQuiet: 'Tracking stopped',
+  chipNoVisits: (age: string) => `No visits for ${age}`,
   badge: (down: boolean, age: string) => `${down ? 'Down' : 'Quiet'} · ${age}`,
   backBadge: (gap: string) => `Back · gap of ${gap}`,
   downSince: (when: string) => `Your site is down since ${when}`,

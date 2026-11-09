@@ -6,6 +6,7 @@ import type { Site, Visit } from '../../lib/api'
 import { signals } from './copy'
 import { gained, silentHours, Usual } from './detect'
 import { tell } from './notify'
+import { chipKindOf } from '../sitestatus/status'
 
 type Props = {
   site: Site
@@ -21,6 +22,7 @@ const MINUTE = 60_000
 
 export function useNotices({ site, online, visits, scope, sources }: Props) {
   const name = site.domain
+  const kind = chipKindOf(site)
   // A source that had no sale in the report before this one.
   const known = useRef<{ scope: string; list: string[] | null }>({ scope, list: null })
   useEffect(() => {
@@ -51,9 +53,9 @@ export function useNotices({ site, online, visits, scope, sources }: Props) {
       const hours = silentHours(last.current, Date.now())
       if (hours && !told.current) {
         told.current = true
-        tell(signals.stopped(name), signals.stoppedBody(hours), 'stopped')
+        tell(kind === 'stopped' ? signals.stopped(name) : signals.quiet(name), signals.stoppedBody(hours), 'stopped')
       }
     }, MINUTE)
     return () => clearInterval(t)
-  }, [name])
+  }, [name, kind])
 }
