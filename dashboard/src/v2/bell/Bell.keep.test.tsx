@@ -113,26 +113,35 @@ describe('the bell after a row is opened', () => {
     m.stop()
   })
 
-  it('keeps the badge at nothing after the panel was open, even when a read answers before the mark lands', async () => {
-    const badge = () => document.querySelector('#bellDot')?.className
+  it('opening the panel reads nothing; opening one row reads only that one; the badge is the list\'s unread rows, also after a reload', async () => {
+    const badge = () => document.querySelector('#bellDot')?.textContent
+    const marked: string[][] = []
     vi.spyOn(more, 'bellRead').mockResolvedValue({ read: [] })
-    vi.spyOn(more, 'markBellRead').mockReturnValue(new Promise(() => undefined)) // the server never answers the mark
-    const m = mount({ bell: [] }, [site])
+    vi.spyOn(more, 'markBellRead').mockImplementation((ids: string[]) => {
+      marked.push(ids)
+      return Promise.resolve({ read: ids })
+    })
+    const extras = (): V2Extras => ({ bell: ['p1', 'p2', 'p3', 'p4'].map((id, i) => hosted(id, now - 10 - i, { open: () => undefined })) })
+    vi.mocked(more.notifications).mockResolvedValue({ notifications: [] })
+    const m = mount(extras(), [site])
     await flush()
     await act(() => new Promise((r) => setTimeout(r, 3100)))
-    expect(badge()).not.toContain('off')
+    expect(badge()).toBe('4')
     open()
     await flush()
-    open() // shut
+    expect(badge()).toBe('4') // seen, not read
+    expect(marked.flat()).toEqual([])
+    act(() => document.querySelectorAll<HTMLButtonElement>('.nf')[0].click())
     await flush()
-    expect(badge()).toContain('off')
-    // A poll answers with the same list, the account's read list still without the mark.
-    await act(() => window.dispatchEvent(new Event('focus')))
-    open()
-    await flush()
-    open()
-    await flush()
-    expect(badge()).toContain('off')
+    expect(marked.flat()).toEqual(['p1'])
+    expect(badge()).toBe('3')
     m.stop()
-  })
+    // A reload: the mark is the account's; the other three are still unread.
+    vi.mocked(more.bellRead).mockResolvedValue({ read: ['p1'] })
+    const again = mount(extras(), [site])
+    await flush()
+    await act(() => new Promise((r) => setTimeout(r, 3100)))
+    expect(badge()).toBe('3')
+    again.stop()
+  }, 20_000)
 })

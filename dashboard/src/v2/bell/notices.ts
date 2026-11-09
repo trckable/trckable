@@ -115,7 +115,7 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number): Notice[] 
         break
       }
       case 'milestone':
-        if (r.milestone && r.day) out.push({ ...base, kind: 'milestone', title: lineOf(r.milestone, true) || tileLabel(r.milestone, true), sub: '', at: startOf(r.day, zone), day: r.day, milestone: r.milestone })
+        if (r.milestone && r.day) out.push({ ...base, kind: 'milestone', title: lineOf(r.milestone, true) || tileLabel(r.milestone, true), sub: '', at: zone ? startOf(r.day, zone) : r.at, day: r.day, milestone: r.milestone })
         break
       case 'sale': {
         const n = r.count ?? 1
@@ -170,7 +170,7 @@ export function withFeed(own: Notice[], feed: Notice[] | undefined): Notice[] {
 }
 
 /** The list's one order: newest first, and the id for notices of the same second, so the same rows never swap places between reads. */
-export const byNewest = (a: Pick<Notice, 'at' | 'id'>, b: Pick<Notice, 'at' | 'id'>): number => b.at - a.at || a.id.localeCompare(b.id)
+export const byNewest = (a: Pick<Notice, 'at' | 'id'>, b: Pick<Notice, 'at' | 'id'>): number => b.at - a.at || Number(a.id > b.id) - Number(a.id < b.id)
 
 /** Newest first (the server cut the week), each once, and never more than 40 besides the sites that are down. */
 export function arrange(all: Notice[], now: number): Notice[] {
