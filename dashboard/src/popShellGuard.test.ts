@@ -22,7 +22,7 @@ const MENUS: Record<string, string> = {
   'v2/ui/DomainPicker.tsx': 'dompick-menu',
 }
 // The boxes of those menus, by class: the shell draws their frame, no other rule may.
-const BOXES = ['bellmenu', 'more-menu', 'xtiles-pop', 'sites', 'pmenu', 'dompick-menu']
+const BOXES = ['bellmenu', 'more-menu', 'xtiles-pop', 'mk-menu\\.sites', 'pmenu', 'dompick-menu']
 const FRAME = /(^|[;{\s])(background(-color)?|border(-radius)?|box-shadow|padding|width|min-width|max-width|backdrop-filter)\s*:/
 
 describe('header menus share one shell', () => {
