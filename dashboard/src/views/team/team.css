@@ -73,5 +73,6 @@
 }
 @media (max-width: 640px) {
   :root .app .tm-acts .kit-seg { height: var(--ph-hit); }
-  :root .app .tm-acts .kit-seg button { height: calc(var(--ph-hit) - 2px); }
+  :root .app .tm-acts .kit-seg { box-sizing: border-box; }
+  :root .app .tm-acts .kit-seg button { height: calc(var(--ph-hit) - 6px); min-height: 0; }
 }
