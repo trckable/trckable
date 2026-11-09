@@ -81,6 +81,7 @@ var routeRules = map[string]string{
 	"GET /api/v1/sites/{site}/mentions/lookalike":                "read",
 	"POST /api/v1/sites/{site}/mentions/{id}/not-about-us":       "write",
 	"POST /api/v1/sites/{site}/mentions/{id}/restore":            "write",
+	"GET /api/v1/favicon":                                        "write",
 	"POST /api/v1/sites":                                         "write",
 	"GET /api/v1/sites/{site}":                                   "read",
 	"PATCH /api/v1/sites/{site}":                                 "write",

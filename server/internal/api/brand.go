@@ -94,29 +94,45 @@ func (a *API) fetchFavicon(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusNotFound, "site not found")
 		return
 	}
+	data, reached := a.findFavicon(r.Context(), si.Domain)
+	if !reached {
+		fail(w, http.StatusNotFound, si.Domain+" could not be reached over https, so its favicon cannot be fetched. Upload a picture instead.")
+		return
+	}
+	if data == nil {
+		fail(w, http.StatusNotFound, si.Domain+" has no icon trckable can use: none of the ones its homepage names, /apple-touch-icon.png or /favicon.ico is a PNG, JPEG, WebP, GIF or ICO (SVG icons are not kept). Upload a picture instead.")
+		return
+	}
+	a.storeIcon(w, r, data)
+}
+
+// findFavicon is the one place a site's own icon is fetched, for the button in
+// Settings, the preview while adding a site and the icon a new site starts
+// with. reached is false when the site did not answer; data is nil when it did
+// but names no icon we keep.
+func (a *API) findFavicon(ctx context.Context, domain string) (data []byte, reached bool) {
 	client := a.IconGet
 	if client == nil {
 		client = alerts.SafeClient(6 * time.Second)
 	}
 	// All the fetches together, so a slow site cannot hold the request.
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	home := "https://" + si.Domain + "/"
+	home := "https://" + domain + "/"
 	// The icons the homepage names come first (most sites point at a PNG
 	// there), then the two places browsers look by themselves.
 	named, reached := declaredIcons(ctx, client, home)
 	if !reached {
-		fail(w, http.StatusNotFound, si.Domain+" could not be reached over https, so its favicon cannot be fetched. Upload a picture instead.")
-		return
+		return nil, false
 	}
 	tries := append(named, home+"apple-touch-icon.png", home+"favicon.ico")
 	for _, u := range tries {
 		if data, ok := getIcon(ctx, client, u); ok {
-			a.storeIcon(w, r, data)
-			return
+			return data, true
 		}
 	}
-	fail(w, http.StatusNotFound, si.Domain+" has no icon trckable can use: none of the ones its homepage names, /apple-touch-icon.png or /favicon.ico is a PNG, JPEG, WebP, GIF or ICO (SVG icons are not kept). Upload a picture instead.")
+	// Out of time is not "no icon": the answer is not known.
+	return nil, ctx.Err() == nil
 }
 
 var iconLink = regexp.MustCompile(`(?is)<link\b[^>]*>`)

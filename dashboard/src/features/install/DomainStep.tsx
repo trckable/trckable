@@ -3,8 +3,8 @@
 // once the field is left or Enter is pressed (never while still typing).
 import { AlertCircle, Check, Info } from 'lucide-react'
 import { useState } from 'react'
-import { SiteMark } from '../../components/SiteMark'
 import { wizard as t } from './copy'
+import { DomainMark } from './DomainMark'
 import { type DomainCheck } from './domain'
 import { domainWords } from './domainWords'
 
@@ -85,7 +85,7 @@ export function DomainStep(p: { domain: string; setDomain: (d: string) => void; 
           autoComplete="url"
           inputMode="url"
         />
-        <SiteMark site={{ domain: p.clean || p.domain || '?' }} size={28} />
+        <DomainMark domain={p.clean || p.domain} valid={p.verdict === 'ok' && !p.locked} />
       </label>
       {!p.locked && (
         <div aria-live="polite">
