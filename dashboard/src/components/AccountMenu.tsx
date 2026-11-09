@@ -9,6 +9,7 @@ import { AccountDot, type AccountAlert } from './AccountDot'
 import { useV2Extras } from '../v2/slots'
 import { PersonAvatar } from './PersonAvatar'
 import { copy } from './moreCopy'
+import { SHELL } from '../kit/PopShell'
 import { Lifted } from './Lifted'
 
 const AccountItems = lazyLoad(() => import('./AccountItems'))
@@ -47,7 +48,7 @@ export function AccountMenu({ alert }: { alert?: AccountAlert | null }) {
         <AccountDot alert={alert} />
       </button>
       {open && (
-        <Lifted className="pop menu more-menu" role="menu" aria-label={copy.accountMenu}>
+        <Lifted className={`pop menu more-menu ${SHELL}`} role="menu" aria-label={copy.accountMenu}>
           <Suspense fallback={null}>
             <AccountItems profile={profile} v={v} go={go} />
           </Suspense>

@@ -8,6 +8,7 @@ import { reducedMotion } from '../../lib/motion'
 import { useTopLayerWhen } from '../../lib/topLayer'
 import { byDay } from '../bell/days'
 import { copy } from '../bell/copy'
+import { PopFoot, PopHead, SHELL } from '../../kit/PopShell'
 import { useArrival } from './useBellArrival'
 import { FilterMenu } from './BellPopovers'
 import { Row } from './BellItem'
@@ -111,10 +112,9 @@ function List(p: BellProps & { close: () => void; bare?: boolean }) {
   return (
     <>
       {!p.bare && (
-        <div className="nfh">
-          <b>{p.title}</b>
+        <PopHead title={p.title}>
           <Tools {...p} />
-        </div>
+        </PopHead>
       )}
       {p.filter?.active && !old && (
         <div className="nfact">
@@ -150,18 +150,20 @@ function List(p: BellProps & { close: () => void; bare?: boolean }) {
           ))}
       </div>
       {!empty && (
-        <div className="nff">
-          {p.archive && !waiting ? (
-            <button type="button" className="lk3" aria-pressed={old} onClick={() => { if (!old) p.archive?.load(); setOld(!old) }}>
-              {old ? copy.showNew : copy.showArchived}
+        <PopFoot
+          start={
+            p.archive && !waiting ? (
+              <button type="button" className="lk3" aria-pressed={old} onClick={() => { if (!old) p.archive?.load(); setOld(!old) }}>
+                {old ? copy.showNew : copy.showArchived}
+              </button>
+            ) : undefined
+          }
+          end={
+            <button type="button" className="lk3" onClick={() => { p.onSettings(); p.close() }}>
+              {p.settings}
             </button>
-          ) : (
-            <span />
-          )}
-          <button type="button" className="lk3" onClick={() => { p.onSettings(); p.close() }}>
-            {p.settings}
-          </button>
-        </div>
+          }
+        />
       )}
     </>
   )
@@ -194,7 +196,7 @@ export function BellMenu(p: BellProps) {
         </svg>
       </button>
       {!p.sheet && (
-        <div ref={menu} className={`mk-menu bellmenu${open ? ' on' : ''}`} id="bellMenu">
+        <div ref={menu} className={`mk-menu bellmenu ${SHELL}${open ? ' on' : ''}`} id="bellMenu">
           {open && <List {...p} close={close} />}
         </div>
       )}

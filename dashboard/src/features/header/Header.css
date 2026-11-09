@@ -54,7 +54,6 @@
 .header-tools.quiet .more-menu {
   top: 44px;
   right: 0;
-  min-width: 220px;
   z-index: 40;
 }
 /* The Create menu has no button of its own: it opens under ⋯, from its key
@@ -165,10 +164,6 @@ html {
   overflow-y: scroll;
 }
 
-/* The avatar's menu ends the first row. */
-.account-menu .more-menu {
-  min-width: 250px;
-}
 .avatar.small {
   width: 28px;
   height: 28px;

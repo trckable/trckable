@@ -64,7 +64,7 @@
 .mk .nf .nfd.off { opacity: 0; transform: scale(.4); }
 .mk .nf .nft small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* The kind's icon on a soft rounded tile of its own colour: down red, sale green, busy amber, goal teal, mention purple, milestone pink, signup blue. The tile is the colour at a low strength, so it reads in both themes. */
-.mk .nf .nfi { box-sizing: border-box; width: 32px; height: 32px; padding: 7px; border-radius: 10px; background: color-mix(in srgb, currentColor 14%, transparent); }
+.mk .nf .nfi { box-sizing: border-box; width: 32px; height: 32px; padding: 7px; border-radius: var(--pop-tile-radius); background: var(--pop-tile-bg); }
 .mk .nf .nfi.k-down, .mk .nf .nfi.k-failed { color: var(--mk-red); }
 .mk .nf .nfi.k-up, .mk .nf .nfi.k-sale { color: var(--mk-green); }
 .mk .nf .nfi.k-spike, .mk .nf .nfi.k-alert, .mk .nf .nfi.k-setup { color: var(--mk-amber); }
@@ -79,9 +79,6 @@
 .mk .nfb.ok { background: var(--mk-green); }
 .mk .nfb.down { background: var(--mk-red); }
 .mk .nfb-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--mk-bg); }
-/* The foot: the archive and the alert settings, two small quiet buttons on one row. */
-.mk .nff .lk3 { font-size: 12px; color: var(--mk-muted); }
-.mk .nff .lk3:hover { color: var(--mk-text); }
 
 /* Nothing in the bell: a soft tile with the bell and a small check in the tone colour, one calm line, one quiet button. */
 .mk .nfe { display: flex; flex-direction: column; align-items: center; gap: var(--mk-s2); padding: 32px; text-align: center; }
@@ -92,8 +89,6 @@
 .mk .nfe .lk3 { display: inline-flex; align-items: center; gap: 6px; margin-top: var(--mk-s2); font-size: 13px; }
 .mk .nfe .nfe-old { margin-top: 0; font-size: 12px; }
 
-/* The list is solid: the page's glow (the score ring) must not show through the frosted pane the other menus have. */
-.mk .mk-menu.bellmenu { background: var(--mk-card2); -webkit-backdrop-filter: none; backdrop-filter: none; }
 .mk .nf .nfw-t { flex: none; align-self: flex-start; padding-top: 2px; font-size: 12px; color: var(--mk-muted); font-variant-numeric: tabular-nums; }
 
 /* The count, the read mark and the list come and go softly; with reduced motion they just change. */

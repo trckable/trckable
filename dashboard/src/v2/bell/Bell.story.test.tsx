@@ -54,8 +54,8 @@ describe('an empty bell', () => {
   it('says so, with only the alert settings to do', () => {
     const m = mount([])
     expect(m.host.querySelector('.nfe b')?.textContent).toBe('You’re all caught up')
-    expect(m.host.querySelector('.nfh .lk3')).toBeNull()
-    expect(m.host.querySelector('.nff')).toBeNull()
+    expect(m.host.querySelector('.pshell-head .lk3')).toBeNull()
+    expect(m.host.querySelector('.pshell-foot')).toBeNull()
     expect(m.host.querySelector('.nfe .lk3')?.textContent).toContain('Alert settings')
     m.stop()
   })

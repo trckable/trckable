@@ -617,10 +617,7 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 @keyframes mk-bell-shake{0%,100%{transform:rotate(0)}15%{transform:rotate(16deg)}30%{transform:rotate(-14deg)}45%{transform:rotate(10deg)}60%{transform:rotate(-8deg)}75%{transform:rotate(4deg)}}
 @media (prefers-reduced-motion:reduce){.mk .ib.bell.shake svg{animation:none}}
 html[data-motion='off'] .mk .ib.bell.shake svg{animation:none}
-.mk .bellmenu{left:auto;right:0;width:380px;padding:0}
-.mk .nfh,.mk .nff{display:flex;justify-content:space-between;align-items:center;padding:var(--mk-s2) var(--mk-s3);gap:var(--mk-s3)}
-.mk .nfh{border-bottom:1px solid var(--mk-line)}
-.mk .nff{border-top:1px solid var(--mk-line)}
+.mk .bellmenu{left:auto;right:0}
 .mk .nfl{display:flex;flex-direction:column;max-height:min(60vh,460px);overflow:auto}
 .mk .nf{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s3);text-align:left;border-top:1px solid var(--mk-line);min-height:56px;width:100%}
 .mk .nf:first-child{border-top:0}
@@ -1109,7 +1106,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
    avatar's right edge like the walkthrough's menus and takes their colours. */
 .mk .hd .account-menu{position:relative;flex:none}
 .mk .hd .account-menu .account-btn{padding:0;border:0;background:none;box-shadow:none;display:grid;place-items:center;border-radius:50%}
-.mk .hd .account-menu .more-menu{right:0;left:auto;top:calc(100% + var(--mk-s2));width:280px;min-width:0;max-width:calc(100vw - 16px);background:var(--mk-card2);border:1px solid var(--mk-line);border-radius:12px;box-shadow:0 20px 50px var(--mk-shc);z-index:var(--z-menu)}
+.mk .hd .account-menu .more-menu{right:0;left:auto;top:calc(100% + var(--pop-gap,var(--mk-s2)));z-index:var(--z-menu)}
 /* "Why?" beside "Replay": two buttons in a line, aligned at the top so the line is as tall as the walkthrough's one. */
 /* A period being read: the page of the last one stays, dimmed, until the new one is whole. */
 .mk-hold{display:contents}

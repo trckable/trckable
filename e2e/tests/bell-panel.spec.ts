@@ -83,7 +83,7 @@ for (const width of [1440, 390, 360]) {
     await expect(menu.locator('.nf').nth(1).locator('.nfw-t')).toHaveText(/^\d\d:\d\d–\d\d:\d\d$/)
 
     // The footer is one link.
-    await expect(menu.locator('.nff button')).toHaveCount(1)
+    await expect(menu.locator('.pshell-foot button')).toHaveCount(1)
 
     // Nothing runs off the side at this width.
     const fits = await menu.evaluate((el) => {
