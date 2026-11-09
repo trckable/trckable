@@ -4,6 +4,7 @@
 import type { InstallCheck } from '../../lib/api'
 import { outcomeOf } from '../install/outcome'
 import { copy } from './copy'
+import { scriptOk, tagOk } from './verdict'
 
 export interface Row {
   id: 'page' | 'tag' | 'script'
@@ -16,10 +17,10 @@ export function rowsOf(c: InstallCheck, domain: string): Row[] {
   if (c.error) return [{ id: 'page', label: copy.page, ok: false, text: c.error }]
   const rows: Row[] = [{ id: 'page', label: copy.page, ok: true, text: copy.pageOk(c.status ?? 200, c.ms ?? 0) }]
   const tag = outcomeOf(c, domain)
-  rows.push({ id: 'tag', label: copy.tag, ok: tag.kind === 'site', text: tag.text })
+  rows.push({ id: 'tag', label: copy.tag, ok: tagOk(c), text: tag.text })
   if (c.script) {
     const st = c.script_status ?? 0
-    const ok = st >= 200 && st < 400
+    const ok = scriptOk(st)
     rows.push({ id: 'script', label: copy.script, ok, text: ok ? copy.scriptOk(st) : copy.scriptBad(c.script, st) })
   }
   return rows

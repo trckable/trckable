@@ -4,7 +4,7 @@
 // no visits for the signals threshold, and nothing known to be wrong with the
 // page. Nothing here knows about the browser.
 import type { Site } from '../../lib/api'
-import { rowsOf } from './rows'
+import { failsOf } from './verdict'
 
 /** Hours without a visit before tracking counts as stopped, as the alert of the same name says by default. */
 export const STOPPED_HOURS = 6
@@ -52,6 +52,6 @@ export type ChipKind = 'down' | 'check' | 'stopped' | 'quiet'
 /** The chip's one decision, read by every surface that names a site that stopped. Down and Check fails come from the probe. Otherwise "stopped" only when a check fails (page down, tag missing, script failing, wrong site id); when every check passes, or none has run, the site is quiet: no visits, nothing wrong. `failing`: the rows of the checks just run, else the site's last check. */
 export function chipKindOf(s: Site, failing?: { ok: boolean }[]): ChipKind {
   if (statusOf(s) === 'down') return downStateOf(s) === 'visitors' ? 'check' : 'down'
-  const rows = failing ?? (s.check ? rowsOf({ url: '', scripts: 0, ...s.check }, s.domain) : [])
-  return rows.some((r) => !r.ok) ? 'stopped' : 'quiet'
+  const fails = failing ? failing.some((r) => !r.ok) : !!s.check && failsOf({ url: '', scripts: 0, ...s.check })
+  return fails ? 'stopped' : 'quiet'
 }
