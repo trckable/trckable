@@ -29,7 +29,7 @@ for (const [width, colorScheme] of [[1440, 'dark'], [1440, 'light'], [390, 'dark
     await page.goto(`${API}/${STEADY_DOMAIN}?view=briefing&period=7d`)
     await expect(page.locator('#xp')).toBeVisible({ timeout: 20_000 })
 
-    const card = page.waitForResponse((r) => r.url().includes('/card?') && !r.url().includes('format=json') && r.url().includes('t=overview'))
+    const card = page.waitForResponse((r) => r.url().includes('/card?') && !r.url().includes('format=json') && !r.url().includes('thumb=1'))
     // The header's button on a wide screen; on a phone it is the ⋯ menu's "Share a picture".
     if (width < 768) await openFromMenu(page)
     else await page.locator('.share-chip').click()
@@ -56,7 +56,9 @@ for (const [width, colorScheme] of [[1440, 'dark'], [1440, 'light'], [390, 'dark
     // Download names the file after the site, the card and the period.
     const file = page.waitForEvent('download')
     await dialog.getByRole('button', { name: /^Download \d+×\d+$/ }).click()
-    expect((await file).suggestedFilename()).toBe(`trckable-${STEADY_DOMAIN}-overview-7d.png`)
+    // The picture the sheet opens on: the Overview from the header's button, the page's own from a phone's menu.
+    const shown = new URL((await img.getAttribute('src')) ?? '', API).searchParams.get('t')
+    expect((await file).suggestedFilename()).toBe(`trckable-${STEADY_DOMAIN}-${shown}-7d.png`)
 
     if (SHOTS && width === 1440) {
       const sites = (await (await page.request.get(`${API}/api/v1/sites`)).json()) as { sites: { id: string; domain: string }[] }
@@ -124,17 +126,18 @@ for (const width of [1440, 390]) test(`the sheet picks the big number and the sm
   else await page.locator('.share-chip').click()
   const dialog = page.getByRole('dialog', { name: 'Share your numbers' })
   await expect(dialog).toBeVisible()
-  const img = dialog.locator('.sd-preview img.sd-img:not(.is-out, .is-loader)')
+  // The newest request: the image still loading when there is one, else the settled one.
+  const img = dialog.locator('.sd-preview img.sd-img:not(.is-out)').last()
   await dialog.getByRole('button', { name: /^Numbers/ }).click()
   const param = async (name: string) => new URL((await img.getAttribute('src'))!, API).searchParams.get(name)
-  expect(await param('metric')).toBe('visitors')
-  expect(await param('stats')).toBe('engaged,avgtime,country')
+  await expect.poll(() => param('metric')).toBe('visitors')
+  await expect.poll(() => param('stats')).toBe('engaged,avgtime,country')
 
   // Pageviews as the big number: the picture asks for it, and the stats no longer offer it.
   const card = page.waitForResponse((r) => r.url().includes('/card?') && !r.url().includes('format=json') && r.url().includes('metric=pageviews') && r.url().includes('t=overview'))
   await dialog.getByRole('button', { name: 'Pageviews' }).click()
   expect((await card).status()).toBe(200)
-  expect(await param('metric')).toBe('pageviews')
+  await expect.poll(() => param('metric')).toBe('pageviews')
   await dialog.getByRole('button', { name: 'Stats' }).click()
   const menu = page.getByRole('menu', { name: 'The small numbers on the card, up to three' })
   await expect(menu).toBeVisible()
@@ -145,17 +148,17 @@ for (const width of [1440, 390]) test(`the sheet picks the big number and the sm
   const pick = page.waitForResponse((r) => r.url().includes('/card?') && !r.url().includes('format=json') && r.url().includes('stats=avgtime%2Ccountry%2Cpage'))
   await menu.getByRole('menuitemcheckbox', { name: 'Top page' }).click()
   expect((await pick).status()).toBe(200)
-  expect(await param('stats')).toBe('avgtime,country,page')
+  await expect.poll(() => param('stats')).toBe('avgtime,country,page')
   await expect(menu.getByRole('menuitemcheckbox', { name: 'Engaged visits' })).toHaveAttribute('aria-checked', 'false')
   await menu.getByRole('menuitemcheckbox', { name: 'Top source' }).click()
-  expect(await param('stats')).toBe('country,page,source')
+  await expect.poll(() => param('stats')).toBe('country,page,source')
   await page.keyboard.press('Escape')
   await expect(menu).toHaveCount(0)
 
   // Engaged visits as the big number takes its own stat away.
   await dialog.getByRole('button', { name: 'Engaged visits' }).click()
   await expect.poll(() => param('metric')).toBe('engaged')
-  expect(await param('stats')).toBe('country,page,source')
+  await expect.poll(() => param('stats')).toBe('country,page,source')
   // The word card says it too.
   const words = await page.request.get(`${API}/api/v1/sites/${(await (await page.request.get(`${API}/api/v1/sites`)).json() as { sites: { id: string; domain: string }[] }).sites.find((s) => s.domain === STEADY_DOMAIN)!.id}/card?format=json&metric=engaged&period=7d`)
   expect((await words.json()).label).toBe('engaged visits')
