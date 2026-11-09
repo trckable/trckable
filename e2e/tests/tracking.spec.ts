@@ -17,12 +17,6 @@ type Ev = {
 let site = ''
 test.beforeAll(async ({ request }) => {
   site = (await (await request.get('/_site')).json()).site
-  // New sites start cookieless; these tests are about the cookie, so this site opts in.
-  const url = `${API}/api/v1/sites/${site}/config`
-  const headers = { Authorization: `Bearer ${TOKEN}`, 'X-Trckable-Request': '1' }
-  const cfg = await (await request.get(url, { headers })).json()
-  const saved = await request.put(url, { headers, data: { ...cfg, consent_free: false, honor_dnt: false, record_city: true } })
-  expect(saved.ok()).toBeTruthy()
 })
 
 // A unique path prefix per test and browser keeps runs independent.
