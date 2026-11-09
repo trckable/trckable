@@ -1446,6 +1446,7 @@ export default {
   'install.copyCode': 'Kopieer de code',
   'install.optionalTitle': 'Tel ook bezoekers met een adblocker',
   'install.optionalHint': 'Optioneel. Gebeurtenissen lopen dan via je eigen domein, gebruik <Analytics> dus zonder host.',
+  'install.cookieless.cookieModeNote': 'Cookiemodus staat aan. Hij voegt nieuwe en terugkerende bezoekers en routes toe; in de EU is een toestemmingsbanner nodig.',
   'install.cookieless.label': 'Zonder cookies',
   'install.cookieless.onServer': 'Geen cookie, niets opgeslagen. Het script pakt het binnen een uur op: niets opnieuw te plakken.',
   'install.cookieless.onBundled': 'De code hierboven heeft cookieless: true. Bouw je app opnieuw en zet hem live.',

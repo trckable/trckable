@@ -1,6 +1,7 @@
 // Settings → Data & privacy. Everything here is part of trckable, not an
 // add-on: the defaults record the most, and each switch is the owner deciding
 // to record less. Nothing is paywalled, and nothing is on without them.
+import { copy } from '../features/install/copy'
 import { Clock, Cookie, Cookie as CookieIcon, EyeOff, MapPin, ShieldCheck } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Switch } from '../components/Switch'
@@ -156,7 +157,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
         {free && <span className="faint eu-note">Visitors get the smaller, storage-free script within the hour.</span>}
         {!free && (
           <span className="faint eu-note" data-testid="cookie-mode-note">
-            Cookie mode is on. It adds new vs returning visitors and journeys, and in the EU it needs a consent banner.
+            {copy.cookieless.cookieModeNote}
           </span>
         )}
       </section>
