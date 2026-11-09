@@ -2,7 +2,11 @@ import formats from './formats.json'
 
 // What the dialog asks the server for: a card is one address, so the preview
 // and the download are the same picture.
-export type Template = 'overview' | 'leaderboard' | 'post'
+export type Template = 'overview' | 'numbers' | 'grid' | 'leaderboard' | 'post'
+/** A group of pictures in the gallery. */
+export type Topic = 'overview' | 'pages' | 'text'
+/** What a picture needs of the site; without it the picture is shown disabled, with the reason. */
+export type Need = 'revenue'
 export type Period = '24h' | '7d' | '30d' | 'all' | 'custom'
 export type Metric = 'visitors' | 'pageviews' | 'engaged' | 'revenue'
 /** The small numbers under the chart: the ones that are also a metric are not offered while it is the big number. */
@@ -15,7 +19,21 @@ export type Shape = 'link' | 'square' | 'story' | 'wide'
 export const FORMATS = formats as { id: Shape; w: number; h: number }[]
 export const formatOf = (shape: Shape) => FORMATS.find((f) => f.id === shape) ?? FORMATS[0]
 
-export const TEMPLATES: Template[] = ['overview', 'leaderboard', 'post']
+/** The gallery: every picture, in its topic. A topic's pictures come first-to-last as listed. */
+export type Picture = { id: Template; topic: Topic; need?: Need }
+export const PICTURES: Picture[] = [
+  { id: 'overview', topic: 'overview' },
+  { id: 'numbers', topic: 'overview' },
+  { id: 'grid', topic: 'overview' },
+  { id: 'leaderboard', topic: 'pages' },
+  { id: 'post', topic: 'text' },
+]
+export const TOPICS: Topic[] = ['overview', 'pages', 'text']
+export const picturesOf = (t: Topic) => PICTURES.filter((p) => p.topic === t)
+/** What the picture lacks on this site, if anything (it is then disabled, saying why). */
+export const missing = (p: Picture, has: Record<Need, boolean>): Need | null => (p.need && !has[p.need] ? p.need : null)
+/** Whether the Numbers section (the big number and the small stats) applies to the picture. */
+export const hasNumbers = (t: Template) => t === 'overview' || t === 'numbers'
 export const METRICS: Metric[] = ['visitors', 'pageviews', 'engaged', 'revenue']
 export const STATS: Stat[] = ['engaged', 'avgtime', 'pageviews', 'visitors', 'bounce', 'country', 'page', 'source', 'revenue']
 export const MAX_STATS = 3

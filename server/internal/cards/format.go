@@ -61,6 +61,12 @@ type Layout struct {
 	CornerGhostK         float64
 	LineW                float64
 
+	// Numbers (three cards in a row) and the grid (two by two).
+	NumTop, NumH            int
+	NumPx                   float64
+	GridTop, GridH, GridGap int
+	GridPx                  float64
+
 	// Leaderboard.
 	TitleY, RowTop, RowStep, RowH int
 	TitlePx, RowPx                float64
@@ -89,6 +95,8 @@ func layoutFor(f Format) Layout {
 		MarkX: f.W - int(math.Round(308*k)), GhostX: 892 * k, GhostY: 520 * vy,
 		SpotBigY: y(316), SpotLabelY: y(372), LineLo: 500 * vy, LineHi: 270 * vy,
 		CornerGhostX: float64(f.W) - 168*k, CornerGhostY: 72 * vy,
+		NumTop: y(366), NumH: y(148), NumPx: 56 * k,
+		GridTop: y(222), GridH: y(140), GridGap: int(math.Round(16 * k)), GridPx: 60 * k,
 		TitleY: y(184), RowTop: y(222), RowStep: y(58), RowH: y(44),
 		TitlePx: 40 * k, RowPx: 26 * k, BarGap: int(math.Round(150 * k)),
 	}
@@ -104,6 +112,8 @@ func layoutFor(f Format) Layout {
 		l.MarkX, l.GhostX, l.GhostY = f.W-354, float64(f.W-354), float64(1024-41)
 		l.SpotBigY, l.SpotLabelY, l.LineLo, l.LineHi = 560, 640, 940, 660
 		l.CornerGhostX, l.CornerGhostY = float64(f.W)-186, 100
+		l.NumTop, l.NumH, l.NumPx = 580, 290, 76
+		l.GridTop, l.GridH, l.GridGap, l.GridPx = 310, 300, 24, 92
 		l.TitleY, l.RowTop, l.RowStep, l.RowH = 250, 310, 124, 100
 		l.TitlePx, l.RowPx, l.BarGap = 58, 38, 160
 	case "story":
@@ -117,6 +127,8 @@ func layoutFor(f Format) Layout {
 		l.MarkX, l.GhostX, l.GhostY = f.W-400, float64(f.W-400), float64(1790-47)
 		l.SpotBigY, l.SpotLabelY, l.LineLo, l.LineHi = 960, 1050, 1540, 1120
 		l.CornerGhostX, l.CornerGhostY = float64(f.W)-206, 180
+		l.NumTop, l.NumH, l.NumPx = 940, 330, 84
+		l.GridTop, l.GridH, l.GridGap, l.GridPx = 540, 420, 28, 104
 		l.TitleY, l.RowTop, l.RowStep, l.RowH = 440, 540, 220, 168
 		l.TitlePx, l.RowPx, l.BarGap = 70, 46, 170
 	}

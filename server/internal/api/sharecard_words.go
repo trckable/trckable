@@ -11,6 +11,7 @@ var cardWords = struct {
 	engaged, avgTime, topCountry                              string
 	engagedVisits, statPageviews, statVisitors, bounce        string
 	topPage, topSource, statRevenue                           string
+	gridTitle                                                 map[string]string // by period
 }{
 	visitors:   "visitors",
 	pageviews:  "pageviews",
@@ -29,6 +30,7 @@ var cardWords = struct {
 	topPage:       "Top page",
 	topSource:     "Top source",
 	statRevenue:   "Revenue",
+	gridTitle:     map[string]string{"24h": "Today in numbers", "7d": "This week in numbers", "30d": "This month in numbers", "all": "All time in numbers", "custom": "Your numbers"},
 }
 
 // cardPeriod is what a card covers: one of the dialog's presets, a custom
@@ -58,7 +60,7 @@ func cardPeriodOf(s string) cardPeriod {
 
 func cardTemplateOf(s string) string {
 	switch s {
-	case "leaderboard":
+	case "leaderboard", "numbers", "grid":
 		return s
 	}
 	return "overview"

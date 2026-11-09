@@ -122,3 +122,19 @@ func TestFormatsMatchThePanel(t *testing.T) {
 		}
 	}
 }
+
+// The Overview pictures with nothing to show (no stats, an empty series) still draw, at every size.
+func TestOverviewPicturesWithNoData(t *testing.T) {
+	for _, f := range Formats {
+		for _, tpl := range []string{"numbers", "grid"} {
+			s := sample(tpl, f.ID, "light")
+			s.Stats, s.Series, s.Change, s.Dir = nil, nil, "", 0
+			if _, err := s.PNG(); err != nil {
+				t.Errorf("%s %s: %v", f.ID, tpl, err)
+			}
+			if got := len(Templates[tpl].Runs(s)); got == 0 {
+				t.Errorf("%s %s: no text at all", f.ID, tpl)
+			}
+		}
+	}
+}

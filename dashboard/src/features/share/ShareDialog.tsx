@@ -9,7 +9,7 @@ import { can } from '../../lib/permissions'
 import { Modal } from '../../kit/Modal'
 import { toast } from '../../components/Toast'
 import { fmtRange, todayIn } from '../../lib/dates'
-import { ACCENTS, DEFAULT_STATS, METRICS, cardUrl, comparing, fileName, statsWith, type CardWords, type Look, type Period } from './card'
+import { ACCENTS, DEFAULT_STATS, METRICS, cardUrl, comparing, fileName, hasNumbers, picturesOf, statsWith, type CardWords, type Look, type Period, type Topic } from './card'
 import { Actions, type Act } from './Actions'
 import { copy } from './copy'
 import { copyImage, saveImage, shareImage } from './image'
@@ -24,10 +24,12 @@ import { useLook } from './useLook'
 import './ShareDialog.css'
 import { fail } from '../../components/toastBus'
 
-export default function ShareDialog({ site: first, sites, period = '7d', onClose }: { site: Site; sites: Site[]; period?: Period; onClose: () => void }) {
+type Props = { site: Site; sites: Site[]; period?: Period; /** The gallery's group the dialog opens on: its first picture is the one shown. */ topic?: Topic; onClose: () => void }
+
+export default function ShareDialog({ site: first, sites, period = '7d', topic = 'overview', onClose }: Props) {
   const [siteId, setSiteId] = useState(first.id)
   const site = sites.find((s) => s.id === siteId) ?? first
-  const [look, setLook] = useState<Look>({ template: 'overview', shape: 'link', period, compare: false, metric: 'visitors', stats: DEFAULT_STATS, theme: 'dark', accent: ACCENTS[0] })
+  const [look, setLook] = useState<Look>({ template: picturesOf(topic)[0].id, shape: 'link', period, compare: false, metric: 'visitors', stats: DEFAULT_STATS, theme: 'dark', accent: ACCENTS[0] })
   // A new big number is not shown again among the small ones.
   const set = (l: Partial<Look>) => setLook((x) => (l.metric ? { ...x, ...l, stats: statsWith(l.stats ?? x.stats, l.metric) } : { ...x, ...l }))
   const brand = useLook(site.id)
@@ -86,7 +88,7 @@ export default function ShareDialog({ site: first, sites, period = '7d', onClose
   const metrics = METRICS.filter((m) => m !== 'revenue' || words?.revenue)
 
   const periodSummary = [look.period === 'custom' && look.range ? fmtRange(look.range, today) : copy.periods[look.period], comparing(look) ? copy.compare : ''].filter(Boolean).join(' · ')
-  const numbersSummary = look.template === 'leaderboard' ? copy.template.leaderboard.hint : copy.metrics[look.metric]
+  const numbersSummary = copy.metrics[look.metric]
 
   return (
     <Modal label={copy.title} className="sd-modal" onClose={onClose}>
@@ -110,12 +112,12 @@ export default function ShareDialog({ site: first, sites, period = '7d', onClose
           </div>
           <div className="sd-panel">
             <Section id="card" title={copy.whatToShare} summary={copy.template[look.template].name} open={open === 'card'} onToggle={() => toggle('card')}>
-              <CardSection value={look.template} onChange={(t) => set({ template: t })} />
+              <CardSection site={site.id} look={shown} has={{ revenue: words?.revenue ?? false }} onChange={(t) => set({ template: t })} />
             </Section>
             <Section id="period" title={copy.period} summary={periodSummary} open={open === 'period'} onToggle={() => toggle('period')}>
               <PeriodSection look={look} tz={site.timezone} set={set} />
             </Section>
-            {look.template !== 'post' && (
+            {hasNumbers(look.template) && (
               <Section id="numbers" title={copy.numbers} summary={numbersSummary} open={open === 'numbers'} onToggle={() => toggle('numbers')}>
                 <NumbersSection look={look} metrics={metrics} revenue={words?.revenue ?? false} set={set} />
               </Section>

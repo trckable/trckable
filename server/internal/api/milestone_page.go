@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/trckable/trckable/server/internal/cards"
 	"github.com/trckable/trckable/server/internal/milestones"
 )
 
@@ -26,7 +27,7 @@ var milestonePage = template.Must(template.New("m").Parse(`<!doctype html>
 <meta property="og:title" content="{{.Title}}">
 <meta property="og:description" content="{{.Reached}}">
 <meta property="og:image" content="{{.Image}}">
-<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:width" content="{{.Card.W}}"><meta property="og:image:height" content="{{.Card.H}}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="{{.Image}}">
 <style>
@@ -38,7 +39,7 @@ img{width:100%;height:auto;border-radius:14px;border:1px solid color-mix(in srgb
 h1{margin:0;font-size:20px}p{margin:0;color:var(--muted)}a{color:var(--accent)}
 </style></head>
 <body><main>
-<img src="{{.Image}}" width="1200" height="630" alt="{{.Title}}">
+<img src="{{.Image}}" width="{{.Card.W}}" height="{{.Card.H}}" alt="{{.Title}}">
 <h1>{{.Title}}</h1>
 <p>{{.Reached}}</p>
 <p><a href="https://trckable.com" rel="noopener">{{.Made}}</a></p>
@@ -72,7 +73,10 @@ func (a *API) milestoneLink(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
-	_ = milestonePage.Execute(w, d)
+	_ = milestonePage.Execute(w, struct {
+		milestones.Page
+		Card cards.Format // the preview's size, from the one list of sizes
+	}{d, cards.FormatOf("link")})
 }
 
 var errNoLink = errors.New("no link")
