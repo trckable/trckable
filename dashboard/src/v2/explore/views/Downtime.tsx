@@ -13,6 +13,9 @@ const when = (s: string) => {
   return m ? `${MONTHS[+m[1] - 1]} ${+m[2]}, ${m[3]}` : s
 }
 
+/** An outage that began and ended in the same minute, or lasted under a minute. */
+const brief = (i: Down) => i.min < 1 || i.from === i.to
+
 export function Downtime({ down }: { down: Down[] }) {
   if (down.length === 0) return null
   return (
@@ -21,8 +24,8 @@ export function Downtime({ down }: { down: Down[] }) {
       {down.map((i) => (
         <div key={i.from} className="sale">
           <span className="mk-tag refund">{copy.down}</span>
-          <span className="gn">{copy.downSpan(when(i.from), when(i.to).replace(/^.*, /, ''))}</span>
-          <span className="amt">{plainSpan(i.min * 60)}</span>
+          <span className="gn">{brief(i) ? when(i.from) : copy.downSpan(when(i.from), when(i.to).replace(/^.*, /, ''))}</span>
+          <span className="amt">{brief(i) ? copy.underMinute : plainSpan(i.min * 60)}</span>
         </div>
       ))}
     </>

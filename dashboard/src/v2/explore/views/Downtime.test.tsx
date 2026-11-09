@@ -9,4 +9,11 @@ describe('the downtime band', () => {
     expect(html).toContain('Downtime')
     expect(html).toContain('23')
   })
+  it('says under a minute for an outage that began and ended in the same minute', () => {
+    const html = renderToStaticMarkup(<Downtime down={[{ from: '11-08 04:07', to: '11-08 04:07', min: 1 }]} />)
+    expect(html).toContain('Nov 8, 04:07')
+    expect(html).toContain('under a minute')
+    expect(html).not.toContain(' to ')
+    expect(renderToStaticMarkup(<Downtime down={[{ from: '11-08 04:07', to: '11-08 04:08', min: 0 }]} />)).toContain('under a minute')
+  })
 })

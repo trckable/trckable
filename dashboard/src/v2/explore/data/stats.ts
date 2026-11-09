@@ -17,7 +17,7 @@ export function statOf(v: number, was: number | undefined, base = true): Stat {
     if (v > hi) return 'up'
     return v < lo ? 'dn' : ''
   }
-  return { v, c, lo, hi, st: !base || (v < FLOOR && c < FLOOR) ? '' : side() }
+  return { v, c, lo, hi, st: !base || (v < FLOOR && c < FLOOR) ? '' : side(), ...(base ? {} : { base: false as const }) }
 }
 
 /** A table's rows: each against the same row of the period before. A period before that was too thin says nothing. */
@@ -35,8 +35,9 @@ export function rowsOf(cur: ApiRow[] | null | undefined, prev: ApiRow[] | null |
     .sort((a, b) => b.v - a.v)
 }
 
-/** "+29% vs usual", "as usual" or nothing to compare: what the little note on a card says. */
-export function noteOf(s: Stat, vs: string, usual: string, none: string): { c: string; t: string } {
+/** "+29% vs usual", "as usual" or nothing to compare: what the little note on a card says. With no base to measure against it says so (`thin`, else `none`), never that the number held. */
+export function noteOf(s: Stat, vs: string, usual: string, none: string, thin = none): { c: string; t: string } {
+  if (s.base === false) return { c: '', t: thin }
   if (s.c > 0.5 && s.st) {
     const x = s.v / s.c
     if (x >= 2) return { c: s.st, t: `${mult(x)} ${vs}` }

@@ -52,6 +52,10 @@ describe('noteOf', () => {
     expect(noteOf(statOf(100, 100), 'vs usual', 'as usual', '').t).toBe('as usual')
     expect(noteOf(statOf(100, undefined), 'vs usual', 'as usual', '').t).toBe('')
   })
+  it('never says a number held when there is no base to measure it against', () => {
+    expect(noteOf(statOf(100, 100, false), 'vs usual', 'as usual', '', 'too little before').t).toBe('too little before')
+    expect(noteOf(statOf(100, 100, false), 'vs usual', 'as usual', '').t).toBe('')
+  })
 })
 
 describe('changeOf', () => {

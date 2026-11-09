@@ -49,7 +49,7 @@ export function mapOverview(r: Report, o: { money?: (minor: number) => string; u
   const cur = r.current
   const prev = r.previous
   const base = !!prev && baseEnough(prev.kpis.visitors)
-  const pe = (s: Stat): Kc['note'] => noteOf(s, copy.vs[o.basis ?? 'usual'], o.basis && o.basis !== 'usual' ? copy.asBefore : copy.asUsual, '')
+  const pe = (s: Stat): Kc['note'] => noteOf(s, copy.vs[o.basis ?? 'usual'], o.basis && o.basis !== 'usual' ? copy.asBefore : copy.asUsual, '', prev ? copy.tooLittleBefore : '')
   const people = statOf(cur.kpis.visitors, prev?.kpis.visitors, base)
   const goal = (cur.goals ?? []).find((g) => g.visitors > 0)
   const gs = goal ? statOf(goal.visitors, prev?.goals?.find((g) => g.value === goal.value)?.visitors, base) : null

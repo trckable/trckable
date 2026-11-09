@@ -1,0 +1,1 @@
+What changed: one number with too little behind it (no sales, a few sign-ups) now says so for itself and keeps the page; a card never says as before when the period before was too thin to compare; a downtime under a minute reads as under a minute.
