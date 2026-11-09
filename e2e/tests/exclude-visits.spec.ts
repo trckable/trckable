@@ -6,6 +6,7 @@
 import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
+import { useCookies } from './audit-kit'
 
 const H = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36'
@@ -32,6 +33,7 @@ test('exclude my visits: the menu opens the site with the flag, and the IP list 
   const made = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain } })
   expect(made.ok()).toBe(true)
   const site = ((await made.json()) as { id: string }).id
+  await useCookies(page.request, site) // new sites start cookieless; this one tells visitors apart
   expect((await visit(page, site, domain, '/first', 'aaaa1')).ok()).toBe(true)
   await expect.poll(() => paths(page, site), { timeout: 15_000 }).toEqual(['/first'])
 
