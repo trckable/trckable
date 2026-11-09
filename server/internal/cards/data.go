@@ -34,15 +34,43 @@ func rows(s Spec) []Item {
 	return s.Rows
 }
 
-func leaderBars(s Spec, f Frame) string {
+// rowBars are the bars behind a list's lines, the first at top, one step apart.
+func rowBars(list []Item, f Frame, top, step int) string {
 	l := f.L
 	var b strings.Builder
-	for i, it := range rows(s) {
+	for i, it := range list {
 		share := min(max(it.Share, 0), 1)
 		w := float64(l.n(24)) + share*float64(l.Right-l.Left-l.n(24)-l.BarGap)
-		fmt.Fprintf(&b, `<rect x="%d" y="%d" width="%.1f" height="%d" rx="%d" fill="%s" fill-opacity="0.18"/>`, l.Left, l.RowTop+i*l.RowStep, w, l.RowH, l.RowH*12/44, f.Ink)
+		fmt.Fprintf(&b, `<rect x="%d" y="%d" width="%.1f" height="%d" rx="%d" fill="%s" fill-opacity="0.18"/>`, l.Left, top+i*step, w, l.RowH, l.RowH*12/44, f.Ink)
 	}
 	return b.String()
+}
+
+// rowRuns are the names and counts of a list's lines, placed as rowBars places the bars.
+func rowRuns(s Spec, list []Item, top, step int) []Run {
+	l := s.layout()
+	room := float64(l.Right - l.Left)
+	var runs []Run
+	for i, it := range list {
+		y := top + i*step + l.RowH*31/44
+		valueW := measure(true, it.Value, l.RowPx)
+		name := fitWith(false, it.Name, room-float64(l.n(20))-valueW-float64(l.n(24)), l.RowPx)
+		runs = append(runs,
+			Run{X: l.Left + l.n(20), Y: y, Px: l.RowPx, Spans: []Span{{Text: name, Ink: s.Theme.FG}}},
+			Run{X: l.Right, Y: y, Px: l.RowPx, End: true, Spans: []Span{{Text: it.Value, Bold: true, Ink: s.Theme.FG}}},
+		)
+	}
+	return runs
+}
+
+// emptyRun is the line a picture says when it has nothing behind it, where its first row would be.
+func emptyRun(s Spec, top int) Run {
+	l := s.layout()
+	return Run{X: l.Left, Y: top + l.RowH*32/44, Px: l.px(30), Spans: []Span{{Text: fitWith(false, s.Big, float64(l.Right-l.Left), l.px(30)), Ink: s.Theme.Muted}}}
+}
+
+func leaderBars(s Spec, f Frame) string {
+	return rowBars(rows(s), f, f.L.RowTop, f.L.RowStep)
 }
 
 func leaderRuns(s Spec) []Run {
@@ -56,16 +84,7 @@ func leaderRuns(s Spec) []Run {
 	runs = append(runs, Marks(s)...)
 	list := rows(s)
 	if len(list) == 0 {
-		return append(runs, Run{X: l.Left, Y: l.RowTop + l.RowH*32/44, Px: l.px(30), Spans: []Span{{Text: fitWith(false, s.Big, room, l.px(30)), Ink: s.Theme.Muted}}})
+		return append(runs, emptyRun(s, l.RowTop))
 	}
-	for i, it := range list {
-		y := l.RowTop + i*l.RowStep + l.RowH*31/44
-		valueW := measure(true, it.Value, l.RowPx)
-		name := fitWith(false, it.Name, room-float64(l.n(20))-valueW-float64(l.n(24)), l.RowPx)
-		runs = append(runs,
-			Run{X: l.Left + l.n(20), Y: y, Px: l.RowPx, Spans: []Span{{Text: name, Ink: s.Theme.FG}}},
-			Run{X: l.Right, Y: y, Px: l.RowPx, End: true, Spans: []Span{{Text: it.Value, Bold: true, Ink: s.Theme.FG}}},
-		)
-	}
-	return runs
+	return append(runs, rowRuns(s, list, l.RowTop, l.RowStep)...)
 }

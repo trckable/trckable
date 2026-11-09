@@ -83,17 +83,30 @@ describe('look options', () => {
 })
 
 describe('the gallery by what the site has', () => {
-  const words = (w: Partial<CardWords>): CardWords => ({ metric: 'visitors', big: '', label: '', foot: '', revenue: false, has_data: true, has_sources: true, has_places: true, has_tech: true, post: '', ...w })
+  const words = (w: Partial<CardWords>): CardWords => ({ metric: 'visitors', big: '', label: '', foot: '', revenue: true, has_data: true, has_sources: true, has_places: true, has_tech: true, has_changed: true, has_search: true, has_ai: true, has_goals: true, has_milestone: true, post: '', ...w })
   const disabled = (w: CardWords | null) => PICTURES.filter((p) => missing(p, hasOf(w))).map((p) => p.id)
-  it('has none disabled while the words are not in yet, nor when the site is busy', () => {
-    expect(disabled(null)).toEqual([])
+  it('has none disabled but Sales while the words are not in yet (money is never assumed), nor any when the site is busy', () => {
+    expect(disabled(null)).toEqual(['sales'])
     expect(disabled(words({}))).toEqual([])
   })
   it('disables the sources and the places on their own, and everything but the post with no visit', () => {
     expect(disabled(words({ has_sources: false }))).toEqual(['sources', 'topsource'])
     expect(disabled(words({ has_places: false }))).toEqual(['places', 'topplace'])
     expect(disabled(words({ has_tech: false }))).toEqual(['devices', 'browsers'])
-    expect(disabled(words({ has_data: false, has_sources: false, has_places: false, has_tech: false }))).toEqual(PICTURES.filter((p) => p.id !== 'post').map((p) => p.id))
+    expect(disabled(words({ has_data: false, has_sources: false, has_places: false, has_tech: false }))).toEqual(['overview', 'numbers', 'grid', 'sources', 'topsource', 'leaderboard', 'toppage', 'places', 'topplace', 'devices', 'browsers'])
+  })
+  it('disables each report picture on its own: What changed, Search, AI, Goals, Sales, Milestone', () => {
+    expect(disabled(words({ has_changed: false }))).toEqual(['changed'])
+    expect(disabled(words({ has_search: false }))).toEqual(['search'])
+    expect(disabled(words({ has_ai: false }))).toEqual(['ai'])
+    expect(disabled(words({ has_goals: false }))).toEqual(['goals'])
+    expect(disabled(words({ revenue: false }))).toEqual(['sales'])
+    expect(disabled(words({ has_milestone: false }))).toEqual(['milestone'])
+    expect(disabled(words({ has_data: false, has_sources: false, has_places: false, has_tech: false, has_changed: false, has_search: false, has_ai: false, has_goals: false, has_milestone: false, revenue: false }))).toEqual(PICTURES.filter((p) => p.id !== 'post').map((p) => p.id))
+  })
+  it('never starts on a report picture, and sales is the last to be asked for', () => {
+    expect(picturesOf('overview')[0].id).toBe('overview')
+    expect(TOPICS.indexOf('sales')).toBeGreaterThan(TOPICS.indexOf('overview'))
   })
   it('lists every topic with a picture', () => expect(TOPICS.every((t) => picturesOf(t).length > 0)).toBe(true))
 })

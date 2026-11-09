@@ -79,7 +79,31 @@ func (n *cardNumbers) pictureOf(spec *cards.Spec, t string) {
 		}
 		return
 	}
+	if d, ok := n.digests[t]; ok {
+		spec.Template, spec.Label, spec.Rows, spec.Stats, spec.Big = "digest", d.title, d.rows, d.stats, d.empty
+		spec.Change, spec.Dir, spec.Series = "", 0, nil
+		return
+	}
+	if t == "milestone" {
+		n.milestoneOf(spec)
+		return
+	}
 	if (t == "overview" || t == "numbers") && !n.HasData && n.Metric != "revenue" {
 		spec.Big, spec.Label, spec.Change, spec.Dir, spec.Series, spec.Stats = cardWords.noVisits, "", "", 0, nil, nil
+	}
+}
+
+// milestoneOf makes the spec the milestone's own card (the spotlight, in its words and colours), on the format and
+// look asked for; with no milestone in the period, the line that says so.
+func (n *cardNumbers) milestoneOf(spec *cards.Spec) {
+	spec.Template, spec.Change, spec.Dir, spec.Series, spec.Stats = "spotlight", "", 0, nil, nil
+	if n.milestone == nil {
+		spec.Big, spec.Label = cardWords.noMilestone, ""
+		return
+	}
+	m := n.milestone.spec
+	spec.Big, spec.Label, spec.Foot = m.Big, m.Label, m.Foot
+	if n.milestone.money {
+		spec.Accent = spec.Theme.Money
 	}
 }
