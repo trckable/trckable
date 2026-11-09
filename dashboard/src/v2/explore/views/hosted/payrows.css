@@ -80,7 +80,7 @@
   align-items: center;
   gap: 6px;
 }
-@media (max-width: 480px) {
+@media (--xs-down) {
   .mk .sale.xpr,
   .mk .xcp .xfade > .sale.xpr.xpr {
     grid-template-columns: 32px minmax(0, 1fr) auto;
