@@ -33,6 +33,8 @@ for (const [width, colorScheme] of [[1280, 'dark'], [390, 'light']] as const) {
     // The gallery: one thumbnail per Overview picture, the chart picture picked.
     const pics = dialog.getByRole('radiogroup', { name: 'Card' })
     for (const name of ['Overview', 'Big number', 'In numbers', 'Leaderboard']) await expect(pics.getByRole('radio', { name })).toBeEnabled()
+    // On a phone the sheet opens on the section the menu was in; the Overview is one tap away.
+    if (width < 768) await pics.getByRole('radio', { name: /Overview/ }).click()
     await expect(pics.getByRole('radio', { name: /Overview/ })).toHaveAttribute('aria-checked', 'true')
     await expect.poll(() => pics.locator('.sd-thumb img').evaluateAll((l) => l.every((i) => (i as HTMLImageElement).complete && (i as HTMLImageElement).naturalWidth === 360))).toBe(true)
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/gallery-${width}-${colorScheme}.png` })

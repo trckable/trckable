@@ -1,6 +1,5 @@
 // What to share: the gallery. Pictures in groups by topic, each a live thumbnail (drawn when it scrolls into view); a
 // picture the site cannot make yet is disabled, with one line saying why.
-import { MessageSquareText } from 'lucide-react'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { PICTURES, TOPICS, cardUrl, missing, type Look, type Need, type Picture, type Template } from './card'
 import { copy } from './copy'
@@ -25,7 +24,7 @@ function Thumb({ site, look, id, off }: { site: string; look: Look; id: Template
   const { ref, seen } = useSeen()
   return (
     <span ref={ref} className="sd-thumb">
-      {id === 'post' ? <MessageSquareText size={22} strokeWidth={1.6} aria-hidden="true" /> : seen && !off && <img src={cardUrl(site, { ...look, template: id, shape: 'link' }, 'thumb')} alt="" loading="lazy" decoding="async" />}
+      {seen && !off && <img src={cardUrl(site, { ...look, template: id, shape: 'link' }, 'thumb')} alt="" loading="lazy" decoding="async" />}
     </span>
   )
 }

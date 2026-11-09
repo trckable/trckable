@@ -2,9 +2,9 @@ import formats from './formats.json'
 
 // What the dialog asks the server for: a card is one address, so the preview
 // and the download are the same picture.
-export type Template = 'overview' | 'numbers' | 'grid' | 'leaderboard' | 'toppage' | 'sources' | 'topsource' | 'places' | 'topplace' | 'devices' | 'browsers' | 'changed' | 'search' | 'ai' | 'goals' | 'sales' | 'milestone' | 'post'
+export type Template = 'overview' | 'numbers' | 'grid' | 'leaderboard' | 'toppage' | 'sources' | 'topsource' | 'places' | 'topplace' | 'devices' | 'browsers' | 'changed' | 'search' | 'ai' | 'goals' | 'sales' | 'milestone'
 /** A group of pictures in the gallery. */
-export type Topic = 'overview' | 'changed' | 'sources' | 'pages' | 'places' | 'tech' | 'search' | 'ai' | 'goals' | 'sales' | 'milestone' | 'text'
+export type Topic = 'overview' | 'changed' | 'sources' | 'pages' | 'places' | 'tech' | 'search' | 'ai' | 'goals' | 'sales' | 'milestone'
 /** What a picture needs of the site; without it the picture is shown disabled, with the reason. */
 export type Need = 'revenue' | 'data' | 'sources' | 'places' | 'tech' | 'changed' | 'search' | 'ai' | 'goals' | 'milestone'
 export type Period = '24h' | '7d' | '30d' | 'all' | 'custom'
@@ -42,9 +42,8 @@ export const PICTURES: Picture[] = [
   { id: 'goals', topic: 'goals', need: 'goals' },
   { id: 'sales', topic: 'sales', need: 'revenue' },
   { id: 'milestone', topic: 'milestone', need: 'milestone' },
-  { id: 'post', topic: 'text' },
 ]
-export const TOPICS: Topic[] = ['overview', 'changed', 'sources', 'pages', 'places', 'tech', 'search', 'ai', 'goals', 'sales', 'milestone', 'text']
+export const TOPICS: Topic[] = ['overview', 'changed', 'sources', 'pages', 'places', 'tech', 'search', 'ai', 'goals', 'sales', 'milestone']
 export const picturesOf = (t: Topic) => PICTURES.filter((p) => p.topic === t)
 /** What the picture lacks on this site, if anything (it is then disabled, saying why). */
 export const missing = (p: Picture, has: Record<Need, boolean>): Need | null => (p.need && !has[p.need] ? p.need : null)
@@ -72,7 +71,10 @@ export function cardUrl(site: string, l: Look, format: 'png' | 'json' | 'thumb' 
     p.set('from', l.range.from)
     p.set('to', l.range.to)
   }
-  if (format === 'json') p.set('format', 'json')
+  if (format === 'json') {
+    p.set('format', 'json')
+    p.set('t', l.template) // the post's text says what its picture says
+  }
   else {
     if (format === 'thumb') p.set('thumb', '1')
     if (comparing(l)) p.set('compare', '1')
@@ -91,6 +93,13 @@ export function cardUrl(site: string, l: Look, format: 'png' | 'json' | 'thumb' 
 
 /** Whether the picture carries a comparison: asked for, and there is a period before (not for all time). */
 export const comparing = (l: Pick<Look, 'compare' | 'period'>) => l.compare && l.period !== 'all'
+
+/** Whether the dialog gives the picture or the post's text. */
+export type Mode = 'picture' | 'text'
+
+/** The gallery topic an Explore section shares; the sections with no picture have none. */
+const SECTION_TOPIC: Record<string, Topic> = { changed: 'changed', overview: 'overview', pages: 'pages', sources: 'sources', search: 'search', places: 'places', tech: 'tech', results: 'goals', sales: 'sales', ai: 'ai' }
+export const topicOfSection = (section: string): Topic | undefined => SECTION_TOPIC[section]
 
 /** The card's period for the page's: a day is the last 24 hours, a week or a month is itself, anything longer is a month. */
 const PAGE_PERIOD = new Map<string, Period>([['today', '24h'], ['yesterday', '24h'], ['7d', '7d']])

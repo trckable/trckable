@@ -1,17 +1,17 @@
-// The card as the server draws it: the very file Download saves. A post is its text, as it will be pasted.
+// The card as the server draws it: the very file Download saves. In text mode, the post as it will be pasted.
 // The picture stands in a box of one size, whole (letterboxed); a new one fades in over the old, which stays until
 // it has loaded, and only the very first one has a shimmer.
 import { useState, type CSSProperties } from 'react'
-import { cardUrl, formatOf, type CardWords, type Look } from './card'
+import { cardUrl, formatOf, type CardWords, type Look, type Mode } from './card'
 import { copy } from './copy'
 
-export function Preview({ site, look, words }: { site: string; look: Look; words: CardWords | null }) {
+export function Preview({ site, look, words, mode }: { site: string; look: Look; words: CardWords | null; mode: Mode }) {
   const src = cardUrl(site, look)
   const { w, h } = formatOf(look.shape)
   const [cur, setCur] = useState('')
   const [old, setOld] = useState('')
   const [failed, setFailed] = useState('')
-  if (look.template === 'post')
+  if (mode === 'text')
     return (
       <div className="sd-preview is-post">
         <p className="sd-post">{words?.post ?? ''}</p>

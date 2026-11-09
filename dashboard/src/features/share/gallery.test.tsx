@@ -11,11 +11,10 @@ describe('gallery', () => {
   it('lists the Overview pictures first, the picked one checked, each with its own thumbnail address', () => {
     const html = renderToStaticMarkup(<CardSection site="s1" look={look} has={has} onChange={() => undefined} />)
     expect(picturesOf('overview').map((p) => p.id)).toEqual(['overview', 'numbers', 'grid'])
-    expect(TOPICS.map((t) => picturesOf(t).length)).toEqual([3, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1])
+    expect(TOPICS.map((t) => picturesOf(t).length)).toEqual([3, 1, 2, 2, 2, 2, 1, 1, 1, 1, 1])
     expect(html.match(/role="radio"/g)).toHaveLength(PICTURES.length)
     expect(html).toMatch(/aria-checked="true"[^>]*>(?:(?!<button).)*Big number/s)
     for (const t of ['overview', 'numbers', 'grid', 'changed', 'sources', 'topsource', 'leaderboard', 'toppage', 'places', 'topplace', 'devices', 'browsers', 'search', 'ai', 'goals', 'sales', 'milestone']) expect(html).toContain(`t=${t}&amp;`)
-    expect(html).not.toContain('t=post&amp;') // a post is text, not a picture
   })
   it('draws every thumbnail as the link preview, whatever size is picked', () => {
     const html = renderToStaticMarkup(<CardSection site="s1" look={{ ...look, shape: 'story' }} has={has} onChange={() => undefined} />)

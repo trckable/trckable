@@ -76,6 +76,7 @@ type cardNumbers struct {
 	pageviews    int64
 	engaged      int64
 	money        string
+	said         string // the period as a post says it ("the last 7 days")
 }
 
 func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
@@ -97,6 +98,15 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Cache-Control", "private, max-age=30")
 	if v.Get("format") == "json" {
+		// The text of a post says what the picture says, in its words.
+		if tpl != "overview" && tpl != "numbers" {
+			spec := cards.Spec{Template: tpl, Foot: n.Foot}
+			if tpl == "grid" {
+				spec.Label, spec.Stats = cardWords.gridTitle[periodKey(v.Get("period"))], n.grid
+			}
+			n.pictureOf(&spec, tpl)
+			n.Post = specPost(spec, tpl, n)
+		}
 		writeJSON(w, http.StatusOK, n)
 		return
 	}
@@ -191,7 +201,7 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 		n.vs = p.vs
 		n.overview(res, prev, v.Get("stats"), a.refIconOf)
 	}
-	if kind == "grid" {
+	if kind == "grid" || kind == "" {
 		n.gridOf(res, a.refIconOf)
 	}
 	a.pictures(reading, &n, p.hours > 0, kind)
@@ -293,7 +303,7 @@ func duration(s float64) string {
 func cardWordsOf(res *query.Result, domain string, p cardPeriod, metric string) cardNumbers {
 	n := cardNumbers{
 		domain: domain, visitors: res.KPIs.Visitors, pageviews: res.KPIs.Pageviews, engaged: engagedOf(res.KPIs),
-		Revenue: res.Money != nil, HasData: res.KPIs.Visitors > 0, Foot: p.label,
+		Revenue: res.Money != nil, HasData: res.KPIs.Visitors > 0, Foot: p.label, said: p.post,
 	}
 	if res.Money != nil {
 		n.money = money(res.Money.Revenue, res.Money.Currency, res.Money.Exponent)

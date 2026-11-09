@@ -129,7 +129,33 @@ func TestCardRouteNewPictures(t *testing.T) {
 			t.Errorf("json lacks %s: %s", key, body)
 		}
 	}
+	if code, _, body := get(t, owner, card+"?format=json&t=goals&period=30d"); code != 200 || !strings.Contains(body, "No goals reached in this period") {
+		t.Errorf("a goals post says its picture's line: %d %s", code, body)
+	}
 	if strings.Contains(body, `"has_search":true`) {
 		t.Errorf("Search Console is not connected: %s", body)
+	}
+}
+
+// A post says what its picture says, in its words: a digest's title, cards and lines, a milestone's number first,
+// a hero's words first, and the plain line for a picture with nothing behind it.
+func TestSpecPost(t *testing.T) {
+	n := cardNumbers{domain: "example.com", said: "the last 30 days"}
+	digest := cards.Spec{Template: "digest", Label: "Top goals", Rows: []cards.Item{{Name: "Signed up", Value: "40"}, {Name: "buy", Value: "10"}}}
+	if got := specPost(digest, "goals", n); got != "example.com in the last 30 days: Top goals. Signed up 40, buy 10. Counted with trckable" {
+		t.Fatalf("goals: %q", got)
+	}
+	sales := cards.Spec{Template: "digest", Label: "Sales", Stats: []cards.Stat{{Value: "$1,234", Label: "Revenue"}, {Value: "3", Label: "Orders"}}}
+	if got := specPost(sales, "sales", n); !strings.Contains(got, "$1,234 Revenue, 3 Orders.") {
+		t.Fatalf("sales: %q", got)
+	}
+	if got := specPost(cards.Spec{Template: "digest", Label: "Sales", Big: cardWords.noSales}, "sales", n); got != "example.com: No sales in this period. Counted with trckable" {
+		t.Fatalf("no sales: %q", got)
+	}
+	if got := specPost(cards.Spec{Template: "spotlight", Big: "10,000", Label: "visitors"}, "milestone", n); got != "example.com: 10,000 visitors. Counted with trckable" {
+		t.Fatalf("milestone: %q", got)
+	}
+	if got := specPost(cards.Spec{Template: "spotlight", Big: "Google", Label: "Most visitors came from"}, "topsource", n); got != "example.com: Most visitors came from Google. Counted with trckable" {
+		t.Fatalf("hero: %q", got)
 	}
 }
