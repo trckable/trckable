@@ -17,6 +17,9 @@ export const faviconSrc = (domain: string) => API_BASE + '/favicon?domain=' + en
 
 const WAIT = 400
 
+// A phone draws marks a step larger, as SiteMark does.
+const scaled = (px: number) => `calc(${px}px * var(--ph-mark, 1))`
+
 /** The domain, once it has stopped changing for a moment and only while it is valid. */
 export function useSettled(domain: string, valid: boolean): string {
   const [settled, setSettled] = useState('')
@@ -25,7 +28,8 @@ export function useSettled(domain: string, valid: boolean): string {
     const id = setTimeout(() => setSettled(domain), WAIT)
     return () => clearTimeout(id)
   }, [domain, valid])
-  return valid ? settled : ''
+  // Until it settles after a change, nothing: the old icon is not this site's.
+  return valid && settled === domain ? settled : ''
 }
 
 export function DomainMark({ domain, valid, size = 28 }: { domain: string; valid: boolean; size?: number }) {
@@ -35,7 +39,7 @@ export function DomainMark({ domain, valid, size = 28 }: { domain: string; valid
   const here = seen.src === src
   const state = tileState(src, here && seen.loaded, here && seen.failed)
   return (
-    <span className="domain-mark" data-state={state} style={{ width: size, height: size }}>
+    <span className="domain-mark" data-state={state} style={{ width: scaled(size), height: scaled(size) }}>
       <SiteMark site={{ domain: domain || '?' }} size={size} />
       {src && !(here && seen.failed) && (
         <img
@@ -44,6 +48,7 @@ export function DomainMark({ domain, valid, size = 28 }: { domain: string; valid
           src={src}
           width={size}
           height={size}
+          style={{ width: scaled(size), height: scaled(size) }}
           alt=""
           aria-hidden="true"
           onLoad={() => setSeen({ src, loaded: true, failed: false })}

@@ -131,7 +131,8 @@ func (a *API) findFavicon(ctx context.Context, domain string) (data []byte, reac
 			return data, true
 		}
 	}
-	return nil, true
+	// Out of time is not "no icon": the answer is not known.
+	return nil, ctx.Err() == nil
 }
 
 var iconLink = regexp.MustCompile(`(?is)<link\b[^>]*>`)
