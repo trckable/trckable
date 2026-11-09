@@ -198,3 +198,24 @@ func TestStoppedAlertReachesTheMailbox(t *testing.T) {
 		t.Fatalf("the second message: %q", subject)
 	}
 }
+
+// The headline says "Tracking stopped" only when the latest check finds something wrong; a passing check, or none
+// since the last visit, is just no visits.
+func TestStoppedTitleNeedsAFailingCheck(t *testing.T) {
+	const last = 1_000
+	cases := []struct {
+		name string
+		c    sqlite.SiteCheck
+		want string
+	}{
+		{"every check passes", sqlite.SiteCheck{At: last + 10, Found: "site"}, "No visits for 15h"},
+		{"no check since the last visit", sqlite.SiteCheck{At: last - 10, Error: "x"}, "No visits for 15h"},
+		{"the page does not answer", sqlite.SiteCheck{At: last + 10, Error: "no answer"}, "Tracking stopped"},
+		{"the tag is missing", sqlite.SiteCheck{At: last + 10, Found: "none"}, "Tracking stopped"},
+	}
+	for _, c := range cases {
+		if got := stoppedTitle(last, c.c, "15h"); got != c.want {
+			t.Errorf("%s: got %q, want %q", c.name, got, c.want)
+		}
+	}
+}

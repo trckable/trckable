@@ -4,8 +4,6 @@
 import { useEffect, useState } from 'react'
 import { Check, TriangleAlert, X } from 'lucide-react'
 import { api, type Site } from '../../lib/api'
-import { can } from '../../lib/permissions'
-import { openSettings } from '../../lib/settings'
 import { navigate } from '../../lib/url'
 import { copy as incidents } from '../incidents/copy'
 import { incidentsPath } from '../incidents/route'
@@ -14,12 +12,11 @@ import { downCopy } from './downCopy'
 import { causeOf, rowsOf } from './rows'
 import { GapChart } from './GapChart'
 import { slotOf, useRecent } from './useRecent'
-import { useMute } from './useMute'
 import { firstAfter, fresh, readGap, writeGap } from './recovery'
-import { downStateOf, statusOf } from './status'
+import { chipKindOf, statusOf, type ChipKind } from './status'
 import { plainSpan } from '../../lib/plainSpan'
 import { silence, when } from './time'
-import { useChecks } from './useChecks'
+import type { useChecks } from './useChecks'
 import { useProbes } from './useProbes'
 import { ProbeList } from './ProbeList'
 import { Blocked } from './Blocked'
@@ -31,22 +28,22 @@ function ageOf(site: Site): string {
   return site.down_since ? plainSpan(Date.now() / 1000 - site.down_since) : silence(site)
 }
 
-/** The chip's word: Down, Check fails (visits keep arriving), or Tracking stopped. */
-function chipOf(site: Site, down: boolean): string {
-  if (!down) return copy.chipQuiet
-  return downStateOf(site) === 'visitors' ? copy.chipCheck : copy.chipDown
+/** The chip's words, from the one decision in status.ts (chipKindOf). */
+function chipOf(kind: ChipKind, site: Site): string {
+  if (kind === 'quiet') return copy.chipNoVisits(silence(site))
+  return { down: copy.chipDown, check: copy.chipCheck, stopped: copy.chipQuiet }[kind]
 }
 
-export function StatusPanel({ site, last, down }: { site: Site; last: number; down: boolean }) {
-  const { state, again } = useChecks(site.id)
+/** What a stopped site's report says, in the modal's body: how long, what happened and since when, what was checked from outside just now. The checks are run by the modal, which holds their button in its foot. */
+export function StatusPanel({ site, last, down, checks }: { site: Site; last: number; down: boolean; checks: ReturnType<typeof useChecks> }) {
+  const { state } = checks
   const recent = useRecent(site.id)
   const probes = useProbes(site.id)
-  const mute = useMute(site, can('alert.manage'))
   const probed = down ? site.down_since : undefined
   const downSince = down ? (probed ?? site.check?.down_since) : undefined
-  const chip = chipOf(site, down)
   const result = state.phase === 'done' ? state.result : undefined
   const rows = result ? rowsOf(result, site.domain) : undefined
+  const chip = chipOf(chipKindOf(site, rows), site)
   return (
     <div className={'status-card ' + (down ? 'down' : 'quiet')}>
       <header className="sgm-hero">
@@ -101,33 +98,10 @@ export function StatusPanel({ site, last, down }: { site: Site; last: number; do
           </ul>
         </section>
       </div>
-      <div className="sgm-actions">
-        {mute.have && (mute.on ? (
-          <span className="status-muted">
-            {copy.muted(when(mute.until, site.timezone))} · <button type="button" className="linkish" onClick={() => void mute.undo()}>{copy.undo}</button>
-          </span>
-        ) : (
-          <button type="button" className="btn ghost" onClick={() => void mute.mute()}>
-            {copy.mute}
-          </button>
-        ))}
-        <a className="btn ghost" href={`https://${site.domain}`} target="_blank" rel="noopener noreferrer">
-          {copy.open}
-        </a>
-        {can('alert.manage') && (
-          <button type="button" className="btn ghost" onClick={() => openSettings(site, 'install')}>
-            {copy.guide}
-          </button>
-        )}
-        <button type="button" className="btn primary" onClick={again} disabled={state.phase === 'checking'}>
-          {copy.again}
-        </button>
-      </div>
       <HistoryLink site={site} />
     </div>
   )
 }
-
 
 /** The one way on to the record of past incidents, quiet at the panel's foot. */
 function HistoryLink({ site }: { site: Site }) {

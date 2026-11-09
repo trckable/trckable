@@ -20,6 +20,7 @@ export const signals = defineCopy('signals', {
   spike: (n: number) => `${n} online: about three times usual`,
   spikeBody: (domain: string) => `${domain} is busier than it has been in this tab`,
   stopped: (domain: string) => `Tracking stopped on ${domain}`,
+  quiet: (domain: string) => `No visits on ${domain}`,
   stoppedBody: (hours: number) => `Nothing has arrived for ${hours} hours`,
   // The surge card, its story and its notice: a friend who noticed, with only counted numbers.
   surge: {
