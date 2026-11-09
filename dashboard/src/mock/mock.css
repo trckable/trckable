@@ -94,7 +94,6 @@
 .mk .mk-dot.down{background:var(--mk-red);box-shadow:0 0 0 3px var(--mk-redD)}
 .mk .mk-dot.off{background:var(--mk-muted)}
 .mk .pwrap{position:relative}
-.mk .pmenu{width:300px}
 .mk .pmenu .dates{display:flex;gap:6px;padding:6px 10px 4px;align-items:center}
 .mk .pmenu .dates input{color:var(--mk-text);height:32px;border-radius:8px;padding:0 6px;font:inherit;font-size:12px;width:100%;margin:0}
 .mk .pmenu .dates button{height:32px;padding:0 10px;border-radius:8px;background:var(--mk-limeD);color:var(--mk-lime);font-weight:600;flex:none}
@@ -678,7 +677,7 @@ html[data-motion='off'] .mk .nfs i,html[data-motion='off'] .mk .nfs b,html[data-
 .mk .pmenu .mi.more.open svg{transform:rotate(180deg)}
 .mk .pmenu .mi svg{flex:none}
 .mk .pmenu .mk-lline{border-top:1px solid var(--mk-line);margin:var(--mk-s2) 0}
-.mk .pmenu.cal{width:min(560px,calc(100vw - 16px))}
+.mk .pmenu.cal{--pop-w:560px}
 .mk .cal{display:flex;flex-direction:column;gap:var(--mk-s3);padding:var(--mk-s2) var(--mk-s3) var(--mk-s3)}
 .mk .cal .mk-back{align-self:flex-start;color:var(--mk-muted);height:var(--mk-h);padding:0 var(--mk-s2);border-radius:var(--mk-rc);font-size:13px;margin-left:calc(var(--mk-s2) * -1)}
 .mk .cal .mk-back:hover{background:var(--mk-hov);color:var(--mk-text)}
@@ -779,7 +778,6 @@ body:has(.mk-menu.on) .tabbar{visibility:hidden}
 .mk .mk-menu .mi{min-height:44px}
 .mk .mk-menu .mi .d{font-size:12px}
 .mk .mk-menu{overflow-x:hidden;padding:var(--mk-s2)}
-.mk .pmenu{width:320px;max-width:calc(100vw - 16px)}
 .mk .pmenu .mi{min-height:44px;padding:var(--mk-s2) var(--mk-s3);align-items:center}
 .mk .pmenu .mi .nm{font-size:14px}
 .mk .pmenu .mi .d{font-size:12px;color:var(--mk-muted);margin-top:2px}
@@ -1129,7 +1127,7 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .sitechip{display:flex;align-items:center;gap:var(--mk-s1)}
 .mk .vf-sealbtn{color:var(--mk-lime);width:20px;height:20px;display:inline-grid;place-items:center;border-radius:50%;flex:none}
 .mk .mk-dot.quiet{background:var(--mk-amber)}
-.mk .mk-menu.sites{width:420px;max-height:min(78vh,640px);overflow:hidden}
+.mk .mk-menu.sites{max-height:min(78vh,640px);overflow:hidden}
 .mk .mk-menu.sites.on{display:flex;flex-direction:column}
 .mk .sitelist{display:flex;flex-direction:column;min-height:0;flex:1 1 auto}
 .mk #siteList{display:flex;flex-direction:column;gap:2px;overflow:auto;overscroll-behavior:contain;min-height:0;flex:1 1 auto}

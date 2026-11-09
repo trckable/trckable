@@ -18,18 +18,24 @@
 /* Four :root: it must outrank the older frame rules on .pop (styles.css, glass.css), which it replaces for these menus. */
 :root:root:root:root .pshell {
   box-sizing: border-box;
-  width: var(--pop-w);
-  max-width: calc(100vw - 16px);
-  padding: var(--pop-pad);
   background: var(--pop-bg);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   border: 1px solid var(--pop-line);
-  border-radius: var(--pop-radius);
-  box-shadow: var(--pop-shadow);
   color: var(--pop-text);
   overflow: auto;
   overscroll-behavior: contain;
+}
+
+/* From a small tablet up the menu is a box under its button; on a phone the sheet rules place it (and dim the page with their own shadow). */
+@media (--sm-up) {
+  :root:root:root:root .pshell {
+    width: var(--pop-w);
+    max-width: calc(100vw - 16px);
+    padding: var(--pop-pad);
+    border-radius: var(--pop-radius);
+    box-shadow: var(--pop-shadow);
+  }
 }
 
 /* The head: the title at the left, its actions at the right. It runs to the frame's edges. */
@@ -82,13 +88,10 @@
   border-radius: 4px;
 }
 
-/* On a phone the menus are sheets from the bottom edge (their own placement rules); the shell gives them the width and the top corners. */
+/* On a phone the menus are sheets from the bottom edge (their own placement rules); the shell gives them the top corners and the shadow. */
 @media (--xs) {
-  :root:root:root:root .pshell {
-    width: auto;
-    max-width: none;
-  }
   :root:root:root:root .pop.pshell {
+    box-shadow: var(--pop-shadow);
     padding: 6px 8px max(14px, env(safe-area-inset-bottom));
     border-radius: 20px 20px 0 0;
     border-bottom: 0;
