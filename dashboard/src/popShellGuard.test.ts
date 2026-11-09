@@ -36,7 +36,7 @@ describe('header menus share one shell', () => {
       for (const [, sel, body] of readFileSync(f, 'utf8').replace(/\/\*[^]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
         // A rule aims at the box itself when the last compound of one of its selectors names it.
         // The sheet rules shared by many menus (a list, or an :is() list) are not one menu's frame.
-        const itself = !sel.includes(':is(') && sel.split(',').length === 1 && [sel].some((part) => {
+        const itself = !sel.includes(':is(') && !sel.includes('::') && sel.split(',').length === 1 && [sel].some((part) => {
           const last = part.trim().split(/\s+|>/).pop() ?? ''
           return BOXES.some((b) => new RegExp(`\\.${b}(?![\\w-])`).test(last))
         })
