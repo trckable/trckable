@@ -1,7 +1,7 @@
 // All sites: the team's home. A strip (people now, today against usual, money, who needs a look), one line for the day, then a row for
 // each site, the ones that need a look first. Every figure is read from the server; a figure it did not give is left out.
 import { useMemo, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Activity, BarChart3, Plus, TrendingUp } from 'lucide-react'
 import { Loading } from '../../components/loading/Loading'
 import { Segmented } from '../../kit'
 import type { Site } from '../../lib/api'
@@ -37,6 +37,13 @@ function Strip({ sites }: { sites: TeamSite[] }) {
       {teamStrip}
     </div>
   )
+}
+
+// One small icon before each sort label, the same size as the + on Add a site.
+const sortIcon = {
+  attention: <Activity size={16} aria-hidden="true" />,
+  traffic: <BarChart3 size={16} aria-hidden="true" />,
+  change: <TrendingUp size={16} aria-hidden="true" />,
 }
 
 function Add({ className }: { className: string }) {
@@ -82,7 +89,16 @@ export function TeamHome({ sites, header }: { sites: Site[]; header: React.React
                   label={copy.sortLabel}
                   value={by}
                   onChange={setBy}
-                  options={(['attention', 'traffic', 'change'] as const).map((v) => ({ value: v, label: copy.sort[v] }))}
+                  options={(['attention', 'traffic', 'change'] as const).map((v) => ({
+                    value: v,
+                    title: copy.sort[v],
+                    label: (
+                      <>
+                        {sortIcon[v]}
+                        <span className="tm-lbl">{copy.sort[v]}</span>
+                      </>
+                    ),
+                  }))}
                 />
               )}
               <Add className="btn small" />

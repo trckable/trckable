@@ -60,3 +60,19 @@
   .tm-row .c-n { display: grid; justify-items: end; gap: 2px; }
 }
 .tm-headrow .c-src { font-size: 12px; color: var(--text-3); }
+
+/* The sort row: the tabs and Add a site are one height (36px) and one font, each tab with a small icon. */
+@media (min-width: 641px) {
+  .app .tm-acts .btn.small { height: 36px; font-size: 13px; }
+}
+.app .tm-acts .kit-seg button { position: relative; gap: 8px; font: 500 13px var(--font); }
+.app .tm-acts .kit-seg button.on { font-weight: 600; }
+.app .tm-acts .kit-seg svg { flex: none; }
+@media (max-width: 360px) {
+  .app .tm-acts .kit-seg .tm-lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+@media (max-width: 640px) {
+  :root .app .tm-acts .kit-seg { height: var(--ph-hit); }
+  :root .app .tm-acts .kit-seg { box-sizing: border-box; }
+  :root .app .tm-acts .kit-seg button { height: calc(var(--ph-hit) - 6px); min-height: 0; }
+}
