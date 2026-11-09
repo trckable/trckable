@@ -219,7 +219,7 @@ export function HeroChart({ c, at, onAt, layer }: { c: ChartIn; at: number | nul
   )
   // The point under the pointer, read out next to it: "13:00 · 42 people · yesterday 31 · +35%".
   const hover = at !== null ? pts[at] : undefined
-  const tip = <Tip width={W} at={hover ? { x: X(hover.i), y: Y(hover.v), body: readOf(hover.name, hover.raw, c.compare?.name ?? null, hover.was, hover.delta) + (c.bars?.vals[hover.i] ? ` · ${c.bars.read(c.bars.vals[hover.i])}` : '') } : null} />
+  const tip = <Tip width={W} at={hover ? { x: X(hover.i), y: Y(hover.v), body: readOf(hover.name, hover.raw, c.compare?.name ?? null, hover.was, hover.delta) + (c.bars && c.bars.kind !== 'views' && c.bars.vals[hover.i] ? ` · ${c.bars.read(c.bars.vals[hover.i])}` : '') } : null} />
   if (!layer) return <>{chart}{tip}<OutcomeKey c={c} /></>
   return (
     <div className="chlay">

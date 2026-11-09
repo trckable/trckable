@@ -1,22 +1,19 @@
-// The chart over Overview: the same one What changed draws (people, the outcome's bars and faces, the period before),
-// for the page's own site, period and filters. Without the moments and notes, which belong to What changed.
+// The chart over Overview: the one What changed draws, with its mentions chip, its notes button and the site's usual
+// band, for the page's own site, period and filters (a cut of the site is told against the period before alone).
 import { useState } from 'react'
+import { useNotes } from '../../../features/notes/useNotes'
 import type { Report } from '../../../lib/api'
-import { isShared } from '../../../lib/me'
-import { useBriefingChart } from '../../briefing/useBriefingChart'
-import { HeroChart } from '../../ui/DayChart'
+import { NotesSheet } from '../../ui/BriefingSheets'
 import type { XCtx } from '../ctx'
+import ChangedChart from './ChangedChart'
 
 export default function OverviewChart({ x, report }: { x: XCtx; report: Report }) {
-  const [at, setAt] = useState<number | null>(null)
-  const { view, site, query } = x
-  const ask = { ...query }
-  delete ask.limit
-  const b = useBriefingChart({ site, report, period: view.period, compare: view.compare, range: { from: query.from, to: query.to }, bucket: view.bucket, ask, notes: [], money: x.money, on: true, plain: x.filters.length > 0 || isShared() })
-  if (!b || !b.ready) return null
+  const notes = useNotes(x.site.id, { from: x.query.from, to: x.query.to }, () => undefined)
+  const [sheet, setSheet] = useState(false)
   return (
-    <div className="chplot">
-      <HeroChart c={b.chart} at={at} onAt={setAt} />
-    </div>
+    <>
+      <ChangedChart x={x} report={report} notes={notes.notes} onNotes={() => setSheet(true)} />
+      {sheet && <NotesSheet site={x.site.domain} siteId={x.site.id} notes={notes.notes} onChanged={notes.load} onClose={() => setSheet(false)} />}
+    </>
   )
 }

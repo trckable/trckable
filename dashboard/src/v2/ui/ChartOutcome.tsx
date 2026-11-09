@@ -2,7 +2,6 @@
 // (money, sign-ups or pageviews), and a small face on the line at each payment or sign-up. Both keep the `data-rv` of the
 // x they sit at, so a replay brings them in as the line reaches them.
 import { faceOf } from '../../components/visitor/face'
-import { hueOf } from '../../lib/visitor'
 import { apart, barScale, barWidth, type Face } from './outcome'
 import type { ChartIn } from './dayChartTypes'
 
@@ -75,7 +74,7 @@ export function OutcomeFaces({ faces, id, X, Y, top, gap, keep }: { faces: Face[
             <clipPath id={clip}>
               <circle cx={x} cy={cy} r={R} />
             </clipPath>
-            <circle cx={x} cy={cy} r={R} fill={`hsl(${hueOf(f.id)} 55% 86%)`} />
+            <circle className="chface-bg" cx={x} cy={cy} r={R} />
             <svg x={x - R} y={cy - R} width={R * 2} height={R * 2} clipPath={`url(#${clip})`}>
               {faceOf(f.id)}
             </svg>

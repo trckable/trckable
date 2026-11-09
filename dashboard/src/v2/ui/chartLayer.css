@@ -33,4 +33,6 @@
 .mk .chout [data-mark=bar]::before{width:8px;height:10px;border-radius:2px;background:var(--mk-amber);opacity:.6}
 .mk .chout [data-mark=bar][data-kind=views]::before{background:var(--mk-text);opacity:.2}
 .mk .chout [data-mark=face]::before{width:10px;height:10px;border-radius:50%;background:var(--mk-card2);border:1px solid var(--mk-amber)}
-@container (--pane-max-600){.mk .chout{gap:8px;font-size:11px;left:8px}.mk .chout [data-mark=line]{display:none}}
+@container (--pane-max-600){.mk .chout{gap:8px;font-size:11px;left:8px;top:24px}}
+/* A face's disc, under the drawn face. */
+.mk .chface-bg{fill:var(--mk-card2)}

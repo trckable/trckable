@@ -1,4 +1,4 @@
-// The chart over What changed: the line of words, the busy-moment band, the moments' markers, the mentions and the
+// The chart over What changed and Overview: the line of words, the busy-moment band, the moments' markers, the mentions and the
 // note flags, for the page's own site and period. Its own chunk, drawn after the numbers.
 import { useState } from 'react'
 import type { Report } from '../../../lib/api'
@@ -13,7 +13,7 @@ export default function ChangedChart({ x, report, notes, onNotes }: { x: XCtx; r
   const { view, site, query } = x
   const ask = { ...query }
   delete ask.limit
-  const b = useBriefingChart({ site, report, period: view.period, compare: view.compare, range: { from: query.from, to: query.to }, bucket: view.bucket, ask, notes, money: x.money, on: true })
+  const b = useBriefingChart({ site, report, period: view.period, compare: view.compare, range: { from: query.from, to: query.to }, bucket: view.bucket, ask, notes, money: x.money, on: true, plain: x.filters.length > 0 })
   if (!b || !b.ready) return null
   const { chart } = b
   const down = !!site.down_since
