@@ -29,7 +29,7 @@ for (const [width, colorScheme] of [[1440, 'dark'], [1440, 'light'], [390, 'dark
     await page.goto(`${API}/${STEADY_DOMAIN}?view=briefing&period=7d`)
     await expect(page.locator('#xp')).toBeVisible({ timeout: 20_000 })
 
-    const card = page.waitForResponse((r) => r.url().includes('/card?') && r.url().includes('t=overview'))
+    const card = page.waitForResponse((r) => r.url().includes('/card?') && !r.url().includes('format=json') && r.url().includes('t=overview'))
     // The header's button on a wide screen; on a phone it is the ⋯ menu's "Share a picture".
     if (width < 768) await openFromMenu(page)
     else await page.locator('.share-chip').click()
@@ -39,7 +39,7 @@ for (const [width, colorScheme] of [[1440, 'dark'], [1440, 'light'], [390, 'dark
     expect(res.status()).toBe(200)
     expect(res.headers()['content-type']).toBe('image/png')
     expect((await res.body()).subarray(0, 4).toString('latin1')).toBe('\x89PNG')
-    const img = dialog.locator('.sd-preview img')
+    const img = dialog.locator('.sd-preview img.sd-img:not(.is-out, .is-loader)')
     await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth)).toBe(1200)
 
     // The page stays under the backdrop: still there, not put away.
@@ -55,7 +55,7 @@ for (const [width, colorScheme] of [[1440, 'dark'], [1440, 'light'], [390, 'dark
 
     // Download names the file after the site, the card and the period.
     const file = page.waitForEvent('download')
-    await dialog.getByRole('button', { name: 'Download PNG' }).click()
+    await dialog.getByRole('button', { name: /^Download \d+×\d+$/ }).click()
     expect((await file).suggestedFilename()).toBe(`trckable-${STEADY_DOMAIN}-overview-7d.png`)
 
     if (SHOTS && width === 1440) {
@@ -124,14 +124,14 @@ for (const width of [1440, 390]) test(`the sheet picks the big number and the sm
   else await page.locator('.share-chip').click()
   const dialog = page.getByRole('dialog', { name: 'Share your numbers' })
   await expect(dialog).toBeVisible()
-  const img = dialog.locator('.sd-preview img')
+  const img = dialog.locator('.sd-preview img.sd-img:not(.is-out, .is-loader)')
   await dialog.getByRole('button', { name: /^Numbers/ }).click()
   const param = async (name: string) => new URL((await img.getAttribute('src'))!, API).searchParams.get(name)
   expect(await param('metric')).toBe('visitors')
   expect(await param('stats')).toBe('engaged,avgtime,country')
 
   // Pageviews as the big number: the picture asks for it, and the stats no longer offer it.
-  const card = page.waitForResponse((r) => r.url().includes('/card?') && r.url().includes('metric=pageviews') && r.url().includes('t=overview'))
+  const card = page.waitForResponse((r) => r.url().includes('/card?') && !r.url().includes('format=json') && r.url().includes('metric=pageviews') && r.url().includes('t=overview'))
   await dialog.getByRole('button', { name: 'Pageviews' }).click()
   expect((await card).status()).toBe(200)
   expect(await param('metric')).toBe('pageviews')
@@ -142,7 +142,7 @@ for (const width of [1440, 390]) test(`the sheet picks the big number and the sm
   await expect(menu.getByRole('menuitemcheckbox', { name: 'Engaged visits' })).toHaveAttribute('aria-checked', 'true')
 
   // A fourth pick pushes the oldest out; the picture follows.
-  const pick = page.waitForResponse((r) => r.url().includes('/card?') && r.url().includes('stats=avgtime%2Ccountry%2Cpage'))
+  const pick = page.waitForResponse((r) => r.url().includes('/card?') && !r.url().includes('format=json') && r.url().includes('stats=avgtime%2Ccountry%2Cpage'))
   await menu.getByRole('menuitemcheckbox', { name: 'Top page' }).click()
   expect((await pick).status()).toBe(200)
   expect(await param('stats')).toBe('avgtime,country,page')
