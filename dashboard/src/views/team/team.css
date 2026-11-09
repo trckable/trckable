@@ -69,6 +69,7 @@
 .app .tm-acts .kit-seg button.on { font-weight: 600; }
 .app .tm-acts .kit-seg svg { flex: none; }
 @media (--narrow) {
+  .app .tm-acts .kit-seg button { gap: 0; padding: 0; min-width: 0; width: var(--ph-hit); }
   .app .tm-acts .kit-seg .tm-lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
 @media (--xs) {
