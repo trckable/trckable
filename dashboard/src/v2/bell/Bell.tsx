@@ -68,7 +68,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
   }, [])
   // The rows the menu lists, and the badge counted from those same rows (none counted until the whole list is there).
   const src = useMemo(() => rowsOf(items, read), [items, read])
-  const { rows: listed, fresh, unlight } = useOpenRows(src, open, gone)
+  const { rows: listed, fresh } = useOpenRows(src, open, gone)
   const [filter, setFilter] = useState<Filter>(readFilter)
   const choose = (f: Filter) => {
     setFilter(f)
@@ -79,12 +79,6 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
   useEffect(() => {
     if (open) refresh(OPEN_GAP_MS, true)
   }, [open, refresh])
-  // An open panel has been seen: what is unread in it (and what arrives while it is open) is read at once, here first and
-  // told to the server after, so no read of the list that is already on its way can bring the badge back.
-  const hasUnread = notices.ready && src.some((r) => r.unread)
-  useEffect(() => {
-    if (open && hasUnread) markAll()
-  }, [open, hasUnread, markAll])
   const warm = useCallback(() => refresh(OPEN_GAP_MS, true), [refresh])
   useEffect(() => {
     const q = window.matchMedia(QUERY.xs)
@@ -177,7 +171,6 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
         const group = listed.find((x) => x.members?.some((m) => m.id === id))
         const n = (group?.members ?? [...listed, ...(archive?.items ?? [])]).find((x) => x.id === id)
         mark(group?.members ? group.members.map((m) => m.id) : id)
-        unlight(group?.members ? [group.id, ...group.members.map((m) => m.id)] : [id])
         for (const m of group?.members ?? [n]) m?.read?.()
         const own = n && sites.find((x) => (n.siteId ? x.id === n.siteId : x.domain === n.site))
         if (n?.milestone && own) setTold({ m: n.milestone, site: own })
@@ -188,7 +181,6 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
       }}
       onAll={() => {
         markAll()
-        unlight(listed.map((r) => r.id))
       }}
       archive={archive && { rows: old, load: archive.load, loading: archive.loading, none: archive.words.none }}
       onSettings={() => site && openSettings(site, 'alerts')}

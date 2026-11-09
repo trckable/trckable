@@ -140,10 +140,30 @@ describe('the server’s list as the bell’s rows', () => {
 
   it('puts a daily milestone under its day, all day, whatever hour the server found it', () => {
     const m = { kind: 'visitors', step: '100', value: 100, day: '2026-10-30', created_at: 1_700_000_999, new: true, shared: false } as never
-    const [n] = fromFeed([row({ id: 'mile:s1:visitors:100', kind: 'milestone', at: 1_700_000_000, day: '2026-10-30', milestone: m })], sites, now)
+    const zoned = [{ id: 's1', domain: 'a.com', timezone: 'UTC' }] as Site[]
+    const [n] = fromFeed([row({ id: 'mile:s1:visitors:100', kind: 'milestone', at: 1_700_000_000, day: '2026-10-30', milestone: m })], zoned, now)
     expect(n.day).toBe('2026-10-30')
-    expect(new Date(n.at * 1000).toDateString()).toBe(new Date('2026-10-30T00:00:00').toDateString())
+    expect(n.at).toBe(Date.parse('2026-10-30T00:00:00Z') / 1000)
     expect(n.at).not.toBe(1_700_000_999)
+  })
+
+  it('keeps a milestone where it sits whether the sites are known yet or not (no jump when they arrive)', () => {
+    const m = { kind: 'visitors', step: '100', value: 100, day: '2026-10-30', created_at: 1, new: true, shared: false } as never
+    const server = Date.parse('2026-10-29T23:00:00Z') / 1000 // the site's midnight, as the server sends it
+    const r = row({ id: 'mile:s1:visitors:100', kind: 'milestone', at: server, day: '2026-10-30', milestone: m, domain: 'a.com' })
+    const before = fromFeed([r], [], now)[0]
+    const after = fromFeed([r], [{ id: 's1', domain: 'a.com', timezone: 'Europe/Berlin' }] as Site[], now)[0]
+    expect(before.at).toBe(after.at)
+  })
+
+  it('lists notices of the same second in one order however the list came, and again after a re-read', () => {
+    const ids = ['c', 'a', 'B', 'a10', 'a2', 'b']
+    const rows = ids.map((id) => n(id, 500))
+    const once = arrange(rows, 1000).map((x) => x.id)
+    expect(arrange([...rows].reverse(), 1000).map((x) => x.id)).toEqual(once)
+    expect(arrange(arrange(rows, 1000), 1000).map((x) => x.id)).toEqual(once)
+    expect(rowsOf(arrange(rows, 1000), new Set()).map((x) => x.id)).toEqual(once)
+    expect(once).toEqual([...ids].sort())
   })
 
   it('never tells a goal without its number, and keeps one milestone of a family and day', () => {
