@@ -17,7 +17,7 @@ import (
 // dialog shows it and downloads it, so preview and file are one picture.
 //
 //	GET /api/v1/sites/{site}/card
-//	t        overview | leaderboard (default overview)
+//	t        overview | numbers | grid | leaderboard (default overview). numbers is the overview without its chart, grid is four numbers, two by two
 //	period   24h | 7d | 30d | all | custom (default 7d); custom takes from and to (YYYY-MM-DD). A period ends on the last full day or hour
 //	compare  1: the change against the period just before, in a pill (off by default; not for all time)
 //	metric   visitors | pageviews | engaged | revenue (default visitors)
@@ -25,11 +25,15 @@ import (
 //	shape    link | square | story | wide: the picture's size (cards.Formats; default link, 1200 × 630)
 //	theme    dark | light
 //	accent   #rrggbb
+//	thumb    1: a small picture (360 px wide) for the dialog's strip; the shape is the link preview's
 //	format   png (default) | json: the numbers in words and a post's text
 //
 // Only totals, top pages, a chart and the top country, page or source: never a visitor. Revenue is in a card
 // only where the report would show it to this reader (the module on, a
 // payment provider connected); asked for anywhere else it is visitors.
+
+// cardThumbW is a thumbnail's width in pixels: twice what the strip shows, for sharp screens.
+const cardThumbW = 360
 
 // cardRenders caps the pictures drawn at once, so a burst of previews
 // cannot take the server's CPU.
@@ -45,6 +49,7 @@ type cardNumbers struct {
 	HasData   bool   `json:"has_data"`
 	Post      string `json:"post"`
 	rows      []cards.Item
+	grid      []cards.Stat // the grid's four numbers
 	series    []float64
 	change    string // the pick against the period before: "+12%", "" when there is none
 	vs        string // what it is against ("previous 30 days"), said after the change
@@ -66,7 +71,11 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 	}
 	v := r.URL.Query()
 	tpl := cardTemplateOf(v.Get("t"))
-	n, ok := a.cardRead(w, r, q, r.PathValue("site"), v, tpl == "overview" && v.Get("format") != "json")
+	kind := tpl
+	if v.Get("format") == "json" {
+		kind = ""
+	}
+	n, ok := a.cardRead(w, r, q, r.PathValue("site"), v, kind)
 	if !ok {
 		return
 	}
@@ -82,7 +91,10 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 		Change: n.change, Dir: n.dir, Stats: n.stats,
 		NoBrand: a.HidesBrand(r.Context(), r.PathValue("site")),
 	}
-	if tpl == "overview" {
+	if tpl == "grid" {
+		spec.Label, spec.Stats, spec.Change, spec.Dir, spec.Series = cardWords.gridTitle[periodKey(v.Get("period"))], n.grid, "", 0, nil
+	}
+	if tpl == "overview" || tpl == "numbers" {
 		spec.Icon = a.cardIcon(r.Context(), r.PathValue("site"), n.domain)
 	}
 	if spec.Template == "leaderboard" {
@@ -94,7 +106,14 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 	case <-r.Context().Done():
 		return
 	}
-	png, err := spec.PNG()
+	var png []byte
+	var err error
+	if v.Get("thumb") == "1" {
+		// A strip of small pictures to choose from: drawn once, kept.
+		png, err = pngCache.get(spec.Key()+"|thumb", func() ([]byte, error) { return spec.Thumb(cardThumbW) })
+	} else {
+		png, err = spec.PNG()
+	}
 	<-cardRenders
 	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
@@ -107,7 +126,8 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 // cardRead reads the period's report the way the dashboard does, and turns
 // it into the card's words; with overview, also the small numbers and the
 // change against the period before.
-func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site string, v url.Values, overview bool) (cardNumbers, bool) {
+func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site string, v url.Values, kind string) (cardNumbers, bool) {
+	overview := kind == "overview" || kind == "numbers"
 	si, err := a.Ctl.SiteInfo(r.Context(), site)
 	if err != nil {
 		fail(w, http.StatusNotFound, "site not found")
@@ -157,6 +177,9 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 		}
 		n.vs = p.vs
 		n.overview(res, prev, v.Get("stats"), a.refIconOf)
+	}
+	if kind == "grid" {
+		n.gridOf(res, a.refIconOf)
 	}
 	return n, true
 }

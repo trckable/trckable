@@ -122,3 +122,62 @@ func TestFormatsMatchThePanel(t *testing.T) {
 		}
 	}
 }
+
+// The Overview pictures with nothing to show (no stats, an empty series) still draw, at every size.
+func TestOverviewPicturesWithNoData(t *testing.T) {
+	for _, f := range Formats {
+		for _, tpl := range []string{"numbers", "grid"} {
+			s := sample(tpl, f.ID, "light")
+			s.Stats, s.Series, s.Change, s.Dir = nil, nil, "", 0
+			if _, err := s.PNG(); err != nil {
+				t.Errorf("%s %s: %v", f.ID, tpl, err)
+			}
+			if got := len(Templates[tpl].Runs(s)); got == 0 {
+				t.Errorf("%s %s: no text at all", f.ID, tpl)
+			}
+		}
+	}
+}
+
+// The numbers and the grid close the gap a missing number would leave: the
+// cards share the whole row (or the whole grid), whatever their count, and
+// no picture ever says a dash.
+func TestPicturesCloseTheGap(t *testing.T) {
+	for _, f := range Formats {
+		l := layoutFor(f)
+		stats := func(n int) []Stat {
+			out := make([]Stat, n)
+			for i := range out {
+				out[i] = Stat{Value: "1,234", Label: "Visitors"}
+			}
+			return out
+		}
+		for n := 1; n <= MaxStats; n++ {
+			s := sample("numbers", f.ID, "dark")
+			s.Stats = stats(n)
+			bs := numberBoxes(s)
+			if len(bs) != n || bs[0].x != l.Left || bs[n-1].x+bs[n-1].w < l.Right-n {
+				t.Errorf("%s numbers %d: %+v", f.ID, n, bs)
+			}
+		}
+		for n := 1; n <= MaxGrid; n++ {
+			s := sample("grid", f.ID, "dark")
+			s.Stats = stats(n)
+			bs := gridBoxes(s)
+			bottom, right := 0, 0
+			for _, b := range bs {
+				bottom, right = max(bottom, b.y+b.h), max(right, b.x+b.w)
+			}
+			if len(bs) != n || right < l.Right-2 || bottom < l.GridTop+2*l.GridH+l.GridGap-2 {
+				t.Errorf("%s grid %d: %+v", f.ID, n, bs)
+			}
+			for _, r := range Templates["grid"].Runs(s) {
+				for _, sp := range r.Spans {
+					if sp.Text == "–" {
+						t.Errorf("%s grid %d: a dash", f.ID, n)
+					}
+				}
+			}
+		}
+	}
+}

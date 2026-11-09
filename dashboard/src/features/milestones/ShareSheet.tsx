@@ -1,9 +1,10 @@
-// The share sheet: the card as the server draws it (1200 × 630), a link to
+// The share sheet: the card as the server draws it (the link preview's size), a link to
 // a tiny public page with the card as its preview, and the picture itself.
 // Money shows its amount only once "Show amount" is on; it starts off.
 import { Download, Image as ImageIcon, Link2, Link2Off, Mail, Moon, Sun, X } from 'lucide-react'
 import { useState } from 'react'
 import { fail, type Milestone, type Site } from '../../lib/api'
+import { formatOf } from '../share/card'
 import { copyImage } from '../share/image'
 import { shareApi } from './share'
 import { can } from '../../lib/permissions'
@@ -12,6 +13,8 @@ import { Switch } from '../../components/Switch'
 import { toast } from '../../components/Toast'
 import { copy } from './copy'
 import { say } from './words'
+
+const LINK = formatOf('link')
 
 export function ShareSheet({ site, m, onClose, onChanged }: { site: Site; m: Milestone; onClose: () => void; onChanged: () => void }) {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
@@ -51,7 +54,7 @@ export function ShareSheet({ site, m, onClose, onChanged }: { site: Site; m: Mil
           <X size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
       </div>
-      <img className="ms-card" src={card('svg')} width={1200} height={630} alt={copy.card} />
+      <img className="ms-card" src={card('svg')} width={LINK.w} height={LINK.h} alt={copy.card} />
       <div className="ms-side">
         {can('share.manage') && !shared && (
           <button type="button" className="btn primary" onClick={makeLink}>

@@ -15,6 +15,8 @@ export const copy = defineCopy('share', {
   compareHint: 'Against the period just before',
   template: {
     overview: { name: 'Overview', hint: 'People, trend, top stats' },
+    numbers: { name: 'Big number', hint: 'People and three stats, no chart' },
+    grid: { name: 'In numbers', hint: 'Four numbers, two by two' },
     leaderboard: { name: 'Leaderboard', hint: 'Top pages' },
     post: { name: 'Social post', hint: 'A quick text' },
   },
@@ -25,6 +27,8 @@ export const copy = defineCopy('share', {
     story: { name: 'Story', hint: 'Story, 9:16: phone stories' },
     wide: { name: 'Wide', hint: 'Wide, 16:9: slides, YouTube' },
   },
+  topics: { overview: 'Overview', pages: 'Pages', text: 'Text' },
+  why: { revenue: 'Needs a connected payment provider', data: 'Needs a visit in this period' },
   site: 'Site',
   light: 'Light card',
   dark: 'Dark card',

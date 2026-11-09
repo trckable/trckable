@@ -73,3 +73,24 @@ func (n *cardNumbers) stat(id string, res *query.Result, icon func(host string) 
 	}
 	return cards.Stat{}, false
 }
+
+// cardGridIDs are the grid's four numbers: fixed, never money.
+var cardGridIDs = []string{"visitors", "pageviews", "engaged", "avgtime"}
+
+// gridOf is the grid's numbers: only the ones with something true to say
+// (a picture to share never shows a dash), and the picture closes the gap.
+func (n *cardNumbers) gridOf(res *query.Result, icon func(host string) image.Image) {
+	for _, id := range cardGridIDs {
+		if st, ok := n.stat(id, res, icon); ok {
+			n.grid = append(n.grid, st)
+		}
+	}
+}
+
+// periodKey is the period's name as the card words know it: an unknown one is 7d, as everywhere.
+func periodKey(s string) string {
+	if _, ok := cardWords.gridTitle[s]; ok {
+		return s
+	}
+	return "7d"
+}

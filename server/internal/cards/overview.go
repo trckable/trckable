@@ -251,7 +251,12 @@ func pillInk(s Spec) string {
 	return s.Theme.Up
 }
 
-func overviewRuns(s Spec) []Run {
+// overviewRuns is the head (the site, the period, the big number, the
+// comparison, the brand) and the small numbers under the chart.
+func overviewRuns(s Spec) []Run { return append(overviewHead(s), statRuns(s)...) }
+
+// overviewHead is everything above the chart, and trckable's name.
+func overviewHead(s Spec) []Run {
 	l := s.layout()
 	room := float64(l.Right - l.Left)
 	big := 136.0
@@ -289,6 +294,13 @@ func overviewRuns(s Spec) []Run {
 	if !s.NoBrand {
 		runs = append(runs, Run{X: l.Right, Y: l.FootY, Px: l.px(28), End: true, Spans: []Span{{Text: "trck", Bold: true, Ink: s.Theme.FG}, {Text: "able.com", Ink: s.Theme.Muted}}})
 	}
+	return runs
+}
+
+// statRuns are the small numbers in a row under the chart.
+func statRuns(s Spec) []Run {
+	l := s.layout()
+	var runs []Run
 	shown := s.Stats[:min(len(s.Stats), MaxStats)]
 	for i, st := range shown {
 		x := l.Left + i*l.StatStep

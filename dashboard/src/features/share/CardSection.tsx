@@ -1,20 +1,57 @@
-// What to share: the kinds of picture.
-import { BarChart3, LayoutDashboard, MessageSquareText, type LucideIcon } from 'lucide-react'
-import { TEMPLATES, type Template } from './card'
+// What to share: the gallery. Pictures in groups by topic, each a live thumbnail (drawn when it scrolls into view); a
+// picture the site cannot make yet is disabled, with one line saying why.
+import { MessageSquareText } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { PICTURES, TOPICS, cardUrl, missing, type Look, type Need, type Picture, type Template } from './card'
 import { copy } from './copy'
 
-const ICONS: Record<Template, LucideIcon> = { overview: LayoutDashboard, leaderboard: BarChart3, post: MessageSquareText }
+type Props = { site: string; look: Look; has: Record<Need, boolean>; pictures?: Picture[]; onChange: (t: Template) => void }
 
-export function CardSection({ value, onChange }: { value: Template; onChange: (t: Template) => void }) {
+/** The thumbnail is asked for only once it is on screen (at once where the browser cannot tell). */
+function useSeen() {
+  const ref = useRef<HTMLSpanElement>(null)
+  const [seen, setSeen] = useState(typeof IntersectionObserver === 'undefined')
+  useEffect(() => {
+    const el = ref.current
+    if (seen || !el) return
+    const io = new IntersectionObserver((e) => e.some((x) => x.isIntersecting) && setSeen(true), { rootMargin: '80px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [seen])
+  return { ref, seen }
+}
+
+function Thumb({ site, look, id, off }: { site: string; look: Look; id: Template; off: boolean }) {
+  const { ref, seen } = useSeen()
   return (
-    <div className="sd-chips" role="radiogroup" aria-label={copy.templates}>
-      {TEMPLATES.map((t) => {
-        const Icon = ICONS[t]
+    <span ref={ref} className="sd-thumb">
+      {id === 'post' ? <MessageSquareText size={22} strokeWidth={1.6} aria-hidden="true" /> : seen && !off && <img src={cardUrl(site, { ...look, template: id, shape: 'link' }, 'thumb')} alt="" loading="lazy" decoding="async" />}
+    </span>
+  )
+}
+
+export function CardSection({ site, look, has, pictures = PICTURES, onChange }: Props) {
+  return (
+    <div className="sd-gallery" role="radiogroup" aria-label={copy.templates}>
+      {TOPICS.map((topic) => {
+        const list = pictures.filter((p) => p.topic === topic)
+        if (!list.length) return null
         return (
-          <button key={t} type="button" role="radio" aria-checked={value === t} className="sd-chip" title={copy.template[t].hint} onClick={() => onChange(t)}>
-            <Icon size={15} strokeWidth={1.8} aria-hidden="true" />
-            {copy.template[t].name}
-          </button>
+          <div key={topic} className="sd-topic">
+            <h3>{copy.topics[topic]}</h3>
+            <div className="sd-pics">
+              {list.map((p) => {
+                const lacks = missing(p, has)
+                return (
+                  <button key={p.id} type="button" role="radio" aria-checked={look.template === p.id} disabled={!!lacks} className="sd-pic" title={lacks ? copy.why[lacks] : copy.template[p.id].hint} onClick={() => onChange(p.id)}>
+                    <Thumb site={site} look={look} id={p.id} off={!!lacks} />
+                    <b>{copy.template[p.id].name}</b>
+                    {lacks && <small>{copy.why[lacks]}</small>}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
         )
       })}
     </div>

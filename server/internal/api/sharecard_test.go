@@ -309,3 +309,77 @@ func TestCardShapeSizes(t *testing.T) {
 		}
 	}
 }
+
+// The grid holds the numbers that are true: nothing behind one leaves it out
+// (never a dash), never money, and a busy period fills all four.
+func TestCardGridModel(t *testing.T) {
+	var n cardNumbers
+	n.gridOf(&query.Result{}, func(string) image.Image { return nil })
+	if len(n.grid) != 0 {
+		t.Fatalf("no data: %+v", n.grid)
+	}
+	n.gridOf(&query.Result{KPIs: query.KPIs{Visitors: 3, Pageviews: 5}}, func(string) image.Image { return nil })
+	if len(n.grid) != 2 || n.grid[0].Value != "3" || n.grid[1].Value != "5" {
+		t.Fatalf("a little data: %+v", n.grid)
+	}
+	n = cardNumbers{}
+	busy := &query.Result{KPIs: query.KPIs{Visitors: 1200, Pageviews: 3400, Sessions: 1500, BounceRate: 0.4, AvgSessionS: 134}}
+	n = cardNumbers{money: "$9"}
+	n.gridOf(busy, func(string) image.Image { return nil })
+	got := []string{}
+	for _, st := range n.grid {
+		got = append(got, st.Label+"="+st.Value)
+	}
+	if want := "Visitors=1,200 Pageviews=3,400 Engaged visits=900 Avg time=2m 14s"; strings.Join(got, " ") != want {
+		t.Errorf("busy: %v", got)
+	}
+}
+
+// The grid's title follows the period; an unknown period is the week's.
+func TestCardGridTitle(t *testing.T) {
+	for in, want := range map[string]string{"30d": "This month in numbers", "24h": "Today in numbers", "all": "All time in numbers", "custom": "Your numbers", "nope": "This week in numbers"} {
+		if got := cardWords.gridTitle[periodKey(in)]; got != want {
+			t.Errorf("%s: %q", in, got)
+		}
+	}
+}
+
+// numbers and grid are drawn at every size, with and without a comparison.
+func TestCardOverviewPictures(t *testing.T) {
+	g := newRig(t)
+	noOutbound(t, g)
+	owner := client()
+	g.setup(t, owner)
+	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
+	for _, tpl := range []string{"numbers", "grid"} {
+		for shape, want := range map[string]image.Point{"link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}} {
+			code, ct, body := get(t, owner, card+"?t="+tpl+"&shape="+shape+"&compare=1&period=30d")
+			if code != http.StatusOK || ct != "image/png" {
+				t.Fatalf("%s %s: %d %s", tpl, shape, code, ct)
+			}
+			cfg, _, err := image.DecodeConfig(strings.NewReader(body))
+			if err != nil || cfg.Width != want.X || cfg.Height != want.Y {
+				t.Errorf("%s %s: %dx%d (%v)", tpl, shape, cfg.Width, cfg.Height, err)
+			}
+		}
+	}
+}
+
+// A thumbnail is the same picture 360 px wide, and the full size is untouched.
+func TestCardThumb(t *testing.T) {
+	g := newRig(t)
+	noOutbound(t, g)
+	owner := client()
+	g.setup(t, owner)
+	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
+	for tpl, want := range map[string]image.Point{"overview": {360, 189}, "numbers": {360, 189}, "grid": {360, 189}, "leaderboard": {360, 189}} {
+		code, _, body := get(t, owner, card+"?t="+tpl+"&thumb=1")
+		cfg, _, err := image.DecodeConfig(strings.NewReader(body))
+		if code != http.StatusOK || err != nil || cfg.Width != want.X || cfg.Height != want.Y {
+			t.Errorf("%s: %d %dx%d (%v)", tpl, code, cfg.Width, cfg.Height, err)
+		}
+	}
+	if _, _, body := get(t, owner, card+"?t=overview"); len(body) < 2000 {
+		t.Fatal("the full picture is still drawn")
+	}
+}

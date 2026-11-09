@@ -11,6 +11,7 @@ import (
 
 	"github.com/srwiley/oksvg"
 	"github.com/srwiley/rasterx"
+	xdraw "golang.org/x/image/draw"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
 	"golang.org/x/image/math/fixed"
@@ -110,4 +111,24 @@ func drawRun(img *image.RGBA, r Run) error {
 		dot = d.Dot
 	}
 	return nil
+}
+
+// Thumb is the card as a small PNG, w pixels wide, for a strip of pictures to choose from.
+func (s Spec) Thumb(w int) ([]byte, error) {
+	full, err := s.PNG()
+	if err != nil {
+		return nil, err
+	}
+	img, err := png.Decode(bytes.NewReader(full))
+	if err != nil {
+		return nil, err
+	}
+	b := img.Bounds()
+	small := image.NewRGBA(image.Rect(0, 0, w, b.Dy()*w/b.Dx()))
+	xdraw.CatmullRom.Scale(small, small.Bounds(), img, b, xdraw.Src, nil)
+	var out bytes.Buffer
+	if err := (&png.Encoder{CompressionLevel: png.BestSpeed}).Encode(&out, small); err != nil {
+		return nil, err
+	}
+	return out.Bytes(), nil
 }

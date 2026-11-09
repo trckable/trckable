@@ -6,7 +6,7 @@ import { StatsPick } from './StatsPick'
 export function NumbersSection({ look, metrics, revenue, set }: { look: Look; metrics: Metric[]; revenue: boolean; set: (l: Partial<Look>) => void }) {
   return (
     <>
-      {look.template !== 'leaderboard' && (
+      {(
         <div className="sd-chips" role="group" aria-label={copy.metric}>
           {metrics.map((m) => (
             <button key={m} type="button" className="sd-chip" aria-pressed={look.metric === m} onClick={() => set({ metric: m })}>
@@ -15,7 +15,7 @@ export function NumbersSection({ look, metrics, revenue, set }: { look: Look; me
           ))}
         </div>
       )}
-      {look.template === 'overview' && <StatsPick look={look} revenue={revenue} set={set} />}
+      <StatsPick look={look} revenue={revenue} set={set} />
     </>
   )
 }
