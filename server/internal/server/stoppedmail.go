@@ -20,7 +20,8 @@ func (s *Server) stoppedWords(ev *alerts.Event, info sqlite.SiteInfo, last int64
 	quiet := alerts.Ago(time.Duration(now.Unix()-last) * time.Second)
 	lastAt := time.Unix(last, 0).In(loc).Format("15:04 MST, 2 Jan")
 	meaning := stoppedMeaning(last, c)
-	ev.Title = "Tracking stopped"
+	title := stoppedTitle(last, c, quiet)
+	ev.Title = title
 	ev.Subject = info.Domain + ": no visits for " + quiet
 	ev.Message = fmt.Sprintf("No visits have reached trckable from %s since %s (%s). %s", info.Domain, lastAt, quiet, meaning)
 	link := ""
@@ -30,7 +31,7 @@ func (s *Server) stoppedWords(ev *alerts.Event, info sqlite.SiteInfo, last int64
 	ev.Email = &mailkit.Email{
 		Preheader: meaning,
 		Blocks: []mailkit.Block{
-			mailkit.Heading{Eyebrow: "Tracking stopped", Title: info.Domain},
+			mailkit.Heading{Eyebrow: title, Title: info.Domain},
 			mailkit.Callout{Tone: mailkit.Bad, Title: "No visits for " + quiet, Text: fmt.Sprintf("No visits have reached trckable from %s since %s.", info.Domain, lastAt)},
 			mailkit.Paragraph{Lead: checkedLead, Text: meaning},
 			mailkit.Rows{Rows: [][2]string{{"Last visit", lastAt}, {"Quiet for", quiet}}},
@@ -42,6 +43,16 @@ func (s *Server) stoppedWords(ev *alerts.Event, info sqlite.SiteInfo, last int64
 
 // stoppedMeaning reads the latest check of the site: did it answer after the
 // last visit, and is the tracking script still on the page.
+// stoppedTitle is the one headline of a quiet site: "Tracking stopped" only when the latest check finds something
+// wrong (the page does not answer, the tracking script is not on it); when the check passes, or none has looked
+// since, it is the plain fact. The dashboard's chip (sitestatus/status.ts, chipKindOf) decides the same way.
+func stoppedTitle(last int64, c sqlite.SiteCheck, quiet string) string {
+	if c.At > last && (c.Error != "" || c.Found == "none" || c.Found == "other") {
+		return "Tracking stopped"
+	}
+	return "No visits for " + quiet
+}
+
 func stoppedMeaning(last int64, c sqlite.SiteCheck) string {
 	switch {
 	case c.At <= last:

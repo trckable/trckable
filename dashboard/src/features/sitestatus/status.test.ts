@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Site } from '../../lib/api'
-import { downStateOf, statusOf } from './status'
+import { chipKindOf, downStateOf, statusOf } from './status'
 import { silence, span } from './time'
 
 const NOW = 1_800_000_000_000
@@ -71,5 +71,20 @@ describe('a quiet site and the next visit', () => {
     const fresh = site({ last_event_at: sec - 60 })
     expect(statusOf(fresh, NOW)).toBe('ok')
     expect(statusOf(fresh, NOW + 7 * 3600_000)).toBe('quiet')
+  })
+})
+
+describe('the chip of a quiet site', () => {
+  const quiet = { last_event_at: sec - 15 * 3600 }
+  it('says stopped only when a check fails', () => {
+    expect(chipKindOf(site(quiet), [{ ok: true }, { ok: true }])).toBe('quiet')
+    expect(chipKindOf(site(quiet), [{ ok: true }, { ok: false }])).toBe('stopped')
+    expect(chipKindOf(site(quiet))).toBe('quiet') // no check yet
+    expect(chipKindOf(site({ ...quiet, check: { at: sec - 60, error: 'could not be reached' } }))).toBe('stopped')
+    expect(chipKindOf(site({ ...quiet, check: { at: sec - 60, found: 'site' } }))).toBe('quiet')
+  })
+  it('keeps down and check-fails for the probe', () => {
+    expect(chipKindOf(site({ ...quiet, down_since: sec - 600 }), [{ ok: true }])).toBe('down')
+    expect(chipKindOf(site({ ...quiet, down_since: sec - 600, down_visitors: true }))).toBe('check')
   })
 })

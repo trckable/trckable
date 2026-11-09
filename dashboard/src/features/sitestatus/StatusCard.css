@@ -63,13 +63,12 @@ button.status-badge:focus-visible {
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-.status-pop > .status-card {
+.status-card {
   flex: none;
 }
 .status-card {
   display: grid;
   gap: 14px;
-  padding: 16px 18px;
   color: var(--text-2);
 }
 .status-card.down {
@@ -77,25 +76,6 @@ button.status-badge:focus-visible {
 }
 .status-card.quiet {
   --tone: var(--warn);
-}
-/* The buttons stay in view while the rest of the panel scrolls under them. */
-.status-card .sgm-actions {
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
-  margin: 0 -18px;
-  padding: 10px 18px;
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-}
-/* On a phone the buttons stack full width and would take a third of the sheet: they scroll with it. */
-@media (max-width: 760px) {
-  .status-card .sgm-actions {
-    position: static;
-    margin: 0;
-    padding: 0;
-    border-top: 0;
-  }
 }
 .status-card .sgm-hero {
   padding-right: 0;
@@ -188,12 +168,6 @@ button.status-badge:focus-visible {
   font-weight: 600;
 }
 @media (max-width: 640px) {
-  .pop.anchored.status-pop {
-    width: auto;
-    border-radius: 18px 18px 0 0;
-    padding: 0;
-    max-height: 84dvh !important;
-  }
   .status-badge {
     height: 36px;
     padding: 0 10px;
@@ -251,7 +225,23 @@ button.status-badge:focus-visible {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.status-back {
-  align-self: flex-start;
-  margin: 8px 8px 0;
+/* The report's modal: its foot keeps the three actions in view, side by side even on a phone. */
+.status-modal .modal-foot > .dialog-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+@media (max-width: 640px) {
+  .status-modal .modal-foot > .dialog-actions {
+    flex-wrap: nowrap;
+  }
+  .status-modal .modal-foot > .dialog-actions > .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: 8px;
+    white-space: nowrap;
+  }
+}
+/* While a report is open, the menu or panel the list sits in is put out of sight, so it never covers the modal (a menu on the top layer sits above any dialog). */
+:is(.mk-menu, .pop):has(.status-list.picked) {
+  visibility: hidden;
 }

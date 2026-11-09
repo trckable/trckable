@@ -73,7 +73,7 @@ describe('what the live page tells', () => {
     act(() => root.render(<Quiet visits={[]} />))
     act(() => void vi.advanceTimersByTime(61_000))
     expect(tell).toHaveBeenCalledTimes(1)
-    expect(tell.mock.calls[0][0]).toBe('Tracking stopped on shop.example')
+    expect(tell.mock.calls[0][0]).toBe('No visits on shop.example')
     act(() => void vi.advanceTimersByTime(10 * 60_000))
     expect(tell).toHaveBeenCalledTimes(1)
   })

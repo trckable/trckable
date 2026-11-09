@@ -47,7 +47,8 @@ for (const size of [{ w: 1440, h: 900 }, { w: 390, h: 844 }]) {
     await shoot(page, 'live')
     await page.locator('#siteBtn').click()
     await page.locator('.site-why').click()
-    await expect(page.locator('#siteMenu')).toContainText('No answer within 10 seconds')
+    await page.locator('.status-row').first().click()
+    await expect(page.locator('.modal.status-modal')).toContainText('No answer within 10 seconds')
     await shoot(page, 'foot-panel')
   })
 }

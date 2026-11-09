@@ -2,9 +2,15 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Site } from '../../lib/api'
 import { setRole } from '../../lib/me'
-import { StatusCard, StatusPanel } from './StatusCard'
+import { StatusCard, StatusPanel as Panel } from './StatusCard'
+import type { useChecks } from './useChecks'
 import { readGap, writeGap } from './recovery'
 
+type Checks = ReturnType<typeof useChecks>
+const checking: Checks = { state: { phase: 'checking' }, again: () => {} }
+const passing: Checks = { state: { phase: 'done', result: { url: 'https://a.example', status: 200, ms: 90, found: 'site', scripts: 1, script: 'https://a.example/t.js', script_status: 200 } }, again: () => {} }
+const failing: Checks = { state: { phase: 'done', result: { url: 'https://a.example', status: 200, ms: 90, found: 'none', scripts: 1 } }, again: () => {} }
+const StatusPanel = (p: { site: Site; last: number; down: boolean; checks?: Checks }) => <Panel {...p} checks={p.checks ?? checking} />
 const NOW = Math.floor(Date.now() / 1000)
 const site = (o: Partial<Site> = {}): Site => ({ id: 's1', domain: 'a.example', name: '', timezone: 'UTC', currency: 'USD', proxy_key: '', ...o })
 
@@ -27,10 +33,6 @@ describe('the panel of a site that stopped, and the line when visits are back', 
     expect(html).toContain('Down')
     expect(html).toContain('did not answer')
     expect(html).toContain('What we checked')
-    expect(html).toContain('Check again')
-    expect(html).toContain('Open site')
-    expect(html).toContain('Install guide')
-    expect(html).toContain('href="https://a.example"')
     expect(html).toContain('href="/a.example/incidents"')
     expect(html).toContain('Incident history')
   })
@@ -55,10 +57,21 @@ describe('the panel of a site that stopped, and the line when visits are back', 
     const s = site({ last_event_at: NOW - 8 * 3600 })
     expect(renderToStaticMarkup(<StatusCard site={s} />)).toBe('')
     const html = renderToStaticMarkup(<StatusPanel site={s} last={NOW - 8 * 3600} down={false} />)
-    expect(html).toContain('Tracking stopped')
+    expect(html).toContain('No visits for 8h')
     expect(html).toContain('No visits since')
     expect(html).toContain('>8h<')
     expect(html).not.toContain('did not answer')
+  })
+
+  it('says Tracking stopped only when a check fails, and No visits for the time when every check passes', () => {
+    const s = site({ last_event_at: NOW - 15 * 3600 })
+    const ok = renderToStaticMarkup(<StatusPanel site={s} last={NOW - 15 * 3600} down={false} checks={passing} />)
+    expect(ok).toContain('No visits for 15h')
+    expect(ok).not.toContain('Tracking stopped')
+    expect(ok).toContain('all look right')
+    const bad = renderToStaticMarkup(<StatusPanel site={s} last={NOW - 15 * 3600} down={false} checks={failing} />)
+    expect(bad).toContain('Tracking stopped')
+    expect(bad).not.toContain('No visits for')
   })
 
   it('shows a badge once visits are back, for an hour', () => {
