@@ -182,6 +182,7 @@ var routeRules = map[string]string{
 	"GET /api/v1/referrer-icons":                                 "self",
 	"GET /api/v1/referrer-icons/{host}":                          "self",
 	"GET /api/v1/sites/{site}/buyers":                            "read",
+	"GET /api/v1/sites/{site}/converts":                          "read",
 	"GET /api/v1/sites/{site}/refunds":                           "read",
 	"GET /api/v1/sites/{site}/sales/payments":                    "read",
 	"GET /api/v1/sites/{site}/sales/customers":                   "read",
