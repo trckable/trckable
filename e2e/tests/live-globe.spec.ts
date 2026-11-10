@@ -238,16 +238,15 @@ test('the list head shows the online count the pill shows, with the half hour as
   expect(f.x + f.width).toBeLessThan(x.x) // clear of the close button
 })
 
-// The earth is real land with borders and a lit sea in space, and everyone at one spot, or close to it, is one marker with their number.
+// The earth is grey dots on a dark sphere, and everyone at one spot, or close to it, is one marker with their number.
 const SHOTS = '/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad'
-type Inside = { states: { head: unknown; total: number; x: number; y: number; r: number }[]; det: unknown; zoom: number; zoomT: number; fineNow: boolean; zoomTo: (z: number) => void; focus: (lat: number, lon: number) => void }
+type Inside = { states: { head: unknown; total: number; x: number; y: number; r: number }[]; zoom: number; zoomT: number; zoomTo: (z: number) => void; focus: (lat: number, lon: number) => void }
 
 async function crowd(page: Page, width: number, colorScheme: 'dark' | 'light') {
   await page.emulateMedia({ colorScheme })
   await page.setViewportSize({ width, height: width < 600 ? 900 : 800 })
   await page.addInitScript(() => {
     localStorage.setItem('trckable.live.globe', 'on')
-    localStorage.setItem('trckable.globe.skin', 'force')
   })
   await page.route(/\/sites\/[^/]+\/now(\?|$)/, async (route) => {
     const res = await route.fetch()
@@ -273,7 +272,7 @@ const heads = (canvas: ReturnType<Page['locator']>) =>
   })
 
 for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark']] as const) {
-  test(`the globe draws land and merges a crowd into one marker, ${width}px ${colorScheme}`, async ({ page }) => {
+  test(`the globe draws land dots and merges a crowd into one marker, ${width}px ${colorScheme}`, async ({ page }) => {
     const canvas = await crowd(page, width, colorScheme)
     // One marker for the 30 in Tirana and the places by it (a blank dot and Pristina), not a pile of dots: the hover tells it in words.
     const marker = await heads(canvas)
@@ -295,135 +294,24 @@ for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark
   })
 }
 
-test('zooming in fetches the detail chunk once, swaps to the finer land and writes names; markers split apart', async ({ page }) => {
-  const chunks: string[] = []
-  page.on('request', (r) => /\/labels-/.test(r.url()) && chunks.push(r.url()))
+test('zooming in splits the gathered places into more markers', async ({ page }) => {
   const canvas = await crowd(page, 1280, 'dark')
-  await page.waitForTimeout(500)
-  expect(chunks).toHaveLength(0)
-  const inside = <T,>(f: (g: Inside) => T, src = f.toString()) => canvas.evaluate((c, code) => new Function('g', `return (${code})(g)`)((c as unknown as { __globe: Inside }).__globe), src) as Promise<T>
   const before = (await heads(canvas)).length
   await canvas.evaluate((c) => {
     const g = (c as unknown as { __globe: Inside }).__globe
     g.focus(46, 14)
     g.zoomTo(3)
   })
-  await expect.poll(() => inside((g) => !!g.det), { timeout: 15_000 }).toBe(true)
   await page.waitForTimeout(2500)
-  expect(chunks.length).toBe(1)
-  expect(await inside((g) => g.fineNow)).toBe(true)
-  expect((await heads(canvas)).length).toBeGreaterThan(before) // zoomed in, the gathered places split
+  expect((await heads(canvas)).length).toBeGreaterThan(before)
   await page.screenshot({ path: `${SHOTS}/globe2-1280-dark-zoom3.png` })
-  // The detail stays: zooming out and in again fetches nothing more.
-  await canvas.evaluate((c) => (c as unknown as { __globe: Inside }).__globe.zoomTo(1))
-  await page.waitForTimeout(800)
-  await canvas.evaluate((c) => (c as unknown as { __globe: Inside }).__globe.zoomTo(16))
-  await page.waitForTimeout(1500)
-  expect(chunks.length).toBe(1)
-})
-
-test('full screen uses the room: the detail comes at once, and it is a shot of the whole screen', async ({ page }) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(document, 'fullscreenEnabled', { value: true, configurable: true })
-    HTMLElement.prototype.requestFullscreen = () => Promise.resolve()
-  })
-  const canvas = await crowd(page, 1280, 'dark')
-  await page.getByRole('button', { name: 'Full screen' }).click()
-  await expect(page.locator('.gwrap')).toHaveClass(/fill/)
-  await expect.poll(() => canvas.evaluate((c) => !!(c as unknown as { __globe: Inside }).__globe.det), { timeout: 15_000 }).toBe(true)
-  await page.waitForTimeout(1500)
-  await page.screenshot({ path: `${SHOTS}/globe2-1280-dark-full.png` })
-})
-
-// The earth is never an empty disc: the vector land is drawn until the pictures are in, and for good where they cannot be.
-const looks = (canvas: ReturnType<Page['locator']>) =>
-  canvas.evaluate((c: HTMLCanvasElement) => {
-    const x = c.getContext('2d')!
-    const seen = new Set<string>()
-    for (let i = 0; i < 24; i++)
-      for (let j = 0; j < 24; j++) {
-        const d = x.getImageData(c.width * (0.3 + i * 0.016), c.height * (0.3 + j * 0.016), 1, 1).data
-        seen.add(`${d[0] >> 4},${d[1] >> 4},${d[2] >> 4}`)
-      }
-    return seen.size
-  })
-// The pictures need WebGL2; without it the globe stays the vector earth (Firefox on the CI runner).
-const hasWebGL2 = (page: Page) => page.evaluate(() => !!document.createElement('canvas').getContext('webgl2'))
-const skinOf = (canvas: ReturnType<Page['locator']>) => canvas.evaluate((c) => !!(c as unknown as { __globe: { skin: unknown } }).__globe.skin)
-
-test('without WebGL the vector earth stays, land and sea', async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem('trckable.live.globe', 'on')
-    const get = HTMLCanvasElement.prototype.getContext
-    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, kind: string, ...rest: unknown[]) {
-      return kind === 'webgl2' || kind === 'webgl' ? null : (get as (...a: unknown[]) => unknown).call(this, kind, ...rest)
-    } as typeof get
-  })
-  await open(page)
-  const canvas = page.locator('.gstage canvas')
-  await expect(canvas).toBeVisible({ timeout: 10_000 })
-  await page.waitForTimeout(2500)
-  expect(await skinOf(canvas)).toBe(false)
-  expect(await looks(canvas)).toBeGreaterThan(4)
-})
-
-test('while the pictures are slow the vector earth shows, then the pictures take over', async ({ page }) => {
-  test.skip(!(await hasWebGL2(page)), 'no WebGL2 in this browser here: the vector earth is the whole globe')
-  await page.addInitScript(() => {
-    localStorage.setItem('trckable.live.globe', 'on')
-    localStorage.setItem('trckable.globe.skin', 'force')
-  })
-  let release: () => void = () => {}
-  const held = new Promise<void>((r) => (release = r))
-  await page.route(/\/(day|night)-2048-.*\.webp/, async (route) => {
-    await held
-    await route.continue()
-  })
-  await open(page)
-  const canvas = page.locator('.gstage canvas')
-  await expect(canvas).toBeVisible({ timeout: 10_000 })
-  await page.waitForTimeout(3000)
-  expect(await skinOf(canvas)).toBe(false)
-  expect(await looks(canvas)).toBeGreaterThan(4)
-  release()
-  await expect.poll(() => skinOf(canvas), { timeout: 15_000 }).toBe(true)
-  await page.waitForTimeout(800)
-  expect(await looks(canvas)).toBeGreaterThan(30)
-})
-
-test('a picture that never arrives leaves the vector earth', async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem('trckable.live.globe', 'on')
-    localStorage.setItem('trckable.globe.skin', 'force')
-  })
-  await page.route(/\/(day|night)-2048-.*\.webp/, (route) => route.abort())
-  await open(page)
-  const canvas = page.locator('.gstage canvas')
-  await expect(canvas).toBeVisible({ timeout: 10_000 })
-  await page.waitForTimeout(2500)
-  expect(await skinOf(canvas)).toBe(false)
-  expect(await looks(canvas)).toBeGreaterThan(4)
-})
-
-test('with the pictures the earth is textured, and the 4096 day picture comes only when zoomed in', async ({ page }) => {
-  test.skip(!(await hasWebGL2(page)), 'no WebGL2 in this browser here: the vector earth is the whole globe')
-  const sharp: string[] = []
-  page.on('request', (r) => /day-4096/.test(r.url()) && sharp.push(r.url()))
-  const canvas = await crowd(page, 1280, 'dark')
-  await expect.poll(() => skinOf(canvas), { timeout: 15_000 }).toBe(true)
-  await page.waitForTimeout(1000)
-  expect(await looks(canvas)).toBeGreaterThan(30)
-  expect(sharp).toHaveLength(0)
-  await canvas.evaluate((c) => (c as unknown as { __globe: Inside }).__globe.zoomTo(4))
-  await expect.poll(() => sharp.length, { timeout: 15_000 }).toBe(1)
 })
 
 // A pin opens the visitor card, and its buttons work: Replay opens the visitor's journey where it can be seen, and Open in Explore
 // lands in Explore narrowed to the page, also from full screen (which covers both) and on a phone (where the tab bar sits over the card's foot).
-for (const [width, full, force] of [[1280, false, true], [1280, true, true], [390, false, true], [1280, false, false]] as const) {
-  test(`the visitor card's buttons work, ${width}px${full ? ', full screen' : ''}${force ? ', with the skin' : ', without it'}`, async ({ page }) => {
+for (const [width, full] of [[1280, false], [1280, true], [390, false]] as const) {
+  test(`the visitor card's buttons work, ${width}px${full ? ', full screen' : ''}`, async ({ page }) => {
     const canvas = await crowd(page, width, 'dark')
-    if (!force) await page.evaluate(() => localStorage.removeItem('trckable.globe.skin'))
     if (full) {
       await page.getByRole('button', { name: 'Full screen' }).click()
       await expect(page.locator('.gwrap.fill')).toBeVisible()
@@ -458,20 +346,6 @@ for (const [width, full, force] of [[1280, false, true], [1280, true, true], [39
     await page.locator('.gpop-ex').click()
     await expect(page).toHaveURL(/xf=page%3A%2F(p\d|form_submit)/, { timeout: 5000 })
     await expect(page.locator('.gwrap.fill')).toHaveCount(0)
-  })
-}
-
-// Space dissolves into the card under the header: no seam. Full screen has no header, so no fade there.
-for (const colorScheme of ['dark', 'light'] as const) {
-  test(`the globe's space fades into the card under the header, ${colorScheme}`, async ({ page }) => {
-    const canvas = await crowd(page, 1280, colorScheme)
-    const mask = () => canvas.evaluate((c) => getComputedStyle(c).maskImage)
-    expect(await mask()).toContain('linear-gradient')
-    const box = (await canvas.boundingBox())!
-    await page.screenshot({ path: `${SHOTS}/gcard-top-${colorScheme}.png`, clip: { x: box.x - 8, y: box.y - 60, width: box.width + 16, height: 220 } })
-    await page.getByRole('button', { name: 'Full screen' }).click()
-    await expect(page.locator('.gwrap.fill')).toBeVisible()
-    expect(await mask()).toBe('none')
   })
 }
 
