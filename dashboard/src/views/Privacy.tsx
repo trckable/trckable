@@ -153,7 +153,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
             Often, yes. Countries with an analytics exemption (France, Italy, the Netherlands, Spain, the UK) generally allow it for a mode like this; Germany and Austria generally still ask for consent. The rules are enforced by this server, so a cached script cannot opt back in. Check your own rules.
           </p>
         </details>
-        <span className="faint eu-note" data-testid="cookie-mode-note">{free ? 'Visitors get the smaller, storage-free script within the hour.' : copy.cookieless.cookieModeNote}</span>
+        <span className="faint eu-note" data-testid={free ? undefined : 'cookie-mode-note'}>{free ? 'Visitors get the smaller, storage-free script within the hour.' : copy.cookieless.cookieModeNote}</span>
       </section>
 
       {!free && <Consent site={site} config={c} on={!!mods?.consent} onSave={save} onOn={() => setMods((m) => ({ ...m, consent: true }))} />}
