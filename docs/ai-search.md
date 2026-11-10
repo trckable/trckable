@@ -8,7 +8,36 @@ Google and the AI assistants find me? It replaces the separate AI and Search
 tabs that Sources used to have. It is in Full, and in Compact once Search
 Console is on. A share link never shows it.
 
+## The headline
+
+The tab opens on four numbers: the requests AI bots made in the period, how many
+of them for each human visitor ("4.4× your human traffic"), the company whose bots
+asked most, and the visitors AI assistants sent. Under them, each assistant shows
+what its company's robots read against the people it sent: "238,000 fetches,
+2,591 visitors, 1 visitor per 92 fetches". An assistant whose robots read a lot and
+send almost nobody is shown in red. The fetches come from crawler data (below);
+without it only the visitors show, and the other numbers are left out rather than
+drawn as zeros.
+
+## How to improve
+
+Up to three tips, each shown only when your own numbers call for it, each with one
+button. Nothing here is general advice:
+
+- **A company's bots got error pages** (at least 20, and at least 5% of their
+  requests): the worst pages are named.
+- **An assistant reads a lot and sends nobody** (500 or more fetches, at most one
+  visitor per 500): its most-read page is named and opens as a filter.
+- **Your server turned away AI bots** (20 or more refused requests, 401, 403 or
+  429): the companies are named.
+- **Pages Google ranks that AI never read**: needs Search Console, and crawler data.
+- **No crawler data yet**: the one tip is to connect it.
+
+Search engines' indexers are never counted as AI here.
+
 ## The three columns
+
+Below the tips come three parts.
 
 - **Google.** The searches that showed your site and how many were clicked, from
   your own Search Console ([connect it in Settings → Search Console](/reports/search-console)).

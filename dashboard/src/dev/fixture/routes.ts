@@ -372,7 +372,13 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
       return ok(funnelOf(c, id, parseQuery(sp), JSON.parse(sp.get('steps') ?? '[]') as FunnelStep[]))
     case 'report/ai-search': {
       const bots = crawlersOf(c, id, parseQuery(sp)).series.filter((s) => s.kind === 'train' || s.kind === 'answer')
-      return ok({ visitors: 12, assistants: [{ name: 'ChatGPT', visitors: 9, referrer: 'chatgpt.com' }, { name: 'Perplexity', visitors: 3, referrer: 'perplexity.ai' }], referrers: [{ value: 'chatgpt.com', visitors: 9 }, { value: 'perplexity.ai', visitors: 3 }], crawled: bots.reduce((n, s) => n + s.total, 0), bots: bots.map((s) => ({ name: s.name, kind: s.kind, hits: s.total, blocked: s.blocked, errors: s.errors })), pages: [], google: c.conn.search })
+      const crawled = bots.reduce((n, s) => n + s.total, 0)
+      // The fixture's robots carry product names; the report names the company behind them.
+      const companies = bots.length ? [{ name: 'OpenAI', hits: Math.round(crawled * 0.62) }, { name: 'Anthropic', hits: Math.round(crawled * 0.3) }, { name: 'Perplexity', hits: Math.round(crawled * 0.08) }] : []
+      const fetches = (company: string) => companies.find((x) => x.name === company)?.hits
+      const assistants = [{ name: 'ChatGPT', visitors: 90, referrer: 'chatgpt.com', company: 'OpenAI', fetches: fetches('OpenAI') }, { name: 'Claude', visitors: 1, company: 'Anthropic', fetches: fetches('Anthropic') }, { name: 'Perplexity', visitors: 12, referrer: 'perplexity.ai', company: 'Perplexity', fetches: fetches('Perplexity') }]
+      const pages = bots.length ? [{ path: '/pricing', read: 120, sent: 6, errors: 0, bots: [{ name: 'Anthropic', kind: 'train', hits: 70 }, { name: 'OpenAI', kind: 'answer', hits: 50 }] }, { path: '/docs/old-setup', read: 40, sent: 0, errors: 38, flag: 'uncredited' }, { path: '/guide', read: 0, sent: 0, clicks: 30, flag: 'unread' }] : []
+      return ok({ visitors: 103, assistants: assistants.sort((a, b) => b.visitors - a.visitors), referrers: [{ value: 'chatgpt.com', visitors: 9 }, { value: 'perplexity.ai', visitors: 3 }], crawled, humans: 280, per_visitor: crawled / 280, companies, bots: bots.map((s) => ({ name: s.name, kind: s.kind, hits: s.total, blocked: s.blocked, errors: s.errors })), pages, google: c.conn.search })
     }
     case 'report/answers':
       return ok(answersReport(answersState(), Math.floor(Date.now() / 1000)))

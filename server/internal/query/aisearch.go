@@ -40,12 +40,15 @@ const (
 // the visitors AI assistants sent, the robots that read the site, and for
 // each page how often it was read against how many people it was sent.
 type AISearch struct {
-	Visitors   int64         `json:"visitors"`   // the assistants' visitors added up: always the sum of Assistants
-	Assistants []AIAssistant `json:"assistants"` // the AI channel by assistant, busiest first; only assistants we know
-	Referrers  []Row         `json:"referrers"`  // the AI channel by referrer
-	Crawled    int64         `json:"crawled"`    // hits by AI crawlers (answering and training)
-	Bots       []AIBot       `json:"bots"`       // busiest first
-	Pages      []AIPage      `json:"pages"`      // read, sent and flags, busiest first
+	Visitors   int64         `json:"visitors"`    // the assistants' visitors added up: always the sum of Assistants
+	Assistants []AIAssistant `json:"assistants"`  // the AI channel by assistant, busiest first; only assistants we know
+	Referrers  []Row         `json:"referrers"`   // the AI channel by referrer
+	Crawled    int64         `json:"crawled"`     // hits by AI crawlers (answering and training)
+	Bots       []AIBot       `json:"bots"`        // busiest first
+	Pages      []AIPage      `json:"pages"`       // read, sent and flags, busiest first
+	Humans     int64         `json:"humans"`      // distinct visitors in the period, whoever sent them
+	PerVisitor float64       `json:"per_visitor"` // AI robot requests for each visitor; 0 when either side is empty
+	Companies  []AICompany   `json:"companies"`   // AI robots added up by company, busiest first
 }
 
 // AIAssistant is one assistant's distinct visitors, and the referrer host that
@@ -54,6 +57,11 @@ type AIAssistant struct {
 	Name     string `json:"name"`
 	Visitors int64  `json:"visitors"`
 	Referrer string `json:"referrer,omitempty"`
+	// Company is the robot company behind it (ChatGPT: OpenAI); empty for an assistant with no robot of its own.
+	Company string `json:"company,omitempty"`
+	// Fetches are what its company's robots read in the period. Nil when no robot data is connected or the assistant
+	// has no robot of its own; 0 is a real zero.
+	Fetches *int64 `json:"fetches,omitempty"`
 }
 
 // aiNames maps a referrer host (itself or any subdomain) to the product people
@@ -106,6 +114,7 @@ type AIPage struct {
 	Path   string  `json:"path"`
 	Read   int64   `json:"read"`
 	Sent   int64   `json:"sent"`
+	Errors int64   `json:"errors,omitempty"` // AI robots' requests for it that hit a broken page
 	Bots   []AIBot `json:"bots,omitempty"`   // who read it, most first (at most three)
 	Clicks float64 `json:"clicks,omitempty"` // Google's clicks for it, when Search Console says
 	Flag   string  `json:"flag,omitempty"`
@@ -142,7 +151,7 @@ func (q Q) AISearch(ctx context.Context, p Params, o AIOptions) (*AISearch, erro
 	// Counters are kept per day in the site's own zone.
 	from := p.From.In(loc).Format(time.DateOnly)
 	to := p.To.In(loc).Add(-time.Nanosecond).AddDate(0, 0, 1).Format(time.DateOnly)
-	out := &AISearch{Assistants: []AIAssistant{}, Referrers: []Row{}, Bots: []AIBot{}, Pages: []AIPage{}}
+	out := &AISearch{Assistants: []AIAssistant{}, Referrers: []Row{}, Bots: []AIBot{}, Pages: []AIPage{}, Companies: []AICompany{}}
 
 	// Who AI sent, by assistant: only the ones we can name, so the header is
 	// the sum of the rows and a referrer that is no assistant never appears.
@@ -212,6 +221,10 @@ func (q Q) AISearch(ctx context.Context, p Params, o AIOptions) (*AISearch, erro
 		return nil, err
 	}
 
+	if err := conn.QueryRowContext(ctx, cte+` SELECT count(DISTINCT visitor_id) FROM s`, args...).Scan(&out.Humans); err != nil {
+		return nil, fmt.Errorf("ai humans: %w", err)
+	}
+
 	// What the robots did, by crawler: the AI ones, and in the list of robots also the search engines' indexers, whose
 	// failures matter as much. Which page AI read stays AI only.
 	span := []any{p.Site, from, to}
@@ -240,6 +253,10 @@ func (q Q) AISearch(ctx context.Context, p Params, o AIOptions) (*AISearch, erro
 		return nil, err
 	}
 
+	out.Companies = aiCompanies(out.Bots)
+	out.PerVisitor = PerVisitor(out.Crawled, out.Humans)
+	out.Assistants = withFetches(out.Assistants, out.Companies)
+
 	// Which robot read which page.
 	//nolint:gosec // scope and pathIf are constant fragments of this file; every value is bound
 	reads, err := conn.QueryContext(ctx, `
@@ -266,9 +283,9 @@ func (q Q) AISearch(ctx context.Context, p Params, o AIOptions) (*AISearch, erro
 	ratio, err := conn.QueryContext(ctx, cte+`,
 		sent AS (SELECT entry_page AS path, count(DISTINCT visitor_id) AS n FROM s
 			WHERE channel = ? AND entry_page IS NOT NULL GROUP BY 1),
-		read AS (SELECT path, sum(hits)::BIGINT AS n FROM crawler_hits
+		read AS (SELECT path, sum(hits)::BIGINT AS n, sum(errors)::BIGINT AS e FROM crawler_hits
 			WHERE `+scope+` AND path <> ?`+pathIf(o.Page)+` GROUP BY 1)
-		SELECT coalesce(read.path, sent.path), coalesce(read.n, 0)::BIGINT, coalesce(sent.n, 0)::BIGINT
+		SELECT coalesce(read.path, sent.path), coalesce(read.n, 0)::BIGINT, coalesce(sent.n, 0)::BIGINT, coalesce(read.e, 0)::BIGINT
 		FROM read FULL OUTER JOIN sent ON read.path = sent.path
 		ORDER BY 2 + 3 DESC, 1 LIMIT ?`,
 		append(append(append(append([]any{}, args...), channelAI), withPage(append(span, crawlOther), o.Page)...), 200)...)
@@ -279,7 +296,7 @@ func (q Q) AISearch(ctx context.Context, p Params, o AIOptions) (*AISearch, erro
 	seen := map[string]bool{}
 	for ratio.Next() {
 		var pg AIPage
-		if err := ratio.Scan(&pg.Path, &pg.Read, &pg.Sent); err != nil {
+		if err := ratio.Scan(&pg.Path, &pg.Read, &pg.Sent, &pg.Errors); err != nil {
 			return nil, err
 		}
 		seen[pg.Path] = true

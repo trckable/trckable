@@ -148,10 +148,21 @@ export interface AiPage {
   sent: number
   /** Who read it, most first. */
   bots?: AiBot[]
+  /** AI robots' requests for it that hit a broken page. */
+  errors?: number
   /** Google's clicks, when Search Console is connected. */
   clicks?: number
   /** uncredited: read, nobody sent. unread: Google ranks it, no AI robot read it. */
   flag?: 'uncredited' | 'unread'
+}
+
+/** One assistant: the people it sent, and what its company's robots read (absent without robot data, or for an assistant with no robot of its own). */
+export interface AiAssistant {
+  name: string
+  visitors: number
+  referrer?: string
+  company?: string
+  fetches?: number
 }
 
 /** The AI & Search tab, less Google's terms. */
@@ -159,9 +170,15 @@ export interface AiSearchReport {
   /** The assistants' visitors added up: the sum of `assistants`. */
   visitors: number
   /** Only assistants we know, busiest first; `referrer` is the host that sent most of them (none for an app that sends none). */
-  assistants: { name: string; visitors: number; referrer?: string }[]
+  assistants: AiAssistant[]
   referrers: { value: string; visitors: number }[]
   crawled: number
+  /** Distinct visitors in the period, whoever sent them. */
+  humans: number
+  /** AI robot requests for each visitor; 0 when either side is empty. */
+  per_visitor: number
+  /** AI robots added up by company, busiest first. */
+  companies: { name: string; hits: number }[]
   bots: AiBot[]
   pages: AiPage[]
   /** Search Console answered: pages carry its clicks. */

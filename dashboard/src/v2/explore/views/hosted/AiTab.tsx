@@ -1,11 +1,10 @@
-// AI & Search in the section's frame: the assistants that sent people, the crawlers that read the pages and each page's
-// reads against the visitors sent; Google's searches are the Search section, one tap away.
+// AI & Search in the section's frame: the headline (what AI reads against the people who come), each assistant's reads
+// against the visitors it sent, what to improve, then the detail: Google's searches, the crawlers and each page's reads.
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { XEmpty, XError, XNote, XSec } from '../../../ui/XBits'
 import { XCols, type CRow } from '../../../ui/XTable'
 import { Loading } from '../../../../components/loading/Loading'
 import { fmtInt } from '../../../../lib/format'
-import { messageOf, more, type SearchReport } from '../../../../lib/apiMore'
 import { aiCopy } from '../../../../features/aisearch/copy'
 import { FailedCell } from '../../../../features/aisearch/FailedCell'
 import { useAiSearch } from '../../../../features/aisearch/useAiSearch'
@@ -14,6 +13,11 @@ import { can } from '../../../../lib/permissions'
 import { hasAnswers } from '../../../../lib/me'
 import { copy } from '../../copy'
 import type { XCtx } from '../../ctx'
+import { AiAssistants } from './AiAssistants'
+import { GoogleLines } from './AiGoogle'
+import { AiHeadline } from './AiHeadline'
+import { AiTips } from './AiTips'
+import { tipsOf } from './aiTipsOf'
 
 const CrawlerSetup = lazy(() => import('../../../../features/crawlers/CrawlerSetup').then((m) => ({ default: m.CrawlerSetup })))
 const AnswersLine = lazy(() => import('../../../../features/answers/AnswersLine').then((m) => ({ default: m.AnswersLine })))
@@ -21,44 +25,7 @@ const ROWS = 12
 const SHORT = 6
 const KINDS = [{ k: 'answer', color: 'var(--mk-lime)' }, { k: 'train', color: 'var(--ch-2)' }, { k: 'index', color: 'var(--ch-3)' }]
 
-/** Google's own searches, a few lines: what showed the site and was clicked (all of them are in Search). */
-function GoogleLines({ x }: { x: XCtx }) {
-  const [rep, setRep] = useState<SearchReport | null | 'off'>(null)
-  const key = JSON.stringify([x.site.id, x.query.from, x.query.to, x.query.filters])
-  useEffect(() => {
-    const ac = new AbortController()
-    more
-      .searchConsole(x.site.id)
-      .then((c): Promise<SearchReport | 'off'> => (c.connected ? more.searchReport(x.site.id, x.query, 'query', ac.signal) : Promise.resolve('off' as const)))
-      .then(setRep)
-      .catch((e: unknown) => !ac.signal.aborted && setRep(/not connected|module is off/i.test(messageOf(e)) ? 'off' : null))
-    return () => ac.abort()
-    // Keyed by content: the query is a new object each render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key])
-  if (rep === 'off') {
-    return (
-      <XEmpty title={aiCopy.connectLabel} hint={aiCopy.connectHint}>
-        <button type="button" className="xb" onClick={() => x.connect('search')}>
-          {aiCopy.connect}
-        </button>
-      </XEmpty>
-    )
-  }
-  if (!rep) return null
-  const list = (rep.rows ?? []).slice(0, 6)
-  if (list.length === 0) return <XEmpty title={aiCopy.noGoogle} hint="" />
-  const top = Math.max(1, ...list.map((r) => r.clicks))
-  const rows: CRow[] = list.map((r) => ({ key: r.key, a: r.key, bar: r.clicks / top, c: [fmtInt(r.clicks)] }))
-  return (
-    <>
-      <XCols first={aiCopy.search} cols={[{ h: aiCopy.clicks }]} rows={rows} xc="minmax(0,1fr) 84px" limit={6} onAll={x.showAll} />
-      <button type="button" className="mk-more" data-xsec="search" onClick={() => x.goTo('search')}>
-        {aiCopy.seeSearch} {'›'}
-      </button>
-    </>
-  )
-}
+const toSection = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
 export default function AiTab({ x }: { x: XCtx }) {
   const { rep, reload } = useAiSearch(x.site.id, x.query, ROWS)
@@ -72,8 +39,7 @@ export default function AiTab({ x }: { x: XCtx }) {
   }, [])
   if (rep === undefined) return <Loading height={180} />
   if (rep === null) return <XError title={aiCopy.failed} onRetry={reload} />
-  const people = rep.assistants.slice(0, ROWS)
-  const top = Math.max(1, ...people.map((a) => a.visitors))
+  const filtered = x.filters.length > 0
   const hit = Math.max(1, ...rep.bots.map((b) => b.hits))
   const crawlers: CRow[] = rep.bots.slice(0, ROWS).map((b) => ({ key: `${b.name}/${b.kind}`, a: `${b.name} · ${aiCopy.kind[b.kind] ?? b.kind}`, bar: b.hits / hit, c: [fmtInt(b.hits), <FailedCell blocked={b.blocked ?? 0} broken={b.errors ?? 0} />] }))
   const kinds = KINDS.map((k) => ({ ...k, n: rep.bots.filter((b) => b.kind === k.k).reduce((n, b) => n + b.hits, 0) })).filter((k) => k.n > 0)
@@ -87,31 +53,13 @@ export default function AiTab({ x }: { x: XCtx }) {
           <AnswersLine x={x} />
         </Suspense>
       )}
-      <div className="x2">
-        <div>
-          <XSec a={aiCopy.assistants} />
-          <XNote>{aiCopy.whyAssistants}</XNote>
-          {people.length === 0 ? (
-            <XEmpty title={aiCopy.noAssistants} hint="" />
-          ) : (
-            <div className="xai-tiles">
-              {people.slice(0, 4).map((p) => (
-                <button key={p.name} type="button" className="xai-tile" disabled={!p.referrer} onClick={() => p.referrer && x.pick('referrer', p.referrer)}>
-                  <span>{p.name}</span>
-                  <b>{fmtInt(p.visitors)}</b>
-                  <i><u style={{ width: `${(p.visitors / top) * 100}%` }} /></i>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        <div>
-          <XSec a={aiCopy.google} />
-          <XNote>{aiCopy.whyGoogle}</XNote>
-          <GoogleLines x={x} />
-        </div>
-      </div>
-      <XSec a={aiCopy.crawlers} b={fmtInt(rep.bots.reduce((n, b) => n + b.hits, 0))} />
+      <AiHeadline rep={rep} filtered={filtered} />
+      <AiAssistants rep={rep} x={x} filtered={filtered} />
+      <AiTips tips={tipsOf(rep, can('site.settings'), filtered)} go={{ connect: () => setSetup(true), page: (p) => x.pick('page', p), section: toSection }} />
+      <XSec a={aiCopy.google} />
+      <XNote>{aiCopy.whyGoogle}</XNote>
+      <GoogleLines x={x} />
+      <XSec id="crawlers" a={aiCopy.crawlers} b={fmtInt(rep.bots.reduce((n, b) => n + b.hits, 0))} />
       <XNote>{aiCopy.whyBots}</XNote>
       {crawlers.length === 0 ? (
         <XEmpty title={aiCopy.noAssistants} hint={aiCopy.setupHint}>
@@ -134,7 +82,7 @@ export default function AiTab({ x }: { x: XCtx }) {
       )}
       {reads.length > 0 && (
         <>
-          <XSec a={aiCopy.pages} />
+          <XSec id="pages" a={aiCopy.pages} />
           <XNote>{aiCopy.whyPages}</XNote>
           <XCols first={aiCopy.page} cols={[{ h: copy.heads.read }, { h: copy.heads.sent }]} rows={reads} xc="minmax(0,1fr) 72px 72px" limit={pageRows} onAll={() => setPageRows(ROWS)} />
         </>

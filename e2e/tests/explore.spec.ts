@@ -178,6 +178,9 @@ const aiAnswer = (assistants: { name: string; visitors: number; referrer?: strin
   assistants,
   referrers: [],
   crawled: 0,
+  humans: 0,
+  per_visitor: 0,
+  companies: [],
   bots: [],
   pages: [],
   google: false,
@@ -189,8 +192,9 @@ test('the AI view lists the assistants and draws bars in proportion', async ({ p
   const answer = aiAnswer([{ name: 'ChatGPT', visitors: 14, referrer: 'chatgpt.com' }, { name: 'Claude', visitors: 2 }, { name: 'Perplexity', visitors: 1 }])
   await page.route('**/report/ai-search**', (r) => r.fulfill({ json: answer }))
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&f=channel:AI&x=ai`)
-  await expect(page.locator('#xp .xai-tile')).toHaveText([/ChatGPT\s*14/, /Claude\s*2/, /Perplexity\s*1/])
-  const widths = await page.locator('#xp .xai-tile u').evaluateAll((els) => els.map((e) => (e as HTMLElement).getBoundingClientRect().width))
+  const rows = page.locator('#xp .xt .xrw')
+  await expect(rows).toHaveText([/ChatGPT\s*14/, /Claude\s*2/, /Perplexity\s*1/])
+  const widths = await rows.locator('.mk-bar i').evaluateAll((els) => els.map((e) => (e as HTMLElement).getBoundingClientRect().width))
   expect(widths[0]).toBeGreaterThan(widths[1] * 5)
   expect(widths[1]).toBeGreaterThan(widths[2])
 })

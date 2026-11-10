@@ -159,3 +159,29 @@ func TestSpecPost(t *testing.T) {
 		t.Fatalf("hero: %q", got)
 	}
 }
+
+// The AI picture's cards are the Explore headline's, and fall back to the visitors alone without robot data.
+func TestAIHeadlineCards(t *testing.T) {
+	rep := &query.AISearch{Visitors: 2649, Crawled: 1_230_000, PerVisitor: 4.4, Companies: []query.AICompany{{Name: "OpenAI", Hits: 606_000}}}
+	got := aiHeadline(rep)
+	want := []string{"1.23M", "4.4×", "OpenAI", "2,649"}
+	if len(got) != len(want) {
+		t.Fatalf("cards %+v", got)
+	}
+	for i, w := range want {
+		if got[i].Value != w {
+			t.Errorf("card %d = %q, want %q", i, got[i].Value, w)
+		}
+	}
+	if !strings.Contains(got[2].Label, "606K") {
+		t.Errorf("top company label %q lacks its requests", got[2].Label)
+	}
+	if only := aiHeadline(&query.AISearch{Visitors: 5}); len(only) != 1 || only[0].Value != "5" {
+		t.Errorf("without robot data: %+v", only)
+	}
+	for in, w := range map[int64]string{950: "950", 12_345: "12K", 1_500_000: "1.50M", 42_000_000: "42M"} {
+		if g := shortCount(in); g != w {
+			t.Errorf("shortCount(%d) = %q, want %q", in, g, w)
+		}
+	}
+}

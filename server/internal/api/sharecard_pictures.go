@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/cards"
@@ -146,19 +147,49 @@ func (a *API) searchPicture(c cardReading, n *cardNumbers) {
 func (a *API) aiPicture(c cardReading, n *cardNumbers) {
 	d := digest{title: cardWords.aiTitle, empty: cardWords.noAI}
 	defer func() { n.digests["ai"] = d }()
-	if rep, err := c.q.AISearch(c.r.Context(), c.params, query.AIOptions{}); err == nil && rep.Visitors > 0 {
-		d.stats = append(d.stats, cards.Stat{Value: number(rep.Visitors), Label: cardWords.aiVisits})
+	if rep, err := c.q.AISearch(c.r.Context(), c.params, query.AIOptions{}); err == nil && (rep.Visitors > 0 || rep.Crawled > 0) {
+		d.stats = aiHeadline(rep)
 		for _, as := range rep.Assistants[:min(len(rep.Assistants), cards.MaxDigestRows)] {
-			d.rows = append(d.rows, cards.Item{Name: as.Name, Value: number(as.Visitors), Share: float64(as.Visitors) / float64(rep.Assistants[0].Visitors)})
+			if as.Visitors > 0 {
+				d.rows = append(d.rows, cards.Item{Name: as.Name, Value: number(as.Visitors), Share: float64(as.Visitors) / float64(rep.Assistants[0].Visitors)})
+			}
 		}
 	}
-	if a.MentionsOn {
+	if a.MentionsOn && len(d.stats) < cards.MaxGrid {
 		list, err := a.Ctl.Mentions(c.r.Context(), c.site, c.params.From.Unix(), c.params.To.Unix(), mentionsMax)
 		if err == nil && len(list) > 0 {
 			d.stats = append(d.stats, cards.Stat{Value: number(int64(len(list))), Label: cardWords.aiMentions})
 		}
 	}
 	n.HasAI = d.filled()
+}
+
+// aiHeadline is the AI picture's number cards, the Explore headline's: the robots' requests, how many for each
+// visitor, the busiest company and the visitors the assistants sent. With no robot data, only the visitors.
+func aiHeadline(rep *query.AISearch) []cards.Stat {
+	if rep.Crawled == 0 || len(rep.Companies) == 0 {
+		return []cards.Stat{{Value: number(rep.Visitors), Label: cardWords.aiVisits}}
+	}
+	stats := []cards.Stat{{Value: shortCount(rep.Crawled), Label: cardWords.aiRequests}}
+	if rep.PerVisitor > 0 {
+		stats = append(stats, cards.Stat{Value: strconv.FormatFloat(rep.PerVisitor, 'f', 1, 64) + "×", Label: cardWords.aiPerVisitor})
+	}
+	top := rep.Companies[0]
+	stats = append(stats, cards.Stat{Value: top.Name, Label: cardWords.aiTop + " · " + shortCount(top.Hits) + " " + cardWords.aiRequestsOf})
+	return append(stats, cards.Stat{Value: number(rep.Visitors), Label: cardWords.aiVisits})
+}
+
+// shortCount says a large count briefly: 1.2M, 606K, 950.
+func shortCount(n int64) string {
+	switch {
+	case n >= 10_000_000:
+		return strconv.FormatInt(n/1_000_000, 10) + "M"
+	case n >= 1_000_000:
+		return strconv.FormatFloat(float64(n)/1_000_000, 'f', 2, 64) + "M"
+	case n >= 10_000:
+		return strconv.FormatInt(n/1000, 10) + "K"
+	}
+	return number(n)
 }
 
 // goalsPicture is the goals reached most, as the report lists them.

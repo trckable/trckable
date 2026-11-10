@@ -1,9 +1,10 @@
 // Every word of the AI & Search tab, its badges and the guide card about it.
 // One place, for when the dashboard's words move to message files.
 import { defineCopy } from '../../i18n'
-import { fmtInt } from '../../lib/format'
+import { fmtCompact, fmtInt } from '../../lib/format'
 
 const times = (n: number) => `${fmtInt(n)} ${n === 1 ? 'time' : 'times'}`
+const people = (n: number) => (n === 0 ? 'nobody' : `${fmtInt(n)} ${n === 1 ? 'person' : 'people'}`)
 const visitors = (n: number) => `${fmtInt(n)} ${n === 1 ? 'visitor' : 'visitors'}`
 
 const kind: Record<string, string> = { answer: 'answers', train: 'training', index: 'search' }
@@ -13,6 +14,7 @@ export const aiCopy = defineCopy('aisearch', {
   failed: 'Couldn’t read AI & Search.',
   google: 'Google',
   assistants: 'AI assistants',
+  assistantsHead: 'Assistants: what they read, what they send',
   crawlers: 'Crawlers',
   assistant: 'Assistant',
   crawler: 'Crawler',
@@ -30,7 +32,7 @@ export const aiCopy = defineCopy('aisearch', {
   ignored: (dims: string[]) => `Google can’t apply the ${dims.join(', ')} filter, so it’s left out here.`,
   noGoogle: 'No searches in this period.',
   whyGoogle: 'The Google searches that brought people to you, by clicks. From Search Console, 2–3 days behind.',
-  whyAssistants: 'People who clicked a link to you inside an AI assistant’s answer.',
+  whyAssistants: 'Fetches are what the assistant’s robots read of your site. Visitors are people who clicked a link to you in its answers.',
   whyBots: 'AI bots that read your pages to learn about you, and how often.',
   whyPages: 'Which pages AI bots read, and how many visits each one then sent.',
   connectHint: 'Then this shows the Google searches that brought people to you.',
@@ -46,6 +48,53 @@ export const aiCopy = defineCopy('aisearch', {
   readTitle: (n: number) => `Read ${times(n)} by AI crawlers`,
   sentTitle: (n: number) => `${visitors(n)} sent by AI assistants`,
   pages: 'Pages',
+  fetches: 'Fetches',
+  /** Under an assistant's name: what its robots read for each person it sent. */
+  returnPer: (n: number) => `1 visitor per ${fmtInt(n)} ${n === 1 ? 'fetch' : 'fetches'}`,
+  returnNobody: 'Read you, sent nobody',
+  noCompare: 'Robots can’t be filtered; clear filters to compare.',
+  noRobots: 'Without crawler data only the visitors show, not what each assistant reads.',
+  headline: {
+    requests: 'AI bot requests',
+    requestsSub: 'in this period',
+    perVisitor: 'Bots per visitor',
+    perVisitorSub: 'for each human visitor',
+    noVisitors: 'No visitors yet',
+    topCompany: 'Top company',
+    topCompanySub: (n: number) => `${fmtCompact(n)} requests`,
+    sent: 'Sent by AI assistants',
+    sentSub: 'visitors',
+  },
+  improve: 'How to improve',
+  whyImprove: 'What your numbers show, and one thing to do about each.',
+  tip: {
+    connect: {
+      title: 'No AI crawler data yet',
+      why: 'Connect it to see which bots read your pages, how often, and whether anything they ask for is broken.',
+      go: 'Connect crawler data',
+    },
+    broken: {
+      title: (company: string, n: number) => `${company} got an error page ${times(n)}`,
+      why: (pages: string) => `Its bot asked for pages that return an error, so it learns nothing from them.${pages ? ` Worst: ${pages}.` : ''}`,
+      go: 'See the crawlers',
+    },
+    credit: {
+      title: (name: string, fetches: number, visitors: number) => `${name} read you ${times(fetches)} and sent ${people(visitors)}`,
+      why: (page: string) => `It reads a lot and credits little.${page ? ` The page it read most is ${page}: make sure its first lines answer the question plainly.` : ''}`,
+      go: 'Open the page',
+      goNone: 'See the pages',
+    },
+    blocked: {
+      title: (n: number) => `Your server turned away AI bots ${times(n)}`,
+      why: (names: string) => `${names}: refused with a 401, 403 or 429. A bot that is turned away cannot read or credit you. If you want to be read, allow it.`,
+      go: 'See the crawlers',
+    },
+    unread: {
+      title: (n: number) => `Among your top pages, ${fmtInt(n)} Google ranks ${n === 1 ? 'was' : 'were'} never read by AI`,
+      why: (pages: string) => `No AI bot fetched these in this period: ${pages}. Check your robots.txt and sitemap.`,
+      go: 'List the pages',
+    },
+  },
   flag: {
     uncredited: 'No credit',
     unread: 'Not read',
