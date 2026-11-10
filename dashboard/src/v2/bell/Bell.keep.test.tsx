@@ -85,11 +85,11 @@ describe('the bell after a row is opened', () => {
     answer({ read: [] })
     await flush()
     expect(rows(first.host)).toEqual(['plan', expect.stringMatching(DOWN)])
-    // Open the hosted row: the build marks it read and takes it out of its list; the page moves on and mounts the bell again, before the sites are known.
+    // Open the hosted row: the build marks it read and takes it out of its list; the page moves on and mounts the bell again (a bell draws nothing before the sites are known, so they are given).
     act(() => document.querySelectorAll<HTMLButtonElement>('.nf')[0].click())
     expect(opened).toHaveBeenCalled()
     first.stop()
-    const again = mount({ bell: [] }, [])
+    const again = mount({ bell: [] }, [site])
     open()
     expect(rows(again.host)).toEqual([expect.stringMatching(DOWN)]) // the list of the last read, in the first frame
     expect(again.host.querySelector('.xnone')).toBeNull()

@@ -31,8 +31,10 @@ export interface FeedRow {
   /** Goal and signup: the visitor who reached it last (the journey's id) and the second they did. */
   visitor?: string
   seen?: number
-  /** Goal and signup: the goal's own key. */
+  /** Goal and signup: the goal's own key (for the goals row, the one reached last). */
   goal?: string
+  /** Goals: the day's goals with their counts, the one reached last first. */
+  goals?: { goal: string; name?: string; count: number }[]
   /** Mention: the post's own address. */
   link?: string
   milestone?: Milestone
@@ -47,7 +49,7 @@ export interface Feed {
   first?: boolean
 }
 
-/** What this browser last read for this person (by their sign-in); null when nothing is kept, it is another person's, or nobody is known yet. */
+/** What this browser last read for this scope (the team and the sign-in); null when nothing is kept, it is another's, or nobody is known yet. */
 export function loadFeed(who: string): FeedRow[] | null {
   if (!who) return null
   try {

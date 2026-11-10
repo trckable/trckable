@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Site } from '../../lib/api'
 import type { FeedRow } from './feed'
-import { arrange, badge, fromFeed, rowsOf, settle, unreadCount, withFeed, type Notice } from './notices'
+import { GOAL_CAP, arrange, badge, fromFeed, rowsOf, settle, unreadCount, withFeed, type Notice } from './notices'
 
 const n = (id: string, at: number, kind: Notice['kind'] = 'down'): Notice => ({ id, kind, site: 'a.com', title: id, sub: '', at })
 
@@ -219,6 +219,29 @@ describe('busy moments of several sites at the same time', () => {
     const rows = rowsOf([busy('a', 'a.com', 1000), busy('a2', 'a.com', 950), busy('b', 'b.com', 900), n('x', 990)], new Set())
     expect(rows.map((r) => r.id)).toEqual(['busy:a', 'x', 'a2'])
     expect(rows[0].members?.map((m) => m.id)).toEqual(['a', 'b'])
+  })
+})
+
+describe('the goals row', () => {
+  const sites1 = [{ id: 's1', domain: 'a.com' }] as Site[]
+  const at = 1_000_000
+
+  it('is one row that sums the day’s goals, at the time of the latest goal', () => {
+    const goals = [
+      { goal: 'outbound_click', count: 131 },
+      { goal: 'form_submit', count: 816 },
+    ]
+    const [g] = fromFeed([{ id: 'goal:s1:2026-11-10:2', kind: 'goal', site: 's1', at: at - 7, count: 947, goals }], sites1, at)
+    expect(g.title).toBe('Goals: 131 Outbound clicks · 816 Form submissions')
+    expect(g.at).toBe(at - 7)
+  })
+
+  it('has a cap of its own: a sale and a site that is down stay listed among 100 goal rows', () => {
+    const goal = (i: number): Notice => n(`goal:${i}`, at - i, 'goal')
+    const list = [...Array.from({ length: 100 }, (_, i) => goal(i)), n('sale:1', at - 500, 'sale'), n('down:1', at - 600)]
+    const out = arrange(list, at)
+    expect(out.filter((x) => x.kind === 'goal')).toHaveLength(GOAL_CAP)
+    expect(out.map((x) => x.id)).toEqual(expect.arrayContaining(['sale:1', 'down:1']))
   })
 })
 

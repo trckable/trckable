@@ -2,8 +2,6 @@ package api
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"net/http"
 	"net/url"
 	"sort"
@@ -27,7 +25,9 @@ import (
 const (
 	bellDays = 7
 	bellMax  = 60
-	bellKeep = 30 * time.Second
+	// bellGoalMax is how many goal rows the list holds besides bellMax: a busy site's goals must not push a sale, a busy spell or a down site out.
+	bellGoalMax = 8
+	bellKeep    = 30 * time.Second
 	// bellTimeout bounds one build of a list, whatever the client that asked does; bellSites is how many sites are read at once.
 	bellTimeout = 20 * time.Second
 	bellSites   = 4
@@ -59,12 +59,22 @@ type bellRow struct {
 	// Goal and signup: the visitor who reached it last (base 36, as the journey takes it) and the second they did.
 	Visitor string `json:"visitor,omitempty"`
 	Seen    int64  `json:"seen,omitempty"`
-	// Goal and signup: the goal's own key, the value Explore narrows by.
+	// Goal and signup: the goal's own key, the value Explore narrows by. For the goals row it is the one reached last.
 	Goal string `json:"goal,omitempty"`
+	// Goals: the day's goals with their counts, the one reached last first.
+	Goals []bellGoal `json:"goals,omitempty"`
 	// Mention: the post's own address.
 	Link string `json:"link,omitempty"`
 	// Milestone: the row as the milestone page tells it.
 	Milestone *sqlite.Milestone `json:"milestone,omitempty"`
+}
+
+// bellGoal is one goal's count in the day's goals row.
+type bellGoal struct {
+	Goal  string `json:"goal"`
+	Name  string `json:"name,omitempty"`
+	Count int64  `json:"count"`
+	last  int64
 }
 
 // bellCache keeps each person's complete list for bellKeep, and shares one build among the requests that ask for it at once.
@@ -157,14 +167,15 @@ func (a *API) bellFeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// The first list this person is given: they are told, once, so what is already behind them is not a burst of unread.
-	seedKey := "bell_seeded:" + p.user.ID
+	// It is kept per team: a team the person joins later starts read too.
+	seedKey := "bell_seeded:" + p.user.ID + ":" + p.account
 	_, seeded, _ := a.Ctl.Meta(r.Context(), seedKey)
 	first := !seeded && !partial
 	if first {
 		_ = a.Ctl.SetMeta(r.Context(), seedKey, "1")
 	}
 	w.Header().Set("Cache-Control", "private, no-store")
-	writeJSON(w, http.StatusOK, map[string]any{"user": p.user.ID, "notifications": rows, "partial": partial, "first": first})
+	writeJSON(w, http.StatusOK, map[string]any{"user": p.user.ID, "account": p.account, "notifications": rows, "partial": partial, "first": first})
 }
 
 // bellRows puts the sites' week together: one list, in the one order (at, then id). The second value is true when a source could not be read.
@@ -235,10 +246,15 @@ func (a *API) bellRows(r *http.Request, account string, sites []sqlite.SiteRow, 
 	})
 	// A site that is down stays in the list however much has happened since: only the rest is cut.
 	out := make([]bellRow, 0, min(len(rows), bellMax))
-	kept := 0
+	kept, goals := 0, 0
 	for _, x := range rows {
 		if x.Kind == "down" && x.Ended == nil {
 			out = append(out, x)
+		} else if x.Kind == "goal" {
+			if goals < bellGoalMax {
+				out = append(out, x)
+				goals++
+			}
 		} else if kept < bellMax {
 			out = append(out, x)
 			kept++
@@ -253,12 +269,6 @@ type nullWriter struct{ h http.Header }
 func (w *nullWriter) Header() http.Header         { return w.h }
 func (w *nullWriter) Write(b []byte) (int, error) { return len(b), nil }
 func (w *nullWriter) WriteHeader(int)             {}
-
-// goalKey shortens a goal's name for an id (ids are kept as read marks and are short).
-func goalKey(goal string) string {
-	h := sha256.Sum256([]byte(goal))
-	return hex.EncodeToString(h[:6])
-}
 
 // bellSite is what one site's stores say of the week.
 func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from int64) ([]bellRow, bool) {
@@ -356,37 +366,79 @@ func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from in
 		if list, err := q.GoalHours(ctx, s.ID, p.TZ, time.Unix(from, 0).UTC(), now.UTC(), 2000); err != nil {
 			ok = false
 		} else {
-			// One row per goal per day, at its latest hour: a few busy goals must not push everything else off the list.
-			rows := map[string]*bellRow{}
+			// One row per site per day for all its goals, at the time of the latest one; a signup keeps its own row. The id
+			// carries how many goals have a count today, so it is unread again when a new goal first counts, not on every count.
+			type day struct {
+				goals  []bellGoal
+				signup *bellRow
+				last   int64
+				seen   int64
+				who    uint64
+				key    string
+			}
+			days := map[string]*day{}
 			var order []string
 			for _, g := range list {
-				at, ok := hour(g.Hour)
-				if !ok {
+				if _, ok := hour(g.Hour); !ok {
 					continue
 				}
-				day := g.Hour[:min(len(g.Hour), 10)]
-				id := "goal:" + s.ID + ":" + goalKey(g.Goal) + ":" + day
-				kind := "goal"
+				d := g.Hour[:min(len(g.Hour), 10)]
+				x := days[d]
+				if x == nil {
+					x = &day{}
+					days[d] = x
+					order = append(order, d)
+				}
 				if p.SignupGoal != "" && g.Goal == p.SignupGoal {
-					id, kind = "signup:"+s.ID+":"+day, "signup"
-				}
-				row := rows[id]
-				if row == nil {
-					row = &bellRow{ID: id, Kind: kind, Site: s.ID, At: at, Text: g.Goal, Goal: g.Goal}
-					if n := names[g.Goal]; n != "" {
-						row.Text = n
+					if x.signup == nil {
+						x.signup = &bellRow{ID: "signup:" + s.ID + ":" + d, Kind: "signup", Site: s.ID, Text: g.Goal, Goal: g.Goal}
 					}
-					rows[id] = row
-					order = append(order, id)
+					x.signup.Count += g.Count
+					if g.Last >= x.signup.Seen {
+						x.signup.Seen, x.signup.At = g.Last, g.Last
+						if named && g.Visitor != 0 {
+							x.signup.Visitor = strconv.FormatUint(g.Visitor, 36)
+						}
+					}
+					continue
 				}
-				row.Count += g.Count
-				if named && g.Last >= row.Seen && g.Visitor != 0 {
-					row.Seen, row.Visitor = g.Last, strconv.FormatUint(g.Visitor, 36)
+				name := g.Goal
+				if n := names[g.Goal]; n != "" {
+					name = n
 				}
-				row.At = max(row.At, at)
+				found := false
+				for i := range x.goals {
+					if x.goals[i].Goal == g.Goal {
+						x.goals[i].Count += g.Count
+						x.goals[i].last = max(x.goals[i].last, g.Last)
+						found = true
+					}
+				}
+				if !found {
+					x.goals = append(x.goals, bellGoal{Goal: g.Goal, Name: name, Count: g.Count, last: g.Last})
+				}
+				if g.Last >= x.last {
+					x.last, x.key = g.Last, g.Goal
+					x.seen, x.who = g.Last, g.Visitor
+				}
 			}
-			for _, id := range order {
-				out = append(out, *rows[id])
+			for _, d := range order {
+				x := days[d]
+				if x.signup != nil {
+					out = append(out, *x.signup)
+				}
+				if len(x.goals) == 0 {
+					continue
+				}
+				sort.SliceStable(x.goals, func(i, j int) bool { return x.goals[i].last > x.goals[j].last })
+				row := bellRow{ID: "goal:" + s.ID + ":" + d + ":" + strconv.Itoa(len(x.goals)), Kind: "goal", Site: s.ID, At: x.last, Goal: x.key, Goals: x.goals}
+				for _, g := range x.goals {
+					row.Count += g.Count
+				}
+				if named && x.who != 0 {
+					row.Seen, row.Visitor = x.seen, strconv.FormatUint(x.who, 36)
+				}
+				out = append(out, row)
 			}
 		}
 	}

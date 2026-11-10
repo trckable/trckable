@@ -2839,6 +2839,8 @@ export default {
   'bell.signups': (n: number) => (n === 1 ? 'Nouvelle inscription' : `${n} nouvelles inscriptions`),
   'bell.goalCount': (goal: string, n: number) => `${goal}: ${n}`,
   'bell.goalSub': 'Objectif',
+  'bell.goals': (list: string) => `Objectifs : ${list}`,
+  'bell.goalEach': (n: string, name: string) => `${n} ${name}`,
   'bell.alertThreshold': (d: string) => `Un seuil que vous avez fixé a été atteint sur ${d}`,
   'bell.alertDisk': (d: string) => `Le disque se remplit (${d})`,
   'bell.peopleN': (n: string) => `${n} personnes`,

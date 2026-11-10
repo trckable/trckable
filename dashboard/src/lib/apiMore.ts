@@ -222,7 +222,7 @@ function sharedBellRead(): Promise<{ read: string[] }> {
 }
 
 export const more = {
-  me: () => call<{ kind: string; email?: string; ip?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean; mentions?: boolean }>('GET', '/me'),
+  me: () => call<{ kind: string; email?: string; account?: string; ip?: string; role?: string; version?: string; keys?: Record<string, string>; update_check?: boolean; must_change?: boolean; mentions?: boolean }>('GET', '/me'),
   setKeys: (keys: Record<string, string>) => call<{ keys: Record<string, string> }>('PUT', '/me/keys', { keys }),
   notifications: () => call<Feed>('GET', '/me/notifications'),
   bellRead: sharedBellRead,

@@ -2838,6 +2838,8 @@ export default {
   'bell.signups': (n: number) => (n === 1 ? 'Nieuwe aanmelding' : `${n} nieuwe aanmeldingen`),
   'bell.goalCount': (goal: string, n: number) => `${goal}: ${n}`,
   'bell.goalSub': 'Doel',
+  'bell.goals': (list: string) => `Doelen: ${list}`,
+  'bell.goalEach': (n: string, name: string) => `${n} ${name}`,
   'bell.alertThreshold': (d: string) => `Een waarde die je instelde is bereikt op ${d}`,
   'bell.alertDisk': (d: string) => `De schijf raakt vol (${d})`,
   'bell.peopleN': (n: string) => `${n} mensen`,

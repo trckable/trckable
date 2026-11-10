@@ -86,4 +86,18 @@ describe('the read set a bell shows', () => {
     expect(out.current?.read.has('z')).toBe(true)
     stop()
   })
+
+  it('keeps the newest marks when the saved list is cut', async () => {
+    vi.spyOn(more, 'bellRead').mockResolvedValue({ read: [] })
+    vi.spyOn(more, 'markBellRead').mockResolvedValue({ read: [] })
+    localStorage.setItem(KEY, JSON.stringify(Array.from({ length: 300 }, (_, i) => `old${i}`)))
+    const { out, stop } = mount()
+    await act(() => Promise.resolve())
+    act(() => out.current?.mark(['new1', 'new2']))
+    const saved = JSON.parse(localStorage.getItem(KEY) ?? '[]') as string[]
+    expect(saved).toHaveLength(300)
+    expect(saved.slice(-2)).toEqual(['new1', 'new2'])
+    expect(saved).not.toContain('old0')
+    stop()
+  })
 })
