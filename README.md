@@ -14,7 +14,7 @@ Self-host it free with every feature, or let [trckable Cloud](https://cloud.trck
 [![Version](https://img.shields.io/badge/version-0.7.25-b8ff3c?style=flat-square)](CHANGELOG.md)
 [![License: AGPL-3.0](https://img.shields.io/badge/server-AGPL--3.0-0b0d10?style=flat-square)](LICENSE)
 [![Tracker: MIT](https://img.shields.io/badge/tracker-MIT-0b0d10?style=flat-square)](packages/trckable/LICENSE)
-[![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/tracker-2098_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2098 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-27_MB-b8ff3c?style=flat-square" alt="Idle memory: 27 MB"></a><!--/f-->
+[![Go](https://img.shields.io/badge/go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white)](server/go.mod) <!--f:badge_tracker--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/tracker-2100_B_gzip-b8ff3c?style=flat-square" alt="Tracker size: 2100 B gzip"></a><!--/f--> <!--f:badge_memory--><a href="https://docs.trckable.com/benchmarks/"><img src="https://img.shields.io/badge/idle_memory-28_MB-b8ff3c?style=flat-square" alt="Idle memory: 28 MB"></a><!--/f-->
 
 [Website](https://trckable.com) · [Live demo](https://trckable.com/#demo) · [Cloud](https://cloud.trckable.com) · [Quick start](#quick-start) · [How it compares](#how-it-compares) · [What it does](#what-it-does) · [Gallery](#gallery) · [Docs](https://docs.trckable.com/) · [Changelog](CHANGELOG.md)
 
@@ -22,13 +22,13 @@ Self-host it free with every feature, or let [trckable Cloud](https://cloud.trck
 
 <br>
 
-<img src=".github/images/gallery/tour.webp" alt="A tour of the trckable dashboard on a demo site: the Briefing with a pointer across its chart, Live with the people on the site right now, the globe with each visitor's country, then Explore and Explore across the whole width" width="960">
+<img src=".github/images/gallery/tour.webp" alt="A tour of the trckable dashboard on a demo site: the Overview with its key numbers and chart, Live with the people on the site right now, the globe with each visitor's country, then Explore with Sources and Goals &amp; funnels" width="960">
 
 <sub>The demo site, recorded from the real dashboard: the comparison, the day under the pointer, Share, the money trail from Search, Full (<kbd>F</kbd>) and Replay.</sub>
 
 <br><br>
 
-<img src=".github/images/readme/numbers.svg" width="880" alt="2.1 KB browser script. 1 container, no external database. 27 MB of memory when idle. 0 IP addresses stored.">
+<img src=".github/images/readme/numbers.svg" width="880" alt="2.1 KB browser script. 1 container, no external database. 28 MB of memory when idle. 0 IP addresses stored.">
 
 </div>
 
@@ -71,10 +71,10 @@ Compose, Railway, Coolify, Dokploy, Umbrel and Helm, all the same image with a d
 The free, self-hostable tools, plus DataFast (paid, hosted only) for script size, all measured the same way. Tables, sources and caveats: [How it compares](https://docs.trckable.com/compare/).
 
 <p align="center">
-  <img src=".github/images/readme/script-size.svg" width="880" alt="Browser script, gzipped, with goals and outbound links: trckable 2,098 bytes, Plausible CE 2,141, Umami 2,333, GoatCounter 3,467, DataFast 5,253 (paid, no self-hosting documented), Rybbit 11,172, Matomo 28,172.">
+  <img src=".github/images/readme/script-size.svg" width="880" alt="Browser script, gzipped, with goals and outbound links: trckable 2,100 bytes, Plausible CE 2,141, Umami 2,333, GoatCounter 3,467, DataFast 5,253 (paid, no self-hosting documented), Rybbit 11,172, Matomo 28,172.">
 </p>
 <p align="center">
-  <img src=".github/images/readme/self-host.svg" width="880" alt="To self-host: trckable is one binary using 27 MB idle, with payment sync for five providers. GoatCounter: one binary, about 30 MB, no payment sync. Umami: Node and PostgreSQL, about 300 MB, manual revenue events. Matomo: PHP and MySQL, about 512 MB, no payment sync. Plausible CE: Elixir, PostgreSQL and ClickHouse, about 2 GB, payment sync on its cloud only. Rybbit: ClickHouse, PostgreSQL and Redis, 2 GB or more, no payment sync.">
+  <img src=".github/images/readme/self-host.svg" width="880" alt="To self-host: trckable is one binary using 28 MB idle, with payment sync for five providers. GoatCounter: one binary, about 30 MB, no payment sync. Umami: Node and PostgreSQL, about 300 MB, manual revenue events. Matomo: PHP and MySQL, about 512 MB, no payment sync. Plausible CE: Elixir, PostgreSQL and ClickHouse, about 2 GB, payment sync on its cloud only. Rybbit: ClickHouse, PostgreSQL and Redis, 2 GB or more, no payment sync.">
 </p>
 
 Where it is not the right pick: with pageviews only, Plausible CE's script is smaller (1,283 B against <!--f:tracker_core_bytes-->1,651<!--/f--> B). Session replay and A/B tests are out of scope on purpose; if you need those, use Matomo.
@@ -100,18 +100,18 @@ Nothing is paid, limited or held back. The complete list: [features](https://doc
 ## Gallery
 
 <p align="center">
-  <img src=".github/images/gallery/full.png" width="880" alt="Explore across the whole width: the overview with its key numbers, the shape of the period, and the top pages and top sources beside each other">
+  <img src=".github/images/gallery/full.png" width="880" alt="Explore, Overview: the key numbers, the shape of the period against the one before, and the top pages and top sources beside each other">
 </p>
 <p align="center">
-  <img src=".github/images/gallery/money-trail.png" width="410" alt="Explore, Sources that pay: for each channel, its customers, the revenue and the revenue per visitor">
+  <img src=".github/images/gallery/money-trail.png" width="410" alt="Explore, Sources: each channel with its people, change, conversion and revenue">
   <img src=".github/images/gallery/script-records.png" width="410" alt="Settings, General: What the script records, each module with what it adds to the script in bytes">
 </p>
 <p align="center">
   <img src=".github/images/gallery/share-card.png" width="410" alt="Settings, Sharing: the links to this dashboard, one of them named Investors, with what each one shows">
-  <img src=".github/images/gallery/core-light.png" width="410" alt="The Briefing in the light theme: the day's headline and score, the chart against the period before as a dashed line, and the key numbers">
+  <img src=".github/images/gallery/core-light.png" width="410" alt="Explore, Overview in the light theme: the key numbers and the chart against the period before as a dashed line">
 </p>
 <p align="center">
-  <sub>Explore across the whole width, the sources that pay, what the script records, the sharing links and the light theme. <a href="docs/screenshots.md">More screenshots</a></sub>
+  <sub>The overview, sources with their revenue, what the script records, the sharing links and the light theme. <a href="docs/screenshots.md">More screenshots</a></sub>
 </p>
 
 ## How it's built

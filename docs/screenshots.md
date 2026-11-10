@@ -1,13 +1,13 @@
 ---
 title: "Screenshots"
-description: "More of the dashboard: the Briefing, the filter menu, cookie consent and widgets."
+description: "More of the dashboard: the Overview, filtering from Search, cookie consent and widgets."
 ---
 
-![The Briefing in the dark theme: the day's headline and score, the chart against the period before as a dashed line, and the key numbers](../.github/images/gallery/core.png)
+![Explore, Overview in the dark theme: the key numbers, and the chart against the period before as a dashed line](../.github/images/gallery/core.png)
 
-![The Filter menu in Explore: Source, Page, Country and Device, each opening its own list](../.github/images/gallery/filter-menu.png)
+![Search (Ctrl+K or Cmd+K) listing filters by country: choosing one narrows every number on the screen](../.github/images/gallery/filter-menu.png)
 
-**Filter menu.** Pick a dimension, then a value; every number on the screen narrows to it.
+**Filters.** Open Search, type a dimension (country, source, device) and pick a value; every number on the screen narrows to it.
 
 ![Cookie consent settings with a live preview of trckable's own bar](../.github/images/gallery/cookie-consent.png)
 
