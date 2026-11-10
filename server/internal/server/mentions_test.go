@@ -319,7 +319,7 @@ func TestRetentionRemovesOldMentions(t *testing.T) {
 			}
 		}
 	}
-	if _, err := r.st.DB.ExecContext(ctx, `INSERT INTO site_settings (site_id, retention_days, updated_at) VALUES (?, 30, 0)`, r.site); err != nil {
+	if _, err := r.st.DB.ExecContext(ctx, `UPDATE site_settings SET retention_days = 30 WHERE site_id = ?`, r.site); err != nil {
 		t.Fatal(err)
 	}
 	(&Server{ctl: r.st}).pruneMentions(ctx)

@@ -1457,6 +1457,7 @@ export default {
   'install.copyCode': 'Copiar el código',
   'install.optionalTitle': 'Cuenta también a los visitantes con bloqueadores de anuncios',
   'install.optionalHint': 'Opcional. Los eventos pasan entonces por tu propio dominio, así que usa <Analytics> sin host.',
+  'install.cookieless.cookieModeNote': 'El modo con cookies está activo. Añade visitantes nuevos y recurrentes y recorridos; en la UE necesita un banner de consentimiento.',
   'install.cookieless.label': 'Sin cookies',
   'install.cookieless.onServer': 'Sin cookie, nada guardado. El script lo recoge en una hora: nada que volver a pegar.',
   'install.cookieless.onBundled': 'El código de arriba tiene cookieless: true. Vuelve a compilar y desplegar tu app.',

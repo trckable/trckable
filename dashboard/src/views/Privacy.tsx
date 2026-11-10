@@ -1,6 +1,7 @@
 // Settings → Data & privacy. Everything here is part of trckable, not an
 // add-on: the defaults record the most, and each switch is the owner deciding
 // to record less. Nothing is paywalled, and nothing is on without them.
+import { copy } from '../features/install/copy'
 import { Clock, Cookie, Cookie as CookieIcon, EyeOff, MapPin, ShieldCheck } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Switch } from '../components/Switch'
@@ -149,11 +150,10 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
         <details className="eu-more">
           <summary>Can I skip the cookie banner?</summary>
           <p className="faint">
-            Often, yes. Countries with an analytics exemption (France, Italy, the Netherlands, Spain, the UK) generally allow it for a mode like this; Germany and Austria generally still ask for consent. The rules are enforced by this
-            server, so a cached script cannot opt back in. Check your own rules.
+            Often, yes. Countries with an analytics exemption (France, Italy, the Netherlands, Spain, the UK) generally allow it for a mode like this; Germany and Austria generally still ask for consent. The rules are enforced by this server, so a cached script cannot opt back in. Check your own rules.
           </p>
         </details>
-        {free && <span className="faint eu-note">Visitors get the smaller, storage-free script within the hour.</span>}
+        <span className="faint eu-note" data-testid={free ? undefined : 'cookie-mode-note'}>{free ? 'Visitors get the smaller, storage-free script within the hour.' : copy.cookieless.cookieModeNote}</span>
       </section>
 
       {!free && <Consent site={site} config={c} on={!!mods?.consent} onSave={save} onOn={() => setMods((m) => ({ ...m, consent: true }))} />}

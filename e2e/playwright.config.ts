@@ -83,6 +83,7 @@ export const TOKEN = 'e2e-token'
 
 export default defineConfig({
   testDir: './tests',
+  globalSetup: './global-setup.ts',
   fullyParallel: true,
   workers: process.env.CI ? undefined : 2, // keep local runs from maxing out every core
   // CI machines are small and shared: a test gets one more try there, and one

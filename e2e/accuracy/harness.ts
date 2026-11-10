@@ -142,7 +142,10 @@ export class Server {
   async addSite(name: string): Promise<Site> {
     const domain = `${name}.accuracy.test`
     const si = (await (await this.api('/sites', { method: 'POST', body: JSON.stringify({ Domain: domain }) })).json()) as { id: string; proxy_key: string }
-    return { id: si.id, domain, key: si.proxy_key }
+    const site = { id: si.id, domain, key: si.proxy_key }
+    // A new site starts cookieless; the scenarios follow visitors, so they run in cookie mode.
+    await this.config(site, { consent_free: false, honor_dnt: false, record_city: true })
+    return site
   }
 
   async module(site: Site, id: string, enabled: boolean) {

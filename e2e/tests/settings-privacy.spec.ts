@@ -99,16 +99,24 @@ test('Leave out my own visits: the tracker keeps the flag in the browser, Count 
   await context.close()
 })
 
-test('Cookieless mode: the served script and the dashboard follow the switch, and a cookieless visit sets nothing', async ({ page, browser }) => {
-  const site = await newSite(page, 'cookieless')
+test('Cookieless mode: a new site starts cookieless, the served script and the dashboard follow the switch, and a cookieless visit sets nothing', async ({ page, browser }) => {
+  const site = await newSite(page, 'cookieless', true, false)
   await openSettings(page, site, 'privacy')
   const sw = page.getByRole('switch', { name: 'Cookieless mode' })
   const script = async () => (await (await page.request.get(`${API}/js/${site.id}.js`)).text()).includes('dataset.cookieless')
-  expect(await script()).toBe(false)
-  await sw.click()
+  // The default: cookieless, with the cookie-mode note hidden.
   await expect(sw).toHaveAttribute('aria-checked', 'true')
   expect((await getConfig(page.request, site)).consent_free).toBe(true)
   expect(await script()).toBe(true)
+  await expect(page.getByTestId('cookie-mode-note')).toHaveCount(0)
+  // Opting in to cookies says what it adds and that the EU needs a banner.
+  await sw.click()
+  await expect(sw).toHaveAttribute('aria-checked', 'false')
+  await expect(page.getByTestId('cookie-mode-note')).toContainText('consent banner')
+  expect((await getConfig(page.request, site)).consent_free).toBe(false)
+  expect(await script()).toBe(false)
+  await sw.click()
+  await expect(sw).toHaveAttribute('aria-checked', 'true')
   // The rows it overrides say so and are locked on.
   const dnt = page.getByRole('switch', { name: 'Honour Do Not Track and Global Privacy Control' })
   await expect(dnt).toBeDisabled()

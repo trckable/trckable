@@ -15,6 +15,12 @@ func TestRegionDntAndPathsReachIngest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// New sites start cookieless, which owns the city and DNT; this test is about the switches.
+	start, _ := s.SiteConfig(ctx, id)
+	start.ConsentFree, start.RecordCity, start.HonorDNT = false, true, false
+	if err := s.SetSiteConfig(ctx, id, start); err != nil {
+		t.Fatal(err)
+	}
 	site, _ := s.Site(id)
 	if site.NoCity || site.HonorDNT || len(site.ExcludePaths) != 0 {
 		t.Fatalf("a new site starts recording the city, ignoring DNT, leaving nothing out: %+v", site)

@@ -5,6 +5,7 @@
 import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
+import { useCookies } from './audit-kit'
 import { PORT, origin } from '../ports'
 
 const H = { 'X-Trckable-Request': '1', 'Content-Type': 'application/json' }
@@ -23,6 +24,7 @@ test('the corner pill renders on a customer page, follows the count, and can be 
   const made = await page.request.post(`${API}/api/v1/sites`, { headers: H, data: { domain } })
   expect(made.ok()).toBe(true)
   const site = ((await made.json()) as { id: string }).id
+  await useCookies(page.request, site) // new sites start cookieless; this one tells visitors apart
   // The part of `v` before the dot names the visitor.
   const visit = (id: string) => page.request.post(`${API}/api/e`, { headers: { 'User-Agent': UA }, data: { s: site, k: 'pv', u: `https://${domain}/`, id, v: `${id}.1` } })
   expect((await visit('ow1')).ok()).toBe(true)
