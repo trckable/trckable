@@ -127,8 +127,9 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number): Notice[] 
         break
       case 'goal': {
         const each = (r.goals ?? []).map((g) => copy.goalEach(fmtInt(g.count), goalName(undefined, g.name ?? g.goal)))
-        const title = each.length ? copy.goals(each.join(' · ')) : copy.goalCount(goalName(undefined, r.text ?? ''), r.count ?? 1)
-        out.push({ ...base, kind: 'goal', title, sub: copy.goalSub, visitor: r.visitor, exact: r.seen, goal: r.goal })
+        // A day with several goals keeps the title short and lists them on the second line, which may wrap to two on a phone.
+        const title = each.length ? copy.goals : copy.goalCount(goalName(undefined, r.text ?? ''), r.count ?? 1)
+        out.push({ ...base, kind: 'goal', title, sub: each.length ? each.join(' · ') : copy.goalSub, visitor: r.visitor, exact: r.seen, goal: r.goal })
         break
       }
       case 'alert': {

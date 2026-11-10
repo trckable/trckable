@@ -232,7 +232,8 @@ describe('the goals row', () => {
       { goal: 'form_submit', count: 816 },
     ]
     const [g] = fromFeed([{ id: 'goal:s1:2026-11-10:2', kind: 'goal', site: 's1', at: at - 7, count: 947, goals }], sites1, at)
-    expect(g.title).toBe('Goals: 131 Outbound clicks · 816 Form submissions')
+    expect(g.title).toBe('Goals')
+    expect(g.sub).toBe('131 Outbound clicks · 816 Form submissions')
     expect(g.at).toBe(at - 7)
   })
 
