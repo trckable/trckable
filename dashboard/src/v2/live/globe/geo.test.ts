@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { feedOf, IDLE_MS, type Row } from '../../../features/live/model'
 import type { NowVisit } from '../../../features/live/api'
 import { cityAt } from './cities'
-import { agoOf, placeOf, pinsOf, spotsOf, wrap } from './geo'
+import { agoOf, placeOf, pinsOf, spotsOf, thinning, wrap } from './geo'
 
 const at = (i: number, o: Partial<NowVisit> = {}): NowVisit => ({ kind: 'pageview', ts: 1000, last: 1000, path: `/p${i}`, visitor: `v${i}`, country: 'de', city: 'Berlin', ...o })
 const row = (i: number, o: Partial<Row> = {}): Row => ({ ...at(i), key: `v${i}`, ...o })
@@ -55,6 +55,9 @@ describe('globe maths', () => {
   it('says seconds, then minutes', () => {
     expect(agoOf(15_000)).toEqual({ unit: 's', n: 15 })
     expect(agoOf(190_000)).toEqual({ unit: 'm', n: 3 })
+    expect(thinning(390, 8, 8)).toBe(2)
+    expect(thinning(1440, 4, 8)).toBe(2)
+    expect(thinning(1440, 10, 16)).toBe(1)
   })
 })
 

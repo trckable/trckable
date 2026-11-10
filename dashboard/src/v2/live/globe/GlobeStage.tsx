@@ -97,7 +97,6 @@ export function GlobeStage({ pins, people, sel, full, onPick, onCrowd, children 
   useEffect(() => globe.current?.setPins(pins), [pins])
   // Leaving full screen puts the zoom back.
   useEffect(() => {
-    globe.current?.setFull(full)
     if (!full) globe.current?.zoomTo(1)
   }, [full])
   // A pin is open: the globe stops and eases it to the middle; closed, it spins again after about a second.

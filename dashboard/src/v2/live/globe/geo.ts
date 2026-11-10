@@ -65,15 +65,6 @@ export function pinsOf(rows: readonly Row[], find?: CityFinder): Pin[] {
   return out
 }
 
-/** Where the sun is over the earth now, as a unit vector (x east, y north, z toward longitude 0): the declination from the day of the year, the longitude from the time of day. */
-export function sunNow(at = Date.now()): [number, number, number] {
-  const d = new Date(at)
-  const day = (at - Date.UTC(d.getUTCFullYear(), 0, 0)) / 86_400_000
-  const dec = 23.44 * Math.sin(((2 * Math.PI) / 365.25) * (day - 81)) * RAD
-  const lon = -((d.getUTCHours() + d.getUTCMinutes() / 60 - 12) * 15) * RAD
-  return [Math.cos(dec) * Math.sin(lon), Math.sin(dec), Math.cos(dec) * Math.cos(lon)]
-}
-
 export const wrap = (lon: number): number => ((((lon + 180) % 360) + 360) % 360) - 180
 
 /** "15s ago", "3m ago": the clock in short words. */
@@ -95,4 +86,9 @@ export function spotsOf(pins: readonly Pin[]): Map<string, { lead: Pin; members:
     }
   }
   return out
+}
+
+/** Fewer dots on a small screen or a low-power device: every second dot is skipped (1 draws all). */
+export function thinning(width: number, cores: number, memory: number): 1 | 2 {
+  return width < 600 || cores <= 4 || memory <= 4 ? 2 : 1
 }
