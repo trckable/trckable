@@ -16,15 +16,17 @@ for (const look of LOOKS) {
   test.describe(`${look.width}px, ${look.scheme}`, () => {
     test('Connect crawler data opens its steps over Explore, and Escape returns to Explore', async ({ page }) => {
       await openFlow(page, cookie, look, '?view=briefing&x=ai')
-      await expect(panel(page).getByRole('button', { name: 'Connect crawler data' })).toBeVisible({ timeout: 20_000 })
-      await panel(page).getByRole('button', { name: 'Connect crawler data' }).click()
+      // Two entry points without crawler data: the tip under How to improve and the Crawlers section's empty state.
+      const connect = panel(page).getByRole('button', { name: 'Connect crawler data' }).first()
+      await expect(connect).toBeVisible({ timeout: 20_000 })
+      await connect.click()
       await expect.poll(() => overlays(page)).toEqual(['Connect crawler data'])
       await expect(panel(page)).toBeVisible()
       await page.keyboard.press('Escape')
       await expect.poll(() => overlays(page)).toEqual([])
       await expect(panel(page)).toBeVisible()
       await expect(panel(page)).toHaveClass(/\bon\b/)
-      await expect(panel(page).getByRole('button', { name: 'Connect crawler data' })).toBeFocused()
+      await expect(connect).toBeFocused()
     })
 
     test('Connect Search Console opens the settings over Explore, and closing them returns to Explore', async ({ page }) => {
