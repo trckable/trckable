@@ -37,9 +37,9 @@ describe('what a pin says', () => {
     expect(say(pin('spike', { n: { factor: 3, visitors: 900 } }), usd).facts[0]).toBe('3× the usual')
   })
 
-  it('sales: the amount, how many and who earned most', () => {
+  it('sales: the amount and who earned most, without saying "sales" again under the head', () => {
     const s = say(pin('sale', { day: '2026-09-02', n: { count: 3, amount: 132200, channel: 'AI' } }), usd)
-    expect(s.line).toBe('3 sales · $1,322 · mostly AI assistants')
+    expect(s.line).toBe('$1,322 · mostly AI assistants')
     expect(s.big).toBe('$1,322')
   })
 

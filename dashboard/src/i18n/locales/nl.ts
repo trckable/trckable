@@ -1310,7 +1310,6 @@ export default {
   'extras.ring.spike': (factor: number) => `Piek · ${times(factor)} het gebruikelijke`,
   'extras.ring.newTraffic': (visitors: number) => `Nieuw verkeer · ${count(visitors, 'bezoeker', 'bezoekers')}`,
   'extras.ring.from': (referrer: string) => `vooral van ${referrer}`,
-  'extras.ring.sales': (count: number, amount: string) => `${int(count)} ${plural(count, 'verkoop', 'verkopen')} · ${amount}`,
   'extras.ring.burst': (factor: number) => `Verkoopgolf · ${times(factor)} het gebruikelijke`,
   'extras.ring.mostly': (channel: string) => `vooral ${channel}`,
   'extras.highlights.tab': 'Hoogtepunten',

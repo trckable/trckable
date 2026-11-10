@@ -14,7 +14,6 @@ export const extrasCopy = defineCopy('extras', {
     /** A spike on a site whose usual is too small for a multiplier: the count says it. */
     newTraffic: (visitors: number) => `New traffic · ${plural(visitors, 'visitor', 'visitors')}`,
     from: (referrer: string) => `mostly from ${referrer}`,
-    sales: (count: number, amount: string) => `${plural(count, 'sale', 'sales')} · ${amount}`,
     burst: (factor: number) => `Sales burst · ${times(factor)} the usual`,
     mostly: (channel: string) => `mostly ${channel}`,
   },
