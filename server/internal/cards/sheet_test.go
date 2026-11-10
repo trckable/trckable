@@ -77,7 +77,7 @@ func TestContactSheet(t *testing.T) {
 	if err := png.Encode(&buf, sheet); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "contact-sheet-3.png"), buf.Bytes(), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "contact-sheet-3.png"), buf.Bytes(), 0o600); err != nil { //nolint:gosec // a picture for the developer, in the folder they named
 		t.Fatal(err)
 	}
 }
