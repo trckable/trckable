@@ -118,7 +118,9 @@ test('the step menu and the site type menu open under their buttons, inside the 
     expect(m.x + m.width).toBeLessThanOrEqual(vp.width)
     expect(m.y + m.height).toBeLessThanOrEqual(vp.height)
     expect(m.y).toBeGreaterThanOrEqual(b.y + b.height - 1) // below the button
-    expect(Math.abs(m.x + m.width - (b.x + b.width))).toBeLessThanOrEqual(1) // right edges line up
+    // A menu opens towards the middle of the window: from the button's left edge when the button is in the left half, else to its right edge.
+    const fromLeft = b.x + b.width / 2 < vp.width / 2
+    expect(Math.abs(fromLeft ? m.x - b.x : m.x + m.width - (b.x + b.width))).toBeLessThanOrEqual(1)
   }
   const dots = panel.locator('[data-step="payments"]').getByRole('button', { name: 'More' })
   await dots.click()

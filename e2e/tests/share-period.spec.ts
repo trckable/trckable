@@ -19,7 +19,7 @@ test('Share: All time, a custom range and Compare reach the picture', async ({ p
   await page.locator('.share-chip').click()
   const dialog = page.getByRole('dialog', { name: 'Share your numbers' })
   await expect(dialog).toBeVisible()
-  const picture = (params: string[]) => page.waitForResponse((r) => r.url().includes('/card?') && params.every((p) => r.url().includes(p)) && r.url().includes('t=overview'))
+  const picture = (params: string[]) => page.waitForResponse((r) => r.url().includes('/card?') && !r.url().includes('format=json') && params.every((p) => r.url().includes(p)) && r.url().includes('t=overview'))
 
   await dialog.getByRole('button', { name: /^Period/ }).click()
   // Compare is off until asked for.
@@ -44,10 +44,10 @@ test('Share: All time, a custom range and Compare reach the picture', async ({ p
   await days.nth(2).click()
   await days.nth(4).click()
   expect((await res).status()).toBe(200)
-  const img = dialog.locator('.sd-preview img')
+  const img = dialog.locator('.sd-preview img.sd-img:not(.is-out, .is-loader)')
   await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth)).toBe(1200)
 
   const file = page.waitForEvent('download')
-  await dialog.getByRole('button', { name: 'Download PNG' }).click()
+  await dialog.getByRole('button', { name: /^Download \d+×\d+$/ }).click()
   expect((await file).suggestedFilename()).toMatch(/^trckable-.*-overview-\d{4}-\d{2}-\d{2}_\d{4}-\d{2}-\d{2}\.png$/)
 })
