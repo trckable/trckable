@@ -128,12 +128,15 @@ func TestBellFeedSources(t *testing.T) {
 	}
 	var goals feedRow
 	for _, r := range rows {
-		if r["kind"] == "goal" && strings.HasPrefix(r["id"].(string), "goal:"+g.site+":"+goalKey("newsletter")+":") {
+		if r["kind"] == "goal" && strings.HasPrefix(r["id"].(string), "goal:"+g.site+":") {
 			goals = r
 		}
 	}
 	if goals == nil || goals["count"] != 3.0 {
 		t.Fatalf("three goals in an hour are one row: %v", goals)
+	}
+	if want := now.Add(-4*time.Hour + 2*time.Minute).Unix(); int64(goals["at"].(float64)) != want {
+		t.Fatalf("a goal row is at the time of the latest goal, not the hour: %v want %d", goals["at"], want)
 	}
 	if goals["visitor"] != strconv.FormatUint(902, 36) {
 		t.Fatalf("a goal row names the visitor who reached it last: %v", goals)
@@ -229,15 +232,13 @@ func TestBellFeedHourInTheSitesZone(t *testing.T) {
 	if err := g.ctl.UpdateSite(ctx, g.site, "site.com", "Asia/Kolkata", ""); err != nil {
 		t.Fatal(err)
 	}
-	zone, _ := time.LoadLocation("Asia/Kolkata")
 	at := g.now.Add(-4*time.Hour - 40*time.Minute)
 	g.event(t, event.Event{Kind: event.KindGoal, Goal: "newsletter", EventID: 8001, TS: at.UnixMilli(), Visitor: 1, Path: "/"})
 	g.waitApplied(t, 1)
 	for _, r := range feedOf(t, g, owner) {
 		if r["kind"] == "goal" {
-			l := at.In(zone)
-			if want := time.Date(l.Year(), l.Month(), l.Day(), l.Hour(), 0, 0, 0, zone).Unix(); int64(r["at"].(float64)) != want {
-				t.Fatalf("the hour is %v, want %d", r["at"], want)
+			if want := at.Unix(); int64(r["at"].(float64)) != want {
+				t.Fatalf("the time is %v, want %d", r["at"], want)
 			}
 			return
 		}
@@ -278,6 +279,67 @@ func TestBellFeedPartial(t *testing.T) {
 	if out["first"] != false {
 		t.Fatalf("told once: %v", out)
 	}
+	// Told once per team: the mark is kept under the person and the account.
+	if _, ok, _ := g.ctl.Meta(context.Background(), "bell_seeded:"+out["user"].(string)+":"+out["account"].(string)); !ok {
+		t.Fatalf("the seed is kept per account: %v", out)
+	}
+	if _, ok, _ := g.ctl.Meta(context.Background(), "bell_seeded:"+out["user"].(string)); ok {
+		t.Fatal("the seed is not kept for the person alone")
+	}
+}
+
+// Goals are one row per site per day: all the day's goals with their counts, at the time of the latest, unread again only by a new goal.
+func TestBellFeedGoalsAreOneRowPerDay(t *testing.T) {
+	g := newRig(t)
+	owner := client()
+	g.setup(t, owner)
+	at := g.now.Add(-5 * time.Hour)
+	id := uint64(6000)
+	add := func(goal string, n int, from time.Time) {
+		for i := 0; i < n; i++ {
+			id++
+			g.event(t, event.Event{Kind: event.KindGoal, Goal: goal, EventID: id, TS: from.Add(time.Duration(i) * time.Minute).UnixMilli(), Visitor: id, Path: "/"})
+		}
+	}
+	add("outbound", 3, at)
+	add("form", 2, at.Add(90*time.Minute))
+	g.waitApplied(t, 5)
+	rows := feedOf(t, g, owner)
+	var goals []feedRow
+	for _, r := range rows {
+		if r["kind"] == "goal" {
+			goals = append(goals, r)
+		}
+	}
+	if len(goals) != 1 {
+		t.Fatalf("one goals row per site per day: %v", goals)
+	}
+	row := goals[0]
+	list := row["goals"].([]any)
+	if row["count"] != 5.0 || len(list) != 2 || list[0].(map[string]any)["goal"] != "form" {
+		t.Fatalf("the day's goals, the latest first: %v", row)
+	}
+	if want := at.Add(91 * time.Minute).Unix(); int64(row["at"].(float64)) != want {
+		t.Fatalf("at the latest goal: %v want %d", row["at"], want)
+	}
+	// More of a goal that already counted keeps the id; a goal with its first count today changes it.
+	first := row["id"]
+	add("form", 2, at.Add(3*time.Hour))
+	g.waitApplied(t, 7)
+	g.api.bell = bellCache{}
+	for _, r := range feedOf(t, g, owner) {
+		if r["kind"] == "goal" && r["id"] != first {
+			t.Fatalf("a bigger count is the same row: %v", r)
+		}
+	}
+	add("demo", 1, at.Add(4*time.Hour))
+	g.waitApplied(t, 8)
+	g.api.bell = bellCache{}
+	for _, r := range feedOf(t, g, owner) {
+		if r["kind"] == "goal" && r["id"] == first {
+			t.Fatalf("a first count of a new goal is a new row: %v", r)
+		}
+	}
 }
 
 // A site that is down is in the list past the cap on the rest, and a long goal name still makes a short id.
@@ -298,8 +360,8 @@ func TestBellFeedPinsDownAndKeepsIdsShort(t *testing.T) {
 	g.event(t, event.Event{Kind: event.KindGoal, Goal: strings.Repeat("g", 190), EventID: 9001, TS: g.now.Add(-3 * time.Hour).UnixMilli(), Visitor: 1, Path: "/"})
 	g.waitApplied(t, 1)
 	rows := feedOf(t, g, owner)
-	if len(rows) != bellMax+1 {
-		t.Fatalf("the cap and the down site: %d rows", len(rows))
+	if len(rows) != bellMax+2 {
+		t.Fatalf("the cap, the goals row and the down site: %d rows", len(rows))
 	}
 	down := 0
 	for _, r := range rows {

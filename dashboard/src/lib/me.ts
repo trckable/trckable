@@ -18,6 +18,13 @@ export const setEmail = (e?: string) => {
 }
 export const currentEmail = () => email
 
+let account = '' // whose data this is (the team), so what is kept for one team is never shown for another
+export const setAccount = (a?: string) => {
+  account = a ?? ''
+}
+/** Who and which team: the key for what this browser keeps of the bell. Empty until the person is known. */
+export const currentScope = () => (email ? `${account}|${email}` : '')
+
 /** The role to ask the table about: a shared link reads, whoever opens it. */
 export const currentRole = () => (shared ? 'viewer' : role)
 

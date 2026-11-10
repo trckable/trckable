@@ -125,9 +125,12 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number): Notice[] 
       case 'signup':
         out.push({ ...base, kind: 'signup', title: copy.signups(r.count ?? 1), sub: '', visitor: r.visitor, exact: r.seen, goal: r.goal })
         break
-      case 'goal':
-        out.push({ ...base, kind: 'goal', title: copy.goalCount(goalName(undefined, r.text ?? ''), r.count ?? 1), sub: copy.goalSub, visitor: r.visitor, exact: r.seen, goal: r.goal })
+      case 'goal': {
+        const each = (r.goals ?? []).map((g) => copy.goalEach(fmtInt(g.count), goalName(undefined, g.name ?? g.goal)))
+        const title = each.length ? copy.goals(each.join(' · ')) : copy.goalCount(goalName(undefined, r.text ?? ''), r.count ?? 1)
+        out.push({ ...base, kind: 'goal', title, sub: copy.goalSub, visitor: r.visitor, exact: r.seen, goal: r.goal })
         break
+      }
       case 'alert': {
         const kind = (r.what ?? '') as AlertKind
         const title = ALERT_TITLE[kind]?.(d)
@@ -156,7 +159,12 @@ const ALERT_TITLE: Partial<Record<AlertKind, (d: string) => string>> = { thresho
 
 /** The most rows the bell lists; a site that is down is listed past it. */
 export const CAP = 40
-const capped = (list: Notice[]): Notice[] => list.filter((n, i) => i < CAP || n.kind === 'down')
+/** The most goal rows: they have a cap of their own, so a sale, a busy spell or a site that is down is never pushed out by them. */
+export const GOAL_CAP = 8
+const capped = (list: Notice[]): Notice[] => {
+  let goals = 0
+  return list.filter((n) => n.kind !== 'goal' || goals++ < GOAL_CAP).filter((n, i) => i < CAP || n.kind === 'down')
+}
 
 /**
  * A build's own feed (its slot) tells surges and milestones with their numbers: where it has any of a kind, the site's own

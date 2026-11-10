@@ -52,8 +52,9 @@ export function useReadSet(on: boolean, delay = 3000) {
   const [read, setRead] = useState<Set<string>>(loadLocal)
   const [synced, setSynced] = useState(askedOnce)
   const latest = useRef(read)
-  const join = useCallback((ids: Iterable<string>) => {
-    const u = new Set([...ids, ...latest.current])
+  /** Adds ids to the read set. `newest` ids go last (a mark just made), so the oldest are what `KEEP` drops; the rest come first. */
+  const join = useCallback((ids: Iterable<string>, newest = false) => {
+    const u = new Set(newest ? [...latest.current, ...ids] : [...ids, ...latest.current])
     if (u.size === latest.current.size) return
     latest.current = u
     saveLocal(u)
@@ -96,7 +97,7 @@ export function useReadSet(on: boolean, delay = 3000) {
     (ids: string[]) => {
       const fresh = ids.filter((id) => !latest.current.has(id))
       if (!fresh.length) return
-      join(fresh)
+      join(fresh, true)
       tell(fresh)
     },
     [join, tell],

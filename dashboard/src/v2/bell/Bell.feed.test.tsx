@@ -45,7 +45,7 @@ afterEach(() => {
 
 describe('the bell’s list', () => {
   it('is drawn at once from the last list this browser kept, before the server has answered, with no placeholder', () => {
-    saveFeed('a@x.com', feed)
+    saveFeed('|a@x.com', feed)
     vi.spyOn(more, 'notifications').mockReturnValue(new Promise(() => undefined))
     vi.spyOn(more, 'bellRead').mockResolvedValue({ read: [] })
     const m = mount()
@@ -56,7 +56,7 @@ describe('the bell’s list', () => {
   })
 
   it('asks the server once, and keeps every row where it was when one is marked read', async () => {
-    saveFeed('a@x.com', feed)
+    saveFeed('|a@x.com', feed)
     const list = vi.spyOn(more, 'notifications').mockResolvedValue({ notifications: feed })
     vi.spyOn(more, 'bellRead').mockResolvedValue({ read: [] })
     const post = vi.spyOn(more, 'markBellRead').mockResolvedValue({ read: [] })
@@ -76,16 +76,16 @@ describe('the bell’s list', () => {
 
 describe('what this browser keeps', () => {
   it('is painted for the person who read it and for no one else, and is gone once forgotten', () => {
-    saveFeed('a@x.com', feed)
-    expect(loadFeed('a@x.com')).toHaveLength(3)
-    expect(loadFeed('b@x.com')).toBeNull()
+    saveFeed('|a@x.com', feed)
+    expect(loadFeed('|a@x.com')).toHaveLength(3)
+    expect(loadFeed('|b@x.com')).toBeNull()
     expect(loadFeed('')).toBeNull()
     clearFeed()
-    expect(loadFeed('a@x.com')).toBeNull()
+    expect(loadFeed('|a@x.com')).toBeNull()
   })
 
   it('does not paint an account switch with the last person’s rows', () => {
-    saveFeed('a@x.com', feed)
+    saveFeed('|a@x.com', feed)
     setEmail('b@x.com')
     vi.spyOn(more, 'notifications').mockReturnValue(new Promise(() => undefined))
     vi.spyOn(more, 'bellRead').mockResolvedValue({ read: [] })
@@ -98,7 +98,7 @@ describe('what this browser keeps', () => {
 
 describe('a list that comes from the server', () => {
   it('keeps the list shown when the read was partial, and a down site stays', async () => {
-    saveFeed('a@x.com', feed)
+    saveFeed('|a@x.com', feed)
     vi.spyOn(more, 'notifications').mockResolvedValue({ notifications: [], partial: true })
     vi.spyOn(more, 'bellRead').mockResolvedValue({ read: [] })
     const m = mount()

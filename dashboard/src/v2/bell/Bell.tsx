@@ -68,7 +68,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
   }, [])
   // The rows the menu lists, and the badge counted from those same rows (none counted until the whole list is there).
   const src = useMemo(() => rowsOf(items, read), [items, read])
-  const { rows: listed, fresh } = useOpenRows(src, open, gone)
+  const { rows: listed, fresh } = useOpenRows(src, open, gone, notices.scope)
   const [filter, setFilter] = useState<Filter>(readFilter)
   const choose = (f: Filter) => {
     setFilter(f)

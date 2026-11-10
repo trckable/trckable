@@ -1065,7 +1065,7 @@ func (a *API) me(w http.ResponseWriter, r *http.Request) {
 	// The version is for the dashboard's footer; every response carries it in
 	// X-Trckable-Version anyway.
 	keys, _ := a.Ctl.UserKeymap(r.Context(), p.user.ID)
-	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "role": p.user.Role, "version": a.Version, "keys": keys, "must_change": a.Ctl.MustChange(r.Context(), p.user.ID), "mentions": a.MentionsOn, "answers": a.AnswersOn(),
+	writeJSON(w, http.StatusOK, map[string]any{"kind": "user", "email": p.user.Email, "account": p.account, "role": p.user.Role, "version": a.Version, "keys": keys, "must_change": a.Ctl.MustChange(r.Context(), p.user.ID), "mentions": a.MentionsOn, "answers": a.AnswersOn(),
 		// Only owners upgrade, so only their dashboards look.
 		"update_check": a.UpdateCheck && permissions.Can(p.user.Role, permissions.ActUpdateCheck),
 		// The address this request came from: Filtering's "Add my current IP".

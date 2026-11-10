@@ -18,7 +18,7 @@ import { useAccountTab, useAddSite } from "./lib/account";
 import { AddSiteHost } from "./features/onboarding/AddSiteHost";
 import { useSettingsAddress } from "./features/settingsAddress";
 import { useLatest } from "./lib/update";
-import { setAppVersion, setEmail, setRole } from "./lib/me";
+import { setAccount, setAppVersion, setEmail, setRole } from "./lib/me";
 import { clearFeed } from "./v2/bell/feed";
 import { can } from "./lib/permissions";
 import { NoneShared, NoSites, useGate } from "./features/onboarding/Gate";
@@ -70,6 +70,7 @@ function App() {
       }
       setRole(me.role, me.mentions, me.answers);
       setEmail(me.email);
+      setAccount(me.account);
       setAppVersion(me.version, me.update_check);
       loadKeymap(me.keys);
       // Before choosing their own password a person may do nothing else (the server refuses /sites).

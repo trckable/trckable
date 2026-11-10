@@ -23,6 +23,8 @@ export const copy = defineCopy('bell', {
   signups: (n: number) => (n === 1 ? 'New signup' : `${n} new signups`),
   goalCount: (goal: string, n: number) => `${goal}: ${n}`,
   goalSub: 'Goal',
+  goals: (list: string) => `Goals: ${list}`,
+  goalEach: (n: string, name: string) => `${n} ${name}`,
   alertThreshold: (d: string) => `A number you set was reached on ${d}`,
   alertDisk: (d: string) => `The disk is filling up (${d})`,
   peopleN: (n: string) => `${n} people`,
