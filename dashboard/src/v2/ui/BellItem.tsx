@@ -59,7 +59,7 @@ export function Row({ n, p, close }: { n: BellRow; p: BellProps; close: () => vo
           {n.time && <time className="nfw-t">{n.time}</time>}
         </div>
       ) : (
-        <button type="button" className={`nf ${n.unread ? 'unread' : ''}${n.bad ? ' bad' : ''}`} aria-label={n.label} onClick={() => pick(n.id)}>
+        <button type="button" className={`nf k-${n.kind} ${n.unread ? 'unread' : ''}${n.bad ? ' bad' : ''}`} aria-label={n.label} onClick={() => pick(n.id)}>
           {dot}
           <Icon n={n} />
           <span className="nft">

@@ -63,6 +63,8 @@
 .mk .nf .nfd { width: 6px; height: 6px; margin-right: calc(var(--mk-s2) * -1); }
 .mk .nf .nfd.off { opacity: 0; transform: scale(.4); }
 .mk .nf .nft small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* A row that lists several things (the day's goals) may take two lines. */
+.mk .nf.k-goal .nft small { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; }
 /* The kind's icon on a soft rounded tile of its own colour: down red, sale green, busy amber, goal teal, mention purple, milestone pink, signup blue. The tile is the colour at a low strength, so it reads in both themes. */
 .mk .nf .nfi { box-sizing: border-box; width: 32px; height: 32px; padding: 7px; border-radius: var(--pop-tile-radius); background: var(--pop-tile-bg); }
 .mk .nf .nfi.k-down, .mk .nf .nfi.k-failed { color: var(--mk-red); }
