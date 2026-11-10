@@ -30,7 +30,7 @@ function Shown({ tab, x, d }: { tab: Tab; x: XCtx; d: TabData }) {
     case 'changed':
       return <Changed x={x} d={d as OverviewModel & { report: Report }} />
     case 'overview':
-      return <Overview x={x} d={d as OverviewModel} />
+      return <Overview x={x} d={d as OverviewModel & { report: Report }} />
     case 'paths':
       return <PathsView x={x} d={d as PathsModel} />
     case 'quality':

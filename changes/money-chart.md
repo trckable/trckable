@@ -1,0 +1,1 @@
+The chart on Overview and What changed is now one chart: the people line, with the site's main outcome as bars on a right-hand axis (revenue, else sign-ups, else pageviews) and a small face on the line at each payment or sign-up.

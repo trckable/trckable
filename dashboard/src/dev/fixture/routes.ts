@@ -476,6 +476,29 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
         .map((x) => ({ id: `pay_${x.min}`, at: new Date(c.w.start + x.min * 60000).toISOString(), amount: x.amt * 100, kind: x.kind, channel: CHANNEL_OF[SRCS[x.s].id], referrer: REFS[SRCS[x.s].id], pages: [site.pages[x.page][0]] }))
       return ok({ buyers: list, currency: 'USD', exponent: 2 })
     }
+    case 'sales/payments': {
+      const q = parseQuery(sp)
+      const n = Number(sp.get('n') ?? 20)
+      const all = salesIn(c, site, dayIndex(c, q.from) * 1440, (dayIndex(c, q.to) + 1) * 1440, q.filters).filter((x) => x.amt > 0)
+      const payments = all
+        .slice()
+        .reverse()
+        .slice(0, n)
+        .map((x) => ({ id: `pay_${x.min}`, at: new Date(c.w.start + x.min * 60000).toISOString(), amount: x.amt * 100, kind: x.kind, visitor: (x.min * 7 + x.s).toString(36), channel: CHANNEL_OF[SRCS[x.s].id], referrer: REFS[SRCS[x.s].id] }))
+      return ok({ payments, total: all.length, currency: 'USD', exponent: 2, countries: [] })
+    }
+    case 'converts': {
+      const q = parseQuery(sp)
+      const n = Number(sp.get('n') ?? 20)
+      const v = visitsOf(c.w, id, c.nowAbs)
+      const su = v.list.findIndex((g) => /^(sign-?up|signed-?up|register(ed)?|create-?account)$/.test(g.key))
+      const [a, b] = [dayIndex(c, q.from) * 1440, (dayIndex(c, q.to) + 1) * 1440]
+      const out: { at: string; visitor: string }[] = []
+      for (let i = v.n - 1; i >= 0 && out.length < n && su >= 0; i--) {
+        if (v.t[i] >= a && v.t[i] < b && (v.goals[i] & (1 << su)) !== 0) out.push({ at: new Date(c.w.start + v.t[i] * 60000).toISOString(), visitor: (i * 7919 + 13).toString(36) })
+      }
+      return ok({ converts: out })
+    }
     case 'sales':
       return ok({ sales: salesIn(c, site, END * 1440, c.nowAbs + 1, []) })
   }

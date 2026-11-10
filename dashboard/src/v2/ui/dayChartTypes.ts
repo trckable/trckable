@@ -2,6 +2,7 @@
 import type { Bucket } from '../../lib/api'
 import type { Compare } from '../briefing/compare'
 import type { Judged } from '../briefing/usual'
+import type { Face, Outcome } from './outcome'
 
 export interface ChartPoint {
   /** Where on the axis (in buckets from its start). */
@@ -60,6 +61,8 @@ export interface ChartIn {
   notes: { i: number; text: string }[]
   /** Where the run outside the usual began (or the biggest rise, once the period is over): the bucket, when as the axis writes it, and which way. */
   started?: { i: number; when: string; dir: 'up' | 'dn'; down?: boolean }
-  /** Sales on the line of the day: where on the axis (in buckets, with the part of the hour), and the amount as written. */
-  sales?: { at: number; text: string; neg?: boolean }[]
+  /** The site's main outcome per bucket, as bars on an axis of their own: money, sign-ups or pageviews. */
+  bars?: { kind: Outcome; vals: number[]; label: string; faceLabel: string; people: string; axis: (n: number) => string; read: (n: number) => string }
+  /** A face on the line at each payment or sign-up, grouped per bucket. */
+  faces?: Face[]
 }

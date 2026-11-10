@@ -17,6 +17,8 @@ export function useCharts(site: string, query: ReportQuery, bucket: Bucket | und
     const ctl = new AbortController()
     fetchCharts(site, query, bucket, ctl.signal)
       .then((charts) => {
+        // A fetch cut off by the next one can read as an empty body: that is not an answer.
+        if (ctl.signal.aborted) return
         last = { key, charts }
         setData({ key, charts })
       })

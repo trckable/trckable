@@ -31,7 +31,7 @@ async function open(page: Page, width: number, scheme: 'dark' | 'light', query: 
   await page.emulateMedia({ colorScheme: scheme })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/${STEADY_DOMAIN}${query}`)
-  await expect(page.locator('svg#chart, .shp svg').first()).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('svg#chart').first()).toBeVisible({ timeout: 20_000 })
   await page.evaluate(() => document.fonts.ready)
 }
 

@@ -87,3 +87,25 @@ func TestAutoSignupFindsTheGoalCalledSignup(t *testing.T) {
 		})
 	}
 }
+
+func TestConvertsListThePeopleWhoReachedTheGoal(t *testing.T) { both(t, testConverts) }
+
+func testConverts(t *testing.T, q Q) {
+	p := sep10
+	p.SignupGoal = "signup"
+	p.Converts = 5
+	r, err := q.Report(context.Background(), p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	eq(t, "converts", len(r.Converts), 1)
+	if r.Converts[0].Visitor == "" || r.Converts[0].At.IsZero() {
+		t.Fatalf("a convert needs a visitor and a time: %+v", r.Converts[0])
+	}
+	p.Converts = 0
+	r, err = q.Report(context.Background(), p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	eq(t, "converts not asked", len(r.Converts), 0)
+}

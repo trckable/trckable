@@ -1,22 +1,6 @@
-// What sits in the chart's lane under the plot: the sales and the notes as small round marks. Each carries the
+// What sits in the chart's lane under the plot: the notes as small round marks. Each carries the
 // x it sits at (`data-rv`), so a replay brings it in as the line reaches it.
 import type { ChartIn } from './DayChart'
-
-export function SaleMarks({ sales, edge, cy }: { sales: NonNullable<ChartIn['sales']>; edge: (i: number) => number; cy: number }) {
-  return (
-    <>
-      {sales.slice(0, 10).map((x) => {
-        const xx = edge(x.at)
-        const col = x.neg ? 'var(--mk-red)' : 'var(--mk-lime)'
-        return (
-          <circle key={`${x.at}${x.text}`} data-rv={xx} cx={xx} cy={cy} r="7" fill={x.neg ? 'var(--mk-redP)' : 'var(--mk-limeP)'} stroke={col}>
-            <title>{x.text}</title>
-          </circle>
-        )
-      })}
-    </>
-  )
-}
 
 export function NoteMarks({ notes, X, cy }: { notes: ChartIn['notes']; X: (i: number) => number; cy: number }) {
   return (

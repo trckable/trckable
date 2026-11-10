@@ -159,9 +159,10 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal, soon?: 
       const against = c.view.compare === 'none' ? undefined : againstName(c.view.period, c.view.compare, c.range)
       const cards = (report: Report, basis: Basis) => mapOverview(report, { money: c.money, uptime, now: today, basis, against })
       // The cards show from the plain report at once; the numbers told against the usual replace them when they are here.
-      if (pre) soon?.(cards(raw, 'previous'))
+      if (pre) soon?.({ ...cards(raw, 'previous'), report: raw })
       const { report, basis } = await toBasis(c, raw, pre)
-      return cards(report, basis)
+      // The chart over the cards is drawn from the plain report: it has its own usual.
+      return { ...cards(report, basis), report: raw }
     }
     case 'funnels': {
       const report = await cachedReport(c.site.id, q, undefined, signal)

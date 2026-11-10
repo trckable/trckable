@@ -1,10 +1,8 @@
 // What the chart over the numbers needs, read for the page's own site and period: the report by the hour where the chart
-// is cut so, the site's past (its usual), the outages, and the sales. The chart's lines are worked out here.
-import { useEffect, useMemo, useState } from 'react'
+// is cut so, the site's past (its usual), the outages, and the outcome behind the bars and faces. The chart's lines are worked out here.
+import { useMemo } from 'react'
 import type { Bucket, Point, Report, ReportQuery, Site } from '../../lib/api'
 import { todayIn, type CompareMode, type Range } from '../../lib/dates'
-import { isShared } from '../../lib/me'
-import { extrasApi, type Buyer } from '../../features/extras/extrasApi'
 import { useNow } from '../../features/incidents/useIncidents'
 import type { ChartIn } from '../ui/DayChart'
 import { chartOf, siteNow } from './chart'
@@ -14,6 +12,7 @@ import { moments } from './moments'
 import { unitOf } from './model'
 import { dayBandOf, hourlyPeople, hourTable, stretchBand, periodBand, usualPeople, verdictOf, type Band } from './usual'
 import { useHistory, useHourly, wantsHours } from './useHistory'
+import { outcomeChart, useOutcome } from './useOutcome'
 
 export interface BriefingChart {
   chart: ChartIn
@@ -42,6 +41,8 @@ interface ChartRead {
   /** Writes an amount in the site's currency; absent where revenue is not shown. */
   money?: (minor: number) => string
   on: boolean
+  /** Told against the period before alone: the site's own past is not read (a cut of the site, a shared page). */
+  plain?: boolean
 }
 
 /** The usual of each bucket: by the hour from the weekly table, by the day from the day totals. */
@@ -54,23 +55,8 @@ function bandsOf(series: Point[], table: ReturnType<typeof hourTable>, days: { t
   })
 }
 
-/** The period's latest sales, which the chart marks; read only where payments are connected. */
-function useBuyers(site: Site, range: Range, on: boolean): Buyer[] | null {
-  const [got, setGot] = useState<{ key: string; buyers: Buyer[] | null } | null>(null)
-  const key = `${site.id}|${range.from}|${range.to}`
-  useEffect(() => {
-    if (!on || isShared()) return
-    let live = true
-    void extrasApi.buyers(site.id, { from: range.from, to: range.to }, 20).then((r) => r.buyers ?? [], () => null).then((buyers) => live && setGot({ key, buyers }))
-    return () => {
-      live = false
-    }
-  }, [key, site.id, range.from, range.to, on])
-  return got && got.key === key ? got.buyers : null
-}
-
 export function useBriefingChart(o: ChartRead): BriefingChart | null {
-  const { site, report: page, period, compare, range, bucket, ask, notes, money, on } = o
+  const { site, report: page, period, compare, range, bucket, ask, notes, money, on, plain } = o
   const up = useUptime(site, range)
   const nowSec = useNow()
   const today = todayIn(site.timezone)
@@ -80,14 +66,14 @@ export function useBriefingChart(o: ChartRead): BriefingChart | null {
   const current = data.current
   const cur = useMemo(() => ({ ...current, series: current.series ?? [] }), [current])
   const prev = useMemo(() => (compare === 'none' || !data.previous ? undefined : wholeBefore({ ...data.previous, series: data.previous.series ?? [] }, data.previous_series)), [data.previous, data.previous_series, compare])
-  const usual = useUsual(site.id, range.to, on && (unit === 'today' || unit === 'yesterday'))
-  const hist = useHistory(site, today, data.bucket === 'hour', on)
-  const buyers = useBuyers(site, range, on && !!cur.money)
+  const usual = useUsual(site.id, range.to, on && !plain && (unit === 'today' || unit === 'yesterday'))
+  const hist = useHistory(site, today, data.bucket === 'hour', on && !plain)
   const against = compare === 'none' ? undefined : againstName(period, compare, range)
   const hourly = data.bucket === 'hour'
   const downNow = !!site.down_since
   const clock = siteNow(site.timezone, new Date(nowSec * 1000))
   const shownBucket = data.bucket ?? 'day'
+  const outcome = useOutcome({ site, range, cur, filters: ask.filters ?? [], bucket: shownBucket, money, on })
   return useMemo(() => {
     if (!on) return null
     const days = (hist.daily ?? []).map((p) => p.t.slice(0, 10))
@@ -131,8 +117,9 @@ export function useBriefingChart(o: ChartRead): BriefingChart | null {
       const last = cur.series.reduce((k, p, i) => (p.t.slice(0, 10) === n.day ? i : k), first)
       return [{ i: hourly ? Math.min(first + 12, last) : first, text: n.text }]
     })
-    const chart = chartOf({ cur, prev, against, bucket: shownBucket, unit, nowT: live ? clock : undefined, downs, notes: marks, bands, overall: st, sales: money && buyers ? buyers.filter((b) => b.amount > 0).map((b) => ({ at: siteNow(site.timezone, new Date(b.at)), text: money(b.amount), size: b.amount })) : undefined })
+    const base = chartOf({ cur, prev, against, bucket: shownBucket, unit, nowT: live ? clock : undefined, downs, notes: marks, bands, overall: st })
+    const chart = { ...base, ...outcomeChart(outcome, cur.series.map((p) => p.t), money && cur.money ? { currency: cur.money.currency, exponent: cur.money.exponent, write: money } : null) }
     const mo = hist.daily && !learning && !low ? moments({ totals, days, todayUp: unit === 'today' ? st === 'up' : false, from: Math.max(0, days.indexOf(range.from)), to: Math.max(0, days.indexOf(range.to)), elapsed: Math.round(nowHour * 60), today: unit === 'today', week: unit === 'week', filtered: false }) : { pills: [], record: null }
     return { chart, series: cur.series.slice(0, chart.points.length), bucket: shownBucket, record: mo.record, learning, low, hd, down: downNow && !!site.watched_since && !site.uptime_paused, ready: !hist.loading }
-  }, [on, cur, prev, against, usual, unit, up.list, up.from0, downNow, site.timezone, site.watched_since, site.uptime_paused, range.to, range.from, shownBucket, nowSec, hist, hourly, today, notes, clock, buyers, money])
+  }, [on, cur, prev, against, usual, unit, up.list, up.from0, downNow, site.watched_since, site.uptime_paused, range.to, range.from, shownBucket, nowSec, hist, hourly, today, notes, clock, outcome, money])
 }

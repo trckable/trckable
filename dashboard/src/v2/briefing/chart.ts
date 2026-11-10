@@ -44,8 +44,6 @@ interface ChartArgs {
   against?: string
   /** The whole period against its usual, for the standing note. */
   overall?: Judged
-  /** Sales to mark on the line, with when each was (the site's clock) and what it came to as written. */
-  sales?: { at: string; text: string; neg?: boolean; size: number }[]
 }
 
 /** A bucket's time as the axis writes it: the weekday and hour for a long hourly chart, the hour for a day, the date for days. */
@@ -145,17 +143,6 @@ export function chartOf(a: ChartArgs): ChartIn {
   const started = startOf(points, hourly, live, e, a.cur.series, a.downs)
   // The axis names every bucket of the period, the hours still to come too (a phone draws the whole day).
   const axis = a.cur.series.map((p, i) => ({ i, tick: tickOf(hourly, a.cur.series.length, Number(p.t.slice(11, 13)), p.t.slice(0, 10)) }))
-  // A sale sits where it happened on the hours of the day, when the chart is by the hour and short enough to read them.
-  const sales =
-    hourly && a.cur.series.length <= 48
-      ? (a.sales ?? [])
-          .flatMap((x) => {
-            const i = a.cur.series.findIndex((p) => p.t.slice(0, 13) === x.at.slice(0, 13))
-            return i < 0 ? [] : [{ at: i + Number(x.at.slice(14, 16)) / 60, text: x.text, neg: x.neg, size: x.size }]
-          })
-          .sort((p, q) => q.size - p.size)
-          .map(({ at, text, neg }) => ({ at, text, neg }))
-      : []
   // A comparison that is asked for but has too little before it says when it begins, never a made-up line.
   const starts = a.against && a.prev && !cmp ? startsOn(a.cur.series, a.prev.series) : null
   const noCompare = starts ? copy.compareStarts(starts, copy.needs[a.unit]) : null
@@ -163,7 +150,6 @@ export function chartOf(a: ChartArgs): ChartIn {
     points,
     axis,
     full: a.cur.series.length,
-    sales,
     span,
     live,
     band,

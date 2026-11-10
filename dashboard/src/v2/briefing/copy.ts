@@ -96,6 +96,13 @@ export const copy = defineCopy('briefing', {
   /** The line over the chart: how the period stands against the one before. */
   vsLine: (pct: string, name: string) => `${pct} vs ${name}`,
   legendNow: 'This period',
+  // What the plot shows besides the line, named in its corner.
+  outcomePeople: 'People',
+  outcomeRevenue: 'Revenue',
+  outcomePayments: 'Payments',
+  outcomeSignups: 'Sign-ups',
+  outcomeViews: 'Pageviews',
+  outcomeSignedUp: 'Signed up',
   /** The controls over a period chart: the periods, the Compare switch and what it is set against. */
   compareStarts: (date: string, needs: string) => `Comparison starts ${date}, once there's ${needs} of data`,
   needs: { today: 'a day', yesterday: 'a day', week: 'a week', month: 'a month', range: 'a full period' },
