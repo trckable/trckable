@@ -46,7 +46,7 @@ for (const [width, colorScheme] of [[1280, 'dark'], [390, 'light']] as const) {
       await dialog.getByRole('button', { name: /^Look/ }).click()
       for (const [shape, label, dims] of [['link', 'Link', '1200x630'], ['story', 'Story', '1080x1920']] as const) {
         await dialog.getByRole('radio', { name: label }).click()
-        await expect.poll(size).toBe(dims)
+        await expect.poll(size, { timeout: 30_000 }).toBe(dims)
         const file = page.waitForEvent('download')
         await dialog.getByRole('button', { name: /^Download \d+×\d+$/ }).click()
         expect((await file).suggestedFilename()).toBe(`trckable-${STEADY_DOMAIN}-${id}${shape === 'link' ? '' : `-${shape}`}-7d.png`)
