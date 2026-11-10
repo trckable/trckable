@@ -67,7 +67,8 @@ export function say(pin: Pin, money: (minor: number) => string): Said {
       const count = n.count ?? 1
       const many = n.what ? `${fmtInt(count)} ${copy.whatMany[n.what]}` : ''
       const what = n.what && count === 1 ? copy.what[n.what] : many
-      const line = what ? [what, money(n.amount ?? 0)] : [extrasCopy.ring.sales(count, money(n.amount ?? 0))]
+      // The head already says "Sales": a line without a kind gives the amount, not the word again.
+      const line = what ? [what, money(n.amount ?? 0)] : [money(n.amount ?? 0)]
       return { title, line: [...line, channel].filter(Boolean).join(' · '), big: money(n.amount ?? 0), facts: [what || copy.sales(count), channel, when(pin.day)].filter(Boolean) }
     }
     case 'referrer':

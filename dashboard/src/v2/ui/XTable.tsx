@@ -144,7 +144,7 @@ export interface CRow {
 
 export function XCols({ first, cols, rows, xc, xcm, limit, onAll }: { first: string; cols: Col[]; rows: CRow[]; xc: string; xcm?: string; limit: number; onAll: () => void }) {
   return (
-    <div className="xt xc" style={{ '--xc': xc, '--xcm': xcm ?? xc } as React.CSSProperties}>
+    <div className="xt xc" style={{ '--xc': xc, '--xcn': xc, '--xcp': xc, '--xcm': xcm ?? xc } as React.CSSProperties}>
       <div className="xth">
         <span>{first}</span>
         {cols.map((c) => (

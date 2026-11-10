@@ -1323,7 +1323,6 @@ export default {
   'extras.ring.spike': (factor: number) => `Pico · ${times(factor)} lo habitual`,
   'extras.ring.newTraffic': (visitors: number) => `Tráfico nuevo · ${count(visitors, 'visitante', 'visitantes')}`,
   'extras.ring.from': (referrer: string) => `sobre todo de ${referrer}`,
-  'extras.ring.sales': (count: number, amount: string) => `${int(count)} ${plural(count, 'venta', 'ventas')} · ${amount}`,
   'extras.ring.burst': (factor: number) => `Racha de ventas · ${times(factor)} lo habitual`,
   'extras.ring.mostly': (channel: string) => `sobre todo ${channel}`,
   'extras.highlights.tab': 'Destacados',
