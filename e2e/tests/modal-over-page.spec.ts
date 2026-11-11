@@ -7,7 +7,6 @@ import { milestone, mockFeed, siteIdOf } from './bell-feed-kit'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough for the backdrop')
 
-const SHOTS = '/private/tmp/claude-501/-Users-albi-Projects-trckable/0368b642-f81a-4e5c-92a8-4258b808c4d8/scratchpad/modal'
 let cookie = ''
 test.beforeAll(async () => {
   cookie = await flowSession()
@@ -15,18 +14,18 @@ test.beforeAll(async () => {
 
 /** What the page shows under the backdrop: the surfaces that carry it, each drawn (not hidden, not collapsed) and not empty. */
 async function pageBeneath(page: Page, surface: string) {
-  // Past the dialog's own 160 ms fade: a page put away fades out over it.
-  await page.waitForTimeout(500)
-  const info = await page.evaluate((sel) => {
-    const el = document.querySelector<HTMLElement>(sel)
-    if (!el) return { found: false, shown: false, text: 0 }
-    const s = getComputedStyle(el)
-    const r = el.getBoundingClientRect()
-    return { found: true, shown: s.visibility !== 'hidden' && s.display !== 'none' && Number(s.opacity) > 0.5 && r.width > 200 && r.height > 200, text: el.innerText.trim().length }
-  }, surface)
-  expect(info.found, `${surface} is in the page`).toBe(true)
-  expect(info.shown, `${surface} is drawn`).toBe(true)
-  expect(info.text, `${surface} has content`).toBeGreaterThan(40)
+  const look = () =>
+    page.evaluate((sel) => {
+      const el = document.querySelector<HTMLElement>(sel)
+      if (!el) return { found: false, shown: false, text: 0 }
+      const s = getComputedStyle(el)
+      const r = el.getBoundingClientRect()
+      return { found: true, shown: s.visibility !== 'hidden' && s.display !== 'none' && Number(s.opacity) > 0.5 && r.width > 200 && r.height > 200, text: el.innerText.trim().length }
+    }, surface)
+  // The page fills in as its data arrives: wait for it to be drawn and filled, then read it.
+  await expect.poll(async () => (await look()).found, { message: `${surface} is in the page` }).toBe(true)
+  await expect.poll(async () => (await look()).shown, { message: `${surface} is drawn` }).toBe(true)
+  await expect.poll(async () => (await look()).text, { message: `${surface} has content` }).toBeGreaterThan(40)
 }
 
 /** The shared backdrop: one dim, one blur. */
@@ -68,22 +67,24 @@ for (const colorScheme of ['light', 'dark'] as const) {
           if (entry.feed) await mockFeed(page, () => entry.feed!(site))
           await page.route(/\/surges\/near/, (r) => r.fulfill(SURGE))
           await page.goto(`${API}${where.url}`)
-          await page.waitForTimeout(2500)
           await pageBeneath(page, where.surface)
           if (entry.feed) {
             await page.locator('#bellBtn').click()
             await page.locator('#bellMenu .nf').first().click()
           } else {
             await page.keyboard.press('ControlOrMeta+K')
-            await page.keyboard.type(entry.palette!)
+            // The palette's commands arrive with the page's data: Enter only once the one asked for is the one picked.
+            await page.locator('.palbox input').fill(entry.palette!)
+            await expect(page.locator('.palbox .pi.on')).toContainText(entry.palette!)
             await page.keyboard.press('Enter')
           }
           await expect(page.getByRole('dialog')).toBeVisible()
+          // Past the dialog's own 160 ms fade: a page put away fades out over it.
+          await page.waitForTimeout(500)
           await pageBeneath(page, where.surface)
           await backdrop(page)
           // The page it was opened from is still the page: the address names the same view.
           expect(new URL(page.url()).pathname).toBe(`/${STEADY_DOMAIN}`)
-          if (entry.name === 'bell event card') await page.screenshot({ path: `${SHOTS}/bell-${where.name.toLowerCase()}-${colorScheme}.png` })
         })
       }
     }

@@ -48,6 +48,9 @@ export function AnchoredPop({
 }) {
   const box = useRef<HTMLDivElement>(null)
   const openedAt = useRef(0)
+  // Where the button was when the popover was placed: a scroll that leaves it there (the browser keeping the
+  // reader's place while the content above loads) moves nothing to follow.
+  const placedAt = useRef<DOMRect | null>(null)
   const [sheet] = useState(phone)
   const [at, setAt] = useState<PopAt | null>(null)
   usePhoneLock()
@@ -71,6 +74,7 @@ export function AnchoredPop({
       // No top layer in this browser: the high z-index lifts it.
     }
     if (!el || !btn || sheet) return
+    placedAt.current = btn.getBoundingClientRect()
     setAt(placePop(btn.getBoundingClientRect(), { w: el.offsetWidth, h: el.offsetHeight }, { w: window.innerWidth, h: window.innerHeight }))
   }, [anchor, sheet])
 
@@ -117,6 +121,9 @@ export function AnchoredPop({
     const scrolled = (e: Event) => {
       if (performance.now() - openedAt.current < 250) return
       if (e.target === document && Math.abs(window.scrollY - y0) < 40) return
+      const was = placedAt.current
+      const now = anchor.current?.getBoundingClientRect()
+      if (was && now && Math.abs(now.top - was.top) < 2 && Math.abs(now.left - was.left) < 2) return
       if (!box.current?.contains(e.target as Node)) onClose()
     }
     document.addEventListener('mousedown', away)
