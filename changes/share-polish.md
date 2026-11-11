@@ -1,1 +1,0 @@
-A site's own icon is on the Overview picture in place of its first letter, the top country has its flag beside it, and on a phone Share is in the page's ⋯ menu as "Share a picture" instead of the header.

@@ -1,1 +1,0 @@
-- Reports: emailed and PDF reports keep trckable's name on the free plan, like share pages and pictures.

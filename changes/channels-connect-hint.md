@@ -1,1 +1,0 @@
-Channels: where nobody can set up a platform, the section is hidden instead of showing disabled buttons; on a self-hosted server an owner sees one link to the setup steps, and the hint for people who cannot connect names the roles that can.

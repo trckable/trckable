@@ -1,1 +1,0 @@
-- Share dialog: every button in the top rows is one height.

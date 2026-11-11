@@ -1,1 +1,0 @@
-Speed shows what slow pages cost: About $X a month lost against your fast pages (or conversions, or engaged visits, without payments), with the Slow, Needs work and Fast bands one tap from their pages.

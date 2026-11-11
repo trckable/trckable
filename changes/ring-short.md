@@ -1,1 +1,0 @@
-- Header: the setup ring shows just the count (4/8); the full words stay its label.

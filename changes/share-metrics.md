@@ -1,1 +1,0 @@
-Share a picture: choose the big number (visitors, pageviews, engaged visits or revenue) and up to three small stats (including top page and top source), with flags for countries and icons for sources.

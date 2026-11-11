@@ -1,1 +1,0 @@
-- Explore: a soft line, fading at both ends, divides the menu of sections from the page.

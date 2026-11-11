@@ -1,1 +1,0 @@
-- Share picture: a long stat such as "United Kingdom" shrinks to fit instead of being cut.

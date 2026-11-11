@@ -1,1 +1,0 @@
-The Explore sidebar lists Payments and Customers as their own entries under Sales, each opening that table directly. They appear only where the tables are offered today, in the side list and the phone menu alike.

@@ -1,1 +1,0 @@
-The Overview has a Share button: a picture of your numbers for a post (the people, how they changed, a chart of the period, engaged visits, average time and the top country, with trckable small in the corner) that you can share, copy or download, in a dark or light card, with a read-only link if you want one.

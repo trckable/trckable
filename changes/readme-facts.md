@@ -1,1 +1,0 @@
-- README: figures refreshed from CI's latest measurements.

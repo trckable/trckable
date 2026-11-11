@@ -1,1 +1,0 @@
-Pages lists entry pages next to exit pages, each with the share of its visits that left after one page; the Overview shows engaged visits, pages per visit and time on site against the period before; Over time can draw pageviews.

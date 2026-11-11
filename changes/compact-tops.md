@@ -1,1 +1,0 @@
-- Tech: the three leader tiles are compact.

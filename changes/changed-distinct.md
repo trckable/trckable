@@ -1,1 +1,0 @@
-- Explore: What changed no longer repeats Overview's four numbers, and Overview leaves downtime to What changed, so each page says its own thing.
