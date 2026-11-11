@@ -406,3 +406,84 @@ func TestBellFeedConsentFreeNamesNoVisitor(t *testing.T) {
 	}
 	t.Fatal("no goal row")
 }
+
+// The list says per row whether it was read, from the one read list the web bell keeps: a mark of one row, of a group's ids
+// or of all shows on the next list, and the read list shows it too.
+func TestBellFeedReadState(t *testing.T) {
+	g := newRig(t)
+	ctx := context.Background()
+	owner := client()
+	g.setup(t, owner)
+	now := g.now
+	for i, ago := range []time.Duration{3 * time.Hour, 2 * time.Hour, time.Hour} {
+		if _, err := g.ctl.StartIncident(ctx, g.site, "down", now.Add(-ago).Unix(), "timeout"); err != nil {
+			t.Fatal(err)
+		}
+		open, _ := g.ctl.OpenIncident(ctx, g.site)
+		if i < 2 {
+			if err := g.ctl.EndIncident(ctx, open.ID, now.Add(-ago+time.Minute).Unix(), nil); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	unread := func() []string {
+		var ids []string
+		for _, r := range feedOf(t, g, owner) {
+			if r["read"] == false {
+				ids = append(ids, r["id"].(string))
+			}
+		}
+		return ids
+	}
+	ids := unread()
+	if len(ids) != 3 {
+		t.Fatalf("all unread at first: %v", ids)
+	}
+	url := g.srv.URL + "/api/v1/me/bell-read"
+	if code, _ := do(t, owner, "POST", url, `{"read":["`+ids[0]+`"]}`, csrf, "1"); code != 200 {
+		t.Fatalf("mark one: %d", code)
+	}
+	if got := unread(); len(got) != 2 {
+		t.Fatalf("one read: %v", got)
+	}
+	if code, out := do(t, owner, "GET", url, ""); code != 200 || len(out["read"].([]any)) != 1 {
+		t.Fatalf("the web's read list: %d %v", code, out)
+	}
+	if code, _ := do(t, owner, "POST", url, `{"read":["`+ids[1]+`","`+ids[2]+`"]}`, csrf, "1"); code != 200 {
+		t.Fatalf("mark a group: %d", code)
+	}
+	if got := unread(); len(got) != 0 {
+		t.Fatalf("group read: %v", got)
+	}
+	// A mark made as the web makes it shows in the list; "all" reads whatever is listed.
+	g2 := newRig(t)
+	o2 := client()
+	g2.setup(t, o2)
+	if _, err := g2.ctl.StartIncident(ctx, g2.site, "down", g2.now.Add(-time.Hour).Unix(), "timeout"); err != nil {
+		t.Fatal(err)
+	}
+	if code, _ := do(t, o2, "POST", g2.srv.URL+"/api/v1/me/bell-read", `{"all":true}`, csrf, "1"); code != 200 {
+		t.Fatalf("mark all: %d", code)
+	}
+	for _, r := range feedOf(t, g2, o2) {
+		if r["read"] != true {
+			t.Fatalf("all read: %v", r)
+		}
+	}
+}
+
+// Nobody signed in has no bell, and an API key is not a person.
+func TestBellReadNeedsAPerson(t *testing.T) {
+	g := newRig(t)
+	owner := client()
+	g.setup(t, owner)
+	anon := client()
+	for _, w := range [][2]string{{"GET", "/api/v1/me/notifications"}, {"GET", "/api/v1/me/bell-read"}} {
+		if code, _ := do(t, anon, w[0], g.srv.URL+w[1], ""); code != http.StatusUnauthorized {
+			t.Fatalf("%s %s without sign-in: %d", w[0], w[1], code)
+		}
+	}
+	if code, _ := do(t, anon, "POST", g.srv.URL+"/api/v1/me/bell-read", `{"all":true}`, csrf, "1"); code != http.StatusUnauthorized {
+		t.Fatalf("mark without sign-in: %d", code)
+	}
+}
