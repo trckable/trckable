@@ -70,6 +70,8 @@ export interface BellProps {
   /** A phone shows the list as a sheet over the page, not under the bell. */
   sheet: boolean
   onPick: (id: string) => void
+  /** A row of parts (a day's goals) was opened: it is read. */
+  onUnfold?: (id: string) => void
   onAll: () => void
   onSettings: () => void
   /** The kinds the list can be narrowed to, and (with several sites) the site; a dot says there is something unread under it. */

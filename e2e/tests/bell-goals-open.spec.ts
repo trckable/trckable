@@ -39,8 +39,10 @@ test('the goals row opens into its goals, and one goal opens Explore on it', asy
   await expect(row.locator('.nft small')).toHaveText(/^5 Scroll · 1 Buy click/)
   const parts = page.locator('.nfp .nfn')
   await expect(parts).toHaveCount(0)
+  await expect(row).toHaveClass(/unread/)
   await row.click()
   await expect(row).toHaveAttribute('aria-expanded', 'true')
+  await expect(row).not.toHaveClass(/unread/) // opening the row reads it
   await expect(parts).toHaveCount(2)
   await expect(parts.nth(0)).toHaveText(/^5 Scroll · \d\d:\d\d$/)
   await expect(parts.nth(1)).toHaveText(/^1 Buy click · \d\d:\d\d$/)

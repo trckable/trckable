@@ -62,7 +62,7 @@ export function Row({ n, p, close }: { n: BellRow; p: BellProps; close: () => vo
           {n.time && <time className="nfw-t">{n.time}</time>}
         </div>
       ) : (
-        <button type="button" className={`nf k-${n.kind} ${n.unread ? 'unread' : ''}${n.bad ? ' bad' : ''}`} aria-label={n.label} aria-expanded={parts ? shown : undefined} onClick={() => (parts ? setShown((v) => !v) : pick(n.id))}>
+        <button type="button" className={`nf k-${n.kind} ${n.unread ? 'unread' : ''}${n.bad ? ' bad' : ''}`} aria-label={n.label} aria-expanded={parts ? shown : undefined} onClick={() => (parts ? (setShown((v) => !v), !shown && p.onUnfold?.(n.id)) : pick(n.id))}>
           {dot}
           <Icon n={n} />
           <span className="nft">
