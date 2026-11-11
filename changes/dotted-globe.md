@@ -1,1 +1,0 @@
-Live's globe is back to the dotted look: grey dots for land on a dark sphere, a flag for each visitor, a number where several share a place. Zooming in (up to 8x), clusters that open into a list of their people, the visitor card and full screen stay as they were; the Earth imagery is gone, which makes the page lighter.

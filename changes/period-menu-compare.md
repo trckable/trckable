@@ -1,1 +1,0 @@
-The period menu now keeps what you pick: Compare (Off, Before, Last year, Custom) and Group by stay selected, the pill says the same words as the menu, Off on Today drops the "vs usual" line and the change figures, Last year opens for a site with a year of data, and the label stays on one line.

@@ -1,1 +1,0 @@
-A page-visit goal can be added in one click: Track a goal suggests up to four from the pages your site really recorded (thank-you, sign up, pricing, contact), and offers to count form submissions when they are off.

@@ -1,1 +1,0 @@
-The site menu is tidier: All sites is a plain row, group headings are just their name (the ⋯ shows on hover), the numbers are muted under a small Today label, a quiet site keeps its number with the quiet time in its tooltip, and everything lines up on one left edge.

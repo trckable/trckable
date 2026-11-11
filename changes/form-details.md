@@ -1,1 +1,0 @@
-Form goals can carry what the visitor entered in a field you mark with data-trckable-keep (a scanned site, a plan), and the journey shows a goal's details as readable "Site: example.com" chips with the site's mark, instead of raw JSON.

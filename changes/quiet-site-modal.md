@@ -1,1 +1,0 @@
-A quiet or down site's report opens in a modal (a bottom sheet on a phone) from the short list, instead of expanding inside the panel. The chip says "Tracking stopped" only when a check fails; when every check passes it says "No visits for 15h", in the site list, the notice and the email alike.

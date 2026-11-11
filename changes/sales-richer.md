@@ -1,1 +1,0 @@
-Sales shows more at a glance: a row of cards (net revenue, orders, customers, average order, refunds), where buyers are from, and a country flag, provider and the time on every payment and customer row.

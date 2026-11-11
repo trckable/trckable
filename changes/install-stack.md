@@ -1,1 +1,0 @@
-The Install dialog says what the site runs ("example.com runs Next.js") when its homepage plainly shows it, and opens on that tab; a tab you pick stays, and when the site is unclear nothing is said and the default tab stays.

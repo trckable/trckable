@@ -1,1 +1,0 @@
-- Explore: the light under the pointer on cards is much fainter, so the text stays easy to read.

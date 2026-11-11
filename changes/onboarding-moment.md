@@ -1,1 +1,0 @@
-The first run is a proper first moment: a three-step row, a roomy address field with its error under it, the code as the centre of step two with a calm wait line, and a celebration with "Open my dashboard" when the first visitor arrives.

@@ -1,1 +1,0 @@
-The bell stays put while it refreshes: a read of the list never brings the placeholder back, a goal always shows its number ("Outbound clicks: 126"), the same milestone of a site and day is one row, and opening the panel reads everything at once so the badge stays clear after it shuts.

@@ -1,1 +1,0 @@
-- Folding phones and small tablets (701–767 px): the dashboard's top bar stays at the top while scrolling

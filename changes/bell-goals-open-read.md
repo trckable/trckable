@@ -1,1 +1,0 @@
-- The bell: opening a day's Goals row marks it read.

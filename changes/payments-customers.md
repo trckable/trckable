@@ -1,1 +1,0 @@
-Explore's Sales has two new lists: Payments (every payment, newest first, with the visitor, their source and refunds marked) and Customers (one row per paying customer, biggest spender first); a row opens that visitor's journey.

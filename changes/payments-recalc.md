@@ -1,1 +1,0 @@
-- Payments settings: "Recalculate payments" in a connection's menu reads the saved payment notices of the last 30 days again with the current rules (owners and admins).

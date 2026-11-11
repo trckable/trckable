@@ -1,1 +1,0 @@
-- Share picture: every country's flag now draws correctly (some showed as blobs).

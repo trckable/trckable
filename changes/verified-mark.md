@@ -1,1 +1,0 @@
-- Sales and Search: the "verified" pill by the total is now a small mark, its source named in the tooltip.

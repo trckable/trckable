@@ -1,1 +1,0 @@
-The offline notice asks our own server before it speaks, so a browser that wrongly says offline (VPN or Wi-Fi handover) no longer shows it; it is shorter, and its time has no leading zero and never breaks.

@@ -1,1 +1,0 @@
-- Header: one tick for done and verified, at the gear's size; on a phone the pill keeps the site and its tick and settings stay in the site menu.
