@@ -58,6 +58,8 @@ export interface Notice {
   link?: string
   /** Several notices drawn as one row (busy moments of different sites at the same time), newest first. */
   members?: Notice[]
+  /** One notice whose members are its parts (a day's goals, one each): drawn as one row, read as one, listed when tapped. */
+  fold?: boolean
 }
 
 export type AlertKind = Alert['kind']
@@ -129,7 +131,14 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number): Notice[] 
         const each = (r.goals ?? []).map((g) => copy.goalEach(fmtInt(g.count), goalName(undefined, g.name ?? g.goal)))
         // A day with several goals keeps the title short and lists them on the second line, which may wrap to two on a phone.
         const title = each.length ? copy.goals : copy.goalCount(goalName(undefined, r.text ?? ''), r.count ?? 1)
-        out.push({ ...base, kind: 'goal', title, sub: each.length ? each.join(' · ') : copy.goalSub, visitor: r.visitor, exact: r.seen, goal: r.goal })
+        const row: Notice = { ...base, kind: 'goal', title, sub: each.length ? each.join(' · ') : copy.goalSub, visitor: r.visitor, exact: r.seen, goal: r.goal }
+        // Several goals: a tap lists each, with its count and when it was last reached, and each opens Explore on that goal.
+        const goals = r.goals ?? []
+        if (goals.length > 1) {
+          row.fold = true
+          row.members = goals.map((g, i) => ({ ...base, id: `${r.id}:${g.goal}`, kind: 'goal', title: each[i], sub: '', at: g.last || r.at, goal: g.goal }))
+        }
+        out.push(row)
         break
       }
       case 'alert': {
@@ -190,7 +199,7 @@ export function arrange(all: Notice[], now: number): Notice[] {
 export type NoticeRow = Notice & { unread: boolean }
 
 /** Whether a notice counts as unread: the one rule for the dot on its row and for the bell's badge. A row of several is unread while any of them is. */
-export const isUnread = (n: Notice, read: ReadonlySet<string>): boolean => (n.members ? n.members.some((m) => isUnread(m, read)) : !n.seen && !read.has(n.id))
+export const isUnread = (n: Notice, read: ReadonlySet<string>): boolean => (n.members && !n.fold ? n.members.some((m) => isUnread(m, read)) : !n.seen && !read.has(n.id))
 
 /** Busy moments of different sites within this long of each other are one row. */
 export const TOGETHER_S = 15 * 60

@@ -1,7 +1,7 @@
 // One row of the bell's list: the unread dot, the icon (the source's own mark with the kind as a badge on its corner, or the
 // kind's icon when nothing sent it), the title (one line, two at most), a short line under it, and its menu.
 import { ArrowUpRight, Check, Flag, MessageSquare } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { SourceMark } from '../../components/visitor/SourceMark'
 import { BELL_PATH } from './bellIcons'
 import { RowMenu } from './BellPopovers'
@@ -40,10 +40,13 @@ export function Row({ n, p, close }: { n: BellRow; p: BellProps; close: () => vo
     p.onPick(id)
     close()
   }
+  const [shown, setShown] = useState(false)
   const dot = <i className={`nfd${n.unread ? '' : ' off'}`} aria-hidden="true" />
+  // A row of parts (a day's goals) looks as one; a tap shows its parts under it, each its own button.
+  const parts = n.fold && n.lines
   return (
     <div className="nfw" data-id={n.id}>
-      {n.lines ? (
+      {n.lines && !parts ? (
         <div className={`nf grp ${n.unread ? 'unread' : ''}`}>
           {dot}
           <KindIcon kind={n.kind} />
@@ -59,7 +62,7 @@ export function Row({ n, p, close }: { n: BellRow; p: BellProps; close: () => vo
           {n.time && <time className="nfw-t">{n.time}</time>}
         </div>
       ) : (
-        <button type="button" className={`nf k-${n.kind} ${n.unread ? 'unread' : ''}${n.bad ? ' bad' : ''}`} aria-label={n.label} onClick={() => pick(n.id)}>
+        <button type="button" className={`nf k-${n.kind} ${n.unread ? 'unread' : ''}${n.bad ? ' bad' : ''}`} aria-label={n.label} aria-expanded={parts ? shown : undefined} onClick={() => (parts ? setShown((v) => !v) : pick(n.id))}>
           {dot}
           <Icon n={n} />
           <span className="nft">
@@ -68,6 +71,15 @@ export function Row({ n, p, close }: { n: BellRow; p: BellProps; close: () => vo
           </span>
           {n.time && <time className="nfw-t">{n.time}</time>}
         </button>
+      )}
+      {parts && shown && (
+        <span className="nfp">
+          {parts.map((l) => (
+            <button key={l.id} type="button" className="nfn" onClick={() => pick(l.id)}>
+              {l.text}
+            </button>
+          ))}
+        </span>
       )}
       <RowMenu row={n} close={close} />
     </div>

@@ -11,8 +11,8 @@ export type Kind = Exclude<Group, 'all'>
 const OF_ALERT: Partial<Record<AlertKind, Kind>> = { stopped: 'down', spike: 'busy', surge: 'busy', milestone: 'milestones', threshold: 'milestones' }
 
 /** The group a notice belongs to, or none (a plan, a team, a mention: listed under All only). */
-export function groupOf(n: Pick<Notice, 'kind' | 'alert' | 'members'>): Kind | undefined {
-  if (n.members) return 'busy'
+export function groupOf(n: Pick<Notice, 'kind' | 'alert' | 'members' | 'fold'>): Kind | undefined {
+  if (n.members && !n.fold) return 'busy'
   const a = alertOf(n)
   return a && OF_ALERT[a]
 }
@@ -44,7 +44,7 @@ export function saveFilter(f: Filter): void {
   }
 }
 
-type Row = Pick<Notice, 'kind' | 'alert' | 'members' | 'site'> & { unread: boolean }
+type Row = Pick<Notice, 'kind' | 'alert' | 'members' | 'fold' | 'site'> & { unread: boolean }
 const onSite = (n: Row, site: string) => !site || n.site === site || !!n.members?.some((m) => m.site === site)
 
 /** The rows a filter lists. */

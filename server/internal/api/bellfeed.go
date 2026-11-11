@@ -69,12 +69,12 @@ type bellRow struct {
 	Milestone *sqlite.Milestone `json:"milestone,omitempty"`
 }
 
-// bellGoal is one goal's count in the day's goals row.
+// bellGoal is one goal's count in the day's goals row, and when it was last reached (unix seconds).
 type bellGoal struct {
 	Goal  string `json:"goal"`
 	Name  string `json:"name,omitempty"`
 	Count int64  `json:"count"`
-	last  int64
+	Last  int64  `json:"last"`
 }
 
 // bellCache keeps each person's complete list for bellKeep, and shares one build among the requests that ask for it at once.
@@ -410,12 +410,12 @@ func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from in
 				for i := range x.goals {
 					if x.goals[i].Goal == g.Goal {
 						x.goals[i].Count += g.Count
-						x.goals[i].last = max(x.goals[i].last, g.Last)
+						x.goals[i].Last = max(x.goals[i].Last, g.Last)
 						found = true
 					}
 				}
 				if !found {
-					x.goals = append(x.goals, bellGoal{Goal: g.Goal, Name: name, Count: g.Count, last: g.Last})
+					x.goals = append(x.goals, bellGoal{Goal: g.Goal, Name: name, Count: g.Count, Last: g.Last})
 				}
 				if g.Last >= x.last {
 					x.last, x.key = g.Last, g.Goal
@@ -430,7 +430,7 @@ func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from in
 				if len(x.goals) == 0 {
 					continue
 				}
-				sort.SliceStable(x.goals, func(i, j int) bool { return x.goals[i].last > x.goals[j].last })
+				sort.SliceStable(x.goals, func(i, j int) bool { return x.goals[i].Last > x.goals[j].Last })
 				row := bellRow{ID: "goal:" + s.ID + ":" + d + ":" + strconv.Itoa(len(x.goals)), Kind: "goal", Site: s.ID, At: x.last, Goal: x.key, Goals: x.goals}
 				for _, g := range x.goals {
 					row.Count += g.Count
