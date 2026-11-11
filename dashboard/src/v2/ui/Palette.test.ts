@@ -33,6 +33,11 @@ describe('where the Ask row goes', () => {
     expect(askIntent('pages', 3, true)).toBe('last')
     expect(askIntent('top', 3, true)).toBe('last')
   })
+  it('keeps a command named in full first, even when its name reads as a question', () => {
+    expect(askIntent('Why visitors leave', 1, true)).toBe('last')
+    expect(askIntent('why visitors leave', 1, false)).toBe('first')
+    expect(askIntent('Why visitors leave?', 1, true)).toBe('first')
+  })
   it('has no row for empty text', () => {
     expect(askIntent('', 0, false)).toBe('none')
     expect(askIntent('   ', 0, false)).toBe('none')

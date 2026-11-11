@@ -57,13 +57,14 @@ export const plain = (s: string) =>
 
 /**
  * @param found how many rows the text finds among the jumps
- * @param exact the text is one word that is exactly a table, site or filter
+ * @param exact the text is exactly the name of a table, site, filter or command
  */
 export function askIntent(text: string, found: number, exact: boolean): AskPlace {
   const t = plain(text)
   if (!t) return 'none'
   if (/[?¿]/.test(t)) return 'first'
-  if (exact && !t.includes(' ')) return 'last'
+  // The text is a command's whole name ("pages", "Why visitors leave"): Enter runs that command, Peek is one arrow below.
+  if (exact) return 'last'
   // A site name or a filter ("albas.al", "country:de") is a jump, whatever it is made of.
   if (!t.includes(' ') && /[.:]/.test(t)) return 'last'
   const words = t.split(/[^\p{L}\p{N}]+/u).filter(Boolean)
