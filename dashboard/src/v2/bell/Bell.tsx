@@ -188,6 +188,12 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
         else if (n && hasCard(n) && sites.some((x) => (n.siteId ? x.id === n.siteId : x.domain === n.site))) setCard(n)
         else if (n) go(n, site, sites)
       }}
+      onUnfold={(id) => {
+        // Opening a day's goals row reads it, as picking one of its goals does.
+        const group = listed.find((x) => x.id === id)
+        mark(id)
+        group?.read?.()
+      }}
       onAll={() => {
         markAll()
       }}
