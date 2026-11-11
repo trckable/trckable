@@ -319,6 +319,9 @@ func TestBellFeedGoalsAreOneRowPerDay(t *testing.T) {
 	if row["count"] != 5.0 || len(list) != 2 || list[0].(map[string]any)["goal"] != "form" {
 		t.Fatalf("the day's goals, the latest first: %v", row)
 	}
+	if want := at.Add(2 * time.Minute).Unix(); int64(list[1].(map[string]any)["last"].(float64)) != want {
+		t.Fatalf("each goal tells when it was last reached: %v want %d", list[1], want)
+	}
 	if want := at.Add(91 * time.Minute).Unix(); int64(row["at"].(float64)) != want {
 		t.Fatalf("at the latest goal: %v want %d", row["at"], want)
 	}

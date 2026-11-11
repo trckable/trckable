@@ -43,6 +43,8 @@ export interface BellRow {
   bad?: boolean
   /** Several in one row: each listed under the title, and opens on its own. */
   lines?: { id: string; text: string }[]
+  /** The lines are the row's parts: the row looks as one, and a tap on it shows them. */
+  fold?: boolean
   actions?: RowAction[]
 }
 

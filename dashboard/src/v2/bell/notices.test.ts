@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Site } from '../../lib/api'
 import type { FeedRow } from './feed'
-import { GOAL_CAP, arrange, badge, fromFeed, rowsOf, settle, unreadCount, withFeed, type Notice } from './notices'
+import { GOAL_CAP, arrange, badge, fromFeed, isUnread, rowsOf, settle, unreadCount, withFeed, type Notice } from './notices'
 
 const n = (id: string, at: number, kind: Notice['kind'] = 'down'): Notice => ({ id, kind, site: 'a.com', title: id, sub: '', at })
 
@@ -235,6 +235,32 @@ describe('the goals row', () => {
     expect(g.title).toBe('Goals')
     expect(g.sub).toBe('131 Outbound clicks · 816 Form submissions')
     expect(g.at).toBe(at - 7)
+  })
+
+  it('lists each goal as its part, with its count and when it was last reached, and is read as one row', () => {
+    const goals = [
+      { goal: 'scroll', name: 'Scroll', count: 5, last: at - 7 },
+      { goal: 'buy_click', name: 'Buy click', count: 1, last: at - 600 },
+    ]
+    const [g] = fromFeed([{ id: 'goal:s1:2026-11-10:2', kind: 'goal', site: 's1', at: at - 7, count: 6, goals }], sites1, at)
+    expect(g.fold).toBe(true)
+    expect(g.members?.map((m) => [m.id, m.title, m.at, m.goal])).toEqual([
+      ['goal:s1:2026-11-10:2:scroll', '5 Scroll', at - 7, 'scroll'],
+      ['goal:s1:2026-11-10:2:buy_click', '1 Buy click', at - 600, 'buy_click'],
+    ])
+    expect(isUnread(g, new Set([g.id]))).toBe(false)
+    expect(isUnread(g, new Set())).toBe(true)
+    expect(rowsOf([g], new Set()).map((r) => r.id)).toEqual([g.id])
+  })
+
+  it('keeps a day of one goal as it was: no parts', () => {
+    const one = fromFeed([{ id: 'goal:s1:2026-11-10:1', kind: 'goal', site: 's1', at, count: 3, goals: [{ goal: 'scroll', name: 'Scroll', count: 3, last: at }] }], sites1, at)[0]
+    const bare = fromFeed([{ id: 'goal:s1:x', kind: 'goal', site: 's1', at, count: 3, text: 'Scroll', goal: 'scroll' }], sites1, at)[0]
+    expect(one.members).toBeUndefined()
+    expect(one.fold).toBeUndefined()
+    expect(one.sub).toBe('3 Scroll')
+    expect(bare.members).toBeUndefined()
+    expect(bare.goal).toBe('scroll')
   })
 
   it('has a cap of its own: a sale and a site that is down stay listed among 100 goal rows', () => {

@@ -33,8 +33,8 @@ export interface FeedRow {
   seen?: number
   /** Goal and signup: the goal's own key (for the goals row, the one reached last). */
   goal?: string
-  /** Goals: the day's goals with their counts, the one reached last first. */
-  goals?: { goal: string; name?: string; count: number }[]
+  /** Goals: the day's goals with their counts and when each was last reached (unix seconds), the one reached last first. */
+  goals?: { goal: string; name?: string; count: number; last?: number }[]
   /** Mention: the post's own address. */
   link?: string
   milestone?: Milestone

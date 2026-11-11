@@ -90,7 +90,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
   const { sites } = notices
   /** Every notice put away at once (a row of several puts all of them away). */
   const away = (n: Notice) => {
-    const all = n.members ?? [n]
+    const all = n.fold ? [n] : (n.members ?? [n])
     setGone((g) => new Set([...g, n.id, ...all.map((m) => m.id)]))
     all.forEach((m) => dismiss?.(m.id))
   }
@@ -104,7 +104,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
   /** What the row's ⋯ offers. Mute and change are the alert's own settings, for whoever may change alerts; a row of several sites has none (it names no one site). */
   const actionsOf = (n: Notice, archived: boolean): RowAction[] => {
     const out: RowAction[] = []
-    const s = n.members ? undefined : sites.find((x) => (n.siteId ? x.id === n.siteId : x.domain === n.site))
+    const s = n.members && !n.fold ? undefined : sites.find((x) => (n.siteId ? x.id === n.siteId : x.domain === n.site))
     const kind = alertOf(n)
     if (s && kind && allowed('alert.manage')) {
       out.push({ key: 'mute', label: copy.mute, run: () => void mute(s, kind) }, { key: 'change', label: copy.change, run: () => openSettings(s, 'alerts', { focus: `alert:${kind}` }) })
@@ -114,7 +114,7 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
   }
   /** What the row says of the time: nothing for a row of several, "All day" for what is kept by the day, else its span or its clock. */
   const whenOfRow = (n: Notice): string => {
-    if (n.members) return ''
+    if (n.members && !n.fold) return ''
     return n.day ? copy.allDay : (n.when ?? timeOf(n.at, n.zone))
   }
   /** The row names its site when the person has several, unless its words already do. */
@@ -131,7 +131,8 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
     bad: n.bad,
     source: n.source,
     label: n.source ? [n.title, n.sub, brandName(n.source), whenOfRow(n)].filter(Boolean).join(', ') : undefined,
-    lines: n.members?.map((m) => ({ id: m.id, text: `${m.site} · ${timeOf(m.at, m.zone)}` })),
+    lines: n.members?.map((m) => ({ id: m.id, text: `${n.fold ? m.title : m.site} · ${timeOf(m.at, m.zone)}` })),
+    fold: n.fold,
     actions: actionsOf(n, archived),
   })
   // A site the account no longer has is no filter.
@@ -170,6 +171,14 @@ export function Bell({ site, notices }: { site: Site | null; notices: ReturnType
         // A row of several is read as one: opening any of its sites reads them all.
         const group = listed.find((x) => x.members?.some((m) => m.id === id))
         const n = (group?.members ?? [...listed, ...(archive?.items ?? [])]).find((x) => x.id === id)
+        // One goal of a day's goals row: the row is read, and Explore opens narrowed to that goal over the day it was reached.
+        if (group?.fold) {
+          mark(group.id)
+          group.read?.()
+          const host = sites.find((x) => (group.siteId ? x.id === group.siteId : x.domain === group.site))
+          if (n?.goal && host) seeGoal(n, n.goal, host, site)
+          return
+        }
         mark(group?.members ? group.members.map((m) => m.id) : id)
         for (const m of group?.members ?? [n]) m?.read?.()
         const own = n && sites.find((x) => (n.siteId ? x.id === n.siteId : x.domain === n.site))
