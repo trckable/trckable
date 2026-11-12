@@ -31,9 +31,28 @@ export interface PausedSpan {
   to: number
 }
 
+export type Period = { incidents: Incident[]; summary: Summary; paused_spans?: PausedSpan[]; quiet_tracked?: boolean }
+
+/** How long one answer for a period serves every screen that asks for the same one (the chart's marks and a card of the same load). */
+export const PERIOD_SHARE_MS = 5_000
+const periods = new Map<string, Promise<Period>>()
+
+/** Every incident that overlaps [from, to] of a site: screens asking for the same period at once share one read. */
+function period(site: string, from: number, to: number): Promise<Period> {
+  const path = `/sites/${site}/incidents?from=${from}&to=${to}`
+  const held = periods.get(path)
+  if (held) return held
+  const p = call<Period>('GET', path)
+  periods.set(path, p)
+  const drop = () => periods.get(path) === p && periods.delete(path)
+  p.catch(drop) // a failed read is asked for again by the next screen
+  setTimeout(drop, PERIOD_SHARE_MS)
+  return p
+}
+
 export const incidents = {
   /** Every incident that overlaps [from, to] (unix seconds), with the totals. */
-  period: (site: string, from: number, to: number) => call<{ incidents: Incident[]; summary: Summary; paused_spans?: PausedSpan[]; quiet_tracked?: boolean }>('GET', `/sites/${site}/incidents?from=${from}&to=${to}`),
+  period,
   /** A page of 50, newest first; `before` is the start of the last one of the page before. */
   page: (site: string, before?: number) => call<{ incidents: Incident[]; next_before: number | null }>('GET', `/sites/${site}/incidents?limit=50${before ? `&before=${before}` : ''}`),
   /** Every site's incidents in the last `days` days. */
