@@ -5,15 +5,15 @@ import { flowSession } from './flows-kit'
 import { API, STEADY_DOMAIN } from '../playwright.config'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough for a layout')
-// Late in the day the solid line is close to the end anyway: the picture would not tell the two apart.
-test.skip(() => new Date().getUTCHours() >= 21, 'the day is nearly over')
+// In the day's last hour the solid line is within an hour of the end: the picture would not tell the two apart.
+test.skip(() => new Date().getUTCHours() >= 23, 'the day is nearly over')
 
 let cookie = ''
 test.beforeAll(async () => {
   cookie = await flowSession()
 })
 
-test('with the comparison on, the usual band runs past now and the solid line stops there', async ({ page }) => {
+test('with the comparison on, the usual band runs past now and the solid line stops there', async ({ page }, info) => {
   const asked: { sofar: boolean; whole: number; cut: number }[] = []
   page.on('response', async (res) => {
     const u = new URL(res.url())
@@ -21,11 +21,16 @@ test('with the comparison on, the usual band runs past now and the solid line st
     const body = (await res.json().catch(() => null)) as { previous?: { series: unknown[] }; previous_series?: unknown[] } | null
     if (body?.previous) asked.push({ sofar: u.searchParams.get('sofar') === '1', whole: body.previous_series?.length ?? 0, cut: body.previous.series.length })
   })
-  // The site's yesterday has traffic only from noon, which the chart does not count as a day before: it is given one from midnight, whole in previous_series and cut at now in previous.
+  // The site's history has traffic only from noon to about four, so its usual (the band) would end there: the weeks of
+  // hours it is learned from are given visitors in every hour, and yesterday one day from midnight, whole in
+  // previous_series and cut at now in previous.
   await page.route(/\/api\/v1\/sites\/[^/]+\/report\?/, async (route) => {
     const res = await route.fetch()
     const body = await res.json()
     const cur = body.current?.series as { t: string }[] | undefined
+    if (new URL(route.request().url()).searchParams.get('bucket') === 'hour' && cur && cur.length > 24) {
+      body.current = { ...body.current, series: cur.map((p) => ({ ...p, visitors: 5 + new Date(p.t).getUTCHours(), pageviews: 5 + new Date(p.t).getUTCHours() })) }
+    }
     if (body.previous && body.previous_series && cur?.length === 24) {
       const day = body.previous_series.map((p: { t: string }, h: number) => ({ ...p, visitors: 5 + h, pageviews: 5 + h }))
       body.previous = { ...body.previous, series: day.slice(0, body.previous.series.length) }
@@ -47,5 +52,5 @@ test('with the comparison on, the usual band runs past now and the solid line st
   const range = (await band.boundingBox())!
   expect(range.x + range.width).toBeGreaterThan(dot.x + dot.width + 20)
   await expect.poll(() => asked.some((a) => a.sofar && a.whole === 24 && a.cut < 24)).toBe(true)
-  await page.screenshot({ path: '/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad/fullday-dark-1280.png' })
+  await page.screenshot({ path: info.outputPath('fullday-dark-1280.png') })
 })
