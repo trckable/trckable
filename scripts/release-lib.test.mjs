@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { fragmentLines, adminMergeCommand, bump, checksState, dirtyBeyondFigures, docsVersionMessage, mergeBlockedByPolicy, cutChangelog, duration, newer, releaseDate, timings, versionMismatches } from './release-lib.mjs'
+import { fragmentLines, adminMergeCommand, bump, checksState, dirtyBeyondFigures, docsVersionMessage, mergeBlockedByPolicy, cutChangelog, duration, newer, releaseDate, timings, versionMismatches, releaseBody, PR_BODY_MAX } from './release-lib.mjs'
 
 test('newer compares each part as a number', () => {
   assert.equal(newer('0.10.0', '0.9.9'), true)
@@ -104,4 +104,14 @@ test('a merge refused by main\'s rules is recognised and the admin command is ex
   assert.equal(mergeBlockedByPolicy('network down'), false)
   assert.equal(adminMergeCommand('0.7.0'), 'gh pr merge release-0.7.0 --squash --delete-branch --subject 0.7.0 --admin')
   assert.equal(docsVersionMessage('0.7.0'), 'docs: version 0.7.0')
+})
+
+test('releaseBody pastes the changes, or links them once the body would pass GitHub’s limit', () => {
+  const short = releaseBody('1.2.3', '- one change', ['- [ ] a note'])
+  assert.match(short, /What changed:\n\n- one change/)
+  assert.match(short, /- \[ \] a note/)
+  const long = releaseBody('1.2.3', 'x'.repeat(70_000), ['- [ ] a note'])
+  assert.ok(long.length <= PR_BODY_MAX)
+  assert.match(long, /blob\/release-1\.2\.3\/CHANGELOG\.md/)
+  assert.match(long, /- \[ \] a note/)
 })
