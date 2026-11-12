@@ -131,3 +131,12 @@ export function adminMergeCommand(v) {
 
 /** The commit message for the docs version written into the site's repo. */
 export const docsVersionMessage = (v) => `docs: version ${v}`
+
+// GitHub refuses a pull request body over 65,536 characters; a long release's changelog is linked instead of pasted.
+export const PR_BODY_MAX = 60_000
+export function releaseBody(v, changes, notes, repo = 'trckable/trckable') {
+  const tail = `\n\nWith it:\n\n${notes.join('\n')}\n\nThe checks on this pull request are the release gate. Once they pass and it is merged: \`pnpm release tag ${v}\` tags main, waits for the release workflow and checks GitHub, npm and the image.`
+  const full = `Release ${v}. What changed:\n\n${changes}${tail}`
+  if (full.length <= PR_BODY_MAX) return full
+  return `Release ${v}. What changed is too long to show here: [CHANGELOG.md](https://github.com/${repo}/blob/release-${v}/CHANGELOG.md).${tail}`
+}

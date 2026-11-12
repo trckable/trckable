@@ -45,7 +45,7 @@
 import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { execFileSync, spawn } from 'node:child_process'
 import { join } from 'node:path'
-import { adminMergeCommand, bump, checksState, cutChangelog, dirtyBeyondFigures, docsVersionMessage, duration, FIGURE_PATHS, mergeBlockedByPolicy, newer, releaseDate, timings, VERSION_PLACES } from './release-lib.mjs'
+import { adminMergeCommand, bump, checksState, cutChangelog, dirtyBeyondFigures, docsVersionMessage, duration, FIGURE_PATHS, mergeBlockedByPolicy, newer, releaseDate, timings, VERSION_PLACES, releaseBody } from './release-lib.mjs'
 import { siteRepo } from './site-repo.mjs'
 
 const ROOT = new URL('..', import.meta.url).pathname
@@ -162,7 +162,7 @@ function prepare() {
   execFileSync('node', ['--test', 'scripts/release-lib.test.mjs'], { cwd: ROOT, stdio: ['ignore', 'ignore', 'inherit'] })
   if (LOCAL_GATE) run('scripts/ship.sh', '--check')
   run('git', 'push', '--no-verify', '-q', '-u', 'origin', `release-${V}`)
-  run('gh', 'pr', 'create', '--base', 'main', '--head', `release-${V}`, '--title', `${V}`, '--body', `Release ${V}. What changed:\n\n${body}\n\nWith it:\n\n${notes.join('\n')}\n\nThe checks on this pull request are the release gate. Once they pass and it is merged: \`pnpm release tag ${V}\` tags main, waits for the release workflow and checks GitHub, npm and the image.`)
+  run('gh', 'pr', 'create', '--base', 'main', '--head', `release-${V}`, '--title', `${V}`, '--body', releaseBody(V, body, notes))
   done('push, pull request')
 }
 
