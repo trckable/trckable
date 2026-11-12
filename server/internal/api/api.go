@@ -1113,7 +1113,8 @@ func (a *API) bellRead(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"read": ids})
 }
 
-// markBellRead adds notices to this person's read list.
+// markBellRead adds notices to this person's read list: the ids given (one row, or a group's own id and its members), or
+// `all` for every row the bell lists now.
 func (a *API) markBellRead(w http.ResponseWriter, r *http.Request) {
 	p := r.Context().Value(ctxKey{}).(principal)
 	if p.user == nil {
@@ -1122,10 +1123,22 @@ func (a *API) markBellRead(w http.ResponseWriter, r *http.Request) {
 	}
 	var in struct {
 		Read []string `json:"read"`
+		All  bool     `json:"all"`
 	}
 	if err := decode(r, &in); err != nil {
 		fail(w, http.StatusBadRequest, "bad request")
 		return
+	}
+	if in.All {
+		rows, _, ok := a.bellList(r, p)
+		if !ok {
+			fail(w, http.StatusInternalServerError, "could not read the bell")
+			return
+		}
+		for _, x := range rows {
+			in.Read = append(in.Read, x.ID)
+		}
+		in.Read = in.Read[:min(len(in.Read), 100)]
 	}
 	if err := a.Ctl.MarkBellRead(r.Context(), p.user.ID, in.Read, time.Now().Unix()); err != nil {
 		fail(w, http.StatusBadRequest, err.Error())

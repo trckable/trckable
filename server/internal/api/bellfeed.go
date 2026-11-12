@@ -137,18 +137,11 @@ func (c *bellCache) build(ctx context.Context, key string, now time.Time, produc
 	return f.rows, f.partial, nil
 }
 
-// bellFeed is GET /api/v1/me/notifications. `partial` says a source could not be read: the list is what could be, and the
-// dashboard keeps the list it has rather than replace it with a shorter one.
-func (a *API) bellFeed(w http.ResponseWriter, r *http.Request) {
-	p := principalOf(r)
-	if p.user == nil {
-		fail(w, http.StatusForbidden, "the bell belongs to a person, not an API key")
-		return
-	}
+// bellList is the person's list for the bell: from the cache, else built. The third value is false when the request is gone.
+func (a *API) bellList(r *http.Request, p principal) ([]bellRow, bool, bool) {
 	all, err := a.Ctl.ListSites(r.Context(), p.account)
 	if err != nil {
-		fail(w, http.StatusInternalServerError, "could not read the bell")
-		return
+		return nil, false, false
 	}
 	sites := visible(p, all)
 	ids := make([]string, len(sites))
@@ -163,7 +156,29 @@ func (a *API) bellFeed(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	req := r.Clone(ctx)
 	rows, partial, err := a.bell.build(r.Context(), key, now, func() ([]bellRow, bool) { return a.bellRows(req, p.account, sites, now) })
-	if err != nil {
+	return rows, partial, err == nil
+}
+
+// bellItem is a row with whether this person has read it, from the same list the web bell keeps.
+type bellItem struct {
+	bellRow
+	Read bool `json:"read"`
+}
+
+// bellFeed is GET /api/v1/me/notifications. `partial` says a source could not be read: the list is what could be, and the
+// dashboard keeps the list it has rather than replace it with a shorter one. Each row says whether it was read (the one
+// read list of /me/bell-read), so a phone and a browser show the same unread.
+func (a *API) bellFeed(w http.ResponseWriter, r *http.Request) {
+	p := principalOf(r)
+	if p.user == nil {
+		fail(w, http.StatusForbidden, "the bell belongs to a person, not an API key")
+		return
+	}
+	rows, partial, ok := a.bellList(r, p)
+	if !ok {
+		if r.Context().Err() == nil {
+			fail(w, http.StatusInternalServerError, "could not read the bell")
+		}
 		return
 	}
 	// The first list this person is given: they are told, once, so what is already behind them is not a burst of unread.
@@ -174,8 +189,18 @@ func (a *API) bellFeed(w http.ResponseWriter, r *http.Request) {
 	if first {
 		_ = a.Ctl.SetMeta(r.Context(), seedKey, "1")
 	}
+	done := map[string]bool{}
+	if ids, err := a.Ctl.BellRead(r.Context(), p.user.ID); err == nil {
+		for _, id := range ids {
+			done[id] = true
+		}
+	}
+	out := make([]bellItem, len(rows))
+	for i, x := range rows {
+		out[i] = bellItem{bellRow: x, Read: done[x.ID]}
+	}
 	w.Header().Set("Cache-Control", "private, no-store")
-	writeJSON(w, http.StatusOK, map[string]any{"user": p.user.ID, "account": p.account, "notifications": rows, "partial": partial, "first": first})
+	writeJSON(w, http.StatusOK, map[string]any{"user": p.user.ID, "account": p.account, "notifications": out, "partial": partial, "first": first})
 }
 
 // bellRows puts the sites' week together: one list, in the one order (at, then id). The second value is true when a source could not be read.

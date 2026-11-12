@@ -39,3 +39,14 @@ remove one. It is signed out at once. The same is available as
 A phone's token acts as you, with your role, until it is removed. Removing a
 person, or setting a new password for them, signs out their phones too. API keys
 are not devices and cannot list or remove them.
+
+## The bell
+
+A phone reads the same bell as the web. `GET /api/v1/me/notifications` lists
+what happened in the last week, each row with `read` (true or false). Read state
+is one list per person, shared by every browser and phone:
+`GET /api/v1/me/bell-read` returns the ids read, and
+`POST /api/v1/me/bell-read` with `{"read": ["id", ...]}` marks rows read (up to
+100 ids; a day's goals row is read by its own id), or `{"all": true}` marks
+everything the bell lists now. Viewers may mark their own reads. Like the rest
+of the bell, it belongs to a person: an API key gets a 403.
