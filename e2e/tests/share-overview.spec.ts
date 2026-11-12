@@ -58,9 +58,11 @@ for (const [width, colorScheme] of [[1440, 'dark'], [1440, 'light'], [390, 'dark
     // Download names the file after the site, the card and the period.
     const file = page.waitForEvent('download')
     await dialog.getByRole('button', { name: /^Download \d+×\d+$/ }).click()
-    // The picture the sheet opens on: the Overview from the header's button, the page's own from a phone's menu.
-    const shown = new URL((await img.getAttribute('src')) ?? '', API).searchParams.get('t')
-    expect((await file).suggestedFilename()).toBe(`trckable-${STEADY_DOMAIN}-${shown}-7d.png`)
+    // The picture the sheet opens on can give way to the Overview once its numbers say it has nothing to show, and the
+    // old picture stays up while the new one loads: the preview settles on the picture the file is named after.
+    const name = (await file).suggestedFilename()
+    const shown = () => img.getAttribute('src').then((s) => new URL(s ?? '', API).searchParams.get('t'))
+    await expect.poll(async () => `trckable-${STEADY_DOMAIN}-${await shown()}-7d.png`).toBe(name)
 
     if (SHOTS && width === 1440) {
       const sites = (await (await page.request.get(`${API}/api/v1/sites`)).json()) as { sites: { id: string; domain: string }[] }

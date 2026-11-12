@@ -35,8 +35,9 @@ for (const [width, colorScheme] of [[1280, 'dark'], [390, 'light']] as const) {
     const img = dialog.locator('.sd-preview img.sd-img:not(.is-out, .is-loader)')
     const size = () => img.evaluate((el: HTMLImageElement) => (el.complete ? `${el.naturalWidth}x${el.naturalHeight}` : ''))
     await expect.poll(size).toBe('1200x630')
-    // The picture the sheet opens on: the Overview from the header's button, the page's own from a phone's menu.
-    const shown = new URL((await img.getAttribute('src')) ?? '', API).searchParams.get('t')
+    // The picture the sheet opens on can give way to the Overview once its numbers say it has nothing to show (the old
+    // picture stays up while the new one loads): it is read once the preview's own request and the look agree.
+    const shown = () => img.getAttribute('src').then((s) => new URL(s ?? '', API).searchParams.get('t'))
 
     for (const [name, shape, dims] of [['Square', 'square', '1080x1080'], ['Story', 'story', '1080x1920'], ['Wide', 'wide', '1600x900']] as const) {
       const res = page.waitForResponse((r) => r.url().includes('/card?') && !r.url().includes('format=json') && r.url().includes(`shape=${shape}`))
@@ -50,7 +51,8 @@ for (const [width, colorScheme] of [[1280, 'dark'], [390, 'light']] as const) {
       if (SHOTS && shape === 'square') await page.screenshot({ path: `${SHOTS}/size-${width}-${colorScheme}.png` })
       const file = page.waitForEvent('download')
       await dialog.getByRole('button', { name: /^Download \d+×\d+$/ }).click()
-      expect((await file).suggestedFilename()).toBe(`trckable-${STEADY_DOMAIN}-${shown}-${shape}-7d.png`)
+      const saved = (await file).suggestedFilename()
+      await expect.poll(async () => `trckable-${STEADY_DOMAIN}-${await shown()}-${shape}-7d.png`).toBe(saved)
     }
   })
 }
