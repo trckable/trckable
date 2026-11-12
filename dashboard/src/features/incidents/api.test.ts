@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-const call = vi.fn()
+const call = vi.fn<(...a: unknown[]) => Promise<unknown>>()
 vi.mock('../../lib/api', () => ({ call: (...a: unknown[]) => call(...a) }))
 
 afterEach(() => {
@@ -18,10 +18,10 @@ describe('incidents.period', () => {
     const b = incidents.period('s1', 10, 20)
     expect(b).toBe(a)
     expect(call).toHaveBeenCalledTimes(1)
-    incidents.period('s1', 10, 30)
+    void incidents.period('s1', 10, 30)
     expect(call).toHaveBeenCalledTimes(2)
     vi.advanceTimersByTime(PERIOD_SHARE_MS)
-    incidents.period('s1', 10, 20)
+    void incidents.period('s1', 10, 20)
     expect(call).toHaveBeenCalledTimes(3)
   })
 
