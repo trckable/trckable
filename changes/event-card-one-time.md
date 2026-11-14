@@ -1,0 +1,1 @@
+- The outage card in the bell says its time once, not twice.

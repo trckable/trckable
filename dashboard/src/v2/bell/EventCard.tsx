@@ -38,7 +38,8 @@ export default function EventCard({ n, site, onSee, onClose }: { n: Notice; site
       </button>
       <h2 className="ev-head">
         {(n.kind === 'signup' || n.kind === 'goal') && <XIco name="results" className="ev-tile" />}
-        {[n.title, n.title.includes(n.site) ? '' : n.site, whenOf(n.exact ?? n.at, undefined, site.timezone)].filter(Boolean).join(' · ')}
+        {/* An outage's title already carries its time, and the body its start: no second time in the head. */}
+        {[n.title, n.title.includes(n.site) ? '' : n.site, n.kind === 'down' || n.kind === 'up' ? '' : whenOf(n.exact ?? n.at, undefined, site.timezone)].filter(Boolean).join(' · ')}
       </h2>
       <div className="ev-body">
         <Body n={n} site={site} />
