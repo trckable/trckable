@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"slices"
-	"strconv"
 
 	"github.com/trckable/trckable/server/internal/cards"
 	"github.com/trckable/trckable/server/internal/query"
@@ -106,10 +105,10 @@ func biggestChanges(cur, prev *query.Result) []cause {
 
 // explainChange is the sentence for the people of the period against the one before, and the table whose top movers
 // tell the story in the fewest rows: the leading causes.
-func explainChange(cur, prev *query.Result) changeOf {
+func explainChange(l *cardLang, cur, prev *query.Result) changeOf {
 	now, was := cur.KPIs.Visitors, prev.KPIs.Visitors
 	if max(now, was) < changedMinBase {
-		return changeOf{say: cardWords.changedFew}
+		return changeOf{say: l.changedFew}
 	}
 	diff := now - was
 	var pct float64
@@ -140,85 +139,68 @@ func explainChange(cur, prev *query.Result) changeOf {
 			causes = append(causes, c)
 		}
 	}
-	name := cardWords.changedPeople
+	name := l.changedPeople
 	out := changeOf{ok: true, causes: causes}
 	switch {
 	case len(causes) == 0 && !big, len(causes) > 0 && !big && math.Abs(float64(causes[0].diff)) < float64(max(now, was))*0.1:
-		out.say = cardWords.changedFlat
+		out.say = l.changedFlat
 		out.causes = nil
 	case !big:
-		out.say = fmt.Sprintf(cardWords.changedMix, name)
+		out.say = fmt.Sprintf(l.changedMix, name)
 	case !hasPct:
-		out.say = fmt.Sprintf(cardWords.changedNew, name)
+		out.say = fmt.Sprintf(l.changedNew, name)
 	default:
-		out.say = sayMoved(name, pct, diff, causes)
+		out.say = sayMoved(l, name, pct, diff, causes)
 	}
 	return out
 }
 
-func sayMoved(name string, pct float64, diff int64, causes []cause) string {
-	verb := cardWords.changedRose
+func sayMoved(l *cardLang, name string, pct float64, diff int64, causes []cause) string {
+	say := l.changedRose
 	by := fmt.Sprintf("%.0f%%", math.Round(math.Abs(pct)))
 	if pct >= 100 {
-		by = times(pct/100 + 1)
+		by = l.times(pct/100 + 1)
 	} else if pct < 0 {
-		verb = cardWords.changedFell
+		say = l.changedFell
 	}
-	moved := fmt.Sprintf("%s %s %s", name, verb, by)
+	moved := fmt.Sprintf(say, name, by)
 	if len(causes) == 0 {
 		return moved + "."
 	}
-	place := causeName(causes[0])
+	place := causeName(l, causes[0])
 	if causes[0].value == "/" {
-		place = cardWords.theHomePage
+		place = l.theHomePage
 	}
 	if diff != 0 && float64(causes[0].diff)/float64(diff) > 0.5 {
-		return fmt.Sprintf(cardWords.changedMostly, moved, place)
+		return fmt.Sprintf(l.changedMostly, moved, place)
 	}
-	return fmt.Sprintf(cardWords.changedLed, moved, place)
-}
-
-// times is a multiple the way the dashboard writes it: one decimal under ten, whole above, never a huge one.
-func times(r float64) string {
-	r = math.Min(r, changedTimes)
-	if r >= 10 {
-		return strconv.FormatFloat(math.Round(r), 'f', 0, 64) + "×"
-	}
-	return strconv.FormatFloat(math.Round(r*10)/10, 'f', -1, 64) + "×"
+	return fmt.Sprintf(l.changedLed, moved, place)
 }
 
 // causeName is a row as people say it: no referrer is Direct, a bare slash is the home page, a country by name.
-func causeName(c cause) string {
+func causeName(l *cardLang, c cause) string {
 	switch {
 	case c.dim == "country" && c.value != "":
-		if n := countryName(c.value); n != "" {
+		if n := countryName(l, c.value); n != "" {
 			return n
 		}
 	case c.value == "/":
-		return cardWords.homePage
+		return l.homePage
 	case c.value == "":
-		return cardWords.direct
+		return l.direct
 	}
 	return c.value
 }
 
-// signed is a change with its sign: +120, −45.
-func signed(n int64) string {
-	if n < 0 {
-		return "−" + number(-n)
-	}
-	return "+" + number(n)
-}
-
 // changeRows are the biggest changes as picture lines, the longest bar for the biggest move.
-func changeRows(causes []cause) []cards.Item {
+func changeRows(l *cardLang, causes []cause) []cards.Item {
 	var items []cards.Item
 	top := 0.0
 	for _, c := range causes[:min(len(causes), cards.MaxDigestRows)] {
 		top = math.Max(top, math.Abs(float64(c.diff)))
 	}
 	for _, c := range causes[:min(len(causes), cards.MaxDigestRows)] {
-		items = append(items, cards.Item{Name: causeName(c), Value: signed(c.diff), Share: math.Abs(float64(c.diff)) / top})
+		items = append(items, cards.Item{Name: causeName(l, c), Value: l.signed(c.diff), Share: math.Abs(float64(c.diff)) / top})
 	}
 	return items
 }

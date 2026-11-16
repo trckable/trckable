@@ -1,3 +1,4 @@
+import { lang } from '../../i18n/lang'
 import formats from './formats.json'
 
 // What the dialog asks the server for: a card is one address, so the preview
@@ -67,6 +68,7 @@ export const hasOf = (w: CardWords | null): Record<Need, boolean> => ({ revenue:
 
 export function cardUrl(site: string, l: Look, format: 'png' | 'json' | 'thumb' = 'png'): string {
   const p = new URLSearchParams({ period: l.period, metric: l.metric })
+  if (lang !== 'en') p.set('lang', lang) // the words, numbers and dates of the picture and its post are the page's language
   if (l.period === 'custom' && l.range) {
     p.set('from', l.range.from)
     p.set('to', l.range.to)

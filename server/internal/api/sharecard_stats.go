@@ -42,34 +42,35 @@ func cardStatsOf(raw, metric string) []string {
 // engaged visit, no time on the site, no country, no revenue connected).
 func (n *cardNumbers) stat(id string, res *query.Result, icon func(host string) image.Image) (cards.Stat, bool) {
 	k := res.KPIs
+	l := n.l()
 	switch id {
 	case "engaged":
 		e := engagedOf(k)
-		return cards.Stat{Value: number(e), Label: cardWords.engaged}, e > 0
+		return cards.Stat{Value: l.number(e), Label: l.engaged}, e > 0
 	case "avgtime":
-		return cards.Stat{Value: duration(k.AvgSessionS), Label: cardWords.avgTime}, k.AvgSessionS >= 0.5
+		return cards.Stat{Value: duration(k.AvgSessionS), Label: l.avgTime}, k.AvgSessionS >= 0.5
 	case "pageviews":
-		return cards.Stat{Value: number(k.Pageviews), Label: cardWords.statPageviews}, k.Pageviews > 0
+		return cards.Stat{Value: l.number(k.Pageviews), Label: l.statPageviews}, k.Pageviews > 0
 	case "visitors":
-		return cards.Stat{Value: number(k.Visitors), Label: cardWords.statVisitors}, k.Visitors > 0
+		return cards.Stat{Value: l.number(k.Visitors), Label: l.statVisitors}, k.Visitors > 0
 	case "bounce":
-		return cards.Stat{Value: fmt.Sprintf("%.0f%%", math.Round(k.BounceRate*100)), Label: cardWords.bounce}, k.Sessions > 0
+		return cards.Stat{Value: fmt.Sprintf("%.0f%%", math.Round(k.BounceRate*100)), Label: l.bounce}, k.Sessions > 0
 	case "country":
 		if top := res.Dims["country"]; len(top) > 0 && top[0].Visitors > 0 {
-			if name := countryName(top[0].Value); name != "" {
-				return cards.Stat{Value: name, Label: cardWords.topCountry, Flag: top[0].Value}, true
+			if name := countryName(l, top[0].Value); name != "" {
+				return cards.Stat{Value: name, Label: l.topCountry, Flag: top[0].Value}, true
 			}
 		}
 	case "page":
 		if top := res.Dims["entry_page"]; len(top) > 0 && top[0].Visitors > 0 && top[0].Value != "" {
-			return cards.Stat{Value: top[0].Value, Label: cardWords.topPage}, true
+			return cards.Stat{Value: top[0].Value, Label: l.topPage}, true
 		}
 	case "source":
 		if top := res.Dims["referrer"]; len(top) > 0 && top[0].Visitors > 0 && top[0].Value != "" {
-			return cards.Stat{Value: top[0].Value, Label: cardWords.topSource, Icon: icon(top[0].Value)}, true
+			return cards.Stat{Value: top[0].Value, Label: l.topSource, Icon: icon(top[0].Value)}, true
 		}
 	case "revenue":
-		return cards.Stat{Value: n.money, Label: cardWords.statRevenue}, n.money != ""
+		return cards.Stat{Value: n.money, Label: l.statRevenue}, n.money != ""
 	}
 	return cards.Stat{}, false
 }

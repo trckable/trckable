@@ -225,11 +225,25 @@ func periodBox(s Spec) (x, y, w, h int) {
 	return l.Right + l.n(pillPad) - w, l.TileY + l.n(35-30), w, l.n(44)
 }
 
+// labelLine is the label under the big number, kept clear of the right margin.
+func labelLine(s Spec) string {
+	l := s.layout()
+	return fitWith(false, s.Label, float64(l.Right-l.Left-l.n(160)), l.px(32))
+}
+
+// changeText is the comparison's words, cut short when the label before it leaves too little room (a longer
+// language says "vs previous 30 days" in more letters).
+func changeText(s Spec) string {
+	l := s.layout()
+	room := float64(l.Right-l.Left) - measure(false, labelLine(s), l.px(32)) - float64(l.n(22)+2*l.n(pillPad)+l.n(4))
+	return fitWith(true, s.Change, room, l.px(changePx))
+}
+
 // changeBox is the comparison's pill, after the label on its line.
 func changeBox(s Spec) (x, y, w, h int) {
 	l := s.layout()
-	w = int(measure(true, s.Change, l.px(changePx))) + 2*l.n(pillPad) + l.n(4)
-	return l.Left + int(measure(false, s.Label, l.px(32))) + l.n(22), l.LabelY - l.n(34), w, l.n(46)
+	w = int(measure(true, changeText(s), l.px(changePx))) + 2*l.n(pillPad) + l.n(4)
+	return l.Left + int(measure(false, labelLine(s), l.px(32))) + l.n(22), l.LabelY - l.n(34), w, l.n(46)
 }
 
 func pills(s Spec) string {
@@ -276,7 +290,7 @@ func overviewHead(s Spec) []Run {
 			break
 		}
 	}
-	line := []Span{{Text: fitWith(false, s.Label, room-float64(l.n(160)), l.px(32)), Ink: s.Theme.Muted}}
+	line := []Span{{Text: labelLine(s), Ink: s.Theme.Muted}}
 	var runs []Run
 	if s.Icon == nil && s.Domain != "" {
 		runs = append(runs, Run{X: l.Left + l.Tile/2, Y: l.TileY + l.n(37), Px: l.px(30), Mid: true, Spans: []Span{{Text: initial, Bold: true, Ink: s.ink()}}})
@@ -291,7 +305,7 @@ func overviewHead(s Spec) []Run {
 	}...)
 	if s.Change != "" && s.Dir != 0 {
 		x, _, _, _ := changeBox(s)
-		runs = append(runs, Run{X: x + l.n(pillPad) + l.n(2), Y: l.LabelY - 1, Px: l.px(changePx), Spans: []Span{{Text: s.Change, Bold: true, Ink: pillInk(s)}}})
+		runs = append(runs, Run{X: x + l.n(pillPad) + l.n(2), Y: l.LabelY - 1, Px: l.px(changePx), Spans: []Span{{Text: changeText(s), Bold: true, Ink: pillInk(s)}}})
 	}
 	if !s.NoBrand {
 		runs = append(runs, Run{X: l.Right, Y: l.FootY, Px: l.px(28), End: true, Spans: []Span{{Text: "trck", Bold: true, Ink: s.Theme.FG}, {Text: "able.com", Ink: s.Theme.Muted}}})

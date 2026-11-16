@@ -15,7 +15,12 @@ import (
 // "Revenue milestone reached" and no digit of the amount is drawn. context
 // is the growth line under the hero ("" when nothing true can be said).
 func Card(m sqlite.Milestone, context, domain, theme string, showAmount bool) cards.Spec {
-	w := Say(m, showAmount)
+	return CardIn(English, m, context, domain, theme, showAmount)
+}
+
+// CardIn is Card in a language.
+func CardIn(t *Tongue, m sqlite.Milestone, context, domain, theme string, showAmount bool) cards.Spec {
+	w := SayIn(t, m, showAmount)
 	_, th := cards.ThemeOf(theme)
 	s := cards.Spec{Template: "spotlight", Theme: th, Domain: domain, Big: w.Big, Label: w.Label, Foot: w.Day}
 	if Money(m.Kind) {
@@ -24,9 +29,9 @@ func Card(m sqlite.Milestone, context, domain, theme string, showAmount bool) ca
 	if m.Kind == Revenue {
 		if showAmount {
 			// "$1,000" over "revenue milestone": the number leads, the words say what it is.
-			s.Label += " " + words.milestone
+			s.Label = t.RevenueLine
 		} else {
-			s.Big, s.Label = words.revenueReached, context
+			s.Big, s.Label = t.RevenueReached, context
 		}
 	}
 	return s
@@ -36,16 +41,18 @@ func Card(m sqlite.Milestone, context, domain, theme string, showAmount bool) ca
 // milestones already known: revenue says how long after the first sale, a
 // family how much faster than its last step (twice as fast or more). Empty
 // when nothing true can be said.
-func Context(m sqlite.Milestone, list []sqlite.Milestone) string {
+func Context(m sqlite.Milestone, list []sqlite.Milestone) string { return ContextIn(English, m, list) }
+
+// ContextIn is Context in a language.
+func ContextIn(t *Tongue, m sqlite.Milestone, list []sqlite.Milestone) string {
 	if m.Kind == Revenue {
 		for _, x := range list {
 			if x.Kind == FirstSale {
 				if d := daysBetween(x.Day, m.Day); d > 0 {
-					unit := "days"
 					if d == 1 {
-						unit = "day"
+						return fmt.Sprintf(t.AfterSaleOne, d)
 					}
-					return fmt.Sprintf("%d %s after the first sale", d, unit)
+					return fmt.Sprintf(t.AfterSale, d)
 				}
 				break
 			}
@@ -68,5 +75,5 @@ func Context(m sqlite.Milestone, list []sqlite.Milestone) string {
 	if now <= 0 || then <= 0 || then/now < 2 {
 		return ""
 	}
-	return fmt.Sprintf("%d× faster than the last one", then/now)
+	return fmt.Sprintf(t.Faster, then/now)
 }

@@ -45,6 +45,8 @@ func ThemeOf(name string) (string, Theme) {
 // it, a foot line, and the site's domain on top).
 type Spec struct {
 	Template string
+	// Lang is the language of the words (a Key, so a cache never mixes two); the words arrive already in it.
+	Lang string
 	// Format is a Formats id; "" is the link preview.
 	Format string
 	Theme  Theme
@@ -136,7 +138,7 @@ func luminance(hex string) float64 {
 
 // Key identifies what a card draws, for a cache.
 func (s Spec) Key() string {
-	return fmt.Sprintf("%s|%s|%v|%s|%s|%s|%s|%s|%v|%v|%s|%d|%s|%t|%s|%s", s.Template, FormatOf(s.Format).ID, s.Theme, s.ink(), s.Domain, s.Big, s.Label, s.Foot, s.Rows, s.Series, s.Change, s.Dir, statsKey(s.Stats), s.NoBrand, s.bg(), s.Badge)
+	return fmt.Sprintf("%s|%s|%s|%v|%s|%s|%s|%s|%s|%v|%v|%s|%d|%s|%t|%s|%s", s.Template, s.Lang, FormatOf(s.Format).ID, s.Theme, s.ink(), s.Domain, s.Big, s.Label, s.Foot, s.Rows, s.Series, s.Change, s.Dir, statsKey(s.Stats), s.NoBrand, s.bg(), s.Badge)
 }
 
 // statsKey is the small numbers as text, an icon as a mark that there is one.

@@ -30,7 +30,7 @@ func TestResolvePeriod(t *testing.T) {
 		{"custom", "2026-11-05", "2026-11-05", "5 Nov 2026", "previous day", 1, true},
 		{"nope", "", "", "2 Nov – 8 Nov 2026", "", 7, false},
 	} {
-		p := resolvePeriod(c.name, c.from, c.to, now, made, c.compare)
+		p := resolvePeriod(cardWords, c.name, c.from, c.to, now, made, c.compare)
 		if p.label != c.label || p.vs != c.vs || (c.days > 0 && p.days != c.days) {
 			t.Errorf("%+v: %q vs %q, %d days", c, p.label, p.vs, p.days)
 		}
@@ -39,7 +39,7 @@ func TestResolvePeriod(t *testing.T) {
 		}
 	}
 	// All time has nothing before it: no comparison, even when asked.
-	if p := resolvePeriod("all", "", "", now, made, true); p.vs != "" {
+	if p := resolvePeriod(cardWords, "all", "", "", now, made, true); p.vs != "" {
 		t.Errorf("all time compares: %q", p.vs)
 	}
 }
@@ -49,7 +49,7 @@ func TestCardChange(t *testing.T) {
 	res := &query.Result{KPIs: query.KPIs{Visitors: 124, Pageviews: 300, Sessions: 100, BounceRate: 0.5}}
 	before := &query.Result{KPIs: query.KPIs{Visitors: 100, Pageviews: 400, Sessions: 100, BounceRate: 0.5}}
 	for metric, want := range map[string]string{"visitors": "+24% vs previous 30 days", "pageviews": "-25% vs previous 30 days", "engaged": ""} {
-		n := cardWordsOf(res, "example.com", cardPeriodOf("30d"), metric)
+		n := cardWordsOf(cardWords, res, "example.com", testPeriod("30d"), metric)
 		n.vs = "previous 30 days"
 		n.overview(res, before, "", noIcon)
 		if n.change != want {
@@ -57,7 +57,7 @@ func TestCardChange(t *testing.T) {
 		}
 	}
 	// No comparison asked (no before): no pill.
-	n := cardWordsOf(res, "example.com", cardPeriodOf("30d"), "visitors")
+	n := cardWordsOf(cardWords, res, "example.com", testPeriod("30d"), "visitors")
 	n.overview(res, nil, "", noIcon)
 	if n.change != "" || n.dir != 0 {
 		t.Errorf("no comparison asked: %+v", n)
@@ -90,4 +90,9 @@ func TestCardRoutePeriods(t *testing.T) {
 			t.Fatalf("%s: %d %s", q, code, ct)
 		}
 	}
+}
+
+// testPeriod is a preset's period at a fixed day, in English.
+func testPeriod(name string) cardPeriod {
+	return resolvePeriod(cardWords, name, "", "", time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC), time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), false)
 }

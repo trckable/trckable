@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/cards"
@@ -82,21 +81,22 @@ func (a *API) pictures(c cardReading, n *cardNumbers, hours bool, kind string) {
 }
 
 func (a *API) changedPicture(c cardReading, n *cardNumbers, hours bool) {
-	d := digest{title: cardWords.changedTitle, empty: cardWords.noChanged}
+	l := n.l()
+	d := digest{title: l.changedTitle, empty: l.noChanged}
 	defer func() { n.digests["changed"] = d }()
 	prev := a.previousReport(c, hours, false)
 	if prev == nil || prev.KPIs.Visitors == 0 || max(prev.KPIs.Visitors, c.res.KPIs.Visitors) < changedMinBase {
 		return
 	}
 	n.HasChanged = true
-	ch := explainChange(c.res, prev)
+	ch := explainChange(l, c.res, prev)
 	d.title = ch.say
 	for _, id := range cardChangedIDs {
 		if st, ok := n.stat(id, c.res, a.refIconOf); ok {
 			d.stats = append(d.stats, st)
 		}
 	}
-	d.rows = changeRows(ch.causes)
+	d.rows = changeRows(l, ch.causes)
 }
 
 // previousReport is the period just before, the same length (hours: the last 24 hours, so the 24 before them). light: only its totals, with no money, goals or groups to scan.
@@ -117,7 +117,8 @@ func (a *API) previousReport(c cardReading, hours, light bool) *query.Result {
 }
 
 func (a *API) searchPicture(c cardReading, n *cardNumbers) {
-	d := digest{title: cardWords.searchTitle, empty: cardWords.noSearch}
+	l := n.l()
+	d := digest{title: l.searchTitle, empty: l.noSearch}
 	defer func() { n.digests["search"] = d }()
 	if !a.moduleOn(c.r, c.site, "search") {
 		return
@@ -129,7 +130,7 @@ func (a *API) searchPicture(c cardReading, n *cardNumbers) {
 	n.HasSearch = true
 	defer func() {
 		if d.filled() {
-			d.badge = cardWords.searchBadge
+			d.badge = l.searchBadge
 		}
 	}()
 	from := startOfDay(c.params.From.In(c.loc), c.loc)
@@ -142,30 +143,31 @@ func (a *API) searchPicture(c cardReading, n *cardNumbers) {
 	impressions, _ := body["impressions"].(float64)
 	list, _ := body["rows"].([]gsc.Row)
 	if impressions > 0 {
-		d.stats = []cards.Stat{{Value: number(int64(clicks)), Label: cardWords.searchClicks}, {Value: number(int64(impressions)), Label: cardWords.searchImpressions}}
+		d.stats = []cards.Stat{{Value: l.number(int64(clicks)), Label: l.searchClicks}, {Value: l.number(int64(impressions)), Label: l.searchImpressions}}
 	}
 	for _, row := range list[:min(len(list), cards.MaxDigestRows)] {
 		if row.Key != "" && row.Clicks > 0 {
-			d.rows = append(d.rows, cards.Item{Name: row.Key, Value: number(int64(row.Clicks)), Share: row.Clicks / list[0].Clicks})
+			d.rows = append(d.rows, cards.Item{Name: row.Key, Value: l.number(int64(row.Clicks)), Share: row.Clicks / list[0].Clicks})
 		}
 	}
 }
 
 func (a *API) aiPicture(c cardReading, n *cardNumbers) {
-	d := digest{title: cardWords.aiTitle, empty: cardWords.noAI}
+	l := n.l()
+	d := digest{title: l.aiTitle, empty: l.noAI}
 	defer func() { n.digests["ai"] = d }()
 	if rep, err := c.q.AISearch(c.r.Context(), c.params, query.AIOptions{}); err == nil && (rep.Visitors > 0 || rep.Crawled > 0) {
-		d.stats = aiHeadline(rep)
+		d.stats = aiHeadline(l, rep)
 		for _, as := range rep.Assistants[:min(len(rep.Assistants), cards.MaxDigestRows)] {
 			if as.Visitors > 0 {
-				d.rows = append(d.rows, cards.Item{Name: as.Name, Value: number(as.Visitors), Share: float64(as.Visitors) / float64(rep.Assistants[0].Visitors)})
+				d.rows = append(d.rows, cards.Item{Name: as.Name, Value: l.number(as.Visitors), Share: float64(as.Visitors) / float64(rep.Assistants[0].Visitors)})
 			}
 		}
 	}
 	if a.MentionsOn && len(d.stats) < cards.MaxGrid {
 		list, err := a.Ctl.Mentions(c.r.Context(), c.site, c.params.From.Unix(), c.params.To.Unix(), mentionsMax)
 		if err == nil && len(list) > 0 {
-			d.stats = append(d.stats, cards.Stat{Value: number(int64(len(list))), Label: cardWords.aiMentions})
+			d.stats = append(d.stats, cards.Stat{Value: l.number(int64(len(list))), Label: l.aiMentions})
 		}
 	}
 	n.HasAI = d.filled()
@@ -173,35 +175,23 @@ func (a *API) aiPicture(c cardReading, n *cardNumbers) {
 
 // aiHeadline is the AI picture's number cards, the Explore headline's: the robots' requests, how many for each
 // visitor, the busiest company and the visitors the assistants sent. With no robot data, only the visitors.
-func aiHeadline(rep *query.AISearch) []cards.Stat {
+func aiHeadline(l *cardLang, rep *query.AISearch) []cards.Stat {
 	if rep.Crawled == 0 || len(rep.Companies) == 0 {
-		return []cards.Stat{{Value: number(rep.Visitors), Label: cardWords.aiVisits}}
+		return []cards.Stat{{Value: l.number(rep.Visitors), Label: l.aiVisits}}
 	}
-	stats := []cards.Stat{{Value: shortCount(rep.Crawled), Label: cardWords.aiRequests}}
+	stats := []cards.Stat{{Value: l.shortCount(rep.Crawled), Label: l.aiRequests}}
 	if rep.PerVisitor > 0 {
-		stats = append(stats, cards.Stat{Value: strconv.FormatFloat(rep.PerVisitor, 'f', 1, 64) + "×", Label: cardWords.aiPerVisitor})
+		stats = append(stats, cards.Stat{Value: l.float(rep.PerVisitor, 1) + "×", Label: l.aiPerVisitor})
 	}
 	top := rep.Companies[0]
-	stats = append(stats, cards.Stat{Value: top.Name, Label: cardWords.aiTop + " · " + shortCount(top.Hits) + " " + cardWords.aiRequestsOf})
-	return append(stats, cards.Stat{Value: number(rep.Visitors), Label: cardWords.aiVisits})
-}
-
-// shortCount says a large count briefly: 1.2M, 606K, 950.
-func shortCount(n int64) string {
-	switch {
-	case n >= 10_000_000:
-		return strconv.FormatInt(n/1_000_000, 10) + "M"
-	case n >= 1_000_000:
-		return strconv.FormatFloat(float64(n)/1_000_000, 'f', 2, 64) + "M"
-	case n >= 10_000:
-		return strconv.FormatInt(n/1000, 10) + "K"
-	}
-	return number(n)
+	stats = append(stats, cards.Stat{Value: top.Name, Label: l.aiTop + " · " + l.shortCount(top.Hits) + " " + l.aiRequestsOf})
+	return append(stats, cards.Stat{Value: l.number(rep.Visitors), Label: l.aiVisits})
 }
 
 // goalsPicture is the goals reached most, as the report lists them.
 func (n *cardNumbers) goalsPicture(res *query.Result) {
-	d := digest{title: cardWords.goalsTitle, empty: cardWords.noGoals}
+	l := n.l()
+	d := digest{title: l.goalsTitle, empty: l.noGoals}
 	for _, g := range res.Goals {
 		if g.Visitors <= 0 || len(d.rows) == cards.MaxRows {
 			continue
@@ -210,7 +200,7 @@ func (n *cardNumbers) goalsPicture(res *query.Result) {
 		if name == "" {
 			name = g.Value
 		}
-		d.rows = append(d.rows, cards.Item{Name: name, Value: number(g.Visitors), Share: float64(g.Visitors) / float64(res.Goals[0].Visitors)})
+		d.rows = append(d.rows, cards.Item{Name: name, Value: l.number(g.Visitors), Share: float64(g.Visitors) / float64(res.Goals[0].Visitors)})
 	}
 	n.HasGoals = d.filled()
 	n.digests["goals"] = d
@@ -218,9 +208,10 @@ func (n *cardNumbers) goalsPicture(res *query.Result) {
 
 // salesPicture is the period's revenue and its orders, where the report has money at all.
 func (n *cardNumbers) salesPicture(res *query.Result) {
-	d := digest{title: cardWords.salesTitle, empty: cardWords.noSales}
+	l := n.l()
+	d := digest{title: l.salesTitle, empty: l.noSales}
 	if res.Money != nil && res.Money.Payments > 0 {
-		d.stats = []cards.Stat{{Value: n.money, Label: cardWords.salesRevenue}, {Value: number(res.Money.Payments), Label: cardWords.salesOrders}}
+		d.stats = []cards.Stat{{Value: n.money, Label: l.salesRevenue}, {Value: l.number(res.Money.Payments), Label: l.salesOrders}}
 	}
 	n.digests["sales"] = d
 }
@@ -244,7 +235,7 @@ func (a *API) milestonePicture(c cardReading, n *cardNumbers) {
 		return
 	}
 	m := list[best]
-	spec := milestones.Card(m, milestones.Context(m, list), c.domain, "dark", false)
+	spec := milestones.CardIn(&n.l().ms, m, milestones.ContextIn(&n.l().ms, m, list), c.domain, "dark", false)
 	n.HasMilestone = true
 	n.milestone = &milestoneLine{spec: spec, money: milestones.Money(m.Kind)}
 }

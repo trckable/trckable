@@ -13,30 +13,27 @@ import (
 //	a list  is the top five of a breakdown with bars, drawn by the leaderboard.
 //	a hero  is the first of a list, alone, drawn by the spotlight.
 
-// cardLists are the list pictures, by t: the breakdown they read and their title. "devices" shows each device's share.
+// cardLists are the list pictures, by t: the breakdown they read (their titles are the language's listTitle). "devices" shows each device's share.
 var cardLists = map[string]struct {
-	dim, title string
-	percent    bool
+	dim     string
+	percent bool
 }{
-	"leaderboard": {dim: "entry_page", title: "Top pages"},
-	"sources":     {dim: "referrer", title: "Top sources"},
-	"places":      {dim: "country", title: "Top countries"},
-	"browsers":    {dim: "browser", title: "Top browsers"},
-	"devices":     {dim: "device", title: "Mobile and desktop", percent: true},
+	"leaderboard": {dim: "entry_page"},
+	"sources":     {dim: "referrer"},
+	"places":      {dim: "country"},
+	"browsers":    {dim: "browser"},
+	"devices":     {dim: "device", percent: true},
 }
 
-// cardHeroes are the single-item pictures, by t: the list whose first line they say, and the words before it.
-var cardHeroes = map[string]struct{ list, label string }{
-	"toppage":   {"leaderboard", "Your most visited page"},
-	"topsource": {"sources", "Most visitors came from"},
-	"topplace":  {"places", "Most visitors are in"},
-}
+// cardHeroes are the single-item pictures, by t: the list whose first line they say (the words before it are the language's heroLabel).
+var cardHeroes = map[string]string{"toppage": "leaderboard", "topsource": "sources", "topplace": "places"}
 
 // listsOf fills the top five of every list picture from the report.
 func (n *cardNumbers) listsOf(res *query.Result) {
+	l := n.l()
 	n.lists = map[string][]cards.Item{}
-	for t, l := range cardLists {
-		rows := res.Dims[l.dim]
+	for t, list := range cardLists {
+		rows := res.Dims[list.dim]
 		var total int64
 		for _, r := range rows {
 			total += r.Visitors
@@ -47,14 +44,14 @@ func (n *cardNumbers) listsOf(res *query.Result) {
 				break
 			}
 			name := r.Value
-			if l.dim == "country" {
-				name = countryName(r.Value)
+			if list.dim == "country" {
+				name = countryName(l, r.Value)
 			}
 			if name == "" || rows[0].Visitors == 0 {
 				continue
 			}
-			value := number(r.Visitors)
-			if l.percent {
+			value := l.number(r.Visitors)
+			if list.percent {
 				value = fmt.Sprintf("%.0f%%", float64(r.Visitors)/float64(total)*100)
 			}
 			items = append(items, cards.Item{Name: name, Value: value, Share: float64(r.Visitors) / float64(rows[0].Visitors)})
@@ -66,13 +63,14 @@ func (n *cardNumbers) listsOf(res *query.Result) {
 // pictureOf sets what the picture says on the spec: a list or hero from its items, and for every picture
 // with nothing behind it the one line "Needs a visit in this period" (never a zero or a dash).
 func (n *cardNumbers) pictureOf(spec *cards.Spec, t string) {
-	if l, ok := cardLists[t]; ok {
-		spec.Template, spec.Label, spec.Rows, spec.Big = "leaderboard", l.title, n.lists[t], cardWords.noVisits
+	l := n.l()
+	if _, ok := cardLists[t]; ok {
+		spec.Template, spec.Label, spec.Rows, spec.Big = "leaderboard", l.listTitle[t], n.lists[t], l.noVisits
 		return
 	}
-	if h, ok := cardHeroes[t]; ok {
-		spec.Template, spec.Label, spec.Big = "spotlight", h.label, cardWords.noVisits
-		if items := n.lists[h.list]; len(items) > 0 {
+	if list, ok := cardHeroes[t]; ok {
+		spec.Template, spec.Label, spec.Big = "spotlight", l.heroLabel[t], l.noVisits
+		if items := n.lists[list]; len(items) > 0 {
 			spec.Big = items[0].Name
 		} else {
 			spec.Label = ""
@@ -89,16 +87,17 @@ func (n *cardNumbers) pictureOf(spec *cards.Spec, t string) {
 		return
 	}
 	if (t == "overview" || t == "numbers") && !n.HasData && n.Metric != "revenue" {
-		spec.Big, spec.Label, spec.Change, spec.Dir, spec.Series, spec.Stats = cardWords.noVisits, "", "", 0, nil, nil
+		spec.Big, spec.Label, spec.Change, spec.Dir, spec.Series, spec.Stats = l.noVisits, "", "", 0, nil, nil
 	}
 }
 
 // milestoneOf makes the spec the milestone's own card (the spotlight, in its words and colours), on the format and
 // look asked for; with no milestone in the period, the line that says so.
 func (n *cardNumbers) milestoneOf(spec *cards.Spec) {
+	l := n.l()
 	spec.Template, spec.Change, spec.Dir, spec.Series, spec.Stats = "spotlight", "", 0, nil, nil
 	if n.milestone == nil {
-		spec.Big, spec.Label = cardWords.noMilestone, ""
+		spec.Big, spec.Label = l.noMilestone, ""
 		return
 	}
 	m := n.milestone.spec

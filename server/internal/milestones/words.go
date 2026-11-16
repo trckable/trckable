@@ -9,32 +9,60 @@ import (
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
-// The words the card, the share page and the alert say. The dashboard's own
-// words are in its message files (dashboard/src/features/milestones/copy.ts);
-// these are the server's, kept in one place the same way.
+// Tongue is the words a milestone card says, in one language, and the way that language writes its numbers,
+// amounts and days. English is the server's own (alerts, the share page, mail); a card can be drawn in another, which
+// the share pictures' language table (the api package) supplies.
+type Tongue struct {
+	Visitors, Pageviews, FirstPageview, Countries, Record, Revenue, RevenueHidden, RevenueReached, RevenueLine, Milestone, FirstGoal, FirstSale, First string
+	SearchClicks, AIVisits                                                                                                                             string
+	AfterSale, AfterSaleOne, Faster                                                                                                                    string // %d days after the first sale; %d day; %d times faster
+	Fmt                                                                                                                                                Formatter
+}
+
+// Formatter writes a count, an amount of a currency and a day the way its language does.
+type Formatter interface {
+	Number(v float64) string
+	Amount(v float64, currency string) string
+	Day(t time.Time) string
+}
+
+type englishFmt struct{}
+
+func (englishFmt) Number(v float64) string             { return Number(v) }
+func (englishFmt) Amount(v float64, cur string) string { return Amount(v, cur) }
+func (englishFmt) Day(t time.Time) string              { return t.Format("Jan 2, 2006") }
+
+// English is the language of everything but a card asked for in another.
+var English = &Tongue{
+	Visitors:       "visitors",
+	Pageviews:      "pageviews",
+	FirstPageview:  "pageview",
+	Countries:      "countries",
+	Record:         "visitors · record day",
+	Revenue:        "revenue",
+	RevenueHidden:  "Revenue",
+	RevenueReached: "Revenue milestone reached",
+	RevenueLine:    "revenue milestone",
+	Milestone:      "milestone",
+	FirstGoal:      "First goal",
+	FirstSale:      "First sale",
+	First:          "First",
+	SearchClicks:   "Google Search clicks · 28 days",
+	AIVisits:       "visits from AI assistants",
+	AfterSale:      "%d days after the first sale",
+	AfterSaleOne:   "%d day after the first sale",
+	Faster:         "%d× faster than the last one",
+	Fmt:            englishFmt{},
+}
+
+// The words the share page and the alert say.
 var words = struct {
-	visitors, pageviews, firstPageview, countries, record, revenue, revenueHidden, revenueReached, milestone, firstGoal, firstSale, first string
-	searchClicks, aiVisits                                                                                                                string
-	alertTitle, made, pageTitle, reached                                                                                                  string
+	alertTitle, made, pageTitle, reached string
 }{
-	visitors:       "visitors",
-	pageviews:      "pageviews",
-	firstPageview:  "pageview",
-	countries:      "countries",
-	record:         "visitors · record day",
-	revenue:        "revenue",
-	revenueHidden:  "Revenue",
-	revenueReached: "Revenue milestone reached",
-	milestone:      "milestone",
-	firstGoal:      "First goal",
-	firstSale:      "First sale",
-	first:          "First",
-	searchClicks:   "Google Search clicks · 28 days",
-	aiVisits:       "visits from AI assistants",
-	alertTitle:     "Milestone reached",
-	made:           "Made with trckable",
-	pageTitle:      "%s on %s",
-	reached:        "reached on %s",
+	alertTitle: "Milestone reached",
+	made:       "Made with trckable",
+	pageTitle:  "%s on %s",
+	reached:    "reached on %s",
 }
 
 // Words is how a milestone reads: the big part and the line under it.
@@ -47,32 +75,35 @@ type Words struct {
 
 // Say puts a milestone into words. showAmount false leaves the amount of a
 // money milestone out.
-func Say(m sqlite.Milestone, showAmount bool) Words {
-	w := Words{Kind: m.Kind, Day: longDay(m.Day)}
+func Say(m sqlite.Milestone, showAmount bool) Words { return SayIn(English, m, showAmount) }
+
+// SayIn is Say in a language.
+func SayIn(t *Tongue, m sqlite.Milestone, showAmount bool) Words {
+	w := Words{Kind: m.Kind, Day: longDay(t, m.Day)}
 	switch m.Kind {
 	case Visitors:
-		w.Big, w.Label = Number(m.Value), words.visitors
+		w.Big, w.Label = t.Fmt.Number(m.Value), t.Visitors
 	case Pageviews:
-		w.Big, w.Label = Number(m.Value), words.pageviews
+		w.Big, w.Label = t.Fmt.Number(m.Value), t.Pageviews
 		if m.Value == 1 {
-			w.Big, w.Label = words.first, words.firstPageview
+			w.Big, w.Label = t.First, t.FirstPageview
 		}
 	case Countries:
-		w.Big, w.Label = Number(m.Value), words.countries
+		w.Big, w.Label = t.Fmt.Number(m.Value), t.Countries
 	case SearchClicks:
-		w.Big, w.Label = Number(m.Value), words.searchClicks
+		w.Big, w.Label = t.Fmt.Number(m.Value), t.SearchClicks
 	case AIVisits:
-		w.Big, w.Label = Number(m.Value), words.aiVisits
+		w.Big, w.Label = t.Fmt.Number(m.Value), t.AIVisits
 	case RecordDay:
-		w.Big, w.Label = Number(m.Value), words.record
+		w.Big, w.Label = t.Fmt.Number(m.Value), t.Record
 	case FirstGoal:
-		w.Big = words.firstGoal
+		w.Big = t.FirstGoal
 	case FirstSale:
-		w.Big = words.firstSale
+		w.Big = t.FirstSale
 	case Revenue:
-		w.Big, w.Label = Amount(m.Value, m.Currency), words.revenue
+		w.Big, w.Label = t.Fmt.Amount(m.Value, m.Currency), t.Revenue
 		if !showAmount {
-			w.Big, w.Label = words.revenueHidden, words.milestone
+			w.Big, w.Label = t.RevenueHidden, t.Milestone
 		}
 	}
 	return w
@@ -105,12 +136,12 @@ func Amount(v float64, currency string) string {
 	return strings.TrimSpace(Number(v) + " " + strings.ToUpper(currency))
 }
 
-func longDay(day string) string {
-	t, err := time.Parse(time.DateOnly, day)
+func longDay(t *Tongue, day string) string {
+	d, err := time.Parse(time.DateOnly, day)
 	if err != nil {
 		return day
 	}
-	return t.Format("Jan 2, 2006")
+	return t.Fmt.Day(d)
 }
 
 // Page is what the share page says.

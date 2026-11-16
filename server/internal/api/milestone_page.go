@@ -64,7 +64,7 @@ func (a *API) milestoneLink(w http.ResponseWriter, r *http.Request) {
 	if png {
 		// Previews fetch the image once and keep it; a short cache is enough.
 		list, _ := a.Ctl.Milestones(r.Context(), m.SiteID, "")
-		a.serveCard(w, m.Milestone, milestones.Context(m.Milestone, list), m.Domain, "dark", m.Amount, false, "public, max-age=300")
+		a.serveCard(w, cardEN, m.Milestone, milestones.Context(m.Milestone, list), m.Domain, "dark", m.Amount, false, "public, max-age=300")
 		return
 	}
 	words := milestones.Say(m.Milestone, m.Amount)

@@ -56,27 +56,13 @@ func TestPNGSizePerFormat(t *testing.T) {
 // card's margins, and no line sits below the foot of the card.
 func TestLayoutFitsEveryFormat(t *testing.T) {
 	for _, f := range Formats {
-		for tpl, tp := range Templates {
+		for tpl := range Templates {
 			s := sample(tpl, f.ID, "dark")
 			if tpl == "spotlight" {
 				s.Big = "1,234,567,890"
 			}
-			for _, r := range tp.Runs(s) {
-				w := 0.0
-				var text strings.Builder
-				for _, sp := range r.Spans {
-					w += measure(sp.Bold, sp.Text, r.Px)
-					text.WriteString(sp.Text)
-				}
-				x0, x1 := float64(r.X), float64(r.X)+w
-				if r.End {
-					x0, x1 = float64(r.X)-w, float64(r.X)
-				} else if r.Mid {
-					x0, x1 = float64(r.X)-w/2, float64(r.X)+w/2
-				}
-				if x0 < 0 || x1 > float64(f.W)-float64(f.W)/40 || r.Y < 0 || r.Y > f.H {
-					t.Errorf("%s %s: %q spans %.0f–%.0f at y %d, outside %d × %d", f.ID, tpl, text.String(), x0, x1, r.Y, f.W, f.H)
-				}
+			for _, o := range s.Overflows() {
+				t.Error(o)
 			}
 		}
 	}

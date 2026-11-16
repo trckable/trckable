@@ -31,7 +31,7 @@ const (
 // passed 10,000 pageviews 🎉".
 func (w Words) Headline(domain string) string {
 	switch {
-	case w.Kind == Pageviews && w.Big == words.first:
+	case w.Kind == Pageviews && w.Big == English.First:
 		return fmt.Sprintf(mailFirstView, domain)
 	case w.Kind == Visitors, w.Kind == Pageviews, w.Kind == Countries, w.Kind == SearchClicks, w.Kind == AIVisits:
 		return fmt.Sprintf(mailCrossed, domain, w.Line())
