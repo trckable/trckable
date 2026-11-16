@@ -339,7 +339,9 @@ func (s *Store) UpdateShare(ctx context.Context, site, id string, e ShareEdit, n
 		return err
 	}
 	defer tx.Rollback() //nolint:errcheck // a no-op once committed
-	res, err := tx.ExecContext(ctx, `UPDATE site_shares SET `+strings.Join(sets, ", ")+` WHERE site_id = ? AND id = ? AND preview = 0`, append(args, site, id)...) //nolint:gosec // the column names are fixed literals from add(); values are bound
+	// The column names are fixed literals from add(); every value is bound.
+	q := `UPDATE site_shares SET ` + strings.Join(sets, ", ") + ` WHERE site_id = ? AND id = ? AND preview = 0` //nolint:gosec // see above
+	res, err := tx.ExecContext(ctx, q, append(args, site, id)...)
 	if err != nil {
 		return err
 	}
