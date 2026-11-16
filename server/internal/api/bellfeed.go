@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"math"
 	"net/http"
 	"net/url"
 	"sort"
@@ -312,7 +313,7 @@ func hostRows(days []sqlite.RejectedHost) []bellRow {
 			continue
 		}
 		seen[id] = true
-		out = append(out, bellRow{ID: id, Kind: "alert", What: "host", Site: d.Site, At: at.Unix(), Day: d.Day, Host: d.Host, Count: int64(d.N)})
+		out = append(out, bellRow{ID: id, Kind: "alert", What: "host", Site: d.Site, At: at.Unix(), Day: d.Day, Host: d.Host, Count: int64(min(d.N, math.MaxInt64))})
 	}
 	return out
 }
