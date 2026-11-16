@@ -589,6 +589,8 @@ export default {
   'links.notesTip': (on: boolean) => (on ? 'Notes affichées. Cliquez pour les masquer' : 'Notes masquées. Cliquez pour les afficher'),
   'links.notesShown': 'Ce lien affiche les notes',
   'links.notesHidden': 'Ce lien masque les notes',
+  'shareHead.credit': 'Analytics par trckable',
+  'shareHead.get': 'Obtenez le vôtre gratuitement',
   'links.rowPassword': 'Lien protégé',
   'links.rowPublic': 'Lien public',
   'links.noEnd': 'Sans date de fin',

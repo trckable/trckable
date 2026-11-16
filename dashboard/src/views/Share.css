@@ -111,3 +111,32 @@
   color: var(--text-2);
   text-decoration: underline;
 }
+
+/* The slim credit at the right of the header: there only where the footer's "Powered by" is. */
+.share-cta {
+  margin-left: auto;
+  flex: none;
+  font-size: 12px;
+  color: var(--text-3);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.share-cta:hover {
+  color: var(--text-2);
+  text-decoration: underline;
+}
+
+.mk .hd > .hd-id:has(> .share-cta) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .share-cta-by {
+    display: none;
+  }
+  .hd-id {
+    flex-wrap: nowrap;
+  }
+}

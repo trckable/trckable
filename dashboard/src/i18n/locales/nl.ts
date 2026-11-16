@@ -588,6 +588,8 @@ export default {
   'links.notesTip': (on: boolean) => (on ? 'Notities zichtbaar. Klik om te verbergen' : 'Notities verborgen. Klik om te tonen'),
   'links.notesShown': 'Deze link toont de notities nu',
   'links.notesHidden': 'Deze link verbergt de notities nu',
+  'shareHead.credit': 'Analytics door trckable',
+  'shareHead.get': 'Haal de jouwe gratis',
   'links.rowPassword': 'Link met wachtwoord',
   'links.rowPublic': 'Openbare link',
   'links.noEnd': 'Geen einddatum',

@@ -10,6 +10,7 @@ import { setShared } from '../lib/me'
 import { Ghost, Name, Wordmark } from '../components/Logo'
 import { SiteMark } from '../components/SiteMark'
 import { VerifiedPill } from '../features/verified/VerifiedPill'
+import { copy } from './shareCopy'
 import './Share.css'
 
 type State = { state: 'loading' } | { state: 'password'; error?: string; hideBrand?: boolean } | { state: 'ready'; info: ShareInfo } | { state: 'error'; message: string }
@@ -125,6 +126,17 @@ export function PoweredBy({ info }: { info: ShareInfo }) {
   )
 }
 
+/** Analytics by trckable · Get yours free →, under the same rule as the credit at the foot. */
+export function ShareCta({ info }: { info: Pick<ShareInfo, 'powered_by'> }) {
+  if (!info.powered_by) return null
+  return (
+    <a className="share-cta" href={POWERED_BY_HREF} target="_blank" rel="noopener">
+      <span className="share-cta-by">{copy.credit} · </span>
+      {copy.get} →
+    </a>
+  )
+}
+
 export function ShareHeader({ info }: { info: ShareInfo }) {
   return (
     <>
@@ -144,6 +156,7 @@ export function ShareHeader({ info }: { info: ShareInfo }) {
         )}
       </span>
       <VerifiedPill verified={info.verified} viewer brand={!info.hide_brand} />
+      <ShareCta info={info} />
     </>
   )
 }

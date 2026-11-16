@@ -598,6 +598,8 @@ export default {
   'links.notesTip': (on: boolean) => (on ? 'Notizen sichtbar. Zum Ausblenden klicken' : 'Notizen ausgeblendet. Zum Einblenden klicken'),
   'links.notesShown': 'Dieser Link zeigt die Notizen jetzt',
   'links.notesHidden': 'Dieser Link blendet die Notizen jetzt aus',
+  'shareHead.credit': 'Analytics von trckable',
+  'shareHead.get': 'Hol dir deins gratis',
   'links.rowPassword': 'Link mit Passwort',
   'links.rowPublic': 'Öffentlicher Link',
   'links.noEnd': 'Kein Enddatum',

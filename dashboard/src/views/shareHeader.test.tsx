@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { ShareInfo } from '../lib/api'
-import { EmbedHeader, PoweredBy, POWERED_BY_HREF, ShareHeader } from './Share'
+import { EmbedHeader, PoweredBy, POWERED_BY_HREF, ShareCta, ShareHeader } from './Share'
 import { accentVars } from './shareAccent'
 
 const info: ShareInfo = { name: 'Test', revenue: false, domain: 'example.org', site: 'example', timezone: 'UTC', currency: 'USD', modules: {} }
@@ -66,5 +66,17 @@ describe('the credit at the foot of a shared page', () => {
     expect(html).toContain(`href="${POWERED_BY_HREF}"`)
     expect(POWERED_BY_HREF).toBe('https://trckable.com/?ref=shared')
     expect(html).toContain('Powered by')
+  })
+})
+
+describe('the credit at the right of the header', () => {
+  const cta = (p: Partial<ShareInfo>) => renderToStaticMarkup(<ShareCta info={{ ...info, ...p }} />)
+  it('follows the footer\'s rule: only when the server says the page carries it', () => {
+    expect(cta({})).toBe('')
+    expect(cta({ powered_by: false })).toBe('')
+    expect(header({ powered_by: false })).not.toContain('share-cta')
+    const html = header({ powered_by: true })
+    expect(html).toContain(`href="${POWERED_BY_HREF}"`)
+    expect(html).toContain('Get yours free')
   })
 })
