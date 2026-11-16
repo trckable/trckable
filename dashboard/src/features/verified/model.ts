@@ -13,6 +13,10 @@ export type Slot = 'revenue' | 'search'
 
 export const KINDS: Kind[] = ['payments', 'search']
 
+/** The badge a section's title may carry: Search shows Google's data, Sales the money. */
+const SLOT_OF_SECTION: Record<string, Slot | undefined> = { search: 'search', sales: 'revenue' }
+export const slotOfSection = (section: string): Slot | undefined => SLOT_OF_SECTION[section]
+
 const KIND_OF: Record<Slot, VerifiedSource['kind']> = { revenue: 'payments', search: 'gsc' }
 const SOURCE_KIND: Record<string, Kind | undefined> = { payments: 'payments', gsc: 'search' }
 

@@ -2265,6 +2265,7 @@ export default {
   'verified.connect': 'Connecter',
   'verified.checked': (when: string) => `Dernière vérification ${when}`,
   'verified.badge': (what: string) => `${what} : comparé à la source elle-même`,
+  'verified.badgeWord': 'Vérifié',
   'verified.seal': 'Vérifié par trckable',
   'badgelink.label': 'Le badge mène vers',
   'badgelink.home': 'trckable.com',

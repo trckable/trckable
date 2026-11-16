@@ -120,7 +120,8 @@ func digestData(s Spec, f Frame) string {
 	return glow(f) + boxes(p.cards, f.Ink, f.L.n(22)) + rowBars(p.rows, f, p.rowTop, p.rowStep) + badgeCheck(s, f)
 }
 
-// The Search Console badge: after the domain, the Search Console mark, "Verified" and a green check. The mark keeps Google's own colours (a brand mark does), the one exception to drawing with the card's
+// The badge: after the domain, the source's mark, "Verified" and a green check; the code below draws Search Console's
+// mark, a provider's is in sources.go. The mark keeps Google's own colours (a brand mark does), the one exception to drawing with the card's
 // theme; the capsule, the words and the check use the theme's surface, text and "up" colours. The mark is traced from
 // Google's published logo: rising bars with capsule ends, the green one mid-height, the blue one the tallest and
 // darker where they overlap, and a yellow lens with a short handle, red where it overlaps the green bar.
@@ -144,11 +145,14 @@ func badgeGeomOf(s Spec) badgeGeom {
 	gap := float64(l.n(10))
 	lw := float64(l.n(22)) * logoW / logoH
 	g.sc = float64(l.n(22)) / logoH
+	if s.Source != SourceSearch {
+		lw, g.sc = float64(l.n(22)), float64(l.n(22))/markUnits
+	}
 	word := measure(false, s.Badge, px)
 	g.w = lw + gap + word + gap*0.8 + g.cd
 	room := float64(l.Right-l.Left) - g.w - float64(l.n(24))
 	g.lx = float64(l.Left) + measure(false, fitWith(false, s.Domain, room, px), px) + float64(l.n(24))
-	g.ly = mid - logoH*g.sc/2
+	g.ly = mid - float64(l.n(22))/2 // the mark is 22 units tall, whichever source's
 	g.tx = g.lx + lw + gap
 	g.ccx, g.ccy = g.tx+word+gap*0.8+g.cd/2, mid
 	return g
@@ -203,7 +207,7 @@ func logo(b *strings.Builder, f Frame, x, y, sc float64) {
 
 // badgeWidth is the room the badge takes on the domain's line.
 func badgeWidth(s Spec) float64 {
-	if s.Badge == "" {
+	if !s.badged() {
 		return 0
 	}
 	return badgeGeomOf(s).w
@@ -234,12 +238,16 @@ func capsule(x, y, w, h float64) string {
 // badgeCheck draws the badge's shapes: the logo and the check, a filled green circle with a tick in the card's
 // background colour (which reads on both themes' greens). Numbers only.
 func badgeCheck(s Spec, f Frame) string {
-	if s.Badge == "" {
+	if !s.badged() {
 		return ""
 	}
 	g := badgeGeomOf(s)
 	var b strings.Builder
-	logo(&b, f, g.lx, g.ly, g.sc)
+	if s.Source == SourceSearch {
+		logo(&b, f, g.lx, g.ly, g.sc)
+	} else {
+		b.WriteString(mark(s.Source, s, g.lx, g.ly, g.sc))
+	}
 	r := g.cd / 2
 	fmt.Fprintf(&b, `<path d="%sZ" fill="%s"/>`, arcPoints(g.ccx, g.ccy, r, 0, 360, true), s.Theme.Up)
 	fmt.Fprintf(&b, `<path d="M%.2f %.2fL%.2f %.2fL%.2f %.2f" fill="none" stroke="%s" stroke-width="%.2f" stroke-linecap="round" stroke-linejoin="round"/>`,
@@ -263,7 +271,7 @@ func digestRuns(s Spec) []Run {
 		runs = append(runs, Run{X: l.Left, Y: l.TitleY + i*int(p.titlePx*1.2), Px: p.titlePx, Spans: []Span{{Text: line, Bold: true, Ink: s.Theme.FG}}})
 	}
 	runs = append(runs, Marks(s)...)
-	if s.Badge != "" {
+	if s.badged() {
 		g := badgeGeomOf(s)
 		runs = append(runs, Run{X: int(g.tx), Y: int(g.y1), Px: g.px1, Spans: []Span{{Text: s.Badge, Ink: s.Theme.Muted}}})
 	}

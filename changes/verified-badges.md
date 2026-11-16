@@ -1,0 +1,1 @@
+Revenue pictures carry the badge of the payment provider that vouches for them (Stripe, Paddle, Lemon Squeezy, Dodo Payments, Polar), and on a shared link the Sales title shows the same logo with Verified and a check while that provider is delivering.

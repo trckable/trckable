@@ -112,6 +112,7 @@ export default function PanelContent(p: ContentProps) {
           noTabs
           onDrawer={!p.full ? () => setDrawer(true) : undefined}
           updated={<Updated site={p.site} read={reads} />}
+          verified={isShared() ? p.site.verified : undefined}
           section={section}
           tab={tab}
           filters={filters}
