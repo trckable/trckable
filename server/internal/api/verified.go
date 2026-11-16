@@ -37,6 +37,8 @@ type verifiedSource struct {
 	Since    int64  `json:"since"`   // unix seconds: when it was set up
 	Checked  int64  `json:"checked"` // unix seconds: when it last worked, or was last looked at
 	Detail   string `json:"detail"`  // one plain sentence, in English
+	// Mixed (payments): typed-in revenue, or a second provider's, sits beside the named one's, so a badge for all the money would be wrong.
+	Mixed bool `json:"mixed,omitempty"`
 }
 
 type verified struct {
@@ -87,11 +89,16 @@ func searchSource(in verifiedIn) (verifiedSource, bool) {
 func paymentSource(in verifiedIn) (verifiedSource, bool) {
 	var s verifiedSource
 	var last int64
+	providers := map[string]bool{}
+	typed := false
 	for _, c := range in.Pay {
 		// Typed in by hand, or a test connection: not proof of real money.
 		if c.Provider == "custom" || c.Mode == "test" {
+			// Typed-in revenue can sit beside the provider's: then not all of it is verified.
+			typed = typed || c.Provider == "custom"
 			continue
 		}
+		providers[c.Provider] = true
 		var hook, sync int64
 		if c.LastEvent != nil {
 			hook = *c.LastEvent
@@ -111,6 +118,8 @@ func paymentSource(in verifiedIn) (verifiedSource, bool) {
 		return s, false
 	}
 	s.Checked = last
+	// Mixed: the money does not all come from the one provider that is named, so nothing may claim it all does.
+	s.Mixed = typed || len(providers) > 1
 	if within(in.Now, last, verifiedPayments) {
 		s.OK, s.Detail = true, "Revenue is read from the provider, not typed in"
 	} else {

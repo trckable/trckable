@@ -247,6 +247,7 @@ func (s Spec) shapes(raster bool) ([]byte, error) {
 	if t.Data != nil {
 		b.WriteString(t.Data(s, s.frame(raster)))
 	}
+	b.WriteString(badgeCheck(s, s.frame(raster)))
 	return b.Bytes(), nil
 }
 
@@ -259,7 +260,7 @@ func (s Spec) SVG() ([]byte, error) {
 	t, _ := s.template()
 	out := bytes.NewBuffer(b)
 	out.WriteString(`<g font-family="Geist, ui-sans-serif, system-ui, sans-serif">`)
-	for _, r := range t.Runs(s) {
+	for _, r := range s.runs(t) {
 		anchor := ""
 		if r.End {
 			anchor = ` text-anchor="end"`

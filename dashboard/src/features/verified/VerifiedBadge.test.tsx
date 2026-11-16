@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import type { Verified, VerifiedSource } from '../../lib/api'
 import { VerifiedBadge, badgeSource } from './VerifiedBadge'
 import logos from './logos.json'
+import { SourceMark } from './Marks'
 import { slotOfSection } from './model'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -45,6 +46,18 @@ describe('the badge by a section title', () => {
     expect(badgeSource(v({ kind: 'gsc', provider: undefined }), 'revenue')).toBeNull()
     expect(badgeSource(v({ provider: 'paypal' }), 'revenue')).toBeNull()
     expect(badgeSource(v({ provider: 'gumroad' }), 'revenue')).toBeNull()
+  })
+
+  it('shows nothing on money that is not all verified', () => {
+    expect(badgeSource(v({ provider: 'stripe', mixed: true }), 'revenue')).toBeNull()
+    expect(badgeSource(v({ provider: 'stripe', mixed: false }), 'revenue')).toBe('stripe')
+  })
+
+  it('draws the source mark of Stripe from the shared logos', () => {
+    draw(<SourceMark s={{ kind: 'payments', provider: 'stripe' }} />)
+    expect(host.querySelector('svg path')?.getAttribute('d')).toBe(logos.stripe.d)
+    draw(<SourceMark s={{ kind: 'payments', provider: 'paypal' }} />)
+    expect(host.querySelector('svg.vf-logo')).toBeNull()
   })
 
   it('draws the logo, the word and the check', () => {
