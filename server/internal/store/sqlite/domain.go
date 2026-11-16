@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -228,4 +229,85 @@ func (s *Store) DomainChangedAt(ctx context.Context, site string) (int64, error)
 		return 0, nil
 	}
 	return at, err
+}
+
+// MaxAllowedHosts is how many extra hostnames a site may list.
+const MaxAllowedHosts = 20
+
+// ErrBadAllowed is a hostname that cannot be allowed; its text is shown as written.
+var ErrBadAllowed = errors.New("use hostnames like staging.example.com: no https://, path, port or spaces")
+
+// ErrTooManyAllowed is a list over MaxAllowedHosts.
+var ErrTooManyAllowed = fmt.Errorf("a site can allow at most %d extra domains", MaxAllowedHosts)
+
+// CleanAllowed is the list as it is kept: lower case, no scheme, path or
+// leading www. (ingest drops it from every visit's hostname), a leading "*."
+// folded into the name (a name already covers its subdomains, as ingest
+// matches them), no repeats, in the order given.
+func CleanAllowed(in []string) ([]string, error) {
+	out := make([]string, 0, len(in))
+	seen := map[string]bool{}
+	for _, raw := range in {
+		h := strings.TrimPrefix(strings.ToLower(strings.TrimSpace(raw)), "*.")
+		h = strings.TrimPrefix(h, "www.")
+		if h == "" {
+			continue
+		}
+		if len(h) > 253 || strings.ContainsAny(h, " /\\:@?#,*") || !strings.Contains(h, ".") || strings.HasPrefix(h, ".") || strings.HasSuffix(h, ".") || strings.Contains(h, "..") {
+			return nil, ErrBadAllowed
+		}
+		if !seen[h] {
+			seen[h] = true
+			out = append(out, h)
+		}
+	}
+	if len(out) > MaxAllowedHosts {
+		return nil, ErrTooManyAllowed
+	}
+	return out, nil
+}
+
+// AllowedOf lists the extra hostnames a site accepts besides its domain.
+func (s *Store) AllowedOf(ctx context.Context, site string) ([]string, error) {
+	var raw string
+	err := s.DB.QueryRowContext(ctx, `SELECT allowed FROM sites WHERE id = ?`, site).Scan(&raw)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, auth.ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	out := []string{} // never null: the dashboard maps over it
+	if raw != "" {
+		out = append(out, strings.Split(raw, ",")...)
+	}
+	return out, nil
+}
+
+// SetAllowed keeps the list (already clean) and makes ingest use it at once.
+// The refused visits this week from a name now allowed are forgotten, so
+// nothing keeps telling that they are refused.
+func (s *Store) SetAllowed(ctx context.Context, site string, list []string) error {
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback() //nolint:errcheck // a rollback after a commit has nothing to do
+	res, err := tx.ExecContext(ctx, `UPDATE sites SET allowed = ? WHERE id = ?`, strings.Join(list, ","), site)
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return auth.ErrNotFound
+	}
+	for _, h := range list {
+		if _, err := tx.ExecContext(ctx, `DELETE FROM rejected_hosts WHERE site_id = ? AND (host = ? OR host LIKE ? ESCAPE '\')`,
+			site, h, "%."+strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(h)); err != nil {
+			return err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return s.reloadSites(ctx)
 }

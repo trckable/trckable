@@ -1,0 +1,1 @@
+Each site has an Allowed domains setting under General: add a staging site or an old domain so its visits count, with the hostnames refused this week offered as one-tap suggestions, and the bell notice about refused visits opens it directly.

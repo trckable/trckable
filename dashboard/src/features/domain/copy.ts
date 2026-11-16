@@ -29,3 +29,18 @@ export const copy = defineCopy('domainChange', {
   checking: 'Checking…',
   tooSoon: 'A site’s domain can change once a day. Try again tomorrow.',
 })
+
+// Allowed domains (Settings → General, under Domain).
+export const allowedCopy = defineCopy('allowedDomains', {
+  label: 'Allowed domains',
+  hint: 'Visits from these addresses count too, e.g. staging or an old domain',
+  placeholder: 'staging.example.com',
+  add: 'Add',
+  remove: (host: string) => `Remove ${host}`,
+  allow: (host: string) => `Allow ${host}`,
+  refused: 'Refused this week',
+  added: (host: string) => `${host} is allowed now`,
+  removed: (host: string) => `${host} is no longer allowed`,
+  have: 'That address is already listed',
+  full: (n: number) => `You can allow up to ${n} addresses. Remove one first.`,
+})

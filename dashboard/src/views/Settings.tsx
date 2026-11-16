@@ -29,6 +29,7 @@ import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import { SavedFlag, useSaved } from '../components/SavedFlag'
 import { InstallSection } from './InstallSection'
 import { ForDevelopers } from './ForDevelopers'
+import { AllowedDomains } from '../features/domain/AllowedDomains'
 import { DomainRow } from '../features/domain/DomainRow'
 import './Settings.css'
 
@@ -181,6 +182,7 @@ function SiteSettings({ site, onSaved }: { site: Site; onSaved: () => void }) {
       </Row>
 
       <DomainRow site={site} onSaved={onSaved} />
+      <AllowedDomains site={site} />
 
       <Row label="Timezone" hint="Which day and hour a visit belongs to">
         <Picker
