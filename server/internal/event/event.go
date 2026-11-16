@@ -48,6 +48,9 @@ type Event struct {
 
 	Hostname string `json:"h,omitempty"`
 	Path     string `json:"p,omitempty"`
+	// Title is the page's title, on a pageview only. It is never stored on
+	// the event row: the writer keeps the latest one per (site, path).
+	Title string `json:"ti,omitempty"`
 
 	RefHost string `json:"rh,omitempty"`
 	RefURL  string `json:"ru,omitempty"`

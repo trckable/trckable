@@ -10,6 +10,8 @@ export type Tone = '' | 'up' | 'dn'
 export interface Row {
   val: string
   name: string
+  /** The page's own title, on a table of pages that has one for the row: the path goes small under it. */
+  title?: string
   /** The shorter name a filter chip says ("HN"). */
   short?: string
   /** Country code, where the row is a country (the flag comes from it). */

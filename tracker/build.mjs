@@ -25,7 +25,10 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 // site's script (2,068 → 2,315). The classic snippet without them is 2,095.
 // 2,418 since 16 Nov 2026: the last send goes by sendBeacon when the page is hidden,
 // and a consent-free visitor's queue is kept in the tab (about 100 bytes).
-const BUDGET = 2418 // bytes, gzip, for the full script: 2 KB, as the site says
+// 2,476 since 16 Nov 2026: a page view carries the page's title (no email address,
+// 200 characters, not again when a router has not changed it, none from a page whose
+// <html> says data-trckable-ignore): 70 bytes on a new site's script (2,406 → 2,476).
+const BUDGET = 2476 // bytes, gzip, for the full script: 2 KB, as the site says
 const TARGET = 1638 // 1.6 KB goal
 
 // Keep in sync with server/internal/modules (Tracker* constants).
