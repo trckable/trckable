@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"math"
 	"net/http"
 	"net/url"
 	"sort"
@@ -243,6 +244,11 @@ func (a *API) bellRows(r *http.Request, account string, sites []sqlite.SiteRow, 
 			}
 		}
 	}
+	if days, err := a.Ctl.HostBusyDays(ctx, ids, bellHostMin, now); err != nil {
+		partial.Store(true)
+	} else {
+		add(hostRows(days))
+	}
 	var g errgroup.Group
 	g.SetLimit(bellSites)
 	for _, s := range sites {
@@ -286,6 +292,30 @@ func (a *API) bellRows(r *http.Request, account string, sites []sqlite.SiteRow, 
 		}
 	}
 	return out, partial.Load()
+}
+
+// bellHostMin is how many refused events from one hostname, in one day, make the bell say so.
+const bellHostMin = 20
+
+// hostRows tells, once per host and week, that a site is being sent visits from a hostname it refuses: the notice is the first
+// such day of the week, so it keeps its id and its place as more come. `days` are oldest first.
+func hostRows(days []sqlite.RejectedHost) []bellRow {
+	seen := map[string]bool{}
+	var out []bellRow
+	for _, d := range days {
+		at, err := time.Parse(time.DateOnly, d.Day)
+		if err != nil {
+			continue
+		}
+		year, week := at.ISOWeek()
+		id := "host:" + d.Site + ":" + d.Host + ":" + strconv.Itoa(year) + "-W" + strconv.Itoa(week)
+		if seen[id] {
+			continue
+		}
+		seen[id] = true
+		out = append(out, bellRow{ID: id, Kind: "alert", What: "host", Site: d.Site, At: at.Unix(), Day: d.Day, Host: d.Host, Count: int64(min(d.N, math.MaxInt64))})
+	}
+	return out
 }
 
 // nullWriter takes what parse would answer a client with: here it only matters that it failed.

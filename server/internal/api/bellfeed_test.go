@@ -487,3 +487,45 @@ func TestBellReadNeedsAPerson(t *testing.T) {
 		t.Fatalf("mark without sign-in: %d", code)
 	}
 }
+
+// A host the site refuses, sending 20 or more events in a day, is one notice a week; fewer is none.
+func TestBellFeedRefusedHostIsOneNoticePerWeek(t *testing.T) {
+	g := newRig(t)
+	ctx := context.Background()
+	owner := client()
+	g.setup(t, owner)
+	day := g.now.UTC().Format(time.DateOnly)
+	if err := g.ctl.AddRejectedHosts(ctx, []sqlite.RejectedHost{
+		{Site: g.site, Day: day, Host: "other.example", N: 25},
+		{Site: g.site, Day: day, Host: "quiet.example", N: 19},
+	}, g.now); err != nil {
+		t.Fatal(err)
+	}
+	rows := feedOf(t, g, owner)
+	var told []feedRow
+	for _, r := range rows {
+		if r["what"] == "host" {
+			told = append(told, r)
+		}
+	}
+	if len(told) != 1 || told[0]["host"] != "other.example" || told[0]["kind"] != "alert" || told[0]["day"] != day {
+		t.Fatalf("the refused host: %v", told)
+	}
+	// More events the same week do not make a second notice, and the id stays.
+	if err := g.ctl.AddRejectedHosts(ctx, []sqlite.RejectedHost{{Site: g.site, Day: day, Host: "other.example", N: 40}}, g.now); err != nil {
+		t.Fatal(err)
+	}
+	g.api.bell = bellCache{}
+	again := 0
+	for _, r := range feedOf(t, g, owner) {
+		if r["what"] == "host" {
+			again++
+			if r["id"] != told[0]["id"] {
+				t.Fatalf("the id moved: %v", r["id"])
+			}
+		}
+	}
+	if again != 1 {
+		t.Fatalf("one notice a week, got %d", again)
+	}
+}

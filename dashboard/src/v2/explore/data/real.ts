@@ -32,7 +32,7 @@ import { scaled, withSourceUsuals } from './scaled'
 import { mapEngage, mapOverview, mapTable, mapTops, optionsOf, type Uptime } from './mapReport'
 import { mapSlowCost } from './slowCost'
 import { mapNetworks } from './networks'
-import { mapBots, mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, salesCountries, mapSearch, mapSpeed } from './mapSections'
+import { botsModel, mapBots, mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, salesCountries, mapSearch, mapSpeed } from './mapSections'
 import type { DataCtx, Meta, TabData } from './useExplore'
 import { dateFmt } from '../../../lib/format'
 
@@ -243,9 +243,11 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal, soon?: 
       const r = await mentionsApi.list(c.site.id, periodFor(c), signal)
       return mapMentions(r.mentions, c.site.timezone, today)
     }
-    case 'bots':
-      // A site that does not watch for robots has none to list.
-      return more.crawlers(c.site.id, q).then(mapBots, () => [])
+    case 'bots': {
+      // A site that does not watch for robots has none to list; what was dropped on purpose comes with the report.
+      const [rows, report] = await Promise.all([more.crawlers(c.site.id, q).then(mapBots, () => []), cachedReport(c.site.id, q, undefined, signal).catch(() => undefined)])
+      return botsModel(rows, report?.bots)
+    }
     case 'outbound': {
       const r = await call<{ properties: { key: string; value: string; visitors: number }[] | null }>('GET', `/sites/${c.site.id}/report/goal-props${rangeQS(q)}&goal=outbound_click&limit=${LINKS_ROWS}`, undefined, signal)
       const rows = mapLinks(r.properties ?? [])

@@ -31,6 +31,8 @@ func TestReportCarriesTheBotsFiltered(t *testing.T) {
 		{Site: g.site, Day: "2026-09-10", Kind: "bot", N: 7},
 		{Site: g.site, Day: "2026-09-11", Kind: "ai-crawler", N: 3},
 		{Site: g.site, Day: "2026-09-12", Kind: "bot", N: 99},
+		{Site: g.site, Day: "2026-09-10", Kind: "owner", N: 5},
+		{Site: g.site, Day: "2026-09-10", Kind: "aged", N: 2},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -38,6 +40,10 @@ func TestReportCarriesTheBotsFiltered(t *testing.T) {
 	b := bots("")
 	if b["total"].(float64) != 10 || b["kinds"].(map[string]any)["ai-crawler"].(float64) != 3 {
 		t.Fatalf("after a flush: %v", b)
+	}
+	// What the owner's settings left out and what was too old are listed, but they are not bots.
+	if k := b["kinds"].(map[string]any); k["owner"].(float64) != 5 || k["aged"].(float64) != 2 {
+		t.Fatalf("the left-out kinds: %v", b)
 	}
 	if b := bots("&f=channel:Search"); b != nil {
 		t.Fatalf("a filtered report carries the site's bots: %v", b)

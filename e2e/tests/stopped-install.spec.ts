@@ -32,7 +32,7 @@ test('a stopped site keeps its dot in the switcher', async ({ page, browserName 
     if (r.request().method() !== 'GET') return r.continue()
     const res = await r.fetch()
     const body = (await res.json()) as { sites: Record<string, unknown>[] }
-    for (const s of body.sites) if (s.id === site.id) Object.assign(s, { last_event_at: now - 3 * DAY, check: { at: now - DAY, error: 'timeout', down_since: now - 2 * DAY } })
+    for (const s of body.sites) if (s.id === site.id) Object.assign(s, { last_event_at: now - 3 * DAY - 6 * 3600, down_since: now - 3 * DAY, check: { at: now - DAY, error: 'timeout', down_since: now - 2 * DAY } })
     await r.fulfill({ response: res, json: body })
   })
   await page.goto(`${API}/example.com`)
@@ -61,7 +61,7 @@ test('a quiet site shows a grey dot and how long it has been quiet, with its exp
     const body = (await res.json()) as { sites: Record<string, unknown>[] }
     for (const s of body.sites) {
       if (s.id === site.id) Object.assign(s, { last_event_at: now - 19 * 3600, check: { at: now - 3600, found: 'none' } })
-      if (s.id === gone.id) Object.assign(s, { last_event_at: now - 3 * DAY, check: { at: now - DAY, error: 'timeout', down_since: now - 2 * DAY } })
+      if (s.id === gone.id) Object.assign(s, { last_event_at: now - 3 * DAY - 6 * 3600, down_since: now - 3 * DAY, check: { at: now - DAY, error: 'timeout', down_since: now - 2 * DAY } })
     }
     await r.fulfill({ response: res, json: body })
   })

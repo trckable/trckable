@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Site } from '../../lib/api'
-import { chipKindOf, downStateOf, statusOf } from './status'
+import { chipKindOf, downStateOf, statusOf, trackingOf } from './status'
 import { silence, span } from './time'
 
 const NOW = 1_800_000_000_000
@@ -48,7 +48,9 @@ describe('a site’s status', () => {
 
   it('is down only when a look after the last visit found no answer', () => {
     const last = sec - 7 * 3600
-    expect(statusOf(site({ last_event_at: last, check: { at: sec - 60, error: 'x' } }), NOW)).toBe('down')
+    // A failed look alone does not make it down here: the server says so with down_since (api TestSitesAgreeWithTheBellOnADownSite), and a probe that finds the page up settles it.
+    expect(statusOf(site({ last_event_at: last, check: { at: sec - 60, error: 'x' } }), NOW)).toBe('quiet')
+    expect(statusOf(site({ last_event_at: last, down_since: last + 6 * 3600, check: { at: sec - 60, error: 'x' } }), NOW)).toBe('down')
     expect(statusOf(site({ last_event_at: last, check: { at: last - 60, error: 'x' } }), NOW)).toBe('quiet')
   })
 
@@ -86,5 +88,17 @@ describe('the chip of a quiet site', () => {
   it('keeps down and check-fails for the probe', () => {
     expect(chipKindOf(site({ ...quiet, down_since: sec - 600 }), [{ ok: true }])).toBe('down')
     expect(chipKindOf(site({ ...quiet, down_since: sec - 600, down_visitors: true }))).toBe('check')
+  })
+})
+
+describe('what the last visit says of tracking itself', () => {
+  it('says tracking works when a visit came in the last hour, even for a site found down', () => {
+    expect(trackingOf(site({ last_event_at: sec - 7 * 60, down_since: sec - 900 }), NOW)).toEqual({ kind: 'works', ago: 420 })
+  })
+  it('tells an older last visit as when visits stopped', () => {
+    expect(trackingOf(site({ last_event_at: sec - 3 * 3600 }), NOW)).toEqual({ kind: 'silent', at: sec - 3 * 3600 })
+  })
+  it('says nothing for a site with no visit', () => {
+    expect(trackingOf(site(), NOW)).toBeUndefined()
   })
 })

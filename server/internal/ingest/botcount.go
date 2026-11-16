@@ -13,6 +13,9 @@ const (
 	BotAI       = "ai-crawler" // an AI company's crawler
 	BotHeadless = "headless"   // a browser driven by a program, or a testing tool
 	BotHosting  = "hosting"    // a visit from a data centre, with strict filtering on
+	// Not bots, counted the same way so the owner can see what their own settings and the clock left out.
+	BotOwner = "owner" // left out by the site's settings: an excluded path, Do Not Track, the owner's own address
+	BotAged  = "aged"  // refused as too old to count
 )
 
 // BotCount is the number of visits of one kind turned away for a site on one

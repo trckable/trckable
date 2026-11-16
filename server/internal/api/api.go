@@ -1187,8 +1187,11 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 		// The sources behind the numbers ride with the list, so the header's
 		// seal and the site switcher need no request of their own.
 		last.Verified = a.verifiedOf(r.Context(), last.SiteInfo)
-		if p, ok := downs[s.ID]; ok {
-			out[len(out)-1].SetDown(p)
+		p, probed := downs[s.ID]
+		if !probed {
+			p = a.probeIfStale(r.Context(), last.SiteInfo, last.Check)
+		}
+		if a.setDown(&out[len(out)-1].SiteInfo, p, last.Check) && probed {
 			a.recheckIfContradicted(s.ID, out[len(out)-1].SiteInfo)
 		}
 		out[len(out)-1].ProbeBlockedSince = blocked[s.ID]
@@ -1229,12 +1232,38 @@ func (a *API) site(w http.ResponseWriter, r *http.Request) {
 	}
 	if p, err := a.Ctl.ProbeOf(r.Context(), si.ID); err == nil {
 		si.ProbeBlockedSince = p.BlockedSince
-		if p.Down() {
-			si.SetDown(p)
+		var check *sqlite.SiteCheck
+		if c, err := a.Ctl.CheckOf(r.Context(), si.ID); err == nil && c.At > 0 {
+			check = &c
+		}
+		if a.setDown(&si, p, check) && p.Down() {
 			a.recheckIfContradicted(si.ID, si)
 		}
 	}
 	writeJSON(w, http.StatusOK, si)
+}
+
+// probeIfStale is the site's last probe, read only when the daily look failed after visits went silent: the one case where a
+// site that no probe finds down may still be down (it is not probed at all).
+func (a *API) probeIfStale(ctx context.Context, si sqlite.SiteInfo, c *sqlite.SiteCheck) sqlite.SiteProbe {
+	if c == nil || !sqlite.CheckFailed(si.LastEventAt, *c, a.Now().Unix()) {
+		return sqlite.SiteProbe{}
+	}
+	p, _ := a.Ctl.ProbeOf(ctx, si.ID)
+	return p
+}
+
+// setDown tells the site down by the one rule (sqlite.DownNow) the incident record and so the bell use too, and says whether it is.
+func (a *API) setDown(si *sqlite.SiteInfo, p sqlite.SiteProbe, c *sqlite.SiteCheck) bool {
+	var check sqlite.SiteCheck
+	if c != nil {
+		check = *c
+	}
+	since, cause, down := sqlite.DownNow(si.LastEventAt, check, p, a.Now().Unix())
+	if down {
+		si.SetDown(sqlite.SiteProbe{DownSince: since, Error: cause})
+	}
+	return down
 }
 
 func (a *API) createSite(w http.ResponseWriter, r *http.Request) {

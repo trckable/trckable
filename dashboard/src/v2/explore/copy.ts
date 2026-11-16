@@ -120,6 +120,8 @@ export const copy = defineCopy('v2explore', {
   sourceNames: { hn: 'Hacker News', ph: 'Product Hunt' },
   todayAt: 'Today',
   aboutAi: 'AI & Search',
+  leftOut: (n: string) => `Left out by your settings: ${n}`,
+  tooOld: (n: string) => `Too old to count: ${n}`,
   noteBots: 'Bots and crawlers are filtered out before anything is counted, so they never inflate your visitors.',
   noteSpeed: "Measured in your visitors' browsers, at the 75th percentile.",
   noteSearch: 'From Google Search Console, usually a day behind.',

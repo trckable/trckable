@@ -268,6 +268,9 @@ var (
 	errNotYet     = errors.New("site not available yet")
 	errHost       = errors.New("hostname not allowed")
 	errRate       = errors.New("rate limited")
+	// errAged is a visit too old to count. The tracker is told the same as for a bad payload (a final no), but the
+	// handler counts it for the site.
+	errAged = errors.New(errBadPayload.Error())
 )
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -307,15 +310,16 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.reject(w, http.StatusServiceUnavailable, err)
 		return
 	}
+	if err == errAged {
+		h.Bots.Add(p.Site, h.Now(), BotAged)
+	}
 	if err != nil {
 		h.reject(w, http.StatusBadRequest, err)
 		return
 	}
 	if drop != "" {
 		h.Stats.Bots.Add(1)
-		if drop != dropOwner {
-			h.Bots.Add(p.Site, h.Now(), drop) // only for a site build found: it knew the id
-		}
+		h.Bots.Add(p.Site, h.Now(), drop)  // only for a site build found: it knew the id
 		w.WriteHeader(http.StatusAccepted) // don't tell bots anything
 		return
 	}
@@ -373,8 +377,9 @@ func (h *Handler) reject(w http.ResponseWriter, code int, err error) {
 var wellFormedSiteID = regexp.MustCompile(`^tkb_[a-z0-9]{8,}$`)
 
 // dropOwner marks a visit the site's owner chose to leave out (an excluded
-// path, Do Not Track): dropped like a bot, but never counted as one.
-const dropOwner = "owner"
+// path, Do Not Track, their own address): dropped like a bot and counted per
+// day like one, but under its own kind, and never in the bot total.
+const dropOwner = BotOwner
 
 // build makes the event for a payload. drop is empty for a visit that is kept;
 // otherwise the visit is dropped, as one of the Bot kinds or dropOwner.
@@ -485,7 +490,7 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 	if age < 0 {
 		age = 0
 	} else if age > maxAgeMs {
-		return nil, "", nil, errBadPayload
+		return nil, "", nil, errAged
 	}
 	e := &event.Event{
 		Site:     site.ID,

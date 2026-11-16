@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -60,8 +61,11 @@ func TestBotCountsLeaveOutWhatIsNotABot(t *testing.T) {
 	h.ServeHTTP(httptest.NewRecorder(), req)
 	// A real visit.
 	post(h, `{"s":"tkb_test","k":"pv","u":"https://site.com/","id":"a"}`, chromeUA)
-	if rows := h.Bots.Drain(); len(rows) != 0 {
-		t.Fatalf("counted what is not a bot: %v", rows)
+	// What the owner's settings left out is counted under its own kind, never as a bot.
+	got := counts(h.Bots.Drain())
+	want := map[string]uint64{"tkb_test 2026-09-22 owner": 2}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("counted %v, want %v", got, want)
 	}
 	if n, _ := l.Committed(); n != 1 {
 		t.Fatalf("the real visit was not kept: %d", n)
@@ -137,5 +141,21 @@ func TestBotCountsAreSafeUnderLoad(t *testing.T) {
 	}
 	if total != 4000 {
 		t.Fatalf("counted %d of 4000", total)
+	}
+}
+
+func TestTooOldIsCountedAsAged(t *testing.T) {
+	h, l := newHandler(t)
+	w := post(h, `{"s":"tkb_test","k":"pv","u":"https://site.com/","a":`+strconv.FormatInt(maxAgeMs+1, 10)+`}`, chromeUA)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("a visit too old: got %d, want a final no", w.Code)
+	}
+	if n, _ := l.Committed(); n != 0 {
+		t.Fatalf("a visit too old was kept: %d", n)
+	}
+	got := counts(h.Bots.Drain())
+	want := map[string]uint64{"tkb_test 2026-09-22 aged": 1}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("counted %v, want %v", got, want)
 	}
 }

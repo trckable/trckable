@@ -102,6 +102,33 @@ func (s *Store) RejectedHostsOf(ctx context.Context, site string, now time.Time)
 	return out, nil
 }
 
+// HostBusyDays are the days, in the last week, on which some site was sent at least min events from one hostname it does not list: the
+// rows behind the bell's "visits from this host are refused" notice. Oldest day first.
+func (s *Store) HostBusyDays(ctx context.Context, sites []string, min int64, now time.Time) ([]RejectedHost, error) {
+	var out []RejectedHost
+	since := now.UTC().AddDate(0, 0, -hostKeepDays+1).Format(time.DateOnly)
+	for _, id := range sites {
+		rows, err := s.DB.QueryContext(ctx, `SELECT day, host, n FROM rejected_hosts WHERE site_id = ? AND day >= ? AND n >= ? ORDER BY day, host`, id, since, min)
+		if err != nil {
+			return nil, err
+		}
+		for rows.Next() {
+			r := RejectedHost{Site: id}
+			if err := rows.Scan(&r.Day, &r.Host, &r.N); err != nil {
+				rows.Close()
+				return nil, err
+			}
+			out = append(out, r)
+		}
+		err = rows.Err()
+		rows.Close()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return out, nil
+}
+
 // SetupMail is a site with no visit yet that was added at least a wait ago and
 // has not had its reminder; its owners' addresses come with it.
 type SetupMail struct {

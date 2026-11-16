@@ -225,10 +225,12 @@ for (const [name, width, height, scheme] of [['desktop', 1440, 900, 'light'], ['
     // The first site stopped answering two days ago.
     await page.route(/\/api\/v1\/sites(\?.*)?$/, async (route) => {
       const res = await route.fetch()
-      const body = (await res.json()) as { sites: { last_event_at?: number; check?: unknown }[] }
+      const body = (await res.json()) as { sites: { last_event_at?: number; check?: unknown; down_since?: number }[] }
       const at = Math.floor(Date.now() / 1000)
       if (body.sites[0]) {
-        body.sites[0].last_event_at = at - 2 * 86400 - 600
+        // As the server tells a never-probed site whose daily look failed after six silent hours: down since last visit + 6 h.
+        body.sites[0].last_event_at = at - 2 * 86400 - 6 * 3600
+        body.sites[0].down_since = at - 2 * 86400
         body.sites[0].check = { at, error: 'unreachable' }
       }
       await route.fulfill({ response: res, json: body })

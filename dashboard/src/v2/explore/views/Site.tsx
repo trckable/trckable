@@ -8,7 +8,7 @@ import { copy } from '../copy'
 import { SlowCost } from './SlowCost'
 import { EmptyTab } from './PeopleTable'
 import type { XCtx } from '../ctx'
-import type { Bot, Mention, Speed as SpeedModel } from '../types'
+import type { BotsModel, Mention, Speed as SpeedModel } from '../types'
 import { openAi } from '../../ui/AiHost'
 import { crawlerSetupAsked } from '../../../features/crawlers/ask'
 import { can } from '../../../lib/permissions'
@@ -119,23 +119,37 @@ export function Mentions({ x, d }: { x: XCtx; d: Mention[] }) {
   )
 }
 
-export function Bots({ x, d }: { x: XCtx; d: Bot[] }) {
+/** What was dropped on purpose besides robots: each line only when something was. */
+function Dropped({ d }: { d: BotsModel }) {
+  if (!d.left && !d.aged) return null
+  return (
+    <XNote>
+      {[d.left ? copy.leftOut(fmtInt(d.left)) : '', d.aged ? copy.tooOld(fmtInt(d.aged)) : ''].filter(Boolean).join(' · ')}
+    </XNote>
+  )
+}
+
+export function Bots({ x, d: model }: { x: XCtx; d: BotsModel }) {
+  const d = model.rows
   if (d.length === 0) {
     return (
-      <EmptyTab x={x}>
-        {can('site.settings') && (
-          <button
-            type="button"
-            className="xb"
-            onClick={() => {
-              crawlerSetupAsked()
-              openExplore('ai')
-            }}
-          >
-            {copy.connectCrawlers}
-          </button>
-        )}
-      </EmptyTab>
+      <>
+        <EmptyTab x={x}>
+          {can('site.settings') && (
+            <button
+              type="button"
+              className="xb"
+              onClick={() => {
+                crawlerSetupAsked()
+                openExplore('ai')
+              }}
+            >
+              {copy.connectCrawlers}
+            </button>
+          )}
+        </EmptyTab>
+        <Dropped d={model} />
+      </>
     )
   }
   const total = d.reduce((p, b) => p + b.count, 0) || 1
@@ -150,6 +164,7 @@ export function Bots({ x, d }: { x: XCtx; d: Bot[] }) {
           {copy.aboutAi}
         </button>
       </XNote>
+      <Dropped d={model} />
     </>
   )
 }

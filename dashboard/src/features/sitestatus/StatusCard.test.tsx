@@ -30,18 +30,27 @@ describe('the panel of a site that stopped, and the line when visits are back', 
     const s = site({ last_event_at: NOW - 8 * 3600, check: { at: NOW - 60, error: 'a.example could not be reached over https' } })
     expect(renderToStaticMarkup(<StatusCard site={s} />)).toBe('') // told in the foot, the Live header and the site list, not by a floating badge
     const html = renderToStaticMarkup(<StatusPanel site={s} last={NOW - 8 * 3600} down />)
-    expect(html).toContain('Down')
+    expect(html).toContain('Tracking stopped') // no probe verdict reached the client: the chip is the quiet one; the server tells a down by down_since
     expect(html).toContain('did not answer')
     expect(html).toContain('What we checked')
     expect(html).toContain('href="/a.example/incidents"')
     expect(html).toContain('Incident history')
   })
 
+  it('says tracking works while a site found down still gets visits, and when visits stopped otherwise', () => {
+    const live = site({ last_event_at: NOW - 5 * 60, down_since: NOW - 600, down_visitors: true })
+    expect(renderToStaticMarkup(<StatusPanel site={live} last={NOW - 5 * 60} down />)).toContain('Tracking works · last visit 5 min ago')
+    const old = site({ last_event_at: NOW - 8 * 3600, down_since: NOW - 3600 })
+    const html = renderToStaticMarkup(<StatusPanel site={old} last={NOW - 8 * 3600} down />)
+    expect(html).not.toContain('Tracking works')
+    expect(html).toContain('No visits since')
+  })
+
   it('says since when the site is down, once the server knows', () => {
     const s = site({ last_event_at: NOW - 8 * 3600, check: { at: NOW - 60, error: 'x', down_since: NOW - 5 * 3600 } })
     const html = renderToStaticMarkup(<StatusPanel site={s} last={NOW - 8 * 3600} down />)
     expect(html).toContain('Your site is down since')
-    expect(html).not.toContain('No visits since')
+    expect(html).not.toContain('sgm-jump">No visits since') // the header tells the outage; the quiet line below it tells the last visit
   })
 
   it('says the check fails, not that the site is down, while visitors still arrive', () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { CrawlerReport, FunnelResult, Money, Report, SearchReport, WebVitals } from '../../../lib/api'
 import type { Mention as ApiMention } from '../../../features/mentions/api'
-import { gradeOf, leakOf, mapBots, mapFunnel, mapLinks, mapMentions, mapSales, salesCountries, mapSearch, mapSpeed, stepsOf } from './mapSections'
+import { botsModel, gradeOf, leakOf, mapBots, mapFunnel, mapLinks, mapMentions, mapSales, salesCountries, mapSearch, mapSpeed, stepsOf } from './mapSections'
 
 const step = (value: string, visitors: number): FunnelResult => ({ kind: 'page', value, visitors, rate: 1, of_total: 1, median_s: 0, dropped: 0 })
 const kpis = { visitors: 100, sessions: 100, pageviews: 200, bounce_rate: 0.4, avg_session_s: 60, views_per_session: 2, new_visitor_share: 0.5 }
@@ -181,6 +181,11 @@ describe('mentions, robots and links', () => {
   it('lists the robots by what they read, most first', () => {
     const r = { series: [{ name: 'a', kind: 'k', total: 3, values: [] }, { name: 'b', kind: 'k', total: 9, values: [] }, { name: 'c', kind: 'k', total: 0, values: [] }] } as unknown as CrawlerReport
     expect(mapBots(r).map((b) => b.name)).toEqual(['b', 'a'])
+  })
+  it('counts what was left out by the owner and what was too old, only from the report', () => {
+    expect(botsModel([], { total: 4, kinds: { bot: 4, owner: 12, aged: 3 } })).toEqual({ rows: [], left: 12, aged: 3 })
+    expect(botsModel([], { total: 4, kinds: { bot: 4 } })).toEqual({ rows: [], left: 0, aged: 0 })
+    expect(botsModel([], undefined)).toEqual({ rows: [], left: 0, aged: 0 }) // under a filter the report carries none
   })
   it('lists no robots when the site saw none (the report sends no series)', () => {
     expect(mapBots({ series: null } as unknown as CrawlerReport)).toEqual([])

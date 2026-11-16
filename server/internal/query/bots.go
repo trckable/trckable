@@ -9,9 +9,15 @@ import (
 // crawlers, headless browsers and data-centre visits. It is the number behind
 // "filtered" on the Visitors tile, and never part of Visitors.
 type Bots struct {
-	Total int64            `json:"total"`
-	Kinds map[string]int64 `json:"kinds"` // bot | ai-crawler | headless | hosting
+	Total int64            `json:"total"` // the robots turned away: not the two kinds below
+	Kinds map[string]int64 `json:"kinds"` // bot | ai-crawler | headless | hosting | owner | aged
 }
+
+// Kinds that are counted beside the bots but are not bots: what the owner's settings left out, and what was too old.
+const (
+	kindOwner = "owner"
+	kindAged  = "aged"
+)
 
 // Bots sums the site's bot counters over the days of [p.From, p.To) as the
 // period names them. The counters are kept per UTC day, so a site far from UTC
@@ -40,7 +46,9 @@ func (q Q) Bots(ctx context.Context, p Params) (*Bots, error) {
 			return nil, err
 		}
 		out.Kinds[kind] = n
-		out.Total += n
+		if kind != kindOwner && kind != kindAged {
+			out.Total += n
+		}
 	}
 	return out, rows.Err()
 }

@@ -247,6 +247,15 @@ export interface Bot {
   count: number
 }
 
+/** The Bots table: the robots that read the site, and what was dropped on purpose besides them (the period's counts, each shown only when above zero). */
+export interface BotsModel {
+  rows: Bot[]
+  /** Left out by the site's own settings: excluded paths, Do Not Track, the owner's addresses. */
+  left: number
+  /** Refused as too old to count. */
+  aged: number
+}
+
 /** The values a filter can take, as menus list them. */
 export interface Option {
   val: string
@@ -297,7 +306,7 @@ export interface Tabs {
   screens: Table
   languages: Table
   timezones: Table
-  bots: Bot[]
+  bots: BotsModel
   networks: Networks
   search: Search
   funnels: Funnel
