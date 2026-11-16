@@ -1,9 +1,18 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { FORMATS, accentsFor, cardUrl, comparing, fileName, formatOf, periodOf, statsFor, statsWith, toggleStat, BACKGROUNDS, PICTURES, TOPICS, topicOfSection, hasOf, missing, picturesOf, type CardWords, type Look } from './card'
 
 const look: Look = { template: 'leaderboard', shape: 'link', period: '24h', metric: 'visitors', stats: ['engaged', 'avgtime', 'country'], theme: 'light', accent: '#4f8cff', compare: false }
 
 describe('cardUrl', () => {
+  it('asks in the page\'s language, and says nothing for English', async () => {
+    expect(new URL(cardUrl('s', look), 'http://x').searchParams.has('lang')).toBe(false)
+    vi.stubGlobal('localStorage', { getItem: () => 'de' })
+    vi.resetModules()
+    const german = await import('./card')
+    expect(new URL(german.cardUrl('s', look, 'json'), 'http://x').searchParams.get('lang')).toBe('de')
+    expect(new URL(german.cardUrl('s', look, 'thumb'), 'http://x').searchParams.get('lang')).toBe('de')
+    vi.unstubAllGlobals()
+  })
   it('asks for the picture with every choice', () => {
     const u = new URL(cardUrl('s 1', look), 'http://x')
     expect(u.pathname).toBe('/api/v1/sites/s%201/card')

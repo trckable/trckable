@@ -10,6 +10,7 @@ import (
 // specPost is the text of a post for a picture other than the overview's two: what the picture says, in its words,
 // and nothing it does not (a picture with nothing behind it says that line).
 func specPost(s cards.Spec, tpl string, n cardNumbers) string {
+	l := n.l()
 	var parts []string
 	say := func(text string) {
 		if text = strings.TrimSpace(text); text != "" {
@@ -26,11 +27,11 @@ func specPost(s cards.Spec, tpl string, n cardNumbers) string {
 		} else {
 			say(s.Label + " " + s.Big)
 		}
-		return fmt.Sprintf("%s: %s %s", n.domain, strings.Join(parts, " "), cardWords.counted)
+		return fmt.Sprintf("%s: %s %s", n.domain, strings.Join(parts, " "), l.counted)
 	}
 	if len(s.Stats) == 0 && len(s.Rows) == 0 {
 		say(s.Big)
-		return fmt.Sprintf("%s: %s %s", n.domain, strings.Join(parts, " "), cardWords.counted)
+		return fmt.Sprintf("%s: %s %s", n.domain, strings.Join(parts, " "), l.counted)
 	}
 	say(s.Label)
 	var stats, rows []string
@@ -42,5 +43,5 @@ func specPost(s cards.Spec, tpl string, n cardNumbers) string {
 	}
 	say(strings.Join(stats, ", "))
 	say(strings.Join(rows, ", "))
-	return fmt.Sprintf("%s in %s: %s %s", n.domain, n.said, strings.Join(parts, " "), cardWords.counted)
+	return fmt.Sprintf("%s %s: %s %s", n.domain, n.said, strings.Join(parts, " "), l.counted)
 }

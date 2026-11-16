@@ -15,6 +15,7 @@ require (
 	golang.org/x/net v0.62.0
 	golang.org/x/oauth2 v0.38.0
 	golang.org/x/sync v0.25.0
+	golang.org/x/text v0.44.0
 	modernc.org/sqlite v1.62.0
 )
 
@@ -46,7 +47,6 @@ require (
 	golang.org/x/exp v0.0.0-20261113113407-e3970619a1a4 // indirect
 	golang.org/x/mod v0.43.0 // indirect
 	golang.org/x/sys v0.50.0 // indirect
-	golang.org/x/text v0.44.0 // indirect
 	modernc.org/ccgo/v4 v4.39.3 // indirect
 	modernc.org/gc/v3 v3.2.1 // indirect
 	modernc.org/libc v1.81.2 // indirect
