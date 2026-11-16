@@ -1706,5 +1706,3 @@ html[data-motion='off'] .mk .mline-guide,html[data-motion='off'] .mk .mline-gdot
 .mk .hd .sitegrp :is(.teamchip+#siteBtn,.ringw,.sitegear),.mk .hd .sitegrp :is(.teamchip+#siteBtn,.sitegear):hover{background-image:linear-gradient(to bottom,transparent,var(--mk-line) 25%,var(--mk-line) 75%,transparent);background-size:1px 100%;background-position:left;background-repeat:no-repeat}
 /* A phone keeps the header to the site and its tick: settings are in the site menu there, so the name keeps its room. */
 @media (--compact){.mk .hd .sitegrp .sitegear{display:none}}
-/* A shared link fixed to one period: the period is said, not offered. */
-.mk .pill.fixed{cursor:default}

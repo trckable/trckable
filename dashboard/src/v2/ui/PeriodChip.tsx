@@ -48,8 +48,6 @@ export interface PeriodChipProps {
   noCompare?: boolean
   /** A second chip on the page (Explore at full width) needs ids of its own. */
   idBase?: string
-  /** The page is fixed to this period (a shared link made so): it is said, and there is no menu. */
-  fixed?: boolean
 }
 
 export function PeriodChip(p: PeriodChipProps) {
@@ -95,17 +93,6 @@ export function PeriodChip(p: PeriodChipProps) {
     { v: 'year', t: 'Last year', off: !p.yearOk, title: 'Needs a year of data' },
     { v: 'custom', t: 'Custom' },
   ]
-  if (p.fixed)
-    return (
-      <div className="pwrap">
-        <span className="pill fixed" id={`${base}Btn`} title={p.label}>
-          {head}
-          {rest && <span className="pl-rest">{` · ${rest}`}</span>}
-          {p.vs && ' '}
-          {p.vs && <span className="vs hide-s">{p.vs}</span>}
-        </span>
-      </div>
-    )
   return (
     <div className={`pwrap${p.onReset ? ' set' : ''}`} ref={attach}>
       <button

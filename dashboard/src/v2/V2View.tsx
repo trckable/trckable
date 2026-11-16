@@ -78,7 +78,7 @@ export function V2View(p: V2Props) {
   useEffect(() => whenIdle(preloadExplore), [])
   // The other tab's code, fetched on idle: switching to it then has nothing to wait for.
   useViewKeys(here, !p.waiting)
-  const fixed = fixedPeriod() !== '' // a shared link made for one period: no menu, and the period's keys do nothing
+  const fixed = fixedPeriod() !== '' // a shared link made for one period: no switch, and the period's keys do nothing
   usePeriodKeys({ on: here === 'briefing' && !p.waiting && !fixed, today, range: p.range, view: p.view })
   // An old address with filters lands where the filters can be seen.
   useEffect(() => {
@@ -90,7 +90,6 @@ export function V2View(p: V2Props) {
   const periodChip = (idBase?: string) => (
     <PeriodChip
       idBase={idBase}
-      fixed={fixed}
       label={label}
       vs={compares((p.view.xp ?? 'changed') as Tab) ? vsDates(p.view, p.range, today) : undefined}
       options={options}
@@ -113,7 +112,7 @@ export function V2View(p: V2Props) {
   // A shared link has a small switch of the few periods it offers, in place of the menu: no dates, no comparison.
   const sharePeriod = (
     <>
-      <SharePeriod value={p.view.period} onPick={(id) => setView(periodPatch(id))} />
+      <SharePeriod value={p.view.period} onPick={(id) => setView(periodPatch(id))} offered={fixed ? [p.view.period] : undefined} />
       <ShareRefresh />
     </>
   )

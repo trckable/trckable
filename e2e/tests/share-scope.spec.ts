@@ -21,7 +21,8 @@ test('the owner picks the sections and the period in the builder, and changes th
   await card.getByLabel('Period').selectOption('7d')
   // The preview is the real page made from these options: the period is said, not offered.
   const preview = card.frameLocator('iframe.sl-live-page')
-  await expect(preview.locator('.pill.fixed').first()).toBeVisible({ timeout: 20_000 })
+  await expect(preview.locator('.hd')).toBeVisible({ timeout: 20_000 })
+  await expect(preview.locator('.share-period')).toHaveCount(0)
   await card.getByRole('button', { name: 'Create link' }).click()
   await card.getByRole('button', { name: 'Done' }).click()
 
@@ -54,9 +55,9 @@ test('a stranger on a link with sections off is refused their data, and the page
   await tab.goto(url)
   await expect(tab.locator('#xp.on')).toBeVisible({ timeout: 20_000 })
 
-  // The period is said, not offered: no menu to open.
-  await expect(tab.locator('.pill.fixed').first()).toBeVisible()
-  await expect(tab.locator('button.pill')).toHaveCount(0)
+  // A link fixed to a period offers no switch of periods.
+  await expect(tab.locator('.hd')).toBeVisible()
+  await expect(tab.locator('.share-period')).toHaveCount(0)
 
   // Explore lists the sections that are on.
   await tab.keyboard.press('e')
@@ -82,6 +83,7 @@ test('a stranger on a link with sections off is refused their data, and the page
   const all = await reader.newPage()
   await all.goto(open)
   await expect(all.locator('#xp.on')).toBeVisible({ timeout: 20_000 })
+  await expect(all.locator('.share-period')).toBeVisible() // a link that lets the reader choose still offers the periods
   const day = (back: number) => new Date(Date.now() - back * 86_400_000).toISOString().slice(0, 10)
   expect(((await (await get(`from=${day(30)}&to=${day(0)}`)).json()) as { current: { dims: Record<string, unknown[]> } }).current.dims.channel.length).toBeGreaterThan(0)
   await reader.close()
