@@ -35,7 +35,7 @@ type digest struct {
 	rows  []cards.Item
 	empty string
 	// badge is the mark of a source that vouches for the numbers (Search Console's), when they are there.
-	badge string
+	badge bool
 }
 
 func (d digest) filled() bool { return len(d.stats) > 0 || len(d.rows) > 0 }
@@ -129,7 +129,7 @@ func (a *API) searchPicture(c cardReading, n *cardNumbers) {
 	n.HasSearch = true
 	defer func() {
 		if d.filled() {
-			d.badge = cardWords.searchBadge
+			d.badge = true
 		}
 	}()
 	from := startOfDay(c.params.From.In(c.loc), c.loc)

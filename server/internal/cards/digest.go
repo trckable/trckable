@@ -119,29 +119,44 @@ func digestData(s Spec, f Frame) string {
 	return glow(f) + boxes(p.cards, f.Ink, f.L.n(22)) + rowBars(p.rows, f, p.rowTop, p.rowStep) + badgeCheck(s, f)
 }
 
-// badgePx is the badge's text size; its check, the gap and the room it takes follow from it.
-func badgePx(l Layout) float64 { return l.px(24) }
+// The Search Console mark: four rounded cells in Google's own colours. A brand mark keeps its colours, so these
+// four are the one exception to drawing with the card's theme and accent; the pill and the check use those.
+var badgeMark = [4]string{"#4285f4", "#ea4335", "#fbbc04", "#34a853"}
 
-// badgeWidth is the room the badge takes at the right of the domain's line: the check, a gap and the words.
-func badgeWidth(s Spec) float64 {
-	if s.Badge == "" {
-		return 0
-	}
-	px := badgePx(s.layout())
-	return px*1.5 + measure(false, s.Badge, px)
+// badgeBox is the pill's size: its height follows the layout, its width holds the check, a gap and the mark.
+func badgeBox(l Layout) (w, h float64) {
+	h = l.px(24) * 1.7
+	return h * 2.3, h
 }
 
-// badgeCheck is the small check before the badge's words, in the card's accent.
+// badgeWidth is the room the badge takes at the right of the domain's line.
+func badgeWidth(s Spec) float64 {
+	if !s.Badge {
+		return 0
+	}
+	w, _ := badgeBox(s.layout())
+	return w
+}
+
+// badgeCheck draws the badge: a soft pill in the card's ink, the check, and the Search Console mark. Numbers only.
 func badgeCheck(s Spec, f Frame) string {
-	if s.Badge == "" {
+	if !s.Badge {
 		return ""
 	}
 	l := f.L
-	px := badgePx(l)
-	x := float64(l.Right) - badgeWidth(s)
-	y := float64(l.DomainY) - px*0.34
-	return fmt.Sprintf(`<path d="M%.1f %.1fL%.1f %.1fL%.1f %.1f" fill="none" stroke="%s" stroke-width="%.1f" stroke-linecap="round" stroke-linejoin="round"/>`,
-		x, y, x+px*0.3, y+px*0.3, x+px*0.85, y-px*0.35, f.Ink, f.Stroke(px*0.14, 1))
+	w, h := badgeBox(l)
+	x, y := float64(l.Right)-w, float64(l.DomainY)-l.px(28)*0.35-h/2
+	var b strings.Builder
+	fmt.Fprintf(&b, `<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="%.1f" fill="%s" fill-opacity="0.1"/>`, x, y, w, h, h/2, f.Ink)
+	cx, cy, u := x+h*0.5, y+h/2, h
+	fmt.Fprintf(&b, `<path d="M%.1f %.1fL%.1f %.1fL%.1f %.1f" fill="none" stroke="%s" stroke-width="%.1f" stroke-linecap="round" stroke-linejoin="round"/>`,
+		cx-u*0.18, cy, cx-u*0.04, cy+u*0.14, cx+u*0.2, cy-u*0.14, f.Ink, f.Stroke(u*0.09, 1))
+	cell := u * 0.27
+	mx, my := x+w-h*0.5-cell*1.02, cy-cell*1.02
+	for i, c := range badgeMark {
+		fmt.Fprintf(&b, `<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="%.1f" fill="%s"/>`, mx+float64(i%2)*cell*1.05, my+float64(i/2)*cell*1.05, cell*0.95, cell*0.95, cell*0.3, c)
+	}
+	return b.String()
 }
 
 func digestRuns(s Spec) []Run {
@@ -155,9 +170,6 @@ func digestRuns(s Spec) []Run {
 	runs := []Run{
 		{X: l.Left, Y: l.DomainY, Px: l.px(28), Spans: []Span{{Text: fitWith(false, s.Domain, room-badge, l.px(28)), Ink: s.Theme.Muted}}},
 		{X: l.Left, Y: l.FootY, Px: l.px(26), Spans: []Span{{Text: fitWith(false, s.Foot, room-float64(l.n(260)), l.px(26)), Ink: s.Theme.Muted}}},
-	}
-	if s.Badge != "" {
-		runs = append(runs, Run{X: l.Right, Y: l.DomainY, Px: badgePx(l), End: true, Spans: []Span{{Text: s.Badge, Ink: s.Theme.Muted}}})
 	}
 	for i, line := range p.title {
 		runs = append(runs, Run{X: l.Left, Y: l.TitleY + i*int(p.titlePx*1.2), Px: p.titlePx, Spans: []Span{{Text: line, Bold: true, Ink: s.Theme.FG}}})

@@ -315,14 +315,13 @@ func TestWrapWords(t *testing.T) {
 
 // A digest with a badge draws its words and a check; without one, neither. Every format keeps the badge inside the card and clear of the domain.
 func TestDigestBadge(t *testing.T) {
-	const badge = "Verified by Google Search Console"
 	for _, f := range Formats {
 		l := layoutFor(f)
 		for _, theme := range []string{"dark", "light"} {
 			plain := sample("digest", f.ID, theme)
 			plain.Domain = "example.com"
 			marked := plain
-			marked.Badge = badge
+			marked.Badge = true
 			a, err := plain.SVG()
 			if err != nil {
 				t.Fatal(err)
@@ -331,11 +330,8 @@ func TestDigestBadge(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if strings.Contains(string(a), "Verified") || strings.Count(string(a), "<path") != strings.Count(string(b), "<path")-1 {
+			if strings.Count(string(a), "<rect")+5 != strings.Count(string(b), "<rect") {
 				t.Errorf("%s %s: a digest without a badge draws one", f.ID, theme)
-			}
-			if !strings.Contains(string(b), badge) {
-				t.Errorf("%s %s: the badge is missing", f.ID, theme)
 			}
 			if left := float64(l.Right) - badgeWidth(marked); left < float64(l.Left)+measure(false, plain.Domain, l.px(28)) {
 				t.Errorf("%s %s: the badge runs into the domain", f.ID, theme)
@@ -346,7 +342,7 @@ func TestDigestBadge(t *testing.T) {
 		}
 	}
 	long := sample("digest", "link", "dark")
-	long.Badge = badge
+	long.Badge = true
 	l := long.layout()
 	for _, r := range digestRuns(long) {
 		if r.Y != l.DomainY || r.End {
