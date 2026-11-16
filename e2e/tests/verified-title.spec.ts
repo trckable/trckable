@@ -39,9 +39,12 @@ test('a link with money badges Sales with the provider, and the badge stays on o
   await expect(badge).toHaveAttribute('data-verified-source', 'stripe')
   await expect(badge).toHaveText('Verified')
   await expect(badge.locator('svg.vf-logo')).toBeVisible()
-  // The title row stays one line high.
-  const box = await row.boundingBox()
-  expect(box!.height).toBeLessThan(60)
+  // The badge stands on the title's own line, never under it.
+  const at = async (l: typeof badge) => {
+    const b = await l.boundingBox()
+    return b!.y + b!.height / 2
+  }
+  expect(Math.abs((await at(badge)) - (await at(page.locator('[data-xtitle=sales]'))))).toBeLessThan(12)
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
   if (!SHOTS) return
   mkdirSync(SHOTS, { recursive: true })
