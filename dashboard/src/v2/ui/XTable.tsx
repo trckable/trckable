@@ -96,7 +96,11 @@ export function XTable({ rows, head, unit = copy.people, mono, flags, mark, sele
           <>
             <span className="mk-bar">
               <i style={{ width: `${(r.v / max) * 100}%` }} />
-              <span className={mono ? 'mono' : ''}>{flags && r.code && <><Flag code={r.code} />{' '}</>}{mark?.(r)}{r.name}</span>
+              <span className={`${mono ? 'mono' : ''}${r.title ? ' xtwo' : ''}`}>
+                {flags && r.code && <><Flag code={r.code} />{' '}</>}
+                {mark?.(r)}
+                {r.title ? <span className="xtw"><b>{r.title}</b><small>{r.val}</small></span> : r.name}
+              </span>
             </span>
             <span className="mk-n">{fmtInt(r.v)}</span>
             <span className={`d ${d.tone}`}>{d.text}</span>

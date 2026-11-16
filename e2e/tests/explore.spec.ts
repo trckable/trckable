@@ -88,7 +88,8 @@ test('the section list has its four groups, and a section shows its tables as ca
 test('a tapped row filters, and the chip takes it off', async ({ page }) => {
   await open(page, 1440)
   await pick(page, /^Pages/)
-  const rows = page.locator('#xp .xt .xrw')
+  // The Pages card's own rows: the card of paths fills in on its own request, and its rows set a landing-page filter.
+  const rows = page.locator('#xp [data-xcard="pages"] .xt .xrw')
   await expect(rows.first()).toBeVisible()
   await rows.first().click()
   await expect(page.locator('#xp .xchip2')).toContainText('Page:')

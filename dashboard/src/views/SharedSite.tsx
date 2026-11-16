@@ -1,7 +1,7 @@
 // What a shared link opens: the same dashboard, reading through the public
 // endpoint, with everything that writes gone. It is a lazy chunk, so nobody
 // signing in normally ever downloads it.
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { SiteHost } from './SiteHost'
 import { Hints } from '../features/hints/HintsDoor'
 import { EmbedHeader, PoweredBy, ShareHeader, SharePassword, ShareShell, useShare } from './Share'
@@ -27,6 +27,11 @@ export default function SharedSite() {
   const s = useShare()
   const [opened, setOpened] = useState<ShareInfo | null>(null)
   const info = opened ?? (s.state === 'ready' ? s.info : null)
+  const domain = info?.domain
+  // The tab names the site (the server already sent the same title for the first paint).
+  useEffect(() => {
+    if (domain) document.title = `${domain} · analytics`
+  }, [domain])
 
   if (info)
     return (

@@ -73,6 +73,9 @@ type Spec struct {
 	// in the corner), "solid" or "grid" (faint lines). A card with no Domain
 	// shows no site name and no tile; one with no Foot, no date.
 	Bg string
+	// Badge is the word after the domain on a digest, with the Search Console mark and a check: the sign of numbers
+	// that come from a verified source; "" is none.
+	Badge string
 }
 
 // Backgrounds are the ones a card can have; anything else is the gradient.
@@ -133,7 +136,7 @@ func luminance(hex string) float64 {
 
 // Key identifies what a card draws, for a cache.
 func (s Spec) Key() string {
-	return fmt.Sprintf("%s|%s|%v|%s|%s|%s|%s|%s|%v|%v|%s|%d|%s|%t|%s", s.Template, FormatOf(s.Format).ID, s.Theme, s.ink(), s.Domain, s.Big, s.Label, s.Foot, s.Rows, s.Series, s.Change, s.Dir, statsKey(s.Stats), s.NoBrand, s.bg())
+	return fmt.Sprintf("%s|%s|%v|%s|%s|%s|%s|%s|%v|%v|%s|%d|%s|%t|%s|%s", s.Template, FormatOf(s.Format).ID, s.Theme, s.ink(), s.Domain, s.Big, s.Label, s.Foot, s.Rows, s.Series, s.Change, s.Dir, statsKey(s.Stats), s.NoBrand, s.bg(), s.Badge)
 }
 
 // statsKey is the small numbers as text, an icon as a mark that there is one.

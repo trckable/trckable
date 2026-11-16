@@ -20,6 +20,14 @@ test('a shared link is the Briefing and Explore, read only, and its embed is the
   await expect(tab.locator('#xp.on')).toBeVisible({ timeout: 20_000 })
   // Whose numbers they are, and none of the owner's header.
   await expect(tab.locator('.hd .share-who')).toContainText(site.domain)
+  await expect(tab).toHaveTitle(`${site.domain} · analytics`)
+  // What a chat app reads before any script runs: the title, the line and the card.
+  const head = await (await reader.request.get(url)).text()
+  expect(head).toContain(`<meta property="og:title" content="${site.domain} analytics">`)
+  expect(head).toContain(`<meta name="twitter:card" content="summary_large_image">`)
+  const card = await reader.request.get(`${url}/card.png`)
+  expect(card.status()).toBe(200)
+  expect(card.headers()['content-type']).toBe('image/png')
   for (const gone of ['#views', '.bellw', '.acctw', '[data-watch]', '.cact']) await expect(tab.locator(gone), gone).toHaveCount(0)
   // No Live tab, and no live count either unless the owner turned it on for the link.
   await expect(tab.getByRole('button', { name: /^Live/ })).toHaveCount(0)

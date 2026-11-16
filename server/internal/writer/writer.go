@@ -78,7 +78,8 @@ type Writer struct {
 
 	sess    *sessionizer
 	dd      *dedupe
-	pending []wal.Record // records peeked at startup, committed first
+	titles  map[titleKey]titleVal // page titles written since the last purge, so an unchanged one is not written again
+	pending []wal.Record          // records peeked at startup, committed first
 
 	jobs chan maintenance // rare maintenance run on the writer's connection
 	// wake interrupts the idle wait so a queued job runs at once instead of
@@ -343,6 +344,7 @@ func (w *Writer) open(ctx context.Context) (*wal.Reader, *sql.Conn, error) {
 		return nil, nil, err
 	}
 	w.sess.reset()
+	w.titles = nil
 	w.dd = newDedupe(dedupePeriod.Milliseconds(), dedupeGens, dedupeMaxIDs)
 	if err := w.restore(ctx, conn); err != nil {
 		conn.Close()
@@ -699,6 +701,11 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 		}
 		return appendSessions(dc.(driver.Conn), closed)
 	})
+	var titled map[titleKey]titleVal
+	if err == nil {
+		w.setStep("commit: page titles")
+		titled, err = w.saveTitles(ctx, conn, rows)
+	}
 	if err == nil {
 		w.setStep("commit: crawler counts")
 		err = w.countCrawls(ctx, conn, crawls)
@@ -726,6 +733,7 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 	if _, err := conn.ExecContext(ctx, "COMMIT"); err != nil {
 		return fmt.Errorf("writer commit: %w", err)
 	}
+	w.rememberTitles(titled)
 	if w.OnCommit != nil && len(rows) > 0 {
 		out := make([]event.Event, len(rows))
 		for i := range rows {
@@ -1007,7 +1015,7 @@ func nzU8(v uint8) any {
 // dropped.
 func (w *Writer) PurgeSite(ctx context.Context, site string) (events, sessions int64, err error) {
 	err = w.doHeavy(ctx, "purge site", func(ctx context.Context, conn *sql.Conn) error {
-		for _, table := range []string{"crawler_hits", "bot_daily", "heat_daily", "imported_daily"} {
+		for _, table := range []string{"crawler_hits", "bot_daily", "heat_daily", "imported_daily", "page_titles"} {
 			if _, err := conn.ExecContext(ctx, `DELETE FROM `+table+` WHERE site_id = ?`, site); err != nil { //nolint:gosec // table is from the fixed list above; the site is bound as a parameter
 				return fmt.Errorf("purge %s: %w", table, err)
 			}
@@ -1027,6 +1035,7 @@ func (w *Writer) PurgeSite(ctx context.Context, site string) (events, sessions i
 		// Drop what the sessionizer still holds for that site, so a half-open
 		// session cannot write itself back after the delete.
 		w.sess.forget(site)
+		w.titles = nil
 		return nil
 	})
 	return events, sessions, err
@@ -1047,6 +1056,7 @@ func (w *Writer) PruneBefore(ctx context.Context, site string, cutoffMs int64) (
 			`DELETE FROM bot_daily WHERE site_id = ? AND day < CAST(make_timestamp(?) AS DATE)`,
 			`DELETE FROM heat_daily WHERE site_id = ? AND day < CAST(make_timestamp(?) AS DATE)`,
 			`DELETE FROM imported_daily WHERE site_id = ? AND day < CAST(make_timestamp(?) AS DATE)`,
+			`DELETE FROM page_titles WHERE site_id = ? AND seen < make_timestamp(?)`,
 		} {
 			res, err := conn.ExecContext(ctx, q, site, cutoffMs*1000) // DuckDB counts microseconds
 			if err != nil {
@@ -1056,6 +1066,7 @@ func (w *Writer) PruneBefore(ctx context.Context, site string, cutoffMs int64) (
 				removed += n
 			}
 		}
+		w.titles = nil // a title still read is written again by its next view
 		return nil
 	})
 	return removed, err

@@ -3,7 +3,9 @@ package ingest
 import (
 	"net"
 	"net/url"
+	"regexp"
 	"strings"
+	"unicode"
 )
 
 // Channels, in classification priority order.
@@ -268,6 +270,25 @@ func matchURL(u string, list []string) bool {
 func clip(s string, n int) string {
 	if len(s) > n {
 		return s[:n]
+	}
+	return s
+}
+
+// MaxTitle is the longest page title kept, in characters.
+const MaxTitle = 200
+
+var titleEmail = regexp.MustCompile(`\S*@\S*`)
+
+// CleanTitle makes a page title safe to keep: one line, no control
+// characters, no email address (a title like "Welcome back, jane@x.com"
+// would otherwise keep one), at most MaxTitle characters. Empty when nothing
+// is left. The tracker does the same before sending; this is the layer a
+// stale or foreign script cannot skip.
+func CleanTitle(s string) string {
+	s = titleEmail.ReplaceAllString(strings.ToValidUTF8(s, ""), "")
+	s = strings.Join(strings.FieldsFunc(s, func(r rune) bool { return unicode.IsSpace(r) || unicode.IsControl(r) }), " ")
+	if r := []rune(s); len(r) > MaxTitle {
+		s = strings.TrimSpace(string(r[:MaxTitle]))
 	}
 	return s
 }

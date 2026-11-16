@@ -21,6 +21,8 @@ export interface Row {
   value: string
   /** A goal's name as it was written; the value is its key. */
   label?: string
+  /** A page's title, on the rows of the page lists, when the site's script has sent one. */
+  title?: string
   visitors: number
   sessions?: number
   pageviews?: number

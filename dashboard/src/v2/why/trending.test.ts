@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Row } from '../../lib/api'
-import { listOf, MIN_COUNT } from './trending'
+import { itemsOf, listOf, MIN_COUNT } from './trending'
 
 const rows = (o: Record<string, number>): Row[] => Object.entries(o).map(([value, visitors]) => ({ value, visitors }))
 const names = (l: { value: string }[]) => l.map((i) => i.value)
@@ -54,5 +54,13 @@ describe('trending', () => {
 
   it('empty lists give nothing', () => {
     expect(listOf('down', null, null)).toEqual([])
+  })
+})
+
+describe('titles', () => {
+  it('a page item carries the title from either period, a value without one has none', () => {
+    const items = itemsOf([{ value: '/a', visitors: 9, title: 'Alpha' }, { value: '/b', visitors: 3 }], [{ value: '/c', visitors: 4, title: 'Gamma' }])
+    const by = Object.fromEntries(items.map((i) => [i.value, i.title]))
+    expect(by).toEqual({ '/a': 'Alpha', '/b': undefined, '/c': 'Gamma' })
   })
 })

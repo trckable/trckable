@@ -88,6 +88,8 @@ var routeRules = map[string]string{
 	"GET /api/v1/sites/{site}/domain":                            "read",
 	"PUT /api/v1/sites/{site}/domain":                            "write",
 	"DELETE /api/v1/sites/{site}/domain/former/{host}":           "write",
+	"GET /api/v1/sites/{site}/allowed-domains":                   "read",
+	"PUT /api/v1/sites/{site}/allowed-domains":                   "write",
 	"GET /api/v1/sites/{site}/icon":                              "read",
 	"PUT /api/v1/sites/{site}/icon":                              "write",
 	"DELETE /api/v1/sites/{site}/icon":                           "write",

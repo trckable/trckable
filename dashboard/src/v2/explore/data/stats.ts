@@ -25,12 +25,14 @@ export function rowsOf(cur: ApiRow[] | null | undefined, prev: ApiRow[] | null |
   const base = prev != null && baseEnough(before)
   const was = new Map((prev ?? []).map((r) => [r.value, r.visitors]))
   const now = (cur ?? []).filter((r) => r.visitors > 0)
+  const titles = new Map(now.flatMap((r) => (r.title ? [[r.value, r.title] as const] : [])))
   const seen = new Set(now.map((r) => r.value))
   const gone = base ? (prev ?? []).filter((r) => !seen.has(r.value) && r.visitors >= FLOOR).map((r) => ({ value: r.value, visitors: 0 })) : []
   return [...now, ...gone]
     .map((r) => {
       const s = statOf(r.visitors, was.get(r.value), base)
-      return { val: r.value, name: name(r.value), v: s.v, c: s.c, st: s.st, ...extra?.(r.value) }
+      const title = titles.get(r.value)
+      return { val: r.value, name: name(r.value), ...(title ? { title } : {}), v: s.v, c: s.c, st: s.st, ...extra?.(r.value) }
     })
     .sort((a, b) => b.v - a.v)
 }
