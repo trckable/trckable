@@ -1,0 +1,1 @@
+- A shared link shows a preview card when it is pasted, and its browser tab carries the site's name.

@@ -372,7 +372,8 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	s.revenue.OnNotice = s.tellMoney
 	// Webhooks go straight to the SQLite inbox: they work while DuckDB warms up.
 	mux.HandleFunc("POST /webhooks/{provider}/{conn}", s.revenue.Webhook)
-	mux.Handle("/", web.DashboardFramed(a.FrameAncestors))
+	mux.HandleFunc("GET /s/{token}/card.png", a.SharePreviewImage)
+	mux.Handle("/", web.DashboardWithHead(a.FrameAncestors, a.SharePreview))
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
 	mux.HandleFunc("GET /readyz", s.readyz)
 	mux.HandleFunc("GET /healthz/collect", s.healthCollect)
