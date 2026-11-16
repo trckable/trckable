@@ -158,9 +158,9 @@ export default function PanelContent(p: ContentProps) {
             act.shut()
             a.copyLink()
           }}
-          onShare={handheld && !isShared() ? share : undefined}
+          onShare={handheld ? share : undefined}
           onShareIcon={!handheld && !isShared() && topicOfSection(section) ? share : undefined}
-          onMail={can('note.write') && !isShared() ? () => {
+          onMail={can('note.write') ? () => {
             act.shut()
             setMail(true)
           } : undefined}

@@ -1,7 +1,6 @@
 // What the toolbar's four menus hold: the sections, the filters (a dimension, then its values), the saved views, and
 // the rest (this page's details, the table as a file, a link).
 import { Share2, Trophy } from 'lucide-react'
-import { isShared } from '../../lib/me'
 import { copy as milestonesCopy } from '../../features/milestones/copy'
 import { Fragment } from 'react'
 import { XGl, XGrab, XMi, XSep } from '../ui/XMenu'
@@ -73,18 +72,16 @@ export function MoreMenu({ views, details, onDetails, onCsv, onCopy, onMail, onS
     <>
       <XGrab />
       {onShare && <XMi data={{ 'data-share': '1' }} icon={<Share2 size={16} strokeWidth={1.75} aria-hidden="true" />} name={shareCopy.menuItem} onClick={onShare} />}
-      {!isShared() && <XMi data={{ 'data-milestones': '1' }} icon={<Trophy size={16} strokeWidth={1.75} aria-hidden="true" />} name={milestonesCopy.title} onClick={() => window.dispatchEvent(new Event('trckable:milestones'))} />}
-      {!isShared() && (
-        <div>
-          <XGl>{copy.views}</XGl>
-          <ViewRows {...views} />
-          <XSep />
-          <ViewTail {...views} />
-          <XSep />
-        </div>
-      )}
+      <XMi data={{ 'data-milestones': '1' }} icon={<Trophy size={16} strokeWidth={1.75} aria-hidden="true" />} name={milestonesCopy.title} onClick={() => window.dispatchEvent(new Event('trckable:milestones'))} />
+      <div>
+        <XGl>{copy.views}</XGl>
+        <ViewRows {...views} />
+        <XSep />
+        <ViewTail {...views} />
+        <XSep />
+      </div>
       {details && <XMi data={{ 'data-pgd': '1' }} name={copy.pageDetails} desc={copy.pageDetailsHint} onClick={onDetails} />}
-      {!isShared() && <XMi id="xCsv" name={copy.exportCsv} desc={copy.exportHint} disabled={!can('data.export')} title={can('data.export') ? undefined : copy.exportDenied} onClick={onCsv} />}
+      <XMi id="xCsv" name={copy.exportCsv} desc={copy.exportHint} disabled={!can('data.export')} title={can('data.export') ? undefined : copy.exportDenied} onClick={onCsv} />
       {onMail && <XMi data={{ 'data-mail': '1' }} name={copy.emailPreview} desc={copy.emailPreviewHint} onClick={onMail} />}
       <XMi data={{ 'data-copy': '1' }} name={copy.copyLink} onClick={onCopy} />
     </>

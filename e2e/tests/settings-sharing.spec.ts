@@ -124,6 +124,8 @@ test('Revenue: with it off the server never sends the figure; with it on the lin
     await expect(view.locator('.xrail [data-xsec="pages"]')).toBeVisible()
     await expect(view.locator('.xrail [data-xsec="sales"]')).toHaveCount(want ? 1 : 0)
     await expect(view.locator('.xrail .xtag')).toHaveCount(0)
+    await expect(view.getByRole('button', { name: 'More' })).toHaveCount(0)
+    await expect(view.locator('.xmore')).toHaveCount(0)
     // A stranger has nothing to search or ask: no Search button, and the shortcut opens nothing.
     await expect(view.getByRole('button', { name: /^Search/ })).toHaveCount(0)
     await view.keyboard.press('ControlOrMeta+k')
