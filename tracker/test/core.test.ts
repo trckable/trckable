@@ -501,7 +501,6 @@ describe('delivery (write-ahead queue)', () => {
     await vi.advanceTimersByTimeAsync(0)
     expect(sent).toHaveLength(3)
     status = 202
-    beaconOk = false // the browser would not take it, so the tab being shown retries
     hidden(true)
     hidden(false)
     await vi.advanceTimersByTimeAsync(0)
@@ -822,34 +821,36 @@ describe('a tab that comes back, and a page that stays open', () => {
 describe('the last send', () => {
   beforeEach(() => vi.useRealTimers())
   afterEach(() => vi.useRealTimers())
-  it('hands what is still pending to sendBeacon when the page is hidden, and does not send it twice', async () => {
+
+  it('hands what is still pending to sendBeacon when the page is hidden or goes away', async () => {
     fetchFails = true // the page view never got an answer
     tracker()
     await flush()
     expect(beacons).toHaveLength(0)
     hidden(true)
-    const ids = beacons.map((e) => e.id)
-    expect(ids.length).toBeGreaterThan(0)
-    expect(new Set(ids).size).toBe(ids.length)
-    expect(queued().some((e: any) => ids.includes(e.id))).toBe(false) // left the queue
-    hidden(false)
-    hidden(true)
-    expect(beacons.map((e) => e.id)).toEqual(ids.concat(beacons.slice(ids.length).map((e) => e.id))) // no repeats of the first ones
-    expect(beacons.slice(ids.length).every((e) => !ids.includes(e.id))).toBe(true)
+    expect(beacons.length).toBeGreaterThan(0)
+    const n = beacons.length
+    win.dispatchEvent(new win.Event('pagehide'))
+    expect(beacons.length).toBeGreaterThan(n)
   })
 
-  it('goes on pagehide too, and keeps an event the browser would not take', async () => {
-    fetchFails = true
-    beaconOk = false
+  it('keeps an event queued when the beacon is taken but the server is down, and sends it on the next page', async () => {
+    status = 503
     tracker()
     await flush()
+    const id = queued()[0].id
     win.dispatchEvent(new win.Event('pagehide'))
-    expect(beacons).toHaveLength(0)
-    expect(queued().length).toBeGreaterThan(0) // still queued for the retry loop
-    beaconOk = true
-    win.dispatchEvent(new win.Event('pagehide'))
-    expect(beacons.length).toBeGreaterThan(0)
-    expect(queued()).toHaveLength(0)
+    expect(beacons.some((e) => e.id === id)).toBe(true) // the browser "took" it
+    expect(queued().some((e: any) => e.id === id)).toBe(true) // but it is still ours to deliver
+    const saved = win.localStorage.getItem('trckable_q')!
+    browser('https://site.com/next', 'https://site.com/pricing')
+    win.localStorage.setItem('trckable_q', saved)
+    sent = []
+    status = 202
+    tracker()
+    await flush()
+    expect(sent.some((e) => e.id === id)).toBe(true)
+    expect(queued().some((e: any) => e.id === id)).toBe(false) // gone once acknowledged
   })
 })
 
