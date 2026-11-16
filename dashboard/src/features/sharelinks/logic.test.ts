@@ -65,11 +65,15 @@ describe('the form', () => {
     expect(problem({ ...EMPTY, embed: true, sites: 'nope' }, NOW)?.field).toBe('sites')
     expect(problem({ ...EMPTY, embed: true, sites: 'https://a.com' }, NOW)).toBeNull()
   })
+  it('asks for the live count only when it is switched on', () => {
+    expect(EMPTY.live).toBe(false)
+    expect(linkBody({ ...EMPTY, live: true }, 'site.com', NOW).live).toBe(true)
+  })
   it('sends a password only for a password link, sites only when embedding is on', () => {
     const typed = { ...EMPTY, password: 'left over', sites: 'https://a.com' }
-    expect(linkBody(typed, 'site.com', NOW)).toEqual({ name: 'site.com', password: '', revenue: false, notes: false, days: 0, embed_origins: [] })
-    const full = { ...typed, name: ' Board ', access: 'password' as const, revenue: true, notes: true, expiry: '7' as const, embed: true }
-    expect(linkBody(full, 'site.com', NOW)).toEqual({ name: 'Board', password: 'left over', revenue: true, notes: true, days: 7, embed_origins: ['https://a.com'] })
+    expect(linkBody(typed, 'site.com', NOW)).toEqual({ name: 'site.com', password: '', revenue: false, notes: false, live: false, days: 0, embed_origins: [] })
+    const full = { ...typed, name: ' Board ', access: 'password' as const, revenue: true, notes: true, live: true, expiry: '7' as const, embed: true }
+    expect(linkBody(full, 'site.com', NOW)).toEqual({ name: 'Board', password: 'left over', revenue: true, notes: true, live: true, days: 7, embed_origins: ['https://a.com'] })
   })
 })
 

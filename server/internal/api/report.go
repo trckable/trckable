@@ -33,7 +33,7 @@ import (
 //	limit      rows per breakdown, 1-100 (default 10)
 //	tz         override the site's timezone
 func (a *API) report(w http.ResponseWriter, r *http.Request) {
-	a.reportFor(w, r, r.PathValue("site"), true, false)
+	a.reportFor(w, r, r.PathValue("site"), true, false, true)
 }
 
 // asked is one parsed report request: the query parameters turned into
@@ -178,8 +178,8 @@ func rowsAsked(s string) int {
 
 // reportFor builds the report for one site. allowRevenue is how a public share
 // hides money: not by leaving it out of the page, but by never asking for it,
-// so the number is not in the answer at all.
-func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, allowRevenue, public bool) {
+// so the number is not in the answer at all. allowOnline does the same for the count of visitors now.
+func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, allowRevenue, public, allowOnline bool) {
 	q := a.Query()
 	if q == nil {
 		w.Header().Set("Retry-After", "2")
@@ -193,7 +193,7 @@ func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, a
 	if public && !a.publicReport(w, r, ask) {
 		return
 	}
-	params, prev, loc, live := ask.Params, ask.Prev, ask.Loc, ask.Live
+	params, prev, loc, live := ask.Params, ask.Prev, ask.Loc, ask.Live && allowOnline
 	from, to, tzName, bucket := ask.From, ask.To, ask.TZ, ask.Bucket
 
 	// The period, the one it is compared with and who is online now are

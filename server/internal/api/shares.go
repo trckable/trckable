@@ -71,6 +71,7 @@ func (a *API) createShare(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 		Revenue  bool   `json:"revenue"`
 		Notes    bool   `json:"notes"` // the chart's notes: off unless asked for
+		Live     bool   `json:"live"`  // the count of visitors now: off unless asked for
 		Days     int    `json:"days"`  // 0 = no end date
 		// Embed lists the sites allowed to show this link in an iframe.
 		Embed []string `json:"embed_origins"`
@@ -97,7 +98,7 @@ func (a *API) createShare(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	sh, token, err := a.Ctl.CreateShare(r.Context(), r.PathValue("site"), in.Name, in.Password, in.Revenue, in.Notes, expires, origins)
+	sh, token, err := a.Ctl.CreateShare(r.Context(), r.PathValue("site"), in.Name, in.Password, in.Revenue, in.Notes, in.Live, expires, origins)
 	if busy(w, err) {
 		return
 	}
@@ -108,20 +109,32 @@ func (a *API) createShare(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, map[string]any{"share": sh, "url": a.shareBase(r, r.PathValue("site")) + "/s/" + token})
 }
 
-// updateShare changes what an existing link shows. Only the notes switch for
-// now: the rest is fixed when the link is made (a new link is one click).
+// updateShare changes what an existing link shows. Only the notes and the
+// live count switch for now: the rest is fixed when the link is made (a new
+// link is one click).
 func (a *API) updateShare(w http.ResponseWriter, r *http.Request) {
 	if a.owner(w, r) == nil || !a.siteExists(w, r) {
 		return
 	}
 	var in struct {
 		Notes *bool `json:"notes"`
+		Live  *bool `json:"live"`
 	}
-	if err := decode(r, &in); err != nil || in.Notes == nil {
-		fail(w, http.StatusBadRequest, "send {\"notes\": true} or false")
+	if err := decode(r, &in); err != nil || (in.Notes == nil && in.Live == nil) {
+		fail(w, http.StatusBadRequest, "send {\"notes\": true} or {\"live\": true}, or false")
 		return
 	}
-	err := a.Ctl.SetShareNotes(r.Context(), r.PathValue("site"), r.PathValue("id"), *in.Notes)
+	site, id := r.PathValue("site"), r.PathValue("id")
+	var err error
+	out := map[string]any{}
+	if in.Notes != nil {
+		err = a.Ctl.SetShareNotes(r.Context(), site, id, *in.Notes)
+		out["notes"] = *in.Notes
+	}
+	if err == nil && in.Live != nil {
+		err = a.Ctl.SetShareLive(r.Context(), site, id, *in.Live)
+		out["live"] = *in.Live
+	}
 	if errors.Is(err, auth.ErrNotFound) {
 		fail(w, http.StatusNotFound, "no such link")
 		return
@@ -130,7 +143,7 @@ func (a *API) updateShare(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"notes": *in.Notes})
+	writeJSON(w, http.StatusOK, out)
 }
 
 // newShareAddress gives a link a new address. The old one, and every session
@@ -357,6 +370,7 @@ func (a *API) shareInfoWith(w http.ResponseWriter, r *http.Request, sh sqlite.Sh
 		"name":       sh.Name,
 		"revenue":    sh.Revenue,
 		"notes":      sh.Notes,
+		"live":       sh.Live,
 		"expires":    sh.ExpiresAt,
 		"domain":     si.Domain,
 		"site":       si.Name,
@@ -430,8 +444,36 @@ func (a *API) shareAnnotations(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"annotations": out})
 }
 
-// shareReport is the ordinary report, for the shared site, with revenue
-// allowed only when the link says so.
+// shareOnlineRate is how many counts one address may read through one link in
+// a minute: the page asks every half minute.
+const shareOnlineRate = 6
+
+// shareOnline is how many visitors are on the site now, and nothing else: no
+// list, no pages, no places. It answers only for a link whose owner turned it
+// on, and otherwise as if there were nothing here.
+func (a *API) shareOnline(w http.ResponseWriter, r *http.Request) {
+	sh, ok := a.shared(w, r)
+	if !ok {
+		return
+	}
+	if !sh.Live {
+		fail(w, http.StatusNotFound, "this link does not show who is here now")
+		return
+	}
+	if !a.loginRate.reserve(a.Now(), limit{"share-online:" + sh.ID + "|" + a.ip(r), a.ipMax(r, shareOnlineRate), time.Minute}) {
+		w.Header().Set("Retry-After", "10")
+		fail(w, http.StatusTooManyRequests, "too many requests: wait a moment")
+		return
+	}
+	var n int64
+	if q := a.Query(); q != nil {
+		n, _ = q.Online(r.Context(), sh.SiteID, a.Now())
+	}
+	writeJSON(w, http.StatusOK, map[string]int64{"online": n})
+}
+
+// shareReport is the ordinary report, for the shared site, with revenue and
+// the count of visitors now allowed only when the link says so.
 func (a *API) shareReport(w http.ResponseWriter, r *http.Request) {
 	sh, ok := a.shared(w, r)
 	if !ok {
@@ -442,7 +484,7 @@ func (a *API) shareReport(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusTooManyRequests, "too many requests: wait a moment")
 		return
 	}
-	a.reportFor(w, r, sh.SiteID, sh.Revenue, true)
+	a.reportFor(w, r, sh.SiteID, sh.Revenue, true, sh.Live)
 }
 
 // shareHeader carries an embedded page's session, since the cookie cannot.

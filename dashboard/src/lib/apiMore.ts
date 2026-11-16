@@ -257,8 +257,8 @@ export const more = {
   updateWidget: (site: string, id: string, w: WidgetLook & { on: boolean }) => call<Widget>('PUT', `/sites/${site}/widgets/${id}`, w),
   deleteWidget: (site: string, id: string) => act('DELETE', `/sites/${site}/widgets/${id}`),
   shares: (site: string) => call<{ shares: Share[]; base: string }>('GET', `/sites/${site}/shares`),
-  updateShare: (site: string, id: string, notes: boolean) => call<{ notes: boolean }>('PATCH', `/sites/${site}/shares/${id}`, { notes }),
-  createShare: (site: string, body: { name: string; password?: string; revenue: boolean; notes?: boolean; days: number; embed_origins?: string[] }) =>
+  updateShare: (site: string, id: string, change: { notes?: boolean; live?: boolean }) => call<{ notes?: boolean; live?: boolean }>('PATCH', `/sites/${site}/shares/${id}`, change),
+  createShare: (site: string, body: { name: string; password?: string; revenue: boolean; notes?: boolean; live?: boolean; days: number; embed_origins?: string[] }) =>
     call<{ share: Share; url: string }>('POST', `/sites/${site}/shares`, body),
   deleteShare: (site: string, id: string) => act('DELETE', `/sites/${site}/shares/${id}`),
   /** A new address for a link; the old one stops working. */

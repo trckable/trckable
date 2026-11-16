@@ -2,9 +2,9 @@
 // opened, when it ends, and what to do with it: copy or open its address, make
 // a new one (the only choice for a link whose address cannot be shown) and
 // revoke it. Only
-// the notes can change on a link that exists (the server takes nothing else),
-// so only they are a button.
-import { CircleDollarSign, Clock, Code, ExternalLink, Eye, Globe, Lock, Power, RefreshCw, StickyNote } from 'lucide-react'
+// the notes and the live count can change on a link that exists (the server
+// takes nothing else), so only they are buttons.
+import { CircleDollarSign, Clock, Code, ExternalLink, Eye, Globe, Lock, Power, Radio, RefreshCw, StickyNote } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from '../../components/Toast'
 import { fail, type Share, more } from '../../lib/apiMore'
@@ -43,26 +43,29 @@ function Ends({ share }: { share: Share }) {
   )
 }
 
-function Notes({ site, share, readOnly, onChanged }: { site: string; share: Share; readOnly: boolean; onChanged: () => void }) {
-  const on = !!share.notes
+/** The two switches that can change on a link that exists, each a flag that is a button for someone who may edit. */
+function Switchable({ site, share, readOnly, onChanged, field }: { site: string; share: Share; readOnly: boolean; onChanged: () => void; field: 'notes' | 'live' }) {
+  const on = !!share[field]
   const name = nameOf(share)
+  const words = field === 'notes' ? { on: copy.notesOn(name), off: copy.notesOff(name), tip: copy.notesTip(on), now: on ? copy.notesHidden : copy.notesShown } : { on: copy.liveOn(name), off: copy.liveOff(name), tip: copy.liveTip(on), now: on ? copy.liveHidden : copy.liveShown }
+  const icon = field === 'notes' ? <StickyNote size={14} strokeWidth={1.75} /> : <Radio size={14} strokeWidth={1.75} />
   if (readOnly)
     return (
-      <Flag on={on} label={on ? copy.notesOn(name) : copy.notesOff(name)}>
-        <StickyNote size={14} strokeWidth={1.75} />
+      <Flag on={on} label={on ? words.on : words.off}>
+        {icon}
       </Flag>
     )
   const flip = () =>
     more
-      .updateShare(site, share.id, !on)
+      .updateShare(site, share.id, { [field]: !on })
       .then(() => {
-        toast(on ? copy.notesHidden : copy.notesShown)
+        toast(words.now)
         onChanged()
       })
       .catch((e: unknown) => fail(e))
   return (
-    <button type="button" className={on ? 'sl-flag on' : 'sl-flag'} aria-pressed={on} aria-label={on ? copy.notesOn(name) : copy.notesOff(name)} title={copy.notesTip(on)} onClick={flip}>
-      <StickyNote size={14} strokeWidth={1.75} />
+    <button type="button" className={on ? 'sl-flag on' : 'sl-flag'} aria-pressed={on} aria-label={on ? words.on : words.off} title={words.tip} onClick={flip}>
+      {icon}
     </button>
   )
 }
@@ -149,7 +152,8 @@ export function LinkRow({ site, share, readOnly, onChanged, onAddress }: RowProp
         <Flag on={share.revenue} label={share.revenue ? copy.revenueOn : copy.revenueOff}>
           <CircleDollarSign size={14} strokeWidth={1.75} />
         </Flag>
-        <Notes site={site} share={share} readOnly={readOnly} onChanged={onChanged} />
+        <Switchable site={site} share={share} readOnly={readOnly} onChanged={onChanged} field="notes" />
+        <Switchable site={site} share={share} readOnly={readOnly} onChanged={onChanged} field="live" />
         <Flag on={embeds.length > 0} label={embeds.length ? copy.embedOn(embeds) : copy.embedOff}>
           <Code size={14} strokeWidth={1.75} />
         </Flag>

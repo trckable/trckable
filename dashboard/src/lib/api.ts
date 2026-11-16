@@ -741,6 +741,7 @@ export interface ShareInfo {
   revenue: boolean
   /** The owner lets this link show the chart's notes. */
   notes?: boolean
+  live?: boolean
   cookieless?: boolean
   expires?: number | null
   domain: string
@@ -789,6 +790,7 @@ export interface Share {
   name: string
   revenue: boolean
   notes?: boolean
+  live?: boolean
   expires_at?: number | null
   has_password: boolean
   created_at: number
@@ -1014,6 +1016,8 @@ export const api = {
 
   openShare: (token: string, password?: string, embed?: boolean) => call<ShareInfo>('POST', '/share/open', { token, password, embed }),
   shareMe: () => call<ShareInfo>('GET', '/share/me'),
+  /** Visitors on the site now, for a link whose owner allows it. */
+  shareOnline: () => call<{ online: number }>('GET', '/share/online'),
   profile: () => call<Profile>('GET', '/account'),
   report: (site: string, q: ReportQuery, signal?: AbortSignal) => call<Report>('GET', reportURL(site, q), undefined, signal),
   events: (site: string, limit = 20) =>

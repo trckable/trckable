@@ -21,7 +21,10 @@ test('a shared link is the Briefing and Explore, read only, and its embed is the
   // Whose numbers they are, and none of the owner's header.
   await expect(tab.locator('.hd .share-who')).toContainText(site.domain)
   for (const gone of ['#views', '.bellw', '.acctw', '[data-watch]', '.cact']) await expect(tab.locator(gone), gone).toHaveCount(0)
-  await expect(tab.getByRole('button', { name: /Live/ })).toHaveCount(0)
+  // No Live tab, and no live count either unless the owner turned it on for the link.
+  await expect(tab.getByRole('button', { name: /^Live/ })).toHaveCount(0)
+  await expect(tab.locator('.share-live')).toHaveCount(0)
+  expect((await tab.request.get(`${API}/api/v1/share/online`)).status()).toBe(404)
   // Explore opens on what the report carries: tables, not the sections that need the rest of the API.
   await tab.keyboard.press('e')
   await expect(tab.locator('#xp.on')).toBeVisible()
@@ -52,5 +55,20 @@ test('a shared page by default carries no "Powered by" link', async ({ page, bro
   await tab.goto(url)
   await expect(tab.locator('#xp.on')).toBeVisible({ timeout: 20_000 })
   await expect(tab.locator('.share-powered')).toHaveCount(0)
+  await reader.close()
+})
+
+test('a link that allows it shows "Live · N now" in the header, and only the count', async ({ page, browser }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: await session('share-page'), url: API }])
+  const site = await newSite(page, 'sharelive')
+  await visit(page.request, site, '/home')
+  const made = await page.request.post(`${API}/api/v1/sites/${site.id}/shares`, { headers: H, data: { name: 'Team', live: true } })
+  const url = ((await made.json()) as { url: string }).url
+  const reader = await browser.newContext()
+  const tab = await reader.newPage()
+  await tab.goto(url)
+  await expect(tab.locator('#xp.on')).toBeVisible({ timeout: 20_000 })
+  await expect(tab.locator('.hd .share-live')).toContainText(/Live · \d+ now/)
+  await expect(tab.locator('#views')).toHaveCount(0)
   await reader.close()
 })

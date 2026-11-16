@@ -11,6 +11,7 @@ import { Ghost, Name, Wordmark } from '../components/Logo'
 import { SiteMark } from '../components/SiteMark'
 import { VerifiedPill } from '../features/verified/VerifiedPill'
 import { copy } from './shareCopy'
+import { useShareOnline } from './useShareOnline'
 import './Share.css'
 
 type State = { state: 'loading' } | { state: 'password'; error?: string; hideBrand?: boolean } | { state: 'ready'; info: ShareInfo } | { state: 'error'; message: string }
@@ -126,6 +127,17 @@ export function PoweredBy({ info }: { info: ShareInfo }) {
   )
 }
 
+/** "● Live · 3 now": there only while somebody is on the site. */
+export function LivePill({ n }: { n: number }) {
+  if (n <= 0) return null
+  return (
+    <span className="share-live">
+      <span className="share-live-dot" aria-hidden="true" />
+      {copy.live} · <span className="num">{n}</span> {copy.now}
+    </span>
+  )
+}
+
 /** Analytics by trckable · Get yours free →, under the same rule as the credit at the foot. */
 export function ShareCta({ info }: { info: Pick<ShareInfo, 'powered_by'> }) {
   if (!info.powered_by) return null
@@ -138,6 +150,7 @@ export function ShareCta({ info }: { info: Pick<ShareInfo, 'powered_by'> }) {
 }
 
 export function ShareHeader({ info }: { info: ShareInfo }) {
+  const online = useShareOnline(!!info.live)
   return (
     <>
       <span className="brand">
@@ -149,6 +162,7 @@ export function ShareHeader({ info }: { info: ShareInfo }) {
           <b>{info.site || info.domain}</b>
           <span className="faint">{info.name || 'Shared with you'}</span>
         </span>
+        <LivePill n={online} />
         {info.logo_url && !info.hide_brand && (
           <span className="faint share-credit">
             <Ghost size={14} /> <Name />

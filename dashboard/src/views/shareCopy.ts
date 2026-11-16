@@ -4,4 +4,6 @@ import { defineCopy } from '../i18n'
 export const copy = defineCopy('shareHead', {
   credit: 'Analytics by trckable',
   get: 'Get yours free',
+  live: 'Live',
+  now: 'now',
 })
