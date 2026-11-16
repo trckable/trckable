@@ -145,7 +145,7 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number): Notice[] 
       case 'alert': {
         // Visits from a hostname the site refuses: a tap opens the site's settings, where its domains are.
         if (r.what === 'host' && r.host) {
-          out.push({ ...base, kind: 'alert', title: copy.hostRefused(r.host), sub: '', open: s ? () => openSettings(s, 'site') : undefined })
+          out.push({ ...base, kind: 'alert', title: copy.hostRefused(r.host), sub: '', open: s ? () => openSettings(s, 'site', { focus: 'allowed-domains' }) : undefined })
           break
         }
         const kind = (r.what ?? '') as AlertKind

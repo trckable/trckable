@@ -1,0 +1,1 @@
+Pages shows each page's title, as Search Console does, with its path small and grey under it; the script sends the title with a page view (no email address, 200 characters at most, none from a page whose html says data-trckable-ignore, none for a consent-free site), 70 bytes more on a new site's script.

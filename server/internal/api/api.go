@@ -263,6 +263,8 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/sites/{site}/domain", a.authed(a.siteDomain))
 	handle("PUT /api/v1/sites/{site}/domain", a.authed(a.changeDomain))
 	handle("DELETE /api/v1/sites/{site}/domain/former/{host}", a.authed(a.endFormerDomain))
+	handle("GET /api/v1/sites/{site}/allowed-domains", a.authed(a.siteAllowed))
+	handle("PUT /api/v1/sites/{site}/allowed-domains", a.authed(a.setAllowed))
 	handle("PUT /api/v1/sites/{site}/icon", a.authed(a.setSiteIcon))
 	handle("DELETE /api/v1/sites/{site}/icon", a.authed(a.clearSiteIcon))
 	handle("POST /api/v1/sites/{site}/icon/favicon", a.authed(a.fetchFavicon))

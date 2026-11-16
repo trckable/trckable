@@ -2,7 +2,10 @@ package sqlite
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -46,7 +49,25 @@ func (s *Store) AddRejectedHosts(ctx context.Context, rows []RejectedHost, now t
 	if _, err := tx.ExecContext(ctx, `DELETE FROM rejected_hosts WHERE day < ?`, now.UTC().AddDate(0, 0, -hostKeepDays).Format(time.DateOnly)); err != nil {
 		return err
 	}
+	type rule struct {
+		domain  string
+		allowed []string
+	}
+	rules := map[string]rule{}
 	for _, r := range rows {
+		// A write that raced a change of the list must not bring a refusal back for a name now allowed.
+		rl, ok := rules[r.Site]
+		if !ok {
+			d, a, err := s.hostRules(ctx, r.Site)
+			if err != nil {
+				return err
+			}
+			rl = rule{d, a}
+			rules[r.Site] = rl
+		}
+		if rl.domain != "" && HostCovered(r.Host, rl.domain, rl.allowed) {
+			continue
+		}
 		var have int
 		if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM rejected_hosts WHERE site_id = ? AND day = ? AND host = ?`, r.Site, r.Day, r.Host).Scan(&have); err != nil {
 			return err
@@ -108,6 +129,10 @@ func (s *Store) HostBusyDays(ctx context.Context, sites []string, min int64, now
 	var out []RejectedHost
 	since := now.UTC().AddDate(0, 0, -hostKeepDays+1).Format(time.DateOnly)
 	for _, id := range sites {
+		domain, allowed, err := s.hostRules(ctx, id)
+		if err != nil {
+			return nil, err
+		}
 		rows, err := s.DB.QueryContext(ctx, `SELECT day, host, n FROM rejected_hosts WHERE site_id = ? AND day >= ? AND n >= ? ORDER BY day, host`, id, since, min)
 		if err != nil {
 			return nil, err
@@ -118,7 +143,10 @@ func (s *Store) HostBusyDays(ctx context.Context, sites []string, min int64, now
 				rows.Close()
 				return nil, err
 			}
-			out = append(out, r)
+			// A name allowed since is not refused any more: rows written before that do not tell.
+			if !HostCovered(r.Host, domain, allowed) {
+				out = append(out, r)
+			}
 		}
 		err = rows.Err()
 		rows.Close()
@@ -127,6 +155,22 @@ func (s *Store) HostBusyDays(ctx context.Context, sites []string, min int64, now
 		}
 	}
 	return out, nil
+}
+
+// hostRules is a site's domain and the extra names it lists.
+func (s *Store) hostRules(ctx context.Context, site string) (string, []string, error) {
+	var domain, raw string
+	if err := s.DB.QueryRowContext(ctx, `SELECT domain, allowed FROM sites WHERE id = ?`, site).Scan(&domain, &raw); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", nil, nil
+		}
+		return "", nil, err
+	}
+	var list []string
+	if raw != "" {
+		list = strings.Split(raw, ",")
+	}
+	return domain, list, nil
 }
 
 // SetupMail is a site with no visit yet that was added at least a wait ago and

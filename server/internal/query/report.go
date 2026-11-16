@@ -107,7 +107,10 @@ type KPIs struct {
 type Row struct {
 	Value string `json:"value"`
 	// Label is a goal's name as it was written, next to its key in Value.
-	Label     string  `json:"label,omitempty"`
+	Label string `json:"label,omitempty"`
+	// Title is a page's title, on the rows of the page dimensions, when the
+	// site's script has sent one for that path.
+	Title     string  `json:"title,omitempty"`
 	Visitors  int64   `json:"visitors"`
 	Sessions  int64   `json:"sessions,omitempty"`
 	Pageviews int64   `json:"pageviews,omitempty"`
@@ -431,6 +434,9 @@ func (q Q) report(ctx context.Context, p Params) (*Result, error) {
 		}
 	}
 	if err := mergeImported(ctx, conn, p, res); err != nil {
+		return nil, err
+	}
+	if err := addTitles(ctx, conn, p.Site, res); err != nil {
 		return nil, err
 	}
 	return res, nil

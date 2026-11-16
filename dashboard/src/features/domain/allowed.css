@@ -1,0 +1,95 @@
+/* Settings → General → Allowed domains. */
+.alw {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+.alw-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.alw-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  min-height: 30px;
+  padding: 0 4px 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--field-fill);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+.alw-chip span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.alw-chip button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.alw-chip button:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+button.alw-pick {
+  cursor: pointer;
+}
+.alw-pick b {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+.alw-pick:hover {
+  background: var(--surface-2);
+}
+.alw-add {
+  display: flex;
+  gap: 8px;
+  width: 300px;
+  max-width: 100%;
+}
+.alw-add .input {
+  flex: 1;
+  min-width: 0;
+}
+.alw-sug {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  font-size: 12.5px;
+}
+@media (max-width: 640px) {
+  .alw,
+  .alw-sug {
+    align-items: stretch;
+  }
+  .alw-list {
+    justify-content: flex-start;
+  }
+  .alw-add {
+    width: auto;
+  }
+}

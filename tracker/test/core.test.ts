@@ -885,3 +885,55 @@ describe('the cookieless queue', () => {
     expect(sent.some((e) => e.id === 'old')).toBe(false)
   })
 })
+
+describe('page titles', () => {
+  it('sends the title with the pageview', async () => {
+    win.document.title = 'Pricing | Acme'
+    tracker()
+    await flush()
+    expect(byKind('pv')[0].ti).toBe('Pricing | Acme')
+  })
+
+  it('sends none for a page without a title, and none with other events', async () => {
+    const t = tracker()
+    await flush()
+    expect(byKind('pv')[0]).not.toHaveProperty('ti')
+    win.document.title = 'Pricing'
+    t('goal', 'x')
+    await flush()
+    expect(byKind('g')[0]).not.toHaveProperty('ti')
+  })
+
+  it('cuts a long title to 200 characters', async () => {
+    win.document.title = 'a'.repeat(500)
+    tracker()
+    await flush()
+    expect(byKind('pv')[0].ti).toHaveLength(200)
+  })
+
+  it('takes an email address out of the title', async () => {
+    win.document.title = 'Hello jane.doe@example.com | Account'
+    tracker()
+    await flush()
+    expect(byKind('pv')[0].ti).not.toContain('@')
+    expect(byKind('pv')[0].ti).toContain('Account')
+  })
+
+  it('sends none from a page marked data-trckable-ignore', async () => {
+    win.document.title = 'Secret'
+    win.document.documentElement.setAttribute('data-trckable-ignore', '')
+    tracker()
+    await flush()
+    expect(byKind('pv')[0]).not.toHaveProperty('ti')
+  })
+
+  it('does not send the last title again when a route has not changed it', async () => {
+    win.document.title = 'Home'
+    tracker()
+    win.history.pushState({}, '', '/docs') // the router has not set its title yet
+    win.document.title = 'Docs'
+    win.history.pushState({}, '', '/blog')
+    await flush()
+    expect(byKind('pv').map((e) => e.ti)).toEqual(['Home', undefined, 'Docs'])
+  })
+})

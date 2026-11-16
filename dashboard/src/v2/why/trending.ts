@@ -5,6 +5,8 @@ export type Kind = 'top' | 'up' | 'down'
 
 export interface Item {
   value: string
+  /** The page's title, where the list is of pages and the site's script sent one. */
+  title?: string
   now: number
   was: number
   /** Percent change against the period before; null for a value with nothing before it (shown as "new", never as infinity). */
@@ -28,11 +30,12 @@ export function itemsOf(cur: Row[] | null | undefined, prev: Row[] | null | unde
   const nowCut = smallest(now)
   const before = new Map(was.map((r) => [r.value, r.visitors]))
   const after = new Map(now.map((r) => [r.value, r.visitors]))
+  const titles = new Map([...was, ...now].flatMap((r) => (r.title ? [[r.value, r.title] as const] : [])))
   const out: Item[] = []
   for (const value of new Set([...after.keys(), ...before.keys()])) {
     const n = after.get(value) ?? nowCut
     const w = before.get(value) ?? wasCut
-    out.push({ value, now: n, was: w, pct: w > 0 ? ((n - w) / w) * 100 : null, fresh: w === 0 && n > 0 })
+    out.push({ value, ...(titles.has(value) ? { title: titles.get(value) } : {}), now: n, was: w, pct: w > 0 ? ((n - w) / w) * 100 : null, fresh: w === 0 && n > 0 })
   }
   return out
 }

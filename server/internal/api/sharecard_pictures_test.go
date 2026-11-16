@@ -185,3 +185,21 @@ func TestAIHeadlineCards(t *testing.T) {
 		}
 	}
 }
+
+// The Google Search Console badge goes on the search picture only when it has numbers behind it.
+func TestSearchBadgeNeedsNumbers(t *testing.T) {
+	n := &cardNumbers{digests: map[string]digest{
+		"search": {title: cardWords.searchTitle, empty: cardWords.noSearch, stats: []cards.Stat{{Value: "12", Label: "Clicks"}}, badge: cardWords.searchBadge},
+		"ai":     {title: cardWords.aiTitle, empty: cardWords.noAI},
+	}}
+	var s cards.Spec
+	n.pictureOf(&s, "search")
+	if s.Badge != cardWords.searchBadge || s.Badge == "" {
+		t.Fatal("a filled search picture has no badge")
+	}
+	s = cards.Spec{}
+	n.pictureOf(&s, "ai")
+	if s.Badge != "" {
+		t.Fatal("a picture without Search Console numbers has a badge")
+	}
+}

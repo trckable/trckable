@@ -7,6 +7,7 @@ import { fail, more, type DomainState, type Site } from '../../lib/apiMore'
 import { fmtDay } from '../../lib/dates'
 import { rememberMove } from '../../lib/moved'
 import { can } from '../../lib/permissions'
+import { AllowedDomains } from './AllowedDomains'
 import { DomainDialog } from './DomainDialog'
 import { copy } from './copy'
 import './domain.css'
@@ -52,6 +53,7 @@ export function DomainRow({ site, onSaved }: { site: Site; onSaved: () => void }
         </p>
       ))}
       {state?.search && !state.search.matches && <p className="dom-note dom-warn">{copy.noMatch(state.search.property, site.domain)}</p>}
+      <AllowedDomains site={site} />
       {open && (
         <DomainDialog
           site={site}

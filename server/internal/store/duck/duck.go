@@ -279,11 +279,21 @@ var migrations = []string{
 	// Null on every row recorded before this release or without that database.
 	`ALTER TABLE events ADD COLUMN network VARCHAR;
 	ALTER TABLE sessions ADD COLUMN network VARCHAR;`,
+	// 13: the latest title of every page, one row per (site, path), so a report
+	// can show "Pricing" above /pricing. Never on the events: a title is the
+	// page's wording, not something a visitor did.
+	`CREATE TABLE page_titles (
+		site_id VARCHAR   NOT NULL,
+		path    VARCHAR   NOT NULL,
+		title   VARCHAR   NOT NULL,
+		seen    TIMESTAMP NOT NULL,
+		PRIMARY KEY (site_id, path)
+	);`,
 }
 
 // tableSince is the migration that created each table added after the first
 // release, so a backup written before it restores without one.
-var tableSince = map[string]int{"crawler_hits": 5, "bot_daily": 7, "heat_daily": 8, "imported_daily": 9}
+var tableSince = map[string]int{"crawler_hits": 5, "bot_daily": 7, "heat_daily": 8, "imported_daily": 9, "page_titles": 13}
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
 
