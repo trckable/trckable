@@ -8,7 +8,6 @@ export const copy = defineCopy('share', {
   period: 'Period',
   templates: 'Card',
   periods: { '24h': '24 hours', '7d': '7 days', '30d': '30 days', all: 'All time', custom: 'Custom range' },
-  whatToShare: 'What to share',
   numbers: 'Numbers',
   lookTitle: 'Look',
   compare: 'Compare',

@@ -160,7 +160,6 @@ export default function PanelContent(p: ContentProps) {
             a.copyLink()
           }}
           onShare={handheld ? share : undefined}
-          onShareIcon={!handheld && !isShared() && topicOfSection(section) ? share : undefined}
           onMail={can('note.write') ? () => {
             act.shut()
             setMail(true)

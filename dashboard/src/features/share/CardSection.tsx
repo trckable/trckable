@@ -1,5 +1,5 @@
-// What to share: the gallery. Pictures in groups by topic, each a live thumbnail (drawn when it scrolls into view); a
-// picture the site cannot make yet is disabled, with one line saying why.
+// What to share: the gallery. Pictures in groups by topic, each a small live thumbnail (drawn when it scrolls into
+// view) and its name; a picture the site cannot make yet is not shown.
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { PICTURES, TOPICS, cardUrl, missing, type Look, type Need, type Picture, type Template } from './card'
 import { copy } from './copy'
@@ -20,11 +20,11 @@ function useSeen() {
   return { ref, seen }
 }
 
-function Thumb({ site, look, id, off }: { site: string; look: Look; id: Template; off: boolean }) {
+function Thumb({ site, look, id }: { site: string; look: Look; id: Template }) {
   const { ref, seen } = useSeen()
   return (
     <span ref={ref} className="sd-thumb">
-      {seen && !off && <img src={cardUrl(site, { ...look, template: id, shape: 'link' }, 'thumb')} alt="" loading="lazy" decoding="async" />}
+      {seen && <img src={cardUrl(site, { ...look, template: id, shape: 'link' }, 'thumb')} alt="" loading="lazy" decoding="async" />}
     </span>
   )
 }
@@ -33,22 +33,18 @@ export function CardSection({ site, look, has, pictures = PICTURES, onChange }: 
   return (
     <div className="sd-gallery" role="radiogroup" aria-label={copy.templates} style={{ '--ring': look.accent } as CSSProperties}>
       {TOPICS.map((topic) => {
-        const list = pictures.filter((p) => p.topic === topic)
+        const list = pictures.filter((p) => p.topic === topic && !missing(p, has))
         if (!list.length) return null
         return (
           <div key={topic} className="sd-topic">
             <h3>{copy.topics[topic]}</h3>
             <div className="sd-pics">
-              {list.map((p) => {
-                const lacks = missing(p, has)
-                return (
-                  <button key={p.id} type="button" role="radio" aria-checked={look.template === p.id} disabled={!!lacks} className="sd-pic" title={lacks ? copy.why[lacks] : copy.template[p.id].hint} onClick={() => onChange(p.id)}>
-                    <Thumb site={site} look={look} id={p.id} off={!!lacks} />
-                    <b>{copy.template[p.id].name}</b>
-                    {lacks && <small>{copy.why[lacks]}</small>}
-                  </button>
-                )
-              })}
+              {list.map((p) => (
+                <button key={p.id} type="button" role="radio" aria-checked={look.template === p.id} className="sd-pic" title={copy.template[p.id].hint} onClick={() => onChange(p.id)}>
+                  <Thumb site={site} look={look} id={p.id} />
+                  <b>{copy.template[p.id].name}</b>
+                </button>
+              ))}
             </div>
           </div>
         )

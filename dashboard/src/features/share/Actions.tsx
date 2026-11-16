@@ -1,4 +1,4 @@
-// What to do with the picture: the download is the main action (the share sheet, on a phone), then copy it.
+// What to do with the picture: the download is the one main action (the share sheet, on a phone), then a compact row: copy the image, copy the link.
 // A post is its text: one Copy, the public link beside it, and the networks the post can go to (X and LinkedIn
 // open their own composer with it written; Slack has none, so it is copied as Slack takes it).
 import { Check, Copy, Download, ExternalLink, Image as ImageIcon, Link2, MessageSquare, Share2 } from 'lucide-react'
@@ -41,8 +41,10 @@ export function Actions(p: Props) {
     <div className="sd-actions" role="group" aria-label={copy.actions}>
       {share && <ActButton act="share" label={copy.share} title={copy.shareTitle} primary Icon={Share2} p={p} />}
       <ActButton act="save" label={copy.download(p.size)} title={copy.downloadTitle} primary={!share} Icon={Download} p={p} />
-      {canCopyImage() && <ActButton act="copy" label={copy.copyImage} title={copy.copyImage} Icon={ImageIcon} p={p} />}
-      {p.link && <ActButton act="link" label={copy.copyLink} title={copy.copyLinkTitle} Icon={Link2} p={p} />}
+      <div className="sd-actions-more">
+        {canCopyImage() && <ActButton act="copy" label={copy.copyImage} title={copy.copyImage} Icon={ImageIcon} p={p} />}
+        {p.link && <ActButton act="link" label={copy.copyLink} title={copy.copyLinkTitle} Icon={Link2} p={p} />}
+      </div>
     </div>
   )
 }

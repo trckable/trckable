@@ -7,8 +7,6 @@ export const copy = defineCopy('header', {
   askTitle: (key: string) => `Peek (${key})`,
   filter: 'Filter',
   settingsFor: (domain: string) => `Settings for ${domain}`,
-  share: 'Share',
-  shareTitle: 'Share these numbers as a picture',
   previous: 'Previous period',
   next: 'Next period',
   /** The tag inside the period control while a comparison is on, after the ±. */
