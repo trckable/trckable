@@ -352,7 +352,7 @@ func TestCardCountryNamesAreGenerated(t *testing.T) {
 	if err != nil {
 		t.Skip("no node")
 	}
-	if out, err := exec.Command(node, "../../../scripts/gen-country-names.mjs", "--check").CombinedOutput(); err != nil {
+	if out, err := exec.Command(node, "../../../scripts/gen-country-names.mjs", "--check").CombinedOutput(); err != nil { //nolint:gosec // node from LookPath, a fixed script
 		t.Errorf("%s", out)
 	}
 }
