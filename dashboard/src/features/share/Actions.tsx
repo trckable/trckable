@@ -1,12 +1,13 @@
 // What to do with the picture: the download is the main action (the share sheet, on a phone), then copy it.
-// A post is its text: one Copy. Where the person may manage links, Copy link puts the site's public link beside them.
-import { Check, Copy, Download, Image as ImageIcon, Link2, Share2 } from 'lucide-react'
+// A post is its text: one Copy, the public link beside it, and the networks the post can go to (X and LinkedIn
+// open their own composer with it written; Slack has none, so it is copied as Slack takes it).
+import { Check, Copy, Download, ExternalLink, Image as ImageIcon, Link2, MessageSquare, Share2 } from 'lucide-react'
 import { QUERY } from '../../kit/breakpoints'
 import { useMedia } from '../../lib/useNarrow'
 import { copy } from './copy'
 import { canCopyImage, canShareImage } from './image'
 
-export type Act = 'share' | 'copy' | 'save' | 'text' | 'link'
+export type Act = 'share' | 'copy' | 'save' | 'text' | 'link' | 'x' | 'linkedin' | 'slack'
 
 type Props = { post: boolean; /** The person may manage links: Copy link is offered. */ link?: boolean; /** The picture's pixel size, on the download button. */ size: string; busy: Act | null; done: Act | null; onAct: (a: Act) => void }
 
@@ -30,6 +31,9 @@ export function Actions(p: Props) {
       <div className="sd-actions" role="group" aria-label={copy.actions}>
         <ActButton act="text" label={copy.copyText} title={copy.copyText} primary Icon={Copy} p={p} />
         {p.link && <ActButton act="link" label={copy.copyLink} title={copy.copyLinkTitle} Icon={Link2} p={p} />}
+        <ActButton act="x" label={copy.postX} title={copy.postX} Icon={ExternalLink} p={p} />
+        <ActButton act="linkedin" label={copy.postLinkedIn} title={copy.postLinkedIn} Icon={ExternalLink} p={p} />
+        <ActButton act="slack" label={copy.copySlack} title={copy.copySlack} Icon={MessageSquare} p={p} />
       </div>
     )
   const share = phone && canShareImage()

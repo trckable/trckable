@@ -15,6 +15,9 @@
   align-items: center;
   gap: 8px;
 }
+.sd-links span {
+  font-size: 13px;
+}
 .sd-head h2 {
   margin: 0 auto 0 0;
   font-size: 18px;
@@ -376,7 +379,7 @@
   .sd-head h2 {
     font-size: 17px;
   }
-  :root .sd-head .btn {
+  :root .sd-head .btn.icon {
     width: var(--ph-hit);
     height: var(--ph-hit);
     padding: 0;
@@ -487,3 +490,60 @@
   font-size: 12px;
 }
 
+
+/* Copy link with several links: which one, as a short list above the actions. */
+.sd-pick {
+  display: grid;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.sd-pick-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 6px 6px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.sd-pick-x {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-3);
+}
+.sd-pick-x:is(:hover, :focus-visible) {
+  background: var(--border);
+  color: var(--text);
+}
+.sd-pick-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font-size: 14px;
+  text-align: left;
+}
+.sd-pick-item:is(:hover, :focus-visible) {
+  background: var(--surface-2);
+}
+.sd-pick-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
