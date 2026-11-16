@@ -2,6 +2,7 @@ package cards
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"text/template"
 )
@@ -119,14 +120,18 @@ func digestData(s Spec, f Frame) string {
 	return glow(f) + boxes(p.cards, f.Ink, f.L.n(22)) + rowBars(p.rows, f, p.rowTop, p.rowStep) + badgeCheck(s, f)
 }
 
-// The Search Console mark: four rounded cells in Google's own colours. A brand mark keeps its colours, so these
-// four are the one exception to drawing with the card's theme and accent; the pill and the check use those.
-var badgeMark = [4]string{"#4285f4", "#ea4335", "#fbbc04", "#34a853"}
+// The Search Console mark: a ring of four arcs in Google's own colours, with the bar of a "G" on the right. A brand
+// mark keeps its colours, so these four are the one exception to drawing with the card's theme; the pill and the
+// check use the theme's surface, text and "up" colours. Angles run clockwise from three o'clock, in degrees.
+var badgeArcs = []struct {
+	from, to float64
+	color    string
+}{{320, 395, "#4285f4"}, {215, 320, "#ea4335"}, {125, 215, "#fbbc04"}, {35, 125, "#34a853"}}
 
-// badgeBox is the pill's size: its height follows the layout, its width holds the check, a gap and the mark.
+// badgeBox is the pill's size: about 50px at the link preview's width, wide enough for the mark and the check.
 func badgeBox(l Layout) (w, h float64) {
-	h = l.px(24) * 1.7
-	return h * 2.3, h
+	h = float64(l.n(50))
+	return h * 2.05, h
 }
 
 // badgeWidth is the room the badge takes at the right of the domain's line.
@@ -138,7 +143,22 @@ func badgeWidth(s Spec) float64 {
 	return w
 }
 
-// badgeCheck draws the badge: a soft pill in the card's ink, the check, and the Search Console mark. Numbers only.
+// arcPoints is the ring's arc from one angle to the other, as a line through points (the rasteriser draws lines).
+func arcPoints(cx, cy, r, from, to float64) string {
+	var b strings.Builder
+	steps := int((to-from)/5) + 1
+	for i := 0; i <= steps; i++ {
+		a := (from + (to-from)*float64(i)/float64(steps)) * math.Pi / 180
+		cmd := "L"
+		if i == 0 {
+			cmd = "M"
+		}
+		fmt.Fprintf(&b, "%s%.1f %.1f", cmd, cx+r*math.Cos(a), cy+r*math.Sin(a))
+	}
+	return b.String()
+}
+
+// badgeCheck draws the badge: a solid pill in the card's surface with a soft border, the mark, then a green check. Numbers only.
 func badgeCheck(s Spec, f Frame) string {
 	if !s.Badge {
 		return ""
@@ -146,16 +166,17 @@ func badgeCheck(s Spec, f Frame) string {
 	l := f.L
 	w, h := badgeBox(l)
 	x, y := float64(l.Right)-w, float64(l.DomainY)-l.px(28)*0.35-h/2
+	cy, sw := y+h/2, h*0.1
 	var b strings.Builder
-	fmt.Fprintf(&b, `<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="%.1f" fill="%s" fill-opacity="0.1"/>`, x, y, w, h, h/2, f.Ink)
-	cx, cy, u := x+h*0.5, y+h/2, h
-	fmt.Fprintf(&b, `<path d="M%.1f %.1fL%.1f %.1fL%.1f %.1f" fill="none" stroke="%s" stroke-width="%.1f" stroke-linecap="round" stroke-linejoin="round"/>`,
-		cx-u*0.18, cy, cx-u*0.04, cy+u*0.14, cx+u*0.2, cy-u*0.14, f.Ink, f.Stroke(u*0.09, 1))
-	cell := u * 0.27
-	mx, my := x+w-h*0.5-cell*1.02, cy-cell*1.02
-	for i, c := range badgeMark {
-		fmt.Fprintf(&b, `<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="%.1f" fill="%s"/>`, mx+float64(i%2)*cell*1.05, my+float64(i/2)*cell*1.05, cell*0.95, cell*0.95, cell*0.3, c)
+	fmt.Fprintf(&b, `<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="%.1f" fill="%s" stroke="%s" stroke-opacity="0.22" stroke-width="%.1f"/>`, x, y, w, h, h/2, f.BG, f.FG, f.Stroke(1.5, l.K))
+	cx, r := x+h*0.62, h*0.24
+	for _, a := range badgeArcs {
+		fmt.Fprintf(&b, `<path d="%s" fill="none" stroke="%s" stroke-width="%.1f"/>`, arcPoints(cx, cy, r, a.from, a.to), a.color, f.Stroke(sw, 1))
 	}
+	fmt.Fprintf(&b, `<path d="M%.1f %.1fL%.1f %.1f" fill="none" stroke="%s" stroke-width="%.1f"/>`, cx, cy, cx+r+sw/2, cy, badgeArcs[0].color, f.Stroke(sw, 1))
+	kx := x + w - h*0.62
+	fmt.Fprintf(&b, `<path d="M%.1f %.1fL%.1f %.1fL%.1f %.1f" fill="none" stroke="%s" stroke-width="%.1f" stroke-linecap="round" stroke-linejoin="round"/>`,
+		kx-h*0.17, cy, kx-h*0.03, cy+h*0.14, kx+h*0.19, cy-h*0.14, s.Theme.Up, f.Stroke(h*0.1, 1))
 	return b.String()
 }
 

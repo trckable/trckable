@@ -330,7 +330,7 @@ func TestDigestBadge(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if strings.Count(string(a), "<rect")+5 != strings.Count(string(b), "<rect") {
+			if strings.Count(string(a), "<rect")+1 != strings.Count(string(b), "<rect") {
 				t.Errorf("%s %s: a digest without a badge draws one", f.ID, theme)
 			}
 			if left := float64(l.Right) - badgeWidth(marked); left < float64(l.Left)+measure(false, plain.Domain, l.px(28)) {
