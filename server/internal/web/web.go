@@ -495,6 +495,13 @@ func serveStored(w http.ResponseWriter, r *http.Request, fsys fs.FS, name string
 // allowed to frame this page (space-separated origins), or "" for none. Only
 // an embeddable share link answers anything.
 func DashboardFramed(frame func(*http.Request) string) http.Handler {
+	return DashboardWithHead(frame, nil)
+}
+
+// DashboardWithHead is DashboardFramed, and head may name a page's own title
+// and meta tags (both already escaped): the page then goes out with them in
+// its head, in plain bytes. head returns "" for a page that keeps the file's own.
+func DashboardWithHead(frame func(*http.Request) string, head func(*http.Request) (title, tags string)) http.Handler {
 	sub, _ := fs.Sub(dist, "dist")
 	files := http.FileServerFS(sub)
 	// The page is the one file every route answers with: read once, here, as
@@ -567,6 +574,12 @@ func DashboardFramed(frame func(*http.Request) string) http.Handler {
 		}
 		h.Set("Referrer-Policy", referrerPolicy(r.URL.Path))
 		body := index
+		if head != nil {
+			if title, tags := head(r); title != "" {
+				_, _ = w.Write(withHead(index, title, tags))
+				return
+			}
+		}
 		if len(indexGz) > 0 {
 			h.Add("Vary", "Accept-Encoding")
 			if Accepts(r.Header.Get("Accept-Encoding"), "gzip") {
@@ -576,6 +589,21 @@ func DashboardFramed(frame func(*http.Request) string) http.Handler {
 		}
 		_, _ = w.Write(body)
 	})
+}
+
+// withHead puts a page's own title and tags into the built page: the title
+// replaces the file's, the tags go at the end of the head.
+func withHead(index []byte, title, tags string) []byte {
+	out := index
+	if i := bytes.Index(out, []byte("<title>")); i >= 0 {
+		if j := bytes.Index(out[i:], []byte("</title>")); j >= 0 {
+			out = append(append(append([]byte{}, out[:i]...), "<title>"+title+"</title>"...), out[i+j+len("</title>"):]...)
+		}
+	}
+	if i := bytes.Index(out, []byte("</head>")); i >= 0 {
+		out = append(append(append([]byte{}, out[:i]...), tags...), out[i:]...)
+	}
+	return out
 }
 
 // serviceWorker is public/sw.js with its version filled in: the hash of the
