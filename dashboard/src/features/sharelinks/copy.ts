@@ -8,7 +8,6 @@ export const copy = defineCopy('links', {
   empty: 'No links yet',
   newLink: 'New link',
   name: 'Name',
-  namePlaceholder: 'For the investors',
   public: 'Public',
   password: 'Password',
   passwordOnly: 'Anyone with the link, and the password',
@@ -87,6 +86,7 @@ export const copy = defineCopy('links', {
   keep: 'Keep',
   fallbackName: 'Shared link',
   changeFailed: 'Could not change the link',
+  more: 'More',
 })
 
 /** What a link is called when its name is empty. */

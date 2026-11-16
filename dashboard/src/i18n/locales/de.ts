@@ -519,10 +519,6 @@ export default {
   'share.failed': 'Die Karte ließ sich nicht zeichnen',
   'share.link': 'Link',
   'share.linkTitle': 'Ein schreibgeschützter Link zu dieser Website',
-  'share.password': 'Passwort',
-  'share.passwordHint': 'Optional',
-  'share.revenue': 'Umsatz',
-  'share.create': 'Link erstellen',
   'share.copyLink': 'Link kopieren',
   'share.linkCopied': 'Link kopiert',
   'share.back': 'Zurück',
@@ -536,7 +532,6 @@ export default {
   'links.empty': 'Noch keine Links',
   'links.newLink': 'Neuer Link',
   'links.name': 'Name',
-  'links.namePlaceholder': 'Für die Investoren',
   'links.public': 'Öffentlich',
   'links.password': 'Passwort',
   'links.passwordOnly': 'Jeder mit dem Link und dem Passwort',
@@ -613,6 +608,7 @@ export default {
   'links.keep': 'Behalten',
   'links.fallbackName': 'Geteilter Link',
   'links.changeFailed': 'Der Link ließ sich nicht ändern',
+  'links.more': 'Mehr',
 
   // sites
   'sites.pick': 'Website wählen',

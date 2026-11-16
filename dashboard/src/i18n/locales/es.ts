@@ -522,10 +522,6 @@ export default {
   'share.failed': 'No se pudo dibujar la tarjeta',
   'share.link': 'Enlace',
   'share.linkTitle': 'Un enlace de solo lectura a este sitio',
-  'share.password': 'Contraseña',
-  'share.passwordHint': 'Opcional',
-  'share.revenue': 'Ingresos',
-  'share.create': 'Crear enlace',
   'share.copyLink': 'Copiar enlace',
   'share.linkCopied': 'Enlace copiado',
   'share.back': 'Atrás',
@@ -539,7 +535,6 @@ export default {
   'links.empty': 'Aún no hay enlaces',
   'links.newLink': 'Nuevo enlace',
   'links.name': 'Nombre',
-  'links.namePlaceholder': 'Para los inversores',
   'links.public': 'Público',
   'links.password': 'Contraseña',
   'links.passwordOnly': 'Cualquiera con el enlace y la contraseña',
@@ -616,6 +611,7 @@ export default {
   'links.keep': 'Conservar',
   'links.fallbackName': 'Enlace compartido',
   'links.changeFailed': 'No se pudo cambiar el enlace',
+  'links.more': 'Más',
 
   // sites
   'sites.pick': 'Elige un sitio',

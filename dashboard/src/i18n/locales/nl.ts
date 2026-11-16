@@ -509,10 +509,6 @@ export default {
   'share.failed': 'De kaart kon niet worden getekend',
   'share.link': 'Link',
   'share.linkTitle': 'Een link met alleen leesrechten naar deze site',
-  'share.password': 'Wachtwoord',
-  'share.passwordHint': 'Optioneel',
-  'share.revenue': 'Omzet',
-  'share.create': 'Link maken',
   'share.copyLink': 'Link kopiëren',
   'share.linkCopied': 'Link gekopieerd',
   'share.back': 'Terug',
@@ -526,7 +522,6 @@ export default {
   'links.empty': 'Nog geen links',
   'links.newLink': 'Nieuwe link',
   'links.name': 'Naam',
-  'links.namePlaceholder': 'Voor de investeerders',
   'links.public': 'Openbaar',
   'links.password': 'Wachtwoord',
   'links.passwordOnly': 'Iedereen met de link en het wachtwoord',
@@ -603,6 +598,7 @@ export default {
   'links.keep': 'Behouden',
   'links.fallbackName': 'Gedeelde link',
   'links.changeFailed': 'De link kon niet worden gewijzigd',
+  'links.more': 'Meer',
 
   // sites
   'sites.pick': 'Kies een site',

@@ -1,39 +1,24 @@
-// The dialog's secondary way to share: a read-only link to the site, with
-// an optional password and revenue off unless switched on. What the link may
-// show is decided on the server: without revenue the figure is never read.
-import { ArrowLeft, Check, Copy, Link2 } from 'lucide-react'
+// The dialog's secondary way to share: a read-only link to the site. It is the
+// same form as Settings → Sharing (features/sharelinks): named after the site,
+// revenue off, no end date, with the password, the end date and embedding
+// under More. What the link may show is decided on the server.
+import { ArrowLeft, Link2 } from 'lucide-react'
 import { useState } from 'react'
-import { fail, type Site, more } from '../../lib/apiMore'
-import { Switch } from '../../components/Switch'
-import { toast } from '../../components/Toast'
+import type { Site } from '../../lib/apiMore'
+import { Created } from '../sharelinks/Created'
+import { NewLink, type Made } from '../sharelinks/NewLink'
 import { copy } from './copy'
 import { LinkPreview } from './LinkPreview'
 import { LookPanel } from './LookPanel'
 import { useLook } from './useLook'
+import '../sharelinks/sharelinks.css'
 
 export function LinkPanel({ site, onBack }: { site: Site; onBack: () => void }) {
-  const [password, setPassword] = useState('')
-  const [revenue, setRevenue] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [url, setUrl] = useState('')
-  const [copied, setCopied] = useState(false)
+  const [made, setMade] = useState<Made | null>(null)
   const look = useLook(site.id)
-  const create = () => {
-    setBusy(true)
-    more
-      .createShare(site.id, { name: site.domain, password: password || undefined, revenue, days: 0 })
-      .then((r) => setUrl(r.url))
-      .catch((e: unknown) => fail(e))
-      .finally(() => setBusy(false))
-  }
-  const copyUrl = () =>
-    navigator.clipboard?.writeText(url).then(() => {
-      setCopied(true)
-      toast(copy.linkCopied)
-    })
   return (
     <div className="sd-linkgrid">
-      <div className="sd-link">
+      <div className="sd-link sl-card">
         <button type="button" className="btn ghost sd-back" onClick={onBack}>
           <ArrowLeft size={16} strokeWidth={1.8} aria-hidden="true" />
           {copy.back}
@@ -42,32 +27,7 @@ export function LinkPanel({ site, onBack }: { site: Site; onBack: () => void }) 
           <Link2 size={17} strokeWidth={1.8} aria-hidden="true" />
           {copy.linkTitle}
         </h3>
-        {!url && (
-          <>
-            <label className="field">
-              {copy.password}
-              <input className="input" type="password" autoComplete="new-password" placeholder={copy.passwordHint} value={password} onChange={(e) => setPassword(e.target.value)} />
-            </label>
-            <label className="sd-toggle">
-              <span>{copy.revenue}</span>
-              <Switch on={revenue} label={copy.revenue} onChange={() => setRevenue((x) => !x)} />
-            </label>
-            <button type="button" className="btn primary" disabled={busy} onClick={create}>
-              {busy && <span className="btn-spin" aria-hidden="true" />}
-              {copy.create}
-            </button>
-          </>
-        )}
-        {url && (
-          <div className="sd-url">
-            <input className="input" readOnly value={url} onFocus={(e) => e.target.select()} />
-            <button type="button" className="btn primary" onClick={copyUrl}>
-              {copied && <Check size={16} strokeWidth={2.4} aria-hidden="true" />}
-              {!copied && <Copy size={16} strokeWidth={1.8} aria-hidden="true" />}
-              {copy.copyLink}
-            </button>
-          </div>
-        )}
+        {made ? <Created made={made} domain={site.domain} onDone={onBack} /> : <NewLink bare site={site} onClose={onBack} onMade={setMade} />}
         <LookPanel state={look} />
         <span className="faint sd-manage">{copy.manage}</span>
       </div>

@@ -510,10 +510,6 @@ export default {
   'share.failed': 'La carte n’a pas pu être dessinée',
   'share.link': 'Lien',
   'share.linkTitle': 'Un lien en lecture seule vers ce site',
-  'share.password': 'Mot de passe',
-  'share.passwordHint': 'Facultatif',
-  'share.revenue': 'Revenus',
-  'share.create': 'Créer le lien',
   'share.copyLink': 'Copier le lien',
   'share.linkCopied': 'Lien copié',
   'share.back': 'Retour',
@@ -527,7 +523,6 @@ export default {
   'links.empty': 'Aucun lien pour l’instant',
   'links.newLink': 'Nouveau lien',
   'links.name': 'Nom',
-  'links.namePlaceholder': 'Pour les investisseurs',
   'links.public': 'Public',
   'links.password': 'Mot de passe',
   'links.passwordOnly': 'Toute personne avec le lien et le mot de passe',
@@ -604,6 +599,7 @@ export default {
   'links.keep': 'Garder',
   'links.fallbackName': 'Lien partagé',
   'links.changeFailed': 'Impossible de modifier le lien',
+  'links.more': 'Plus',
 
   // sites
   'sites.pick': 'Choisir un site',

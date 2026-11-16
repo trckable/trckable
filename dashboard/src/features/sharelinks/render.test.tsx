@@ -1,7 +1,8 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import type { Share } from '../../lib/api'
+import type { Share, Site } from '../../lib/api'
 import { LinkRow } from './LinkRow'
+import { NewLink } from './NewLink'
 import { EMPTY } from './logic'
 import { Preview } from './Preview'
 import { numbersOf } from './numbers'
@@ -89,6 +90,23 @@ describe('the thumbnail', () => {
     const locked = draw({ access: 'password' }, true)
     expect(locked).toContain('sl-locked')
     expect(locked).not.toContain('sl-tiles')
+  })
+})
+
+describe('the new-link form', () => {
+  const site = { id: 's', domain: 'acme.com', name: 'Acme', timezone: 'UTC', currency: 'USD', proxy_key: '' } as Site
+  const form = (bare = false) => renderToStaticMarkup(<NewLink site={site} bare={bare} onClose={noop} onMade={noop} />)
+  it('is named after the domain and keeps the password, end date and embedding under More', () => {
+    const html = form()
+    expect(html).toContain('placeholder="acme.com"')
+    expect(html).toContain('aria-expanded="false"')
+    expect(html).not.toContain('Who can open it')
+    expect(html).not.toContain('Embed on sites')
+  })
+  it('draws the picture of the result unless the host has its own', () => {
+    expect(form()).toContain('sl-preview')
+    expect(form(true)).not.toContain('sl-preview')
+    expect(form(true)).toContain('sl-new bare')
   })
 })
 

@@ -47,6 +47,28 @@
   border-radius: 14px;
   background: var(--sunken);
 }
+.sl-new.bare {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 12px;
+}
+.sl-more {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 2px;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font-size: 13px;
+  cursor: pointer;
+}
+.sl-more svg {
+  transition: transform 0.15s;
+}
+.sl-more[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
 .sl-fields {
   display: flex;
   flex-direction: column;
@@ -54,12 +76,10 @@
   min-width: 0;
 }
 .sl-access button {
-  flex: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  height: 38px;
+  gap: 6px;
 }
 .sl-opts {
   border: 1px solid var(--border);
