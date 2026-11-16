@@ -13,6 +13,7 @@ vi.mock('../../lib/apiMore', async (orig) => ({
   more: { siteDomain: (...a: unknown[]) => siteDomain(...a), changeDomain: (...a: unknown[]) => changeDomain(...a), endFormerDomain: (...a: unknown[]) => endFormerDomain(...a) },
 }))
 let allowed = true
+vi.mock('./AllowedDomains', () => ({ AllowedDomains: () => null }))
 vi.mock('../../lib/permissions', () => ({ can: () => allowed }))
 
 import { APIError } from '../../lib/api'
