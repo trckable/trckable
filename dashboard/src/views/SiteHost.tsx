@@ -7,9 +7,9 @@ import { cachedReport, dropReports, showsInstall, api, type ReportQuery, type Si
 import { setWeekStart, todayIn, type Range } from '../lib/dates'
 import { fmtMoney } from '../lib/format'
 import { journeysOn } from '../features/cookieless/labels'
-import { navigate, oldAddressTarget, readView, setDefaultPeriodFor, setView, useLocation, wantsLive, writeView } from '../lib/url'
+import { navigate, oldAddressTarget, readView, setDefaultPeriodFor, setView, useLocation, wantsLive, writeView, type ViewState } from '../lib/url'
 import { queryOf, rangeOf } from '../lib/dashQuery'
-import { isShared } from '../lib/me'
+import { fixedPeriod, isShared } from '../lib/me'
 import { can } from '../lib/permissions'
 import { useMods } from '../lib/useMods'
 import { shows } from '../lib/modules'
@@ -37,6 +37,13 @@ const Notices = lazy(() => import('./Notices')) // the note over test payments
 const AddGoals = lazy(() => import('./AddGoals').then((m) => ({ default: m.AddGoals })))
 const JourneyDialog = lazy(() => import('../features/journey/JourneyDialog').then((m) => ({ default: m.JourneyDialog })))
 
+/** A shared link made for one period shows that period, whatever the address says (the server holds it too): no custom dates, and the comparison is the period before or none. */
+function lockedView(v: ViewState): ViewState {
+  const period = fixedPeriod()
+  if (!period) return v
+  return { ...v, period, from: undefined, to: undefined, cfrom: undefined, cto: undefined, compare: v.compare === 'none' ? 'none' : 'previous', day: undefined }
+}
+
 /** How long the setup screen stays, green, after the first visit before Live opens. */
 const FIRST_VISIT_MS = 2400
 
@@ -62,7 +69,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
   if (!shared) setDefaultPeriodFor(site)
   useKeymap()
   const { params } = useLocation()
-  const view = readView(params)
+  const view = lockedView(readView(params))
   const today = todayIn(site.timezone)
   const range: Range = useMemo(() => rangeOf(view, today), [view.period, view.from, view.to, today]) // eslint-disable-line react-hooks/exhaustive-deps -- view is new each render: keyed by the fields the range reads
   const filtersKey = JSON.stringify(view.filters)

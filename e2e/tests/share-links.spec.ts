@@ -2,6 +2,7 @@
 // the list and copy or open it again there, give an old link a new address,
 // revoke one with the question in the row. Also the pictures for the review:
 // POLISH_SHOTS=<folder> saves them.
+import { request } from '@playwright/test'
 import { expect, test, type Page } from './fixtures'
 import { API } from '../playwright.config'
 import { session } from './session'
@@ -54,8 +55,13 @@ test('make a link in the card, copy it, revoke it', async ({ page, context, brow
   // The form is in the card, not in a modal.
   await expect(page.getByRole('dialog', { name: 'New shared link' })).toHaveCount(0)
   await card.getByLabel('Name').fill('For the board')
+  // Named after the site, revenue off, no end date; the password, the end date and embedding are under More.
+  await expect(card.getByLabel('Name')).toHaveAttribute('placeholder', /\.test$/)
+  await expect(card.getByRole('switch', { name: 'Revenue' })).toHaveAttribute('aria-checked', 'false')
+  await expect(card.getByRole('group', { name: 'Expires' })).toHaveCount(0)
   await shot(page, 'form-public')
-  await card.getByRole('button', { name: 'Password' }).click()
+  await card.getByRole('button', { name: 'More', exact: true }).click()
+  await card.getByRole('group', { name: 'Who can open it' }).getByRole('button', { name: 'Password' }).click()
   const create = card.getByRole('button', { name: 'Create link' })
   await expect(create).toBeDisabled()
   await card.getByLabel('Password', { exact: true }).fill('a long enough phrase')
@@ -63,13 +69,14 @@ test('make a link in the card, copy it, revoke it', async ({ page, context, brow
   await card.getByRole('switch', { name: 'Notes' }).click()
   await card.getByRole('button', { name: '30d' }).click()
   await expect(card.getByRole('switch', { name: 'Revenue' })).toHaveAttribute('aria-checked', 'true')
-  // The thumbnail follows: revenue tile in, and the lock shows the password screen.
-  await expect(card.locator('.sl-tiles.four')).toBeVisible()
-  await expect(card.locator('.sl-note').first()).toBeVisible()
+  // The preview is the page itself, made from these options: its own header, and with the lock its own password page.
+  const preview = card.frameLocator('iframe.sl-live-page')
+  await expect(preview.locator('.hd')).toBeVisible({ timeout: 20_000 })
   await shot(page, 'form-password')
   await card.getByRole('button', { name: 'Show the password screen' }).click()
-  await expect(card.locator('.sl-locked')).toBeVisible()
+  await expect(preview.getByLabel('Password')).toBeVisible({ timeout: 20_000 })
   await card.getByRole('button', { name: 'Show the page' }).click()
+  await expect(preview.locator('.hd')).toBeVisible({ timeout: 20_000 })
 
   // A bad site address is named before anything is sent.
   await card.getByRole('switch', { name: 'Embed on sites' }).click()
@@ -119,6 +126,60 @@ test('make a link in the card, copy it, revoke it', async ({ page, context, brow
   await row.getByRole('button', { name: 'Revoke', exact: true }).click()
   await expect(card.locator('.sl-row', { hasText: 'For the board' })).toHaveCount(0)
   await expect(card.getByText('No links yet')).toBeVisible()
+})
+
+test('a link is changed in its row: renamed, given a password, made public again, and a stranger meets each change', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'one browser is enough: the server does the work')
+  const site = await open(page)
+  const res = await page.request.post(`${API}/api/v1/sites/${site}/shares`, { headers: H, data: { name: 'Board', days: 30 } })
+  const token = ((await res.json()) as { url: string }).url.split('/s/')[1]
+  // A stranger each time: a browser that already holds the link's session is let in again without the password.
+  const opens = async (password?: string) => {
+    const stranger = await request.newContext()
+    const status = (await stranger.post(`${API}/api/v1/share/open`, { headers: H, data: { token, password } })).status()
+    await stranger.dispose()
+    return status
+  }
+  await sharing(page, site)
+  const card = page.locator('#shares')
+  const row = () => card.locator('.sl-row') // the one link of this site
+  const edit = () => card.locator('.sl-edit')
+  const save = async () => {
+    await edit().getByRole('button', { name: 'Save' }).click()
+    await expect(edit()).toHaveCount(0)
+  }
+
+  // Nothing changed, nothing to save; a name and a password change are one Save.
+  await row().getByRole('button', { name: 'Edit link: Board' }).click()
+  await expect(edit().getByRole('button', { name: 'Save' })).toBeDisabled()
+  await edit().getByLabel('Name').fill('Investors')
+  await shot(page, 'edit')
+  await save()
+  await expect(row()).toContainText('Investors')
+  expect(await opens()).toBe(200)
+
+  await row().getByRole('button', { name: 'Edit link: Investors' }).click()
+  await edit().getByRole('group', { name: 'Who can open it' }).getByRole('button', { name: 'Password' }).click()
+  await expect(edit().getByRole('button', { name: 'Save' })).toBeDisabled()
+  await edit().getByLabel('Password', { exact: true }).fill('a long enough phrase')
+  await save()
+  await expect(row().getByRole('img', { name: 'Password link' })).toBeVisible()
+  expect(await opens()).toBe(401)
+  expect(await opens('a long enough phrase')).toBe(200)
+
+  // A rename alone keeps the password; Public removes it.
+  await row().getByRole('button', { name: 'Edit link: Investors' }).click()
+  await expect(edit().getByLabel('Password', { exact: true })).toHaveAttribute('placeholder', /keep the password/)
+  await edit().getByLabel('Name').fill('Team')
+  await save()
+  expect(await opens()).toBe(401)
+  await row().getByRole('button', { name: 'Edit link: Team' }).click()
+  await edit().getByRole('group', { name: 'Who can open it' }).getByRole('button', { name: 'Public' }).click()
+  await edit().getByRole('group', { name: 'Expires' }).getByRole('button', { name: 'Never' }).click()
+  await save()
+  await expect(row().getByRole('img', { name: 'Public link' })).toBeVisible()
+  await expect(row().getByText('No end date')).toBeAttached()
+  expect(await opens()).toBe(200)
 })
 
 test('a link made before addresses were kept gets a new address, and the old one stops', async ({ page, context, browserName }) => {
@@ -182,7 +243,8 @@ test('a phone sees the name and one line of small icons, and nothing spills side
   expect(row!.height).toBeLessThan(90)
   await shot(page, 'list-390')
   await card.getByRole('button', { name: 'New link' }).click()
-  await card.getByRole('button', { name: 'Password' }).click()
+  await card.getByRole('button', { name: 'More', exact: true }).click()
+  await card.getByRole('group', { name: 'Who can open it' }).getByRole('button', { name: 'Password' }).click()
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
   await shot(page, 'form-390')
 })

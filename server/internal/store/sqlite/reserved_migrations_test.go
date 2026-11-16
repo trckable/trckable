@@ -16,7 +16,7 @@ func TestReservedMigrationsAreNoOps(t *testing.T) {
 // moves on to 87 without adding the column twice.
 func TestShareLiveMigrationIsIdempotent(t *testing.T) {
 	st, ctx, _ := domainSite(t)
-	if _, err := st.DB.ExecContext(ctx, `PRAGMA user_version = 85`); err != nil {
+	if _, err := st.DB.ExecContext(ctx, `ALTER TABLE site_shares DROP COLUMN sections; ALTER TABLE site_shares DROP COLUMN period; ALTER TABLE site_shares DROP COLUMN preview; PRAGMA user_version = 85`); err != nil {
 		t.Fatal(err)
 	}
 	if err := st.MigrateTo(ctx, len(migrations)); err != nil {

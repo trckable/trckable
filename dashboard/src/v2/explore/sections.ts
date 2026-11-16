@@ -1,5 +1,5 @@
 // Explore's sections in four groups, and the tables each one holds.
-import { hasAnswers, hasMentions, isShared } from '../../lib/me'
+import { hasAnswers, hasMentions, isShared, sectionShown } from '../../lib/me'
 import type { FilterDim, Section, Tab } from './types'
 
 export type { Section, Tab } from './types'
@@ -49,7 +49,7 @@ export const seeMoney = (on: boolean) => {
 const PAYING: Tab[] = ['sales', 'payments', 'customers', 'earners']
 
 /** Whether a table is offered here: all of them, but on a shared link only those the report can fill. */
-export const offered = (t: Tab): boolean => (t !== 'mentions' || hasMentions()) && (t !== 'networks' || networksSeen) && (t !== 'answers' || hasAnswers()) && (!isShared() || (SHARED.includes(t) && !(noMoney && PAYING.includes(t))))
+export const offered = (t: Tab): boolean => (t !== 'mentions' || hasMentions()) && (t !== 'networks' || networksSeen) && (t !== 'answers' || hasAnswers()) && (!isShared() || (SHARED.includes(t) && !(noMoney && PAYING.includes(t)) && sectionShown(sectionOf(t))))
 
 /** A section's tables, as offered here. */
 export const TABS = Object.fromEntries(SECTIONS.map((s) => [s, []])) as unknown as Record<Section, Tab[]>

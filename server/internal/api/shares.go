@@ -75,30 +75,31 @@ func (a *API) createShare(w http.ResponseWriter, r *http.Request) {
 		Days     int    `json:"days"`  // 0 = no end date
 		// Embed lists the sites allowed to show this link in an iframe.
 		Embed []string `json:"embed_origins"`
+		// Sections are the parts of the dashboard it shows besides the headline
+		// numbers: all of them when left out. Period fixes it to one period:
+		// the reader chooses when left out.
+		Sections []string `json:"sections"`
+		Period   string   `json:"period"`
 	}
 	if err := decode(r, &in); err != nil {
 		fail(w, http.StatusBadRequest, "bad request")
 		return
 	}
-	if len([]rune(in.Name)) > 60 {
-		fail(w, http.StatusBadRequest, "keep the name under 60 characters")
+	if err := checkShareName(in.Name); err != nil {
+		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	var expires *int64
-	if in.Days > 0 {
-		if in.Days > 3650 {
-			fail(w, http.StatusBadRequest, "ten years is the longest a link can last")
-			return
-		}
-		at := a.Now().AddDate(0, 0, in.Days).Unix()
-		expires = &at
+	expires, err := a.shareEnd(in.Days)
+	if err != nil {
+		fail(w, http.StatusBadRequest, err.Error())
+		return
 	}
 	origins, err := embedOrigins(in.Embed)
 	if err != nil {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	sh, token, err := a.Ctl.CreateShare(r.Context(), r.PathValue("site"), in.Name, in.Password, in.Revenue, in.Notes, in.Live, expires, origins)
+	sh, token, err := a.Ctl.CreateShare(r.Context(), r.PathValue("site"), in.Name, in.Password, in.Revenue, in.Notes, in.Live, expires, origins, sqlite.ShareScope{Sections: in.Sections, Period: in.Period})
 	if busy(w, err) {
 		return
 	}
@@ -109,41 +110,141 @@ func (a *API) createShare(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, map[string]any{"share": sh, "url": a.shareBase(r, r.PathValue("site")) + "/s/" + token})
 }
 
-// updateShare changes what an existing link shows. Only the notes and the
-// live count switch for now: the rest is fixed when the link is made (a new
-// link is one click).
+// checkShareName keeps a link's name short enough for a list.
+func checkShareName(name string) error {
+	if len([]rune(name)) > 60 {
+		return errors.New("keep the name under 60 characters")
+	}
+	return nil
+}
+
+// shareEnd turns a number of days from now into the end date a link is kept
+// with: none for 0.
+func (a *API) shareEnd(days int) (*int64, error) {
+	switch {
+	case days < 0:
+		return nil, errors.New("days cannot be negative")
+	case days == 0:
+		return nil, nil
+	case days > 3650:
+		return nil, errors.New("ten years is the longest a link can last")
+	}
+	at := a.Now().AddDate(0, 0, days).Unix()
+	return &at, nil
+}
+
+// updateShare changes an existing link: its name, its end date, its password
+// (set, changed or removed), the sites it may be embedded on and the notes.
+// What it shows (revenue) is fixed when it is made. Whoever may make a link may
+// change it, nobody else; a field left out stays as it was.
 func (a *API) updateShare(w http.ResponseWriter, r *http.Request) {
 	if a.owner(w, r) == nil || !a.siteExists(w, r) {
 		return
 	}
 	var in struct {
-		Notes *bool `json:"notes"`
-		Live  *bool `json:"live"`
+		Name     *string   `json:"name"`
+		Notes    *bool     `json:"notes"`
+		Live     *bool     `json:"live"`
+		Days     *int      `json:"days"` // 0 removes the end date
+		Password *string   `json:"password"`
+		Embed    *[]string `json:"embed_origins"`
+		Sections *[]string `json:"sections"` // [] shows the headline numbers only
+		Period   *string   `json:"period"`   // "" lets the reader choose
 	}
-	if err := decode(r, &in); err != nil || (in.Notes == nil && in.Live == nil) {
-		fail(w, http.StatusBadRequest, "send {\"notes\": true} or {\"live\": true}, or false")
+	if err := decode(r, &in); err != nil {
+		fail(w, http.StatusBadRequest, "bad request")
 		return
 	}
-	site, id := r.PathValue("site"), r.PathValue("id")
-	var err error
-	out := map[string]any{}
-	if in.Notes != nil {
-		err = a.Ctl.SetShareNotes(r.Context(), site, id, *in.Notes)
-		out["notes"] = *in.Notes
+	var e sqlite.ShareEdit
+	if in.Name == nil && in.Notes == nil && in.Live == nil && in.Days == nil && in.Password == nil && in.Embed == nil && in.Sections == nil && in.Period == nil {
+		fail(w, http.StatusBadRequest, "send what to change: name, notes, live, days, password, embed_origins, sections or period")
+		return
 	}
-	if err == nil && in.Live != nil {
-		err = a.Ctl.SetShareLive(r.Context(), site, id, *in.Live)
-		out["live"] = *in.Live
+	if in.Sections != nil {
+		if _, err := sqlite.ParseSections(*in.Sections); err != nil {
+			fail(w, http.StatusBadRequest, "sections can be "+strings.Join(sqlite.ShareSections, ", "))
+			return
+		}
+		e.Sections = in.Sections
 	}
-	if errors.Is(err, auth.ErrNotFound) {
+	if in.Period != nil {
+		if err := sqlite.CheckSharePeriod(*in.Period); err != nil {
+			fail(w, http.StatusBadRequest, "period can be "+strings.Join(sqlite.SharePeriods, ", "))
+			return
+		}
+		e.Period = in.Period
+	}
+	if in.Name != nil {
+		if err := checkShareName(*in.Name); err != nil {
+			fail(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		e.Name = in.Name
+	}
+	e.Notes, e.Live = in.Notes, in.Live
+	if in.Days != nil {
+		end, err := a.shareEnd(*in.Days)
+		if err != nil {
+			fail(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		e.SetExpiry, e.Expires = true, end
+	}
+	if in.Password != nil {
+		// Removing the password is sending "": a password of spaces is a mistake, not that.
+		if *in.Password != "" && strings.TrimSpace(*in.Password) == "" {
+			fail(w, http.StatusBadRequest, "a password cannot be only spaces")
+			return
+		}
+		e.Password = in.Password
+	}
+	if in.Embed != nil {
+		origins, err := embedOrigins(*in.Embed)
+		if err != nil {
+			fail(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if origins == nil {
+			origins = []string{}
+		}
+		e.Origins = &origins
+	}
+	err := a.Ctl.UpdateShare(r.Context(), r.PathValue("site"), r.PathValue("id"), e, a.Now())
+	if busy(w, err) {
+		return
+	}
+	switch {
+	case errors.Is(err, auth.ErrNotFound):
 		fail(w, http.StatusNotFound, "no such link")
 		return
+	case errors.Is(err, sqlite.ErrExpired):
+		fail(w, http.StatusConflict, "this link has ended, make a new one")
+		return
+	case errors.Is(err, auth.ErrWeakPassword):
+		fail(w, http.StatusBadRequest, err.Error())
+		return
+	case err != nil:
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
 	}
+	list, err := a.Ctl.Shares(r.Context(), r.PathValue("site"))
 	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	writeJSON(w, http.StatusOK, out)
+	for _, sh := range list {
+		if sh.ID != r.PathValue("id") {
+			continue
+		}
+		row := shareRow{Share: sh}
+		if sh.Token != "" {
+			row.URL = a.shareBase(r, r.PathValue("site")) + "/s/" + sh.Token
+		}
+		// "notes" stays where the answer always had it, for callers that only flip that switch.
+		writeJSON(w, http.StatusOK, map[string]any{"share": row, "notes": sh.Notes, "live": sh.Live})
+		return
+	}
+	fail(w, http.StatusNotFound, "no such link")
 }
 
 // newShareAddress gives a link a new address. The old one, and every session
@@ -256,7 +357,7 @@ func (a *API) openShare(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusNotFound, "this link does not exist, or it was revoked")
 		return
 	}
-	session, err := a.Ctl.StartShareSession(r.Context(), sh.ID, in.Token, a.Now())
+	session, err := a.Ctl.StartShareSession(r.Context(), sh.ID, in.Token, sh.PassHash, a.Now())
 	if errors.Is(err, auth.ErrNotFound) {
 		// The owner made a new address between the check and here.
 		fail(w, http.StatusNotFound, "this link does not exist, or it was revoked")
@@ -370,6 +471,8 @@ func (a *API) shareInfoWith(w http.ResponseWriter, r *http.Request, sh sqlite.Sh
 		"name":       sh.Name,
 		"revenue":    sh.Revenue,
 		"notes":      sh.Notes,
+		"sections":   sh.Sections,
+		"period":     sh.Period,
 		"live":       sh.Live,
 		"expires":    sh.ExpiresAt,
 		"domain":     si.Domain,
@@ -432,7 +535,12 @@ func (a *API) shareAnnotations(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{"annotations": out})
 		return
 	}
-	a.fixSharePeriod(r, sh.SiteID)
+	// A link fixed to a period reads the notes of that period and no other; any other is brought to one of the offered periods.
+	if sh.Period != "" {
+		a.lockPeriod(r, sh)
+	} else {
+		a.fixSharePeriod(r, sh.SiteID)
+	}
 	v := r.URL.Query()
 	list, err := a.Ctl.Annotations(r.Context(), sh.SiteID, v.Get("from"), v.Get("to"))
 	if err != nil {
@@ -485,8 +593,12 @@ func (a *API) shareReport(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusTooManyRequests, "too many requests: wait a moment")
 		return
 	}
-	a.fixSharePeriod(r, sh.SiteID)
-	a.reportFor(w, r, sh.SiteID, sh.Revenue, true, sh.Live)
+	if sh.Period != "" {
+		a.lockPeriod(r, sh)
+	} else {
+		a.fixSharePeriod(r, sh.SiteID)
+	}
+	a.reportFor(w, r, sh.SiteID, sh.Revenue, &sh, sh.Live)
 }
 
 // shareHeader carries an embedded page's session, since the cookie cannot.

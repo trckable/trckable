@@ -41,6 +41,26 @@ export const setShared = (modules?: Record<string, boolean>) => {
 
 export const isShared = () => shared
 
+// What the link shows besides its headline numbers: the sections its owner left on (every one until the page is told),
+// and the period it is fixed to ('' when whoever opens it chooses). The server enforces both; this keeps the page from
+// offering what would come back empty or refused.
+let sharedSections: readonly string[] | null = null
+let sharedFixed = ''
+
+export const setSharedScope = (sections?: readonly string[], period?: string) => {
+  sharedSections = sections ?? null
+  sharedFixed = period ?? ''
+}
+
+/** The sections of Explore a link's owner can switch off. The others are never off: the headline numbers are always there, and Sales follows the link's revenue. */
+export const LINK_SECTIONS = ['pages', 'sources', 'places', 'tech'] as const
+
+/** Whether a section of Explore is shown here: always off a link, and on one when the link lists it. */
+export const sectionShown = (section: string) => !shared || sharedSections === null || !(LINK_SECTIONS as readonly string[]).includes(section) || sharedSections.includes(section)
+
+/** The period a shared link is fixed to, or '' when the reader chooses. */
+export const fixedPeriod = () => (shared ? sharedFixed : '')
+
 // Mentions is switched on by the server (TRCKABLE_MENTIONS); off, nothing of it is offered.
 export const hasMentions = () => mentionsOn
 

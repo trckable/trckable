@@ -1157,6 +1157,16 @@ var migrations = []string{
 	// earlier build already took to 85 with this column has it: see
 	// migrationApplied.
 	`ALTER TABLE site_shares ADD COLUMN live INTEGER NOT NULL DEFAULT 0;`,
+	// 88: what a share link shows besides its headline numbers (shares.go):
+	// sections is empty for all of them, "-" for none, else the shown ones joined
+	// with commas; period is one period the link is fixed to, empty when the
+	// reader chooses. A link made before this shows everything and lets the
+	// reader choose, as it always did.
+	`ALTER TABLE site_shares ADD COLUMN sections TEXT NOT NULL DEFAULT '';
+	ALTER TABLE site_shares ADD COLUMN period TEXT NOT NULL DEFAULT '';`,
+	// 89: a share made only to be looked at (sharepreview.go): the owner's
+	// picture of the page a link would open. Never listed or counted.
+	`ALTER TABLE site_shares ADD COLUMN preview INTEGER NOT NULL DEFAULT 0;`,
 }
 
 // migrationApplied reports migrations (1-based) whose effect is already in the

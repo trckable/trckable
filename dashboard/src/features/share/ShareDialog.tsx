@@ -3,7 +3,7 @@
 // and top country (never a visitor), and revenue is in it only where the report would show it. A read-only link is
 // the Link corner.
 import { Link2, X } from 'lucide-react'
-import { more } from '../../lib/apiMore'
+import { more, type Share } from '../../lib/apiMore'
 import { useEffect, useState } from 'react'
 import type { Site } from '../../lib/api'
 import { can } from '../../lib/permissions'
@@ -12,6 +12,9 @@ import { toast } from '../../components/Toast'
 import { fmtRange, todayIn } from '../../lib/dates'
 import { ACCENTS, DEFAULT_STATS, METRICS, cardUrl, comparing, fileName, formatOf, hasNumbers, hasOf, missing, PICTURES, picturesOf, statsWith, type CardWords, type Look, type Mode, type Period, type Topic } from './card'
 import { Actions, type Act } from './Actions'
+import { LinkPicker } from './LinkPicker'
+import { copyForSlack, linkedInAddress, postLink, xAddress } from './post'
+import { nameOf } from '../sharelinks/copy'
 import { copy } from './copy'
 import { copyImage, saveImage, shareImage } from './image'
 import { LinkPanel } from './LinkPanel'
@@ -41,6 +44,9 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
   const [busy, setBusy] = useState<Act | null>(null)
   const [done, setDone] = useState<Act | null>(null)
   const [linking, setLinking] = useState(false)
+  // The site's links: what Copy link copies, and the link a post carries. Read when the dialog opens and when the link panel closes.
+  const [links, setLinks] = useState<Share[]>([])
+  const [picking, setPicking] = useState(false)
   const [mode, setMode] = useState<Mode>('picture')
   const [open, setOpen] = useState('card')
   const toggle = (id: string) => setOpen((o) => (o === id ? '' : id))
@@ -66,11 +72,25 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
     }
   }, [site.id, look.period, look.range?.from, look.range?.to, look.compare, look.metric, look.template]) // eslint-disable-line react-hooks/exhaustive-deps -- the words depend on these only
   useEffect(() => {
+    if (!can('share.manage') || linking) return
+    more
+      .shares(site.id)
+      .then((r) => setLinks(r.shares.filter((x) => x.url)))
+      .catch(() => setLinks([]))
+  }, [site.id, linking])
+  useEffect(() => {
     if (!done) return
     const t = setTimeout(() => setDone(null), 1600)
     return () => clearTimeout(t)
   }, [done])
 
+  const copyLink = async (link: Share) => {
+    if (!link.url) return
+    setPicking(false)
+    await navigator.clipboard.writeText(link.url)
+    toast(copy.linkCopiedNamed(nameOf(link)))
+    setDone('link')
+  }
   const go = async (act: Act) => {
     setBusy(act)
     try {
@@ -79,15 +99,23 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
         await navigator.clipboard.writeText(words?.post ?? '')
         toast(copy.copied)
       } else if (act === 'link') {
-        // The public link that exists; one is never made by a click on Copy.
-        const link = (await more.shares(site.id)).shares.find((x) => x.url && !x.has_password && !x.revenue && !x.expires_at)
-        if (!link?.url) {
+        // A link that exists; one is never made by a click on Copy. Several: the person says which.
+        if (!links.length) {
           toast(copy.noLink)
           setLinking(true)
           return
         }
-        await navigator.clipboard.writeText(link.url)
-        toast(copy.linkCopied)
+        if (links.length > 1) {
+          setPicking(true)
+          return
+        }
+        await copyLink(links[0])
+      } else if (act === 'x' || act === 'linkedin') {
+        // Opened at once, in the click: a window asked for after a wait is one a browser may refuse.
+        window.open(act === 'x' ? xAddress(words?.post ?? '', postLink(links)) : linkedInAddress(words?.post ?? '', postLink(links)), '_blank', 'noopener,noreferrer')
+      } else if (act === 'slack') {
+        await copyForSlack(words?.post ?? '', postLink(links))
+        toast(copy.slackCopied)
       } else if (act === 'copy') {
         await copyImage(url)
         toast(copy.imageCopied)
@@ -114,8 +142,9 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
       <div className="sd-head">
         <h2>{copy.title}</h2>
         {can('share.manage') && (
-          <button type="button" className="btn icon" aria-pressed={linking} title={copy.linkTitle} aria-label={copy.link} onClick={() => setLinking((x) => !x)}>
+          <button type="button" className="btn sd-links" aria-pressed={linking} title={copy.linkTitle} onClick={() => setLinking((x) => !x)}>
             <Link2 size={16} strokeWidth={1.8} aria-hidden="true" />
+            <span>{copy.link}</span>
           </button>
         )}
         <button type="button" className="btn icon sd-close" aria-label={copy.close} onClick={onClose}>
@@ -146,6 +175,7 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
                 <LookSection site={site} sites={sites.length ? sites : [site]} onSite={setSiteId} look={look} set={set} brand={brand} />
               </Section>}
             </div>
+            {picking && <LinkPicker shares={links} onPick={(l) => void copyLink(l).catch(fail)} onClose={() => setPicking(false)} />}
             <Actions post={mode === 'text'} link={can('share.manage')} size={`${px.w}×${px.h}`} busy={busy} done={done} onAct={(a) => void go(a)} />
           </div>
         </div>

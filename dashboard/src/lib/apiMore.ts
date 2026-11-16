@@ -266,8 +266,11 @@ export const more = {
   updateWidget: (site: string, id: string, w: WidgetLook & { on: boolean }) => call<Widget>('PUT', `/sites/${site}/widgets/${id}`, w),
   deleteWidget: (site: string, id: string) => act('DELETE', `/sites/${site}/widgets/${id}`),
   shares: (site: string) => call<{ shares: Share[]; base: string }>('GET', `/sites/${site}/shares`),
-  updateShare: (site: string, id: string, change: { notes?: boolean; live?: boolean }) => call<{ notes?: boolean; live?: boolean }>('PATCH', `/sites/${site}/shares/${id}`, change),
-  createShare: (site: string, body: { name: string; password?: string; revenue: boolean; notes?: boolean; live?: boolean; days: number; embed_origins?: string[] }) =>
+  /** Changes only what is in the body: the name, the notes, the days to the end (0: none), the password ("" removes it) and the embed sites. */
+  updateShare: (site: string, id: string, body: { name?: string; notes?: boolean; live?: boolean; days?: number; password?: string; embed_origins?: string[]; sections?: string[]; period?: string }) => call<{ share: Share; notes: boolean; live: boolean }>('PATCH', `/sites/${site}/shares/${id}`, body),
+  /** Opens the page a link with these options would, as a link of its own for an hour: the address (a path of this server) to draw. */
+  previewShare: (site: string, body: { name: string; revenue: boolean; notes: boolean; live: boolean; sections: string[]; period: string; lock: boolean }) => call<{ path: string }>('PUT', `/sites/${site}/shares/preview`, body),
+  createShare: (site: string, body: { name: string; password?: string; revenue: boolean; notes?: boolean; live?: boolean; days: number; embed_origins?: string[]; sections?: string[]; period?: string }) =>
     call<{ share: Share; url: string }>('POST', `/sites/${site}/shares`, body),
   deleteShare: (site: string, id: string) => act('DELETE', `/sites/${site}/shares/${id}`),
   /** A new address for a link; the old one stops working. */
