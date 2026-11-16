@@ -5,6 +5,13 @@
 import type { Feed } from '../v2/bell/feed'
 import { act, call, raw, rangeQS } from './api'
 
+/** The extra hostnames a site accepts, and the ones refused this week that it does not list. */
+export interface AllowedDomains {
+  allowed: string[]
+  refused: { host: string; n: number }[]
+  max: number
+}
+
 /** A site's domain, the earlier ones still accepted and the Search Console match; `preview` is a change asked about. */
 export interface DomainState {
   domain: string
@@ -238,6 +245,8 @@ export const more = {
   createSite: (domain: string) => call<Site>('POST', '/sites', { domain }),
   updateSite: (id: string, patch: { name?: string; timezone?: string; currency?: string }) => call<Site>('PATCH', `/sites/${id}`, patch),
   siteDomain: (id: string, to?: string) => call<DomainState>('GET', `/sites/${id}/domain${to ? `?to=${encodeURIComponent(to)}` : ''}`),
+  allowedDomains: (id: string) => call<AllowedDomains>('GET', `/sites/${id}/allowed-domains`),
+  setAllowedDomains: (id: string, allowed: string[]) => call<AllowedDomains>('PUT', `/sites/${id}/allowed-domains`, { allowed }),
   changeDomain: (id: string, domain: string) => call<DomainState>('PUT', `/sites/${id}/domain`, { domain }),
   endFormerDomain: (id: string, host: string) => call<DomainState>('DELETE', `/sites/${id}/domain/former/${encodeURIComponent(host)}`),
   deleteSite: (id: string, domain: string) => call<{ events: number; sessions: number; payments: number; connections: number }>('DELETE', `/sites/${id}`, { domain }),
