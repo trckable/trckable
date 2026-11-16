@@ -1,8 +1,9 @@
 // The small marks of the Verified seal: the seal itself, and one per source.
-// Brand colours live only in the tiny Google and Stripe marks; everything else
+// Brand colours live only in the tiny Google mark and the payment providers' logos (logos.ts); everything else
 // takes the text colour.
 import { BadgeCheck, Check, CreditCard } from 'lucide-react'
 import type { VerifiedSource } from '../../lib/api'
+import { logoOf, markStyle } from './logos'
 
 export const Seal = ({ size = 15 }: { size?: number }) => <BadgeCheck size={size} strokeWidth={2} aria-hidden="true" />
 
@@ -20,18 +21,21 @@ export function GoogleG({ size = 14 }: { size?: number }) {
   )
 }
 
-/** Stripe's S, white on its violet. */
-export function StripeS({ size = 14 }: { size?: number }) {
+/** A payment provider's logo, from the one file the share pictures draw too; nothing for one we have no logo of. */
+export function ProviderLogo({ id, size = 14 }: { id: string; size?: number }) {
+  const m = logoOf(id)
+  if (!m) return null
+  const st = markStyle(m)
   return (
-    <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true">
-      <rect width="16" height="16" rx="4" fill="#635bff" />
-      <path fill="#fff" d="M7.4 6.2c0-.4.3-.6.9-.6.8 0 1.7.3 2.4.7V4.2a6.3 6.3 0 0 0-2.4-.4c-2 0-3.3 1-3.3 2.7 0 2.7 3.7 2.2 3.7 3.4 0 .5-.4.6-1 .6-.9 0-1.9-.4-2.7-.8v2.2c.9.4 1.8.6 2.7.6 2 0 3.4-1 3.4-2.7 0-2.9-3.7-2.4-3.7-3.6z" />
+    <svg className={`vf-logo${st.light ? ' vf-logo-ink-light' : ''}`} width={size} height={size} viewBox="0 0 24 24" fill={st.fill} aria-hidden="true">
+      <path d={m.d} />
     </svg>
   )
 }
 
-/** The mark of one source: Google's G, Stripe's S, a card for any other provider. */
+/** The mark of one source: Google's G, the provider's logo, a card for a provider with none. */
 export function SourceMark({ s, size = 14 }: { s: Pick<VerifiedSource, 'kind' | 'provider'>; size?: number }) {
   if (s.kind === 'gsc') return <GoogleG size={size} />
-  return s.provider === 'stripe' ? <StripeS size={size} /> : <CreditCard size={size} strokeWidth={1.9} aria-hidden="true" />
+  if (s.provider && logoOf(s.provider)) return <ProviderLogo id={s.provider} size={size} />
+  return <CreditCard size={size} strokeWidth={1.9} aria-hidden="true" />
 }

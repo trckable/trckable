@@ -39,8 +39,8 @@ func widgetMarks(v verified, words widgetWords) []widgetMark {
 			out = append(out, widgetMark{words.plain("v_gsc"), markGSC})
 		case "payments":
 			// Never a provider's name or mark: a public badge says only that payments are verified.
-			if paid {
-				continue // one mark for the money, whoever pays
+			if paid || s.Mixed {
+				continue // one mark for the money, whoever pays; none while not all of it is verified
 			}
 			paid = true
 			out = append(out, widgetMark{words.plain("v_pay"), markPay})

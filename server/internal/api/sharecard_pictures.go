@@ -33,8 +33,8 @@ type digest struct {
 	stats []cards.Stat
 	rows  []cards.Item
 	empty string
-	// badge is the mark of a source that vouches for the numbers (Search Console's), when they are there.
-	badge string
+	// badge is the word of the badge, and source the id of the source that vouches for the numbers (verified.go), when they are there.
+	badge, source string
 }
 
 func (d digest) filled() bool { return len(d.stats) > 0 || len(d.rows) > 0 }
@@ -74,6 +74,9 @@ func (a *API) pictures(c cardReading, n *cardNumbers, hours bool, kind string) {
 	}
 	if want("sales") {
 		n.salesPicture(c.res)
+		d := n.digests["sales"]
+		a.vouch(c, &d, "payments", n.l().searchBadge)
+		n.digests["sales"] = d
 	}
 	if want("milestone") {
 		a.milestonePicture(c, n)
@@ -116,6 +119,44 @@ func (a *API) previousReport(c cardReading, hours, light bool) *query.Result {
 	return got
 }
 
+// vouch puts the badge on a picture that has numbers, when a source of that kind stands behind them right now: the
+// one list every screen reads (verifiedOf), so a picture never claims more than the dashboard does.
+func (a *API) vouch(c cardReading, d *digest, kind, word string) {
+	if !d.filled() {
+		return
+	}
+	si, err := a.Ctl.SiteInfo(c.r.Context(), c.site)
+	if err != nil {
+		return
+	}
+	if d.source = verifiedSourceOf(a.verifiedOf(c.r.Context(), si), kind, c.res.Money); d.source != "" {
+		d.badge = word
+	}
+}
+
+// verifiedSourceOf is the card mark's id of the source of a kind ("gsc" or "payments") that works: "gsc", or the
+// payment provider's id. "" when none works or the provider has no mark to draw. The money is the report's: a badge
+// on revenue needs ALL of it verified, so none when the source is mixed (typed-in revenue, a second provider) or
+// the report counts test payments.
+func verifiedSourceOf(v verified, kind string, m *query.Money) string {
+	for _, s := range v.Sources {
+		if !s.OK || s.Kind != kind {
+			continue
+		}
+		if kind == "payments" && (s.Mixed || m == nil || m.Test) {
+			return ""
+		}
+		id := s.Provider
+		if kind == "gsc" {
+			id = cards.SourceSearch
+		}
+		if cards.SourceKnown(id) {
+			return id
+		}
+	}
+	return ""
+}
+
 func (a *API) searchPicture(c cardReading, n *cardNumbers) {
 	l := n.l()
 	d := digest{title: l.searchTitle, empty: l.noSearch}
@@ -128,11 +169,7 @@ func (a *API) searchPicture(c cardReading, n *cardNumbers) {
 		return
 	}
 	n.HasSearch = true
-	defer func() {
-		if d.filled() {
-			d.badge = l.searchBadge
-		}
-	}()
+	defer func() { a.vouch(c, &d, "gsc", l.searchBadge) }()
 	from := startOfDay(c.params.From.In(c.loc), c.loc)
 	last := startOfDay(c.params.To.In(c.loc), c.loc).AddDate(0, 0, -1) // the period's end is exclusive; Google's is not
 	body, _, err := a.searchBody(c.r.Context(), c.site, conn, c.loc, gsc.Query{From: from, To: last, Dimension: "query", Limit: 100}, from, last)

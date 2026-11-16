@@ -302,39 +302,70 @@ func TestWrapWords(t *testing.T) {
 // A digest with a badge draws its word and a check after the domain; without one, nothing. In every format and both
 // themes, with a short and a long domain, the badge stays inside the card's margins and clear of the domain.
 func TestDigestBadge(t *testing.T) {
-	for _, f := range Formats {
-		l := layoutFor(f)
-		for _, theme := range []string{"dark", "light"} {
-			for _, domain := range []string{"example.com", "a-very-long-domain-name-for-a-site-with-many-parts.example.co.uk"} {
-				plain := sample("digest", f.ID, theme)
-				plain.Domain = domain
-				marked := plain
-				marked.Badge = "Verified"
-				a, err := plain.SVG()
-				if err != nil {
-					t.Fatal(err)
-				}
-				b, err := marked.SVG()
-				if err != nil {
-					t.Fatal(err)
-				}
-				if strings.Contains(string(a), "Verified") || !strings.Contains(string(b), "Verified") {
-					t.Errorf("%s %s: the badge is drawn only when asked for", f.ID, theme)
-				}
-				g := badgeGeomOf(marked)
-				domainEnd := float64(l.Left)
-				for _, r := range digestRuns(marked) {
-					if r.Y == l.DomainY && !r.End && r.X == l.Left {
-						domainEnd += measure(false, r.Spans[0].Text, r.Px)
+	for _, tpl := range []string{"digest", "leaderboard", "grid", "spotlight", "overview", "numbers"} {
+		for _, f := range Formats {
+			for _, theme := range []string{"dark", "light"} {
+				for _, src := range []string{SourceSearch, "stripe", "paddle", "lemonsqueezy", "dodo", "polar"} {
+					for _, domain := range []string{"example.com", "a-very-long-domain-name-for-a-site-with-many-parts.example.co.uk"} {
+						plain := sample(tpl, f.ID, theme)
+						plain.Domain = domain
+						marked := plain
+						marked.Badge, marked.Source = "Verified", src
+						a, err := plain.SVG()
+						if err != nil {
+							t.Fatal(err)
+						}
+						b, err := marked.SVG()
+						if err != nil {
+							t.Fatal(err)
+						}
+						if strings.Contains(string(a), "Verified") || !strings.Contains(string(b), "Verified") {
+							t.Errorf("%s %s: the badge is drawn only when asked for", f.ID, theme)
+						}
+						g := badgeGeomOf(marked)
+						sl := marked.slot()
+						domainEnd := float64(sl.x0)
+						for _, r := range marked.runs(Templates[tpl]) {
+							if r.Y == sl.base && !r.End && !r.Mid && r.X == sl.x0 {
+								domainEnd += measure(false, r.Spans[0].Text, r.Px)
+							}
+						}
+						if g.lx < domainEnd || g.ccx+g.cd/2 > sl.right+1 {
+							t.Errorf("%s %s %s %q: the badge (%.0f to %.0f) runs into the domain (ends %.0f) or past its room (%.0f)", tpl, f.ID, theme, domain, g.lx, g.ccx+g.cd/2, domainEnd, sl.right)
+						}
+						if _, err := marked.PNG(); err != nil {
+							t.Errorf("%s %s %s: %v", f.ID, theme, src, err)
+						}
 					}
-				}
-				if g.lx < domainEnd || g.ccx+g.cd/2 > float64(l.Right)+1 {
-					t.Errorf("%s %s %q: the badge (%.0f to %.0f) runs into the domain (ends %.0f) or out of the margin (%d)", f.ID, theme, domain, g.lx, g.ccx+g.cd/2, domainEnd, l.Right)
-				}
-				if _, err := marked.PNG(); err != nil {
-					t.Errorf("%s %s: %v", f.ID, theme, err)
 				}
 			}
 		}
+	}
+}
+
+// A badge needs a source with a mark: the word alone, or an unknown source, draws nothing.
+func TestBadgeNeedsKnownSource(t *testing.T) {
+	s := sample("digest", Formats[0].ID, "dark")
+	s.Badge = "Verified"
+	for _, src := range []string{"", "paypal", "custom"} {
+		s.Source = src
+		svg, err := s.SVG()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(string(svg), "Verified") {
+			t.Errorf("source %q has no mark and still gets a badge", src)
+		}
+	}
+}
+
+// The dashboard draws the same marks: its copy of the file is this one.
+func TestSourceMarksMatchDashboard(t *testing.T) {
+	theirs, err := os.ReadFile("../../../dashboard/src/features/verified/logos.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(theirs, sourcesJSON) {
+		t.Fatal("dashboard/src/features/verified/logos.json differs from logos/sources.json: copy one over the other")
 	}
 }

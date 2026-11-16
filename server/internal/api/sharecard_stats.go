@@ -84,6 +84,7 @@ func (n *cardNumbers) gridOf(res *query.Result, icon func(host string) image.Ima
 	for _, id := range cardGridIDs {
 		if st, ok := n.stat(id, res, icon); ok {
 			n.grid = append(n.grid, st)
+			n.moneyGrid = n.moneyGrid || id == "revenue"
 		}
 	}
 }
