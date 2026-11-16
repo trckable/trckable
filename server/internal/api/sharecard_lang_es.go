@@ -76,6 +76,7 @@ var cardES = &cardLang{
 		Revenue:        "de ingresos",
 		RevenueHidden:  "Ingresos",
 		RevenueReached: "Hito de ingresos alcanzado",
+		RevenueLine:    "hito de ingresos",
 		Milestone:      "hito",
 		FirstGoal:      "Primer objetivo",
 		FirstSale:      "Primera venta",

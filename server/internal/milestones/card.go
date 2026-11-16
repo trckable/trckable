@@ -29,7 +29,7 @@ func CardIn(t *Tongue, m sqlite.Milestone, context, domain, theme string, showAm
 	if m.Kind == Revenue {
 		if showAmount {
 			// "$1,000" over "revenue milestone": the number leads, the words say what it is.
-			s.Label += " " + t.Milestone
+			s.Label = t.RevenueLine
 		} else {
 			s.Big, s.Label = t.RevenueReached, context
 		}

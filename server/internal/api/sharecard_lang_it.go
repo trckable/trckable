@@ -76,6 +76,7 @@ var cardIT = &cardLang{
 		Revenue:        "di ricavi",
 		RevenueHidden:  "Ricavi",
 		RevenueReached: "Traguardo di ricavi raggiunto",
+		RevenueLine:    "traguardo di ricavi",
 		Milestone:      "traguardo",
 		FirstGoal:      "Primo obiettivo",
 		FirstSale:      "Prima vendita",

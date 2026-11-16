@@ -76,6 +76,7 @@ var cardDE = &cardLang{
 		Revenue:        "Umsatz",
 		RevenueHidden:  "Umsatz",
 		RevenueReached: "Umsatz-Meilenstein erreicht",
+		RevenueLine:    "Umsatz-Meilenstein",
 		Milestone:      "Meilenstein",
 		FirstGoal:      "Erstes Ziel",
 		FirstSale:      "Erster Verkauf",

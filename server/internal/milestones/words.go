@@ -13,10 +13,10 @@ import (
 // amounts and days. English is the server's own (alerts, the share page, mail); a card can be drawn in another, which
 // the share pictures' language table (the api package) supplies.
 type Tongue struct {
-	Visitors, Pageviews, FirstPageview, Countries, Record, Revenue, RevenueHidden, RevenueReached, Milestone, FirstGoal, FirstSale, First string
-	SearchClicks, AIVisits                                                                                                                string
-	AfterSale, AfterSaleOne, Faster                                                                                                       string // %d days after the first sale; %d day; %d times faster
-	Fmt                                                                                                                                   Formatter
+	Visitors, Pageviews, FirstPageview, Countries, Record, Revenue, RevenueHidden, RevenueReached, RevenueLine, Milestone, FirstGoal, FirstSale, First string
+	SearchClicks, AIVisits                                                                                                                             string
+	AfterSale, AfterSaleOne, Faster                                                                                                                    string // %d days after the first sale; %d day; %d times faster
+	Fmt                                                                                                                                                Formatter
 }
 
 // Formatter writes a count, an amount of a currency and a day the way its language does.
@@ -42,6 +42,7 @@ var English = &Tongue{
 	Revenue:        "revenue",
 	RevenueHidden:  "Revenue",
 	RevenueReached: "Revenue milestone reached",
+	RevenueLine:    "revenue milestone",
 	Milestone:      "milestone",
 	FirstGoal:      "First goal",
 	FirstSale:      "First sale",

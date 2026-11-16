@@ -76,6 +76,7 @@ var cardFR = &cardLang{
 		Revenue:        "de revenus",
 		RevenueHidden:  "Revenus",
 		RevenueReached: "Jalon de revenus atteint",
+		RevenueLine:    "jalon de revenus",
 		Milestone:      "jalon",
 		FirstGoal:      "Premier objectif",
 		FirstSale:      "Première vente",

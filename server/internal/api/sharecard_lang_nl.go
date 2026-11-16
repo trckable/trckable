@@ -76,6 +76,7 @@ var cardNL = &cardLang{
 		Revenue:        "omzet",
 		RevenueHidden:  "Omzet",
 		RevenueReached: "Omzetmijlpaal bereikt",
+		RevenueLine:    "omzetmijlpaal",
 		Milestone:      "mijlpaal",
 		FirstGoal:      "Eerste doel",
 		FirstSale:      "Eerste verkoop",
