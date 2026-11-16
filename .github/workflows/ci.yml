@@ -345,7 +345,7 @@ jobs:
   e2e-demo:
     name: WCAG 2.1 AA and the Full charts on demo data (${{ matrix.name }})
     needs: [changes, build]
-    if: github.event_name != 'push' && needs.changes.outputs.demo == 'true'
+    if: needs.changes.outputs.demo == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     container:
