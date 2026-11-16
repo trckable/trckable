@@ -177,7 +177,9 @@ func scalePath(d string, x, y, sc float64) string {
 			j++
 		}
 		var px, py float64
-		fmt.Sscanf(d[i:j], "%f %f", &px, &py)
+		if _, err := fmt.Sscanf(d[i:j], "%f %f", &px, &py); err != nil {
+			panic("cards: bad logo path: " + d[i:j]) // the path is a constant, so this is a programming error
+		}
 		fmt.Fprintf(&b, "%.2f %.2f", x+(px-7)*sc, y+(py-6)*sc)
 		i = j
 	}
@@ -222,13 +224,6 @@ func arcPoints(cx, cy, r, from, to float64, move bool) string {
 		fmt.Fprintf(&b, "%s%.2f %.2f", cmd, cx+r*math.Cos(a), cy+r*math.Sin(a))
 	}
 	return b.String()
-}
-
-// capsule is a fully rounded pill as a closed path.
-func capsule(x, y, w, h float64) string {
-	r := h / 2
-	return fmt.Sprintf("M%.2f %.2f", x+r, y) + fmt.Sprintf("L%.2f %.2f", x+w-r, y) + arcPoints(x+w-r, y+r, r, -90, 90, false) +
-		fmt.Sprintf("L%.2f %.2f", x+r, y+h) + arcPoints(x+r, y+r, r, 90, 270, false) + "Z"
 }
 
 // badgeCheck draws the badge's shapes: the logo and the check, a filled green circle with a tick in the card's
