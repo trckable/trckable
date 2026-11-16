@@ -5,98 +5,16 @@ import (
 	"time"
 )
 
-// The share card's words, in one place for when translations come.
-var cardWords = struct {
-	visitors, pageviews, revenue, topPages, noVisits, counted string
-	engaged, avgTime, topCountry                              string
-	engagedVisits, statPageviews, statVisitors, bounce        string
-	topPage, topSource, statRevenue                           string
-	gridTitle                                                 map[string]string // by period
-	// What changed: the dashboard's words (explore/copy.ts).
-	changedFew, changedFlat, changedMix, changedNew, changedRose, changedFell, changedMostly, changedLed string
-	changedPeople, homePage, theHomePage, direct, changedTitle                                           string
-	// The other pictures.
-	searchTitle, searchBadge, searchClicks, searchImpressions, aiTitle, aiVisits, aiMentions, aiRequests, aiPerVisitor, aiTop, aiRequestsOf, goalsTitle, salesTitle, salesRevenue, salesOrders string
-	noChanged, noSearch, noAI, noGoals, noSales, noMilestone                                                                                                                                   string
-}{
-	visitors:   "visitors",
-	pageviews:  "pageviews",
-	revenue:    "revenue",
-	topPages:   "Top pages",
-	noVisits:   "Needs a visit in this period",
-	counted:    "Counted with trckable",
-	engaged:    "Engaged visits",
-	avgTime:    "Avg time",
-	topCountry: "Top country",
-
-	engagedVisits: "engaged visits",
-	statPageviews: "Pageviews",
-	statVisitors:  "Visitors",
-	bounce:        "Bounce rate",
-	topPage:       "Top page",
-	topSource:     "Top source",
-	statRevenue:   "Revenue",
-	changedFew:    "Too little yet to compare fairly.",
-	changedFlat:   "No real change.",
-	changedMix:    "%s held, but where they come from changed.",
-	changedNew:    "%s are new this period.",
-	changedRose:   "rose",
-	changedFell:   "fell",
-	changedMostly: "%s, mostly from %s.",
-	changedLed:    "%s, led by %s.",
-	changedPeople: "People",
-	changedTitle:  "What changed",
-	homePage:      "Home page",
-	theHomePage:   "the home page",
-	direct:        "Direct",
-
-	searchTitle:       "Found on Google",
-	searchBadge:       "Verified",
-	searchClicks:      "Clicks",
-	searchImpressions: "Impressions",
-	aiTitle:           "AI and mentions",
-	aiVisits:          "Visits from AI assistants",
-	aiMentions:        "Mentions",
-	aiRequests:        "AI bot requests",
-	aiPerVisitor:      "Bots per visitor",
-	aiTop:             "Top company",
-	aiRequestsOf:      "requests",
-	goalsTitle:        "Top goals",
-	salesTitle:        "Sales",
-	salesRevenue:      "Revenue",
-	salesOrders:       "Orders",
-	noChanged:         "Needs a period before this one with visits",
-	noSearch:          "No searches in this period",
-	noAI:              "No AI visits or mentions in this period",
-	noGoals:           "No goals reached in this period",
-	noSales:           "No sales in this period",
-	noMilestone:       "No milestone in this period",
-	gridTitle:         map[string]string{"24h": "Today in numbers", "7d": "This week in numbers", "30d": "This month in numbers", "all": "All time in numbers", "custom": "Your numbers"},
-}
-
 // cardPeriod is what a card covers: one of the dialog's presets, a custom
 // range or all time. A preset or custom period resolved by resolvePeriod ends
 // on the last full day (or hour), never on the one still running.
 type cardPeriod struct {
 	days, hours int
 	label       string // the pill: real dates, or "Last 24 hours"
-	post        string // how the post says it
+	post        string // how the post says it, with its preposition ("in the last 7 days")
 	vs          string // what a comparison is against ("previous 30 days"); "" when there is none to make
 	// from and to are the first and last day covered, in the site's zone; set by resolvePeriod, not by the presets.
 	from, to time.Time
-}
-
-var cardPeriods = map[string]cardPeriod{
-	"24h": {days: 2, hours: 24, label: "Last 24 hours", post: "the last 24 hours"},
-	"7d":  {days: 7, label: "Last 7 days", post: "the last 7 days"},
-	"30d": {days: 30, label: "Last 30 days", post: "the last 30 days"},
-}
-
-func cardPeriodOf(s string) cardPeriod {
-	if p, ok := cardPeriods[s]; ok {
-		return p
-	}
-	return cardPeriods["7d"]
 }
 
 func cardTemplateOf(s string) string {
@@ -119,39 +37,20 @@ func cardTemplateOf(s string) string {
 // cardPost is a short text update: the picked number first, then the
 // others that are not money (money only when it is the pick).
 func cardPost(n cardNumbers, p cardPeriod) string {
+	l := n.l()
 	if !n.HasData && n.Metric != "revenue" {
-		return fmt.Sprintf("%s: counting has begun. %s", n.domain, cardWords.counted)
+		return fmt.Sprintf(l.postBegun, n.domain, l.counted)
 	}
 	head := fmt.Sprintf("%s %s", n.Big, n.Label)
-	rest := fmt.Sprintf("%s %s", number(n.pageviews), cardWords.pageviews)
+	rest := fmt.Sprintf("%s %s", l.number(n.pageviews), l.pageviews)
 	if n.Metric != "visitors" {
-		rest = fmt.Sprintf("%s %s", number(n.visitors), cardWords.visitors)
+		rest = fmt.Sprintf("%s %s", l.number(n.visitors), l.visitors)
 	}
 	top := ""
 	if len(n.rows) > 0 {
-		top = fmt.Sprintf(" Top page: %s.", n.rows[0].Name)
+		top = " " + fmt.Sprintf(l.postTopPage, n.rows[0].Name)
 	}
-	return fmt.Sprintf("%s in %s: %s, %s.%s %s", n.domain, p.post, head, rest, top, cardWords.counted)
-}
-
-// shortDay is a day as the pill writes it: "9 Oct", with the year when asked.
-func shortDay(d time.Time, year bool) string {
-	if year {
-		return d.Format("2 Jan 2006")
-	}
-	return d.Format("2 Jan")
-}
-
-// datesLabel is a run of days in words: "9 Oct – 8 Nov 2026", the year said
-// once when both ends are in it, and a single day on its own.
-func datesLabel(from, to time.Time) string {
-	switch {
-	case from.Equal(to):
-		return shortDay(to, true)
-	case from.Year() == to.Year():
-		return shortDay(from, false) + " – " + shortDay(to, true)
-	}
-	return shortDay(from, true) + " – " + shortDay(to, true)
+	return fmt.Sprintf("%s %s: %s, %s.%s %s", n.domain, p.post, head, rest, top, l.counted)
 }
 
 // resolvePeriod is the period the card asks for, at the site's now: a preset
@@ -159,7 +58,7 @@ func datesLabel(from, to time.Time) string {
 // dates). The last day is yesterday, never the one still running, so a chart
 // does not end in a dip; a custom range that reaches today is cut back to it.
 // compare is whether a comparison is asked for: all time has nothing before it.
-func resolvePeriod(name, fromS, toS string, now, created time.Time, compare bool) cardPeriod {
+func resolvePeriod(l *cardLang, name, fromS, toS string, now, created time.Time, compare bool) cardPeriod {
 	loc := now.Location()
 	day := func(t time.Time) time.Time { return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc) }
 	yesterday := day(now).AddDate(0, 0, -1)
@@ -176,31 +75,31 @@ func resolvePeriod(name, fromS, toS string, now, created time.Time, compare bool
 	}
 	vs := func(p cardPeriod) cardPeriod {
 		if compare && p.days == 1 {
-			p.vs = "previous day"
+			p.vs = l.prevDay
 		} else if compare {
-			p.vs = fmt.Sprintf("previous %d days", p.days)
+			p.vs = fmt.Sprintf(l.prevDays, p.days)
 		}
 		return p
 	}
 	switch name {
 	case "24h":
-		p := cardPeriods["24h"]
+		p := cardPeriod{days: 2, hours: 24, label: l.last24, post: l.post24}
 		if compare {
-			p.vs = "previous 24 hours"
+			p.vs = l.prev24
 		}
 		return p
 	case "all":
 		from := day(created.In(loc))
-		p := span(cardPeriod{post: "all time"}, from, yesterday)
-		p.label = "Since " + p.from.Format("Jan 2006")
+		p := span(cardPeriod{post: l.postAll}, from, yesterday)
+		p.label = fmt.Sprintf(l.since, l.monthYear(p.from))
 		return p
 	case "custom":
 		from, e1 := time.ParseInLocation("2006-01-02", fromS, loc)
 		to, e2 := time.ParseInLocation("2006-01-02", toS, loc)
 		if e1 == nil && e2 == nil && !from.After(to) && !from.After(yesterday) && to.Sub(from) < 20*366*24*time.Hour {
 			p := span(cardPeriod{}, from, to)
-			p.label = datesLabel(p.from, p.to)
-			p.post = p.label
+			p.label = l.datesLabel(p.from, p.to)
+			p.post = fmt.Sprintf(l.postRange, p.label)
 			return vs(p)
 		}
 	}
@@ -209,7 +108,7 @@ func resolvePeriod(name, fromS, toS string, now, created time.Time, compare bool
 		days = 30
 	}
 	p := span(cardPeriod{}, yesterday.AddDate(0, 0, 1-days), yesterday)
-	p.label = datesLabel(p.from, p.to)
-	p.post = fmt.Sprintf("the last %d days", days)
+	p.label = l.datesLabel(p.from, p.to)
+	p.post = fmt.Sprintf(l.postDays, days)
 	return vs(p)
 }

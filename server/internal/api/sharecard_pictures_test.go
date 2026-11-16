@@ -16,36 +16,36 @@ func visitorsResult(total int64, dims map[string][]query.Row) *query.Result {
 func TestChangedSentence(t *testing.T) {
 	cur := visitorsResult(300, map[string][]query.Row{"referrer": {{Value: "news.ycombinator.com", Visitors: 200}, {Value: "google.com", Visitors: 100}}})
 	prev := visitorsResult(100, map[string][]query.Row{"referrer": {{Value: "google.com", Visitors: 90}, {Value: "news.ycombinator.com", Visitors: 10}}})
-	ch := explainChange(cur, prev)
+	ch := explainChange(cardWords, cur, prev)
 	if ch.say != "People rose 3×, mostly from news.ycombinator.com." {
 		t.Fatalf("sentence: %q", ch.say)
 	}
-	rows := changeRows(biggestChanges(cur, prev))
+	rows := changeRows(cardWords, biggestChanges(cur, prev))
 	if len(rows) == 0 || rows[0].Name != "news.ycombinator.com" || rows[0].Value != "+190" || rows[0].Share != 1 {
 		t.Fatalf("rows: %+v", rows)
 	}
 
-	fell := explainChange(visitorsResult(60, map[string][]query.Row{"country": {{Value: "DE", Visitors: 10}}}), visitorsResult(100, map[string][]query.Row{"country": {{Value: "DE", Visitors: 50}}}))
+	fell := explainChange(cardWords, visitorsResult(60, map[string][]query.Row{"country": {{Value: "DE", Visitors: 10}}}), visitorsResult(100, map[string][]query.Row{"country": {{Value: "DE", Visitors: 50}}}))
 	if !strings.HasPrefix(fell.say, "People fell 40%, ") || !strings.Contains(fell.say, "Germany") {
 		t.Fatalf("fall: %q", fell.say)
 	}
-	if got := explainChange(visitorsResult(100, nil), visitorsResult(102, nil)).say; got != cardWords.changedFlat {
+	if got := explainChange(cardWords, visitorsResult(100, nil), visitorsResult(102, nil)).say; got != cardWords.changedFlat {
 		t.Fatalf("flat: %q", got)
 	}
-	if got := explainChange(visitorsResult(5, nil), visitorsResult(9, nil)).say; got != cardWords.changedFew {
+	if got := explainChange(cardWords, visitorsResult(5, nil), visitorsResult(9, nil)).say; got != cardWords.changedFew {
 		t.Fatalf("few: %q", got)
 	}
-	if got := explainChange(visitorsResult(50, nil), visitorsResult(0, nil)).say; got != "People are new this period." {
+	if got := explainChange(cardWords, visitorsResult(50, nil), visitorsResult(0, nil)).say; got != "People are new this period." {
 		t.Fatalf("new: %q", got)
 	}
-	if rows := changeRows(nil); len(rows) != 0 {
+	if rows := changeRows(cardWords, nil); len(rows) != 0 {
 		t.Fatalf("no changes: %+v", rows)
 	}
-	if signed(-45) != "−45" || signed(1200) != "+1,200" {
-		t.Fatalf("sign: %s %s", signed(-45), signed(1200))
+	if cardWords.signed(-45) != "−45" || cardWords.signed(1200) != "+1,200" {
+		t.Fatalf("sign: %s %s", cardWords.signed(-45), cardWords.signed(1200))
 	}
-	if times(2.46) != "2.5×" || times(40.4) != "40×" || times(900) != "100×" {
-		t.Fatalf("times: %s %s %s", times(2.46), times(40.4), times(900))
+	if cardWords.times(2.46) != "2.5×" || cardWords.times(40.4) != "40×" || cardWords.times(900) != "100×" {
+		t.Fatalf("times: %s %s %s", cardWords.times(2.46), cardWords.times(40.4), cardWords.times(900))
 	}
 }
 
@@ -64,7 +64,7 @@ func TestGoalsAndSalesPictures(t *testing.T) {
 	}
 
 	res := &query.Result{Money: &query.Money{Currency: "USD", Exponent: 2, Revenue: 123456, Payments: 3}}
-	n = cardWordsOf(res, "example.com", cardPeriodOf("7d"), "")
+	n = cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), "")
 	n.digests = map[string]digest{}
 	n.salesPicture(res)
 	if s := n.digests["sales"]; len(s.stats) != 2 || s.stats[0].Value != "$1,234" || s.stats[1].Value != "3" {
@@ -72,7 +72,7 @@ func TestGoalsAndSalesPictures(t *testing.T) {
 	}
 	// No money in the report (a role that cannot see it, or nothing connected) is no number at all.
 	none := &query.Result{}
-	n = cardWordsOf(none, "example.com", cardPeriodOf("7d"), "")
+	n = cardWordsOf(cardWords, none, "example.com", testPeriod("7d"), "")
 	n.digests = map[string]digest{}
 	n.salesPicture(none)
 	if s := n.digests["sales"]; s.filled() || strings.ContainsAny(s.empty+s.title, "$0123456789") {
@@ -140,7 +140,7 @@ func TestCardRouteNewPictures(t *testing.T) {
 // A post says what its picture says, in its words: a digest's title, cards and lines, a milestone's number first,
 // a hero's words first, and the plain line for a picture with nothing behind it.
 func TestSpecPost(t *testing.T) {
-	n := cardNumbers{domain: "example.com", said: "the last 30 days"}
+	n := cardNumbers{domain: "example.com", said: "in the last 30 days"}
 	digest := cards.Spec{Template: "digest", Label: "Top goals", Rows: []cards.Item{{Name: "Signed up", Value: "40"}, {Name: "buy", Value: "10"}}}
 	if got := specPost(digest, "goals", n); got != "example.com in the last 30 days: Top goals. Signed up 40, buy 10. Counted with trckable" {
 		t.Fatalf("goals: %q", got)
@@ -163,7 +163,7 @@ func TestSpecPost(t *testing.T) {
 // The AI picture's cards are the Explore headline's, and fall back to the visitors alone without robot data.
 func TestAIHeadlineCards(t *testing.T) {
 	rep := &query.AISearch{Visitors: 2649, Crawled: 1_230_000, PerVisitor: 4.4, Companies: []query.AICompany{{Name: "OpenAI", Hits: 606_000}}}
-	got := aiHeadline(rep)
+	got := aiHeadline(cardWords, rep)
 	want := []string{"1.23M", "4.4×", "OpenAI", "2,649"}
 	if len(got) != len(want) {
 		t.Fatalf("cards %+v", got)
@@ -176,12 +176,12 @@ func TestAIHeadlineCards(t *testing.T) {
 	if !strings.Contains(got[2].Label, "606K") {
 		t.Errorf("top company label %q lacks its requests", got[2].Label)
 	}
-	if only := aiHeadline(&query.AISearch{Visitors: 5}); len(only) != 1 || only[0].Value != "5" {
+	if only := aiHeadline(cardWords, &query.AISearch{Visitors: 5}); len(only) != 1 || only[0].Value != "5" {
 		t.Errorf("without robot data: %+v", only)
 	}
 	for in, w := range map[int64]string{950: "950", 12_345: "12K", 1_500_000: "1.50M", 42_000_000: "42M"} {
-		if g := shortCount(in); g != w {
-			t.Errorf("shortCount(%d) = %q, want %q", in, g, w)
+		if g := cardWords.shortCount(in); g != w {
+			t.Errorf("cardWords.shortCount(%d) = %q, want %q", in, g, w)
 		}
 	}
 }

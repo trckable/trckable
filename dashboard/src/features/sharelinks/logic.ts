@@ -12,6 +12,7 @@ export interface Draft {
   password: string
   revenue: boolean
   notes: boolean
+  live: boolean
   expiry: Expiry
   /** yyyy-mm-dd, from the date field */
   date: string
@@ -19,7 +20,7 @@ export interface Draft {
   sites: string
 }
 
-export const EMPTY: Draft = { name: '', access: 'public', password: '', revenue: false, notes: false, expiry: 'never', date: '', embed: false, sites: '' }
+export const EMPTY: Draft = { name: '', access: 'public', password: '', revenue: false, notes: false, live: false, expiry: 'never', date: '', embed: false, sites: '' }
 
 /** The most days the server accepts. */
 export const MAX_DAYS = 3650
@@ -111,6 +112,7 @@ export function linkBody(d: Draft, fallbackName: string, now = new Date()) {
     password: d.access === 'password' ? d.password : '',
     revenue: d.revenue,
     notes: d.notes,
+    live: d.live,
     days: expiryDays(d, now) ?? 0,
     embed_origins: d.embed ? parseOrigins(d.sites).list : [],
   }

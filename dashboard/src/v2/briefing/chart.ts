@@ -3,6 +3,7 @@
 import type { Bucket, Point, Result } from '../../lib/api'
 import { tag } from '../../i18n'
 import { fmtDay } from '../../lib/dates'
+import { isShared } from '../../lib/me'
 import { copy } from './copy'
 import type { ChartIn, Down } from '../ui/DayChart'
 import type { Unit } from './model'
@@ -145,7 +146,7 @@ export function chartOf(a: ChartArgs): ChartIn {
   const axis = a.cur.series.map((p, i) => ({ i, tick: tickOf(hourly, a.cur.series.length, Number(p.t.slice(11, 13)), p.t.slice(0, 10)) }))
   // A comparison that is asked for but has too little before it says when it begins, never a made-up line.
   const starts = a.against && a.prev && !cmp ? startsOn(a.cur.series, a.prev.series) : null
-  const noCompare = starts ? copy.compareStarts(starts, copy.needs[a.unit]) : null
+  const noCompare = starts && !isShared() ? copy.compareStarts(starts, copy.needs[a.unit]) : null
   return {
     points,
     axis,

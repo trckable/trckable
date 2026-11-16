@@ -167,12 +167,14 @@ func (a *API) milestoneCard(w http.ResponseWriter, r *http.Request) {
 	}
 	list, _, _ := a.visibleMilestones(r, r.PathValue("site"))
 	q := r.URL.Query()
-	a.serveCard(w, m, milestones.Context(m, list), si.Domain, q.Get("theme"), q.Get("amount") == "1", q.Get("format") == "svg", "private, no-store")
+	l := cardLangOf(q.Get("lang"))
+	a.serveCard(w, l, m, milestones.ContextIn(&l.ms, m, list), si.Domain, q.Get("theme"), q.Get("amount") == "1", q.Get("format") == "svg", "private, no-store")
 }
 
 // serveCard draws a card, from the cache when it was drawn before.
-func (a *API) serveCard(w http.ResponseWriter, m sqlite.Milestone, context, domain, theme string, amount, svg bool, cache string) {
-	c := milestones.Card(m, context, domain, theme, amount)
+func (a *API) serveCard(w http.ResponseWriter, l *cardLang, m sqlite.Milestone, context, domain, theme string, amount, svg bool, cache string) {
+	c := milestones.CardIn(&l.ms, m, context, domain, theme, amount)
+	c.Lang = l.code
 	if svg {
 		b, err := c.SVG()
 		if err != nil {

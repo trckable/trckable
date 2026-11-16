@@ -9,6 +9,7 @@ import { XMenu } from '../ui/XMenu'
 import { copy as shareCopy } from '../../features/share/copy'
 import { copy } from './copy'
 import { chipName, dimWord } from './filters'
+import { isShared } from '../../lib/me'
 import { MoreMenu, PickMenu, type ViewsProps } from './menus'
 import { FILTER_DIMS, TABS } from './sections'
 import { TAB_ICONS } from './tabIcons'
@@ -118,19 +119,21 @@ export function Toolbar(p: ToolbarProps) {
             <Share2 size={15} strokeWidth={1.75} aria-hidden="true" />
           </button>
         )}
-        <XMenu
-          id="more"
-          cls="r"
-          open={p.menu === 'more'}
-          label={copy.more}
-          button={
-            <button type="button" className="xb xmore" data-xm="more" aria-label={copy.more} {...btn('more')}>
-              {'⋯'}
-            </button>
-          }
-        >
-          <MoreMenu views={p.views} details={p.details} onDetails={p.onDetails} onCsv={p.onCsv} onCopy={p.onCopy} onMail={p.onMail} onShare={p.onShare} />
-        </XMenu>
+        {!isShared() && (
+          <XMenu
+            id="more"
+            cls="r"
+            open={p.menu === 'more'}
+            label={copy.more}
+            button={
+              <button type="button" className="xb xmore" data-xm="more" aria-label={copy.more} {...btn('more')}>
+                {'⋯'}
+              </button>
+            }
+          >
+            <MoreMenu views={p.views} details={p.details} onDetails={p.onDetails} onCsv={p.onCsv} onCopy={p.onCopy} onMail={p.onMail} onShare={p.onShare} />
+          </XMenu>
+        )}
       </div>
       {p.noTabs && <p className="xpage-desc">{copy.names[p.section][1]}</p>}
       <Chips p={p} />

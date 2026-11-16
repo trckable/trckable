@@ -58,9 +58,9 @@ function useLinger(on: boolean, held: boolean, ms: number): boolean {
 export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[]; identity?: React.ReactNode }) {
   // Before anything reads a date: "This week" starts on the site's own day.
   setWeekStart(site.week_start)
-  setDefaultPeriodFor(site)
-  useKeymap()
   const shared = isShared()
+  if (!shared) setDefaultPeriodFor(site)
+  useKeymap()
   const { params } = useLocation()
   const view = readView(params)
   const today = todayIn(site.timezone)

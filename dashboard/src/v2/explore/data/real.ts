@@ -22,7 +22,7 @@ import { hourTable, stretchBand } from '../../briefing/usual'
 import { usualBand } from '../../briefing/useSlices'
 import type { Usual } from '../../briefing/model'
 import { funnelBuilt } from '../../setup/funnelBuilt'
-import { seeNetworks } from '../sections'
+import { seeMoney, seeNetworks } from '../sections'
 import type { Down, SavedView, Tab } from '../types'
 import { basisOf, type Basis } from './basis'
 import { insightOf } from './insight'
@@ -285,6 +285,7 @@ export async function loadMeta(c: DataCtx): Promise<Meta> {
     ),
   ])
   seeNetworks((report.current.dims.network ?? []).length > 0)
+  seeMoney(!!report.current.money)
   return { connected: { rev: !!report.current.money, search, goals: (report.current.goals ?? []).length > 0 }, options: optionsOf(report.current), views: segments.map(viewOf), }
 }
 
