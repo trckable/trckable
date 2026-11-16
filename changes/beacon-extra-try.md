@@ -1,0 +1,1 @@
+- A visit sent as a page closes stays queued until the server confirms it, so none is lost during an outage.
