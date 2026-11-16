@@ -44,3 +44,16 @@ func TestGuardedGoroutineExitsOnPanic(t *testing.T) {
 		t.Fatalf("exit code %d, want 1", code.Load())
 	}
 }
+
+// A stalled writer shows as degraded (still 200) with the time it stalled.
+func TestReadyzDegradedWhileWriterStalled(t *testing.T) {
+	s := newTestServer(t, config.Config{})
+	old := writerStalled
+	since := time.Now().Add(-6 * time.Minute)
+	writerStalled = func(*Server) time.Time { return since }
+	t.Cleanup(func() { writerStalled = old })
+	code, body := get(s, "/readyz", "")
+	if code != http.StatusOK || !strings.Contains(body, "degraded") || !strings.Contains(body, "wal_stalled_since") {
+		t.Fatalf("stalled writer: %d %s", code, body)
+	}
+}

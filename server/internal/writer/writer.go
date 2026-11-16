@@ -54,6 +54,19 @@ type Options struct {
 	// WAL from the last committed mark.
 	RetryMin, RetryMax, GiveUpAfter time.Duration
 	OnGiveUp                        func(err error)
+
+	// Maintenance jobs (Do) run with a deadline: JobTimeout for the small ones,
+	// HeavyJobTimeout for purge, prune and erase (defaults 2m and 4m). A job
+	// that runs out is logged and the writer carries on with the WAL.
+	JobTimeout, HeavyJobTimeout time.Duration
+	// StepSlow: a writer step longer than this is logged (default 1m).
+	StepSlow time.Duration
+	// The stall watchdog: no progress for StallAfter while the WAL holds more
+	// is logged (default 5m), again every StallRepeat (10m), and after
+	// StallExitAfter (default 15m; negative turns it off) OnStall is called:
+	// the process is expected to exit and the next start replays the WAL.
+	StallAfter, StallRepeat, StallExitAfter, WatchEvery time.Duration
+	OnStall                                             func(err error)
 }
 
 // Writer applies WAL records to DuckDB.
@@ -80,6 +93,10 @@ type Writer struct {
 	inject func() error
 	// injectLate fails a commit inside its transaction, after the work is done.
 	injectLate func() error
+
+	step         atomic.Pointer[stepInfo] // what the loop is doing (watchdog, logs)
+	stalledSince atomic.Int64             // unix ns, 0 when not stalled
+	committedFn  func() uint64            // WAL committed seq; nil reads the log (tests)
 
 	applied atomic.Uint64 // hwm, readable from other goroutines (health, pruning)
 	ready   atomic.Bool   // sessions restored; snapshots are complete
@@ -115,6 +132,15 @@ func New(log *wal.Log, store *duck.Store, opts Options) *Writer {
 	if opts.GiveUpAfter <= 0 {
 		opts.GiveUpAfter = 5 * time.Minute
 	}
+	opts.JobTimeout = orDefault(opts.JobTimeout, defaultJobTimeout)
+	opts.HeavyJobTimeout = orDefault(opts.HeavyJobTimeout, defaultHeavyJobTimeout)
+	opts.StepSlow = orDefault(opts.StepSlow, defaultStepSlow)
+	opts.StallAfter = orDefault(opts.StallAfter, defaultStallAfter)
+	opts.StallRepeat = orDefault(opts.StallRepeat, defaultStallRepeat)
+	opts.WatchEvery = orDefault(opts.WatchEvery, defaultWatchEvery)
+	if opts.StallExitAfter == 0 {
+		opts.StallExitAfter = defaultStallExitAfter
+	}
 	now := opts.Now
 	if now == nil {
 		now = time.Now
@@ -128,6 +154,13 @@ func New(log *wal.Log, store *duck.Store, opts Options) *Writer {
 		dd:    newDedupe(dedupePeriod.Milliseconds(), dedupeGens, dedupeMaxIDs),
 		jobs:  make(chan maintenance, 8),
 	}
+}
+
+func orDefault(d, def time.Duration) time.Duration {
+	if d <= 0 {
+		return def
+	}
+	return d
 }
 
 // Applied returns the highest WAL seq committed to DuckDB.
@@ -167,9 +200,18 @@ func (w *Writer) OpenSessions(site string) (s []Session, ok bool) {
 // DuckDB) and waits for it. Used for maintenance such as purging a deleted
 // site's data.
 func (w *Writer) Do(ctx context.Context, job func(ctx context.Context, conn *sql.Conn) error) error {
+	return w.do(ctx, "maintenance", w.opts.JobTimeout, job)
+}
+
+// doHeavy is Do for jobs that may scan a whole site (purge, prune, erase).
+func (w *Writer) doHeavy(ctx context.Context, name string, job func(ctx context.Context, conn *sql.Conn) error) error {
+	return w.do(ctx, name, w.opts.HeavyJobTimeout, job)
+}
+
+func (w *Writer) do(ctx context.Context, name string, timeout time.Duration, job func(ctx context.Context, conn *sql.Conn) error) error {
 	done := make(chan error, 1)
 	select {
-	case w.jobs <- maintenance{job: job, done: done}:
+	case w.jobs <- maintenance{name: name, timeout: timeout, job: job, done: done}:
 		w.interrupt() // the writer may be parked waiting for events
 	case <-ctx.Done():
 		return ctx.Err()
@@ -199,8 +241,10 @@ func (w *Writer) setWake(cancel context.CancelFunc) {
 }
 
 type maintenance struct {
-	job  func(ctx context.Context, conn *sql.Conn) error
-	done chan error
+	name    string
+	timeout time.Duration
+	job     func(ctx context.Context, conn *sql.Conn) error
+	done    chan error
 }
 
 func (w *Writer) Run(ctx context.Context) error {
@@ -220,18 +264,22 @@ func (w *Writer) Run(ctx context.Context) error {
 	defer rd.Close()
 	defer conn.Close()
 	w.ready.Store(true)
+	wctx, stopWatch := context.WithCancel(ctx)
+	defer stopWatch()
+	go w.watchdog(wctx)
 
 	for {
 		// Maintenance first: it is rare, and it must not wait behind traffic.
 		for {
 			select {
 			case m := <-w.jobs:
-				m.done <- m.job(context.Background(), conn)
+				m.done <- w.runJob(m, conn)
 				continue
 			default:
 			}
 			break
 		}
+		w.setStep("waiting for events")
 		batch, err := w.collect(ctx, rd)
 		if len(batch) > 0 {
 			// Never abandon a batch that is already out of the WAL reader.
@@ -251,6 +299,25 @@ func (w *Writer) Run(ctx context.Context) error {
 			return err
 		}
 	}
+}
+
+// runJob runs a maintenance job with its deadline. The job gets a context
+// that ends at the deadline (DuckDB statements stop with it); an overrun is
+// logged and the writer goes back to the WAL.
+func (w *Writer) runJob(m maintenance, conn *sql.Conn) error {
+	w.setStep("job " + m.name)
+	defer w.setStep("idle")
+	jctx, cancel := context.WithTimeout(context.Background(), m.timeout)
+	defer cancel()
+	start := time.Now()
+	err := m.job(jctx, conn)
+	if jctx.Err() != nil {
+		slog.Error("writer: a maintenance job timed out; carrying on with the WAL", "job", m.name, "timeout", m.timeout, "took", time.Since(start).Round(time.Second), "err", err)
+		if err == nil {
+			err = context.DeadlineExceeded
+		}
+	}
+	return err
 }
 
 // open reads the high-water mark, starts the WAL reader and the writer's
@@ -324,6 +391,8 @@ func (w *Writer) retry(ctx context.Context, what string, first error, attempt fu
 // once, whatever the failed attempt did. Cancelling ctx ends the wait; the
 // batch stays in the WAL and the next start replays it.
 func (w *Writer) commitRetry(ctx context.Context, conn *sql.Conn, batch []wal.Record) error {
+	w.setStep("commit")
+	defer w.setStep("idle")
 	err := w.commit(context.Background(), conn, batch)
 	if err == nil {
 		return nil
@@ -607,9 +676,11 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 		touched[s.Site] = [2]int64{min(span[0], s.Start, s.Last), max(span[1], s.Start, s.Last)}
 	}
 
+	w.setStep("commit: begin")
 	if _, err := conn.ExecContext(ctx, "BEGIN TRANSACTION"); err != nil {
 		return err
 	}
+	w.setStep("commit: append rows")
 	err = conn.Raw(func(dc any) error {
 		if len(rows) > 0 {
 			app, err := duckdb.NewAppenderFromConn(dc.(driver.Conn), "", "events")
@@ -629,12 +700,14 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 		return appendSessions(dc.(driver.Conn), closed)
 	})
 	if err == nil {
+		w.setStep("commit: crawler counts")
 		err = w.countCrawls(ctx, conn, crawls)
 	}
 	if err == nil && w.injectLate != nil {
 		err = w.injectLate()
 	}
 	if err == nil {
+		w.setStep("commit: high-water mark")
 		if len(batch) > 0 {
 			_, err = conn.ExecContext(ctx, "UPDATE ingest_state SET hwm = ?, sessions_w = ? WHERE id = 1",
 				batch[len(batch)-1].Seq, time.UnixMilli(watermark).UTC())
@@ -649,6 +722,7 @@ func (w *Writer) commitAt(ctx context.Context, conn *sql.Conn, batch []wal.Recor
 		}
 		return fmt.Errorf("writer commit: %w", err)
 	}
+	w.setStep("commit: COMMIT")
 	if _, err := conn.ExecContext(ctx, "COMMIT"); err != nil {
 		return fmt.Errorf("writer commit: %w", err)
 	}
@@ -932,7 +1006,7 @@ func nzU8(v uint8) any {
 // Options.Sites says the site does not exist, and its queued events are
 // dropped.
 func (w *Writer) PurgeSite(ctx context.Context, site string) (events, sessions int64, err error) {
-	err = w.Do(ctx, func(ctx context.Context, conn *sql.Conn) error {
+	err = w.doHeavy(ctx, "purge site", func(ctx context.Context, conn *sql.Conn) error {
 		for _, table := range []string{"crawler_hits", "bot_daily", "heat_daily", "imported_daily"} {
 			if _, err := conn.ExecContext(ctx, `DELETE FROM `+table+` WHERE site_id = ?`, site); err != nil { //nolint:gosec // table is from the fixed list above; the site is bound as a parameter
 				return fmt.Errorf("purge %s: %w", table, err)
@@ -963,7 +1037,7 @@ func (w *Writer) PurgeSite(ctx context.Context, site string) (events, sessions i
 // PurgeSite, it runs on the writer's connection.
 func (w *Writer) PruneBefore(ctx context.Context, site string, cutoffMs int64) (int64, error) {
 	var removed int64
-	err := w.Do(ctx, func(ctx context.Context, conn *sql.Conn) error {
+	err := w.doHeavy(ctx, "prune", func(ctx context.Context, conn *sql.Conn) error {
 		// Both tables keep a TIMESTAMP: events by when they happened,
 		// sessions by when they started.
 		for _, q := range []string{
@@ -997,7 +1071,7 @@ func (w *Writer) PruneBefore(ctx context.Context, site string, cutoffMs int64) (
 // person.
 func (w *Writer) ErasePerson(ctx context.Context, site string, visitor uint64) (events, sessions int64, err error) {
 	id := strconv.FormatUint(visitor, 10) // unsigned 64-bit: our own id, never user input
-	err = w.Do(ctx, func(ctx context.Context, conn *sql.Conn) error {
+	err = w.doHeavy(ctx, "erase person", func(ctx context.Context, conn *sql.Conn) error {
 		for i, table := range []string{"events", "sessions"} {
 			res, err := conn.ExecContext(ctx, `DELETE FROM `+table+` WHERE site_id = ? AND visitor_id = `+id, site) //nolint:gosec // table is from the fixed list above and id a formatted uint64; the site is bound as a parameter
 			if err != nil {
