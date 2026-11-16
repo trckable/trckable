@@ -78,7 +78,6 @@ func (a *API) gscFor(c sqlite.SearchConsole) (*gsc.Client, error) {
 }
 
 func (a *API) forgetSearch(site string) {
-	a.cache.lists.purge()
 	st := a.searchInit()
 	st.mu.Lock()
 	defer st.mu.Unlock()

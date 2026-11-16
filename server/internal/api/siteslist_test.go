@@ -127,7 +127,6 @@ func TestSitesListBatchesWhatItReadsPerSite(t *testing.T) {
 	}
 
 	n := g.counted(t)
-	g.api.cache.lists.purge()
 	n.Store(0)
 	body := g.rawSites(t)
 	after := n.Load()
@@ -165,31 +164,22 @@ func TestSitesListBatchesWhatItReadsPerSite(t *testing.T) {
 	}
 }
 
-// A second poll inside the window is answered from the shared list; a change
-// to a site shows at once.
-func TestSitesListIsSharedBriefly(t *testing.T) {
+// A change to a site shows on the very next read: nothing is kept between polls.
+func TestSitesListShowsAMuteAtOnce(t *testing.T) {
 	g := newRig(t)
-	n := g.counted(t)
-	g.api.cache.lists.purge()
-	n.Store(0)
 	first := g.rawSites(t)
-	cost := n.Load()
-	if again := g.rawSites(t); string(again) != string(first) || n.Load() != cost {
-		t.Errorf("the second poll read the store (%d queries, %d before) or differed", n.Load(), cost)
-	}
 	req, _ := http.NewRequest("POST", g.srv.URL+"/api/v1/sites/"+g.site+"/alerts/mute", strings.NewReader(`{"hours":2}`))
 	req.Header.Set("Authorization", "Bearer automation-token")
 	req.Header.Set("Content-Type", "application/json")
-	if res, err := http.DefaultClient.Do(req); err != nil || res.StatusCode >= 300 {
-		t.Fatalf("mute: %v %v", err, res)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	if res.StatusCode >= 300 {
+		t.Fatalf("mute: %d", res.StatusCode)
 	}
 	if after := g.rawSites(t); !strings.Contains(string(after), `"alerts_muted_until":`) || string(after) == string(first) {
 		t.Errorf("a muted site did not show at once: %s", after)
-	}
-	g.advance(listTTL + time.Second)
-	n.Store(0)
-	g.rawSites(t)
-	if n.Load() == 0 {
-		t.Error("the list outlived its window")
 	}
 }

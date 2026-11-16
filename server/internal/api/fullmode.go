@@ -558,7 +558,6 @@ func (a *API) muteAlerts(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	a.cache.lists.purge()
 	writeJSON(w, http.StatusOK, map[string]any{"alerts_muted_until": until})
 }
 
@@ -571,7 +570,6 @@ func (a *API) unmuteAlerts(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	a.cache.lists.purge()
 	w.WriteHeader(http.StatusNoContent)
 }
 

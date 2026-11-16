@@ -9,7 +9,6 @@
 package api
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -1156,23 +1155,12 @@ func (a *API) markBellRead(w http.ResponseWriter, r *http.Request) {
 // ---- sites ----
 
 func (a *API) sites(w http.ResponseWriter, r *http.Request) {
-	key := a.listKey(r)
-	body, ok := a.cache.lists.get(key, a.Now())
-	if !ok {
-		out, err := a.siteList(r)
-		if err != nil {
-			fail(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-		var buf bytes.Buffer
-		_ = json.NewEncoder(&buf).Encode(map[string]any{"sites": out})
-		body = buf.Bytes()
-		a.cache.lists.put(key, body, a.Now())
+	out, err := a.siteList(r)
+	if err != nil {
+		fail(w, http.StatusInternalServerError, err.Error())
+		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(body)
+	writeJSON(w, http.StatusOK, map[string]any{"sites": out})
 }
 
 // siteList is the sites a request may see, with what stands behind each.
@@ -1322,7 +1310,6 @@ func (a *API) createSite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.defaultAlerts(r.Context(), principalOf(r).account, id)
-	a.cache.lists.purge()
 	si, _ := a.Ctl.SiteInfo(r.Context(), id)
 	a.startIcon(id, si.Domain)
 	a.tellOwners(r, notice.SiteAdded, id, notice.Vars{"domain": si.Domain})

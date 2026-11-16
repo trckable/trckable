@@ -57,8 +57,7 @@ type reportCache struct {
 	max     int
 	m       map[string]cacheEntry
 	sites   map[string]*siteChanges
-	epoch   uint64 // moves when every site's reports are dropped at once
-	lists   listCache
+	epoch   uint64            // moves when every site's reports are dropped at once
 	onPurge func(site string) // told when a site (or "": every site) is dropped
 }
 
@@ -165,7 +164,6 @@ func (c *reportCache) purgeSite(site string) {
 	if c.onPurge != nil {
 		c.onPurge(site)
 	}
-	c.lists.purge()
 	for k, e := range c.m {
 		if e.site == site {
 			delete(c.m, k)
@@ -183,7 +181,6 @@ func (c *reportCache) purgeAll() {
 		c.onPurge("")
 	}
 	clear(c.m)
-	c.lists.purge()
 }
 
 // Touched drops the cached reports the writer's last commit can have changed:
