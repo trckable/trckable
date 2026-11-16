@@ -86,5 +86,8 @@ var cardNL = &cardLang{
 		AfterSale:      "%d dagen na de eerste verkoop",
 		AfterSaleOne:   "%d dag na de eerste verkoop",
 		Faster:         "%d× sneller dan de vorige",
+		PageTitle:      "%s op %s",
+		PageReached:    "bereikt op %s",
+		PageMade:       "Gemaakt met trckable",
 	},
 }
