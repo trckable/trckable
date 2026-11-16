@@ -26,9 +26,6 @@ RUN pnpm install --frozen-lockfile --filter @trckable/dashboard...
 RUN pnpm --filter @trckable/dashboard build
 
 FROM golang:1.27-trixie AS build
-# gold drops what the linker finds unused and folds identical functions: DuckDB's
-# static library is about 5 MB of the compressed image smaller for it.
-RUN apt-get update && apt-get install -y --no-install-recommends binutils-gold && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY server/go.mod server/go.sum ./server/
 RUN cd server && go mod download
@@ -36,14 +33,8 @@ COPY server/ ./server/
 COPY --from=web /src/server/internal/web/dist/ ./server/internal/web/dist/
 COPY VERSION ./
 ARG VERSION=
-# Only the DuckDB extensions the server uses are linked (deploy/duckdb_extensions.c).
-COPY deploy/duckdb_extensions.c /duckdb/extensions.c
-RUN L=$(cd server && go list -m -f '{{.Dir}}' go.duckdb.org/libduckdb/linux-$(go env GOARCH)) \
- && cc -c -I"$L" /duckdb/extensions.c -o /duckdb/extensions.o \
- && ar rcs /duckdb/libtrckable_extensions.a /duckdb/extensions.o \
- && echo "-rdynamic -L/duckdb -L$L -ltrckable_extensions -lcore_functions_extension -licu_extension -ljson_extension -lparquet_extension -lduckdb_static -lstdc++ -lm -ldl" > /duckdb/ldflags
-RUN V=${VERSION:-$(cat VERSION)} && cd server && CGO_LDFLAGS="$(cat /duckdb/ldflags)" CGO_ENABLED=1 go build -trimpath -tags netgo,osusergo,duckdb_use_static_lib \
-      -ldflags="-s -w -linkmode external -extldflags '-static -fuse-ld=gold -Wl,--gc-sections -Wl,--icf=safe' -X github.com/trckable/trckable/server/internal/server.Version=$V" \
+RUN V=${VERSION:-$(cat VERSION)} && cd server && CGO_ENABLED=1 go build -trimpath -tags netgo,osusergo \
+      -ldflags="-s -w -linkmode external -extldflags=-static -X github.com/trckable/trckable/server/internal/server.Version=$V" \
       -o /out/trckabled ./cmd/trckabled \
  && mkdir -p /out/data
 
