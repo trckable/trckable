@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -264,6 +265,7 @@ type payload struct {
 var (
 	errBadPayload = errors.New("bad payload")
 	errUnknown    = errors.New("unknown site")
+	errNotYet     = errors.New("site not available yet")
 	errHost       = errors.New("hostname not allowed")
 	errRate       = errors.New("rate limited")
 )
@@ -298,6 +300,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err == errRate {
 		w.Header().Set("Retry-After", "10")
 		h.reject(w, http.StatusTooManyRequests, err)
+		return
+	}
+	if err == errNotYet {
+		w.Header().Set("Retry-After", "5")
+		h.reject(w, http.StatusServiceUnavailable, err)
 		return
 	}
 	if err != nil {
@@ -360,6 +367,11 @@ func (h *Handler) reject(w http.ResponseWriter, code int, err error) {
 	_, _ = io.WriteString(w, msg) // if this fails the client has gone
 }
 
+// wellFormedSiteID is what a site id looks like ("tkb_" and lowercase letters
+// or digits). An API key (tkb_live_…) has an underscore after the prefix and
+// does not match.
+var wellFormedSiteID = regexp.MustCompile(`^tkb_[a-z0-9]{8,}$`)
+
 // dropOwner marks a visit the site's owner chose to leave out (an excluded
 // path, Do Not Track): dropped like a bot, but never counted as one.
 const dropOwner = "owner"
@@ -369,6 +381,13 @@ const dropOwner = "owner"
 func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *http.Cookie, error) {
 	site, ok := h.Sites.Site(p.Site)
 	if !ok {
+		if wellFormedSiteID.MatchString(p.Site) {
+			// The cache cannot tell a site it has not loaded yet (just created
+			// by another process, a reload that failed) from one that does not
+			// exist, so this is "not now": the tracker keeps the event and
+			// tries again.
+			return nil, "", nil, errNotYet
+		}
 		return nil, "", nil, errUnknown
 	}
 	u, ok := parsePageURL(p.URL, site.HashMode)

@@ -672,3 +672,22 @@ func TestWebVitalsAreKeptAsReportedAndWildOnesAreDropped(t *testing.T) {
 		t.Fatalf("a wild number was kept: %+v", e)
 	}
 }
+
+func TestUnknownSiteNotNowOrNever(t *testing.T) {
+	h, _ := newHandler(t)
+	// A well-formed id the cache does not have yet: "not now", so the tracker keeps the event.
+	w := post(h, `{"s":"tkb_abcdefghijkl","k":"pv","u":"https://site.com/"}`, chromeUA)
+	if w.Code != http.StatusServiceUnavailable {
+		t.Errorf("well-formed unknown id: status %d, want 503", w.Code)
+	}
+	if w.Header().Get("Retry-After") == "" {
+		t.Error("503 without Retry-After")
+	}
+	// Not a site id at all: final.
+	for _, s := range []string{"nope", "tkb_x", "tkb_live_abcdefghij", ""} {
+		body := `{"s":"` + s + `","k":"pv","u":"https://site.com/"}`
+		if w := post(h, body, chromeUA); w.Code != http.StatusBadRequest {
+			t.Errorf("malformed id %q: status %d, want 400", s, w.Code)
+		}
+	}
+}
