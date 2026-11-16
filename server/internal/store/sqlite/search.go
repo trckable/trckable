@@ -36,6 +36,27 @@ func (s *Store) SearchConsoleOf(ctx context.Context, site string) (SearchConsole
 	return c, err
 }
 
+// SearchConsolesOf returns the connections of every site of an account, by site.
+func (s *Store) SearchConsolesOf(ctx context.Context, account string) (map[string]SearchConsole, error) {
+	rows, err := s.DB.QueryContext(ctx, `SELECT c.site_id, c.key_enc, c.client_email, c.property, c.created_at, c.last_ok_at, c.last_error
+		FROM search_console c JOIN sites s ON s.id = c.site_id WHERE s.account_id = ?`, account)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[string]SearchConsole{}
+	for rows.Next() {
+		var c SearchConsole
+		var ok sql.NullInt64
+		if err := rows.Scan(&c.SiteID, &c.KeyEnc, &c.ClientEmail, &c.Property, &c.Created, &ok, &c.LastError); err != nil {
+			return nil, err
+		}
+		c.LastOK = ok.Int64
+		out[c.SiteID] = c
+	}
+	return out, rows.Err()
+}
+
 // SetSearchConsoleKey stores a new key. A new key starts with no property:
 // the list of properties it can read belongs to that account.
 func (s *Store) SetSearchConsoleKey(ctx context.Context, site, keyEnc, email string) error {

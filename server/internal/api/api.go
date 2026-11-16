@@ -154,6 +154,10 @@ type API struct {
 	stopOnce   sync.Once
 	shareHosts atomic.Pointer[map[string]string] // verified share domain -> site, kept in memory
 	shareTried atomic.Int64                      // when the list was last tried and failed (unix nanoseconds)
+	// SiteChanged is told whenever a site's settings or modules change (empty:
+	// all of them), so what is built from them can be rebuilt.
+	SiteChanged func(site string)
+
 	// ReservedHosts are names that can never be a share domain, besides the
 	// dashboard's own address (TRCKABLE_RESERVED_HOSTS).
 	ReservedHosts []string
@@ -193,6 +197,7 @@ func (a *API) Stop() {
 func (a *API) init() {
 	a.once.Do(func() {
 		a.cache = newReportCache(256)
+		a.cache.onPurge = a.SiteChanged
 		a.refIcons = newRefIcons()
 		a.loginRate = &attempts{m: map[string][]time.Time{}}
 		a.stopping = make(chan struct{})
@@ -1150,10 +1155,19 @@ func (a *API) markBellRead(w http.ResponseWriter, r *http.Request) {
 // ---- sites ----
 
 func (a *API) sites(w http.ResponseWriter, r *http.Request) {
-	rows, err := a.Ctl.ListSites(r.Context(), principalOf(r).account)
+	out, err := a.siteList(r)
 	if err != nil {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"sites": out})
+}
+
+// siteList is the sites a request may see, with what stands behind each.
+func (a *API) siteList(r *http.Request) ([]siteListRow, error) {
+	rows, err := a.Ctl.ListSites(r.Context(), principalOf(r).account)
+	if err != nil {
+		return nil, err
 	}
 	rows = visible(principalOf(r), rows)
 	brands, _ := a.Ctl.Brands(r.Context(), principalOf(r).account)
@@ -1163,30 +1177,40 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 	paused, _ := a.Ctl.PausedUptime(r.Context())
 	former, err := a.Ctl.FormerHostsByAccount(r.Context(), principalOf(r).account, a.Now())
 	if err != nil {
-		fail(w, http.StatusInternalServerError, err.Error())
-		return
+		return nil, err
 	}
 	talked := map[string]bool{}
 	if a.MentionsOn {
 		talked, _ = a.Ctl.SitesWithMentions(r.Context())
 	}
+	flags, flagsErr := a.Ctl.ListSiteFlags(r.Context(), principalOf(r).account)
+	ids := make([]string, len(rows))
+	for i, s := range rows {
+		ids[i] = s.ID
+	}
+	sources := a.verifiedFor(r.Context(), principalOf(r).account, ids)
+	now := a.Now().Unix()
 	out := []siteListRow{}
 	for _, s := range rows {
 		b := brands[s.ID]
 		// A site whose settings cannot be read is told as cookieless: the careful side.
 		week, cookieless := 1, true
-		if c, err := a.Ctl.SiteConfig(r.Context(), s.ID); err == nil {
-			week, cookieless = c.WeekStart, c.ConsentFree
+		var muted int64
+		if f, ok := flags[s.ID]; ok && flagsErr == nil {
+			week, cookieless = f.WeekStart, f.ConsentFree
+			if f.AlertsMutedUntil > now {
+				muted = f.AlertsMutedUntil
+			}
 		}
 		out = append(out, siteListRow{SiteInfo: sqlite.SiteInfo{ID: s.ID, Domain: s.Domain, Name: s.Name, Timezone: s.Timezone, Currency: s.Currency, ProxyKey: a.proxyKeyFor(r, s.ProxyKey), LastEventAt: s.LastEventAt, CreatedAt: s.CreatedAt, WatchedSince: s.WatchedSince,
-			Color: b.Color, IconURL: iconURL(s.ID, b), WeekStart: week, Cookieless: cookieless, AlertsMutedUntil: a.mutedUntil(r, s.ID)}})
+			Color: b.Color, IconURL: iconURL(s.ID, b), WeekStart: week, Cookieless: cookieless, AlertsMutedUntil: muted}})
 		last := &out[len(out)-1]
 		if c, ok := checks[s.ID]; ok {
 			last.Check = &c
 		}
 		// The sources behind the numbers ride with the list, so the header's
 		// seal and the site switcher need no request of their own.
-		last.Verified = a.verifiedOf(r.Context(), last.SiteInfo)
+		last.Verified = sources[s.ID]
 		p, probed := downs[s.ID]
 		if !probed {
 			p = a.probeIfStale(r.Context(), last.SiteInfo, last.Check)
@@ -1200,7 +1224,7 @@ func (a *API) sites(w http.ResponseWriter, r *http.Request) {
 		out[len(out)-1].Answers = a.AnswersOn()
 		out[len(out)-1].FormerHosts = former[s.ID]
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"sites": out})
+	return out, nil
 }
 
 // siteListRow is a site in the list, with what stands behind its numbers.

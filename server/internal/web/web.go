@@ -240,29 +240,76 @@ func prelude(o ScriptOpts) string {
 // Caching is one hour with a day of stale-while-revalidate, so turning a
 // module on or off reaches visitors within the hour.
 func Tracker(features SiteFeatures, opts SiteScript) http.Handler {
+	return TrackerMemo(features, opts, &ScriptMemo{})
+}
+
+// memoTTL bounds how long a finished script is reused when nothing tells the
+// memo to forget it.
+const (
+	memoTTL = time.Minute
+	memoMax = 4096
+)
+
+// ScriptMemo keeps each site's finished script and ETag, so a request (a 304
+// included) reads no settings and hashes nothing. Forget drops one site's, or
+// every site's when given "": call it whenever a site's settings or modules
+// change.
+type ScriptMemo struct {
+	mu sync.Mutex
+	m  map[string]memoScript
+}
+
+type memoScript struct {
+	s   script
+	exp time.Time
+}
+
+func (c *ScriptMemo) get(name string) (script, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	e, ok := c.m[name]
+	if !ok || time.Now().After(e.exp) {
+		delete(c.m, name)
+		return script{}, false
+	}
+	return e.s, true
+}
+
+func (c *ScriptMemo) put(name string, s script) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.m == nil || len(c.m) >= memoMax {
+		c.m = map[string]memoScript{}
+	}
+	c.m[name] = memoScript{s: s, exp: time.Now().Add(memoTTL)}
+}
+
+// Forget drops a site's finished script; "" drops them all.
+func (c *ScriptMemo) Forget(site string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if site == "" {
+		clear(c.m)
+		return
+	}
+	delete(c.m, site)
+}
+
+// TrackerMemo is Tracker reusing the finished script of each site from memo.
+func TrackerMemo(features SiteFeatures, opts SiteScript, memo *ScriptMemo) http.Handler {
 	all := scriptFor([]string{"goals", "outbound", "checkout"})
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s := all
-		pre := ""
 		if name := strings.TrimSuffix(path.Base(r.URL.Path), ".js"); name != "t" && features != nil {
 			if !strings.HasPrefix(name, "tkb_") {
 				http.NotFound(w, r)
 				return
 			}
-			s = scriptFor(features(name))
-			// The site's own script knows its site: a tag copied without
-			// data-site still counts (one set on the tag wins).
-			q, _ := json.Marshal(name)
-			pre = "document.currentScript.dataset.site=document.currentScript.dataset.site||" + string(q) + ";"
-			if opts != nil {
-				pre += prelude(opts(name))
+			var ok bool
+			if s, ok = memo.get(name); !ok {
+				s = siteScript(name, features, opts)
+				memo.put(name, s)
 			}
-		}
-		if pre != "" {
-			// The etag has to follow the prelude: change the wording and the
-			// browser must fetch the new script, not keep the old one.
-			sum := sha256.Sum256([]byte(pre))
-			s = script{body: append([]byte(pre), s.body...), etag: `"` + hex.EncodeToString(sum[:6]) + strings.Trim(s.etag, `"`) + `"`}
 		}
 		h := w.Header()
 		h.Set("Content-Type", "application/javascript; charset=utf-8")
@@ -275,6 +322,23 @@ func Tracker(features SiteFeatures, opts SiteScript) http.Handler {
 		}
 		_, _ = w.Write(s.body)
 	})
+}
+
+// siteScript builds one site's script: its modules, and a prelude that tells
+// it its site and its settings.
+func siteScript(name string, features SiteFeatures, opts SiteScript) script {
+	s := scriptFor(features(name))
+	// The site's own script knows its site: a tag copied without
+	// data-site still counts (one set on the tag wins).
+	q, _ := json.Marshal(name)
+	pre := "document.currentScript.dataset.site=document.currentScript.dataset.site||" + string(q) + ";"
+	if opts != nil {
+		pre += prelude(opts(name))
+	}
+	// The etag has to follow the prelude: change the wording and the
+	// browser must fetch the new script, not keep the old one.
+	sum := sha256.Sum256([]byte(pre))
+	return script{body: append([]byte(pre), s.body...), etag: `"` + hex.EncodeToString(sum[:6]) + strings.Trim(s.etag, `"`) + `"`}
 }
 
 // ETagMatch says whether an If-None-Match header holds a validator: the tag

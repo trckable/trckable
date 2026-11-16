@@ -559,3 +559,25 @@ func TestDashboardNotBuilt(t *testing.T) {
 		t.Errorf("got %d %q", rec.Code, rec.Body.String())
 	}
 }
+
+// A site's finished script is built once: the second request reads no settings,
+// and forgetting the site builds it again.
+func TestTrackerMemoBuildsEachSiteOnce(t *testing.T) {
+	var reads int
+	memo := &ScriptMemo{}
+	h := TrackerMemo(func(string) []string { return []string{"goals"} }, func(string) ScriptOpts { reads++; return ScriptOpts{} }, memo)
+	get := func() string {
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/js/tkb_x.js", nil))
+		return w.Header().Get("ETag")
+	}
+	tag := get()
+	if get() != tag || reads != 1 {
+		t.Fatalf("settings read %d times for two requests", reads)
+	}
+	memo.Forget("tkb_x")
+	get()
+	if reads != 2 {
+		t.Fatalf("settings read %d times after forgetting, want 2", reads)
+	}
+}

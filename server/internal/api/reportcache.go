@@ -53,11 +53,12 @@ const (
 )
 
 type reportCache struct {
-	mu    sync.Mutex
-	max   int
-	m     map[string]cacheEntry
-	sites map[string]*siteChanges
-	epoch uint64 // moves when every site's reports are dropped at once
+	mu      sync.Mutex
+	max     int
+	m       map[string]cacheEntry
+	sites   map[string]*siteChanges
+	epoch   uint64            // moves when every site's reports are dropped at once
+	onPurge func(site string) // told when a site (or "": every site) is dropped
 }
 
 type cacheEntry struct {
@@ -160,6 +161,9 @@ func (c *reportCache) purgeSite(site string) {
 	defer c.mu.Unlock()
 	c.record(site, change{all: true})
 	c.site(site).purges++
+	if c.onPurge != nil {
+		c.onPurge(site)
+	}
 	for k, e := range c.m {
 		if e.site == site {
 			delete(c.m, k)
@@ -173,6 +177,9 @@ func (c *reportCache) purgeAll() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.epoch++
+	if c.onPurge != nil {
+		c.onPurge("")
+	}
 	clear(c.m)
 }
 
