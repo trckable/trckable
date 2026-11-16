@@ -1144,14 +1144,17 @@ var migrations = []string{
 	ALTER TABLE pay_payments ADD COLUMN method TEXT NOT NULL DEFAULT '';
 	ALTER TABLE pay_hints ADD COLUMN product TEXT NOT NULL DEFAULT '';
 	ALTER TABLE pay_hints ADD COLUMN method TEXT NOT NULL DEFAULT '';`,
-	// 85: what a share link shows besides its headline numbers (shares.go):
+	// 85: whether a share link may show how many visitors are on the site now:
+	// off unless the owner turns it on, like the notes.
+	`ALTER TABLE site_shares ADD COLUMN live INTEGER NOT NULL DEFAULT 0;`,
+	// 86: what a share link shows besides its headline numbers (shares.go):
 	// sections is empty for all of them, "-" for none, else the shown ones joined
 	// with commas; period is one period the link is fixed to, empty when the
 	// reader chooses. A link made before this shows everything and lets the
 	// reader choose, as it always did.
 	`ALTER TABLE site_shares ADD COLUMN sections TEXT NOT NULL DEFAULT '';
 	ALTER TABLE site_shares ADD COLUMN period TEXT NOT NULL DEFAULT '';`,
-	// 86: a share made only to be looked at (sharepreview.go): the owner's
+	// 87: a share made only to be looked at (sharepreview.go): the owner's
 	// picture of the page a link would open. Never listed or counted.
 	`ALTER TABLE site_shares ADD COLUMN preview INTEGER NOT NULL DEFAULT 0;`,
 }

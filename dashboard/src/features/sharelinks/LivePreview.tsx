@@ -10,6 +10,7 @@ export interface PreviewOptions {
   name: string
   revenue: boolean
   notes: boolean
+  live: boolean
   sections: string[]
   period: string
 }

@@ -18,7 +18,7 @@ import (
 // connected) is visitors: the card and the post never carry money then.
 func TestCardNeverSlipsInRevenue(t *testing.T) {
 	res := &query.Result{KPIs: query.KPIs{Visitors: 1200, Pageviews: 3400}}
-	n := cardWordsOf(res, "example.com", cardPeriodOf("7d"), "revenue")
+	n := cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), "revenue")
 	if n.Metric != "visitors" || n.Revenue || n.Big != "1,200" || n.money != "" {
 		t.Fatalf("%+v", n)
 	}
@@ -27,21 +27,21 @@ func TestCardNeverSlipsInRevenue(t *testing.T) {
 	}
 	// With money, revenue shows only when picked.
 	res.Money = &query.Money{Currency: "USD", Exponent: 2, Revenue: 123456}
-	if n := cardWordsOf(res, "example.com", cardPeriodOf("7d"), ""); n.Metric != "visitors" || strings.Contains(n.Post, "$") {
+	if n := cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), ""); n.Metric != "visitors" || strings.Contains(n.Post, "$") {
 		t.Fatalf("default: %+v", n)
 	}
-	if n := cardWordsOf(res, "example.com", cardPeriodOf("7d"), "revenue"); n.Big != "$1,234" || !strings.Contains(n.Post, "$1,234 revenue") {
+	if n := cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), "revenue"); n.Big != "$1,234" || !strings.Contains(n.Post, "$1,234 revenue") {
 		t.Fatalf("revenue: %+v", n)
 	}
 }
 
 // No visits: the post says so plainly, and a leaderboard has no lines.
 func TestCardEmpty(t *testing.T) {
-	n := cardWordsOf(&query.Result{Dims: map[string][]query.Row{"entry_page": {{Value: "/", Visitors: 0}}}}, "example.com", cardPeriodOf("24h"), "")
+	n := cardWordsOf(cardWords, &query.Result{Dims: map[string][]query.Row{"entry_page": {{Value: "/", Visitors: 0}}}}, "example.com", testPeriod("24h"), "")
 	if n.HasData || len(n.rows) != 0 || n.Big != "0" || !strings.Contains(n.Post, "counting has begun") {
 		t.Fatalf("%+v", n)
 	}
-	if cardPeriodOf("nope").label != "Last 7 days" || cardTemplateOf("x") != "overview" || cardTemplateOf("leaderboard") != "leaderboard" {
+	if testPeriod("nope").label != testPeriod("7d").label || cardTemplateOf("x") != "overview" || cardTemplateOf("leaderboard") != "leaderboard" {
 		t.Fatal("defaults")
 	}
 }
@@ -87,7 +87,7 @@ func TestCardOverview(t *testing.T) {
 		KPIs: query.KPIs{Visitors: 112, Sessions: 200, BounceRate: 0.4, AvgSessionS: 192},
 		Dims: map[string][]query.Row{"country": {{Value: "DE", Visitors: 60}}},
 	}
-	n := cardWordsOf(res, "example.com", cardPeriodOf("7d"), "")
+	n := cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), "")
 	n.overview(res, &query.Result{KPIs: query.KPIs{Visitors: 100}}, "", noIcon)
 	if n.change != "+12%" || n.dir != 1 || len(n.stats) != 3 {
 		t.Fatalf("%+v", n)
@@ -95,19 +95,19 @@ func TestCardOverview(t *testing.T) {
 	if got := []string{n.stats[0].Value, n.stats[1].Value, n.stats[2].Value}; got[0] != "120" || got[1] != "3m 12s" || got[2] != "Germany" {
 		t.Fatalf("stats: %v", got)
 	}
-	n = cardWordsOf(res, "example.com", cardPeriodOf("7d"), "")
+	n = cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), "")
 	n.overview(res, &query.Result{KPIs: query.KPIs{Visitors: 200}}, "", noIcon)
 	if n.change != "-44%" || n.dir != -1 {
 		t.Fatalf("fall: %+v", n)
 	}
 	// Zero engaged visits and no time: those two are left off, the country stays.
-	n = cardWordsOf(res, "example.com", cardPeriodOf("7d"), "")
+	n = cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), "")
 	n.overview(&query.Result{KPIs: query.KPIs{Visitors: 5, Sessions: 5, BounceRate: 1}, Dims: res.Dims}, nil, "", noIcon)
 	if len(n.stats) != 1 || n.stats[0].Label != "Top country" {
 		t.Fatalf("zeros: %+v", n.stats)
 	}
 	// Nothing before it, nothing in it: no change and no numbers that are not true.
-	n = cardWordsOf(&query.Result{}, "example.com", cardPeriodOf("7d"), "")
+	n = cardWordsOf(cardWords, &query.Result{}, "example.com", testPeriod("7d"), "")
 	n.overview(&query.Result{Dims: map[string][]query.Row{"country": {{Value: "ZZZ", Visitors: 3}}}}, nil, "", noIcon)
 	if n.change != "" || n.dir != 0 || len(n.stats) != 0 {
 		t.Fatalf("empty: %+v", n)
@@ -209,7 +209,7 @@ func TestCardMetrics(t *testing.T) {
 		"visitors": {"visitors", "100", "10,40"}, "pageviews": {"pageviews", "300", "20,90"},
 		"engaged": {"engaged", "60", "5,40"}, "revenue": {"revenue", "$50", "0,0"}, "bogus": {"visitors", "100", "10,40"},
 	} {
-		n := cardWordsOf(res, "example.com", cardPeriodOf("7d"), metric)
+		n := cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), metric)
 		var series []string
 		for _, v := range n.series {
 			series = append(series, strconv.FormatFloat(v, 'f', -1, 64))
@@ -218,7 +218,7 @@ func TestCardMetrics(t *testing.T) {
 			t.Errorf("%s: %s %s %v", metric, n.Metric, n.Big, series)
 		}
 	}
-	if n := cardWordsOf(res, "example.com", cardPeriodOf("7d"), "engaged"); n.Label != "engaged visits" || !strings.Contains(n.Post, "60 engaged visits") {
+	if n := cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), "engaged"); n.Label != "engaged visits" || !strings.Contains(n.Post, "60 engaged visits") {
 		t.Fatalf("%+v", n)
 	}
 }
@@ -237,19 +237,19 @@ func TestCardPickedStats(t *testing.T) {
 	icon := image.NewRGBA(image.Rect(0, 0, 2, 2))
 	var asked string
 	get := func(host string) image.Image { asked = host; return icon }
-	n := cardWordsOf(res, "example.com", cardPeriodOf("7d"), "pageviews")
+	n := cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), "pageviews")
 	n.overview(res, nil, "page,source,bounce", get)
 	if len(n.stats) != 3 || n.stats[0].Value != "/pricing" || n.stats[1].Icon == nil || asked != "news.example.org" || n.stats[2].Value != "25%" {
 		t.Fatalf("%+v", n.stats)
 	}
-	n = cardWordsOf(res, "example.com", cardPeriodOf("7d"), "visitors")
+	n = cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), "visitors")
 	n.overview(res, nil, "country,revenue,visitors", noIcon)
 	if len(n.stats) != 2 || n.stats[0].Flag != "DE" || n.stats[1].Value != "$50" {
 		t.Fatalf("%+v", n.stats)
 	}
 	// No money, no source, no page: those are left off.
 	res.Money, res.Dims = nil, nil
-	n = cardWordsOf(res, "example.com", cardPeriodOf("7d"), "visitors")
+	n = cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), "visitors")
 	n.overview(res, nil, "revenue,page,pageviews", noIcon)
 	if len(n.stats) != 1 || n.stats[0].Label != "Pageviews" {
 		t.Fatalf("%+v", n.stats)

@@ -24,6 +24,7 @@ type PreviewSpec struct {
 	Name     string
 	Revenue  bool
 	Notes    bool
+	Live     bool
 	Sections []string // nil: all
 	Period   string
 	// Lock gives it a password nobody knows, so what opens is the password page.
@@ -68,9 +69,9 @@ func (s *Store) PreviewShare(ctx context.Context, site, person string, spec Prev
 		return "", err
 	}
 	if _, err := tx.ExecContext(ctx,
-		`INSERT INTO site_shares (id, site_id, name, token_hash, token_enc, pass_hash, revenue, notes, expires_at, created_at, embed_origins, sections, period, preview)
-		 VALUES (?, ?, ?, ?, '', ?, ?, ?, ?, ?, '', ?, ?, 1)`,
-		id, site, strings.TrimSpace(spec.Name), hex.EncodeToString(auth.Hash(token)), pass, rev, spec.Notes, end, now.Unix(), sectionsColumn(sections), spec.Period); err != nil {
+		`INSERT INTO site_shares (id, site_id, name, token_hash, token_enc, pass_hash, revenue, notes, live, expires_at, created_at, embed_origins, sections, period, preview)
+		 VALUES (?, ?, ?, ?, '', ?, ?, ?, ?, ?, ?, '', ?, ?, 1)`,
+		id, site, strings.TrimSpace(spec.Name), hex.EncodeToString(auth.Hash(token)), pass, rev, spec.Notes, spec.Live, end, now.Unix(), sectionsColumn(sections), spec.Period); err != nil {
 		return "", err
 	}
 	return token, tx.Commit()

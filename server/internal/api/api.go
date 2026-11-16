@@ -345,6 +345,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handleFunc("GET /api/v1/share/me", a.shareMe)
 	handleFunc("GET /api/v1/share/report", a.shareReport)
 	handleFunc("GET /api/v1/share/annotations", a.shareAnnotations)
+	handleFunc("GET /api/v1/share/online", a.shareOnline)
 	handleFunc("GET /api/v1/share/icon", a.shareIcon)
 	handleFunc("GET /api/v1/share/logo", a.shareLogo)
 	handle("GET /api/v1/sites/{site}/report", a.authed(a.report))

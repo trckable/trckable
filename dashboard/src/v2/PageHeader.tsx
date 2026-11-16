@@ -81,13 +81,13 @@ export function PageHeader(p: PageHeaderProps) {
   useEffect(() => whenIdle(Palette.preload), [])
   // The phone's bar opens the same box.
   useEffect(() => {
-    const on = () => openFind('')
+    const on = () => !isShared() && openFind('')
     window.addEventListener('trckable:find', on)
     return () => window.removeEventListener('trckable:find', on)
   }, [])
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
-      if (pressed(e, 'ask')) {
+      if (pressed(e, 'ask') && !isShared()) {
         e.preventDefault()
         e.stopImmediatePropagation()
         setSeed('')
@@ -159,7 +159,7 @@ export function PageHeader(p: PageHeaderProps) {
             </>
           ) : null
         }
-        explore={p.waiting ? null : <ExploreChip label="Search" kbd="⌘K" onClick={() => setFind(true)} />}
+        explore={p.waiting || isShared() ? null : <ExploreChip label="Search" kbd="⌘K" onClick={() => setFind(true)} />}
         extras={slots.headerExtra}
         bell={p.identity ? null : <Bell site={site} notices={notices} />}
         account={isShared() ? null : <AccountMenu alert={slots.accountAlert} />}

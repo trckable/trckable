@@ -119,6 +119,18 @@ test('Revenue: with it off the server never sends the figure; with it on the lin
     expect(body.includes('"money"'), `${url}: money in the report`).toBe(want)
     expect(body.includes('"revenue":'), `${url}: revenue on the rows`).toBe(want)
     expect(((await (await view.request.get(`${API}/api/v1/share/me`)).json()) as { revenue: boolean }).revenue).toBe(want)
+    // The menu offers Sales only where the link carries payments: nothing else would be there to read, and a stranger can connect none.
+    await view.goto(`${link(url)}?x=overview`)
+    await expect(view.locator('#xp.on')).toBeVisible({ timeout: 20_000 })
+    await expect(view.locator('.xrail [data-xsec="pages"]')).toBeVisible()
+    await expect(view.locator('.xrail [data-xsec="sales"]')).toHaveCount(want ? 1 : 0)
+    await expect(view.locator('.xrail .xtag')).toHaveCount(0)
+    await expect(view.getByRole('button', { name: 'More' })).toHaveCount(0)
+    await expect(view.locator('.xmore')).toHaveCount(0)
+    // A stranger has nothing to search or ask: no Search button, and the shortcut opens nothing.
+    await expect(view.getByRole('button', { name: /^Search/ })).toHaveCount(0)
+    await view.keyboard.press('ControlOrMeta+k')
+    await expect(view.locator('.pal, [role="dialog"]')).toHaveCount(0)
     await context.close()
   }
 })

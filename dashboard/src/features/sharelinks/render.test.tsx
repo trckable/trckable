@@ -16,6 +16,11 @@ describe('a row', () => {
     expect(html).toContain('aria-pressed="false"')
     expect(row({ notes: true })).toContain('aria-pressed="true"')
   })
+  it('has a live visitors button, off unless the link says so', () => {
+    expect(row({})).toContain('Live visitors hidden: Board')
+    expect(row({ live: true })).toContain('Live visitors shown: Board')
+    expect(row({ live: true }, true)).not.toContain('<button type="button" class="sl-flag on" aria-pressed="true" aria-label="Live visitors shown')
+  })
   it('tells apart a password link from a public one', () => {
     expect(row({})).toContain('Password link')
     expect(row({ has_password: false })).toContain('Public link')
@@ -88,7 +93,7 @@ describe('the new-link form', () => {
 })
 
 describe('the preview of the page', () => {
-  const options = { name: 'Board', revenue: false, notes: false, sections: ['pages'], period: '7d' }
+  const options = { name: 'Board', revenue: false, notes: false, live: false, sections: ['pages'], period: '7d' }
   const draw = (p: Partial<Parameters<typeof LivePreview>[0]> = {}) => renderToStaticMarkup(<LivePreview site="s" host="reports.acme.com" options={options} {...p} />)
   it('says where the page would be and waits for it', () => {
     const html = draw()

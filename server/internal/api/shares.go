@@ -71,6 +71,7 @@ func (a *API) createShare(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 		Revenue  bool   `json:"revenue"`
 		Notes    bool   `json:"notes"` // the chart's notes: off unless asked for
+		Live     bool   `json:"live"`  // the count of visitors now: off unless asked for
 		Days     int    `json:"days"`  // 0 = no end date
 		// Embed lists the sites allowed to show this link in an iframe.
 		Embed []string `json:"embed_origins"`
@@ -98,7 +99,7 @@ func (a *API) createShare(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	sh, token, err := a.Ctl.CreateShare(r.Context(), r.PathValue("site"), in.Name, in.Password, in.Revenue, in.Notes, expires, origins, sqlite.ShareScope{Sections: in.Sections, Period: in.Period})
+	sh, token, err := a.Ctl.CreateShare(r.Context(), r.PathValue("site"), in.Name, in.Password, in.Revenue, in.Notes, in.Live, expires, origins, sqlite.ShareScope{Sections: in.Sections, Period: in.Period})
 	if busy(w, err) {
 		return
 	}
@@ -143,6 +144,7 @@ func (a *API) updateShare(w http.ResponseWriter, r *http.Request) {
 	var in struct {
 		Name     *string   `json:"name"`
 		Notes    *bool     `json:"notes"`
+		Live     *bool     `json:"live"`
 		Days     *int      `json:"days"` // 0 removes the end date
 		Password *string   `json:"password"`
 		Embed    *[]string `json:"embed_origins"`
@@ -154,8 +156,8 @@ func (a *API) updateShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var e sqlite.ShareEdit
-	if in.Name == nil && in.Notes == nil && in.Days == nil && in.Password == nil && in.Embed == nil && in.Sections == nil && in.Period == nil {
-		fail(w, http.StatusBadRequest, "send what to change: name, notes, days, password, embed_origins, sections or period")
+	if in.Name == nil && in.Notes == nil && in.Live == nil && in.Days == nil && in.Password == nil && in.Embed == nil && in.Sections == nil && in.Period == nil {
+		fail(w, http.StatusBadRequest, "send what to change: name, notes, live, days, password, embed_origins, sections or period")
 		return
 	}
 	if in.Sections != nil {
@@ -179,7 +181,7 @@ func (a *API) updateShare(w http.ResponseWriter, r *http.Request) {
 		}
 		e.Name = in.Name
 	}
-	e.Notes = in.Notes
+	e.Notes, e.Live = in.Notes, in.Live
 	if in.Days != nil {
 		end, err := a.shareEnd(*in.Days)
 		if err != nil {
@@ -239,7 +241,7 @@ func (a *API) updateShare(w http.ResponseWriter, r *http.Request) {
 			row.URL = a.shareBase(r, r.PathValue("site")) + "/s/" + sh.Token
 		}
 		// "notes" stays where the answer always had it, for callers that only flip that switch.
-		writeJSON(w, http.StatusOK, map[string]any{"share": row, "notes": sh.Notes})
+		writeJSON(w, http.StatusOK, map[string]any{"share": row, "notes": sh.Notes, "live": sh.Live})
 		return
 	}
 	fail(w, http.StatusNotFound, "no such link")
@@ -471,6 +473,7 @@ func (a *API) shareInfoWith(w http.ResponseWriter, r *http.Request, sh sqlite.Sh
 		"notes":      sh.Notes,
 		"sections":   sh.Sections,
 		"period":     sh.Period,
+		"live":       sh.Live,
 		"expires":    sh.ExpiresAt,
 		"domain":     si.Domain,
 		"site":       si.Name,
@@ -532,9 +535,11 @@ func (a *API) shareAnnotations(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{"annotations": out})
 		return
 	}
-	// A link fixed to a period reads the notes of that period and no other.
-	if !a.lockPeriod(w, r, sh) {
-		return
+	// A link fixed to a period reads the notes of that period and no other; any other is brought to one of the offered periods.
+	if sh.Period != "" {
+		a.lockPeriod(r, sh)
+	} else {
+		a.fixSharePeriod(r, sh.SiteID)
 	}
 	v := r.URL.Query()
 	list, err := a.Ctl.Annotations(r.Context(), sh.SiteID, v.Get("from"), v.Get("to"))
@@ -548,8 +553,36 @@ func (a *API) shareAnnotations(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"annotations": out})
 }
 
-// shareReport is the ordinary report, for the shared site, with revenue
-// allowed only when the link says so.
+// shareOnlineRate is how many counts one address may read through one link in
+// a minute: the page asks every half minute.
+const shareOnlineRate = 6
+
+// shareOnline is how many visitors are on the site now, and nothing else: no
+// list, no pages, no places. It answers only for a link whose owner turned it
+// on, and otherwise as if there were nothing here.
+func (a *API) shareOnline(w http.ResponseWriter, r *http.Request) {
+	sh, ok := a.shared(w, r)
+	if !ok {
+		return
+	}
+	if !sh.Live {
+		fail(w, http.StatusNotFound, "this link does not show who is here now")
+		return
+	}
+	if !a.loginRate.reserve(a.Now(), limit{"share-online:" + sh.ID + "|" + a.ip(r), a.ipMax(r, shareOnlineRate), time.Minute}) {
+		w.Header().Set("Retry-After", "10")
+		fail(w, http.StatusTooManyRequests, "too many requests: wait a moment")
+		return
+	}
+	var n int64
+	if q := a.Query(); q != nil {
+		n, _ = q.Online(r.Context(), sh.SiteID, a.Now())
+	}
+	writeJSON(w, http.StatusOK, map[string]int64{"online": n})
+}
+
+// shareReport is the ordinary report, for the shared site, with revenue and
+// the count of visitors now allowed only when the link says so.
 func (a *API) shareReport(w http.ResponseWriter, r *http.Request) {
 	sh, ok := a.shared(w, r)
 	if !ok {
@@ -560,10 +593,12 @@ func (a *API) shareReport(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusTooManyRequests, "too many requests: wait a moment")
 		return
 	}
-	if !a.lockPeriod(w, r, sh) {
-		return
+	if sh.Period != "" {
+		a.lockPeriod(r, sh)
+	} else {
+		a.fixSharePeriod(r, sh.SiteID)
 	}
-	a.reportFor(w, r, sh.SiteID, sh.Revenue, &sh)
+	a.reportFor(w, r, sh.SiteID, sh.Revenue, &sh, sh.Live)
 }
 
 // shareHeader carries an embedded page's session, since the cookie cannot.

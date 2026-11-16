@@ -111,3 +111,67 @@
   color: var(--text-2);
   text-decoration: underline;
 }
+
+/* "● Live · 3 now" beside the site's name: a small green dot and a count. */
+.share-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  font-size: 12px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.share-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mk-green);
+}
+
+/* The slim credit at the right of the header: there only where the footer's "Powered by" is. */
+.share-cta {
+  margin-left: auto;
+  flex: none;
+  font-size: 12px;
+  color: var(--text-3);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.share-cta:hover {
+  color: var(--text-2);
+  text-decoration: underline;
+}
+
+.mk .hd > .hd-id:has(> .share-cta) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .share-cta-by {
+    display: none;
+  }
+  .hd-id {
+    flex-wrap: nowrap;
+  }
+}
+
+/* The period switch: three short choices that keep their frame on a phone, where the Explore toolbar strips its controls bare. */
+.mk .xp.xpage .xperiod .share-period .mk-seg {
+  width: auto;
+  border-color: var(--mk-line) !important;
+  background-color: var(--mk-card) !important;
+}
+
+.mk .xp.xpage .xperiod .share-period .mk-seg button.on {
+  background-color: var(--mk-sel) !important;
+}
+
+.xperiod:has(.share-period) {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

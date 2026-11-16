@@ -121,95 +121,36 @@ func scopedDims(sh sqlite.Share, in map[string][]query.Row) map[string][]query.R
 }
 
 // lockPeriod holds a report asked through a link that is fixed to one period
-// to that period, whatever dates came with it: the range is rewritten here,
-// before the request is read, in the site's own time zone. The comparison is
-// held too: none, or the stretch just before the period (the figures' own
-// change); a request for last year or for dates of its own is answered with
-// the stretch before, never with another one.
-func (a *API) lockPeriod(w http.ResponseWriter, r *http.Request, sh sqlite.Share) bool {
-	if sh.Period == "" {
-		return true
+// to that period, whatever dates came with it: the range is written here,
+// before the request is read, in the site's own time zone, with no comparison
+// and no other cut of the range (the same rules fixSharePeriod gives a link
+// whose reader chooses). The period is one of sharePeriods.
+func (a *API) lockPeriod(r *http.Request, sh sqlite.Share) {
+	tz := ""
+	if si, err := a.Ctl.SiteInfo(r.Context(), sh.SiteID); err == nil {
+		tz = si.Timezone
 	}
-	si, err := a.Ctl.SiteInfo(r.Context(), sh.SiteID)
-	if err != nil {
-		fail(w, http.StatusNotFound, "that site is gone")
-		return false
-	}
-	loc, err := time.LoadLocation(si.Timezone)
+	loc, err := time.LoadLocation(tz)
 	if err != nil {
 		loc = time.UTC
 	}
+	today := a.Now().In(loc)
+	p := sharePeriodByID(sh.Period)
 	v := r.URL.Query()
-	from, to := sharePeriodRange(sh.Period, a.Now().In(loc))
-	v.Set("from", from.Format("2006-01-02"))
-	v.Set("to", to.Format("2006-01-02"))
-	for _, k := range []string{"cfrom", "cto", "tz", "sincehour"} {
+	for _, k := range []string{"compare", "cfrom", "cto", "sofar", "sincehour", "bucket", "tz"} {
 		v.Del(k)
 	}
-	if c := v.Get("compare"); c != "" && c != "none" {
-		v.Set("compare", "previous")
-		// A calendar period is told against the same stretch of the one before
-		// (this month so far against last month's first days), as the dashboard does.
-		if cf, ct, ok := calendarPrevious(sh.Period, from, to); ok {
-			v.Set("compare", "custom")
-			v.Set("cfrom", cf.Format("2006-01-02"))
-			v.Set("cto", ct.Format("2006-01-02"))
-		}
-	}
+	v.Set("from", p.start(today).Format("2006-01-02"))
+	v.Set("to", today.Format("2006-01-02"))
 	r.URL.RawQuery = v.Encode()
-	return true
 }
 
-// calendarPrevious is the stretch a calendar period is compared with: this
-// month's first days against the same days of last month, this year to date
-// against the same stretch of last year (dashboard/src/lib/dates.ts).
-func calendarPrevious(period string, from, to time.Time) (time.Time, time.Time, bool) {
-	switch period {
-	case "mtd":
-		pf := monthsBack(from, 1)
-		pt := monthsBack(to, 1)
-		if end := time.Date(pf.Year(), pf.Month()+1, 0, 12, 0, 0, 0, pf.Location()); pt.After(end) {
-			pt = end
+// sharePeriodByID is the offered period with this id; the default for one that is not offered.
+func sharePeriodByID(id string) sharePeriod {
+	for _, p := range sharePeriods {
+		if p.ID == id {
+			return p
 		}
-		return pf, pt, true
-	case "ytd":
-		return monthsBack(from, 12), monthsBack(to, 12), true
 	}
-	return from, to, false
-}
-
-// sharePeriodRange is the days (inclusive) a period of sqlite.SharePeriods
-// covers on the day `now` is: the same ranges the dashboard's period menu
-// draws (dashboard/src/lib/dates.ts).
-func sharePeriodRange(period string, now time.Time) (time.Time, time.Time) {
-	t := time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, now.Location()) // noon: a clock change never moves the day
-	day := func(d time.Time, n int) time.Time { return d.AddDate(0, 0, n) }
-	switch period {
-	case "yesterday":
-		return day(t, -1), day(t, -1)
-	case "7d":
-		return day(t, -6), t
-	case "30d":
-		return day(t, -29), t
-	case "90d":
-		return day(t, -89), t
-	case "12mo":
-		return day(monthsBack(t, 12), 1), t
-	case "mtd":
-		return time.Date(t.Year(), t.Month(), 1, 12, 0, 0, 0, t.Location()), t
-	case "lastmonth":
-		first := time.Date(t.Year(), t.Month(), 1, 12, 0, 0, 0, t.Location())
-		return first.AddDate(0, -1, 0), day(first, -1)
-	case "ytd":
-		return time.Date(t.Year(), 1, 1, 12, 0, 0, 0, t.Location()), t
-	}
-	return t, t // "today"
-}
-
-// monthsBack goes back n months, to the last day of a month that is too short
-// (31 March less one month is 28 February): what the dashboard's own sum does.
-func monthsBack(t time.Time, n int) time.Time {
-	first := time.Date(t.Year(), t.Month()-time.Month(n), 1, 12, 0, 0, 0, t.Location())
-	last := first.AddDate(0, 1, -1).Day()
-	return time.Date(first.Year(), first.Month(), min(t.Day(), last), 12, 0, 0, 0, t.Location())
+	return sharePeriods[1]
 }

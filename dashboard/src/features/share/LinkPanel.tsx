@@ -16,7 +16,7 @@ import '../sharelinks/sharelinks.css'
 
 export function LinkPanel({ site, onBack }: { site: Site; onBack: () => void }) {
   const [made, setMade] = useState<Made | null>(null)
-  const [options, setOptions] = useState<PreviewOptions>({ name: site.domain, revenue: false, notes: false, sections: ['pages', 'sources', 'places', 'tech'], period: '' })
+  const [options, setOptions] = useState<PreviewOptions>({ name: site.domain, revenue: false, notes: false, live: false, sections: ['pages', 'sources', 'places', 'tech'], period: '' })
   const [password, setPassword] = useState(false)
   const [lock, setLock] = useState(false)
   const look = useLook(site.id)

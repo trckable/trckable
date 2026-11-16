@@ -28,6 +28,7 @@ func (a *API) previewShare(w http.ResponseWriter, r *http.Request) {
 		Name     string   `json:"name"`
 		Revenue  bool     `json:"revenue"`
 		Notes    bool     `json:"notes"`
+		Live     bool     `json:"live"`
 		Sections []string `json:"sections"`
 		Period   string   `json:"period"`
 		Lock     bool     `json:"lock"` // the password page, not the numbers
@@ -41,7 +42,7 @@ func (a *API) previewShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	token, err := a.Ctl.PreviewShare(r.Context(), r.PathValue("site"), u.ID, sqlite.PreviewSpec{
-		Name: in.Name, Revenue: in.Revenue, Notes: in.Notes, Sections: in.Sections, Period: in.Period, Lock: in.Lock,
+		Name: in.Name, Revenue: in.Revenue, Notes: in.Notes, Live: in.Live, Sections: in.Sections, Period: in.Period, Lock: in.Lock,
 	}, a.Now())
 	if busy(w, err) {
 		return

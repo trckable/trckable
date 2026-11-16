@@ -10,6 +10,8 @@ import { setShared } from '../lib/me'
 import { Ghost, Name, Wordmark } from '../components/Logo'
 import { SiteMark } from '../components/SiteMark'
 import { VerifiedPill } from '../features/verified/VerifiedPill'
+import { copy } from './shareCopy'
+import { useShareOnline } from './useShareOnline'
 import './Share.css'
 
 type State = { state: 'loading' } | { state: 'password'; error?: string; hideBrand?: boolean } | { state: 'ready'; info: ShareInfo } | { state: 'error'; message: string }
@@ -125,7 +127,37 @@ export function PoweredBy({ info }: { info: ShareInfo }) {
   )
 }
 
+/** The link's own name, when its owner gave it one: the default (the site's name or address) says nothing new. */
+export const shareName = (info: Pick<ShareInfo, 'name' | 'site' | 'domain'>): string => {
+  const name = (info.name ?? '').trim()
+  return name === '' || name === info.site || name === info.domain ? '' : name
+}
+
+/** "● Live · 3 now": there only while somebody is on the site. */
+export function LivePill({ n }: { n: number }) {
+  if (n <= 0) return null
+  return (
+    <span className="share-live">
+      <span className="share-live-dot" aria-hidden="true" />
+      {copy.live} · <span className="num">{n}</span> {copy.now}
+    </span>
+  )
+}
+
+/** Analytics by trckable · Get yours free →, under the same rule as the credit at the foot. */
+export function ShareCta({ info }: { info: Pick<ShareInfo, 'powered_by'> }) {
+  if (!info.powered_by) return null
+  return (
+    <a className="share-cta" href={POWERED_BY_HREF} target="_blank" rel="noopener">
+      <span className="share-cta-by">{copy.credit} · </span>
+      {copy.get} →
+    </a>
+  )
+}
+
 export function ShareHeader({ info }: { info: ShareInfo }) {
+  const online = useShareOnline(!!info.live)
+  const name = shareName(info)
   return (
     <>
       <span className="brand">
@@ -135,8 +167,9 @@ export function ShareHeader({ info }: { info: ShareInfo }) {
         <SiteMark site={{ domain: info.domain, color: info.color, icon_url: info.icon_url }} size={20} />
         <span className="share-who">
           <b>{info.site || info.domain}</b>
-          <span className="faint">{info.name || 'Shared with you'}</span>
+          {name && <span className="faint">{name}</span>}
         </span>
+        <LivePill n={online} />
         {info.logo_url && !info.hide_brand && (
           <span className="faint share-credit">
             <Ghost size={14} /> <Name />
@@ -144,6 +177,7 @@ export function ShareHeader({ info }: { info: ShareInfo }) {
         )}
       </span>
       <VerifiedPill verified={info.verified} viewer brand={!info.hide_brand} />
+      <ShareCta info={info} />
     </>
   )
 }

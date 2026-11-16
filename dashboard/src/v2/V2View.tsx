@@ -22,6 +22,8 @@ import { FreshSlot } from './briefing/FreshSlot'
 import { copy } from './copy'
 import { PeriodChip } from './ui/PeriodChip'
 import { periodPatch } from './ui/chartPick'
+import { SharePeriod } from './ui/SharePeriod'
+import { ShareRefresh } from './ui/ShareRefresh'
 import { periodOptions } from './periodOptions'
 import { TabBar } from './ui/TabBar'
 import { whenIdle } from '../lib/lazyLoad'
@@ -108,6 +110,13 @@ export function V2View(p: V2Props) {
       onRange={(from, to) => setView({ period: 'custom', from, to, bucket: undefined, day: undefined })}
     />
   )
+  // A shared link has a small switch of the few periods it offers, in place of the menu: no dates, no comparison.
+  const sharePeriod = (
+    <>
+      <SharePeriod value={p.view.period} onPick={(id) => setView(periodPatch(id))} />
+      <ShareRefresh />
+    </>
+  )
   // Both screens stay built once they have been shown, the one not on hidden: a switch moves no data and builds nothing, so
   // there is no loading shape, no card that arrives late and no number that starts over. Live is built when the page is idle
   // (its first answer is then already read); the Briefing keeps what it was showing while Live is on (Live has no period).
@@ -132,7 +141,7 @@ export function V2View(p: V2Props) {
     <>
       {briefFor === p.site.id && (
         <div className="view-pane" hidden={here !== 'briefing'}>
-          <ExplorePage site={p.site} range={held.range} view={held.view} label={label} period={periodChip('xper')} money={p.money} onGoal={p.onGoal} />
+          <ExplorePage site={p.site} range={held.range} view={held.view} label={label} period={p.identity ? sharePeriod : periodChip('xper')} money={p.money} onGoal={p.onGoal} />
         </div>
       )}
       {liveOn && (

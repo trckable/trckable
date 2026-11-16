@@ -29,6 +29,7 @@ import (
 //	name     0: no site name (and no tile) on the picture
 //	accent   #rrggbb
 //	thumb    1: a small picture (360 px wide) for the dialog's strip; the shape is the link preview's
+//	lang     en (default) | de | es | fr | it | nl: the words, numbers and dates of the picture and its post
 //	format   png (default) | json: the numbers in words and a post's text
 //
 // Only totals, top pages, a chart and the top country, page or source: never a visitor. Revenue is in a card
@@ -90,7 +91,8 @@ type cardNumbers struct {
 	pageviews    int64
 	engaged      int64
 	money        string
-	said         string // the period as a post says it ("the last 7 days")
+	w            *cardLang // the language of the words
+	said         string    // the period as a post says it ("the last 7 days")
 }
 
 func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
@@ -116,7 +118,7 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 		if tpl != "overview" && tpl != "numbers" {
 			spec := cards.Spec{Template: tpl, Foot: n.Foot}
 			if tpl == "grid" {
-				spec.Label, spec.Stats = cardWords.gridTitle[periodKey(v.Get("period"))], n.grid
+				spec.Label, spec.Stats = n.l().gridTitle[periodKey(v.Get("period"))], n.grid
 			}
 			n.pictureOf(&spec, tpl)
 			n.Post = specPost(spec, tpl, n)
@@ -127,12 +129,12 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 	_, theme := cards.ThemeOf(v.Get("theme"))
 	spec := cards.Spec{
 		Template: tpl, Format: cards.FormatOf(v.Get("shape")).ID, Theme: theme, Accent: v.Get("accent"),
-		Domain: n.domain, Big: n.Big, Label: n.Label, Foot: n.Foot, Series: n.series,
+		Lang: n.l().code, Domain: n.domain, Big: n.Big, Label: n.Label, Foot: n.Foot, Series: n.series,
 		Change: n.change, Dir: n.dir, Stats: n.stats,
 		NoBrand: a.HidesBrand(r.Context(), r.PathValue("site")), Bg: v.Get("bg"),
 	}
 	if tpl == "grid" {
-		spec.Label, spec.Stats, spec.Change, spec.Dir, spec.Series = cardWords.gridTitle[periodKey(v.Get("period"))], n.grid, "", 0, nil
+		spec.Label, spec.Stats, spec.Change, spec.Dir, spec.Series = n.l().gridTitle[periodKey(v.Get("period"))], n.grid, "", 0, nil
 	}
 	if tpl == "overview" || tpl == "numbers" {
 		spec.Icon = a.cardIcon(r.Context(), r.PathValue("site"), n.domain)
@@ -188,7 +190,8 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 		loc = time.UTC
 	}
 	now := a.Now().In(loc)
-	p := resolvePeriod(v.Get("period"), v.Get("from"), v.Get("to"), now, time.Unix(si.CreatedAt, 0), v.Get("compare") == "1")
+	l := cardLangOf(v.Get("lang"))
+	p := resolvePeriod(l, v.Get("period"), v.Get("from"), v.Get("to"), now, time.Unix(si.CreatedAt, 0), v.Get("compare") == "1")
 	reading := cardReading{r: r, q: q, loc: loc, site: site, domain: si.Domain}
 	ask := r.Clone(r.Context())
 	if p.hours > 0 {
@@ -211,7 +214,7 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 		reportFail(w, err)
 		return cardNumbers{}, false
 	}
-	n := cardWordsOf(res, si.Domain, p, v.Get("metric"))
+	n := cardWordsOf(l, res, si.Domain, p, v.Get("metric"))
 	reading.ask, reading.res, reading.params = ask, res, params
 	if overview {
 		var prev *query.Result
@@ -245,7 +248,7 @@ func (n *cardNumbers) overview(res, prev *query.Result, stats string, icon func(
 		if n.dir != 0 {
 			n.change = fmt.Sprintf("%+.0f%%", d)
 			if n.vs != "" {
-				n.change += " vs " + n.vs
+				n.change += " " + n.l().vs + " " + n.vs
 			}
 		}
 	}
@@ -321,13 +324,13 @@ func duration(s float64) string {
 	return fmt.Sprintf("%dh %02dm", sec/3600, sec%3600/60)
 }
 
-func cardWordsOf(res *query.Result, domain string, p cardPeriod, metric string) cardNumbers {
+func cardWordsOf(l *cardLang, res *query.Result, domain string, p cardPeriod, metric string) cardNumbers {
 	n := cardNumbers{
-		domain: domain, visitors: res.KPIs.Visitors, pageviews: res.KPIs.Pageviews, engaged: engagedOf(res.KPIs),
+		w: l, domain: domain, visitors: res.KPIs.Visitors, pageviews: res.KPIs.Pageviews, engaged: engagedOf(res.KPIs),
 		Revenue: res.Money != nil, HasData: res.KPIs.Visitors > 0, Foot: p.label, said: p.post,
 	}
 	if res.Money != nil {
-		n.money = money(res.Money.Revenue, res.Money.Currency, res.Money.Exponent)
+		n.money = l.money(res.Money.Revenue, res.Money.Currency, res.Money.Exponent)
 	}
 	// Anything not allowed or not known is visitors: revenue never slips in.
 	n.Metric = "visitors"
@@ -339,13 +342,13 @@ func cardWordsOf(res *query.Result, domain string, p cardPeriod, metric string) 
 	}
 	switch n.Metric {
 	case "revenue":
-		n.Big, n.Label = n.money, cardWords.revenue
+		n.Big, n.Label = n.money, l.revenue
 	case "pageviews":
-		n.Big, n.Label = number(n.pageviews), cardWords.pageviews
+		n.Big, n.Label = l.number(n.pageviews), l.pageviews
 	case "engaged":
-		n.Big, n.Label = number(n.engaged), cardWords.engagedVisits
+		n.Big, n.Label = l.number(n.engaged), l.engagedVisits
 	default:
-		n.Big, n.Label = number(n.visitors), cardWords.visitors
+		n.Big, n.Label = l.number(n.visitors), l.visitors
 	}
 	n.listsOf(res)
 	n.rows = n.lists["leaderboard"]
@@ -353,6 +356,14 @@ func cardWordsOf(res *query.Result, domain string, p cardPeriod, metric string) 
 	n.HasTech = len(n.lists["devices"]) > 0 || len(n.lists["browsers"]) > 0
 	n.Post = cardPost(n, p)
 	return n
+}
+
+// l is the language of the picture's words: English for a card made without one.
+func (n cardNumbers) l() *cardLang {
+	if n.w == nil {
+		return cardWords
+	}
+	return n.w
 }
 
 // pointOf is one chart bucket's number for the metric. Engaged visits are

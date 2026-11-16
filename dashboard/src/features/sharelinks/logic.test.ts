@@ -65,11 +65,15 @@ describe('the form', () => {
     expect(problem({ ...EMPTY, embed: true, sites: 'nope' }, NOW)?.field).toBe('sites')
     expect(problem({ ...EMPTY, embed: true, sites: 'https://a.com' }, NOW)).toBeNull()
   })
+  it('asks for the live count only when it is switched on', () => {
+    expect(EMPTY.live).toBe(false)
+    expect(linkBody({ ...EMPTY, live: true }, 'site.com', NOW).live).toBe(true)
+  })
   it('sends a password only for a password link, sites only when embedding is on', () => {
     const typed = { ...EMPTY, password: 'left over', sites: 'https://a.com' }
-    expect(linkBody(typed, 'site.com', NOW)).toEqual({ name: 'site.com', password: '', revenue: false, notes: false, days: 0, embed_origins: [], sections: ['pages', 'sources', 'places', 'tech'], period: '' })
-    const full = { ...typed, name: ' Board ', access: 'password' as const, revenue: true, notes: true, expiry: '7' as const, embed: true }
-    expect(linkBody(full, 'site.com', NOW)).toEqual({ name: 'Board', password: 'left over', revenue: true, notes: true, days: 7, embed_origins: ['https://a.com'], sections: ['pages', 'sources', 'places', 'tech'], period: '' })
+    expect(linkBody(typed, 'site.com', NOW)).toEqual({ name: 'site.com', password: '', revenue: false, notes: false, live: false, days: 0, embed_origins: [], sections: ['pages', 'sources', 'places', 'tech'], period: '' })
+    const full = { ...typed, name: ' Board ', access: 'password' as const, revenue: true, notes: true, live: true, expiry: '7' as const, embed: true }
+    expect(linkBody(full, 'site.com', NOW)).toEqual({ name: 'Board', password: 'left over', revenue: true, notes: true, live: true, days: 7, embed_origins: ['https://a.com'], sections: ['pages', 'sources', 'places', 'tech'], period: '' })
   })
 })
 
@@ -134,8 +138,8 @@ describe('what a link shows', () => {
 
 describe('what the preview is made from', () => {
   it('is what the link shows: its name (or the site), revenue, notes, sections in order, the period', () => {
-    expect(previewOptions(EMPTY, 'site.com')).toEqual({ name: 'site.com', revenue: false, notes: false, sections: ['pages', 'sources', 'places', 'tech'], period: '' })
-    expect(previewOptions({ ...EMPTY, name: ' Board ', revenue: true, notes: true, sections: ['tech', 'pages'], period: '30d' }, 'site.com')).toEqual({ name: 'Board', revenue: true, notes: true, sections: ['pages', 'tech'], period: '30d' })
+    expect(previewOptions(EMPTY, 'site.com')).toEqual({ name: 'site.com', revenue: false, notes: false, live: false, sections: ['pages', 'sources', 'places', 'tech'], period: '' })
+    expect(previewOptions({ ...EMPTY, name: ' Board ', revenue: true, notes: true, sections: ['tech', 'pages'], period: '30d' }, 'site.com')).toEqual({ name: 'Board', revenue: true, notes: true, live: false, sections: ['pages', 'tech'], period: '30d' })
   })
   it('does not move for who may open the link or until when', () => {
     expect(previewOptions({ ...EMPTY, access: 'password', password: 'x', expiry: '7', embed: true, sites: 'https://a.com' }, 'site.com')).toEqual(previewOptions(EMPTY, 'site.com'))

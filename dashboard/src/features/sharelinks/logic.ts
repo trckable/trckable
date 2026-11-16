@@ -12,6 +12,7 @@ export interface Draft {
   password: string
   revenue: boolean
   notes: boolean
+  live: boolean
   expiry: Expiry
   /** yyyy-mm-dd, from the date field */
   date: string
@@ -27,9 +28,9 @@ export interface Draft {
 
 /** What a link can leave out: the sections of Explore (the server's own list), and the periods it can be fixed to. */
 export const SECTIONS = ['pages', 'sources', 'places', 'tech'] as const
-export const PERIODS = ['today', 'yesterday', '7d', '30d', '90d', '12mo', 'mtd', 'lastmonth', 'ytd'] as const
+export const PERIODS = ['7d', '30d', '12mo'] as const
 
-export const EMPTY: Draft = { name: '', access: 'public', password: '', revenue: false, notes: false, expiry: 'never', date: '', embed: false, sites: '', sections: [...SECTIONS], period: '' }
+export const EMPTY: Draft = { name: '', access: 'public', password: '', revenue: false, notes: false, live: false, expiry: 'never', date: '', embed: false, sites: '', sections: [...SECTIONS], period: '' }
 
 /** The sections in the server's order, so two lists of the same sections compare equal. */
 const ordered = (list: readonly string[]) => SECTIONS.filter((s) => list.includes(s))
@@ -46,6 +47,7 @@ export function draftOf(s: Share): Draft {
     hadPassword: s.has_password,
     revenue: s.revenue,
     notes: !!s.notes,
+    live: !!s.live,
     expiry: s.expires_at ? 'date' : 'never',
     date: s.expires_at ? iso(new Date(s.expires_at * 1000)) : '',
     embed: origins.length > 0,
@@ -147,6 +149,7 @@ export function linkBody(d: Draft, fallbackName: string, now = new Date()) {
     password: d.access === 'password' ? d.password : '',
     revenue: d.revenue,
     notes: d.notes,
+    live: d.live,
     days: expiryDays(d, now) ?? 0,
     embed_origins: d.embed ? parseOrigins(d.sites).list : [],
     sections: ordered(d.sections),
@@ -158,9 +161,10 @@ export function linkBody(d: Draft, fallbackName: string, now = new Date()) {
  *  rename never touches the password or the end date. Revenue is fixed when a
  *  link is made, so it is never in it. */
 export function patchBody(was: Draft, d: Draft, now = new Date()) {
-  const body: { name?: string; notes?: boolean; days?: number; password?: string; embed_origins?: string[]; sections?: string[]; period?: string } = {}
+  const body: { name?: string; notes?: boolean; live?: boolean; days?: number; password?: string; embed_origins?: string[]; sections?: string[]; period?: string } = {}
   if (d.name.trim() !== was.name.trim()) body.name = d.name.trim()
   if (d.notes !== was.notes) body.notes = d.notes
+  if (d.live !== was.live) body.live = d.live
   if (ordered(d.sections).join() !== ordered(was.sections).join()) body.sections = ordered(d.sections)
   if (d.period !== was.period) body.period = d.period
   if (d.expiry !== was.expiry || d.date !== was.date) body.days = expiryDays(d, now) ?? 0
@@ -173,7 +177,7 @@ export function patchBody(was: Draft, d: Draft, now = new Date()) {
 
 /** What the preview of the page is made from: what a link shows (not who may open it, nor until when). */
 export function previewOptions(d: Draft, fallbackName: string) {
-  return { name: d.name.trim() || fallbackName, revenue: d.revenue, notes: d.notes, sections: ordered(d.sections), period: d.period }
+  return { name: d.name.trim() || fallbackName, revenue: d.revenue, notes: d.notes, live: d.live, sections: ordered(d.sections), period: d.period }
 }
 
 /** Where a row's end date stands: none, still ahead, or already past. */

@@ -33,7 +33,7 @@ import (
 //	limit      rows per breakdown, 1-100 (default 10)
 //	tz         override the site's timezone
 func (a *API) report(w http.ResponseWriter, r *http.Request) {
-	a.reportFor(w, r, r.PathValue("site"), true, nil)
+	a.reportFor(w, r, r.PathValue("site"), true, nil, true)
 }
 
 // asked is one parsed report request: the query parameters turned into
@@ -178,10 +178,11 @@ func rowsAsked(s string) int {
 
 // reportFor builds the report for one site. allowRevenue is how a public share
 // hides money: not by leaving it out of the page, but by never asking for it,
-// so the number is not in the answer at all. share is the link the report is
-// read through, nil for a signed-in reader: what the link does not show is
-// left out the same way (sharescope.go).
-func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, allowRevenue bool, share *sqlite.Share) {
+// so the number is not in the answer at all. allowOnline does the same for the
+// count of visitors now. share is the link the report is read through, nil for
+// a signed-in reader: what the link does not show is left out the same way
+// (sharescope.go).
+func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, allowRevenue bool, share *sqlite.Share, allowOnline bool) {
 	q := a.Query()
 	if q == nil {
 		w.Header().Set("Retry-After", "2")
@@ -192,10 +193,10 @@ func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, a
 	if ask == nil {
 		return
 	}
-	if share != nil && !a.publicReport(w, r, ask, *share) {
+	if share != nil && !publicReport(w, ask, *share) {
 		return
 	}
-	params, prev, loc, live := ask.Params, ask.Prev, ask.Loc, ask.Live
+	params, prev, loc, live := ask.Params, ask.Prev, ask.Loc, ask.Live && allowOnline
 	from, to, tzName, bucket := ask.From, ask.To, ask.TZ, ask.Bucket
 
 	// The period, the one it is compared with and who is online now are
@@ -397,22 +398,16 @@ func cacheKey(p query.Params) string {
 	return fmt.Sprintf("%s|%d|%d|%s|%s|%v|%v|%v|%s|%s|%v|%v|%v|%s|%s|%v|%v|%d|%d|%d|%v|%s|%d", p.Site, p.From.Unix(), p.To.Unix(), p.TZ, p.Bucket, p.SundayWeeks, p.Daily, p.Deep, strings.Join(fs, "&"), p.Currency, p.Test, p.Revenue, p.Goals, p.Attribution, strings.Join(gs, "&"), p.Sales, p.SalePages, p.Limit, p.Buyers, p.NewReferrers, p.LinkRevenue, p.SignupGoal, p.Converts)
 }
 
-// shareReportRange is the longest period a public link may ask for.
-const shareReportRange = 2 * 366 * 24 * time.Hour
-
 // shareReportRate is how many reports one address may read through one link
 // in a minute.
 const shareReportRate = 30
 
 // publicReport holds a report read through a share link to what a page
-// needs: a limited rate, no more than two years at a time, and nothing deep.
-// It answers the request itself and says false when it refused.
-func (a *API) publicReport(w http.ResponseWriter, r *http.Request, ask *asked, sh sqlite.Share) bool {
+// needs: nothing deep, and nothing of a section the link leaves out. (The
+// period is fixed before this, by fixSharePeriod or lockPeriod.) It answers the
+// request itself and says false when it refused.
+func publicReport(w http.ResponseWriter, ask *asked, sh sqlite.Share) bool {
 	if !refuseHiddenFilters(w, sh, ask.Params.Filters, ask.Params.PageGoals) {
-		return false
-	}
-	if ask.To.Sub(ask.From) > shareReportRange || (ask.Prev != nil && ask.Prev.To.Sub(ask.Prev.From) > shareReportRange) {
-		fail(w, http.StatusBadRequest, "pick a period of two years or less")
 		return false
 	}
 	ask.Params.Deep = false

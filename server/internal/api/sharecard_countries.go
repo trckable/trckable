@@ -284,5 +284,16 @@ var countryNames = map[string]string{
 	"ZW": "Zimbabwe",
 }
 
-// countryName is a country's English name from its two-letter code; "" for anything else.
-func countryName(code string) string { return countryNames[strings.ToUpper(code)] }
+// countryName is a country's name from its two-letter code, in the picture's language (the English one where the
+// language has none); "" for a code the report does not know.
+func countryName(l *cardLang, code string) string {
+	code = strings.ToUpper(code)
+	en := countryNames[code]
+	if en == "" || l.code == "en" {
+		return en
+	}
+	if name := countryNamesIn[l.code][code]; name != "" {
+		return name
+	}
+	return en
+}

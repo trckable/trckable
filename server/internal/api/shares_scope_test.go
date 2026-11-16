@@ -8,6 +8,7 @@ import (
 
 	"github.com/trckable/trckable/server/internal/event"
 	"github.com/trckable/trckable/server/internal/query"
+	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
 // A link shows the sections its owner left on and nothing of the others: the
@@ -185,29 +186,17 @@ func TestShareFixedPeriodIsEnforcedOnTheServer(t *testing.T) {
 	if visitors(rep) != 1 {
 		t.Errorf("the visit of 20 days ago is outside the week: %v", rep["current"])
 	}
-	// The change against the week before stays; reaching for another stretch is answered with the week before.
-	weekBefore := g.now.AddDate(0, 0, -13).UTC().Format("2006-01-02")
-	for q, want := range map[string]string{"&compare=previous": weekBefore, "&compare=year": weekBefore, "&compare=custom&cfrom=2026-01-01&cto=2026-01-10": weekBefore, "&compare=none": "", "": ""} {
+	// No comparison reaches another stretch: the answer carries none, whatever was asked.
+	for _, q := range []string{"&compare=previous", "&compare=year", "&compare=custom&cfrom=2026-01-01&cto=2026-01-10", "&compare=none", ""} {
 		code, rep := do(t, anon, "GET", g.srv.URL+"/api/v1/share/report?from=2020-01-01&to=2030-01-01"+q, "")
-		got, _ := rep["previous_from"].(string)
-		if code != 200 || got != want {
-			t.Errorf("compare %q: %d, the comparison starts %q, want %q", q, code, got, want)
+		if _, has := rep["previous_from"]; code != 200 || has {
+			t.Errorf("compare %q: %d, previous_from present: %v", q, code, has)
 		}
 	}
 	// The notes are the week's.
 	_, notes := do(t, anon, "GET", g.srv.URL+"/api/v1/share/annotations?from=2020-01-01&to=2030-01-01", "")
 	if got := notes["annotations"].([]any); len(got) != 1 || got[0].(map[string]any)["text"] != "today" {
 		t.Errorf("a link fixed to a week showed the notes of other weeks: %v", got)
-	}
-
-	// A month so far is told against the same days of last month, as the dashboard does.
-	_, month := do(t, c, "POST", base+"/shares", `{"name":"Month","period":"mtd"}`, csrf, "1")
-	murl := month["url"].(string)
-	mreader := client()
-	do(t, mreader, "POST", g.srv.URL+"/api/v1/share/open", `{"token":"`+murl[len(murl)-26:]+`"}`)
-	_, rep = do(t, mreader, "GET", g.srv.URL+"/api/v1/share/report?compare=custom&cfrom=2026-01-01&cto=2026-01-10", "")
-	if rep["from"] != "2026-09-01" || rep["to"] != today || rep["previous_from"] != "2026-08-01" || rep["previous_to"] != "2026-08-22" {
-		t.Errorf("this month so far: %v..%v against %v..%v", rep["from"], rep["to"], rep["previous_from"], rep["previous_to"])
 	}
 
 	// A link that lets the reader choose still does.
@@ -231,27 +220,15 @@ func TestShareFixedPeriodIsEnforcedOnTheServer(t *testing.T) {
 	}
 }
 
-// Every period a link can be fixed to is the range the dashboard's menu draws.
-func TestSharePeriodRanges(t *testing.T) {
-	// Wednesday 25 March 2026, and the leap day, which a year back does not have.
-	d := func(s string) time.Time { x, _ := time.Parse("2006-01-02", s); return x }
-	for _, tc := range []struct{ now, period, from, to string }{
-		{"2026-03-25", "today", "2026-03-25", "2026-03-25"},
-		{"2026-03-25", "yesterday", "2026-03-24", "2026-03-24"},
-		{"2026-03-25", "7d", "2026-03-19", "2026-03-25"},
-		{"2026-03-25", "30d", "2026-02-24", "2026-03-25"},
-		{"2026-03-25", "90d", "2025-12-26", "2026-03-25"},
-		{"2026-03-25", "12mo", "2025-03-26", "2026-03-25"},
-		{"2028-02-29", "12mo", "2027-03-01", "2028-02-29"},
-		{"2026-03-25", "mtd", "2026-03-01", "2026-03-25"},
-		{"2026-03-25", "lastmonth", "2026-02-01", "2026-02-28"},
-		{"2026-01-10", "lastmonth", "2025-12-01", "2025-12-31"},
-		{"2026-03-25", "ytd", "2026-01-01", "2026-03-25"},
-	} {
-		from, to := sharePeriodRange(tc.period, d(tc.now))
-		if f, e := from.Format("2006-01-02"), to.Format("2006-01-02"); f != tc.from || e != tc.to {
-			t.Errorf("%s on %s: %s..%s, want %s..%s", tc.period, tc.now, f, e, tc.from, tc.to)
+// Every period a link can be fixed to is one a shared page offers.
+func TestSharePeriodsAreTheOfferedOnes(t *testing.T) {
+	for _, id := range sqlite.SharePeriods {
+		if sharePeriodByID(id).ID != id {
+			t.Errorf("%q is not one of the offered periods", id)
 		}
+	}
+	if len(sqlite.SharePeriods) != len(sharePeriods) {
+		t.Error("the periods a link can be fixed to are not the offered ones")
 	}
 }
 

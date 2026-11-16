@@ -5,6 +5,7 @@ import type { Point, Result } from '../../lib/api'
 import { addDays, compareLabel, diffDays, fmtDay, type CompareMode, type Range } from '../../lib/dates'
 import { fmtInt } from '../../lib/format'
 import { tag } from '../../i18n'
+import { isShared } from '../../lib/me'
 import { copy } from './copy'
 
 export interface Compare {
@@ -86,9 +87,9 @@ export function readOf(name: string, v: number, against: string | null, was: num
   return against !== null && was !== null ? copy.chartReadVs(name, fmtInt(v), against, fmtInt(was), delta === null ? '' : signed(delta)) : copy.chartRead(name, fmtInt(v))
 }
 
-/** Why the comparison cannot be drawn, in one line, when it was asked for and the period before has too little behind it: when it begins. None when it can, or when there is no before at all. */
+/** Why the comparison cannot be drawn, in one line, when it was asked for and the period before has too little behind it: when it begins. None when it can, when there is no before at all, and on a shared link, which has no comparison to wait for. */
 export function whyNot(cur: readonly Point[], prev: readonly Point[] | undefined): string | null {
-  if (!prev || compareOf(cur, prev, cur.length, '')) return null
+  if (isShared() || !prev || compareOf(cur, prev, cur.length, '')) return null
   const starts = startsOn(cur, prev)
   return starts ? copy.compareStarts(starts, copy.needs.range) : null
 }

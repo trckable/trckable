@@ -22,7 +22,7 @@ func TestShareTokenIsSealedAndComesBack(t *testing.T) {
 	}
 	s.Sealer = box
 	site, _ := s.CreateSite(ctx, DefaultAccount, "a.com", "")
-	_, token, err := s.CreateShare(ctx, site, "Board", "", true, false, nil, nil, ShareScope{})
+	_, token, err := s.CreateShare(ctx, site, "Board", "", true, false, false, nil, nil, ShareScope{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +51,7 @@ func TestShareTokenWithAnotherKeyOrNoKey(t *testing.T) {
 	first, _ := secrets.New([]byte("the first instance key"))
 	s.Sealer = first
 	site, _ := s.CreateSite(ctx, DefaultAccount, "a.com", "")
-	if _, _, err := s.CreateShare(ctx, site, "Board", "", false, false, nil, nil, ShareScope{}); err != nil {
+	if _, _, err := s.CreateShare(ctx, site, "Board", "", false, false, false, nil, nil, ShareScope{}); err != nil {
 		t.Fatal(err)
 	}
 	for name, sealer := range map[string]Sealer{"another key": mustBox(t, "a different instance key"), "no key": nil} {
@@ -63,7 +63,7 @@ func TestShareTokenWithAnotherKeyOrNoKey(t *testing.T) {
 	}
 	// A sealed value moved from one link to another is not taken for its token.
 	s.Sealer = first
-	if _, _, err := s.CreateShare(ctx, site, "Second", "", false, false, nil, nil, ShareScope{}); err != nil {
+	if _, _, err := s.CreateShare(ctx, site, "Second", "", false, false, false, nil, nil, ShareScope{}); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.DB.ExecContext(ctx, `UPDATE site_shares SET token_enc = (SELECT token_enc FROM site_shares WHERE name = 'Board') WHERE name = 'Second'`); err != nil {
@@ -84,7 +84,7 @@ func TestShareSessionNeedsTheCurrentToken(t *testing.T) {
 	ctx := context.Background()
 	s.Sealer = mustBox(t, "race test key")
 	site, _ := s.CreateSite(ctx, DefaultAccount, "a.com", "")
-	_, old, err := s.CreateShare(ctx, site, "Board", "a long enough password", false, false, nil, nil, ShareScope{})
+	_, old, err := s.CreateShare(ctx, site, "Board", "a long enough password", false, false, false, nil, nil, ShareScope{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,7 +120,7 @@ func TestShareTokenSealedValueDoesNotOpenOnAnotherLink(t *testing.T) {
 	box := mustBox(t, "bound seal key")
 	s.Sealer = box
 	site, _ := s.CreateSite(ctx, DefaultAccount, "a.com", "")
-	sh, token, err := s.CreateShare(ctx, site, "Board", "", false, false, nil, nil, ShareScope{})
+	sh, token, err := s.CreateShare(ctx, site, "Board", "", false, false, false, nil, nil, ShareScope{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,7 +160,7 @@ func TestRotateShareEndsTheOldAddress(t *testing.T) {
 	ctx := context.Background()
 	s.Sealer = mustBox(t, "rotate test key")
 	site, _ := s.CreateSite(ctx, DefaultAccount, "a.com", "")
-	sh, old, err := s.CreateShare(ctx, site, "Board", "a long enough password", true, true, nil, nil, ShareScope{})
+	sh, old, err := s.CreateShare(ctx, site, "Board", "a long enough password", true, true, false, nil, nil, ShareScope{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -203,7 +203,7 @@ func TestShareTokenMigration(t *testing.T) {
 	ctx := context.Background()
 	s.Sealer = mustBox(t, "migration test key")
 	site, _ := s.CreateSite(ctx, DefaultAccount, "a.com", "")
-	if _, err := s.DB.ExecContext(ctx, `ALTER TABLE site_check DROP COLUMN down_since; ALTER TABLE sites DROP COLUMN alerts_muted_until; DROP TABLE surges; ALTER TABLE annotations DROP COLUMN planned; ALTER TABLE widgets DROP COLUMN texts; ALTER TABLE widgets DROP COLUMN lang; ALTER TABLE widgets DROP COLUMN name; DROP TABLE report_schedules; DROP TABLE site_share_look; DROP TABLE sso_links; ALTER TABLE auth_sessions DROP COLUMN via; ALTER TABLE site_settings DROP COLUMN exclude_ips; DROP TABLE known_devices; DROP TABLE memberships; ALTER TABLE users DROP COLUMN last_account; ALTER TABLE site_shares DROP COLUMN token_enc; DROP TABLE site_probe; DROP TABLE site_probe_log; DROP TABLE pay_notices; DROP TABLE bell_read; ALTER TABLE pay_hints DROP COLUMN from_plan; ALTER TABLE pay_hints DROP COLUMN to_plan; ALTER TABLE pay_hints DROP COLUMN country; ALTER TABLE pay_payments DROP COLUMN country; ALTER TABLE mentions DROP COLUMN state; ALTER TABLE mentions DROP COLUMN via; ALTER TABLE mentions DROP COLUMN link; DROP TABLE IF EXISTS rejected_hosts; ALTER TABLE sites DROP COLUMN setup_mail_at; ALTER TABLE alerts DROP COLUMN metric; ALTER TABLE alerts DROP COLUMN period; ALTER TABLE alerts DROP COLUMN fired_period; ALTER TABLE milestones DROP COLUMN detail; ALTER TABLE pay_payments DROP COLUMN charge_amount; ALTER TABLE pay_payments DROP COLUMN charge_currency; ALTER TABLE pay_payments DROP COLUMN product; ALTER TABLE pay_payments DROP COLUMN method; ALTER TABLE pay_hints DROP COLUMN product; ALTER TABLE pay_hints DROP COLUMN method; ALTER TABLE site_shares DROP COLUMN sections; ALTER TABLE site_shares DROP COLUMN period; ALTER TABLE site_shares DROP COLUMN preview; PRAGMA user_version = 39`); err != nil {
+	if _, err := s.DB.ExecContext(ctx, `ALTER TABLE site_check DROP COLUMN down_since; ALTER TABLE sites DROP COLUMN alerts_muted_until; DROP TABLE surges; ALTER TABLE annotations DROP COLUMN planned; ALTER TABLE widgets DROP COLUMN texts; ALTER TABLE widgets DROP COLUMN lang; ALTER TABLE widgets DROP COLUMN name; DROP TABLE report_schedules; DROP TABLE site_share_look; DROP TABLE sso_links; ALTER TABLE auth_sessions DROP COLUMN via; ALTER TABLE site_settings DROP COLUMN exclude_ips; DROP TABLE known_devices; DROP TABLE memberships; ALTER TABLE users DROP COLUMN last_account; ALTER TABLE site_shares DROP COLUMN token_enc; DROP TABLE site_probe; DROP TABLE site_probe_log; DROP TABLE pay_notices; DROP TABLE bell_read; ALTER TABLE pay_hints DROP COLUMN from_plan; ALTER TABLE pay_hints DROP COLUMN to_plan; ALTER TABLE pay_hints DROP COLUMN country; ALTER TABLE pay_payments DROP COLUMN country; ALTER TABLE mentions DROP COLUMN state; ALTER TABLE mentions DROP COLUMN via; ALTER TABLE mentions DROP COLUMN link; DROP TABLE IF EXISTS rejected_hosts; ALTER TABLE sites DROP COLUMN setup_mail_at; ALTER TABLE alerts DROP COLUMN metric; ALTER TABLE alerts DROP COLUMN period; ALTER TABLE alerts DROP COLUMN fired_period; ALTER TABLE milestones DROP COLUMN detail; ALTER TABLE pay_payments DROP COLUMN charge_amount; ALTER TABLE pay_payments DROP COLUMN charge_currency; ALTER TABLE pay_payments DROP COLUMN product; ALTER TABLE pay_payments DROP COLUMN method; ALTER TABLE pay_hints DROP COLUMN product; ALTER TABLE pay_hints DROP COLUMN method; ALTER TABLE site_shares DROP COLUMN live; ALTER TABLE site_shares DROP COLUMN sections; ALTER TABLE site_shares DROP COLUMN period; ALTER TABLE site_shares DROP COLUMN preview; PRAGMA user_version = 39`); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.DB.ExecContext(ctx, `INSERT INTO site_shares (id, site_id, name, token_hash, created_at) VALUES ('shr_old', ?, 'Old', 'h', 1)`, site); err != nil {

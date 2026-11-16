@@ -1,7 +1,7 @@
 // The options under the name: what the link shows (revenue, notes) up front,
 // and who can open it, until when and where it can be embedded under More.
 // Each a row with its icon, its name and its control, so the list reads at a glance.
-import { Calendar, ChevronDown, CircleDollarSign, Clock, Code, StickyNote } from 'lucide-react'
+import { Calendar, ChevronDown, CircleDollarSign, Clock, Code, Radio, StickyNote } from 'lucide-react'
 import { useState } from 'react'
 import { Switch } from '../../components/Switch'
 import { FieldError, fieldProps } from '../../kit/FieldError'
@@ -103,6 +103,9 @@ export function Options({ draft, set, blocked, editing }: { draft: Draft; set: P
         )}
         <Opt icon={<StickyNote size={15} strokeWidth={1.75} />} label={copy.notes}>
           <Switch on={draft.notes} label={copy.notes} onChange={() => set({ notes: !draft.notes })} />
+        </Opt>
+        <Opt icon={<Radio size={15} strokeWidth={1.75} />} label={copy.live}>
+          <Switch on={draft.live} label={copy.live} onChange={() => set({ live: !draft.live })} />
         </Opt>
         <Scope draft={draft} set={set} />
       </div>
