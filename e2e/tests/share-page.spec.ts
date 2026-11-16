@@ -25,6 +25,19 @@ test('a shared link is the Briefing and Explore, read only, and its embed is the
   await expect(tab.getByRole('button', { name: /^Live/ })).toHaveCount(0)
   await expect(tab.locator('.share-live')).toHaveCount(0)
   expect((await tab.request.get(`${API}/api/v1/share/online`)).status()).toBe(404)
+  // The period: three choices, no dates and no comparison, and the address cannot ask for another range.
+  await expect(tab.locator('#share-period [role=tab]')).toHaveText(['7d', '30d', '12mo'])
+  await expect(tab.locator('#share-period [aria-selected=true]')).toHaveText('30d')
+  await expect(tab.locator('#xper .pwrap, .xperiod .pwrap')).toHaveCount(0)
+  const odd = await (await tab.request.get(`${API}/api/v1/share/report?from=2020-01-01&to=2020-01-02&compare=year`)).json()
+  expect(odd.previous).toBeUndefined()
+  expect(Date.parse(odd.to) - Date.parse(odd.from)).toBeGreaterThanOrEqual(6 * 86_400_000)
+  expect(odd.from > '2020-01-01').toBe(true)
+  // Refresh reads the numbers again in place: a new report request, and the page stays where it is.
+  const again = tab.waitForRequest((r) => r.url().includes('/share/report'))
+  await tab.getByRole('button', { name: 'Refresh' }).click()
+  await again
+  expect(tab.url()).toBe(url)
   // Explore opens on what the report carries: tables, not the sections that need the rest of the API.
   await tab.keyboard.press('e')
   await expect(tab.locator('#xp.on')).toBeVisible()

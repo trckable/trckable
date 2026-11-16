@@ -190,8 +190,8 @@ func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, a
 	if ask == nil {
 		return
 	}
-	if public && !a.publicReport(w, r, ask) {
-		return
+	if public {
+		publicReport(ask)
 	}
 	params, prev, loc, live := ask.Params, ask.Prev, ask.Loc, ask.Live && allowOnline
 	from, to, tzName, bucket := ask.From, ask.To, ask.TZ, ask.Bucket
@@ -392,24 +392,15 @@ func cacheKey(p query.Params) string {
 	return fmt.Sprintf("%s|%d|%d|%s|%s|%v|%v|%v|%s|%s|%v|%v|%v|%s|%s|%v|%v|%d|%d|%d|%v|%s|%d", p.Site, p.From.Unix(), p.To.Unix(), p.TZ, p.Bucket, p.SundayWeeks, p.Daily, p.Deep, strings.Join(fs, "&"), p.Currency, p.Test, p.Revenue, p.Goals, p.Attribution, strings.Join(gs, "&"), p.Sales, p.SalePages, p.Limit, p.Buyers, p.NewReferrers, p.LinkRevenue, p.SignupGoal, p.Converts)
 }
 
-// shareReportRange is the longest period a public link may ask for.
-const shareReportRange = 2 * 366 * 24 * time.Hour
-
 // shareReportRate is how many reports one address may read through one link
 // in a minute.
 const shareReportRate = 30
 
 // publicReport holds a report read through a share link to what a page
-// needs: a limited rate, no more than two years at a time, and nothing deep.
-// It answers the request itself and says false when it refused.
-func (a *API) publicReport(w http.ResponseWriter, r *http.Request, ask *asked) bool {
-	if ask.To.Sub(ask.From) > shareReportRange || (ask.Prev != nil && ask.Prev.To.Sub(ask.Prev.From) > shareReportRange) {
-		fail(w, http.StatusBadRequest, "pick a period of two years or less")
-		return false
-	}
+// needs: nothing deep. (The period is fixed before this, by fixSharePeriod.)
+func publicReport(ask *asked) {
 	ask.Params.Deep = false
 	if ask.Prev != nil {
 		ask.Prev.Deep = false
 	}
-	return true
 }

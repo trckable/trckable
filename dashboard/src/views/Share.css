@@ -158,3 +158,20 @@
     flex-wrap: nowrap;
   }
 }
+
+/* The period switch: three short choices that keep their frame on a phone, where the Explore toolbar strips its controls bare. */
+.mk .xp.xpage .xperiod .share-period .mk-seg {
+  width: auto;
+  border-color: var(--mk-line) !important;
+  background-color: var(--mk-card) !important;
+}
+
+.mk .xp.xpage .xperiod .share-period .mk-seg button.on {
+  background-color: var(--mk-sel) !important;
+}
+
+.xperiod:has(.share-period) {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

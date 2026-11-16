@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { ShareInfo } from '../lib/api'
-import { EmbedHeader, LivePill, PoweredBy, POWERED_BY_HREF, ShareCta, ShareHeader } from './Share'
+import { EmbedHeader, LivePill, PoweredBy, POWERED_BY_HREF, ShareCta, ShareHeader, shareName } from './Share'
 import { accentVars } from './shareAccent'
 
 const info: ShareInfo = { name: 'Test', revenue: false, domain: 'example.org', site: 'example', timezone: 'UTC', currency: 'USD', modules: {} }
@@ -89,5 +89,15 @@ describe('the credit at the right of the header', () => {
     const html = header({ powered_by: true })
     expect(html).toContain(`href="${POWERED_BY_HREF}"`)
     expect(html).toContain('Get yours free')
+  })
+})
+
+describe('the name of the link', () => {
+  it('shows only a name the owner chose', () => {
+    expect(shareName({ name: 'Board', site: 'example', domain: 'example.org' })).toBe('Board')
+    expect(shareName({ name: 'example.org', site: 'example', domain: 'example.org' })).toBe('')
+    expect(shareName({ name: 'example', site: 'example', domain: 'example.org' })).toBe('')
+    expect(shareName({ name: '  ', site: 'example', domain: 'example.org' })).toBe('')
+    expect(header({ name: 'example.org' })).not.toContain('faint')
   })
 })

@@ -432,6 +432,7 @@ func (a *API) shareAnnotations(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{"annotations": out})
 		return
 	}
+	a.fixSharePeriod(r, sh.SiteID)
 	v := r.URL.Query()
 	list, err := a.Ctl.Annotations(r.Context(), sh.SiteID, v.Get("from"), v.Get("to"))
 	if err != nil {
@@ -484,6 +485,7 @@ func (a *API) shareReport(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusTooManyRequests, "too many requests: wait a moment")
 		return
 	}
+	a.fixSharePeriod(r, sh.SiteID)
 	a.reportFor(w, r, sh.SiteID, sh.Revenue, true, sh.Live)
 }
 

@@ -127,6 +127,12 @@ export function PoweredBy({ info }: { info: ShareInfo }) {
   )
 }
 
+/** The link's own name, when its owner gave it one: the default (the site's name or address) says nothing new. */
+export const shareName = (info: Pick<ShareInfo, 'name' | 'site' | 'domain'>): string => {
+  const name = (info.name ?? '').trim()
+  return name === '' || name === info.site || name === info.domain ? '' : name
+}
+
 /** "● Live · 3 now": there only while somebody is on the site. */
 export function LivePill({ n }: { n: number }) {
   if (n <= 0) return null
@@ -151,6 +157,7 @@ export function ShareCta({ info }: { info: Pick<ShareInfo, 'powered_by'> }) {
 
 export function ShareHeader({ info }: { info: ShareInfo }) {
   const online = useShareOnline(!!info.live)
+  const name = shareName(info)
   return (
     <>
       <span className="brand">
@@ -160,7 +167,7 @@ export function ShareHeader({ info }: { info: ShareInfo }) {
         <SiteMark site={{ domain: info.domain, color: info.color, icon_url: info.icon_url }} size={20} />
         <span className="share-who">
           <b>{info.site || info.domain}</b>
-          <span className="faint">{info.name || 'Shared with you'}</span>
+          {name && <span className="faint">{name}</span>}
         </span>
         <LivePill n={online} />
         {info.logo_url && !info.hide_brand && (

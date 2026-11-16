@@ -74,9 +74,6 @@ func TestPublicShareReportIsRangedAndRateLimited(t *testing.T) {
 	if code, _ := do(t, anon, "POST", g.srv.URL+"/api/v1/share/open", `{"token":"`+url[len(url)-26:]+`"}`); code != 200 {
 		t.Fatal("open")
 	}
-	if code, _ := do(t, anon, "GET", g.srv.URL+"/api/v1/share/report?from=2020-01-01&to=2026-09-22", ""); code != http.StatusBadRequest {
-		t.Errorf("a six-year range on a public link: %d", code)
-	}
 	limited := false
 	for range shareReportRate*sharedPeerFactor + 5 { // tests share one address: the ceiling is wider
 		if code, _ := do(t, anon, "GET", g.srv.URL+"/api/v1/share/report?from=2026-09-22&to=2026-09-22", ""); code == http.StatusTooManyRequests {
