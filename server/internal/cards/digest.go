@@ -120,63 +120,129 @@ func digestData(s Spec, f Frame) string {
 	return glow(f) + boxes(p.cards, f.Ink, f.L.n(22)) + rowBars(p.rows, f, p.rowTop, p.rowStep) + badgeCheck(s, f)
 }
 
-// The Search Console mark: a ring of four arcs in Google's own colours, with the bar of a "G" on the right. A brand
-// mark keeps its colours, so these four are the one exception to drawing with the card's theme; the pill and the
-// check use the theme's surface, text and "up" colours. Angles run clockwise from three o'clock, in degrees.
-var badgeArcs = []struct {
-	from, to float64
-	color    string
-}{{320, 395, "#4285f4"}, {215, 320, "#ea4335"}, {125, 215, "#fbbc04"}, {35, 125, "#34a853"}}
+// The Search Console badge: a capsule with the Search Console mark, "Verified" with a green check, and under it the
+// source's name. The mark keeps Google's own colours (a brand mark does), the one exception to drawing with the card's
+// theme; the capsule, the words and the check use the theme's surface, text and "up" colours. The mark is traced from
+// Google's published logo: rising bars with capsule ends, the green one mid-height, the blue one the tallest and
+// darker where they overlap, and a yellow lens with a short handle, red where it overlaps the green bar.
+const (
+	logoBlue, logoDark, logoGreen, logoYellow, logoRed = "#5383ec", "#3265cb", "#58a65c", "#f1bf42", "#d85140"
+	// The mark is drawn in a box of 63 by 64.5 units, from (7, 6) in the tracing.
+	logoW, logoH = 63.0, 64.5
+)
 
-// badgeBox is the pill's size: about 50px at the link preview's width, wide enough for the mark and the check.
-func badgeBox(l Layout) (w, h float64) {
-	h = float64(l.n(50))
-	return h * 2.05, h
+// badgeGeom is where the badge's parts stand: the capsule's left, top, width and height, the mark's left and size,
+// the words' left, the first line's baseline, the second's, and the check's middle.
+type badgeGeom struct{ x, y, w, h, mx, m, tx, y1, y2, kx, px1, px2 float64 }
+
+func badgeGeomOf(s Spec) badgeGeom {
+	l := s.layout()
+	g := badgeGeom{h: float64(l.n(58)), px1: l.px(26), px2: l.px(19)}
+	pad, gap := g.h*0.3, g.h*0.22
+	g.m = float64(l.n(34)) * logoW / logoH
+	first, second := measure(false, s.Badge, g.px1), measure(false, s.BadgeSub, g.px2)
+	check := g.h * 0.2
+	g.w = pad + g.m + gap + math.Max(first+gap*0.6+check, second) + pad
+	g.x, g.y = float64(l.Right)-g.w, float64(l.DomainY)-float64(l.n(44))
+	g.mx = g.x + pad
+	g.tx = g.mx + g.m + gap
+	g.y1, g.y2 = g.y+g.h*0.46, g.y+g.h*0.8
+	g.kx = g.tx + first + gap*0.6 + check/2
+	return g
 }
 
-// badgeWidth is the room the badge takes at the right of the domain's line.
-func badgeWidth(s Spec) float64 {
-	if !s.Badge {
-		return 0
-	}
-	w, _ := badgeBox(s.layout())
-	return w
+// bar is a vertical bar with capsule ends as a closed path: left, right, top and bottom, and the radii of its top and bottom corners.
+func bar(x0, x1, top, bottom, rt, rb float64) string {
+	return fmt.Sprintf("M%.2f %.2f", x0+rt, top) + fmt.Sprintf("L%.2f %.2f", x1-rt, top) + arcPoints(x1-rt, top+rt, rt, -90, 0, false) +
+		fmt.Sprintf("L%.2f %.2f", x1, bottom-rb) + arcPoints(x1-rb, bottom-rb, rb, 0, 90, false) +
+		fmt.Sprintf("L%.2f %.2f", x0+rb, bottom) + arcPoints(x0+rb, bottom-rb, rb, 90, 180, false) +
+		fmt.Sprintf("L%.2f %.2f", x0, top+rt) + arcPoints(x0+rt, top+rt, rt, 180, 270, false) + "Z"
 }
 
-// arcPoints is the ring's arc from one angle to the other, as a line through points (the rasteriser draws lines).
-func arcPoints(cx, cy, r, from, to float64) string {
+// scalePath moves a path of M, L and Z commands from the tracing's units to the card's: origin (7, 6) to (x, y), sc to the unit.
+func scalePath(d string, x, y, sc float64) string {
 	var b strings.Builder
-	steps := int((to-from)/5) + 1
-	for i := 0; i <= steps; i++ {
-		a := (from + (to-from)*float64(i)/float64(steps)) * math.Pi / 180
-		cmd := "L"
-		if i == 0 {
-			cmd = "M"
+	for i := 0; i < len(d); {
+		c := d[i]
+		i++
+		b.WriteByte(c)
+		if c == 'Z' {
+			continue
 		}
-		fmt.Fprintf(&b, "%s%.1f %.1f", cmd, cx+r*math.Cos(a), cy+r*math.Sin(a))
+		j := i
+		for j < len(d) && d[j] != 'M' && d[j] != 'L' && d[j] != 'Z' {
+			j++
+		}
+		var px, py float64
+		fmt.Sscanf(d[i:j], "%f %f", &px, &py)
+		fmt.Fprintf(&b, "%.2f %.2f", x+(px-7)*sc, y+(py-6)*sc)
+		i = j
 	}
 	return b.String()
 }
 
-// badgeCheck draws the badge: a solid pill in the card's surface with a soft border, the mark, then a green check. Numbers only.
+// logo draws the Search Console mark with its tracing's origin at (x, y) and sc pixels to the unit. The tracing's
+// units are those of the crop it was made from (its bars span x 30 to 70, y 6 to 63).
+func logo(b *strings.Builder, f Frame, x, y, sc float64) {
+	pt := func(px, py float64) string { return fmt.Sprintf("%.2f %.2f", x+(px-7)*sc, y+(py-6)*sc) }
+	scale := func(d string) string { return scalePath(d, x, y, sc) }
+	fill := func(d, c string) { fmt.Fprintf(b, `<path d="%s" fill="%s"/>`, scale(d), c) }
+	// The handle, a short stroke with round ends down and to the left.
+	fmt.Fprintf(b, `<path d="M%s L%s" fill="none" stroke="%s" stroke-width="%.2f" stroke-linecap="round"/>`, pt(17.5, 58.5), pt(8.5, 67), logoYellow, 3.8*sc)
+	fill(bar(30, 54, 23, 63, 12, 5), logoGreen)
+	fill(bar(45.5, 70, 6, 63, 12.25, 8), logoBlue)
+	// Where the green bar lies under the blue one: its part right of the blue bar's left edge.
+	fill("M45.5 23.52"+arcPoints(42, 35, 12, -73, 0, false)+"L54 63L45.5 63Z", logoDark)
+	fill(arcPoints(26, 51, 12, 0, 360, true)+"Z", logoYellow)
+	// Where the lens lies over the green bar: the lens right of the bar's left edge, inside its rounded corner.
+	fill("M30 39.7"+arcPoints(26, 51, 12, -70.5, 62.4, false)+arcPoints(35, 58, 5, 134, 180, false)+"Z", logoRed)
+}
+
+// badgeWidth is the room the badge takes at the right of the domain's line.
+func badgeWidth(s Spec) float64 {
+	if s.Badge == "" {
+		return 0
+	}
+	return badgeGeomOf(s).w
+}
+
+// arcPoints is an arc of a circle from one angle to the other, as a line through points (the rasteriser draws lines).
+func arcPoints(cx, cy, r, from, to float64, move bool) string {
+	var b strings.Builder
+	steps := int((to-from)/2.5) + 1
+	for i := 0; i <= steps; i++ {
+		a := (from + (to-from)*float64(i)/float64(steps)) * math.Pi / 180
+		cmd := "L"
+		if i == 0 && move {
+			cmd = "M"
+		}
+		fmt.Fprintf(&b, "%s%.2f %.2f", cmd, cx+r*math.Cos(a), cy+r*math.Sin(a))
+	}
+	return b.String()
+}
+
+// capsule is a fully rounded pill as a closed path.
+func capsule(x, y, w, h float64) string {
+	r := h / 2
+	return fmt.Sprintf("M%.2f %.2f", x+r, y) + fmt.Sprintf("L%.2f %.2f", x+w-r, y) + arcPoints(x+w-r, y+r, r, -90, 90, false) +
+		fmt.Sprintf("L%.2f %.2f", x+r, y+h) + arcPoints(x+r, y+r, r, 90, 270, false) + "Z"
+}
+
+// badgeCheck draws the badge's shapes: a solid capsule in the card's surface with a soft border, the magnifier (ring
+// of four arcs, a short handle at the lower right, a rising line inside) and the green check. Numbers only.
 func badgeCheck(s Spec, f Frame) string {
-	if !s.Badge {
+	if s.Badge == "" {
 		return ""
 	}
-	l := f.L
-	w, h := badgeBox(l)
-	x, y := float64(l.Right)-w, float64(l.DomainY)-l.px(28)*0.35-h/2
-	cy, sw := y+h/2, h*0.1
+	g := badgeGeomOf(s)
 	var b strings.Builder
-	fmt.Fprintf(&b, `<rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="%.1f" fill="%s" stroke="%s" stroke-opacity="0.22" stroke-width="%.1f"/>`, x, y, w, h, h/2, f.BG, f.FG, f.Stroke(1.5, l.K))
-	cx, r := x+h*0.62, h*0.24
-	for _, a := range badgeArcs {
-		fmt.Fprintf(&b, `<path d="%s" fill="none" stroke="%s" stroke-width="%.1f"/>`, arcPoints(cx, cy, r, a.from, a.to), a.color, f.Stroke(sw, 1))
-	}
-	fmt.Fprintf(&b, `<path d="M%.1f %.1fL%.1f %.1f" fill="none" stroke="%s" stroke-width="%.1f"/>`, cx, cy, cx+r+sw/2, cy, badgeArcs[0].color, f.Stroke(sw, 1))
-	kx := x + w - h*0.62
-	fmt.Fprintf(&b, `<path d="M%.1f %.1fL%.1f %.1fL%.1f %.1f" fill="none" stroke="%s" stroke-width="%.1f" stroke-linecap="round" stroke-linejoin="round"/>`,
-		kx-h*0.17, cy, kx-h*0.03, cy+h*0.14, kx+h*0.19, cy-h*0.14, s.Theme.Up, f.Stroke(h*0.1, 1))
+	fmt.Fprintf(&b, `<path d="%s" fill="%s" stroke="%s" stroke-opacity="0.22" stroke-width="%.1f"/>`, capsule(g.x, g.y, g.w, g.h), f.BG, f.FG, f.Stroke(1.5, f.L.K))
+	sc := g.m / logoW
+	oy := g.y + (g.h-logoH*sc)/2
+	logo(&b, f, g.mx, oy, sc)
+	ky := g.y1 - g.px1*0.3
+	fmt.Fprintf(&b, `<path d="M%.2f %.2fL%.2f %.2fL%.2f %.2f" fill="none" stroke="%s" stroke-width="%.2f" stroke-linecap="round" stroke-linejoin="round"/>`,
+		g.kx-g.h*0.09, ky, g.kx-g.h*0.01, ky+g.h*0.08, g.kx+g.h*0.1, ky-g.h*0.08, s.Theme.Up, f.Stroke(g.h*0.07, 1))
 	return b.String()
 }
 
@@ -196,6 +262,12 @@ func digestRuns(s Spec) []Run {
 		runs = append(runs, Run{X: l.Left, Y: l.TitleY + i*int(p.titlePx*1.2), Px: p.titlePx, Spans: []Span{{Text: line, Bold: true, Ink: s.Theme.FG}}})
 	}
 	runs = append(runs, Marks(s)...)
+	if s.Badge != "" {
+		g := badgeGeomOf(s)
+		runs = append(runs,
+			Run{X: int(g.tx), Y: int(g.y1), Px: g.px1, Spans: []Span{{Text: s.Badge, Ink: s.Theme.FG}}},
+			Run{X: int(g.tx), Y: int(g.y2), Px: g.px2, Spans: []Span{{Text: s.BadgeSub, Ink: s.Theme.Muted}}})
+	}
 	if len(p.cards) == 0 && len(p.rows) == 0 {
 		return append(runs, emptyRun(s, p.emptyTop))
 	}

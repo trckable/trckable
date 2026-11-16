@@ -321,7 +321,7 @@ func TestDigestBadge(t *testing.T) {
 			plain := sample("digest", f.ID, theme)
 			plain.Domain = "example.com"
 			marked := plain
-			marked.Badge = true
+			marked.Badge, marked.BadgeSub = "Verified", "Google Search Console"
 			a, err := plain.SVG()
 			if err != nil {
 				t.Fatal(err)
@@ -330,7 +330,7 @@ func TestDigestBadge(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if strings.Count(string(a), "<rect")+1 != strings.Count(string(b), "<rect") {
+			if strings.Contains(string(a), "Verified") || !strings.Contains(string(b), "Verified") {
 				t.Errorf("%s %s: a digest without a badge draws one", f.ID, theme)
 			}
 			if left := float64(l.Right) - badgeWidth(marked); left < float64(l.Left)+measure(false, plain.Domain, l.px(28)) {
@@ -342,7 +342,7 @@ func TestDigestBadge(t *testing.T) {
 		}
 	}
 	long := sample("digest", "link", "dark")
-	long.Badge = true
+	long.Badge, long.BadgeSub = "Verified", "Google Search Console"
 	l := long.layout()
 	for _, r := range digestRuns(long) {
 		if r.Y != l.DomainY || r.End {

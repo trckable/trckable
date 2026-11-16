@@ -80,7 +80,7 @@ func (n *cardNumbers) pictureOf(spec *cards.Spec, t string) {
 		return
 	}
 	if d, ok := n.digests[t]; ok {
-		spec.Template, spec.Label, spec.Rows, spec.Stats, spec.Big, spec.Badge = "digest", d.title, d.rows, d.stats, d.empty, d.badge
+		spec.Template, spec.Label, spec.Rows, spec.Stats, spec.Big, spec.Badge, spec.BadgeSub = "digest", d.title, d.rows, d.stats, d.empty, d.badge, d.badgeSub
 		spec.Change, spec.Dir, spec.Series = "", 0, nil
 		return
 	}
