@@ -5,6 +5,7 @@ export { fail } from '../components/toastBus'
 import { filterParam } from './filterSet'
 import { API_BASE } from './apiBase'
 import { announceSiteWrite } from './siteWrites'
+import { miniStore } from './miniStore'
 
 export interface KPIs {
   visitors: number
@@ -556,7 +557,20 @@ export const wrong = "That isn’t right. Check it and try again."
 /** The error body the server sends with a failed request. */
 type Failure = { error?: string; needs_code?: boolean; code?: string; hide_brand?: boolean }
 
+/** How many reads of a shared link's report are on their way: the Refresh button spins while there is one. */
+export const sharedReads = miniStore(0)
+
 export async function call<T>(method: string, path: string, body?: unknown, signal?: AbortSignal, quiet = false): Promise<T> {
+  if (!path.startsWith('/share/report')) return send<T>(method, path, body, signal, quiet)
+  sharedReads.set(sharedReads.get() + 1)
+  try {
+    return await send<T>(method, path, body, signal, quiet)
+  } finally {
+    sharedReads.set(sharedReads.get() - 1)
+  }
+}
+
+async function send<T>(method: string, path: string, body?: unknown, signal?: AbortSignal, quiet = false): Promise<T> {
   const res = await fetch(API_BASE + path, {
     method,
     signal,
