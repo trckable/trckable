@@ -1,13 +1,13 @@
 // The other sections' answers, said as Explore's models. Pure: mapSections.test.ts.
 import { MIN_VITALS } from '../../../lib/api'
-import type { CrawlerReport, FunnelResult, FunnelStep, Money, PaidStep, Report, SearchReport, SearchRow as ApiSearchRow, WebVitals } from '../../../lib/api'
+import type { Bots, CrawlerReport, FunnelResult, FunnelStep, Money, PaidStep, Report, SearchReport, SearchRow as ApiSearchRow, WebVitals } from '../../../lib/api'
 import { fmtDay } from '../../../lib/dates'
 import { fmtFixed, fmtInt, dateFmt } from '../../../lib/format'
 import { averagePosition } from '../../../lib/searchPosition'
 import type { Mention as ApiMention } from '../../../features/mentions/api'
 import { baseEnough } from '../../../lib/thin'
 import { copy } from '../copy'
-import type { Bot, Funnel, Goal, Grade, Mention, Row, Sale, Sales, Search, SearchRow, SlowPage, Speed, Step, Xkc } from '../types'
+import type { Bot, BotsModel, Funnel, Goal, Grade, Mention, Row, Sale, Sales, Search, SearchRow, SlowPage, Speed, Step, Xkc } from '../types'
 import { changeOf, statOf } from './stats'
 
 // ---- funnel and goals ----
@@ -150,6 +150,11 @@ export function mapBots(r: CrawlerReport): Bot[] {
   const by = new Map<string, number>()
   for (const s of r.series ?? []) by.set(s.name, (by.get(s.name) ?? 0) + s.total)
   return [...by].map(([name, count]) => ({ name, count })).filter((b) => b.count > 0).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+}
+
+/** The Bots table from the robots read and the period's counts of what was dropped on purpose (the report's `bots`, absent under a filter). */
+export function botsModel(rows: Bot[], counted?: Bots): BotsModel {
+  return { rows, left: counted?.kinds?.owner ?? 0, aged: counted?.kinds?.aged ?? 0 }
 }
 
 export function mapLinks(rows: { key: string; value: string; visitors: number }[]): Row[] {

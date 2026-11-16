@@ -13,6 +13,7 @@ import type { Site } from '../../lib/api'
 import { WhyInline } from '../ui/WhyInline'
 import { plainSpan } from '../../lib/plainSpan'
 import { downStateOf } from '../../features/sitestatus/status'
+import { TrackingLine } from '../../features/sitestatus/TrackingLine'
 import { whyDown } from '../briefing/why'
 import { liveCount, liveLink } from '../../features/live/liveLink'
 import { feedOf, onlineAt, peopleAt, seriesAt } from '../../features/live/model'
@@ -159,6 +160,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
             <div className={`downbox${checkOnly ? ' warn' : ''}`}>
               {(checkOnly ? copy.checkBox : copy.downBox)(at(downSince * 1000), plainSpan((now - downSince * 1000) / 1000))}{' '}
               <WhyInline why={whyDown({ domain: whole?.domain ?? '', cause: whole?.down_cause, minutes: 0, ongoing: true })} />
+              {whole && <TrackingLine site={whole} now={now} className="tracking-line" />}
             </div>
           )}
           <MinuteChart bars={bars} people={people} mode={mode} total={visitors30(data.visitors, online)} beat={beat} minute={Math.floor(now / 60_000)} phone={phone} timezone={timezone} label={(ago) => at(now - ago * 60_000)} />

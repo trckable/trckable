@@ -13,13 +13,14 @@ import { causeOf, rowsOf } from './rows'
 import { GapChart } from './GapChart'
 import { slotOf, useRecent } from './useRecent'
 import { firstAfter, fresh, readGap, writeGap } from './recovery'
-import { chipKindOf, statusOf, type ChipKind } from './status'
+import { chipKindOf, statusOf, trackingOf, type ChipKind } from './status'
 import { plainSpan } from '../../lib/plainSpan'
 import { silence, when } from './time'
 import type { useChecks } from './useChecks'
 import { useProbes } from './useProbes'
 import { ProbeList } from './ProbeList'
 import { Blocked } from './Blocked'
+import { TrackingLine } from './TrackingLine'
 import '../signals/surge.css'
 import './StatusCard.css'
 
@@ -58,6 +59,7 @@ export function StatusPanel({ site, last, down, checks }: { site: Site; last: nu
       </header>
       <p className="sgm-honest muted">{probed ? downCopy.bar(site.down_cause ?? '') : causeOf(rows, down)}</p>
       {site.probe_blocked_since && <p className="sgm-honest muted">{downCopy.blocked}</p>}
+      {down && (!!downSince || trackingOf(site)?.kind === 'works') && <TrackingLine site={site} className="sgm-honest muted tracking-line" />}
       {last > 0 && recent && <GapChart slices={recent.slices} last={when(last, site.timezone)} at={slotOf(last, recent.now)} />}
       <div className="sgm-tiles">
         <section className="sgm-tile" aria-label={copy.tileVisit}>

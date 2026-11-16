@@ -186,6 +186,12 @@ describe('the server’s list as the bell’s rows', () => {
     expect(out[1].source).toBe('news.ycombinator.com')
   })
 
+  it('tells a refused host as a notice that opens the site settings', () => {
+    const out = fromFeed([row({ id: 'host:s1:other.example:2026-W46', kind: 'alert', what: 'host', host: 'other.example', day: '2026-11-14' })], sites, now)
+    expect(out.map((r) => [r.kind, r.title, r.alert])).toEqual([['alert', 'Visits from other.example are refused — add it as an allowed domain', undefined]])
+    expect(typeof out[0].open).toBe('function')
+  })
+
   it('tells Answers changes, the first time with its own words, and a budget that ran out at its own time', () => {
     const out = fromFeed(
       [row({ id: 'a1', kind: 'answer', what: 'dropped', engine: 'openai', text: 'best analytics' }), row({ id: 'a2', kind: 'answer', what: 'seen', engine: 'anthropic', first: true }), row({ id: 'a3', kind: 'answer', what: 'paused', site: '', at: now - 5000 })],

@@ -55,3 +55,16 @@ export function chipKindOf(s: Site, failing?: { ok: boolean }[]): ChipKind {
   const fails = failing ? failing.some((r) => !r.ok) : !!s.check && failsOf({ url: '', scripts: 0, ...s.check })
   return fails ? 'stopped' : 'quiet'
 }
+
+/** How recent the last visit must be for us to say tracking works. */
+export const TRACKING_FRESH_SECS = 3600
+
+export type Tracking = { kind: 'works'; ago: number } | { kind: 'silent'; at: number }
+
+/** What the site's own last visit says about tracking itself, whatever the uptime probe says of the page: a visit in the last hour means tracking works; an older one is told as when visits stopped. Nothing for a site with no visit yet. The one decision behind the status card's line and the Live down box's. */
+export function trackingOf(s: Pick<Site, 'last_event_at'>, now = Date.now()): Tracking | undefined {
+  const last = s.last_event_at
+  if (!last) return undefined
+  const ago = Math.max(0, now / 1000 - last)
+  return ago <= TRACKING_FRESH_SECS ? { kind: 'works', ago } : { kind: 'silent', at: last }
+}

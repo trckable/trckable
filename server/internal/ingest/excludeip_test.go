@@ -56,8 +56,8 @@ func TestExcludedAddressIsNeverCounted(t *testing.T) {
 	if seen.n.Load() != 0 {
 		t.Fatal("an excluded visit marked the site as live")
 	}
-	if rows := h.Bots.Drain(); len(rows) != 0 {
-		t.Fatalf("an excluded visit was counted as a bot: %v", rows)
+	if got := counts(h.Bots.Drain()); len(got) != 1 || got["tkb_test 2026-09-22 owner"] != 2 {
+		t.Fatalf("an excluded visit is counted as the owner's, not a bot: %v", got)
 	}
 
 	// Anyone else is counted as before.

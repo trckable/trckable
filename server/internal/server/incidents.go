@@ -17,7 +17,7 @@ import (
 
 // stoppedHours is how long without a visit before tracking counts as stopped:
 // the same number as STOPPED_HOURS in dashboard/src/features/sitestatus/status.ts.
-const stoppedHours = 6
+const stoppedHours = sqlite.StoppedHours
 
 // weekSecs and the history an estimate needs.
 const (
@@ -34,7 +34,7 @@ func troubleOf(last int64, c sqlite.SiteCheck, now int64) string {
 	if last == 0 || now-last < stoppedHours*3600 {
 		return ""
 	}
-	if c.At > last && c.Error != "" {
+	if sqlite.CheckFailed(last, c, now) {
 		return "down"
 	}
 	return "quiet"

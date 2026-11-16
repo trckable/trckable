@@ -11,6 +11,7 @@ import { clock } from '../../lib/site'
 import { fmtFixed, fmtInt, fmtMoney } from '../../lib/format'
 import type { FeedRow } from './feed'
 import { copy } from './copy'
+import { openSettings } from '../../lib/settings'
 
 export type NoticeKind = 'down' | 'up' | 'spike' | 'sale' | 'signup' | 'goal' | 'alert' | 'mention' | 'answer' | 'milestone' | 'weekly' | 'failed' | 'plan' | 'team' | 'setup'
 
@@ -142,6 +143,11 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number): Notice[] 
         break
       }
       case 'alert': {
+        // Visits from a hostname the site refuses: a tap opens the site's settings, where its domains are.
+        if (r.what === 'host' && r.host) {
+          out.push({ ...base, kind: 'alert', title: copy.hostRefused(r.host), sub: '', open: s ? () => openSettings(s, 'site') : undefined })
+          break
+        }
         const kind = (r.what ?? '') as AlertKind
         const title = ALERT_TITLE[kind]?.(d)
         if (title) out.push({ ...base, kind: 'alert', alert: kind, title, sub: '' })

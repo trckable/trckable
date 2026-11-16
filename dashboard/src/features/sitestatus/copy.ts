@@ -16,6 +16,7 @@ export const copy = defineCopy('sitestatus', {
   backBadge: (gap: string) => `Back · gap of ${gap}`,
   downSince: (when: string) => `Your site is down since ${when}`,
   sinceVisit: (when: string) => `No visits since ${when}`,
+  trackingWorks: (ago: string) => `Tracking works · last visit ${ago} ago`,
   causeDown: 'The site did not answer when trckable looked. Everything recorded before is kept.',
   causeFine: 'The page, the tag and the script all look right. There have simply been no visits.',
   causeWait: 'Looking at the page from outside to find out why. Everything recorded before is kept.',

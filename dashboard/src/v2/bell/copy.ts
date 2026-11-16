@@ -27,6 +27,7 @@ export const copy = defineCopy('bell', {
   goalEach: (n: string, name: string) => `${n} ${name}`,
   alertThreshold: (d: string) => `A number you set was reached on ${d}`,
   alertDisk: (d: string) => `The disk is filling up (${d})`,
+  hostRefused: (host: string) => `Visits from ${host} are refused — add it as an allowed domain`,
   peopleN: (n: string) => `${n} people`,
   vsUsual: (x: string) => `${x}× usual`,
   menu: 'Notifications',

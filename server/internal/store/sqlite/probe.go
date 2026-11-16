@@ -10,6 +10,29 @@ import (
 // is a blip, two are an outage.
 const DownAfter = 2
 
+// StoppedHours is how long without a visit before tracking counts as stopped: the same number as STOPPED_HOURS in
+// dashboard/src/features/sitestatus/status.ts.
+const StoppedHours = 6
+
+// CheckFailed says the daily look at the site found no answer after its last visit, and the visits have been silent long enough
+// for that to matter.
+func CheckFailed(last int64, c SiteCheck, now int64) bool {
+	return last != 0 && now-last >= StoppedHours*3600 && c.At > last && c.Error != ""
+}
+
+// DownNow is the one answer to "is this site down": when the uptime probe says so, and, for a site that is not probed at all
+// (p.At is 0), when the daily look failed after its last visit went silent. Every screen that tells it (the sites list, so Live
+// and the header; the incident record, so the bell) asks here. since is when it began, cause why.
+func DownNow(last int64, c SiteCheck, p SiteProbe, now int64) (since int64, cause string, down bool) {
+	if p.Down() {
+		return p.DownSince, p.Error, true
+	}
+	if p.At == 0 && CheckFailed(last, c, now) {
+		return last + StoppedHours*3600, c.Error, true
+	}
+	return 0, "", false
+}
+
 // SiteProbe is the last light look at a site's homepage (server/uptime.go).
 type SiteProbe struct {
 	At        int64  `json:"at"`               // unix seconds; 0 when never probed
