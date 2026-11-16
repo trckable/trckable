@@ -313,44 +313,41 @@ func TestWrapWords(t *testing.T) {
 	}
 }
 
-// A digest with a badge draws its words and a check; without one, neither. Every format keeps the badge inside the card and clear of the domain.
+// A digest with a badge draws its word and a check after the domain; without one, nothing. In every format and both
+// themes, with a short and a long domain, the badge stays inside the card's margins and clear of the domain.
 func TestDigestBadge(t *testing.T) {
 	for _, f := range Formats {
 		l := layoutFor(f)
 		for _, theme := range []string{"dark", "light"} {
-			plain := sample("digest", f.ID, theme)
-			plain.Domain = "example.com"
-			marked := plain
-			marked.Badge, marked.BadgeSub = "Verified", "Google Search Console"
-			a, err := plain.SVG()
-			if err != nil {
-				t.Fatal(err)
-			}
-			b, err := marked.SVG()
-			if err != nil {
-				t.Fatal(err)
-			}
-			if strings.Contains(string(a), "Verified") || !strings.Contains(string(b), "Verified") {
-				t.Errorf("%s %s: a digest without a badge draws one", f.ID, theme)
-			}
-			if left := float64(l.Right) - badgeWidth(marked); left < float64(l.Left)+measure(false, plain.Domain, l.px(28)) {
-				t.Errorf("%s %s: the badge runs into the domain", f.ID, theme)
-			}
-			if _, err := marked.PNG(); err != nil {
-				t.Errorf("%s %s: %v", f.ID, theme, err)
-			}
-		}
-	}
-	long := sample("digest", "link", "dark")
-	long.Badge, long.BadgeSub = "Verified", "Google Search Console"
-	l := long.layout()
-	for _, r := range digestRuns(long) {
-		if r.Y != l.DomainY || r.End {
-			continue
-		}
-		for _, sp := range r.Spans {
-			if measure(false, sp.Text, r.Px) > float64(l.Right-l.Left)-badgeWidth(long) {
-				t.Errorf("a long domain overlaps the badge: %q", sp.Text)
+			for _, domain := range []string{"example.com", "a-very-long-domain-name-for-a-site-with-many-parts.example.co.uk"} {
+				plain := sample("digest", f.ID, theme)
+				plain.Domain = domain
+				marked := plain
+				marked.Badge = "Verified"
+				a, err := plain.SVG()
+				if err != nil {
+					t.Fatal(err)
+				}
+				b, err := marked.SVG()
+				if err != nil {
+					t.Fatal(err)
+				}
+				if strings.Contains(string(a), "Verified") || !strings.Contains(string(b), "Verified") {
+					t.Errorf("%s %s: the badge is drawn only when asked for", f.ID, theme)
+				}
+				g := badgeGeomOf(marked)
+				domainEnd := float64(l.Left)
+				for _, r := range digestRuns(marked) {
+					if r.Y == l.DomainY && !r.End && r.X == l.Left {
+						domainEnd += measure(false, r.Spans[0].Text, r.Px)
+					}
+				}
+				if g.lx < domainEnd || g.ccx+g.cd/2 > float64(l.Right)+1 {
+					t.Errorf("%s %s %q: the badge (%.0f to %.0f) runs into the domain (ends %.0f) or out of the margin (%d)", f.ID, theme, domain, g.lx, g.ccx+g.cd/2, domainEnd, l.Right)
+				}
+				if _, err := marked.PNG(); err != nil {
+					t.Errorf("%s %s: %v", f.ID, theme, err)
+				}
 			}
 		}
 	}
