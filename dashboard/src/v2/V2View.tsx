@@ -2,6 +2,7 @@
 // own header and control rows for these two views; Explore (the full numbers) opens over either as a panel.
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { setView, type ViewState } from '../lib/url'
+import { fixedPeriod } from '../lib/me'
 import { PageHeader } from './PageHeader'
 import '../mock/mock.css'
 import '../mock/theme.css'
@@ -75,7 +76,8 @@ export function V2View(p: V2Props) {
   useEffect(() => whenIdle(preloadExplore), [])
   // The other tab's code, fetched on idle: switching to it then has nothing to wait for.
   useViewKeys(here, !p.waiting)
-  usePeriodKeys({ on: here === 'briefing' && !p.waiting, today, range: p.range, view: p.view })
+  const fixed = fixedPeriod() !== '' // a shared link made for one period: no menu, and the period's keys do nothing
+  usePeriodKeys({ on: here === 'briefing' && !p.waiting && !fixed, today, range: p.range, view: p.view })
   // An old address with filters lands where the filters can be seen.
   useEffect(() => {
     if (!p.waiting) routeFiltered(p.view)
@@ -86,6 +88,7 @@ export function V2View(p: V2Props) {
   const periodChip = (idBase?: string) => (
     <PeriodChip
       idBase={idBase}
+      fixed={fixed}
       label={label}
       vs={compares((p.view.xp ?? 'changed') as Tab) ? vsDates(p.view, p.range, today) : undefined}
       options={options}

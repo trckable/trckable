@@ -67,9 +67,9 @@ describe('the form', () => {
   })
   it('sends a password only for a password link, sites only when embedding is on', () => {
     const typed = { ...EMPTY, password: 'left over', sites: 'https://a.com' }
-    expect(linkBody(typed, 'site.com', NOW)).toEqual({ name: 'site.com', password: '', revenue: false, notes: false, days: 0, embed_origins: [] })
+    expect(linkBody(typed, 'site.com', NOW)).toEqual({ name: 'site.com', password: '', revenue: false, notes: false, days: 0, embed_origins: [], sections: ['pages', 'sources', 'places', 'tech'], period: '' })
     const full = { ...typed, name: ' Board ', access: 'password' as const, revenue: true, notes: true, expiry: '7' as const, embed: true }
-    expect(linkBody(full, 'site.com', NOW)).toEqual({ name: 'Board', password: 'left over', revenue: true, notes: true, days: 7, embed_origins: ['https://a.com'] })
+    expect(linkBody(full, 'site.com', NOW)).toEqual({ name: 'Board', password: 'left over', revenue: true, notes: true, days: 7, embed_origins: ['https://a.com'], sections: ['pages', 'sources', 'places', 'tech'], period: '' })
   })
 })
 
@@ -108,6 +108,26 @@ describe('changing a link that exists', () => {
   it('does not ask again for the password of a link that has one', () => {
     expect(problem(was, NOW, was)).toBeNull()
     expect(problem({ ...was, hadPassword: false, access: 'password' }, NOW)?.field).toBe('password')
+  })
+})
+
+describe('what a link shows', () => {
+  const link = { id: 'a', site_id: 's', name: 'Board', revenue: false, has_password: false, created_at: 1, views: 0 }
+  it('starts with every section and the period left to the reader', () => {
+    expect(EMPTY).toMatchObject({ sections: ['pages', 'sources', 'places', 'tech'], period: '' })
+    expect(draftOf(link)).toMatchObject({ sections: ['pages', 'sources', 'places', 'tech'], period: '' })
+  })
+  it('sends the sections in the server order and the period when making a link', () => {
+    const body = linkBody({ ...EMPTY, sections: ['tech', 'pages'], period: '7d' }, 'site.com', NOW)
+    expect(body).toMatchObject({ sections: ['pages', 'tech'], period: '7d' })
+    expect(linkBody({ ...EMPTY, sections: [] }, 'site.com', NOW).sections).toEqual([])
+  })
+  it('reads them back from a link that has them, and sends them only when they change', () => {
+    const was = draftOf({ ...link, sections: ['sources', 'pages'], period: '30d' })
+    expect(was).toMatchObject({ sections: ['pages', 'sources'], period: '30d' })
+    expect(patchBody(was, { ...was, sections: ['sources', 'pages'] }, NOW)).toEqual({})
+    expect(patchBody(was, { ...was, sections: ['pages'] }, NOW)).toEqual({ sections: ['pages'] })
+    expect(patchBody(was, { ...was, sections: [], period: '' }, NOW)).toEqual({ sections: [], period: '' })
   })
 })
 

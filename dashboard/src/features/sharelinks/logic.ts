@@ -17,11 +17,22 @@ export interface Draft {
   date: string
   embed: boolean
   sites: string
+  /** The sections of Explore the link shows, besides the headline numbers. */
+  sections: string[]
+  /** The period the link is fixed to; '' lets whoever opens it choose. */
+  period: string
   /** Editing a link that already has a password: leaving the field empty keeps it. */
   hadPassword?: boolean
 }
 
-export const EMPTY: Draft = { name: '', access: 'public', password: '', revenue: false, notes: false, expiry: 'never', date: '', embed: false, sites: '' }
+/** What a link can leave out: the sections of Explore (the server's own list), and the periods it can be fixed to. */
+export const SECTIONS = ['pages', 'sources', 'places', 'tech'] as const
+export const PERIODS = ['today', 'yesterday', '7d', '30d', '90d', '12mo', 'mtd', 'lastmonth', 'ytd'] as const
+
+export const EMPTY: Draft = { name: '', access: 'public', password: '', revenue: false, notes: false, expiry: 'never', date: '', embed: false, sites: '', sections: [...SECTIONS], period: '' }
+
+/** The sections in the server's order, so two lists of the same sections compare equal. */
+const ordered = (list: readonly string[]) => SECTIONS.filter((s) => list.includes(s))
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
@@ -39,6 +50,8 @@ export function draftOf(s: Share): Draft {
     date: s.expires_at ? iso(new Date(s.expires_at * 1000)) : '',
     embed: origins.length > 0,
     sites: origins.join(' '),
+    sections: ordered(s.sections ?? SECTIONS),
+    period: s.period ?? '',
   }
 }
 
@@ -136,6 +149,8 @@ export function linkBody(d: Draft, fallbackName: string, now = new Date()) {
     notes: d.notes,
     days: expiryDays(d, now) ?? 0,
     embed_origins: d.embed ? parseOrigins(d.sites).list : [],
+    sections: ordered(d.sections),
+    period: d.period,
   }
 }
 
@@ -143,9 +158,11 @@ export function linkBody(d: Draft, fallbackName: string, now = new Date()) {
  *  rename never touches the password or the end date. Revenue is fixed when a
  *  link is made, so it is never in it. */
 export function patchBody(was: Draft, d: Draft, now = new Date()) {
-  const body: { name?: string; notes?: boolean; days?: number; password?: string; embed_origins?: string[] } = {}
+  const body: { name?: string; notes?: boolean; days?: number; password?: string; embed_origins?: string[]; sections?: string[]; period?: string } = {}
   if (d.name.trim() !== was.name.trim()) body.name = d.name.trim()
   if (d.notes !== was.notes) body.notes = d.notes
+  if (ordered(d.sections).join() !== ordered(was.sections).join()) body.sections = ordered(d.sections)
+  if (d.period !== was.period) body.period = d.period
   if (d.expiry !== was.expiry || d.date !== was.date) body.days = expiryDays(d, now) ?? 0
   if (d.access === 'public' && was.hadPassword) body.password = ''
   if (d.access === 'password' && d.password.trim()) body.password = d.password

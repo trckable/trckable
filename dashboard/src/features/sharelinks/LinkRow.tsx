@@ -3,16 +3,17 @@
 // a new one (the only choice for a link whose address cannot be shown), change
 // it in place (name, end date, password, embedding, notes) and revoke it.
 // What it shows (revenue) is fixed once it is made.
-import { CircleDollarSign, Clock, Code, ExternalLink, Eye, Globe, Lock, Pencil, Power, RefreshCw, StickyNote } from 'lucide-react'
+import { CalendarRange, CircleDollarSign, Clock, Code, ExternalLink, Eye, Globe, LayoutGrid, Lock, Pencil, Power, RefreshCw, StickyNote } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from '../../components/Toast'
 import { fail, type Share, more } from '../../lib/apiMore'
+import { PRESETS } from '../../lib/dates'
 import { fmtInt, dateFmt } from '../../lib/format'
 import { Ask } from './Ask'
 import { CopyButton } from './CopyButton'
 import { copy, nameOf } from './copy'
 import { LinkEdit } from './LinkEdit'
-import { endState } from './logic'
+import { endState, SECTIONS } from './logic'
 import { tag } from '../../i18n'
 
 const day = (unix?: number | null) => (unix ? dateFmt(tag, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(unix * 1000)) : '')
@@ -23,6 +24,13 @@ function Flag({ on, label, fixed, children }: { on: boolean; label: string; /** 
       {children}
     </span>
   )
+}
+
+/** What the sections flag says: every section, the ones shown, or the headline numbers only. */
+function sectionsLabel(shown: string[]) {
+  if (shown.length === SECTIONS.length) return copy.sectionsEvery
+  if (!shown.length) return copy.sectionsNone
+  return copy.sectionsShown(shown.map((s) => copy.sectionNames[s as keyof typeof copy.sectionNames]).join(', '))
 }
 
 function endLabel(share: Share) {
@@ -139,6 +147,7 @@ export function LinkRow({ site, share, readOnly, onChanged, onAddress }: RowProp
   const [editing, setEditing] = useState(false)
   const locked = share.has_password
   const embeds = share.embed_origins ?? []
+  const shown = share.sections ?? [...SECTIONS]
   const seen = share.views > 0 ? copy.lastOpened(day(share.viewed_at)) : copy.neverOpened
   return (
     <>
@@ -152,6 +161,12 @@ export function LinkRow({ site, share, readOnly, onChanged, onAddress }: RowProp
             <CircleDollarSign size={14} strokeWidth={1.75} />
           </Flag>
           <Notes site={site} share={share} readOnly={readOnly} onChanged={onChanged} />
+          <Flag on={shown.length < SECTIONS.length} label={sectionsLabel(shown)}>
+            <LayoutGrid size={14} strokeWidth={1.75} />
+          </Flag>
+          <Flag on={!!share.period} label={share.period ? copy.periodFixed(PRESETS.find((p) => p.id === share.period)?.label ?? share.period) : copy.periodFree}>
+            <CalendarRange size={14} strokeWidth={1.75} />
+          </Flag>
           <Flag on={embeds.length > 0} label={embeds.length ? copy.embedOn(embeds) : copy.embedOff}>
             <Code size={14} strokeWidth={1.75} />
           </Flag>

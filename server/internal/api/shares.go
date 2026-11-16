@@ -74,6 +74,11 @@ func (a *API) createShare(w http.ResponseWriter, r *http.Request) {
 		Days     int    `json:"days"`  // 0 = no end date
 		// Embed lists the sites allowed to show this link in an iframe.
 		Embed []string `json:"embed_origins"`
+		// Sections are the parts of the dashboard it shows besides the headline
+		// numbers: all of them when left out. Period fixes it to one period:
+		// the reader chooses when left out.
+		Sections []string `json:"sections"`
+		Period   string   `json:"period"`
 	}
 	if err := decode(r, &in); err != nil {
 		fail(w, http.StatusBadRequest, "bad request")
@@ -93,7 +98,7 @@ func (a *API) createShare(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	sh, token, err := a.Ctl.CreateShare(r.Context(), r.PathValue("site"), in.Name, in.Password, in.Revenue, in.Notes, expires, origins)
+	sh, token, err := a.Ctl.CreateShare(r.Context(), r.PathValue("site"), in.Name, in.Password, in.Revenue, in.Notes, expires, origins, sqlite.ShareScope{Sections: in.Sections, Period: in.Period})
 	if busy(w, err) {
 		return
 	}
@@ -141,15 +146,31 @@ func (a *API) updateShare(w http.ResponseWriter, r *http.Request) {
 		Days     *int      `json:"days"` // 0 removes the end date
 		Password *string   `json:"password"`
 		Embed    *[]string `json:"embed_origins"`
+		Sections *[]string `json:"sections"` // [] shows the headline numbers only
+		Period   *string   `json:"period"`   // "" lets the reader choose
 	}
 	if err := decode(r, &in); err != nil {
 		fail(w, http.StatusBadRequest, "bad request")
 		return
 	}
 	var e sqlite.ShareEdit
-	if in.Name == nil && in.Notes == nil && in.Days == nil && in.Password == nil && in.Embed == nil {
-		fail(w, http.StatusBadRequest, "send what to change: name, notes, days, password or embed_origins")
+	if in.Name == nil && in.Notes == nil && in.Days == nil && in.Password == nil && in.Embed == nil && in.Sections == nil && in.Period == nil {
+		fail(w, http.StatusBadRequest, "send what to change: name, notes, days, password, embed_origins, sections or period")
 		return
+	}
+	if in.Sections != nil {
+		if _, err := sqlite.ParseSections(*in.Sections); err != nil {
+			fail(w, http.StatusBadRequest, "sections can be "+strings.Join(sqlite.ShareSections, ", "))
+			return
+		}
+		e.Sections = in.Sections
+	}
+	if in.Period != nil {
+		if err := sqlite.CheckSharePeriod(*in.Period); err != nil {
+			fail(w, http.StatusBadRequest, "period can be "+strings.Join(sqlite.SharePeriods, ", "))
+			return
+		}
+		e.Period = in.Period
 	}
 	if in.Name != nil {
 		if err := checkShareName(*in.Name); err != nil {
@@ -445,6 +466,8 @@ func (a *API) shareInfoWith(w http.ResponseWriter, r *http.Request, sh sqlite.Sh
 		"name":       sh.Name,
 		"revenue":    sh.Revenue,
 		"notes":      sh.Notes,
+		"sections":   sh.Sections,
+		"period":     sh.Period,
 		"expires":    sh.ExpiresAt,
 		"domain":     si.Domain,
 		"site":       si.Name,
@@ -506,6 +529,10 @@ func (a *API) shareAnnotations(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{"annotations": out})
 		return
 	}
+	// A link fixed to a period reads the notes of that period and no other.
+	if !a.lockPeriod(w, r, sh) {
+		return
+	}
 	v := r.URL.Query()
 	list, err := a.Ctl.Annotations(r.Context(), sh.SiteID, v.Get("from"), v.Get("to"))
 	if err != nil {
@@ -530,7 +557,10 @@ func (a *API) shareReport(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusTooManyRequests, "too many requests: wait a moment")
 		return
 	}
-	a.reportFor(w, r, sh.SiteID, sh.Revenue, true)
+	if !a.lockPeriod(w, r, sh) {
+		return
+	}
+	a.reportFor(w, r, sh.SiteID, sh.Revenue, &sh)
 }
 
 // shareHeader carries an embedded page's session, since the cookie cannot.

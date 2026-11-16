@@ -267,8 +267,8 @@ export const more = {
   deleteWidget: (site: string, id: string) => act('DELETE', `/sites/${site}/widgets/${id}`),
   shares: (site: string) => call<{ shares: Share[]; base: string }>('GET', `/sites/${site}/shares`),
   /** Changes only what is in the body: the name, the notes, the days to the end (0: none), the password ("" removes it) and the embed sites. */
-  updateShare: (site: string, id: string, body: { name?: string; notes?: boolean; days?: number; password?: string; embed_origins?: string[] }) => call<{ share: Share; notes: boolean }>('PATCH', `/sites/${site}/shares/${id}`, body),
-  createShare: (site: string, body: { name: string; password?: string; revenue: boolean; notes?: boolean; days: number; embed_origins?: string[] }) =>
+  updateShare: (site: string, id: string, body: { name?: string; notes?: boolean; days?: number; password?: string; embed_origins?: string[]; sections?: string[]; period?: string }) => call<{ share: Share; notes: boolean }>('PATCH', `/sites/${site}/shares/${id}`, body),
+  createShare: (site: string, body: { name: string; password?: string; revenue: boolean; notes?: boolean; days: number; embed_origins?: string[]; sections?: string[]; period?: string }) =>
     call<{ share: Share; url: string }>('POST', `/sites/${site}/shares`, body),
   deleteShare: (site: string, id: string) => act('DELETE', `/sites/${site}/shares/${id}`),
   /** A new address for a link; the old one stops working. */

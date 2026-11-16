@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"errors"
+	"slices"
 	"strings"
 	"time"
 
@@ -41,9 +42,95 @@ type Share struct {
 	// EmbedOrigins are the sites allowed to show this link in an iframe,
 	// like https://example.com. None means it cannot be framed at all.
 	EmbedOrigins []string `json:"embed_origins,omitempty"`
+	// Sections are the parts of the dashboard this link shows besides the
+	// headline numbers and chart: always listed in full, so the list says what
+	// a link shows without knowing what "default" means.
+	Sections []string `json:"sections"`
+	// Period is the one period this link shows (one of SharePeriods), or empty
+	// when whoever opens it chooses.
+	Period string `json:"period"`
 	// Token is empty for a link made before tokens were kept, or when this
 	// process cannot open what was sealed (no instance key, or another one).
 	Token string `json:"-"`
+}
+
+// ShareSections are the parts of a shared dashboard an owner can switch off,
+// by the name Explore gives them. The headline numbers and chart are always
+// there: a link with nothing in it would not be a link.
+var ShareSections = []string{"pages", "sources", "places", "tech"}
+
+// SharePeriods are the periods a link can be fixed to, by the name the
+// dashboard's period menu gives them.
+var SharePeriods = []string{"today", "yesterday", "7d", "30d", "90d", "12mo", "mtd", "lastmonth", "ytd"}
+
+// ErrBadScope says a section or a period is not one a link can have.
+var ErrBadScope = errors.New("that is not something a link can show")
+
+// ParseSections checks a list of sections a link shows and puts it in the
+// order of ShareSections, without repeats. Nothing in the list is a link
+// that shows the headline numbers only.
+func ParseSections(in []string) ([]string, error) {
+	seen := map[string]bool{}
+	for _, x := range in {
+		if !slices.Contains(ShareSections, x) {
+			return nil, ErrBadScope
+		}
+		seen[x] = true
+	}
+	out := []string{}
+	for _, x := range ShareSections {
+		if seen[x] {
+			out = append(out, x)
+		}
+	}
+	return out, nil
+}
+
+// CheckSharePeriod says whether p is a period a link can be fixed to ("" is
+// not fixed).
+func CheckSharePeriod(p string) error {
+	if p != "" && !slices.Contains(SharePeriods, p) {
+		return ErrBadScope
+	}
+	return nil
+}
+
+// Shows says whether the link shows a section. The headline numbers always
+// show; a name that is no section shows nothing.
+func (s Share) Shows(section string) bool {
+	return section == "overview" || slices.Contains(s.Sections, section)
+}
+
+// sectionsColumn is how a list of sections is kept: empty for all of them (what
+// every link made before sections was), "-" for none, else the names joined.
+func sectionsColumn(list []string) string {
+	switch {
+	case len(list) == len(ShareSections):
+		return ""
+	case len(list) == 0:
+		return "-"
+	}
+	return strings.Join(list, ",")
+}
+
+// sectionsOf reads sectionsColumn back. A name this build does not know is
+// dropped: a link never shows more than it was told to.
+func sectionsOf(raw string) []string {
+	if raw == "" {
+		return slices.Clone(ShareSections)
+	}
+	list, _ := ParseSections(strings.Split(raw, ","))
+	if list == nil {
+		return []string{}
+	}
+	return list
+}
+
+// ShareScope is what a new link shows besides its numbers: nil sections is
+// all of them, an empty period is the reader's choice.
+type ShareScope struct {
+	Sections []string
+	Period   string
 }
 
 // MaxEmbedOrigins caps the sites one link may be embedded on.
@@ -95,7 +182,7 @@ func (s *Store) openToken(id, sealed, hash string) string {
 // Shares lists a site's links, each with its token when it can be read.
 func (s *Store) Shares(ctx context.Context, site string) ([]Share, error) {
 	rows, err := s.DB.QueryContext(ctx,
-		`SELECT id, site_id, name, revenue, notes, expires_at, pass_hash <> '', created_at, viewed_at, views, embed_origins, token_hash, token_enc
+		`SELECT id, site_id, name, revenue, notes, expires_at, pass_hash <> '', created_at, viewed_at, views, embed_origins, token_hash, token_enc, sections, period
 		 FROM site_shares WHERE site_id = ? ORDER BY created_at DESC`, site)
 	if err != nil {
 		return nil, err
@@ -106,11 +193,11 @@ func (s *Store) Shares(ctx context.Context, site string) ([]Share, error) {
 		var sh Share
 		var rev int
 		var pass bool
-		var origins, hash, sealed string
-		if err := rows.Scan(&sh.ID, &sh.SiteID, &sh.Name, &rev, &sh.Notes, &sh.ExpiresAt, &pass, &sh.CreatedAt, &sh.ViewedAt, &sh.Views, &origins, &hash, &sealed); err != nil {
+		var origins, hash, sealed, sections string
+		if err := rows.Scan(&sh.ID, &sh.SiteID, &sh.Name, &rev, &sh.Notes, &sh.ExpiresAt, &pass, &sh.CreatedAt, &sh.ViewedAt, &sh.Views, &origins, &hash, &sealed, &sections, &sh.Period); err != nil {
 			return nil, err
 		}
-		sh.Revenue, sh.HasPass, sh.EmbedOrigins = rev == 1, pass, splitLines(origins)
+		sh.Revenue, sh.HasPass, sh.EmbedOrigins, sh.Sections = rev == 1, pass, splitLines(origins), sectionsOf(sections)
 		sh.Token = s.openToken(sh.ID, sealed, hash)
 		out = append(out, sh)
 	}
@@ -118,13 +205,23 @@ func (s *Store) Shares(ctx context.Context, site string) ([]Share, error) {
 }
 
 // CreateShare makes a link and returns its token.
-func (s *Store) CreateShare(ctx context.Context, site, name, password string, revenue, notes bool, expires *int64, origins []string) (Share, string, error) {
+func (s *Store) CreateShare(ctx context.Context, site, name, password string, revenue, notes bool, expires *int64, origins []string, scope ShareScope) (Share, string, error) {
 	var n int
 	if err := s.DB.QueryRowContext(ctx, `SELECT count(*) FROM site_shares WHERE site_id = ?`, site).Scan(&n); err != nil {
 		return Share{}, "", err
 	}
 	if n >= MaxSharesPerSite {
 		return Share{}, "", errors.New("that is as many links as one site can have; revoke one first")
+	}
+	if err := CheckSharePeriod(scope.Period); err != nil {
+		return Share{}, "", err
+	}
+	sections := slices.Clone(ShareSections)
+	if scope.Sections != nil {
+		var err error
+		if sections, err = ParseSections(scope.Sections); err != nil {
+			return Share{}, "", err
+		}
 	}
 	token := auth.Token("", 16) // 26 chars of base32: not guessable
 	pass := ""
@@ -138,22 +235,24 @@ func (s *Store) CreateShare(ctx context.Context, site, name, password string, re
 	if len(origins) > MaxEmbedOrigins {
 		origins = origins[:MaxEmbedOrigins]
 	}
-	sh := Share{ID: auth.Token("shr_", 8), SiteID: site, Name: strings.TrimSpace(name), Revenue: revenue, Notes: notes, ExpiresAt: expires, HasPass: pass != "", CreatedAt: time.Now().Unix(), EmbedOrigins: origins}
+	sh := Share{ID: auth.Token("shr_", 8), SiteID: site, Name: strings.TrimSpace(name), Revenue: revenue, Notes: notes, ExpiresAt: expires, HasPass: pass != "", CreatedAt: time.Now().Unix(), EmbedOrigins: origins, Sections: sections, Period: scope.Period}
 	rev := 0
 	if revenue {
 		rev = 1
 	}
 	_, err := s.DB.ExecContext(ctx,
-		`INSERT INTO site_shares (id, site_id, name, token_hash, token_enc, pass_hash, revenue, notes, expires_at, created_at, embed_origins) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		sh.ID, site, sh.Name, hex.EncodeToString(auth.Hash(token)), s.sealToken(sh.ID, token), pass, rev, notes, expires, sh.CreatedAt, strings.Join(origins, "\n"))
+		`INSERT INTO site_shares (id, site_id, name, token_hash, token_enc, pass_hash, revenue, notes, expires_at, created_at, embed_origins, sections, period) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		sh.ID, site, sh.Name, hex.EncodeToString(auth.Hash(token)), s.sealToken(sh.ID, token), pass, rev, notes, expires, sh.CreatedAt, strings.Join(origins, "\n"), sectionsColumn(sections), sh.Period)
 	return sh, token, err
 }
 
 // ShareEdit is what changes on an existing link: every field left nil stays
 // as it was. Revenue is not here on purpose: it is fixed when the link is made.
 type ShareEdit struct {
-	Name  *string
-	Notes *bool
+	Name     *string
+	Notes    *bool
+	Sections *[]string
+	Period   *string
 	// Expires: SetExpiry says it changes; a nil Expires then removes the end date.
 	SetExpiry bool
 	Expires   *int64
@@ -177,6 +276,19 @@ func (s *Store) UpdateShare(ctx context.Context, site, id string, e ShareEdit) e
 	}
 	if e.Notes != nil {
 		add("notes", *e.Notes)
+	}
+	if e.Sections != nil {
+		list, err := ParseSections(*e.Sections)
+		if err != nil {
+			return err
+		}
+		add("sections", sectionsColumn(list))
+	}
+	if e.Period != nil {
+		if err := CheckSharePeriod(*e.Period); err != nil {
+			return err
+		}
+		add("period", *e.Period)
 	}
 	if e.SetExpiry {
 		add("expires_at", e.Expires)
@@ -285,18 +397,18 @@ func (s *Store) DeleteShare(ctx context.Context, site, id string) error {
 func (s *Store) OpenShare(ctx context.Context, token, password string, now time.Time) (Share, error) {
 	var sh Share
 	var rev int
-	var pass, origins string
+	var pass, origins, sections string
 	err := s.DB.QueryRowContext(ctx,
-		`SELECT id, site_id, name, revenue, notes, expires_at, pass_hash, created_at, viewed_at, views, embed_origins
+		`SELECT id, site_id, name, revenue, notes, expires_at, pass_hash, created_at, viewed_at, views, embed_origins, sections, period
 		 FROM site_shares WHERE token_hash = ?`, hex.EncodeToString(auth.Hash(strings.TrimSpace(token)))).
-		Scan(&sh.ID, &sh.SiteID, &sh.Name, &rev, &sh.Notes, &sh.ExpiresAt, &pass, &sh.CreatedAt, &sh.ViewedAt, &sh.Views, &origins)
+		Scan(&sh.ID, &sh.SiteID, &sh.Name, &rev, &sh.Notes, &sh.ExpiresAt, &pass, &sh.CreatedAt, &sh.ViewedAt, &sh.Views, &origins, &sections, &sh.Period)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Share{}, auth.ErrNotFound
 	}
 	if err != nil {
 		return Share{}, err
 	}
-	sh.Revenue, sh.HasPass, sh.EmbedOrigins = rev == 1, pass != "", splitLines(origins)
+	sh.Revenue, sh.HasPass, sh.EmbedOrigins, sh.Sections = rev == 1, pass != "", splitLines(origins), sectionsOf(sections)
 	if sh.ExpiresAt != nil && now.Unix() > *sh.ExpiresAt {
 		return Share{}, ErrExpired
 	}
@@ -364,17 +476,17 @@ func (s *Store) ShareOf(ctx context.Context, session string, now time.Time) (Sha
 	}
 	var sh Share
 	var rev int
-	var pass string
+	var pass, sections string
 	err = s.DB.QueryRowContext(ctx,
-		`SELECT id, site_id, name, revenue, notes, expires_at, pass_hash, created_at, viewed_at, views FROM site_shares WHERE id = ?`, id).
-		Scan(&sh.ID, &sh.SiteID, &sh.Name, &rev, &sh.Notes, &sh.ExpiresAt, &pass, &sh.CreatedAt, &sh.ViewedAt, &sh.Views)
+		`SELECT id, site_id, name, revenue, notes, expires_at, pass_hash, created_at, viewed_at, views, sections, period FROM site_shares WHERE id = ?`, id).
+		Scan(&sh.ID, &sh.SiteID, &sh.Name, &rev, &sh.Notes, &sh.ExpiresAt, &pass, &sh.CreatedAt, &sh.ViewedAt, &sh.Views, &sections, &sh.Period)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Share{}, auth.ErrNotFound // revoked while someone was reading
 	}
 	if err != nil {
 		return Share{}, err
 	}
-	sh.Revenue, sh.HasPass = rev == 1, pass != ""
+	sh.Revenue, sh.HasPass, sh.Sections = rev == 1, pass != "", sectionsOf(sections)
 	if sh.ExpiresAt != nil && now.Unix() > *sh.ExpiresAt {
 		return Share{}, ErrExpired
 	}

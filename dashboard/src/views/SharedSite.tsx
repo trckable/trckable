@@ -6,6 +6,7 @@ import { SiteHost } from './SiteHost'
 import { Hints } from '../features/hints/HintsDoor'
 import { EmbedHeader, PoweredBy, ShareHeader, SharePassword, ShareShell, useShare } from './Share'
 import { isEmbed } from '../lib/earlyStart'
+import { setSharedScope } from '../lib/me'
 import { accentVars } from './shareAccent'
 import type { ShareInfo, Site } from '../lib/api'
 
@@ -33,7 +34,9 @@ export default function SharedSite() {
     if (domain) document.title = `${domain} · analytics`
   }, [domain])
 
-  if (info)
+  if (info) {
+    // Before the page below reads what this link shows (its sections, its fixed period).
+    setSharedScope(info.sections, info.period)
     return (
       <div className={isEmbed() ? 'app shared embed' : 'app shared'} style={accentVars(info.accent)}>
         <SiteHost key={info.domain} site={asSite(info)} sites={[]} identity={isEmbed() ? <EmbedHeader info={info} /> : <ShareHeader info={info} />} />
@@ -41,6 +44,7 @@ export default function SharedSite() {
         {!isEmbed() && <Hints />}
       </div>
     )
+  }
   if (s.state === 'password') return <SharePassword onOpen={setOpened} error={s.error} hideBrand={s.hideBrand} />
   if (s.state === 'error') return <ShareShell title="Nothing here" sub={s.message} />
   return <ShareShell title="Opening…" sub="One moment." />

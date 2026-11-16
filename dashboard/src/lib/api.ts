@@ -743,6 +743,9 @@ export interface ShareInfo {
   revenue: boolean
   /** The owner lets this link show the chart's notes. */
   notes?: boolean
+  /** The parts of Explore this link shows besides the headline numbers, and the period it is fixed to ('' when the reader chooses). */
+  sections?: string[]
+  period?: string
   cookieless?: boolean
   expires?: number | null
   domain: string
@@ -798,6 +801,9 @@ export interface Share {
   views: number
   /** Sites allowed to show this link in an iframe. */
   embed_origins?: string[]
+  /** What the link shows besides the headline numbers, and the one period it is fixed to ('' when the reader chooses). */
+  sections?: string[]
+  period?: string
   /** The link's address, for its owner to copy again. None for a link made
    *  before addresses were kept, or when the server cannot read it. */
   url?: string

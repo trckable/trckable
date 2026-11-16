@@ -119,6 +119,19 @@
 .sl-opt-below .input {
   height: 38px;
 }
+.sl-sections {
+  flex-wrap: wrap;
+  align-self: flex-start;
+}
+.sl-select {
+  height: 34px;
+  max-width: 190px;
+  padding-block: 0;
+  font-size: 13px;
+}
+.sl-opt-note {
+  font-size: 13px;
+}
 .sl-date {
   max-width: 200px;
   align-self: flex-end;

@@ -9,6 +9,7 @@ import { Access } from './Access'
 import { copy } from './copy'
 import { MAX_DAYS, daysUntil, endDate, originsError, parseOrigins, type Draft, type Expiry, type Problem } from './logic'
 import { Opt } from './Opt'
+import { Scope } from './Scope'
 
 type Patch = (p: Partial<Draft>) => void
 
@@ -103,6 +104,7 @@ export function Options({ draft, set, blocked, editing }: { draft: Draft; set: P
         <Opt icon={<StickyNote size={15} strokeWidth={1.75} />} label={copy.notes}>
           <Switch on={draft.notes} label={copy.notes} onChange={() => set({ notes: !draft.notes })} />
         </Opt>
+        <Scope draft={draft} set={set} />
       </div>
       <button type="button" className="sl-more" aria-expanded={more} onClick={() => setMore((m) => !m)}>
         <ChevronDown size={14} strokeWidth={1.75} aria-hidden="true" />

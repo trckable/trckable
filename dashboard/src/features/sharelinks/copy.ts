@@ -93,6 +93,17 @@ export const copy = defineCopy('links', {
   saving: 'Saving…',
   saved: 'Link saved',
   passwordKeep: 'Leave empty to keep the password',
+  sections: 'Sections',
+  sectionNames: { pages: 'Pages', sources: 'Sources', places: 'Places', tech: 'Tech' },
+  sectionsAll: 'All',
+  sectionsSome: (n: number) => `${n} of 4`,
+  sectionsShown: (names: string) => `Shows: ${names}`,
+  sectionsNone: 'Headline numbers only',
+  sectionsEvery: 'Shows every section',
+  period: 'Period',
+  periodChoose: 'Reader chooses',
+  periodFixed: (name: string) => `Always ${name}`,
+  periodFree: 'Reader chooses the period',
 })
 
 /** What a link is called when its name is empty. */

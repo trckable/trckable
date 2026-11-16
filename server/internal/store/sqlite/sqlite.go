@@ -1144,6 +1144,13 @@ var migrations = []string{
 	ALTER TABLE pay_payments ADD COLUMN method TEXT NOT NULL DEFAULT '';
 	ALTER TABLE pay_hints ADD COLUMN product TEXT NOT NULL DEFAULT '';
 	ALTER TABLE pay_hints ADD COLUMN method TEXT NOT NULL DEFAULT '';`,
+	// 85: what a share link shows besides its headline numbers (shares.go):
+	// sections is empty for all of them, "-" for none, else the shown ones joined
+	// with commas; period is one period the link is fixed to, empty when the
+	// reader chooses. A link made before this shows everything and lets the
+	// reader choose, as it always did.
+	`ALTER TABLE site_shares ADD COLUMN sections TEXT NOT NULL DEFAULT '';
+	ALTER TABLE site_shares ADD COLUMN period TEXT NOT NULL DEFAULT '';`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
