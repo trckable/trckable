@@ -90,7 +90,11 @@ type cardNumbers struct {
 	pageviews    int64
 	engaged      int64
 	money        string
-	said         string // the period as a post says it ("the last 7 days")
+	// moneySource is the id of the provider that vouches for ALL the report's money ("" when none does); moneyStat and
+	// moneyGrid say whether the overview's small numbers, or the grid's, include it.
+	moneySource          string
+	moneyStat, moneyGrid bool
+	said                 string // the period as a post says it ("the last 7 days")
 }
 
 func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
@@ -138,6 +142,7 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 		spec.Icon = a.cardIcon(r.Context(), r.PathValue("site"), n.domain)
 	}
 	n.pictureOf(&spec, tpl)
+	n.vouchMoney(&spec, tpl)
 	if v.Get("date") == "0" {
 		spec.Foot = ""
 	}
@@ -225,6 +230,9 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 	if kind == "grid" || kind == "" {
 		n.gridOf(res, a.refIconOf)
 	}
+	if res.Money != nil {
+		n.moneySource = verifiedSourceOf(a.verifiedOf(r.Context(), si), "payments", res.Money)
+	}
 	a.pictures(reading, &n, p.hours > 0, kind)
 	return n, true
 }
@@ -253,6 +261,7 @@ func (n *cardNumbers) overview(res, prev *query.Result, stats string, icon func(
 	for _, id := range cardStatsOf(stats, n.Metric) {
 		if st, ok := n.stat(id, res, icon); ok {
 			n.stats = append(n.stats, st)
+			n.moneyStat = n.moneyStat || id == "revenue"
 		}
 	}
 }

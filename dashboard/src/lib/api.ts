@@ -126,6 +126,8 @@ export interface VerifiedSource {
   checked: number
   /** One plain sentence in English, for scripts; the dashboard words it itself. */
   detail: string
+  /** payments: typed-in revenue, or a second provider's, sits beside the named one's, so not all the money is verified. */
+  mixed?: boolean
 }
 export interface Verified {
   sources: VerifiedSource[]

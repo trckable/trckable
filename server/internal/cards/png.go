@@ -68,7 +68,7 @@ func (s Spec) PNG() ([]byte, error) {
 			drawPic(img, p)
 		}
 	}
-	for _, r := range t.Runs(s) {
+	for _, r := range s.runs(t) {
 		if err := drawRun(img, r); err != nil {
 			return nil, err
 		}
