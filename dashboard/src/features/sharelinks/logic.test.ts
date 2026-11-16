@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { EMPTY, daysUntil, endState, expiryDays, linkBody, parseOrigins, previewParts, problem } from './logic'
+import { EMPTY, daysUntil, draftOf, endState, patchBody, expiryDays, linkBody, parseOrigins, previewOptions, problem } from './logic'
 
 // Noon on 15 Oct 2026, the viewer's clock.
 const NOW = new Date(2026, 9, 15, 12, 0, 0)
@@ -71,30 +71,78 @@ describe('the form', () => {
   })
   it('sends a password only for a password link, sites only when embedding is on', () => {
     const typed = { ...EMPTY, password: 'left over', sites: 'https://a.com' }
-    expect(linkBody(typed, 'site.com', NOW)).toEqual({ name: 'site.com', password: '', revenue: false, notes: false, live: false, days: 0, embed_origins: [] })
+    expect(linkBody(typed, 'site.com', NOW)).toEqual({ name: 'site.com', password: '', revenue: false, notes: false, live: false, days: 0, embed_origins: [], sections: ['pages', 'sources', 'places', 'tech'], period: '' })
     const full = { ...typed, name: ' Board ', access: 'password' as const, revenue: true, notes: true, live: true, expiry: '7' as const, embed: true }
-    expect(linkBody(full, 'site.com', NOW)).toEqual({ name: 'Board', password: 'left over', revenue: true, notes: true, live: true, days: 7, embed_origins: ['https://a.com'] })
+    expect(linkBody(full, 'site.com', NOW)).toEqual({ name: 'Board', password: 'left over', revenue: true, notes: true, live: true, days: 7, embed_origins: ['https://a.com'], sections: ['pages', 'sources', 'places', 'tech'], period: '' })
   })
 })
 
-describe('what the thumbnail draws', () => {
-  it('revenue shows or hides the tile and the bars', () => {
-    expect(previewParts({ ...EMPTY, revenue: true }, false, NOW)).toMatchObject({ revenueTile: true, revenueBars: true })
-    expect(previewParts(EMPTY, false, NOW)).toMatchObject({ revenueTile: false, revenueBars: false })
+describe('changing a link that exists', () => {
+  const share = { id: 'a', site_id: 's', name: 'Board', revenue: true, notes: false, has_password: true, created_at: 1, views: 0, expires_at: Math.floor(new Date(2026, 10, 20, 12).getTime() / 1000), embed_origins: ['https://a.com'] }
+  const was = draftOf(share)
+  it('starts from what the link has now', () => {
+    expect(was).toMatchObject({ name: 'Board', access: 'password', hadPassword: true, password: '', notes: false, expiry: 'date', date: '2026-11-20', embed: true, sites: 'https://a.com' })
+    expect(draftOf({ ...share, has_password: false, expires_at: null, embed_origins: undefined })).toMatchObject({ access: 'public', expiry: 'never', date: '', embed: false })
   })
-  it('notes show or hide the markers', () => {
-    expect(previewParts({ ...EMPTY, notes: true }, false, NOW).notes).toBe(true)
-    expect(previewParts(EMPTY, false, NOW).notes).toBe(false)
+  it('sends nothing for a form nobody touched, and only what changed otherwise', () => {
+    expect(patchBody(was, was, NOW)).toEqual({})
+    expect(patchBody(was, { ...was, name: ' Investors ', notes: true }, NOW)).toEqual({ name: 'Investors', notes: true })
   })
-  it('shows the end date, when there is one', () => {
-    expect(previewParts(EMPTY, false, NOW).ends).toBeNull()
-    expect(previewParts({ ...EMPTY, expiry: '7' }, false, NOW).ends?.getDate()).toBe(22)
-    expect(previewParts({ ...EMPTY, expiry: 'date', date: '2026-10-25' }, false, NOW).ends?.getDate()).toBe(25)
+  it('keeps the password unless a new one is typed, removes it only when the link turns public', () => {
+    expect(patchBody(was, { ...was, password: 'a new one' }, NOW)).toEqual({ password: 'a new one' })
+    expect(patchBody(was, { ...was, password: '   ' }, NOW)).toEqual({})
+    expect(patchBody(was, { ...was, access: 'public' }, NOW)).toEqual({ password: '' })
+    expect(patchBody({ ...was, access: 'public', hadPassword: false }, { ...was, access: 'public', hadPassword: false }, NOW)).toEqual({})
   })
-  it('the lock switches to the password screen, for a password link only', () => {
-    expect(previewParts({ ...EMPTY, access: 'password' }, true, NOW).lock).toBe(true)
-    expect(previewParts({ ...EMPTY, access: 'password' }, false, NOW).lock).toBe(false)
-    expect(previewParts(EMPTY, true, NOW).lock).toBe(false)
+  it('sends the end date as days from now, and 0 for none', () => {
+    expect(patchBody(was, { ...was, expiry: '30' }, NOW)).toEqual({ days: 30 })
+    expect(patchBody(was, { ...was, expiry: 'never', date: '' }, NOW)).toEqual({ days: 0 })
+    expect(patchBody(was, { ...was, date: '2026-10-25' }, NOW)).toEqual({ days: 10 })
+  })
+  it('sends the embed sites when they change, and an empty list when embedding is turned off', () => {
+    expect(patchBody(was, { ...was, sites: 'https://a.com https://b.com' }, NOW)).toEqual({ embed_origins: ['https://a.com', 'https://b.com'] })
+    expect(patchBody(was, { ...was, embed: false }, NOW)).toEqual({ embed_origins: [] })
+  })
+  it('lets a link that has ended be renamed, but not given a bad new date', () => {
+    const ended = draftOf({ ...share, expires_at: Math.floor(new Date(2026, 9, 1, 12).getTime() / 1000) })
+    expect(problem({ ...ended, name: 'Renamed' }, NOW, ended)).toBeNull()
+    expect(problem({ ...ended, date: '2026-10-01' }, NOW, ended)).toBeNull()
+    expect(problem({ ...ended, date: '2026-10-02' }, NOW, ended)?.field).toBe('date')
+  })
+  it('does not ask again for the password of a link that has one', () => {
+    expect(problem(was, NOW, was)).toBeNull()
+    expect(problem({ ...was, hadPassword: false, access: 'password' }, NOW)?.field).toBe('password')
+  })
+})
+
+describe('what a link shows', () => {
+  const link = { id: 'a', site_id: 's', name: 'Board', revenue: false, has_password: false, created_at: 1, views: 0 }
+  it('starts with every section and the period left to the reader', () => {
+    expect(EMPTY).toMatchObject({ sections: ['pages', 'sources', 'places', 'tech'], period: '' })
+    expect(draftOf(link)).toMatchObject({ sections: ['pages', 'sources', 'places', 'tech'], period: '' })
+  })
+  it('sends the sections in the server order and the period when making a link', () => {
+    const body = linkBody({ ...EMPTY, sections: ['tech', 'pages'], period: '7d' }, 'site.com', NOW)
+    expect(body).toMatchObject({ sections: ['pages', 'tech'], period: '7d' })
+    expect(linkBody({ ...EMPTY, sections: [] }, 'site.com', NOW).sections).toEqual([])
+  })
+  it('reads them back from a link that has them, and sends them only when they change', () => {
+    const was = draftOf({ ...link, sections: ['sources', 'pages'], period: '30d' })
+    expect(was).toMatchObject({ sections: ['pages', 'sources'], period: '30d' })
+    expect(patchBody(was, { ...was, sections: ['sources', 'pages'] }, NOW)).toEqual({})
+    expect(patchBody(was, { ...was, sections: ['pages'] }, NOW)).toEqual({ sections: ['pages'] })
+    expect(patchBody(was, { ...was, sections: [], period: '' }, NOW)).toEqual({ sections: [], period: '' })
+  })
+})
+
+
+describe('what the preview is made from', () => {
+  it('is what the link shows: its name (or the site), revenue, notes, sections in order, the period', () => {
+    expect(previewOptions(EMPTY, 'site.com')).toEqual({ name: 'site.com', revenue: false, notes: false, live: false, sections: ['pages', 'sources', 'places', 'tech'], period: '' })
+    expect(previewOptions({ ...EMPTY, name: ' Board ', revenue: true, notes: true, sections: ['tech', 'pages'], period: '30d' }, 'site.com')).toEqual({ name: 'Board', revenue: true, notes: true, live: false, sections: ['pages', 'tech'], period: '30d' })
+  })
+  it('does not move for who may open the link or until when', () => {
+    expect(previewOptions({ ...EMPTY, access: 'password', password: 'x', expiry: '7', embed: true, sites: 'https://a.com' }, 'site.com')).toEqual(previewOptions(EMPTY, 'site.com'))
   })
 })
 

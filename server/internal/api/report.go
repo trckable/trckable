@@ -33,7 +33,7 @@ import (
 //	limit      rows per breakdown, 1-100 (default 10)
 //	tz         override the site's timezone
 func (a *API) report(w http.ResponseWriter, r *http.Request) {
-	a.reportFor(w, r, r.PathValue("site"), true, false, true)
+	a.reportFor(w, r, r.PathValue("site"), true, nil, true)
 }
 
 // asked is one parsed report request: the query parameters turned into
@@ -178,8 +178,11 @@ func rowsAsked(s string) int {
 
 // reportFor builds the report for one site. allowRevenue is how a public share
 // hides money: not by leaving it out of the page, but by never asking for it,
-// so the number is not in the answer at all. allowOnline does the same for the count of visitors now.
-func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, allowRevenue, public, allowOnline bool) {
+// so the number is not in the answer at all. allowOnline does the same for the
+// count of visitors now. share is the link the report is read through, nil for
+// a signed-in reader: what the link does not show is left out the same way
+// (sharescope.go).
+func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, allowRevenue bool, share *sqlite.Share, allowOnline bool) {
 	q := a.Query()
 	if q == nil {
 		w.Header().Set("Retry-After", "2")
@@ -190,8 +193,8 @@ func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, a
 	if ask == nil {
 		return
 	}
-	if public {
-		publicReport(ask)
+	if share != nil && !publicReport(w, ask, *share) {
+		return
 	}
 	params, prev, loc, live := ask.Params, ask.Prev, ask.Loc, ask.Live && allowOnline
 	from, to, tzName, bucket := ask.From, ask.To, ask.TZ, ask.Bucket
@@ -242,6 +245,9 @@ func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, a
 	names := a.goalNames(r.Context(), siteID)
 	cur = names.Report(cur, params.PageGoals)
 	pr = names.Report(pr, params.PageGoals)
+	if share != nil {
+		cur, pr = scoped(*share, cur, params.PageGoals), scoped(*share, pr, params.PageGoals)
+	}
 	out := map[string]any{
 		"site": siteID, "timezone": tzName, "bucket": bucket, "attribution": params.Attribution,
 		"from": from.Format("2006-01-02"), "to": to.AddDate(0, 0, -1).Format("2006-01-02"),
@@ -397,10 +403,16 @@ func cacheKey(p query.Params) string {
 const shareReportRate = 30
 
 // publicReport holds a report read through a share link to what a page
-// needs: nothing deep. (The period is fixed before this, by fixSharePeriod.)
-func publicReport(ask *asked) {
+// needs: nothing deep, and nothing of a section the link leaves out. (The
+// period is fixed before this, by fixSharePeriod or lockPeriod.) It answers the
+// request itself and says false when it refused.
+func publicReport(w http.ResponseWriter, ask *asked, sh sqlite.Share) bool {
+	if !refuseHiddenFilters(w, sh, ask.Params.Filters, ask.Params.PageGoals) {
+		return false
+	}
 	ask.Params.Deep = false
 	if ask.Prev != nil {
 		ask.Prev.Deep = false
 	}
+	return true
 }

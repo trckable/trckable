@@ -1,28 +1,36 @@
 // One link, one compact row: who can open it, what it shows, how often it was
 // opened, when it ends, and what to do with it: copy or open its address, make
-// a new one (the only choice for a link whose address cannot be shown) and
-// revoke it. Only
-// the notes and the live count can change on a link that exists (the server
-// takes nothing else), so only they are buttons.
-import { CircleDollarSign, Clock, Code, ExternalLink, Eye, Globe, Lock, Power, Radio, RefreshCw, StickyNote } from 'lucide-react'
+// a new one (the only choice for a link whose address cannot be shown), change
+// it in place (name, end date, password, embedding, notes) and revoke it.
+// What it shows (revenue) is fixed once it is made.
+import { CalendarRange, CircleDollarSign, Clock, Code, ExternalLink, Eye, Globe, LayoutGrid, Lock, Pencil, Power, Radio, RefreshCw, StickyNote } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from '../../components/Toast'
 import { fail, type Share, more } from '../../lib/apiMore'
+import { PRESETS } from '../../lib/dates'
 import { fmtInt, dateFmt } from '../../lib/format'
 import { Ask } from './Ask'
 import { CopyButton } from './CopyButton'
 import { copy, nameOf } from './copy'
-import { endState } from './logic'
+import { LinkEdit } from './LinkEdit'
+import { endState, SECTIONS } from './logic'
 import { tag } from '../../i18n'
 
 const day = (unix?: number | null) => (unix ? dateFmt(tag, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(unix * 1000)) : '')
 
-function Flag({ on, label, children }: { on: boolean; label: string; children: React.ReactNode }) {
+function Flag({ on, label, fixed, children }: { on: boolean; label: string; /** Cannot change once the link is made. */ fixed?: boolean; children: React.ReactNode }) {
   return (
-    <span className={on ? 'sl-flag on' : 'sl-flag'} role="img" aria-label={label} title={`${label}. ${copy.fixed}`}>
+    <span className={on ? 'sl-flag on' : 'sl-flag'} role="img" aria-label={label} title={fixed ? `${label}. ${copy.fixed}` : label}>
       {children}
     </span>
   )
+}
+
+/** What the sections flag says: every section, the ones shown, or the headline numbers only. */
+function sectionsLabel(shown: string[]) {
+  if (shown.length === SECTIONS.length) return copy.sectionsEvery
+  if (!shown.length) return copy.sectionsNone
+  return copy.sectionsShown(shown.map((s) => copy.sectionNames[s as keyof typeof copy.sectionNames]).join(', '))
 }
 
 function endLabel(share: Share) {
@@ -139,49 +147,63 @@ interface RowProps {
 }
 
 export function LinkRow({ site, share, readOnly, onChanged, onAddress }: RowProps) {
+  const [editing, setEditing] = useState(false)
   const locked = share.has_password
   const embeds = share.embed_origins ?? []
+  const shown = share.sections ?? [...SECTIONS]
   const seen = share.views > 0 ? copy.lastOpened(day(share.viewed_at)) : copy.neverOpened
   return (
-    <li className="sl-row">
-      <span className="sl-kind" role="img" aria-label={locked ? copy.rowPassword : copy.rowPublic} title={locked ? copy.rowPassword : copy.rowPublic}>
-        {locked ? <Lock size={14} strokeWidth={1.75} /> : <Globe size={14} strokeWidth={1.75} />}
-      </span>
-      <span className="sl-name">{nameOf(share)}</span>
-      <span className="sl-meta">
-        <Flag on={share.revenue} label={share.revenue ? copy.revenueOn : copy.revenueOff}>
-          <CircleDollarSign size={14} strokeWidth={1.75} />
-        </Flag>
-        <Switchable site={site} share={share} readOnly={readOnly} onChanged={onChanged} field="notes" />
-        <Switchable site={site} share={share} readOnly={readOnly} onChanged={onChanged} field="live" />
-        <Flag on={embeds.length > 0} label={embeds.length ? copy.embedOn(embeds) : copy.embedOff}>
-          <Code size={14} strokeWidth={1.75} />
-        </Flag>
-        <span className="sl-views num" title={seen}>
-          <Eye size={13} strokeWidth={1.75} aria-hidden="true" />
-          <span aria-hidden="true">{share.views > 0 ? fmtInt(share.views) : '–'}</span>
-          <span className="sr">
-            {copy.viewsLabel(share.views)}. {seen}
+    <>
+      <li className="sl-row">
+        <span className="sl-kind" role="img" aria-label={locked ? copy.rowPassword : copy.rowPublic} title={locked ? copy.rowPassword : copy.rowPublic}>
+          {locked ? <Lock size={14} strokeWidth={1.75} /> : <Globe size={14} strokeWidth={1.75} />}
+        </span>
+        <span className="sl-name">{nameOf(share)}</span>
+        <span className="sl-meta">
+          <Flag fixed on={share.revenue} label={share.revenue ? copy.revenueOn : copy.revenueOff}>
+            <CircleDollarSign size={14} strokeWidth={1.75} />
+          </Flag>
+          <Switchable site={site} share={share} readOnly={readOnly} onChanged={onChanged} field="notes" />
+          <Switchable site={site} share={share} readOnly={readOnly} onChanged={onChanged} field="live" />
+          <Flag on={shown.length < SECTIONS.length} label={sectionsLabel(shown)}>
+            <LayoutGrid size={14} strokeWidth={1.75} />
+          </Flag>
+          <Flag on={!!share.period} label={share.period ? copy.periodFixed(PRESETS.find((p) => p.id === share.period)?.label ?? share.period) : copy.periodFree}>
+            <CalendarRange size={14} strokeWidth={1.75} />
+          </Flag>
+          <Flag on={embeds.length > 0} label={embeds.length ? copy.embedOn(embeds) : copy.embedOff}>
+            <Code size={14} strokeWidth={1.75} />
+          </Flag>
+          <span className="sl-views num" title={seen}>
+            <Eye size={13} strokeWidth={1.75} aria-hidden="true" />
+            <span aria-hidden="true">{share.views > 0 ? fmtInt(share.views) : '–'}</span>
+            <span className="sr">
+              {copy.viewsLabel(share.views)}. {seen}
+            </span>
           </span>
+          <Ends share={share} />
         </span>
-        <Ends share={share} />
-      </span>
-      {!readOnly && (
-        <span className="sl-acts">
-          {share.url ? (
-            <>
-              <CopyButton icon text={share.url} label={copy.copyRow(nameOf(share))} toastText={copy.copiedToast} />
-              <a className="sl-icon" href={share.url} target="_blank" rel="noreferrer noopener" aria-label={copy.openRow(nameOf(share))} title={copy.open}>
-                <ExternalLink size={15} strokeWidth={1.75} />
-              </a>
-              <NewAddress site={site} share={share} quiet onMade={(url) => onAddress?.(share, url)} />
-            </>
-          ) : (
-            <NewAddress site={site} share={share} onMade={(url) => onAddress?.(share, url)} />
-          )}
-          <Revoke site={site} share={share} onDone={onChanged} />
-        </span>
-      )}
-    </li>
+        {!readOnly && (
+          <span className="sl-acts">
+            {share.url ? (
+              <>
+                <CopyButton icon text={share.url} label={copy.copyRow(nameOf(share))} toastText={copy.copiedToast} />
+                <a className="sl-icon" href={share.url} target="_blank" rel="noreferrer noopener" aria-label={copy.openRow(nameOf(share))} title={copy.open}>
+                  <ExternalLink size={15} strokeWidth={1.75} />
+                </a>
+                <NewAddress site={site} share={share} quiet onMade={(url) => onAddress?.(share, url)} />
+              </>
+            ) : (
+              <NewAddress site={site} share={share} onMade={(url) => onAddress?.(share, url)} />
+            )}
+            <button type="button" className="sl-icon" aria-expanded={editing} aria-label={copy.editRow(nameOf(share))} title={copy.edit} onClick={() => setEditing((v) => !v)}>
+              <Pencil size={15} strokeWidth={1.75} />
+            </button>
+            <Revoke site={site} share={share} onDone={onChanged} />
+          </span>
+        )}
+      </li>
+      {editing && !readOnly && <LinkEdit site={site} share={share} onClose={() => setEditing(false)} onSaved={onChanged} />}
+    </>
   )
 }

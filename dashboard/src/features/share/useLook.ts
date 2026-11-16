@@ -11,6 +11,8 @@ const MAX_LOGO = 128 << 10
 export function useLook(site: string) {
   const [look, setLook] = useState<ShareLook | null>(null)
   const [domain, setDomain] = useState('')
+  // Moves when the look was saved: what the page of a link is drawn from changed, so a preview of it is drawn again.
+  const [version, setVersion] = useState(0)
   const timer = useRef(0)
   const latest = useRef<ShareLook | null>(null)
   useEffect(() => {
@@ -39,6 +41,7 @@ export function useLook(site: string) {
     return more
       .setShareLook(site, next)
       .then((l) => {
+        setVersion((v) => v + 1)
         // Only a domain's save takes the answer: the tidied name. Any other
         // answer may be older than what was typed or picked since.
         if (!domainSave) return
@@ -74,7 +77,10 @@ export function useLook(site: string) {
       more
         .setShareLogo(site, f)
         .then(() => more.shareLook(site))
-        .then(setLook)
+        .then((l) => {
+          setLook(l)
+          setVersion((v) => v + 1)
+        })
         .catch((e: unknown) => (e instanceof APIError && e.status === 400 ? toast(copy.logoRefused, 'error') : fail(e)))
     },
     verify: () => {
@@ -84,10 +90,16 @@ export function useLook(site: string) {
         .catch((e: unknown) => (e instanceof APIError && e.status === 400 ? toast(copy.notYet, 'error') : fail(e)))
     },
     removeLogo: () => {
-      more.clearShareLogo(site).then(setLook).catch((e: unknown) => fail(e))
+      more
+        .clearShareLogo(site)
+        .then((l) => {
+          setLook(l)
+          setVersion((v) => v + 1)
+        })
+        .catch((e: unknown) => fail(e))
     },
   }
-  return { look, domain, setDomain, edit }
+  return { look, domain, setDomain, edit, version }
 }
 
 export type Look = ReturnType<typeof useLook>

@@ -329,6 +329,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("DELETE /api/v1/sites/{site}/privacy/person", a.authed(a.erasePerson))
 	handle("GET /api/v1/sites/{site}/shares", a.authed(a.shares))
 	handle("POST /api/v1/sites/{site}/shares", a.authed(a.createShare))
+	handle("PUT /api/v1/sites/{site}/shares/preview", a.authed(a.previewShare))
 	handle("PATCH /api/v1/sites/{site}/shares/{id}", a.authed(a.updateShare))
 	handle("DELETE /api/v1/sites/{site}/shares/{id}", a.authed(a.deleteShare))
 	handle("POST /api/v1/sites/{site}/shares/{id}/address", a.authed(a.newShareAddress))
