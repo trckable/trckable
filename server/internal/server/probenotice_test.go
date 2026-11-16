@@ -245,9 +245,24 @@ func TestEveryDueAlertFiresEvenWhenAnEarlierOneFails(t *testing.T) {
 	if n := len(box.all()); n != 3 {
 		t.Fatalf("sent again after an unsaved mark: %d messages", n)
 	}
-	for i, raw := range got {
-		if _, subject := subjectOf(t, raw); !strings.HasPrefix(subject, strings.TrimSuffix(wantSubjects[i], " ")) {
-			t.Errorf("message %d: %q", i, subject)
+	// Deliveries run side by side, so the messages arrive in any order: each wanted subject must be there once.
+	var subjects []string
+	for _, raw := range got {
+		_, subject := subjectOf(t, raw)
+		subjects = append(subjects, subject)
+	}
+	for _, want := range wantSubjects {
+		found := -1
+		for i, subject := range subjects {
+			if strings.HasPrefix(subject, strings.TrimSuffix(want, " ")) {
+				found = i
+				break
+			}
 		}
+		if found < 0 {
+			t.Errorf("no message for %q in %q", want, subjects)
+			continue
+		}
+		subjects = append(subjects[:found], subjects[found+1:]...)
 	}
 }

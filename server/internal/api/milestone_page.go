@@ -20,7 +20,7 @@ import (
 // still on.
 
 var milestonePage = template.Must(template.New("m").Parse(`<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
+<html lang="{{.Lang}}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>{{.Title}}</title>
@@ -64,19 +64,40 @@ func (a *API) milestoneLink(w http.ResponseWriter, r *http.Request) {
 	if png {
 		// Previews fetch the image once and keep it; a short cache is enough.
 		list, _ := a.Ctl.Milestones(r.Context(), m.SiteID, "")
-		a.serveCard(w, cardEN, m.Milestone, milestones.Context(m.Milestone, list), m.Domain, "dark", m.Amount, false, "public, max-age=300")
+		l := pageLang(r)
+		a.serveCard(w, l, m.Milestone, milestones.ContextIn(&l.ms, m.Milestone, list), m.Domain, "dark", m.Amount, false, "public, max-age=300")
 		return
 	}
-	words := milestones.Say(m.Milestone, m.Amount)
-	d := milestones.PageWords(words, m.Domain)
+	l := pageLang(r)
+	words := milestones.SayIn(&l.ms, m.Milestone, m.Amount)
+	d := milestones.PageWordsIn(&l.ms, words, m.Domain)
 	d.Image = a.publicBase(r) + "/m/" + token + ".png"
+	if l.code != "en" {
+		d.Image += "?lang=" + l.code
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
 	_ = milestonePage.Execute(w, struct {
 		milestones.Page
+		Lang string
 		Card cards.Format // the preview's size, from the one list of sizes
-	}{d, cards.FormatOf("link")})
+	}{d, l.code, cards.FormatOf("link")})
+}
+
+// pageLang is the language of a shared link: the one it was shared in (?lang=), else the visitor's own, else English.
+func pageLang(r *http.Request) *cardLang {
+	if q := r.URL.Query().Get("lang"); q != "" {
+		return cardLangOf(q)
+	}
+	for _, part := range strings.Split(r.Header.Get("Accept-Language"), ",") {
+		tag, _, _ := strings.Cut(strings.TrimSpace(part), ";")
+		tag, _, _ = strings.Cut(tag, "-")
+		if l, ok := cardLangs[strings.ToLower(tag)]; ok {
+			return l
+		}
+	}
+	return cardEN
 }
 
 var errNoLink = errors.New("no link")

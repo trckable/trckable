@@ -86,5 +86,8 @@ var cardES = &cardLang{
 		AfterSale:      "%d días después de la primera venta",
 		AfterSaleOne:   "%d día después de la primera venta",
 		Faster:         "%d× más rápido que el anterior",
+		PageTitle:      "%s en %s",
+		PageReached:    "alcanzado el %s",
+		PageMade:       "Hecho con trckable",
 	},
 }

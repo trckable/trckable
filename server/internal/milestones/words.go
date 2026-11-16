@@ -16,6 +16,7 @@ type Tongue struct {
 	Visitors, Pageviews, FirstPageview, Countries, Record, Revenue, RevenueHidden, RevenueReached, RevenueLine, Milestone, FirstGoal, FirstSale, First string
 	SearchClicks, AIVisits                                                                                                                             string
 	AfterSale, AfterSaleOne, Faster                                                                                                                    string // %d days after the first sale; %d day; %d times faster
+	PageTitle, PageReached, PageMade                                                                                                                   string // "%s on %s"; "reached on %s"; the share page's footer link
 	Fmt                                                                                                                                                Formatter
 }
 
@@ -52,17 +53,17 @@ var English = &Tongue{
 	AfterSale:      "%d days after the first sale",
 	AfterSaleOne:   "%d day after the first sale",
 	Faster:         "%d× faster than the last one",
+	PageTitle:      "%s on %s",
+	PageReached:    "reached on %s",
+	PageMade:       "Made with trckable",
 	Fmt:            englishFmt{},
 }
 
 // The words the share page and the alert say.
 var words = struct {
-	alertTitle, made, pageTitle, reached string
+	alertTitle string
 }{
 	alertTitle: "Milestone reached",
-	made:       "Made with trckable",
-	pageTitle:  "%s on %s",
-	reached:    "reached on %s",
 }
 
 // Words is how a milestone reads: the big part and the line under it.
@@ -150,11 +151,14 @@ type Page struct {
 }
 
 // PageWords puts a milestone's words on its share page.
-func PageWords(w Words, domain string) Page {
-	return Page{Title: fmt.Sprintf(words.pageTitle, w.Line(), domain), Reached: fmt.Sprintf(words.reached, w.Day), Made: words.made}
+func PageWords(w Words, domain string) Page { return PageWordsIn(English, w, domain) }
+
+// PageWordsIn is PageWords in a language.
+func PageWordsIn(t *Tongue, w Words, domain string) Page {
+	return Page{Title: fmt.Sprintf(t.PageTitle, w.Line(), domain), Reached: fmt.Sprintf(t.PageReached, w.Day), Made: t.PageMade}
 }
 
 // AlertLine is the milestone as an alert says it.
 func AlertLine(w Words, domain string) (title, message string) {
-	return words.alertTitle, fmt.Sprintf(words.pageTitle, w.Line(), domain) + ", " + fmt.Sprintf(words.reached, w.Day) + "."
+	return words.alertTitle, fmt.Sprintf(English.PageTitle, w.Line(), domain) + ", " + fmt.Sprintf(English.PageReached, w.Day) + "."
 }
