@@ -238,6 +238,7 @@ func (a *API) setSiteColor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *API) writeBrand(w http.ResponseWriter, r *http.Request) {
+	a.cache.lists.purge()
 	brands, _ := a.Ctl.Brands(r.Context(), principalOf(r).account)
 	b := brands[r.PathValue("site")]
 	writeJSON(w, http.StatusOK, map[string]any{"color": b.Color, "icon_at": b.IconAt, "icon_url": iconURL(r.PathValue("site"), b)})

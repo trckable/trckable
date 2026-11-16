@@ -140,6 +140,39 @@ func (s *Store) SiteConfig(ctx context.Context, site string) (SiteConfig, error)
 	return c, nil
 }
 
+// SiteFlags is what the sites list needs of a site's settings, read for a
+// whole account at once.
+type SiteFlags struct {
+	WeekStart        int
+	ConsentFree      bool
+	AlertsMutedUntil int64
+}
+
+// ListSiteFlags reads WeekStart, ConsentFree and the alert snooze of every
+// site of an account in one query. A site without a settings row has the
+// defaults SiteConfig gives it: it keeps the cookie mode it always had.
+func (s *Store) ListSiteFlags(ctx context.Context, account string) (map[string]SiteFlags, error) {
+	rows, err := s.DB.QueryContext(ctx, `
+		SELECT s.id, s.alerts_muted_until, coalesce(t.week_start, 1), coalesce(t.consent_free, 0)
+		FROM sites s LEFT JOIN site_settings t ON t.site_id = s.id WHERE s.account_id = ?`, account)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[string]SiteFlags{}
+	for rows.Next() {
+		var id string
+		var f SiteFlags
+		var free int
+		if err := rows.Scan(&id, &f.AlertsMutedUntil, &f.WeekStart, &free); err != nil {
+			return nil, err
+		}
+		f.ConsentFree = free == 1
+		out[id] = f
+	}
+	return out, rows.Err()
+}
+
 // parseGroups reads "Name = /glob" lines back. A line without an "=" is a
 // glob whose name is the glob, which is what someone typing quickly means.
 func parseGroups(s string) []Group {

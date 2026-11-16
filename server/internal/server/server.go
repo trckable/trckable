@@ -58,7 +58,8 @@ var Version = "0.8.0" // the VERSION file; release builds stamp it too
 // Server is a running trckable instance.
 type Server struct {
 	cfg      config.Config
-	rechecks recheckGate // unscheduled looks at a site, at most one in five minutes (uptime_now.go)
+	scripts  web.ScriptMemo // each site's finished tracker script; forgotten when the site changes
+	rechecks recheckGate    // unscheduled looks at a site, at most one in five minutes (uptime_now.go)
 	nowOnce  sync.Once
 	nowP     *prober
 	judge    atomic.Pointer[mentionJudge] // the optional yes/no check on a mention (SetMentionJudge)
@@ -215,7 +216,7 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 			BannerCSS:      c.Banner.CSS,
 		}
 	}
-	tracker := web.Tracker(feat, opts)
+	tracker := web.TrackerMemo(feat, opts, &s.scripts)
 	online := web.OnlineScript(func(ctx context.Context, id string) (web.OnlineLook, bool) { return s.api.OnlineLook(ctx, id) })
 	loader := web.WidgetLoader()
 	// The neutral name of /js/t.js, for a first-party proxy. /js/x.js stays what it was: not found.
@@ -253,7 +254,8 @@ func New(ctx context.Context, cfg config.Config) (*Server, error) {
 	s.notices = &notice.Hub{Store: ctl, BaseURL: cfg.BaseURL}
 	s.notices.Register(probeForm, s.deliverProbe)
 	a := &api.API{
-		Ctl: ctl, Notices: s.notices, Hub: s.hub, Token: cfg.APIToken, SetupEnv: cfg.SetupToken, ClientIP: s.ingest.ClientIP,
+		SiteChanged: func(site string) { s.scripts.Forget(site) },
+		Ctl:         ctl, Notices: s.notices, Hub: s.hub, Token: cfg.APIToken, SetupEnv: cfg.SetupToken, ClientIP: s.ingest.ClientIP,
 		Locate:  s.place,
 		Revenue: s.revenue, BaseURL: cfg.BaseURL, ReservedHosts: cfg.ReservedHosts, ShareDomainSkipVerify: cfg.ShareDomainSkipVerify, ShareDomainAskOpen: cfg.ShareDomainAskOpen, Box: box, Version: Version, UpdateCheck: cfg.UpdateCheck,
 		Query: func() *query.Q {

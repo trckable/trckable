@@ -131,6 +131,26 @@ func (a *API) verifiedOf(ctx context.Context, si sqlite.SiteInfo) verified {
 	return verified{Sources: verifiedSources(in)}
 }
 
+// verifiedFor is verifiedOf for a list of sites: the two sources are read
+// once for all of them, not once per site.
+func (a *API) verifiedFor(ctx context.Context, account string, ids []string) map[string]verified {
+	searches, _ := a.Ctl.SearchConsolesOf(ctx, account)
+	var pays map[string][]revenue.Connection
+	if a.Revenue != nil {
+		pays, _ = a.Revenue.ConnectionsOf(ctx, ids)
+	}
+	now := a.Now()
+	out := make(map[string]verified, len(ids))
+	for _, id := range ids {
+		in := verifiedIn{Now: now, Pay: pays[id]}
+		if c, ok := searches[id]; ok {
+			in.Search = &c
+		}
+		out[id] = verified{Sources: verifiedSources(in)}
+	}
+	return out
+}
+
 func (a *API) verified(w http.ResponseWriter, r *http.Request) {
 	si, err := a.Ctl.SiteInfo(r.Context(), r.PathValue("site"))
 	if err != nil {

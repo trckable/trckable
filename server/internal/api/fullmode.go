@@ -531,14 +531,6 @@ const (
 	muteMaxHours = 168
 )
 
-// mutedUntil is when a site's snooze ends, or 0 when it is over or never was.
-func (a *API) mutedUntil(r *http.Request, site string) int64 {
-	if until := a.Ctl.MutedUntil(r.Context(), site); until > a.Now().Unix() {
-		return until
-	}
-	return 0
-}
-
 // muteAlerts snoozes every alert of a site, for a day unless the body gives
 // hours: nothing is sent, nothing is deleted, and it lifts by itself.
 func (a *API) muteAlerts(w http.ResponseWriter, r *http.Request) {
@@ -566,6 +558,7 @@ func (a *API) muteAlerts(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	a.cache.lists.purge()
 	writeJSON(w, http.StatusOK, map[string]any{"alerts_muted_until": until})
 }
 
@@ -578,6 +571,7 @@ func (a *API) unmuteAlerts(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	a.cache.lists.purge()
 	w.WriteHeader(http.StatusNoContent)
 }
 

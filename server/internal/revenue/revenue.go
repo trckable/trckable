@@ -172,6 +172,32 @@ func (s *Service) Connections(ctx context.Context, site, base string) ([]Connect
 	return out, rows.Err()
 }
 
+// ConnectionsOf lists the active connections of several sites at once, by site.
+func (s *Service) ConnectionsOf(ctx context.Context, sites []string) (map[string][]Connection, error) {
+	out := map[string][]Connection{}
+	if len(sites) == 0 {
+		return out, nil
+	}
+	args := make([]any, len(sites))
+	for i, id := range sites {
+		args[i] = id
+	}
+	marks := strings.TrimSuffix(strings.Repeat("?,", len(sites)), ",")
+	rows, err := s.DB.QueryContext(ctx, `SELECT `+connCols+` FROM pay_connections c WHERE c.site_id IN (`+marks+`) AND c.disabled_at IS NULL ORDER BY c.created_at`, args...) //nolint:gosec // marks is only placeholders
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		c, err := s.scan(rows, "", false)
+		if err != nil {
+			return nil, err
+		}
+		out[c.Site] = append(out[c.Site], c)
+	}
+	return out, rows.Err()
+}
+
 func (s *Service) connection(ctx context.Context, id string, decrypt bool) (Connection, error) {
 	row := s.DB.QueryRowContext(ctx, `SELECT `+connCols+` FROM pay_connections c WHERE c.id = ? AND c.disabled_at IS NULL`, id)
 	c, err := s.scan(row, "", decrypt)

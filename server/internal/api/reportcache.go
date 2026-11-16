@@ -53,11 +53,13 @@ const (
 )
 
 type reportCache struct {
-	mu    sync.Mutex
-	max   int
-	m     map[string]cacheEntry
-	sites map[string]*siteChanges
-	epoch uint64 // moves when every site's reports are dropped at once
+	mu      sync.Mutex
+	max     int
+	m       map[string]cacheEntry
+	sites   map[string]*siteChanges
+	epoch   uint64 // moves when every site's reports are dropped at once
+	lists   listCache
+	onPurge func(site string) // told when a site (or "": every site) is dropped
 }
 
 type cacheEntry struct {
@@ -160,6 +162,10 @@ func (c *reportCache) purgeSite(site string) {
 	defer c.mu.Unlock()
 	c.record(site, change{all: true})
 	c.site(site).purges++
+	if c.onPurge != nil {
+		c.onPurge(site)
+	}
+	c.lists.purge()
 	for k, e := range c.m {
 		if e.site == site {
 			delete(c.m, k)
@@ -173,7 +179,11 @@ func (c *reportCache) purgeAll() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.epoch++
+	if c.onPurge != nil {
+		c.onPurge("")
+	}
 	clear(c.m)
+	c.lists.purge()
 }
 
 // Touched drops the cached reports the writer's last commit can have changed:

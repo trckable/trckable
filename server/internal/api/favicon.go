@@ -176,6 +176,7 @@ func (a *API) startIcon(site, domain string) {
 		}
 		if typ := iconType(data); typ != "" {
 			_ = a.Ctl.SetBrandIcon(ctx, site, typ, data)
+			a.cache.lists.purge()
 		}
 	}()
 }
