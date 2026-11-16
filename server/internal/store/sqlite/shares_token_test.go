@@ -97,17 +97,17 @@ func TestShareSessionNeedsTheCurrentToken(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.StartShareSession(ctx, sh.ID, old, now); !errors.Is(err, auth.ErrNotFound) {
+	if _, err := s.StartShareSession(ctx, sh.ID, old, sh.PassHash, now); !errors.Is(err, auth.ErrNotFound) {
 		t.Fatalf("a session started with the old token: %v", err)
 	}
 	var n int
 	if err := s.DB.QueryRowContext(ctx, `SELECT count(*) FROM share_sessions`).Scan(&n); err != nil || n != 0 {
 		t.Fatalf("sessions left behind: %d %v", n, err)
 	}
-	if _, err := s.StartShareSession(ctx, sh.ID, fresh, now); err != nil {
+	if _, err := s.StartShareSession(ctx, sh.ID, fresh, sh.PassHash, now); err != nil {
 		t.Fatalf("the new token: %v", err)
 	}
-	if _, err := s.StartShareSession(ctx, "shr_nothere", fresh, now); !errors.Is(err, auth.ErrNotFound) {
+	if _, err := s.StartShareSession(ctx, "shr_nothere", fresh, "", now); !errors.Is(err, auth.ErrNotFound) {
 		t.Fatalf("another link's id: %v", err)
 	}
 }
@@ -165,7 +165,7 @@ func TestRotateShareEndsTheOldAddress(t *testing.T) {
 		t.Fatal(err)
 	}
 	now := time.Now()
-	session, err := s.StartShareSession(ctx, sh.ID, old, now)
+	session, err := s.StartShareSession(ctx, sh.ID, old, sh.PassHash, now)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -207,13 +207,16 @@ func (a *API) updateShare(w http.ResponseWriter, r *http.Request) {
 		}
 		e.Origins = &origins
 	}
-	err := a.Ctl.UpdateShare(r.Context(), r.PathValue("site"), r.PathValue("id"), e)
+	err := a.Ctl.UpdateShare(r.Context(), r.PathValue("site"), r.PathValue("id"), e, a.Now())
 	if busy(w, err) {
 		return
 	}
 	switch {
 	case errors.Is(err, auth.ErrNotFound):
 		fail(w, http.StatusNotFound, "no such link")
+		return
+	case errors.Is(err, sqlite.ErrExpired):
+		fail(w, http.StatusConflict, "this link has ended, make a new one")
 		return
 	case errors.Is(err, auth.ErrWeakPassword):
 		fail(w, http.StatusBadRequest, err.Error())
@@ -352,7 +355,7 @@ func (a *API) openShare(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusNotFound, "this link does not exist, or it was revoked")
 		return
 	}
-	session, err := a.Ctl.StartShareSession(r.Context(), sh.ID, in.Token, a.Now())
+	session, err := a.Ctl.StartShareSession(r.Context(), sh.ID, in.Token, sh.PassHash, a.Now())
 	if errors.Is(err, auth.ErrNotFound) {
 		// The owner made a new address between the check and here.
 		fail(w, http.StatusNotFound, "this link does not exist, or it was revoked")

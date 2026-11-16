@@ -245,7 +245,7 @@ func (a *API) reportFor(w http.ResponseWriter, r *http.Request, siteID string, a
 	cur = names.Report(cur, params.PageGoals)
 	pr = names.Report(pr, params.PageGoals)
 	if share != nil {
-		cur, pr = scoped(*share, cur), scoped(*share, pr)
+		cur, pr = scoped(*share, cur, params.PageGoals), scoped(*share, pr, params.PageGoals)
 	}
 	out := map[string]any{
 		"site": siteID, "timezone": tzName, "bucket": bucket, "attribution": params.Attribution,
@@ -408,7 +408,7 @@ const shareReportRate = 30
 // needs: a limited rate, no more than two years at a time, and nothing deep.
 // It answers the request itself and says false when it refused.
 func (a *API) publicReport(w http.ResponseWriter, r *http.Request, ask *asked, sh sqlite.Share) bool {
-	if !refuseHiddenFilters(w, sh, ask.Params.Filters) {
+	if !refuseHiddenFilters(w, sh, ask.Params.Filters, ask.Params.PageGoals) {
 		return false
 	}
 	if ask.To.Sub(ask.From) > shareReportRange || (ask.Prev != nil && ask.Prev.To.Sub(ask.Prev.From) > shareReportRange) {

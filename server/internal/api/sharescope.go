@@ -29,6 +29,16 @@ var dimSection = map[string]string{
 // section, and filtering by one says nothing about the sections that are off.
 var openDims = map[string]bool{"goal": true}
 
+// isPageGoal says whether a goal is one of the site's "a page was seen" goals.
+func isPageGoal(pageGoals []query.Group, name string) bool {
+	for _, g := range pageGoals {
+		if name != "" && g.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
 // sectionsAll says whether the link shows every section it can.
 func sectionsAll(sh sqlite.Share) bool {
 	for _, s := range sqlite.ShareSections {
@@ -51,9 +61,9 @@ func showsDim(sh sqlite.Share, dim string) bool {
 // refuseHiddenFilters answers 403 when the request filters by a dimension of
 // a hidden section: a filter would tell what the section's table would, by
 // the numbers that change when it is applied.
-func refuseHiddenFilters(w http.ResponseWriter, sh sqlite.Share, filters []query.Filter) bool {
+func refuseHiddenFilters(w http.ResponseWriter, sh sqlite.Share, filters []query.Filter, pageGoals []query.Group) bool {
 	for _, f := range filters {
-		if !showsDim(sh, f.Dim) {
+		if !showsDim(sh, f.Dim) || (f.Dim == "goal" && !sh.Shows("pages") && isPageGoal(pageGoals, f.Value)) {
 			fail(w, http.StatusForbidden, "this link does not show that")
 			return false
 		}
@@ -65,7 +75,7 @@ func refuseHiddenFilters(w http.ResponseWriter, sh sqlite.Share, filters []query
 // copies rather than edits: the result may be the one the report cache keeps.
 // A section that is off has empty tables, not missing ones, so a page reading
 // them has nothing to trip on.
-func scoped(sh sqlite.Share, in *query.Result) *query.Result {
+func scoped(sh sqlite.Share, in *query.Result, pageGoals []query.Group) *query.Result {
 	if in == nil || sectionsAll(sh) {
 		return in
 	}
@@ -74,6 +84,16 @@ func scoped(sh sqlite.Share, in *query.Result) *query.Result {
 	out.RevenueDims = scopedDims(sh, in.RevenueDims)
 	if !sh.Shows("pages") {
 		out.Hosts = 0
+		// A goal reached by visiting a page names that page's path: it goes with the pages.
+		out.Goals = make([]query.Row, 0, len(in.Goals))
+		for _, g := range in.Goals {
+			if !isPageGoal(pageGoals, g.Value) && !isPageGoal(pageGoals, g.Label) {
+				out.Goals = append(out.Goals, g)
+			}
+		}
+		if in.Signup != nil && isPageGoal(pageGoals, in.Signup.Goal) {
+			out.Signup = nil
+		}
 	}
 	if in.Days != nil {
 		out.Days = make([]query.Day, len(in.Days))
