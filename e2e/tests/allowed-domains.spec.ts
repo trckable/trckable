@@ -59,7 +59,7 @@ for (const [width, height] of [
     await expect(dialog.getByRole('button', { name: 'Remove old-site.example.org' })).toBeVisible()
     await field.fill('not a host')
     await dialog.getByRole('button', { name: 'Add', exact: true }).click()
-    await expect(dialog.getByRole('alert').or(dialog.locator('.field-err-msg'))).toContainText('hostnames')
+    await expect(dialog.getByRole('alert').or(dialog.locator('.field-err-msg'))).toContainText('staging.example.com')
     for (const scheme of ['dark', 'light'] as const) {
       await page.emulateMedia({ colorScheme: scheme })
       if (SHOTS) await page.screenshot({ path: `${SHOTS}/allowed-${width}-${scheme}-listed.png` })

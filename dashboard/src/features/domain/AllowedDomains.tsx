@@ -22,6 +22,14 @@ const hostOf = (typed: string) =>
     .replace(/^\*\./, '')
     .replace(/^www\./, '')
 
+/** The server's refusal of a list, in the person's words. */
+const refusal = (code: string, max: number) => {
+  if (code === 'allowed_bad') return copy.bad
+  if (code === 'allowed_shared') return copy.shared
+  if (code === 'allowed_many') return copy.full(max)
+  return null
+}
+
 export function AllowedDomains({ site }: { site: Site }) {
   const [state, setState] = useState<State | null>(null)
   const [text, setText] = useState('')
@@ -51,7 +59,8 @@ export function AllowedDomains({ site }: { site: Site }) {
       setWrong(null)
       toast(said)
     } catch (e) {
-      if (e instanceof APIError && e.status === 400) setWrong(e.message)
+      const said = e instanceof APIError ? refusal(e.code, state?.max ?? 20) : null
+      if (said) setWrong(said)
       else fail(e)
     } finally {
       setBusy(false)

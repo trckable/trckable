@@ -3539,6 +3539,8 @@ export default {
   'allowedDomains.added': (host: string) => `${host} ist jetzt erlaubt`,
   'allowedDomains.removed': (host: string) => `${host} ist nicht mehr erlaubt`,
   'allowedDomains.have': "Diese Adresse steht schon in der Liste",
+  'allowedDomains.bad': "Nutze eine Adresse wie staging.beispiel.de: ohne https://, Pfad, Port, Leerzeichen oder IP-Nummer",
+  'allowedDomains.shared': "Diese Adresse teilen sich viele Websites. Nutze deine eigene, z. B. staging.beispiel.de",
   'allowedDomains.full': (n: number) => `Du kannst bis zu ${n} Adressen erlauben. Entferne zuerst eine.`,
   'plainSpan.min': (m: number) => `${m} Min.`,
   'plainSpan.hours': (h: number, m: number) => (m ? `${h} Std. ${m} Min.` : `${h} Std.`),

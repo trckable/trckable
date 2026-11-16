@@ -3549,6 +3549,8 @@ export default {
   'allowedDomains.added': (host: string) => `${host} is nu toegestaan`,
   'allowedDomains.removed': (host: string) => `${host} is niet meer toegestaan`,
   'allowedDomains.have': "Dit adres staat al in de lijst",
+  'allowedDomains.bad': "Gebruik een adres zoals staging.voorbeeld.nl: zonder https://, pad, poort, spaties of IP-nummer",
+  'allowedDomains.shared': "Dit adres wordt door veel sites gedeeld. Gebruik je eigen adres, zoals staging.voorbeeld.nl",
   'allowedDomains.full': (n: number) => `Je kunt maximaal ${n} adressen toestaan. Verwijder eerst een.`,
   'plainSpan.min': (m: number) => `${m} min`,
   'plainSpan.hours': (h: number, m: number) => (m ? `${h} u ${m} min` : `${h} u`),

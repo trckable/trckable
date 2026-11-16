@@ -35,7 +35,7 @@ func TestAllowedDomainsThroughTheAPI(t *testing.T) {
 	}
 
 	// Bad names are refused whole; nothing is kept.
-	for _, body := range []string{`{"allowed":["https://a.example/x"]}`, `{"allowed":["a b.example"]}`, `{"allowed":["localhost"]}`, `{"allowed":["a.example:8080"]}`, `{"allowed":["*"]}`} {
+	for _, body := range []string{`{"allowed":["https://a.example/x"]}`, `{"allowed":["a b.example"]}`, `{"allowed":["localhost"]}`, `{"allowed":["a.example:8080"]}`, `{"allowed":["*"]}`, `{"allowed":["co.uk"]}`, `{"allowed":["www.co.uk"]}`, `{"allowed":["github.io"]}`, `{"allowed":["vercel.app"]}`, `{"allowed":["203.0.113.7"]}`, `{"allowed":["[::1]"]}`} {
 		if code, _ := do(t, owner, "PUT", base, body, csrf, "1"); code != http.StatusBadRequest {
 			t.Errorf("%s: %d", body, code)
 		}
@@ -74,6 +74,20 @@ func TestAllowedDomainsThroughTheAPI(t *testing.T) {
 		if r["what"] == "host" {
 			t.Fatalf("notice for an allowed host: %v", r)
 		}
+	}
+	// A refusal written after the name was allowed (the writer's flush racing the change) is dropped, and the bell stays quiet.
+	if err := g.ctl.AddRejectedHosts(ctx, []sqlite.RejectedHost{{Site: g.site, Day: day, Host: "staging.other.com", N: 50}}, g.now); err != nil {
+		t.Fatal(err)
+	}
+	g.api.bell = bellCache{}
+	for _, r := range feedOf(t, g, owner) {
+		if r["what"] == "host" {
+			t.Fatalf("notice after a late flush: %v", r)
+		}
+	}
+	// Unicode names are kept as punycode.
+	if code, out := do(t, owner, "PUT", base, `{"allowed":["bücher.example"]}`, csrf, "1"); code != http.StatusOK || out["allowed"].([]any)[0] != "xn--bcher-kva.example" {
+		t.Fatalf("idna: %d %v", code, out)
 	}
 	// Clearing the list empties it.
 	if code, out := do(t, owner, "PUT", base, `{"allowed":[]}`, csrf, "1"); code != http.StatusOK || len(out["allowed"].([]any)) != 0 {

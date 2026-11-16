@@ -42,5 +42,7 @@ export const allowedCopy = defineCopy('allowedDomains', {
   added: (host: string) => `${host} is allowed now`,
   removed: (host: string) => `${host} is no longer allowed`,
   have: 'That address is already listed',
+  bad: 'Use an address like staging.example.com: no https://, path, port, spaces or IP number',
+  shared: 'That address is shared by many sites. Use your own, like staging.example.com',
   full: (n: number) => `You can allow up to ${n} addresses. Remove one first.`,
 })

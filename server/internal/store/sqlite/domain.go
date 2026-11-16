@@ -5,11 +5,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/netip"
 	"strings"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/auth"
 	"github.com/trckable/trckable/server/internal/ingest"
+	"golang.org/x/net/idna"
+	"golang.org/x/net/publicsuffix"
 )
 
 // FormerHostGrace is how long a site goes on accepting visits from the
@@ -237,6 +240,9 @@ const MaxAllowedHosts = 20
 // ErrBadAllowed is a hostname that cannot be allowed; its text is shown as written.
 var ErrBadAllowed = errors.New("use hostnames like staging.example.com: no https://, path, port or spaces")
 
+// ErrPublicSuffix is a name that belongs to many people (co.uk, github.io): allowing it would count anyone's visits.
+var ErrPublicSuffix = errors.New("that is shared by many sites, use your own address")
+
 // ErrTooManyAllowed is a list over MaxAllowedHosts.
 var ErrTooManyAllowed = fmt.Errorf("a site can allow at most %d extra domains", MaxAllowedHosts)
 
@@ -253,8 +259,19 @@ func CleanAllowed(in []string) ([]string, error) {
 		if h == "" {
 			continue
 		}
-		if len(h) > 253 || strings.ContainsAny(h, " /\\:@?#,*") || !strings.Contains(h, ".") || strings.HasPrefix(h, ".") || strings.HasSuffix(h, ".") || strings.Contains(h, "..") {
+		if len(h) > 253 || strings.ContainsAny(h, " /\\:@?#,*[]") || !strings.Contains(h, ".") || strings.HasPrefix(h, ".") || strings.HasSuffix(h, ".") || strings.Contains(h, "..") {
 			return nil, ErrBadAllowed
+		}
+		if _, err := netip.ParseAddr(h); err == nil {
+			return nil, ErrBadAllowed
+		}
+		ascii, err := idna.Lookup.ToASCII(h)
+		if err != nil {
+			return nil, ErrBadAllowed
+		}
+		h = ascii
+		if suffix, _ := publicsuffix.PublicSuffix(h); suffix == h {
+			return nil, ErrPublicSuffix
 		}
 		if !seen[h] {
 			seen[h] = true
@@ -310,4 +327,18 @@ func (s *Store) SetAllowed(ctx context.Context, site string, list []string) erro
 		return err
 	}
 	return s.reloadSites(ctx)
+}
+
+// HostCovered says whether a site accepts a hostname: its domain, a listed
+// name, or a subdomain of either (the rule ingest applies).
+func HostCovered(host, domain string, allowed []string) bool {
+	if host == domain || strings.HasSuffix(host, "."+domain) {
+		return true
+	}
+	for _, a := range allowed {
+		if host == a || strings.HasSuffix(host, "."+a) {
+			return true
+		}
+	}
+	return false
 }

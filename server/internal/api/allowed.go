@@ -49,7 +49,16 @@ func failAllowed(w http.ResponseWriter, err error) {
 		fail(w, http.StatusNotFound, "not found")
 		return
 	}
-	fail(w, http.StatusBadRequest, err.Error())
+	code := ""
+	switch {
+	case errors.Is(err, sqlite.ErrBadAllowed):
+		code = "allowed_bad"
+	case errors.Is(err, sqlite.ErrTooManyAllowed):
+		code = "allowed_many"
+	case errors.Is(err, sqlite.ErrPublicSuffix):
+		code = "allowed_shared"
+	}
+	writeJSON(w, http.StatusBadRequest, apiError{Error: err.Error(), Code: code})
 }
 
 // siteAllowed answers Settings with the site's allowed domains.
