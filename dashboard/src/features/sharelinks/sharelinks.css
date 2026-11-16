@@ -411,6 +411,15 @@
 .sl-row:hover {
   background: var(--surface-2);
 }
+/* A link opened for changes: its fields, under its row, in the sunken panel the new-link form has. */
+.sl-edit {
+  padding: 12px;
+  border-top: 1px solid var(--grid);
+  background: var(--sunken);
+}
+.sl-edit + .sl-row {
+  border-top: 1px solid var(--grid);
+}
 .sl-kind {
   display: grid;
   place-items: center;

@@ -599,6 +599,12 @@ export default {
   'links.fallbackName': 'Gedeelde link',
   'links.changeFailed': 'De link kon niet worden gewijzigd',
   'links.more': 'Meer',
+  'links.edit': 'Bewerken',
+  'links.editRow': (name: string) => `Link bewerken: ${name}`,
+  'links.save': 'Opslaan',
+  'links.saving': 'Opslaan…',
+  'links.saved': 'Link opgeslagen',
+  'links.passwordKeep': 'Laat leeg om het wachtwoord te houden',
 
   // sites
   'sites.pick': 'Kies een site',

@@ -600,6 +600,12 @@ export default {
   'links.fallbackName': 'Lien partagé',
   'links.changeFailed': 'Impossible de modifier le lien',
   'links.more': 'Plus',
+  'links.edit': 'Modifier',
+  'links.editRow': (name: string) => `Modifier le lien : ${name}`,
+  'links.save': 'Enregistrer',
+  'links.saving': 'Enregistrement…',
+  'links.saved': 'Lien enregistré',
+  'links.passwordKeep': 'Laissez vide pour garder le mot de passe',
 
   // sites
   'sites.pick': 'Choisir un site',

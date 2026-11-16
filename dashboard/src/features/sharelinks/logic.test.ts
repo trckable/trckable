@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { EMPTY, daysUntil, endState, expiryDays, linkBody, parseOrigins, previewParts, problem } from './logic'
+import { EMPTY, daysUntil, draftOf, endState, patchBody, expiryDays, linkBody, parseOrigins, previewParts, problem } from './logic'
 
 // Noon on 15 Oct 2026, the viewer's clock.
 const NOW = new Date(2026, 9, 15, 12, 0, 0)
@@ -70,6 +70,44 @@ describe('the form', () => {
     expect(linkBody(typed, 'site.com', NOW)).toEqual({ name: 'site.com', password: '', revenue: false, notes: false, days: 0, embed_origins: [] })
     const full = { ...typed, name: ' Board ', access: 'password' as const, revenue: true, notes: true, expiry: '7' as const, embed: true }
     expect(linkBody(full, 'site.com', NOW)).toEqual({ name: 'Board', password: 'left over', revenue: true, notes: true, days: 7, embed_origins: ['https://a.com'] })
+  })
+})
+
+describe('changing a link that exists', () => {
+  const share = { id: 'a', site_id: 's', name: 'Board', revenue: true, notes: false, has_password: true, created_at: 1, views: 0, expires_at: Math.floor(new Date(2026, 10, 20, 12).getTime() / 1000), embed_origins: ['https://a.com'] }
+  const was = draftOf(share)
+  it('starts from what the link has now', () => {
+    expect(was).toMatchObject({ name: 'Board', access: 'password', hadPassword: true, password: '', notes: false, expiry: 'date', date: '2026-11-20', embed: true, sites: 'https://a.com' })
+    expect(draftOf({ ...share, has_password: false, expires_at: null, embed_origins: undefined })).toMatchObject({ access: 'public', expiry: 'never', date: '', embed: false })
+  })
+  it('sends nothing for a form nobody touched, and only what changed otherwise', () => {
+    expect(patchBody(was, was, NOW)).toEqual({})
+    expect(patchBody(was, { ...was, name: ' Investors ', notes: true }, NOW)).toEqual({ name: 'Investors', notes: true })
+  })
+  it('keeps the password unless a new one is typed, removes it only when the link turns public', () => {
+    expect(patchBody(was, { ...was, password: 'a new one' }, NOW)).toEqual({ password: 'a new one' })
+    expect(patchBody(was, { ...was, password: '   ' }, NOW)).toEqual({})
+    expect(patchBody(was, { ...was, access: 'public' }, NOW)).toEqual({ password: '' })
+    expect(patchBody({ ...was, access: 'public', hadPassword: false }, { ...was, access: 'public', hadPassword: false }, NOW)).toEqual({})
+  })
+  it('sends the end date as days from now, and 0 for none', () => {
+    expect(patchBody(was, { ...was, expiry: '30' }, NOW)).toEqual({ days: 30 })
+    expect(patchBody(was, { ...was, expiry: 'never', date: '' }, NOW)).toEqual({ days: 0 })
+    expect(patchBody(was, { ...was, date: '2026-10-25' }, NOW)).toEqual({ days: 10 })
+  })
+  it('sends the embed sites when they change, and an empty list when embedding is turned off', () => {
+    expect(patchBody(was, { ...was, sites: 'https://a.com https://b.com' }, NOW)).toEqual({ embed_origins: ['https://a.com', 'https://b.com'] })
+    expect(patchBody(was, { ...was, embed: false }, NOW)).toEqual({ embed_origins: [] })
+  })
+  it('lets a link that has ended be renamed, but not given a bad new date', () => {
+    const ended = draftOf({ ...share, expires_at: Math.floor(new Date(2026, 9, 1, 12).getTime() / 1000) })
+    expect(problem({ ...ended, name: 'Renamed' }, NOW, ended)).toBeNull()
+    expect(problem({ ...ended, date: '2026-10-01' }, NOW, ended)).toBeNull()
+    expect(problem({ ...ended, date: '2026-10-02' }, NOW, ended)?.field).toBe('date')
+  })
+  it('does not ask again for the password of a link that has one', () => {
+    expect(problem(was, NOW, was)).toBeNull()
+    expect(problem({ ...was, hadPassword: false, access: 'password' }, NOW)?.field).toBe('password')
   })
 })
 

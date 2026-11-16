@@ -17,9 +17,30 @@ export interface Draft {
   date: string
   embed: boolean
   sites: string
+  /** Editing a link that already has a password: leaving the field empty keeps it. */
+  hadPassword?: boolean
 }
 
 export const EMPTY: Draft = { name: '', access: 'public', password: '', revenue: false, notes: false, expiry: 'never', date: '', embed: false, sites: '' }
+
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+/** The form of a link that exists, to change it. */
+export function draftOf(s: Share): Draft {
+  const origins = s.embed_origins ?? []
+  return {
+    name: s.name,
+    access: s.has_password ? 'password' : 'public',
+    password: '',
+    hadPassword: s.has_password,
+    revenue: s.revenue,
+    notes: !!s.notes,
+    expiry: s.expires_at ? 'date' : 'never',
+    date: s.expires_at ? iso(new Date(s.expires_at * 1000)) : '',
+    embed: origins.length > 0,
+    sites: origins.join(' '),
+  }
+}
 
 /** The most days the server accepts. */
 export const MAX_DAYS = 3650
@@ -92,9 +113,11 @@ export interface Problem {
 }
 
 /** The first reason the form cannot be sent yet, or null. */
-export function problem(d: Draft, now = new Date()): Problem | null {
-  if (d.access === 'password' && !d.password.trim()) return { field: 'password', text: copy.needPassword }
-  if (expiryDays(d, now) === null) return { field: 'date', text: copy.dateBad }
+export function problem(d: Draft, now = new Date(), was?: Draft): Problem | null {
+  if (d.access === 'password' && !d.password.trim() && !d.hadPassword) return { field: 'password', text: copy.needPassword }
+  // An end date left as it was is not checked again: a link that has ended can still be renamed.
+  const sameEnd = was && d.expiry === was.expiry && d.date === was.date
+  if (!sameEnd && expiryDays(d, now) === null) return { field: 'date', text: copy.dateBad }
   if (d.embed) {
     const found = parseOrigins(d.sites)
     const bad = originsError(found) ?? (found.list.length ? null : copy.embedNeed)
@@ -114,6 +137,21 @@ export function linkBody(d: Draft, fallbackName: string, now = new Date()) {
     days: expiryDays(d, now) ?? 0,
     embed_origins: d.embed ? parseOrigins(d.sites).list : [],
   }
+}
+
+/** What to send to change a link from `was` to `d`: only what differs, so a
+ *  rename never touches the password or the end date. Revenue is fixed when a
+ *  link is made, so it is never in it. */
+export function patchBody(was: Draft, d: Draft, now = new Date()) {
+  const body: { name?: string; notes?: boolean; days?: number; password?: string; embed_origins?: string[] } = {}
+  if (d.name.trim() !== was.name.trim()) body.name = d.name.trim()
+  if (d.notes !== was.notes) body.notes = d.notes
+  if (d.expiry !== was.expiry || d.date !== was.date) body.days = expiryDays(d, now) ?? 0
+  if (d.access === 'public' && was.hadPassword) body.password = ''
+  if (d.access === 'password' && d.password.trim()) body.password = d.password
+  const list = d.embed ? parseOrigins(d.sites).list : []
+  if (list.join('\n') !== (was.embed ? parseOrigins(was.sites).list : []).join('\n')) body.embed_origins = list
+  return body
 }
 
 /** Which parts of the viewer's page the thumbnail draws for these options. */

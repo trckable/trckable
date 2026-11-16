@@ -609,6 +609,12 @@ export default {
   'links.fallbackName': 'Geteilter Link',
   'links.changeFailed': 'Der Link ließ sich nicht ändern',
   'links.more': 'Mehr',
+  'links.edit': 'Bearbeiten',
+  'links.editRow': (name: string) => `Link bearbeiten: ${name}`,
+  'links.save': 'Speichern',
+  'links.saving': 'Speichern…',
+  'links.saved': 'Link gespeichert',
+  'links.passwordKeep': 'Leer lassen, um das Passwort zu behalten',
 
   // sites
   'sites.pick': 'Website wählen',

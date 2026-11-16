@@ -87,6 +87,12 @@ export const copy = defineCopy('links', {
   fallbackName: 'Shared link',
   changeFailed: 'Could not change the link',
   more: 'More',
+  edit: 'Edit',
+  editRow: (name: string) => `Edit link: ${name}`,
+  save: 'Save',
+  saving: 'Saving…',
+  saved: 'Link saved',
+  passwordKeep: 'Leave empty to keep the password',
 })
 
 /** What a link is called when its name is empty. */

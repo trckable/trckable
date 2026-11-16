@@ -25,8 +25,9 @@ async function sharing(page: Page, site: TestSite) {
 async function make(card: Locator, name: string, how: { password?: string; revenue?: boolean; notes?: boolean; expires?: '7d' | '30d'; embed?: string } = {}) {
   await card.getByRole('button', { name: 'New link' }).first().click()
   await card.getByLabel('Name').fill(name)
+  if (how.password || how.expires || how.embed) await card.getByRole('button', { name: 'More', exact: true }).click()
   if (how.password) {
-    await card.getByRole('button', { name: 'Password' }).click()
+    await card.getByRole('group', { name: 'Who can open it' }).getByRole('button', { name: 'Password' }).click()
     await card.getByLabel('Password', { exact: true }).fill(how.password)
   }
   if (how.revenue) await card.getByRole('switch', { name: 'Revenue' }).click()

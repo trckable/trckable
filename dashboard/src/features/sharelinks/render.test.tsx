@@ -61,6 +61,11 @@ describe('a row', () => {
     expect(html).toContain('Password link')
     expect(html).toContain('Copy link: Board')
   })
+  it('has an Edit button that opens the fields of the link, none for a viewer', () => {
+    expect(row({})).toContain('aria-label="Edit link: Board"')
+    expect(row({})).toContain('aria-expanded="false"')
+    expect(row({}, true)).not.toContain('Edit link')
+  })
   it('offers a viewer nothing to press', () => {
     const html = row({}, true)
     expect(html).not.toContain('<button')

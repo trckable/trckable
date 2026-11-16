@@ -149,14 +149,86 @@ func (s *Store) CreateShare(ctx context.Context, site, name, password string, re
 	return sh, token, err
 }
 
-// SetShareNotes turns the chart's notes on or off for one link, from the
-// next report its readers load.
-func (s *Store) SetShareNotes(ctx context.Context, site, id string, on bool) error {
-	res, err := s.DB.ExecContext(ctx, `UPDATE site_shares SET notes = ? WHERE site_id = ? AND id = ?`, on, site, id)
+// ShareEdit is what changes on an existing link: every field left nil stays
+// as it was. Revenue is not here on purpose: it is fixed when the link is made.
+type ShareEdit struct {
+	Name  *string
+	Notes *bool
+	// Expires: SetExpiry says it changes; a nil Expires then removes the end date.
+	SetExpiry bool
+	Expires   *int64
+	// Password: nil keeps it, empty removes it, anything else is the new one.
+	Password *string
+	Origins  *[]string
+}
+
+// UpdateShare changes what a link shows or who can open it, from the next
+// request of its readers on. A new password ends the sessions opened with the
+// old one. A link that is not this site's is ErrNotFound.
+func (s *Store) UpdateShare(ctx context.Context, site, id string, e ShareEdit) error {
+	var sets []string
+	var args []any
+	add := func(col string, v any) {
+		sets = append(sets, col+" = ?")
+		args = append(args, v)
+	}
+	if e.Name != nil {
+		add("name", strings.TrimSpace(*e.Name))
+	}
+	if e.Notes != nil {
+		add("notes", *e.Notes)
+	}
+	if e.SetExpiry {
+		add("expires_at", e.Expires)
+	}
+	if e.Origins != nil {
+		origins := *e.Origins
+		if len(origins) > MaxEmbedOrigins {
+			origins = origins[:MaxEmbedOrigins]
+		}
+		add("embed_origins", strings.Join(origins, "\n"))
+	}
+	newPassword := false
+	if e.Password != nil {
+		pass := ""
+		if *e.Password != "" {
+			h, err := auth.HashPasswordCtx(ctx, *e.Password)
+			if err != nil {
+				return err
+			}
+			pass, newPassword = h, true
+		}
+		add("pass_hash", pass)
+	}
+	if len(sets) == 0 {
+		return s.shareExists(ctx, site, id)
+	}
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback() //nolint:errcheck // a no-op once committed
+	res, err := tx.ExecContext(ctx, `UPDATE site_shares SET `+strings.Join(sets, ", ")+` WHERE site_id = ? AND id = ?`, append(args, site, id)...)
 	if err != nil {
 		return err
 	}
 	if n, _ := res.RowsAffected(); n == 0 {
+		return auth.ErrNotFound
+	}
+	if newPassword {
+		if _, err := tx.ExecContext(ctx, `DELETE FROM share_sessions WHERE share_id = ?`, id); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+func (s *Store) shareExists(ctx context.Context, site, id string) error {
+	var n int
+	if err := s.DB.QueryRowContext(ctx, `SELECT count(*) FROM site_shares WHERE site_id = ? AND id = ?`, site, id).Scan(&n); err != nil {
+		return err
+	}
+	if n == 0 {
 		return auth.ErrNotFound
 	}
 	return nil

@@ -26,6 +26,7 @@ export function Access({ draft, set, blocked }: { draft: Draft; set: (p: Partial
               type="password"
               aria-label={copy.password}
               autoComplete="new-password"
+              placeholder={draft.hadPassword ? copy.passwordKeep : undefined}
               value={draft.password}
               onChange={(e) => set({ password: e.target.value })}
               onBlur={() => setLeft(true)}

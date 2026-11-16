@@ -90,14 +90,16 @@ function Embed({ draft, set }: { draft: Draft; set: Patch }) {
 /** Whether anything under More differs from the plain link: then it starts open. */
 const customised = (d: Draft) => d.access === 'password' || d.expiry !== 'never' || d.embed
 
-export function Options({ draft, set, blocked }: { draft: Draft; set: Patch; blocked: Problem | null }) {
+export function Options({ draft, set, blocked, editing }: { draft: Draft; set: Patch; blocked: Problem | null; /** A link that exists: its revenue is fixed, so it is not offered. */ editing?: boolean }) {
   const [more, setMore] = useState(() => customised(draft))
   return (
     <>
       <div className="sl-opts">
-        <Opt icon={<CircleDollarSign size={15} strokeWidth={1.75} />} label={copy.revenue}>
-          <Switch on={draft.revenue} label={copy.revenue} onChange={() => set({ revenue: !draft.revenue })} />
-        </Opt>
+        {!editing && (
+          <Opt icon={<CircleDollarSign size={15} strokeWidth={1.75} />} label={copy.revenue}>
+            <Switch on={draft.revenue} label={copy.revenue} onChange={() => set({ revenue: !draft.revenue })} />
+          </Opt>
+        )}
         <Opt icon={<StickyNote size={15} strokeWidth={1.75} />} label={copy.notes}>
           <Switch on={draft.notes} label={copy.notes} onChange={() => set({ notes: !draft.notes })} />
         </Opt>

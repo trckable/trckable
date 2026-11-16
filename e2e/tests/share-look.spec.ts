@@ -62,7 +62,7 @@ test('a link wears the owner\'s logo and colour, and hides trckable\'s name', as
 
   // The link, opened with no account.
   await dialog.getByRole('button', { name: 'Create link' }).click()
-  const url = await dialog.locator('.sd-url input').inputValue()
+  const url = await dialog.locator('.sl-url').inputValue()
   const path = new URL(url).pathname
   const anon = await browser.newContext({ colorScheme: SCHEME, ...(WIDTH ? { viewport: { width: WIDTH, height: 844 } } : {}) })
   const shared = await anon.newPage()
