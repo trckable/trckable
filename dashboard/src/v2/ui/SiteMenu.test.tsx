@@ -19,7 +19,7 @@ describe('the header button’s name', () => {
   it('marks a not-verified and a down site on the mark, never as fine', () => {
     const html = (s: Site, state?: 'new') => renderToStaticMarkup(<MarkDot site={s} size={18} state={state} />)
     expect(html(site({ last_event_at: undefined }), 'new')).toContain('mk-dot off')
-    expect(html(site({ last_event_at: NOW - 3 * 86400, check: { at: NOW - 3600, error: 'could not be reached' } }))).toContain('mk-dot down')
+    expect(html(site({ last_event_at: NOW - 3 * 86400, down_since: NOW - 3 * 86400, check: { at: NOW - 3600, error: 'could not be reached' } }))).toContain('mk-dot down')
     expect(html(site())).toContain('mk-dot "')
   })
 })

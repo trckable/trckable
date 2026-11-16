@@ -34,7 +34,7 @@ describe('a site in the list', () => {
 
   it('says setup, or how long it has been down or quiet, in the number’s place', () => {
     expect(row(site({ last_event_at: undefined }), 0)).toContain('Not verified')
-    const gone = row(site({ last_event_at: NOW - 3 * 86400, check: { at: NOW - 3600, error: 'example.com could not be reached over https' } }))
+    const gone = row(site({ last_event_at: NOW - 3 * 86400, down_since: NOW - 3 * 86400, check: { at: NOW - 3600, error: 'example.com could not be reached over https' } }))
     expect(gone).toContain('state-word down')
     expect(gone).toContain('down 3d')
     expect(gone).toContain('title="Not reachable for 3d. Open the site to see what’s wrong."')
