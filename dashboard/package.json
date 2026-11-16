@@ -5,10 +5,10 @@
   "license": "AGPL-3.0-only",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build && node scripts/precompress.mjs && node scripts/size.mjs",
+    "build": "pnpm typecheck && vite build && node scripts/precompress.mjs && node scripts/size.mjs",
     "build:map": "node scripts/build-map.mjs",
     "build:globe": "node scripts/build-globe.mjs",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "node node_modules/typescript7/bin/tsc --noEmit",
     "lint": "node scripts/lint.mjs && node scripts/colors.mjs && node scripts/component-size.mjs",
     "test": "vitest run"
   },
@@ -34,6 +34,7 @@
     "iso-3166-1": "^2.1.1",
     "topojson-client": "^3.1.0",
     "typescript": "^5.9.3",
+    "typescript7": "npm:typescript@^7.0.2",
     "typescript-eslint": "8.72.2",
     "vite": "^8.3.8",
     "vitest": "^5.1.0",
