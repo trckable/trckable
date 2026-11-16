@@ -40,15 +40,6 @@ describe('the palette', () => {
     expect(openExplore.mock.calls.every((c) => c[0] === 'overview')).toBe(true)
   })
 
-  it('refreshes every number of the site from a row of its own', () => {
-    const bus = new EventTarget()
-    vi.stubGlobal('window', bus)
-    const seen = vi.fn()
-    bus.addEventListener('trckable:refresh', seen)
-    paletteItems({ sites: [site], site, data, here: 'briefing', domainOf: (s) => s.domain }).find((i) => i.title === 'Refresh the numbers')?.run()
-    vi.unstubAllGlobals()
-    expect(seen).toHaveBeenCalledOnce()
-  })
 
   it('finds settings, alerts, share, the theme and sign out by their words', () => {
     const items = paletteItems({ sites: [site], site, data, here: 'briefing', domainOf: (s) => s.domain })

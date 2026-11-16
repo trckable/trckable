@@ -94,7 +94,6 @@ export function Palette({ items, placeholder, none, onClose, initial = '', ask }
                   <button type="button" className={`pi${k === sel ? ' on' : ''}`} onClick={() => run(i)} onPointerMove={() => k !== sel && setAt(k)}>
                     {i.lead && <span aria-hidden="true" style={{ display: 'flex' }} dangerouslySetInnerHTML={{ __html: i.lead }} />}
                     {i.title}
-                    {i.kind && <span className="s">{i.kind}</span>}
                   </button>
                 </Fragment>
               )
