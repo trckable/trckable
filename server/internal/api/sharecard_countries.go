@@ -1,11 +1,6 @@
 package api
 
-import (
-	"strings"
-
-	"golang.org/x/text/language"
-	"golang.org/x/text/language/display"
-)
+import "strings"
 
 // countryNames are the English names of the countries the report knows by
 // their two-letter codes, for the share card's top country.
@@ -297,11 +292,7 @@ func countryName(l *cardLang, code string) string {
 	if en == "" || l.code == "en" {
 		return en
 	}
-	region, err := language.ParseRegion(code)
-	if err != nil {
-		return en
-	}
-	if name := display.Regions(language.MustParse(l.code)).Name(region); name != "" && name != region.String() {
+	if name := countryNamesIn[l.code][code]; name != "" {
 		return name
 	}
 	return en

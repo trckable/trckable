@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"reflect"
 	"regexp"
 	"sort"
@@ -330,5 +331,28 @@ func TestCardLangMilestone(t *testing.T) {
 				}
 			}
 		}
+	}
+}
+
+// The countries people come from have a name in every language but English, and the table is the one the generator writes from the
+// dashboard's languages (skipped where node is not installed).
+func TestCardCountryNamesAreGenerated(t *testing.T) {
+	for code := range cardLangs {
+		if code == "en" {
+			continue
+		}
+		// Old codes with no current country (CT, PU, ...) fall back to English; the real ones have a name.
+		for _, c := range []string{"DE", "FR", "US", "GB", "JP", "BR", "IN", "AU", "CH", "NL", "ES", "IT"} {
+			if countryNamesIn[code][c] == "" {
+				t.Errorf("%s: no name for %s", code, c)
+			}
+		}
+	}
+	node, err := exec.LookPath("node")
+	if err != nil {
+		t.Skip("no node")
+	}
+	if out, err := exec.Command(node, "../../../scripts/gen-country-names.mjs", "--check").CombinedOutput(); err != nil {
+		t.Errorf("%s", out)
 	}
 }
