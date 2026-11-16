@@ -117,6 +117,7 @@ test('from 768 px Share is the header button and the ⋯ menu does not repeat it
   await expect(page.locator('.share-chip')).toBeVisible()
   await page.locator('.xmore').click()
   await expect(page.getByRole('menuitem', { name: 'Export CSV' })).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: 'Milestones' })).toBeVisible()
   await expect(page.getByRole('menuitem', { name: 'Share a picture' })).toHaveCount(0)
 })
 
