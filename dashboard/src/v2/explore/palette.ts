@@ -54,8 +54,6 @@ export function paletteItems(o: { sites: Site[]; site: Site | null; data: Report
   if (o.site && ready && !isShared()) out.push({ title: mc.title, kind: pc.kinds.view, group: pc.groups.goTo, run: () => window.dispatchEvent(new Event('trckable:milestones')) })
   if (o.site && ready) out.push(
     ...(isShared() ? [] : [{ title: pc.goLive, kind: pc.kinds.view, group: pc.groups.goTo, run: () => void switchTab('live', o.here) }]),
-    { title: pc.goBriefing, kind: pc.kinds.view, group: pc.groups.goTo, run: () => void switchTab('briefing', o.here) },
-    { title: pc.refresh, kind: pc.kinds.action, group: pc.groups.goTo, run: () => window.dispatchEvent(new Event('trckable:refresh')) },
     { title: pc.clear, kind: pc.kinds.filter, group: pc.groups.goTo, run: () => setView({ filters: [], xf: undefined }) },
   )
   // Settings (every section, so "alerts" and "share" find theirs), the Mentions page, the theme and sign out: what the menus hold.
@@ -85,7 +83,7 @@ export function paletteItems(o: { sites: Site[]; site: Site | null; data: Report
     out.push({ title: pc.signOut, also: 'log out', kind: pc.kinds.action, group: pc.groups.account, run: signOut })
   }
   for (const s of o.sites) out.push({ title: pc.switchTo(s.name || s.domain), kind: pc.kinds.site, group: pc.groups.sites, run: () => navigate('/' + encodeURIComponent(s.domain)) })
-  if (ready) for (const [id, name] of PERIODS) out.push({ title: `${pc.period} · ${name}`, kind: pc.kinds.period, group: pc.groups.period, run: () => setView({ period: id, from: undefined, to: undefined }) })
+  if (ready) for (const [id, name] of PERIODS) out.push({ title: name, also: pc.period, kind: pc.kinds.period, group: pc.groups.period, run: () => setView({ period: id, from: undefined, to: undefined }) })
   const dims = ready ? o.data?.current.dims : undefined
   for (const r of (dims?.referrer ?? []).slice(0, 8)) out.push({ title: `${pc.filter} · ${pc.source} ${sourceName(r.value) || r.value}`, kind: pc.kinds.filter, group: pc.groups.filters, run: () => openExplore('overview', [{ dim: 'referrer', value: r.value }]) })
   for (const r of (dims?.country ?? []).slice(0, 8)) out.push({ title: `${pc.filter} · ${pc.country} ${countryName(r.value)}`, kind: pc.kinds.filter, group: pc.groups.filters, run: () => openExplore('overview', [{ dim: 'country', value: r.value }]) })

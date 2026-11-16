@@ -1,0 +1,1 @@
+- Search: no stale 'Go to Briefing' or 'Refresh the numbers', no kind labels, periods read as their names.
