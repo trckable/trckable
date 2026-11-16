@@ -247,6 +247,7 @@ type payload struct {
 	Referrer   string            `json:"r"`
 	Width      int               `json:"w"`
 	Lang       string            `json:"l"`
+	Title      string            `json:"ti"` // the page's title, on a pageview
 	ID         string            `json:"id"` // event id, base36
 	Age        int64             `json:"a"`  // ms since the event happened (queued retries)
 	PV         string            `json:"pv"` // pageview id, base36
@@ -519,6 +520,9 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 			return nil, BotOther, nil, nil
 		}
 		e.Channel = classify(u, e.RefHost, e.RefURL)
+		if !site.ConsentFree { // the consent-free promise: nothing about the page's wording is kept either
+			e.Title = CleanTitle(p.Title)
+		}
 		e.UTMSource, e.UTMMedium, e.UTMCampaign, e.UTMTerm, e.UTMContent =
 			u.UTMSource, u.UTMMedium, u.UTMCampaign, u.UTMTerm, u.UTMCont
 		if e.RefHost == "" {

@@ -5,7 +5,7 @@
 // It sends raw signals only; the server derives everything else. Wire format
 // (short keys): s site · k kind (pv|g|e) · u url · r referrer · w screen width
 // l language · id event id · a age ms · pv pageview id · v visitor id
-// n goal · p props · en engaged ms · sc scroll % · dev localhost allowed · c cookieless
+// ti page title (pageviews) · n goal · p props · en engaged ms · sc scroll % · dev localhost allowed · c cookieless
 // lcp ms · cls thousandths · inp ms (Core Web Vitals, with that module on)
 
 // Build-time feature flags. esbuild replaces each with true/false per
@@ -422,6 +422,8 @@ export function start(c: Config): Tracker {
     if (pv && engaged > 0) send(__VITALS__ && ping != 1 ? { k: 'e', pv, en: engaged, sc: scroll, ...snap() } : { k: 'e', pv, en: engaged, sc: scroll })
   }
 
+  let was = '' // the title of the page before
+
   const page = () => {
     // A new page is a new path (and route, in hash mode): a query that changes
     // while typing in a search box or ticking a filter is the same page.
@@ -435,7 +437,13 @@ export function start(c: Config): Tracker {
     pv = rid()
     engaged = scroll = 0
     visible = shown()
-    send({ k: 'pv', r: ref, pv })
+    // The title, as the browser shows it, with any email address taken out and at
+    // most 200 characters. A router that has not set the new title yet still
+    // shows the last page's: the same title as before is not sent again.
+    // A page whose <html> or <title> carries data-trckable-ignore sends none.
+    const ti = d.title.replace(/\S*@\S*/g, '').slice(0, 200)
+    send({ k: 'pv', r: ref, pv, ti: ti != was && !d.documentElement.hasAttribute('data-trckable-ignore') ? ti : undefined })
+    was = ti
     ref = '' // later SPA navigations are internal
     if (__GOALS__) observeScrollGoals()
   }

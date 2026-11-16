@@ -468,6 +468,12 @@
 .mk [data-xcard=pages] .mk-bar{background:none}
 .mk [data-xcard=pages] .mk-bar>i{display:none}
 .mk [data-xcard=pages] .xrw{min-height:34px}
+/* A page with a title: the title, and its path small and grey under it. */
+.mk .xt .mk-bar .xtwo{display:flex;align-items:center;gap:6px;min-width:0;position:relative;inset:auto;transform:none}
+.mk .xt .mk-bar .xtw{display:flex;flex-direction:column;min-width:0;line-height:1.25;position:static;transform:none}
+.mk .xt .xtw>b{font-weight:500;overflow:hidden;text-overflow:ellipsis}
+.mk .xt .xtw>small{font-size:11px;font-weight:400;color:var(--mk-muted);overflow:hidden;text-overflow:ellipsis}
+.mk .xcards .mk-bar:has(.xtwo){height:auto;min-height:36px;padding-block:3px}
 /* Empty cards take less room. */
 .mk .xcards .xempty,.mk .xcards .xcp .xempty{min-height:104px;padding:var(--mk-s2)}
 .mk .xcards .xcp:has(.xempty){display:flex;flex-direction:column}
@@ -605,6 +611,9 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .mk .xtr-row{display:grid;grid-template-columns:20px minmax(0,1fr) auto 44px;align-items:center;gap:var(--mk-s2);padding:8px 6px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;text-align:start;cursor:pointer}
 .mk .xtr-row:hover{background:var(--mk-band)}
 .mk .xtr-mark{display:flex;color:var(--mk-muted)}
+.mk .xtr-titled{display:flex;flex-direction:column;line-height:1.25}
+.mk .xtr-titled>b{font-weight:500;overflow:hidden;text-overflow:ellipsis}
+.mk .xtr-titled>small{font-size:11px;font-weight:400;color:var(--mk-muted);overflow:hidden;text-overflow:ellipsis}
 .mk .xtr-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mk .xtr-d{min-width:48px;color:var(--mk-muted);font-size:12.5px;font-variant-numeric:tabular-nums;text-align:end;white-space:nowrap}
 .mk .xtr-d.up{color:var(--mk-lime)}
