@@ -78,6 +78,8 @@ func (s *Server) problems() map[string]string {
 	}
 	if err := writerFailing(s); err != nil {
 		out[problemWriter] = err.Error()
+	} else if since := writerStalled(s); !since.IsZero() {
+		out[problemWriter] = "the writer has made no progress since " + since.UTC().Format(time.RFC3339)
 	}
 	if s.revenue != nil && s.revenue.KeyMismatch() {
 		out[problemKey] = "TRCKABLE_SECRET does not match the key this data was encrypted with"

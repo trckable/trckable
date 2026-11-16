@@ -595,6 +595,11 @@ func (s *Server) startAnalytics(ctx context.Context) {
 			s.writerErr.Store(err)
 			slog.Error("the analytics writer cannot commit; exiting so the next start replays the WAL", "err", err)
 			s.exitNow(1)
+		},
+		StallExitAfter: stallExit(s.cfg.WriterStallExit),
+		OnStall: func(err error) {
+			s.writerErr.Store(err)
+			s.exitNow(1)
 		}})
 	w.OnCommit = s.hub.Publish
 	w.OnTouch = func(site string, lo, hi int64) {
