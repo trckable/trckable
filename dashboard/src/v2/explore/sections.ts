@@ -39,8 +39,17 @@ export const seeNetworks = (on: boolean) => {
   networksSeen = on
 }
 
+let noMoney = false
+/** Whether the period's report carries payments. A shared link without them has nothing to show under Sales, and a viewer there can connect nothing. */
+export const seeMoney = (on: boolean) => {
+  noMoney = !on
+}
+
+/** The tables that read payments: on a shared link they are offered only once the report carries some. */
+const PAYING: Tab[] = ['sales', 'payments', 'customers', 'earners']
+
 /** Whether a table is offered here: all of them, but on a shared link only those the report can fill. */
-export const offered = (t: Tab): boolean => (t !== 'mentions' || hasMentions()) && (t !== 'networks' || networksSeen) && (t !== 'answers' || hasAnswers()) && (!isShared() || SHARED.includes(t))
+export const offered = (t: Tab): boolean => (t !== 'mentions' || hasMentions()) && (t !== 'networks' || networksSeen) && (t !== 'answers' || hasAnswers()) && (!isShared() || (SHARED.includes(t) && !(noMoney && PAYING.includes(t))))
 
 /** A section's tables, as offered here. */
 export const TABS = Object.fromEntries(SECTIONS.map((s) => [s, []])) as unknown as Record<Section, Tab[]>

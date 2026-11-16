@@ -74,15 +74,17 @@ export function MoreMenu({ views, details, onDetails, onCsv, onCopy, onMail, onS
       <XGrab />
       {onShare && <XMi data={{ 'data-share': '1' }} icon={<Share2 size={16} strokeWidth={1.75} aria-hidden="true" />} name={shareCopy.menuItem} onClick={onShare} />}
       {!isShared() && <XMi data={{ 'data-milestones': '1' }} icon={<Trophy size={16} strokeWidth={1.75} aria-hidden="true" />} name={milestonesCopy.title} onClick={() => window.dispatchEvent(new Event('trckable:milestones'))} />}
-      <div>
-        <XGl>{copy.views}</XGl>
-        <ViewRows {...views} />
-        <XSep />
-        <ViewTail {...views} />
-        <XSep />
-      </div>
+      {!isShared() && (
+        <div>
+          <XGl>{copy.views}</XGl>
+          <ViewRows {...views} />
+          <XSep />
+          <ViewTail {...views} />
+          <XSep />
+        </div>
+      )}
       {details && <XMi data={{ 'data-pgd': '1' }} name={copy.pageDetails} desc={copy.pageDetailsHint} onClick={onDetails} />}
-      <XMi id="xCsv" name={copy.exportCsv} desc={copy.exportHint} disabled={!can('data.export')} title={can('data.export') ? undefined : copy.exportDenied} onClick={onCsv} />
+      {!isShared() && <XMi id="xCsv" name={copy.exportCsv} desc={copy.exportHint} disabled={!can('data.export')} title={can('data.export') ? undefined : copy.exportDenied} onClick={onCsv} />}
       {onMail && <XMi data={{ 'data-mail': '1' }} name={copy.emailPreview} desc={copy.emailPreviewHint} onClick={onMail} />}
       <XMi data={{ 'data-copy': '1' }} name={copy.copyLink} onClick={onCopy} />
     </>
