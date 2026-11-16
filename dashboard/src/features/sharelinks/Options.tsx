@@ -1,6 +1,6 @@
-// The four options under the name: each a row with its icon, its name and
+// The options under the name: each a row with its icon, its name and
 // its control, so the whole list reads at a glance.
-import { Calendar, CircleDollarSign, Clock, Code, StickyNote } from 'lucide-react'
+import { Calendar, CircleDollarSign, Clock, Code, Radio, StickyNote } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Switch } from '../../components/Switch'
 import { FieldError, fieldProps } from '../../kit/FieldError'
@@ -77,6 +77,9 @@ export function Options({ draft, set }: { draft: Draft; set: Patch }) {
       </Opt>
       <Opt icon={<StickyNote size={15} strokeWidth={1.75} />} label={copy.notes}>
         <Switch on={draft.notes} label={copy.notes} onChange={() => set({ notes: !draft.notes })} />
+      </Opt>
+      <Opt icon={<Radio size={15} strokeWidth={1.75} />} label={copy.live}>
+        <Switch on={draft.live} label={copy.live} onChange={() => set({ live: !draft.live })} />
       </Opt>
       <Expires draft={draft} set={set} />
       <Opt

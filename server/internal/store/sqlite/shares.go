@@ -33,6 +33,7 @@ type Share struct {
 	Name      string `json:"name"`
 	Revenue   bool   `json:"revenue"` // false hides money, on the server
 	Notes     bool   `json:"notes"`   // false hides the chart's notes, on the server
+	Live      bool   `json:"live"`    // false refuses the count of visitors on the site now, on the server
 	ExpiresAt *int64 `json:"expires_at,omitempty"`
 	HasPass   bool   `json:"has_password"`
 	CreatedAt int64  `json:"created_at"`
@@ -95,7 +96,7 @@ func (s *Store) openToken(id, sealed, hash string) string {
 // Shares lists a site's links, each with its token when it can be read.
 func (s *Store) Shares(ctx context.Context, site string) ([]Share, error) {
 	rows, err := s.DB.QueryContext(ctx,
-		`SELECT id, site_id, name, revenue, notes, expires_at, pass_hash <> '', created_at, viewed_at, views, embed_origins, token_hash, token_enc
+		`SELECT id, site_id, name, revenue, notes, live, expires_at, pass_hash <> '', created_at, viewed_at, views, embed_origins, token_hash, token_enc
 		 FROM site_shares WHERE site_id = ? ORDER BY created_at DESC`, site)
 	if err != nil {
 		return nil, err
@@ -107,7 +108,7 @@ func (s *Store) Shares(ctx context.Context, site string) ([]Share, error) {
 		var rev int
 		var pass bool
 		var origins, hash, sealed string
-		if err := rows.Scan(&sh.ID, &sh.SiteID, &sh.Name, &rev, &sh.Notes, &sh.ExpiresAt, &pass, &sh.CreatedAt, &sh.ViewedAt, &sh.Views, &origins, &hash, &sealed); err != nil {
+		if err := rows.Scan(&sh.ID, &sh.SiteID, &sh.Name, &rev, &sh.Notes, &sh.Live, &sh.ExpiresAt, &pass, &sh.CreatedAt, &sh.ViewedAt, &sh.Views, &origins, &hash, &sealed); err != nil {
 			return nil, err
 		}
 		sh.Revenue, sh.HasPass, sh.EmbedOrigins = rev == 1, pass, splitLines(origins)
@@ -118,7 +119,7 @@ func (s *Store) Shares(ctx context.Context, site string) ([]Share, error) {
 }
 
 // CreateShare makes a link and returns its token.
-func (s *Store) CreateShare(ctx context.Context, site, name, password string, revenue, notes bool, expires *int64, origins []string) (Share, string, error) {
+func (s *Store) CreateShare(ctx context.Context, site, name, password string, revenue, notes, live bool, expires *int64, origins []string) (Share, string, error) {
 	var n int
 	if err := s.DB.QueryRowContext(ctx, `SELECT count(*) FROM site_shares WHERE site_id = ?`, site).Scan(&n); err != nil {
 		return Share{}, "", err
@@ -138,14 +139,14 @@ func (s *Store) CreateShare(ctx context.Context, site, name, password string, re
 	if len(origins) > MaxEmbedOrigins {
 		origins = origins[:MaxEmbedOrigins]
 	}
-	sh := Share{ID: auth.Token("shr_", 8), SiteID: site, Name: strings.TrimSpace(name), Revenue: revenue, Notes: notes, ExpiresAt: expires, HasPass: pass != "", CreatedAt: time.Now().Unix(), EmbedOrigins: origins}
+	sh := Share{ID: auth.Token("shr_", 8), SiteID: site, Name: strings.TrimSpace(name), Revenue: revenue, Notes: notes, Live: live, ExpiresAt: expires, HasPass: pass != "", CreatedAt: time.Now().Unix(), EmbedOrigins: origins}
 	rev := 0
 	if revenue {
 		rev = 1
 	}
 	_, err := s.DB.ExecContext(ctx,
-		`INSERT INTO site_shares (id, site_id, name, token_hash, token_enc, pass_hash, revenue, notes, expires_at, created_at, embed_origins) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		sh.ID, site, sh.Name, hex.EncodeToString(auth.Hash(token)), s.sealToken(sh.ID, token), pass, rev, notes, expires, sh.CreatedAt, strings.Join(origins, "\n"))
+		`INSERT INTO site_shares (id, site_id, name, token_hash, token_enc, pass_hash, revenue, notes, live, expires_at, created_at, embed_origins) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		sh.ID, site, sh.Name, hex.EncodeToString(auth.Hash(token)), s.sealToken(sh.ID, token), pass, rev, notes, live, expires, sh.CreatedAt, strings.Join(origins, "\n"))
 	return sh, token, err
 }
 
@@ -153,6 +154,19 @@ func (s *Store) CreateShare(ctx context.Context, site, name, password string, re
 // next report its readers load.
 func (s *Store) SetShareNotes(ctx context.Context, site, id string, on bool) error {
 	res, err := s.DB.ExecContext(ctx, `UPDATE site_shares SET notes = ? WHERE site_id = ? AND id = ?`, on, site, id)
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return auth.ErrNotFound
+	}
+	return nil
+}
+
+// SetShareLive allows or refuses the count of visitors on the site now for one
+// link, from the next count its readers ask for.
+func (s *Store) SetShareLive(ctx context.Context, site, id string, on bool) error {
+	res, err := s.DB.ExecContext(ctx, `UPDATE site_shares SET live = ? WHERE site_id = ? AND id = ?`, on, site, id)
 	if err != nil {
 		return err
 	}
@@ -215,9 +229,9 @@ func (s *Store) OpenShare(ctx context.Context, token, password string, now time.
 	var rev int
 	var pass, origins string
 	err := s.DB.QueryRowContext(ctx,
-		`SELECT id, site_id, name, revenue, notes, expires_at, pass_hash, created_at, viewed_at, views, embed_origins
+		`SELECT id, site_id, name, revenue, notes, live, expires_at, pass_hash, created_at, viewed_at, views, embed_origins
 		 FROM site_shares WHERE token_hash = ?`, hex.EncodeToString(auth.Hash(strings.TrimSpace(token)))).
-		Scan(&sh.ID, &sh.SiteID, &sh.Name, &rev, &sh.Notes, &sh.ExpiresAt, &pass, &sh.CreatedAt, &sh.ViewedAt, &sh.Views, &origins)
+		Scan(&sh.ID, &sh.SiteID, &sh.Name, &rev, &sh.Notes, &sh.Live, &sh.ExpiresAt, &pass, &sh.CreatedAt, &sh.ViewedAt, &sh.Views, &origins)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Share{}, auth.ErrNotFound
 	}
@@ -294,8 +308,8 @@ func (s *Store) ShareOf(ctx context.Context, session string, now time.Time) (Sha
 	var rev int
 	var pass string
 	err = s.DB.QueryRowContext(ctx,
-		`SELECT id, site_id, name, revenue, notes, expires_at, pass_hash, created_at, viewed_at, views FROM site_shares WHERE id = ?`, id).
-		Scan(&sh.ID, &sh.SiteID, &sh.Name, &rev, &sh.Notes, &sh.ExpiresAt, &pass, &sh.CreatedAt, &sh.ViewedAt, &sh.Views)
+		`SELECT id, site_id, name, revenue, notes, live, expires_at, pass_hash, created_at, viewed_at, views FROM site_shares WHERE id = ?`, id).
+		Scan(&sh.ID, &sh.SiteID, &sh.Name, &rev, &sh.Notes, &sh.Live, &sh.ExpiresAt, &pass, &sh.CreatedAt, &sh.ViewedAt, &sh.Views)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Share{}, auth.ErrNotFound // revoked while someone was reading
 	}

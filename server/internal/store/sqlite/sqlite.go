@@ -1144,6 +1144,9 @@ var migrations = []string{
 	ALTER TABLE pay_payments ADD COLUMN method TEXT NOT NULL DEFAULT '';
 	ALTER TABLE pay_hints ADD COLUMN product TEXT NOT NULL DEFAULT '';
 	ALTER TABLE pay_hints ADD COLUMN method TEXT NOT NULL DEFAULT '';`,
+	// 85: whether a share link may show how many visitors are on the site now:
+	// off unless the owner turns it on, like the notes.
+	`ALTER TABLE site_shares ADD COLUMN live INTEGER NOT NULL DEFAULT 0;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

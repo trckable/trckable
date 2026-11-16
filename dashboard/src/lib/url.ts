@@ -4,6 +4,8 @@ import { useSyncExternalStore } from 'react'
 import type { Filter, FunnelStep } from './api'
 import type { CompareMode } from './dates'
 import { filterParam, parseFilterParam } from './filterSet'
+import { isShared } from './me'
+import { sharePeriodOf } from './sharePeriods'
 import { wantsBriefing } from './tab'
 
 const EVENT = 'trckable:navigate'
@@ -124,7 +126,17 @@ function rangeOf(a: string | null, b: string | null): [string, string] | [undefi
   return x <= y ? [x, y] : [y, x]
 }
 
+/** A shared link has the periods it offers and nothing else: no dates from the address, and no comparison. */
+function sharedView(v: ViewState): ViewState {
+  return { ...v, period: sharePeriodOf(v.from && v.to ? null : v.period), from: undefined, to: undefined, compare: 'none', cfrom: undefined, cto: undefined, bucket: undefined, day: undefined }
+}
+
 export function readView(params: URLSearchParams): ViewState {
+  const v = readAddress(params)
+  return isShared() ? sharedView(v) : v
+}
+
+function readAddress(params: URLSearchParams): ViewState {
   const [from, to] = rangeOf(params.get('from'), params.get('to'))
   const [cfrom, cto] = rangeOf(params.get('cfrom'), params.get('cto'))
   const cmp = params.get('compare')
@@ -164,7 +176,7 @@ export function writeView(v: ViewState): string {
     p.set('to', v.to)
   } else if (v.period !== defaultPeriod) p.set('period', v.period)
   // Only what differs from the default is written: "none" on a preset period, anything but "none" on a custom range.
-  if (v.compare !== compareOf(null, v.from && v.to ? 'custom' : v.period)) p.set('compare', v.compare)
+  if (!isShared() && v.compare !== compareOf(null, v.from && v.to ? 'custom' : v.period)) p.set('compare', v.compare)
   if (v.compare === 'custom' && v.cfrom && v.cto) {
     p.set('cfrom', v.cfrom)
     p.set('cto', v.cto)
