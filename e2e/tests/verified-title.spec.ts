@@ -38,7 +38,7 @@ test('a link with money badges Sales with the provider, and the badge stays on o
   const badge = row.locator('[data-verified-source]')
   await expect(badge).toHaveAttribute('data-verified-source', 'stripe')
   await expect(badge).toHaveText('Verified')
-  await expect(badge.locator('svg.vf-logo')).toBeVisible()
+  await expect(badge.locator('svg.vf-pmark')).toBeVisible()
   // The badge stands on the title's own line, never under it.
   const at = async (l: typeof badge) => {
     const b = await l.boundingBox()
