@@ -49,12 +49,13 @@ const OPTIONAL = new Set(['vitals', 'consent', 'banner', 'forms'])
 // 2,740 since 12 Oct 2026, the same 34 bytes; 2,744 since 13 Oct, the same 4.
 // 2,984 since 18 Oct 2026, the Web Vitals above (heaviest mix 2,979).
 // 3,210 since 3 Nov 2026, the forms module's data-trckable-keep fields (343 bytes with the privacy rules; heaviest mix 3,206).
-const WITH_OPTIONAL_BUDGET = 3320
+// 3,325 since 16 Nov 2026, pako 3 measures the same code 5 bytes bigger.
+const WITH_OPTIONAL_BUDGET = 3325
 
 // trckable's own cookie bar carries markup, styles and words, so it has a
 // budget of its own. It replaces a consent manager that costs 30–90 KB, and
 // it is off unless a site asks for it.
-const BANNER_BUDGET = 4030 // 4,030 since 16 Nov 2026, the last send and the tab queue; 3,920 since 3 Nov 2026, the forms module's kept fields; 3,400 until 12 Oct 2026, the same 34 bytes; 3,452 since 13 Oct, the same change; 3,690 since 18 Oct, the Web Vitals; 3,692 since 22 Oct, visitor ids without a leading zero
+const BANNER_BUDGET = 4035 // 4,035 since 16 Nov 2026, pako 3 measures the same code 5 bytes bigger; 4,030 since 16 Nov 2026, the last send and the tab queue; 3,920 since 3 Nov 2026, the forms module's kept fields; 3,400 until 12 Oct 2026, the same 34 bytes; 3,452 since 13 Oct, the same change; 3,690 since 18 Oct, the Web Vitals; 3,692 since 22 Oct, visitor ids without a leading zero
 
 // The heatmaps module is a script of its own, sent after the base script only
 // to a site that turned it on, so none of it counts against BUDGET. It has a
