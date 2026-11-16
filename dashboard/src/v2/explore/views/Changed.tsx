@@ -15,6 +15,7 @@ import { ChangedChart } from './chartChunk'
 import type { Overview as Model } from '../types'
 import { Downtime } from './Downtime'
 import { XKcs } from '../../ui/XKcs'
+import { viewerKcs } from '../viewerKcs'
 import { MoverChips, MoverList, nameOf } from './Movers'
 import { Trending } from './Trending'
 
@@ -137,7 +138,7 @@ export function Changed({ x, d }: { x: XCtx; d: Model & { report: Report } }) {
       <p className="xchg-say">{say}</p>
       <MoverChips list={w?.causes ?? []} metric={metric} fmt={fmt} />
       {chart && <ChartSlot x={x} report={d.report} notes={notes.notes} onNotes={() => setSheet(true)} />}
-      <XKcs items={d.kcs} />
+      <XKcs items={viewerKcs(d.kcs)} />
       <Biggest metrics={metrics} metric={metric} setMetric={setMetric} list={list} fmt={fmt} few={w?.kind === 'few'} />
       {whole && <Plain x={x} />}
       {!whole && <Trending x={x} cur={cur} prev={prev} />}

@@ -2,6 +2,7 @@
 // the comparison needs), or, for a chart by the hour, when it will be ready. The comparison's own words are its tooltip.
 import { copy } from '../briefing/copy'
 import type { ChartIn } from './DayChart'
+import './chartRow.css'
 
 export function UsualRange({ c }: { c: Pick<ChartIn, 'startsOn' | 'learn' | 'noCompare'> }) {
   if (!c.startsOn) return null
