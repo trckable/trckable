@@ -2,7 +2,9 @@
 // own tabs. On a phone each menu is a sheet.
 import { Share2 } from 'lucide-react'
 import type { ReactNode } from 'react'
-import type { Filter } from '../../lib/api'
+import type { Filter, Verified } from '../../lib/api'
+import { VerifiedBadge } from '../../features/verified/VerifiedBadge'
+import { slotOfSection } from '../../features/verified/model'
 import { XSub } from '../ui/XBits'
 import { XIco } from '../ui/XIcons'
 import { XMenu } from '../ui/XMenu'
@@ -27,6 +29,8 @@ interface ToolbarProps {
   /** Opens the menu of sections, where it is a drawer: the name is then a heading, not a menu. */
   onDrawer?: () => void
   section: Section
+  /** The sources behind the numbers, where the title may carry their badge (a shared page). */
+  verified?: Verified
   tab: Tab
   filters: Filter[]
   options: Partial<Record<FilterDim, Option[]>>
@@ -95,6 +99,7 @@ export function Toolbar(p: ToolbarProps) {
           <XIco name={p.section} />
           <b>{name}</b>
         </span>
+        <VerifiedBadge verified={p.verified} slot={slotOfSection(p.section)} />
         {!p.onDrawer && <XMenu
           id="pick"
           cls="xpw"

@@ -2279,6 +2279,7 @@ export default {
   'verified.connect': 'Koppelen',
   'verified.checked': (when: string) => `Laatst gecontroleerd ${when}`,
   'verified.badge': (what: string) => `${what}: vergeleken met de bron zelf`,
+  'verified.badgeWord': 'Geverifieerd',
   'verified.seal': 'Geverifieerd door trckable',
   'badgelink.label': 'Badge linkt naar',
   'badgelink.home': 'trckable.com',
