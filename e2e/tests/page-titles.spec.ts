@@ -37,9 +37,10 @@ test('Pages shows each page title with its path under it', async ({ page, contex
   const report = async () => {
     const day = (ago: number) => new Date(Date.now() - ago * 86_400_000).toISOString().slice(0, 10)
     const res = await page.request.get(`${API}/api/v1/sites/${site}/report?from=${day(1)}&to=${day(0)}`, { headers: H })
-    return ((await res.json()) as { current: { dims: { page?: { value: string; title?: string }[] } } }).current.dims.page ?? []
+    return ((await res.json()) as { current: { dims: { page?: { value: string; title?: string; visitors: number }[] } } }).current.dims.page ?? []
   }
-  await expect.poll(async () => (await report()).find((r) => r.value === '/pricing')?.title, { timeout: 20_000 }).toBe('Plans and pricing | Acme')
+  // The title shows with the first batch the writer commits; What changed needs every view of /pricing written (20 people is its floor).
+  await expect.poll(async () => (await report()).find((r) => r.value === '/pricing'), { timeout: 30_000 }).toMatchObject({ title: 'Plans and pricing | Acme', visitors: 32 })
   expect((await report()).find((r) => r.value === '/about')?.title).toBeUndefined()
   expect((await report()).find((r) => r.value === '/blog')?.title).toBe('Notes for')
 
