@@ -1,5 +1,7 @@
 package api
 
+import "github.com/trckable/trckable/server/internal/milestones"
+
 var cardIT = &cardLang{
 	code: "it", group: ".", decimal: ",", moneyAt: moneyAfter,
 	months: [12]string{"gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"},
@@ -64,4 +66,24 @@ var cardIT = &cardLang{
 	prev24: "24 ore precedenti", prevDay: "giorno precedente", prevDays: "%d giorni precedenti", vs: "vs",
 
 	postBegun: "%s: il conteggio è iniziato. %s", postTopPage: "Pagina principale: %s.",
+
+	ms: milestones.Tongue{
+		Visitors:       "visitatori",
+		Pageviews:      "visualizzazioni",
+		FirstPageview:  "visualizzazione",
+		Countries:      "paesi",
+		Record:         "visitatori · giorno record",
+		Revenue:        "di ricavi",
+		RevenueHidden:  "Ricavi",
+		RevenueReached: "Traguardo di ricavi raggiunto",
+		Milestone:      "traguardo",
+		FirstGoal:      "Primo obiettivo",
+		FirstSale:      "Prima vendita",
+		First:          "Prima",
+		SearchClicks:   "Clic da Ricerca Google · 28 giorni",
+		AIVisits:       "visite da assistenti IA",
+		AfterSale:      "%d giorni dopo la prima vendita",
+		AfterSaleOne:   "%d giorno dopo la prima vendita",
+		Faster:         "%d× più veloce dell’ultimo",
+	},
 }

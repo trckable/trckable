@@ -1,5 +1,7 @@
 package api
 
+import "github.com/trckable/trckable/server/internal/milestones"
+
 var cardEN = &cardLang{
 	code: "en", group: ",", decimal: ".", moneyAt: moneyBefore,
 	months: [12]string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"},
@@ -64,4 +66,6 @@ var cardEN = &cardLang{
 	prev24: "previous 24 hours", prevDay: "previous day", prevDays: "previous %d days", vs: "vs",
 
 	postBegun: "%s: counting has begun. %s", postTopPage: "Top page: %s.",
+
+	ms: *milestones.English,
 }

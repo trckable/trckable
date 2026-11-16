@@ -1,5 +1,7 @@
 package api
 
+import "github.com/trckable/trckable/server/internal/milestones"
+
 var cardNL = &cardLang{
 	code: "nl", group: ".", decimal: ",", moneyAt: moneySpaced,
 	months: [12]string{"jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"},
@@ -64,4 +66,24 @@ var cardNL = &cardLang{
 	prev24: "voorgaande 24 uur", prevDay: "voorgaande dag", prevDays: "voorgaande %d dagen", vs: "t.o.v.",
 
 	postBegun: "%s: het tellen is begonnen. %s", postTopPage: "Toppagina: %s.",
+
+	ms: milestones.Tongue{
+		Visitors:       "bezoekers",
+		Pageviews:      "paginaweergaven",
+		FirstPageview:  "paginaweergave",
+		Countries:      "landen",
+		Record:         "bezoekers · recorddag",
+		Revenue:        "omzet",
+		RevenueHidden:  "Omzet",
+		RevenueReached: "Omzetmijlpaal bereikt",
+		Milestone:      "mijlpaal",
+		FirstGoal:      "Eerste doel",
+		FirstSale:      "Eerste verkoop",
+		First:          "Eerste",
+		SearchClicks:   "Google Zoeken-klikken · 28 dagen",
+		AIVisits:       "bezoeken van AI-assistenten",
+		AfterSale:      "%d dagen na de eerste verkoop",
+		AfterSaleOne:   "%d dag na de eerste verkoop",
+		Faster:         "%d× sneller dan de vorige",
+	},
 }

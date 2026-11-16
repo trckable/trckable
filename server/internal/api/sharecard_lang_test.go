@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 	"regexp"
@@ -10,7 +11,9 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/cards"
+	"github.com/trckable/trckable/server/internal/milestones"
 	"github.com/trckable/trckable/server/internal/query"
+	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
 var verbs = regexp.MustCompile(`%[a-z]`)
@@ -33,6 +36,19 @@ func TestCardLangsAreComplete(t *testing.T) {
 				}
 				if got, want := verbs.FindAllString(f.String(), -1), verbs.FindAllString(en.Field(i).String(), -1); !reflect.DeepEqual(got, want) {
 					t.Errorf("%s: %s fills in %v, English %v", code, name, got, want)
+				}
+			case reflect.Struct:
+				// The milestone words: each a word, with English's places to fill in.
+				for j := 0; j < f.NumField(); j++ {
+					if f.Field(j).Kind() != reflect.String {
+						continue
+					}
+					if f.Field(j).String() == "" {
+						t.Errorf("%s: %s.%s is empty", code, name, f.Type().Field(j).Name)
+					}
+					if got, want := verbs.FindAllString(f.Field(j).String(), -1), verbs.FindAllString(en.Field(i).Field(j).String(), -1); !reflect.DeepEqual(got, want) {
+						t.Errorf("%s: %s.%s fills in %v, English %v", code, name, f.Type().Field(j).Name, got, want)
+					}
 				}
 			case reflect.Map:
 				keys := func(m reflect.Value) []string {
@@ -278,6 +294,41 @@ func TestCardRouteLang(t *testing.T) {
 		_, _, c := get(t, owner, card+"?t="+tpl+"&period=30d&lang=fr")
 		if !strings.HasPrefix(b, "\x89PNG") || a == b || b == c {
 			t.Errorf("%s: the pictures in en, de and fr must be three pictures", tpl)
+		}
+	}
+}
+
+// The milestone card speaks the picture's language: the number, the words, the amount and the day.
+func TestCardLangMilestone(t *testing.T) {
+	m := sqlite.Milestone{Kind: milestones.Visitors, Value: 10000, Day: "2026-09-21"}
+	for code, want := range map[string][3]string{
+		"en": {"10,000", "visitors", "Sep 21, 2026"},
+		"de": {"10.000", "Besucher", "21. Sep 2026"},
+		"fr": {"10\u00a0000", "visiteurs", "21 sept. 2026"},
+	} {
+		l := cardLangOf(code)
+		s := milestones.CardIn(&l.ms, m, "", "demo.trckable.com", "light", false)
+		if s.Big != want[0] || s.Label != want[1] || s.Foot != want[2] {
+			t.Errorf("%s: %q %q %q", code, s.Big, s.Label, s.Foot)
+		}
+	}
+	rev := sqlite.Milestone{Kind: milestones.Revenue, Value: 1000, Currency: "EUR", Day: "2026-09-21"}
+	if got := milestones.SayIn(&cardDE.ms, rev, true).Line(); got != "1.000\u00a0€ Umsatz" {
+		t.Errorf("de revenue %q", got)
+	}
+	if got := milestones.SayIn(&cardDE.ms, rev, false).Line(); got != "Umsatz Meilenstein" {
+		t.Errorf("de hidden revenue %q", got)
+	}
+	// Every language's milestone cards fit every format.
+	for code, l := range cardLangs {
+		for _, f := range cards.Formats {
+			for _, k := range []string{milestones.Visitors, milestones.Revenue, milestones.SearchClicks, milestones.AIVisits, milestones.RecordDay, milestones.FirstSale} {
+				s := milestones.CardIn(&l.ms, sqlite.Milestone{Kind: k, Value: 1234567, Currency: "EUR", Day: "2026-09-21"}, fmt.Sprintf(l.ms.AfterSale, 12), "a-very-long-domain-name.example.com", "light", true)
+				s.Format = f.ID
+				for _, o := range s.Overflows() {
+					t.Errorf("%s %s: %s", code, k, o)
+				}
+			}
 		}
 	}
 }

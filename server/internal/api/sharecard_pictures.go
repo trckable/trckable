@@ -235,7 +235,7 @@ func (a *API) milestonePicture(c cardReading, n *cardNumbers) {
 		return
 	}
 	m := list[best]
-	spec := milestones.Card(m, milestones.Context(m, list), c.domain, "dark", false)
+	spec := milestones.CardIn(&n.l().ms, m, milestones.ContextIn(&n.l().ms, m, list), c.domain, "dark", false)
 	n.HasMilestone = true
 	n.milestone = &milestoneLine{spec: spec, money: milestones.Money(m.Kind)}
 }

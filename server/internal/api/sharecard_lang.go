@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/trckable/trckable/server/internal/milestones"
 )
 
 // cardLang is every word a share picture and its post say, and how it writes numbers, money and dates, in one
@@ -37,6 +39,8 @@ type cardLang struct {
 	prev24, prevDay, prevDays, vs                       string
 	// A post.
 	postBegun, postTopPage string
+	// The milestone picture.
+	ms milestones.Tongue
 }
 
 const (
@@ -47,6 +51,23 @@ const (
 
 // cardLangs are the languages a picture speaks: the dashboard's.
 var cardLangs = map[string]*cardLang{"en": cardEN, "de": cardDE, "es": cardES, "fr": cardFR, "it": cardIT, "nl": cardNL}
+
+func init() {
+	for _, l := range cardLangs {
+		if l.code != "en" {
+			l.ms.Fmt = cardFmt{l}
+		}
+	}
+}
+
+// cardFmt writes a milestone's counts, amounts and days the way its language does.
+type cardFmt struct{ l *cardLang }
+
+func (f cardFmt) Number(v float64) string { return f.l.number(int64(v)) }
+func (f cardFmt) Amount(v float64, cur string) string {
+	return f.l.money(int64(v), strings.ToUpper(cur), 0)
+}
+func (f cardFmt) Day(t time.Time) string { return f.l.shortDay(t, true) }
 
 // cardWords is English, the language of any picture asked for in one it does not have.
 var cardWords = cardEN
@@ -96,7 +117,7 @@ func (l *cardLang) money(minor int64, cur string, exp int) string {
 	for i := 0; i < exp; i++ {
 		whole /= 10
 	}
-	sym := map[string]string{"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥", "CHF": "CHF"}[cur]
+	sym := map[string]string{"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥", "CHF": "CHF", "INR": "₹", "AUD": "A$", "CAD": "C$"}[cur]
 	switch {
 	case sym == "":
 		return l.number(whole) + " " + cur
