@@ -7,7 +7,7 @@ import { can } from '../../lib/permissions'
 import { openSettings } from '../../lib/settings'
 import { copy } from './copy'
 import { SourceMark, Tick } from './Marks'
-import { missing, providerName, tabOf, working, type Kind } from './model'
+import { missing, mixedPayments, providerName, tabOf, working, type Kind } from './model'
 import { agoWords, dayWords } from './time'
 import './panel.css'
 
@@ -52,13 +52,25 @@ export function useVerified(verified: Verified | undefined, site: { id: string }
 }
 
 export function Sources({ data, site, viewer, close }: { data: Verified | undefined; site?: { id: string; domain: string; timezone?: string }; viewer: boolean; close: () => void }) {
-  const connect = !viewer && !!site && can('site.settings') ? missing(data) : []
+  const mixed = viewer ? null : mixedPayments(data)
+  const connect = !viewer && !!site && can('site.settings') ? missing(data).filter((k) => !(mixed && k === 'payments')) : []
   return (
     <>
       <ul className="vf-rows">
         {working(data).map((s) => (
           <Row key={s.kind} s={s} viewer={viewer} zone={site?.timezone} />
         ))}
+        {mixed && (
+          <li className="vf-row">
+            <span className="vf-ico">
+              <SourceMark s={mixed} size={16} />
+            </span>
+            <span className="vf-txt">
+              <b>{copy.names.payments}</b>
+              <small>{copy.mixedPayments}</small>
+            </span>
+          </li>
+        )}
       </ul>
       {site &&
         connect.map((k) => (

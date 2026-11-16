@@ -32,6 +32,8 @@ export const copy = defineCopy('verified', {
   badge: (what: string) => `${what}: checked against the source itself`,
   /** The word in the badge by a section's title. */
   badgeWord: 'Verified',
+  /** Why Payments is not counted while typed-in or a second provider's revenue sits beside the verified one. */
+  mixedPayments: 'Not counted: includes revenue typed in by hand or from a second provider',
   // The site switcher's seal.
   seal: 'Verified by trckable',
 })
