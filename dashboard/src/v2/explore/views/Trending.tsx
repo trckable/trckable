@@ -47,7 +47,7 @@ function List({ spec, x, cur, prev }: { spec: Spec; x: XCtx; cur: ApiRow[] | nul
       {items.map((i) => (
         <button key={i.value} type="button" className="xtr-row" title={`${spec.name(i.value)}: ${fmtInt(i.was)} → ${fmtInt(i.now)}`} onClick={() => i.value && x.goWith(spec.tab, spec.dim, i.value)}>
           <span className="xtr-mark">{rowMark(spec.tab, { val: i.value, name: spec.name(i.value), v: i.now, c: i.was, st: '' })}</span>
-          <span className="xtr-name">{spec.name(i.value)}</span>
+          {i.title ? <span className="xtr-name xtr-titled"><b>{i.title}</b><small>{i.value}</small></span> : <span className="xtr-name">{spec.name(i.value)}</span>}
           <Change i={i} />
           <b className="xtr-n">{fmtInt(i.now)}</b>
         </button>

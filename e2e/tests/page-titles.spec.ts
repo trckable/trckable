@@ -26,11 +26,13 @@ test('Pages shows each page title with its path under it', async ({ page, contex
   const site = ((await made.json()) as { id: string }).id
   await useCookies(page.request, site)
   const visit = (path: string, id: string, ti?: string) =>
-    page.request.post(`${API}/api/e`, { headers: { 'User-Agent': UA }, data: { s: site, k: 'pv', u: `https://${domain}${path}`, id, v: `k3j2.${id}`, ...(ti ? { ti } : {}) } })
+    page.request.post(`${API}/api/e`, { headers: { 'User-Agent': UA }, data: { s: site, k: 'pv', u: `https://${domain}${path}`, id, v: `${id}.k3j2`, ...(ti ? { ti } : {}) } })
   expect((await visit('/pricing', 'aaaa1', 'Pricing | Acme')).ok()).toBe(true)
   expect((await visit('/pricing', 'aaaa2', 'Plans and pricing | Acme')).ok()).toBe(true) // the latest title wins
   expect((await visit('/about', 'aaaa3')).ok()).toBe(true) // no title: the path alone
   expect((await visit('/blog', 'aaaa4', 'Notes for jane@example.com')).ok()).toBe(true) // an email never stays
+
+  for (let i = 0; i < 30; i++) await visit('/pricing', `bbbb${i}`, 'Plans and pricing | Acme') // enough people for What changed to list
 
   const report = async () => {
     const day = (ago: number) => new Date(Date.now() - ago * 86_400_000).toISOString().slice(0, 10)
@@ -41,13 +43,28 @@ test('Pages shows each page title with its path under it', async ({ page, contex
   expect((await report()).find((r) => r.value === '/about')?.title).toBeUndefined()
   expect((await report()).find((r) => r.value === '/blog')?.title).toBe('Notes for')
 
-  await page.goto(`${API}/${domain}?view=briefing&period=7d&x=pages`)
-  const rows = page.locator('#xp [data-xcard="pages"] .xt .xrw')
-  const pricing = rows.filter({ hasText: '/pricing' })
-  await expect(pricing.locator('b')).toHaveText('Plans and pricing | Acme')
-  await expect(pricing.locator('small')).toHaveText('/pricing')
-  const about = rows.filter({ hasText: '/about' })
-  await expect(about).toBeVisible()
-  await expect(about.locator('small')).toHaveCount(0)
-  if (SHOTS) await page.locator('#xp [data-xcard="pages"]').screenshot({ path: `${SHOTS}/page-titles-1280.png` })
+  for (const [width, height, theme] of [
+    [1440, 900, 'dark'],
+    [1440, 900, 'light'],
+    [390, 844, 'dark'],
+  ] as const) {
+    await page.emulateMedia({ colorScheme: theme })
+    await page.setViewportSize({ width, height })
+    await page.goto(`${API}/${domain}?view=briefing&period=7d&x=pages`)
+    const rows = page.locator('#xp [data-xcard="pages"] .xt .xrw')
+    const pricing = rows.filter({ hasText: '/pricing' })
+    await expect(pricing.locator('b')).toHaveText('Plans and pricing | Acme')
+    await expect(pricing.locator('small')).toHaveText('/pricing')
+    const about = rows.filter({ hasText: '/about' })
+    await expect(about).toBeVisible()
+    await expect(about.locator('small')).toHaveCount(0)
+    if (SHOTS) await page.locator('#xp [data-xcard="pages"]').screenshot({ path: `${SHOTS}/pages-${width}-${theme}.png` })
+
+    // What changed: the same title above the path in the Top list.
+    await page.goto(`${API}/${domain}?view=briefing&period=7d&x=changed`)
+    const trend = page.locator('#xp .xtr[data-trend="page"]')
+    await expect(trend.locator('.xtr-row', { hasText: '/pricing' }).locator('b').first()).toHaveText('Plans and pricing | Acme')
+    await expect(trend.locator('.xtr-row', { hasText: '/about' }).locator('small')).toHaveCount(0)
+    if (SHOTS) await trend.screenshot({ path: `${SHOTS}/changed-${width}-${theme}.png` })
+  }
 })
