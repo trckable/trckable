@@ -15,22 +15,26 @@ import (
 
 // Config is the resolved runtime configuration.
 type Config struct {
-	DataDir      string   // TRCKABLE_DATA_DIR (default /data in the container, ./data otherwise)
-	Addr         string   // TRCKABLE_ADDR, or ":"+PORT (Railway), default ":8080"
-	DuckThreads  int      // TRCKABLE_DUCKDB_THREADS (default 2)
-	DuckMemory   string   // TRCKABLE_DUCKDB_MEMORY (default: a quarter of the memory, at least 512MB)
-	TrustProxy   string   // TRCKABLE_TRUST_PROXY: "auto" | "none" | "xff" | "header:<Name>"
-	LogLevel     string   // TRCKABLE_LOG_LEVEL: debug | info | warn | error
-	WALNoSync    bool     // TRCKABLE_UNSAFE_NO_FSYNC=1 — benchmarks only, never production
-	OnRailway    bool     // detected from RAILWAY_* variables
-	DrainSeconds int      // TRCKABLE_DRAIN_SECONDS (default 25; Railway drains for 30)
-	Sites        []string // TRCKABLE_SITES: domains to create at boot (comma-separated)
-	Geo          string   // TRCKABLE_GEO: country (default, ~4 MB) | city (~130 MB) | off
-	GeoShared    string   // TRCKABLE_GEO_DIR: a shared, read-only geo directory kept fresh elsewhere
-	APIToken     string   // TRCKABLE_API_TOKEN: automation bearer token for /api/v1
-	MetricsToken string   // TRCKABLE_METRICS_TOKEN: bearer token for /metrics (off, 404, without it)
-	SetupToken   string   // TRCKABLE_SETUP_TOKEN: first-run setup secret (Railway template generates it)
-	BaseURL      string   // TRCKABLE_BASE_URL, or https://$RAILWAY_PUBLIC_DOMAIN
+	DataDir      string // TRCKABLE_DATA_DIR (default /data in the container, ./data otherwise)
+	Addr         string // TRCKABLE_ADDR, or ":"+PORT (Railway), default ":8080"
+	DuckThreads  int    // TRCKABLE_DUCKDB_THREADS (default 2)
+	DuckMemory   string // TRCKABLE_DUCKDB_MEMORY (default: a quarter of the memory, at least 512MB)
+	TrustProxy   string // TRCKABLE_TRUST_PROXY: "auto" | "none" | "xff" | "header:<Name>"
+	LogLevel     string // TRCKABLE_LOG_LEVEL: debug | info | warn | error
+	WALNoSync    bool   // TRCKABLE_UNSAFE_NO_FSYNC=1 — benchmarks only, never production
+	OnRailway    bool   // detected from RAILWAY_* variables
+	DrainSeconds int    // TRCKABLE_DRAIN_SECONDS (default 25; Railway drains for 30)
+	// WriterStallExit is how long the analytics writer may make no progress
+	// before the process exits (the host restarts it and the WAL replays):
+	// TRCKABLE_WRITER_STALL_EXIT_MINUTES, default 15, 0 turns it off.
+	WriterStallExit time.Duration
+	Sites           []string // TRCKABLE_SITES: domains to create at boot (comma-separated)
+	Geo             string   // TRCKABLE_GEO: country (default, ~4 MB) | city (~130 MB) | off
+	GeoShared       string   // TRCKABLE_GEO_DIR: a shared, read-only geo directory kept fresh elsewhere
+	APIToken        string   // TRCKABLE_API_TOKEN: automation bearer token for /api/v1
+	MetricsToken    string   // TRCKABLE_METRICS_TOKEN: bearer token for /metrics (off, 404, without it)
+	SetupToken      string   // TRCKABLE_SETUP_TOKEN: first-run setup secret (Railway template generates it)
+	BaseURL         string   // TRCKABLE_BASE_URL, or https://$RAILWAY_PUBLIC_DOMAIN
 	// ReservedHosts are names that can never be a share domain, besides the
 	// dashboard's own address (TRCKABLE_RESERVED_HOSTS, comma-separated).
 	ReservedHosts []string
@@ -114,29 +118,30 @@ type Config struct {
 // Load resolves the configuration from the environment.
 func Load() Config {
 	c := Config{
-		DataDir:      env("TRCKABLE_DATA_DIR", defaultDataDir()),
-		Addr:         env("TRCKABLE_ADDR", ""),
-		DuckThreads:  envInt("TRCKABLE_DUCKDB_THREADS", 2),
-		DuckMemory:   env("TRCKABLE_DUCKDB_MEMORY", defaultDuckMemory()),
-		TrustProxy:   env("TRCKABLE_TRUST_PROXY", "auto"),
-		LogLevel:     strings.ToLower(env("TRCKABLE_LOG_LEVEL", "info")),
-		WALNoSync:    os.Getenv("TRCKABLE_UNSAFE_NO_FSYNC") == "1",
-		OnRailway:    os.Getenv("RAILWAY_ENVIRONMENT") != "" || os.Getenv("RAILWAY_PROJECT_ID") != "",
-		DrainSeconds: envInt("TRCKABLE_DRAIN_SECONDS", 25),
-		Geo:          strings.ToLower(env("TRCKABLE_GEO", "country")),
-		GeoShared:    os.Getenv("TRCKABLE_GEO_DIR"),
-		APIToken:     envFile("TRCKABLE_API_TOKEN"),
-		MetricsToken: envFile("TRCKABLE_METRICS_TOKEN"),
-		SetupToken:   envFile("TRCKABLE_SETUP_TOKEN"),
-		BaseURL:      os.Getenv("TRCKABLE_BASE_URL"),
-		Secret:       envFile("TRCKABLE_SECRET"),
-		SMTPURL:      os.Getenv("TRCKABLE_SMTP_URL"),
-		MailFrom:     os.Getenv("TRCKABLE_MAIL_FROM"),
-		ResendKey:    os.Getenv("TRCKABLE_RESEND_KEY"),
-		BackupS3:     envFile("TRCKABLE_BACKUP_S3"),
-		UpdateCheck:  !strings.EqualFold(strings.TrimSpace(os.Getenv("TRCKABLE_UPDATE_CHECK")), "off"),
-		BackupDays:   envInt("TRCKABLE_BACKUP_KEEP_DAYS", 30),
-		NoticeDays:   envDays("TRCKABLE_PAYMENT_NOTICE_DAYS", 30),
+		DataDir:         env("TRCKABLE_DATA_DIR", defaultDataDir()),
+		Addr:            env("TRCKABLE_ADDR", ""),
+		DuckThreads:     envInt("TRCKABLE_DUCKDB_THREADS", 2),
+		DuckMemory:      env("TRCKABLE_DUCKDB_MEMORY", defaultDuckMemory()),
+		TrustProxy:      env("TRCKABLE_TRUST_PROXY", "auto"),
+		LogLevel:        strings.ToLower(env("TRCKABLE_LOG_LEVEL", "info")),
+		WALNoSync:       os.Getenv("TRCKABLE_UNSAFE_NO_FSYNC") == "1",
+		OnRailway:       os.Getenv("RAILWAY_ENVIRONMENT") != "" || os.Getenv("RAILWAY_PROJECT_ID") != "",
+		DrainSeconds:    envInt("TRCKABLE_DRAIN_SECONDS", 25),
+		WriterStallExit: time.Duration(envDays("TRCKABLE_WRITER_STALL_EXIT_MINUTES", 15)) * time.Minute,
+		Geo:             strings.ToLower(env("TRCKABLE_GEO", "country")),
+		GeoShared:       os.Getenv("TRCKABLE_GEO_DIR"),
+		APIToken:        envFile("TRCKABLE_API_TOKEN"),
+		MetricsToken:    envFile("TRCKABLE_METRICS_TOKEN"),
+		SetupToken:      envFile("TRCKABLE_SETUP_TOKEN"),
+		BaseURL:         os.Getenv("TRCKABLE_BASE_URL"),
+		Secret:          envFile("TRCKABLE_SECRET"),
+		SMTPURL:         os.Getenv("TRCKABLE_SMTP_URL"),
+		MailFrom:        os.Getenv("TRCKABLE_MAIL_FROM"),
+		ResendKey:       os.Getenv("TRCKABLE_RESEND_KEY"),
+		BackupS3:        envFile("TRCKABLE_BACKUP_S3"),
+		UpdateCheck:     !strings.EqualFold(strings.TrimSpace(os.Getenv("TRCKABLE_UPDATE_CHECK")), "off"),
+		BackupDays:      envInt("TRCKABLE_BACKUP_KEEP_DAYS", 30),
+		NoticeDays:      envDays("TRCKABLE_PAYMENT_NOTICE_DAYS", 30),
 	}
 	c.UptimeEvery = envDuration("TRCKABLE_UPTIME_EVERY", 5*time.Minute)
 	c.MentionsOn = envBool("TRCKABLE_MENTIONS") || strings.EqualFold(strings.TrimSpace(os.Getenv("TRCKABLE_MENTIONS")), "on")

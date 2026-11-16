@@ -634,14 +634,15 @@ func (s *Server) shutdown() error {
 }
 
 type readiness struct {
-	Status         string `json:"status"`
-	Version        string `json:"version"`
-	AnalyticsReady bool   `json:"analytics_ready"`
-	WALCommitted   uint64 `json:"wal_committed"`
-	WALApplied     uint64 `json:"wal_applied"`
-	WALLag         uint64 `json:"wal_lag"`
-	WALBytes       int64  `json:"wal_bytes"`
-	Error          string `json:"error,omitempty"`
+	Status          string `json:"status"`
+	Version         string `json:"version"`
+	AnalyticsReady  bool   `json:"analytics_ready"`
+	WALCommitted    uint64 `json:"wal_committed"`
+	WALApplied      uint64 `json:"wal_applied"`
+	WALLag          uint64 `json:"wal_lag"`
+	WALBytes        int64  `json:"wal_bytes"`
+	WALStalledSince string `json:"wal_stalled_since,omitempty"` // set while the writer makes no progress
+	Error           string `json:"error,omitempty"`
 }
 
 // readyz is healthy as soon as events can be accepted durably (SQLite + WAL);
@@ -671,6 +672,10 @@ func (s *Server) readyz(w http.ResponseWriter, r *http.Request) {
 	} else if err := writerFailing(s); err != nil {
 		rd.Status, rd.Error = "degraded", "the analytics writer cannot store events: "+err.Error() // still 200: events are durable in the WAL, and a probe that cut ingest would lose them
 		s.readyzLog(rd.Error, err)
+	} else if since := writerStalled(s); !since.IsZero() {
+		rd.Status, rd.Error = "degraded", "the analytics writer has stopped making progress" // still 200: a restart by a probe would not help, and events are durable
+		rd.WALStalledSince = since.UTC().Format(time.RFC3339)
+		s.readyzLog(rd.Error, errors.New("stalled since "+rd.WALStalledSince))
 	} else if v := s.writerErr.Load(); v != nil {
 		rd.Status, rd.Error = "degraded", "the analytics writer reported an error" // events still durable in the WAL
 		s.readyzLog(rd.Error, v.(error))
@@ -686,6 +691,24 @@ var writerFailing = func(s *Server) error {
 		return wr.Failing()
 	}
 	return nil
+}
+
+// writerStalled is since when the writer has made no progress while the WAL
+// holds more, or the zero time. Normal start-up catch-up moves the applied
+// mark, so it never counts.
+var writerStalled = func(s *Server) time.Time {
+	if wr := s.writer.Load(); wr != nil {
+		return wr.Stalled()
+	}
+	return time.Time{}
+}
+
+// stallExit maps the config (0 = off) to the writer's option (negative = off).
+func stallExit(d time.Duration) time.Duration {
+	if d <= 0 {
+		return -1
+	}
+	return d
 }
 
 // readyzLog logs why /readyz is not healthy, at most once a minute.
