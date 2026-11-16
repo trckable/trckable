@@ -48,7 +48,9 @@ describe('a site’s status', () => {
 
   it('is down only when a look after the last visit found no answer', () => {
     const last = sec - 7 * 3600
-    expect(statusOf(site({ last_event_at: last, check: { at: sec - 60, error: 'x' } }), NOW)).toBe('down')
+    // A failed look alone does not make it down here: the server says so with down_since (api TestSitesAgreeWithTheBellOnADownSite), and a probe that finds the page up settles it.
+    expect(statusOf(site({ last_event_at: last, check: { at: sec - 60, error: 'x' } }), NOW)).toBe('quiet')
+    expect(statusOf(site({ last_event_at: last, down_since: last + 6 * 3600, check: { at: sec - 60, error: 'x' } }), NOW)).toBe('down')
     expect(statusOf(site({ last_event_at: last, check: { at: last - 60, error: 'x' } }), NOW)).toBe('quiet')
   })
 

@@ -17,12 +17,11 @@ function scriptSeen(s: Site): boolean {
 }
 
 export function statusOf(s: Site, now = Date.now()): Status {
-  if (s.down_since) return 'down' // the uptime probe: some visitors may still get through, the site is down for our checks
+  if (s.down_since) return 'down' // the server's one rule (sqlite.DownNow): the uptime probe, or for a site never probed a failed daily look after visits went silent
   const last = s.last_event_at
   if (!last) return scriptSeen(s) ? 'quiet' : 'new' // imported history or a working script with no live visit yet is not "not installed"
   if (now / 1000 - last < STOPPED_HOURS * 3600) return 'ok'
-  const c = s.check
-  return c && c.at > last && c.error ? 'down' : 'quiet'
+  return 'quiet' // a failed daily look is told by the server as down_since (sqlite.DownNow), never decided here
 }
 
 /** How a site our checks find down is told: 'down' (nobody is known to get through) or 'visitors' (the check fails but visits keep arriving, so the check may be wrong). Undefined when the probe finds it up. The one place that is decided; every down text reads it. */

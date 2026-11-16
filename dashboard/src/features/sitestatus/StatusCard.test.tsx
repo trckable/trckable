@@ -30,7 +30,7 @@ describe('the panel of a site that stopped, and the line when visits are back', 
     const s = site({ last_event_at: NOW - 8 * 3600, check: { at: NOW - 60, error: 'a.example could not be reached over https' } })
     expect(renderToStaticMarkup(<StatusCard site={s} />)).toBe('') // told in the foot, the Live header and the site list, not by a floating badge
     const html = renderToStaticMarkup(<StatusPanel site={s} last={NOW - 8 * 3600} down />)
-    expect(html).toContain('Down')
+    expect(html).toContain('Tracking stopped') // no probe verdict reached the client: the chip is the quiet one; the server tells a down by down_since
     expect(html).toContain('did not answer')
     expect(html).toContain('What we checked')
     expect(html).toContain('href="/a.example/incidents"')
