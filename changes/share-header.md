@@ -1,0 +1,1 @@
+A shared link offers Last 7 days, Last 30 days and Last 12 months with a Refresh button, shows a live visitor count when its owner turns it on, and carries a slim credit in its header where the footer one is shown.
