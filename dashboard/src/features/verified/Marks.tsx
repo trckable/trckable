@@ -27,7 +27,7 @@ export function ProviderLogo({ id, size = 14 }: { id: string; size?: number }) {
   if (!m) return null
   const st = markStyle(m)
   return (
-    <svg className={`vf-logo${st.light ? ' vf-logo-ink-light' : ''}`} width={size} height={size} viewBox="0 0 24 24" fill={st.fill} aria-hidden="true">
+    <svg className={`vf-pmark${st.light ? ' vf-pmark-ink-light' : ''}`} width={size} height={size} viewBox="0 0 24 24" fill={st.fill} aria-hidden="true">
       <path d={m.d} />
     </svg>
   )
