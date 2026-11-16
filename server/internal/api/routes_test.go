@@ -163,6 +163,7 @@ var routeRules = map[string]string{
 	"GET /api/v1/share/me":                                       "public",
 	"GET /api/v1/share/report":                                   "public",
 	"GET /api/v1/share/annotations":                              "public",
+	"GET /api/v1/share/online":                                   "public",
 	"GET /api/v1/share/icon":                                     "public",
 	"GET /api/v1/share/logo":                                     "public",
 	"GET /api/v1/share-domain/ask":                               "public",
