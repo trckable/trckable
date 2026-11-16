@@ -1,6 +1,7 @@
 package cards
 
 import (
+	"fmt"
 	"strings"
 	"text/template"
 )
@@ -115,16 +116,48 @@ func digestPlanOf(s Spec) digestPlan {
 
 func digestData(s Spec, f Frame) string {
 	p := digestPlanOf(s)
-	return glow(f) + boxes(p.cards, f.Ink, f.L.n(22)) + rowBars(p.rows, f, p.rowTop, p.rowStep)
+	return glow(f) + boxes(p.cards, f.Ink, f.L.n(22)) + rowBars(p.rows, f, p.rowTop, p.rowStep) + badgeCheck(s, f)
+}
+
+// badgePx is the badge's text size; its check, the gap and the room it takes follow from it.
+func badgePx(l Layout) float64 { return l.px(24) }
+
+// badgeWidth is the room the badge takes at the right of the domain's line: the check, a gap and the words.
+func badgeWidth(s Spec) float64 {
+	if s.Badge == "" {
+		return 0
+	}
+	px := badgePx(s.layout())
+	return px*1.5 + measure(false, s.Badge, px)
+}
+
+// badgeCheck is the small check before the badge's words, in the card's accent.
+func badgeCheck(s Spec, f Frame) string {
+	if s.Badge == "" {
+		return ""
+	}
+	l := f.L
+	px := badgePx(l)
+	x := float64(l.Right) - badgeWidth(s)
+	y := float64(l.DomainY) - px*0.34
+	return fmt.Sprintf(`<path d="M%.1f %.1fL%.1f %.1fL%.1f %.1f" fill="none" stroke="%s" stroke-width="%.1f" stroke-linecap="round" stroke-linejoin="round"/>`,
+		x, y, x+px*0.3, y+px*0.3, x+px*0.85, y-px*0.35, f.Ink, f.Stroke(px*0.14, 1))
 }
 
 func digestRuns(s Spec) []Run {
 	l := s.layout()
 	p := digestPlanOf(s)
 	room := float64(l.Right - l.Left)
+	badge := badgeWidth(s)
+	if badge > 0 {
+		badge += float64(l.n(24))
+	}
 	runs := []Run{
-		{X: l.Left, Y: l.DomainY, Px: l.px(28), Spans: []Span{{Text: fitWith(false, s.Domain, room, l.px(28)), Ink: s.Theme.Muted}}},
+		{X: l.Left, Y: l.DomainY, Px: l.px(28), Spans: []Span{{Text: fitWith(false, s.Domain, room-badge, l.px(28)), Ink: s.Theme.Muted}}},
 		{X: l.Left, Y: l.FootY, Px: l.px(26), Spans: []Span{{Text: fitWith(false, s.Foot, room-float64(l.n(260)), l.px(26)), Ink: s.Theme.Muted}}},
+	}
+	if s.Badge != "" {
+		runs = append(runs, Run{X: l.Right, Y: l.DomainY, Px: badgePx(l), End: true, Spans: []Span{{Text: s.Badge, Ink: s.Theme.Muted}}})
 	}
 	for i, line := range p.title {
 		runs = append(runs, Run{X: l.Left, Y: l.TitleY + i*int(p.titlePx*1.2), Px: p.titlePx, Spans: []Span{{Text: line, Bold: true, Ink: s.Theme.FG}}})

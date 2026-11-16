@@ -34,6 +34,8 @@ type digest struct {
 	stats []cards.Stat
 	rows  []cards.Item
 	empty string
+	// badge is the mark of a source that vouches for the numbers (Search Console's), when they are there.
+	badge string
 }
 
 func (d digest) filled() bool { return len(d.stats) > 0 || len(d.rows) > 0 }
@@ -125,6 +127,11 @@ func (a *API) searchPicture(c cardReading, n *cardNumbers) {
 		return
 	}
 	n.HasSearch = true
+	defer func() {
+		if d.filled() {
+			d.badge = cardWords.searchBadge
+		}
+	}()
 	from := startOfDay(c.params.From.In(c.loc), c.loc)
 	last := startOfDay(c.params.To.In(c.loc), c.loc).AddDate(0, 0, -1) // the period's end is exclusive; Google's is not
 	body, _, err := a.searchBody(c.r.Context(), c.site, conn, c.loc, gsc.Query{From: from, To: last, Dimension: "query", Limit: 100}, from, last)
