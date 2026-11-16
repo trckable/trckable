@@ -57,7 +57,7 @@ describe('the badge by a section title', () => {
     draw(<SourceMark s={{ kind: 'payments', provider: 'stripe' }} />)
     expect(host.querySelector('svg path')?.getAttribute('d')).toBe(logos.stripe.d)
     draw(<SourceMark s={{ kind: 'payments', provider: 'paypal' }} />)
-    expect(host.querySelector('svg.vf-logo')).toBeNull()
+    expect(host.querySelector('svg.vf-pmark')).toBeNull()
   })
 
   it('draws the logo, the word and the check', () => {
@@ -65,7 +65,7 @@ describe('the badge by a section title', () => {
     const b = host.querySelector('[data-verified-source]')
     expect(b?.getAttribute('data-verified-source')).toBe('paddle')
     expect(b?.textContent).toBe('Verified')
-    expect(b?.querySelector('svg.vf-logo path')?.getAttribute('d')).toBe(logos.paddle.d)
+    expect(b?.querySelector('svg.vf-pmark path')?.getAttribute('d')).toBe(logos.paddle.d)
     expect(b?.querySelector('.vf-badge-tick svg')).not.toBeNull()
   })
 
