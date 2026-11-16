@@ -31,6 +31,8 @@ export function working(v?: Verified): VerifiedSource[] {
     const kind = SOURCE_KIND[s.kind]
     // A source that never answered (checked 0) vouches for nothing, whatever else it says.
     if (!s.ok || !s.checked || !kind || seen.has(kind)) return false
+    // Revenue that is not all from verified providers is not verified: nothing may say it is.
+    if (s.mixed) return false
     seen.add(kind)
     return true
   })
@@ -41,6 +43,9 @@ export const earned = (v?: Verified): Kind[] => {
   const have = working(v).map((s) => SOURCE_KIND[s.kind])
   return KINDS.filter((k) => have.includes(k))
 }
+
+/** The payments source that works but is mixed with revenue that is not verified: the panel says why it does not count. */
+export const mixedPayments = (v?: Verified): VerifiedSource | null => (v?.sources ?? []).find((s) => s.kind === 'payments' && s.ok && s.checked > 0 && s.mixed) ?? null
 
 /** The kinds not earned yet: each gets a Connect row. */
 export const missing = (v?: Verified): Kind[] => KINDS.filter((k) => !earned(v).includes(k))

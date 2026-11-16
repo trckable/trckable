@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Verified, VerifiedSource } from '../../lib/api'
-import { earned, lastChecked, missing, proofFor, providerName, working } from './model'
+import { earned, lastChecked, missing, mixedPayments, proofFor, providerName, working } from './model'
 
 const src = (s: Partial<VerifiedSource>): VerifiedSource => ({ kind: 'payments', provider: 'stripe', ok: true, since: 1000, checked: 2000, detail: '', ...s })
 const v = (...s: Partial<VerifiedSource>[]): Verified => ({ sources: s.map(src) })
@@ -26,6 +26,15 @@ describe('what counts', () => {
     expect(working(many)).toHaveLength(1)
     expect(earned(many)).toEqual(['payments'])
     expect(earned(v({ provider: 'polar' }, { kind: 'gsc' }))).toEqual(['payments', 'search'])
+  })
+
+  it('does not count payments mixed with typed-in or a second provider’s revenue, and says so', () => {
+    const mixed = v({ provider: 'stripe', mixed: true }, { kind: 'gsc' })
+    expect(working(mixed).map((s) => s.kind)).toEqual(['gsc'])
+    expect(earned(mixed)).toEqual(['search'])
+    expect(proofFor(mixed, 'revenue')).toBeNull()
+    expect(mixedPayments(mixed)?.provider).toBe('stripe')
+    expect(mixedPayments(v({ provider: 'stripe' }))).toBeNull()
   })
 
   it('finds the source behind each card, and none once it stops working', () => {
