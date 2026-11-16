@@ -1,8 +1,7 @@
 // The tools of the old Data view's header row, after the site: Live/Data (on a desktop) and the borderless Ask.
 // What the numbers are, Live/Data on a phone or tablet, the period and the page's ⋯ (Refresh,
-// Create, Core/Full, Milestones, Export), is the row under it, and so is
-// Share: an icon beside ⋯ (on a phone it is ⋯'s first item).
-import { Search, Share2 } from 'lucide-react'
+// Create, Core/Full, Milestones, Export), is the row under it.
+import { Search } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { caps, keyFor, useKeymap } from '../../lib/keys'
 import { isShared } from '../../lib/me'
@@ -42,14 +41,6 @@ export function HeaderTools(p: Props) {
         </button>
       )}
     </div>
-  )
-}
-
-export function ShareButton({ onShare }: { onShare: () => void }) {
-  return (
-    <button type="button" className="btn icon ghost share-btn" data-key="share" onClick={onShare} title={copy.shareTitle} aria-label={copy.share}>
-      <Share2 size={17} strokeWidth={1.75} aria-hidden="true" />
-    </button>
   )
 }
 

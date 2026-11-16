@@ -1,5 +1,5 @@
 // Share's report pictures: What changed, Search, AI and mentions, Goals, Sales and Milestone. A picture the site cannot
-// make is shown disabled with its reason; the ones it can make are drawn and downloaded at the size asked.
+// make is not shown; the ones it can make are drawn and downloaded at the size asked.
 import { expect, test } from './fixtures'
 import { flowSession } from './flows-kit'
 import { API, STEADY_DOMAIN } from '../playwright.config'
@@ -14,7 +14,7 @@ test.beforeAll(async () => {
 /** A PNG's width and height, from its header. */
 const dims = (b: Buffer) => `${b.readUInt32BE(16)}x${b.readUInt32BE(20)}`
 
-test('Share: What changed is picked, drawn and downloaded in two sizes; the others say what they need', async ({ page }) => {
+test('Share: What changed is picked, drawn and downloaded in two sizes; the ones it cannot make are not shown', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/${STEADY_DOMAIN}?view=briefing&period=7d`)
@@ -24,11 +24,11 @@ test('Share: What changed is picked, drawn and downloaded in two sizes; the othe
   await expect(dialog).toBeVisible()
   const pics = dialog.getByRole('radiogroup', { name: 'Card' })
   await expect(pics.getByRole('radio', { name: /^What changed/ })).toBeEnabled()
-  // Nothing is connected on this site: the rest wait for what they need, and are not drawn.
-  await expect(pics.getByRole('radio', { name: /^Google Search/ })).toBeDisabled()
-  await expect(pics.getByRole('radio', { name: /^Sales/ })).toBeDisabled()
-  await expect(pics.getByRole('radio', { name: /^Top goals/ })).toBeDisabled()
-  await expect(pics.getByText('Needs Search Console connected')).toBeVisible()
+  // Nothing is connected on this site: the rest are not offered.
+  await expect(pics.getByRole('radio', { name: /^Google Search/ })).toHaveCount(0)
+  await expect(pics.getByRole('radio', { name: /^Sales/ })).toHaveCount(0)
+  await expect(pics.getByRole('radio', { name: /^Top goals/ })).toHaveCount(0)
+  await expect(pics.getByText(/^Needs /)).toHaveCount(0)
   await expect(pics.getByRole('radio', { name: /^Overview/ })).toHaveAttribute('aria-checked', 'true')
 
   await pics.getByRole('radio', { name: /^What changed/ }).click()

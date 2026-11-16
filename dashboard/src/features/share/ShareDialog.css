@@ -222,20 +222,20 @@
 }
 .sd-gallery {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 .sd-pics {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
 }
 .sd-pic {
   display: grid;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
-  padding: 5px;
+  padding: 4px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
   background: none;
   color: var(--text);
   font-size: 12px;
@@ -252,12 +252,12 @@
 .sd-note {
   margin: 0;
 }
-.sd-pic:disabled {
-  opacity: 0.55;
-}
-.sd-pic small {
-  color: var(--muted);
+.sd-pic b {
+  overflow: hidden;
   font-size: 11px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .sd-thumb {
   display: grid;
@@ -313,9 +313,12 @@
   height: 36px;
 }
 .sd-actions-more {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   gap: 8px;
+}
+.sd-actions-more .sd-act {
+  flex: 1;
+  min-width: 0;
 }
 .sd-link {
   display: grid;

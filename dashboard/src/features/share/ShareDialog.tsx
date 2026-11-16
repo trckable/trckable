@@ -48,7 +48,7 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
   const [links, setLinks] = useState<Share[]>([])
   const [picking, setPicking] = useState(false)
   const [mode, setMode] = useState<Mode>('picture')
-  const [open, setOpen] = useState('card')
+  const [open, setOpen] = useState('')
   const toggle = (id: string) => setOpen((o) => (o === id ? '' : id))
 
   // The words: whether revenue may be picked, and the post's text. Revenue
@@ -160,9 +160,7 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
           <div className="sd-panel">
             <div className="sd-sections">
               <ModeSwitch mode={mode} onChange={setMode} />
-              <Section id="card" title={copy.whatToShare} summary={copy.template[look.template].name} open={open === 'card'} onToggle={() => toggle('card')}>
-                <CardSection site={site.id} look={shown} has={has} onChange={(t) => set({ template: t })} />
-              </Section>
+              <CardSection site={site.id} look={shown} has={has} onChange={(t) => set({ template: t })} />
               <Section id="period" title={copy.period} summary={periodSummary} open={open === 'period'} onToggle={() => toggle('period')}>
                 <PeriodSection look={look} tz={site.timezone} set={set} />
               </Section>

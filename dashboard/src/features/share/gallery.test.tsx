@@ -20,27 +20,24 @@ describe('gallery', () => {
     const html = renderToStaticMarkup(<CardSection site="s1" look={{ ...look, shape: 'story' }} has={has} onChange={() => undefined} />)
     expect(html).not.toContain('shape=')
   })
-  it('asks for the small picture, and for none of a picture the period cannot fill', () => {
+  it('asks for the small picture, and shows none of a picture the period cannot fill', () => {
     const html = renderToStaticMarkup(<CardSection site="s1" look={look} has={{ ...has, data: false, tech: false }} onChange={() => undefined} />)
     expect(html).toContain('thumb=1')
-    expect(html).not.toContain('t=numbers&amp;')
-    expect(html).not.toContain('t=grid&amp;')
-    for (const t of ['overview', 'leaderboard', 'devices']) expect(html).not.toContain(`t=${t}&amp;`)
+    for (const t of ['overview', 'numbers', 'grid', 'leaderboard', 'devices']) expect(html).not.toContain(`t=${t}&amp;`)
     for (const t of ['changed', 'search', 'ai', 'goals', 'sales', 'milestone']) expect(html).toContain(`t=${t}&amp;`) // lazily, with the rest: their own needs are met
-    expect(html).toContain('Needs a visit in this period')
+    expect(html).not.toContain('Needs ')
     const bare = renderToStaticMarkup(<CardSection site="s1" look={look} has={none} onChange={() => undefined} />)
     expect(bare).not.toContain('thumb=1')
-    expect(bare).toContain('Needs a visit from another site')
-    expect(bare).toContain('Needs a visit from a known country')
-    expect(bare).toContain('Needs a visit with a known browser')
-    for (const why of ['Needs an earlier period with visits', 'Needs Search Console connected', 'Needs a visit from an AI assistant or a mention', 'Needs a goal reached', 'Needs a connected payment provider', 'Needs a milestone in this period']) expect(bare).toContain(why)
+    expect(bare).not.toContain('role="radio"')
+    expect(bare).not.toContain('Needs ')
   })
-  it('shows a picture the site cannot make disabled, with the reason', () => {
+  it('hides a picture the site cannot make, with no disabled button or reason', () => {
     const sales: Picture = { id: 'grid', topic: 'overview', need: 'revenue' }
     expect(missing(sales, { ...has, revenue: false })).toBe('revenue')
     expect(missing(sales, has)).toBeNull()
     const html = renderToStaticMarkup(<CardSection site="s1" look={look} has={{ ...has, revenue: false }} pictures={[...PICTURES.filter((p) => p.id !== 'grid'), sales]} onChange={() => undefined} />)
-    expect(html).toMatch(/<button[^>]*disabled[^>]*>/)
-    expect(html).toContain('Needs a connected payment provider')
+    expect(html).not.toContain('disabled')
+    expect(html).not.toContain('In numbers')
+    expect(html).not.toContain('Needs a connected payment provider')
   })
 })

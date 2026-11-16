@@ -40,7 +40,6 @@ for (const width of [1280, 390]) {
       const head = dialog.getByRole('button', { name })
       if ((await head.getAttribute('aria-expanded')) !== 'true') await head.click()
     }
-    const gallery = () => open_(/^What to share/)
     await expect(dialog.locator('.sd-preview img.sd-img:not(.is-out, .is-loader)')).toBeVisible()
     const first = await size()
     const same = async (what: string) => expect(await size(), what).toBe(first)
@@ -50,9 +49,8 @@ for (const width of [1280, 390]) {
       await open_(/^Look/)
       await dialog.getByRole('radio', { name: shape }).click()
       await same(`size ${shape}`)
-      await gallery()
       for (let i = 0; i < (await pics.count()); i++) {
-        if (!(await pics.nth(i).isEnabled()) || (await pics.nth(i).textContent())?.includes('Social post')) continue // a post has no size
+        if ((await pics.nth(i).textContent())?.includes('Social post')) continue // a post has no size
         await pics.nth(i).click()
         await same(`picture ${i} at ${shape}`)
       }

@@ -43,7 +43,8 @@ for (const [width, colorScheme] of [[1280, 'dark'], [390, 'light']] as const) {
     const size = () => img.evaluate((el: HTMLImageElement) => (el.complete ? `${el.naturalWidth}x${el.naturalHeight}` : ''))
     for (const [name, id] of [['Big number', 'numbers'], ['In numbers', 'grid'], ['Overview', 'overview']] as const) {
       await pics.getByRole('radio', { name: new RegExp(name) }).click()
-      await dialog.getByRole('button', { name: /^Look/ }).click()
+      const look = dialog.getByRole('button', { name: /^Look/ })
+      if ((await look.getAttribute('aria-expanded')) !== 'true') await look.click()
       for (const [shape, label, dims] of [['link', 'Link', '1200x630'], ['story', 'Story', '1080x1920']] as const) {
         await dialog.getByRole('radio', { name: label }).click()
         await expect.poll(size, { timeout: 30_000 }).toBe(dims)
@@ -51,7 +52,6 @@ for (const [width, colorScheme] of [[1280, 'dark'], [390, 'light']] as const) {
         await dialog.getByRole('button', { name: /^Download \d+×\d+$/ }).click()
         expect((await file).suggestedFilename()).toBe(`trckable-${STEADY_DOMAIN}-${id}${shape === 'link' ? '' : `-${shape}`}-7d.png`)
       }
-      await dialog.getByRole('button', { name: /^What to share/ }).click()
     }
   })
 }
