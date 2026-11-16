@@ -6,7 +6,7 @@ import { copy } from './copy'
 import { trackingOf } from './status'
 import { when } from './time'
 
-export function TrackingLine({ site, now = Date.now(), className = 'tracking-line' }: { site: Pick<Site, 'last_event_at' | 'timezone'>; now?: number; className?: string }) {
+export function TrackingLine({ site, now, className = 'tracking-line' }: { site: Pick<Site, 'last_event_at' | 'timezone'>; now?: number; className?: string }) {
   const t = trackingOf(site, now)
   if (!t) return null
   return (
