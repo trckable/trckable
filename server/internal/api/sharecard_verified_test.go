@@ -75,7 +75,7 @@ func TestSalesBadgeNeedsRevenue(t *testing.T) {
 	n.salesPicture(&query.Result{Money: &query.Money{}})
 	empty := n.digests["sales"]
 	var a API
-	a.vouch(cardReading{}, &empty, "payments") // nothing to vouch for: returns before it reads anything
+	a.vouch(cardReading{}, &empty, "payments", "Verified") // nothing to vouch for: returns before it reads anything
 	if empty.source != "" || empty.badge != "" {
 		t.Fatalf("a sales picture with no revenue has a badge: %+v", empty)
 	}
