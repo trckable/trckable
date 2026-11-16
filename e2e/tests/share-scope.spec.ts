@@ -19,6 +19,9 @@ test('the owner picks the sections and the period in the builder, and changes th
   await sections.getByRole('button', { name: 'Sources' }).click()
   await sections.getByRole('button', { name: 'Tech' }).click()
   await card.getByLabel('Period').selectOption('7d')
+  // The preview is the real page made from these options: the period is said, not offered.
+  const preview = card.frameLocator('iframe.sl-live-page')
+  await expect(preview.locator('.pill.fixed').first()).toBeVisible({ timeout: 20_000 })
   await card.getByRole('button', { name: 'Create link' }).click()
   await card.getByRole('button', { name: 'Done' }).click()
 

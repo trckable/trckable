@@ -1151,6 +1151,9 @@ var migrations = []string{
 	// reader choose, as it always did.
 	`ALTER TABLE site_shares ADD COLUMN sections TEXT NOT NULL DEFAULT '';
 	ALTER TABLE site_shares ADD COLUMN period TEXT NOT NULL DEFAULT '';`,
+	// 86: a share made only to be looked at (sharepreview.go): the owner's
+	// picture of the page a link would open. Never listed or counted.
+	`ALTER TABLE site_shares ADD COLUMN preview INTEGER NOT NULL DEFAULT 0;`,
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }

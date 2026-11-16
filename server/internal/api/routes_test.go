@@ -160,6 +160,7 @@ var routeRules = map[string]string{
 	"POST /api/v1/sites/{site}/shares":                           "write",
 	"DELETE /api/v1/sites/{site}/shares/{id}":                    "write",
 	"PATCH /api/v1/sites/{site}/shares/{id}":                     "write",
+	"PUT /api/v1/sites/{site}/shares/preview":                    "write",
 	"POST /api/v1/sites/{site}/shares/{id}/address":              "write",
 	"POST /api/v1/share/open":                                    "public",
 	"GET /api/v1/share/me":                                       "public",

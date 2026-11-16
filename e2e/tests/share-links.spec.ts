@@ -69,13 +69,14 @@ test('make a link in the card, copy it, revoke it', async ({ page, context, brow
   await card.getByRole('switch', { name: 'Notes' }).click()
   await card.getByRole('button', { name: '30d' }).click()
   await expect(card.getByRole('switch', { name: 'Revenue' })).toHaveAttribute('aria-checked', 'true')
-  // The thumbnail follows: revenue tile in, and the lock shows the password screen.
-  await expect(card.locator('.sl-tiles.four')).toBeVisible()
-  await expect(card.locator('.sl-note').first()).toBeVisible()
+  // The preview is the page itself, made from these options: its own header, and with the lock its own password page.
+  const preview = card.frameLocator('iframe.sl-live-page')
+  await expect(preview.locator('.hd')).toBeVisible({ timeout: 20_000 })
   await shot(page, 'form-password')
   await card.getByRole('button', { name: 'Show the password screen' }).click()
-  await expect(card.locator('.sl-locked')).toBeVisible()
+  await expect(preview.getByLabel('Password')).toBeVisible({ timeout: 20_000 })
   await card.getByRole('button', { name: 'Show the page' }).click()
+  await expect(preview.locator('.hd')).toBeVisible({ timeout: 20_000 })
 
   // A bad site address is named before anything is sent.
   await card.getByRole('switch', { name: 'Embed on sites' }).click()

@@ -137,7 +137,7 @@
   align-self: flex-end;
 }
 
-/* ---- the thumbnail ---- */
+/* ---- the preview ---- */
 .sl-preview {
   display: flex;
   flex-direction: column;
@@ -173,7 +173,6 @@
   border-radius: 12px;
   overflow: hidden;
   background: var(--bg);
-  min-height: 250px;
   font-size: 10px;
   color: var(--text-2);
 }
@@ -202,147 +201,32 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.sl-page {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  padding: 9px;
-}
-.sl-top {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-.sl-top b {
-  min-width: 0;
-  color: var(--text);
-  font-size: 11px;
-  white-space: nowrap;
+/* The page itself, laid out at the width of a screen and scaled down to the box (LivePreview). */
+.sl-live {
+  position: relative;
+  min-height: 160px;
   overflow: hidden;
-  text-overflow: ellipsis;
+  background: var(--bg);
 }
-.sl-ends {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  flex: none;
-  white-space: nowrap;
+.sl-live-page {
+  position: absolute;
+  inset: 0 auto auto 0;
+  border: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
-.sl-range {
-  flex: none;
-  white-space: nowrap;
-  margin-left: auto;
-  padding: 1px 6px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+.sl-live.loaded .sl-live-page {
+  opacity: 1;
 }
-.sl-tiles {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 5px;
+.sl-live-wait {
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
 }
-.sl-tiles.four {
-  grid-template-columns: repeat(4, 1fr);
-}
-.sl-tile {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 5px 6px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
-  min-width: 0;
-}
-.sl-tile span {
-  font-size: 8px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-3);
-}
-.sl-tile b {
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-}
-.sl-tile b.money,
-.sl-panel i.money,
-.sl-bar {
-  color: var(--money);
-}
-.sl-chart {
-  width: 100%;
-  height: auto;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
-}
-.sl-line {
-  stroke: var(--accent);
-  stroke-width: 1.6;
-}
-.sl-area {
-  fill: var(--accent-soft);
-}
-.sl-bar {
-  fill: currentColor;
-  opacity: 0.75;
-}
-.sl-note line {
-  stroke: var(--ch-7);
-  stroke-dasharray: 2 2;
-  stroke-width: 1;
-}
-.sl-note circle {
-  fill: var(--ch-7);
-}
-.sl-panels {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  gap: 5px;
-}
-.sl-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 6px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
-}
-.sl-panel i {
-  display: block;
-  height: 5px;
-  border-radius: 3px;
-  background: var(--accent-soft);
-}
-.sl-panel i.money {
-  background: currentColor;
-  opacity: 0.35;
-}
-.sl-locked {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 210px;
-}
-.sl-locked b {
-  color: var(--text);
-  font-size: 12px;
-}
-.sl-fake {
-  width: 60%;
-  padding: 6px 8px;
-  border: 1px solid var(--border-2);
-  border-radius: 6px;
-  background: var(--surface);
-  letter-spacing: 2px;
+.sl-live.loaded .sl-live-wait {
+  display: none;
 }
 
 /* ---- just created ---- */
@@ -598,10 +482,7 @@ button.sl-flag:hover {
 /* The 12 px floor on a phone: every text rule of this file under 12 px on a
    desktop is raised to 12 (the phone scale, phone.css). */
 @media (max-width: 640px) {
-  :root :is(
-    .sl-frame,
-    .sl-top b
-  ) {
+  :root :is(.sl-frame) {
     font-size: 12px;
   }
 }

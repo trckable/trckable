@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { EMPTY, daysUntil, draftOf, endState, patchBody, expiryDays, linkBody, parseOrigins, previewParts, problem } from './logic'
+import { EMPTY, daysUntil, draftOf, endState, patchBody, expiryDays, linkBody, parseOrigins, previewOptions, problem } from './logic'
 
 // Noon on 15 Oct 2026, the viewer's clock.
 const NOW = new Date(2026, 9, 15, 12, 0, 0)
@@ -131,24 +131,14 @@ describe('what a link shows', () => {
   })
 })
 
-describe('what the thumbnail draws', () => {
-  it('revenue shows or hides the tile and the bars', () => {
-    expect(previewParts({ ...EMPTY, revenue: true }, false, NOW)).toMatchObject({ revenueTile: true, revenueBars: true })
-    expect(previewParts(EMPTY, false, NOW)).toMatchObject({ revenueTile: false, revenueBars: false })
+
+describe('what the preview is made from', () => {
+  it('is what the link shows: its name (or the site), revenue, notes, sections in order, the period', () => {
+    expect(previewOptions(EMPTY, 'site.com')).toEqual({ name: 'site.com', revenue: false, notes: false, sections: ['pages', 'sources', 'places', 'tech'], period: '' })
+    expect(previewOptions({ ...EMPTY, name: ' Board ', revenue: true, notes: true, sections: ['tech', 'pages'], period: '30d' }, 'site.com')).toEqual({ name: 'Board', revenue: true, notes: true, sections: ['pages', 'tech'], period: '30d' })
   })
-  it('notes show or hide the markers', () => {
-    expect(previewParts({ ...EMPTY, notes: true }, false, NOW).notes).toBe(true)
-    expect(previewParts(EMPTY, false, NOW).notes).toBe(false)
-  })
-  it('shows the end date, when there is one', () => {
-    expect(previewParts(EMPTY, false, NOW).ends).toBeNull()
-    expect(previewParts({ ...EMPTY, expiry: '7' }, false, NOW).ends?.getDate()).toBe(22)
-    expect(previewParts({ ...EMPTY, expiry: 'date', date: '2026-10-25' }, false, NOW).ends?.getDate()).toBe(25)
-  })
-  it('the lock switches to the password screen, for a password link only', () => {
-    expect(previewParts({ ...EMPTY, access: 'password' }, true, NOW).lock).toBe(true)
-    expect(previewParts({ ...EMPTY, access: 'password' }, false, NOW).lock).toBe(false)
-    expect(previewParts(EMPTY, true, NOW).lock).toBe(false)
+  it('does not move for who may open the link or until when', () => {
+    expect(previewOptions({ ...EMPTY, access: 'password', password: 'x', expiry: '7', embed: true, sites: 'https://a.com' }, 'site.com')).toEqual(previewOptions(EMPTY, 'site.com'))
   })
 })
 

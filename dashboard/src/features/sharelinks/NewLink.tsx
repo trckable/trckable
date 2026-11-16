@@ -1,15 +1,14 @@
 // The new-link form: what to call it, what it shows and, under More, who can
 // open it and for how long. One form for Settings → Sharing and the Share
-// dialog; Settings draws a picture of the result beside it, the dialog has
-// its own preview of the page.
+// dialog; Settings draws the page the link will open beside it, the dialog
+// draws it in its own panel (and is told the options by onOptions).
 import { Link2 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { fail, type Site, more } from '../../lib/apiMore'
 import { copy } from './copy'
-import { EMPTY, linkBody, problem, type Draft } from './logic'
+import { EMPTY, linkBody, previewOptions, problem, type Draft } from './logic'
+import { LivePreview, type PreviewOptions } from './LivePreview'
 import { Options } from './Options'
-import { usePreviewNumbers } from './numbers'
-import { Preview } from './Preview'
 
 export interface Made {
   name: string
@@ -21,17 +20,22 @@ interface Props {
   site: Site
   onClose: () => void
   onMade: (m: Made) => void
-  /** Without the picture of the result: the host shows its own. */
+  /** Without the preview beside it: the host draws its own, from what this says. */
   bare?: boolean
+  /** What the page shows, as it stands, and whether the link will ask for a password (the host's preview can then show that page). */
+  onOptions?: (o: PreviewOptions, password: boolean) => void
 }
 
-export function NewLink({ site, onClose, onMade, bare }: Props) {
+export function NewLink({ site, onClose, onMade, bare, onOptions }: Props) {
   const [draft, setDraft] = useState<Draft>(EMPTY)
-  const [lockShown, setLockShown] = useState(false)
+  const [locked, setLocked] = useState(false)
   const [busy, setBusy] = useState(false)
-  const numbers = usePreviewNumbers(site)
   const set = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }))
   const blocked = problem(draft)
+  const options = previewOptions(draft, site.domain)
+  const shown = JSON.stringify(options)
+  const password = draft.access === 'password'
+  useEffect(() => onOptions?.(options, password), [shown, password]) // eslint-disable-line react-hooks/exhaustive-deps -- options is rebuilt each render: told when its content changes
 
   const create = () => {
     if (blocked || busy) return
@@ -67,7 +71,7 @@ export function NewLink({ site, onClose, onMade, bare }: Props) {
           </button>
         </div>
       </div>
-      {!bare && <Preview draft={draft} numbers={numbers} domain={site.domain} lockShown={lockShown} onLock={() => setLockShown((v) => !v)} />}
+      {!bare && <LivePreview site={site.id} host={globalThis.location?.host ?? ''} options={options} lock={password ? locked : undefined} onLock={password ? () => setLocked((v) => !v) : undefined} />}
     </form>
   )
 }

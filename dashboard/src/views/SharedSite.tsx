@@ -24,6 +24,9 @@ const asSite = (info: ShareInfo): Site => ({
   verified: info.verified,
 })
 
+/** The owner's preview of a link (a picture of this page in the builder) is not a first visit: it offers no hints. */
+const previewing = () => new URLSearchParams(location.search).has('preview')
+
 export default function SharedSite() {
   const s = useShare()
   const [opened, setOpened] = useState<ShareInfo | null>(null)
@@ -41,7 +44,7 @@ export default function SharedSite() {
       <div className={isEmbed() ? 'app shared embed' : 'app shared'} style={accentVars(info.accent)}>
         <SiteHost key={info.domain} site={asSite(info)} sites={[]} identity={isEmbed() ? <EmbedHeader info={info} /> : <ShareHeader info={info} />} />
         {!isEmbed() && <PoweredBy info={info} />}
-        {!isEmbed() && <Hints />}
+        {!isEmbed() && !previewing() && <Hints />}
       </div>
     )
   }

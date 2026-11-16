@@ -183,7 +183,7 @@ func (s *Store) openToken(id, sealed, hash string) string {
 func (s *Store) Shares(ctx context.Context, site string) ([]Share, error) {
 	rows, err := s.DB.QueryContext(ctx,
 		`SELECT id, site_id, name, revenue, notes, expires_at, pass_hash <> '', created_at, viewed_at, views, embed_origins, token_hash, token_enc, sections, period
-		 FROM site_shares WHERE site_id = ? ORDER BY created_at DESC`, site)
+		 FROM site_shares WHERE site_id = ? AND preview = 0 ORDER BY created_at DESC`, site)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +207,7 @@ func (s *Store) Shares(ctx context.Context, site string) ([]Share, error) {
 // CreateShare makes a link and returns its token.
 func (s *Store) CreateShare(ctx context.Context, site, name, password string, revenue, notes bool, expires *int64, origins []string, scope ShareScope) (Share, string, error) {
 	var n int
-	if err := s.DB.QueryRowContext(ctx, `SELECT count(*) FROM site_shares WHERE site_id = ?`, site).Scan(&n); err != nil {
+	if err := s.DB.QueryRowContext(ctx, `SELECT count(*) FROM site_shares WHERE site_id = ? AND preview = 0`, site).Scan(&n); err != nil {
 		return Share{}, "", err
 	}
 	if n >= MaxSharesPerSite {
@@ -499,6 +499,7 @@ func (s *Store) PruneShareSessions(ctx context.Context, now time.Time) {
 	// Best effort: expired sessions are refused anyway, and the next run
 	// removes what this one could not.
 	_, _ = s.DB.ExecContext(ctx, `DELETE FROM share_sessions WHERE expires_at < ?`, now.Unix())
+	_, _ = s.DB.ExecContext(ctx, `DELETE FROM site_shares WHERE preview = 1 AND expires_at < ?`, now.Unix())
 }
 
 // EmbedOriginsFor returns the sites a link (by its token) may be framed on.
@@ -507,10 +508,15 @@ func (s *Store) PruneShareSessions(ctx context.Context, now time.Time) {
 func (s *Store) EmbedOriginsFor(ctx context.Context, token string, now time.Time) []string {
 	var origins string
 	var expires *int64
-	err := s.DB.QueryRowContext(ctx, `SELECT embed_origins, expires_at FROM site_shares WHERE token_hash = ?`,
-		hex.EncodeToString(auth.Hash(strings.TrimSpace(token)))).Scan(&origins, &expires)
+	var preview bool
+	err := s.DB.QueryRowContext(ctx, `SELECT embed_origins, expires_at, preview FROM site_shares WHERE token_hash = ?`,
+		hex.EncodeToString(auth.Hash(strings.TrimSpace(token)))).Scan(&origins, &expires, &preview)
 	if err != nil || (expires != nil && now.Unix() > *expires) {
 		return nil
+	}
+	// A preview is drawn inside the dashboard, by this origin and no other.
+	if preview {
+		return []string{"'self'"}
 	}
 	// Each one is checked again on the way out, because this value goes into a
 	// Content-Security-Policy header: one that was stored before the check

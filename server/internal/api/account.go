@@ -401,7 +401,7 @@ func (a *API) deletePreview(w http.ResponseWriter, r *http.Request) {
 	for key, query := range map[string]string{
 		"payments":    `SELECT count(*) FROM pay_payments WHERE site_id = ?`,
 		"connections": `SELECT count(*) FROM pay_connections WHERE site_id = ?`,
-		"shares":      `SELECT count(*) FROM site_shares WHERE site_id = ?`,
+		"shares":      `SELECT count(*) FROM site_shares WHERE site_id = ? AND preview = 0`,
 		"widgets":     `SELECT count(*) FROM widgets WHERE site_id = ?`,
 	} {
 		var n int64

@@ -82,10 +82,6 @@ export const copy = defineCopy('share', {
   back: 'Back',
   manage: 'All links are in Settings → Sharing',
   // The look of this site's links: the owner's own logo, colour and domain.
-  preview: 'Preview of the shared page',
-  previewSample: 'Shared with you',
-  previewPath: '/s/…',
-  tiles: ['Visitors', 'Pageviews', 'Bounce rate', 'Session time'],
   look: 'Look of the links',
   lookInfo: 'What people see when they open a link: your logo and colour instead of trckable’s, and optionally your own domain.',
   logo: 'Logo',

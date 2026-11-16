@@ -171,16 +171,9 @@ export function patchBody(was: Draft, d: Draft, now = new Date()) {
   return body
 }
 
-/** Which parts of the viewer's page the thumbnail draws for these options. */
-export function previewParts(d: Pick<Draft, 'access' | 'revenue' | 'notes' | 'expiry' | 'date'>, lockShown: boolean, now = new Date()) {
-  const days = expiryDays(d, now)
-  return {
-    lock: d.access === 'password' && lockShown,
-    revenueTile: d.revenue,
-    revenueBars: d.revenue,
-    notes: d.notes,
-    ends: days ? endDate(days, now) : null,
-  }
+/** What the preview of the page is made from: what a link shows (not who may open it, nor until when). */
+export function previewOptions(d: Draft, fallbackName: string) {
+  return { name: d.name.trim() || fallbackName, revenue: d.revenue, notes: d.notes, sections: ordered(d.sections), period: d.period }
 }
 
 /** Where a row's end date stands: none, still ahead, or already past. */

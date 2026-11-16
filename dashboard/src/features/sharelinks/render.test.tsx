@@ -2,16 +2,12 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import type { Share, Site } from '../../lib/api'
 import { LinkRow } from './LinkRow'
+import { LivePreview } from './LivePreview'
 import { NewLink } from './NewLink'
-import { EMPTY } from './logic'
-import { Preview } from './Preview'
-import { numbersOf } from './numbers'
-import type { Report } from '../../lib/api'
 
 const noop = () => undefined
 const share: Share = { id: 'shr_1', site_id: 's', name: 'Board', revenue: true, notes: false, has_password: true, created_at: 1, views: 42, viewed_at: 1_800_000_000, expires_at: null, embed_origins: ['https://a.com'] }
 const row = (s: Partial<Share>, readOnly = false) => renderToStaticMarkup(<LinkRow site="s" share={{ ...share, ...s }} readOnly={readOnly} onChanged={noop} />)
-const draw = (d: Partial<typeof EMPTY>, lockShown = false) => renderToStaticMarkup(<Preview draft={{ ...EMPTY, ...d }} numbers={null} domain="site.com" lockShown={lockShown} onLock={noop} />)
 
 describe('a row', () => {
   it('has a revoke button, and a notes button that says which way it is', () => {
@@ -74,30 +70,6 @@ describe('a row', () => {
   })
 })
 
-describe('the thumbnail', () => {
-  it('leaves the revenue tile and the revenue bars out until revenue is on', () => {
-    expect(draw({})).not.toContain('Revenue')
-    const on = draw({ revenue: true })
-    expect(on).toContain('Revenue by page')
-    expect(on).toContain('sl-tiles four')
-  })
-  it('draws the note markers only when notes are on', () => {
-    expect(draw({})).not.toContain('sl-note')
-    expect(draw({ notes: true })).toContain('sl-note')
-  })
-  it('shows the end date', () => {
-    expect(draw({})).not.toContain('sl-ends')
-    expect(draw({ expiry: '7' })).toContain('sl-ends')
-  })
-  it('offers the lock only for a password link, and then shows its screen', () => {
-    expect(draw({})).not.toContain('sl-lock')
-    expect(draw({ access: 'password' })).toContain('Show the password screen')
-    const locked = draw({ access: 'password' }, true)
-    expect(locked).toContain('sl-locked')
-    expect(locked).not.toContain('sl-tiles')
-  })
-})
-
 describe('the new-link form', () => {
   const site = { id: 's', domain: 'acme.com', name: 'Acme', timezone: 'UTC', currency: 'USD', proxy_key: '' } as Site
   const form = (bare = false) => renderToStaticMarkup(<NewLink site={site} bare={bare} onClose={noop} onMade={noop} />)
@@ -115,23 +87,18 @@ describe('the new-link form', () => {
   })
 })
 
-describe('the numbers behind it', () => {
-  it('come from the report and stay in a drawable size', () => {
-    const report = {
-      current: {
-        kpis: { visitors: 12400, pageviews: 38100, bounce_rate: 0.41 },
-        series: Array.from({ length: 30 }, (_, i) => ({ t: '', visitors: i, pageviews: i, revenue: 100 })),
-        dims: { channel: [{ value: 'a', visitors: 10 }, { value: 'b', visitors: 5 }] },
-        money: { currency: 'USD', exponent: 2, revenue: 824000 },
-        revenue_dims: { page: [{ value: '/', visitors: 1, revenue: 50 }] },
-      },
-    } as unknown as Report
-    const n = numbersOf(report)
-    expect(n.visitors).toBe('12.4K')
-    expect(n.bounce).toBe('41%')
-    expect(n.revenue).toBe('$8,240')
-    expect(n.bars).toHaveLength(7)
-    expect(n.sources).toEqual([1, 0.5])
-    expect(n.pages).toEqual([1])
+describe('the preview of the page', () => {
+  const options = { name: 'Board', revenue: false, notes: false, sections: ['pages'], period: '7d' }
+  const draw = (p: Partial<Parameters<typeof LivePreview>[0]> = {}) => renderToStaticMarkup(<LivePreview site="s" host="reports.acme.com" options={options} {...p} />)
+  it('says where the page would be and waits for it', () => {
+    const html = draw()
+    expect(html).toContain('reports.acme.com/s/······')
+    expect(html).toContain('sl-live-wait')
+    expect(html).not.toContain('<iframe')
+  })
+  it('offers the password page only when the link has a password', () => {
+    expect(draw()).not.toContain('sl-lock')
+    expect(draw({ lock: false, onLock: noop })).toContain('Show the password screen')
+    expect(draw({ lock: true, onLock: noop })).toContain('Show the page')
   })
 })
