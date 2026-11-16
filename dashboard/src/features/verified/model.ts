@@ -13,6 +13,10 @@ export type Slot = 'revenue' | 'search'
 
 export const KINDS: Kind[] = ['payments', 'search']
 
+/** The badge a section's title may carry: Search shows Google's data, Sales the money. */
+const SLOT_OF_SECTION: Record<string, Slot | undefined> = { search: 'search', sales: 'revenue' }
+export const slotOfSection = (section: string): Slot | undefined => SLOT_OF_SECTION[section]
+
 const KIND_OF: Record<Slot, VerifiedSource['kind']> = { revenue: 'payments', search: 'gsc' }
 const SOURCE_KIND: Record<string, Kind | undefined> = { payments: 'payments', gsc: 'search' }
 
@@ -27,6 +31,8 @@ export function working(v?: Verified): VerifiedSource[] {
     const kind = SOURCE_KIND[s.kind]
     // A source that never answered (checked 0) vouches for nothing, whatever else it says.
     if (!s.ok || !s.checked || !kind || seen.has(kind)) return false
+    // Revenue that is not all from verified providers is not verified: nothing may say it is.
+    if (s.mixed) return false
     seen.add(kind)
     return true
   })
@@ -37,6 +43,9 @@ export const earned = (v?: Verified): Kind[] => {
   const have = working(v).map((s) => SOURCE_KIND[s.kind])
   return KINDS.filter((k) => have.includes(k))
 }
+
+/** The payments source that works but is mixed with revenue that is not verified: the panel says why it does not count. */
+export const mixedPayments = (v?: Verified): VerifiedSource | null => (v?.sources ?? []).find((s) => s.kind === 'payments' && s.ok && s.checked > 0 && s.mixed) ?? null
 
 /** The kinds not earned yet: each gets a Connect row. */
 export const missing = (v?: Verified): Kind[] => KINDS.filter((k) => !earned(v).includes(k))

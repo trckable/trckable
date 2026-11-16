@@ -93,6 +93,11 @@ func (s *Store) Schema(ctx context.Context) (have, want int, err error) {
 	return have, len(migrations), err
 }
 
+// Migrations are positional (PRAGMA user_version is the count applied) and
+// never edited once released. Slots 85 and 86 are reserved: a downstream build
+// that carries core's list as a prefix uses them for its own, so they stay
+// no-ops here. A new core migration appends after the highest reserved slot,
+// never into a gap.
 var migrations = []string{
 	// 1: accounts, sites, key/value meta, daily salts
 	`CREATE TABLE accounts (
@@ -1144,19 +1149,36 @@ var migrations = []string{
 	ALTER TABLE pay_payments ADD COLUMN method TEXT NOT NULL DEFAULT '';
 	ALTER TABLE pay_hints ADD COLUMN product TEXT NOT NULL DEFAULT '';
 	ALTER TABLE pay_hints ADD COLUMN method TEXT NOT NULL DEFAULT '';`,
-	// 85: whether a share link may show how many visitors are on the site now:
-	// off unless the owner turns it on, like the notes.
+	// 85, 86: reserved: a downstream build uses these slots; keep them no-ops.
+	`SELECT 1;`,
+	`SELECT 1;`,
+	// 87: whether a share link may show how many visitors are on the site now:
+	// off unless the owner turns it on, like the notes. A database that an
+	// earlier build already took to 85 with this column has it: see
+	// migrationApplied.
 	`ALTER TABLE site_shares ADD COLUMN live INTEGER NOT NULL DEFAULT 0;`,
-	// 86: what a share link shows besides its headline numbers (shares.go):
+	// 88: what a share link shows besides its headline numbers (shares.go):
 	// sections is empty for all of them, "-" for none, else the shown ones joined
 	// with commas; period is one period the link is fixed to, empty when the
 	// reader chooses. A link made before this shows everything and lets the
 	// reader choose, as it always did.
 	`ALTER TABLE site_shares ADD COLUMN sections TEXT NOT NULL DEFAULT '';
 	ALTER TABLE site_shares ADD COLUMN period TEXT NOT NULL DEFAULT '';`,
-	// 87: a share made only to be looked at (sharepreview.go): the owner's
+	// 89: a share made only to be looked at (sharepreview.go): the owner's
 	// picture of the page a link would open. Never listed or counted.
 	`ALTER TABLE site_shares ADD COLUMN preview INTEGER NOT NULL DEFAULT 0;`,
+}
+
+// migrationApplied reports migrations (1-based) whose effect is already in the
+// database, so they are only recorded: the share live column, added at 85 by a
+// build before the slots were reserved.
+func migrationApplied(ctx context.Context, tx *sql.Tx, n int) (bool, error) {
+	if n != 87 {
+		return false, nil
+	}
+	var c int
+	err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM pragma_table_info('site_shares') WHERE name = 'live'`).Scan(&c)
+	return c > 0, err
 }
 
 func (s *Store) migrate(ctx context.Context) error { return s.migrateTo(ctx, len(migrations)) }
@@ -1183,9 +1205,16 @@ func (s *Store) migrateTo(ctx context.Context, n int) error {
 		if err != nil {
 			return err
 		}
-		if _, err := tx.ExecContext(ctx, migrations[i]); err != nil {
+		done, err := migrationApplied(ctx, tx, i+1)
+		if err != nil {
 			tx.Rollback()
 			return fmt.Errorf("sqlite migration %d: %w", i+1, err)
+		}
+		if !done {
+			if _, err := tx.ExecContext(ctx, migrations[i]); err != nil {
+				tx.Rollback()
+				return fmt.Errorf("sqlite migration %d: %w", i+1, err)
+			}
 		}
 		if _, err := tx.ExecContext(ctx, fmt.Sprintf(`PRAGMA user_version = %d`, i+1)); err != nil {
 			tx.Rollback()

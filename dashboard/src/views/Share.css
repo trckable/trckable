@@ -150,7 +150,7 @@
   min-width: 0;
 }
 
-@media (max-width: 640px) {
+@media (--xs) {
   .share-cta-by {
     display: none;
   }

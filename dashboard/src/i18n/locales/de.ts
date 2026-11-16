@@ -2295,6 +2295,8 @@ export default {
   'verified.connect': 'Verbinden',
   'verified.checked': (when: string) => `Zuletzt geprüft ${when}`,
   'verified.badge': (what: string) => `${what}: mit der Quelle selbst abgeglichen`,
+  'verified.badgeWord': 'Geprüft',
+  'verified.mixedPayments': 'Nicht gezählt: enthält von Hand eingetragene Einnahmen oder die eines zweiten Anbieters',
   'verified.seal': 'Von trckable geprüft',
   'badgelink.label': 'Das Abzeichen führt zu',
   'badgelink.home': 'trckable.com',

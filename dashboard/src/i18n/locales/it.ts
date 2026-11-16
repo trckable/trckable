@@ -2292,6 +2292,8 @@ export default {
   'verified.connect': 'Collega',
   'verified.checked': (when: string) => `Ultimo controllo ${when}`,
   'verified.badge': (what: string) => `${what}: confrontato con la fonte stessa`,
+  'verified.badgeWord': 'Verificato',
+  'verified.mixedPayments': 'Non conteggiato: include ricavi inseriti a mano o di un secondo fornitore',
   'verified.seal': 'Verificato da trckable',
   'badgelink.label': 'Il badge porta a',
   'badgelink.home': 'trckable.com',

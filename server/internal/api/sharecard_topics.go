@@ -60,6 +60,21 @@ func (n *cardNumbers) listsOf(res *query.Result) {
 	}
 }
 
+// vouchMoney puts the provider's badge on a picture that shows revenue (the revenue metric, a revenue number card),
+// when that provider vouches for all of it.
+func (n *cardNumbers) vouchMoney(spec *cards.Spec, t string) {
+	shows := false
+	switch t {
+	case "overview", "numbers":
+		shows = n.Metric == "revenue" || n.moneyStat
+	case "grid":
+		shows = n.moneyGrid
+	}
+	if shows && n.moneySource != "" {
+		spec.Badge, spec.Source = n.l().searchBadge, n.moneySource
+	}
+}
+
 // pictureOf sets what the picture says on the spec: a list or hero from its items, and for every picture
 // with nothing behind it the one line "Needs a visit in this period" (never a zero or a dash).
 func (n *cardNumbers) pictureOf(spec *cards.Spec, t string) {
@@ -78,7 +93,7 @@ func (n *cardNumbers) pictureOf(spec *cards.Spec, t string) {
 		return
 	}
 	if d, ok := n.digests[t]; ok {
-		spec.Template, spec.Label, spec.Rows, spec.Stats, spec.Big, spec.Badge = "digest", d.title, d.rows, d.stats, d.empty, d.badge
+		spec.Template, spec.Label, spec.Rows, spec.Stats, spec.Big, spec.Badge, spec.Source = "digest", d.title, d.rows, d.stats, d.empty, d.badge, d.source
 		spec.Change, spec.Dir, spec.Series = "", 0, nil
 		return
 	}

@@ -117,10 +117,11 @@ func digestPlanOf(s Spec) digestPlan {
 
 func digestData(s Spec, f Frame) string {
 	p := digestPlanOf(s)
-	return glow(f) + boxes(p.cards, f.Ink, f.L.n(22)) + rowBars(p.rows, f, p.rowTop, p.rowStep) + badgeCheck(s, f)
+	return glow(f) + boxes(p.cards, f.Ink, f.L.n(22)) + rowBars(p.rows, f, p.rowTop, p.rowStep)
 }
 
-// The Search Console badge: after the domain, the Search Console mark, "Verified" and a green check. The mark keeps Google's own colours (a brand mark does), the one exception to drawing with the card's
+// The badge: after the domain, the source's mark, "Verified" and a green check; the code below draws Search Console's
+// mark, a provider's is in sources.go. The mark keeps Google's own colours (a brand mark does), the one exception to drawing with the card's
 // theme; the capsule, the words and the check use the theme's surface, text and "up" colours. The mark is traced from
 // Google's published logo: rising bars with capsule ends, the green one mid-height, the blue one the tallest and
 // darker where they overlap, and a yellow lens with a short handle, red where it overlaps the green bar.
@@ -138,17 +139,20 @@ type badgeGeom struct {
 
 func badgeGeomOf(s Spec) badgeGeom {
 	l := s.layout()
-	px := l.px(28)
-	g := badgeGeom{px1: px, cd: float64(l.n(18)), y1: float64(l.DomainY)}
-	mid := float64(l.DomainY) - px*0.35
+	sl := s.slot()
+	px := sl.px
+	g := badgeGeom{px1: px, cd: float64(l.n(18)), y1: float64(sl.base)}
+	mid := float64(sl.base) - px*0.35
 	gap := float64(l.n(10))
 	lw := float64(l.n(22)) * logoW / logoH
 	g.sc = float64(l.n(22)) / logoH
+	if s.Source != SourceSearch {
+		lw, g.sc = float64(l.n(22)), float64(l.n(22))/markUnits
+	}
 	word := measure(false, s.Badge, px)
 	g.w = lw + gap + word + gap*0.8 + g.cd
-	room := float64(l.Right-l.Left) - g.w - float64(l.n(24))
-	g.lx = float64(l.Left) + measure(false, fitWith(false, s.Domain, room, px), px) + float64(l.n(24))
-	g.ly = mid - logoH*g.sc/2
+	g.lx = float64(sl.x0) + measure(false, s.shownDomain(sl.right-float64(sl.x0)-g.w-float64(l.n(24))), px) + float64(l.n(24))
+	g.ly = mid - float64(l.n(22))/2 // the mark is 22 units tall, whichever source's
 	g.tx = g.lx + lw + gap
 	g.ccx, g.ccy = g.tx+word+gap*0.8+g.cd/2, mid
 	return g
@@ -203,14 +207,6 @@ func logo(b *strings.Builder, f Frame, x, y, sc float64) {
 	fill("M30 39.7"+arcPoints(26, 51, 12, -70.5, 62.4, false)+arcPoints(35, 58, 5, 134, 180, false)+"Z", logoRed)
 }
 
-// badgeWidth is the room the badge takes on the domain's line.
-func badgeWidth(s Spec) float64 {
-	if s.Badge == "" {
-		return 0
-	}
-	return badgeGeomOf(s).w
-}
-
 // arcPoints is an arc of a circle from one angle to the other, as a line through points (the rasteriser draws lines).
 func arcPoints(cx, cy, r, from, to float64, move bool) string {
 	var b strings.Builder
@@ -229,12 +225,16 @@ func arcPoints(cx, cy, r, from, to float64, move bool) string {
 // badgeCheck draws the badge's shapes: the logo and the check, a filled green circle with a tick in the card's
 // background colour (which reads on both themes' greens). Numbers only.
 func badgeCheck(s Spec, f Frame) string {
-	if s.Badge == "" {
+	if !s.badged() {
 		return ""
 	}
 	g := badgeGeomOf(s)
 	var b strings.Builder
-	logo(&b, f, g.lx, g.ly, g.sc)
+	if s.Source == SourceSearch {
+		logo(&b, f, g.lx, g.ly, g.sc)
+	} else {
+		b.WriteString(mark(s.Source, s, g.lx, g.ly, g.sc))
+	}
 	r := g.cd / 2
 	fmt.Fprintf(&b, `<path d="%sZ" fill="%s"/>`, arcPoints(g.ccx, g.ccy, r, 0, 360, true), s.Theme.Up)
 	fmt.Fprintf(&b, `<path d="M%.2f %.2fL%.2f %.2fL%.2f %.2f" fill="none" stroke="%s" stroke-width="%.2f" stroke-linecap="round" stroke-linejoin="round"/>`,
@@ -246,22 +246,14 @@ func digestRuns(s Spec) []Run {
 	l := s.layout()
 	p := digestPlanOf(s)
 	room := float64(l.Right - l.Left)
-	badge := badgeWidth(s)
-	if badge > 0 {
-		badge += float64(l.n(24))
-	}
 	runs := []Run{
-		{X: l.Left, Y: l.DomainY, Px: l.px(28), Spans: []Span{{Text: fitWith(false, s.Domain, room-badge, l.px(28)), Ink: s.Theme.Muted}}},
+		{X: l.Left, Y: l.DomainY, Px: l.px(28), Spans: []Span{{Text: fitWith(false, s.Domain, room, l.px(28)), Ink: s.Theme.Muted}}},
 		{X: l.Left, Y: l.FootY, Px: l.px(26), Spans: []Span{{Text: fitWith(false, s.Foot, room-float64(l.n(260)), l.px(26)), Ink: s.Theme.Muted}}},
 	}
 	for i, line := range p.title {
 		runs = append(runs, Run{X: l.Left, Y: l.TitleY + i*int(p.titlePx*1.2), Px: p.titlePx, Spans: []Span{{Text: line, Bold: true, Ink: s.Theme.FG}}})
 	}
 	runs = append(runs, Marks(s)...)
-	if s.Badge != "" {
-		g := badgeGeomOf(s)
-		runs = append(runs, Run{X: int(g.tx), Y: int(g.y1), Px: g.px1, Spans: []Span{{Text: s.Badge, Ink: s.Theme.Muted}}})
-	}
 	if len(p.cards) == 0 && len(p.rows) == 0 {
 		return append(runs, emptyRun(s, p.emptyTop))
 	}
