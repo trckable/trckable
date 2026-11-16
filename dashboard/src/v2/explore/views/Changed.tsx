@@ -16,6 +16,7 @@ import type { Overview as Model } from '../types'
 import { Downtime } from './Downtime'
 import { XKcs } from '../../ui/XKcs'
 import { MoverChips, MoverList, nameOf } from './Movers'
+import { Trending } from './Trending'
 
 const NoteDialog = lazy(() => import('../../../components/NoteDialog').then((m) => ({ default: m.NoteDialog })))
 
@@ -139,6 +140,7 @@ export function Changed({ x, d }: { x: XCtx; d: Model & { report: Report } }) {
       <XKcs items={d.kcs} />
       <Biggest metrics={metrics} metric={metric} setMetric={setMetric} list={list} fmt={fmt} few={w?.kind === 'few'} />
       {whole && <Plain x={x} />}
+      {!whole && <Trending x={x} cur={cur} prev={prev} />}
       <Downtime down={d.down} />
       <Tools site={x.site} to={x.query.to} notes={notes} sheet={sheet} setSheet={setSheet} />
     </>

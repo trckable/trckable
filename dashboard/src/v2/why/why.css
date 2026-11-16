@@ -597,3 +597,18 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 /* Every segmented switch centres its label exactly: one line box, flex centre, no baseline offset. */
 .mk :is(.mk-seg,.xsub) button{display:inline-flex;align-items:center;justify-content:center;padding-block:0;line-height:1;text-align:center}
 .mk :is(.mk-seg,.xsub) button>*{line-height:1}
+/* What changed: pages and sources, Top / Trending up / Trending down. Two columns where there is room, one on a phone. */
+.mk .xtr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:var(--mk-s4);margin-top:var(--mk-s5)}
+.mk .xtr{display:flex;flex-direction:column;min-width:0;padding:var(--mk-s3) var(--mk-s3) var(--mk-s2);background:var(--mk-card);border-radius:16px}
+.mk .xtr-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--mk-s2);padding:0 6px var(--mk-s2)}
+.mk .xtr-head h3{margin:0;font-size:14px;font-weight:600}
+.mk .xtr-row{display:grid;grid-template-columns:20px minmax(0,1fr) auto 44px;align-items:center;gap:var(--mk-s2);padding:8px 6px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;text-align:start;cursor:pointer}
+.mk .xtr-row:hover{background:var(--mk-band)}
+.mk .xtr-mark{display:flex;color:var(--mk-muted)}
+.mk .xtr-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk .xtr-d{min-width:48px;color:var(--mk-muted);font-size:12.5px;font-variant-numeric:tabular-nums;text-align:end;white-space:nowrap}
+.mk .xtr-d.up{color:var(--mk-lime)}
+.mk .xtr-d.dn{color:var(--mk-red)}
+.mk .xtr-n{font-weight:650;font-variant-numeric:tabular-nums;text-align:end}
+.mk .xtr .mk-quiet{padding:var(--mk-s3) 6px}
+.mk .xtr .mk-more{margin-top:auto;border:0;background:none;text-align:start;padding:8px 6px}
