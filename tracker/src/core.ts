@@ -406,13 +406,13 @@ export function start(c: Config): Tracker {
     }
   }
 
-  // The page is going away: what is still pending goes by sendBeacon, which
-  // the browser finishes after the page is gone (a plain text body, so no
-  // preflight). Sent this way, an event leaves the queue; one the browser
-  // refuses stays, and the retry loop has it.
-  const beacon = () => {
-    pending.slice().map((p) => nav.sendBeacon?.(c.api, body(p)) && drop(p))
-  }
+  // The page is going away: what is still pending is also handed to
+  // sendBeacon, which the browser finishes after the page is gone (a plain text
+  // body, so no preflight). Only an extra try: the browser takes the request
+  // when it is queued, not when the server answers, so nothing leaves the queue
+  // here. Only an acknowledged fetch does, and the server drops a second copy
+  // by event id.
+  const beacon = () => pending.map((p) => nav.sendBeacon?.(c.api, body(p)))
 
   const flushEngagement = (ping?: number) => {
     if (visible) {
