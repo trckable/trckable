@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import * as me from '../../lib/me'
 import type { Point, Result } from '../../lib/api'
 import { againstName, capital, changeOf, compareOf, grainOf, hasBefore, sameGrain, pairAt, readOf, signed, startsOn, whyNot, wholeBefore } from './compare'
 
@@ -79,6 +80,11 @@ describe('the hover and the reason', () => {
     expect(whyNot(now, pts([0, 0, 0, 0, 0, 0, 0, 0, 0, 5]))).toMatch(/^Comparison starts /)
     expect(whyNot(now, pts(Array.from({ length: 10 }, () => 4)))).toBeNull()
     expect(whyNot(now, undefined)).toBeNull()
+  })
+  it('says nothing on a shared link, which has no comparison to wait for', () => {
+    vi.spyOn(me, 'isShared').mockReturnValue(true)
+    expect(whyNot(pts(Array.from({ length: 10 }, () => 5), 11), pts([0, 0, 0, 0, 0, 0, 0, 0, 0, 5]))).toBeNull()
+    vi.restoreAllMocks()
   })
 })
 
