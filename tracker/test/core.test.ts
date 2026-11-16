@@ -8,6 +8,8 @@ let win: Window
 let sent: Sent[]
 let status: number
 let fetchFails: boolean
+let beacons: Sent[] // what sendBeacon took
+let beaconOk: boolean
 let gate: Promise<void> | null // while set, answers wait for it
 let inflight: number
 let peak: number // the most requests that were out at the same time
@@ -25,10 +27,15 @@ function browser(url = 'https://site.com/pricing?utm_source=hn', referrer = 'htt
     history: win.history,
     screen: win.screen,
     localStorage: win.localStorage,
+    sessionStorage: win.sessionStorage,
     innerHeight: 900,
     scrollY: 0,
     IntersectionObserver: undefined,
-    navigator: { language: 'de-DE', webdriver: false },
+    navigator: {
+      language: 'de-DE',
+      webdriver: false,
+      sendBeacon: vi.fn((_url: string, body: string) => (beaconOk ? (beacons.push(JSON.parse(body)), true) : false)),
+    },
     fetch: vi.fn(async (_url: string, init: { body: string }) => {
       sent.push(JSON.parse(init.body))
       peak = Math.max(peak, ++inflight)
@@ -58,6 +65,8 @@ beforeEach(() => {
   sent = []
   status = 202
   fetchFails = false
+  beacons = []
+  beaconOk = true
   gate = null
   inflight = peak = 0
   browser()
@@ -492,6 +501,7 @@ describe('delivery (write-ahead queue)', () => {
     await vi.advanceTimersByTimeAsync(0)
     expect(sent).toHaveLength(3)
     status = 202
+    beaconOk = false // the browser would not take it, so the tab being shown retries
     hidden(true)
     hidden(false)
     await vi.advanceTimersByTimeAsync(0)
@@ -806,5 +816,71 @@ describe('a tab that comes back, and a page that stays open', () => {
       if (!away) worst = Math.max(worst, Date.now() - at)
     }
     expect(worst).toBeLessThan(5 * MIN) // the server's live window
+  })
+})
+
+describe('the last send', () => {
+  beforeEach(() => vi.useRealTimers())
+  afterEach(() => vi.useRealTimers())
+  it('hands what is still pending to sendBeacon when the page is hidden, and does not send it twice', async () => {
+    fetchFails = true // the page view never got an answer
+    tracker()
+    await flush()
+    expect(beacons).toHaveLength(0)
+    hidden(true)
+    const ids = beacons.map((e) => e.id)
+    expect(ids.length).toBeGreaterThan(0)
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(queued().some((e: any) => ids.includes(e.id))).toBe(false) // left the queue
+    hidden(false)
+    hidden(true)
+    expect(beacons.map((e) => e.id)).toEqual(ids.concat(beacons.slice(ids.length).map((e) => e.id))) // no repeats of the first ones
+    expect(beacons.slice(ids.length).every((e) => !ids.includes(e.id))).toBe(true)
+  })
+
+  it('goes on pagehide too, and keeps an event the browser would not take', async () => {
+    fetchFails = true
+    beaconOk = false
+    tracker()
+    await flush()
+    win.dispatchEvent(new win.Event('pagehide'))
+    expect(beacons).toHaveLength(0)
+    expect(queued().length).toBeGreaterThan(0) // still queued for the retry loop
+    beaconOk = true
+    win.dispatchEvent(new win.Event('pagehide'))
+    expect(beacons.length).toBeGreaterThan(0)
+    expect(queued()).toHaveLength(0)
+  })
+})
+
+describe('the cookieless queue', () => {
+  afterEach(() => vi.useRealTimers())
+  const tab = () => JSON.parse(win.sessionStorage.getItem('trckable_q') || '[]')
+
+  it('keeps a failed cookieless event in sessionStorage, and sends it from the next page of the tab', async () => {
+    status = 503
+    tracker({ cookieless: true })
+    await flush()
+    expect(tab()).toHaveLength(1)
+    expect(win.localStorage.length).toBe(0) // no localStorage, no cookie
+    expect(win.document.cookie).toBe('')
+    const id = tab()[0].id
+    const saved = win.sessionStorage.getItem('trckable_q')!
+    browser('https://site.com/next', 'https://site.com/pricing') // the next page in the same tab
+    win.sessionStorage.setItem('trckable_q', saved)
+    sent = []
+    status = 202
+    tracker({ cookieless: true })
+    await flush()
+    expect(sent.some((e) => e.id === id)).toBe(true)
+    expect(tab().some((e: any) => e.id === id)).toBe(false) // acknowledged: gone
+    expect(win.localStorage.length).toBe(0)
+  })
+
+  it('drops what is older than a day', async () => {
+    win.sessionStorage.setItem('trckable_q', JSON.stringify([{ id: 'old', k: 'pv', s: 'tkb_test', u: 'https://site.com/', c: 1, a: Date.now() - 25 * 3_600_000 }]))
+    tracker({ cookieless: true })
+    await flush()
+    expect(sent.some((e) => e.id === 'old')).toBe(false)
   })
 })

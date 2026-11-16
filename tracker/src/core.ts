@@ -70,8 +70,13 @@ export function start(c: Config): Tracker {
   const now = Date.now
   if (w.__trk) return w.__trk // loaded twice (tag and bundle, two bundles): one tracker per page
 
-  // Consent-free mode touches no browser storage at all, not even to read.
+  // Consent-free mode keeps no cookie and nothing in localStorage; its only
+  // storage is the tab's own sessionStorage, for events not yet delivered.
   let ls: Storage | null = null
+  let ss: Storage | null = null
+  try {
+    ss = sessionStorage
+  } catch {}
   if (!c.cookieless)
     try {
       ls = localStorage
@@ -160,6 +165,7 @@ export function start(c: Config): Tracker {
         put('', 0)
         pending = []
         ls?.removeItem(QUEUE)
+        ss?.removeItem(QUEUE)
       }
       if (ok || final) release()
     }
@@ -264,30 +270,36 @@ export function start(c: Config): Tracker {
   // What has not been acknowledged yet; each event carries the time it was made
   // in `a`, which becomes its age on the wire. A cookie visitor's events are
   // kept in localStorage: 24 hours, 200 events, the oldest dropped first, and
-  // sent again, with their own ids and their own age, by the next page or visit. An event sent without a cookie is kept in memory
-  // only, for as long as the page is open: consent-free mode touches no
-  // storage, so a visitor in it who closes the page during an outage loses
-  // what was not delivered.
-  const queue = (): Payload[] => {
+  // sent again, with their own ids and their own age, by the next page or visit.
+  // An event sent without a cookie is kept the same way in sessionStorage: it
+  // survives a page change in the tab, and is gone with the tab.
+  const queue = (s = ls): Payload[] => {
     try {
-      return JSON.parse(ls!.getItem(QUEUE)!) || []
+      return JSON.parse(s!.getItem(QUEUE)!) || []
     } catch {
       return []
     }
   }
-  const save = (q: Payload[]) => {
+  const save = (q: Payload[], s = ls) => {
     try {
-      ls!.setItem(QUEUE, JSON.stringify(q.slice(-200)))
+      s!.setItem(QUEUE, JSON.stringify(q.slice(-200)))
     } catch {}
+  }
+  // The store an event lives in: no cookie, the tab's; else the browser's.
+  const home = (p: Payload) => (p.c ? ss : ls)
+  const drop = (p: Payload) => {
+    pending = pending.filter((y) => y != p)
+    const s = home(p)
+    save(queue(s).filter((y) => y.id != p.id), s)
   }
   // One try. The age is how long the event has waited, so that the server puts
   // it on the day it happened. A 5xx or 429 is a "not now" (the event stays
   // queued); anything else is final, and the event goes.
+  const body = (p: Payload) => JSON.stringify({ ...p, a: now() - (p.a as number) })
   const go = (p: Payload) =>
-    fetch(c.api, { method: 'POST', body: JSON.stringify({ ...p, a: now() - (p.a as number) }), keepalive: true }).then((r) => {
+    fetch(c.api, { method: 'POST', body: body(p), keepalive: true }).then((r) => {
       if (r.status > 499 || r.status == 429) throw 0
-      pending = pending.filter((y) => y != p)
-      if (!cookieless) save(queue().filter((y) => y.id != p.id))
+      drop(p)
     })
 
   // After a failure, the queue is worked through oldest first and one request
@@ -327,13 +339,12 @@ export function start(c: Config): Tracker {
     const v = cookieless ? 0 : vid()
     p.a = now() // when it was made: the wire's age is how long ago
     if (!v) p.c = 1 // no cookie: the server must not set one either
-    else {
-      p.v = v
-      // Write-ahead: queued before sending, removed once acknowledged. Anything
-      // left (page closed mid-flight, offline, server down) is sent again later;
-      // the server drops duplicates by event id.
-      save([...queue(), p])
-    }
+    else p.v = v
+    // Queued before sending, removed once acknowledged, in the store that fits
+    // (a cookie's visitor: localStorage; none: the tab's sessionStorage).
+    // Anything left (page closed mid-flight, offline, server down) is sent
+    // again later; the server drops duplicates by event id.
+    save([...queue(home(p)), p], home(p))
     pending.push(p)
     fly || tries || go(p).catch(back)
   }
@@ -393,6 +404,14 @@ export function start(c: Config): Tracker {
       if (a.length) cwv.inp = Math.round(a[Math.min(a.length - 1, (a.length / 50) | 0)])
       return cwv
     }
+  }
+
+  // The page is going away: what is still pending goes by sendBeacon, which
+  // the browser finishes after the page is gone (a plain text body, so no
+  // preflight). Sent this way, an event leaves the queue; one the browser
+  // refuses stays, and the retry loop has it.
+  const beacon = () => {
+    pending.slice().map((p) => nav.sendBeacon?.(c.api, body(p)) && drop(p))
   }
 
   const flushEngagement = (ping?: number) => {
@@ -501,11 +520,11 @@ export function start(c: Config): Tracker {
   let tick = 0 // minutes shown since the last report
   d.addEventListener('visibilitychange', () =>
     d.hidden
-      ? (flushEngagement(), (away = now()))
+      ? (flushEngagement(), beacon(), (away = now()))
       : (run(), (tick = 0), now() - away > 18e5 ? ((last = ''), page()) : (visible = now())),
   )
   setInterval(() => d.hidden || tick++ % 3 || flushEngagement(1), 6e4)
-  w.addEventListener('pagehide', flushEngagement)
+  w.addEventListener('pagehide', () => (flushEngagement(), beacon()))
   w.addEventListener(
     'scroll',
     () => {
@@ -531,7 +550,7 @@ export function start(c: Config): Tracker {
 
   // Retry what an earlier page could not deliver. Older than a day is dropped:
   // the server would refuse it (it dates events up to 25 hours back).
-  if (!cookieless) save((pending = queue().filter((x) => now() - (x.a as number) < 864e5)))
+  save((pending = queue(cookieless ? ss : ls).filter((x) => now() - (x.a as number) < 864e5)), cookieless ? ss : ls)
   run()
   w.addEventListener('online', run)
 
