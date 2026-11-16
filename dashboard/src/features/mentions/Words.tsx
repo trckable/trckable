@@ -56,6 +56,10 @@ export function Words({ site, words, onWords }: { site: string; words: WordsValu
       })
       .finally(() => setBusy(false))
   }
+  // Leaving the field adds the word, but the window losing focus (another tab, another window) is not leaving it.
+  const leave = () => {
+    if (document.hasFocus()) add()
+  }
   return (
     <>
     <ul className="mentions-words">
@@ -89,7 +93,7 @@ export function Words({ site, words, onWords }: { site: string; words: WordsValu
               disabled={busy}
               aria-label={page.wordLabel}
               onChange={(e) => setDraft(e.target.value)}
-              onBlur={add}
+              onBlur={leave}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') add()
                 if (e.key === 'Escape') setDraft(null)
