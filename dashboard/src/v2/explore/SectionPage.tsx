@@ -113,7 +113,11 @@ export function SectionPage({ section, tab, x, c, onRead }: { section: Section; 
   useEffect(() => {
     if (tab === tabs[0]) return
     // The table the address names, each time it names another; after a move from Live has put the page at its top.
-    const f = requestAnimationFrame(() => document.getElementById(`xc-${isPlaceTab(tab) ? 'places' : tab}`)?.scrollIntoView({ block: 'start' }))
+    const f = requestAnimationFrame(() => {
+      // The page's own window only: scrollIntoView would also move a page this one is embedded in.
+      const el = document.getElementById(`xc-${isPlaceTab(tab) ? 'places' : tab}`)
+      if (el) scrollTo({ top: Math.max(0, scrollY + el.getBoundingClientRect().top - (parseFloat(getComputedStyle(el).scrollMarginTop) || 0)) })
+    })
     return () => cancelAnimationFrame(f)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab])
