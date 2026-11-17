@@ -36,7 +36,7 @@ Self-host it free with every feature, or let [trckable Cloud](https://cloud.trck
 
 ## Two ways to use it
 
-**Self-host:** one container, on your own server. Free and open source (AGPL-3.0), every feature. **[trckable Cloud](https://cloud.trckable.com):** we run it, with updates and backups, after a 14-day free trial. Same product either way, and the same 2 KB script.
+**Self-host:** one container, on your own server. Free and open source (AGPL-3.0), every feature. **[trckable Cloud](https://cloud.trckable.com):** we run it, with updates and backups, and Free includes 1 site. Same product either way, and the same 2 KB script.
 
 ## Quick start
 
