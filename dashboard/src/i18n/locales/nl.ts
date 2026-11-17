@@ -1015,6 +1015,7 @@ export default {
   'sites.menu.downTip': (span: string) => `Al ${span} niet bereikbaar. Open de site om te zien wat er mis is.`,
   'sites.menu.quietTip': (span: string) => `Al ${span} geen bezoeken. Er lijkt niets mis met de pagina.`,
   'sites.menu.downShort': (span: string) => `onbereikbaar ${span}`,
+  'sites.menu.locked': 'Vergrendeld: upgrade om hem te zien',
   'sites.menu.quietShort': (span: string) => `rustig ${span}`,
   'sites.menu.noLiveVisits': 'Nog geen live bezoeken',
   'sites.menu.today': (n: string) => `${n} vandaag`,

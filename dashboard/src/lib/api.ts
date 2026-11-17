@@ -168,6 +168,8 @@ export interface Site {
   down_cause?: string
   /** Set while the site's firewall blocks the server's uptime look (unix seconds): we cannot check it, its visitors are not affected. */
   probe_blocked_since?: number
+  /** Set by a downstream build when the account's plan shows fewer sites than it has: the site keeps tracking but its data is locked. */
+  locked?: boolean
   /** The site's uptime check is paused: nothing is looked at, so no screen calls the site fine because of it. */
   uptime_paused?: boolean
   /** The last time the server looked for the snippet from the outside. */

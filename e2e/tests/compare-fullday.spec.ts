@@ -5,8 +5,8 @@ import { flowSession } from './flows-kit'
 import { API, STEADY_DOMAIN } from '../playwright.config'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough for a layout')
-// In the day's last hour the solid line is within an hour of the end: the picture would not tell the two apart.
-test.skip(() => new Date().getUTCHours() >= 23, 'the day is nearly over')
+// In the day's last hour the solid line is within an hour of the end, and in its first hour within an hour of the start: the picture would not tell the two apart.
+test.skip(() => { const h = new Date().getUTCHours(); return h >= 23 || h < 1 }, 'the day is nearly over or just begun')
 
 let cookie = ''
 test.beforeAll(async () => {
