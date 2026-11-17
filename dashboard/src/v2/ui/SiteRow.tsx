@@ -1,7 +1,7 @@
 // One site in the list that opens from the header: its mark with the state dot on it (green while visits come, grey when quiet, red when down, hollow
 // when not installed), its name (its domain too, when another site has the same name), and today's visitors, or how long it has been quiet or down. Anyone who may arrange can drag the row, move it with Alt + ↑/↓ or its ⋯ menu (pin, a group).
 import { Fragment } from 'react'
-import { ExternalLink, GripVertical } from 'lucide-react'
+import { ExternalLink, GripVertical, Lock } from 'lucide-react'
 import type { Site } from '../../lib/api'
 import { Menu } from '../../components/Menu'
 import { confirmWith } from '../../components/Confirm'
@@ -88,7 +88,7 @@ export function SiteRow({ site, place, on, arrange: a, today, onPick, move, clas
           <div className="nm">{name}</div>
           {move ? <div className="d state-line quiet moving" title={move.title}>{move.text}</div> : note && <div className="d">{note}</div>}
         </span>
-        <Tail s={site} today={today} />
+        {site.locked ? <Lock size={14} strokeWidth={2} aria-label={copy.locked} className="site-lock" /> : <Tail s={site} today={today} />}
       </button>
       {move && (
         <button type="button" data-stop data-nodrag className="btn sw-stop" aria-label={move.stopLabel} onClick={move.stop}>

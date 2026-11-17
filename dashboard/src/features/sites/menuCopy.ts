@@ -25,6 +25,8 @@ export const copy = defineCopy('sites.menu', {
   installHelp: 'Install help',
   downTip: (span: string) => `Not reachable for ${span}. Open the site to see what’s wrong.`,
   downShort: (span: string) => `down ${span}`,
+  /** A site the account's plan keeps locked (a downstream build sets `locked`): its row shows a lock instead of the count. */
+  locked: 'Locked: upgrade to see it',
   noLiveVisits: 'No live visits yet',
   quietShort: (span: string) => `quiet ${span}`,
   quietTip: (span: string) => `No visits for ${span}. Nothing looks wrong with the page.`,
