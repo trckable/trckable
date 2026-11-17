@@ -1017,8 +1017,6 @@ export default {
   'sites.menu.quietTip': (span: string) => `Aucune visite depuis ${span}. Rien ne semble anormal sur la page.`,
   'sites.menu.downShort': (span: string) => `injoignable ${span}`,
   'sites.menu.locked': 'Verrouillé : passez à une offre supérieure pour le voir',
-  'sites.menu.quietShort': (span: string) => `calme ${span}`,
-  'sites.menu.noLiveVisits': 'Pas encore de visites en direct',
   'sites.menu.today': (n: string) => `${n} aujourd’hui`,
   'sites.menu.todayHead': 'Aujourd’hui',
   'sites.menu.todayAll': 'Visiteurs aujourd’hui, tous les sites',

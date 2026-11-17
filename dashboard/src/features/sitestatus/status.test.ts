@@ -102,3 +102,20 @@ describe('what the last visit says of tracking itself', () => {
     expect(trackingOf(site(), NOW)).toBeUndefined()
   })
 })
+
+describe('a quiet site that gets a visit', () => {
+  it('is no longer quiet, here or in the list', async () => {
+    const { noteVisit, forgetVisits } = await import('./seen')
+    const { dotState } = await import('../sites/StateDot')
+    forgetVisits()
+    const old = site({ last_event_at: sec - 24 * 86400 })
+    expect(statusOf(old, NOW)).toBe('quiet')
+    expect(silence(old, NOW)).toBe('24d')
+    noteVisit(old.id, sec - 5)
+    expect(statusOf(old, NOW)).toBe('ok')
+    expect(dotState(old, NOW)).toBe('now')
+    expect(silence(old, NOW)).toBe('1m')
+    forgetVisits()
+    expect(statusOf(old, NOW)).toBe('quiet')
+  })
+})

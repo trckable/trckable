@@ -1026,8 +1026,6 @@ export default {
   'sites.menu.quietTip': (span: string) => `Seit ${span} keine Besuche. An der Seite sieht nichts falsch aus.`,
   'sites.menu.downShort': (span: string) => `nicht erreichbar ${span}`,
   'sites.menu.locked': 'Gesperrt: upgraden, um ihn zu sehen',
-  'sites.menu.quietShort': (span: string) => `ruhig ${span}`,
-  'sites.menu.noLiveVisits': 'Noch keine Live-Besuche',
   'sites.menu.today': (n: string) => `${n} heute`,
   'sites.menu.todayHead': 'Heute',
   'sites.menu.todayAll': 'Besucher heute, alle Websites',

@@ -4,6 +4,7 @@
 // red: the site is down; hollow: never seen (features/sitestatus/status.ts).
 // It reads the sites list the dashboard already has: no query of its own.
 import type { Site } from '../../lib/api'
+import { lastEventOf } from '../sitestatus/seen'
 import { siteState, type SiteState } from '../sitestatus/status'
 import { copy } from './copy'
 
@@ -14,7 +15,8 @@ const NOW_S = 300
 
 export function dotState(s: Site, now = Date.now()): DotState {
   if (siteState(s, now) === 'stopped') return 'stopped' // a site that fails is never shown as fine, visits or not
-  if (s.last_event_at && now / 1000 - s.last_event_at < NOW_S) return 'now'
+  const last = lastEventOf(s)
+  if (last && now / 1000 - last < NOW_S) return 'now'
   return siteState(s, now)
 }
 

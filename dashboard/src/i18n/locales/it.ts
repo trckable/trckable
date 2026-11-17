@@ -1023,8 +1023,6 @@ export default {
   'sites.menu.quietTip': (span: string) => `Nessuna visita da ${span}. La pagina non sembra avere problemi.`,
   'sites.menu.downShort': (span: string) => `non raggiungibile ${span}`,
   'sites.menu.locked': 'Bloccato: passa a un piano superiore per vederlo',
-  'sites.menu.quietShort': (span: string) => `quieto ${span}`,
-  'sites.menu.noLiveVisits': 'Ancora nessuna visita in diretta',
   'sites.menu.today': (n: string) => `${n} oggi`,
   'sites.menu.todayHead': 'Oggi',
   'sites.menu.todayAll': 'Visitatori oggi, tutti i siti',

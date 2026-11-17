@@ -16,6 +16,7 @@ import { downStateOf } from '../../features/sitestatus/status'
 import { TrackingLine } from '../../features/sitestatus/TrackingLine'
 import { whyDown } from '../briefing/why'
 import { liveCount, liveLink } from '../../features/live/liveLink'
+import { noteVisit } from '../../features/sitestatus/seen'
 import { feedOf, onlineAt, peopleAt, seriesAt } from '../../features/live/model'
 import type { Busier, LiveNow } from '../../features/live/api'
 import { useTicking } from '../../features/live/useTicking'
@@ -89,6 +90,10 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
   // The newer of the two readings is the one onlineNow chose; on the server's clock, as the rows are.
   const online = data ? onlineAt(reading, Math.max(stream.at ?? 0, got) + skew, data.recent, stream.visits, data.at, now) : reading
   useEffect(() => liveCount.set(online), [online])
+  const wholeId = whole?.id
+  useEffect(() => {
+    if (wholeId && online) noteVisit(wholeId)
+  }, [wholeId, online])
   const rows = useMemo(() => (data ? feedOf(data.recent, stream.visits, data.at, now) : []), [data, stream.visits, now])
   const lists = useMemo(() => listsOf(rows), [rows])
   const day = useTodayLists(site, timezone, data?.today?.visitors ?? 0)
