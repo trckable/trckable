@@ -3,6 +3,7 @@
 import type { Site } from '../../lib/api'
 import { tag } from '../../i18n'
 import { clock } from '../../lib/site'
+import { lastEventOf } from './seen'
 import { dateFmt } from '../../lib/format'
 
 /** Seconds as the shortest honest span: 12m, 6h, 3d. */
@@ -15,7 +16,7 @@ export function span(secs: number): string {
 
 /** How long a site has been quiet (since its last visit) or down (since the check first failed), short; empty before the first visit. */
 export function silence(s: Site, now = Date.now()): string {
-  const since = s.down_since || s.last_event_at
+  const since = s.down_since || lastEventOf(s)
   return since ? span(now / 1000 - since) : ''
 }
 

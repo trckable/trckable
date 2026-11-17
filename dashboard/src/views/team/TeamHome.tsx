@@ -1,6 +1,6 @@
 // All sites: the team's home. A strip (people now, today against usual, money, who needs a look), one line for the day, then a row for
 // each site, the ones that need a look first. Every figure is read from the server; a figure it did not give is left out.
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Activity, BarChart3, Plus, TrendingUp } from 'lucide-react'
 import { Loading } from '../../components/loading/Loading'
 import { Segmented } from '../../kit'
@@ -11,6 +11,7 @@ import { can } from '../../lib/permissions'
 import { fmtInt, fmtMoney } from '../../lib/format'
 import { useV2Extras } from '../../v2/slots'
 import { SummaryCards, type SumItem } from '../../v2/ui/SummaryCards'
+import { noteVisit } from '../../features/sitestatus/seen'
 import { briefing } from './briefing'
 import { copy } from './copy'
 import { sorted, sumTone, teamSite, tone, totals, type Sort, type TeamSite } from './model'
@@ -71,6 +72,10 @@ function Empty() {
 export function TeamHome({ sites, header }: { sites: Site[]; header: React.ReactNode }) {
   const { rows, err } = useTeam()
   const [by, setBy] = useState<Sort>('attention')
+  // Someone online is a visit: the list read at load may be days old.
+  useEffect(() => {
+    for (const r of rows ?? []) if (!r.error && r.online > 0) noteVisit(r.id)
+  }, [rows])
   const team = useMemo(() => (rows || sites.length === 0 ? sites.map((s) => teamSite(s, rows?.find((r) => r.id === s.id))) : null), [rows, sites])
   const ready = team ? sorted(team, by) : null
   return (

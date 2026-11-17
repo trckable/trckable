@@ -7,6 +7,7 @@ import { signals } from './copy'
 import { gained, silentHours, Usual } from './detect'
 import { tell } from './notify'
 import { chipKindOf } from '../sitestatus/status'
+import { lastEventOf } from '../sitestatus/seen'
 
 type Props = {
   site: Site
@@ -40,7 +41,7 @@ export function useNotices({ site, online, visits, scope, sources }: Props) {
   }, [online, name])
 
   // Quiet for hours, told once for each silence: the next visit starts it over.
-  const last = useRef(Math.max((site.last_event_at ?? 0) * 1000, 0))
+  const last = useRef(Math.max((lastEventOf(site) ?? 0) * 1000, 0))
   const told = useRef(false)
   useEffect(() => {
     if (visits[0]) {

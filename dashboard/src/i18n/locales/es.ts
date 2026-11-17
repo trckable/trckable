@@ -1029,8 +1029,6 @@ export default {
   'sites.menu.quietTip': (span: string) => `Sin visitas desde hace ${span}. La página no parece tener ningún problema.`,
   'sites.menu.downShort': (span: string) => `sin respuesta ${span}`,
   'sites.menu.locked': 'Bloqueado: mejora tu plan para verlo',
-  'sites.menu.quietShort': (span: string) => `en calma ${span}`,
-  'sites.menu.noLiveVisits': 'Aún no hay visitas en directo',
   'sites.menu.today': (n: string) => `${n} hoy`,
   'sites.menu.todayHead': 'Hoy',
   'sites.menu.todayAll': 'Visitantes hoy, todos los sitios',

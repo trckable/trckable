@@ -4,6 +4,7 @@
 // no visits for the signals threshold, and nothing known to be wrong with the
 // page. Nothing here knows about the browser.
 import type { Site } from '../../lib/api'
+import { lastEventOf } from './seen'
 import { failsOf } from './verdict'
 
 /** Hours without a visit before tracking counts as stopped, as the alert of the same name says by default. */
@@ -18,7 +19,7 @@ function scriptSeen(s: Site): boolean {
 
 export function statusOf(s: Site, now = Date.now()): Status {
   if (s.down_since) return 'down' // the server's one rule (sqlite.DownNow): the uptime probe, or for a site never probed a failed daily look after visits went silent
-  const last = s.last_event_at
+  const last = lastEventOf(s)
   if (!last) return scriptSeen(s) ? 'quiet' : 'new' // imported history or a working script with no live visit yet is not "not installed"
   if (now / 1000 - last < STOPPED_HOURS * 3600) return 'ok'
   return 'quiet' // a failed daily look is told by the server as down_since (sqlite.DownNow), never decided here

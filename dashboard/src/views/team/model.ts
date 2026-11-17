@@ -14,7 +14,7 @@ export interface TeamSite {
   /** The site's own icon, when its owner set one; the letter mark otherwise. */
   icon_url?: string
   state: DotState
-  /** How long it has been quiet or down, short ("7h"); empty otherwise. */
+  /** How long it has been down, short ("7h"); empty otherwise. */
   silent: string
   /** The day's numbers; absent while the server has not given them (or could not read them). */
   day?: {
@@ -31,7 +31,7 @@ export interface TeamSite {
 
 export function teamSite(site: Site, row: TeamRow | undefined, now = Date.now()): TeamSite {
   const state = dotState(site, now)
-  const out: TeamSite = { id: site.id, domain: site.domain, name: site.name || site.domain, color: siteColor(site), icon_url: site.icon_url, state, silent: state === 'quiet' || state === 'stopped' ? silence(site, now) : '' }
+  const out: TeamSite = { id: site.id, domain: site.domain, name: site.name || site.domain, color: siteColor(site), icon_url: site.icon_url, state, silent: state === 'stopped' ? silence(site, now) : '' }
   if (row && !row.error) {
     out.day = { online: row.online, today: row.today, usual: row.usual, series: row.series, topSource: row.top_source, revenue: row.revenue, currency: row.currency, exponent: row.exponent }
   }
