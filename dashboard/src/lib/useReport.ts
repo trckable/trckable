@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { useVisibleInterval } from './visibleInterval'
 import { APIError, cachedReport, dropReports, peekReport, type Report, type ReportQuery } from './api'
 
-/** Fetches a report, keeping the last one on screen while the next loads. A
- *  period read before is shown at once, whatever its age, and refreshed behind
- *  it when it is older than the cache keeps it (lib/api.ts). */
+/** Fetches a report. A new site, period or filter drops the old answer at once
+ *  (nothing is shown under a name it does not belong to); the same one read
+ *  again keeps its answer on screen. A period read before is shown at once,
+ *  whatever its age, and refreshed behind it when it is older than the cache
+ *  keeps it (lib/api.ts). */
 export function useReport(site: string | null, q: ReportQuery | null, opts: { poll?: boolean } = {}) {
   const [data, setData] = useState<Report | null>(() => (site && q ? (peekReport(site, q) ?? null) : null))
   const [error, setError] = useState<string | null>(null)
@@ -14,7 +16,7 @@ export function useReport(site: string | null, q: ReportQuery | null, opts: { po
   const [loading, setLoading] = useState(false)
   const [tick, setTick] = useState(0)
   const key = site && q ? site + JSON.stringify(q) : ''
-  const [lastKey, setLastKey] = useState('')
+  const [lastKey, setLastKey] = useState(() => (site && q && peekReport(site, q) ? site + JSON.stringify(q) : ''))
   // A refetch asked for because something new arrived skips the 10 s cache.
   const fresh = useRef(false)
   const onScreen = useRef('') // the key of the report on screen
@@ -89,7 +91,7 @@ export function useReport(site: string | null, q: ReportQuery | null, opts: { po
   // Only a page with no live stream (a shared link) reads again on a timer: once a minute. Everyone else's report is read again when the stream brings something (useLiveRefresh).
   useVisibleInterval(() => setTick((n) => n + 1), 60_000, !!opts.poll, 5 * 60_000)
 
-  return { data, error, warming, loading, stale: loading && lastKey !== key, refresh: (skipCache = false) => {
+  return { data: lastKey === key ? data : null, error, warming, loading, stale: loading && lastKey !== key, refresh: (skipCache = false) => {
     fresh.current = skipCache
     setTick((n) => n + 1)
   } }

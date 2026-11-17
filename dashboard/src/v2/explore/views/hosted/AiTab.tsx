@@ -25,7 +25,11 @@ const ROWS = 12
 const SHORT = 6
 const KINDS = [{ k: 'answer', color: 'var(--mk-lime)' }, { k: 'train', color: 'var(--ch-2)' }, { k: 'index', color: 'var(--ch-3)' }]
 
-const toSection = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+// The page's own window only: scrollIntoView would also move a page this one is embedded in.
+const toSection = (id: string) => {
+  const el = document.getElementById(id)
+  if (el) scrollTo({ top: Math.max(0, scrollY + el.getBoundingClientRect().top - (parseFloat(getComputedStyle(el).scrollMarginTop) || 0)), behavior: 'smooth' })
+}
 
 export default function AiTab({ x }: { x: XCtx }) {
   const { rep, reload } = useAiSearch(x.site.id, x.query, ROWS)
