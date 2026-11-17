@@ -54,7 +54,7 @@ export const copy = defineCopy('setup', {
   vitals: { title: 'Page speed (Web Vitals)', sub: (kb: number) => `Adds ${fmtInt(kb)} KB to the script` },
   heatmaps: { title: 'Heatmaps', sub: 'Where people click and scroll' },
   ga: { title: 'Import from Google Analytics', sub: 'Bring your old history in' },
-  team: { title: 'Invite teammates', sub: 'Unlimited seats' },
+  team: { title: 'Invite teammates', sub: 'Give them their own sign-in' },
   phone: { title: 'The phone app', sub: 'Alerts in your pocket' },
   mentions: { title: 'Your own words for Mentions', sub: 'Hear when someone writes about you' },
 })
