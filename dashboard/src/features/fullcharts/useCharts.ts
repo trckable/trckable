@@ -1,5 +1,5 @@
 // Loads the chart grid for what is on screen, and again when that changes.
-// An older answer arriving late is dropped, never drawn over a newer one.
+// An older answer arriving late is dropped, never drawn over a newer one, and the charts of another period or filter are never shown under this one's name (a refresh of the same one keeps its charts).
 import { useCallback, useEffect, useState } from 'react'
 import { type Bucket, type ReportQuery } from '../../lib/api'
 import { words } from '../../lib/errors'
@@ -10,8 +10,9 @@ let last: { key: string; charts: Charts } | null = null
 
 export function useCharts(site: string, query: ReportQuery, bucket: Bucket | undefined) {
   const [round, setRound] = useState(0)
-  const key = site + JSON.stringify([query.from, query.to, query.filters, query.testPayments, bucket, round])
-  const [data, setData] = useState<{ key: string; charts: Charts } | null>(last?.key === key ? last : null)
+  const asked = site + JSON.stringify([query.from, query.to, query.filters, query.testPayments, bucket])
+  const key = `${asked}|${round}`
+  const [data, setData] = useState<{ key: string; charts: Charts } | null>(last?.key === asked ? last : null)
   const [failed, setFailed] = useState<{ key: string; why: string } | null>(null)
   useEffect(() => {
     const ctl = new AbortController()
@@ -19,8 +20,8 @@ export function useCharts(site: string, query: ReportQuery, bucket: Bucket | und
       .then((charts) => {
         // A fetch cut off by the next one can read as an empty body: that is not an answer.
         if (ctl.signal.aborted) return
-        last = { key, charts }
-        setData({ key, charts })
+        last = { key: asked, charts }
+        setData({ key: asked, charts })
       })
       .catch((e: unknown) => {
         if (!ctl.signal.aborted) setFailed({ key, why: words(e) })
@@ -28,5 +29,5 @@ export function useCharts(site: string, query: ReportQuery, bucket: Bucket | und
     return () => ctl.abort()
   }, [key]) // eslint-disable-line react-hooks/exhaustive-deps -- keyed by content: query is a new object on every render of the dashboard
   const retry = useCallback(() => setRound((n) => n + 1), [])
-  return { charts: data?.charts ?? null, stale: !!data && data.key !== key, error: failed?.key === key ? failed.why : null, retry }
+  return { charts: data?.key === asked ? data.charts : null, error: failed?.key === key ? failed.why : null, retry }
 }

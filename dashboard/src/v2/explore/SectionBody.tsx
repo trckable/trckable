@@ -1,6 +1,6 @@
 // The section the person is on: its loading shape while the numbers come, a plain line when they could not, or the
 // section itself.
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { XError, XSkeleton } from '../ui/XBits'
 import { copy } from './copy'
 import type { XCtx } from './ctx'
@@ -55,16 +55,24 @@ function Shown({ tab, x, d }: { tab: Tab; x: XCtx; d: TabData }) {
 }
 
 export function SectionBody({ tab, x, r, still }: { tab: Tab; x: XCtx; r: Loaded<TabData>; still?: boolean }) {
-  // The last numbers of this table stay, dimmed, while a new period or filter is read: the page does not jump. Another table starts from its loading shape.
-  const [kept, setKept] = useState<{ tab: Tab; data: TabData } | null>(null)
-  if (r.state === 'ok' && (kept?.tab !== tab || kept.data !== r.data)) setKept({ tab, data: r.data })
-  const stale = r.state === 'loading' && kept?.tab === tab ? kept.data : null
+  // Numbers of an earlier period or filter never stay on screen while the new ones are read: only the height they had is held, so the page does not jump, and the loading shape fills it once the wait is felt (explore.css .xhold).
+  const box = useRef<HTMLDivElement>(null)
+  const [held, setHeld] = useState<{ tab: Tab; h: number } | null>(null)
+  const shown = r.state === 'ok' && !isHosted(tab)
+  useEffect(() => {
+    const el = box.current
+    if (!shown || !el || typeof ResizeObserver === 'undefined') return
+    const note = () => setHeld((o) => (o?.tab === tab && o.h === el.offsetHeight ? o : { tab, h: el.offsetHeight }))
+    note()
+    const ro = new ResizeObserver(note)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [shown, tab])
   useEffect(() => {
     if (!still && scrollY > 0) scrollTo({ top: 0 })
   }, [tab, still])
   if (isHosted(tab)) return <div key={tab} className="xfade"><Hosted tab={tab} x={x} /></div>
-  if (stale) return <div key={tab} className="xstale" aria-busy="true"><Shown tab={tab} x={x} d={stale} /></div>
-  if (r.state === 'loading') return <XSkeleton cards={CARDS[tab] ?? 0} label={copy.loading} />
+  if (r.state === 'loading') return <div className="xhold" style={{ minHeight: held?.tab === tab ? held.h : undefined }} aria-busy="true"><XSkeleton cards={CARDS[tab] ?? 0} label={copy.loading} /></div>
   if (r.state === 'error') return <XError title={copy.failed} hint={r.message} onRetry={r.retry} />
-  return <div key={tab} className="xfade"><Shown tab={tab} x={x} d={r.data} /></div>
+  return <div key={tab} ref={box} className="xfade"><Shown tab={tab} x={x} d={r.data} /></div>
 }

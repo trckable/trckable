@@ -55,20 +55,22 @@
 .mk .xp.xpage.full .xrail{position:static;transform:none;translate:none}
 .mk .xp.xpage.full .xrail>:first-child{margin-top:0;padding-top:0}
 .mk .xp.xpage .xchg-rest{margin-top:calc(var(--mk-s2) - var(--mk-s4))}
-/* Moving around Explore: the new section rises in, a read in progress dims what is there, a loading shape appears only if the wait is felt. */
+/* Moving around Explore: the new section rises in, a read in progress holds the height of what was there, a loading shape appears only if the wait is felt. */
 .mk .xfade{display:flex;flex-direction:column;gap:var(--mk-s4);min-width:0;animation:x-rise .2s cubic-bezier(.2,.8,.2,1)}
-.mk .xstale{display:flex;flex-direction:column;gap:var(--mk-s4);min-width:0;opacity:.55;pointer-events:none;transition:opacity .15s ease .08s}
-.mk .xfade>*,.mk .xstale>*{margin-block:0}
-.mk .xfade>.xsec,.mk .xstale>.xsec{margin-top:var(--mk-s5);margin-bottom:calc(var(--mk-s2) - var(--mk-s4))}
-.mk .xp.xpage .xsk{animation:x-show .2s ease .09s backwards}
+.mk .xfade>*{margin-block:0}
+.mk .xfade>.xsec{margin-top:var(--mk-s5);margin-bottom:calc(var(--mk-s2) - var(--mk-s4))}
+.mk .xp.xpage .xsk{animation:x-show .2s ease .15s backwards}
+.mk .xhold{min-width:0}
 .mk .xrail .xri{transition:background-color .15s ease,color .15s ease}
 @keyframes x-rise{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 @keyframes x-show{from{opacity:0}to{opacity:1}}
-@media (prefers-reduced-motion:reduce){.mk .xfade,.mk .xp.xpage .xsk{animation:none}.mk .xstale{transition:none}}
-[data-motion='off'] .mk .xfade,[data-motion='off'] .mk .xp.xpage .xsk{animation:none}
+@keyframes x-later{from{visibility:hidden}to{visibility:visible}}
+@media (prefers-reduced-motion:reduce){.mk .xfade{animation:none}.mk .xp.xpage .xsk{animation:x-later 0s linear .15s backwards}}
+[data-motion='off'] .mk .xfade{animation:none}
+[data-motion='off'] .mk .xp.xpage .xsk{animation:x-later 0s linear .15s backwards}
 /* Dividers that fade out at their ends, so sections are told apart without boxes. */
-.mk .xfade>.xsec,.mk .xstale>.xsec{position:relative;padding-top:var(--mk-s5);margin-top:var(--mk-s4)}
-.mk .xfade>.xsec::before,.mk .xstale>.xsec::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--mk-line) 10%,var(--mk-line) 90%,transparent)}
+.mk .xfade>.xsec{position:relative;padding-top:var(--mk-s5);margin-top:var(--mk-s4)}
+.mk .xfade>.xsec::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--mk-line) 10%,var(--mk-line) 90%,transparent)}
 @media (--md-up){
   .mk .xp.xpage .xmain{position:relative}
   .mk .xp.xpage .xmain::before{content:"";position:absolute;top:0;bottom:0;left:calc(var(--mk-s6) / -2);width:1px;background:linear-gradient(180deg,transparent,var(--mk-line) 48px,var(--mk-line) calc(100% - 96px),transparent)}
@@ -91,7 +93,7 @@
   .mk .xp.xpage.full{overflow:visible!important}
 }
 /* The first heading of a section has nothing above it to divide from. */
-.mk .xfade>.xsec:first-child::before,.mk .xstale>.xsec:first-child::before{display:none}
+.mk .xfade>.xsec:first-child::before{display:none}
 /* Channel quality */
 .mk .xqual-page{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mk .xqual .xth,.mk .xqual .xrw{grid-template-columns:var(--xq)!important;gap:var(--mk-s3);align-items:center;text-align:left}
@@ -141,15 +143,15 @@
 .mk .xp.xpage .xrail .xgl:first-child{padding-top:8px}
 .mk .xdrawer .xrail .xgl:first-child{padding-top:0}
 /* Every block is a card: its heading on top with a line under it, what it holds below, one even gap between cards. */
-.mk .xfade,.mk .xstale{gap:0}
-.mk .xfade>*,.mk .xstale>*{margin-bottom:var(--mk-s4)}
-.mk .xfade>.xsec,.mk .xstale>.xsec{margin:0;padding:12px var(--mk-s4);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px 16px 0 0;color:var(--mk-text);font-weight:600}
-.mk .xfade>.xsec::before,.mk .xstale>.xsec::before{display:none}
-.mk .xfade>.xsec~*:not(.xsec),.mk .xstale>.xsec~*:not(.xsec){margin:0;padding:var(--mk-s2) var(--mk-s4);background:var(--mk-card);border-inline:1px solid var(--mk-line)}
-.mk .xfade>.xsec+*:not(.xsec),.mk .xstale>.xsec+*:not(.xsec){padding-top:var(--mk-s3)}
-.mk .xfade>.xsec~*:not(.xsec):has(+.xsec),.mk .xfade>.xsec~*:not(.xsec):last-child,.mk .xstale>.xsec~*:not(.xsec):has(+.xsec),.mk .xstale>.xsec~*:not(.xsec):last-child{margin-bottom:var(--mk-s4);padding-bottom:var(--mk-s4);border-bottom:1px solid var(--mk-line);border-radius:0 0 16px 16px}
+.mk .xfade{gap:0}
+.mk .xfade>*{margin-bottom:var(--mk-s4)}
+.mk .xfade>.xsec{margin:0;padding:12px var(--mk-s4);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px 16px 0 0;color:var(--mk-text);font-weight:600}
+.mk .xfade>.xsec::before{display:none}
+.mk .xfade>.xsec~*:not(.xsec){margin:0;padding:var(--mk-s2) var(--mk-s4);background:var(--mk-card);border-inline:1px solid var(--mk-line)}
+.mk .xfade>.xsec+*:not(.xsec){padding-top:var(--mk-s3)}
+.mk .xfade>.xsec~*:not(.xsec):has(+.xsec),.mk .xfade>.xsec~*:not(.xsec):last-child{margin-bottom:var(--mk-s4);padding-bottom:var(--mk-s4);border-bottom:1px solid var(--mk-line);border-radius:0 0 16px 16px}
 /* A section with no headings of its own is one card. */
-.mk .xfade:not(:has(>.xsec,>.xkw,>.xchg-say)),.mk .xstale:not(:has(>.xsec,>.xkw,>.xchg-say)){padding:var(--mk-s4);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px}
+.mk .xfade:not(:has(>.xsec,>.xkw,>.xchg-say)){padding:var(--mk-s4);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px}
 .mk .xfade:not(:has(>.xsec,>.xkw,>.xchg-say))>:last-child{margin-bottom:0}
 .mk .xp.xpage .xchg-say.xsay-table{margin-top:0}
 .mk .xfade>.xsay-table+.xt,.mk .xfade>.xchg-say+.xqual{padding:var(--mk-s2) var(--mk-s4);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px}
@@ -162,8 +164,8 @@
 .mk .xlg>span{display:inline-flex;align-items:center;gap:6px}
 .mk .xlg i{width:8px;height:8px;border-radius:50%}
 /* The two top tables are their own card, not part of the block before them. */
-.mk .xfade>.xsec~*:not(.xsec):has(+.x2),.mk .xstale>.xsec~*:not(.xsec):has(+.x2){margin-bottom:var(--mk-s4);padding-bottom:var(--mk-s4);border-bottom:1px solid var(--mk-line);border-radius:0 0 16px 16px}
-.mk .xfade>.xsec~.x2,.mk .xstale>.xsec~.x2{padding:var(--mk-s4);border:1px solid var(--mk-line);border-radius:16px}
+.mk .xfade>.xsec~*:not(.xsec):has(+.x2){margin-bottom:var(--mk-s4);padding-bottom:var(--mk-s4);border-bottom:1px solid var(--mk-line);border-radius:0 0 16px 16px}
+.mk .xfade>.xsec~.x2{padding:var(--mk-s4);border:1px solid var(--mk-line);border-radius:16px}
 .mk .xlg{margin-right:var(--mk-s3)}
 /* A section is one page of cards. */
 .mk .xcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--mk-s4);align-items:start}
@@ -174,7 +176,7 @@
 .mk .xcp-b{padding:var(--mk-s3) var(--mk-s4) var(--mk-s4);min-width:0}
 .mk .xcp-bare>.xcp-b{padding:0}
 .mk .xcp-wait{min-height:220px}
-.mk .xcp .xfade,.mk .xcp .xstale{padding:0!important;background:none!important;border:0!important;border-radius:0!important}
+.mk .xcp .xfade{padding:0!important;background:none!important;border:0!important;border-radius:0!important}
 .mk .xcp .xfade>:last-child{margin-bottom:0}
 .mk .xcp .xfade>.xsec{padding:0 0 var(--mk-s2);background:none;border:0;border-radius:0;font-weight:400;color:var(--mk-muted)}
 .mk .xcp .xfade>.xsec~*:not(.xsec){padding:0;background:none;border:0;border-radius:0}
@@ -198,14 +200,14 @@
 .mk .xcards{align-items:stretch}
 .mk .xcp{display:flex;flex-direction:column}
 .mk .xcp-b{flex:1;display:flex;flex-direction:column}
-.mk .xcp-b>.xfade,.mk .xcp-b>.xstale{flex:1}
+.mk .xcp-b>.xfade{flex:1}
 .mk .xcp .xfade>.xnote{margin-top:auto;padding-top:var(--mk-s3)}
 .mk .xcp .xsay-table{display:none}
 .mk .xp.xpage .xchg-say.xsay-page{font-size:18px;margin:0 0 var(--mk-s4)}
 .mk .xcp .xfade>section{margin:0;padding:0}
 .mk .xcp .mk-more{border:0;border-radius:0;background:none}
 /* Overview: top pages and top sources are two cards. */
-.mk .xfade>.xsec~.x2,.mk .xstale>.xsec~.x2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--mk-s4);padding:0;background:none;border:0;border-radius:0;margin-bottom:0}
+.mk .xfade>.xsec~.x2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--mk-s4);padding:0;background:none;border:0;border-radius:0;margin-bottom:0}
 .mk .xfade>.x2>div{min-width:0;padding:0 var(--mk-s4) var(--mk-s3);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px}
 .mk .xfade>.x2 .xsec{margin:0 calc(var(--mk-s4) * -1) var(--mk-s2);padding:12px var(--mk-s4);border-bottom:1px solid var(--mk-line);color:var(--mk-text);font-weight:600}
 .mk .xfade>.x2 .xsec>span:last-child{font-weight:400;color:var(--mk-muted)}
@@ -342,7 +344,7 @@
 }
 .mk .shwhy{margin:var(--mk-s2) 0 0;font-size:12px;color:var(--mk-muted)}
 /* Channels: the ring beside its table. */
-.mk [data-xcard=sources] .xfade,.mk [data-xcard=sources] .xstale{display:grid;grid-template-columns:190px minmax(0,1fr);gap:var(--mk-s5);align-items:center}
+.mk [data-xcard=sources] .xfade{display:grid;grid-template-columns:190px minmax(0,1fr);gap:var(--mk-s5);align-items:center}
 .mk [data-xcard=sources] .xfade>.xsay-table{grid-column:1/-1}
 .mk .dn-ring{position:relative;width:190px;height:190px}
 .mk .dn-ring svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
@@ -350,7 +352,7 @@
 .mk .dn-mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:34px;text-align:center;pointer-events:none}
 .mk .dn-mid b{font-size:25px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .mk .dn-mid span{font-size:11.5px;line-height:1.25;color:var(--mk-muted)}
-@media (--xs){.mk [data-xcard=sources] .xfade,.mk [data-xcard=sources] .xstale{grid-template-columns:minmax(0,1fr);justify-items:center}.mk [data-xcard=sources] .xfade>*{width:100%}.mk [data-xcard=sources] .dn-ring{width:190px}}
+@media (--xs){.mk [data-xcard=sources] .xfade{grid-template-columns:minmax(0,1fr);justify-items:center}.mk [data-xcard=sources] .xfade>*{width:100%}.mk [data-xcard=sources] .dn-ring{width:190px}}
 /* Quality: the rate as a filled meter, the page as a chip. */
 .mk .xqual-rate{display:grid;grid-template-columns:minmax(40px,1fr) 34px;align-items:center;gap:8px;min-width:0}
 .mk .xqual-rate i{display:block;height:10px;border-radius:6px;background:var(--mk-band);overflow:hidden}
@@ -524,9 +526,7 @@
 /* Explore and Live have no foot: Docs, Feedback and What's new are under the avatar. */
 body:has(.mk.mk-body) .app-footer{border:0;padding:0;margin:0;min-height:0}
 body:has(.mk.mk-body) .app-footer>span{display:none}
-/* A new filter or period: the card keeps its shape, dimmed, until the new numbers arrive. */
-.mk .xcp-b{transition:opacity .18s ease}
-.mk .xcp-b.is-stale{opacity:.5;pointer-events:none}
+/* A new filter or period: the card keeps its height, with no numbers in it, until the new ones arrive. */
 .mk .xcards .xrw:focus:not(:focus-visible){outline:none;box-shadow:none}
 .mk .xcards .xrw:active{transform:none}
 /* The phone's quality table: no room for Lands on, and the last heading whole. */
