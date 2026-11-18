@@ -6,6 +6,7 @@ import type { Site, Visit } from '../../lib/api'
 import { Install, type Extras } from './Install'
 import { stageOf, type Stage } from './journey'
 import { SetupExtras } from './SetupExtras'
+import { SamplePreview } from './SamplePreview'
 import { SetupPanel } from './SetupPanel'
 import { useCookieless } from './useCookieless'
 import { useInstallCheck } from './useInstallCheck'
@@ -53,6 +54,7 @@ export function SetupScreen({ site, visits, title, sub, heading, onCopy }: Props
         </div>
         <Install site={site} visits={visits} variant="setup" cookieless={cookieless} onExtras={setExtras} />
         {more && <div className="ist-extras-phone">{more}</div>}
+        {!arrived && <SamplePreview domain={site.domain} />}
       </div>
       <SetupPanel site={site} check={check} stage={stage} onCheck={ask} extras={more} />
     </div>
