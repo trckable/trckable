@@ -376,6 +376,8 @@
   margin: auto;
 }
 .setup-cols {
+  position: relative;
+  z-index: 1; /* over the globe behind the screen */
   width: 100%;
 }
 .setup-main {
