@@ -2,7 +2,7 @@
 // and the two actions. On a phone the same card is one bar pinned to the bottom. A step's mark keeps its size when it
 // ticks, so nothing moves. When the first visit lands the card ticks, the ghost hops and the heading says so for a moment.
 import { ArrowUpRight, ChevronDown, ChevronUp, RefreshCw, Sparkles } from 'lucide-react'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { ghostSvg } from '../../brand/logo'
 import type { Site } from '../../lib/api'
 import { journey as t } from './journeyCopy'
@@ -61,6 +61,7 @@ function Step({ state, name, note, ping }: { state: 'done' | 'now'; name: string
 function Result({ run, site }: { run: ReturnType<typeof useCheckRun>; site: Site }) {
   const p = t.panel
   if (run.running) return <span className="ist-shimmer">{p.checking}</span>
+  if (run.limited) return <><span className="ist-wide">{p.limited}</span><span className="ist-narrow">{p.limitedShort}</span></>
   if (run.outcome === 'none') return <>{t.now}</>
   const long = run.outcome === 'seen' ? p.none(clock(site.timezone, run.shownAt)) : p.failed
   return (
@@ -75,21 +76,22 @@ function Result({ run, site }: { run: ReturnType<typeof useCheckRun>; site: Site
 export function SetupPanel({ site, check, stage, onCheck }: { site: Site; check: InstallCheckHandle; stage: Stage; onCheck: () => void }) {
   const run = useCheckRun({ ...check, start: onCheck })
   const p = t.panel
+  const body = useId()
   const [min, setMin] = useMinimised(site.id)
   const arrived = stage === 'arrived'
-    const days = staleDays(site)
+  const days = staleDays(site)
   const stuck = stage === 'waiting' || stage === 'limited'
   const problem = stuck ? days > 0 : stage !== 'found' && stage !== 'arrived'
   const note = problem ? findingOf(stage, check, days) : null
   return (
     <aside className={min ? 'ist min' : 'ist'} aria-label={p.title} data-stage={stage}>
-      <div className="ist-card" aria-live="polite">
-        <button type="button" className="ist-tog" aria-expanded={!min} aria-label={min ? p.show : p.hide} title={min ? p.show : p.hide} onClick={() => setMin(!min)}>
+      <div className="ist-card">
+        <button type="button" className="ist-tog" aria-expanded={!min} aria-controls={body} aria-label={min ? p.show : p.hide} title={min ? p.show : p.hide} onClick={() => setMin(!min)}>
           {min ? <ChevronUp size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
         </button>
         <div className="ist-head">
           {ghost(20)}
-          <h2>
+          <h2 aria-live="polite">
             {arrived && <Sparkles size={14} aria-hidden="true" />}
             {arrived ? p.live : p.title}
           </h2>
@@ -103,7 +105,7 @@ export function SetupPanel({ site, check, stage, onCheck }: { site: Site; check:
           <i className="ist-radar" aria-hidden="true" />
           {arrived ? p.got : p.bar}
         </span>
-        <ol className="ist-steps" data-filled={arrived}>
+        <ol id={body} className="ist-steps" data-filled={arrived}>
           <Step state="done" name={p.created} note={site.domain} />
           <Step state={arrived ? 'done' : 'now'} name={p.visit} note={arrived ? p.got : p.once} ping={arrived ? 0 : run.presses} />
         </ol>
@@ -119,7 +121,7 @@ export function SetupPanel({ site, check, stage, onCheck }: { site: Site; check:
             <span>{t.openSite(site.domain)}</span>
             <ArrowUpRight size={16} aria-hidden="true" />
           </a>
-          <button type="button" className={'ist-check ' + (run.running ? 'busy' : run.outcome)} disabled={arrived} aria-disabled={run.running || arrived} onClick={run.press}>
+          <button type="button" className={'ist-check ' + (run.running ? 'busy' : run.outcome)} disabled={arrived} aria-disabled={run.running || run.limited || arrived} onClick={run.press}>
             <RefreshCw size={14} aria-hidden="true" key={run.running ? 'spin' : run.presses} />
             <span className="ist-result" aria-live="polite">
               <Result run={run} site={site} />

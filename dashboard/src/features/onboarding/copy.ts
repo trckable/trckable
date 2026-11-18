@@ -23,7 +23,7 @@ export const copy = defineCopy('onboarding', {
   preview: { empty: 'yoursite.com' },
   install: {
     title: 'Add the code',
-    sub: (domain: string) => `Paste it into the <head> of ${domain}, then open your site once.`,
+    sub: (domain: string) => `Paste it into the <head> of ${domain}.`,
   },
   here: {
     title: 'Your first visitor just arrived',

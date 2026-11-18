@@ -16,9 +16,11 @@ export function useCheckRun(check: InstallCheckHandle) {
   const [presses, setPresses] = useState(0)
   const from = useRef({ at: check.at, started: 0 })
   const phase = check.state.phase
+  // Rate limited: the check looks again by itself when the wait is over, so a press cannot bring it forward.
+  const limited = phase === 'limited' && !running
 
   const press = () => {
-    if (running) return
+    if (running || limited) return
     from.current = { at: check.at, started: Date.now() }
     setRunning(true)
     setPresses((n) => n + 1)
@@ -37,5 +39,5 @@ export function useCheckRun(check: InstallCheckHandle) {
     return () => clearTimeout(timer)
   }, [running, check.at, phase])
 
-  return { running, outcome, shownAt, presses, press }
+  return { running, limited, outcome, shownAt, presses, press }
 }

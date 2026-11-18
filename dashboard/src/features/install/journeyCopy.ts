@@ -14,7 +14,7 @@ export const journey = defineCopy('install.journey', {
   stale: { head: 'Still waiting', line: (days: number) => `No visit in ${days} days.` },
   now: 'Check now',
   openSite: (domain: string) => `Open ${domain}`,
-  panel: { title: 'Install status', listening: 'Listening', created: 'Site created', visit: 'First visit', once: 'Open your site once', got: 'Received', bar: 'Waiting for the first visit', hide: 'Minimise', show: 'Show install status', live: 'You’re live', checking: 'Checking…', none: (time: string) => `No visit yet · checked ${time}`, noneShort: 'No visit yet', failed: 'Couldn’t check · Try again', failedShort: 'Try again' },
+  panel: { title: 'Install status', listening: 'Listening', created: 'Site created', visit: 'First visit', once: 'Open your site once', got: 'Received', bar: 'Waiting for the first visit', hide: 'Minimise', show: 'Show install status', live: 'You’re live', checking: 'Checking…', none: (time: string) => `No visit yet · checked ${time}`, noneShort: 'No visit yet', failed: 'Couldn’t check · Try again', failedShort: 'Try again', limited: 'Too many checks · try again in a few minutes', limitedShort: 'Try again later' },
   why: 'Why?',
   help: 'Need help?',
   docs: 'Docs',

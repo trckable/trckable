@@ -56,4 +56,12 @@ describe('the install status Check now', () => {
     act(() => void vi.advanceTimersByTime(MIN_MS))
     expect(host.querySelector('.ist-result')?.textContent).toContain('Couldn’t check')
   })
+
+  it('waits out a rate limit: the button says so and a press does nothing', () => {
+    const onCheck = vi.fn()
+    draw(handle({ state: { phase: 'limited' }, at: 5 }), onCheck)
+    expect(host.querySelector('.ist-result')?.textContent).toContain('Too many checks')
+    act(() => button().click())
+    expect(onCheck).not.toHaveBeenCalled()
+  })
 })

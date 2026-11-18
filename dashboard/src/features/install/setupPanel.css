@@ -1,16 +1,12 @@
 /* The install status: a card floating at the bottom left of the window over the page, so it stays in view while the code
-   scrolls. Under the toasts (they take its place for a moment: it moves up), above the page; minimised it is a pill.
-   Every animation is off for a reader who asks for less motion. */
+   scrolls, where there is room beside the code (1440 px and up); on a narrower window it is a bar across the bottom.
+   Minimised it is a pill. Every animation is off for a reader who asks for less motion. */
 .ist {
   position: fixed;
-  left: calc(16px + var(--rail-w, 0px)); /* past a left rail, when a build has one */
+  left: 16px;
   bottom: 16px;
-  z-index: 30;
+  z-index: 29; /* with the side cards: under the header and its menus */
   width: 296px;
-  transition: bottom 0.2s var(--ease, ease);
-}
-body:has(.toasts .toast) .ist {
-  bottom: 96px;
 }
 .ist-card {
   position: relative;
@@ -21,7 +17,8 @@ body:has(.toasts .toast) .ist {
   border-radius: 20px;
   background: var(--surface-2);
   box-shadow: 0 12px 32px rgb(0 0 0 / 0.28), 0 0 0 1px var(--border);
-  overflow: hidden;
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
 }
 /* A faint lime line along the top edge, inside the card. */
 .ist-card::before {
@@ -336,9 +333,6 @@ body:has(.toasts .toast) .ist {
     animation: ist-shimmer 1s 0.35s ease-out 1 forwards;
     pointer-events: none;
   }
-  .ist .pulse {
-    animation: none;
-  }
 }
 @keyframes ist-radar {
   from {
@@ -409,16 +403,14 @@ body:has(.toasts .toast) .ist {
   }
 }
 
-/* A phone: the card is a bar across the bottom (the problem, when there is one, opens above it); the page leaves room under it. */
-@media (--xs-down) {
-  .setup-screen {
+/* Under 1440 px (the lg step and narrower) there is no room beside the code: the card is a bar across the bottom (the problem, when there is one,
+   opens above it), and the page leaves room under it. Toasts go above it. */
+@media (--lg-down) {
+  .setup-cols {
     padding-bottom: 72px;
   }
-  .setup-words {
-    text-align: left;
-  }
-  .setup-words h1 {
-    font-size: 19px;
+  body:has(.ist) .toasts {
+    bottom: 80px;
   }
   .ist,
   .ist.min {
@@ -429,19 +421,21 @@ body:has(.toasts .toast) .ist {
     padding: 8px 12px max(8px, env(safe-area-inset-bottom));
     background: var(--bg);
   }
-  body:has(.toasts .toast) .ist {
-    bottom: 0;
-  }
   .ist-card,
-  .ist.min .ist-card {
+  .ist.min .ist-card,
+  :root:not([data-glass='off']) .ist-card {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
+    max-width: 620px;
+    margin: 0 auto;
     padding: 6px 6px 6px 14px;
     border-radius: 14px;
     box-shadow: none;
     background: var(--sunken);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
   .ist-card::before {
     display: none;
@@ -488,5 +482,13 @@ body:has(.toasts .toast) .ist {
     flex: none;
     padding: 0 12px;
     color: var(--text);
+  }
+}
+@media (--xs-down) {
+  .setup-words {
+    text-align: left;
+  }
+  .setup-words h1 {
+    font-size: 19px;
   }
 }

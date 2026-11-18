@@ -270,7 +270,11 @@
   flex-wrap: wrap;
 }
 .inst-setup .inst-cl-hint {
-  display: none;
+  margin: 0;
+  padding-left: 0;
+  flex-basis: 100%;
+  order: 3;
+  font-size: 12px;
 }
 .inst-ai-hint {
   display: none;
@@ -509,41 +513,6 @@
 .inst .inst-ai-copy {
   border: 1px solid var(--border-2);
   background: var(--surface-2);
-}
-.setup-flow,
-.setup-flow .inst {
-  min-width: 0;
-}
-.setup-status.compact {
-  align-items: flex-start;
-  gap: 2px;
-  padding: 12px 14px;
-  border-radius: 10px;
-  text-align: left;
-}
-.setup-status.compact .setup-head {
-  justify-content: flex-start;
-}
-.setup-status.compact .setup-head h2 {
-  font-size: 14px;
-}
-.setup-status.compact .setup-act {
-  justify-content: flex-start;
-  gap: 12px;
-  margin-top: 6px;
-}
-.setup-flow .code-card {
-  max-width: 100%;
-}
-
-/* The logic board big and centred above the words, like an empty state; every check lit when the first visit has come. */
-.setup-fig {
-  width: min(100%, 300px);
-  margin-bottom: 8px;
-  pointer-events: none;
-}
-.setup-fig:has(.tkf) {
-  pointer-events: auto;
 }
 
 /* What the site runs: one quiet line above the tabs. */
