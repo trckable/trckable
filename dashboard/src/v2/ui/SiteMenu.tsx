@@ -14,7 +14,7 @@ import { useTopLayerWhen } from '../../lib/topLayer'
 import { midEllipsis } from '../../lib/midEllipsis'
 import { MarkDot } from '../../features/sites/MarkDot'
 import { copy as statusCopy } from '../../features/sitestatus/copy'
-import { quietSites, statusOf } from '../../features/sitestatus/status'
+import { notInstalled, quietSites, statusOf } from '../../features/sitestatus/status'
 import { footerMoreCopy } from '../../components/footerMoreCopy'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
@@ -80,7 +80,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
     else void Promise.all([layoutReady(LAYOUT_WAIT), SiteList.load()]).then(() => setOpen(true))
   }
   const done = useCallback(() => close(), [close])
-  const down = p.sites.filter((s) => statusOf(s) === 'down')
+  const down = p.sites.filter((s) => statusOf(s) === 'down' && !notInstalled(s))
   const quiet = quietSites(p.sites)
   const whyLabel = down.length ? statusCopy.whatHappened(down.length) : footerMoreCopy.siteQuiet(quiet.length)
   const told = [...down, ...quiet]

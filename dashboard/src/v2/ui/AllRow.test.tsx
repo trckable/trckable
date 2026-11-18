@@ -8,5 +8,6 @@ describe('the All sites row', () => {
   it('is only its name until the total is here, then adds it', () => {
     expect(html(null)).not.toContain('<b>')
     expect(html(42)).toContain('<b>42</b>')
+    expect(html(0)).not.toContain('<b>')
   })
 })

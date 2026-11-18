@@ -21,6 +21,7 @@ export const copy = defineCopy('sites.menu', {
   // A site's state, where its number would be, when the dot alone can't say it.
   setup: 'setup',
   notVerified: 'Not verified',
+  notInstalled: 'Not installed',
   notVerifiedTip: 'No visit has arrived yet. Open Install to finish and check it.',
   installHelp: 'Install help',
   downTip: (span: string) => `Not reachable for ${span}. Open the site to see what’s wrong.`,

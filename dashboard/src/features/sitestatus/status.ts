@@ -17,6 +17,11 @@ function scriptSeen(s: Site): boolean {
   return s.check?.found === 'site' || !!s.verified?.sources.some((v) => v.kind === 'snippet' && v.ok)
 }
 
+/** Never received a visit and no script seen: not installed. A site in this state is never "down" in the site menu, whatever its probe says (a verified site that fails keeps its down). */
+export function notInstalled(s: Site): boolean {
+  return !lastEventOf(s) && !scriptSeen(s)
+}
+
 export function statusOf(s: Site, now = Date.now()): Status {
   if (s.down_since) return 'down' // the server's one rule (sqlite.DownNow): the uptime probe, or for a site never probed a failed daily look after visits went silent
   const last = lastEventOf(s)

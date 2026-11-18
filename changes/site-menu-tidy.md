@@ -1,0 +1,1 @@
+In the site menu a site that has never received a visit says "Not installed" instead of "down", no longer counts as down or opens the "Site down" bar, the "All sites" row hides its number when it is 0, and a row's drag handle only shows on hover or focus (always on touch).

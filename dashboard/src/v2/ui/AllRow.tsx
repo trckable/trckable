@@ -27,7 +27,7 @@ export function AllRow({ on, total, all, problems, onPick }: { on: boolean; tota
         <div className="nm">{all}</div>
         {problems && <Problems c={problems} />}
       </span>
-      {total !== null && (
+      {total !== null && total > 0 && (
         <span className="now" title={menu.todayAll}>
           <b>{fmtCompact(total)}</b>
         </span>
