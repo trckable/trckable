@@ -70,10 +70,6 @@
 .ist-head h2 svg {
   color: var(--accent);
 }
-.ist-ghost {
-  display: inline-flex;
-  flex: none;
-}
 .ist-live,
 .ist-bar-text {
   display: inline-flex;
@@ -94,9 +90,6 @@
   font-size: 13.5px;
   color: var(--text-2);
 }
-.ist-bar-text .ist-ghost {
-  display: none;
-}
 /* The radar: a lime dot with two rings that spread and fade. */
 .ist-radar {
   position: relative;
@@ -115,7 +108,7 @@
   border-radius: 50%;
   opacity: 0;
 }
-/* Minimised: the ghost, the dot and the one line, and the way back. */
+/* Minimised: the dot and the one line, and the way back. */
 .ist.min {
   width: auto;
 }
@@ -132,8 +125,7 @@
 .ist.min .ist-act {
   display: none;
 }
-.ist.min .ist-bar-text,
-.ist.min .ist-bar-text .ist-ghost {
+.ist.min .ist-bar-text {
   display: inline-flex;
 }
 .ist.min .ist-tog {
@@ -324,9 +316,6 @@
   .ist-open.nudge {
     animation: ist-nudge 0.7s 0.1s var(--ease, ease) 1;
   }
-  .ist[data-stage='arrived'] .ist-ghost {
-    animation: ist-hop 0.7s 0.3s var(--ease, ease) 1;
-  }
   .ist[data-stage='arrived'] .ist-card::after {
     content: '';
     position: absolute;
@@ -387,17 +376,6 @@
 @keyframes ist-spin {
   to {
     transform: rotate(360deg);
-  }
-}
-@keyframes ist-hop {
-  30% {
-    transform: translateY(-7px) rotate(-8deg);
-  }
-  60% {
-    transform: translateY(0) rotate(4deg);
-  }
-  80% {
-    transform: translateY(-2px);
   }
 }
 @keyframes ist-shimmer {
@@ -522,10 +500,6 @@
   .ist-bar-text,
   .ist.min .ist-bar-text {
     display: inline-flex;
-  }
-  .ist-bar-text .ist-ghost,
-  .ist.min .ist-bar-text .ist-ghost {
-    display: none;
   }
   .ist.min .ist-find {
     display: flex;
