@@ -78,7 +78,7 @@ export interface V2Extras {
   /** All sites: one more line under a site's state in its row (over its plan's limit), by the site's id. */
   siteStatus?: (siteId: string) => ReactNode
   /** Draws "Add a site" in the site menu through this (it may show it off, with a reason). */
-  addSiteGuard?: (render: (off: boolean) => ReactNode) => ReactNode
+  addSiteGuard?: (render: (off: boolean) => ReactNode, done?: () => void) => ReactNode
 }
 
 // The public product never reads these exports itself: a build that has more wraps the app in the provider.
