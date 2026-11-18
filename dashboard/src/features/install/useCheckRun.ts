@@ -33,7 +33,8 @@ export function useCheckRun(check: InstallCheckHandle) {
     const wait = Math.max(0, MIN_MS - (Date.now() - from.current.started))
     const timer = setTimeout(() => {
       setShownAt(check.at ?? 0)
-      setOutcome(phase === 'failed' || phase === 'limited' ? 'failed' : 'seen')
+      // Rate limited reads as a plain "no visit yet": the check looks again by itself.
+      setOutcome(phase === 'failed' ? 'failed' : 'seen')
       setRunning(false)
     }, wait)
     return () => clearTimeout(timer)

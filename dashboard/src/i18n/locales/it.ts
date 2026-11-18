@@ -3068,8 +3068,6 @@ export default {
   'install.journey.panel.none': (time: string) => `Ancora nessuna visita · controllato alle ${time}`,
   'install.journey.panel.noneShort': 'Ancora nessuna visita',
   'install.journey.panel.failed': 'Controllo non riuscito · Riprova',
-  'install.journey.panel.limited': 'Troppi controlli · riprova tra qualche minuto',
-  'install.journey.panel.limitedShort': 'Riprova più tardi',
   'install.journey.panel.failedShort': 'Riprova',
   'install.journey.support': 'Assistenza',
   'install.journey.remove': 'Rimuovi questo sito',
