@@ -1,9 +1,8 @@
 // The install status: a timeline of two steps (the site exists, the first visit), one note when the check found a problem,
 // and the two actions. On a phone the same card is one bar pinned to the bottom. A step's mark keeps its size when it
-// ticks, so nothing moves. When the first visit lands the card ticks, the ghost hops and the heading says so for a moment.
+// ticks, so nothing moves. When the first visit lands the card ticks, the heading says so for a moment.
 import { ArrowUpRight, ChevronDown, ChevronUp, RefreshCw, Sparkles } from 'lucide-react'
 import { useId, useState, type ReactNode } from 'react'
-import { ghostSvg } from '../../brand/logo'
 import type { Site } from '../../lib/api'
 import { journey as t } from './journeyCopy'
 import { findingOf, Why } from './SetupWhy'
@@ -38,7 +37,6 @@ export function useMinimised(site: string): [boolean, (on: boolean) => void] {
 
 const clock = (tz: string, at: number): string => dateFmt(undefined, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: tz }).format(at)
 
-const ghost = (size: number) => <span className="ist-ghost" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ghostSvg(size) }} />
 
 function Step({ state, name, note, ping }: { state: 'done' | 'now'; name: string; note: string; ping?: number }) {
   return (
@@ -90,7 +88,6 @@ export function SetupPanel({ site, check, stage, onCheck, extras }: { site: Site
           {min ? <ChevronUp size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
         </button>
         <div className="ist-head">
-          {ghost(20)}
           <h2 aria-live="polite">
             {arrived && <Sparkles size={14} aria-hidden="true" />}
             {arrived ? p.live : p.title}
