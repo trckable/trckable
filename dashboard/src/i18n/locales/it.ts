@@ -1476,6 +1476,7 @@ export default {
   'install.optionalTitle': 'Conta anche i visitatori con il blocco degli annunci',
   'install.optionalHint': 'Facoltativo. Gli eventi passano allora dal tuo dominio, quindi usa <Analytics> senza host.',
   'install.cookieless.cookieModeNote': "La modalità con cookie è attiva. Aggiunge visitatori nuovi e di ritorno e percorsi; nell'UE richiede un banner di consenso.",
+  'install.cookieless.tip': 'Conta le visite senza cookie né nulla salvato nel browser del visitatore.',
   'install.cookieless.label': 'Senza cookie',
   'install.cookieless.onServer': 'Nessun cookie, niente memorizzato. Lo script lo recepisce entro un’ora: niente da reincollare.',
   'install.cookieless.onBundled': 'Il codice qui sopra ha cookieless: true. Ricompila e rilascia la tua app.',
