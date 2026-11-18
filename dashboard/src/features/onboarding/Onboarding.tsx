@@ -15,10 +15,10 @@ import { checkDomain, cleanDomain, isAdded } from '../install/domain'
 import { domainWords } from '../install/domainWords'
 import { wizard } from '../install/copy'
 import { formWords } from '../../lib/formWords'
+import { SetupScreen } from '../install/SetupScreen'
 import { useFocusTrap } from '../install/useFocusTrap'
 import { copy } from './copy'
 import { FirstVisit } from './FirstVisit'
-import { InstallStep } from './InstallStep'
 import { finishPath, firstVisited, type Step } from './model'
 import { SiteStep } from './SiteStep'
 import { Journey } from './Journey'
@@ -31,6 +31,9 @@ import './onboarding.css'
 import '../../kit/Modal.css'
 import { firstStep, type SitePrefill } from '../../lib/addSiteLink'
 import { browserZone } from '../../lib/format'
+
+/** How long the install status shows the first visit before the first run moves on. */
+const TICK_MS = 1400
 
 /** A sentence about "the site", with the site's name swapped for a picker. */
 function withSwitch(sentence: (domain: string) => string, pick: ReactNode): ReactNode {
@@ -69,10 +72,13 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
   // The first visit on any site moves the install step on by itself, for that site.
   const winner = firstVisited(sites.map((s) => s.id), seen)
   const arrived = visits.length > 0
-  if (winner && step === 'install') {
-    setActive(winner)
-    setStep('here')
-  }
+  // The install status ticks and says so for a moment before the step moves on.
+  useEffect(() => {
+    if (!winner || step !== 'install') return
+    setActive(winner) // eslint-disable-line react-hooks/set-state-in-effect -- the visit's site is the one shown
+    const timer = setTimeout(() => setStep('here'), TICK_MS)
+    return () => clearTimeout(timer)
+  }, [winner, step])
 
   // Nothing is cached yet: "offline, showing the last data" would be untrue here.
   useEffect(() => {
@@ -157,7 +163,8 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
 
   const first = visits[0]
   const titles = { site: copy.site.title, install: copy.install.title, here: copy.here.title }
-  const subs = { site: copy.site.sub, install: copy.install.sub(shown), here: copy.here.sub }
+  const subs = { site: copy.site.sub, install: '', here: copy.here.sub }
+  const installSub = sites.length > 1 ? withSwitch(copy.install.sub, <SiteSwitch sites={sites} active={active} seen={seen} onPick={setActive} />) : copy.install.sub(shown)
 
   return (
     <div ref={box} className={required ? 'ob gated' : 'ob'} role="dialog" aria-modal="true" aria-label={copy.label}>
@@ -178,6 +185,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
       </div>
       <Journey step={step} domain={shown} copied={copied} />
       <main className="ob-main" data-step={step} key={step}>
+        {step !== 'install' && (
         <div className="ob-text">
           {step === 'here' && (
             <span className="ob-check" aria-hidden="true">
@@ -187,7 +195,7 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
           <h1 ref={heading} tabIndex={-1}>
             {titles[step]}
           </h1>
-          <p className="muted">{step === 'install' && sites.length > 1 ? withSwitch(copy.install.sub, <SiteSwitch sites={sites} active={active} seen={seen} onPick={setActive} />) : subs[step]}</p>
+          <p className="muted">{subs[step]}</p>
           {step === 'site' && <SiteStep taken={!!prefill?.taken && clean === prefill.domain} focusGo={!!prefill} domain={domain} onDomain={(d) => { setDomain(d); setProblem('') }} problem={problem} busy={busy} ready={!!clean} onSubmit={create} />}
           {step === 'here' && <FirstVisit visit={first} />}
           {step === 'here' && (
@@ -198,15 +206,9 @@ export default function Onboarding({ onClose, onSites, required = false, resume,
             </div>
           )}
         </div>
+        )}
         {step === 'install' && site && (
-          <div className="ob-install">
-            <InstallStep
-              key={site.id}
-              onCopy={markCopied}
-              site={site}
-              visits={visits}
-            />
-          </div>
+          <SetupScreen key={site.id} site={site} visits={visits} heading={heading} title={titles.install} sub={installSub} onCopy={markCopied} />
         )}
       </main>
       {sites.map((s) => (

@@ -1,0 +1,1 @@
+Adding a site now shows a floating Install status card next to the code: it ticks off "Site created" and "First visit", checks when you ask with a clear result, and celebrates when the first visit lands. A site with no visit yet shows this setup screen in Live and Explore instead of empty charts.

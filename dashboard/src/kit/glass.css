@@ -118,7 +118,7 @@
     border-radius: 14px;
   }
   /* Pop-ups over the page and over cards: menus, sheets, toasts, tooltips, the side card. A little more opaque and more blurred. */
-  :root:not([data-glass='off']) :is(.pop, .picker-pop, .toast, .hint, .side-card, .tip, .kit-tip, .chart-tip, .cursor-pill, .moment-tip, .note-tip, .story-pop, .note-cal) {
+  :root:not([data-glass='off']) :is(.pop, .picker-pop, .toast, .hint, .side-card, .tip, .kit-tip, .chart-tip, .cursor-pill, .moment-tip, .note-tip, .story-pop, .note-cal, .ist-card) {
     border-color: var(--glass-line-pop);
     background: var(--glass-pop);
     -webkit-backdrop-filter: var(--glass-blur-pop);

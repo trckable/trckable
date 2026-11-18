@@ -274,6 +274,7 @@
   padding-left: 0;
   flex-basis: 100%;
   order: 3;
+  font-size: 12px;
 }
 .inst-ai-hint {
   display: none;
@@ -415,15 +416,7 @@
   }
 }
 /* ---- A site with no verified install ----------------------------------------
-   One centred screen: the install, the live line, and where to get help. */
-.setup-screen {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  width: min(620px, 100%);
-  margin: auto;
-}
-/* The screen sits in the middle of the room under the header; taller than that, it starts at the top and the page scrolls. */
+   The screen sits in the middle of the room under the header; taller than that, it starts at the top and the page scrolls. */
 .app > #app:has(.mk-fresh),
 .app > #app:has(.mk-fresh) > #main,
 .mk-fresh {
@@ -437,71 +430,45 @@
 .mk-fresh {
   padding: 8px 0;
 }
-.setup-title {
+.setup-screen {
+  display: flex;
+  flex-direction: column;
+  width: min(620px, 100%);
+  margin: auto;
+}
+.setup-cols {
+  width: 100%;
+}
+.setup-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.setup-words {
+  text-align: center;
+}
+.setup-words h1 {
   margin: 0;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
-.setup-flow {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.setup-words h1:focus {
+  outline: none;
 }
-.setup-status {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 20px 16px 16px;
-  border-radius: 12px;
-  background: var(--sunken);
-  text-align: center;
+.setup-words p {
+  margin: 6px 0 0;
+  font-size: 14px;
 }
-.setup-head {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+.setup-main .inst {
+  width: 100%;
+  min-width: 0;
 }
-.setup-head h2 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+.setup-main .code-card {
+  max-width: 100%;
 }
-.setup-head svg {
-  flex: none;
-}
-.setup-status.ok {
-  background: color-mix(in srgb, var(--up) 14%, transparent);
-}
-.setup-status.ok svg {
-  color: var(--up);
-}
-.setup-status.warn svg {
-  color: var(--warn);
-}
-.setup-says {
-  margin: 0;
-  color: var(--text-2);
-  font-size: 13.5px;
-}
-.setup-act {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 8px 12px;
-  margin-top: 8px;
-}
-.setup-act .btn {
-  height: 34px;
-  padding: 0 14px;
-}
-.setup-last {
-  font-size: 12px;
-}
+
 .setup-why {
   font-size: 12.5px;
   color: var(--text-2);
@@ -513,12 +480,10 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin: 10px auto 0;
+  margin: 10px 0 0;
   padding: 10px 14px 10px 28px;
-  max-width: 440px;
   border-radius: 10px;
   background: var(--surface-2);
-  text-align: left;
   line-height: 1.45;
 }
 .setup-why li::marker {
@@ -526,8 +491,8 @@
 }
 .setup-why p {
   display: flex;
-  justify-content: center;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 4px 14px;
   margin: 10px 0 0;
 }
 .setup-why a {
@@ -536,33 +501,6 @@
 .setup-why .linkish {
   margin: 0;
 }
-/* Open, the reasons take their own line under the button, centred like the rest of the card. */
-.setup-why[open] {
-  flex-basis: 100%;
-}
-.setup-status.compact .setup-why ul {
-  margin-left: 0;
-}
-.setup-status.compact .setup-why p {
-  justify-content: flex-start;
-}
-.setup-code > summary {
-  cursor: pointer;
-  color: var(--text-2);
-  font-size: 12.5px;
-}
-.setup-code > .inst {
-  margin-top: 10px;
-}
-@media (max-width: 640px) {
-  .setup-screen {
-    margin-top: 12px;
-  }
-  .setup-title {
-    font-size: 19px;
-  }
-}
-
 /* On the setup screen (inside the page's own button reset) the switch and the buttons keep their look. */
 .inst .switch {
   border: 1px solid var(--border-2);
@@ -575,41 +513,6 @@
 .inst .inst-ai-copy {
   border: 1px solid var(--border-2);
   background: var(--surface-2);
-}
-.setup-flow,
-.setup-flow .inst {
-  min-width: 0;
-}
-.setup-status.compact {
-  align-items: flex-start;
-  gap: 2px;
-  padding: 12px 14px;
-  border-radius: 10px;
-  text-align: left;
-}
-.setup-status.compact .setup-head {
-  justify-content: flex-start;
-}
-.setup-status.compact .setup-head h2 {
-  font-size: 14px;
-}
-.setup-status.compact .setup-act {
-  justify-content: flex-start;
-  gap: 12px;
-  margin-top: 6px;
-}
-.setup-flow .code-card {
-  max-width: 100%;
-}
-
-/* The logic board big and centred above the words, like an empty state; every check lit when the first visit has come. */
-.setup-fig {
-  width: min(100%, 300px);
-  margin-bottom: 8px;
-  pointer-events: none;
-}
-.setup-fig:has(.tkf) {
-  pointer-events: auto;
 }
 
 /* What the site runs: one quiet line above the tabs. */

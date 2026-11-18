@@ -1,19 +1,15 @@
-// A site with no verified install is one setup screen, nothing else: the compact install (code, AI prompt,
-// cookieless) and a live line that looks for the first visit. The visit turns the line green, and Live opens by itself.
+// A site with no verified install is one setup screen, nothing else: the install on the left, its status beside it. The
+// first visit ticks the status, and Live opens by itself.
 import type { Site, Visit } from '../../lib/api'
-import { copy as inst } from '../../features/install/copy'
-import { SetupInstall } from '../../features/install/SetupInstall'
-import { midEllipsis } from '../../lib/midEllipsis'
+import { SetupScreen } from '../../features/install/SetupScreen'
+import { copy as setup } from '../../features/onboarding/copy'
 import { copy } from './copy'
 
 export default function Fresh({ site, visits }: { site: Site; visits: Visit[] }) {
   return (
     <div className="mk mk-body mk-fresh">
-      <section className="setup-screen rise" aria-label={copy.freshLabel}>
-        <h1 className="setup-title" title={site.domain}>
-          {inst.titleCard(midEllipsis(site.domain, 36))}
-        </h1>
-        <SetupInstall site={site} visits={visits} />
+      <section className="setup-screen" aria-label={copy.freshLabel}>
+        <SetupScreen site={site} visits={visits} title={setup.install.title} sub={setup.install.sub(site.domain)} />
       </section>
     </div>
   )
