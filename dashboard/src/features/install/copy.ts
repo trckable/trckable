@@ -37,6 +37,7 @@ export const copy = defineCopy('install', {
   // Cookieless.
   cookieless: {
     label: 'Cookieless',
+    tip: 'Counts visits without a cookie or anything stored in the visitor’s browser.',
     cookieModeNote: 'Cookie mode is on. It adds new vs returning visitors and journeys, and in the EU it needs a consent banner.',
     onServer: 'No cookie, nothing stored. The script picks it up within an hour: nothing to re-paste.',
     onBundled: 'The code above has cookieless: true. Rebuild and deploy your app.',

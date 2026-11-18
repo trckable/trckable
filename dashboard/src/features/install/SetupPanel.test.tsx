@@ -64,4 +64,14 @@ describe('the install status Check now', () => {
     act(() => button().click())
     expect(onCheck).not.toHaveBeenCalled()
   })
+
+  it('shows the extras between the steps and the actions, and nothing when there are none', () => {
+    act(() => root.render(<SetupPanel site={site} check={handle({})} stage="waiting" onCheck={() => {}} extras={<i className="probe" />} />))
+    const box = host.querySelector('.ist-extras')
+    expect(box?.querySelector('.probe')).not.toBeNull()
+    expect(box?.previousElementSibling?.className).toContain('ist-steps')
+    expect(box?.nextElementSibling?.className).toBe('ist-act')
+    draw(handle({}), () => {})
+    expect(host.querySelector('.ist-extras')).toBeNull()
+  })
 })

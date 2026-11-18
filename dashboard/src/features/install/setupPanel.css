@@ -230,9 +230,11 @@
 /* Actions: one lime button, and a quiet text one. */
 .ist-act {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
 }
 .ist-open {
+  min-width: 0;
   justify-content: center;
   gap: 6px;
   height: 38px;
@@ -404,6 +406,46 @@
   }
 }
 
+/* Install with AI and Cookieless: two compact rows on the card, under the steps, set off by a hairline. */
+.ist-extras {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.ist-rows {
+  display: flex;
+  flex-direction: column;
+}
+.ist-rows .inst-row {
+  min-height: 36px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.ist-rows .inst-ai {
+  min-height: 36px;
+}
+.ist-rows .inst-ai-copy {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  border: 1px solid var(--border-2);
+  background: var(--surface-2);
+}
+.ist-rows .switch {
+  border: 1px solid var(--border-2);
+  background: var(--surface-2);
+}
+.ist-rows .switch.on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.ist.min .ist-extras {
+  display: none;
+}
+/* The page's own copy of the rows is for a phone only, where the card is a bar. */
+.ist-extras-phone {
+  display: none;
+}
+
 /* The column makes room for the card: the card's width and a gap (328 px) less what the centring already leaves (a column of
    620 px is clear of it from 1276 px up). */
 @media not (--handheld) {
@@ -428,6 +470,15 @@
 @media (--handheld) {
   .setup-cols {
     padding-bottom: 72px;
+  }
+  .ist-extras-phone {
+    display: block;
+    padding: 4px 12px;
+    border-radius: 10px;
+    background: var(--sunken);
+  }
+  .ist-extras-phone .ist-rows .inst-row {
+    min-height: 40px;
   }
   body:has(.ist) .toasts {
     bottom: 80px;
@@ -462,6 +513,7 @@
   }
   .ist-head,
   .ist-steps,
+  .ist-extras,
   .ist-open,
   .ist-tog,
   .ist.min .ist-tog {

@@ -2,14 +2,12 @@
 // domain and server filled in, and where the code goes for the stack, copied in one click.
 import { Check, Sparkles } from 'lucide-react'
 import { useState } from 'react'
-import type { Ctx, Method } from '../../lib/install'
-import { aiPrompt, copy } from './copy'
+import { copy } from './copy'
 
 const t = copy.ai
 
-export function AiCard({ ctx, method }: { ctx: Ctx; method: Method }) {
+export function AiCard({ prompt }: { prompt: string }) {
   const [copied, setCopied] = useState(false)
-  const prompt = aiPrompt(ctx, method)
   const take = () =>
     navigator.clipboard?.writeText(prompt).then(() => {
       setCopied(true)

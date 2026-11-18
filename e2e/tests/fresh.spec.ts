@@ -15,12 +15,14 @@ test('before the first visit: the setup screen, Not verified, a locked ring, no 
   const screen = page.getByRole('region', { name: 'Waiting for the first visit' })
   await expect(screen.getByRole('heading', { level: 1 })).toContainText('Add the code', { timeout: 20_000 })
   await expect(screen).toContainText(site.domain)
-  // The install is the compact one: tabs, the code with this site's id and a Copy button inside it, cookieless, the AI prompt.
+  // The install is the compact one: tabs, the code with this site's id and a Copy button inside it. Cookieless and the AI prompt sit on the install status card, not under the code.
   await expect(screen.getByRole('tablist', { name: 'How to install' })).toBeVisible()
   await expect(screen.locator('pre.code').first()).toContainText(`data-site="${site.id}"`)
   await expect(screen.locator('.code-corner').getByRole('button', { name: 'Copy the code' })).toBeVisible()
-  await expect(screen.getByRole('switch', { name: 'Cookieless' })).toBeVisible()
-  await expect(screen.getByRole('button', { name: 'Copy prompt' })).toBeVisible()
+  await expect(screen.locator('.setup-main').getByRole('switch', { name: 'Cookieless' })).toHaveCount(0)
+  const card = page.getByRole('complementary', { name: 'Install status' })
+  await expect(card.getByRole('switch', { name: 'Cookieless' })).toBeVisible()
+  await expect(card.getByRole('button', { name: 'Copy prompt' })).toBeVisible()
   // Help is behind a small link, not shown up front.
   await expect(screen.getByRole('link', { name: 'Support' })).toBeHidden()
   // The header: the not-installed dot on the site's icon (Not verified in its label), no Live | Briefing, no Explore, no phone bar.
