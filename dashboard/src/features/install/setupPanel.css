@@ -230,9 +230,11 @@
 /* Actions: one lime button, and a quiet text one. */
 .ist-act {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
 }
 .ist-open {
+  min-width: 0;
   justify-content: center;
   gap: 6px;
   height: 38px;
