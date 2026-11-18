@@ -222,27 +222,17 @@ body:has(.ob.gated) .side-deck {
 }
 
 
-/* Step 2: the code, then a calm line while the first visit is awaited. */
-.ob-install-step {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  min-width: 0;
+/* Step 2: the words and the code in one column; the install status floats over it (install.css). It fades in without a
+   move, which would carry the floating card with it. */
+@media (prefers-reduced-motion: no-preference) {
+  .ob-main[data-step='install'] {
+    animation-name: ob-fade;
+  }
 }
-.ob-install-step .inst {
-  width: 100%;
-}
-.ob-wait {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 8px 12px;
-  color: var(--text-2);
-  font-size: 14px;
-}
-.ob-wait .btn {
-  height: 32px;
+@keyframes ob-fade {
+  from {
+    opacity: 0;
+  }
 }
 
 /* Step 3: the first visit has come. */
@@ -535,9 +525,6 @@ body:has(.ob.gated) .side-deck {
     flex: 1;
     justify-content: center;
   }
-  .ob-main[data-step='install'] > .ob-text {
-    flex: none;
-  }
   /* The short steps fill the screen: the journey is the hero and takes the spare height; the words, the card or field and the
      button sit below it, the button last, in thumb reach. */
   .ob-journey[data-step='site'],
@@ -639,14 +626,14 @@ body:has(.ob.gated) .side-deck {
 }
 
 /* Step 2: the code block is the only surface: mono, a soft fill, no border. */
-.ob-install-step .code-card,
-.ob-install-step .inst pre {
+.setup-main .code-card,
+.setup-main .inst pre {
   border: 0;
   border-radius: 16px;
   background: var(--sunken);
   font-family: var(--mono);
 }
-.ob-install-step .code-card pre {
+.setup-main .code-card pre {
   font-size: 14px;
   line-height: 1.7;
 }

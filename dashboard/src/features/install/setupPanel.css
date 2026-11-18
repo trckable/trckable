@@ -1,0 +1,492 @@
+/* The install status: a card floating at the bottom left of the window over the page, so it stays in view while the code
+   scrolls. Under the toasts (they take its place for a moment: it moves up), above the page; minimised it is a pill.
+   Every animation is off for a reader who asks for less motion. */
+.ist {
+  position: fixed;
+  left: calc(16px + var(--rail-w, 0px)); /* past a left rail, when a build has one */
+  bottom: 16px;
+  z-index: 30;
+  width: 296px;
+  transition: bottom 0.2s var(--ease, ease);
+}
+body:has(.toasts .toast) .ist {
+  bottom: 96px;
+}
+.ist-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px 18px 16px;
+  border-radius: 20px;
+  background: var(--surface-2);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.28), 0 0 0 1px var(--border);
+  overflow: hidden;
+}
+/* A faint lime line along the top edge, inside the card. */
+.ist-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 20px auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 70%, transparent), transparent);
+  pointer-events: none;
+}
+.ist-tog {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-2);
+}
+.ist-tog:hover {
+  background: var(--sunken);
+  color: var(--text);
+}
+.ist-tog:focus-visible,
+.ist-check:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.ist-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 32px;
+}
+.ist-head h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ist-head h2 svg {
+  color: var(--accent);
+}
+.ist-ghost {
+  display: inline-flex;
+  flex: none;
+}
+.ist-live,
+.ist-bar-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.ist-live {
+  margin-left: auto;
+}
+.ist[data-stage='arrived'] .ist-live {
+  visibility: hidden;
+}
+.ist-bar-text {
+  display: none;
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.ist-bar-text .ist-ghost {
+  display: none;
+}
+/* The radar: a lime dot with two rings that spread and fade. */
+.ist-radar {
+  position: relative;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.ist-radar::before,
+.ist-radar::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  opacity: 0;
+}
+/* Minimised: the ghost, the dot and the one line, and the way back. */
+.ist.min {
+  width: auto;
+}
+.ist.min .ist-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  padding: 6px 6px 6px 14px;
+  border-radius: 999px;
+}
+.ist.min .ist-head,
+.ist.min .ist-steps,
+.ist.min .ist-find,
+.ist.min .ist-act {
+  display: none;
+}
+.ist.min .ist-bar-text,
+.ist.min .ist-bar-text .ist-ghost {
+  display: inline-flex;
+}
+.ist.min .ist-tog {
+  position: static;
+  order: 2;
+  margin-left: 6px;
+}
+
+/* The timeline: a circle per step, a line between them that fills when the next step is done. */
+.ist-steps {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ist-step {
+  position: relative;
+  display: grid;
+  grid-template: 'm n' auto 'm t' auto / 20px minmax(0, 1fr);
+  column-gap: 12px;
+}
+.ist-step:not(:last-child)::before,
+.ist-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 23px;
+  bottom: -17px;
+  width: 0;
+}
+.ist-step:not(:last-child)::before {
+  border-left: 1.5px dashed var(--border-2);
+}
+.ist-step:not(:last-child)::after {
+  z-index: 1;
+  border-left: 1.5px solid var(--accent);
+  transform: scaleY(0);
+  transform-origin: top;
+}
+.ist-steps[data-filled='true'] .ist-step:not(:last-child)::after {
+  transform: scaleY(1);
+}
+.ist-mark {
+  grid-area: m;
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border: 1.5px solid var(--border-2);
+  border-radius: 50%;
+  background: var(--surface-2);
+}
+.ist-step.now .ist-mark {
+  border-color: var(--accent);
+}
+.ist-step.done .ist-mark {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.ist-name {
+  grid-area: n;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
+}
+.ist-note {
+  grid-area: t;
+  overflow: hidden;
+  font-size: 12.5px;
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ist-find {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+.ist-find b {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Actions: one lime button, and a quiet text one. */
+.ist-act {
+  display: grid;
+  gap: 6px;
+}
+.ist-open {
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+}
+.ist-open span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ist-open svg {
+  flex: none;
+}
+.ist-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.ist-check:hover:not(:disabled) {
+  color: var(--text);
+}
+.ist-narrow {
+  display: none;
+}
+.ist-check.failed {
+  color: var(--warn);
+}
+.ist-ping {
+  position: absolute;
+  inset: -1.5px;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+.ist-shimmer {
+  background: linear-gradient(100deg, currentColor 35%, var(--accent) 50%, currentColor 65%) 100% 0 / 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.ist-check:disabled {
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ist-radar::before {
+    animation: ist-radar 2.4s ease-out infinite;
+  }
+  .ist-radar::after {
+    animation: ist-radar 2.4s 1.2s ease-out infinite;
+  }
+  .ist-step.now .ist-mark {
+    animation: ist-ring 2s ease-out infinite;
+  }
+  .ist-step.done .ist-tick {
+    stroke-dasharray: 1;
+    animation: ist-draw 0.35s 0.1s ease-out backwards;
+  }
+  .ist-step:not(:last-child)::after {
+    transition: transform 0.5s 0.35s var(--ease, ease);
+  }
+  .ist-check.busy svg {
+    animation: ist-spin 0.9s linear infinite;
+  }
+  .ist-shimmer {
+    animation: ist-sweep 1.1s linear infinite;
+  }
+  .ist-ping {
+    animation: ist-radar 0.8s ease-out 1;
+  }
+  .ist-check.seen svg {
+    animation: ist-settle 0.5s var(--ease, ease) 1;
+  }
+  .ist-check.seen .ist-result {
+    animation: ist-fade 1.2s ease-out 1;
+  }
+  .ist-open.nudge {
+    animation: ist-nudge 0.7s 0.1s var(--ease, ease) 1;
+  }
+  .ist[data-stage='arrived'] .ist-ghost {
+    animation: ist-hop 0.7s 0.3s var(--ease, ease) 1;
+  }
+  .ist[data-stage='arrived'] .ist-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 35%, color-mix(in srgb, var(--accent) 28%, transparent) 50%, transparent 65%);
+    transform: translateX(-100%);
+    animation: ist-shimmer 1s 0.35s ease-out 1 forwards;
+    pointer-events: none;
+  }
+  .ist .pulse {
+    animation: none;
+  }
+}
+@keyframes ist-radar {
+  from {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(3.2);
+  }
+}
+@keyframes ist-ring {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+@keyframes ist-sweep {
+  to {
+    background-position: -50% 0;
+  }
+}
+@keyframes ist-settle {
+  40% {
+    transform: translateY(-3px) rotate(-12deg);
+  }
+  70% {
+    transform: translateY(0);
+  }
+}
+@keyframes ist-fade {
+  from {
+    color: var(--text);
+  }
+}
+@keyframes ist-nudge {
+  40% {
+    transform: scale(1.03);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+}
+@keyframes ist-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes ist-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ist-hop {
+  30% {
+    transform: translateY(-7px) rotate(-8deg);
+  }
+  60% {
+    transform: translateY(0) rotate(4deg);
+  }
+  80% {
+    transform: translateY(-2px);
+  }
+}
+@keyframes ist-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* A phone: the card is a bar across the bottom (the problem, when there is one, opens above it); the page leaves room under it. */
+@media (--xs-down) {
+  .setup-screen {
+    padding-bottom: 72px;
+  }
+  .setup-words {
+    text-align: left;
+  }
+  .setup-words h1 {
+    font-size: 19px;
+  }
+  .ist,
+  .ist.min {
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    padding: 8px 12px max(8px, env(safe-area-inset-bottom));
+    background: var(--bg);
+  }
+  body:has(.toasts .toast) .ist {
+    bottom: 0;
+  }
+  .ist-card,
+  .ist.min .ist-card {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 6px 6px 14px;
+    border-radius: 14px;
+    box-shadow: none;
+    background: var(--sunken);
+  }
+  .ist-card::before {
+    display: none;
+  }
+  .ist-head,
+  .ist-steps,
+  .ist-open,
+  .ist-tog,
+  .ist.min .ist-tog {
+    display: none;
+  }
+  .ist-bar-text,
+  .ist.min .ist-bar-text {
+    display: inline-flex;
+  }
+  .ist-bar-text .ist-ghost,
+  .ist.min .ist-bar-text .ist-ghost {
+    display: none;
+  }
+  .ist.min .ist-find {
+    display: flex;
+  }
+  .ist.min .ist-act {
+    display: contents;
+  }
+  .ist-find {
+    flex-basis: 100%;
+    padding: 4px 8px 8px 0;
+  }
+  .ist-act {
+    display: contents;
+  }
+  .ist-wide {
+    display: none;
+  }
+  .ist-narrow {
+    display: inline;
+  }
+  .ist-bar-text {
+    white-space: nowrap;
+  }
+  .ist-check {
+    height: var(--ph-hit, 40px);
+    flex: none;
+    padding: 0 12px;
+    color: var(--text);
+  }
+}

@@ -18,7 +18,6 @@ type Row = { label: string; cookies: [string, Tone]; cookieless: [string, Tone] 
 
 export const copy = defineCopy('install', {
   label: 'Install trckable',
-  titleCard: (domain: string) => `Add trckable to ${domain}`,
   titleSettings: (domain: string) => `Install on ${domain}`,
   chipWaiting: 'Waiting for the first visit…',
   chipLive: 'Receiving visits',
