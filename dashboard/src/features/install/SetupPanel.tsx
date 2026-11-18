@@ -61,7 +61,6 @@ function Step({ state, name, note, ping }: { state: 'done' | 'now'; name: string
 function Result({ run, site }: { run: ReturnType<typeof useCheckRun>; site: Site }) {
   const p = t.panel
   if (run.running) return <span className="ist-shimmer">{p.checking}</span>
-  if (run.limited) return <><span className="ist-wide">{p.limited}</span><span className="ist-narrow">{p.limitedShort}</span></>
   if (run.outcome === 'none') return <>{t.now}</>
   const long = run.outcome === 'seen' ? p.none(clock(site.timezone, run.shownAt)) : p.failed
   return (
@@ -102,7 +101,6 @@ export function SetupPanel({ site, check, stage, onCheck, extras }: { site: Site
           </span>
         </div>
         <span className="ist-bar-text">
-          {ghost(18)}
           <i className="ist-radar" aria-hidden="true" />
           {arrived ? p.got : p.bar}
         </span>

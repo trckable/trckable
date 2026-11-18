@@ -3068,8 +3068,6 @@ export default {
   'install.journey.panel.none': (time: string) => `Nog geen bezoek · gecontroleerd om ${time}`,
   'install.journey.panel.noneShort': 'Nog geen bezoek',
   'install.journey.panel.failed': 'Controle mislukt · Probeer opnieuw',
-  'install.journey.panel.limited': 'Te veel controles · probeer het over een paar minuten opnieuw',
-  'install.journey.panel.limitedShort': 'Probeer later',
   'install.journey.panel.failedShort': 'Probeer opnieuw',
   'install.journey.support': 'Support',
   'install.journey.remove': 'Deze site verwijderen',

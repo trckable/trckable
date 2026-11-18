@@ -3056,8 +3056,6 @@ export default {
   'install.journey.panel.none': (time: string) => `Pas encore de visite · vérifié à ${time}`,
   'install.journey.panel.noneShort': 'Pas encore de visite',
   'install.journey.panel.failed': 'Vérification impossible · Réessayer',
-  'install.journey.panel.limited': 'Trop de vérifications · réessayez dans quelques minutes',
-  'install.journey.panel.limitedShort': 'Réessayez plus tard',
   'install.journey.panel.failedShort': 'Réessayer',
   'install.journey.support': 'Assistance',
   'install.journey.remove': 'Supprimer ce site',

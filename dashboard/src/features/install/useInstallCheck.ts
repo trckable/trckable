@@ -6,8 +6,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { APIError, type InstallCheck, more } from '../../lib/apiMore'
 
 export const RECHECK_MS = 30_000
-/** After a 429 the server's window is ten minutes: wait out a good part of it. */
-export const BACKOFF_MS = 5 * 60_000
+/** After a 429, wait a little before looking again (the server allows 30 looks per ten minutes). */
+export const BACKOFF_MS = 2 * 60_000
 
 export type CheckState =
   | { phase: 'idle' }

@@ -144,7 +144,7 @@ func fetchText(ctx context.Context, client *http.Client, u string) (body string,
 func (a *API) checkInstall(w http.ResponseWriter, r *http.Request) {
 	// Each of these does real work (outside fetches, or a password hash):
 	// limited, so a busy button or a stolen session cannot make it a flood.
-	if !a.loginRate.allow("check:"+r.PathValue("site"), a.Now(), 10, 10*time.Minute) {
+	if !a.loginRate.allow("check:"+r.PathValue("site"), a.Now(), 30, 10*time.Minute) {
 		fail(w, http.StatusTooManyRequests, "checked many times just now: try again in a few minutes")
 		return
 	}

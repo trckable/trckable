@@ -57,10 +57,10 @@ describe('the install status Check now', () => {
     expect(host.querySelector('.ist-result')?.textContent).toContain('Couldn’t check')
   })
 
-  it('waits out a rate limit: the button says so and a press does nothing', () => {
+  it('waits out a rate limit quietly: no warning, and a press does nothing', () => {
     const onCheck = vi.fn()
     draw(handle({ state: { phase: 'limited' }, at: 5 }), onCheck)
-    expect(host.querySelector('.ist-result')?.textContent).toContain('Too many checks')
+    expect(host.querySelector('.ist-result')?.textContent).not.toContain('Too many')
     act(() => button().click())
     expect(onCheck).not.toHaveBeenCalled()
   })
