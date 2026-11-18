@@ -13,7 +13,8 @@ test('before the first visit: the setup screen, Not verified, a locked ring, no 
   // An empty v is the address with no view: the suite would otherwise send it to Explore.
   await page.goto(`${API}/${site.domain}?v=`)
   const screen = page.getByRole('region', { name: 'Waiting for the first visit' })
-  await expect(screen.locator('.setup-title')).toContainText(`Add trckable to ${site.domain}`, { timeout: 20_000 })
+  await expect(screen.getByRole('heading', { level: 1 })).toContainText('Add the code', { timeout: 20_000 })
+  await expect(screen).toContainText(site.domain)
   // The install is the compact one: tabs, the code with this site's id and a Copy button inside it, cookieless, the AI prompt.
   await expect(screen.getByRole('tablist', { name: 'How to install' })).toBeVisible()
   await expect(screen.locator('pre.code').first()).toContainText(`data-site="${site.id}"`)
@@ -36,19 +37,16 @@ test('before the first visit: the setup screen, Not verified, a locked ring, no 
   await expect(page.locator('.setupmenu .sprow.locked').first()).toBeVisible()
   await page.keyboard.press('Escape')
   // One card says where it stands. The server cannot reach the suite's site: it says so, and never "found".
-  const status = screen.locator('.setup-status')
-  await expect(status.locator('h2')).toContainText(/Waiting for the first visit|Can’t reach your site/, { timeout: 20_000 })
-  await expect(status).toContainText('last check', { timeout: 20_000 })
+  const status = screen.getByRole('complementary', { name: 'Install status' })
+  await expect(status).toContainText('Open your site once', { timeout: 20_000 })
   await status.getByRole('button', { name: /Check (now|again)/ }).click()
-  await status.locator('summary').click()
-  await expect(screen.getByRole('link', { name: 'Support' })).toBeVisible()
-  // A real pageview: the line turns green, then Live opens with no reload.
+  await expect(status).toContainText(/No visit yet|Couldn’t check|Too many checks/, { timeout: 20_000 })
+  // A real pageview: the card ticks, then Live opens with no reload.
   await visit(page.request, site, '/first')
-  await expect(screen.locator('.setup-status.ok')).toContainText('First visit received', { timeout: 30_000 })
   await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible({ timeout: 30_000 })
   await expect(page.locator('#views')).toBeVisible()
   await expect(page.locator('#siteBtn')).not.toHaveAttribute('aria-label', /Not verified/)
-  await expect(page.locator('.setup-title')).toHaveCount(0)
+  await expect(page.locator('.setup-screen h1')).toHaveCount(0)
 })
 
 for (const size of [
@@ -60,7 +58,7 @@ for (const size of [
     await page.setViewportSize(size)
     const site = await newSite(page, 'freshfit', false)
     await page.goto(`${API}/${site.domain}?v=`)
-    await expect(page.locator('.setup-title')).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('.setup-screen h1')).toBeVisible({ timeout: 20_000 })
     const [width, inner] = await page.evaluate(() => [document.scrollingElement!.scrollWidth, window.innerWidth])
     expect(width).toBeLessThanOrEqual(inner)
     await expect(page.locator('nav.tabbar')).toHaveCount(0)

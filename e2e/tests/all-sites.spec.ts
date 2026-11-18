@@ -72,7 +72,7 @@ test('All sites: totals are the rows, sorts, states and the ⋯ menu', async ({ 
 
   // A site not installed yet opens its setup screen.
   await row(empty).locator('.tm-name').click()
-  await expect(page.locator('.setup-status')).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('aside.ist')).toBeVisible({ timeout: 20_000 })
   await page.goto(`${API}/sites`)
   await row(busy).waitFor()
 

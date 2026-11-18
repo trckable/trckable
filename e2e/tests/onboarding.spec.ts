@@ -157,13 +157,12 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
   await expectStep(run, 'Add the code')
   const card = run.getByRole('region', { name: 'Install trckable' })
   await expect(run.getByRole('button', { name: /Check (now|again)/ })).toBeVisible()
-  // One centred column: the status and the card share a horizontal centre.
-  // A new site that cannot be reached yet is not scolded: a calm line waits, the warning only after Check now.
-  await expect(run.getByText('Waiting for your first visit…')).toBeVisible()
+  // A new site that cannot be reached yet is not scolded: the Install status card waits, the warning only after Check now.
+  await expect(run.getByText('Install status')).toBeVisible()
+  await expect(run.getByText('Open your site once')).toBeVisible()
   await page.waitForTimeout(4000)
-  await expect(run.locator('.setup-status')).toHaveCount(0)
   await expect(run.getByText('Can’t reach your site')).toHaveCount(0)
-  await expect(run.getByText('Waiting for your first visit…')).toBeVisible()
+  await expect(run.getByText('Open your site once')).toBeVisible()
   const sites = (await (await page.request.get(`${base}/api/v1/sites`)).json()).sites as { id: string; domain: string }[]
   const site = sites.find((s) => s.domain === domain)
   expect(site?.id).toMatch(/^tkb_/)
@@ -225,7 +224,7 @@ test('after the first verified site, Add a site closes like any dialog and an un
   await wizard.getByRole('button', { name: 'Skip' }).click()
   await expect(wizard.getByRole('tablist', { name: 'How to install' })).toBeVisible({ timeout: 15_000 })
   await wizard.getByRole('button', { name: 'Later' }).click()
-  await expect(page.locator('.setup-status').first()).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('aside.ist').first()).toBeVisible({ timeout: 15_000 })
   await expect(gate).toHaveCount(0)
   for (const path of ['/settings', '/sites', '/' + verified]) {
     await page.goto(base + path)
@@ -233,7 +232,7 @@ test('after the first verified site, Add a site closes like any dialog and an un
     await expect(gate).toHaveCount(0)
   }
   await page.goto(`${base}/${verified}`)
-  await expect(page.locator('.setup-status')).toHaveCount(0)
+  await expect(page.locator('aside.ist')).toHaveCount(0)
 })
 
 test('/settings is not a page: an owner lands on the dashboard, a viewer is never held in the first run', async ({ page, browserName }) => {
