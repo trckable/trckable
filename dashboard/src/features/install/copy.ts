@@ -26,7 +26,6 @@ export const copy = defineCopy('install', {
   sampleData: 'Sample data',
   sampleNow: 'right now',
   sampleSources: 'Sources',
-  samplePages: 'Pages',
   sampleCountries: 'Countries',
 
   // Tabs.
