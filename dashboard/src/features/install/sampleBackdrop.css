@@ -17,6 +17,9 @@
   height: 100%;
   display: block;
 }
+.sb-host canvas {
+  filter: blur(1.5px); /* a touch soft, so it sits behind the page */
+}
 @media (--xs-down) {
   .sb {
     opacity: 0.7;
