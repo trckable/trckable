@@ -52,9 +52,9 @@ test('All sites: totals are the rows, sorts, states and the ⋯ menu', async ({ 
   const rowsNow = sum(await nums('.tm-row[data-site] .tm-live'))
   expect(Number((await page.locator('[data-sum=online] .sum-v').textContent())!.replace(/\D/g, ''))).toBe(rowsNow)
 
-  // States, in the list's words: quiet, not verified, receiving.
+  // States, in the list's words: quiet, not installed, receiving.
   await expect(row(small)).toContainText('quiet 10h')
-  await expect(row(empty)).toContainText('Not verified')
+  await expect(row(empty)).toContainText('Not installed')
   await expect(row(busy)).toContainText('Receiving')
   expect(await page.locator('[data-sum=attention] .sum-v').textContent()).toMatch(/^[1-9]/)
   await expect(page.locator('[data-k=briefing]')).toContainText('need')

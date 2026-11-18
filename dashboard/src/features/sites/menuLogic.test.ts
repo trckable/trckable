@@ -46,7 +46,7 @@ describe('the total beside All sites', () => {
 describe('what All sites says about the sites that are not fine', () => {
   const now = Date.now()
   const at = (ago: number) => now / 1000 - ago
-  it('counts the down and the not verified ones, and leaves a quiet one to its grey dot', () => {
+  it('counts the down and the not installed ones, and leaves a quiet one to its grey dot', () => {
     const quiet = { ...site('q', 'quiet.example.com'), last_event_at: at(3 * 86400) }
     const down = { ...site('d', 'down.example.com'), last_event_at: at(60), down_since: at(7200) } as Site
     const fresh = site('n', 'new.example.com')

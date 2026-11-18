@@ -20,9 +20,8 @@ export const copy = defineCopy('sites.menu', {
 
   // A site's state, where its number would be, when the dot alone can't say it.
   setup: 'setup',
-  notVerified: 'Not verified',
   notInstalled: 'Not installed',
-  notVerifiedTip: 'No visit has arrived yet. Open Install to finish and check it.',
+  notInstalledTip: 'No visit has arrived yet. Open Install to finish and check it.',
   installHelp: 'Install help',
   downTip: (span: string) => `Not reachable for ${span}. Open the site to see what’s wrong.`,
   downShort: (span: string) => `down ${span}`,
@@ -30,9 +29,9 @@ export const copy = defineCopy('sites.menu', {
   locked: 'Locked: upgrade to see it',
   quietTip: (span: string) => `No visits for ${span}. Nothing looks wrong with the page.`,
 
-  // All sites: how many of the listed sites are down or not verified, under its name (a quiet site is only its grey dot).
+  // All sites: how many of the listed sites are down or not installed, under its name (a quiet site is only its grey dot).
   downCount: (n: number) => `${n} down`,
-  unverifiedCount: (n: number) => `${n} not verified`,
+  notInstalledCount: (n: number) => `${n} not installed`,
 
   // The numbers: today's visitors per site, and both totals beside All sites.
   today: (n: string) => `${n} today`,

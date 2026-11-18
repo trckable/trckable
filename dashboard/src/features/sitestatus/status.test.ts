@@ -10,7 +10,8 @@ const site = (o: Partial<Site> = {}): Site => ({ id: 's1', domain: 'a.example', 
 describe('a site the uptime probe finds not answering', () => {
   it('is down even while visits are still coming in', () => {
     expect(statusOf(site({ last_event_at: sec - 60, down_since: sec - 600 }), NOW)).toBe('down')
-    expect(statusOf(site({ down_since: sec - 600 }), NOW)).toBe('down')
+    expect(statusOf(site({ down_since: sec - 600 }), NOW)).toBe('new') // never installed: not down
+    expect(statusOf(site({ down_since: sec - 600, check: { at: sec, found: 'site' } as Site['check'] }), NOW)).toBe('down') // a script seen: installed
   })
 })
 

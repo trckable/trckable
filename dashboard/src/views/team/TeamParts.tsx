@@ -18,10 +18,10 @@ export const mark = (s: TeamSite) => <SiteMark site={{ domain: s.domain, color: 
 
 export const openSite = (s: TeamSite) => navigate('/' + encodeURIComponent(s.domain))
 
-/** The state in the list's own words: Receiving, down 23m, Not verified. A quiet site says nothing here; the bell tells when visits stop. */
+/** The state in the list's own words: Receiving, down 23m, Not installed. A quiet site says nothing here; the bell tells when visits stop. */
 export function Status({ s }: { s: TeamSite }) {
   if (s.state === 'quiet') return null
-  const word = { stopped: menu.downShort(s.silent), new: menu.notVerified, now: copy.receiving, live: copy.receiving }[s.state]
+  const word = { stopped: menu.downShort(s.silent), new: menu.notInstalled, now: copy.receiving, live: copy.receiving }[s.state]
   const kind = { stopped: 'down', new: 'warn', now: 'ok', live: 'ok' }[s.state]
   return <span className={'tm-status ' + kind}>{word}</span>
 }

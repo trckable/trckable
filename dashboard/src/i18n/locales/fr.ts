@@ -1008,11 +1008,11 @@ export default {
   'sites.menu.others': 'Autres sites',
   'sites.menu.emptyGroup': 'Faites glisser un site ici, ou utilisez le menu ⋯ d’un site.',
   'sites.menu.setup': 'à configurer',
-  'sites.menu.notVerified': 'Non vérifié',
-  'sites.menu.notVerifiedTip': 'Aucune visite n’est encore arrivée. Ouvrez l’installation pour la terminer et la vérifier.',
+  'sites.menu.notInstalled': 'Non installé',
+  'sites.menu.notInstalledTip': 'Aucune visite n’est encore arrivée. Ouvrez l’installation pour la terminer et la vérifier.',
   'sites.menu.installHelp': 'Aide à l’installation',
   'sites.menu.downCount': (n: number) => `${n} hors service`,
-  'sites.menu.unverifiedCount': (n: number) => `${n} non vérifié`,
+  'sites.menu.notInstalledCount': (n: number) => `${n} non installé`,
   'sites.menu.downTip': (span: string) => `Injoignable depuis ${span}. Ouvrez le site pour voir ce qui ne va pas.`,
   'sites.menu.quietTip': (span: string) => `Aucune visite depuis ${span}. Rien ne semble anormal sur la page.`,
   'sites.menu.downShort': (span: string) => `injoignable ${span}`,
@@ -2295,7 +2295,6 @@ export default {
 
   // the walkthrough screens (v2)
   'v2.today': 'Aujourd’hui',
-  'v2.notVerified': 'Non vérifié',
   'v2.stateDown': 'Hors service',
   'v2.stateQuiet': 'Calme',
   'v2.yesterday': 'Hier',

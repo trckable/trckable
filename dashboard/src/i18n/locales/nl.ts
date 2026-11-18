@@ -1007,11 +1007,11 @@ export default {
   'sites.menu.others': 'Andere sites',
   'sites.menu.emptyGroup': 'Sleep een site hierheen, of gebruik het ⋯-menu van een site.',
   'sites.menu.setup': 'instellen',
-  'sites.menu.notVerified': 'Niet geverifieerd',
-  'sites.menu.notVerifiedTip': 'Er is nog geen bezoek binnengekomen. Open de installatie om af te ronden en te controleren.',
+  'sites.menu.notInstalled': 'Niet geïnstalleerd',
+  'sites.menu.notInstalledTip': 'Er is nog geen bezoek binnengekomen. Open de installatie om af te ronden en te controleren.',
   'sites.menu.installHelp': 'Hulp bij installatie',
   'sites.menu.downCount': (n: number) => `${n} offline`,
-  'sites.menu.unverifiedCount': (n: number) => `${n} niet geverifieerd`,
+  'sites.menu.notInstalledCount': (n: number) => `${n} niet geïnstalleerd`,
   'sites.menu.downTip': (span: string) => `Al ${span} niet bereikbaar. Open de site om te zien wat er mis is.`,
   'sites.menu.quietTip': (span: string) => `Al ${span} geen bezoeken. Er lijkt niets mis met de pagina.`,
   'sites.menu.downShort': (span: string) => `onbereikbaar ${span}`,
@@ -2294,7 +2294,6 @@ export default {
 
   // the walkthrough screens (v2)
   'v2.today': 'Vandaag',
-  'v2.notVerified': 'Niet geverifieerd',
   'v2.stateDown': 'Offline',
   'v2.stateQuiet': 'Rustig',
   'v2.yesterday': 'Gisteren',

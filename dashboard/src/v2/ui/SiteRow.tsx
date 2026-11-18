@@ -9,23 +9,19 @@ import { fmtCompact, fmtInt } from '../../lib/format'
 import { prefetchSite } from '../../lib/dashQuery'
 import { copy } from '../../features/sites/menuCopy'
 import { addGroup, moveTo, pin, placeKey, sectionsOf, step, unpin, type Place } from '../../features/sites/layout'
-import { dotState, type DotState } from '../../features/sites/StateDot'
+import { dotState } from '../../features/sites/StateDot'
 import { OpenSite, openSiteTab } from '../../features/sites/OpenSite'
-import { notInstalled } from '../../features/sitestatus/status'
 import { silence } from '../../features/sitestatus/time'
 import type { Arrange } from '../../features/sites/arrange'
 import { MarkDot } from '../../features/sites/MarkDot'
 import type { SiteMove } from '../slots'
 
-/** The row's state: a site never installed is that, not down, whatever its probe says. */
-const rowState = (s: Site): DotState => (notInstalled(s) ? 'new' : dotState(s))
-
 /** What stands where the people on it would: "setup", how long it has been down (red), else today's visitors; a quiet site (grey dot) keeps its number, and its span is in the tip. */
 function Tail({ s, today }: { s: Site; today?: number }) {
-  const state = rowState(s)
+  const state = dotState(s)
   if (state === 'new') {
     return (
-      <span className="now unverified" title={copy.notVerifiedTip}>
+      <span className="now unverified" title={copy.notInstalledTip}>
         {copy.notInstalled}
       </span>
     )
@@ -87,7 +83,7 @@ export function SiteRow({ site, place, on, arrange: a, today, onPick, move, clas
           moveStep(e.key === 'ArrowUp' ? -1 : 1)
         }}
       >
-        <MarkDot site={site} size={22} state={rowState(site)} className={move ? 'quiet' : undefined} title={move?.title} />
+        <MarkDot site={site} size={22} className={move ? 'quiet' : undefined} title={move?.title} />
         <span className="mt2">
           <div className="nm">{name}</div>
           {move ? <div className="d state-line quiet moving" title={move.title}>{move.text}</div> : note && <div className="d">{note}</div>}
@@ -134,7 +130,7 @@ export function RowMenu({ site, place, a, step: moveStep, settings, status }: { 
         const groups = [
           [
             settings && item(copy.siteSettings, () => settings('site')),
-            settings && rowState(site) === 'new' && item(copy.installHelp, () => settings('install')),
+            settings && dotState(site) === 'new' && item(copy.installHelp, () => settings('install')),
             site.domain && (
               <button type="button" role="menuitem" className="open-touch" onClick={() => { close(); openSiteTab(site.domain) }}>
                 <ExternalLink size={14} strokeWidth={1.75} aria-hidden="true" />

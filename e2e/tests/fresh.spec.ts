@@ -1,5 +1,5 @@
 // A site with no verified install is one setup screen: the compact install, a live line that looks for the first visit,
-// "Not verified" in the header, the setup ring with Install first and the rest locked, and no Live, Briefing or Explore.
+// "Not installed" in the header, the setup ring with Install first and the rest locked, and no Live, Briefing or Explore.
 // A first visit turns the line green and Live opens by itself.
 import { expect, test } from './fixtures'
 import { API } from '../playwright.config'
@@ -7,7 +7,7 @@ import { newSite, visit } from './audit-kit'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one browser is enough: the page is the same')
 
-test('before the first visit: the setup screen, Not verified, a locked ring, no Live or Briefing; a visit opens Live', async ({ page }) => {
+test('before the first visit: the setup screen, Not installed, a locked ring, no Live or Briefing; a visit opens Live', async ({ page }) => {
   test.slow()
   const site = await newSite(page, 'fresh', false)
   // An empty v is the address with no view: the suite would otherwise send it to Explore.
@@ -25,8 +25,8 @@ test('before the first visit: the setup screen, Not verified, a locked ring, no 
   await expect(card.getByRole('button', { name: 'Copy prompt' })).toBeVisible()
   // Help is behind a small link, not shown up front.
   await expect(screen.getByRole('link', { name: 'Support' })).toBeHidden()
-  // The header: the not-installed dot on the site's icon (Not verified in its label), no Live | Briefing, no Explore, no phone bar.
-  await expect(page.locator('#siteBtn')).toHaveAttribute('aria-label', /Not verified/)
+  // The header: the not-installed dot on the site's icon (Not installed in its label), no Live | Briefing, no Explore, no phone bar.
+  await expect(page.locator('#siteBtn')).toHaveAttribute('aria-label', /Not installed/)
   await expect(page.locator('#siteBtn .mk-dot.off')).toHaveCount(1)
   await expect(page.locator('#views')).toHaveCount(0)
   await expect(page.locator('#xp')).toHaveCount(0)
@@ -47,7 +47,7 @@ test('before the first visit: the setup screen, Not verified, a locked ring, no 
   await visit(page.request, site, '/first')
   await expect(page.getByRole('region', { name: 'Live', exact: true })).toBeVisible({ timeout: 30_000 })
   await expect(page.locator('#views')).toBeVisible()
-  await expect(page.locator('#siteBtn')).not.toHaveAttribute('aria-label', /Not verified/)
+  await expect(page.locator('#siteBtn')).not.toHaveAttribute('aria-label', /Not installed/)
   await expect(page.locator('.setup-screen h1')).toHaveCount(0)
 })
 

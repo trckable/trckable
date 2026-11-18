@@ -7,6 +7,7 @@ import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { layoutReady, preloadLayout } from '../../features/sites/useSiteLayout'
 import { dotState, type DotState } from '../../features/sites/StateDot'
 import { copy } from '../copy'
+import { copy as menu } from '../../features/sites/menuCopy'
 import { MenuFoot, type FootItem } from './MenuFoot'
 import { useMenu } from './useMenu'
 import { useOnlyOpen } from '../../lib/headerMenu'
@@ -14,7 +15,7 @@ import { useTopLayerWhen } from '../../lib/topLayer'
 import { midEllipsis } from '../../lib/midEllipsis'
 import { MarkDot } from '../../features/sites/MarkDot'
 import { copy as statusCopy } from '../../features/sitestatus/copy'
-import { notInstalled, quietSites, statusOf } from '../../features/sitestatus/status'
+import { quietSites, statusOf } from '../../features/sitestatus/status'
 import { footerMoreCopy } from '../../components/footerMoreCopy'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
@@ -39,9 +40,9 @@ interface SiteMenuProps {
   all: string
 }
 
-/** The button's name for a screen reader and its tooltip: the site, and its state when it is not fine ("drivemymac.app · Not verified"). */
+/** The button's name for a screen reader and its tooltip: the site, and its state when it is not fine ("drivemymac.app · Not installed"). */
 export function siteLabel(name: string, state: DotState): string {
-  const word = { stopped: copy.stateDown, quiet: copy.stateQuiet, new: copy.notVerified }[state as 'stopped' | 'quiet' | 'new']
+  const word = { stopped: copy.stateDown, quiet: copy.stateQuiet, new: menu.notInstalled }[state as 'stopped' | 'quiet' | 'new']
   return word ? `${name} · ${word}` : name
 }
 
@@ -80,7 +81,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
     else void Promise.all([layoutReady(LAYOUT_WAIT), SiteList.load()]).then(() => setOpen(true))
   }
   const done = useCallback(() => close(), [close])
-  const down = p.sites.filter((s) => statusOf(s) === 'down' && !notInstalled(s))
+  const down = p.sites.filter((s) => statusOf(s) === 'down')
   const quiet = quietSites(p.sites)
   const whyLabel = down.length ? statusCopy.whatHappened(down.length) : footerMoreCopy.siteQuiet(quiet.length)
   const told = [...down, ...quiet]

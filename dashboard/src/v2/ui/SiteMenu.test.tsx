@@ -9,7 +9,7 @@ const site = (o: Partial<Site> = {}): Site => ({ id: 's1', domain: 'drivemymac.a
 
 describe('the header button’s name', () => {
   it('adds the state only when the site is not fine', () => {
-    expect(siteLabel('drivemymac.app', 'new')).toBe('drivemymac.app · Not verified')
+    expect(siteLabel('drivemymac.app', 'new')).toBe('drivemymac.app · Not installed')
     expect(siteLabel('drivemymac.app', 'stopped')).toBe('drivemymac.app · Down')
     expect(siteLabel('drivemymac.app', 'quiet')).toBe('drivemymac.app · Quiet')
     expect(siteLabel('drivemymac.app', 'live')).toBe('drivemymac.app')

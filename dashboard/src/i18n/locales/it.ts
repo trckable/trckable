@@ -1014,11 +1014,11 @@ export default {
   'sites.menu.others': 'Altri siti',
   'sites.menu.emptyGroup': 'Trascina qui un sito, o usa il menu ⋯ di un sito.',
   'sites.menu.setup': 'da configurare',
-  'sites.menu.notVerified': 'Non verificato',
-  'sites.menu.notVerifiedTip': 'Non è ancora arrivata nessuna visita. Apri l’installazione per completarla e controllarla.',
+  'sites.menu.notInstalled': 'Non installato',
+  'sites.menu.notInstalledTip': 'Non è ancora arrivata nessuna visita. Apri l’installazione per completarla e controllarla.',
   'sites.menu.installHelp': 'Aiuto per l’installazione',
   'sites.menu.downCount': (n: number) => `${n} non raggiungibile`,
-  'sites.menu.unverifiedCount': (n: number) => `${n} non verificato`,
+  'sites.menu.notInstalledCount': (n: number) => `${n} non installato`,
   'sites.menu.downTip': (span: string) => `Non raggiungibile da ${span}. Apri il sito per vedere cosa non va.`,
   'sites.menu.quietTip': (span: string) => `Nessuna visita da ${span}. La pagina non sembra avere problemi.`,
   'sites.menu.downShort': (span: string) => `non raggiungibile ${span}`,
@@ -2294,7 +2294,6 @@ export default {
 
   // the walkthrough screens (v2)
   'v2.today': 'Oggi',
-  'v2.notVerified': 'Non verificato',
   'v2.stateDown': 'Non raggiungibile',
   'v2.stateQuiet': 'Quieto',
   'v2.yesterday': 'Ieri',

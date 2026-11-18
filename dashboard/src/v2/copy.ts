@@ -3,7 +3,6 @@ import { defineCopy } from '../i18n'
 
 export const copy = defineCopy('v2', {
   today: 'Today',
-  notVerified: 'Not verified',
   stateDown: 'Down',
   stateQuiet: 'Quiet',
   yesterday: 'Yesterday',
