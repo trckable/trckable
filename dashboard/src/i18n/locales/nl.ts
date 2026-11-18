@@ -3524,6 +3524,8 @@ export default {
   'channels.flash.failed': 'Koppelen is niet gelukt. Probeer het opnieuw.',
   'channels.viewOnly': (who: string) => `Vraag ${who} om accounts te koppelen.`,
   'blocks.explore': 'Open in Explore',
+  'blocks.now': 'Nu',
+  'blocks.today': 'Vandaag',
   'blocks.uptime': (pct: string) => `${pct} online`,
   'blocks.noIncidents': 'Geen downtime in deze periode.',
   'blocks.ongoing': 'Duurt nog',

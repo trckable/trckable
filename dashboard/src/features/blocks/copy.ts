@@ -3,6 +3,8 @@ import { fmtInt } from '../../lib/format'
 
 export const copy = defineCopy('blocks', {
   explore: 'Open in Explore',
+  now: 'Now',
+  today: 'Today',
   uptime: (pct: string) => `${pct} up`,
   noIncidents: 'No downtime in this period.',
   ongoing: 'Still going',

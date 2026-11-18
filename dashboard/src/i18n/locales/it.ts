@@ -3524,6 +3524,8 @@ export default {
   'channels.flash.failed': 'Il collegamento non ha funzionato. Riprova.',
   'channels.viewOnly': (who: string) => `Chiedi a ${who} di collegare gli account.`,
   'blocks.explore': 'Apri in Explore',
+  'blocks.now': 'Adesso',
+  'blocks.today': 'Oggi',
   'blocks.uptime': (pct: string) => `${pct} attivo`,
   'blocks.noIncidents': 'Nessun downtime in questo periodo.',
   'blocks.ongoing': 'In corso',

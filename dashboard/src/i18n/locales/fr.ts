@@ -3512,6 +3512,8 @@ export default {
   'channels.flash.failed': 'La connexion n’a pas fonctionné. Réessayez.',
   'channels.viewOnly': (who: string) => `Demandez à ${who} de connecter les comptes.`,
   'blocks.explore': 'Ouvrir dans Explore',
+  'blocks.now': 'Maintenant',
+  'blocks.today': 'Aujourd’hui',
   'blocks.uptime': (pct: string) => `${pct} disponible`,
   'blocks.noIncidents': 'Aucune indisponibilité sur cette période.',
   'blocks.ongoing': 'En cours',
