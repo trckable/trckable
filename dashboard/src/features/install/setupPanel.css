@@ -1,5 +1,6 @@
 /* The install status: a card floating at the bottom left of the window over the page, so it stays in view while the code
-   scrolls, where there is room beside the code (1440 px and up); on a narrower window it is a bar across the bottom.
+   scrolls, from a tablet's width up; on a phone it is a bar across the bottom. Where the centred column would run under it, the
+   column moves over (below), so the two never overlap.
    Minimised it is a pill. Every animation is off for a reader who asks for less motion. */
 .ist {
   position: fixed;
@@ -403,9 +404,25 @@
   }
 }
 
-/* Under 1440 px (the lg step and narrower) there is no room beside the code: the card is a bar across the bottom (the problem, when there is one,
-   opens above it), and the page leaves room under it. Toasts go above it. */
-@media (--lg-down) {
+/* The column makes room for the card: the card's width and a gap (328 px) less what the centring already leaves (a column of
+   620 px is clear of it from 1276 px up). */
+@media not (--handheld) {
+  .mk-fresh {
+    padding-left: clamp(0px, calc(1276px - 100vw), 328px);
+  }
+  .ob-main[data-step='install'] {
+    max-width: none;
+    padding-left: calc(clamp(16px, 4vw, 40px) + clamp(0px, calc(1276px - 100vw), 328px));
+  }
+  .ob-main[data-step='install'] > .setup-cols {
+    max-width: 620px;
+    margin-inline: auto;
+  }
+}
+
+/* A phone: the card is a bar across the bottom (the problem, when there is one, opens above it), and the page leaves room
+   under it. Toasts go above it. */
+@media (--handheld) {
   .setup-cols {
     padding-bottom: 72px;
   }
