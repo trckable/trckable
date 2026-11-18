@@ -21,8 +21,8 @@ function Tail({ s, today }: { s: Site; today?: number }) {
   const state = dotState(s)
   if (state === 'new') {
     return (
-      <span className="now unverified" title={copy.notVerifiedTip}>
-        {copy.notVerified}
+      <span className="now unverified" title={copy.notInstalledTip}>
+        {copy.notInstalled}
       </span>
     )
   }

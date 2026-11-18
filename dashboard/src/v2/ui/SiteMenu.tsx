@@ -7,6 +7,7 @@ import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { layoutReady, preloadLayout } from '../../features/sites/useSiteLayout'
 import { dotState, type DotState } from '../../features/sites/StateDot'
 import { copy } from '../copy'
+import { copy as menu } from '../../features/sites/menuCopy'
 import { MenuFoot, type FootItem } from './MenuFoot'
 import { useMenu } from './useMenu'
 import { useOnlyOpen } from '../../lib/headerMenu'
@@ -39,9 +40,9 @@ interface SiteMenuProps {
   all: string
 }
 
-/** The button's name for a screen reader and its tooltip: the site, and its state when it is not fine ("drivemymac.app · Not verified"). */
+/** The button's name for a screen reader and its tooltip: the site, and its state when it is not fine ("drivemymac.app · Not installed"). */
 export function siteLabel(name: string, state: DotState): string {
-  const word = { stopped: copy.stateDown, quiet: copy.stateQuiet, new: copy.notVerified }[state as 'stopped' | 'quiet' | 'new']
+  const word = { stopped: copy.stateDown, quiet: copy.stateQuiet, new: menu.notInstalled }[state as 'stopped' | 'quiet' | 'new']
   return word ? `${name} · ${word}` : name
 }
 

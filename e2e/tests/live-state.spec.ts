@@ -52,8 +52,9 @@ test('All sites follows the same last visit on the page that is open', async ({ 
   await page.context().addCookies([{ name: 'trckable_session', value: await session('live-state-all'), url: API }])
   const seen = await fakeLastSeen(page)
   await page.goto(`${API}/sites`)
-  const main = page.locator('.tm-page')
-  await expect(main).toContainText(/quiet/i, { timeout: 20_000 })
+  // The list says nothing under a quiet site (#803): its row carries the state.
+  const row = page.locator('.tm-row[data-site]', { hasText: HISTORY_DOMAIN })
+  await expect(row).toHaveClass(/\bquiet\b/, { timeout: 20_000 })
   seen.at = Math.floor(Date.now() / 1000) - 5
-  await expect(main).not.toContainText(/quiet/i, WAIT)
+  await expect(row).not.toHaveClass(/\bquiet\b/, WAIT)
 })

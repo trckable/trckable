@@ -23,6 +23,15 @@ describe('a team site mark', () => {
   })
 })
 
+describe('a site never installed in the team view', () => {
+  it('is not installed, never down, while an installed site that is down stays down', () => {
+    const never = teamSite(site('n', { last_event_at: undefined, down_since: at(3) }), undefined, NOW)
+    expect(never.state).toBe('new')
+    expect(never.silent).toBe('')
+    expect(teamSite(site('v', { last_event_at: at(24), down_since: at(3) }), undefined, NOW).state).toBe('stopped')
+  })
+})
+
 describe('the team strip', () => {
   it('adds up the rows beside it and nothing else', () => {
     const t = totals(team())
@@ -30,7 +39,7 @@ describe('the team strip', () => {
     expect(t.online).toBe(2)
     expect(t.revenue).toEqual({ minor: 7500, currency: 'USD', exponent: 2 })
     expect(t.versus).toEqual({ today: 150, usual: 160 }) // only the rows that have a usual, on both sides
-    expect(t.attention.map((s) => s.id)).toEqual(['c', 'b']) // not verified, then quiet
+    expect(t.attention.map((s) => s.id)).toEqual(['c', 'b']) // not installed, then quiet
   })
 
   it('tells the team against its usual only when the sites with a usual hold most of today', () => {

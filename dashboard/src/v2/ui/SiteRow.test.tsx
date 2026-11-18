@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Site } from '../../lib/api'
 import { OpenSite } from '../../features/sites/OpenSite'
 import { RowMenu, SiteRow } from './SiteRow'
+import { problemCounts } from '../../features/sites/menuLogic'
 
 const NOW = Math.floor(Date.now() / 1000)
 const site = (o: Partial<Site> = {}): Site => ({ id: 's1', domain: 'example.com', name: 'Example', timezone: 'UTC', currency: 'USD', proxy_key: '', last_event_at: NOW - 60, ...o })
@@ -33,7 +34,7 @@ describe('a site in the list', () => {
   })
 
   it('says setup, or how long it has been down or quiet, in the number’s place', () => {
-    expect(row(site({ last_event_at: undefined }), 0)).toContain('Not verified')
+    expect(row(site({ last_event_at: undefined }), 0)).toContain('Not installed')
     const gone = row(site({ last_event_at: NOW - 3 * 86400, down_since: NOW - 3 * 86400, check: { at: NOW - 3600, error: 'example.com could not be reached over https' } }))
     expect(gone).toContain('state-word down')
     expect(gone).toContain('down 3d')
@@ -148,3 +149,18 @@ describe('the ⋯ menu in groups', () => {
   })
 })
 
+
+describe('a site never installed', () => {
+  const NEVER = { last_event_at: undefined, down_since: NOW - 3 * 3600 }
+  it('says Not installed, never down, while a verified site that is down keeps its down', () => {
+    const html = row(site(NEVER))
+    expect(html).toContain('Not installed')
+    expect(html).not.toContain('down 3h')
+    expect(html).not.toContain('state-word down')
+    expect(row(site({ last_event_at: NOW - 86400, down_since: NOW - 3 * 3600 }))).toContain('down 3h')
+  })
+  it('is left out of the down count, a verified down site is counted', () => {
+    expect(problemCounts([site(NEVER)])).toEqual({ down: 0, unverified: 1 })
+    expect(problemCounts([site({ last_event_at: NOW - 86400, down_since: NOW - 3 * 3600 }), site(NEVER)])).toEqual({ down: 1, unverified: 1 })
+  })
+})

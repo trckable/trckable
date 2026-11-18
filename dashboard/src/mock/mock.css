@@ -1135,7 +1135,8 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .site-row .mi.site{flex:1;min-width:0}
 .mk .site-row.sortable .mi.site{cursor:pointer}
 .mk .site-row .grip{position:absolute;left:-2px;opacity:0;color:var(--mk-faint);pointer-events:none}
-.mk .site-row:hover .grip{opacity:.7}
+.mk .site-row:hover .grip,.mk .site-row:focus-within .grip{opacity:.7}
+@media (hover:none),(pointer:coarse){.mk .site-row .grip{opacity:.7}}
 .mk .site-row.dragging{background:var(--mk-card);box-shadow:0 10px 30px var(--mk-shc);z-index:2}
 /* The actions sit in their own column at the end of the row (never over the numbers), shown on hover or focus; the same width is kept free at the end of All sites, so every number ends at one edge. */
 .mk .sitelist{--acts:68px}
@@ -1612,6 +1613,7 @@ html[data-motion='off'] .mk .lswap{animation:none}
 .mk .sitelist .mi.on .nm{color:var(--mk-text)}
 /* one quiet status at the right of every row; the dot on the logo stays but muted */
 .mk .sitelist .mi .now,.mk .sitelist .mi .now.state-word,.mk .sitelist .mi .now.state-word.down,.mk .sitelist .mi .now.unverified{color:var(--mk-faint);font-weight:400;font-size:12px}
+.mk .sitelist .mi .now.unverified{color:var(--mk-amber)}
 .mk .sitelist .mi .now b{color:var(--mk-muted);font-weight:500}
 .mk .sitelist .site-row .mkwrap .mk-dot{opacity:.65;filter:saturate(.7)}
 .mk .team-row{position:relative;display:flex;align-items:center;border-radius:var(--mk-rc)}

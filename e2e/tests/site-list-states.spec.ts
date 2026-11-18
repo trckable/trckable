@@ -50,11 +50,11 @@ for (const [name, width, height] of [['desktop', 1440, 900], ['phone', 390, 844]
       await expect(dot('s3')).toHaveClass(/down/)
       await expect(menu.locator('[data-site="s3"] .now:not(.mk-dot)')).toHaveText(/^down /)
       await expect(dot('s4')).toHaveClass(/off/)
-      await expect(menu.locator('[data-site="s4"] .now:not(.mk-dot)')).toHaveText('Not verified')
+      await expect(menu.locator('[data-site="s4"] .now:not(.mk-dot)')).toHaveText('Not installed')
       const all = menu.locator('.mi.all .all-problems')
       await expect(all).toContainText('1 down')
       await expect(all).not.toContainText('quiet')
-      await expect(all).toContainText('1 not verified')
+      await expect(all).toContainText('1 not installed')
     })
 
     test('every number and word ends at one right edge', async ({ page }) => {

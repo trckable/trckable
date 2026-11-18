@@ -208,7 +208,7 @@ const PAGES: [string, Go, boolean][] = [
   ['Explore, today', briefing(HISTORY_DOMAIN, 'today'), false],
   ['Explore, 7 days (still learning)', briefing(HISTORY_DOMAIN, '7d'), false],
   ['Live', at(() => `${API}/${LABELS_DOMAIN}?view=live`, '.liveview'), false],
-  ['Setup, not verified', at(() => `${API}/${waiting}`, '.mk'), false],
+  ['Setup, not installed', at(() => `${API}/${waiting}`, '.mk'), false],
   ['Answers', at(() => `${API}/${HISTORY_DOMAIN}?x=answers`, '.mk'), false],
   ['Mentions', at(() => `${API}/${HISTORY_DOMAIN}/mentions`, '.mk'), false],
   ['Team', at(() => `${API}/${HISTORY_DOMAIN}?account=people`, '.modal.window, .window'), false],

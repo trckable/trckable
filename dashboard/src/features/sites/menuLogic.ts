@@ -31,7 +31,7 @@ export function teamTotal(numbers: Map<string, Today> | null, sites: Site[]): nu
   return totalOf(new Map([...numbers].filter(([id]) => ids.has(id)))).visitors
 }
 
-/** How many of these sites are down or not verified yet: All sites says it under its name, so a failing site shows there too. */
+/** How many of these sites are down or not installed yet: All sites says it under its name, so a failing site shows there too. */
 export function problemCounts(sites: Site[], now = Date.now()): { down: number; unverified: number } {
   const c = { down: 0, unverified: 0 }
   for (const s of sites) {

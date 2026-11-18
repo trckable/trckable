@@ -3,9 +3,9 @@ import { LayoutGrid } from 'lucide-react'
 import { fmtCompact } from '../../lib/format'
 import { copy as menu } from '../../features/sites/menuCopy'
 
-/** The sites that are down or not verified, said under the name, the worst first: a failing site shows here too, whatever the total says. */
+/** The sites that are down or not installed, said under the name, the worst first: a failing site shows here too, whatever the total says. */
 function Problems({ c }: { c: { down: number; unverified: number } }) {
-  const parts = [c.down > 0 && ['down', menu.downCount(c.down)], c.unverified > 0 && ['quiet', menu.unverifiedCount(c.unverified)]].filter(Boolean) as string[][]
+  const parts = [c.down > 0 && ['down', menu.downCount(c.down)], c.unverified > 0 && ['quiet', menu.notInstalledCount(c.unverified)]].filter(Boolean) as string[][]
   if (parts.length === 0) return null
   return (
     <div className="d state-line all-problems">
@@ -27,7 +27,7 @@ export function AllRow({ on, total, all, problems, onPick }: { on: boolean; tota
         <div className="nm">{all}</div>
         {problems && <Problems c={problems} />}
       </span>
-      {total !== null && (
+      {total !== null && total > 0 && (
         <span className="now" title={menu.todayAll}>
           <b>{fmtCompact(total)}</b>
         </span>
