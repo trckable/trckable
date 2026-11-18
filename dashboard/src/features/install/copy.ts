@@ -22,12 +22,6 @@ export const copy = defineCopy('install', {
   chipWaiting: 'Waiting for the first visit…',
   chipLive: 'Receiving visits',
 
-  // The sample of Live under the code.
-  sampleData: 'Sample data',
-  sampleNow: 'right now',
-  sampleSources: 'Sources',
-  sampleCountries: 'Countries',
-
   // Tabs.
   tabsLabel: 'How to install',
   more: 'More…',

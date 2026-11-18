@@ -1,0 +1,24 @@
+/* The globe behind the setup screen: it fills the window, under the page and under the install status card. The page's own
+   boxes (the code) keep their solid backgrounds, and the globe keeps its dots off the words (globeDraw.ts), so everything
+   stays readable. */
+.sb {
+  position: fixed;
+  inset: 0;
+  z-index: -1; /* behind the screen's words, inside its own stacking context */
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+.sb-host,
+.sb-host canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+@media (--xs-down) {
+  .sb {
+    opacity: 0.7;
+  }
+}
