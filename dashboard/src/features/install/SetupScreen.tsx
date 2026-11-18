@@ -3,9 +3,11 @@
 // holds a problem back for two minutes (or until "Check now"): a person who has only just copied the code has not pasted it yet.
 import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react'
 import type { Site, Visit } from '../../lib/api'
-import { Install } from './Install'
+import { Install, type Extras } from './Install'
 import { stageOf, type Stage } from './journey'
+import { SetupExtras } from './SetupExtras'
 import { SetupPanel } from './SetupPanel'
+import { useCookieless } from './useCookieless'
 import { useInstallCheck } from './useInstallCheck'
 
 /** How long a new site may wait before the page says what the check found. */
@@ -18,6 +20,9 @@ export function SetupScreen({ site, visits, title, sub, heading, onCopy }: Props
   const check = useInstallCheck(site.id, arrived, true)
   const [asked, setAsked] = useState(false)
   const [late, setLate] = useState(false)
+  const cookieless = useCookieless(site.id)
+  const [extras, setExtras] = useState<Extras | null>(null)
+  const more = extras && <SetupExtras extras={extras} cookieless={cookieless} />
   useEffect(() => {
     const t = setTimeout(() => setLate(true), PATIENCE_MS)
     return () => clearTimeout(t)
@@ -46,9 +51,10 @@ export function SetupScreen({ site, visits, title, sub, heading, onCopy }: Props
           </h1>
           <p className="muted">{sub}</p>
         </div>
-        <Install site={site} visits={visits} variant="setup" />
+        <Install site={site} visits={visits} variant="setup" cookieless={cookieless} onExtras={setExtras} />
+        {more && <div className="ist-extras-phone">{more}</div>}
       </div>
-      <SetupPanel site={site} check={check} stage={stage} onCheck={ask} />
+      <SetupPanel site={site} check={check} stage={stage} onCheck={ask} extras={more} />
     </div>
   )
 }

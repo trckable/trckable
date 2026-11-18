@@ -2,7 +2,7 @@
 // and the two actions. On a phone the same card is one bar pinned to the bottom. A step's mark keeps its size when it
 // ticks, so nothing moves. When the first visit lands the card ticks, the ghost hops and the heading says so for a moment.
 import { ArrowUpRight, ChevronDown, ChevronUp, RefreshCw, Sparkles } from 'lucide-react'
-import { useId, useState } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { ghostSvg } from '../../brand/logo'
 import type { Site } from '../../lib/api'
 import { journey as t } from './journeyCopy'
@@ -72,8 +72,9 @@ function Result({ run, site }: { run: ReturnType<typeof useCheckRun>; site: Site
   )
 }
 
-/** stage: what the page may say now (it holds a problem back while the code is still being pasted). */
-export function SetupPanel({ site, check, stage, onCheck }: { site: Site; check: InstallCheckHandle; stage: Stage; onCheck: () => void }) {
+/** stage: what the page may say now (it holds a problem back while the code is still being pasted). extras: the two
+    rows between the steps and the actions (Install with AI, Cookieless); a phone shows them in the page instead. */
+export function SetupPanel({ site, check, stage, onCheck, extras }: { site: Site; check: InstallCheckHandle; stage: Stage; onCheck: () => void; extras?: ReactNode }) {
   const run = useCheckRun({ ...check, start: onCheck })
   const p = t.panel
   const body = useId()
@@ -116,6 +117,7 @@ export function SetupPanel({ site, check, stage, onCheck }: { site: Site; check:
             <Why stage={stage} site={site} />
           </div>
         )}
+        {extras && <div className="ist-extras">{extras}</div>}
         <div className="ist-act">
           <a key={run.outcome === 'seen' ? run.presses : 0} className={run.outcome === 'seen' ? 'btn primary ist-open nudge' : 'btn primary ist-open'} href={`https://${site.domain}`} target="_blank" rel="noreferrer">
             <span>{t.openSite(site.domain)}</span>

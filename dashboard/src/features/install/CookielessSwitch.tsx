@@ -16,20 +16,23 @@ function hintOf(state: Cookieless, bundled: boolean): string {
   return bundled ? t.onBundled : t.onServer
 }
 
-export function CookielessSwitch({ state, bundled }: { state: Cookieless; bundled: boolean }) {
+/** tip: the explanation sits in the row's tooltip instead of a line under it (the install status card). */
+export function CookielessSwitch({ state, bundled, tip }: { state: Cookieless; bundled: boolean; tip?: boolean }) {
   const [asking, setAsking] = useState(false)
   const on = state.on === true
   const hint = hintOf(state, bundled)
   return (
     <div className="inst-cl">
-      <div className="inst-row">
+      <div className="inst-row" title={tip ? t.tip + (hint ? ' ' + hint : '') : undefined}>
         <Switch on={on} label={t.label} disabled={state.on === null || state.saving || state.locked} onChange={() => setAsking(true)} />
         <span className="inst-row-label">{t.label}</span>
         {state.saving && <span className="btn-spin" aria-label={t.saving} />}
       </div>
-      <p className="faint inst-cl-hint" aria-live="polite">
-        {hint}
-      </p>
+      {!tip && (
+        <p className="faint inst-cl-hint" aria-live="polite">
+          {hint}
+        </p>
+      )}
       {asking && (
         <Suspense fallback={null}>
           <CookielessDialog
