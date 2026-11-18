@@ -3514,6 +3514,8 @@ export default {
   'channels.flash.failed': 'Das Verbinden hat nicht geklappt. Versuche es erneut.',
   'channels.viewOnly': (who: string) => `Bitte ${who}, Konten zu verbinden.`,
   'blocks.explore': 'In Explore öffnen',
+  'blocks.now': 'Jetzt',
+  'blocks.today': 'Heute',
   'blocks.uptime': (pct: string) => `${pct} online`,
   'blocks.noIncidents': 'Keine Ausfälle in diesem Zeitraum.',
   'blocks.ongoing': 'Dauert an',

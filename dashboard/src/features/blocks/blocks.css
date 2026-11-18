@@ -52,11 +52,26 @@
 .blk .blk-rows em[data-tone='down'] {
   color: var(--down);
 }
+.blk {
+  position: relative;
+}
+/* The title is the link, stretched over the whole card: no second, underlined link in it. */
 .blk .blk-link {
-  align-self: flex-start;
-  color: var(--text-2);
-  font-size: 12px;
-  text-decoration: underline;
+  color: inherit;
+  text-decoration: none;
+}
+.blk .blk-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.blk:has(.blk-link):hover {
+  background: color-mix(in srgb, var(--accent) 8%, var(--raised-well));
+}
+.blk .blk-link:focus-visible::after {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 .blk .blk-chart.mk {
   min-height: 0;
