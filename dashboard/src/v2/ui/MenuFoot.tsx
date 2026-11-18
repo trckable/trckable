@@ -15,5 +15,5 @@ export function MenuFoot({ items, done }: { items: FootItem[]; done: () => void 
       {f.label}
     </button>
   )
-  return <div className="mfoot sfoot">{items.map((f) => (addSiteGuard ? <span key={f.key}>{addSiteGuard((off) => draw(f, off))}</span> : draw(f, false)))}</div>
+  return <div className="mfoot sfoot">{items.map((f) => (addSiteGuard ? <span key={f.key}>{addSiteGuard((off) => draw(f, off), done)}</span> : draw(f, false)))}</div>
 }
