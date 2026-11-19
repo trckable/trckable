@@ -16,7 +16,6 @@ import { midEllipsis } from '../../lib/midEllipsis'
 import { MarkDot } from '../../features/sites/MarkDot'
 import { copy as statusCopy } from '../../features/sitestatus/copy'
 import { quietSites, statusOf } from '../../features/sitestatus/status'
-import { footerMoreCopy } from '../../components/footerMoreCopy'
 
 const SiteList = lazyLoad(() => import('./SiteList').then((m) => ({ default: m.SiteList })))
 const warmUp = () => {
@@ -83,7 +82,6 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
   const done = useCallback(() => close(), [close])
   const down = p.sites.filter((s) => statusOf(s) === 'down')
   const quiet = quietSites(p.sites)
-  const whyLabel = down.length ? statusCopy.whatHappened(down.length) : footerMoreCopy.siteQuiet(quiet.length)
   const told = [...down, ...quiet]
   const [why, setWhy] = useState(false)
   const footer = <MenuFoot items={p.footer} done={done} />
@@ -98,10 +96,9 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
         </svg>
       </button>
       <div ref={menu} className={`mk-menu sites ${SHELL}${open ? ' on' : ''}`} id="siteMenu" role={open ? 'dialog' : undefined} aria-label={open ? copy.sites : undefined}>
-        {open && told.length > 0 && (
-          <button type="button" className="site-why" data-site-why="1" aria-expanded={why} onClick={() => setWhy((w) => !w)}>
-            <i aria-hidden="true" />
-            {why ? statusCopy.backToSites : whyLabel}
+        {open && why && told.length > 0 && (
+          <button type="button" className="site-why" onClick={() => setWhy(false)}>
+            {statusCopy.backToSites}
           </button>
         )}
         {open && why && told.length > 0 && (
@@ -119,6 +116,7 @@ export function SiteChip({ p }: { p: SiteMenuProps }) {
               find={p.find}
               all={p.all}
               close={done}
+              onWhy={down.length ? () => setWhy(true) : undefined}
             />
           </Suspense>
         )}
