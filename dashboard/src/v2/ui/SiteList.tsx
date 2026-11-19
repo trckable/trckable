@@ -37,6 +37,8 @@ interface SiteListProps {
   find: string
   all: string
   close: () => void
+  /** Opens what happened to the sites that are down ("1 down" under All sites). */
+  onWhy?: () => void
 }
 
 export function SiteList(p: SiteListProps) {
@@ -147,7 +149,7 @@ export function SiteList(p: SiteListProps) {
         </div>
       )}
       <div id="siteList" ref={list}>
-        {!found && <AllRow on={!current} total={teamTotal(numbers, sites)} problems={problemCounts(sites)} all={p.all} onPick={() => { p.close(); p.onPick('*') }} />}
+        {!found && <AllRow on={!current} total={teamTotal(numbers, sites)} problems={problemCounts(sites)} all={p.all} onPick={() => { p.close(); p.onPick('*') }} onWhy={p.onWhy} />}
         {found && <ul className="site-group">{found.map((s) => item(s, { kind: 'rest' }))}</ul>}
         {found?.length === 0 && <p className="mk-quiet sites-none">{menu.noMatch(q)}</p>}
         {!found &&

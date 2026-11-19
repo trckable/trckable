@@ -518,8 +518,8 @@
 .mk .xnext{display:flex;flex-wrap:wrap;gap:var(--mk-s2);margin-top:var(--mk-s4)}
 .mk .xleak{margin-left:var(--mk-s2)}
 .mk .mk-chip.is-down{border-color:color-mix(in srgb,var(--x-red) 45%,var(--mk-line));background:color-mix(in srgb,var(--x-red) 8%,var(--mk-card))}
-.mk .site-why{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;margin-bottom:var(--mk-s2);border:0;border-radius:10px;background:color-mix(in srgb,var(--x-red) 10%,transparent);color:inherit;font:inherit;font-size:13px;font-weight:500;text-align:left;cursor:pointer}
-.mk .site-why i{width:6px;height:6px;border-radius:50%;background:var(--x-red)}
+.mk .site-why{display:flex;align-items:center;width:100%;padding:8px 12px;margin-bottom:var(--mk-s2);border:0;border-radius:10px;background:none;color:var(--mk-muted);font:inherit;font-size:13px;font-weight:500;text-align:left;cursor:pointer}
+.mk .site-why:hover{color:inherit}
 
 .lsn-go { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
 .lsn-go:hover { text-decoration: underline; }
@@ -621,3 +621,8 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .mk .xtr-n{font-weight:650;font-variant-numeric:tabular-nums;text-align:end}
 .mk .xtr .mk-quiet{padding:var(--mk-s3) 6px}
 .mk .xtr .mk-more{margin-top:auto;border:0;background:none;text-align:start;padding:8px 6px}
+/* "1 down" under All sites opens what happened: its own button, laid exactly over the row's red words (hidden under it). */
+.mk .all-wrap{position:relative}
+.mk .all-wrap .all-problems .down{visibility:hidden}
+.mk .all-why{position:absolute;left:50px;bottom:5px;padding:0;border:0;background:none;color:var(--mk-red);font:inherit;font-size:12px;line-height:14px;font-weight:600;cursor:pointer}
+.mk .all-why:hover{text-decoration:underline}
