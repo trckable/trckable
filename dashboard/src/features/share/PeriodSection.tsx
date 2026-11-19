@@ -40,11 +40,10 @@ export function PeriodSection({ look, tz, set }: { look: Look; tz: string; set: 
       )}
       {look.period !== 'all' && (
         <div className="sd-row">
-          <span>{copy.compare}</span>
+          <span title={copy.compareHint}>{copy.compare}</span>
           <Switch on={look.compare} label={copy.compare} onChange={() => set({ compare: !look.compare })} />
         </div>
       )}
-      {look.period !== 'all' && <p className="sd-hint faint">{copy.compareHint}</p>}
     </>
   )
 }
