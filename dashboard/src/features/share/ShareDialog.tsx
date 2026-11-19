@@ -9,8 +9,7 @@ import type { Site } from '../../lib/api'
 import { can } from '../../lib/permissions'
 import { Modal } from '../../kit/Modal'
 import { toast } from '../../components/Toast'
-import { fmtRange, todayIn } from '../../lib/dates'
-import { ACCENTS, DEFAULT_STATS, METRICS, cardUrl, comparing, fileName, formatOf, hasNumbers, hasOf, missing, PICTURES, picturesOf, statsWith, type CardWords, type Look, type Mode, type Period, type Topic } from './card'
+import { ACCENTS, DEFAULT_STATS, METRICS, cardUrl, fileName, formatOf, hasNumbers, hasOf, missing, PICTURES, picturesOf, statsWith, type CardWords, type Look, type Mode, type Period, type Topic } from './card'
 import { Actions, type Act } from './Actions'
 import { LinkPicker } from './LinkPicker'
 import { copyForSlack, linkedInAddress, postLink, xAddress } from './post'
@@ -130,10 +129,8 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
   }
   const has = hasOf(words)
   const px = formatOf(look.shape)
-  const today = todayIn(site.timezone)
   const metrics = METRICS.filter((m) => m !== 'revenue' || words?.revenue)
 
-  const periodSummary = [look.period === 'custom' && look.range ? fmtRange(look.range, today) : copy.periods[look.period], comparing(look) ? copy.compare : ''].filter(Boolean).join(' · ')
   const numbersSummary = copy.metrics[look.metric]
 
   return (
@@ -160,19 +157,25 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
           <div className="sd-panel">
             <div className="sd-sections">
               <ModeSwitch mode={mode} onChange={setMode} />
-              <CardSection site={site.id} look={shown} has={has} onChange={(t) => set({ template: t })} />
-              <Section id="period" title={copy.period} summary={periodSummary} open={open === 'period'} onToggle={() => toggle('period')}>
+              {/* The period first and always open: it is what a person changes most. */}
+              <div className="sd-period" aria-label={copy.period} role="group">
+                <span className="sd-label">{copy.period}</span>
                 <PeriodSection look={look} tz={site.timezone} set={set} />
-              </Section>
+              </div>
               {hasNumbers(look.template) && (
                 <Section id="numbers" title={copy.numbers} summary={numbersSummary} open={open === 'numbers'} onToggle={() => toggle('numbers')}>
                   <NumbersSection look={look} metrics={metrics} revenue={words?.revenue ?? false} set={set} />
                 </Section>
               )}
-              {mode === 'picture' && <Section id="look" title={copy.lookTitle} summary={copy[look.theme]} open={open === 'look'} onToggle={() => toggle('look')}>
-                <LookSection site={site} sites={sites.length ? sites : [site]} onSite={setSiteId} look={look} set={set} brand={brand} />
-              </Section>}
+              <CardSection site={site.id} look={shown} has={has} onChange={(t) => set({ template: t })} />
             </div>
+            {mode === 'picture' && (
+              <div className="sd-look-row">
+                <Section id="look" title={copy.lookTitle} summary={copy[look.theme]} open={open === 'look'} onToggle={() => toggle('look')}>
+                  <LookSection site={site} sites={sites.length ? sites : [site]} onSite={setSiteId} look={look} set={set} brand={brand} />
+                </Section>
+              </div>
+            )}
             {picking && <LinkPicker shares={links} onPick={(l) => void copyLink(l).catch(fail)} onClose={() => setPicking(false)} />}
             <Actions post={mode === 'text'} link={can('share.manage')} size={`${px.w}×${px.h}`} busy={busy} done={done} onAct={(a) => void go(a)} />
           </div>

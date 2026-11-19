@@ -36,7 +36,7 @@
 }
 .sd-panel {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto; /* the sections scroll, the actions stay in view */
+  grid-template-rows: minmax(0, 1fr) auto auto; /* the sections scroll; Look and the actions stay in view */
   gap: 8px;
   min-width: 0;
   min-height: 0;
@@ -549,4 +549,26 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* The period, always open at the top of the panel. */
+.sd-period {
+  display: grid;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+.sd-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+/* Look: one folded row just above the actions; open, it scrolls inside itself. */
+.sd-look-row .sd-sec-body {
+  max-height: 40vh;
+  overflow-y: auto;
+}
+.sd-look-row .sd-sec {
+  width: 100%;
 }
