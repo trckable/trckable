@@ -66,8 +66,11 @@
   inset: 0;
   border-radius: inherit;
 }
-.blk:has(.blk-link):hover {
-  background: color-mix(in srgb, var(--accent) 8%, var(--raised-well));
+/* A card that opens in Explore: its title underlines under a mouse; the card keeps its colour. */
+@media (hover: hover) {
+  .blk:hover .blk-link {
+    text-decoration: underline;
+  }
 }
 .blk .blk-link:focus-visible::after {
   outline: 2px solid var(--accent);
