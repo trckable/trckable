@@ -1,1 +1,0 @@
-- A card's title in an answer opens it in Explore, and a chart's axis says Today or Now instead of a raw timestamp.

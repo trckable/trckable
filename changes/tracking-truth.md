@@ -1,1 +1,0 @@
-A site found down now also says whether tracking itself works, the Live down box and the bell always agree on which sites are down, visits from a hostname a site refuses raise one bell notice a week, and what your own settings left out and what was too old to count show beside the bots.

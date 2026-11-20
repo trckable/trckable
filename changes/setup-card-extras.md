@@ -1,1 +1,0 @@
-The setup screen is quieter: Install with AI and the Cookieless switch moved off the page under the code and onto the floating Install status card (on a phone they sit under the code as two compact rows).

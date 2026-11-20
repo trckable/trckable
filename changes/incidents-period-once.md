@@ -1,1 +1,0 @@
-- Dashboard: a page that shows the same incidents period in two places reads it from the server once.
