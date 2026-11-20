@@ -60,8 +60,9 @@ func (n *cardNumbers) listsOf(res *query.Result) {
 	}
 }
 
-// vouchMoney puts the provider's badge on a picture that shows revenue (the revenue metric, a revenue number card),
-// when that provider vouches for all of it.
+// vouchMoney puts the badge on a picture: the provider's, on one that shows revenue (the revenue metric, a revenue
+// number card) when that provider vouches for all of it; otherwise Search Console's, when its connection works.
+// The digests carry theirs from the pictures (vouchDigests).
 func (n *cardNumbers) vouchMoney(spec *cards.Spec, t string) {
 	shows := false
 	switch t {
@@ -70,9 +71,22 @@ func (n *cardNumbers) vouchMoney(spec *cards.Spec, t string) {
 	case "grid":
 		shows = n.moneyGrid
 	}
-	if shows && n.moneySource != "" {
-		spec.Badge, spec.Source = n.l().searchBadge, n.moneySource
+	if _, ok := n.digests[t]; ok {
+		return
 	}
+	switch {
+	case shows && n.moneySource != "":
+		spec.Badge, spec.Source = n.l().searchBadge, n.moneySource
+	case n.gscSource != "" && !n.empty(spec, t):
+		spec.Badge, spec.Source = n.l().searchBadge, n.gscSource
+	}
+}
+
+// empty says whether the picture has nothing behind it (the one line "Needs a visit", or no milestone): Search
+// Console has no numbers to vouch for there.
+func (n *cardNumbers) empty(spec *cards.Spec, t string) bool {
+	l := n.l()
+	return (spec.Big == l.noVisits && len(spec.Rows) == 0) || spec.Big == l.noMilestone || (t == "grid" && !n.HasData)
 }
 
 // pictureOf sets what the picture says on the spec: a list or hero from its items, and for every picture

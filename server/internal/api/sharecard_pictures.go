@@ -81,6 +81,17 @@ func (a *API) pictures(c cardReading, n *cardNumbers, hours bool, kind string) {
 	if want("milestone") {
 		a.milestonePicture(c, n)
 	}
+	n.vouchDigests()
+}
+
+// vouchDigests puts Search Console's badge on every digest that has numbers and no provider's badge already.
+func (n *cardNumbers) vouchDigests() {
+	for k, d := range n.digests {
+		if d.source == "" && d.filled() && n.gscSource != "" {
+			d.badge, d.source = n.l().searchBadge, n.gscSource
+			n.digests[k] = d
+		}
+	}
 }
 
 func (a *API) changedPicture(c cardReading, n *cardNumbers, hours bool) {
@@ -169,7 +180,6 @@ func (a *API) searchPicture(c cardReading, n *cardNumbers) {
 		return
 	}
 	n.HasSearch = true
-	defer func() { a.vouch(c, &d, "gsc", l.searchBadge) }()
 	from := startOfDay(c.params.From.In(c.loc), c.loc)
 	last := startOfDay(c.params.To.In(c.loc), c.loc).AddDate(0, 0, -1) // the period's end is exclusive; Google's is not
 	body, _, err := a.searchBody(c.r.Context(), c.site, conn, c.loc, gsc.Query{From: from, To: last, Dimension: "query", Limit: 100}, from, last)

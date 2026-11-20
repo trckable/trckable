@@ -1,0 +1,1 @@
+Every share picture of a site whose Google Search Console connection works carries the Verified badge with the Search Console mark: Overview, Big number, In numbers, What changed and the digests. A picture of revenue that a payment provider vouches for keeps that provider's badge.
