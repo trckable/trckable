@@ -28,6 +28,17 @@ export function Place({ who }: { who: Identity }) {
 
 const PHONE = new Set(['Mobile', 'Tablet'])
 
+/** The device by its own name when the system tells it: iPhone, iPad, Mac, Android phone; else the device kind. */
+export function deviceName(who: Pick<Identity, 'device' | 'os'>): string {
+  const os = who.os.toLowerCase()
+  const tablet = who.device === 'Tablet'
+  if (os === 'ios' || os === 'ipados') return tablet ? copy.ipad : copy.iphone
+  if (os.startsWith('mac')) return copy.mac
+  if (os === 'android') return tablet ? copy.androidTablet : copy.androidPhone
+  if (os.startsWith('windows') && who.device === 'Desktop') return copy.windowsPc
+  return who.device
+}
+
 /** The words of the device line. A phone or tablet whose system is known says how it
  *  opened the site in one name ("iOS browser", "Android app"), or the social app after
  *  its system. A desktop keeps its browser, and says "Desktop app" for one that is an app. */
@@ -50,28 +61,23 @@ export function Tech({ who }: { who: Identity }) {
 
 export function IdentityHead({ who, titleId, zone }: { who: Identity; titleId: string; zone?: string }) {
   const how = howOf(who)
-  const system = who.os || who.device
-  const phone = PHONE.has(who.device) && !!who.os
   return (
     <div className="jr-who" style={{ ['--v-hue' as string]: String(who.hue) }}>
       <Avatar id={who.visitor} size={52} live={who.live} />
       <div className="jr-who-text">
         <h2 id={titleId}>{nameOf(who.visitor)}</h2>
-        {(system || how.text) && (
-          <p className="jr-how">
-            {system && !phone && (
-              <span className="jr-how-part">
-                {who.os ? <OsMark os={who.os} /> : <DeviceIcon device={who.device} size={15} />}
-                <span>{system}</span>
-              </span>
-            )}
+        <p className="jr-how">
+          <span className="jr-how-part">
+            {who.os ? <OsMark os={who.os} /> : <DeviceIcon device={who.device} size={15} />}
+            <span>{deviceName(who)}</span>
+          </span>
+          {how.text && (
             <span className="jr-how-part">
-              {phone && <OsMark os={who.os} />}
               <HowMark x={who} />
-              <b>{how.text}</b>
+              <b>{who.app === 'app' ? copy.inApp : how.detail || how.text}</b>
             </span>
-          </p>
-        )}
+          )}
+        </p>
         <p className="jr-who-line faint">
           {who.country && (
             <span title={countryName(who.country)}>
