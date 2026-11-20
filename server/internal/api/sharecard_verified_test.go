@@ -119,8 +119,9 @@ func TestSearchBadgeOnEveryPicture(t *testing.T) {
 		m["ai"] = digest{title: "ai"} // nothing in it, so nothing to vouch for
 		return m
 	}
-	for _, tpl := range []string{"overview", "numbers", "grid", "leaderboard", "spotlight", "milestone", "changed", "search", "goals", "sales"} {
-		n := cardNumbers{gscSource: cards.SourceSearch, digests: digests()}
+	for _, tpl := range []string{"overview", "numbers", "grid", "leaderboard", "toppage", "milestone", "changed", "search", "goals", "sales"} {
+		n := cardNumbers{gscSource: cards.SourceSearch, digests: digests(), HasData: true, milestone: &milestoneLine{spec: cards.Spec{Big: "1,000", Label: "visitors"}}}
+		n.lists = map[string][]cards.Item{"leaderboard": {{Name: "/"}}}
 		var s cards.Spec
 		n.vouchDigests()
 		n.pictureOf(&s, tpl)
@@ -135,6 +136,15 @@ func TestSearchBadgeOnEveryPicture(t *testing.T) {
 		off.vouchMoney(&o, tpl)
 		if o.Badge != "" || o.Source != "" {
 			t.Errorf("%s without Search Console: badge %q source %q", tpl, o.Badge, o.Source)
+		}
+	}
+	for _, tpl := range []string{"overview", "numbers", "grid", "leaderboard", "toppage", "milestone"} {
+		blank := cardNumbers{gscSource: cards.SourceSearch, digests: digests()}
+		var e cards.Spec
+		blank.pictureOf(&e, tpl)
+		blank.vouchMoney(&e, tpl)
+		if e.Badge != "" || e.Source != "" {
+			t.Errorf("%s with no data: badge %q source %q", tpl, e.Badge, e.Source)
 		}
 	}
 	var ai cards.Spec
