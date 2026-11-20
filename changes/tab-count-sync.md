@@ -1,0 +1,1 @@
+- The browser tab's online count is the same reading as the Live pill and Live, so the tab no longer says 4 while the page says 3.

@@ -1,0 +1,1 @@
+- Live's "On the site right now" list no longer shows a Replay label on each row; a click on the row still opens the visitor.

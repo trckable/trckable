@@ -3090,7 +3090,6 @@ export default {
   'v2.live.nobody': 'Gerade niemand auf der Website. Ruhe ist zu dieser Stunde normal.',
   'v2.live.still': 'Noch auf der Website',
   'v2.live.replay': 'Rückblick',
-  'v2.live.replayTitle': 'Rückblick ansehen',
   'v2.live.aboveDay': (weekday: string) => `über einem üblichen ${weekday}`,
   'v2.live.belowDay': (weekday: string) => `unter einem üblichen ${weekday}`,
   'v2.live.aboutUsual': 'Wie üblich',

@@ -542,13 +542,6 @@ html:has(.mk),body:has(.mk){overflow-x:clip}
 .mk .lrev .xb{margin-top:var(--mk-s2)}
 .mk .lv{width:100%;text-align:left;border:0;border-top:1px solid var(--mk-line);background:none}
 .mk .lv:hover{background:var(--mk-hov)}
-.mk .lv .mk-rp{color:var(--mk-faint);font-size:12px;flex:none;width:64px;text-align:right}
-.mk .lv:hover .mk-rp{color:var(--mk-lime)}
-.mk .lv .mk-rp em{font-style:normal}
-@container (--pane-max-600){
-.mk .lv .mk-rp em{display:none}
-.mk .lv .mk-rp{width:24px}
-}
 .mk .irow{display:flex;align-items:center;gap:var(--mk-s3);padding:var(--mk-s3) 0;border-top:1px solid var(--mk-line);min-height:56px}
 .mk .irow:first-child{border-top:0}
 .mk .irow input{flex:1;min-width:0;height:36px;border-radius:10px;color:var(--mk-text);padding:0 12px;font:inherit}

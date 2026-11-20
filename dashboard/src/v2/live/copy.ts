@@ -30,7 +30,6 @@ export const copy = defineCopy('v2.live', {
   nobody: 'Nobody on the site right now. Quiet is normal at this hour.',
   still: 'Still on the site',
   replay: 'Replay',
-  replayTitle: 'Watch replay',
   aboveDay: (weekday: string) => `above a usual ${weekday}`,
   belowDay: (weekday: string) => `below a usual ${weekday}`,
   aboutUsual: 'About usual',
