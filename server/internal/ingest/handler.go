@@ -513,7 +513,9 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 	e.BrowserVersion = ua.Version
 	// Only the flag is believed from the page, never a name: a phone or tablet
 	// the user agent did not place in an app, whose page says it is in one.
-	if e.App = ua.App; e.App == "" && (p.App == float64(1) || p.App == true) && (ua.Device == "Mobile" || ua.Device == "Tablet") {
+	// iOS's other browsers are built on the app web view and carry its traces:
+	// their own name in the user agent outranks the flag.
+	if e.App = ua.App; e.App == "" && (p.App == float64(1) || p.App == true) && (ua.Device == "Mobile" || ua.Device == "Tablet") && !iosBrowserRE.MatchString(r.UserAgent()) {
 		e.App = "app"
 	}
 

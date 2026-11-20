@@ -11,6 +11,6 @@ trckable works it out from the user agent, so the social apps and most web views
 <script defer data-site="tkb_a1b2c3d4" data-app src="https://stats.example.com/js/tkb_a1b2c3d4.js"></script>
 ```
 
-Any page that carries `data-app` is counted as opened in an app, but only on a phone or tablet. The name of your app is not sent or kept.
+Any page that carries `data-app` is counted as opened in an app, but only on a phone or tablet. The name of your app is not sent or kept. Put it only on the pages your app serves inside its web view: on a page people also open in their browser, every phone visit would count as an app visit.
 
 Filter by it with the `app` filter: `browser`, `app`, or a social app's name in lowercase (`instagram`). The CSV export lists the same lines as "device and app".

@@ -336,7 +336,7 @@ export function start(c: Config): Tracker {
       p.id = rid()
       if (c.dev) p.dev = 1
       // An app's web view: its bridge is on the page (checked per send, a bridge can arrive late).
-      if (c.app || w.ReactNativeWebView || w.Capacitor?.isNativePlatform?.() || w.cordova || w.flutter_inappwebview || w.webkit?.messageHandlers) p.ap = 1
+      if (c.app || w.ReactNativeWebView || w.Capacitor?.isNativePlatform?.() || w.cordova || w.flutter_inappwebview) p.ap = 1
       if ((__CONSENT__ || __BANNER__) && held) return held.push(p)
     }
     if (cookieless > 1) return // declined: nothing is sent
