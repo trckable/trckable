@@ -21,7 +21,10 @@ func domainSite(t *testing.T) (*Store, context.Context, string) {
 
 func TestChangeDomainKeepsEverythingButTheAddress(t *testing.T) {
 	st, ctx, id := domainSite(t)
-	now := time.Date(2026, 10, 21, 10, 0, 0, 0, time.UTC)
+	// Today, not a fixed day: ingest keeps the former address by the real clock,
+	// so a fixed day broke the test once its 30 days had run out (20 Nov 2026).
+	now := time.Now().UTC().Truncate(time.Second)
+	day := now.Format("2006-01-02")
 	before, _ := st.SiteInfo(ctx, id)
 	if err := st.SetCheck(ctx, id, SiteCheck{At: now.Unix(), Found: "site"}); err != nil {
 		t.Fatal(err)
@@ -48,8 +51,8 @@ func TestChangeDomainKeepsEverythingButTheAddress(t *testing.T) {
 	if c, _ := st.CheckOf(ctx, id); c.At != 0 {
 		t.Fatalf("the old address's look must not stand for the new one: %+v", c)
 	}
-	notes, _ := st.Annotations(ctx, id, "2026-10-01", "2026-10-31")
-	if len(notes) != 1 || notes[0].Text != "Domain changed to new.com" || notes[0].Day != "2026-10-21" {
+	notes, _ := st.Annotations(ctx, id, day, day)
+	if len(notes) != 1 || notes[0].Text != "Domain changed to new.com" || notes[0].Day != day {
 		t.Fatalf("notes: %+v", notes)
 	}
 	// Ingest knows the old address until the grace ends.
