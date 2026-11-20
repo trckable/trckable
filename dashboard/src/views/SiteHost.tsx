@@ -144,8 +144,11 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
   const narrow = useNarrow()
   const money = mods === null || shows(mods, 'cards', 'revenue') ? cur?.money : undefined
   const fmtM = (minor: number) => (money ? fmtMoney(minor, money.currency, money.exponent) : '')
+  // The people online now, one reading for the Live pill, the browser tab's title and Live itself (the tab once read
+  // the bare stream and said 4 beside the pill's 3).
+  const online = onlineNow(stream, data?.online, data?.online) ?? null
   // The tab's count and the red dot while the site does not answer.
-  useLiveCount(onlineNow(stream, data?.online, data?.online))
+  useLiveCount(online)
   useSiteDown(!!site.down_since)
   return (
     <>
@@ -187,7 +190,7 @@ export function SiteHost({ site, sites, identity }: { site: Site; sites: Site[];
       )}
       {!shared && (stream.online !== null || stream.sales.length > 0) && (
         <Suspense fallback={null}>
-          <Signals key={site.id} site={site} online={stream.online} visits={stream.visits} sales={stream.sales} scope={site.id + range.from + range.to + filtersKey} sources={live && cur?.revenue_dims ? (cur.revenue_dims.channel ?? []).map((r) => r.value) : undefined} signup={cur?.signup?.goal} />
+          <Signals key={site.id} site={site} online={online} visits={stream.visits} sales={stream.sales} scope={site.id + range.from + range.to + filtersKey} sources={live && cur?.revenue_dims ? (cur.revenue_dims.channel ?? []).map((r) => r.value) : undefined} signup={cur?.signup?.goal} />
         </Suspense>
       )}
       {!shared && location.search.includes('import=ga') && (
