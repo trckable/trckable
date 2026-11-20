@@ -2,6 +2,8 @@
 // Every row shows; the list scrolls inside its card.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Row } from '../../features/live/model'
+import { SourceMark } from '../../components/visitor/SourceMark'
+import { brandOf } from '../../lib/brandIcons'
 import { copy as off } from '../../features/cookieless/copy'
 import { why } from '../../features/cookieless/why'
 import { useLeaving } from '../../features/live/useLeaving'
@@ -69,7 +71,8 @@ export function FeedList({ rows, up, signup, clock, empty, onVisitor, cookieless
             )}
             <span className="pg mono" title={page.title}>{page.text}</span>
             <span className="src" style={hot ? { color: 'var(--mk-lime)' } : undefined}>
-              {src}
+              <SourceMark channel={r.channel || 'Direct'} referrer={r.referrer || (brandOf(src) ? src : undefined)} size={16} />
+              <span className="srcn">{src}</span>
             </span>
             <span className="cc" title={r.country ? countryName(r.country) : undefined}>
               {r.country?.length === 2 ? (
