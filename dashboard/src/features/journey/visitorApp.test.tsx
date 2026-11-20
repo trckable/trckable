@@ -8,9 +8,13 @@ import type { JourneyResult, JourneyVisit } from '../../lib/api'
 
 describe('techParts', () => {
   it('drops "Mobile" when the system is known and ends with how it opened', () => {
-    expect(techParts({ device: 'Mobile', browser: 'Safari', os: 'iOS', app: '' })).toEqual(['iOS', 'Safari'])
-    expect(techParts({ device: 'Mobile', browser: 'Safari', os: 'iOS', app: 'app' })).toEqual(['iOS', 'In an app'])
+    expect(techParts({ device: 'Mobile', browser: 'Safari', os: 'iOS', app: '' })).toEqual(['iOS browser'])
+    expect(techParts({ device: 'Mobile', browser: 'Safari', os: 'iOS', app: 'app' })).toEqual(['iOS app'])
+    expect(techParts({ device: 'Tablet', browser: 'Chrome', os: 'Android', app: 'app' })).toEqual(['Android app'])
     expect(techParts({ device: 'Mobile', browser: 'Safari', os: 'iOS', app: 'instagram' })).toEqual(['iOS', 'Instagram'])
+  })
+  it('says "Desktop app" for a desktop that is an app', () => {
+    expect(techParts({ device: 'Desktop', browser: 'Chrome', os: 'Windows', app: 'app' })).toEqual(['Desktop app', 'Windows'])
   })
   it('keeps the desktop line as it was, with its browser', () => {
     expect(techParts({ device: 'Desktop', browser: 'Chrome', os: 'macOS', app: '' })).toEqual(['Desktop', 'Chrome', 'macOS'])
@@ -41,8 +45,8 @@ describe('the header draws how they came', () => {
   it('iOS in Safari: the Apple mark and the Safari logo, words kept', () => {
     const html = head(visitOf())
     expect(html).toContain('title="iOS"')
-    expect(html).toContain('title="Safari"')
-    expect(html).toContain('<b>Safari</b>')
+    expect(html).toContain('title="iOS browser · Safari"')
+    expect(html).toContain('<b>iOS browser</b>')
   })
   it('iOS in the Instagram app: the Apple mark and the Instagram brand, "Instagram app"', () => {
     const html = head(visitOf({ app: 'instagram' }))
@@ -55,8 +59,9 @@ describe('the header draws how they came', () => {
     expect(html).toContain('data-mark="android"')
     expect(html).toContain('data-mark="chrome"')
   })
-  it('an app without a name gets "In an app"', () => {
-    expect(head(visitOf({ app: 'app' }))).toContain('<b>In an app</b>')
+  it('an app without a name gets its system: "iOS app", "Android app"', () => {
+    expect(head(visitOf({ app: 'app' }))).toContain('<b>iOS app</b>')
+    expect(head(visitOf({ app: 'app', os: 'Android', browser: 'Chrome' }))).toContain('<b>Android app</b>')
   })
   it('a desktop: its system and its browser', () => {
     const html = head(visitOf({ device: 'Desktop', os: 'Windows', browser: 'Edge' }))

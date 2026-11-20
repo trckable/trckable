@@ -197,15 +197,18 @@ var sessionDims = map[string]string{
 	"screen":          screenBucket,
 }
 
-// appKey is how a phone or tablet visit opened the site: "browser" for the
-// phone's own, "app" for an app's web view, or the social app's key. A desktop
-// has none, so it never lands in a list of apps. Rows from before the column
-// existed read as "browser".
-const appKey = `CASE WHEN device IN ('Mobile', 'Tablet') THEN coalesce(nullif(app, ''), 'browser') END`
+// appKey is how a visit opened the site: "browser" for the phone's own, "app"
+// for an app's web view, or the social app's key. A desktop has none unless it
+// is an app (Tauri, Electron), so it never lands in a list of apps otherwise.
+// Rows from before the column existed read as "browser".
+const appKey = `CASE WHEN device IN ('Mobile', 'Tablet') OR app = 'app' THEN coalesce(nullif(app, ''), 'browser') END`
 
-// deviceApp splits Mobile and Tablet by appKey ("Mobile|instagram"), the
-// sub-lines under those two device rows.
-const deviceApp = `CASE WHEN device IN ('Mobile', 'Tablet') THEN device || '|' || coalesce(nullif(app, ''), 'browser') END`
+// deviceApp is how people open the site, as the six groups the dashboard names:
+// "Desktop" and "Desktop|app", a phone's or tablet's system with "browser" or
+// "app" ("iOS|app", "Android|browser"), or a social app's key ("instagram").
+const deviceApp = `CASE WHEN app IS NOT NULL AND app NOT IN ('', 'app') THEN app
+		WHEN device = 'Desktop' THEN CASE WHEN app = 'app' THEN 'Desktop|app' ELSE 'Desktop' END
+		WHEN device IN ('Mobile', 'Tablet') THEN coalesce(nullif(os, ''), device) || '|' || CASE WHEN app = 'app' THEN 'app' ELSE 'browser' END END`
 
 // screenBucket groups the width of the window a visit began in. Exact widths
 // would be a list of a thousand one-visit rows; these five are the ones a
@@ -218,12 +221,13 @@ const screenBucket = `CASE WHEN screen IS NULL THEN NULL
 		ELSE '>1920' END`
 
 // DefaultDims are computed for every report (Core + Full).
-var DefaultDims = []string{"channel", "referrer", "campaign", "entry_page", "country", "device", "browser", "os"}
+// device_app is among them: Overview says how many people used the app from it.
+var DefaultDims = []string{"channel", "referrer", "campaign", "entry_page", "country", "device", "browser", "os", "device_app"}
 
 // DeepDims are the ones only Full mode shows, and the ones its filter menu
 // offers. They ride along in the same GROUPING SETS scan, so asking for them
 // costs one wider scan rather than six more queries — but Core does not ask.
-var DeepDims = []string{"exit_page", "region", "city", "source", "medium", "language", "timezone", "network", "browser_version", "screen", "device_app"}
+var DeepDims = []string{"exit_page", "region", "city", "source", "medium", "language", "timezone", "network", "browser_version", "screen"}
 
 // dimsFor is the breakdowns one report computes.
 func dimsFor(deep bool) []string {

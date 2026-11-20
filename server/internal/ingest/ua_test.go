@@ -51,7 +51,8 @@ func TestPageSaysItIsInAnApp(t *testing.T) {
 		{`{"s":"tkb_test","k":"pv","u":"https://site.com/","ap":true}`, phone, "app"},
 		{`{"s":"tkb_test","k":"pv","u":"https://site.com/","ap":"instagram"}`, phone, ""}, // a name from the page is never believed
 		{`{"s":"tkb_test","k":"pv","u":"https://site.com/"}`, phone, ""},
-		{`{"s":"tkb_test","k":"pv","u":"https://site.com/","ap":1}`, chromeUA, ""}, // desktop
+		{`{"s":"tkb_test","k":"pv","u":"https://site.com/","ap":1}`, chromeUA, "app"}, // a desktop app (Tauri, Electron)
+		{`{"s":"tkb_test","k":"pv","u":"https://site.com/"}`, chromeUA, ""},
 		// iOS's other browsers carry the web view's traces: their name wins over the flag.
 		{`{"s":"tkb_test","k":"pv","u":"https://site.com/","ap":1}`, "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/126.0.6478.54 Mobile/15E148 Safari/604.1", ""},
 		{`{"s":"tkb_test","k":"pv","u":"https://site.com/","ap":1}`, "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/127.0 Mobile/15E148 Safari/605.1.15", ""},

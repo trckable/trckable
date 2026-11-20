@@ -22,6 +22,8 @@ export interface Options {
   hash?: boolean
   /** Allow tracking on localhost and in iframes (development). */
   dev?: boolean
+  /** Your site runs inside your app's web view (Capacitor, Cordova, Tauri…): every visit counts as an app visit. */
+  app?: boolean
   /** Cookie domain, e.g. "example.com" to share visitors across subdomains. */
   domain?: string
   /** Where your trckable server lives, e.g. "https://stats.example.com". */
@@ -59,6 +61,11 @@ export function track(name: string, props?: Props): void {
 /** Records a pageview manually (automatic tracking already covers SPA routes). */
 export function pageview(): void {
   call('pageview')
+}
+
+/** Says the rest of this visit is in your app, for a web view that carries no sign of it. */
+export function inApp(): void {
+  call('inApp')
 }
 
 /** Switches between cookieless (false) and cookie mode (true) after consent. */

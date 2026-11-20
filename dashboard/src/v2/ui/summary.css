@@ -95,6 +95,24 @@
 .mk .sum-n.dn {
   color: var(--mk-red);
 }
+.mk .sum-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  margin-top: 6px;
+  padding: 2px 8px 2px 6px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--mk-band, transparent);
+  text-align: left;
+  color: var(--mk-muted);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.mk .sum-chip:hover, .mk .sum-chip.on { color: var(--mk-text); }
 .mk .sum-d {
   font-size: 12px;
   line-height: 1.4;

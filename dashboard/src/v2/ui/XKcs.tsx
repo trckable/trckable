@@ -6,7 +6,13 @@ import { Spark } from './KpiCard'
 import { SummaryCards } from './SummaryCards'
 import type { Kc, Tone, Xkc } from '../explore/types'
 
-export function XKcs({ items }: { items: Kc[] }) {
+/** `onChip` sets the filter a card's chip stands for; a card's chip is left out where nothing can. `chipOn` is the value of the app filter now on. */
+function chipOf(chip: Kc['chip'], onChip?: (dim: string, value: string) => void, chipOn?: string | null) {
+  if (!chip || !onChip) return undefined
+  return { text: chip.text, on: chipOn === chip.value, onClick: () => onChip(chip.dim, chip.value) }
+}
+
+export function XKcs({ items, onChip, chipOn }: { items: Kc[]; onChip?: (dim: string, value: string) => void; chipOn?: string | null }) {
   return (
     <SummaryCards
       items={items.map((k) => ({
@@ -26,6 +32,7 @@ export function XKcs({ items }: { items: Kc[] }) {
             <Spark vals={k.vals} h={24} lo={k.lo} hi={k.hi} />
           ),
         sub: k.share !== undefined ? `${fmtPct(k.share)} ${copy.ofPeople}` : undefined,
+        chip: chipOf(k.chip, onChip, chipOn),
       }))}
     />
   )

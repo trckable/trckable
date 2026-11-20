@@ -74,6 +74,7 @@ type NowVisit struct {
 	City    string `json:"city,omitempty"`
 	Device  string `json:"device,omitempty"`
 	Browser string `json:"browser,omitempty"`
+	OS      string `json:"os,omitempty"`
 	App     string `json:"app,omitempty"`
 	Visitor string `json:"visitor,omitempty"` // the pseudonymous id the live stream sends, so a row opens the same journey
 }
@@ -175,7 +176,7 @@ func (q Q) onSite(ctx context.Context, site string, now time.Time) ([]NowVisit, 
 			SELECT visitor_id, ts, kind, coalesce(path, '') AS path, coalesce(goal, '') AS goal,
 			       coalesce(channel, '') AS channel, coalesce(referrer_host, '') AS ref,
 			       coalesce(country, '') AS country, coalesce(city, '') AS city,
-			       coalesce(device, '') AS device, coalesce(browser, '') AS browser, coalesce(app, '') AS app,
+			       coalesce(device, '') AS device, coalesce(browser, '') AS browser, coalesce(os, '') AS os, coalesce(app, '') AS app,
 			       row_number() OVER (PARTITION BY visitor_id ORDER BY ts DESC, seq DESC) AS rn
 			FROM events
 			WHERE site_id = ? AND kind IN (1, 2) AND ts >= ? AND ts <= ?
@@ -183,7 +184,7 @@ func (q Q) onSite(ctx context.Context, site string, now time.Time) ([]NowVisit, 
 		)
 		SELECT act.visitor_id, coalesce(epoch_ms(pv.ts), epoch_ms(act.last)), epoch_ms(act.last), coalesce(pv.kind, 0),
 		       coalesce(pv.path, ''), coalesce(pv.goal, ''), coalesce(pv.channel, ''), coalesce(pv.ref, ''),
-		       coalesce(pv.country, ''), coalesce(pv.city, ''), coalesce(pv.device, ''), coalesce(pv.browser, ''), coalesce(pv.app, '')
+		       coalesce(pv.country, ''), coalesce(pv.city, ''), coalesce(pv.device, ''), coalesce(pv.browser, ''), coalesce(pv.os, ''), coalesce(pv.app, '')
 		FROM act LEFT JOIN pv ON pv.visitor_id = act.visitor_id AND pv.rn = 1
 		ORDER BY act.last DESC, pv.ts DESC NULLS LAST, act.visitor_id
 		LIMIT ?`,
@@ -197,7 +198,7 @@ func (q Q) onSite(ctx context.Context, site string, now time.Time) ([]NowVisit, 
 		var v NowVisit
 		var kind uint8
 		var visitor uint64
-		if err := rows.Scan(&visitor, &v.TS, &v.Last, &kind, &v.Path, &v.Goal, &v.Channel, &v.Ref, &v.Country, &v.City, &v.Device, &v.Browser, &v.App); err != nil {
+		if err := rows.Scan(&visitor, &v.TS, &v.Last, &kind, &v.Path, &v.Goal, &v.Channel, &v.Ref, &v.Country, &v.City, &v.Device, &v.Browser, &v.OS, &v.App); err != nil {
 			return nil, err
 		}
 		switch kind {

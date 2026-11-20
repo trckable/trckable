@@ -6,7 +6,7 @@
 // (short keys): s site · k kind (pv|g|e) · u url · r referrer · w screen width
 // l language · id event id · a age ms · pv pageview id · v visitor id
 // ti page title (pageviews) · n goal · p props · en engaged ms · sc scroll % · dev localhost allowed · c cookieless
-// ap 1 when the page runs in an app's web view
+// ap 1 when the page runs in an app (a web view's bridge, data-app, ?app=1, inApp())
 // lcp ms · cls thousandths · inp ms (Core Web Vitals, with that module on)
 
 // Build-time feature flags. esbuild replaces each with true/false per
@@ -28,7 +28,7 @@ export interface Config {
   hash?: boolean // count #/routes as pages (hash-routed SPAs)
   dev?: boolean // allow localhost / iframes for development
   domain?: string // cookie domain, e.g. "example.com" to share across subdomains
-  app?: boolean // the site says it is shown inside an app (data-app)
+  app?: boolean // the site says it is shown inside an app (data-app, the app option)
   banner?: BannerText // wording for trckable's own cookie bar (banner module)
 }
 
@@ -54,6 +54,7 @@ export type Props = Record<string, string | number | boolean>
 export interface Tracker {
   (cmd: 'goal' | 'track', name: string, props?: Props): void
   (cmd: 'pageview'): void
+  (cmd: 'inApp'): void
   (cmd: 'consent', granted: boolean): void
 }
 
@@ -107,6 +108,17 @@ export function start(c: Config): Tracker {
   let engaged!: number
   let scroll!: number
   let ref = d.referrer
+  // The app marker: ?app=1 (or ?tkb_app=1) on the page the app opens, kept for the
+  // visit in the tab's storage (inApp() keeps it the same way) and never sent on.
+  const APP = /([?&])(?:tkb_)?app=1(&|(?=#)|$)/
+  let app = !!c.app || !!ss?.getItem('trckable_app')
+  const mark = () => {
+    app = true
+    try {
+      ss?.setItem('trckable_app', '1')
+    } catch {}
+  }
+  if (APP.test(loc.href)) mark()
   let pending: Payload[] = [] // what has not been acknowledged yet, oldest first
 
   // An id is made to be unique, not to be secret: about 52 random bits, a
@@ -330,13 +342,26 @@ export function start(c: Config): Tracker {
     if (__CONSENT__) consent()
     if (!p.id) {
       p.s = c.site
-      p.u = loc.href
+      p.u = loc.href.replace(APP, (_, a, b) => (b == '&' ? a : ''))
       p.w = screen.width
       p.l = nav.language
       p.id = rid()
       if (c.dev) p.dev = 1
-      // An app's web view: its bridge is on the page (checked per send, a bridge can arrive late).
-      if (c.app || w.ReactNativeWebView || w.Capacitor?.isNativePlatform?.() || w.cordova || w.flutter_inappwebview) p.ap = 1
+      // An app: the site says so, or its bridge is on the page (checked per send, a bridge can arrive late).
+      if (
+        app ||
+        w.ReactNativeWebView ||
+        w.Capacitor?.isNativePlatform?.() ||
+        w.cordova ||
+        w.flutter_inappwebview ||
+        w.expo ||
+        w.ExpoModules ||
+        w.Portals ||
+        w.isTauri ||
+        /Electron\//.test(nav.userAgent) ||
+        w.process?.versions?.electron
+      )
+        p.ap = 1
       if ((__CONSENT__ || __BANNER__) && held) return held.push(p)
     }
     if (cookieless > 1) return // declined: nothing is sent
@@ -573,6 +598,7 @@ export function start(c: Config): Tracker {
   return (w.__trk = ((cmd: string, a?: any, b?: Props) => {
     if (__GOALS__ && (cmd == 'goal' || cmd == 'track')) goal(a, b)
     else if (cmd == 'pageview') (last = ''), page()
+    else if (cmd == 'inApp') mark()
     else if (cmd == 'consent') {
       // The site's own answer from its own banner: yes, or a final no.
       if (__CONSENT__ || __BANNER__) grant(a, 1)

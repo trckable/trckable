@@ -96,9 +96,6 @@
 }
 
 /* A line under a device row: how a phone's visits opened the site. */
-.mk .xt .xrw.xapp { display: grid; min-height: 0; padding-block: 2px; color: var(--mk-muted); font-size: 13px; border-top-color: transparent; }
-.mk .xt .xrw.xapp .mk-bar { height: 20px; background: none; }
-.mk .xt .xrw.xapp .mk-bar span { left: 27px; }
 
 /* Entry and exit pages: the share that left after one page is a column of its own, in a card as in the side panel. */
 .mk .xt.xl .xth,
@@ -470,3 +467,14 @@
   font-size: 12px;
   color: var(--mk-muted);
 }
+
+/* How people open the site: a thin split bar, with each way's icon and name under it. */
+.mk .xhow { margin-bottom: 18px; }
+.mk .xhow-bar { display: flex; gap: 3px; height: 8px; margin-top: 8px; }
+.mk .xhow-part { flex-basis: 6px; min-width: 6px; padding: 0; border: 0; border-radius: 5px; cursor: pointer; transition: opacity .15s; }
+.mk .xhow-part.off { opacity: .25; }
+.mk .xhow-names { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px; }
+.mk .xhow-name { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; padding: 2px 0; border: 0; background: none; color: var(--mk-muted); font: inherit; font-size: 13px; cursor: pointer; }
+.mk .xhow-name .cut { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk .xhow-name .num { color: var(--mk-text); }
+.mk .xhow-name:hover, .mk .xhow-name.on { color: var(--mk-text); }

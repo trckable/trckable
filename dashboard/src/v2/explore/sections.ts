@@ -91,7 +91,7 @@ export const isTab = (v: string | undefined): v is Tab => !!v && (ALL_TABS as st
 /** The tables that set two periods side by side; the rest read this period alone. */
 export const compares = (t: Tab) => !HOSTED.includes(t) && !['speed', 'outbound', 'mentions', 'answers', 'sales', 'quality', 'paths', 'networks'].includes(t)
 
-export const FILTER_DIMS: FilterDim[] = ['referrer', 'page', 'country', 'device']
+export const FILTER_DIMS: FilterDim[] = ['referrer', 'page', 'country', 'device', 'device_app']
 
 /** What a table's rows filter by when a row is tapped. */
 export const ROW_DIM: Partial<Record<Tab, FilterDim>> = { pages: 'page', sources: 'referrer', referrers: 'referrer', utm: 'referrer', countries: 'country', devices: 'device' }

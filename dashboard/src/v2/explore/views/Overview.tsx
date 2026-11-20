@@ -18,7 +18,7 @@ export function Overview({ x, d }: { x: XCtx; d: Model & { report: Report } }) {
   if (!x.site.last_event_at && d.of === 0 && x.filters.length === 0) return <Waiting site={x.site} />
   return (
     <>
-      <XKcs items={viewerKcs(d.kcs)} />
+      <XKcs items={viewerKcs(d.kcs)} onChip={x.pick} chipOn={valueOf(x.filters, 'app')} />
       <XKcsPlain items={d.visits} />
       <XSec a={copy.shape} b={copy.per(d.per)} />
       {d.shape ? (

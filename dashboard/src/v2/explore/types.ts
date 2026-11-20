@@ -26,8 +26,6 @@ export interface Row {
   su?: number
   /** Where the table is of entry or exit pages: the share of its visits that left after one page, 0 to 1. */
   br?: number
-  /** A line under its row, not a row of its own: how a phone's visits opened the site. It has no filter and no change against before. */
-  sub?: boolean
 }
 
 /** A number, the range it usually sits in, and where it is now. */
@@ -49,6 +47,8 @@ export interface Kc {
   unit?: string
   note: { c: string; t: string }
   vals: number[]
+  /** A quiet line under the number that filters when tapped: what it says and the filter it sets. */
+  chip?: { text: string; dim: string; value: string }
   /** With no line to draw: the share of people this number is, 0 to 1. */
   share?: number
   lo?: number
@@ -110,8 +110,17 @@ export interface Table {
   noneAtAll?: boolean
   /** Tech: the device, browser and system most people used. */
   tops?: Top[]
+  /** Devices: how people open the site, once any came by an app (a way to open it that is not the browser). */
+  how?: How[]
   /** Pages: how people read, five numbers against the period before. */
   engage?: Xkc[]
+}
+
+/** One way of opening the site: the group's key as the server names it ("iOS|app", "instagram"), its words and its people. */
+export interface How {
+  key: string
+  name: string
+  v: number
 }
 
 /** The one most people used, of a kind of thing: its share of the period's people (0 to 1). */
@@ -267,7 +276,7 @@ export interface Option {
   short?: string
 }
 
-export type FilterDim = 'referrer' | 'page' | 'country' | 'device'
+export type FilterDim = 'referrer' | 'page' | 'country' | 'device' | 'device_app'
 
 export interface Connected {
   rev: boolean

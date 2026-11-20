@@ -17,5 +17,5 @@ export function Analytics(props: AnalyticsProps): null {
   return null
 }
 
-export { track, pageview, consent } from './index'
+export { track, pageview, consent, inApp } from './index'
 export type { Options, Props } from './index'

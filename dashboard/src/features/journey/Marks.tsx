@@ -4,26 +4,27 @@
 import { AppWindow, Compass } from 'lucide-react'
 import { brandOf } from '../../lib/brandIcons'
 import { logoOf } from '../../v2/explore/rowMarks'
-import { appLine, appName } from '../apps/copy'
+import { appName, howKey, howName } from '../apps/copy'
 import { copy } from './copy'
 import type { Identity } from './model'
 
 type Tech = Pick<Identity, 'app' | 'browser' | 'device' | 'os'>
 
-/** How they came, in a few words: "Instagram app", "In an app", "Safari". `key` picks the mark: the app's key or the browser's name. */
-export function howOf(x: Pick<Tech, 'app' | 'browser'>): { key: string; text: string } {
+/** How they came, in a few words: "Instagram app", "iOS app", "iOS browser", or a desktop's browser ("Safari"). `key` picks the mark: the app's key or the browser's name; `detail` is the browser behind a phone's "iOS browser". */
+export function howOf(x: Pick<Tech, 'app' | 'browser' | 'device' | 'os'>): { key: string; text: string; detail?: string } {
   if (x.app && x.app !== 'browser') {
     const name = appName(x.app)
-    return { key: x.app, text: name ? copy.appNamed(name) : appLine('app') }
+    return { key: x.app, text: name ? copy.appNamed(name) : howName(howKey(x)) }
   }
-  return { key: x.browser, text: x.browser || appLine('browser') }
+  const phone = howName(howKey(x))
+  return { key: x.browser, text: x.device === 'Desktop' ? x.browser || phone : phone || x.browser, detail: x.browser }
 }
 
 /** The system's own mark, or nothing when it is not one of the four. */
 const osMark = (os: string) => logoOf(os)
 
 /** The app's brand, else the browser's logo, else a window (app) or compass (browser). */
-function howMark(key: string, app: boolean) {
+export function howMark(key: string, app: boolean) {
   const logo = logoOf(key)
   if (logo) return logo
   const brand = app ? brandOf(`${key}.com`) : null
@@ -47,11 +48,11 @@ export function OsMark({ os }: { os: string }) {
   )
 }
 
-export function HowMark({ x }: { x: Pick<Tech, 'app' | 'browser'> }) {
+export function HowMark({ x }: { x: Pick<Tech, 'app' | 'browser' | 'device' | 'os'> }) {
   const how = howOf(x)
   const app = !!x.app && x.app !== 'browser'
   return (
-    <span className="jr-mk" title={how.text} data-mark={app ? 'app-' + x.app : how.key.toLowerCase()}>
+    <span className="jr-mk" title={how.detail && how.detail !== how.text ? `${how.text} · ${how.detail}` : how.text} data-mark={app ? 'app-' + x.app : how.key.toLowerCase()}>
       {howMark(how.key, app)}
     </span>
   )

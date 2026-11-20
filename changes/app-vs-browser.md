@@ -1,0 +1,1 @@
+Every visit says how it opened your site: Desktop, iOS browser, iOS app, Android browser, Android app, or a social app. Overview shows how many used your app, Explore's Devices gets a "How they open it" bar you can filter by, and apps that hide what they are (Expo, Ionic Portals, Tauri, Electron, or any web view) are found, or told with `app`, `inApp()` or `?app=1`.

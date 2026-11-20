@@ -45,7 +45,13 @@ export const copy = defineCopy('v2explore', {
   loading: 'Loading',
   failed: 'We could not load this',
   retry: 'Try again',
-  dims: { referrer: 'Source', page: 'Page', country: 'Country', device: 'Device' },
+  dims: { referrer: 'Source', page: 'Page', country: 'Country', device: 'Device', device_app: 'Opened in', app: 'Opened in' },
+  /** The title of the bar that splits people by how they open the site: the browser, the site's app, a social app. */
+  howOpen: 'How they open it',
+  /** The line under the people number when the site's own app drew a share of them. */
+  usedApp: (pct: string) => `${pct} used your app`,
+  /** The filter chip for every app visit at once. */
+  inYourApp: 'Your app',
   groups: { traffic: 'Traffic', audience: 'Audience', results: 'Results', site: 'Site' },
   names: {
     changed: ['What changed', 'Why the numbers moved'],

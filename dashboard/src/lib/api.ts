@@ -237,7 +237,8 @@ export interface Visit {
   city?: string
   device?: string
   browser?: string
-  /** How a phone or tablet visit reached the page when not by the browser: 'app', or a social app's key ('instagram'). */
+  os?: string
+  /** How the visit reached the page when not by the browser: 'app', or a social app's key ('instagram'). */
   app?: string
 }
 

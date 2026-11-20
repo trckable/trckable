@@ -2,6 +2,7 @@
 import type { Filter } from '../../lib/api'
 import { DIM_LABEL } from '../../features/overview/dimLabels'
 import { countryName } from '../../lib/format'
+import { howName } from '../../features/apps/copy'
 import { copy } from './copy'
 import type { FilterDim, Option } from './types'
 
@@ -11,6 +12,8 @@ export const dimWord = (dim: string): string => (copy.dims as Record<string, str
 export function chipName(f: Filter, options: Partial<Record<FilterDim, Option[]>>): string {
   const o = options[f.dim as FilterDim]?.find((x) => x.val === f.value)
   if (o) return o.short ?? o.name
+  if (f.dim === 'device_app') return howName(f.value)
+  if (f.dim === 'app' && f.value === 'app') return copy.inYourApp
   return f.dim === 'country' ? countryName(f.value) : f.value
 }
 
