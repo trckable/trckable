@@ -18,7 +18,6 @@ import { isSignup } from '../../features/signals/signupLine'
 import { copy } from '../live/copy'
 import { useArrivals } from '../live/useArrivals'
 import { howKey, howName } from '../../features/apps/copy'
-import { AppTag } from '../../features/apps/AppTag'
 import './feedRow.css'
 
 /** Under this width (px) the list drops the visitor's name and the word Replay, so the page keeps the room. */
@@ -87,7 +86,7 @@ export function FeedList({ rows, up, signup, clock, empty, onVisitor, cookieless
             <span className="tm num">{agoShort(clock - r.last)}</span>
             <span className="dv" title={r.app ? `${r.device} · ${howName(howKey(r))}` : r.device} aria-label={r.device}>
               {r.device && <DeviceIcon device={r.device} size={15} />}
-              {r.app && <AppTag app={r.app} device={r.device} os={r.os} />}
+              {r.app && <i className="app-dot" aria-hidden="true" />}
             </span>
           </button>
         )
