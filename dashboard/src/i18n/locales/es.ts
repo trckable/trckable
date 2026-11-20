@@ -3093,7 +3093,6 @@ export default {
   'v2.live.nobody': 'Nadie en el sitio ahora mismo. La calma es normal a esta hora.',
   'v2.live.still': 'Siguen en el sitio',
   'v2.live.replay': 'Repetición',
-  'v2.live.replayTitle': 'Ver la repetición',
   'v2.live.aboveDay': (weekday: string) => `por encima de un ${weekday} habitual`,
   'v2.live.belowDay': (weekday: string) => `por debajo de un ${weekday} habitual`,
   'v2.live.aboutUsual': 'Como siempre',
