@@ -5,6 +5,7 @@ import { Avatar } from '../../components/visitor/Avatar'
 import { DeviceIcon } from '../../components/visitor/DeviceIcon'
 import { nameOf } from '../../lib/visitor'
 import { countryName, fmtDuration, fmtInt, fmtMoney } from '../../lib/format'
+import { appLine } from '../apps/copy'
 import { copy } from './copy'
 import type { Identity } from './model'
 import { SourceChip, type OnFilter } from './SourceChip'
@@ -29,8 +30,18 @@ export function Place({ who }: { who: Identity }) {
   )
 }
 
+const PHONE = new Set(['Mobile', 'Tablet'])
+
+/** The words of the device line. A phone or tablet whose system is known drops
+ *  the word "Mobile" (the system says it) and ends with how it opened the site:
+ *  the browser, "In an app", or the social app. A desktop keeps its browser. */
+export function techParts(who: Pick<Identity, 'device' | 'browser' | 'os' | 'app'>): string[] {
+  if (PHONE.has(who.device) && who.os) return [who.os, who.app ? appLine(who.app) : who.browser].filter(Boolean)
+  return [who.device, who.app && PHONE.has(who.device) ? appLine(who.app) : who.browser, who.os].filter(Boolean)
+}
+
 export function Tech({ who }: { who: Identity }) {
-  const parts = [who.device, who.browser, who.os].filter(Boolean)
+  const parts = techParts(who)
   if (parts.length === 0) return <span>{copy.unknownDevice}</span>
   return (
     <span>

@@ -4,7 +4,7 @@ import { fmtSpan, hasCard, TRAIL, trailTo, visitAt } from './eventModel'
 import type { Notice } from './notices'
 
 const page = (path: string, at: number) => ({ kind: 'page' as const, key: `${path}${at}`, at, offset: 0, path, count: 1, engagedS: 0, exit: false })
-const visit = (key: string, start: number, end: number, nodes: VisitStory['nodes']): VisitStory => ({ key, number: 1, start, end, channel: 'Direct', referrer: '', country: 'DE', device: 'Desktop', browser: '', os: '', pageviews: nodes.length, engagedS: 0, more: 0, live: false, nodes })
+const visit = (key: string, start: number, end: number, nodes: VisitStory['nodes']): VisitStory => ({ key, number: 1, start, end, channel: 'Direct', referrer: '', country: 'DE', device: 'Desktop', browser: '', os: '', app: '', pageviews: nodes.length, engagedS: 0, more: 0, live: false, nodes })
 const story = (visits: VisitStory[]): Story => ({ visits, truncated: false, identity: {} as Story['identity'] })
 const n = (o: Partial<Notice>): Notice => ({ id: 'x', kind: 'goal', site: 'a.com', title: '', sub: '', at: 0, ...o })
 

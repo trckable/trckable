@@ -700,6 +700,7 @@ export interface JourneyVisit {
   device?: string
   browser?: string
   os?: string
+  app?: string
   pageviews: number
   engaged_s: number
   /** Events the visit has beyond the ones listed. */

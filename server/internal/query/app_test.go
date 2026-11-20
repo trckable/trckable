@@ -64,3 +64,19 @@ func TestAppFilter(t *testing.T) {
 		}
 	}
 }
+
+// A visitor's journey says how each visit opened the site: nothing for a
+// browser (or a row from before the column), "app", or the social app's key.
+func TestJourneyCarriesApp(t *testing.T) {
+	upTo := time.Date(2026, 9, 12, 0, 0, 0, 0, time.UTC)
+	for _, open := range []bool{false, true} {
+		q := appRig(t, open)
+		for v, want := range map[uint64]string{1: "", 2: "instagram", 3: "app", 5: ""} {
+			j, err := q.Journey(context.Background(), "s1", v, upTo)
+			if err != nil || len(j.Visits) != 1 {
+				t.Fatalf("visitor %d: %+v %v", v, j, err)
+			}
+			eq(t, "app of visitor "+string(rune('0'+v)), j.Visits[0].App, want)
+		}
+	}
+}

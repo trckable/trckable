@@ -1,0 +1,1 @@
+- The visitor window says how the person came: the phone's browser, an app, or a social app like Instagram, in its header and on each visit.

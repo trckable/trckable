@@ -41,7 +41,7 @@ function Visit({ n, site, visitor }: { n: Notice; site: Site; visitor: string })
   const v = visitAt(state.story, at)
   if (!v) return <p className="ev-note">{t.noVisit}</p>
   const trail = trailTo(v, at)
-  const who = { ...state.story.identity, country: v.country, device: v.device, browser: v.browser, os: v.os }
+  const who = { ...state.story.identity, country: v.country, device: v.device, browser: v.browser, os: v.os, app: v.app }
   return (
     <>
       <button type="button" className="ev-who" aria-label={`${t.openVisitor}: ${nameOf(visitor)}`} onClick={() => setOpen(true)}>
