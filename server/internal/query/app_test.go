@@ -42,6 +42,10 @@ func TestDeviceBreakdownSplitsPhonesByApp(t *testing.T) {
 		}
 		eq(t, "device_app rows", len(got), len(want))
 		eq(t, "Mobile", rowsOf(r.Dims["device"])["Mobile"], int64(4))
+		os := rowsOf(r.Dims["device_os"])
+		for k, n := range map[string]int64{"Mobile|iOS": 3, "Tablet|Android": 1, "Desktop|macOS": 2, "Mobile|Android": 1} {
+			eq(t, "device_os "+k, os[k], n)
+		}
 	}
 }
 

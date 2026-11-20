@@ -262,6 +262,16 @@ function resultOf(c: Ctx, v: Visits, a: number, b: number, bucket: Bucket, filte
     way('Android|app', share('Mobile', 0.1) + share('Tablet', 0.3)),
     way('instagram', share('Mobile', 0.1)),
   ].filter((x) => x.visitors > 0)
+  d.device_os = [
+    way('Mobile|iOS', share('Mobile', 0.6)),
+    way('Mobile|Android', share('Mobile', 0.4)),
+    way('Tablet|iPadOS', share('Tablet', 0.3)),
+    way('Tablet|Android', share('Tablet', 0.7)),
+    way('Desktop|macOS', share('Desktop', 0.4)),
+    way('Desktop|Windows', share('Desktop', 0.5)),
+    way('Desktop|Linux', share('Desktop', 0.07)),
+    way('Desktop|ChromeOS', share('Desktop', 0.03)),
+  ].filter((x) => x.visitors > 0)
   const goals: Row[] = v.list.map((g, gi) => ({ value: g.key, label: g.label, visitors: goalN[gi], pageviews: goalN[gi] }))
   const out: Result = {
     approximate: false,

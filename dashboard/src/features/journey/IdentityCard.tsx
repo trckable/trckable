@@ -2,6 +2,7 @@
 // and browser or app, each with its mark), where from, how many visits and how long, and what they paid.
 import { Avatar } from '../../components/visitor/Avatar'
 import { DeviceIcon } from '../../components/visitor/DeviceIcon'
+import { deviceName } from '../../lib/deviceName'
 import { nameOf } from '../../lib/visitor'
 import { appName, howKey, howName } from '../apps/copy'
 import { countryName, fmtDuration, fmtInt, fmtMoney } from '../../lib/format'
@@ -27,17 +28,6 @@ export function Place({ who }: { who: Identity }) {
 }
 
 const PHONE = new Set(['Mobile', 'Tablet'])
-
-/** The device by its own name when the system tells it: iPhone, iPad, Mac, Android phone; else the device kind. */
-export function deviceName(who: Pick<Identity, 'device' | 'os'>): string {
-  const os = who.os.toLowerCase()
-  const tablet = who.device === 'Tablet'
-  if (os === 'ios' || os === 'ipados') return tablet ? copy.ipad : copy.iphone
-  if (os.startsWith('mac')) return copy.mac
-  if (os === 'android') return tablet ? copy.androidTablet : copy.androidPhone
-  if (os.startsWith('windows') && who.device === 'Desktop') return copy.windowsPc
-  return who.device
-}
 
 /** The words of the device line. A phone or tablet whose system is known says how it
  *  opened the site in one name ("iOS browser", "Android app"), or the social app after

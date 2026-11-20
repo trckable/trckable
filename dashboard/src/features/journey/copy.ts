@@ -32,6 +32,8 @@ export const copy = defineCopy('journey', {
   androidPhone: 'Android phone',
   androidTablet: 'Android tablet',
   windowsPc: 'Windows PC',
+  linux: 'Linux',
+  otherDevice: 'Other',
   inApp: 'App',
   paid: 'Paid',
   refunded: (amount: string) => `${amount} refunded`,

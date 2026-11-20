@@ -191,6 +191,7 @@ var sessionDims = map[string]string{
 	"network":    "network",
 	"app":        appKey,
 	"device_app": deviceApp,
+	"device_os":  deviceOS,
 
 	// A version only newer visits carry: the rest are Unknown, not missing.
 	"browser_version": "coalesce(browser_version, 'Unknown')",
@@ -210,6 +211,10 @@ const deviceApp = `CASE WHEN app IS NOT NULL AND app NOT IN ('', 'app') THEN app
 		WHEN device = 'Desktop' THEN CASE WHEN app = 'app' THEN 'Desktop|app' ELSE 'Desktop' END
 		WHEN device IN ('Mobile', 'Tablet') THEN coalesce(nullif(os, ''), device) || '|' || CASE WHEN app = 'app' THEN 'app' ELSE 'browser' END END`
 
+// deviceOS is the device kind with its system, "Mobile|iOS" or "Desktop|Windows",
+// which is what tells an iPhone from an iPad and a Mac from a Windows PC.
+const deviceOS = `device || '|' || coalesce(os, '')`
+
 // screenBucket groups the width of the window a visit began in. Exact widths
 // would be a list of a thousand one-visit rows; these five are the ones a
 // designer chooses between. A visit that never said stays out of the list.
@@ -222,7 +227,7 @@ const screenBucket = `CASE WHEN screen IS NULL THEN NULL
 
 // DefaultDims are computed for every report (Core + Full).
 // device_app is among them: Overview says how many people used the app from it.
-var DefaultDims = []string{"channel", "referrer", "campaign", "entry_page", "country", "device", "browser", "os", "device_app"}
+var DefaultDims = []string{"channel", "referrer", "campaign", "entry_page", "country", "device", "browser", "os", "device_app", "device_os"}
 
 // DeepDims are the ones only Full mode shows, and the ones its filter menu
 // offers. They ride along in the same GROUPING SETS scan, so asking for them

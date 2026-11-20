@@ -22,7 +22,7 @@ var dimSection = map[string]string{
 	"page": "pages", "entry_page": "pages", "exit_page": "pages", "group": "pages", "hostname": "pages",
 	"channel": "sources", "referrer": "sources", "campaign": "sources", "source": "sources", "medium": "sources", "link": "sources",
 	"country": "places", "region": "places", "city": "places", "timezone": "places", "language": "places",
-	"device": "tech", "app": "tech", "device_app": "tech", "browser": "tech", "os": "tech", "browser_version": "tech", "screen": "tech", "network": "tech",
+	"device": "tech", "app": "tech", "device_app": "tech", "device_os": "tech", "browser": "tech", "os": "tech", "browser_version": "tech", "screen": "tech", "network": "tech",
 }
 
 // openDims are the dimensions a filter may use on any link: a goal is not a
