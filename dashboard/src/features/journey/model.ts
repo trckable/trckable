@@ -237,3 +237,43 @@ function identityOf(data: JourneyResult, visits: VisitStory[], payments: Payment
     source: credited ? { channel: credited.channel, referrer: credited.referrer } : undefined,
   }
 }
+
+/** Pages kept at each end of a long visit, and visits kept before the rest fold away. */
+export const EDGE_PAGES = 2
+export const KEEP_VISITS = 3
+
+/** The row that stands for pages left out of a long visit. */
+export interface Fold {
+  kind: 'fold'
+  key: string
+  hidden: number
+}
+
+/** A long visit shows its first and last two pages; the pages between fold into one "+N pages" row. Goals and
+ *  payments never fold: the sale and the goal are what a visit is read for. Fewer than two pages to hide: all stay. */
+export function foldNodes(nodes: StoryNode[]): (StoryNode | Fold)[] {
+  const out: (StoryNode | Fold)[] = []
+  let run = 0
+  let total = 0
+  const flush = (key: string) => {
+    if (run > 0) out.push({ kind: 'fold', key: `${key}-fold`, hidden: run })
+    run = 0
+  }
+  nodes.forEach((n, i) => {
+    if (n.kind === 'page' && i >= EDGE_PAGES && i < nodes.length - EDGE_PAGES) {
+      run++
+      total++
+      return
+    }
+    flush(n.key)
+    out.push(n)
+  })
+  flush('end')
+  return total < 2 ? nodes : out
+}
+
+/** The newest visits to show, and how many older ones fold into one row. Visits are newest first. */
+export function splitVisits<T>(visits: T[]): { shown: T[]; folded: T[] } {
+  if (visits.length <= KEEP_VISITS + 1) return { shown: visits, folded: [] } // one hidden visit is not worth a row
+  return { shown: visits.slice(0, KEEP_VISITS), folded: visits.slice(KEEP_VISITS) }
+}

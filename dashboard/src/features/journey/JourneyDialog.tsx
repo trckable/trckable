@@ -7,12 +7,12 @@ import { Loading } from '../../components/loading/Loading'
 import { Modal } from '../../kit/Modal'
 import type { ReportQuery, Site } from '../../lib/api'
 import { copy } from './copy'
-import { IdentityFacts, IdentityHead } from './IdentityCard'
+import { IdentityHead, Paid } from './IdentityCard'
 import { JourneyMenu } from './JourneyMenu'
 import { LiveNow } from './LiveNow'
 import type { OnFilter } from './SourceChip'
 import { useJourney, type JourneyState } from './useJourney'
-import { VisitCard } from './VisitCard'
+import { VisitList } from './VisitList'
 import './Journey.css'
 
 function Body({ state, titleId, zone, onFilter }: { state: JourneyState; titleId: string; zone: string; onFilter?: OnFilter }) {
@@ -43,15 +43,11 @@ function Body({ state, titleId, zone, onFilter }: { state: JourneyState; titleId
   const who = story.identity
   return (
     <>
-      <IdentityHead who={who} titleId={titleId} />
+      <IdentityHead who={who} titleId={titleId} zone={zone} />
       {who.live && <LiveNow path={who.currentPath} />}
-      <IdentityFacts who={who} currency={currency} zone={zone} onFilter={onFilter} />
+      <Paid who={who} currency={currency} onFilter={onFilter} />
       {story.visits.length === 0 && <p className="faint">{copy.empty}</p>}
-      <ol className="jr-visits" aria-label={copy.visitsLabel}>
-        {story.visits.map((v) => (
-          <VisitCard key={v.key} v={v} currency={currency} zone={zone} onFilter={onFilter} />
-        ))}
-      </ol>
+      <VisitList visits={story.visits} who={who} currency={currency} zone={zone} onFilter={onFilter} />
       {story.truncated && <p className="faint">{copy.older}</p>}
     </>
   )
