@@ -15,21 +15,20 @@ export const copy = defineCopy('journey', {
   options: 'Visitor options',
 
   // The identity card.
-  returning: 'Returning',
-  new: 'New',
   onSiteNow: 'On the site now',
   viewing: 'Viewing',
-  firstSeen: 'First seen',
-  lastSeen: 'Last seen',
-  visits: 'Visits',
   dayTime: (day: string, time: string) => `${day}, ${time}`,
   viewsFor: (n: number, time: string) => `${plural(n, 'view', 'views')} · ${time}`,
+  firstVisit: (time: string) => `First visit · ${time}`,
+  visitsSince: (n: string, since: string, time: string) => `${n} visits since ${since} · ${time}`,
+  appNamed: (app: string) => `${app} app`,
+  visits: 'Visits',
   timeOnSite: 'Time on site',
+  unknownPlace: 'Unknown place',
+  unknownDevice: 'Unknown device',
   paid: 'Paid',
   refunded: (amount: string) => `${amount} refunded`,
   creditedTo: 'Credited to',
-  unknownPlace: 'Unknown place',
-  unknownDevice: 'Unknown device',
 
   // The timeline.
   visitsLabel: 'Visits, newest first',
@@ -51,6 +50,8 @@ export const copy = defineCopy('journey', {
   here: 'Here now',
   older: 'Older visits are not shown.',
   noPages: 'No pages recorded in this visit.',
+  morePages: (n: number) => `+${plural(n, 'page', 'pages')}`,
+  earlierVisits: (n: number) => plural(n, 'earlier visit', 'earlier visits'),
   moreEvents: (n: number) => `+${n} more`,
 
   // The menu.

@@ -1,5 +1,5 @@
 // The small picture before a row of Tech, Sources and Referrers: a device's icon, a browser's, a system's or a site's mark (drawn here, so nothing is fetched).
-import { BadgeDollarSign, Globe, Link, Mail, Monitor, MousePointer, Search, Smartphone, Sparkles, Tablet, TabletSmartphone, Users, type LucideIcon } from 'lucide-react'
+import { Apple, BadgeDollarSign, Globe, Link, Mail, Monitor, MousePointer, Search, Smartphone, Sparkles, Tablet, TabletSmartphone, Users, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { brandOf } from '../../lib/brandIcons'
 import { pageIcon } from './pageIcon'
@@ -96,6 +96,39 @@ const LOGOS: [RegExp, () => ReactNode][] = [
       </Logo>
     ),
   ],
+  [
+    /^(ios|ipados|macos|mac os|os x)/,
+    () => <Apple size={16} strokeWidth={1.9} className="xrowico" aria-hidden="true" />,
+  ],
+  [
+    /^android/,
+    () => (
+      <Logo>
+        <path d="M6 10.500a6 6 0 0 1 12 0Z" fill="#3ddc84" />
+        <rect x="6" y="11.500" width="12" height="7" rx="2" fill="#3ddc84" />
+        <path d="m8 5.500 1.400 2m6.600-2-1.400 2" stroke="#3ddc84" strokeWidth="1.300" strokeLinecap="round" />
+      </Logo>
+    ),
+  ],
+  [
+    /^windows/,
+    () => (
+      <Logo>
+        <path d="M3 5.400 10.500 4.400v7H3Zm8.500-1.100L21 3v8.400h-9.500ZM3 12.600h7.500v7L3 18.600Zm8.500 0H21V21l-9.500-1.300Z" fill="#0a8bd6" />
+      </Logo>
+    ),
+  ],
+  [
+    /^(linux|ubuntu|debian|fedora)/,
+    () => (
+      <Logo>
+        <ellipse cx="12" cy="14" rx="6" ry="8" fill="currentColor" />
+        <circle cx="12" cy="6.500" r="3.400" fill="currentColor" />
+        <ellipse cx="12" cy="15.500" rx="3.200" ry="5" style={{ fill: 'var(--surface-2)' }} />
+        <path d="M9 7.200h6l-3 1.700Z" fill="#f5a623" />
+      </Logo>
+    ),
+  ],
 ]
 
 const CHANNELS: Record<string, LucideIcon> = { Direct: MousePointer, Search, Social: Users, AI: Sparkles, Email: Mail, Referral: Link, Paid: BadgeDollarSign }
@@ -112,7 +145,7 @@ function siteMark(host: string): ReactNode {
 }
 
 /** A logo by the name of a browser or a system, if one is drawn. */
-function logoOf(name: string): ReactNode {
+export function logoOf(name: string): ReactNode {
   const n = name.toLowerCase()
   return LOGOS.find(([re]) => re.test(n))?.[1]()
 }
