@@ -333,6 +333,11 @@ func TestDigestBadge(t *testing.T) {
 						if g.lx < domainEnd || g.ccx+g.cd/2 > sl.right+1 {
 							t.Errorf("%s %s %s %q: the badge (%.0f to %.0f) runs into the domain (ends %.0f) or past its room (%.0f)", tpl, f.ID, theme, domain, g.lx, g.ccx+g.cd/2, domainEnd, sl.right)
 						}
+						// The PNG is the same drawing rasterised: once per size and source is enough (all 576 took the
+						// package past CI's 20 minutes).
+						if tpl != "digest" || theme != "dark" || domain != "example.com" {
+							continue
+						}
 						if _, err := marked.PNG(); err != nil {
 							t.Errorf("%s %s %s: %v", f.ID, theme, src, err)
 						}

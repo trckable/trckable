@@ -1,4 +1,4 @@
-// A site's state follows its last visit without a reload: the Quiet badge, the
+// A site's state follows its last visit without a reload: the quiet dot, the
 // switcher's dot and line and the All sites page all read the one sites list
 // the dashboard keeps current. The server's list is faked through the sites
 // route, and the "visit" is the last-seen time moving.
@@ -22,25 +22,22 @@ async function fakeLastSeen(page: Page) {
   return seen
 }
 
-test('a visit clears the Quiet badge and turns the switcher dot to now, with no reload', async ({ page }) => {
+test('a visit clears the quiet state and turns the switcher dot to now, with no reload', async ({ page }) => {
   test.slow()
   await page.context().addCookies([{ name: 'trckable_session', value: await session('live-state'), url: API }])
   const seen = await fakeLastSeen(page)
   await page.goto(`${API}/${HISTORY_DOMAIN}?period=7d`)
-  const badge = page.locator('[data-site-why]') // the site selector says it, nothing floats
   await expect(page.locator('#siteBtn .mk-dot.idle')).toBeVisible({ timeout: 20_000 }) // the button's dot is grey while it is quiet
   await expect(page.locator('#siteBtn')).toHaveAttribute('aria-label', /quiet/i)
   await page.locator('#siteBtn').click() // the switcher stays open while the visit arrives
-  await expect(badge).toBeVisible()
   // A quiet site keeps its number; the dot is grey and the span is in the tooltip.
   const quietRow = page.locator('#siteMenu [data-site]', { hasText: HISTORY_DOMAIN })
   await expect(quietRow.locator('.mk-dot.idle')).toBeVisible()
   await expect(quietRow.locator('.now:not(.mk-dot)')).toHaveAttribute('title', /No visits for 14h/, WAIT) // the row's number comes from the overview, which the list never waits for
   await page.evaluate(() => ((window as unknown as { __kept?: boolean }).__kept = true))
   seen.at = Math.floor(Date.now() / 1000) - 5
-  await expect(badge).toHaveCount(0, WAIT)
   await expect(page.locator('#siteMenu .site .mk-dot.now').first()).toBeVisible(WAIT)
-  await expect(page.locator('#siteBtn .mk-dot.idle')).toHaveCount(0)
+  await expect(page.locator('#siteBtn .mk-dot.idle')).toHaveCount(0, WAIT)
   await expect(page.locator('#siteBtn .mk-dot.now')).toBeVisible(WAIT)
   await expect(page.locator('#siteBtn')).not.toHaveAttribute('aria-label', /quiet/i)
   await expect(page.locator('#siteMenu .state-word')).toHaveCount(0)
