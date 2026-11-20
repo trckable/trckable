@@ -211,16 +211,16 @@ func TestCheckOnDemandFindsTheSnippetAndIsLimited(t *testing.T) {
 	if code, _ := do(t, client(), "POST", check, "", csrf, "1"); code != http.StatusUnauthorized {
 		t.Fatalf("signed out: %d", code)
 	}
-	for i := 1; i < 10; i++ {
+	for i := 1; i < checksPerTenMinutes; i++ {
 		if code, _ := do(t, c, "POST", check, "", csrf, "1"); code != http.StatusOK {
-			t.Fatalf("check %d of 10: %d", i+1, code)
+			t.Fatalf("check %d of %d: %d", i+1, checksPerTenMinutes, code)
 		}
 	}
 	if code, out := do(t, c, "POST", check, "", csrf, "1"); code != http.StatusTooManyRequests || out["error"] == nil {
-		t.Fatalf("the eleventh check in ten minutes: %d %v", code, out)
+		t.Fatalf("one check over the limit in ten minutes: %d %v", code, out)
 	}
-	if n := reads.Load(); n != 10 {
-		t.Fatalf("the site was read %d times, want 10: a refused check reads nothing", n)
+	if n := reads.Load(); n != checksPerTenMinutes {
+		t.Fatalf("the site was read %d times, want %d: a refused check reads nothing", n, checksPerTenMinutes)
 	}
 }
 

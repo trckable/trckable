@@ -1,5 +1,5 @@
-// A quiet site's report opens in a modal (a bottom sheet on a phone), not inline in the bar's panel: Esc closes it and
-// focus goes back; its chip says "Tracking stopped" only when a check fails, else "No visits for <time>".
+// A down site's report opens in a modal (a bottom sheet on a phone), not inline in the bar's panel: Esc closes it and
+// focus goes back. Since #817 the sites menu offers "1 down", not quiet sites, so the fixture site is down.
 import { expect, test } from './fixtures'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
@@ -17,7 +17,7 @@ async function quiet(page: import('@playwright/test').Page, check: object) {
     if (r.request().method() !== 'GET') return r.continue()
     const res = await r.fetch()
     const body = (await res.json()) as { sites: Record<string, unknown>[] }
-    for (const s of body.sites) if (s.domain === HISTORY_DOMAIN) Object.assign(s, { last_event_at: LAST, down_since: undefined, check: { at: NOW } })
+    for (const s of body.sites) if (s.domain === HISTORY_DOMAIN) Object.assign(s, { last_event_at: LAST, down_since: LAST, check: { at: NOW } })
     await r.fulfill({ response: res, json: body })
   })
   await page.route('**/api/v1/sites/*/install/check', (r) => r.fulfill({ json: check }))
@@ -27,7 +27,7 @@ async function quiet(page: import('@playwright/test').Page, check: object) {
   await page.locator('[data-site-why]').click()
 }
 
-test('the bar lists the quiet site, a click opens its report in a modal, Esc closes it and focus returns', async ({ page }) => {
+test('the menu lists the down site, a click opens its report in a modal, Esc closes it and focus returns', async ({ page }) => {
   test.slow()
   await page.emulateMedia({ colorScheme: 'dark' })
   await quiet(page, passing)
@@ -37,7 +37,7 @@ test('the bar lists the quiet site, a click opens its report in a modal, Esc clo
   await row.click()
   const modal = page.getByRole('dialog', { name: /./ }).filter({ has: page.locator('.status-card') })
   await expect(modal).toBeVisible()
-  await expect(modal.locator('.sg-chip')).toHaveText('No visits for 15h') // every check passes
+  await expect(modal.locator('.sg-chip')).toHaveText('Down')
   await expect(modal.getByRole('button', { name: 'Check again' })).toBeVisible()
   await expect(modal.getByRole('link', { name: 'Open site' })).toBeVisible()
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/quiet-modal-${page.viewportSize()?.width}-dark.png` })
@@ -46,12 +46,12 @@ test('the bar lists the quiet site, a click opens its report in a modal, Esc clo
   await expect(page.locator('.status-row').first()).toBeFocused()
 })
 
-test('the chip says Tracking stopped when a check fails', async ({ page }) => {
+test('the chip says Down, also when a check fails, and Close closes', async ({ page }) => {
   test.slow()
   await quiet(page, failing)
   await page.locator('.status-row').first().click()
   const modal = page.locator('.modal.status-modal')
-  await expect(modal.locator('.sg-chip')).toHaveText('Tracking stopped')
+  await expect(modal.locator('.sg-chip')).toHaveText('Down')
   await modal.getByRole('button', { name: 'Close' }).click()
   await expect(modal).toBeHidden()
 })
@@ -64,6 +64,8 @@ test('on a phone it is a sheet and the foot is fully in view', async ({ page }) 
   await page.locator('.status-row').first().click()
   const modal = page.locator('.modal.status-modal')
   await expect(modal.locator('.sg-chip')).toBeVisible()
+  // the sheet slides up from below: measure once it has settled
+  await expect.poll(async () => { const b = await modal.boundingBox(); return b && b.y + b.height }).toBeLessThanOrEqual(700)
   const foot = await modal.locator('.modal-foot').boundingBox()
   expect(foot && foot.y + foot.height <= 700 && foot.x >= 0 && foot.x + foot.width <= 390).toBe(true)
   for (const name of ['Open site', 'Check again']) {
