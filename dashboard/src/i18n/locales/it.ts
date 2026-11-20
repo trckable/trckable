@@ -3100,7 +3100,6 @@ export default {
   'v2.live.nobody': 'Nessuno sul sito in questo momento. A quest’ora è normale che sia tranquillo.',
   'v2.live.still': 'Ancora sul sito',
   'v2.live.replay': 'Replay',
-  'v2.live.replayTitle': 'Guarda il replay',
   'v2.live.aboveDay': (weekday: string) => `sopra un ${weekday} normale`,
   'v2.live.belowDay': (weekday: string) => `sotto un ${weekday} normale`,
   'v2.live.aboutUsual': 'Come al solito',

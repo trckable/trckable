@@ -20,14 +20,13 @@
 .mk .lfeed .lv .src { flex: 0 1 auto; max-width: 96px; min-width: 10ch; }
 .mk .lfeed .lv .vn { min-width: 8ch; }
 /* Too tight for the name and the source on one line: the source sits under the name, and neither is cut short. */
-.mk .lfeed[data-stack] .lv { display: grid; grid-template-columns: auto auto minmax(8ch, 18ch) minmax(14ch, 1fr) auto auto auto auto; column-gap: var(--mk-s2); row-gap: 0; align-items: center; }
+.mk .lfeed[data-stack] .lv { display: grid; grid-template-columns: auto auto minmax(8ch, 18ch) minmax(14ch, 1fr) auto auto auto; column-gap: var(--mk-s2); row-gap: 0; align-items: center; }
 .mk .lfeed[data-stack] .lv > * { grid-row: 1 / span 2; }
 .mk .lfeed[data-stack] .lv .mk-dot { grid-column: 1; }
 .mk .lfeed[data-stack] .lv .v-avatar { grid-column: 2; }
 .mk .lfeed[data-stack] .lv .cc { grid-column: 5; }
 .mk .lfeed[data-stack] .lv .tm { grid-column: 6; }
 .mk .lfeed[data-stack] .lv .dv { grid-column: 7; }
-.mk .lfeed[data-stack] .lv .mk-rp { grid-column: 8; }
 .mk .lfeed[data-stack] .lv .vn { grid-column: 3; grid-row: 1; align-self: end; max-width: none; }
 .mk .lfeed[data-stack] .lv .src { grid-column: 3; grid-row: 2; align-self: start; max-width: none; min-width: 0; }
 .mk .lfeed[data-stack] .lv .pg { grid-column: 4; min-width: 14ch; }
@@ -36,11 +35,9 @@
 /* A visit that opened in an app: a small tag after the device, the social app's name or "App". */
 .mk .lfeed .lv .dv:has(.ap) { display: inline-flex; align-items: center; gap: 4px; width: auto; }
 .mk .lfeed .lv .dv .ap { font-style: normal; font-size: 10.5px; line-height: 1; padding: 2px 5px; border-radius: 4px; background: var(--mk-band); color: var(--mk-muted); max-width: 11ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* The tag takes its room from the page, which may shrink to a few characters, not from the Replay mark. */
+/* The tag takes its room from the page, which may shrink to a few characters, not from the end of the row. */
 .mk .lfeed .lv:has(.ap) .pg { min-width: 6ch; }
 .mk .lfeed[data-narrow] .lv .vn { display: none; }
-.mk .lfeed[data-narrow] .lv .mk-rp { width: 18px; }
-.mk .lfeed[data-narrow] .lv .mk-rp em { display: none; }
 .mk .lfeed .lv .tm { width: 30px; flex: none; text-align: right; color: var(--mk-muted); font-size: 12.5px; }
 /* Someone who reached the signup goal: the row is tinted like a sale, and its page line (the goal's name) reads in the accent. */
 .mk .lfeed .lv.signup { background: var(--mk-band); }

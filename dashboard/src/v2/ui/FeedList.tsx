@@ -85,11 +85,6 @@ export function FeedList({ rows, up, signup, clock, empty, onVisitor, cookieless
               {r.device && <DeviceIcon device={r.device} size={15} />}
               {r.app && <em className="ap">{appTag(r.app)}</em>}
             </span>
-            {r.visitor && onVisitor && (
-              <span className="mk-rp" title={copy.replayTitle}>
-                {'\u25B6'}<em> {copy.replay}</em>
-              </span>
-            )}
           </button>
         )
       })}
