@@ -46,7 +46,7 @@ for (const size of [{ w: 1440, h: 900 }, { w: 390, h: 844 }]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
     await shoot(page, 'live')
     await page.locator('#siteBtn').click()
-    await page.locator('.site-why').click()
+    await page.locator('[data-site-why]').click()
     await page.locator('.status-row').first().click()
     await expect(page.locator('.modal.status-modal')).toContainText('No answer within 10 seconds')
     await shoot(page, 'foot-panel')

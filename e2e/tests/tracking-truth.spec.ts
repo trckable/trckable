@@ -34,7 +34,7 @@ for (const [name, width, height] of [['1440', 1440, 900], ['390', 390, 844]] as 
       await expect(box.locator('.tracking-line')).toContainText('Tracking works · last visit 3 min ago')
       if (SHOTS) await page.screenshot({ path: `${SHOTS}/live-${name}-${colorScheme}.png` })
       await page.locator('#siteBtn').click()
-      await page.locator('.site-why').click()
+      await page.locator('[data-site-why]').click()
       await page.locator('.status-row').first().click()
       const pop = page.locator('.modal.status-modal')
       await expect(pop.locator('.tracking-line')).toContainText('Tracking works · last visit 3 min ago')
