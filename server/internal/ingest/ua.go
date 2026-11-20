@@ -3,6 +3,7 @@ package ingest
 import (
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/mileusna/useragent"
 )
@@ -29,6 +30,10 @@ type uaInfo struct {
 	// nothing a person can act on and would split one release into hundreds.
 	Version string
 	Bot     bool
+	// App says how a phone or tablet visit reached the page when it was not a
+	// browser: a social app's key ("instagram"), or "app" for any other app's
+	// web view. Empty for a normal browser, for unknown, and for a desktop.
+	App string
 	// BotKind says what sort of automation it is, for the count of what was
 	// turned away (botcount.go). Empty when it is not one.
 	BotKind string
@@ -56,6 +61,46 @@ func browserVersion(name string, major int) string {
 		return ""
 	}
 	return name + " " + strconv.Itoa(major)
+}
+
+// socialApps are the apps that show a page in their own browser and say so in
+// the user agent, each with the key the reports use. Checked in this order.
+var socialApps = []struct {
+	key string
+	re  *regexp.Regexp
+}{
+	{"facebook", regexp.MustCompile(`FBAN|FBAV|FB_IAB`)},
+	{"instagram", regexp.MustCompile(`Instagram`)},
+	{"tiktok", regexp.MustCompile(`musical_ly|BytedanceWebview|TikTok`)},
+	{"linkedin", regexp.MustCompile(`LinkedInApp`)},
+	{"snapchat", regexp.MustCompile(`Snapchat`)},
+	{"twitter", regexp.MustCompile(`Twitter for iPhone|TwitterAndroid`)},
+	{"pinterest", regexp.MustCompile(`Pinterest`)},
+	{"line", regexp.MustCompile(`\bLine/`)},
+	{"wechat", regexp.MustCompile(`MicroMessenger`)},
+}
+
+// iosBrowserRE is a browser on iOS that is not Safari but has its own name.
+var iosBrowserRE = regexp.MustCompile(`CriOS|FxiOS|EdgiOS|OPiOS|GSA/|DuckDuckGo`)
+
+// appOf says which app a phone or tablet visit came through. A user agent
+// names the social apps; any other app's web view shows only by what a
+// browser's has and this one lacks: "; wv)" on Android, no "Safari/" on iOS.
+func appOf(s string) string {
+	for _, a := range socialApps {
+		if a.re.MatchString(s) {
+			return a.key
+		}
+	}
+	if strings.Contains(s, "; wv)") {
+		return "app"
+	}
+	ios := strings.Contains(s, "iPhone") || strings.Contains(s, "iPad") || strings.Contains(s, "iPod")
+	if ios && strings.Contains(s, "AppleWebKit") && strings.Contains(s, "Mobile/") &&
+		!strings.Contains(s, "Safari/") && !iosBrowserRE.MatchString(s) {
+		return "app"
+	}
+	return ""
 }
 
 func parseUA(s string, screenWidth int) uaInfo {
@@ -91,6 +136,9 @@ func parseUA(s string, screenWidth int) uaInfo {
 		case info.Device == "":
 			info.Device = "Desktop"
 		}
+	}
+	if info.Device == "Mobile" || info.Device == "Tablet" {
+		info.App = appOf(s)
 	}
 	return info
 }

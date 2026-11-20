@@ -1,6 +1,6 @@
 // The script-tag build (/js/t.js):
 //   <script defer src="https://stats.example.com/js/t.js" data-site="tkb_…"></script>
-// Options: data-api, data-cookieless, data-hash, data-dev, data-domain.
+// Options: data-api, data-cookieless, data-hash, data-dev, data-domain, data-app.
 // API: trckable('goal', 'signup', { plan: 'pro' }). Calls made before the
 // script loads are queued by the optional stub and replayed here.
 import { start, type Config, type Tracker } from './core'
@@ -17,6 +17,7 @@ const cfg: Config = {
   cookieless: 'cookieless' in ds,
   hash: 'hash' in ds,
   dev: 'dev' in ds,
+  app: 'app' in ds,
   domain: ds.domain,
 }
 // Wording for trckable's own cookie bar, assigned rather than passed so that a

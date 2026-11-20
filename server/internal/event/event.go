@@ -75,6 +75,11 @@ type Event struct {
 	// BrowserVersion is the browser and its major version ("Chrome 129").
 	BrowserVersion string `json:"bv,omitempty"`
 
+	// App says a phone or tablet visit came through an app rather than the
+	// browser: a social app's key ("instagram") or "app" for any other web
+	// view. Empty is a normal browser, unknown, or a desktop.
+	App string `json:"ap,omitempty"`
+
 	// Timezone is the visitor's IANA time zone ("Europe/Berlin"). Never kept
 	// where the site drops region and city, or keeps no cookie.
 	Timezone string `json:"tz,omitempty"`

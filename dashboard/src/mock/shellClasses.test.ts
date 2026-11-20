@@ -22,7 +22,7 @@ function cssFiles(dir: string): string[] {
 export function bareClasses(css: string): string[] {
   const out: string[] = []
   for (const m of strip(css).matchAll(/(?:^|[},])\s*([^{}@]+)\{/g)) {
-    for (const sel of m[1]!.split(',')) {
+    for (const sel of m[1].split(',')) {
       const c = sel.trim().match(/^\.([a-zA-Z_][\w-]*)(?![\w-])/)?.[1]
       if (c) out.push(c)
     }
@@ -36,7 +36,7 @@ describe('feature stylesheets and the shell', () => {
   })
 
   it('no feature styles a shell class name unscoped', () => {
-    const shell = new Set([...strip(readFileSync(join(SRC, 'mock/mock.css'), 'utf8')).matchAll(/\.mk \.([a-zA-Z_][\w-]*)/g)].map((m) => m[1]!))
+    const shell = new Set([...strip(readFileSync(join(SRC, 'mock/mock.css'), 'utf8')).matchAll(/\.mk \.([a-zA-Z_][\w-]*)/g)].map((m) => m[1]))
     const clashes = new Set<string>()
     for (const f of cssFiles(SRC)) {
       const rel = relative(SRC, f)

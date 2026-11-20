@@ -1,0 +1,1 @@
+Visits from an app's web view or a social app's browser are told apart from a phone's normal browser: Explore's Devices table lists them under Mobile and Tablet, and Live tags them with "App" or the app's name.

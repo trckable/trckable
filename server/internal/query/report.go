@@ -189,11 +189,23 @@ var sessionDims = map[string]string{
 	"language":   "language",
 	"timezone":   "timezone",
 	"network":    "network",
+	"app":        appKey,
+	"device_app": deviceApp,
 
 	// A version only newer visits carry: the rest are Unknown, not missing.
 	"browser_version": "coalesce(browser_version, 'Unknown')",
 	"screen":          screenBucket,
 }
+
+// appKey is how a phone or tablet visit opened the site: "browser" for the
+// phone's own, "app" for an app's web view, or the social app's key. A desktop
+// has none, so it never lands in a list of apps. Rows from before the column
+// existed read as "browser".
+const appKey = `CASE WHEN device IN ('Mobile', 'Tablet') THEN coalesce(nullif(app, ''), 'browser') END`
+
+// deviceApp splits Mobile and Tablet by appKey ("Mobile|instagram"), the
+// sub-lines under those two device rows.
+const deviceApp = `CASE WHEN device IN ('Mobile', 'Tablet') THEN device || '|' || coalesce(nullif(app, ''), 'browser') END`
 
 // screenBucket groups the width of the window a visit began in. Exact widths
 // would be a list of a thousand one-visit rows; these five are the ones a
@@ -211,7 +223,7 @@ var DefaultDims = []string{"channel", "referrer", "campaign", "entry_page", "cou
 // DeepDims are the ones only Full mode shows, and the ones its filter menu
 // offers. They ride along in the same GROUPING SETS scan, so asking for them
 // costs one wider scan rather than six more queries — but Core does not ask.
-var DeepDims = []string{"exit_page", "region", "city", "source", "medium", "language", "timezone", "network", "browser_version", "screen"}
+var DeepDims = []string{"exit_page", "region", "city", "source", "medium", "language", "timezone", "network", "browser_version", "screen", "device_app"}
 
 // dimsFor is the breakdowns one report computes.
 func dimsFor(deep bool) []string {
