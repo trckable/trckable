@@ -1,0 +1,1 @@
+Live's right-now list lines up: the source logo sits the same distance from its name in every row, every column keeps one place, and an in-app visit shows a small badge on the device icon instead of a text chip that repeated the source.

@@ -17,7 +17,7 @@
 /* The page is what the row is about: it takes the room the other cells leave (at least 14 characters), in its normal weight; the device is its icon. */
 .mk .lfeed .lv { gap: var(--mk-s2); }
 .mk .lfeed .lv .pg { flex: 1 1 0; min-width: 14ch; }
-.mk .lfeed .lv .src { flex: 0 1 auto; max-width: 124px; min-width: 10ch; }
+.mk .lfeed .lv .src { flex: 0 1 124px; min-width: 10ch; }
 .mk .lfeed .lv .vn { min-width: 8ch; }
 /* Too tight for the name and the source on one line: the source sits under the name, and neither is cut short. */
 .mk .lfeed[data-stack] .lv { display: grid; grid-template-columns: auto auto minmax(8ch, 18ch) minmax(14ch, 1fr) auto auto auto; column-gap: var(--mk-s2); row-gap: 0; align-items: center; }
@@ -32,10 +32,9 @@
 .mk .lfeed[data-stack] .lv .pg { grid-column: 4; min-width: 14ch; }
 
 .mk .lfeed .lv .dv { display: inline-grid; place-items: center; width: 18px; flex: none; }
-/* A visit that opened in an app: a small tag after the device, the social app's name or "App". */
-.mk .lfeed .lv .dv:has(.app-tag) { display: inline-flex; align-items: center; gap: 4px; width: auto; }
-/* The tag takes its room from the page, which may shrink to a few characters, not from the end of the row. */
-.mk .lfeed .lv:has(.app-tag) .pg { min-width: 6ch; }
+/* A visit that opened in an app: a small badge on the device's icon (its title names the app), so the device column keeps one width in every row. */
+.mk .lfeed .lv .dv { position: relative; }
+.mk .lfeed .lv .app-dot { position: absolute; top: -2px; right: -2px; width: 7px; height: 7px; border-radius: 50%; background: var(--mk-text); box-shadow: 0 0 0 2px var(--mk-card, var(--mk-bg, transparent)); }
 .mk .lfeed[data-narrow] .lv .vn { display: none; }
 .mk .lfeed .lv .tm { width: 30px; flex: none; text-align: right; color: var(--mk-muted); font-size: 12.5px; }
 /* Someone who reached the signup goal: the row is tinted like a sale, and its page line (the goal's name) reads in the accent. */
@@ -45,3 +44,5 @@
 /* The source: its mark, then its name, which ellipsizes alone. */
 .mk .lfeed .lv .src { display: inline-flex; align-items: center; gap: 6px; }
 .mk .lfeed .lv .srcn { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The mark sits the same distance from its name for every source: the app's global .brand rule must not add a margin to it. */
+.mk .lfeed .lv .src .v-mark { margin: 0; }
