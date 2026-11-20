@@ -1,6 +1,6 @@
 // Live's first card under the half hour: today's visitors, and where they are, as a bar list of the pages or of the
 // countries behind one small switch.
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { countryName, fmtInt, weekdayName } from '../../lib/format'
 import { todayIn } from '../../lib/dates'
 import { copy } from './copy'
@@ -8,6 +8,8 @@ import { CardSkeleton } from './CardSkeleton'
 import { usualLine, type Lists } from './liveModel'
 import type { LiveNow } from '../../features/live/api'
 import { Flag } from '../ui/Flag'
+import { deviceLabel, type DeviceKey } from '../../lib/deviceName'
+import { logoOf } from '../explore/rowMarks'
 
 type Mode = 'pages' | 'countries' | 'devices'
 
@@ -25,11 +27,15 @@ interface Bar {
   n: number
   mono: boolean
   flag?: string
+  mark?: ReactNode
 }
+
+// The system whose logo each device wears; Other has none.
+const MARKS: Partial<Record<DeviceKey, string>> = { iphone: 'ios', ipad: 'ios', mac: 'macos', androidPhone: 'android', androidTablet: 'android', windowsPc: 'windows', linux: 'linux' }
 
 function barsOf(lists: Lists, mode: Mode): Bar[] {
   if (mode === 'pages') return lists.pages.map((p) => ({ key: p.label, label: p.label, n: p.n, mono: true }))
-  if (mode === 'devices') return lists.devices.map((d) => ({ key: d.key, label: copy[d.key], n: d.n, mono: false }))
+  if (mode === 'devices') return lists.devices.map((d) => ({ key: d.key, label: deviceLabel(d.key), n: d.n, mono: false, mark: logoOf(MARKS[d.key] ?? '') }))
   return lists.countries.map((c) => ({ key: c.key, label: c.label || countryName(c.key), n: c.n, mono: false, flag: c.key }))
 }
 
@@ -76,6 +82,7 @@ export function AnalyticsCard({ today, lists, timezone }: Props) {
               <i style={{ width: `${(r.n / max) * 100}%` }} />
               <span className={r.mono ? 'mono' : undefined}>
                 {r.flag && <span className="lflag"><Flag code={r.flag} /></span>}
+                {r.mark && <span className="lflag">{r.mark}</span>}
                 {r.label}
               </span>
               <b>{r.n}</b>

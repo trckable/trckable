@@ -55,9 +55,13 @@ describe('Live', () => {
     expect(l.countries.map((c) => [c.label, c.n])).toEqual([['United States', 2], ['Germany', 1]])
   })
 
-  it('splits phone against computer from the people whose device is known', () => {
-    expect(listsOf([row(1, { device: 'mobile' }), row(2, { device: 'desktop' }), row(3, { device: 'desktop' }), row(4, { device: 'tablet' }), row(5)]).devices).toEqual([{ key: 'phone', n: 2 }, { key: 'computer', n: 2 }])
-    expect(deviceCounts([['Desktop', 5], ['Mobile', 3], ['Tablet', 1], ['Bot', 9]])).toEqual([{ key: 'computer', n: 5 }, { key: 'phone', n: 4 }])
+  it('names the devices from the kind and the system, the larger first, and drops the unknown kind', () => {
+    const got = deviceCounts([['Mobile', 'iOS', 3], ['Tablet', 'iPadOS', 1], ['Tablet', 'iOS', 1], ['Desktop', 'macOS', 2], ['Mobile', 'Android', 1], ['Tablet', 'Android', 1], ['Desktop', 'Windows', 4], ['Desktop', 'Linux', 1], ['Desktop', 'ChromeOS', 1], ['Mobile', '', 1], [undefined, 'iOS', 9]])
+    expect(got).toEqual([
+      { key: 'windowsPc', n: 4 }, { key: 'iphone', n: 3 }, { key: 'ipad', n: 2 }, { key: 'mac', n: 2 }, { key: 'otherDevice', n: 2 },
+      { key: 'androidPhone', n: 1 }, { key: 'androidTablet', n: 1 }, { key: 'linux', n: 1 },
+    ])
+    expect(listsOf([row(1, { device: 'Mobile', os: 'iOS' }), row(2, { device: 'Desktop', os: 'macOS' }), row(3, { device: 'Desktop', os: 'macOS' }), row(4)]).devices).toEqual([{ key: 'mac', n: 2 }, { key: 'iphone', n: 1 }])
     expect(listsOf([row(1)]).devices).toEqual([])
   })
 })

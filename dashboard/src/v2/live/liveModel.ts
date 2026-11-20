@@ -1,6 +1,7 @@
 // What Live shows, worked out from the server's last half hour and the people on the site: the bars, the sources split,
 // how Today stands against its usual, the pages and the countries. Pure: live.test.ts.
 import { countryName } from '../../lib/format'
+import { deviceKey, type DeviceKey } from '../../lib/deviceName'
 import { baseEnough, overCap } from '../../lib/thin'
 import type { LiveNow } from '../../features/live/api'
 import type { Row } from '../../features/live/model'
@@ -68,12 +69,15 @@ function topFive(values: (string | undefined)[]): [string, number][] {
   return [...counts].sort((a, b) => b[1] - a[1]).slice(0, 5)
 }
 
-/** Phone against computer as counts of the people whose device is known (a tablet counts with the phone), the larger first. */
-export function deviceCounts(kinds: [string | undefined, number][]): { key: 'phone' | 'computer'; n: number }[] {
-  const sum = (match: (kind: string) => boolean) => kinds.reduce((n, [k, c]) => n + (k && match(k.toLowerCase()) ? c : 0), 0)
-  const computer = sum((k) => k === 'desktop')
-  const phone = sum((k) => k === 'mobile' || k === 'tablet')
-  return ([{ key: 'phone' as const, n: phone }, { key: 'computer' as const, n: computer }]).filter((d) => d.n > 0).sort((x, y) => y.n - x.n)
+/** The people whose device is known, counted by what it is (iPhone, iPad, Mac, Android phone and tablet, Windows PC, Linux, Other), the larger first. */
+export function deviceCounts(people: [string | undefined, string | undefined, number][]): { key: DeviceKey; n: number }[] {
+  const counts = new Map<DeviceKey, number>()
+  for (const [device, os, n] of people) {
+    if (!device) continue
+    const key = deviceKey(device, os)
+    counts.set(key, (counts.get(key) ?? 0) + n)
+  }
+  return [...counts].filter(([, n]) => n > 0).map(([key, n]) => ({ key, n })).sort((x, y) => y.n - x.n)
 }
 
 /** The pages, countries and devices the Analytics card lists. */
@@ -87,7 +91,7 @@ export function listsOf(rows: Row[]): Lists {
   return {
     pages: topFive(rows.map((r) => r.path)).map(([label, n]) => ({ label, n })),
     countries: topFive(rows.map((r) => r.country?.toUpperCase())).map(([key, n]) => ({ label: countryName(key), key, n })),
-    devices: deviceCounts(rows.map((r) => [r.device, 1])),
+    devices: deviceCounts(rows.map((r) => [r.device, r.os, 1])),
   }
 }
 
