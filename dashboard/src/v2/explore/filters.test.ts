@@ -20,6 +20,12 @@ describe('filters', () => {
     expect(on).toEqual([{ dim: 'device', value: 'Mobile' }])
     expect(toggled(on, 'device', 'Mobile')).toEqual([])
   })
+  it('names the opened-in chips the way people say it, with no list of options at hand', () => {
+    expect(chipName({ dim: 'device_app', value: 'iOS|app' }, {})).toBe('iOS app')
+    expect(chipName({ dim: 'device_app', value: 'Android|browser' }, {})).toBe('Android browser')
+    expect(chipName({ dim: 'device_app', value: 'instagram' }, {})).toBe('Instagram')
+    expect(chipName({ dim: 'app', value: 'app' }, {})).toBe('Your app')
+  })
   it('keeps one value to a dimension', () => {
     expect(toggled([{ dim: 'device', value: 'Mobile' }], 'device', 'Desktop')).toEqual([{ dim: 'device', value: 'Desktop' }])
     expect(withValue([{ dim: 'device', value: 'Mobile' }], 'page', '/')).toHaveLength(2)

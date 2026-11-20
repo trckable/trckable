@@ -2,6 +2,8 @@
 // Every row shows; the list scrolls inside its card.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Row } from '../../features/live/model'
+import { SourceMark } from '../../components/visitor/SourceMark'
+import { brandOf } from '../../lib/brandIcons'
 import { copy as off } from '../../features/cookieless/copy'
 import { why } from '../../features/cookieless/why'
 import { useLeaving } from '../../features/live/useLeaving'
@@ -15,7 +17,7 @@ import { copy as liveCopy } from '../../features/live/copy'
 import { isSignup } from '../../features/signals/signupLine'
 import { copy } from '../live/copy'
 import { useArrivals } from '../live/useArrivals'
-import { appTag } from '../../features/apps/copy'
+import { howKey, howName } from '../../features/apps/copy'
 import { AppTag } from '../../features/apps/AppTag'
 import './feedRow.css'
 
@@ -69,7 +71,8 @@ export function FeedList({ rows, up, signup, clock, empty, onVisitor, cookieless
             )}
             <span className="pg mono" title={page.title}>{page.text}</span>
             <span className="src" style={hot ? { color: 'var(--mk-lime)' } : undefined}>
-              {src}
+              <SourceMark channel={r.channel || 'Direct'} referrer={r.referrer || (brandOf(src) ? src : undefined)} size={16} />
+              <span className="srcn">{src}</span>
             </span>
             <span className="cc" title={r.country ? countryName(r.country) : undefined}>
               {r.country?.length === 2 ? (
@@ -82,9 +85,9 @@ export function FeedList({ rows, up, signup, clock, empty, onVisitor, cookieless
               )}
             </span>
             <span className="tm num">{agoShort(clock - r.last)}</span>
-            <span className="dv" title={r.app ? `${r.device} · ${appTag(r.app)}` : r.device} aria-label={r.device}>
+            <span className="dv" title={r.app ? `${r.device} · ${howName(howKey(r))}` : r.device} aria-label={r.device}>
               {r.device && <DeviceIcon device={r.device} size={15} />}
-              {r.app && <AppTag app={r.app} />}
+              {r.app && <AppTag app={r.app} device={r.device} os={r.os} />}
             </span>
           </button>
         )

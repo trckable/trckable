@@ -96,10 +96,11 @@ describe('pageviews', () => {
     await flush()
     expect(byKind('pv')[0]).not.toHaveProperty('ap')
 
-    for (const bridge of ['ReactNativeWebView', 'cordova', 'flutter_inappwebview']) {
+    const fns: Record<string, string> = { ReactNativeWebView: 'postMessage', cordova: 'exec', flutter_inappwebview: 'callHandler' }
+    for (const bridge of Object.keys(fns)) {
       browser()
       sent = []
-      ;(win as any)[bridge] = {}
+      ;(win as any)[bridge] = { [fns[bridge]]: () => {} }
       tracker()
       await flush()
       expect(byKind('pv')[0].ap).toBe(1)
@@ -123,6 +124,97 @@ describe('pageviews', () => {
     tracker({ app: true }) // data-app on the script tag
     await flush()
     expect(byKind('pv')[0].ap).toBe(1)
+  })
+
+  it('knows the other app frameworks by what they leave on the page', async () => {
+    for (const [bridge, value] of [['expo', {}], ['ExpoModules', {}], ['Portals', { publish: () => {} }], ['isTauri', true]] as const) {
+      browser()
+      sent = []
+      ;(win as any)[bridge] = value
+      tracker()
+      await flush()
+      expect(byKind('pv')[0].ap).toBe(1)
+    }
+    browser()
+    sent = []
+    ;(win as any).process = { versions: { electron: '30.0.0' } }
+    tracker()
+    await flush()
+    expect(byKind('pv')[0].ap).toBe(1)
+
+    browser()
+    sent = []
+    ;(globalThis as any).navigator.userAgent = 'Mozilla/5.0 Chrome/120 Electron/30.0.0 Safari/537.36'
+    tracker()
+    await flush()
+    expect(byKind('pv')[0].ap).toBe(1)
+    delete (globalThis as any).navigator.userAgent
+  })
+
+  it('is not fooled by elements whose ids are the names of the bridges', async () => {
+    browser()
+    sent = []
+    win.document.body.innerHTML = '<div id="expo"></div><div id="Portals"></div><div id="cordova"></div><div id="ExpoModules"></div><div id="ReactNativeWebView"></div><div id="isTauri"></div>'
+    for (const k of ['expo', 'Portals', 'cordova', 'ExpoModules', 'ReactNativeWebView', 'isTauri']) (win as any)[k] = win.document.getElementById(k)
+    tracker()
+    await flush()
+    expect(byKind('pv')[0]).not.toHaveProperty('ap')
+  })
+
+  it('keeps the app marker in memory only for a cookieless visit', async () => {
+    browser('https://site.com/start?tkb_app=1', '')
+    const t = tracker({ cookieless: true })
+    await flush()
+    expect(byKind('pv')[0].ap).toBe(1)
+    t('inApp')
+    expect(win.sessionStorage.getItem('trckable_app')).toBeNull()
+  })
+
+  it('strips every marker from the address and the referrer', async () => {
+    browser('https://site.com/p?app=1&tkb_app=1&x=2', 'https://app.example/in?tkb_app=1&app=1')
+    tracker()
+    await flush()
+    expect(byKind('pv')[0].u).toBe('https://site.com/p?x=2')
+    expect(byKind('pv')[0].r).toBe('https://app.example/in')
+  })
+
+  it('takes ?app=1 once, keeps it for the visit, and does not send it on', async () => {
+    browser('https://site.com/start?app=1&x=2', '')
+    tracker()
+    win.history.pushState({}, '', '/next')
+    win.history.pushState({}, '', '/last?y=1&tkb_app=1#top')
+    await flush()
+    const pvs = byKind('pv')
+    expect(pvs.map((e) => e.ap)).toEqual([1, 1, 1])
+    expect(pvs.map((e) => e.u)).toEqual(['https://site.com/start?x=2', 'https://site.com/next', 'https://site.com/last?y=1#top'])
+
+    // A later page of the same tab, opened without the marker, is still the app.
+    const ss = win.sessionStorage.getItem('trckable_app')
+    expect(ss).toBe('1')
+    browser('https://site.com/other', '')
+    win.sessionStorage.setItem('trckable_app', '1')
+    sent = []
+    tracker()
+    await flush()
+    expect(byKind('pv')[0].ap).toBe(1)
+
+    browser('https://site.com/plain', '')
+    sent = []
+    tracker()
+    await flush()
+    expect(byKind('pv')[0]).not.toHaveProperty('ap')
+  })
+
+  it('inApp() marks this and later sends', async () => {
+    const t = tracker()
+    await flush()
+    expect(byKind('pv')[0]).not.toHaveProperty('ap')
+    t('inApp')
+    t('goal', 'signup')
+    win.history.pushState({}, '', '/more')
+    await flush()
+    expect(byKind('g')[0].ap).toBe(1)
+    expect(byKind('pv')[1].ap).toBe(1)
   })
 
   it('counts SPA navigations once and ignores same-URL replaceState', async () => {

@@ -19,6 +19,7 @@ export const DIM_LABEL: Record<string, string> = {
   language: 'Language',
   network: 'Network',
   os: 'OS',
+  device_app: 'Opened in',
   goal: 'Goal',
   link: 'Link',
   utm_source: 'utm_source',

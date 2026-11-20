@@ -1,4 +1,6 @@
 // Where the people right now came from: the top five, a row each with its share as a bar, how many and the percent.
+import { SourceMark } from '../../components/visitor/SourceMark'
+import { brandOf } from '../../lib/brandIcons'
 import { fmtInt } from '../../lib/format'
 import { channelLabel } from '../../lib/palette'
 import { openThing } from '../explore/thing'
@@ -12,7 +14,7 @@ export function SourceRows({ parts, color, timezone, todayVisitors }: { parts: R
       {parts.map((p) => (
         <li key={p.channel} title={channelLabel(p.channel)}>
           <button type="button" className="lsn lsn-go" onClick={() => openThing({ kind: 'channel', value: p.channel }, { visit: { at: Date.now(), tz: timezone, todayVisitors } })}>
-            <i style={{ background: color(p.channel) }} />
+            {brandOf(p.channel) ? <SourceMark channel={p.channel} referrer={p.channel} size={16} /> : <i style={{ background: color(p.channel) }} />}
             {channelLabel(p.channel)}
           </button>
           <span className="lsb">

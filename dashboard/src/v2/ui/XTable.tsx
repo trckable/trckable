@@ -91,11 +91,11 @@ export function XTable({ rows, head, unit = copy.people, mono, flags, mark, sele
         {paid && <span className="hm">{copy.heads.revenue}</span>}
       </div>
       {rows.slice(0, limit).map((r) => {
-        const d = r.sub ? { text: '', tone: '' } : delta(r)
+        const d = delta(r)
         const inner = (
           <>
             <span className="mk-bar">
-              {!r.sub && <i style={{ width: `${(r.v / max) * 100}%` }} />}
+              <i style={{ width: `${(r.v / max) * 100}%` }} />
               <span className={`${mono ? 'mono' : ''}${r.title ? ' xtwo' : ''}`}>
                 {flags && r.code && <><Flag code={r.code} />{' '}</>}
                 {mark?.(r)}
@@ -111,8 +111,8 @@ export function XTable({ rows, head, unit = copy.people, mono, flags, mark, sele
             {paid && <span className="mk-n hm">{r.rev ? money(r.rev) : '–'}</span>}
           </>
         )
-        if (!onPick || r.sub) return (
-          <div key={r.val} className={`xrw${r.sub ? ' xapp' : ''}`}>
+        if (!onPick) return (
+          <div key={r.val} className="xrw">
             {inner}
           </div>
         )

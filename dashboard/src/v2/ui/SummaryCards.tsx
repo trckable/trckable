@@ -1,6 +1,7 @@
 // The one summary card: a small uppercase label, the number under it, one muted line under that (the change, then what it is against).
 // Every row of number tiles above a table or a page uses this, so they all look the same.
 import type { ReactNode } from 'react'
+import { Smartphone } from 'lucide-react'
 import { Ico } from './icons'
 import { RollText } from './RollText'
 import type { Tone } from '../explore/types'
@@ -27,6 +28,8 @@ export interface SumItem {
   /** A slim chart under the line: a sparkline or a share bar, in the card's colour. */
   chart?: ReactNode
   color?: string
+  /** A quiet line of its own under the card's last line, that filters when tapped. */
+  chip?: { text: string; on: boolean; onClick: () => void }
   onClick?: () => void
   data?: string
 }
@@ -56,6 +59,12 @@ function Body({ k }: { k: SumItem }) {
           {k.tag && <span className={`sum-n ${k.tone ?? ''}`}>{ARROW[k.tone ?? ''] + k.tag}</span>}
           {k.sub}
         </div>
+      )}
+      {k.chip && (
+        <button type="button" className={`sum-chip${k.chip.on ? ' on' : ''}`} aria-pressed={k.chip.on} onClick={k.chip.onClick}>
+          <Smartphone size={13} aria-hidden="true" />
+          <span>{k.chip.text}</span>
+        </button>
       )}
       {k.chart && <div className="sum-c" style={k.color ? { color: k.color } : undefined}>{k.chart}</div>}
     </>

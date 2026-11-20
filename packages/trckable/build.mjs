@@ -82,7 +82,7 @@ execSync('npx tsc -p tsconfig.build.json', { stdio: 'inherit' })
 
 const gz = (f) => gzipSize(readFileSync(f))
 const react = gz('dist/react.js') + gz('dist/index.js')
-const BUDGET = 2816 // bytes, gzip (2712 at 0.9.0; room for the app switches); scripts/facts.mjs reads it from here
+const BUDGET = 2870 // bytes, gzip; scripts/facts.mjs reads it from here
 console.log(`trckable/react adds ${react} B gzip to an app (budget ${BUDGET}) ${react <= BUDGET ? '✓' : '✗ OVER BUDGET'}`)
 for (const e of [...entries, { name: 'cli' }]) console.log(`  dist/${e.name}.js  ${gz(`dist/${e.name}.js`)} B gzip`)
 if (react > BUDGET) process.exit(1)

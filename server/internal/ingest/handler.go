@@ -261,7 +261,7 @@ type payload struct {
 	INP        uint32            `json:"inp"`
 	Dev        int               `json:"dev"` // localhost allowed (tracker data-dev)
 	Cookieless int               `json:"c"`   // visitor is in cookieless mode: never set a cookie
-	App        any               `json:"ap"`  // 1 or true: the page runs in an app's web view (a bridge on the page, or data-app)
+	App        any               `json:"ap"`  // 1 or true: the page runs in an app (a web view's bridge on the page, data-app, ?app=1)
 }
 
 var (
@@ -511,11 +511,12 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 		e.Screen = uint16(p.Width)
 	}
 	e.BrowserVersion = ua.Version
-	// Only the flag is believed from the page, never a name: a phone or tablet
-	// the user agent did not place in an app, whose page says it is in one.
+	// Only the flag is believed from the page, never a name: a visit the user
+	// agent did not place in an app, whose page says it is in one (a phone's
+	// web view, or a desktop app built on a web view: Tauri, Electron).
 	// iOS's other browsers are built on the app web view and carry its traces:
 	// their own name in the user agent outranks the flag.
-	if e.App = ua.App; e.App == "" && (p.App == float64(1) || p.App == true) && (ua.Device == "Mobile" || ua.Device == "Tablet") && !iosBrowserRE.MatchString(r.UserAgent()) {
+	if e.App = ua.App; e.App == "" && (p.App == float64(1) || p.App == true) && !iosBrowserRE.MatchString(r.UserAgent()) {
 		e.App = "app"
 	}
 

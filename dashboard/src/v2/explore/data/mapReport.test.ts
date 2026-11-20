@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { KPIs, Money, Report, Result } from '../../../lib/api'
-import { mapEngage, mapOverview, mapTable, mapTops, optionsOf } from './mapReport'
+import { appChip, appShare, mapEngage, mapOverview, mapTable, mapTops, optionsOf } from './mapReport'
 
 const kpis = (visitors: number, extra: Partial<KPIs> = {}): KPIs => ({ visitors, sessions: visitors, pageviews: visitors * 2, bounce_rate: 0.45, avg_session_s: 60, views_per_session: 2, new_visitor_share: 0.5, ...extra })
 const hours = (xs: number[]) => xs.map((visitors, h) => ({ t: `2026-10-16T${String(h).padStart(2, '0')}:00`, visitors, pageviews: visitors * 2 }))
@@ -209,26 +209,54 @@ describe('how people read', () => {
   })
 })
 
-describe('the device table splits phones by how the site was opened', () => {
+describe('how people open the site', () => {
   const devices = [{ value: 'Desktop', visitors: 50 }, { value: 'Mobile', visitors: 40 }, { value: 'Tablet', visitors: 10 }]
-  const apps = [{ value: 'Mobile|browser', visitors: 30 }, { value: 'Mobile|instagram', visitors: 6 }, { value: 'Mobile|app', visitors: 4 }, { value: 'Tablet|browser', visitors: 10 }]
+  const apps = [
+    { value: 'Desktop', visitors: 50 },
+    { value: 'iOS|browser', visitors: 24 },
+    { value: 'Android|browser', visitors: 6 },
+    { value: 'instagram', visitors: 6 },
+    { value: 'iOS|app', visitors: 4 },
+    { value: 'Android|app', visitors: 6 },
+    { value: 'Desktop|app', visitors: 4 },
+  ]
 
-  it('puts a line under Mobile for each way, busiest first, once an app visit exists', () => {
+  it('names the ways, busiest first, once an app visit exists; the device rows stay as they were', () => {
     const t = mapTable('devices', report(result(100, { dims: { device: devices, device_app: apps } })))
-    expect(t.rows.map((r) => [r.val, r.name, r.v, !!r.sub])).toEqual([
-      ['Desktop', 'Desktop', 50, false],
-      ['Mobile', 'Mobile', 40, false],
-      ['Mobile|browser', 'Browser', 30, true],
-      ['Mobile|instagram', 'Instagram', 6, true],
-      ['Mobile|app', 'In an app', 4, true],
-      ['Tablet', 'Tablet', 10, false],
-      ['Tablet|browser', 'Browser', 10, true],
+    expect(t.how?.map((h) => [h.key, h.name, h.v])).toEqual([
+      ['Desktop', 'Desktop', 50],
+      ['iOS|browser', 'iOS browser', 24],
+      ['Android|browser', 'Android browser', 6],
+      ['instagram', 'Instagram', 6],
+      ['Android|app', 'Android app', 6],
+      ['iOS|app', 'iOS app', 4],
+      ['Desktop|app', 'Desktop app', 4],
     ])
+    expect(t.rows.map((r) => r.val)).toEqual(['Desktop', 'Mobile', 'Tablet'])
   })
 
-  it('changes nothing while every phone visit came by the browser', () => {
-    const only = [{ value: 'Mobile|browser', visitors: 40 }, { value: 'Tablet|browser', visitors: 10 }]
-    const t = mapTable('devices', report(result(100, { dims: { device: devices, device_app: only } })))
-    expect(t.rows.map((r) => r.val)).toEqual(['Desktop', 'Mobile', 'Tablet'])
+  it('shows nothing while every visit came by a browser or a desktop', () => {
+    const only = [{ value: 'Desktop', visitors: 50 }, { value: 'iOS|browser', visitors: 40 }, { value: 'Android|browser', visitors: 10 }]
+    expect(mapTable('devices', report(result(100, { dims: { device: devices, device_app: only } }))).how).toBeUndefined()
+  })
+
+  it('counts the people who used the site\'s own app, never a social app', () => {
+    expect(appShare(apps, 100)).toBeCloseTo(0.14)
+    expect(appShare([{ value: 'instagram', visitors: 30 }], 100)).toBe(0)
+    expect(appShare(apps, 0)).toBe(0)
+  })
+
+  it('puts a line under the people number only from 5% of people', () => {
+    expect(appChip([{ value: 'iOS|app', visitors: 5 }], 100).chip).toEqual({ text: '5% used your app', dim: 'app', value: 'app' })
+    expect(appChip([{ value: 'iOS|app', visitors: 4 }], 100).chip).toBeUndefined()
+    expect(appChip(null, 100)).toEqual({})
+    const o = mapOverview(report(result(100, { dims: { device_app: apps } })), { uptime: null, now: '2026-09-27' })
+    expect(o.kcs[0].chip?.text).toBe('14% used your app')
+    expect(mapOverview(report(result(100, { dims: { device_app: [] } })), { uptime: null, now: '2026-09-27' }).kcs[0].chip).toBeUndefined()
+  })
+
+  it('knows the opened-in filter as a value of the period, named the way people say it', () => {
+    const o = optionsOf(result(100, { dims: { device_app: apps } }))
+    expect(o.device_app?.find((x) => x.val === 'iOS|app')?.name).toBe('iOS app')
   })
 })

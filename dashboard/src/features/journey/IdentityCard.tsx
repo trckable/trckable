@@ -3,7 +3,7 @@
 import { Avatar } from '../../components/visitor/Avatar'
 import { DeviceIcon } from '../../components/visitor/DeviceIcon'
 import { nameOf } from '../../lib/visitor'
-import { appLine } from '../apps/copy'
+import { appName, howKey, howName } from '../apps/copy'
 import { countryName, fmtDuration, fmtInt, fmtMoney } from '../../lib/format'
 import { Flag } from '../../v2/ui/Flag'
 import { copy } from './copy'
@@ -28,12 +28,25 @@ export function Place({ who }: { who: Identity }) {
 
 const PHONE = new Set(['Mobile', 'Tablet'])
 
-/** The words of the device line. A phone or tablet whose system is known drops
- *  the word "Mobile" (the system says it) and ends with how it opened the site:
- *  the browser, "In an app", or the social app. A desktop keeps its browser. */
+/** The device by its own name when the system tells it: iPhone, iPad, Mac, Android phone; else the device kind. */
+export function deviceName(who: Pick<Identity, 'device' | 'os'>): string {
+  const os = who.os.toLowerCase()
+  const tablet = who.device === 'Tablet'
+  if (os === 'ios' || os === 'ipados') return tablet ? copy.ipad : copy.iphone
+  if (os.startsWith('mac')) return copy.mac
+  if (os === 'android') return tablet ? copy.androidTablet : copy.androidPhone
+  if (os.startsWith('windows') && who.device === 'Desktop') return copy.windowsPc
+  return who.device
+}
+
+/** The words of the device line. A phone or tablet whose system is known says how it
+ *  opened the site in one name ("iOS browser", "Android app"), or the social app after
+ *  its system. A desktop keeps its browser, and says "Desktop app" for one that is an app. */
 export function techParts(who: Pick<Identity, 'device' | 'browser' | 'os' | 'app'>): string[] {
-  if (PHONE.has(who.device) && who.os) return [who.os, who.app ? appLine(who.app) : who.browser].filter(Boolean)
-  return [who.device, who.app && PHONE.has(who.device) ? appLine(who.app) : who.browser, who.os].filter(Boolean)
+  const social = who.app && who.app !== 'browser' && who.app !== 'app' ? appName(who.app) : undefined
+  if (PHONE.has(who.device) && who.os) return social ? [who.os, social] : [howName(howKey(who))]
+  if (who.device === 'Desktop' && who.app === 'app') return [howName(howKey(who)), who.os].filter(Boolean)
+  return [who.device, social ?? who.browser, who.os].filter(Boolean)
 }
 
 export function Tech({ who }: { who: Identity }) {
@@ -48,26 +61,23 @@ export function Tech({ who }: { who: Identity }) {
 
 export function IdentityHead({ who, titleId, zone }: { who: Identity; titleId: string; zone?: string }) {
   const how = howOf(who)
-  const system = who.os || who.device
   return (
     <div className="jr-who" style={{ ['--v-hue' as string]: String(who.hue) }}>
       <Avatar id={who.visitor} size={52} live={who.live} />
       <div className="jr-who-text">
         <h2 id={titleId}>{nameOf(who.visitor)}</h2>
-        {(system || how.text) && (
-          <p className="jr-how">
-            {system && (
-              <span className="jr-how-part">
-                {who.os ? <OsMark os={who.os} /> : <DeviceIcon device={who.device} size={15} />}
-                <span>{system}</span>
-              </span>
-            )}
+        <p className="jr-how">
+          <span className="jr-how-part">
+            {who.os ? <OsMark os={who.os} /> : <DeviceIcon device={who.device} size={15} />}
+            <span>{deviceName(who)}</span>
+          </span>
+          {how.text && (
             <span className="jr-how-part">
               <HowMark x={who} />
-              <b>{how.text}</b>
+              <b>{who.app === 'app' ? copy.inApp : how.detail || how.text}</b>
             </span>
-          </p>
-        )}
+          )}
+        </p>
         <p className="jr-who-line faint">
           {who.country && (
             <span title={countryName(who.country)}>

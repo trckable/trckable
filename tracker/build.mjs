@@ -30,7 +30,9 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 // <html> says data-trckable-ignore): 70 bytes on a new site's script (2,416 → 2,486).
 // 2,580 since 20 Nov 2026: a visit from an app's web view says so (the bridge names an app
 // leaves on the page, or data-app): 93 bytes on a new site's script (2,486 → 2,579).
-const BUDGET = 2580 // bytes, gzip, for the full script: 2 KB, as the site says
+// 2,860 since 20 Nov 2026 (2,852 measured: the bridges are checked by what they can do, the marker is also taken out of the referrer). Before: 2,730,  more apps are told apart (Expo, Ionic Portals, Tauri, Electron), and
+// ?app=1 and inApp() say it for a web view that shows nothing: 150 bytes (2,579 → 2,729).
+const BUDGET = 2860 // bytes, gzip, for the full script: 2 KB, as the site says
 const TARGET = 1638 // 1.6 KB goal
 
 // Keep in sync with server/internal/modules (Tracker* constants).
@@ -57,12 +59,13 @@ const OPTIONAL = new Set(['vitals', 'consent', 'banner', 'forms'])
 // 3,325 since 16 Nov 2026, pako 3 measures the same code 5 bytes bigger.
 // 3,385 since 16 Nov 2026, the page title (heaviest mix 3,385).
 // 3,480 since 20 Nov 2026, the app flag (heaviest mix 3,473).
-const WITH_OPTIONAL_BUDGET = 3480
+// 3,760 since 20 Nov 2026, the same (heaviest mix 3,751).
+const WITH_OPTIONAL_BUDGET = 3760
 
 // trckable's own cookie bar carries markup, styles and words, so it has a
 // budget of its own. It replaces a consent manager that costs 30–90 KB, and
 // it is off unless a site asks for it.
-const BANNER_BUDGET = 4195 // 4,195 since 20 Nov 2026, the app flag; 4,096 since 16 Nov 2026, the page title; 4,035 since 16 Nov 2026, pako 3 measures the same code 5 bytes bigger; 4,030 since 16 Nov 2026, the last send and the tab queue; 3,920 since 3 Nov 2026, the forms module's kept fields; 3,400 until 12 Oct 2026, the same 34 bytes; 3,452 since 13 Oct, the same change; 3,690 since 18 Oct, the Web Vitals; 3,692 since 22 Oct, visitor ids without a leading zero
+const BANNER_BUDGET = 4470 // 4,470 since 20 Nov 2026, the app checks (a bridge is told from an element of the same id) and the marker taken out of the referrer too; 4,345 since 20 Nov 2026, the same 150 bytes; 4,195 since 20 Nov 2026, the app flag; 4,096 since 16 Nov 2026, the page title; 4,035 since 16 Nov 2026, pako 3 measures the same code 5 bytes bigger; 4,030 since 16 Nov 2026, the last send and the tab queue; 3,920 since 3 Nov 2026, the forms module's kept fields; 3,400 until 12 Oct 2026, the same 34 bytes; 3,452 since 13 Oct, the same change; 3,690 since 18 Oct, the Web Vitals; 3,692 since 22 Oct, visitor ids without a leading zero
 
 // The heatmaps module is a script of its own, sent after the base script only
 // to a site that turned it on, so none of it counts against BUDGET. It has a

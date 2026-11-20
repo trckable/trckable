@@ -251,5 +251,6 @@ npx trckable mcp                                                                
 | `hash` | Count `#/routes` as pages |
 | `dev` | Track on localhost, including automated browsers (Playwright, Cypress) |
 | `domain` | Cookie domain, to share visitors across subdomains |
+| `app` | Your site runs inside your app's web view: every visit counts as an app visit. `inApp()` does the same for the rest of one visit, and `?tkb_app=1` on the first URL does too |
 
 MIT licensed. The trckable server is AGPL-3.0.

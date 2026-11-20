@@ -7,9 +7,9 @@ import { channelLabel } from '../../../lib/palette'
 import { baseEnough, tooFew } from '../../../lib/thin'
 import { compareOf, whyNot } from '../../briefing/compare'
 import { sourceName } from '../../briefing/model'
-import { appLine } from '../../../features/apps/copy'
+import { howName, isAppKey } from '../../../features/apps/copy'
 import { copy } from '../copy'
-import type { Down, FilterDim, Kc, Option, Overview, Row, Shape, Stat, Tab, Table, Top, Xkc } from '../types'
+import type { Down, FilterDim, How, Kc, Option, Overview, Row, Shape, Stat, Tab, Table, Top, Xkc } from '../types'
 import type { Basis } from './basis'
 import { changeOf, noteOf, rowsOf, statOf } from './stats'
 
@@ -48,7 +48,7 @@ export function mapOverview(r: Report, o: { money?: (minor: number) => string; u
   const views = statOf(cur.kpis.pageviews, prev?.kpis.pageviews, base)
   const series = cur.series ?? []
   const kcs: Kc[] = [
-    { icon: 'people', label: copy.people, val: fmtInt(people.v), note: pe(people), vals: series.map((p) => p.visitors), st: people.st === 'dn' ? 'dn' : '' },
+    { icon: 'people', label: copy.people, val: fmtInt(people.v), note: pe(people), vals: series.map((p) => p.visitors), st: people.st === 'dn' ? 'dn' : '', ...appChip(cur.dims.device_app, cur.kpis.visitors) },
     goal && gs
       ? { icon: 'goal', label: cap(goal.label || goal.value), val: fmtInt(goal.visitors), note: pe(gs), vals: [], share: people.v ? goal.visitors / people.v : 0, col: 'var(--mk-blue)', st: gs.st === 'dn' ? 'dn' : '' }
       : { icon: 'eye', label: copy.kc.views, val: fmtInt(views.v), note: pe(views), vals: series.map((p) => p.pageviews), col: 'var(--mk-blue)', st: views.st === 'dn' ? 'dn' : '' },
@@ -161,17 +161,29 @@ export function mapTable(tab: Tab, r: Report): Table {
     ...(sales ? { cust: paid.get(v)?.customers ?? 0, rev: paid.get(v)?.revenue ?? 0 } : {}),
   })
   const rows = rowsOf(r.current.dims[t.key], r.previous?.dims[t.key], r.previous?.kpis.visitors, t.name, extra)
-  return { rows: t.key === 'device' ? withApps(rows, r.current.dims.device_app) : rows, dim: t.dim, of: r.current.kpis.visitors }
+  const how = t.key === 'device' ? howParts(r.current.dims.device_app) : []
+  return { rows, dim: t.dim, of: r.current.kpis.visitors, ...(how.length ? { how } : {}) }
 }
 
-/** How a phone's or a tablet's visits opened the site, as lines under its row, once any came by an app: with only browser visits nothing is added. */
-export function withApps(rows: Row[], apps: ApiRow[] | null | undefined): Row[] {
-  const by = (apps ?? []).filter((a) => a.visitors > 0).map((a) => ({ device: a.value.split('|')[0], app: a.value.split('|')[1] ?? '', v: a.visitors }))
-  if (!by.some((a) => a.app !== 'browser')) return rows
-  return rows.flatMap((row) => [
-    row,
-    ...by.filter((a) => a.device === row.val).sort((a, b) => b.v - a.v).map((a) => ({ val: `${row.val}|${a.app}`, name: appLine(a.app), v: a.v, c: a.v, st: '' as const, sub: true })),
-  ])
+/** The ways people opened the site, busiest first, once any came by an app (a web view's or a social app's): with only browser and desktop visits there is nothing to tell apart, and nothing is returned. */
+export function howParts(apps: ApiRow[] | null | undefined): How[] {
+  const parts = (apps ?? []).filter((a) => a.visitors > 0).map((a) => ({ key: a.value, name: howName(a.value), v: a.visitors }))
+  return parts.some((p) => isAppKey(p.key)) ? parts.sort((a, b) => b.v - a.v) : []
+}
+
+/** The least share of people that makes the site's app worth a line on the Overview. */
+export const APP_CHIP_MIN = 0.05
+
+/** The line under the people number: how many used the site's app, once at least 5% did. Tapping it filters to the app's visits. */
+export function appChip(apps: ApiRow[] | null | undefined, people: number): { chip?: Kc['chip'] } {
+  const share = appShare(apps, people)
+  return share >= APP_CHIP_MIN ? { chip: { text: copy.usedApp(`${Math.round(share * 100)}%`), dim: 'app', value: 'app' } } : {}
+}
+
+/** The share of the period's people who used the site's app (an app's web view on a phone, a tablet or a desktop), 0 to 1; social apps are not the site's own. */
+export function appShare(apps: ApiRow[] | null | undefined, people: number): number {
+  const own = (apps ?? []).filter((a) => a.value.endsWith('|app')).reduce((n, a) => n + a.visitors, 0)
+  return people > 0 ? own / people : 0
 }
 
 const OPTION_DIMS: Record<FilterDim, { dim: string; name: (v: string) => string }> = {
@@ -179,6 +191,7 @@ const OPTION_DIMS: Record<FilterDim, { dim: string; name: (v: string) => string 
   page: { dim: 'page', name: (v) => v },
   country: { dim: 'country', name: countryName },
   device: { dim: 'device', name: (v) => v },
+  device_app: { dim: 'device_app', name: howName },
 }
 
 /** The values a filter can take, from what the period saw. */
