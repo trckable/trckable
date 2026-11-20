@@ -55,7 +55,8 @@ test('a quiet site is told in the site selector', async ({ page }) => {
   await open(page)
   await expect(page.locator('#siteBtn')).toBeVisible({ timeout: 20_000 })
   await page.locator('#siteBtn').click()
-  await expect(page.locator('#siteMenu').getByText('1 site quiet')).toBeVisible() // a line, not the "1 down ›" button (#817)
+  // A quiet site is only its grey dot and the tip on its number (no line says it, #803).
+  await expect(page.locator('#siteMenu .now[title*="No visits for"]')).toHaveCount(1)
 })
 
 test('a release this browser has not seen shows in the header', async ({ page }) => {

@@ -307,10 +307,10 @@ test('zooming in splits the gathered places into more markers', async ({ page })
   await page.screenshot({ path: `${SHOTS}/globe2-1280-dark-zoom3.png` })
 })
 
-// A pin opens the visitor card, and its buttons work: Replay opens the visitor's journey where it can be seen, and Open in Explore
-// lands in Explore narrowed to the page, also from full screen (which covers both) and on a phone (where the tab bar sits over the card's foot).
+// A pin opens the visitor card, and its button works: Open in Explore lands in Explore narrowed to the page, also from full
+// screen (which it ends) and on a phone (where the tab bar sits over the card's foot).
 for (const [width, full] of [[1280, false], [1280, true], [390, false]] as const) {
-  test(`the visitor card's buttons work, ${width}px${full ? ', full screen' : ''}`, async ({ page }) => {
+  test(`the visitor card's button works, ${width}px${full ? ', full screen' : ''}`, async ({ page }) => {
     const canvas = await crowd(page, width, 'dark')
     if (full) {
       await page.getByRole('button', { name: 'Full screen' }).click()
@@ -327,22 +327,6 @@ for (const [width, full] of [[1280, false], [1280, true], [390, false]] as const
     }
     await pick()
     await page.screenshot({ path: `${SHOTS}/gcard-${width}${full ? '-full' : ''}.png` })
-    await page.locator('.gpop-go').click()
-    const journey = page.getByText('Visitor journey')
-    await expect(journey).toBeVisible({ timeout: 5000 })
-    // It is on top: the point in its middle belongs to the dialog, not to the full-screen cover under it.
-    await expect.poll(() => journey.evaluate((e) => { const r = e.getBoundingClientRect(); return !!document.elementFromPoint(r.x + 4, r.y + 4)?.closest('[role=dialog], .modal-back, dialog') })).toBe(true) // the phone's sheet is still sliding up
-    await page.keyboard.press('Escape')
-    await page.keyboard.press('Escape')
-    await expect(page.locator('.gpop')).toHaveCount(0)
-    await page.waitForTimeout(1500)
-    if (!full) await pick()
-    else {
-      await page.getByRole('button', { name: 'Full screen' }).click()
-      await expect(page.locator('.gwrap.fill')).toBeVisible()
-      await page.waitForTimeout(800)
-      await pick()
-    }
     await page.locator('.gpop-ex').click()
     await expect(page).toHaveURL(/xf=page%3A%2F(p\d|form_submit)/, { timeout: 5000 })
     await expect(page.locator('.gwrap.fill')).toHaveCount(0)
