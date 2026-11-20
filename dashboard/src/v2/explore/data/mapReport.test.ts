@@ -208,3 +208,27 @@ describe('how people read', () => {
     expect(none.every((k) => k.val === '–')).toBe(true)
   })
 })
+
+describe('the device table splits phones by how the site was opened', () => {
+  const devices = [{ value: 'Desktop', visitors: 50 }, { value: 'Mobile', visitors: 40 }, { value: 'Tablet', visitors: 10 }]
+  const apps = [{ value: 'Mobile|browser', visitors: 30 }, { value: 'Mobile|instagram', visitors: 6 }, { value: 'Mobile|app', visitors: 4 }, { value: 'Tablet|browser', visitors: 10 }]
+
+  it('puts a line under Mobile for each way, busiest first, once an app visit exists', () => {
+    const t = mapTable('devices', report(result(100, { dims: { device: devices, device_app: apps } })))
+    expect(t.rows.map((r) => [r.val, r.name, r.v, !!r.sub])).toEqual([
+      ['Desktop', 'Desktop', 50, false],
+      ['Mobile', 'Mobile', 40, false],
+      ['Mobile|browser', 'Browser', 30, true],
+      ['Mobile|instagram', 'Instagram', 6, true],
+      ['Mobile|app', 'In an app', 4, true],
+      ['Tablet', 'Tablet', 10, false],
+      ['Tablet|browser', 'Browser', 10, true],
+    ])
+  })
+
+  it('changes nothing while every phone visit came by the browser', () => {
+    const only = [{ value: 'Mobile|browser', visitors: 40 }, { value: 'Tablet|browser', visitors: 10 }]
+    const t = mapTable('devices', report(result(100, { dims: { device: devices, device_app: only } })))
+    expect(t.rows.map((r) => r.val)).toEqual(['Desktop', 'Mobile', 'Tablet'])
+  })
+})

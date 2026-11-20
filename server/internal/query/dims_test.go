@@ -17,19 +17,6 @@ import (
 // both must read the same two columns.
 func dimsRig(t *testing.T, open bool) Q {
 	t.Helper()
-	ctx := context.Background()
-	dir := t.TempDir()
-	st, err := duck.Open(ctx, filepath.Join(dir, "d.duckdb"), duck.Options{})
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { st.Close() })
-	lg, err := wal.Open(filepath.Join(dir, "wal"), wal.Options{NoSync: true})
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { lg.Close() })
-
 	at := func(h, m int) int64 { return time.Date(2026, 9, 10, h, m, 0, 0, time.UTC).UnixMilli() }
 	pv := func(ts int64, v uint64, ver string, width uint16) event.Event {
 		return event.Event{Site: "s1", Kind: event.KindPageview, TS: ts, Visitor: v, Path: "/",
@@ -46,6 +33,25 @@ func dimsRig(t *testing.T, open bool) Q {
 		pv(at(15, 0), 7, "Chrome 130", 641),  // the bottom of the second
 		pv(at(16, 0), 8, "Chrome 130", 1024), // the top of the second
 	}
+	return rigOf(t, open, evs, at(16, 1), at(23, 0))
+}
+
+// rigOf writes the events through the writer and returns a query over the store: with open, the last session is still in memory at the first clock, otherwise every session is closed at the second.
+func rigOf(t *testing.T, open bool, evs []event.Event, openAt, closedAt int64) Q {
+	t.Helper()
+	ctx := context.Background()
+	dir := t.TempDir()
+	st, err := duck.Open(ctx, filepath.Join(dir, "d.duckdb"), duck.Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { st.Close() })
+	lg, err := wal.Open(filepath.Join(dir, "wal"), wal.Options{NoSync: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { lg.Close() })
+
 	for i := range evs {
 		evs[i].EventID = uint64(i + 1)
 		evs[i].Pageview = uint64(i + 1)
@@ -54,9 +60,9 @@ func dimsRig(t *testing.T, open bool) Q {
 			t.Fatal(err)
 		}
 	}
-	clock := time.UnixMilli(at(16, 1))
+	clock := time.UnixMilli(openAt)
 	if !open {
-		clock = time.UnixMilli(at(23, 0))
+		clock = time.UnixMilli(closedAt)
 	}
 	w := writer.New(lg, st, writer.Options{FlushEvery: 10 * time.Millisecond, IdleClose: 30 * time.Millisecond, Now: func() time.Time { return clock }})
 	wctx, cancel := context.WithCancel(ctx)

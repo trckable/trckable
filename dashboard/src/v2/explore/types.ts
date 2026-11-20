@@ -26,6 +26,8 @@ export interface Row {
   su?: number
   /** Where the table is of entry or exit pages: the share of its visits that left after one page, 0 to 1. */
   br?: number
+  /** A line under its row, not a row of its own: how a phone's visits opened the site. It has no filter and no change against before. */
+  sub?: boolean
 }
 
 /** A number, the range it usually sits in, and where it is now. */

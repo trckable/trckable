@@ -32,6 +32,7 @@ var exportDims = []struct{ dim, label string }{
 	{"region", "region"},
 	{"city", "city"},
 	{"device", "device"},
+	{"device_app", "device and app"},
 	{"browser", "browser"},
 	{"os", "operating system"},
 	{"browser_version", "browser version"},

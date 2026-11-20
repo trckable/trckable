@@ -7,6 +7,7 @@ import { channelLabel } from '../../../lib/palette'
 import { baseEnough, tooFew } from '../../../lib/thin'
 import { compareOf, whyNot } from '../../briefing/compare'
 import { sourceName } from '../../briefing/model'
+import { appLine } from '../../../features/apps/copy'
 import { copy } from '../copy'
 import type { Down, FilterDim, Kc, Option, Overview, Row, Shape, Stat, Tab, Table, Top, Xkc } from '../types'
 import type { Basis } from './basis'
@@ -160,7 +161,17 @@ export function mapTable(tab: Tab, r: Report): Table {
     ...(sales ? { cust: paid.get(v)?.customers ?? 0, rev: paid.get(v)?.revenue ?? 0 } : {}),
   })
   const rows = rowsOf(r.current.dims[t.key], r.previous?.dims[t.key], r.previous?.kpis.visitors, t.name, extra)
-  return { rows, dim: t.dim, of: r.current.kpis.visitors }
+  return { rows: t.key === 'device' ? withApps(rows, r.current.dims.device_app) : rows, dim: t.dim, of: r.current.kpis.visitors }
+}
+
+/** How a phone's or a tablet's visits opened the site, as lines under its row, once any came by an app: with only browser visits nothing is added. */
+export function withApps(rows: Row[], apps: ApiRow[] | null | undefined): Row[] {
+  const by = (apps ?? []).filter((a) => a.visitors > 0).map((a) => ({ device: a.value.split('|')[0], app: a.value.split('|')[1] ?? '', v: a.visitors }))
+  if (!by.some((a) => a.app !== 'browser')) return rows
+  return rows.flatMap((row) => [
+    row,
+    ...by.filter((a) => a.device === row.val).sort((a, b) => b.v - a.v).map((a) => ({ val: `${row.val}|${a.app}`, name: appLine(a.app), v: a.v, c: a.v, st: '' as const, sub: true })),
+  ])
 }
 
 const OPTION_DIMS: Record<FilterDim, { dim: string; name: (v: string) => string }> = {

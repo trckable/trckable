@@ -95,6 +95,11 @@
   }
 }
 
+/* A line under a device row: how a phone's visits opened the site. */
+.mk .xt .xrw.xapp { display: grid; min-height: 0; padding-block: 2px; color: var(--mk-muted); font-size: 13px; border-top-color: transparent; }
+.mk .xt .xrw.xapp .mk-bar { height: 20px; background: none; }
+.mk .xt .xrw.xapp .mk-bar span { left: 27px; }
+
 /* Entry and exit pages: the share that left after one page is a column of its own, in a card as in the side panel. */
 .mk .xt.xl .xth,
 .mk .xt.xl .xrw {

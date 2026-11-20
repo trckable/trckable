@@ -289,6 +289,12 @@ var migrations = []string{
 		seen    TIMESTAMP NOT NULL,
 		PRIMARY KEY (site_id, path)
 	);`,
+	// 14: how a phone or tablet visit reached the page when it was not a
+	// browser: a social app's key ("instagram") or "app" for any other web
+	// view. Null on every row recorded before this release, which the reports
+	// count with the browser visits rather than guess.
+	`ALTER TABLE events ADD COLUMN app VARCHAR;
+	ALTER TABLE sessions ADD COLUMN app VARCHAR;`,
 }
 
 // tableSince is the migration that created each table added after the first

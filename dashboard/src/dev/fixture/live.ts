@@ -53,7 +53,7 @@ export function nowOf(c: Ctx, id: string): LiveNow {
       const dv = pick(r, site.dv[s])
       const ct = pick(r, site.ct[s])
       const ts = at - (4 + i * 5) * 1000
-      recent.push({ kind: 'pageview', ts, last: ts, visitor: `lv${i}`, path: site.pages[pick(r, site.pg[s])][0], channel: SRCS[s].name, country: CTYS[ct].id, city: CITIES[CTYS[ct].id]?.[i % 2], device: DEVS[dv].name })
+      recent.push({ kind: 'pageview', ts, last: ts, visitor: `lv${i}`, path: site.pages[pick(r, site.pg[s])][0], channel: SRCS[s].name, country: CTYS[ct].id, city: CITIES[CTYS[ct].id]?.[i % 2], device: DEVS[dv].name, ...(DEVS[dv].name === 'Mobile' && i % 3 === 0 ? { app: i % 6 === 0 ? 'instagram' : 'app' } : {}) })
     }
   // A person who has just signed up, when the site has a signup goal.
   const signup = c.conn.goals ? goalsOf(site).find((g) => /^(sign-?up|signed-?up)$/.test(g.key)) : undefined

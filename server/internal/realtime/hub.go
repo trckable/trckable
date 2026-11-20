@@ -23,6 +23,7 @@ type Live struct {
 	City    string `json:"city,omitempty"`
 	Device  string `json:"device,omitempty"`
 	Browser string `json:"browser,omitempty"`
+	App     string `json:"app,omitempty"` // how a phone or tablet visit reached the page when not by the browser: "app" or a social app's key
 	// Visitor is the pseudonymous id, so the dashboard can open this person's
 	// journey. It is derived from a daily-rotating salted hash and never
 	// contains an IP, an email or anything a visitor typed.
@@ -108,7 +109,7 @@ func (h *Hub) Publish(evs []event.Event) {
 		if len(subs) == 0 || e.Kind == event.KindEngagement {
 			continue
 		}
-		l := Live{TS: e.TS, Visitor: strconv.FormatUint(e.Visitor, 36), Path: e.Path, Channel: e.Channel, Ref: e.RefHost, Country: e.Country, City: e.City, Device: e.Device, Browser: e.Browser}
+		l := Live{TS: e.TS, Visitor: strconv.FormatUint(e.Visitor, 36), Path: e.Path, Channel: e.Channel, Ref: e.RefHost, Country: e.Country, City: e.City, Device: e.Device, Browser: e.Browser, App: e.App}
 		if e.Kind == event.KindGoal {
 			l.Kind, l.Goal = "goal", e.Goal
 			if h.Label != nil {

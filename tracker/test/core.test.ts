@@ -91,6 +91,40 @@ describe('pageviews', () => {
     expect(pv.v).toMatch(/^[0-9a-z]+\.[0-9a-z]+$/) // "<id>.<first-seen>"
   })
 
+  it('says so when the page runs in an app\'s web view, and only then', async () => {
+    tracker()
+    await flush()
+    expect(byKind('pv')[0]).not.toHaveProperty('ap')
+
+    for (const bridge of ['ReactNativeWebView', 'cordova', 'flutter_inappwebview']) {
+      browser()
+      sent = []
+      ;(win as any)[bridge] = {}
+      tracker()
+      await flush()
+      expect(byKind('pv')[0].ap).toBe(1)
+    }
+    browser()
+    sent = []
+    ;(win as any).Capacitor = { isNativePlatform: () => true }
+    tracker()
+    await flush()
+    expect(byKind('pv')[0].ap).toBe(1)
+
+    browser()
+    sent = []
+    ;(win as any).Capacitor = { isNativePlatform: () => false } // Capacitor in a plain browser
+    tracker()
+    await flush()
+    expect(byKind('pv')[0]).not.toHaveProperty('ap')
+
+    browser()
+    sent = []
+    tracker({ app: true }) // data-app on the script tag
+    await flush()
+    expect(byKind('pv')[0].ap).toBe(1)
+  })
+
   it('counts SPA navigations once and ignores same-URL replaceState', async () => {
     tracker()
     win.history.pushState({}, '', '/docs')

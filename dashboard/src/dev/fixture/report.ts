@@ -250,6 +250,10 @@ function resultOf(c: Ctx, v: Visits, a: number, b: number, bucket: Bucket, filte
     .map(([value, pv]): Row => ({ value, visitors: Math.round(pv * 0.8), pageviews: Math.round(pv) }))
     .sort((p, q) => (q.pageviews ?? 0) - (p.pageviews ?? 0))
   const d: Record<string, Row[] | null> = { browser: rows(dims.browser), campaign: [], channel: rows(dims.channel), country: rows(dims.country), device: rows(dims.device), entry_page: rows(dims.entry_page), os: rows(dims.os), page: pageRows, referrer: rows(dims.referrer) }
+  // Phones and tablets, split by how the site was opened (a third came through an app).
+  d.device_app = (d.device ?? []).flatMap((x) =>
+    x.value === 'Desktop' ? [] : [{ ...x, value: `${x.value}|browser`, visitors: Math.round(x.visitors * 0.66) }, { ...x, value: `${x.value}|instagram`, visitors: Math.round(x.visitors * 0.2) }, { ...x, value: `${x.value}|app`, visitors: Math.round(x.visitors * 0.14) }],
+  )
   const goals: Row[] = v.list.map((g, gi) => ({ value: g.key, label: g.label, visitors: goalN[gi], pageviews: goalN[gi] }))
   const out: Result = {
     approximate: false,

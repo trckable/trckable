@@ -6,6 +6,7 @@
 // (short keys): s site · k kind (pv|g|e) · u url · r referrer · w screen width
 // l language · id event id · a age ms · pv pageview id · v visitor id
 // ti page title (pageviews) · n goal · p props · en engaged ms · sc scroll % · dev localhost allowed · c cookieless
+// ap 1 when the page runs in an app's web view
 // lcp ms · cls thousandths · inp ms (Core Web Vitals, with that module on)
 
 // Build-time feature flags. esbuild replaces each with true/false per
@@ -27,6 +28,7 @@ export interface Config {
   hash?: boolean // count #/routes as pages (hash-routed SPAs)
   dev?: boolean // allow localhost / iframes for development
   domain?: string // cookie domain, e.g. "example.com" to share across subdomains
+  app?: boolean // the site says it is shown inside an app (data-app)
   banner?: BannerText // wording for trckable's own cookie bar (banner module)
 }
 
@@ -333,6 +335,8 @@ export function start(c: Config): Tracker {
       p.l = nav.language
       p.id = rid()
       if (c.dev) p.dev = 1
+      // An app's web view: its bridge is on the page (checked per send, a bridge can arrive late).
+      if (c.app || w.ReactNativeWebView || w.Capacitor?.isNativePlatform?.() || w.cordova || w.flutter_inappwebview || w.webkit?.messageHandlers) p.ap = 1
       if ((__CONSENT__ || __BANNER__) && held) return held.push(p)
     }
     if (cookieless > 1) return // declined: nothing is sent
