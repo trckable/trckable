@@ -13,8 +13,16 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+/* Inline blocks set on the top of a one-em line: the figure's baseline is the line's own, whether a digit is rolling (a
+   clipped slot, whose baseline would be its bottom edge) or still, so a figure next to another never sinks. */
 .rn-digits {
-  display: inline-flex;
+  display: inline-block;
+  line-height: 1;
+}
+.rn-digits > .rn-g,
+.rn-digits > .rn-slot {
+  display: inline-block;
+  vertical-align: top;
 }
 .rn-g {
   display: block;

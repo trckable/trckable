@@ -1,6 +1,11 @@
+// @vitest-environment happy-dom
+import { act } from 'react'
+import { createRoot } from 'react-dom/client'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { cells, nextRoll, RollingNumber, type Roll } from './RollingNumber'
+
+;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 const start = (text: string, value: number): Roll => ({ cur: text, prev: text, value, dir: 1, n: 0 })
 const fmt = (n: number) => n.toLocaleString('en-US')
@@ -35,5 +40,17 @@ describe('RollingNumber', () => {
   it('keeps the state when the text is unchanged', () => {
     const s = start('8', 8)
     expect(nextRoll(s, 8, '8', false)).toBe(s)
+  })
+  it('is plain digits again once the roll ends: no blank slot left in front of 9 after 10', () => {
+    const container = document.createElement('div')
+    const root = createRoot(container)
+    act(() => root.render(<RollingNumber value={10} format={fmt} />))
+    act(() => root.render(<RollingNumber value={9} format={fmt} />))
+    const digits = () => container.querySelector('.rn-digits') as HTMLElement
+    expect(digits().children).toHaveLength(2) // rolling: the 1 slides away
+    act(() => { digits().dispatchEvent(new Event('animationend', { bubbles: true })) })
+    expect(digits().children).toHaveLength(1)
+    expect(container.querySelector('.rn-slot')).toBeNull()
+    expect(digits().textContent).toBe('9')
   })
 })

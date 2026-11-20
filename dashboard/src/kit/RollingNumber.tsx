@@ -33,7 +33,13 @@ export function RollingNumber({ value, format, className }: { value: number; for
   return (
     <span className={className ? `rn ${className}` : 'rn'} aria-live="polite" aria-atomic="true">
       <span className="rn-text">{text}</span>
-      <span className={rolled ? `rn-digits rn-${up ? 'up' : 'down'}` : 'rn-digits'} key={rolled ? r.n : 'still'} aria-hidden="true">
+      <span
+        className={rolled ? `rn-digits rn-${up ? 'up' : 'down'}` : 'rn-digits'}
+        key={rolled ? r.n : 'still'}
+        aria-hidden="true"
+        // Once the roll is over the figure is plain digits again: no blank slot is left where a digit went (10 → 9).
+        onAnimationEnd={(e) => { if (e.target === e.currentTarget) setRoll((x) => (x.n === r.n ? { ...x, prev: x.cur } : x)) }}
+      >
         {cells(r.prev, r.cur).map((c, i) =>
           rolled && c.moves ? (
             <span key={i} className="rn-slot">
