@@ -55,7 +55,6 @@ for (const width of [1280, 390]) {
         await same(`picture ${i} at ${shape}`)
       }
     }
-    await open_(/^Period/)
     for (const p of ['24 hours', '7 days', '30 days', 'All time']) {
       await dialog.getByRole('button', { name: p, exact: true }).click()
       await same(`period ${p}`)
