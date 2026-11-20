@@ -69,7 +69,6 @@
 .mk .grows code { padding: 2px 8px; border-radius: 6px; background: var(--mk-fill); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mk .gacts { display: flex; gap: var(--mk-s2); padding-top: var(--mk-s4); border-top: 1px solid var(--mk-line); }
 .mk .gacts button { flex: 1; height: 38px; border: 0; border-radius: 10px; font-weight: 600; font-size: 13px; background: var(--mk-fill); color: var(--mk-text); }
-.mk .gacts .gpop-go { background: var(--mk-limeD); color: var(--mk-lime); }
 @keyframes g-slide { from { transform: translateX(20px); opacity: 0; } }
 /* Narrow: the card is a sheet over the foot of the globe, and on a phone over the foot of the screen. */
 .mk .gs-sheet .gpop { inset: auto 8px 8px 8px; transform: none !important; }

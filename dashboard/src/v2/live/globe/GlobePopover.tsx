@@ -44,7 +44,6 @@ interface CardProps {
   gone: boolean
   extra: Extra
   onClose: () => void
-  onVisitor?: (v: string) => void
   onLeave: () => void
   /** Set when the card was opened from a list of people: a way back to it. */
   onBack?: () => void
@@ -66,7 +65,7 @@ function Head({ children, onClose, onBack }: { children: React.ReactNode; onClos
   )
 }
 
-function Card({ row, clock, gone, extra, onClose, onVisitor, onLeave, onBack }: CardProps) {
+function Card({ row, clock, gone, extra, onClose, onLeave, onBack }: CardProps) {
   const place = [row.city, row.country ? countryName(row.country) : ''].filter(Boolean).join(', ')
   return (
     <div className="gcardv">
@@ -112,16 +111,8 @@ function Card({ row, clock, gone, extra, onClose, onVisitor, onLeave, onBack }: 
           <dd>{ago(clock - row.ts)}</dd>
         </div>
       </dl>
-      {!gone && (row.visitor || row.path) && (
+      {!gone && row.kind === 'pageview' && row.path && (
         <div className="gacts">
-          {row.visitor && onVisitor && (
-            <button type="button" className="gpop-go" onClick={() => {
-              onLeave()
-              if (row.visitor) onVisitor(row.visitor)
-            }}>
-              {'▶'} {copy.replay}
-            </button>
-          )}
           {row.kind === 'pageview' && row.path && (
             <button type="button" className="gpop-ex" onClick={() => {
                 onLeave()
@@ -199,8 +190,8 @@ export function GlobePopover({ open, row, crowd, clock, site, onVisitor, onClose
   const card = (
     <div className="gpop" ref={box} role="dialog" aria-label={title} tabIndex={-1}>
       <div className="gpop-in">
-        {shown && withJourney && <Journeyed key={shown.key} row={shown} site={site} clock={clock} gone={gone} onClose={onClose} onVisitor={onVisitor} onLeave={onLeave} onBack={back} />}
-        {shown && !withJourney && <Card key={shown.key} row={shown} extra={{}} clock={clock} gone={gone} onClose={onClose} onVisitor={onVisitor} onLeave={onLeave} onBack={back} />}
+        {shown && withJourney && <Journeyed key={shown.key} row={shown} site={site} clock={clock} gone={gone} onClose={onClose} onLeave={onLeave} onBack={back} />}
+        {shown && !withJourney && <Card key={shown.key} row={shown} extra={{}} clock={clock} gone={gone} onClose={onClose} onLeave={onLeave} onBack={back} />}
         {listing && <GlobeCrowd rows={crowd} title={open.city || countryName(open.cc)} clock={clock} onPick={setPick} onClose={onClose} />}
       </div>
     </div>
