@@ -26,7 +26,7 @@ test('a site the probe finds down is told on the site button and in its list, by
   await expect(page.locator('.status-float')).toHaveCount(0)
   await expect(page.locator('.footer-status[data-status="down"]')).toHaveCount(0) // the foot never repeats it
   await page.locator('#siteBtn').click()
-  await page.locator('.site-why').click()
+  await page.locator('[data-site-why]').click()
   await page.locator('.status-row').first().click()
   const report = page.locator('.modal.status-modal')
   await expect(report).toContainText('Some visitors still get through')
@@ -56,7 +56,7 @@ test('the Live card says Down in its header, and the panel in the site list list
   await expect(page.locator('.lnow .downbox')).toContainText('nobody can reach the site') // the Live card says it
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/down2-live-badge-1440.png` })
   await page.locator('#siteBtn').click()
-  await page.locator('.site-why').click()
+  await page.locator('[data-site-why]').click()
   await page.locator('.status-row').first().click()
   const pop = page.locator('.modal.status-modal')
   await expect(pop.locator('[data-probe]')).toHaveCount(3)

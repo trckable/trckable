@@ -53,8 +53,9 @@ test('a quiet site is told in the site selector', async ({ page }) => {
     await route.fulfill({ response: res, json: body })
   })
   await open(page)
+  await expect(page.locator('#siteBtn')).toBeVisible({ timeout: 20_000 })
   await page.locator('#siteBtn').click()
-  await expect(page.locator('[data-site-why]')).toHaveText('1 site quiet')
+  await expect(page.locator('#siteMenu').getByText('1 site quiet')).toBeVisible() // a line, not the "1 down ›" button (#817)
 })
 
 test('a release this browser has not seen shows in the header', async ({ page }) => {
