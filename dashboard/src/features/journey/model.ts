@@ -77,6 +77,8 @@ export interface VisitStory {
   device: string
   browser: string
   os: string
+  /** How a phone or tablet opened the site when not in its browser: "app" or a social app's key. */
+  app: string
   pageviews: number
   engagedS: number
   /** Events not listed in the timeline. */
@@ -97,6 +99,7 @@ export interface Identity {
   device: string
   browser: string
   os: string
+  app: string
   live: boolean
   currentPath: string
   paid: number
@@ -195,6 +198,7 @@ export function buildStory(data: JourneyResult, now: number): Story {
       device: v.device ?? '',
       browser: v.browser ?? '',
       os: v.os ?? '',
+      app: v.app ?? '',
       pageviews: v.pageviews,
       engagedS: v.engaged_s,
       more: v.events_more ?? 0,
@@ -225,6 +229,7 @@ function identityOf(data: JourneyResult, visits: VisitStory[], payments: Payment
     device: newest?.device ?? '',
     browser: newest?.browser ?? '',
     os: newest?.os ?? '',
+    app: newest?.app ?? '',
     live: newest?.live ?? false,
     currentPath: current?.path ?? '',
     paid: payments.reduce((s, p) => s + p.amount, 0),

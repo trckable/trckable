@@ -34,10 +34,9 @@
 
 .mk .lfeed .lv .dv { display: inline-grid; place-items: center; width: 18px; flex: none; }
 /* A visit that opened in an app: a small tag after the device, the social app's name or "App". */
-.mk .lfeed .lv .dv:has(.ap) { display: inline-flex; align-items: center; gap: 4px; width: auto; }
-.mk .lfeed .lv .dv .ap { font-style: normal; font-size: 10.5px; line-height: 1; padding: 2px 5px; border-radius: 4px; background: var(--mk-band); color: var(--mk-muted); max-width: 11ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk .lfeed .lv .dv:has(.app-tag) { display: inline-flex; align-items: center; gap: 4px; width: auto; }
 /* The tag takes its room from the page, which may shrink to a few characters, not from the Replay mark. */
-.mk .lfeed .lv:has(.ap) .pg { min-width: 6ch; }
+.mk .lfeed .lv:has(.app-tag) .pg { min-width: 6ch; }
 .mk .lfeed[data-narrow] .lv .vn { display: none; }
 .mk .lfeed[data-narrow] .lv .mk-rp { width: 18px; }
 .mk .lfeed[data-narrow] .lv .mk-rp em { display: none; }

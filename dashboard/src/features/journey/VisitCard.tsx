@@ -1,6 +1,7 @@
 // One visit: when, where from, on what, and the timeline of what they did.
 import { countryCode, countryName, fmtDuration } from '../../lib/format'
 import { DeviceIcon } from '../../components/visitor/DeviceIcon'
+import { AppTag } from '../apps/AppTag'
 import { copy } from './copy'
 import type { VisitStory } from './model'
 import { SourceChip, type OnFilter } from './SourceChip'
@@ -29,6 +30,7 @@ export function VisitCard({ v, currency, zone, onFilter }: { v: VisitStory; curr
           {v.device && (
             <span title={v.device}>
               <DeviceIcon device={v.device} /> {v.device}
+              {v.app && <AppTag app={v.app} />}
             </span>
           )}
           <span className="num">

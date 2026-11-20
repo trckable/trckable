@@ -256,15 +256,17 @@ func (q Q) GoalProps(ctx context.Context, p Params, goal string) ([]PropRow, err
 
 // JourneyVisit is one visit in a visitor's journey.
 type JourneyVisit struct {
-	Start     time.Time      `json:"start"`
-	End       time.Time      `json:"end"`
-	Channel   string         `json:"channel,omitempty"`
-	Referrer  string         `json:"referrer,omitempty"`
-	Campaign  string         `json:"campaign,omitempty"`
-	Country   string         `json:"country,omitempty"`
-	Device    string         `json:"device,omitempty"`
-	Browser   string         `json:"browser,omitempty"`
-	OS        string         `json:"os,omitempty"`
+	Start    time.Time `json:"start"`
+	End      time.Time `json:"end"`
+	Channel  string    `json:"channel,omitempty"`
+	Referrer string    `json:"referrer,omitempty"`
+	Campaign string    `json:"campaign,omitempty"`
+	Country  string    `json:"country,omitempty"`
+	Device   string    `json:"device,omitempty"`
+	Browser  string    `json:"browser,omitempty"`
+	OS       string    `json:"os,omitempty"`
+	// App is how a phone or tablet visit opened the site when it was not the browser: "app" for a web view, or a social app's key. Empty otherwise.
+	App       string         `json:"app,omitempty"`
 	Pageviews int64          `json:"pageviews"`
 	EngagedS  float64        `json:"engaged_s"`
 	Events    []JourneyEvent `json:"events"`
@@ -312,7 +314,7 @@ func (q Q) Journey(ctx context.Context, site string, visitor uint64, upTo time.T
 	//nolint:gosec // the visitor id is a formatted uint64, not text from a request; the rest is bound as parameters
 	rows, err := conn.QueryContext(ctx, `
 		SELECT session_id, start, last, coalesce(channel, 'Direct'), coalesce(referrer, ''), coalesce(campaign, ''),
-		       coalesce(country, ''), coalesce(device, ''), coalesce(browser, ''), coalesce(os, ''), pvs, engaged_ms, first_seen
+		       coalesce(country, ''), coalesce(device, ''), coalesce(browser, ''), coalesce(os, ''), coalesce(app, ''), pvs, engaged_ms, first_seen
 		FROM (SELECT * FROM sessions UNION ALL SELECT * FROM s_open)
 		WHERE site_id = ? AND visitor_id = `+strconv.FormatUint(visitor, 10)+` AND start < ?
 		ORDER BY start DESC LIMIT ?`, site, upTo, MaxJourneyVisits+1)
@@ -326,7 +328,7 @@ func (q Q) Journey(ctx context.Context, site string, visitor uint64, upTo time.T
 		var v JourneyVisit
 		var id, eng uint64
 		var first sql.NullTime
-		if err := rows.Scan(&id, &v.Start, &v.End, &v.Channel, &v.Referrer, &v.Campaign, &v.Country, &v.Device, &v.Browser, &v.OS, &v.Pageviews, &eng, &first); err != nil {
+		if err := rows.Scan(&id, &v.Start, &v.End, &v.Channel, &v.Referrer, &v.Campaign, &v.Country, &v.Device, &v.Browser, &v.OS, &v.App, &v.Pageviews, &eng, &first); err != nil {
 			rows.Close()
 			return nil, err
 		}

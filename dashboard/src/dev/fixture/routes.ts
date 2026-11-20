@@ -17,6 +17,7 @@ import {
 } from './report'
 import { channelsAnswer } from './channels'
 import { answersChange, answersReport, answersSetup, answersState } from './answers'
+import { journeyOf } from './journey'
 import { busierOf, nowOf } from './live'
 import { crawlersOf, funnelOf, heatOf, linksOf, scrollOf, segments } from './sections'
 import { hash, mulberry, pick } from './rand'
@@ -328,6 +329,8 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
   const rest = m[2]
   const site = sites.find((s) => s.id === id)
   if (!site) return { status: 404, body: { error: 'no such site' } }
+  const jr = /^journey\/(.+)$/.exec(rest)
+  if (jr) return ok(journeyOf(jr[1], Date.now()))
   switch (rest) {
     case 'report':
       return ok(reportOf(c, id, parseQuery(sp)))
