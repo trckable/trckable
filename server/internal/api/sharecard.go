@@ -95,7 +95,9 @@ type cardNumbers struct {
 	said         string    // the period as a post says it ("the last 7 days")
 	// moneySource is the id of the provider that vouches for ALL the report's money ("" when none does); moneyStat and
 	// moneyGrid say whether the overview's small numbers, or the grid's, include it.
-	moneySource          string
+	moneySource string
+	// gscSource is "gsc" when the site's Search Console connection works right now, and stands behind every picture of it.
+	gscSource            string
 	moneyStat, moneyGrid bool
 }
 
@@ -233,8 +235,10 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 	if kind == "grid" || kind == "" {
 		n.gridOf(res, a.refIconOf)
 	}
+	ver := a.verifiedOf(r.Context(), si)
+	n.gscSource = verifiedSourceOf(ver, "gsc", nil)
 	if res.Money != nil {
-		n.moneySource = verifiedSourceOf(a.verifiedOf(r.Context(), si), "payments", res.Money)
+		n.moneySource = verifiedSourceOf(ver, "payments", res.Money)
 	}
 	a.pictures(reading, &n, p.hours > 0, kind)
 	return n, true

@@ -106,3 +106,57 @@ func TestMoneyBadgeOnEveryRevenuePicture(t *testing.T) {
 		}
 	}
 }
+
+// With Search Console working, every picture carries its badge; a provider that vouches for the revenue wins on
+// the pictures that show it; with no connection none does.
+func TestSearchBadgeOnEveryPicture(t *testing.T) {
+	stat := []cards.Stat{{Value: "12", Label: "Clicks"}}
+	digests := func() map[string]digest {
+		m := map[string]digest{}
+		for _, k := range []string{"changed", "search", "ai", "goals", "sales"} {
+			m[k] = digest{title: k, stats: stat}
+		}
+		m["ai"] = digest{title: "ai"} // nothing in it, so nothing to vouch for
+		return m
+	}
+	for _, tpl := range []string{"overview", "numbers", "grid", "leaderboard", "spotlight", "milestone", "changed", "search", "goals", "sales"} {
+		n := cardNumbers{gscSource: cards.SourceSearch, digests: digests()}
+		var s cards.Spec
+		n.vouchDigests()
+		n.pictureOf(&s, tpl)
+		n.vouchMoney(&s, tpl)
+		if s.Badge != cardWords.searchBadge || s.Source != cards.SourceSearch {
+			t.Errorf("%s: badge %q source %q", tpl, s.Badge, s.Source)
+		}
+		off := cardNumbers{digests: digests()}
+		var o cards.Spec
+		off.vouchDigests()
+		off.pictureOf(&o, tpl)
+		off.vouchMoney(&o, tpl)
+		if o.Badge != "" || o.Source != "" {
+			t.Errorf("%s without Search Console: badge %q source %q", tpl, o.Badge, o.Source)
+		}
+	}
+	var ai cards.Spec
+	n := cardNumbers{gscSource: cards.SourceSearch, digests: digests()}
+	n.vouchDigests()
+	n.pictureOf(&ai, "ai")
+	if ai.Badge != "" {
+		t.Errorf("an empty digest has a badge: %q", ai.Badge)
+	}
+	var rev cards.Spec
+	n = cardNumbers{Metric: "revenue", moneySource: "stripe", gscSource: cards.SourceSearch}
+	n.vouchMoney(&rev, "overview")
+	if rev.Source != "stripe" {
+		t.Errorf("revenue picture source %q, want stripe", rev.Source)
+	}
+	pay := digests()
+	d := pay["sales"]
+	d.source, d.badge = "stripe", cardWords.searchBadge
+	pay["sales"] = d
+	n = cardNumbers{gscSource: cards.SourceSearch, digests: pay}
+	n.vouchDigests()
+	if n.digests["sales"].source != "stripe" {
+		t.Errorf("sales digest source %q, want stripe", n.digests["sales"].source)
+	}
+}
