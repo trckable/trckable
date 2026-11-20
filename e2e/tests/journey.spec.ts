@@ -77,10 +77,10 @@ async function openJourney(page: Page) {
 
 test('tells one visitor’s story', async ({ page }) => {
   const dialog = await openJourney(page)
-  await expect(dialog.getByText('Returning', { exact: true })).toBeVisible()
+  await expect(dialog.getByText(/^2 visits since /)).toBeVisible() // the header's line for someone who came back
   await expect(dialog.getByRole('status').filter({ hasText: 'On the site now' })).toBeVisible()
-  await expect(dialog.locator('.jr-fact.money .jr-money')).toHaveText('$49')
-  await expect(dialog.locator('.jr-fact.money .jr-chip')).toContainText('Search · google.com')
+  await expect(dialog.locator('.jr-paid .jr-money')).toHaveText('$49')
+  await expect(dialog.locator('.jr-paid .jr-chip')).toContainText('Search · google.com')
 
   const visits = dialog.getByRole('list', { name: 'Visits, newest first' }).locator(':scope > li')
   await expect(visits).toHaveCount(2)
