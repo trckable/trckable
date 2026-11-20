@@ -111,7 +111,7 @@ describe('a long visit folds to the first two pages, one row, the last two', () 
 describe('many visits fold behind one row', () => {
   const visits = (n: number) => Array.from({ length: n }, (_, i) => visitOf({}, 1, START - i * 86400000))
   it('shows three, then folds the rest', () => {
-    expect(splitVisits(story(...visits(3)).visits).folded).toHaveLength(0)
+    expect(splitVisits(story(...visits(4)).visits).folded).toHaveLength(0)
     const s = splitVisits(story(...visits(6)).visits)
     expect(s.shown).toHaveLength(3)
     expect(s.folded).toHaveLength(3)

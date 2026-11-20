@@ -274,6 +274,6 @@ export function foldNodes(nodes: StoryNode[]): (StoryNode | Fold)[] {
 
 /** The newest visits to show, and how many older ones fold into one row. Visits are newest first. */
 export function splitVisits<T>(visits: T[]): { shown: T[]; folded: T[] } {
-  if (visits.length <= KEEP_VISITS) return { shown: visits, folded: [] }
+  if (visits.length <= KEEP_VISITS + 1) return { shown: visits, folded: [] } // one hidden visit is not worth a row
   return { shown: visits.slice(0, KEEP_VISITS), folded: visits.slice(KEEP_VISITS) }
 }
