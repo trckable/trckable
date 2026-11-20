@@ -96,10 +96,11 @@ describe('pageviews', () => {
     await flush()
     expect(byKind('pv')[0]).not.toHaveProperty('ap')
 
-    for (const bridge of ['ReactNativeWebView', 'cordova', 'flutter_inappwebview']) {
+    const fns: Record<string, string> = { ReactNativeWebView: 'postMessage', cordova: 'exec', flutter_inappwebview: 'callHandler' }
+    for (const bridge of Object.keys(fns)) {
       browser()
       sent = []
-      ;(win as any)[bridge] = {}
+      ;(win as any)[bridge] = { [fns[bridge]]: () => {} }
       tracker()
       await flush()
       expect(byKind('pv')[0].ap).toBe(1)
@@ -126,10 +127,10 @@ describe('pageviews', () => {
   })
 
   it('knows the other app frameworks by what they leave on the page', async () => {
-    for (const bridge of ['expo', 'ExpoModules', 'Portals', 'isTauri']) {
+    for (const [bridge, value] of [['expo', {}], ['ExpoModules', {}], ['Portals', { publish: () => {} }], ['isTauri', true]] as const) {
       browser()
       sent = []
-      ;(win as any)[bridge] = {}
+      ;(win as any)[bridge] = value
       tracker()
       await flush()
       expect(byKind('pv')[0].ap).toBe(1)
@@ -148,6 +149,33 @@ describe('pageviews', () => {
     await flush()
     expect(byKind('pv')[0].ap).toBe(1)
     delete (globalThis as any).navigator.userAgent
+  })
+
+  it('is not fooled by elements whose ids are the names of the bridges', async () => {
+    browser()
+    sent = []
+    win.document.body.innerHTML = '<div id="expo"></div><div id="Portals"></div><div id="cordova"></div><div id="ExpoModules"></div><div id="ReactNativeWebView"></div><div id="isTauri"></div>'
+    for (const k of ['expo', 'Portals', 'cordova', 'ExpoModules', 'ReactNativeWebView', 'isTauri']) (win as any)[k] = win.document.getElementById(k)
+    tracker()
+    await flush()
+    expect(byKind('pv')[0]).not.toHaveProperty('ap')
+  })
+
+  it('keeps the app marker in memory only for a cookieless visit', async () => {
+    browser('https://site.com/start?tkb_app=1', '')
+    const t = tracker({ cookieless: true })
+    await flush()
+    expect(byKind('pv')[0].ap).toBe(1)
+    t('inApp')
+    expect(win.sessionStorage.getItem('trckable_app')).toBeNull()
+  })
+
+  it('strips every marker from the address and the referrer', async () => {
+    browser('https://site.com/p?app=1&tkb_app=1&x=2', 'https://app.example/in?tkb_app=1&app=1')
+    tracker()
+    await flush()
+    expect(byKind('pv')[0].u).toBe('https://site.com/p?x=2')
+    expect(byKind('pv')[0].r).toBe('https://app.example/in')
   })
 
   it('takes ?app=1 once, keeps it for the visit, and does not send it on', async () => {

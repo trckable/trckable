@@ -43,9 +43,9 @@ If your app's web view carries none of those, or hides that it is an app (Google
    if (window.myAppBridge) inApp()
    ```
 
-4. **`?app=1`** on the address your app opens (`?tkb_app=1` works too). The script reads it once when the page loads, remembers it for the visit in that tab, and leaves it out of the address it sends, so your reports show `/pricing`, not `/pricing?app=1`.
+4. **`?tkb_app=1`** on the address your app opens (`?app=1` is read too, but your own site may already use that name for something else). The script reads it once when the page loads, remembers it for the visit in that tab, and leaves it out of the address it sends, so your reports show `/pricing`, not `/pricing?tkb_app=1`.
 
-Put a switch only where your app's web view is. On a page people also open in their browser, `data-app` and the `app` option would make every visit there count as an app visit.
+Put a switch only where your app's web view is. On a page people also open in their browser, `data-app` and the `app` option would make every visit there count as an app visit, desktop ones too (shown as "Desktop app").
 
 ## One example for each framework
 
@@ -56,7 +56,7 @@ Put a switch only where your app's web view is. On a page people also open in th
 **React Native and Expo.** A page inside `react-native-webview` is found on its own, and so is an Expo web view. If your page needs the app to look like a browser, add the marker to the address:
 
 ```tsx
-<WebView source={{ uri: 'https://example.com/?app=1' }} />
+<WebView source={{ uri: 'https://example.com/?tkb_app=1' }} />
 ```
 
 **Cordova.** Found on its own.
@@ -64,7 +64,7 @@ Put a switch only where your app's web view is. On a page people also open in th
 **Flutter.** `flutter_inappwebview` is found on its own. `webview_flutter` leaves nothing on the page, so load your site with the marker:
 
 ```dart
-controller.loadRequest(Uri.parse('https://example.com/?app=1'));
+controller.loadRequest(Uri.parse('https://example.com/?tkb_app=1'));
 ```
 
 **Tauri.** Tauri 2 is found on its own. With Tauri 1, add the `app` option (or `data-app`) to the site's own script.

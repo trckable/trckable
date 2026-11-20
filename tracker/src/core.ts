@@ -108,17 +108,23 @@ export function start(c: Config): Tracker {
   let engaged!: number
   let scroll!: number
   let ref = d.referrer
-  // The app marker: ?app=1 (or ?tkb_app=1) on the page the app opens, kept for the
-  // visit in the tab's storage (inApp() keeps it the same way) and never sent on.
-  const APP = /([?&])(?:tkb_)?app=1(&|(?=#)|$)/
-  let app = !!c.app || !!ss?.getItem('trckable_app')
+  // The app marker: ?tkb_app=1 (or ?app=1) on the page the app opens, kept for the
+  // visit in the tab's storage (inApp() keeps it the same way; a cookieless visit
+  // keeps it in memory only) and never sent on, in the address or the referrer.
+  const APP = /[?&](?:tkb_)?app=1(?=&|#|$)/
+  const strip = (u: string) => u.replace(new RegExp(APP, 'g'), '').replace(/^([^?#]*)&/, '$1?')
+  const store = c.cookieless ? null : ss
+  let app = !!c.app || !!store?.getItem('trckable_app')
   const mark = () => {
     app = true
     try {
-      ss?.setItem('trckable_app', '1')
+      store?.setItem('trckable_app', '1')
     } catch {}
   }
   if (APP.test(loc.href)) mark()
+  // A named element on the page is a global too (<div id="expo">): only what an app's own bridge is counts.
+  const fn = (x: any, k: string) => typeof x?.[k] == 'function'
+  const obj = (x: any) => typeof x == 'object' && !!x && !x.nodeType && x.length === undefined
   let pending: Payload[] = [] // what has not been acknowledged yet, oldest first
 
   // An id is made to be unique, not to be secret: about 52 random bits, a
@@ -342,7 +348,7 @@ export function start(c: Config): Tracker {
     if (__CONSENT__) consent()
     if (!p.id) {
       p.s = c.site
-      p.u = loc.href.replace(APP, (_, a, b) => (b == '&' ? a : ''))
+      p.u = strip(loc.href)
       p.w = screen.width
       p.l = nav.language
       p.id = rid()
@@ -350,14 +356,14 @@ export function start(c: Config): Tracker {
       // An app: the site says so, or its bridge is on the page (checked per send, a bridge can arrive late).
       if (
         app ||
-        w.ReactNativeWebView ||
-        w.Capacitor?.isNativePlatform?.() ||
-        w.cordova ||
-        w.flutter_inappwebview ||
-        w.expo ||
-        w.ExpoModules ||
-        w.Portals ||
-        w.isTauri ||
+        fn(w.ReactNativeWebView, 'postMessage') ||
+        w.Capacitor?.isNativePlatform?.() === true ||
+        fn(w.cordova, 'exec') ||
+        fn(w.flutter_inappwebview, 'callHandler') ||
+        obj(w.expo) ||
+        obj(w.ExpoModules) ||
+        fn(w.Portals, 'publish') ||
+        w.isTauri === true ||
         /Electron\//.test(nav.userAgent) ||
         w.process?.versions?.electron
       )
@@ -471,7 +477,7 @@ export function start(c: Config): Tracker {
     // shows the last page's: the same title as before is not sent again.
     // A page whose <html> or <title> carries data-trckable-ignore sends none.
     const ti = d.title.replace(/\S*@\S*/g, '').slice(0, 200)
-    send({ k: 'pv', r: ref, pv, ti: ti != was && !d.documentElement.hasAttribute('data-trckable-ignore') ? ti : undefined })
+    send({ k: 'pv', r: strip(ref), pv, ti: ti != was && !d.documentElement.hasAttribute('data-trckable-ignore') ? ti : undefined })
     was = ti
     ref = '' // later SPA navigations are internal
     if (__GOALS__) observeScrollGoals()
