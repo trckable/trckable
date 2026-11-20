@@ -1,1 +1,0 @@
-The share sheet is simpler: the pictures sit in a compact grid, pictures a site cannot make are not shown, and one Download button leads, with Copy image under it. The date row no longer repeats Share next to the header's Share.

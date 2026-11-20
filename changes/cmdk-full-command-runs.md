@@ -1,1 +1,0 @@
-- Search: a command typed in full, like Why visitors leave, runs on Enter instead of going to Peek.

@@ -10,6 +10,52 @@ under Unreleased, into the release section.
 
 ## Unreleased
 
+## 0.9.0 (20 Nov 2026)
+
+- Each site has an Allowed domains setting under General: add a staging site or an old domain so its visits count, with the hostnames refused this week offered as one-tap suggestions, and the bell notice about refused visits opens it directly.
+- Every share picture of a site whose Google Search Console connection works carries the Verified badge with the Search Console mark: Overview, Big number, In numbers, What changed and the digests. A picture of revenue that a payment provider vouches for keeps that provider's badge.
+- A visit sent as a page closes stays queued until the server confirms it, so none is lost during an outage.
+- The phone app and the web bell share one read state: the notifications list says which rows are read, and one call marks them all read.
+- A card's title in an answer opens it in Explore, and a chart's axis says Today or Now instead of a raw timestamp.
+- What changed lists your pages and your sources as Top, Trending up and Trending down, each with the change against the period before.
+- Search: a command typed in full, like Why visitors leave, runs on Enter instead of going to Peek.
+- Switching Explore's tabs no longer scrolls the page the dashboard is shown in.
+- The outage card in the bell says its time once, not twice.
+- A changed period no longer leaves the old comparison note in the command palette while the new report loads, and AI & Search's links to a section no longer scroll the page the dashboard is shown in.
+- The sites list loads in a fixed handful of queries however many sites you have, and the tracker script is built once per site instead of on every request.
+- Visits from an app's web view or a social app's browser are told apart from a phone's normal browser: Explore's Devices table lists them under Mobile and Tablet, and Live tags them with "App" or the app's name.
+- Dashboard: a page that shows the same incidents period in two places reads it from the server once.
+- Live's "On the site right now" list no longer shows a Replay label on each row; a click on the row still opens the visitor.
+- The add-a-word field in Mentions no longer closes, and no longer saves a half-typed word, when the browser window loses focus.
+- A build's Add a site guard is handed the Sites menu's close, so the menu can shut when the guard opens something else.
+- The milestone share link opens in the sharer's dashboard language; English links stay unchanged.
+- The page a shared milestone link opens, and its preview picture, come in your language (German, French, Spanish, Italian, Dutch), chosen by the link or the visitor's browser
+- The page's ⋯ menu opens Milestones.
+- A visit is no longer lost when the page closes right after loading, when the server briefly does not know a new site yet, or when a no-cookie visitor changes page during an outage.
+- Pages shows each page's title, as Search Console does, with its path small and grey under it; the script sends the title with a page view (no email address, 200 characters at most, none from a page whose html says data-trckable-ignore, none for a consent-free site), 70 bytes more on a new site's script.
+- Search: no stale 'Go to Briefing' or 'Refresh the numbers', no kind labels, periods read as their names.
+- The setup checklist's invite row no longer claims a seat count.
+- Changing the period, the comparison or a filter no longer leaves the old figures on screen under the new label: the numbers, charts and tables give way to the loading shape until the new ones arrive.
+- Rolling numbers (Live, every counter) settle to plain digits after rolling and keep their baseline, so 9 after 10 no longer sits shifted and 20 no longer sinks below the number beside it.
+- The setup screen is quieter: Install with AI and the Cookieless switch moved off the page under the code and onto the floating Install status card (on a phone they sit under the code as two compact rows).
+- While a new site waits for its first visit, the setup screen shows a dotted globe behind the page with visits flying in, softly blurred, still under reduced motion.
+- Adding a site now shows a floating Install status card next to the code: it ticks off "Site created" and "First visit", checks when you ask with a clear result, and celebrates when the first visit lands. A site with no visit yet shows this setup screen in Live and Explore instead of empty charts.
+- Share links are made with one builder (in the Share dialog and in Settings), can be changed after they are made, choose the sections and the period they show (the server refuses what a link leaves out), preview the real shared page, and Copy link names the link it copied; a text post goes to X and LinkedIn and can be copied for Slack.
+- The Found on Google picture carries a small Verified by Google Search Console badge when it shows Search Console numbers.
+- A shared link offers Last 7 days, Last 30 days and Last 12 months with a Refresh button, shows a live visitor count when its owner turns it on, and carries a slim credit in its header where the footer one is shown.
+- A shared link leaves out what its page cannot show: Sales without payments, Uptime and One page only without a figure, the ⋯ menu, the search button and its shortcut.
+- Share pictures and their post text come in your language (German, French, Spanish, Italian, Dutch), with numbers, money, dates and country names the way that language writes them
+- A shared link shows a preview card when it is pasted, and its browser tab carries the site's name.
+- The share sheet is simpler: the pictures sit in a compact grid, pictures a site cannot make are not shown, and one Download button leads, with Copy image under it. The date row no longer repeats Share next to the header's Share.
+- In the site menu a site that has never received a visit says "Not installed" instead of "down", no longer counts as down or opens the "Site down" bar, the "All sites" row hides its number when it is 0, and a row's drag handle only shows on hover or focus (always on touch).
+- Sites with a visitor are never listed as quiet, and the sites list no longer prints "quiet" under a name.
+- The browser tab's online count is the same reading as the Live pill and Live, so the tab no longer says 4 while the page says 3.
+- A site found down now also says whether tracking itself works, the Live down box and the bell always agree on which sites are down, visits from a hostname a site refuses raise one bell notice a week, and what your own settings left out and what was too old to count show beside the bots.
+- Revenue pictures carry the badge of the payment provider that vouches for them (Stripe, Paddle, Lemon Squeezy, Dodo Payments, Polar), and on a shared link the Sales title shows the same logo with Verified and a check while that provider is delivering.
+- The visitor window says how the person came: the phone's browser, an app, or a social app like Instagram, in its header and on each visit.
+- The visitor window is calmer and clearer: a soft band behind the face and name, how they came drawn with the system's mark, the browser's logo or the social app's brand, a quiet rail down the visits with the current one lit. A long visit shows its first and last two pages with one "+N pages" row that opens in place, and a visitor with many visits shows the latest three and one "N earlier visits" row; the window scrolls inside and never outgrows the screen.
+- If the analytics writer ever freezes, trckable now says so in its log, shows "degraded" on /readyz with when it stalled, and restarts itself after 15 minutes so no visit stays uncounted (TRCKABLE_WRITER_STALL_EXIT_MINUTES, 0 turns the restart off).
+
 ## 0.8.0 (11 Nov 2026)
 
 - Accessibility: the site chip, the pickers, the email chip and the name field say their visible text; the incident badge's red reads in light mode.

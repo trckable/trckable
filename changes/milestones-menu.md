@@ -1,1 +1,0 @@
-- The page's ⋯ menu opens Milestones.

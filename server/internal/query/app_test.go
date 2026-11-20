@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -76,7 +77,7 @@ func TestJourneyCarriesApp(t *testing.T) {
 			if err != nil || len(j.Visits) != 1 {
 				t.Fatalf("visitor %d: %+v %v", v, j, err)
 			}
-			eq(t, "app of visitor "+string(rune('0'+v)), j.Visits[0].App, want)
+			eq(t, fmt.Sprintf("app of visitor %d", v), j.Visits[0].App, want)
 		}
 	}
 }

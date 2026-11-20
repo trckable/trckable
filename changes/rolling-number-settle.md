@@ -1,1 +1,0 @@
-- Rolling numbers (Live, every counter) settle to plain digits after rolling and keep their baseline, so 9 after 10 no longer sits shifted and 20 no longer sinks below the number beside it.

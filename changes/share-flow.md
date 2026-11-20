@@ -1,1 +1,0 @@
-Share links are made with one builder (in the Share dialog and in Settings), can be changed after they are made, choose the sections and the period they show (the server refuses what a link leaves out), preview the real shared page, and Copy link names the link it copied; a text post goes to X and LinkedIn and can be copied for Slack.

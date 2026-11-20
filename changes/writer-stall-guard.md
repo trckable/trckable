@@ -1,1 +1,0 @@
-If the analytics writer ever freezes, trckable now says so in its log, shows "degraded" on /readyz with when it stalled, and restarts itself after 15 minutes so no visit stays uncounted (TRCKABLE_WRITER_STALL_EXIT_MINUTES, 0 turns the restart off).
