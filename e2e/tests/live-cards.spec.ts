@@ -85,9 +85,9 @@ test('the cards show today and the pages people are on', async ({ page }) => {
   await expect(today.locator('.lhero')).not.toHaveText(/^0/)
   const pages = cards(page).locator('.lan')
   await expect(pages.locator('.lbar', { hasText: run })).toBeVisible({ timeout: 10_000 })
-  // Devices sit behind the same switch, beside the pages and the countries.
+  // Devices sit behind the same switch, beside the pages and the countries; each is named (iPhone, Mac, Windows PC, …).
   await pages.getByRole('button', { name: 'Devices' }).click()
-  await expect(pages.locator('.lbar', { hasText: /Computer|Phone/ }).first()).toBeVisible({ timeout: 10_000 })
+  await expect(pages.locator('.lbar', { hasText: /iPhone|iPad|Mac|Android|Windows PC|Linux|Desktop|Phone|Tablet|Other/ }).first()).toBeVisible({ timeout: 10_000 })
 })
 
 test('on a phone the cards stack and nothing runs off the side', async ({ page }) => {

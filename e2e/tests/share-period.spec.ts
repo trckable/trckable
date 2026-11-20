@@ -21,8 +21,7 @@ test('Share: All time, a custom range and Compare reach the picture', async ({ p
   await expect(dialog).toBeVisible()
   const picture = (params: string[]) => page.waitForResponse((r) => r.url().includes('/card?') && !r.url().includes('format=json') && params.every((p) => r.url().includes(p)) && r.url().includes('t=overview'))
 
-  await dialog.getByRole('button', { name: /^Period/ }).click()
-  // Compare is off until asked for.
+  // The period is always open (#819). Compare is off until asked for.
   await expect(dialog.getByRole('switch', { name: 'Compare' })).toHaveAttribute('aria-checked', 'false')
   let res = picture(['period=30d', 'compare=1'])
   await dialog.getByRole('button', { name: '30 days' }).click()
