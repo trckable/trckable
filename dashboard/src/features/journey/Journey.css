@@ -23,8 +23,8 @@
 }
 .jr-corner {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 34px; /* inside the who band: the modal's 24px padding plus the band's 14px, level with the name */
+  right: 38px;
   display: flex;
   gap: 6px;
   align-items: center;
@@ -49,7 +49,7 @@
   min-width: 0;
 }
 .jr-who h2 {
-  padding-right: 76px; /* the corner's buttons */
+  padding-right: calc(2 * var(--ph-hit, 32px) + 12px); /* the corner's buttons */
 }
 .jr-who h2,
 .jr-title-wait {
@@ -132,7 +132,6 @@
   flex: none;
   border-radius: 999px;
   background: var(--up);
-  animation: jr-ping 1.6s ease-out infinite;
 }
 @keyframes jr-ping {
   0% {
@@ -247,7 +246,10 @@ button.jr-chip:focus-visible {
 }
 .jr-visit.live::before {
   background: var(--up);
-  animation: jr-ping 1.6s ease-out infinite;
+}
+/* One pulse for a visitor on the site: the page they are on ("Here now"). The bar, the rail and the face hold still. */
+.journey-dialog .v-avatar.live::after {
+  animation: none;
 }
 .jr-earlier {
   display: grid;
@@ -533,15 +535,12 @@ button.jr-path:focus-visible {
     background: var(--border-2);
   }
   .jr-corner {
-    top: 14px;
-    right: 12px;
+    top: 28px; /* the sheet's 22px top padding plus the band's 12px, level with the name */
+    right: 28px;
   }
   .jr-who {
     padding: 12px;
     gap: 12px;
-  }
-  .jr-who h2 {
-    padding-right: 64px;
   }
   .jr-visits {
     padding-left: 16px;
@@ -580,8 +579,6 @@ button.jr-path:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .jr-node,
   .modal.journey-dialog,
-  .jr-live-dot,
-  .jr-visit.live::before,
   .jr-node.here .jr-dot {
     animation: none;
   }

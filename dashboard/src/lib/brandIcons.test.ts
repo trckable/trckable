@@ -16,6 +16,18 @@ describe('the brand of a referring host', () => {
     expect(brandOf(undefined)).toBeNull()
     expect(brandOf('')).toBeNull()
   })
+  it('picks the most specific host, and knows a source named without a domain', () => {
+    expect(brandOf('news.google.com')?.name).toBe('Google News')
+    expect(brandOf('gemini.google.com')?.name).toBe('Gemini')
+    expect(brandOf('google.com')?.name).toBe('Google')
+    expect(brandOf('google')?.name).toBe('Google')
+    expect(brandOf('Google Ads')?.name).toBe('Google')
+    expect(brandOf('claude.ai')?.name).toBe('Claude')
+  })
+  it('lists every host once', () => {
+    const hosts = Object.values(BRANDS).flatMap((b) => b.hosts)
+    expect(new Set(hosts).size).toBe(hosts.length)
+  })
   it('keeps a path for every mark', () => {
     for (const b of Object.values(BRANDS)) expect(b.d.length).toBeGreaterThan(20)
   })
