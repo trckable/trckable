@@ -41,7 +41,7 @@ export function AllRow({ on, total, all, problems, onPick, onWhy }: { on: boolea
     <div className="all-wrap">
       {row}
       <button type="button" data-stop data-site-why="1" className="all-why" aria-label={statusCopy.whatHappened(problems.down)} onClick={onWhy}>
-        {menu.downCount(problems.down)} ›
+        {`${menu.downCount(problems.down)} ›`}
       </button>
     </div>
   )
