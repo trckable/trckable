@@ -824,6 +824,7 @@ func appendRow(app *duckdb.Appender, r *row) error {
 		nzU32(e.LCPms), nilU32(e.CLS1k), nzU32(e.INPms),
 		nzTrue(e.Imported),
 		nz(e.BrowserVersion), nz(e.Timezone), nz(e.Network), nz(e.App),
+		nzU32(e.FCPms),
 	)
 }
 

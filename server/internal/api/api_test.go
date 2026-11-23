@@ -572,9 +572,9 @@ func TestWebVitalsEndToEnd(t *testing.T) {
 			cls := 40 + uint32(i)
 			// The tab was left once before (a smaller, earlier report), then at the end.
 			ev(event.Event{Kind: event.KindEngagement, TS: g.now.Add(-time.Hour).UnixMilli(), Visitor: uint64(i + 1), Pageview: pvid,
-				EngagedMs: 2000, LCPms: 400, INPms: 20})
+				EngagedMs: 2000, LCPms: 400, INPms: 20, FCPms: 200})
 			ev(event.Event{Kind: event.KindEngagement, TS: g.now.Add(-time.Hour).UnixMilli(), Visitor: uint64(i + 1), Pageview: pvid,
-				EngagedMs: 5000, LCPms: page.lcp + uint32(i)*100, CLS1k: &cls, INPms: 120 + uint32(i)*10})
+				EngagedMs: 5000, LCPms: page.lcp + uint32(i)*100, CLS1k: &cls, INPms: 120 + uint32(i)*10, FCPms: 700 + uint32(i)*100})
 		}
 	}
 	g.waitApplied(t, id)
@@ -603,6 +603,11 @@ func TestWebVitalsEndToEnd(t *testing.T) {
 	// The p75 spans both pages: 1000..1900 and 3000..3900 together.
 	if out["lcp_ms"].(float64) < 3000 || out["lcp_ms"].(float64) > 3700 {
 		t.Errorf("p75 LCP = %v, want it inside the slow page's range", out["lcp_ms"])
+	}
+	// FCP 700..1600 on both pages, the largest report of each page view; it is
+	// not one of the three scores.
+	if out["people"] != 10.0 || out["fcp_n"] != 20.0 || out["fcp_ms"].(float64) < 1200 || out["fcp_ms"].(float64) > 1500 {
+		t.Errorf("fcp: n=%v p75=%v", out["fcp_n"], out["fcp_ms"])
 	}
 	// CLS 0.040–0.049 and INP 120–210 are both inside Google's "good".
 	if out["cls_1k"].(float64) > 100 || out["inp_ms"].(float64) > 200 {

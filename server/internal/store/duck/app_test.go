@@ -15,7 +15,7 @@ func TestAppColumnMigratesAnExistingStore(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer s.Close()
-	if err := s.MigrateTo(ctx, Migrations()-1); err != nil {
+	if err := s.MigrateTo(ctx, 13); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.DB.ExecContext(ctx, `INSERT INTO events (seq, site_id, ts, kind, visitor_id, session_id, path, device) VALUES (1, 's1', TIMESTAMP '2026-09-10 09:00:00', 1, 5, 6, '/', 'Mobile')`); err != nil {
@@ -34,5 +34,12 @@ func TestAppColumnMigratesAnExistingStore(t *testing.T) {
 	}
 	if _, err := s.DB.ExecContext(ctx, `SELECT app FROM sessions`); err != nil {
 		t.Fatal(err)
+	}
+	var fcp *int64
+	if err := s.DB.QueryRowContext(ctx, `SELECT fcp_ms FROM events`).Scan(&fcp); err != nil {
+		t.Fatal(err)
+	}
+	if fcp != nil {
+		t.Fatalf("old row: fcp_ms %v; want the row kept and the column empty", *fcp)
 	}
 }

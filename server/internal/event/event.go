@@ -102,6 +102,7 @@ type Event struct {
 	LCPms uint32  `json:"lcp,omitempty"`
 	CLS1k *uint32 `json:"cls,omitempty"`
 	INPms uint32  `json:"inp,omitempty"`
+	FCPms uint32  `json:"fcp,omitempty"` // first contentful paint, shown where LCP is not reported
 
 	// Imported marks history brought in by `trckabled import`.
 	Imported bool `json:"im,omitempty"`
