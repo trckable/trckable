@@ -1,0 +1,1 @@
+Share cards tell the same numbers as the dashboard: the last 7 and 30 days end today, the last 24 hours count the hour still running (a site with visitors never reads 0), and All time begins at the site's first recorded data, imported history included, instead of the day the site was added.

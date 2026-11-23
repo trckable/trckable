@@ -50,3 +50,26 @@ test('Share: All time, a custom range and Compare reach the picture', async ({ p
   await dialog.getByRole('button', { name: /^Download \d+×\d+$/ }).click()
   expect((await file).suggestedFilename()).toMatch(/^trckable-.*-overview-\d{4}-\d{2}-\d{2}_\d{4}-\d{2}-\d{2}\.png$/)
 })
+
+// The picture never says a number the dashboard contradicts: its big number is the report's visitors for the same window
+// (the last 7 days ending today; all time from the first data).
+test('Share: the card number is the dashboard number for 7 days and all time', async ({ page }) => {
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  const sites = ((await (await page.request.get(`${API}/api/v1/sites`)).json()) as { sites: { id: string; domain: string; timezone: string }[] }).sites
+  const site = sites.find((s) => s.domain === STEADY_DOMAIN)
+  if (!site) throw new Error('no steady site')
+  const day = (back: number) => {
+    const d = new Date(Date.now() - back * 86_400_000)
+    return new Intl.DateTimeFormat('en-CA', { timeZone: site.timezone || 'UTC' }).format(d)
+  }
+  const visitors = async (from: string) => {
+    const res = await page.request.get(`${API}/api/v1/sites/${site.id}/report?from=${from}&to=${day(0)}`)
+    return ((await res.json()) as { kpis: { visitors: number } }).kpis.visitors
+  }
+  const big = async (period: string) => {
+    const res = await page.request.get(`${API}/api/v1/sites/${site.id}/card?format=json&period=${period}&t=overview`)
+    return ((await res.json()) as { big: string }).big
+  }
+  expect(await big('7d')).toBe((await visitors(day(6))).toLocaleString('en-US'))
+  expect(await big('all')).toBe((await visitors('2000-01-01')).toLocaleString('en-US'))
+})

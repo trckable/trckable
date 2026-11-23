@@ -421,8 +421,8 @@ func TestCardTopicModels(t *testing.T) {
 	// None: every picture says what it needs, none shows a zero or a dash.
 	var none cardNumbers
 	none.listsOf(&query.Result{})
-	for _, tpl := range []string{"overview", "numbers", "leaderboard", "sources", "places", "browsers", "devices", "toppage", "topsource", "topplace"} {
-		spec = cards.Spec{Big: "0", Rows: nil}
+	for _, tpl := range []string{"overview", "numbers", "grid", "leaderboard", "sources", "places", "browsers", "devices", "toppage", "topsource", "topplace"} {
+		spec = cards.Spec{Template: tpl, Big: "0", Rows: nil, Stats: []cards.Stat{{Value: "0"}}}
 		none.pictureOf(&spec, tpl)
 		if spec.Big != "Needs a visit in this period" || len(spec.Rows) != 0 || len(spec.Stats) != 0 {
 			t.Errorf("%s with none: %+v", tpl, spec)

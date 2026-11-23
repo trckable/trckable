@@ -6,8 +6,8 @@ import (
 )
 
 // cardPeriod is what a card covers: one of the dialog's presets, a custom
-// range or all time. A preset or custom period resolved by resolvePeriod ends
-// on the last full day (or hour), never on the one still running.
+// range or all time. A preset or custom period resolved by resolvePeriod covers
+// the day (and hour) still running, as the dashboard does.
 type cardPeriod struct {
 	days, hours int
 	label       string // the pill: real dates, or "Last 24 hours"
@@ -54,17 +54,19 @@ func cardPost(n cardNumbers, p cardPeriod) string {
 }
 
 // resolvePeriod is the period the card asks for, at the site's now: a preset
-// (24h, 7d, 30d), "all" (since the site began) or a custom from..to (two
-// dates). The last day is yesterday, never the one still running, so a chart
-// does not end in a dip; a custom range that reaches today is cut back to it.
+// (24h, 7d, 30d), "all" (since the site's first data, first) or a custom
+// from..to (two dates). The last day is today, the one still running, and the
+// last hour the one running now, as on the dashboard, so a card never says
+// less than the page; the presets' days are the share links' (sharePeriods),
+// the one list. A custom range that reaches past today is cut back to it.
 // compare is whether a comparison is asked for: all time has nothing before it.
-func resolvePeriod(l *cardLang, name, fromS, toS string, now, created time.Time, compare bool) cardPeriod {
+func resolvePeriod(l *cardLang, name, fromS, toS string, now, first time.Time, compare bool) cardPeriod {
 	loc := now.Location()
 	day := func(t time.Time) time.Time { return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc) }
-	yesterday := day(now).AddDate(0, 0, -1)
+	today := day(now)
 	span := func(p cardPeriod, from, to time.Time) cardPeriod {
-		if to.After(yesterday) {
-			to = yesterday
+		if to.After(today) {
+			to = today
 		}
 		if from.After(to) {
 			from = to
@@ -89,26 +91,29 @@ func resolvePeriod(l *cardLang, name, fromS, toS string, now, created time.Time,
 		}
 		return p
 	case "all":
-		from := day(created.In(loc))
-		p := span(cardPeriod{post: l.postAll}, from, yesterday)
+		from := today
+		if !first.IsZero() {
+			from = day(first.In(loc))
+		}
+		p := span(cardPeriod{post: l.postAll}, from, today)
 		p.label = fmt.Sprintf(l.since, l.monthYear(p.from))
 		return p
 	case "custom":
 		from, e1 := time.ParseInLocation("2006-01-02", fromS, loc)
 		to, e2 := time.ParseInLocation("2006-01-02", toS, loc)
-		if e1 == nil && e2 == nil && !from.After(to) && !from.After(yesterday) && to.Sub(from) < 20*366*24*time.Hour {
+		if e1 == nil && e2 == nil && !from.After(to) && !from.After(today) && to.Sub(from) < 20*366*24*time.Hour {
 			p := span(cardPeriod{}, from, to)
 			p.label = l.datesLabel(p.from, p.to)
 			p.post = fmt.Sprintf(l.postRange, p.label)
 			return vs(p)
 		}
 	}
-	days := 7
+	sp := sharePeriods[0]
 	if name == "30d" {
-		days = 30
+		sp = sharePeriods[1]
 	}
-	p := span(cardPeriod{}, yesterday.AddDate(0, 0, 1-days), yesterday)
+	p := span(cardPeriod{}, sp.start(today), today)
 	p.label = l.datesLabel(p.from, p.to)
-	p.post = fmt.Sprintf(l.postDays, days)
+	p.post = fmt.Sprintf(l.postDays, sp.Days)
 	return vs(p)
 }

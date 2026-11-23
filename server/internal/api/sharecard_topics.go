@@ -115,7 +115,9 @@ func (n *cardNumbers) pictureOf(spec *cards.Spec, t string) {
 		n.milestoneOf(spec)
 		return
 	}
-	if (t == "overview" || t == "numbers") && !n.HasData && n.Metric != "revenue" {
+	if (t == "overview" || t == "numbers" || t == "grid") && !n.HasData && n.Metric != "revenue" {
+		// The grid is drawn as the overview here: its four numbers would all be zeros.
+		spec.Template = "overview"
 		spec.Big, spec.Label, spec.Change, spec.Dir, spec.Series, spec.Stats = l.noVisits, "", "", 0, nil, nil
 	}
 }
