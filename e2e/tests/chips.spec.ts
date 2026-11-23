@@ -6,7 +6,7 @@ import { API, STEADY_DOMAIN } from '../playwright.config'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough for the chips')
 
-const SHOTS = '/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad'
+const SHOTS = 'test-results/shots'
 let cookie = ''
 test.beforeAll(async () => {
   cookie = await flowSession()

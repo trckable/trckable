@@ -239,7 +239,7 @@ test('the list head shows the online count the pill shows, with the half hour as
 })
 
 // The earth is grey dots on a dark sphere, and everyone at one spot, or close to it, is one marker with their number.
-const SHOTS = '/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad'
+const SHOTS = 'test-results/shots'
 type Inside = { states: { head: unknown; total: number; x: number; y: number; r: number }[]; zoom: number; zoomT: number; zoomTo: (z: number) => void; focus: (lat: number, lon: number) => void }
 
 async function crowd(page: Page, width: number, colorScheme: 'dark' | 'light') {
