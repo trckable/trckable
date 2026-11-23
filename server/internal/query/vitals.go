@@ -17,6 +17,12 @@ type Vitals struct {
 	LCP *int64 `json:"lcp_ms,omitempty"` // largest contentful paint, ms
 	CLS *int64 `json:"cls_1k,omitempty"` // cumulative layout shift, thousandths
 	INP *int64 `json:"inp_ms,omitempty"` // slowest interaction, ms
+	// First contentful paint: the loading time for the visits whose browser
+	// reports no LCP (every browser on an iPhone). Not one of the three scores.
+	FCP  *int64 `json:"fcp_ms,omitempty"`
+	FCPn int64  `json:"fcp_n"`
+	// How many different people had a page view that sent an engagement report in the range.
+	People int64 `json:"people"`
 	// How many page views each score is built from. A browser reports what it
 	// can measure (Safari has no layout shift, a visitor who never tapped has
 	// no INP), so the three differ, and a score from a handful is not shown.
@@ -75,8 +81,8 @@ func (q Q) VitalsFor(ctx context.Context, p Params) (*Vitals, error) {
 	// Reports arrive after their page view, so they may fall just past the
 	// range's end; a day's grace covers any real page.
 	with := cte + `, pv AS (
-		SELECT e.pageview_id, any_value(e.path) AS path, any_value(e.device) AS device, any_value(e.network) AS network,
-		       max(x.lcp_ms) AS lcp, max(x.cls_1k) AS cls, max(x.inp_ms) AS inp
+		SELECT e.pageview_id, any_value(e.path) AS path, any_value(e.device) AS device, any_value(e.network) AS network, any_value(e.visitor_id) AS visitor,
+		       max(x.lcp_ms) AS lcp, max(x.cls_1k) AS cls, max(x.inp_ms) AS inp, max(x.fcp_ms) AS fcp
 		FROM events e JOIN events x
 		  ON x.site_id = e.site_id AND x.pageview_id = e.pageview_id AND x.kind = 3
 		 AND x.ts >= ? AND x.ts < ? + INTERVAL 1 DAY
@@ -100,12 +106,12 @@ func (q Q) VitalsFor(ctx context.Context, p Params) (*Vitals, error) {
 	with += ` GROUP BY e.pageview_id)`
 
 	v := &Vitals{}
-	var lcp, cls, inp sql.NullFloat64
+	var lcp, cls, inp, fcp sql.NullFloat64
 	err = conn.QueryRowContext(ctx, with+`
 		SELECT count(*) FILTER (lcp IS NOT NULL OR cls IS NOT NULL OR inp IS NOT NULL),
-		       count(lcp), count(cls), count(inp),
-		       quantile_cont(lcp, 0.75), quantile_cont(cls, 0.75), quantile_cont(inp, 0.75)
-		FROM pv`, args...).Scan(&v.Samples, &v.LCPn, &v.CLSn, &v.INPn, &lcp, &cls, &inp)
+		       count(lcp), count(cls), count(inp), count(fcp), count(DISTINCT visitor),
+		       quantile_cont(lcp, 0.75), quantile_cont(cls, 0.75), quantile_cont(inp, 0.75), quantile_cont(fcp, 0.75)
+		FROM pv`, args...).Scan(&v.Samples, &v.LCPn, &v.CLSn, &v.INPn, &v.FCPn, &v.People, &lcp, &cls, &inp, &fcp)
 	if err != nil {
 		return nil, fmt.Errorf("web vitals: %w", err)
 	}
@@ -125,6 +131,10 @@ func (q Q) VitalsFor(ctx context.Context, p Params) (*Vitals, error) {
 	set(&v.LCP, lcp, GoodLCP)
 	set(&v.CLS, cls, GoodCLS)
 	set(&v.INP, inp, GoodINP)
+	if fcp.Valid {
+		x := int64(fcp.Float64 + 0.5)
+		v.FCP = &x
+	}
 
 	// The pages worth fixing first: slowest by LCP, with enough views to mean
 	// something.

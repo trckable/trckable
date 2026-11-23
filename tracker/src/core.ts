@@ -7,7 +7,7 @@
 // l language · id event id · a age ms · pv pageview id · v visitor id
 // ti page title (pageviews) · n goal · p props · en engaged ms · sc scroll % · dev localhost allowed · c cookieless
 // ap 1 when the page runs in an app (a web view's bridge, data-app, ?app=1, inApp())
-// lcp ms · cls thousandths · inp ms (Core Web Vitals, with that module on)
+// lcp ms · fcp ms · cls thousandths · inp ms (Core Web Vitals, with that module on)
 
 // Build-time feature flags. esbuild replaces each with true/false per
 // variant, so a feature a site turned off is not in its script at all.
@@ -410,7 +410,10 @@ export function start(c: Config): Tracker {
         drain.push(() => po.takeRecords().forEach(cb))
       } catch {}
     }
-    watch('largest-contentful-paint', (e) => e.startTime < hid && (cwv.lcp = Math.max(e.startTime - ((performance.getEntriesByType('navigation')[0] as any)?.activationStart || 0), 0) | 0))
+    const at = (e: any) => Math.max(e.startTime - ((performance.getEntriesByType('navigation')[0] as any)?.activationStart || 0), 0) | 0
+    watch('largest-contentful-paint', (e) => e.startTime < hid && (cwv.lcp = at(e)))
+    // First contentful paint: what a browser with no LCP (iPhone) can still report.
+    watch('paint', (e) => e.name[6] == 'c' && e.startTime < hid && (cwv.fcp = at(e)))
     // Layout shift is scored in session windows, not as a running total: at
     // most 5 s long, ended by a 1 s gap; the worst window is the score. A
     // browser that measures it and sees none reports 0, which is a score.

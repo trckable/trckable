@@ -661,14 +661,14 @@ func TestWebVitalsAreKeptAsReportedAndWildOnesAreDropped(t *testing.T) {
 		e, _ := lastEvent(t, l)
 		return e
 	}
-	e := send(`,"lcp":1800,"cls":0,"inp":96`)
-	if e.LCPms != 1800 || e.CLS1k == nil || *e.CLS1k != 0 || e.INPms != 96 {
+	e := send(`,"lcp":1800,"cls":0,"inp":96,"fcp":640`)
+	if e.FCPms != 640 || e.LCPms != 1800 || e.CLS1k == nil || *e.CLS1k != 0 || e.INPms != 96 {
 		t.Fatalf("reported values changed: %+v", e)
 	}
 	if e = send(`,"lcp":1800`); e.CLS1k != nil {
 		t.Fatalf("no layout shift reported, but one was stored: %d", *e.CLS1k)
 	}
-	if e = send(`,"lcp":99999999,"cls":99999999,"inp":99999999`); e.LCPms != 0 || e.CLS1k != nil || e.INPms != 0 {
+	if e = send(`,"lcp":99999999,"cls":99999999,"inp":99999999,"fcp":99999999`); e.FCPms != 0 || e.LCPms != 0 || e.CLS1k != nil || e.INPms != 0 {
 		t.Fatalf("a wild number was kept: %+v", e)
 	}
 }
