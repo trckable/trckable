@@ -15,11 +15,10 @@ describe('the folded entries of the section list', () => {
     expect(state(h)).not.toContain('data-closed')
   })
   it('open and close with the chevron without moving to another tab', () => {
-    expect(railOpen(railToggled({}, 'goals', 'pages'), 'goals', 'pages')).toBe(false)
-    expect(railOpen(railToggled({}, 'goals', 'goals'), 'goals', 'goals')).toBe(false)
-    expect(railOpen(railToggled(railToggled({}, 'goals', 'goals'), 'goals', 'goals'), 'goals', 'goals')).toBe(true)
+    expect(railOpen(railToggled({}, 'goals'), 'goals')).toBe(false)
+    expect(railOpen(railToggled(railToggled({}, 'goals'), 'goals'), 'goals')).toBe(true)
   })
   it('open when the entry itself is pressed', () => {
-    expect(railOpen(railPressed(railToggled({}, 'goals', 'goals'), 'goals'), 'goals', 'goals')).toBe(true)
+    expect(railOpen(railPressed(railToggled({}, 'goals'), 'goals'), 'goals')).toBe(true)
   })
 })

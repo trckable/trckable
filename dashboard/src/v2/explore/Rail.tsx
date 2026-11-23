@@ -19,7 +19,7 @@ export function Rail({ section, tab, conn, onPick, onTab }: { section: Section; 
       {listedSections().map((k) => {
         const subs = listedTabs(k)
         const on = k === section && !subs.includes(tab)
-        const open = railOpen(force, k, section)
+        const open = railOpen(force, k)
         return (
           <Fragment key={k}>
             <div className="xrg">
@@ -29,7 +29,7 @@ export function Rail({ section, tab, conn, onPick, onTab }: { section: Section; 
                 {k === 'goals' && !conn.rev && <span className="xtag">{copy.connectTag}</span>}
               </button>
               {subs.length > 0 && (
-                <button type="button" className="xchev" data-open={open ? '' : undefined} aria-expanded={open} aria-controls={`xkids-${k}`} aria-label={copy.railToggle} onClick={() => setForce((f) => railToggled(f, k, section))}>
+                <button type="button" className="xchev" data-open={open ? '' : undefined} aria-expanded={open} aria-controls={`xkids-${k}`} aria-label={copy.railToggle} onClick={() => setForce((f) => railToggled(f, k))}>
                   <ChevronRight size={14} strokeWidth={2} aria-hidden="true" />
                 </button>
               )}
