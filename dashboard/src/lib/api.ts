@@ -817,6 +817,8 @@ export interface ShareLook {
 }
 
 export interface Share {
+  /** The fixed period in words, made by the server as the card says it, in the page's language. */
+  period_label?: string
   id: string
   site_id: string
   name: string

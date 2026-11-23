@@ -193,3 +193,18 @@ func (a *API) sharePeriodIn(ctx context.Context, site, in string) (string, error
 	}
 	return in, nil
 }
+
+// sharePeriodLabel is a link's fixed period in the card's words, in the card's language: the same function the
+// card's own period line is made by. "" for a link whose reader chooses.
+func sharePeriodLabel(l *cardLang, period string, now time.Time) string {
+	if period == "" {
+		return ""
+	}
+	if first, last, ok := sqlite.SharePeriodDays(period); ok {
+		if last == "" {
+			return resolvePeriod(l, "since", first, "", now, time.Time{}, false).label
+		}
+		return resolvePeriod(l, "custom", first, last, now, time.Time{}, false).label
+	}
+	return resolvePeriod(l, period, "", "", now, time.Time{}, false).label
+}

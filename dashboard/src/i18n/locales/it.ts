@@ -630,7 +630,6 @@ export default {
   'links.sectionsEvery': 'Mostra tutte le sezioni',
   'links.period': 'Periodo',
   'links.periodChoose': 'Sceglie chi lo apre',
-  'links.periodSince': (day: string) => `Da ${day}`,
   'links.periodFixed': (name: string) => `Sempre ${name}`,
   'links.periodFree': 'Chi lo apre sceglie il periodo',
 

@@ -5,7 +5,9 @@ import { LayoutGrid, CalendarRange } from 'lucide-react'
 import { copy } from './copy'
 import { PERIODS, SECTIONS, type Draft } from './logic'
 import { Opt } from './Opt'
-import { periodName } from './periodName'
+import { PRESETS } from '../../lib/dates'
+
+const periodName = (id: string) => PRESETS.find((p) => p.id === id)?.label ?? id
 
 export function Scope({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) => void }) {
   const flip = (s: string) => set({ sections: draft.sections.includes(s) ? draft.sections.filter((x) => x !== s) : [...draft.sections, s] })
@@ -34,7 +36,7 @@ export function Scope({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) =
               {periodName(p)}
             </option>
           ))}
-          {draft.period && !(PERIODS as readonly string[]).includes(draft.period) && <option value={draft.period}>{periodName(draft.period)}</option>}
+          {draft.period && !(PERIODS as readonly string[]).includes(draft.period) && <option value={draft.period}>{draft.periodLabel || draft.period}</option>}
         </select>
       </Opt>
     </>

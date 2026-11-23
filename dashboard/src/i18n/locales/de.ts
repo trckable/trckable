@@ -633,7 +633,6 @@ export default {
   'links.sectionsEvery': 'Zeigt alle Bereiche',
   'links.period': 'Zeitraum',
   'links.periodChoose': 'Leser wählt',
-  'links.periodSince': (day: string) => `Seit ${day}`,
   'links.periodFixed': (name: string) => `Immer ${name}`,
   'links.periodFree': 'Der Leser wählt den Zeitraum',
 

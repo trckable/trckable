@@ -123,3 +123,19 @@ func TestCardWordsNameTheFirstDay(t *testing.T) {
 		t.Errorf("first day %q (%v), want 2026-08-13", n.First, ok)
 	}
 }
+
+// The links list names each fixed period with the card's own words, in the language asked for.
+func TestShareListNamesPeriods(t *testing.T) {
+	now := time.Date(2026, 11, 9, 15, 30, 0, 0, time.UTC)
+	for _, c := range []struct{ code, period, want string }{
+		{"en", "12mo", "Last 12 months"},
+		{"en", "2026-03-01..2026-06-14", "1 Mar – 14 Jun 2026"},
+		{"en", "since:2024-02-04", "Since 4 Feb 2024"},
+		{"de", "30d", "Letzte 30 Tage"},
+		{"en", "", ""},
+	} {
+		if got := sharePeriodLabel(cardLangOf(c.code), c.period, now); got != c.want {
+			t.Errorf("%s %q: %q, want %q", c.code, c.period, got, c.want)
+		}
+	}
+}

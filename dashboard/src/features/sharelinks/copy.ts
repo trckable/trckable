@@ -102,7 +102,6 @@ export const copy = defineCopy('links', {
   period: 'Period',
   periodChoose: 'Reader chooses',
   periodFixed: (name: string) => `Always ${name}`,
-  periodSince: (day: string) => `Since ${day}`,
   periodFree: 'Reader chooses the period',
 })
 

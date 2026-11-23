@@ -624,7 +624,6 @@ export default {
   'links.sectionsEvery': 'Montre toutes les sections',
   'links.period': 'Période',
   'links.periodChoose': 'Au choix du lecteur',
-  'links.periodSince': (day: string) => `Depuis ${day}`,
   'links.periodFixed': (name: string) => `Toujours ${name}`,
   'links.periodFree': 'Le lecteur choisit la période',
 
