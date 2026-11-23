@@ -354,6 +354,9 @@ func TestCardOverviewPictures(t *testing.T) {
 	noOutbound(t, g)
 	owner := client()
 	g.setup(t, owner)
+	if raceEnabled {
+		owner.Timeout = 30 * time.Second // the big pictures are drawn slowly under the race detector
+	}
 	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
 	for _, tpl := range []string{"numbers", "grid"} {
 		for shape, want := range map[string]image.Point{"link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}} {
