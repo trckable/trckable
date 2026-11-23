@@ -72,10 +72,12 @@ func (a *API) fixSharePeriod(r *http.Request, siteID string) {
 }
 
 // last24Hours is the card's 24 hours: the 24 hour buckets that end with the one
-// running now. The end is an instant (an hour boundary), so a clock change
+// running now. The end is an instant (a local hour boundary), so a clock change
 // inside the window does not move it.
 func last24Hours(now time.Time) (from, to time.Time) {
-	to = now.Truncate(time.Hour).Add(time.Hour)
+	// The next hour boundary of the site's own clock (zones of +5:30 or +5:45 have
+	// theirs at :30 and :45 of UTC's hours): subtract the clock's minutes, then add the hour.
+	to = now.Add(-time.Duration(now.Minute())*time.Minute - time.Duration(now.Second())*time.Second - time.Duration(now.Nanosecond())).Add(time.Hour)
 	return to.Add(-24 * time.Hour), to
 }
 

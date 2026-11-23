@@ -314,18 +314,22 @@ func (a *API) firstDayOf(ctx context.Context, q *query.Q, site, tz string) (stri
 	key := site + "|" + tz
 	a.cache.mu.Lock()
 	day, ok := a.cache.first[key]
+	sc := a.cache.site(site)
+	seq, purges, epoch := sc.seq, sc.purges, a.cache.epoch
 	a.cache.mu.Unlock()
 	if ok {
 		return day, nil
 	}
 	day, err := q.FirstDay(ctx, site, tz)
-	if err != nil {
-		return "", err
+	if err != nil || day == "" {
+		return day, err
 	}
-	if day != "" {
-		a.cache.mu.Lock()
+	// Kept only when nothing as old as that day was written, and nothing purged, while it was read.
+	t, perr := time.Parse(time.DateOnly, day)
+	a.cache.mu.Lock()
+	defer a.cache.mu.Unlock()
+	if perr == nil && a.cache.epoch == epoch && a.cache.site(site).purges == purges && !a.cache.changedSince(site, seq, 0, t.Add(48*time.Hour).UnixMilli()) {
 		a.cache.first[key] = day
-		a.cache.mu.Unlock()
 	}
 	return day, nil
 }

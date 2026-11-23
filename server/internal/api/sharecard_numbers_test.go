@@ -11,6 +11,7 @@ import (
 
 	"github.com/trckable/trckable/server/internal/event"
 	"github.com/trckable/trckable/server/internal/query"
+	"github.com/trckable/trckable/server/internal/writer"
 )
 
 // A card's big number is the report's visitors for the same period, never another count: every preset, a custom
@@ -192,5 +193,57 @@ func TestCardComparisonOfAFlatSiteIsFlat(t *testing.T) {
 		if c.dir != 0 || c.change != "" {
 			t.Errorf("%s of a flat site: %q (dir %d), want none", period, c.change, c.dir)
 		}
+	}
+}
+
+// All time follows the site's first data when older days arrive after the card was read: imported days and older events.
+func TestCardAllTimeMovesWhenOlderDataArrives(t *testing.T) {
+	g := newRig(t)
+	g.setup(t, client())
+	now := g.advance(0)
+	g.event(t, event.Event{Kind: event.KindPageview, EventID: 1, Pageview: 1, TS: now.Add(-2 * time.Hour).UnixMilli(), Visitor: 1, Path: "/"})
+	g.waitApplied(t, 1)
+	if n := g.cardOf(t, "period=all"); n.Big != "1" || n.Foot != "Since Sep 2026" {
+		t.Fatalf("before: %s %q", n.Big, n.Foot)
+	}
+	// An import writes its days and tells the report cache, as the import's job does.
+	rows := []writer.ImportedRow{{Day: "2026-03-01", Dim: "total", Sessions: 30, Users: 20, Views: 50}}
+	if err := g.w.ReplaceImported(context.Background(), g.site, "2026-03-01", "2026-03-01", rows); err != nil {
+		t.Fatal(err)
+	}
+	g.api.PurgeSite(g.site)
+	if n := g.cardOf(t, "period=all"); n.Big != "21" || n.Foot != "Since Mar 2026" {
+		t.Errorf("after an import: %s %q, want 21 since Mar 2026", n.Big, n.Foot)
+	}
+	// An older event of the site's own moves it too.
+	g.event(t, event.Event{Kind: event.KindPageview, EventID: 2, Pageview: 2, TS: now.Add(-250 * 24 * time.Hour).UnixMilli(), Visitor: 2, Path: "/"})
+	g.waitApplied(t, 2)
+	if n := g.cardOf(t, "period=all"); n.Foot != "Since Jan 2026" {
+		t.Errorf("after an older event: %q", n.Foot)
+	}
+}
+
+// In a zone whose hours begin at :30 of UTC's, the hour running now is the last point of the 24 hours.
+func TestLast24HoursEndsOnTheLocalHour(t *testing.T) {
+	g := newRig(t)
+	g.setup(t, client())
+	si, _ := g.ctl.SiteInfo(context.Background(), g.site)
+	if err := g.ctl.UpdateSite(context.Background(), g.site, si.Name, "Asia/Kolkata", si.Currency); err != nil {
+		t.Fatal(err)
+	}
+	loc, _ := time.LoadLocation("Asia/Kolkata")
+	now := g.advance(0) // 17:30 in Kolkata
+	g.event(t, event.Event{Kind: event.KindPageview, EventID: 1, Pageview: 1, TS: now.Add(-10 * time.Minute).UnixMilli(), Visitor: 1, Path: "/"})
+	g.waitApplied(t, 1)
+	from, to := last24Hours(now.In(loc))
+	if to.In(loc).Minute() != 0 || to.Sub(from) != 24*time.Hour {
+		t.Fatalf("window %s .. %s", from.In(loc), to.In(loc))
+	}
+	res, err := g.api.Query().Report(context.Background(), query.Params{Site: g.site, From: from.UTC(), To: to.UTC(), TZ: "Asia/Kolkata", Bucket: "hour", Limit: 10})
+	if err != nil || len(res.Series) == 0 || res.Series[len(res.Series)-1].Visitors != 1 {
+		t.Errorf("last point of the series: %v %+v", err, res.Series)
+	}
+	if got := g.cardOf(t, "period=24h").Big; got != "1" {
+		t.Errorf("card: %s", got)
 	}
 }
