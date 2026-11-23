@@ -259,6 +259,7 @@ type payload struct {
 	LCP        uint32            `json:"lcp"` // Core Web Vitals, with that module on
 	CLS        *uint32           `json:"cls"` // thousandths; 0 is a score (no shift), absent is "not measured"
 	INP        uint32            `json:"inp"`
+	FCP        uint32            `json:"fcp"` // first contentful paint, ms
 	Dev        int               `json:"dev"` // localhost allowed (tracker data-dev)
 	Cookieless int               `json:"c"`   // visitor is in cookieless mode: never set a cookie
 	App        any               `json:"ap"`  // 1 or true: the page runs in an app (a web view's bridge on the page, data-app, ?app=1)
@@ -568,6 +569,9 @@ func (h *Handler) build(r *http.Request, p *payload) (*event.Event, string, *htt
 		}
 		if p.INP < 6e5 {
 			e.INPms = p.INP
+		}
+		if p.FCP < 6e5 {
+			e.FCPms = p.FCP
 		}
 	default:
 		return nil, "", nil, errBadPayload

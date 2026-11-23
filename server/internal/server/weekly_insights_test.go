@@ -7,6 +7,7 @@ import (
 
 	"github.com/trckable/trckable/server/internal/insights"
 	"github.com/trckable/trckable/server/internal/query"
+	"github.com/trckable/trckable/server/internal/reports"
 )
 
 func money(n int64) *int64 { return &n }
@@ -64,7 +65,7 @@ func TestWeeklySaysNothingWhenNothingClearsTheFloors(t *testing.T) {
 			t.Errorf("%q with nothing to say:\n%s", no, msg)
 		}
 	}
-	if got := weeklyInsights(cur, prev); len(got) != 0 {
+	if got := weeklyInsights(reports.For("en"), cur, prev); len(got) != 0 {
 		t.Errorf("findings: %v", got)
 	}
 }
@@ -76,7 +77,7 @@ func TestWeeklyMoneyLinesNeedPayments(t *testing.T) {
 		Dims: map[string][]query.Row{"channel": {{Value: "Search", Visitors: 610, Revenue: money(30000), Payers: 5}, {Value: "Direct", Visitors: 650, Revenue: money(0)}}},
 	}
 	prev := &query.Result{KPIs: query.KPIs{Visitors: 1000}, Dims: map[string][]query.Row{"channel": {{Value: "Search", Visitors: 400}}}}
-	for _, line := range weeklyInsights(cur, prev) {
+	for _, line := range weeklyInsights(reports.For("en"), cur, prev) {
 		if strings.Contains(line, "earns") {
 			t.Errorf("a money line with no payments connected: %s", line)
 		}
@@ -100,7 +101,7 @@ func TestWeeklyKeepsToThreeLines(t *testing.T) {
 			"entry_page": {{Value: "/pricing", Visitors: 900, Payers: 30}},
 		},
 	}
-	got := weeklyInsights(cur, prev)
+	got := weeklyInsights(reports.For("en"), cur, prev)
 	if len(got) != 3 || !strings.Contains(got[2], "/pricing converts") {
 		t.Fatalf("three lines, in the dashboard's order: %v", got)
 	}
@@ -124,7 +125,7 @@ func TestAWeekIsReportedOnlyForASiteThatHadOne(t *testing.T) {
 // under ten, never "230.0×".
 func TestInsightLineTimes(t *testing.T) {
 	for in, want := range map[float64]string{1.9: "1.9× the average", 3.0: "3× the average", 12.3: "12× the average"} {
-		line := insightLine(insights.Insight{Kind: insights.TopRevenue, Dim: "channel", Value: "Search", PerVisitor: 49, Times: in}, &query.Money{Currency: "USD", Exponent: 2})
+		line := insightLine(reports.For("en"), insights.Insight{Kind: insights.TopRevenue, Dim: "channel", Value: "Search", PerVisitor: 49, Times: in}, &query.Money{Currency: "USD", Exponent: 2})
 		if !strings.HasSuffix(line, want) {
 			t.Errorf("%v: %q", in, line)
 		}

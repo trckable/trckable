@@ -12,11 +12,11 @@ import { mentionsApi } from '../../features/mentions/api'
 import { whenQuiet } from '../../features/extras/quiet'
 import { onSiteWrite } from '../../lib/siteWrites'
 import { moduleOn } from '../briefing/moduleOn'
-import { aiOf, mentionsOf, speedOf, uptimeFigure, UPTIME_DAYS, type AiFigure, type MentionsFigure, type UptimeFigure } from './health'
+import { aiOf, mentionsOf, speedOf, uptimeFigure, UPTIME_DAYS, type AiFigure, type MentionsFigure, type Speed, type UptimeFigure } from './health'
 
 /** Each figure is undefined while it is read, null when there is nothing to say, else the figure. */
 export interface Health {
-  speed?: number | null
+  speed?: Speed | null
   /** Whether the site records speed at all: off, "Set up" turns it on; on, there are only too few visits. */
   vitalsOn?: boolean
   uptime?: UptimeFigure | null

@@ -15,6 +15,8 @@ export type Ghost = 'gauge' | 'strip' | 'rows'
 interface Props {
   site: Site
   line: string
+  /** A second, quieter line under it. */
+  note?: string
   ghost: Ghost[]
   /** The one button: its words and what it opens, and the question "Why?" asks Peek beside it. None when nothing needs switching on. */
   action?: { label: string; setup: LiveSetup; ask: string }
@@ -71,7 +73,7 @@ function Actions({ site, action }: { site: Site; action: NonNullable<Props['acti
   )
 }
 
-export function EmptyBlock({ site, line, ghost, action, collecting }: Props) {
+export function EmptyBlock({ site, line, note, ghost, action, collecting }: Props) {
   return (
     <div className={`lhempty${collecting ? ' collecting' : ''}`}>
       <div className="lhghost" aria-hidden="true">
@@ -80,6 +82,7 @@ export function EmptyBlock({ site, line, ghost, action, collecting }: Props) {
         ))}
       </div>
       <span className="lhline">{line}</span>
+      {note && <span className="lhnote">{note}</span>}
       {action && <Actions site={site} action={action} />}
     </div>
   )
