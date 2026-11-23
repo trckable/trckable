@@ -51,7 +51,7 @@ test('a shared link is the Briefing and Explore, read only, and its embed is the
   await expect(tab.locator('#xp.on')).toBeVisible()
   await tab.keyboard.press('f')
   await expect(tab.locator('#xp .xrail [data-xsec="overview"]')).toBeVisible()
-  await expect(tab.locator('#xp .xrail [data-xsec="speed"], #xp .xrail [data-xsec="mentions"], #xp .xrail [data-xsec="results"]')).toHaveCount(0)
+  await expect(tab.locator('#xp .xrail [data-xsec="health"], #xp .xrail [data-xsec="web"]')).toHaveCount(0)
   await tab.locator('#xp .xrail [data-xsec="pages"]').click()
   await expect(tab.locator('#xp .xt .xrw').first()).toBeVisible()
   await expect(tab.locator('#xp')).not.toContainText('We could not load this')

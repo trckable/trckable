@@ -1,6 +1,7 @@
 // What a section needs from the panel around it: the filters, how many rows to show, and the things a tap does.
 import type { Filter, ReportQuery, Site } from '../../lib/api'
 import type { ViewState } from '../../lib/url'
+import type { DataCtx } from './data/useExplore'
 import type { Connected, FilterDim, Option, Tab } from './types'
 
 export type Setup = 'rev' | 'search' | 'goals'
@@ -50,4 +51,9 @@ export interface XCtx {
   addCustom: (page: string, kind: 'step' | 'goal') => void
   removeCustom: (kind: 'step' | 'goal', i: number) => void
   pageDetails: () => void
+  /** What the cards read their numbers with: the site, the period and the filters. */
+  data: DataCtx
+  /** The source whose details stand beside Sources' table. */
+  source?: string
+  setSource: (s: string | null) => void
 }

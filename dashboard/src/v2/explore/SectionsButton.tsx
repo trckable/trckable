@@ -5,7 +5,7 @@ import { SHELL } from '../../kit/PopShell'
 import { Popover } from '../../kit/Popover'
 import { copy } from './copy'
 import { openExplore } from './open'
-import { groups, TABS, type Section } from './sections'
+import { listedSections, TABS, type Section } from './sections'
 import { TileIcon } from '../why/tileIcons'
 
 function Tile({ section, onOpen }: { section: Section; onOpen: () => void }) {
@@ -32,7 +32,7 @@ export function SectionsButton() {
     >
       {(close) => (
         <div className="xtiles">
-          {groups().flatMap((g) => g.items).map((s) => (
+          {listedSections().map((s) => (
             <Tile key={s} section={s} onOpen={() => { close(); openExplore(TABS[s][0]) }} />
           ))}
         </div>

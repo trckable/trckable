@@ -1,6 +1,6 @@
 // What Explore keeps from the old Data page, each in its place on the new one: the chart of What changed with its moments'
 // markers, mentions' dots, busy band and note flags, the guide to leaving after one page, the card seals, and Google's
-// lines in AI & search. The server's own findings are given through the routes.
+// lines in AI & web. The server's own findings are given through the routes.
 import { expect, test, type Page } from './fixtures'
 import { API, HISTORY_DOMAIN } from '../playwright.config'
 import { session } from './session'
@@ -68,14 +68,17 @@ test('a card that rests on a source wears its seal in Explore', async ({ page })
   await expect(page.locator('#xp .vf-mark').first()).toHaveAttribute('aria-label', /Payments verified/, { timeout: 20_000 })
 })
 
-test('AI & search keeps Google beside the assistants and the crawlers', async ({ page }) => {
+test('Google lives in Sources, beside the sources; AI & web has the assistants and the crawlers', async ({ page }) => {
   await page.route('**/api/v1/sites/*/search-console', (r) => r.fulfill({ json: { connected: true, connection: { property: `sc-domain:${HISTORY_DOMAIN}` } } }))
   await page.route(/\/report\/search\?/, (r) => r.fulfill({ json: { property: `sc-domain:${HISTORY_DOMAIN}`, dim: 'query', rows: [{ key: 'privacy analytics', clicks: 42, impressions: 900, ctr: 0.047, position: 5.1 }, { key: 'trckable', clicks: 30, impressions: 300, ctr: 0.1, position: 1.2 }], from: day(30), to: day(0), clicks: 72, impressions: 1200 } }))
+  await open(page, '?view=briefing&period=30d&x=search')
+  const sources = page.locator('#xp.on')
+  await expect(sources.getByText('privacy analytics')).toBeVisible({ timeout: 20_000 })
+  await expect(sources.locator('[data-xpanel="google"]')).toBeVisible()
   await open(page, '?view=briefing&period=30d&x=ai')
   const panel = page.locator('#xp.on')
-  await expect(panel.getByText('privacy analytics')).toBeVisible({ timeout: 20_000 })
-  await expect(panel).toContainText('Google')
-  await expect(panel).toContainText('AI assistants')
+  await expect(panel).toContainText('AI assistants', { timeout: 20_000 })
+  await expect(panel.getByText('privacy analytics')).toHaveCount(0)
 })
 
 test('a moment is a marker over the chart: it says itself on pointing and opens its card on a click', async ({ page }) => {

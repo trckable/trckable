@@ -9,21 +9,20 @@ import type { Loaded } from './data/useLoad'
 import type { Report } from '../../lib/api'
 import { Changed } from './views/Changed'
 import { HOSTED } from './sections'
-import type { Briefing, Networks as NetworksModel, Paths as PathsModel, Quality as QualityModel, HostedTab, BotsModel, Funnel, Mention, Overview as OverviewModel, Sales as SalesModel, Search as SearchModel, Speed as SpeedModel, Tab, Table } from './types'
+import type { Briefing, Networks as NetworksModel, Paths as PathsModel, HostedTab, Funnel, Mention, Overview as OverviewModel, Sales as SalesModel, Speed as SpeedModel, Tab, Table } from './types'
 import { Hosted } from './views/Hosted'
 import { Overview } from './views/Overview'
 import { Networks } from './views/Networks'
 import { PathsView } from './views/Paths'
-import { Quality } from './views/Quality'
 import { Results } from './views/Results'
 import { Sales } from './views/Sales'
-import { Search } from './views/Search'
-import { Bots, Mentions, Speed } from './views/Site'
+import { SourcesView } from './views/Sources'
+import { Mentions, Speed } from './views/Site'
 import { Tables } from './views/Tables'
 
 const isHosted = (t: Tab): t is HostedTab => HOSTED.includes(t)
 
-const CARDS: Partial<Record<Tab, number>> = { changed: 4, overview: 4, search: 4, speed: 3 }
+const CARDS: Partial<Record<Tab, number>> = { changed: 4, overview: 4, speed: 3 }
 
 function Shown({ tab, x, d }: { tab: Tab; x: XCtx; d: TabData }) {
   switch (tab) {
@@ -33,12 +32,10 @@ function Shown({ tab, x, d }: { tab: Tab; x: XCtx; d: TabData }) {
       return <Overview x={x} d={d as OverviewModel & { report: Report }} />
     case 'paths':
       return <PathsView x={x} d={d as PathsModel} />
-    case 'quality':
-      return <Quality d={d as QualityModel} />
     case 'networks':
       return <Networks x={x} d={d as NetworksModel} />
-    case 'search':
-      return <Search x={x} d={d as SearchModel} />
+    case 'sources':
+      return <SourcesView x={x} d={d as Table} />
     case 'funnels':
       return <Results x={x} d={d as Funnel} />
     case 'sales':
@@ -47,8 +44,6 @@ function Shown({ tab, x, d }: { tab: Tab; x: XCtx; d: TabData }) {
       return <Speed x={x} d={d as SpeedModel} />
     case 'mentions':
       return <Mentions x={x} d={d as Mention[]} />
-    case 'bots':
-      return <Bots x={x} d={d as BotsModel} />
     default:
       return <Tables tab={tab} x={x} d={d as Table} />
   }

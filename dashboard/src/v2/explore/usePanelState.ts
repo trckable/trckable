@@ -46,6 +46,7 @@ export function usePanelState(ask: Ask) {
       setView({ xp: to, xf: [...without(filters, dim), { dim, value }] })
       set({ n: FIRST, menu: null })
     },
+    source: (to: string | null) => setView({ xs: to ?? undefined }),
     pick: (dim: string, value: string) => narrow(toggled(filters, dim, value)),
     pickAny: (dim: string, values: string[]) => narrow(toggledAny(filters, dim, values)),
     remove: (dim: string) => narrow(without(filters, dim)),

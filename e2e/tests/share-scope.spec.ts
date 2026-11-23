@@ -63,7 +63,7 @@ test('a stranger on a link with sections off is refused their data, and the page
   await tab.keyboard.press('e')
   await tab.keyboard.press('f')
   await expect(tab.locator('#xp .xrail [data-xsec="pages"]')).toBeVisible()
-  await expect(tab.locator('#xp .xrail [data-xsec="sources"], #xp .xrail [data-xsec="places"], #xp .xrail [data-xsec="tech"]')).toHaveCount(0)
+  await expect(tab.locator('#xp .xrail [data-xsec="sources"], #xp .xrail [data-xsec="audience"]')).toHaveCount(0)
   await tab.locator('#xp .xrail [data-xsec="pages"]').click()
   await expect(tab.locator('#xp .xt .xrw').first()).toBeVisible()
 

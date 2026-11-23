@@ -93,9 +93,11 @@ describe('look options', () => {
 
 describe('Explore sections and the gallery', () => {
   it('maps each section with a picture to its topic, and the others to none', () => {
-    expect(['changed', 'overview', 'pages', 'sources', 'search', 'places', 'tech', 'results', 'sales', 'ai'].map((s) => topicOfSection(s))).toEqual(['changed', 'overview', 'pages', 'sources', 'search', 'places', 'tech', 'goals', 'sales', 'ai'])
-    for (const s of ['speed', 'links', 'mentions', 'answers']) expect(topicOfSection(s)).toBeUndefined()
-    for (const s of ['changed', 'results', 'sales', 'ai']) {
+    expect(['changed', 'overview', 'pages', 'sources', 'audience', 'goals', 'web'].map((s) => topicOfSection(s))).toEqual(['changed', 'overview', 'pages', 'sources', 'places', 'goals', 'ai'])
+    expect(topicOfSection('health')).toBeUndefined()
+    // Shares made before the seven sections still find their picture.
+    expect(['search', 'places', 'tech', 'results', 'sales', 'ai', 'speed'].map((s) => topicOfSection(s))).toEqual(['sources', 'places', 'places', 'goals', 'goals', 'ai', undefined])
+    for (const s of ['changed', 'goals', 'web']) {
       const topic = topicOfSection(s)
       expect(topic).toBeDefined()
       expect(picturesOf(topic ?? 'overview').length).toBeGreaterThan(0)

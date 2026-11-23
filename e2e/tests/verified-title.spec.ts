@@ -44,7 +44,7 @@ test('a link with money badges Sales with the provider, and the badge stays on o
     const b = await l.boundingBox()
     return b!.y + b!.height / 2
   }
-  expect(Math.abs((await at(badge)) - (await at(page.locator('[data-xtitle=sales]'))))).toBeLessThan(12)
+  expect(Math.abs((await at(badge)) - (await at(page.locator('[data-xtitle=goals]'))))).toBeLessThan(12)
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
   if (!SHOTS) return
   mkdirSync(SHOTS, { recursive: true })

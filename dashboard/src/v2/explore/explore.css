@@ -478,3 +478,10 @@
 .mk .xhow-name .cut { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mk .xhow-name .num { color: var(--mk-text); }
 .mk .xhow-name:hover, .mk .xhow-name.on { color: var(--mk-text); }
+
+/* Sources: Google's details open under its row, the width of the table. */
+.mk .xsrc-panel { margin: 4px 0 var(--mk-s3); padding: var(--mk-s3); border-radius: var(--mk-r3, 14px); background: var(--mk-band); }
+.mk .xsrc-ph { display: flex; align-items: center; gap: var(--mk-s2); margin-bottom: var(--mk-s3); }
+.mk .xsrc-ph h3 { flex: 1; min-width: 0; margin: 0; font-size: 14px; font-weight: 650; }
+.mk .xsrc-x { display: grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: 8px; background: none; color: var(--mk-muted); cursor: pointer; }
+.mk .xsrc-x:hover { color: var(--mk-text); background: var(--mk-line); }

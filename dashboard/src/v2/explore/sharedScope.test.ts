@@ -2,7 +2,7 @@
 // fixed for the link says so. (The server refuses the same data; this is the page not offering what would come back empty.)
 import { afterEach, describe, expect, it } from 'vitest'
 import { fixedPeriod, sectionShown, setShared, setSharedScope } from '../../lib/me'
-import { groups, isTab, TABS } from './sections'
+import { isTab, listedSections, TABS } from './sections'
 
 afterEach(() => setSharedScope())
 
@@ -12,24 +12,24 @@ describe('a shared link with some sections off', () => {
     setSharedScope(['pages'])
     expect(TABS.pages).toContain('pages')
     expect(TABS.overview).toContain('overview')
-    expect(TABS.sales).toContain('sales')
-    for (const s of ['sources', 'places', 'tech'] as const) expect(TABS[s]).toEqual([])
+    expect(TABS.goals).toContain('sales')
+    for (const s of ['sources', 'audience'] as const) expect(TABS[s]).toEqual([])
   })
   it('lists only the sections that have a table left, and does not follow an address into one that is off', () => {
     setShared()
     setSharedScope(['pages'])
-    const listed = groups().flatMap((g) => g.items)
+    const listed = listedSections()
     expect(listed).toContain('pages')
-    for (const s of ['sources', 'places', 'tech']) expect(listed).not.toContain(s)
+    for (const s of ['sources', 'audience']) expect(listed).not.toContain(s)
     expect(isTab('countries')).toBe(false)
     expect(isTab('pages')).toBe(true)
   })
   it('offers every section it can when the link lists them all, or does not say', () => {
     setShared()
     setSharedScope(['pages', 'sources', 'places', 'tech'])
-    expect(TABS.places).toContain('countries')
+    expect(TABS.audience).toContain('countries')
     setSharedScope(undefined)
-    expect(TABS.tech).toContain('devices')
+    expect(TABS.audience).toContain('devices')
   })
   it('knows which sections an owner can switch off', () => {
     setShared()

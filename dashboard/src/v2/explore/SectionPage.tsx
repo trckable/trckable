@@ -21,7 +21,7 @@ import { biggestMover, whyContext } from './whyLine'
 /** Tables that already are cards with their own headings. */
 const BARE: Tab[] = ['changed', 'overview', 'funnels', 'speed', 'search', 'ai', 'sales']
 /** Charts and long rows that need the whole width. */
-const WIDE: Tab[] = ['pages', 'paths', 'devices', 'sources', 'earners', 'highlights', 'overtime', 'hours', 'revmap', 'people', 'flow', 'vsale', 'retention', 'toconvert', 'quality', 'networks', 'mentions', 'answers', 'payments', 'customers']
+const WIDE: Tab[] = ['pages', 'paths', 'devices', 'sources', 'earners', 'highlights', 'overtime', 'hours', 'revmap', 'people', 'flow', 'vsale', 'retention', 'toconvert', 'networks', 'mentions', 'answers', 'payments', 'customers']
 const ROWS = 5
 
 function Card({ tab, x, c, open, onRead, onSay }: { tab: Tab; x: XCtx; c: DataCtx; open: boolean; onRead: () => void; onSay: (s: string | null) => void }) {
@@ -100,8 +100,10 @@ function glow(e: PointerEvent<HTMLDivElement>) {
 
 export function SectionPage({ section, tab, x, c, onRead }: { section: Section; tab: Tab; x: XCtx; c: DataCtx; onRead: () => void }) {
   const tabs = TABS[section]
+  // Sources is two views, one at a time: the table of sources, or the campaigns.
+  const shown = section === 'sources' ? tabs.filter((t) => t === (tab === 'utm' ? 'utm' : 'sources')) : tabs
   // The places tables are one card, with a switch between them: it stands where the first of them would.
-  const cards = tabs.filter((t, i) => !isPlaceTab(t) || tabs.findIndex(isPlaceTab) === i)
+  const cards = shown.filter((t, i) => !isPlaceTab(t) || shown.findIndex(isPlaceTab) === i)
   const [say, setSay] = useState<string | null>(null)
   // The way on stands under the cards: drawn once the first has answered, so it does not slide down as they fill.
   const [answered, setAnswered] = useState<Section | null>(null)

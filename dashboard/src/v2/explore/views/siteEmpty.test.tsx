@@ -18,7 +18,7 @@ import { Speed } from './Site'
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 const x = { site: { id: 's1', domain: 'site.com' }, limit: 5, showAll: vi.fn() } as unknown as XCtx
-const none: SpeedModel = { kcs: [], pages: [], devices: [] }
+const none: SpeedModel = { kcs: [], pages: [], devices: [], uptime: null, down: [] }
 let root: Root
 let host: HTMLDivElement
 const show = () => act(() => root.render(<Speed x={x} d={none} />))

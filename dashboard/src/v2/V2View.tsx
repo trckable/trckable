@@ -29,7 +29,7 @@ import { TabBar } from './ui/TabBar'
 import { whenIdle } from '../lib/lazyLoad'
 import { ExplorePage, preloadExplore } from './explore/Page'
 import './why/why.css'
-import { routeFiltered } from './explore/open'
+import { routeFiltered, routeMoved } from './explore/open'
 import { MkToastHost } from './ui/MkToastHost'
 import { AiHost } from './ui/AiHost'
 import { useActiveRow } from './ui/activeRow'
@@ -82,7 +82,7 @@ export function V2View(p: V2Props) {
   usePeriodKeys({ on: here === 'briefing' && !p.waiting && !fixed, today, range: p.range, view: p.view })
   // An old address with filters lands where the filters can be seen.
   useEffect(() => {
-    if (!p.waiting) routeFiltered(p.view)
+    if (!p.waiting && !routeMoved(p.view)) routeFiltered(p.view)
     // Once, on the address that was opened: shutting the panel clears the filters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [p.waiting])

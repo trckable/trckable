@@ -63,12 +63,6 @@ export const answersCopy = defineCopy('answers', {
     errored: 'This one could not be asked.',
     run: (k: number) => `Run ${n(k)}`,
   },
-  line: {
-    ai: 'Answers',
-    more: 'Open Answers',
-    noQuestions: ['Answers has no questions yet', 'Add a few questions and see if ChatGPT, Perplexity and Claude name you.'],
-    add: 'Add questions',
-  },
   alert: { label: 'Answers', hint: 'When an assistant that named you in the last two rounds stops naming you: once per question' },
   change: {
     seen: (engine: string, q: string) => `${engine} started naming you for “${q}”`,

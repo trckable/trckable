@@ -65,7 +65,6 @@ for (const width of [1440, 390]) {
     // One plain line under each section's heading.
     const sections = [
       ['Assistants: what they read, what they send', 'Fetches are what the assistant’s robots read of your site. Visitors are people who clicked a link to you in its answers.'],
-      ['Google', 'The Google searches that brought people to you, by clicks.'],
       ['Crawlers', 'AI bots that read your pages to learn about you, and how often.'],
       ['Pages', 'Which pages AI bots read, and how many visits each one then sent.'],
     ] as const
@@ -76,14 +75,6 @@ for (const width of [1440, 390]) {
     }
   })
 }
-
-test('Google not connected says what connecting it brings, and offers the way', async ({ page }) => {
-  const card = await open(page)
-  const empty = card.locator('.xempty', { hasText: 'Connect Search Console' })
-  await expect(empty).toBeVisible()
-  await expect(empty).toContainText('Then this shows the Google searches that brought people to you.')
-  await expect(empty.getByRole('button', { name: 'Connect', exact: true })).toBeVisible()
-})
 
 test('the headline says what AI reads against the people who come, and the busiest company', async ({ page }) => {
   const card = await open(page)

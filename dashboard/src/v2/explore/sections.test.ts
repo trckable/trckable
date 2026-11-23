@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as me from '../../lib/me'
-import { groups, isTab, sectionOf, seeMoney, seeNetworks, TABS } from './sections'
+import { ALL_TABS, isTab, listedSections, movedTo, sectionNamed, sectionOf, seeMoney, seeNetworks, TABS } from './sections'
 
 describe('the Sources section', () => {
   it('has one UTM tab, not a second pair for source and medium', () => {
@@ -10,24 +10,44 @@ describe('the Sources section', () => {
   })
 })
 
-describe('the Search section', () => {
-  it('is its own, not a table of Sources', () => {
-    expect(TABS.search).toEqual(['search'])
-    expect(TABS.sources).not.toContain('search')
-    expect(sectionOf('search')).toBe('search')
+describe('the sections', () => {
+  it('are seven, in this order', () => {
+    expect(listedSections()).toEqual(['overview', 'pages', 'sources', 'audience', 'goals', 'health', 'web'])
   })
-  it('stands in the Traffic group after Sources', () => {
-    expect(groups()[0].items.slice(-2)).toEqual(['sources', 'search'])
+  it('hold no table twice', () => {
+    const all = listedSections().flatMap((s) => TABS[s])
+    expect(new Set(all).size).toBe(all.length)
+  })
+  it('have no Search of their own: it is Google\'s panel in Sources', () => {
+    expect(ALL_TABS).not.toContain('search')
+    expect(TABS.sources).toEqual(['sources', 'utm'])
+    expect(movedTo('search')).toEqual({ tab: 'sources', source: 'google' })
+  })
+  it('keep the old addresses and section names working', () => {
+    expect(movedTo('referrers')).toEqual({ tab: 'sources' })
+    expect(movedTo('quality')).toEqual({ tab: 'sources' })
+    expect(movedTo('bots')).toEqual({ tab: 'ai' })
+    expect(movedTo('pages')).toBeUndefined()
+    const old = { search: 'sources', places: 'audience', tech: 'audience', results: 'goals', sales: 'goals', speed: 'health', mentions: 'web', links: 'web', ai: 'web', answers: 'web', pages: 'pages', overview: 'overview' }
+    for (const [from, to] of Object.entries(old)) expect(sectionNamed(from)).toBe(to)
+    expect(sectionNamed('nowhere')).toBeUndefined()
+  })
+  it('send a table that moved to the section it now sits in', () => {
+    expect(sectionOf('earners')).toBe('goals')
+    expect(sectionOf('sells')).toBe('goals')
+    expect(sectionOf('revmap')).toBe('goals')
+    expect(sectionOf('speed')).toBe('health')
+    expect(sectionOf('outbound')).toBe('web')
   })
 })
 
 describe('the Networks table', () => {
-  it('is in Tech after Browsers, and only once a visit named a provider', () => {
+  it('is in Audience after Browsers, and only once a visit named a provider', () => {
     seeNetworks(false)
-    expect(TABS.tech).not.toContain('networks')
+    expect(TABS.audience).not.toContain('networks')
     seeNetworks(true)
-    expect(TABS.tech).toEqual(['devices', 'browsers', 'networks', 'bversion', 'screens'])
-    expect(sectionOf('networks')).toBe('tech')
+    expect(TABS.audience).toEqual(['countries', 'regions', 'cities', 'timezones', 'languages', 'people', 'devices', 'browsers', 'networks', 'bversion', 'screens'])
+    expect(sectionOf('networks')).toBe('audience')
     seeNetworks(false)
   })
 })
@@ -37,32 +57,33 @@ describe('a shared link and payments', () => {
     vi.restoreAllMocks()
     seeMoney(true)
   })
-  const sections = () => groups().flatMap((g) => g.items)
+  const sections = () => listedSections()
 
   it('drops Sales, and the table of sources that pay, when the report carries no payments', () => {
     vi.spyOn(me, 'isShared').mockReturnValue(true)
     seeMoney(false)
-    expect(sections()).not.toContain('sales')
-    expect(TABS.sources).not.toContain('earners')
+    expect(sections()).not.toContain('goals')
+    expect(TABS.goals).not.toContain('sales')
+    expect(TABS.goals).not.toContain('earners')
     expect(isTab('sales')).toBe(false)
     expect(isTab('payments')).toBe(false)
   })
   it('keeps every other section a shared link can fill', () => {
     vi.spyOn(me, 'isShared').mockReturnValue(true)
     seeMoney(false)
-    expect(sections()).toEqual(['overview', 'pages', 'sources', 'places', 'tech'])
+    expect(sections()).toEqual(['overview', 'pages', 'sources', 'audience'])
   })
   it('shows Sales once the report carries payments', () => {
     vi.spyOn(me, 'isShared').mockReturnValue(true)
     seeMoney(true)
-    expect(sections()).toContain('sales')
-    expect(TABS.sources).toContain('earners')
+    expect(sections()).toContain('goals')
+    expect(TABS.goals).toContain('earners')
     expect(isTab('sales')).toBe(true)
   })
   it('leaves a signed-in view as it was, payments or not', () => {
     vi.spyOn(me, 'isShared').mockReturnValue(false)
     seeMoney(false)
-    expect(sections()).toContain('sales')
-    expect(TABS.sales).toEqual(['sales', 'payments', 'customers'])
+    expect(sections()).toContain('goals')
+    expect(TABS.goals).toEqual(['funnels', 'retention', 'vsale', 'toconvert', 'flow', 'sales', 'earners', 'sells', 'revmap', 'payments', 'customers'])
   })
 })

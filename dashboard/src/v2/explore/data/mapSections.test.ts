@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import type { CrawlerReport, FunnelResult, Money, Report, SearchReport, WebVitals } from '../../../lib/api'
+import type { FunnelResult, Money, Report, SearchReport, WebVitals } from '../../../lib/api'
 import type { Mention as ApiMention } from '../../../features/mentions/api'
-import { botsModel, gradeOf, leakOf, mapBots, mapFunnel, mapLinks, mapMentions, mapSales, salesCountries, mapSearch, mapSpeed, stepsOf } from './mapSections'
+import { gradeOf, leakOf, mapFunnel, mapLinks, mapMentions, mapSales, salesCountries, mapSearch, mapSpeed, stepsOf } from './mapSections'
 
 const step = (value: string, visitors: number): FunnelResult => ({ kind: 'page', value, visitors, rate: 1, of_total: 1, median_s: 0, dropped: 0 })
 const kpis = { visitors: 100, sessions: 100, pageviews: 200, bounce_rate: 0.4, avg_session_s: 60, views_per_session: 2, new_visitor_share: 0.5 }
@@ -97,10 +97,10 @@ describe('search', () => {
     const prev = rep(60, 4000, [{ key: 'trckable', clicks: 60, impressions: 4000, ctr: 0.015, position: 3 }])
     const s = mapSearch({ query: q, pages: q, prev })
     expect(s.kcs.map((k) => [k.label, k.val, k.tag, k.tone])).toEqual([
-      ['Clicks', '120', '+100%', 'up'],
-      ['Impressions', '4.0k', '≈ same', ''],
+      ['Clicked', '120', '+100%', 'up'],
+      ['Seen', '4.0k', '≈ same', ''],
       ['Click rate', '3.0%', '+100%', 'up'],
-      ['Avg position', '6.7', '+123%', 'dn'],
+      ['Position', '6.7', '+123%', 'dn'],
     ])
     expect(s.kcs[0].detail).toBe('before 60')
   })
@@ -168,7 +168,7 @@ describe('speed', () => {
   })
 })
 
-describe('mentions, robots and links', () => {
+describe('mentions and links', () => {
   it('lists mentions newest first in the site day, leaving comments out', () => {
     const m = (id: number, posted: number, extra: Partial<ApiMention> = {}): ApiMention => ({ id, source: 'hn', url: '', title: `t${id}`, host: 'news.ycombinator.com', points: 5, comments: 2, posted_at: posted, found_at: posted, visitors: 0, ...extra })
     const day = Date.UTC(2026, 9, 16, 14, 5) / 1000
@@ -177,22 +177,6 @@ describe('mentions, robots and links', () => {
       ['t2', 'Hacker News', 'Today 14:05'],
       ['t1', 'Hacker News', 'Oct 13 14:05'],
     ])
-  })
-  it('lists the robots by what they read, most first', () => {
-    const r = { series: [{ name: 'a', kind: 'k', total: 3, values: [] }, { name: 'b', kind: 'k', total: 9, values: [] }, { name: 'c', kind: 'k', total: 0, values: [] }] } as unknown as CrawlerReport
-    expect(mapBots(r).map((b) => b.name)).toEqual(['b', 'a'])
-  })
-  it('counts what was left out by the owner and what was too old, only from the report', () => {
-    expect(botsModel([], { total: 4, kinds: { bot: 4, owner: 12, aged: 3 } })).toEqual({ rows: [], left: 12, aged: 3 })
-    expect(botsModel([], { total: 4, kinds: { bot: 4 } })).toEqual({ rows: [], left: 0, aged: 0 })
-    expect(botsModel([], undefined)).toEqual({ rows: [], left: 0, aged: 0 }) // under a filter the report carries none
-  })
-  it('lists no robots when the site saw none (the report sends no series)', () => {
-    expect(mapBots({ series: null } as unknown as CrawlerReport)).toEqual([])
-  })
-  it('names a robot once, with the hits of all its errands', () => {
-    const r = { series: [{ name: 'OpenAI', kind: 'train', total: 4, values: [] }, { name: 'OpenAI', kind: 'answer', total: 3, values: [] }, { name: 'Google', kind: 'index', total: 5, values: [] }] } as unknown as CrawlerReport
-    expect(mapBots(r)).toEqual([{ name: 'OpenAI', count: 7 }, { name: 'Google', count: 5 }])
   })
   it('says a mention\'s points and comments only where the place counts them', () => {
     const day = Date.UTC(2026, 9, 16, 14, 5) / 1000
