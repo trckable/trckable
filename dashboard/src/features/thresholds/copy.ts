@@ -10,6 +10,6 @@ export const copy = defineCopy('thresholds', {
   numberLabel: 'The number to reach',
   metricLabel: 'What to count',
   periodLabel: 'Over which period',
-  metric: { sales: 'sales', revenue: 'revenue', visitors: 'visitors' },
+  metric: { sales: 'sales', revenue: 'revenue', visitors: 'people' },
   period: { day: 'in a day', week: 'in a week', month: 'in a month', all: 'in total' },
 })

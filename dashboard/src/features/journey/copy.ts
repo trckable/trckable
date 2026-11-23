@@ -6,13 +6,13 @@ import { defineCopy } from '../../i18n'
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
 export const copy = defineCopy('journey', {
-  dialog: 'Visitor journey',
-  loading: 'Loading this visitor’s journey…',
+  dialog: 'Person journey',
+  loading: 'Loading this person’s journey…',
   failed: (why: string) => `Couldn’t load this journey: ${why}`,
   retry: 'Try again',
-  empty: 'No visits recorded for this visitor in this period.',
+  empty: 'No visits recorded for this person in this period.',
   close: 'Close',
-  options: 'Visitor options',
+  options: 'Person options',
 
   // The identity card.
   onSiteNow: 'On the site now',
@@ -64,10 +64,10 @@ export const copy = defineCopy('journey', {
   moreEvents: (n: number) => `+${n} more`,
 
   // The menu.
-  copyId: 'Copy visitor id',
-  copied: 'Visitor id copied',
+  copyId: 'Copy person id',
+  copied: 'Person id copied',
   copyFailed: 'Couldn’t copy the id',
   dataRequest: 'Data request…',
-  dataRequestHint: 'Export or erase everything held about this visitor',
-  erase: 'Erase visitor…',
+  dataRequestHint: 'Export or erase everything held about this person',
+  erase: 'Erase person…',
 })

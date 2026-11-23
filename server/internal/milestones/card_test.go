@@ -28,7 +28,7 @@ func TestCardCarriesTheNumber(t *testing.T) {
 		}
 	}
 	v := Card(sqlite.Milestone{Kind: Visitors, Value: 10000, Day: "2026-09-14"}, "", "demo.trckable.com", "dark", false)
-	if v.Big != "10,000" || v.Label != "visitors" {
+	if v.Big != "10,000" || v.Label != "people" {
 		t.Fatalf("big %q, label %q", v.Big, v.Label)
 	}
 }

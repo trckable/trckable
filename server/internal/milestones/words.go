@@ -35,11 +35,11 @@ func (englishFmt) Day(t time.Time) string              { return t.Format("Jan 2,
 
 // English is the language of everything but a card asked for in another.
 var English = &Tongue{
-	Visitors:       "visitors",
+	Visitors:       "people",
 	Pageviews:      "pageviews",
 	FirstPageview:  "pageview",
 	Countries:      "countries",
-	Record:         "visitors · record day",
+	Record:         "people · record day",
 	Revenue:        "revenue",
 	RevenueHidden:  "Revenue",
 	RevenueReached: "Revenue milestone reached",
@@ -110,7 +110,7 @@ func SayIn(t *Tongue, m sqlite.Milestone, showAmount bool) Words {
 	return w
 }
 
-// Line is the milestone in one line: "10,000 visitors", "First sale".
+// Line is the milestone in one line: "10,000 people", "First sale".
 func (w Words) Line() string { return strings.TrimSpace(w.Big + " " + w.Label) }
 
 // Number writes 10000 as 10,000.

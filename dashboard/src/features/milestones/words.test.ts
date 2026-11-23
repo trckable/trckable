@@ -6,14 +6,14 @@ const m = (o: Partial<Milestone>): Milestone => ({ kind: 'visitors', step: '1000
 
 describe('milestone words', () => {
   it('says each family its own way', () => {
-    expect(say(m({}))).toEqual({ big: '1,000', n: 1000, label: 'visitors', money: false })
+    expect(say(m({}))).toEqual({ big: '1,000', n: 1000, label: 'people', money: false })
     expect(say(m({ kind: 'first_sale', value: 1 }))).toEqual({ big: '', n: 0, label: 'First sale', money: true })
     expect(say(m({ kind: 'pageviews', value: 1 })).label).toBe('First pageview')
     expect(say(m({ kind: 'revenue', value: 1000, currency: 'USD' })).big).toBe('$1,000')
-    expect(say(m({ kind: 'record_day', value: 412 })).label).toBe('visitors · record day')
+    expect(say(m({ kind: 'record_day', value: 412 })).label).toBe('people · record day')
   })
   it('writes the next step with numbers only', () => {
-    expect(nextLine({ kind: 'visitors', step: 10000, now: 7412 })).toBe('next 10,000 visitors · 7,412 now')
+    expect(nextLine({ kind: 'visitors', step: 10000, now: 7412 })).toBe('next 10,000 people · 7,412 now')
   })
   it('groups the timeline by year, newest first', () => {
     const g = byYear([m({ day: '2026-09-21' }), m({ day: '2026-01-02' }), m({ day: '2025-12-04' })])
@@ -53,11 +53,11 @@ describe('milestone words', () => {
     expect(badge(m({ kind: 'first_sale', value: 1 }), true)).toBe('1st')
   })
   it('writes the progress line with the days at this pace', () => {
-    expect(progressLine({ kind: 'visitors', step: 25000, now: 12400, per_day: 650 })).toBe('12,400 of 25,000 visitors · ~20 days at this pace')
-    expect(progressLine({ kind: 'visitors', step: 25000, now: 12400, per_day: 0 })).toBe('12,400 of 25,000 visitors')
-    expect(progressLine({ kind: 'visitors', step: 25000, now: 12400 })).toBe('12,400 of 25,000 visitors')
-    expect(progressLine({ kind: 'visitors', step: 25000, now: 12400, per_day: 10 })).toBe('12,400 of 25,000 visitors')
-    expect(progressLine({ kind: 'visitors', step: 25000, now: 24999.5, per_day: 5 })).toBe('24,999 of 25,000 visitors · ~1 day at this pace')
+    expect(progressLine({ kind: 'visitors', step: 25000, now: 12400, per_day: 650 })).toBe('12,400 of 25,000 people · ~20 days at this pace')
+    expect(progressLine({ kind: 'visitors', step: 25000, now: 12400, per_day: 0 })).toBe('12,400 of 25,000 people')
+    expect(progressLine({ kind: 'visitors', step: 25000, now: 12400 })).toBe('12,400 of 25,000 people')
+    expect(progressLine({ kind: 'visitors', step: 25000, now: 12400, per_day: 10 })).toBe('12,400 of 25,000 people')
+    expect(progressLine({ kind: 'visitors', step: 25000, now: 24999.5, per_day: 5 })).toBe('24,999 of 25,000 people · ~1 day at this pace')
   })
   it('marks the steps between powers of ten as quiet', () => {
     expect(isQuietStep(m({ value: 2500 }))).toBe(true)

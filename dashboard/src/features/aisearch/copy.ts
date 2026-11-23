@@ -5,7 +5,7 @@ import { fmtCompact, fmtInt } from '../../lib/format'
 
 const times = (n: number) => `${fmtInt(n)} ${n === 1 ? 'time' : 'times'}`
 const people = (n: number) => (n === 0 ? 'nobody' : `${fmtInt(n)} ${n === 1 ? 'person' : 'people'}`)
-const visitors = (n: number) => `${fmtInt(n)} ${n === 1 ? 'visitor' : 'visitors'}`
+const visitors = (n: number) => `${fmtInt(n)} ${n === 1 ? 'person' : 'people'}`
 
 const kind: Record<string, string> = { answer: 'answers', train: 'training', index: 'search' }
 
@@ -25,11 +25,11 @@ export const aiCopy = defineCopy('aisearch', {
   blockedHead: 'Blocked / failed',
   noFailures: '–',
   failTitle: (blocked: number, broken: number) => `${fmtInt(blocked)} blocked by your server or CDN · ${fmtInt(broken)} broken pages`,
-  visitors: 'Visitors',
+  visitors: 'People',
   connect: 'Connect',
   noAssistants: 'None in this period.',
   ignored: (dims: string[]) => `Google can’t apply the ${dims.join(', ')} filter, so it’s left out here.`,
-  whyAssistants: 'Fetches are what the assistant’s robots read of your site. Visitors are people who clicked a link to you in its answers.',
+  whyAssistants: 'Fetches are what the assistant’s robots read of your site. People are those who clicked a link to you in its answers.',
   whyBots: 'AI bots that read your pages to learn about you, and how often.',
   whyPages: 'Which pages AI bots read, and how many visits each one then sent.',
   setupHint: 'Connect crawler data to see which AI bots read your pages.',
@@ -45,20 +45,20 @@ export const aiCopy = defineCopy('aisearch', {
   pages: 'Pages',
   fetches: 'Fetches',
   /** Under an assistant's name: what its robots read for each person it sent. */
-  returnPer: (n: number) => `1 visitor per ${fmtInt(n)} ${n === 1 ? 'fetch' : 'fetches'}`,
+  returnPer: (n: number) => `1 person per ${fmtInt(n)} ${n === 1 ? 'fetch' : 'fetches'}`,
   returnNobody: 'Read you, sent nobody',
   noCompare: 'Robots can’t be filtered; clear filters to compare.',
-  noRobots: 'Without crawler data only the visitors show, not what each assistant reads.',
+  noRobots: 'Without crawler data only the people show, not what each assistant reads.',
   headline: {
     requests: 'AI bot requests',
     requestsSub: 'in this period',
-    perVisitor: 'Bots per visitor',
-    perVisitorSub: 'for each human visitor',
-    noVisitors: 'No visitors yet',
+    perVisitor: 'Bots per person',
+    perVisitorSub: 'for each human',
+    noVisitors: 'No people yet',
     topCompany: 'Top company',
     topCompanySub: (n: number) => `${fmtCompact(n)} requests`,
     sent: 'Sent by AI assistants',
-    sentSub: 'visitors',
+    sentSub: 'people',
   },
   improve: 'How to improve',
   whyImprove: 'What your numbers show, and one thing to do about each.',
@@ -100,20 +100,20 @@ export const aiCopy = defineCopy('aisearch', {
 
 /** The guide card, on the first AI visitor or the first AI crawler. */
 export const guideCopy = defineCopy('aisearch.guide', {
-  visitor: { label: 'AI & Search', title: 'An AI assistant sent a visitor', body: 'See which assistants, and which pages.', go: 'Open AI & Search' },
+  visitor: { label: 'AI & Search', title: 'An AI assistant sent a person', body: 'See which assistants, and which pages.', go: 'Open AI & Search' },
   crawler: { label: 'AI & Search', title: 'An AI crawler read your site', body: 'See which robots, and which pages.', go: 'Open AI & Search' },
 })
 
 /** The dialog behind the guide card. */
 export const aiModalCopy = defineCopy('aisearch.modal', {
-  visitors: 'visitors from AI',
+  visitors: 'people from AI',
   crawled: 'reads by AI crawlers',
   landed: 'Landed on',
   readPages: 'Pages read',
   when: 'When',
-  whenLabel: 'AI visitors for each day of the period',
+  whenLabel: 'AI people for each day of the period',
   meansVisitor: 'An AI assistant named your site in an answer, and a person followed the link.',
-  meansCrawler: 'AI crawlers are robots. They read your pages to answer or train, and they are not counted as visitors.',
+  meansCrawler: 'AI crawlers are robots. They read your pages to answer or train, and they are not counted as people.',
   seeAll: 'See all in AI & Search',
   reads: (n: number) => `${fmtInt(n)} ${n === 1 ? 'read' : 'reads'}`,
 })

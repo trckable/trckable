@@ -10,7 +10,7 @@ export const first = defineCopy('install.first', {
     ga4: 'GA4',
     ga4Sub: 'BigQuery export, NDJSON',
     csv: 'CSV',
-    csvSub: 'ts, path, visitor',
+    csvSub: 'ts, path, person',
     command: (domain: string) => `trckabled import ${domain} export.ndjson`,
     docs: 'Docs',
     docsUrl: MIGRATE_DOCS,

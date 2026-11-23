@@ -7,7 +7,7 @@ const rep = (o: Partial<AiSearchReport>): AiSearchReport => ({ ...base, ...o })
 const ids = (r: AiSearchReport, can = true) => tipsOf(r, can).map((t) => t.id)
 
 describe('returnPer', () => {
-  it('divides fetches by visitors', () => {
+  it('divides fetches by people', () => {
     expect(returnPer(238_000, 2591)).toEqual({ kind: 'per', n: 92 })
     expect(returnPer(68_000, 58)).toEqual({ kind: 'per', n: 1172 })
   })
@@ -17,7 +17,7 @@ describe('returnPer', () => {
     expect(returnPer(undefined, 5)).toEqual({ kind: 'none' })
     expect(returnPer(0, 0)).toEqual({ kind: 'none' })
   })
-  it('shows no ratio on few fetches, or when visitors are as many as fetches', () => {
+  it('shows no ratio on few fetches, or when people are as many as fetches', () => {
     expect(returnPer(49, 1)).toEqual({ kind: 'none' })
     expect(returnPer(50, 1)).toEqual({ kind: 'per', n: 50 })
     expect(returnPer(60, 60)).toEqual({ kind: 'none' })

@@ -29,7 +29,7 @@ test('a site the probe finds down is told on the site button and in its list, by
   await page.locator('[data-site-why]').click()
   await page.locator('.status-row').first().click()
   const report = page.locator('.modal.status-modal')
-  await expect(report).toContainText('Some visitors still get through')
+  await expect(report).toContainText('Some people still get through')
   await expect(report).toContainText('No answer within 10 seconds')
   await expect(page.getByRole('link', { name: 'See incident' })).toBeVisible()
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/downfix-badge-1440.png` })

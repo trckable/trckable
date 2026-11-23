@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/alerts"
+	"github.com/trckable/trckable/server/internal/headcount"
 	"github.com/trckable/trckable/server/internal/mailkit"
 	"github.com/trckable/trckable/server/internal/modules"
 	"github.com/trckable/trckable/server/internal/query"
@@ -101,9 +102,9 @@ func aiLine(a aiWeek) string {
 	}
 	switch {
 	case a.Visitors > 0 && a.Crawls > 0:
-		return fmt.Sprintf("AI assistants sent %s; crawlers read %s.", plural(a.Visitors, "visitor", "visitors"), plural(a.Crawls, "page", "pages"))
+		return fmt.Sprintf("AI assistants sent %s; crawlers read %s.", plural(a.Visitors, "person", "people"), plural(a.Crawls, "page", "pages"))
 	case a.Visitors > 0:
-		return fmt.Sprintf("AI assistants sent %s.", plural(a.Visitors, "visitor", "visitors"))
+		return fmt.Sprintf("AI assistants sent %s.", plural(a.Visitors, "person", "people"))
 	case a.Crawls > 0:
 		return fmt.Sprintf("AI crawlers read %s.", plural(a.Crawls, "page", "pages"))
 	}
@@ -116,7 +117,7 @@ func goalLine(cur *query.Result) string {
 		return ""
 	}
 	g := cur.Goals[0]
-	return fmt.Sprintf("Top goal: %s, %s visitors", g.Name(), number(g.Visitors))
+	return fmt.Sprintf("Top goal: %s, %s people", g.Name(), number(g.Visitors))
 }
 
 // revenueLine is the report's line about money, or none without payments.
@@ -138,7 +139,7 @@ func revenueLine(cur, prev *query.Result) string {
 // weeklyEmail is the report as a designed email: the same numbers and
 // sentences as weeklyText, laid out by package reports on the mail kit. The
 // stop link is added to it when it is sent.
-func weeklyEmail(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, busiest, link string, men reports.Weekly, answersLine string) *mailkit.Email {
+func weeklyEmail(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, busiest, link string, men reports.Weekly, answersLine string, cookieless bool) *mailkit.Email {
 	x := men
 	x.Link = link
 	if cur.KPIs.Visitors > 0 {
@@ -156,18 +157,29 @@ func weeklyEmail(domain string, from, to time.Time, cur, prev *query.Result, ai 
 	if answersLine != "" {
 		x.Facts = append(x.Facts, answersLine)
 	}
+	if headcount.OncePerDay(cookieless, int(to.Sub(from).Hours()/24+0.5)) {
+		x.Facts = append(x.Facts, "People are "+headcount.OncePerDayNote+" on a site without cookies.")
+	}
 	d := reports.Data{Site: domain, Cadence: "weekly", Lang: "en", From: from, To: to, Cur: cur, Prev: prev}
 	return reports.WeeklyEmail(d, x)
 }
 
+// onceNote is the clause that goes with the people of a week on a site without cookies.
+func onceNote(cookieless bool, from, to time.Time) string {
+	if headcount.OncePerDay(cookieless, int(to.Sub(from).Hours()/24+0.5)) {
+		return " · " + headcount.OncePerDayNote
+	}
+	return ""
+}
+
 // weeklyText words the report. It is plain text on purpose: every chat tool
 // and every mail client shows it the same.
-func weeklyText(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, busiest, link, answersLine string) (title, msg string, data map[string]any) {
+func weeklyText(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, busiest, link, answersLine string, cookieless bool) (title, msg string, data map[string]any) {
 	last := to.AddDate(0, 0, -1)
 	title = "Your week"
 	lines := []string{fmt.Sprintf("%s, %s – %s", domain, from.Format("Jan 2"), last.Format("Jan 2"))}
 	k := cur.KPIs
-	lines = append(lines, fmt.Sprintf("%s visitors, %s.", number(k.Visitors), change(float64(k.Visitors), float64(prev.KPIs.Visitors))))
+	lines = append(lines, fmt.Sprintf("%s people%s, %s.", number(k.Visitors), onceNote(cookieless, from, to), change(float64(k.Visitors), float64(prev.KPIs.Visitors))))
 	if k.Visitors == 0 {
 		lines = append(lines, "Nothing arrived this week. If that is unexpected, check that the script is still on the site.")
 	} else {
@@ -290,9 +302,13 @@ func (s *Server) weeklyEvent(ctx context.Context, q *query.Q, info sqlite.SiteIn
 		busiest = surge.Busiest(*b, time.Unix(b.Started, 0).In(loc))
 	}
 	answers := s.answersWeekLine(ctx, siteID, from, to)
-	ev.Title, ev.Message, ev.Data = weeklyText(info.Domain, from, to, cur, prev, ai, busiest, link, answers)
+	cookieless := false
+	if c, err := s.ctl.SiteConfig(ctx, siteID); err == nil {
+		cookieless = c.ConsentFree
+	}
+	ev.Title, ev.Message, ev.Data = weeklyText(info.Domain, from, to, cur, prev, ai, busiest, link, answers, cookieless)
 	ev.Text = ev.Title + " — " + ev.Message
-	ev.Email = weeklyEmail(info.Domain, from, to, cur, prev, ai, busiest, link, s.weekMentions(ctx, siteID, info.Domain, from, to), answers)
+	ev.Email = weeklyEmail(info.Domain, from, to, cur, prev, ai, busiest, link, s.weekMentions(ctx, siteID, info.Domain, from, to), answers, cookieless)
 	return ev, true
 }
 

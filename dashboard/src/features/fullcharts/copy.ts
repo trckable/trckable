@@ -20,15 +20,15 @@ export const copy = defineCopy('full', {
   funnel: {
     title: 'Visit to sale',
     question: 'Where people drop off',
-    label: 'Visitors at each step, from visit to sale',
+    label: 'People at each step, from visit to sale',
     visit: 'Visit',
     sale: 'Sale',
     goal: (name: string) => name,
     lost: (pct: number, left: number) => `−${pct}% · ${fmtInt(left)} left`,
     step: 'Step',
-    visitors: 'Visitors',
+    visitors: 'People',
     rate: 'Of the step before',
-    foot: 'Bar length: share of all visitors. Each step counts only people who did the one before it.',
+    foot: 'Bar length: share of all people. Each step counts only people who did the one before it.',
   },
   convert: {
     title: 'Time to convert',
@@ -44,10 +44,10 @@ export const copy = defineCopy('full', {
   visitors: {
     title: 'New vs returning',
     question: 'Are people coming back?',
-    label: 'New and returning visitors per bucket',
+    label: 'New and returning people per bucket',
     new: 'New',
     returning: 'Returning',
-    unknown: (n: number) => `${plural(n, 'visitor', 'visitors')} without a first-visit date (cookieless) are in neither line.`,
+    unknown: (n: number) => `${plural(n, 'person', 'people')} without a first-visit date (cookieless) are in neither line.`,
   },
   views: {
     title: 'Pageviews',
@@ -56,9 +56,9 @@ export const copy = defineCopy('full', {
   },
   rhythm: {
     title: 'Weekday × hour',
-    question: 'When your visitors are here',
+    question: 'When your people are here',
     label: (tz: string) => `Visits by weekday and hour, in ${tz}`,
-    caption: (tz: string) => `Visitors by weekday and hour, in ${tz}. Hover or tap a square for the count.`,
+    caption: (tz: string) => `People by weekday and hour, in ${tz}. Hover or tap a square for the count.`,
     days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     hour: (h: number) => String(h).padStart(2, '0'),
     tip: (day: string, h: number, n: number) => `${day} ${String(h).padStart(2, '0')}:00 · ${plural(n, 'visit', 'visits')}`,

@@ -74,11 +74,11 @@ func TestPluralForms(t *testing.T) {
 		}
 	}
 	w := newWidgetWords("de", sqlite.Widget{Kind: "live"})
-	if got := w.plural("bar", 1, "time", "12:00"); got != "12:00 · 1 Besucher" {
+	if got := w.plural("bar", 1, "time", "12:00"); got != "12:00 · 1 Person" {
 		t.Errorf("one: %q", got)
 	}
 	w = newWidgetWords("en", sqlite.Widget{Kind: "live"})
-	if one, many := w.plural("bar", 1, "time", "12:00"), w.plural("bar", 3, "time", "12:00"); one != "12:00 · 1 visitor" || many != "12:00 · 3 visitors" {
+	if one, many := w.plural("bar", 1, "time", "12:00"), w.plural("bar", 3, "time", "12:00"); one != "12:00 · 1 person" || many != "12:00 · 3 people" {
 		t.Errorf("en: %q, %q", one, many)
 	}
 }
@@ -179,7 +179,7 @@ func TestWidgetLanguageAndTextsOnThePage(t *testing.T) {
 	_, auto := made(`{"kind":"live","shows":["bars","pages"]}`)
 	id := auto["id"].(string)
 	body, h = get(id, "de-DE,de;q=0.9")
-	for _, want := range []string{"Besucher in den letzten 30 Minuten", `lang="de"`, "Gezählt von", "0 Besucher"} {
+	for _, want := range []string{"Personen in den letzten 30 Minuten", `lang="de"`, "Gezählt von", "0 Personen"} {
 		if !strings.Contains(body, want) {
 			t.Fatalf("auto, German misses %q", want)
 		}
@@ -187,10 +187,10 @@ func TestWidgetLanguageAndTextsOnThePage(t *testing.T) {
 	if !strings.Contains(strings.Join(h.Values("Vary"), ","), "Accept-Language") || h.Get("Content-Language") != "de" {
 		t.Fatalf("auto says so to caches: %v", h)
 	}
-	if body, _ = get(id, "fr"); !strings.Contains(body, "Visiteurs des 30 dernières minutes") || !strings.Contains(body, "3 visiteurs") {
+	if body, _ = get(id, "fr"); !strings.Contains(body, "Personnes des 30 dernières minutes") || !strings.Contains(body, "3 personnes") {
 		t.Fatalf("auto, French, with the plural: %s", body)
 	}
-	if body, _ = get(id, ""); !strings.Contains(body, "Visitors in the last 30 minutes") || !strings.Contains(body, "3 visitors") {
+	if body, _ = get(id, ""); !strings.Contains(body, "People in the last 30 minutes") || !strings.Contains(body, "3 people") {
 		t.Fatalf("auto with no preference is English: %s", body)
 	}
 

@@ -9,6 +9,7 @@ import { channelLabel } from '../../../lib/palette'
 import { copy } from '../copy'
 import { MIN_VITALS } from '../../../lib/api'
 import { queryOf } from '../../../lib/dashQuery'
+import { countedOncePerDay } from '../../../lib/oncePerDay'
 import { addDays, diffDays, fmtRange, todayIn, type Range } from '../../../lib/dates'
 import { parseFilterParam } from '../../../lib/filterSet'
 import { writeView } from '../../../lib/url'
@@ -38,6 +39,8 @@ import type { DataCtx, Meta, TabData } from './useExplore'
 import { dateFmt } from '../../../lib/format'
 
 /** Explore asks for the deep report: the breakdowns of regions, cities, exit pages and the rest ride in the same read. */
+/** The people of this period are counted once per day: a site without cookies, over more than one day. */
+const once = (c: DataCtx) => countedOncePerDay(c.site.cookieless, diffDays(c.range.from, c.range.to) + 1)
 const query = (c: DataCtx, filters: Filter[] = c.filters): ReportQuery => ({ ...queryOf({ ...c.view, filters }, c.range), deep: true, limit: EXPLORE_ROWS })
 /** Overview and What changed read only pages, sources and the other plain breakdowns, never the deep ones, so they ask for the lighter report and it comes back sooner. */
 const plainQuery = (c: DataCtx): ReportQuery => ({ ...query(c), deep: false })
@@ -175,13 +178,13 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal, soon?: 
     {
       // Measured against the same period as the changes below it: the cards and the table have to agree.
       const [report, uptime, google] = await Promise.all([cachedReport(c.site.id, plainQuery(c), undefined, signal), periodUptime(c), c.filters.length === 0 ? googleSeen(c, today, signal) : null])
-      return { ...mapOverview(report, { money: c.money, uptime, now: today, basis: 'previous', against: againstName(c.view.period, c.view.compare === 'none' ? 'previous' : c.view.compare, c.range) }), report, google }
+      return { ...mapOverview(report, { money: c.money, uptime, now: today, once: once(c), basis: 'previous', against: againstName(c.view.period, c.view.compare === 'none' ? 'previous' : c.view.compare, c.range) }), report, google }
     }
     case 'overview': {
       const pre = basisOf({ range: c.range, filters: c.filters, compare: c.view.compare }) === 'usual' ? earlyOf(c) : null
       const [raw, uptime] = await Promise.all([cachedReport(c.site.id, plainQuery(c), undefined, signal), periodUptime(c)])
       const against = c.view.compare === 'none' ? undefined : againstName(c.view.period, c.view.compare, c.range)
-      const cards = (report: Report, basis: Basis) => mapOverview(report, { money: c.money, uptime, now: today, basis, against })
+      const cards = (report: Report, basis: Basis) => mapOverview(report, { money: c.money, uptime, now: today, once: once(c), basis, against })
       // The cards show from the plain report at once; the numbers told against the usual replace them when they are here.
       if (pre) soon?.({ ...cards(raw, 'previous'), report: raw })
       const { report, basis } = await toBasis(c, raw, pre)

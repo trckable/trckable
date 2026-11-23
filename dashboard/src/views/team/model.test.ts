@@ -45,7 +45,7 @@ describe('the team strip', () => {
   it('tells the team against its usual only when the sites with a usual hold most of today', () => {
     const lopsided = [teamSite(site('a'), row('a', { today: 10, usual: 5 }), NOW), teamSite(site('b'), row('b', { today: 90 }), NOW)]
     expect(totals(lopsided).versus).toBeNull()
-    expect(briefing(lopsided)).toBe('100 visitors across the sites so far. Every site is fine.')
+    expect(briefing(lopsided)).toBe('100 people across the sites so far. Every site is fine.')
   })
 
   it('shows no revenue for two currencies, and none without a payment', () => {

@@ -16,10 +16,10 @@ describe('a row', () => {
     expect(html).toContain('aria-pressed="false"')
     expect(row({ notes: true })).toContain('aria-pressed="true"')
   })
-  it('has a live visitors button, off unless the link says so', () => {
-    expect(row({})).toContain('Live visitors hidden: Board')
-    expect(row({ live: true })).toContain('Live visitors shown: Board')
-    expect(row({ live: true }, true)).not.toContain('<button type="button" class="sl-flag on" aria-pressed="true" aria-label="Live visitors shown')
+  it('has a live people button, off unless the link says so', () => {
+    expect(row({})).toContain('Live people hidden: Board')
+    expect(row({ live: true })).toContain('Live people shown: Board')
+    expect(row({ live: true }, true)).not.toContain('<button type="button" class="sl-flag on" aria-pressed="true" aria-label="Live people shown')
   })
   it('tells apart a password link from a public one', () => {
     expect(row({})).toContain('Password link')

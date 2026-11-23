@@ -138,7 +138,7 @@ describe('the side card', () => {
         id="rich"
         label="Spike"
         closeLabel="Close"
-        title="816 visitors"
+        title="816 people"
         onClose={() => undefined}
         actions={<button type="button">{'Show Sep 28'}</button>}
         kind={{ icon: <svg data-icon="up" />, label: 'Traffic spike', tint: 'var(--money)' }}

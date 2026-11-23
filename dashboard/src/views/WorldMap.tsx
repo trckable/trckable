@@ -25,8 +25,8 @@ export interface MapMetric {
 
 const VISITORS: MapMetric = {
   get: (r) => r.visitors,
-  fmt: (n) => `${fmtInt(n)} visitors`,
-  label: 'Visitors by country',
+  fmt: (n) => `${fmtInt(n)} people`,
+  label: 'People by country',
   foot: (n) => `${fmtInt(n)} countries · hover to see one`,
   color: 'var(--accent)',
 }

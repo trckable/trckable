@@ -242,7 +242,7 @@ function SiteLook({ site, onSaved }: { site: Site; onSaved: () => void }) {
     <section className="card" style={{ gap: 0 }}>
       <div className="card-head" style={{ paddingBottom: 10 }}>
         <h2>Look</h2>
-        <Info text="How this site shows up inside trckable: the site picker, All sites and the header. Visitors never see it." />
+        <Info text="How this site shows up inside trckable: the site picker, All sites and the header. People never see it." />
       </div>
       <Row label="Icon" hint="Its favicon, or a picture you crop. PNG, JPEG, WebP, GIF or ICO.">
         <SiteMark site={site} size={36} />

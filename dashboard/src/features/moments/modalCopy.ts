@@ -4,7 +4,7 @@ import { defineCopy } from '../../i18n'
 
 export const modalCopy = defineCopy('moments.modal', {
   chart: 'The days around it',
-  exclude: 'Your own clicks count as visitors. Leave this browser out and every number is someone else.',
+  exclude: 'Your own clicks count as people. Leave this browser out and every number is someone else.',
   replay: 'Replay plays the period back as a short story, day by day.',
   full: 'Full shows every card: pages, sources, countries, devices, goals and more.',
   weekly: 'One short email a week with your numbers. Turn it off any time.',

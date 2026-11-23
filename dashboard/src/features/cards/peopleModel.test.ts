@@ -15,7 +15,7 @@ describe('the people card', () => {
     expect(p.channel).toBe('Search')
   })
 
-  it('lists each visitor once, newest first, and at most the limit', () => {
+  it('lists each person once, newest first, and at most the limit', () => {
     const events = [ev('a', 's2', '2026-09-30T11:00:00Z', '/a'), ev('b', 's3', '2026-09-30T10:50:00Z', '/b'), ev('a', 's1', '2026-09-30T09:00:00Z', '/old')]
     expect(peopleOf(events).map((p) => p.visitor)).toEqual(['a', 'b'])
     expect(peopleOf(events, 1)).toHaveLength(1)

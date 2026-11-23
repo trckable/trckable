@@ -39,7 +39,7 @@ describe('a milestone reached', () => {
     const card = document.body.querySelector('.side-card')
     expect(card?.textContent).toContain('Milestone · demo.trckable.com')
     expect(card?.textContent).toContain('10,000')
-    expect(card?.textContent).toContain('visitors')
+    expect(card?.textContent).toContain('people')
     expect(card?.textContent).toContain('3× faster than the last one')
     expect(card?.classList.contains('flat')).toBe(true) // no coloured line on its edge
     expect(card?.querySelector('.side-ghost')).toBeNull() // no mascot on the card

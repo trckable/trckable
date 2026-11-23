@@ -6,18 +6,19 @@ var cardES = &cardLang{
 	code: "es", group: ".", decimal: ",", moneyAt: moneyAfter,
 	months: [12]string{"ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sept", "oct", "nov", "dic"},
 
-	visitors:   "visitantes",
+	visitors:   "personas",
 	pageviews:  "páginas vistas",
 	revenue:    "ingresos",
 	noVisits:   "Necesita una visita en este periodo",
 	counted:    "Contado con trckable",
+	oncePerDay: "contadas una vez al día",
 	engaged:    "Visitas con interacción",
 	avgTime:    "Tiempo medio",
 	topCountry: "País principal",
 
 	engagedVisits: "visitas con interacción",
 	statPageviews: "Páginas vistas",
-	statVisitors:  "Visitantes",
+	statVisitors:  "Personas",
 	bounce:        "Rebote",
 	topPage:       "Página principal",
 	topSource:     "Fuente principal",
@@ -44,7 +45,7 @@ var cardES = &cardLang{
 	aiVisits:          "Visitas de IA",
 	aiMentions:        "Menciones",
 	aiRequests:        "Peticiones de IA",
-	aiPerVisitor:      "Bots/visitante",
+	aiPerVisitor:      "Bots/persona",
 	aiTop:             "Empresa principal",
 	aiRequestsOf:      "peticiones",
 	goalsTitle:        "Objetivos principales",
@@ -60,7 +61,7 @@ var cardES = &cardLang{
 
 	gridTitle: map[string]string{"24h": "Hoy en cifras", "7d": "Esta semana en cifras", "30d": "Este mes en cifras", "all": "Todo el tiempo en cifras", "custom": "Tus cifras"},
 	listTitle: map[string]string{"leaderboard": "Páginas principales", "sources": "Fuentes principales", "places": "Países principales", "browsers": "Navegadores principales", "devices": "Móvil y escritorio"},
-	heroLabel: map[string]string{"toppage": "Tu página más visitada", "topsource": "La mayoría de visitantes vino de", "topplace": "La mayoría de visitantes está en"},
+	heroLabel: map[string]string{"toppage": "Tu página más visitada", "topsource": "La mayoría de personas vino de", "topplace": "La mayoría de personas está en"},
 
 	last24: "Últimas 24 horas", post24: "en las últimas 24 horas", postDays: "en los últimos %d días", postAll: "en todo el tiempo", postRange: "en %s", since: "Desde %s",
 	prev24: "24 horas anteriores", prevDay: "día anterior", prevDays: "%d días anteriores", vs: "vs",
@@ -68,11 +69,11 @@ var cardES = &cardLang{
 	postBegun: "%s: ha empezado el recuento. %s", postTopPage: "Página principal: %s.",
 
 	ms: milestones.Tongue{
-		Visitors:       "visitantes",
+		Visitors:       "personas",
 		Pageviews:      "páginas vistas",
 		FirstPageview:  "página vista",
 		Countries:      "países",
-		Record:         "visitantes · día récord",
+		Record:         "personas · día récord",
 		Revenue:        "de ingresos",
 		RevenueHidden:  "Ingresos",
 		RevenueReached: "Hito de ingresos alcanzado",

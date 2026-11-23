@@ -22,6 +22,7 @@ type cardLang struct {
 	dayDot         string     // after the day of the month ("9." in German)
 	// Words.
 	visitors, pageviews, revenue, noVisits, counted    string
+	oncePerDay                                         string // beside the people of a period over more than a day, on a site without cookies
 	engaged, avgTime, topCountry                       string
 	engagedVisits, statPageviews, statVisitors, bounce string
 	topPage, topSource, statRevenue                    string

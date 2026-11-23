@@ -6,7 +6,7 @@ const rows = (o: Record<string, number>): Row[] => Object.entries(o).map(([value
 const names = (l: { value: string }[]) => l.map((i) => i.value)
 
 describe('top of a breakdown', () => {
-  it('is the most visitors now, ties by name', () => {
+  it('is the most people now, ties by name', () => {
     expect(names(topOf(rows({ '/a': 3, '/c': 9, '/b': 9 }), rows({})))).toEqual(['/b', '/c', '/a'])
   })
 

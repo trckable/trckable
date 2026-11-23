@@ -8,5 +8,5 @@ export const domainCopy = defineCopy('domains', {
   menuLabel: (now: string) => `Domain: ${now}`,
   search: 'Search domains',
   noMatch: (q: string) => `No domain matches “${q}”.`,
-  visitors: (host: string, n: string) => `${host}: ${n} visitors in this period`,
+  visitors: (host: string, n: string) => `${host}: ${n} people in this period`,
 })

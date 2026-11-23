@@ -34,7 +34,7 @@ const mount = (rows: Row[]) => {
 }
 
 describe('the globe popover', () => {
-  it('opens a visitor from the list, holds the globe still, and closing lets it spin again', () => {
+  it('opens a person from the list, holds the globe still, and closing lets it spin again', () => {
     const { box, globe, root } = mount([row(1), row(2)])
     expect(box.querySelector('[role=dialog]')).toBeNull()
     expect(globe().held).toBe(false)
@@ -55,7 +55,7 @@ describe('the globe popover', () => {
     act(() => root.unmount())
   })
 
-  it('says so when the visitor has left, and then closes', () => {
+  it('says so when the person has left, and then closes', () => {
     vi.useFakeTimers()
     const { box, show, globe, root } = mount([row(1)])
     act(() => (box.querySelector('.gfeed .lv') as HTMLElement).click())
@@ -71,7 +71,7 @@ describe('the globe popover', () => {
     vi.useRealTimers()
   })
 
-  it('full screen shows the new visitors, newest first, and a click opens that visitor', () => {
+  it('full screen shows the new people, newest first, and a click opens that person', () => {
     const { box, root } = mount([row(1), row(2), row(3)])
     expect(box.querySelector('.gnew')).toBeNull()
     // The count online now above the list is the number the pill shows, and in full screen the same block floats over the globe.
@@ -163,7 +163,7 @@ describe('the globe popover', () => {
 })
 
 describe('a marker zooming cannot split', () => {
-  it('opens as a list of its people, a row opens that visitor, and back returns to the list', () => {
+  it('opens as a list of its people, a row opens that person, and back returns to the list', () => {
     const rows = Array.from({ length: 20 }, (_, i) => row(i + 1, { visitor: `vis-${i}` }))
     const { box, globe, root } = mount(rows)
     act(() => (globe() as unknown as { hooks: { onCrowd: (k: string[]) => void } }).hooks.onCrowd(rows.map((r) => r.key)))

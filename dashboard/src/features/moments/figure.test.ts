@@ -7,10 +7,10 @@ const money = (m: number) => `$${(m / 100).toFixed(2)}`
 const pin = (o: Partial<Pin>): Pin => ({ id: 'x', kind: 'spike', score: 1, filters: [], showDay: false, n: {}, ...o })
 
 describe('a pin as a card tells it', () => {
-  it('counts a spike up in visitors, with how many times the usual', () => {
-    expect(figureOf(pin({ kind: 'spike', n: { visitors: 2813, factor: 17.2 } }), money)).toMatchObject({ n: 2813, unit: 'visitors', mult: '17×' })
+  it('counts a spike up in people, with how many times the usual', () => {
+    expect(figureOf(pin({ kind: 'spike', n: { visitors: 2813, factor: 17.2 } }), money)).toMatchObject({ n: 2813, unit: 'people', mult: '17×' })
     // A spike on a quiet site has no usual to multiply: the count, no multiplier.
-    expect(figureOf(pin({ kind: 'spike', n: { visitors: 230 } }), money)).toEqual({ n: 230, fmt: fmtInt, unit: 'visitors' })
+    expect(figureOf(pin({ kind: 'spike', n: { visitors: 230 } }), money)).toEqual({ n: 230, fmt: fmtInt, unit: 'people' })
     // A spike without a count is only its factor.
     expect(figureOf(pin({ kind: 'spike', n: { factor: 4 } }), money)).toEqual({ text: '4×' })
   })
@@ -26,7 +26,7 @@ describe('a pin as a card tells it', () => {
     expect(figureOf(pin({ kind: 'move', n: { change: 0.5 } }), money).text).toBe('+50%')
     expect(figureOf(pin({ kind: 'move', n: { change: -0.2 } }), money).text).toBe('−20%')
     const m = figureOf(pin({ kind: 'milestone', n: { family: 'visitors', value: 10000 } }), money)
-    expect(m).toMatchObject({ n: 10000, text: '10,000', unit: 'visitors' })
+    expect(m).toMatchObject({ n: 10000, text: '10,000', unit: 'people' })
     expect(m.fmt?.(1234)).toBe('1,234')
     expect(figureOf(pin({ kind: 'ai', n: { name: 'ChatGPT' } }), money).text).toBe('ChatGPT')
   })

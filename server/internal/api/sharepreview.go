@@ -16,7 +16,7 @@ import (
 // The words live here, in one place (the tab's own is in the dashboard).
 const (
 	previewTitle = "%s analytics"
-	previewText  = "Visitors, pages and sources for %s, live."
+	previewText  = "People, pages and sources for %s, live."
 )
 
 // sharePreviewQuery is the picture a link shows: the overview of the last

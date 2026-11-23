@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/cards"
+	"github.com/trckable/trckable/server/internal/headcount"
 	"github.com/trckable/trckable/server/internal/query"
 )
 
@@ -222,6 +223,9 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 		return cardNumbers{}, false
 	}
 	n := cardWordsOf(l, res, si.Domain, p, v.Get("metric"))
+	if c, err := a.Ctl.SiteConfig(r.Context(), site); err == nil && n.Metric == "visitors" && headcount.OncePerDay(c.ConsentFree, p.days) {
+		n.Label += " · " + l.oncePerDay
+	}
 	reading.ask, reading.res, reading.params = ask, res, params
 	if overview {
 		var prev *query.Result

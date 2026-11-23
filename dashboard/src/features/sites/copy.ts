@@ -8,7 +8,7 @@ export const copy = defineCopy('sites', {
   pick: 'Pick a site',
   all: 'Sites',
   dot: {
-    now: 'Visitors right now: a visit in the last 5 minutes',
+    now: 'People right now: a visit in the last 5 minutes',
     live: 'Receiving visits',
     quiet: 'No visits for hours',
     stopped: 'Down: the site did not answer when trckable last looked',

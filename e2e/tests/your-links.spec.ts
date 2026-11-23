@@ -35,7 +35,7 @@ test('each link shows what it brought, and a tap opens the dashboard for it', as
   // The figures are the rows added up: 3 links, 515 visitors, 21 goals, $540.
   const stat = (name: string) => page.locator('.sumrow .sum').filter({ hasText: name }).locator('.sum-v')
   await expect(stat('Links')).toHaveText('3')
-  await expect(stat('Visitors')).toHaveText('515')
+  await expect(stat('People')).toHaveText('515')
   await expect(stat('Reached a goal')).toHaveText('21')
   await expect(stat('Revenue')).toHaveText('$540')
   await expect(page.getByText('Back to the dashboard')).toHaveCount(0)

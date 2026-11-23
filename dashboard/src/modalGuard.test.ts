@@ -33,7 +33,7 @@ const OWN_SURFACE = new Set(['v2/explore/Rail.tsx', 'features/mentions/Detail.ts
 // frame today: its header or footer carries the dialog's live content, or the dialog is a layout of its own.
 const OWN_CHROME: Record<string, string> = {
   'components/Window.tsx': 'settings and profile: a left-nav window whose header is the section head',
-  'features/journey/JourneyDialog.tsx': 'the visit story: its header is the visitor, with a menu in the corner',
+  'features/journey/JourneyDialog.tsx': 'the visit story: its header is the person, with a menu in the corner',
   'features/signals/SurgeModal.tsx': 'the surge hero: a live count is the header',
   'features/bounce/BounceGuideModal.tsx': 'the bounce guide: a hero header like the surge dialog',
   'features/heatmap/HeatOverlay.tsx': 'the heatmap: its header is the toolbar (page, width, layers)',

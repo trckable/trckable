@@ -36,7 +36,7 @@ export const copy = defineCopy('sites.menu', {
   // The numbers: today's visitors per site, and both totals beside All sites.
   today: (n: string) => `${n} today`,
   todayHead: 'Today',
-  todayAll: 'Visitors today, all sites',
+  todayAll: 'People today, all sites',
 
   openSite: (domain: string) => `Open ${domain}`,
 

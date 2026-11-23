@@ -176,7 +176,7 @@ func TestCardLangCountries(t *testing.T) {
 func TestCardLangSentences(t *testing.T) {
 	cur := visitorsResult(300, map[string][]query.Row{"referrer": {{Value: "news.ycombinator.com", Visitors: 200}, {Value: "google.com", Visitors: 100}}})
 	prev := visitorsResult(100, map[string][]query.Row{"referrer": {{Value: "google.com", Visitors: 90}, {Value: "news.ycombinator.com", Visitors: 10}}})
-	if got := explainChange(cardDE, cur, prev).say; got != "Besucher stiegen um 3×, vor allem durch news.ycombinator.com." {
+	if got := explainChange(cardDE, cur, prev).say; got != "Personen stiegen um 3×, vor allem durch news.ycombinator.com." {
 		t.Errorf("de: %q", got)
 	}
 	if got := explainChange(cardFR, cur, prev).say; got != "Personnes en hausse de 3×, surtout grâce à news.ycombinator.com." {
@@ -303,9 +303,9 @@ func TestCardRouteLang(t *testing.T) {
 func TestCardLangMilestone(t *testing.T) {
 	m := sqlite.Milestone{Kind: milestones.Visitors, Value: 10000, Day: "2026-09-21"}
 	for code, want := range map[string][3]string{
-		"en": {"10,000", "visitors", "Sep 21, 2026"},
-		"de": {"10.000", "Besucher", "21. Sep 2026"},
-		"fr": {"10\u00a0000", "visiteurs", "21 sept. 2026"},
+		"en": {"10,000", "people", "Sep 21, 2026"},
+		"de": {"10.000", "Personen", "21. Sep 2026"},
+		"fr": {"10\u00a0000", "personnes", "21 sept. 2026"},
 	} {
 		l := cardLangOf(code)
 		s := milestones.CardIn(&l.ms, m, "", "demo.trckable.com", "light", false)

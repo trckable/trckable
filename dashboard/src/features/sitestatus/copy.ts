@@ -40,7 +40,7 @@ export const copy = defineCopy('sitestatus', {
   tag: 'Script tag found',
   script: 'Script loads',
   scriptOk: (status: number) => `The script answered ${status}.`,
-  scriptBad: (url: string, status: number) => (status ? `${url} answered ${status}. Visitors’ browsers get nothing from it.` : `${url} could not be loaded.`),
+  scriptBad: (url: string, status: number) => (status ? `${url} answered ${status}. People’s browsers get nothing from it.` : `${url} could not be loaded.`),
 
   mute: 'Mute alerts for 24 h',
   muted: (when: string) => `Muted until ${when}`,

@@ -140,7 +140,7 @@ func TestSayHidesTheAmount(t *testing.T) {
 	if w := Say(sqlite.Milestone{Kind: Revenue, Value: 100000, Currency: "CHF"}, true); w.Big != "100,000 CHF" {
 		t.Fatalf("no sign: %+v", w)
 	}
-	if w := Say(sqlite.Milestone{Kind: Visitors, Value: 1_000_000}, false); w.Line() != "1,000,000 visitors" {
+	if w := Say(sqlite.Milestone{Kind: Visitors, Value: 1_000_000}, false); w.Line() != "1,000,000 people" {
 		t.Fatalf("visitors: %+v", w)
 	}
 }
