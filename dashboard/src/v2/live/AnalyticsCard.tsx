@@ -10,6 +10,7 @@ import type { LiveNow } from '../../features/live/api'
 import { Flag } from '../ui/Flag'
 import { deviceLabel, type DeviceKey } from '../../lib/deviceName'
 import { logoOf } from '../explore/rowMarks'
+import { appOf } from '../../features/apps/copy'
 
 type Mode = 'pages' | 'countries' | 'devices'
 
@@ -35,7 +36,12 @@ const MARKS: Partial<Record<DeviceKey, string>> = { iphone: 'ios', ipad: 'ios', 
 
 function barsOf(lists: Lists, mode: Mode): Bar[] {
   if (mode === 'pages') return lists.pages.map((p) => ({ key: p.label, label: p.label, n: p.n, mono: true }))
-  if (mode === 'devices') return lists.devices.map((d) => ({ key: d.key, label: deviceLabel(d.key), n: d.n, mono: false, mark: logoOf(MARKS[d.key] ?? '') }))
+  if (mode === 'devices')
+    return lists.devices.map((d) => {
+      const [device, app] = d.key.split(':') as [DeviceKey, string?]
+      const name = deviceLabel(device)
+      return { key: d.key, label: app ? appOf(name) : name, n: d.n, mono: false, mark: logoOf(MARKS[device] ?? '') }
+    })
   return lists.countries.map((c) => ({ key: c.key, label: c.label || countryName(c.key), n: c.n, mono: false, flag: c.key }))
 }
 

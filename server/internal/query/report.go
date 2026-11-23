@@ -212,8 +212,10 @@ const deviceApp = `CASE WHEN app IS NOT NULL AND app NOT IN ('', 'app') THEN app
 		WHEN device IN ('Mobile', 'Tablet') THEN coalesce(nullif(os, ''), device) || '|' || CASE WHEN app = 'app' THEN 'app' ELSE 'browser' END END`
 
 // deviceOS is the device kind with its system, "Mobile|iOS" or "Desktop|Windows",
-// which is what tells an iPhone from an iPad and a Mac from a Windows PC.
-const deviceOS = `device || '|' || coalesce(os, '')`
+// which is what tells an iPhone from an iPad and a Mac from a Windows PC. A visit
+// through the site's own app adds "|app" ("Mobile|iOS|app"); every other visit,
+// and every site without an app, keeps the two parts.
+const deviceOS = `device || '|' || coalesce(os, '') || CASE WHEN app = 'app' THEN '|app' ELSE '' END`
 
 // screenBucket groups the width of the window a visit began in. Exact widths
 // would be a list of a thousand one-visit rows; these five are the ones a

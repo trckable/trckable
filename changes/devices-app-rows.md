@@ -1,0 +1,1 @@
+Live Analytics, Devices: visits through your own app get their own row ("iPhone app", "Android phone app", "Mac app"), apart from the same device in a browser. Sites without an app see only the devices, as before.
