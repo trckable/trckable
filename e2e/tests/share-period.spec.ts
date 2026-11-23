@@ -64,7 +64,7 @@ test('Share: the card number is the dashboard number for 7 days and all time', a
   }
   const visitors = async (from: string) => {
     const res = await page.request.get(`${API}/api/v1/sites/${site.id}/report?from=${from}&to=${day(0)}`)
-    return ((await res.json()) as { kpis: { visitors: number } }).kpis.visitors
+    return ((await res.json()) as { current: { kpis: { visitors: number } } }).current.kpis.visitors
   }
   const big = async (period: string) => {
     const res = await page.request.get(`${API}/api/v1/sites/${site.id}/card?format=json&period=${period}&t=overview`)

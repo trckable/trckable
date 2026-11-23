@@ -76,12 +76,14 @@ func TestCardNumberIsTheReportsVisitors(t *testing.T) {
 			continue // the report counts whole days; the 24 hours are told by the card's own window above
 		}
 		_, _, rb := get(t, owner, g.srv.URL+"/api/v1/sites/"+g.site+"/report?"+q.Encode())
-		var rep query.Result
+		var rep struct {
+			Current query.Result `json:"current"`
+		}
 		if err := json.Unmarshal([]byte(rb), &rep); err != nil {
 			t.Fatalf("%s report: %v", c.name, err)
 		}
-		if rep.KPIs.Visitors != c.want {
-			t.Errorf("%s: report says %d, want %d", c.name, rep.KPIs.Visitors, c.want)
+		if rep.Current.KPIs.Visitors != c.want {
+			t.Errorf("%s: report says %d, want %d", c.name, rep.Current.KPIs.Visitors, c.want)
 		}
 	}
 }
