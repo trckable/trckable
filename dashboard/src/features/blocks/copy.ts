@@ -13,7 +13,7 @@ export const copy = defineCopy('blocks', {
   lasted: (d: string) => `for ${d}`,
   noMentions: 'No mentions in this period.',
   noRows: 'Nothing to rank in this period.',
-  visitors: (n: number) => `${fmtInt(n)} ${n === 1 ? 'visitor' : 'visitors'}`,
+  visitors: (n: number) => `${fmtInt(n)} ${n === 1 ? 'person' : 'people'}`,
   was: (v: string) => `was ${v}`,
   chart: (title: string, from: string, to: string) => `${title}, from ${from} to ${to}`,
 })

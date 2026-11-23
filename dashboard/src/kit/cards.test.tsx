@@ -7,9 +7,9 @@ const html = (el: React.ReactElement) => renderToStaticMarkup(el)
 
 describe('Card', () => {
   it('is a section with a title and a corner button when it opens something', () => {
-    const h = html(<Card title="Visitors" onOpen={() => {}} openLabel="Open visitors">body</Card>)
+    const h = html(<Card title="People" onOpen={() => {}} openLabel="Open people">body</Card>)
     expect(h).toContain('<section')
-    expect(h).toContain('aria-label="Open visitors"')
+    expect(h).toContain('aria-label="Open people"')
     expect(h).toContain('body')
   })
   it('is one button when pressed, with the corner only a mark', () => {
@@ -54,11 +54,11 @@ describe('Segmented', () => {
 
 describe('MetricArea', () => {
   it('shows value, pill and sub, and an area only when there are days to draw', () => {
-    const withDays = html(<MetricArea label="Visitors" value="38,035" pill={{ text: '▲ 9%', tone: 'good' }} sub="30 days" series={[1, 2, 3, 2]} />)
+    const withDays = html(<MetricArea label="People" value="38,035" pill={{ text: '▲ 9%', tone: 'good' }} sub="30 days" series={[1, 2, 3, 2]} />)
     expect(withDays).toContain('38,035')
     expect(withDays).toContain('kit-pill good')
     expect(withDays).toContain('kit-area')
-    expect(html(<MetricArea label="Visitors" value="1" />)).not.toContain('kit-area')
+    expect(html(<MetricArea label="People" value="1" />)).not.toContain('kit-area')
   })
   it('draws the area in the colour it is given', () => {
     expect(html(<MetricArea label="A" value="1" series={[1, 2, 3]} color="#3b82f6" />)).toContain('#3b82f6')
@@ -118,7 +118,7 @@ describe('the smaller cards', () => {
     expect(h).not.toContain('>5%<')
   })
   it('a card has the icon tile and the status on its top line', () => {
-    const h = html(<Card title="Visitors" icon={<i />} status="vs last week">x</Card>)
+    const h = html(<Card title="People" icon={<i />} status="vs last week">x</Card>)
     expect(h).toContain('kit-tile')
     expect(h).toContain('>vs last week</span>')
   })

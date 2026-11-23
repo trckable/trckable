@@ -244,7 +244,7 @@ func (s *Server) evaluateReport(ctx context.Context, a sqlite.Alert, ev alerts.E
 // nothing ("230×" of one visitor), so it is new traffic: the count alone.
 func busyDay(domain string, today, usual float64, days int) (title, message string) {
 	if usual < moments.MinUsual || days < moments.MinHistory {
-		return "New traffic", fmt.Sprintf("%s has %s visitors today, more than it usually gets.", domain, summary.For("en").Number(int64(today+0.5)))
+		return "New traffic", fmt.Sprintf("%s has %s people today, more than it usually gets.", domain, summary.For("en").Number(int64(today+0.5)))
 	}
-	return "Busy day", fmt.Sprintf("%s has %s visitors today — about %s a normal day.", domain, summary.For("en").Number(int64(today+0.5)), moments.Times(today/usual))
+	return "Busy day", fmt.Sprintf("%s has %s people today — about %s a normal day.", domain, summary.For("en").Number(int64(today+0.5)), moments.Times(today/usual))
 }

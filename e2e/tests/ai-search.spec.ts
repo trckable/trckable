@@ -64,7 +64,7 @@ for (const width of [1440, 390]) {
     await expect(card).not.toContainText('Couldn’t read AI & Search')
     // One plain line under each section's heading.
     const sections = [
-      ['Assistants: what they read, what they send', 'Fetches are what the assistant’s robots read of your site. Visitors are people who clicked a link to you in its answers.'],
+      ['Assistants: what they read, what they send', 'Fetches are what the assistant’s robots read of your site. People are those who clicked a link to you in its answers.'],
       ['Crawlers', 'AI bots that read your pages to learn about you, and how often.'],
       ['Pages', 'Which pages AI bots read, and how many visits each one then sent.'],
     ] as const
@@ -91,7 +91,7 @@ test('each assistant shows what its robots read against the people it sent, bigg
   const table = card.locator('.xt', { has: page.getByText('Fetches', { exact: true }) })
   const rows = table.locator('.xrw')
   await expect(rows.first()).toContainText(/ChatGPT/)
-  await expect(rows.first()).not.toContainText('visitor per') // 6 reads is too few for a ratio: only the two numbers
+  await expect(rows.first()).not.toContainText('person per') // 6 reads is too few for a ratio: only the two numbers
   await expect(rows.first()).toHaveText(/6\s*14$/)
   await expect(rows.nth(1)).toContainText(/Claude/)
   await expect(rows.nth(1)).toHaveText(/3\s*5$/)
@@ -133,7 +133,7 @@ test('a page row filters the dashboard to that page', async ({ page }) => {
   await expect(page).toHaveURL(/xf=page/)
 })
 
-test('without crawler data only the visitors show, and the one tip is to connect it', async ({ page }) => {
+test('without crawler data only the people show, and the one tip is to connect it', async ({ page }) => {
   // example.com has had no crawler reported: nothing to compare the visitors with, so no zeros are drawn.
   const card = await open(page, 1440, 'example.com')
   await expect(card.locator('[data-sum="sent"]')).toBeVisible()

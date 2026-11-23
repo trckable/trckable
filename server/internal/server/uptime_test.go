@@ -32,7 +32,7 @@ func fakeProber(st *sqlite.Store, answer func(url string) (int, error)) (*prober
 
 func TestDownAlertUsesTheBarsWords(t *testing.T) {
 	got := downMessage("Europe/Berlin", sqlite.SiteProbe{DownSince: 1_800_000_000, Error: "No answer within 10 seconds"})
-	want := "Your site isn't answering our checks since 09:00 (No answer within 10 seconds). Some visitors still get through, which is why you may still see people online."
+	want := "Your site isn't answering our checks since 09:00 (No answer within 10 seconds). Some people still get through, which is why you may still see people online."
 	if got != want {
 		t.Fatalf("got %q", got)
 	}

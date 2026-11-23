@@ -46,7 +46,7 @@ describe('a surge as a card', () => {
     expect(head.textContent).toContain('Busier than usual')
     expect(head.textContent).toContain('today 16:00')
     expect(head.querySelector('.side-card-x')).not.toBeNull()
-    expect(body.querySelector('.side-card-title')?.textContent).toBe('33visitors')
+    expect(body.querySelector('.side-card-title')?.textContent).toBe('33people')
     expect(foot.querySelector('.btn')?.textContent).toBe('See it')
     // One context line: the multiple and the source's chip, and no other line naming a source.
     const sub = body.querySelector('.side-sub')?.textContent ?? ''

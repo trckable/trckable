@@ -40,7 +40,7 @@ test('Explore\'s shape of the period draws the usual or the period before and re
   await expect(page.locator('svg#chart .chusual, svg#chart .chbefore')).toHaveCount(1)
   const box = (await page.locator('svg#chart').boundingBox())!
   await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5)
-  await expect(page.locator('.chart-tip')).toHaveText(/^.+ · [\d,]+ (visitors|people) · .+ [\d,]+ · [+-]?\d+%/)
+  await expect(page.locator('.chart-tip')).toHaveText(/^.+ · [\d,]+ people · .+ [\d,]+ · [+-]?\d+%/)
 })
 
 test('the compare control says why when the period before has too little behind it', async ({ page }) => {

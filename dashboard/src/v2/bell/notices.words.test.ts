@@ -9,7 +9,7 @@ const rows = (list: Milestone[]) => list.map((milestone, i) => ({ id: `mile:s1:$
 describe('milestone rows in the bell', () => {
   it('say what was reached in a sentence, never a raw key', () => {
     const [a, b, c] = fromFeed(rows([m({ kind: 'record_day', value: 317 }), m({ kind: 'pageviews', value: 1 }), m({ kind: 'revenue', value: 250, currency: 'USD' })]), sites, 9e9)
-    expect(a.title).toBe('317 visitors in one day: your busiest yet.')
+    expect(a.title).toBe('317 people in one day: your busiest yet.')
     expect(b.title).not.toMatch(/pageviews|\d+ pageviews/)
     expect(c.title).toContain('$250')
     for (const n of [a, b, c]) expect(n.title).not.toMatch(/record_day|Milestone:/)

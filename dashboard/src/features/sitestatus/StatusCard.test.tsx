@@ -53,7 +53,7 @@ describe('the panel of a site that stopped, and the line when visits are back', 
     expect(html).not.toContain('sgm-jump">No visits since') // the header tells the outage; the quiet line below it tells the last visit
   })
 
-  it('says the check fails, not that the site is down, while visitors still arrive', () => {
+  it('says the check fails, not that the site is down, while people still arrive', () => {
     const s = site({ last_event_at: NOW - 60, down_since: NOW - 2779 * 60, down_visitors: true })
     const html = renderToStaticMarkup(<StatusPanel site={s} last={NOW - 60} down />)
     expect(html).toContain('Check fails')
@@ -106,7 +106,7 @@ describe('the panel of a site that stopped, and the line when visits are back', 
     const html = renderToStaticMarkup(<StatusCard site={fine} />)
     expect(html).toContain('Can’t check')
     const panel = renderToStaticMarkup(<StatusPanel site={site({ last_event_at: NOW - 8 * 3600, probe_blocked_since: NOW - 60 })} last={NOW - 8 * 3600} down={false} />)
-    expect(panel).toContain('its firewall blocks our checks. Your visitors aren’t affected.')
+    expect(panel).toContain('its firewall blocks our checks. Your people aren’t affected.')
     expect(renderToStaticMarkup(<StatusCard site={site({ last_event_at: NOW - 60 })} />)).not.toContain('Can’t check')
   })
 })

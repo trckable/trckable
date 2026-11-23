@@ -7,7 +7,7 @@ describe('thin data', () => {
     expect(tooFew(MIN_SESSIONS - 1)).toBe(true)
     expect(tooFew(MIN_SESSIONS)).toBe(false)
   })
-  it('wants an earlier period of at least MIN_BASE visitors', () => {
+  it('wants an earlier period of at least MIN_BASE people', () => {
     expect(baseEnough(undefined)).toBe(false)
     expect(baseEnough(MIN_BASE - 1)).toBe(false)
     expect(baseEnough(MIN_BASE)).toBe(true)

@@ -60,15 +60,15 @@ describe('the AI & Search dialog', () => {
   it('names the assistants with their counts and a bar each, the pages they landed on, the days and what it means', async () => {
     const { dlg } = await draw('visitor')
     expect(dlg.getAttribute('aria-modal')).toBe('true')
-    expect(dlg.querySelector('.cm-title')?.textContent).toBe('20visitors from AI')
+    expect(dlg.querySelector('.cm-title')?.textContent).toBe('20people from AI')
     const rows = [...dlg.querySelectorAll('.cm-bars')[0].querySelectorAll('li')]
     expect(rows.map((r) => r.querySelector('.cm-row')?.textContent)).toEqual(['ChatGPT12', 'Perplexity5', 'Claude3'])
     expect(rows.every((r) => r.querySelector('i'))).toBe(true)
     expect([...dlg.querySelectorAll('.cm-bars')[1].querySelectorAll('li')].map((r) => r.querySelector('.cm-row')?.textContent)).toEqual(['/blog/self-hosting9', '/pricing7'])
-    expect(dlg.querySelector('svg[role="img"]')?.getAttribute('aria-label')).toBe('AI visitors for each day of the period')
+    expect(dlg.querySelector('svg[role="img"]')?.getAttribute('aria-label')).toBe('AI people for each day of the period')
     expect(dlg.querySelector('.cm-meaning')?.textContent).toContain('followed the link')
   })
-  it('asks the report for AI visitors only, for the dashboard’s period', async () => {
+  it('asks the report for AI people only, for the dashboard’s period', async () => {
     await draw('visitor')
     const [site, q] = report.mock.calls[0] as [string, { filters: unknown[] }]
     expect(site).toBe('s1')
@@ -90,7 +90,7 @@ describe('the AI & Search dialog', () => {
     expect(dlg.querySelector('.cm-title')?.textContent).toBe('140reads by AI crawlers')
     expect([...dlg.querySelectorAll('.cm-bars')[0].querySelectorAll('li')].map((r) => r.querySelector('.cm-row')?.textContent)).toEqual(['GPTBot100 reads', 'ClaudeBot40 reads'])
     expect([...dlg.querySelectorAll('.cm-bars')[1].querySelectorAll('li')].map((r) => r.querySelector('.cm-name')?.textContent)).toEqual(['/blog/self-hosting', '/docs', '/pricing'])
-    expect(dlg.querySelector('.cm-meaning')?.textContent).toContain('not counted as visitors')
+    expect(dlg.querySelector('.cm-meaning')?.textContent).toContain('not counted as people')
   })
   it('closes on Escape', async () => {
     const { onClose } = await draw('visitor')

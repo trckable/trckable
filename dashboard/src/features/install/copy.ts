@@ -31,14 +31,14 @@ export const copy = defineCopy('install', {
   step: (n: number) => `Step ${n}`,
   copyStep: (title: string) => `Copy: ${title}`,
   copyCode: 'Copy the code',
-  optionalTitle: 'Count visitors with ad blockers too',
+  optionalTitle: 'Count people with ad blockers too',
   optionalHint: 'Optional. Events then go through your own domain, so use <Analytics> without host.',
 
   // Cookieless.
   cookieless: {
     label: 'Cookieless',
-    tip: 'Counts visits without a cookie or anything stored in the visitor’s browser.',
-    cookieModeNote: 'Cookie mode is on. It adds new vs returning visitors and journeys, and in the EU it needs a consent banner.',
+    tip: 'Counts visits without a cookie or anything stored in the person’s browser.',
+    cookieModeNote: 'Cookie mode is on. It adds new vs returning people and journeys, and in the EU it needs a consent banner.',
     onServer: 'No cookie, nothing stored. The script picks it up within an hour: nothing to re-paste.',
     onBundled: 'The code above has cookieless: true. Rebuild and deploy your app.',
     saving: 'Saving…',
@@ -51,7 +51,7 @@ export const copy = defineCopy('install', {
     colCookieless: 'Cookieless',
     rows: [
       { label: 'Browser storage', cookies: ['cookie', 'meh'], cookieless: ['nothing', 'yes'] },
-      { label: 'Returning visitors', cookies: ['recognised', 'yes'], cookieless: ['each day new', 'meh'] },
+      { label: 'Returning people', cookies: ['recognised', 'yes'], cookieless: ['each day new', 'meh'] },
       { label: 'Revenue attribution', cookies: ['across days', 'yes'], cookieless: ['same day only', 'meh'] },
       { label: 'Journeys & new-vs-returning', cookies: ['on', 'yes'], cookieless: ['off', 'no'] },
     ] as Row[],

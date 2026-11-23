@@ -37,7 +37,7 @@ export const copy = defineCopy('widgets', {
     credit: 'Show "Counted by trckable"',
     textsHint: 'Leave empty for the translated default',
     frame: 'Paste this where the card should appear',
-    corner: 'Or paste this once, to float it in a corner of every page. Visitors can close it',
+    corner: 'Or paste this once, to float it in a corner of every page. People can close it',
     copyFrame: 'Copy embed code',
     copyCorner: 'Copy the corner script',
     snippet: 'Snippet copied',

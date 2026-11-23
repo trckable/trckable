@@ -70,7 +70,7 @@ async function openJourney(page: Page) {
   await expect(row).toBeVisible({ timeout: 15_000 })
   await row.focus()
   await page.keyboard.press('Enter')
-  const dialog = page.getByRole('dialog', { name: 'Visitor journey' })
+  const dialog = page.getByRole('dialog', { name: 'Person journey' })
   await expect(dialog.getByRole('heading', { level: 2 })).toHaveText(/^[A-Z][a-z]+ [A-Z][a-z]+$/) // the visitor's generated two-word name
   return dialog
 }
@@ -110,10 +110,10 @@ test('tells one visitor’s story', async ({ page }) => {
 
 test('actions: filter by the source, copy id in the menu, Escape closes', async ({ page }) => {
   const dialog = await openJourney(page)
-  await dialog.getByRole('button', { name: 'Visitor options' }).click()
-  await expect(page.getByRole('menuitem', { name: 'Copy visitor id' })).toBeVisible()
+  await dialog.getByRole('button', { name: 'Person options' }).click()
+  await expect(page.getByRole('menuitem', { name: 'Copy person id' })).toBeVisible()
   await expect(page.getByRole('menuitem', { name: 'Data request…' })).toBeVisible()
-  await expect(page.getByRole('menuitem', { name: 'Erase visitor…' })).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: 'Erase person…' })).toBeVisible()
   await page.keyboard.press('Escape')
   await dialog.getByRole('list', { name: 'Visit 2, what they did' }).locator('xpath=..').locator('.jr-chip').click()
   await expect(dialog).toBeHidden()

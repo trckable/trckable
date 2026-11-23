@@ -47,12 +47,12 @@ test('visitors who leave after one page: the search list opens the guide', async
   }
   await page.route(/\/report\/bounce-guide/, (r) => r.fulfill({ json: guide }))
   await open(page, '?view=briefing&period=30d')
-  const dialog = page.getByRole('dialog', { name: 'Why visitors leave' })
+  const dialog = page.getByRole('dialog', { name: 'Why people leave' })
   await expect(async () => {
     if (!(await page.locator('.pal.on .palbox input').isVisible())) await page.keyboard.press('ControlOrMeta+k')
     await expect(page.locator('.pal.on .palbox input')).toBeVisible({ timeout: 1500 })
   }).toPass({ timeout: 15_000 })
-  await page.locator('.pal.on .palbox input').fill('Why visitors leave')
+  await page.locator('.pal.on .palbox input').fill('Why people leave')
   await page.keyboard.press('Enter')
   await expect(dialog).toBeVisible()
   await expect(dialog).toContainText('What happened')
@@ -118,7 +118,7 @@ test('a mention is a dot over the chart, with its source and what it brought', a
   const dot = page.locator('.chlay .mp-pin').first()
   await expect(dot).toBeVisible({ timeout: 20_000 })
   await dot.hover()
-  await expect(page.getByRole('tooltip')).toContainText('visitors')
+  await expect(page.getByRole('tooltip')).toContainText('people')
   await expect(dot.locator('.mention-mark')).toHaveAttribute('data-source', 'hn')
 })
 

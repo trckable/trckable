@@ -334,7 +334,7 @@ func TestCardGridModel(t *testing.T) {
 	for _, st := range n.grid {
 		got = append(got, st.Label+"="+st.Value)
 	}
-	if want := "Visitors=1,200 Pageviews=3,400 Engaged visits=900 Avg time=2m 14s"; strings.Join(got, " ") != want {
+	if want := "People=1,200 Pageviews=3,400 Engaged visits=900 Avg time=2m 14s"; strings.Join(got, " ") != want {
 		t.Errorf("busy: %v", got)
 	}
 }
@@ -410,7 +410,7 @@ func TestCardTopicModels(t *testing.T) {
 	}
 	var spec cards.Spec
 	n.pictureOf(&spec, "topsource")
-	if spec.Template != "spotlight" || spec.Big != "google.com" || spec.Label != "Most visitors came from" {
+	if spec.Template != "spotlight" || spec.Big != "google.com" || spec.Label != "Most people came from" {
 		t.Errorf("hero: %+v", spec)
 	}
 	spec = cards.Spec{}

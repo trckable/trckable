@@ -95,9 +95,9 @@ func TestThresholdWords(t *testing.T) {
 	}{
 		{alerts.MetricSales, alerts.PeriodDay, 10, "10 sales today"},
 		{alerts.MetricSales, alerts.PeriodDay, 1, "1 sale today"},
-		{alerts.MetricVisitors, alerts.PeriodMonth, 1250, "1,250 visitors this month"},
+		{alerts.MetricVisitors, alerts.PeriodMonth, 1250, "1,250 people this month"},
 		{alerts.MetricRevenue, alerts.PeriodWeek, 5000, "$5,000 in revenue this week"},
-		{alerts.MetricVisitors, alerts.PeriodAll, 100000, "100,000 visitors so far"},
+		{alerts.MetricVisitors, alerts.PeriodAll, 100000, "100,000 people so far"},
 	} {
 		ev := thresholdEvent(sqlite.Alert{Kind: "threshold", Metric: c.metric, Period: c.period, Threshold: c.n}, info, c.n, time.Now())
 		if ev.Title != c.want || !strings.Contains(ev.Message, "goal.example reached "+c.want) {

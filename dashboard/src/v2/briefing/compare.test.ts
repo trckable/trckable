@@ -67,13 +67,13 @@ describe('the hover and the reason', () => {
   const c = { name: 'last month', vals: [270, 100], pct: null }
   it('reads a bucket against the same one before, with the change', () => {
     expect(pairAt(c, 312, 0, 2)).toEqual({ was: 270, delta: 16 })
-    expect(readOf('Oct 6', 312, 'last month', 270, 16)).toBe('Oct 6 · 312 visitors · last month 270 · +16%')
+    expect(readOf('Oct 6', 312, 'last month', 270, 16)).toBe('Oct 6 · 312 people · last month 270 · +16%')
   })
   it('tells no change for the bucket still going, and none for a bucket with nothing before it', () => {
     expect(pairAt(c, 50, 1, 1)).toEqual({ was: 100, delta: null })
     expect(pairAt(c, 50, 5, 9)).toEqual({ was: null, delta: null })
     expect(pairAt(null, 50, 0, 9)).toEqual({ was: null, delta: null })
-    expect(readOf('Oct 6', 312, null, null, null)).toBe('Oct 6 · 312 visitors')
+    expect(readOf('Oct 6', 312, null, null, null)).toBe('Oct 6 · 312 people')
   })
   it('says when the comparison begins when there is too little before, and nothing when it can be drawn', () => {
     const now = pts(Array.from({ length: 10 }, () => 5), 11)

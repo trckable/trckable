@@ -9,9 +9,9 @@ export const copy = defineCopy('v2networks', {
   engaged: 'Stay',
   loads: 'Loads in',
   enough: (n: number) => `Conversion shows from ${n} visits.`,
-  say: (slow: string, slowPct: string, fast: string, fastPct: string) => `Visitors on ${slow} convert at ${slowPct}, on ${fast} at ${fastPct}.`,
-  sayStay: (slow: string, slowPct: string, fast: string, fastPct: string) => `Visitors on ${slow} stay at ${slowPct}, on ${fast} at ${fastPct}.`,
+  say: (slow: string, slowPct: string, fast: string, fastPct: string) => `People on ${slow} convert at ${slowPct}, on ${fast} at ${fastPct}.`,
+  sayStay: (slow: string, slowPct: string, fast: string, fastPct: string) => `People on ${slow} stay at ${slowPct}, on ${fast} at ${fastPct}.`,
   none: 'Too few visits yet to compare networks.',
-  note: 'Networks come from the visitor’s internet provider, and only on sites that keep region and city.',
+  note: 'Networks come from the person’s internet provider, and only on sites that keep region and city.',
   credit: 'Provider names by DB-IP',
 })

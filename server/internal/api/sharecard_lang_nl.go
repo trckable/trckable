@@ -6,18 +6,19 @@ var cardNL = &cardLang{
 	code:   "nl",
 	months: [12]string{"jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"},
 
-	visitors:   "bezoekers",
+	visitors:   "mensen",
 	pageviews:  "paginaweergaven",
 	revenue:    "omzet",
 	noVisits:   "Heeft een bezoek nodig in deze periode",
 	counted:    "Geteld met trckable",
+	oncePerDay: "eenmaal per dag geteld",
 	engaged:    "Betrokken bezoeken",
 	avgTime:    "Gem. tijd",
 	topCountry: "Topland",
 
 	engagedVisits: "betrokken bezoeken",
 	statPageviews: "Paginaweergaven",
-	statVisitors:  "Bezoekers",
+	statVisitors:  "Mensen",
 	bounce:        "Bouncepercentage",
 	topPage:       "Toppagina",
 	topSource:     "Topbron",
@@ -44,7 +45,7 @@ var cardNL = &cardLang{
 	aiVisits:          "AI-bezoeken",
 	aiMentions:        "Vermeldingen",
 	aiRequests:        "AI-verzoeken",
-	aiPerVisitor:      "Bots/bezoeker",
+	aiPerVisitor:      "Bots/persoon",
 	aiTop:             "Topbedrijf",
 	aiRequestsOf:      "verzoeken",
 	goalsTitle:        "Topdoelen",
@@ -60,7 +61,7 @@ var cardNL = &cardLang{
 
 	gridTitle: map[string]string{"24h": "Vandaag in cijfers", "7d": "Deze week in cijfers", "30d": "Deze maand in cijfers", "all": "Alle tijd in cijfers", "custom": "Jouw cijfers"},
 	listTitle: map[string]string{"leaderboard": "Toppagina’s", "sources": "Topbronnen", "places": "Toplanden", "browsers": "Topbrowsers", "devices": "Mobiel en desktop"},
-	heroLabel: map[string]string{"toppage": "Je meest bezochte pagina", "topsource": "De meeste bezoekers kwamen van", "topplace": "De meeste bezoekers zijn in"},
+	heroLabel: map[string]string{"toppage": "Je meest bezochte pagina", "topsource": "De meeste mensen kwamen van", "topplace": "De meeste mensen zijn in"},
 
 	last24: "Laatste 24 uur", post24: "in de laatste 24 uur", postDays: "in de laatste %d dagen", postAll: "in alle tijd", postRange: "in %s", since: "Sinds %s",
 	prev24: "voorgaande 24 uur", prevDay: "voorgaande dag", prevDays: "voorgaande %d dagen", vs: "t.o.v.",
@@ -68,11 +69,11 @@ var cardNL = &cardLang{
 	postBegun: "%s: het tellen is begonnen. %s", postTopPage: "Toppagina: %s.",
 
 	ms: milestones.Tongue{
-		Visitors:       "bezoekers",
+		Visitors:       "mensen",
 		Pageviews:      "paginaweergaven",
 		FirstPageview:  "paginaweergave",
 		Countries:      "landen",
-		Record:         "bezoekers · recorddag",
+		Record:         "mensen · recorddag",
 		Revenue:        "omzet",
 		RevenueHidden:  "Omzet",
 		RevenueReached: "Omzetmijlpaal bereikt",

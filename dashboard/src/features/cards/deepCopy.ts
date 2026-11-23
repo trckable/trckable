@@ -22,7 +22,7 @@ export const deepCopy = defineCopy('cards.deep', {
   retention: {
     title: 'Retention',
     arrived: 'Arrived',
-    people: 'Visitors',
+    people: 'People',
     week: (k: number) => `Week ${k}`,
     open: '·',
     inProgress: 'in progress',
@@ -40,7 +40,7 @@ export const deepCopy = defineCopy('cards.deep', {
     typical: (t: string) => `${t} typical`,
     lost: (pct: number, left: string) => `−${pct}% · ${left} left`,
     steps: 'Steps',
-    label: 'Visitors at each step of the funnel',
+    label: 'People at each step of the funnel',
     remove: (step: string) => `Remove ${step}`,
     add: 'Add a step',
     addLabel: '+ Add step',
@@ -58,6 +58,6 @@ export const deepCopy = defineCopy('cards.deep', {
     goal: 'goal',
     none: 'No visits recorded yet.',
     failed: 'Couldn’t read the latest people.',
-    open: 'See this visitor’s whole journey',
+    open: 'See this person’s whole journey',
   },
 })

@@ -5,7 +5,7 @@ import { filterOf, heroOf, openedOf, quoteParts, replyURL, sparkPoints } from '.
 const m = (o: Partial<Mention>): Mention => ({ id: 1, source: 'hn', url: 'https://news.ycombinator.com/item?id=5', title: 'T', host: 'news.ycombinator.com', posted_at: 1000, found_at: 1000, visitors: 0, ...o })
 
 describe('hero', () => {
-  it('shows the mention driving visitors now, then the newest busy one inside a day', () => {
+  it('shows the mention driving people now, then the newest busy one inside a day', () => {
     const a = m({ id: 1, posted_at: 100_000 - 3600, visitors: 5 })
     const b = m({ id: 2, posted_at: 100_000 - 7200, visitors: 90 })
     expect(heroOf([a, b], null, 100_000)).toEqual({ kind: 'now', m: b })

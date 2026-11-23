@@ -56,13 +56,13 @@ func insightLine(w reports.Words, i insights.Insight, m *query.Money) string {
 		if i.Change < 0 {
 			dir = "down"
 		}
-		return fmt.Sprintf("%s %s %s · %s → %s visitors", name, dir, w.Say.Percent(math.Abs(i.Change)), w.Number(i.Was), w.Number(i.Now))
+		return fmt.Sprintf("%s %s %s · %s → %s people", name, dir, w.Say.Percent(math.Abs(i.Change)), w.Number(i.Was), w.Number(i.Now))
 	case insights.TopRevenue:
-		return fmt.Sprintf("%s earns %s a visitor, %s the average", name, each(w, i.PerVisitor, m), moments.Times(i.Times))
+		return fmt.Sprintf("%s earns %s a person, %s the average", name, each(w, i.PerVisitor, m), moments.Times(i.Times))
 	case insights.ConversionDrop:
 		return fmt.Sprintf("%s converts %s, was %s", name, w.Say.Percent(i.Rate), w.Say.Percent(i.WasRate))
 	}
-	return fmt.Sprintf("New referrer: %s sent %s", name, plural(w, i.Now, "visitor"))
+	return fmt.Sprintf("New referrer: %s sent %s", name, plural(w, i.Now, "person", "people"))
 }
 
 // each writes a small amount (minor units, a fraction of a unit is normal for
@@ -75,9 +75,9 @@ func each(w reports.Words, minor float64, m *query.Money) string {
 	return w.Say.MoneyFine(minor, cur, exp)
 }
 
-func plural(w reports.Words, n int64, one string) string {
+func plural(w reports.Words, n int64, one, many string) string {
 	if n == 1 {
 		return "1 " + one
 	}
-	return w.Number(n) + " " + one + "s"
+	return w.Number(n) + " " + many
 }

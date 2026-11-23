@@ -1,0 +1,1 @@
+Everyone who arrives on your site is now called people, in the dashboard, emails, share pictures, milestones and widgets, in all five languages; on a site without cookies a count over more than one day says it is counted once per day.

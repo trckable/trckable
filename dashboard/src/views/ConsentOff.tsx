@@ -25,7 +25,7 @@ export function ConsentOff({ site, onOn }: { site: Site; onOn: () => void }) {
     <section className="card" id="consent" style={{ gap: 12 }}>
       <div className="card-head">
         <h2>Cookie consent</h2>
-        <Info text="For sites that want the cookie and the returning-visitor numbers that come with it, and are willing to ask first. Cookieless mode above is the other answer: no cookie, and nothing stored on the device. A visitor who declines your banner is never counted, and the first page waits for their answer." />
+        <Info text="For sites that want the cookie and the numbers for returning people that come with it, and are willing to ask first. Cookieless mode above is the other answer: no cookie, and nothing stored on the device. A person who declines your banner is never counted, and the first page waits for their answer." />
       </div>
       <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>
         Keep the cookie and ask first. trckable can read the consent manager you already run, or ask with a small bar of its own — about its one cookie and nothing else.

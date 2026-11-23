@@ -13,7 +13,7 @@ import { track } from 'trckable'
 track('signup', { plan: 'pro' })`,
   api: `curl -X POST ${host}/api/e \\
   -H 'content-type: application/json' \\
-  -H 'user-agent: <the visitor's user agent>' \\
+  -H 'user-agent: <the person's user agent>' \\
   -d '{"s":"${site.id}","k":"g","u":"https://${site.domain}/welcome",
        "n":"signup","p":{"plan":"pro"},
        "v":"<visitor id from the trckable_vid cookie>"}'`,

@@ -90,7 +90,7 @@ describe('the period before on the chart', () => {
   it('reads one point as the number, the one before and the change, and says nothing about a usual range', () => {
     const c = chartOf({ cur: result(cur), prev: result([1910, 100, 100, 100]), bucket: 'day', unit: 'month', against: 'last month' })
     const at = chartNote(c, 0)
-    expect(at).toContain('120 visitors')
+    expect(at).toContain('120 people')
     expect(at).toContain('last month 1,910')
     expect(at).toContain('-94%')
     expect(at).not.toMatch(/usual|0–0/)

@@ -4,10 +4,10 @@ import { defineCopy } from '../../i18n'
 
 export const copy = defineCopy('story', {
   spike: (factor: string) => `Traffic ${factor}`,
-  newTraffic: (visitors: number) => `New traffic · ${visitors === 1 ? '1 visitor' : `${fmtInt(visitors)} visitors`}`,
+  newTraffic: (visitors: number) => `New traffic · ${visitors === 1 ? '1 person' : `${fmtInt(visitors)} people`}`,
   from: (who: string) => `from ${who}`,
   sale: (n: number) => (n === 1 ? 'Sale' : `${n} sales`),
-  country: (name: string) => `First visitor from ${name}`,
+  country: (name: string) => `First person from ${name}`,
   ai: (bot: string) => `First AI assistant visit · ${bot}`,
   milestone: (what: string) => `Milestone · ${what}`,
   note: 'Note',

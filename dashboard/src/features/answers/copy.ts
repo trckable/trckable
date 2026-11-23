@@ -37,7 +37,7 @@ export const answersCopy = defineCopy('answers', {
   pagesHead: 'Pages AI links to',
   pagesTotal: (earned: string, k: number) => `${earned} earned from ${n(k)} pages`,
   page: { path: 'Page', answers: 'Answers', read: 'AI read', sent: 'Sent', earned: 'Earned' },
-  pageHints: { answers: 'Answers that linked this page', read: 'Times an AI crawler read the page', sent: 'Visitors an AI assistant sent', earned: 'Revenue those visitors made' },
+  pageHints: { answers: 'Answers that linked this page', read: 'Times an AI crawler read the page', sent: 'People an AI assistant sent', earned: 'Revenue those people made' },
   paused: 'Paused until the 1st: this month’s budget is used.',
   docs: 'https://trckable.com/docs/answers/',
   empty: {
@@ -108,7 +108,7 @@ export const answersCopy = defineCopy('answers', {
     count: (a: number, total: number) => `${n(a)} of ${n(total)}`,
     max: (k: number) => `That is the most you can add: ${n(k)}.`,
     ownName: 'This question names your site, which would change the answer. Leave your name out.',
-    sends: (names: string) => `Your questions go to ${names}. Nothing about your visitors does.`,
+    sends: (names: string) => `Your questions go to ${names}. Nothing about your people does.`,
     budget: (used: string, cap: string) => `This month about ${used} of ${cap}`,
     budgetLabel: 'Monthly budget',
     engines: 'Asking',

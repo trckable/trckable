@@ -26,7 +26,7 @@ export const copy = defineCopy('onboarding', {
     sub: (domain: string) => `Paste it into the <head> of ${domain}.`,
   },
   here: {
-    title: 'Your first visitor just arrived',
+    title: 'Your first person just arrived',
     sub: 'Your site is live and counting.',
     page: 'Page',
     source: 'Source',
@@ -43,11 +43,11 @@ export const copy = defineCopy('onboarding', {
   },
   empty: {
     title: 'Add your site',
-    sub: 'Two minutes from here to your first visitor, live.',
+    sub: 'Two minutes from here to your first person, live.',
     field: 'Your site',
     placeholder: 'yoursite.com',
     add: 'Start',
     bad: 'That doesn’t look like a site address, like yoursite.com.',
-    steps: ['Type your site', 'Paste one line, or pick your platform', 'Watch your first visitor arrive'],
+    steps: ['Type your site', 'Paste one line, or pick your platform', 'Watch your first person arrive'],
   },
 })

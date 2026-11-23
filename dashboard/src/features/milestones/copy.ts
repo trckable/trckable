@@ -6,10 +6,10 @@ import { defineCopy } from '../../i18n'
 export const copy = defineCopy('milestones', {
   // What each family's number is.
   label: {
-    visitors: 'visitors',
+    visitors: 'people',
     pageviews: 'pageviews',
     firstPageview: 'First pageview',
-    record_day: 'visitors · record day',
+    record_day: 'people · record day',
     countries: 'countries',
     first_goal: 'First goal',
     first_sale: 'First sale',
@@ -42,9 +42,9 @@ export const copy = defineCopy('milestones', {
     visitors: (n: string) => `${n} people have visited your site.`,
     pageviews: (n: string) => `Your pages have been viewed ${n} times.`,
     firstPageview: 'Your site counted its first pageview.',
-    record_day: (n: string) => `${n} visitors in one day: your busiest yet.`,
+    record_day: (n: string) => `${n} people in one day: your busiest yet.`,
     countries: (n: string) => `People from ${n} countries have visited your site.`,
-    first_goal: 'A visitor reached one of your goals for the first time.',
+    first_goal: 'A person reached one of your goals for the first time.',
     first_sale: 'Your first sale came in.',
     revenue: (n: string) => `Your site has earned ${n}.`,
     revenueQuiet: 'Your revenue reached a new step.',
@@ -55,7 +55,7 @@ export const copy = defineCopy('milestones', {
   progressDays: (now: string, step: string, label: string, days: number) => `${now} of ${step} ${label} · ~${days} ${days === 1 ? 'day' : 'days'} at this pace`,
   quietStep: 'Reached',
   next: (step: string, label: string, now: string) => `next ${step} ${label} · ${now} now`,
-  none: 'Nothing yet. The first one is 100 visitors.',
+  none: 'Nothing yet. The first one is 100 people.',
   off: 'Milestones are off for this site.',
   // The share sheet.
   sheet: 'Share milestone',

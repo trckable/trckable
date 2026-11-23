@@ -457,8 +457,8 @@ func ipResolver(cfg config.Config) ingest.IPResolver {
 
 // proxyWarning is logged once, the first time a request comes through what
 // looks like a reverse proxy while no forwarded address is trusted.
-const proxyWarning = "requests arrive through a reverse proxy, but TRCKABLE_TRUST_PROXY is not set, so every visitor looks like one address: " +
-	"the sign-in limits are shared by everyone and visitor countries show the proxy's place. " +
+const proxyWarning = "requests arrive through a reverse proxy, but TRCKABLE_TRUST_PROXY is not set, so everyone looks like one address: " +
+	"the sign-in limits are shared by everyone and countries show the proxy's place. " +
 	"Set TRCKABLE_TRUST_PROXY=xff when one proxy in front of trckable adds X-Forwarded-For (Caddy, nginx, Traefik do), " +
 	"or header:<Name> for a header your proxy sets (header:X-Real-IP, header:CF-Connecting-IP), then restart. " +
 	"Check it with: npx trckable doctor"

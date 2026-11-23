@@ -41,6 +41,10 @@ describe('the overview', () => {
     expect(o.kcs[1]).toMatchObject({ icon: 'goal', label: 'Signed up', val: '12' })
     expect(o.kcs[2]).toMatchObject({ icon: 'sales', val: '$305', unit: 'net' })
   })
+  it('tells the people of a long period on a site without cookies as counted once per day', () => {
+    expect(mapOverview(report(result(100)), { ...none, once: true }).kcs[0]).toMatchObject({ icon: 'people', unit: 'counted once per day' })
+    expect(mapOverview(report(result(100)), none).kcs[0]).not.toHaveProperty('unit')
+  })
   it('says what the incident record found', () => {
     const o = mapOverview(report(result(100)), { ...none, uptime: { pct: 99.5, down: [{ from: '11:40', to: '12:03', min: 23 }], lost: 1380 } })
     expect(o.kcs[2]).toMatchObject({ icon: 'uptime', val: '99.50%', note: { c: 'dn', t: 'down 23 min' }, st: 'dn' })

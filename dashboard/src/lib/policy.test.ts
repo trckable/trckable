@@ -149,7 +149,7 @@ describe('the cookie banner module', () => {
     expect(t).not.toMatch(/no banner|do not ask for your consent/)
   })
 
-  it('says a visitor who declines is not counted at all', () => {
+  it('says a person who declines is not counted at all', () => {
     const t = policyText(input({ modules: { consent: true } }))
     expect(t).toContain('If you decline, your visit is not counted at all')
   })

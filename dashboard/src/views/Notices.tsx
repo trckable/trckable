@@ -32,7 +32,7 @@ export default function Notices({ kind, text, onAct }: { kind: Kind; text?: stri
   }
   return (
     <p className="faint" style={{ fontSize: 12, margin: 0 }}>
-      Breakdown visitor counts are estimates (±2%) for ranges above 250,000 sessions. Totals are exact.
+      Breakdown person counts are estimates (±2%) for ranges above 250,000 sessions. Totals are exact.
     </p>
   )
 }

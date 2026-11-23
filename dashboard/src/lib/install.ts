@@ -42,7 +42,7 @@ const nextSteps = (c: Ctx): Step[] => [
   { title: 'Add it to app/layout.tsx', code: `import { Analytics } from 'trckable/next'\n${nextComponent(c)}` },
   {
     title: 'Add one route, so events go through your own domain',
-    code: `// app/api/e/route.ts — same-origin: past analytics blocklists, 400-day Safari visitors\n// With this route, remove host="${c.host}" from <Analytics>\nexport { POST } from 'trckable/next'`,
+    code: `// app/api/e/route.ts — same-origin: past analytics blocklists, 400-day Safari people\n// With this route, remove host="${c.host}" from <Analytics>\nexport { POST } from 'trckable/next'`,
     optional: true,
   },
   { title: 'Set two environment variables', code: `# .env\nTRCKABLE_HOST=${c.host}\nTRCKABLE_PROXY_KEY=${c.proxyKey}`, optional: true },
@@ -111,7 +111,7 @@ export const METHODS: Method[] = [
     code: joinSteps(landingSteps),
     steps: landingSteps,
     bundled: true,
-    note: 'data-domain shares the cookie with the app: one visitor, one journey, sales included.',
+    note: 'data-domain shares the cookie with the app: one person, one journey, sales included.',
     keywords: 'subdomain saas marketing cross-domain',
   },
   {
@@ -427,7 +427,7 @@ TRCKABLE_PROXY_KEY=${c.proxyKey}
 
 <!-- every page, in <head> -->
 ${tag(c, '', undefined, '/api/e')}`,
-    note: 'Same-origin, so nothing can block it and Safari keeps visitors 400 days. Express and Fastify: turn the request into a Request first (@hono/node-server does).',
+    note: 'Same-origin, so nothing can block it and Safari keeps people 400 days. Express and Fastify: turn the request into a Request first (@hono/node-server does).',
     keywords: 'node bun deno cloudflare middleware express fastify',
   },
   {
@@ -437,9 +437,9 @@ ${tag(c, '', undefined, '/api/e')}`,
     where: 'Send events straight to the HTTP API.',
     code: ({ host, site, domain }) => `curl -X POST ${host}/api/e \\
   -H 'content-type: application/json' \\
-  -H "user-agent: <the visitor's browser user agent>" \\
+  -H "user-agent: <the person's browser user agent>" \\
   -d '{"s":"${site}","k":"pv","u":"https://${domain}/pricing"}'`,
-    note: 'For backends, queues and native apps. Pass the visitor’s own user agent: requests that name no browser (curl, Go, Python, Node fetch) are counted as bots and dropped.',
+    note: 'For backends, queues and native apps. Pass the person’s own user agent: requests that name no browser (curl, Go, Python, Node fetch) are counted as bots and dropped.',
     keywords: 'api node python go php ruby laravel rails django',
   },
   {
@@ -461,7 +461,7 @@ location /api/e {
 
 <!-- every page, in <head>: the script and its events from your domain -->
 ${tag(c, '', '/t.js')}`,
-    note: 'Same-origin: no blocker list, and the visitor cookie lasts 400 days in Safari. Keep the proxy key secret.',
+    note: 'Same-origin: no blocker list, and the cookie lasts 400 days in Safari. Keep the proxy key secret.',
     keywords: 'nginx caddy cloudflare vercel rewrite first-party',
   },
   {

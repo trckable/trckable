@@ -110,7 +110,7 @@ func TestHTMLIsEscapedBrandedAndTranslated(t *testing.T) {
 			t.Errorf("unescaped %q in the email", bad)
 		}
 	}
-	for _, want := range []string{"Wochenbericht", "Besucher", "KI-Assistenten", "&lt;script&gt;", "1.284", "#336699", "gegenüber der Vorwoche", "Diesen Bericht abbestellen", "x=1&amp;y=2", "21. Sep – 27. Sep", "Gesendet von trckable"} {
+	for _, want := range []string{"Wochenbericht", "Personen", "KI-Assistenten", "&lt;script&gt;", "1.284", "#336699", "gegenüber der Vorwoche", "Diesen Bericht abbestellen", "x=1&amp;y=2", "21. Sep – 27. Sep", "Gesendet von trckable"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("the email lacks %q", want)
 		}
@@ -125,7 +125,7 @@ func TestHTMLIsEscapedBrandedAndTranslated(t *testing.T) {
 	}
 	if empty := sample("en"); true {
 		empty.Cur = &query.Result{}
-		if !strings.Contains(HTML(empty), "No visitors arrived") {
+		if !strings.Contains(HTML(empty), "No people arrived") {
 			t.Error("an empty period says so")
 		}
 	}
@@ -198,7 +198,7 @@ func TestPDFIsAValidOnePageDocumentWithTheReport(t *testing.T) {
 		t.Error("a picture without a logo")
 	}
 	c := content(t, objs)
-	for _, want := range []string{"WOCHENBERICHT", "1.284", "Besucher pro Tag", "Top-Quellen", "(gegen\xfcber der Vorwoche)", "/F2", "0.200 0.400 0.600 rg"} {
+	for _, want := range []string{"WOCHENBERICHT", "1.284", "Personen pro Tag", "Top-Quellen", "(gegen\xfcber der Vorwoche)", "/F2", "0.200 0.400 0.600 rg"} {
 		if !strings.Contains(c, want) && !strings.Contains(c, strings.ToUpper(want)) {
 			t.Errorf("the page lacks %q:\n%s", want, c)
 		}

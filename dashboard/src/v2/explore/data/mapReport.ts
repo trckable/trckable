@@ -36,7 +36,7 @@ function shapeOf(r: Report, against?: string): Shape | null {
 }
 
 /** The overview's four cards: people, a goal (or views), money (or uptime), and who left after one page. */
-export function mapOverview(r: Report, o: { money?: (minor: number) => string; uptime: Uptime | null; now: ISODate; basis?: Basis; against?: string }): Overview {
+export function mapOverview(r: Report, o: { money?: (minor: number) => string; uptime: Uptime | null; now: ISODate; basis?: Basis; against?: string; once?: boolean }): Overview {
   const cur = r.current
   const prev = r.previous
   const base = !!prev && baseEnough(prev.kpis.visitors)
@@ -47,7 +47,7 @@ export function mapOverview(r: Report, o: { money?: (minor: number) => string; u
   const views = statOf(cur.kpis.pageviews, prev?.kpis.pageviews, base)
   const series = cur.series ?? []
   const kcs: Kc[] = [
-    { icon: 'people', label: copy.people, val: fmtInt(people.v), note: pe(people), vals: series.map((p) => p.visitors), st: people.st === 'dn' ? 'dn' : '', ...appChip(cur.dims.device_app, cur.kpis.visitors) },
+    { icon: 'people', label: copy.people, val: fmtInt(people.v), ...(o.once ? { unit: copy.oncePerDay } : {}), note: pe(people), vals: series.map((p) => p.visitors), st: people.st === 'dn' ? 'dn' : '', ...appChip(cur.dims.device_app, cur.kpis.visitors) },
     goal && gs
       ? { icon: 'goal', label: cap(goal.label || goal.value), val: fmtInt(goal.visitors), note: pe(gs), vals: [], share: people.v ? goal.visitors / people.v : 0, col: 'var(--mk-blue)', st: gs.st === 'dn' ? 'dn' : '' }
       : { icon: 'eye', label: copy.kc.views, val: fmtInt(views.v), note: pe(views), vals: series.map((p) => p.pageviews), col: 'var(--mk-blue)', st: views.st === 'dn' ? 'dn' : '' },

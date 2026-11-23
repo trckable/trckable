@@ -28,7 +28,7 @@ func TestWeeklyCarriesTheFindingsThatClearTheirFloors(t *testing.T) {
 		NewReferrers: []query.NewReferrer{{Referrer: "news.example.org", Visitors: 40}},
 	}
 	prev := &query.Result{KPIs: query.KPIs{Visitors: 1000}, Dims: map[string][]query.Row{"channel": {{Value: "Search", Visitors: 400}, {Value: "Direct", Visitors: 600}}}}
-	_, msg, _ := weeklyText("demo.example.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "", "https://stats.example.com/demo.example.com?from=2026-09-14&to=2026-09-20&compare=previous", "")
+	_, msg, _ := weeklyText("demo.example.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "", "https://stats.example.com/demo.example.com?from=2026-09-14&to=2026-09-20&compare=previous", "", false)
 
 	lines := strings.Split(msg, "\n")
 	at := func(want string) int {
@@ -40,8 +40,8 @@ func TestWeeklyCarriesTheFindingsThatClearTheirFloors(t *testing.T) {
 		t.Fatalf("missing %q in:\n%s", want, msg)
 		return -1
 	}
-	move, pays, fresh, link := at("Search up 52% · 400 → 610 visitors"), at("Search earns $0.49 a visitor, 1.9× the average"), at("New referrer: news.example.org sent 40 visitors"), at("https://stats.example.com/")
-	if at("1,260 visitors") >= move || move >= pays || pays >= fresh || fresh >= link {
+	move, pays, fresh, link := at("Search up 52% · 400 → 610 people"), at("Search earns $0.49 a person, 1.9× the average"), at("New referrer: news.example.org sent 40 people"), at("https://stats.example.com/")
+	if at("1,260 people") >= move || move >= pays || pays >= fresh || fresh >= link {
 		t.Errorf("order: numbers, then findings, then the link:\n%s", msg)
 	}
 	if link != len(lines)-1 {
@@ -59,7 +59,7 @@ func TestWeeklySaysNothingWhenNothingClearsTheFloors(t *testing.T) {
 		NewReferrers: []query.NewReferrer{{Referrer: "tiny.example.org", Visitors: 3}},
 	}
 	prev := &query.Result{KPIs: query.KPIs{Visitors: 50}, Dims: map[string][]query.Row{"channel": {{Value: "Search", Visitors: 20}}}}
-	_, msg, _ := weeklyText("demo.example.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "", "https://stats.example.com/demo.example.com", "")
+	_, msg, _ := weeklyText("demo.example.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "", "https://stats.example.com/demo.example.com", "", false)
 	for _, no := range []string{"earns", "New referrer", "Search up", "→", "converts"} {
 		if strings.Contains(msg, no) {
 			t.Errorf("%q with nothing to say:\n%s", no, msg)

@@ -7,11 +7,11 @@ import { defineCopy } from '../../i18n'
 export const copy = defineCopy('markers', {
   group: 'Sources and links on the chart',
   chip: (name: string, added: number) => `${name} +${fmtInt(added)}`,
-  mark: (name: string, added: number, day: string, more: number) => `${name}, ${fmtInt(added)} more visitors on ${day}${more ? `, and ${more} more` : ''}. Open`,
-  sent: (name: string, visitors: number, day: string) => `${name} sent ${fmtInt(visitors)} ${visitors === 1 ? 'visitor' : 'visitors'} on ${day}`,
+  mark: (name: string, added: number, day: string, more: number) => `${name}, ${fmtInt(added)} more people on ${day}${more ? `, and ${more} more` : ''}. Open`,
+  sent: (name: string, visitors: number, day: string) => `${name} sent ${fmtInt(visitors)} ${visitors === 1 ? 'person' : 'people'} on ${day}`,
   over: (added: number) => `${fmtInt(added)} more than a usual day`,
   alsoNear: (n: number) => `and ${n} more around then`,
-  see: 'See these visitors',
+  see: 'See these people',
   line: (day: string, name: string, added: number) => `Most of the ${day} jump came from ${name} (+${fmtInt(added)})`,
   show: 'Show markers',
 })

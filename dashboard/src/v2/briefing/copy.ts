@@ -90,14 +90,15 @@ export const copy = defineCopy('briefing', {
   // The chart.
   hours: 'hours',
   days: 'days',
-  chartRead: (when: string, v: string) => `${when} · ${v} visitors`,
-  /** The point under the pointer against the same one before: "Oct 6 · 2,480 visitors · last month 1,910 · +30%" (the change is left out when there is none to tell). */
-  chartReadVs: (when: string, v: string, name: string, was: string, pct: string) => `${when} · ${v} visitors · ${name} ${was}${pct ? ` · ${pct}` : ''}`,
+  chartRead: (when: string, v: string) => `${when} · ${v} people`,
+  /** The point under the pointer against the same one before: "Oct 6 · 2,480 people · last month 1,910 · +30%" (the change is left out when there is none to tell). */
+  chartReadVs: (when: string, v: string, name: string, was: string, pct: string) => `${when} · ${v} people · ${name} ${was}${pct ? ` · ${pct}` : ''}`,
   /** The line over the chart: how the period stands against the one before. */
   vsLine: (pct: string, name: string) => `${pct} vs ${name}`,
   legendNow: 'This period',
   // What the plot shows besides the line, named in its corner.
   outcomePeople: 'People',
+  outcomePeopleOnce: 'People · counted once per day',
   outcomeRevenue: 'Revenue',
   outcomePayments: 'Payments',
   outcomeSignups: 'Sign-ups',

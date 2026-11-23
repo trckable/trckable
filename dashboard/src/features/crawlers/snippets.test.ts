@@ -40,7 +40,7 @@ describe('each setup', () => {
     }
   })
 
-  it('never carries a visitor: no address, no cookie, no id', () => {
+  it('never carries a person: no address, no cookie, no id', () => {
     for (const setup of SETUPS) {
       for (const s of snippetsFor(setup, plan)) {
         expect(s.code, setup).not.toMatch(/connecting-ip|x-forwarded|x-real-ip|remote_addr|remoteAddr|cookie/i)

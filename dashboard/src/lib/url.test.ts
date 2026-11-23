@@ -2,14 +2,14 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { oldAddressTarget, readView, setDefaultPeriodFor, writeView } from './url'
 
 describe('the chart metric in the address', () => {
-  it('is revenue or pageviews when the address says so, visitors (nothing) otherwise', () => {
+  it('is revenue or pageviews when the address says so, people (nothing) otherwise', () => {
     expect(readView(new URLSearchParams('metric=revenue')).metric).toBe('revenue')
     expect(readView(new URLSearchParams('metric=pageviews')).metric).toBe('pageviews')
     for (const m of ['conversion', 'per-visitor', 'bounce', 'session']) expect(readView(new URLSearchParams(`metric=${m}`)).metric).toBe(m)
     expect(readView(new URLSearchParams('')).metric).toBeUndefined()
     expect(readView(new URLSearchParams('metric=whatever')).metric).toBeUndefined()
   })
-  it('round-trips beside the rest of the view, and disappears with visitors', () => {
+  it('round-trips beside the rest of the view, and disappears with people', () => {
     const q = 'period=7d&f=channel%3ASearch&mode=full&metric=revenue'
     const v = readView(new URLSearchParams(q))
     expect(writeView(v)).toBe('?' + q)

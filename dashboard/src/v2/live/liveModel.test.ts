@@ -24,7 +24,7 @@ describe('Live', () => {
     expect(sourceParts([])).toEqual({ parts: [], other: 0 })
   })
 
-  it('shows sources that add up to the half hour: each visitor is one source', () => {
+  it('shows sources that add up to the half hour: each person is one source', () => {
     const sources = [{ channel: 'Search', visitors: 11 }, { channel: 'Direct', visitors: 4 }]
     const sum = sourceParts(sources).parts.reduce((n, p) => n + p.n, 0)
     expect(sum).toBe(visitors30(15, 3))

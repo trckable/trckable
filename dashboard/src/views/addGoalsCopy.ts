@@ -16,7 +16,7 @@ export const copy = defineCopy('goals', {
   hints: {
     html: 'Extra data-trckable-* attributes become properties.',
     js: 'Call it when the action succeeded, not on the click.',
-    api: 'Send the visitor id from the trckable_vid cookie.',
+    api: 'Send the person id from the trckable_vid cookie.',
   },
   appears: {
     html: 'It shows up in Goals after the first click. Nothing to save.',

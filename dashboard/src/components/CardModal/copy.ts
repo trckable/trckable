@@ -7,6 +7,6 @@ export const cardModal = defineCopy('cardModal', {
   details: 'Details',
   none: 'Nothing in this period',
   inPeriod: 'This period',
-  visitors: (n: number) => `${fmtInt(n)} ${n === 1 ? 'visitor' : 'visitors'}`,
-  visitorsLabel: 'Visitors in this period',
+  visitors: (n: number) => `${fmtInt(n)} ${n === 1 ? 'person' : 'people'}`,
+  visitorsLabel: 'People in this period',
 })

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Share } from '../../lib/api'
 import { linkedInAddress, postLink, slackText, withLink, xAddress } from './post'
 
-const post = 'We passed 10,000 visitors & counting\nThanks to everyone who read it'
+const post = 'We passed 10,000 people & counting\nThanks to everyone who read it'
 const url = 'https://reports.acme.com/s/abc123'
 
 describe('a post and its link', () => {

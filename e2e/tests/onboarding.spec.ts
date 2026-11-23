@@ -179,14 +179,14 @@ test('a first site, its install, its first visit, then Live', async ({ page, bro
 
   // A real pageview moves it on by itself.
   await visit(page, site!.id)
-  await expect(run.getByRole('heading', { name: 'Your first visitor just arrived' })).toBeVisible({ timeout: 20_000 })
+  await expect(run.getByRole('heading', { name: 'Your first person just arrived' })).toBeVisible({ timeout: 20_000 })
   await expectStep(run, 'First visit')
   await expect(run.getByText('/_first-visit', { exact: true })).toBeVisible()
   await expect(run.getByText('Just now')).toBeVisible()
   // No side card or nudge over the celebration: they wait until the dashboard.
   await expect(page.getByRole('complementary')).toHaveCount(0)
   // Closing it leaves the focus on the page: move on from the heading.
-  await run.getByRole('heading', { name: 'Your first visitor just arrived' }).focus()
+  await run.getByRole('heading', { name: 'Your first person just arrived' }).focus()
 
   // Enter: straight to Live mode, where the visit is (no second screen).
   await page.keyboard.press('Enter')

@@ -15,8 +15,8 @@ describe('networks', () => {
     expect(networkName('Telefonica Germany GmbH & Co. OHG')).toBe('Telefonica Germany')
     expect(networkName('AS')).toBe('AS')
   })
-  it('compares the lowest and highest converter', () => expect(headline([row({ name: 'Jio', rate: 0.009 }), row({ name: 'Vodafone', rate: 0.032 }), row({ name: 'Mid', rate: 0.02 })])).toBe('Visitors on Jio convert at 0.9%, on Vodafone at 3.2%.'))
-  it('says stay, not convert, when it counts the visits that stayed', () => expect(headline([row({ name: 'Jio', rate: 0.4 }), row({ name: 'Vodafone', rate: 0.62 })], 'engaged')).toBe('Visitors on Jio stay at 40%, on Vodafone at 62%.'))
+  it('compares the lowest and highest converter', () => expect(headline([row({ name: 'Jio', rate: 0.009 }), row({ name: 'Vodafone', rate: 0.032 }), row({ name: 'Mid', rate: 0.02 })])).toBe('People on Jio convert at 0.9%, on Vodafone at 3.2%.'))
+  it('says stay, not convert, when it counts the visits that stayed', () => expect(headline([row({ name: 'Jio', rate: 0.4 }), row({ name: 'Vodafone', rate: 0.62 })], 'engaged')).toBe('People on Jio stay at 40%, on Vodafone at 62%.'))
   it('claims nothing from one provider, equal rates or too few visits', () => {
     expect(headline([row({ rate: 0.1 })])).toContain('Too few')
     expect(headline([row({ rate: 0.1 }), row({ rate: 0.1 })])).toContain('Too few')

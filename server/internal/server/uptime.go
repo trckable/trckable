@@ -459,7 +459,7 @@ func downMessage(tz string, p sqlite.SiteProbe) string {
 	if err != nil {
 		loc = time.UTC
 	}
-	return fmt.Sprintf("Your site isn't answering our checks since %s (%s). Some visitors still get through, which is why you may still see people online.",
+	return fmt.Sprintf("Your site isn't answering our checks since %s (%s). Some people still get through, which is why you may still see people online.",
 		time.Unix(p.DownSince, 0).In(loc).Format("15:04"), p.Error)
 }
 

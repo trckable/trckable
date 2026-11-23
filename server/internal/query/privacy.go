@@ -93,8 +93,8 @@ func (q Q) ExportPerson(ctx context.Context, site, domain string, visitor uint64
 		Site:    domain,
 		Visitor: strconv.FormatUint(visitor, 36),
 		MadeAt:  now.UTC(),
-		Note: "Everything " + domain + " recorded for this visitor. trckable never stores IP addresses, " +
-			"and the visitor id is a hash, not a name. Timestamps are UTC.",
+		Note: "Everything " + domain + " recorded for this person. trckable never stores IP addresses, " +
+			"and the person id is a hash, not a name. Timestamps are UTC.",
 		FirstSeen: j.FirstSeen,
 		Visits:    j.Visits,
 		Truncated: j.Truncated,

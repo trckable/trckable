@@ -13,14 +13,14 @@ export const eventCopy = defineCopy('bell.event', {
   seeIncidents: 'See it in Incidents',
   seeMentions: 'See it in Mentions',
   // The visit behind a goal, a signup or a sale.
-  openVisitor: 'Open this visitor’s story',
+  openVisitor: 'Open this person’s story',
   page: 'Page',
   from: 'From',
   path: 'The path before it',
   toConvert: 'Time to convert',
   visitsBefore: 'Visits before',
   pagesSeen: 'Pages seen',
-  noVisit: 'The visit behind this one is not shown: this site does not tell visitors apart, or it is too old.',
+  noVisit: 'The visit behind this one is not shown: this site does not tell people apart, or it is too old.',
   // A sale.
   amount: 'Amount',
   kindNew: 'New customer',

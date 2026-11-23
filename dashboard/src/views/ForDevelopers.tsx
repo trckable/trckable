@@ -15,11 +15,11 @@ export function ForDevelopers({ site }: { site: Site }) {
 
       {/* A credential, so the server sends it to owners only. */}
       {site.proxy_key ? (
-        <Row label="Proxy key" hint="Lets your own server forward a visitor's location" tone="danger">
+        <Row label="Proxy key" hint="Lets your own server forward a person's location" tone="danger">
           <Copyable value={site.proxy_key} secret />
         </Row>
       ) : (
-        <Row label="Proxy key" hint="Lets your own server forward a visitor's location">
+        <Row label="Proxy key" hint="Lets your own server forward a person's location">
           <span className="faint">Owners only</span>
         </Row>
       )}

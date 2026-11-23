@@ -7,7 +7,7 @@ import { defineCopy } from '../../i18n'
 import type { BounceGuide } from '../../lib/apiMore'
 
 export const copy = defineCopy('bounce', {
-  label: 'Why visitors leave',
+  label: 'Why people leave',
   close: 'Close',
   loading: 'Reading the visits…',
   failed: 'Couldn’t read the visits. Try again in a moment.',
@@ -36,7 +36,7 @@ export const copy = defineCopy('bounce', {
   slowOn: 'Slow to load:',
   sourceOn: (source: string, device: string) => `${source} on ${device}`,
   noClick: (rate: string) => `${rate} leave without clicking`,
-  fromOn: (source: string, device: string) => `Visitors from ${source} on ${device}`,
+  fromOn: (source: string, device: string) => `People from ${source} on ${device}`,
   zones: { good: 'Good', slow: 'Slow', poor: 'Poor' },
   secs: (n: string) => `${n} s`,
   showsAfter: (secs: string) => `Main content shows after ${secs}\u00a0s`,
