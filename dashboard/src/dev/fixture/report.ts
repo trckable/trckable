@@ -263,7 +263,8 @@ function resultOf(c: Ctx, v: Visits, a: number, b: number, bucket: Bucket, filte
     way('instagram', share('Mobile', 0.1)),
   ].filter((x) => x.visitors > 0)
   d.device_os = [
-    way('Mobile|iOS', share('Mobile', 0.6)),
+    way('Mobile|iOS', share('Mobile', 0.46)),
+    way('Mobile|iOS|app', share('Mobile', 0.14)),
     way('Mobile|Android', share('Mobile', 0.4)),
     way('Tablet|iPadOS', share('Tablet', 0.3)),
     way('Tablet|Android', share('Tablet', 0.7)),

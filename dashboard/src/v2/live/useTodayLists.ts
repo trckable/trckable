@@ -23,7 +23,12 @@ export function useTodayLists(site: string, timezone: string, visitors: number):
         return {
           pages: top(d.page).map((p) => ({ label: p.value, n: p.visitors })),
           countries: top(d.country).map((c) => ({ label: countryName(c.value.toUpperCase()), key: c.value.toUpperCase(), n: c.visitors })),
-          devices: deviceCounts((d.device_os ?? []).map((r): [string, string, number] => [...(r.value.split('|') as [string, string]), r.visitors])),
+          devices: deviceCounts(
+            (d.device_os ?? []).map((r): [string, string, number, boolean] => {
+              const [device, os, app] = r.value.split('|')
+              return [device, os, r.visitors, app === 'app']
+            }),
+          ),
         }
       })
       .catch(() => null)

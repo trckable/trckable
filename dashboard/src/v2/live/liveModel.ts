@@ -69,12 +69,16 @@ function topFive(values: (string | undefined)[]): [string, number][] {
   return [...counts].sort((a, b) => b[1] - a[1]).slice(0, 5)
 }
 
-/** The people whose device is known, counted by what it is (iPhone, iPad, Mac, Android phone and tablet, Windows PC, Linux, Other), the larger first. */
-export function deviceCounts(people: [string | undefined, string | undefined, number][]): { key: DeviceKey; n: number }[] {
-  const counts = new Map<DeviceKey, number>()
-  for (const [device, os, n] of people) {
+/** A device, or the same device through the site's own app ("iphone:app"). */
+export type DeviceRowKey = DeviceKey | `${DeviceKey}:app`
+
+/** The people whose device is known, counted by what it is (iPhone, iPad, Mac, Android phone and tablet, Windows PC, Linux, Other), the larger first.
+ * Visits through the site's own app get their own row ("iPhone app"); a site with no app shows only the devices. */
+export function deviceCounts(people: [string | undefined, string | undefined, number, boolean?][]): { key: DeviceRowKey; n: number }[] {
+  const counts = new Map<DeviceRowKey, number>()
+  for (const [device, os, n, app] of people) {
     if (!device) continue
-    const key = deviceKey(device, os)
+    const key: DeviceRowKey = app ? `${deviceKey(device, os)}:app` : deviceKey(device, os)
     counts.set(key, (counts.get(key) ?? 0) + n)
   }
   return [...counts].filter(([, n]) => n > 0).map(([key, n]) => ({ key, n })).sort((x, y) => y.n - x.n)
@@ -91,7 +95,7 @@ export function listsOf(rows: Row[]): Lists {
   return {
     pages: topFive(rows.map((r) => r.path)).map(([label, n]) => ({ label, n })),
     countries: topFive(rows.map((r) => r.country?.toUpperCase())).map(([key, n]) => ({ label: countryName(key), key, n })),
-    devices: deviceCounts(rows.map((r) => [r.device, r.os, 1])),
+    devices: deviceCounts(rows.map((r) => [r.device, r.os, 1, r.app === 'app'])),
   }
 }
 

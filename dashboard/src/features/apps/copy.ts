@@ -19,6 +19,9 @@ const c = defineCopy('apps', {
   wechat: 'WeChat',
 })
 
+/** "iPhone app", "Mac app": a device or system through the site's own app. */
+export const appOf = (name: string) => c.appOf(name)
+
 const NAMED: Record<string, string> = c as unknown as Record<string, string>
 /** A social app's name, or undefined for any other key. */
 export const appName = (key: string) => (Object.hasOwn(NAMED, key) && typeof NAMED[key] === 'string' ? NAMED[key] : undefined)
