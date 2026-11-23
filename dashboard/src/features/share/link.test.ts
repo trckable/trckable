@@ -20,7 +20,8 @@ describe('the period a link is fixed to', () => {
   })
   it('finds the link of an all-time card by its first day, and of a range by its days', () => {
     expect(linkFor([mine({ period: 'since:2024-02-04' })], { card: 'toppage', period: 'all' }, '2024-02-04', now)).toBeDefined()
-    expect(linkFor([mine({ period: 'since:2024-02-04' })], { card: 'toppage', period: 'all' }, '2024-02-05', now)).toBeUndefined()
+    expect(linkFor([mine({ period: 'since:2024-02-04' })], { card: 'toppage', period: 'all' }, '2024-02-05', now)).toBeDefined()
+    expect(linkFor([mine({ period: '30d' })], { card: 'toppage', period: 'all' }, '2024-02-04', now)).toBeUndefined()
     expect(linkFor([mine({ period: '2026-03-01..2026-06-14' })], { card: 'toppage', period: 'custom', from: '2026-03-01', to: '2026-06-14' }, undefined, now)).toBeDefined()
     expect(linkFor([mine({ period: '2026-03-01..2026-06-14' })], { card: 'toppage', period: 'custom', from: '2026-03-01', to: '2026-06-13' }, undefined, now)).toBeUndefined()
   })

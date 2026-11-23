@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/event"
+	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
 // The share studio's links carry the period their owner picked: a range or all time (kept as its first day)
@@ -33,6 +34,16 @@ func TestShareLinkKeepsItsPeriod(t *testing.T) {
 		}
 		u := out["url"].(string)
 		return code, u[strings.LastIndex(u, "/")+1:], out["share"].(map[string]any)["period"].(string)
+	}
+	// A start further back than the site's data is its first day; a range that ends before it, or is too long, is refused.
+	if _, _, stored := make("since:0001-01-01"); stored != "since:2026-03-06" {
+		t.Errorf("since the year 1: kept as %q", stored)
+	}
+	if _, _, stored := make("1990-01-01..2026-09-10"); stored != "2026-03-06..2026-09-10" {
+		t.Errorf("a range from before the data: kept as %q", stored)
+	}
+	if code, _, _ := make("1990-01-01..2026-01-01"); code != http.StatusBadRequest {
+		t.Errorf("a range that ends before the data: %d, want 400", code)
 	}
 	// What cannot be a period is refused, and nothing is made.
 	for _, bad := range []string{"custom", "2026-09-10..2026-09-01", "2026-09-10..2026-09-30", "2026-13-01..2026-13-02", "since:2026-10-01", "since:soon", "1d"} {
@@ -136,6 +147,19 @@ func TestShareListNamesPeriods(t *testing.T) {
 	} {
 		if got := sharePeriodLabel(cardLangOf(c.code), c.period, now); got != c.want {
 			t.Errorf("%s %q: %q, want %q", c.code, c.period, got, c.want)
+		}
+	}
+}
+
+// The card and the page of a link are drawn from the same days, for a stored period that is good and for one that is not.
+func TestCardDaysAreThePageDays(t *testing.T) {
+	now := time.Date(2026, 11, 9, 15, 30, 0, 0, time.UTC)
+	for _, p := range []string{"7d", "30d", "12mo", "2026-03-01..2026-06-14", "since:2024-02-04", "since:0001-01-01", "1990-01-01..2026-01-01", "since:2030-01-01", "2026-06-14..2026-03-01"} {
+		q := linkCardQuery(sqlite.Share{Period: p}, nil)
+		card := resolvePeriod(cardWords, q.Get("period"), q.Get("from"), q.Get("to"), now, time.Time{}, false)
+		from, to, _ := fixedDays(p, now)
+		if !card.from.Equal(from) || !card.to.Equal(to) {
+			t.Errorf("%q: the card covers %s..%s, the page %s..%s", p, card.from.Format(time.DateOnly), card.to.Format(time.DateOnly), from.Format(time.DateOnly), to.Format(time.DateOnly))
 		}
 	}
 }

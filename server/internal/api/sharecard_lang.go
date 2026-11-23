@@ -139,8 +139,3 @@ func (l *cardLang) datesLabel(from, to time.Time) string {
 	}
 	return l.shortDay(from, true) + " – " + l.shortDay(to, true)
 }
-
-// monthYear is "Nov 2026".
-func (l *cardLang) monthYear(d time.Time) string {
-	return fmt.Sprintf("%s %d", l.months[d.Month()-1], d.Year())
-}

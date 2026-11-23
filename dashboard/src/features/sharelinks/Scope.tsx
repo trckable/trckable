@@ -2,10 +2,10 @@
 // period is fixed or the reader chooses. The server holds both: a section left off is refused,
 // not only left out of the page.
 import { LayoutGrid, CalendarRange } from 'lucide-react'
+import { PRESETS } from '../../lib/dates'
 import { copy } from './copy'
 import { PERIODS, SECTIONS, type Draft } from './logic'
 import { Opt } from './Opt'
-import { PRESETS } from '../../lib/dates'
 
 const periodName = (id: string) => PRESETS.find((p) => p.id === id)?.label ?? id
 

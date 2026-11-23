@@ -211,8 +211,11 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 		day, err := a.firstDayOf(r.Context(), q, site, si.Timezone)
 		if err != nil {
 			slog.Error("share card: first day", "site", site, "err", err)
-			fail(w, http.StatusServiceUnavailable, "the site's first day could not be read")
-			return cardNumbers{}, false
+			if kind != "" || v.Get("period") == "all" {
+				fail(w, http.StatusServiceUnavailable, "the site's first day could not be read")
+				return cardNumbers{}, false
+			}
+			day = "" // the words still answer, without the first day
 		}
 		if day != "" {
 			first, _ = time.ParseInLocation(time.DateOnly, day, loc)

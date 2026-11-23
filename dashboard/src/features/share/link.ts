@@ -3,7 +3,7 @@
 // section and nothing else.
 import { more, type Share } from '../../lib/apiMore'
 import { copy } from './copy'
-import { linkPeriod, pictureParams, sectionsOf, type Look } from './card'
+import { hasPeriod, linkPeriod, pictureParams, sectionsOf, type Look } from './card'
 
 // The public page a card goes out with: a link of the site whose preview picture is the card, at the size of the place
 // it goes to. It is always the studio's own link for that card, made to show what the card shows and no more: the
@@ -12,11 +12,14 @@ import { linkPeriod, pictureParams, sectionsOf, type Look } from './card'
 
 const same = (a: string[], b: string[]) => a.length === b.length && b.every((x) => a.includes(x))
 
+/** Whether a link's period is the card's: all time matches any link kept from a first day, so one link serves it as the site grows. */
+const periodHeld = (kept: string, l: Pick<Look, 'card' | 'period' | 'from' | 'to'>, first?: string) => (l.period === 'all' && hasPeriod(l.card) ? kept.startsWith('since:') : kept === linkPeriod(l, first))
+
 /** The studio's link for this card: named by the studio, open to anybody, no revenue, not ended, showing exactly the card's sections and period (for all time, from the site's first day). */
 export const linkFor = (links: Share[], l: Pick<Look, 'card' | 'ms' | 'period' | 'from' | 'to'>, first?: string, now = Date.now()): Share | undefined =>
   links.find(
     (x) =>
-      x.url && x.name === copy.linkName && !x.has_password && !x.revenue && (!x.expires_at || x.expires_at * 1000 > now) && same(x.sections ?? [], sectionsOf(l)) && (x.period ?? '') === linkPeriod(l, first),
+      x.url && x.name === copy.linkName && !x.has_password && !x.revenue && (!x.expires_at || x.expires_at * 1000 > now) && same(x.sections ?? [], sectionsOf(l)) && periodHeld(x.period ?? '', l, first),
   )
 
 /** The link's address with the card named in it: the page's preview is that card at that size. The period is the link's own, kept on the server, so the address does not name one. */
