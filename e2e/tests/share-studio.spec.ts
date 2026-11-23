@@ -2,7 +2,7 @@
 // editable and counted, and "Post on LinkedIn" opens LinkedIn's composer with a public link whose page carries the card.
 import { expect, test } from './fixtures'
 import { flowSession } from './flows-kit'
-import { API } from '../playwright.config'
+import { API, STEADY_DOMAIN } from '../playwright.config'
 import { openStudio } from './share-kit'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough for the studio')
@@ -91,4 +91,28 @@ test('Share studio: Post on LinkedIn opens LinkedIn with a public link whose pre
   const png = await page.request.get(new URL(img, API).toString())
   expect(png.status()).toBe(200)
   expect(png.headers()['content-type']).toBe('image/png')
+})
+
+// The card never says a number the dashboard contradicts: its big number is the report's people for the same window
+// (the last 7 or 30 days ending today; all time from the first data). All time is read on Download, the one place that has it.
+test('Share studio: the card number is the dashboard number for 7 days, 30 days and all time', async ({ page }) => {
+  const dialog = await openStudio(page, 1280, cookie)
+  const sites = ((await (await page.request.get(`${API}/api/v1/sites`)).json()) as { sites: { id: string; domain: string; timezone: string }[] }).sites
+  const site = sites.find((s) => s.domain === STEADY_DOMAIN)
+  if (!site) throw new Error('no steady site')
+  const day = (back: number) => new Intl.DateTimeFormat('en-CA', { timeZone: site.timezone || 'UTC' }).format(new Date(Date.now() - back * 86_400_000))
+  const visitors = async (from: string) => {
+    const res = await page.request.get(`${API}/api/v1/sites/${site.id}/report?from=${from}&to=${day(0)}`)
+    return ((await res.json()) as { current: { kpis: { visitors: number } } }).current.kpis.visitors
+  }
+  const bigAfter = async (chip: string, period: string) => {
+    const words = page.waitForResponse((r) => r.url().includes('format=json') && r.url().includes(`period=${period}`) && r.url().includes('t=overview'))
+    await dialog.getByRole('button', { name: chip, exact: true }).click()
+    return ((await (await words).json()) as { big: string }).big
+  }
+  expect(await bigAfter('30 days', '30d')).toBe((await visitors(day(29))).toLocaleString('en-US'))
+  expect(await bigAfter('7 days', '7d')).toBe((await visitors(day(6))).toLocaleString('en-US'))
+  await dialog.locator('.sd-more').click()
+  await dialog.locator('.sd-morelist').getByRole('button', { name: 'Download', exact: true }).click()
+  expect(await bigAfter('All time', 'all')).toBe((await visitors('2012-01-01')).toLocaleString('en-US'))
 })
