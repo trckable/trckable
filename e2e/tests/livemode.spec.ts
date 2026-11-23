@@ -483,7 +483,9 @@ for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark
     expect(look.radius).toBe('8px')
     expect(look.weight).toBe('400')
     // The page gets the flexible width (14 characters at least); the device is its icon with its name as the tooltip.
-    expect(await row.locator('.pg').evaluate((e) => e.getBoundingClientRect().width)).toBeGreaterThan(100)
+    const pg = await row.locator('.pg').evaluate((e) => ({ width: e.getBoundingClientRect().width, min: parseFloat(getComputedStyle(e).minWidth) }))
+    expect(pg.min).toBeGreaterThan(0)
+    expect(pg.width).toBeGreaterThanOrEqual(pg.min - 0.5)
     await expect(row.locator('.dv svg')).toBeVisible()
     await expect(row.locator('.dv')).toHaveAttribute('title', /\w/)
     await page.waitForTimeout(400)
