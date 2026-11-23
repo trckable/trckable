@@ -29,7 +29,7 @@ export function AiHost({ site }: { site: Site }) {
         onClose={() => setSeen(null)}
         onGo={() => {
           setSeen(null)
-          openExplore(seen === 'crawler' ? 'bots' : 'sources', seen === 'crawler' ? undefined : [{ dim: 'channel', value: 'AI' }])
+          openExplore(seen === 'crawler' ? 'ai' : 'sources', seen === 'crawler' ? undefined : [{ dim: 'channel', value: 'AI' }])
         }}
       />
     </Suspense>

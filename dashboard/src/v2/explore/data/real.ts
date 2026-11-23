@@ -30,10 +30,10 @@ import { insightOf } from './insight'
 import { ENOUGH, headline, mainOf, ranked, rateOf, type QualityRow } from './quality'
 import { EXPLORE_ROWS, LINKS_ROWS } from './rows'
 import { scaled, withSourceUsuals } from './scaled'
-import { mapEngage, mapOverview, mapTable, mapTops, optionsOf, type Uptime } from './mapReport'
+import { mapEngage, mapOverview, mapTable, mapTops, optionsOf, uptimeXkc, type Uptime } from './mapReport'
 import { mapSlowCost } from './slowCost'
 import { mapNetworks } from './networks'
-import { botsModel, mapBots, mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, salesCountries, mapSearch, mapSpeed } from './mapSections'
+import { mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, salesCountries, mapSearch, mapSpeed } from './mapSections'
 import type { DataCtx, Meta, TabData } from './useExplore'
 import { dateFmt } from '../../../lib/format'
 
@@ -206,11 +206,14 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal, soon?: 
     }
     case 'search': {
       const conn = await more.searchConsole(c.site.id)
-      if (!conn.connected) return { on: false, enough: false, kcs: [], queries: [], pages: [], days: [] }
-      const report = await cachedReport(c.site.id, q, undefined, signal)
-      const p = before(report)
-      const [query_, pages, days, prev] = await Promise.all([more.searchReport(c.site.id, q, 'query', signal), more.searchReport(c.site.id, q, 'page', signal), more.searchReport(c.site.id, q, 'date', signal).catch(() => undefined), more.searchReport(c.site.id, { ...q, from: p.from, to: p.to, compare: undefined }, 'query', signal).catch(() => undefined)])
-      return mapSearch({ query: query_, pages, days, prev })
+      if (!conn.connected) return { on: false, enough: false, kcs: [], queries: [], pages: [], days: [], seen: 0, clicked: 0, window: '' }
+      // Google's numbers run a few days behind: one window for the tiles, the table of sources and the chart, the last complete days and as many as the period.
+      const w = seenWindow(c.range, today)
+      const gq = { ...q, from: w.from, to: w.to, compare: undefined }
+      const prevTo = addDays(w.from, -1)
+      const p = { from: addDays(prevTo, -diffDays(w.from, w.to)), to: prevTo }
+      const [query_, pages, days, prev] = await Promise.all([more.searchReport(c.site.id, gq, 'query', signal), more.searchReport(c.site.id, gq, 'page', signal), more.searchReport(c.site.id, gq, 'date', signal).catch(() => undefined), more.searchReport(c.site.id, { ...gq, from: p.from, to: p.to }, 'query', signal).catch(() => undefined)])
+      return mapSearch({ query: query_, pages, days, prev, window: fmtRange(w, today) })
     }
     case 'paths': {
       const r = await more.paths(c.site.id, q, signal)
@@ -250,12 +253,13 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal, soon?: 
       const p = before(report)
       // A site that does not measure speed has none to show.
       const none: WebVitals = { samples: 0, good: 0 }
-      const [cur, prev, cost] = await Promise.all([
+      const [cur, prev, cost, up] = await Promise.all([
         more.vitals(c.site.id, q).catch(() => none),
         more.vitals(c.site.id, { ...q, from: p.from, to: p.to, compare: undefined }).catch(() => undefined),
         more.slowCost(c.site.id, q).catch(() => null),
+        periodUptime(c).catch(() => null),
       ])
-      return { ...mapSpeed(cur, prev), cost: mapSlowCost(cost) }
+      return { ...mapSpeed(cur, prev), cost: mapSlowCost(cost), uptime: up && uptimeXkc(up), down: up?.down ?? [] }
     }
     case 'networks': {
       const report = await cachedReport(c.site.id, q, undefined, signal)
@@ -266,11 +270,6 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal, soon?: 
     case 'mentions': {
       const r = await mentionsApi.list(c.site.id, periodFor(c), signal)
       return mapMentions(r.mentions, c.site.timezone, today)
-    }
-    case 'bots': {
-      // A site that does not watch for robots has none to list; what was dropped on purpose comes with the report.
-      const [rows, report] = await Promise.all([more.crawlers(c.site.id, q).then(mapBots, () => []), cachedReport(c.site.id, q, undefined, signal).catch(() => undefined)])
-      return botsModel(rows, report?.bots)
     }
     case 'outbound': {
       const r = await call<{ properties: { key: string; value: string; visitors: number }[] | null }>('GET', `/sites/${c.site.id}/report/goal-props${rangeQS(q)}&goal=outbound_click&limit=${LINKS_ROWS}`, undefined, signal)

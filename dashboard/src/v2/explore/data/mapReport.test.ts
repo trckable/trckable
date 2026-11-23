@@ -58,17 +58,6 @@ describe('the overview', () => {
   })
 })
 
-describe('the overview and the Sources tab list the same sources', () => {
-  // Two direct visits have no referrer: the report has a channel for them and no referrer row.
-  const cur = result(2, { dims: { channel: [{ value: 'Direct', visitors: 2 }] } })
-  it('shows Direct 2 in the top sources, as the Sources tab does', () => {
-    const rep = report(cur, result(2))
-    const top = mapOverview(rep, none).sources
-    expect(top).toMatchObject([{ name: 'Direct', v: 2 }])
-    expect(top.map((r) => [r.name, r.v])).toEqual(mapTable('sources', rep).rows.map((r) => [r.name, r.v]))
-  })
-})
-
 describe('the tables', () => {
   const cur = result(100, {
     dims: {
@@ -87,10 +76,14 @@ describe('the tables', () => {
     expect(t.dim).toBe('page')
     expect(t.rows[0]).toMatchObject({ val: '/', v: 60, c: 20, st: 'up' })
   })
-  it('says a country by its name and its code, a channel by its label, a referrer by its host', () => {
+  it('says a country by its name and its code, a source by its host', () => {
     expect(mapTable('countries', rep).rows[0]).toMatchObject({ name: 'Germany', code: 'DE' })
-    expect(mapTable('sources', rep)).toMatchObject({ dim: 'channel', rows: [{ name: 'Search' }] })
-    expect(mapTable('referrers', rep).rows[0].name).toBe('google.com')
+    expect(mapTable('sources', rep)).toMatchObject({ dim: 'referrer' })
+    expect(mapTable('sources', rep).rows[0].name).toBe('google.com')
+  })
+  it('lists Direct among the sources, from the channels, since a direct visit has no referrer', () => {
+    const direct = result(10, { dims: { referrer: [{ value: 'google.com', visitors: 4 }], channel: [{ value: 'Direct', visitors: 6 }, { value: 'Search', visitors: 4 }] } })
+    expect(mapTable('sources', report(direct)).rows.map((x) => [x.val, x.name, x.v])).toEqual([['', 'Direct', 6], ['google.com', 'google.com', 4]])
   })
   it('has rows that only read for browsers, and nothing for a tab that is not a table', () => {
     expect(mapTable('browsers', rep).dim).toBeUndefined()

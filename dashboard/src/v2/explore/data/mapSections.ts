@@ -1,13 +1,13 @@
 // The other sections' answers, said as Explore's models. Pure: mapSections.test.ts.
 import { MIN_VITALS } from '../../../lib/api'
-import type { Bots, CrawlerReport, FunnelResult, FunnelStep, Money, PaidStep, Report, SearchReport, SearchRow as ApiSearchRow, WebVitals } from '../../../lib/api'
+import type { FunnelResult, FunnelStep, Money, PaidStep, Report, SearchReport, SearchRow as ApiSearchRow, WebVitals } from '../../../lib/api'
 import { fmtDay } from '../../../lib/dates'
 import { fmtFixed, fmtInt, dateFmt } from '../../../lib/format'
 import { averagePosition } from '../../../lib/searchPosition'
 import type { Mention as ApiMention } from '../../../features/mentions/api'
 import { baseEnough } from '../../../lib/thin'
 import { copy } from '../copy'
-import type { Bot, BotsModel, Funnel, Goal, Grade, Mention, Row, Sale, Sales, Search, SearchRow, SlowPage, Speed, Step, Xkc } from '../types'
+import type { Funnel, Goal, Grade, Mention, Row, Sale, Sales, Search, SearchRow, SlowPage, Speed, Step, Xkc } from '../types'
 import { changeOf, statOf } from './stats'
 
 // ---- funnel and goals ----
@@ -72,7 +72,7 @@ const pct1 = (x: number) => `${fmtFixed(x * 100, 1)}%`
 
 const rowOf = (r: ApiSearchRow, name: string, fresh: boolean): SearchRow => ({ name, clicks: r.clicks, impr: r.impressions, ctr: r.ctr, pos: r.position, ...(fresh ? { fresh: true } : {}) })
 
-export function mapSearch(o: { query: SearchReport; pages: SearchReport; days?: SearchReport; prev?: SearchReport }): Search {
+export function mapSearch(o: { query: SearchReport; pages: SearchReport; days?: SearchReport; prev?: SearchReport; window?: string }): Search {
   const { query, pages, prev } = o
   const base = prev !== undefined && prev.clicks >= 5
   const ctr = query.impressions ? query.clicks / query.impressions : 0
@@ -87,10 +87,13 @@ export function mapSearch(o: { query: SearchReport; pages: SearchReport; days?: 
   const known = new Set((prev?.rows ?? []).map((r) => r.key))
   return {
     on: true,
+    seen: query.impressions,
+    clicked: query.clicks,
+    window: o.window ?? '',
     enough: (query.rows?.length ?? 0) > 0 || query.clicks > 0,
     kcs: [
-      kc('click', copy.heads.clicks, fmtInt(query.clicks), query.clicks, prev?.clicks ?? 0, fmtInt(prev?.clicks ?? 0)),
-      kc('eye', copy.impressions, fmtK(query.impressions), query.impressions, prev?.impressions ?? 0, fmtK(prev?.impressions ?? 0)),
+      kc('click', copy.clicked, fmtInt(query.clicks), query.clicks, prev?.clicks ?? 0, fmtInt(prev?.clicks ?? 0)),
+      kc('eye', copy.seen, fmtK(query.impressions), query.impressions, prev?.impressions ?? 0, fmtK(prev?.impressions ?? 0)),
       kc('percent', copy.clickRate, pct1(ctr), ctr, ctr0, pct1(ctr0)),
       kc('hash', copy.position, fmtFixed(pos, 1), pos, pos0, fmtFixed(pos0, 1), true),
     ],
@@ -140,22 +143,10 @@ export function mapSpeed(cur: WebVitals, prev?: WebVitals): Speed {
     .slice(0, 8)
     .map((p) => ({ name: p.value, v: p.visitors, val: written(0, p.visitors / 1000), grade: gradeOf(0, p.visitors / 1000) }))
   const devices: SlowPage[] = (cur.devices ?? []).flatMap((d) => (d.lcp_ms == null || d.n < MIN_VITALS ? [] : [{ name: d.value, v: d.lcp_ms, val: written(0, d.lcp_ms / 1000), grade: gradeOf(0, d.lcp_ms / 1000) }]))
-  return { kcs: [kc(0, 'speed', copy.loadingWord, copy.lcp), kc(1, 'click', copy.response, copy.inp), kc(2, 'goal', copy.stability, copy.cls)], pages, devices }
+  return { kcs: [kc(0, 'speed', copy.loadingWord, copy.lcp), kc(1, 'click', copy.response, copy.inp), kc(2, 'goal', copy.stability, copy.cls)], pages, devices, uptime: null, down: [] }
 }
 
-// ---- mentions, bots, links ----
-
-/** One line per robot: the report keeps a robot's errands (training, answering) apart, and the list says its name once with every hit. */
-export function mapBots(r: CrawlerReport): Bot[] {
-  const by = new Map<string, number>()
-  for (const s of r.series ?? []) by.set(s.name, (by.get(s.name) ?? 0) + s.total)
-  return [...by].map(([name, count]) => ({ name, count })).filter((b) => b.count > 0).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
-}
-
-/** The Bots table from the robots read and the period's counts of what was dropped on purpose (the report's `bots`, absent under a filter). */
-export function botsModel(rows: Bot[], counted?: Bots): BotsModel {
-  return { rows, left: counted?.kinds?.owner ?? 0, aged: counted?.kinds?.aged ?? 0 }
-}
+// ---- mentions, links ----
 
 export function mapLinks(rows: { key: string; value: string; visitors: number }[]): Row[] {
   return rows

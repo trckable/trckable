@@ -30,8 +30,8 @@ for (const look of LOOKS) {
     })
 
     test('Connect Search Console opens the settings over Explore, and closing them returns to Explore', async ({ page }) => {
-      await openFlow(page, cookie, look, '?view=briefing&x=ai')
-      await panel(page).getByRole('button', { name: 'Connect', exact: true }).click()
+      await openFlow(page, cookie, look, '?view=briefing&x=search')
+      await panel(page).locator('[data-xpanel="google"]').getByRole('button', { name: 'Connect', exact: true }).click()
       await expect.poll(() => overlays(page)).toEqual(['Settings for history.example'])
       await expect(panel(page)).toBeVisible()
       await page.keyboard.press('Escape')
@@ -40,13 +40,13 @@ for (const look of LOOKS) {
     })
 
     test('what is scrolled to in the panel is not left under its header', async ({ page }) => {
-      await openFlow(page, cookie, look, '?view=briefing&x=ai')
-      const title = panel(page).getByText('Connect Search Console', { exact: true })
+      await openFlow(page, cookie, look, '?view=briefing&x=search')
+      const title = panel(page).getByText('See the searches that bring people', { exact: true })
       await title.scrollIntoViewIfNeeded()
-      await panel(page).getByRole('button', { name: 'Connect', exact: true }).focus()
+      await panel(page).locator('[data-xpanel="google"]').getByRole('button', { name: 'Connect', exact: true }).focus()
       const gap = await page.evaluate(() => {
         const head = document.querySelector('.hd')!.getBoundingClientRect().bottom
-        const t = [...document.querySelectorAll('#xp b, #xp h3, #xp h2')].find((e) => e.textContent?.trim() === 'Connect Search Console')!
+        const t = [...document.querySelectorAll('#xp *')].find((e) => e.children.length === 0 && e.textContent?.trim() === 'See the searches that bring people')!
         return t.getBoundingClientRect().top - head
       })
       expect(gap).toBeGreaterThanOrEqual(0)

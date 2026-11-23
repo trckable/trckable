@@ -88,7 +88,7 @@ for (const width of [1440, 390]) {
 
     test('Back undoes the last filter', async ({ page }) => {
       await open(page, width)
-      await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=&x=overview`)
+      await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=&x=pages`)
       await expect(panel(page)).toBeVisible()
       await page.locator('#xp .xt .xrw').first().click()
       await expect(chips(page)).toHaveCount(1)

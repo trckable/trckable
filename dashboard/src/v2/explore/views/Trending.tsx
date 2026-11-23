@@ -38,8 +38,8 @@ function Line({ tab, dim, name, i, x }: { tab: Tab; dim: string; name: string; i
 function GoogleInset({ i, path, x }: { i: Item; path: Path; x: XCtx }) {
   return (
     <div className="xbr-g" data-google="path">
-      <button type="button" className="xtr-row" onClick={() => x.goWith('referrers', 'referrer', i.value)}>
-        <span className="xtr-mark">{rowMark('referrers', { val: i.value, name: host(i.value), v: i.now, c: i.was, st: '' })}</span>
+      <button type="button" className="xtr-row" onClick={() => x.goWith('sources', 'referrer', i.value)}>
+        <span className="xtr-mark">{rowMark('sources', { val: i.value, name: host(i.value), v: i.now, c: i.was, st: '' })}</span>
         <span className="xtr-name">{copy.googlePeople(fmtInt(path.arrived))}</span>
         <Change i={i} />
       </button>
@@ -60,7 +60,7 @@ export function SourcesCard({ x, cur, prev, google }: { x: XCtx; cur: Dims; prev
       {!first && rest.length === 0 && <div className="mk-quiet">{copy.trendNone}</div>}
       {first && google && <GoogleInset i={first} path={google} x={x} />}
       {rest.map((i) => (
-        <Line key={i.value} tab="referrers" dim="referrer" name={host(i.value) || copy.direct} i={i} x={x} />
+        <Line key={i.value} tab="sources" dim="referrer" name={host(i.value) || copy.direct} i={i} x={x} />
       ))}
     </BriefCard>
   )

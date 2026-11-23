@@ -77,6 +77,8 @@ export interface ViewState {
   xp?: string
   /** What the panel narrows by, until it is closed (then it is kept as the page's own filters, if changed). */
   xf?: Filter[]
+  /** The source whose details stand in Sources' right-hand panel ("xs=google"). Absent = none. */
+  xs?: string
 }
 
 /** Funnel steps from the address; anything but a page or a goal is dropped. */
@@ -163,6 +165,7 @@ function readAddress(params: URLSearchParams): ViewState {
     story: params.get('story')?.match(/^[a-z]{1,12}$/)?.[0],
     surge: params.get('sg')?.match(/^\d{9,11}$/) ? Number(params.get('sg')) : undefined,
     xp: params.get('x')?.match(/^[a-z]{2,12}$/)?.[0],
+    xs: params.get('xs')?.match(/^[a-z]{2,12}$/)?.[0],
     xf: params.has('xf') ? params.getAll('xf').flatMap((f) => parseFilterParam(f) ?? []) : undefined,
   }
 }
@@ -193,6 +196,7 @@ export function writeView(v: ViewState): string {
   if (v.story) p.set('story', v.story)
   if (v.surge) p.set('sg', String(v.surge))
   if (v.xp) p.set('x', v.xp)
+  if (v.xs) p.set('xs', v.xs)
   for (const f of v.xf ?? []) p.append('xf', filterParam(f))
   // Data says so only when nothing else in the address does: a bare address
   // opens Live on a site with visits.

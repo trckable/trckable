@@ -12,7 +12,7 @@ import type { Search as Model, SearchRow } from '../types'
 import { SearchChart } from './SearchChart'
 import { fmtK, pct1 } from './numbers'
 
-const cols = [{ h: copy.heads.clicks }, { h: copy.impr, hm: true }, { h: copy.ctr, hm: true }, { h: copy.pos }]
+const cols = [{ h: copy.clicked }, { h: copy.impr, hm: true }, { h: copy.ctr, hm: true }, { h: copy.pos }]
 
 function rowsOf(list: SearchRow[], mono: boolean): CRow[] {
   const max = Math.max(1, ...list.map((r) => r.clicks))

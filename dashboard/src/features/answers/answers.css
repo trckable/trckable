@@ -110,7 +110,7 @@ button.an-pr:hover .path{background:var(--an-fill-2)}
 .an-note{font-size:13px;color:var(--an-muted);display:flex;align-items:center;gap:8px}
 
 /* Buttons and fields shared by the sheet and the settings */
-.an-btn,.an-ico,.an-chip,.an-link,.an-qr,.an-pr,.an-line{border:0;box-shadow:none;font-family:inherit}
+.an-btn,.an-ico,.an-chip,.an-link,.an-qr,.an-pr{border:0;box-shadow:none;font-family:inherit}
 .an-btn{height:40px;padding:0 16px;border-radius:10px;background:var(--an-fill);font-size:13px;font-weight:500;color:var(--an-ink);display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .15s}
 .an-btn:hover:not(:disabled){background:var(--an-fill-2)}
 .an-btn.primary{background:var(--an-accent);color:var(--accent-ink,#0b0d10)}
@@ -172,11 +172,6 @@ button.an-pr:hover .path{background:var(--an-fill-2)}
 @media (max-width:700px){.an-eng dl{grid-template-columns:1fr;gap:2px}.an-eng dd{margin-bottom:8px}}
 
 /* The line in AI & search */
-.an-line{flex-direction:row;align-items:center;gap:10px;width:100%;padding:12px 14px;border-radius:12px;background:var(--an-fill);font-size:13.5px;text-align:left;transition:background .15s}
-.an-line:hover{background:var(--an-fill-2)}
-.an-line span{font-weight:500}
-.an-line small{font-size:12px;color:var(--an-muted)}
-.an-line i{margin-left:auto;font-style:normal;font-size:12px;color:var(--an-faint)}
 
 /* Settings → Answers */
 .an-settings{gap:26px;padding-bottom:8px}

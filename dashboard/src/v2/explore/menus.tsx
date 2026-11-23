@@ -2,12 +2,11 @@
 // the rest (this page's details, the table as a file, a link).
 import { Share2, Trophy } from 'lucide-react'
 import { copy as milestonesCopy } from '../../features/milestones/copy'
-import { Fragment } from 'react'
 import { XGl, XGrab, XMi, XSep } from '../ui/XMenu'
 import { XIco } from '../ui/XIcons'
 import { copy as shareCopy } from '../../features/share/copy'
 import { copy } from './copy'
-import { groups } from './sections'
+import { listedSections } from './sections'
 import { can } from '../../lib/permissions'
 import type { Connected, SavedView, Section } from './types'
 
@@ -15,13 +14,8 @@ export function PickMenu({ section, conn, onPick }: { section: Section; conn: Co
   return (
     <>
       <XGrab />
-      {groups().map((g) => (
-        <Fragment key={g.key}>
-          <XGl>{copy.groups[g.key]}</XGl>
-          {g.items.map((k) => (
-            <XMi key={k} data={{ 'data-xsec': k }} icon={<XIco name={k} />} name={copy.names[k][0]} desc={copy.names[k][1]} on={k === section} tag={k === 'sales' && !conn.rev ? copy.connectTag : undefined} onClick={() => onPick(k)} />
-          ))}
-        </Fragment>
+      {listedSections().map((k) => (
+        <XMi key={k} data={{ 'data-xsec': k }} icon={<XIco name={k} />} name={copy.names[k][0]} desc={copy.names[k][1]} on={k === section} tag={k === 'goals' && !conn.rev ? copy.connectTag : undefined} onClick={() => onPick(k)} />
       ))}
     </>
   )

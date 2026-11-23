@@ -1,6 +1,6 @@
 // Explore's tables. One of people (a bar behind the name, how many, against the usual, the share) and one with columns of
 // its own. Both end in a button when there are more rows than shown: the rest of the list, or the section that holds it.
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { fmtInt, fmtPct } from '../../lib/format'
 import { mult } from '../briefing/model'
 import { copy } from '../explore/copy'
@@ -12,15 +12,13 @@ export interface More {
   len: number
   shown: number
   onAll: () => void
-  /** A section to go to instead of listing everything here. */
-  go?: { label: string; run: () => void; section?: string }
 }
 
 function XMore({ more }: { more: More }) {
   if (more.len <= more.shown) return null
   return (
-    <button type="button" className="mk-more" data-xall={more.go ? undefined : '1'} data-xsec={more.go?.section} onClick={more.go ? more.go.run : more.onAll}>
-      {more.go ? `${more.go.label} ›` : copy.showAll(more.len)}
+    <button type="button" className="mk-more" data-xall="1" onClick={more.onAll}>
+      {copy.showAll(more.len)}
     </button>
   )
 }
@@ -63,10 +61,9 @@ export interface XTableProps {
   /** Writes an amount in the site's currency: with it, rows that carry sales get their conversion and revenue. */
   money?: (minor: number) => string
   onAll: () => void
-  go?: { label: string; run: () => void; section?: string }
 }
 
-export function XTable({ rows, head, unit = copy.people, mono, flags, mark, selected, onPick, dim, limit, of, money, onAll, go }: XTableProps) {
+export function XTable({ rows, head, unit = copy.people, mono, flags, mark, selected, onPick, dim, limit, of, money, onAll }: XTableProps) {
   const paid = !!money && rows.some((r) => r.rev !== undefined)
   const signups = rows.some((r) => r.su !== undefined)
   const left = rows.some((r) => r.br !== undefined)
@@ -122,7 +119,7 @@ export function XTable({ rows, head, unit = copy.people, mono, flags, mark, sele
           </button>
         )
       })}
-      <XMore more={{ len: rows.length, shown: limit, onAll, go }} />
+      <XMore more={{ len: rows.length, shown: limit, onAll }} />
     </div>
   )
 }
@@ -143,6 +140,8 @@ export interface CRow {
   mono?: boolean
   /** A tap on the row, as a filter would: the row is a button. */
   onPick?: () => void
+  /** Opened in place under the row, the width of the table. */
+  below?: ReactNode
   c: ReactNode[]
 }
 
@@ -175,14 +174,18 @@ export function XCols({ first, cols, rows, xc, xcm, limit, onAll }: { first: str
             ))}
           </>
         )
-        return r.onPick ? (
-          <button key={r.key} type="button" className="xrw" onClick={r.onPick}>
+        const row = r.onPick ? (
+          <button type="button" className="xrw" aria-expanded={r.below ? true : undefined} onClick={r.onPick}>
             {inner}
           </button>
         ) : (
-          <div key={r.key} className="xrw">
-            {inner}
-          </div>
+          <div className="xrw">{inner}</div>
+        )
+        return (
+          <Fragment key={r.key}>
+            {row}
+            {r.below}
+          </Fragment>
         )
       })}
       <XMore more={{ len: rows.length, shown: limit, onAll }} />

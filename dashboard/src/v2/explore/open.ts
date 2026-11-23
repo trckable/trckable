@@ -2,7 +2,7 @@
 // what it narrows by (?xf=), so a link opens it and Back leaves it.
 import type { Filter } from '../../lib/api'
 import { readView, setView, type ViewState } from '../../lib/url'
-import { isTab, type Tab } from './sections'
+import { isTab, movedTo, type Tab } from './sections'
 
 /** Open on a table, narrowed by some filters (the page's own when none are given). */
 export function openExplore(tab: Tab = 'overview', filters?: Filter[]) {
@@ -17,13 +17,25 @@ export function routeFiltered(view: Pick<ViewState, 'xp' | 'filters'>): boolean 
   return true
 }
 
+/** An address that names a table that was folded into another (?x=search) is rewritten to where it went; Google's old Search opens Sources with its panel. */
+export function routeMoved(view: Pick<ViewState, 'xp'>): boolean {
+  const to = movedTo(view.xp)
+  if (!to) return false
+  setView({ xp: to.tab, xs: to.source }, { replace: true })
+  return true
+}
+
 /** What the address asks the panel to show: nothing while it is shut. */
 export interface Ask {
   tab: Tab
   filters: Filter[]
+  /** The source whose details stand beside Sources' table. */
+  source?: string
 }
 
-export function askOf(view: Pick<ViewState, 'xp' | 'xf' | 'filters'>): Ask | null {
+export function askOf(view: Pick<ViewState, 'xp' | 'xf' | 'xs' | 'filters'>): Ask | null {
   if (!view.xp) return null
-  return { tab: isTab(view.xp) ? view.xp : 'overview', filters: view.xf ?? view.filters }
+  const moved = movedTo(view.xp)
+  const tab = moved?.tab ?? (isTab(view.xp) ? view.xp : 'overview')
+  return { tab, filters: view.xf ?? view.filters, source: moved?.source ?? (tab === 'sources' ? view.xs : undefined) }
 }

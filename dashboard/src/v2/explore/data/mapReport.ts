@@ -3,7 +3,6 @@ import type { KPIs, Report, Result, Row as ApiRow, ScrollReport } from '../../..
 import type { ISODate } from '../../../lib/dates'
 import { countryName, fmtDuration, fmtFixed, fmtInt, fmtPct, languageName, zoneName } from '../../../lib/format'
 import { plainSpan } from '../../../lib/plainSpan'
-import { channelLabel } from '../../../lib/palette'
 import { baseEnough, tooFew } from '../../../lib/thin'
 import { compareOf, whyNot } from '../../briefing/compare'
 import { sourceName } from '../../briefing/model'
@@ -69,7 +68,6 @@ export function mapOverview(r: Report, o: { money?: (minor: number) => string; u
     col: 'var(--mk-blue)',
     st: worse ? 'dn' : '',
   })
-  const rows = (dim: string, name: (v: string) => string) => rowsOf(cur.dims[dim], prev?.dims[dim], prev?.kpis.visitors, name)
   return {
     kcs,
     visits: Object.values(mapVisits(cur, base ? prev : undefined)),
@@ -77,11 +75,14 @@ export function mapOverview(r: Report, o: { money?: (minor: number) => string; u
     shape: shapeOf(r, o.against),
     down: o.uptime?.down ?? [],
     lost: o.uptime?.pct == null ? null : o.uptime.lost,
-    pages: rows('page', (v) => v),
-    // The channels, as the Sources tab lists them: a direct visit has no referrer, so a list of referrers would leave it out.
-    sources: rows('channel', channelLabel),
     of: cur.kpis.visitors,
   }
+}
+
+/** The uptime as a card of Site health, beside the speed cards. */
+export function uptimeXkc(u: Uptime | null): Xkc {
+  const k = uptimeKc(u)
+  return { icon: k.icon, label: k.label, val: k.val, tag: '', tone: k.st, detail: k.note.t }
 }
 
 function uptimeKc(u: Uptime | null): Kc {
@@ -114,8 +115,7 @@ const LEAVES = new Set(['entry_page', 'exit_page'])
 
 const TABLES: Partial<Record<Tab, TableCfg>> = {
   pages: { key: 'page', dim: 'page', name: (v) => v },
-  sources: { key: 'channel', dim: 'channel', name: channelLabel },
-  referrers: { key: 'referrer', dim: 'referrer', name: (v) => host(v) || copy.direct },
+  sources: { key: 'referrer', dim: 'referrer', name: (v) => host(v) || copy.direct },
   utm: { key: 'campaign', dim: 'campaign', name: (v) => v },
   countries: { key: 'country', dim: 'country', name: countryName, code: true },
   devices: { key: 'device', dim: 'device', name: (v) => v },
@@ -139,29 +139,40 @@ const NO_SALE = new Set(['page', 'group', 'exit_page', 'hostname'])
 /** Signups are counted for the visit's own dimensions; a page or a section is not one. */
 const NO_SIGNUP = new Set(['page', 'group', 'hostname'])
 
+/** A table's rows from a period's report. Sources lists each referring site, and Direct too: a direct visit has no referrer, so it comes from the channels. */
+function withDirect(tab: Tab, p: Result): ApiRow[] | null | undefined {
+  const rows = p.dims[TABLES[tab]?.key ?? '']
+  if (tab !== 'sources') return rows
+  if (!rows) return rows
+  const direct = (p.dims.channel ?? []).filter((x) => x.value === 'Direct' && x.visitors > 0).map((x) => ({ ...x, value: '' }))
+  return [...rows.filter((x) => x.value !== ''), ...direct].sort((a, b) => b.visitors - a.visitors)
+}
+
 /** A table of people for one tab: the dimension's rows against the period before, each said in its own words. */
 export function mapTable(tab: Tab, r: Report): Table {
   const t = TABLES[tab]
   if (!t) return { rows: [], of: r.current.kpis.visitors }
+  const cur = withDirect(tab, r.current) ?? []
+  const prev = r.previous ? withDirect(tab, r.previous) : undefined
   // Only the breakdowns the server attributes sales to carry them (not regions, cities, languages, screens...): a column of zeros there would say nobody paid.
-  const attributed = (r.current.dims[t.key] ?? []).some((x) => x.revenue !== undefined) || !!r.current.revenue_dims?.[t.key]
+  const attributed = cur.some((x) => x.revenue !== undefined) || !!r.current.revenue_dims?.[t.key]
   const sales = !!r.current.money && !NO_SALE.has(t.key) && attributed
   // The rows carry what they earned; the top list covers a row the report left without it.
   const paid = new Map<string, ApiRow>()
   if (sales) {
     for (const x of r.current.revenue_dims?.[t.key] ?? []) paid.set(x.value, x)
-    for (const x of r.current.dims[t.key] ?? []) if (x.revenue !== undefined) paid.set(x.value, x)
+    for (const x of cur) if (x.revenue !== undefined) paid.set(x.value, x)
   }
   const signups = !!r.current.signup && !NO_SIGNUP.has(t.key)
-  const joined = new Map((r.current.dims[t.key] ?? []).map((x) => [x.value, x.signups ?? 0]))
-  const bounced = LEAVES.has(t.key) ? new Map((r.current.dims[t.key] ?? []).map((x) => [x.value, x])) : null
+  const joined = new Map(cur.map((x) => [x.value, x.signups ?? 0]))
+  const bounced = LEAVES.has(t.key) ? new Map(cur.map((x) => [x.value, x])) : null
   const extra = (v: string): Partial<Row> => ({
     ...(bounced ? { br: (bounced.get(v)?.sessions ?? 0) > 0 ? bounced.get(v)?.bounce_rate ?? 0 : undefined } : {}),
     ...(t.code ? { code: v } : {}),
     ...(signups ? { su: joined.get(v) ?? 0 } : {}),
     ...(sales ? { cust: paid.get(v)?.customers ?? 0, rev: paid.get(v)?.revenue ?? 0 } : {}),
   })
-  const rows = rowsOf(r.current.dims[t.key], r.previous?.dims[t.key], r.previous?.kpis.visitors, t.name, extra)
+  const rows = rowsOf(cur, prev, r.previous?.kpis.visitors, t.name, extra)
   const how = t.key === 'device' ? howParts(r.current.dims.device_app) : []
   return { rows, dim: t.dim, of: r.current.kpis.visitors, ...(how.length ? { how } : {}) }
 }

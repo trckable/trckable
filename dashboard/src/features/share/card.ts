@@ -1,3 +1,4 @@
+import { sectionNamed } from '../../v2/explore/sections'
 import { lang } from '../../i18n/lang'
 import formats from './formats.json'
 
@@ -100,8 +101,9 @@ export const comparing = (l: Pick<Look, 'compare' | 'period'>) => l.compare && l
 export type Mode = 'picture' | 'text'
 
 /** The gallery topic an Explore section shares; the sections with no picture have none. */
-const SECTION_TOPIC: Record<string, Topic> = { changed: 'changed', overview: 'overview', pages: 'pages', sources: 'sources', search: 'search', places: 'places', tech: 'tech', results: 'goals', sales: 'sales', ai: 'ai' }
-export const topicOfSection = (section: string): Topic | undefined => SECTION_TOPIC[section]
+const SECTION_TOPIC: Record<string, Topic> = { changed: 'changed', overview: 'overview', pages: 'pages', sources: 'sources', audience: 'places', goals: 'goals', web: 'ai' }
+/** An old section id (search, places, tech, results, sales...) is read as the section it became. */
+export const topicOfSection = (section: string): Topic | undefined => SECTION_TOPIC[sectionNamed(section) ?? section]
 
 /** The card's period for the page's: a day is the last 24 hours, a week or a month is itself, anything longer is a month. */
 const PAGE_PERIOD = new Map<string, Period>([['today', '24h'], ['yesterday', '24h'], ['7d', '7d']])

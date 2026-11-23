@@ -92,6 +92,9 @@ export default function PanelContent(p: ContentProps) {
     addCustom: act.addCustom,
     removeCustom: act.removeCustom,
     pageDetails: a.pageDetails,
+    data: c,
+    source: p.ask.source,
+    setSource: act.source,
   }
   // A click in the panel that is not in a menu shuts the menu; one on the dim of a phone's sheet does too.
   const away = (e: MouseEvent) => {

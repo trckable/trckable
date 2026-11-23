@@ -26,9 +26,9 @@ export function ExplorePage(p: Omit<ContentProps, 'ask' | 'full'>) {
     ChangedChart.preload()
     OverviewChart.preload()
   }, [])
-  const { xp, xf, filters } = p.view
+  const { xp, xf, xs, filters } = p.view
   const details = pageDetails.use()
-  const ask = askOf({ xp: xp ?? 'changed', xf, filters }) ?? { tab: 'changed' as const, filters: [] }
+  const ask = askOf({ xp: xp ?? 'changed', xf, xs, filters }) ?? { tab: 'changed' as const, filters: [] }
   return (
     <>
     <section className={`xp xpage on${wide ? ' full' : ''}`} id="xp" aria-label={copy.title}>

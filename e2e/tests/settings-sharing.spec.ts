@@ -123,7 +123,7 @@ test('Revenue: with it off the server never sends the figure; with it on the lin
     await view.goto(`${link(url)}?x=overview`)
     await expect(view.locator('#xp.on')).toBeVisible({ timeout: 20_000 })
     await expect(view.locator('.xrail [data-xsec="pages"]')).toBeVisible()
-    await expect(view.locator('.xrail [data-xsec="sales"]')).toHaveCount(want ? 1 : 0)
+    await expect(view.locator('.xrail [data-xsec="goals"]')).toHaveCount(want ? 1 : 0)
     await expect(view.locator('.xrail .xtag')).toHaveCount(0)
     await expect(view.getByRole('button', { name: 'More' })).toHaveCount(0)
     await expect(view.locator('.xmore')).toHaveCount(0)

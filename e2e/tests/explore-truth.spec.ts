@@ -113,8 +113,6 @@ async function expectTable(page: Page, want: [string, number][], people = 37) {
 const tableOf: [string, [string, number][]][] = [
   ['pages', [['Home page', 24], ['/pricing', 21], ['/blog', 4]]],
   ['exits', [['/pricing', 21], ['Home page', 12], ['/blog', 4]]],
-  ['sources', [['Search', 18], ['Direct', 7], ['Social', 5], ['AI assistants', 4], ['Email', 3]]],
-  ['referrers', [['google.com', 18], ['news.ycombinator.com', 5], ['chatgpt.com', 4]]],
   ['utm', [['launch', 3]]],
   ['countries', [['Germany', 21], ['United States', 9], ['United Kingdom', 7]]],
   ['regions', [['Berlin', 12], ['England', 7], ['Bavaria', 6], ['California', 5], ['Texas', 4], ['Hesse', 3]]],
@@ -131,7 +129,33 @@ for (const [tab, want] of tableOf) {
   })
 }
 
-test('the overview cards and its two lists equal the hand count', async ({ page }) => {
+test('sources is the hand count: each referring site, and Direct, with their people', async ({ page }) => {
+  await open(page, 'sources')
+  const rows = card(page).locator('.xt .xrw')
+  await expect(rows.first()).toBeVisible()
+  const got = await rows.evaluateAll((els) => els.map((el) => [el.querySelector('.mk-bar > span')!.textContent!.trim(), Number(el.querySelectorAll('.mk-n')[2].textContent!.replace(/[^\d]/g, ''))]))
+  expect(got).toEqual([['google.com', 18], ['Direct', 7], ['news.ycombinator.com', 5], ['chatgpt.com', 4]])
+})
+
+test('looking at just one source filters the period, with the standard chip, and the cross restores it', async ({ page }) => {
+  await open(page, 'sources')
+  const rows = card(page).locator('.xt .xrw')
+  await expect(rows).toHaveCount(4)
+  await rows.filter({ hasText: 'google.com' }).click()
+  // Google's details open under its row, inside the table card.
+  const panel = card(page).locator('[data-xpanel="google"]')
+  await expect(panel).toBeVisible()
+  await panel.getByRole('button', { name: 'Look at just this source' }).click()
+  await expect(page.locator('#xp .xchip2')).toContainText('Source: Google')
+  await expect(page).toHaveURL(/xf=referrer/)
+  await expect(rows).toHaveCount(1)
+  await expect(rows.first().locator('.mk-n').nth(2)).toHaveText('18')
+  await page.locator('#xp .xchip2 button').click()
+  await expect(page.locator('#xp .xchip2')).toHaveCount(0)
+  await expect(rows).toHaveCount(4)
+})
+
+test('the overview cards equal the hand count', async ({ page }) => {
   await open(page, 'overview')
   const cards = card(page).locator('.sumrow .sum')
   await expect(cards).toHaveCount(7) // the four numbers, then the three of the visits
@@ -148,34 +172,10 @@ test('the overview cards and its two lists equal the hand count', async ({ page 
   await expect(third.locator('.sum-d')).toHaveText('checks are off')
   // Bounced: 25 of 37 visits saw one page and signed nothing up (68%).
   await expect(cards.nth(3).locator('.sum-v')).toHaveText('68%')
-  const lists = card(page).locator('.x2 > div')
-  const pages = lists.nth(0).locator('.xrw')
-  await expect(pages).toHaveCount(3)
-  await expect(pages.nth(0).locator('.mk-n')).toHaveText('24')
-  await expect(pages.nth(0).locator('.sh')).toHaveText('65%')
-  await expect(pages.nth(2).locator('.mk-n')).toHaveText('4')
-  const sources = lists.nth(1).locator('.xrw')
-  await expect(sources.nth(0).locator('.mk-bar > span')).toHaveText('Search')
-  await expect(sources.nth(0).locator('.mk-n')).toHaveText('18')
-  await expect(sources.nth(0).locator('.sh')).toHaveText('49%')
-})
-
-test('the lines against the period before are the changes of the hand count', async ({ page }) => {
-  await open(page, 'referrers')
-  const got = Object.fromEntries((await lines(page)).map((x) => [x.name, x.vs]))
-  // google.com: 18 now, 10 before (80% more); Hacker News: 5 and 5; chatgpt.com: nobody before.
-  expect(got['google.com']).toBe('▲ 80%')
-  expect(got['news.ycombinator.com']).toBe('≈ same')
-  expect(got['chatgpt.com']).toBe('–')
-  await open(page, 'sources')
-  const channels = Object.fromEntries((await lines(page)).map((x) => [x.name, x.vs]))
-  // Direct: 7 now, 8 before: inside what is usual.
-  expect(channels['Direct']).toBe('≈ same')
-  expect(channels['Search']).toBe('▲ 80%')
 })
 
 test('a tab nothing was recorded for says so, with no row of zeros', async ({ page }) => {
-  for (const tab of ['languages', 'screens', 'groups', 'bots', 'outbound']) {
+  for (const tab of ['languages', 'screens', 'groups', 'outbound']) {
     await open(page, tab)
     await expect(card(page).locator('.xt .xrw'), `${tab} lists nothing`).toHaveCount(0)
     await expect(card(page).locator('.xempty, .xe'), `${tab} says there is nothing`).toBeVisible()
@@ -198,9 +198,11 @@ test('what needs payments shows no figures that are not there', async ({ page })
     await expect(lock.locator('.lkc-s, .lkc-tag')).toHaveCount(0)
     await expect(lock).not.toContainText(/\$\s?\d/)
   }
-  await open(page, 'search')
-  await expect(card(page).locator('.lkc')).toBeVisible()
-  await expect(card(page).locator('.lkc .lkc-s')).toHaveCount(0)
+  await open(page, 'sources')
+  await card(page).locator('.xrw', { hasText: 'google.com' }).click()
+  const panel = card(page).locator('[data-xpanel="google"]')
+  await expect(panel.locator('.lkc')).toBeVisible()
+  await expect(panel.locator('.lkc .lkc-s')).toHaveCount(0)
 })
 
 test('goals and the funnel count the people who got there', async ({ page }) => {
