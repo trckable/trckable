@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"log/slog"
 	"math"
 	"net/http"
 	"net/url"
@@ -201,7 +202,13 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 	var first time.Time
 	if v.Get("period") == "all" {
 		// All time begins at the site's first data, imported history included, never at its creation.
-		if day, err := q.FirstDay(r.Context(), site, si.Timezone); err == nil && day != "" {
+		day, err := a.firstDayOf(r.Context(), q, site, si.Timezone)
+		if err != nil {
+			slog.Error("share card: first day", "site", site, "err", err)
+			fail(w, http.StatusServiceUnavailable, "the site's first day could not be read")
+			return cardNumbers{}, false
+		}
+		if day != "" {
 			first, _ = time.ParseInLocation(time.DateOnly, day, loc)
 		}
 	}
@@ -220,8 +227,8 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 	params := parsed.Params
 	if p.hours > 0 {
 		// The last 24 hours up to now: the hour still running counts, as on the dashboard.
-		end := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 0, 0, 0, loc).Add(time.Hour)
-		params.From, params.To, params.Bucket = end.Add(-time.Duration(p.hours)*time.Hour).UTC(), end.UTC(), "hour"
+		from, to := last24Hours(now)
+		params.From, params.To, params.Bucket = from.UTC(), to.UTC(), "hour"
 	}
 	res, err := a.cachedReport(ask, q, params)
 	if err != nil {

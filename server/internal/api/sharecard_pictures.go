@@ -113,13 +113,15 @@ func (a *API) changedPicture(c cardReading, n *cardNumbers, hours bool) {
 	d.rows = changeRows(l, ch.causes)
 }
 
-// previousReport is the period just before, the same length (hours: the last 24 hours, so the 24 before them). light: only its totals, with no money, goals or groups to scan.
+// previousReport is the period just before, the same length (hours: the last 24 hours, so the 24 before them). A period that includes now is cut at the same elapsed point (soFar). light: only its totals, with no money, goals or groups to scan.
 func (a *API) previousReport(c cardReading, hours, light bool) *query.Result {
 	before := c.params
 	before.From, before.To = previousStart(c.params.From, c.params.To, c.loc).UTC(), c.params.From
 	if hours {
 		before.From = c.params.From.Add(-c.params.To.Sub(c.params.From))
 	}
+	// A period still running is told against the same stretch of the one before, as the dashboard does.
+	before, _ = a.soFar(c.params, before)
 	if light {
 		before.Revenue, before.Goals, before.Groups, before.PageGoals, before.Limit = false, false, nil, nil, 1
 	}

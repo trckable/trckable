@@ -1,1 +1,3 @@
 Share cards tell the same numbers as the dashboard: the last 7 and 30 days end today, the last 24 hours count the hour still running (a site with visitors never reads 0), and All time begins at the site's first recorded data, imported history included, instead of the day the site was added.
+
+The comparison on a card ("+12% vs previous 7 days") is told the dashboard's way: a period still running is set against the same stretch of the one before, not all of it. The Share dialog's period hint now says the period runs up to now. On the demo data, Engaged reads 0 because every seeded visit is a single page.

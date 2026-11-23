@@ -61,20 +61,6 @@ func cardPost(n cardNumbers, p cardPeriod) string {
 // the one list. A custom range that reaches past today is cut back to it.
 // compare is whether a comparison is asked for: all time has nothing before it.
 func resolvePeriod(l *cardLang, name, fromS, toS string, now, first time.Time, compare bool) cardPeriod {
-	loc := now.Location()
-	day := func(t time.Time) time.Time { return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc) }
-	today := day(now)
-	span := func(p cardPeriod, from, to time.Time) cardPeriod {
-		if to.After(today) {
-			to = today
-		}
-		if from.After(to) {
-			from = to
-		}
-		p.from, p.to = from, to
-		p.days = int(to.Sub(from).Hours()/24+0.5) + 1
-		return p
-	}
 	vs := func(p cardPeriod) cardPeriod {
 		if compare && p.days == 1 {
 			p.vs = l.prevDay
@@ -83,37 +69,30 @@ func resolvePeriod(l *cardLang, name, fromS, toS string, now, first time.Time, c
 		}
 		return p
 	}
-	switch name {
-	case "24h":
+	if name == "24h" {
 		p := cardPeriod{days: 2, hours: 24, label: l.last24, post: l.post24}
 		if compare {
 			p.vs = l.prev24
 		}
 		return p
+	}
+	from, to, ok := periodDays(name, fromS, toS, now, first)
+	if !ok {
+		name = "7d"
+		from, to, _ = periodDays(name, "", "", now, first)
+	}
+	p := cardPeriod{from: from, to: to, days: int(to.Sub(from).Hours()/24+0.5) + 1}
+	switch name {
 	case "all":
-		from := today
-		if !first.IsZero() {
-			from = day(first.In(loc))
-		}
-		p := span(cardPeriod{post: l.postAll}, from, today)
+		p.post = l.postAll
 		p.label = fmt.Sprintf(l.since, l.monthYear(p.from))
 		return p
 	case "custom":
-		from, e1 := time.ParseInLocation("2006-01-02", fromS, loc)
-		to, e2 := time.ParseInLocation("2006-01-02", toS, loc)
-		if e1 == nil && e2 == nil && !from.After(to) && !from.After(today) && to.Sub(from) < 20*366*24*time.Hour {
-			p := span(cardPeriod{}, from, to)
-			p.label = l.datesLabel(p.from, p.to)
-			p.post = fmt.Sprintf(l.postRange, p.label)
-			return vs(p)
-		}
+		p.label = l.datesLabel(p.from, p.to)
+		p.post = fmt.Sprintf(l.postRange, p.label)
+		return vs(p)
 	}
-	sp := sharePeriods[0]
-	if name == "30d" {
-		sp = sharePeriods[1]
-	}
-	p := span(cardPeriod{}, sp.start(today), today)
 	p.label = l.datesLabel(p.from, p.to)
-	p.post = fmt.Sprintf(l.postDays, sp.Days)
+	p.post = fmt.Sprintf(l.postDays, p.days)
 	return vs(p)
 }
