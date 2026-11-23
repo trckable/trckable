@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"log/slog"
 	"math"
 	"net/http"
 	"net/url"
@@ -19,7 +20,7 @@ import (
 //
 //	GET /api/v1/sites/{site}/card
 //	t        overview | numbers | grid | leaderboard (the top pages) | sources | places | browsers | devices (top five with bars) | toppage | topsource | topplace (one hero) | changed | search | ai | goals | sales (a title, number cards and lines) | milestone (the biggest of the period) | bestday (the day with the most people) (default overview). numbers is the overview without its chart, grid is four numbers, two by two
-//	period   24h | 7d | 30d | all | custom (default 7d); custom takes from and to (YYYY-MM-DD). A period ends on the last full day or hour
+//	period   24h | 7d | 30d | all | custom (default 7d); custom takes from and to (YYYY-MM-DD). A period ends today (or this hour), as the dashboard's does; all time begins at the site's first data
 //	compare  1: the change against the period just before, in a pill (off by default; not for all time)
 //	metric   visitors | pageviews | engaged | revenue (default visitors)
 //	stats    up to three small numbers under the chart, comma-separated (see cardStatIDs); default engaged,avgtime,country
@@ -202,7 +203,20 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 	}
 	now := a.Now().In(loc)
 	l := cardLangOf(v.Get("lang"))
-	p := resolvePeriod(l, v.Get("period"), v.Get("from"), v.Get("to"), now, time.Unix(si.CreatedAt, 0), v.Get("compare") == "1")
+	var first time.Time
+	if v.Get("period") == "all" {
+		// All time begins at the site's first data, imported history included, never at its creation.
+		day, err := a.firstDayOf(r.Context(), q, site, si.Timezone)
+		if err != nil {
+			slog.Error("share card: first day", "site", site, "err", err)
+			fail(w, http.StatusServiceUnavailable, "the site's first day could not be read")
+			return cardNumbers{}, false
+		}
+		if day != "" {
+			first, _ = time.ParseInLocation(time.DateOnly, day, loc)
+		}
+	}
+	p := resolvePeriod(l, v.Get("period"), v.Get("from"), v.Get("to"), now, first, v.Get("compare") == "1")
 	reading := cardReading{r: r, q: q, loc: loc, site: site, domain: si.Domain}
 	ask := r.Clone(r.Context())
 	if p.hours > 0 {
@@ -216,9 +230,9 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 	}
 	params := parsed.Params
 	if p.hours > 0 {
-		// The last 24 full hours: the hour now is still running, so it is left out.
-		end := now.Truncate(time.Hour)
-		params.From, params.To, params.Bucket = end.Add(-time.Duration(p.hours)*time.Hour).UTC(), end.UTC(), "hour"
+		// The last 24 hours up to now: the hour still running counts, as on the dashboard.
+		from, to := last24Hours(now)
+		params.From, params.To, params.Bucket = from.UTC(), to.UTC(), "hour"
 	}
 	res, err := a.cachedReport(ask, q, params)
 	if err != nil {

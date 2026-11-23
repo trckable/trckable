@@ -126,13 +126,7 @@ func (a *API) parse(w http.ResponseWriter, r *http.Request, siteID string, allow
 		// A period still running is told against the same stretch of the one
 		// before (today at 14:00 against yesterday up to 14:00), not all of it.
 		if v.Get("sofar") == "1" {
-			now := a.Now()
-			if el := now.Sub(params.From); el > 0 && now.Before(params.To) && p.From.Add(el).Before(p.To) {
-				whole := p
-				whole.Daily = false
-				prevFull = &whole
-				p.To = p.From.Add(el)
-			}
+			p, prevFull = a.soFar(params, p)
 		}
 		p.Daily = false
 		prev = &p
@@ -305,6 +299,21 @@ func dateRange(fromS, toS string, today time.Time) (time.Time, time.Time, error)
 		return from, to, fmt.Errorf("range longer than 20 years")
 	}
 	return from, to.AddDate(0, 0, 1), nil
+}
+
+// soFar cuts the period before (prev) of a period still running (cur) at the
+// same elapsed point: today at 14:00 against yesterday up to 14:00. whole is
+// the full period before, for a chart's dashed line, or nil when nothing was
+// cut. The dashboard's comparison and the cards' are this one calculation.
+func (a *API) soFar(cur, prev query.Params) (cut query.Params, whole *query.Params) {
+	now := a.Now()
+	if el := now.Sub(cur.From); el > 0 && now.Before(cur.To) && prev.From.Add(el).Before(prev.To) {
+		full := prev
+		full.Daily = false
+		whole = &full
+		prev.To = prev.From.Add(el)
+	}
+	return prev, whole
 }
 
 // previousStart is where the period just before from..to begins: the same

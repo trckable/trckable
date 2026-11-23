@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -59,6 +60,7 @@ type reportCache struct {
 	sites   map[string]*siteChanges
 	epoch   uint64            // moves when every site's reports are dropped at once
 	onPurge func(site string) // told when a site (or "": every site) is dropped
+	first   map[string]string // the day of a site's first data, by site and zone; only a day that exists is kept
 }
 
 type cacheEntry struct {
@@ -90,7 +92,7 @@ type change struct {
 }
 
 func newReportCache(max int) *reportCache {
-	return &reportCache{max: max, m: map[string]cacheEntry{}, sites: map[string]*siteChanges{}}
+	return &reportCache{max: max, m: map[string]cacheEntry{}, sites: map[string]*siteChanges{}, first: map[string]string{}}
 }
 
 // reaches reports whether a change can alter what the report covers: its own
@@ -149,6 +151,7 @@ func (c *reportCache) touched(site string, lo, hi int64) {
 	defer c.mu.Unlock()
 	ch := change{lo: lo, hi: hi}
 	c.record(site, ch)
+	c.dropFirst(site, lo)
 	for k, e := range c.m {
 		if e.site == site && !e.live && ch.reaches(e.from, e.to) {
 			delete(c.m, k)
@@ -160,6 +163,7 @@ func (c *reportCache) purgeSite(site string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.record(site, change{all: true})
+	c.dropFirst(site, 0)
 	c.site(site).purges++
 	if c.onPurge != nil {
 		c.onPurge(site)
@@ -177,6 +181,7 @@ func (c *reportCache) purgeAll() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.epoch++
+	clear(c.first)
 	if c.onPurge != nil {
 		c.onPurge("")
 	}
@@ -286,4 +291,45 @@ func (a *API) readReport(ctx context.Context, read func(context.Context) (any, e
 	}
 	a.cache.m[key] = cacheEntry{res: res, exp: now.Add(ttl), site: p.Site, ver: ver, live: live, made: now, from: from, to: to}
 	return res, nil
+}
+
+// dropFirst forgets the site's first day when data as old as it (lo, unix ms)
+// arrives: later data cannot move it. The two days of slack cover any zone.
+func (c *reportCache) dropFirst(site string, lo int64) {
+	for k, day := range c.first {
+		if !strings.HasPrefix(k, site+"|") {
+			continue
+		}
+		if t, err := time.Parse(time.DateOnly, day); err != nil || lo < t.Add(48*time.Hour).UnixMilli() {
+			delete(c.first, k)
+		}
+	}
+}
+
+// firstDayOf is the day of the site's first data, in its zone ("" when it has
+// none), kept until data that old arrives so that an all-time card does not
+// read the whole history on every event.
+func (a *API) firstDayOf(ctx context.Context, q *query.Q, site, tz string) (string, error) {
+	a.init()
+	key := site + "|" + tz
+	a.cache.mu.Lock()
+	day, ok := a.cache.first[key]
+	sc := a.cache.site(site)
+	seq, purges, epoch := sc.seq, sc.purges, a.cache.epoch
+	a.cache.mu.Unlock()
+	if ok {
+		return day, nil
+	}
+	day, err := q.FirstDay(ctx, site, tz)
+	if err != nil || day == "" {
+		return day, err
+	}
+	// Kept only when nothing as old as that day was written, and nothing purged, while it was read.
+	t, perr := time.Parse(time.DateOnly, day)
+	a.cache.mu.Lock()
+	defer a.cache.mu.Unlock()
+	if perr == nil && a.cache.epoch == epoch && a.cache.site(site).purges == purges && !a.cache.changedSince(site, seq, 0, t.Add(48*time.Hour).UnixMilli()) {
+		a.cache.first[key] = day
+	}
+	return day, nil
 }

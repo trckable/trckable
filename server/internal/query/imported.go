@@ -209,3 +209,29 @@ func (q Q) FirstRecordedDay(ctx context.Context, site, tz string) (string, error
 	}
 	return first.Time.In(loc).Format(time.DateOnly), nil
 }
+
+// FirstDay is the day (in the zone) of the site's first data of any kind,
+// recorded or imported (events from an import, and days brought in from
+// another tool), or "" when there is none. All time begins here.
+func (q Q) FirstDay(ctx context.Context, site, tz string) (string, error) {
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		loc = time.UTC
+	}
+	var first, day sql.NullTime
+	if err := q.DB.QueryRowContext(ctx, `SELECT min(ts) FROM events WHERE site_id = ?`, site).Scan(&first); err != nil {
+		return "", err
+	}
+	if err := q.DB.QueryRowContext(ctx, `SELECT min(day) FROM imported_daily WHERE site_id = ? AND dim = 'total'`, site).Scan(&day); err != nil {
+		return "", err
+	}
+	out := ""
+	if first.Valid {
+		out = first.Time.In(loc).Format(time.DateOnly)
+	}
+	// An imported day is a calendar date already, not an instant: read as it is.
+	if d := day.Time.Format(time.DateOnly); day.Valid && (out == "" || d < out) {
+		out = d
+	}
+	return out, nil
+}

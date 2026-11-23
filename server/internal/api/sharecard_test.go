@@ -354,6 +354,9 @@ func TestCardOverviewPictures(t *testing.T) {
 	noOutbound(t, g)
 	owner := client()
 	g.setup(t, owner)
+	if raceEnabled {
+		owner.Timeout = 30 * time.Second // the big pictures are drawn slowly under the race detector
+	}
 	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
 	for _, tpl := range []string{"numbers", "grid"} {
 		for shape, want := range map[string]image.Point{"link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}} {
@@ -422,8 +425,11 @@ func TestCardTopicModels(t *testing.T) {
 	// None: every picture says what it needs, none shows a zero or a dash.
 	var none cardNumbers
 	none.listsOf(&query.Result{})
-	for _, tpl := range []string{"overview", "numbers", "leaderboard", "sources", "places", "browsers", "devices", "toppage", "topsource", "topplace"} {
-		spec = cards.Spec{Big: "0", Rows: nil}
+	for _, tpl := range []string{"overview", "numbers", "grid", "leaderboard", "sources", "places", "browsers", "devices", "toppage", "topsource", "topplace"} {
+		spec = cards.Spec{Template: tpl, Big: "0", Rows: nil}
+		if tpl == "grid" {
+			spec.Stats = []cards.Stat{{Value: "0"}} // the grid's four zeros
+		}
 		none.pictureOf(&spec, tpl)
 		if spec.Big != "Needs a visit in this period" || len(spec.Rows) != 0 || len(spec.Stats) != 0 {
 			t.Errorf("%s with none: %+v", tpl, spec)

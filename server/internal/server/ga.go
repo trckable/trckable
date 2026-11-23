@@ -25,7 +25,11 @@ func (g gaSink) Replace(ctx context.Context, site, from, to string, rows []ga.Ro
 	for i, r := range rows {
 		out[i] = writer.ImportedRow{Day: r.Day, Dim: r.Dim, Value: r.Value, Sessions: r.Sessions, Users: r.Users, Views: r.Views}
 	}
-	return w.ReplaceImported(ctx, site, from, to, out)
+	err := w.ReplaceImported(ctx, site, from, to, out)
+	if g.s.api != nil {
+		g.s.api.PurgeSite(site) // the first day of all time may have moved, whoever called
+	}
+	return err
 }
 
 func (g gaSink) Have(ctx context.Context, site, from, to string) (bool, error) {
