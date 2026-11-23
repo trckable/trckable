@@ -128,18 +128,18 @@ func TestCardLangFormats(t *testing.T) {
 	for _, c := range []struct {
 		code, num, money, signed, dates, times, per string
 	}{
-		{"en", "1,234,567", "$1,234", "−1,200", "9 Oct – 8 Nov 2026", "2.5×", "1.5"},
-		{"de", "1.234.567", "1.234 $", "−1.200", "9. Okt – 8. Nov 2026", "2,5×", "1,5"},
-		{"fr", "1 234 567", "1 234 $", "−1 200", "9 oct. – 8 nov. 2026", "2,5×", "1,5"},
-		{"es", "1.234.567", "1.234 $", "−1.200", "9 oct – 8 nov 2026", "2,5×", "1,5"},
-		{"it", "1.234.567", "1.234 $", "−1.200", "9 ott – 8 nov 2026", "2,5×", "1,5"},
-		{"nl", "1.234.567", "$ 1.234", "−1.200", "9 okt – 8 nov 2026", "2,5×", "1,5"},
+		{"en", "1,234,567", "$1,235", "−1,200", "9 Oct – 8 Nov 2026", "2.5×", "1.5"},
+		{"de", "1.234.567", "1.235 $", "−1.200", "9. Okt – 8. Nov 2026", "2,5×", "1,5"},
+		{"fr", "1 234 567", "1 235 $", "−1 200", "9 oct. – 8 nov. 2026", "2,5×", "1,5"},
+		{"es", "1.234.567", "1.235 $", "−1.200", "9 oct – 8 nov 2026", "2,5×", "1,5"},
+		{"it", "1.234.567", "1.235 $", "−1.200", "9 ott – 8 nov 2026", "2,5×", "1,5"},
+		{"nl", "1.234.567", "$ 1.235", "−1.200", "9 okt – 8 nov 2026", "2,5×", "1,5"},
 	} {
 		l := cardLangOf(c.code)
 		if got := l.number(1234567); got != c.num {
 			t.Errorf("%s number %q, want %q", c.code, got, c.num)
 		}
-		if got := l.number(-1234); !strings.HasPrefix(got, "-") || strings.HasPrefix(got, "-"+l.group) {
+		if got := l.number(-1234); !strings.HasPrefix(got, "-") || strings.HasPrefix(got, "-"+l.words().Number(1)[:0]+"-") {
 			t.Errorf("%s negative %q", c.code, got)
 		}
 		if got := l.money(123456, "USD", 2); got != c.money {

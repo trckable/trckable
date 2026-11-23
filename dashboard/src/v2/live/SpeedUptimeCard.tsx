@@ -4,12 +4,11 @@ import { tag } from '../../i18n'
 import { MIN_VITALS, type Site } from '../../lib/api'
 import { dateFmt, fmtFixed } from '../../lib/format'
 import { navigate } from '../../lib/url'
-import { gradeOf } from '../explore/data/mapSections'
 import { openExplore } from '../explore/open'
 import { copy } from './copy'
 import { EmptyBlock } from './EmptyBlock'
 import { CardSkeleton } from './CardSkeleton'
-import { pausedWords } from './health'
+import { BANDS, pausedWords, speedGrade, type Speed } from './health'
 import { loading, type Health } from './useHealth'
 import { plainSpan } from '../../lib/plainSpan'
 import { downStateOf } from '../../features/sitestatus/status'
@@ -17,18 +16,19 @@ import './liveUptime.css'
 import type { DayState } from '../../features/incidents/model'
 
 const h = copy.health
-const MAX = 5 // the gauge runs to five seconds; zones follow the grades (fast to 2.5, OK to 4)
 
 /** A point on the half circle at a share (0 to 1) of the way round, in a box 200 wide. */
 const at = (t: number, r: number): [number, number] => [100 + r * Math.cos(Math.PI * (1 - t)), 100 - r * Math.sin(Math.PI * (1 - t))]
 
-function Gauge({ v }: { v: number }) {
+function Gauge({ v, kind }: { v: number; kind: Speed['kind'] }) {
+  // The gauge runs to the far end of the figure's bands; its zones follow the grades.
+  const [good, mid, max] = BANDS[kind]
   const zones: { from: number; to: number; cls: string }[] = [
-    { from: 0, to: 0.5, cls: 'good' },
-    { from: 0.5, to: 0.8, cls: 'mid' },
-    { from: 0.8, to: 1, cls: 'poor' },
+    { from: 0, to: good / max, cls: 'good' },
+    { from: good / max, to: mid / max, cls: 'mid' },
+    { from: mid / max, to: 1, cls: 'poor' },
   ]
-  const [nx, ny] = at(Math.min(v / MAX, 1), 86)
+  const [nx, ny] = at(Math.min(v / max, 1), 86)
   return (
     <svg className="lhgauge" viewBox="0 0 200 108" role="img" aria-label={h.sec(fmtFixed(v, 1))}>
       {zones.map((z) => {
@@ -70,21 +70,25 @@ function incidents(site: Site) {
 const speedAction = { label: h.turnOnSpeed, setup: 'speed' as const, ask: h.askSpeed }
 
 /** Speed with no figure: off, one button turns it on; on, it is only waiting for visits. */
-function SpeedEmpty({ site, recorded, both }: { site: Site; recorded?: boolean; both?: boolean }) {
+function SpeedEmpty({ site, speed, recorded, both }: { site: Site; speed?: Speed | null; recorded?: boolean; both?: boolean }) {
   const off = both ? h.empty.both : h.empty.speed
-  const line = recorded ? h.empty.collecting(MIN_VITALS) : off
-  return <EmptyBlock site={site} line={line} ghost={both ? ['gauge', 'strip'] : ['gauge']} action={recorded ? undefined : speedAction} collecting={recorded} />
+  const line = recorded ? h.empty.readings(speed?.n ?? 0, MIN_VITALS) : off
+  // Enough people but few readings: say why (iPhones report none), so the count is not read as a broken card.
+  const note = recorded && (speed?.people ?? 0) >= MIN_VITALS ? h.iphoneNote : undefined
+  return <EmptyBlock site={site} line={line} note={note} ghost={both ? ['gauge', 'strip'] : ['gauge']} action={recorded ? undefined : speedAction} collecting={recorded} />
 }
 
-function SpeedBlock({ site, speed, recorded }: { site: Site; speed?: number | null; recorded?: boolean }) {
+function SpeedBlock({ site, speed, recorded }: { site: Site; speed?: Speed | null; recorded?: boolean }) {
   // Switched on but too few visits: nothing to set up, only to wait for. (Uptime has no switch: every site is probed.)
-  if (speed == null) return <SpeedEmpty site={site} recorded={recorded} />
-  const grade = gradeOf(0, speed)
+  if (speed?.sec == null) return <SpeedEmpty site={site} speed={speed} recorded={recorded} />
+  const grade = speedGrade(speed.kind, speed.sec)
   return (
     <button type="button" className="lhspeed" onClick={() => openExplore('speed')}>
-      <Gauge v={speed} />
-      <b className="lhn">{h.sec(fmtFixed(speed, 1))}</b>
+      <Gauge v={speed.sec} kind={speed.kind} />
+      <b className="lhn">{h.sec(fmtFixed(speed.sec, 1))}</b>
       <span className={`lhgrade ${grade}`}>{h.grades[grade]}</span>
+      {speed.kind === 'fcp' && <span className="lhwhat">{h.fcpLabel}</span>}
+      {speed.kind === 'fcp' && <span className="lhnote">{h.fcpNote(speed.n)}</span>}
     </button>
   )
 }
@@ -120,8 +124,8 @@ function DownBody({ site, since, health }: { site: Site; since: number; health: 
 
 function UpBody({ site, health }: { site: Site; health: Health }) {
   // Neither half has a figure: one message and one button for the card, not two stacked.
-  if (health.speed == null && (health.uptime?.pct ?? null) === null) {
-    return <SpeedEmpty site={site} recorded={health.vitalsOn} both />
+  if (health.speed?.sec == null && (health.uptime?.pct ?? null) === null) {
+    return <SpeedEmpty site={site} speed={health.speed} recorded={health.vitalsOn} both />
   }
   return (
     <>

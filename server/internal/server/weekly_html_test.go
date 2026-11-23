@@ -32,7 +32,7 @@ func TestWeeklyEmail(t *testing.T) {
 	from, cur, prev := weeklySample()
 	link := "https://stats.example.com/demo.trckable.com?from=2026-09-28&to=2026-10-04&compare=previous"
 	cur.Series = []query.Point{{T: "2026-09-28", Visitors: 600}, {T: "2026-09-29", Visitors: 900}, {T: "2026-09-30", Visitors: 700}}
-	page := weeklyPage(weeklyEmail("demo.trckable.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{Visitors: 702}, "Busiest: Tuesday", link, weeklyMentions(weekMentionSample(), "https://stats.example.com/demo.trckable.com/mentions"), "", false), "https://stats.example.com/u/abc.def")
+	page := weeklyPage(weeklyEmail("demo.trckable.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{People: 702}, "Busiest: Tuesday", link, weeklyMentions(weekMentionSample(), "https://stats.example.com/demo.trckable.com/mentions"), "", false), "https://stats.example.com/u/abc.def")
 	for _, want := range []string{
 		"cid:logo@report", "Your week", "demo.trckable.com", "Sep 28 – Oct 4",
 		"People", "4,512", "up 13%", "Pageviews", "Bounce rate", "45%", "Visit length", "2m 10s",
@@ -90,7 +90,7 @@ func TestWeeklyMentionsPicksTheTop(t *testing.T) {
 		t.Fatalf("got %d shown, %d more, link %q", len(x.Mentions), x.MentionsMore, x.MentionsLink)
 	}
 	if x.Mentions[0].Title != "Show HN: first" || x.Mentions[1].Title != "Launch day" || x.Mentions[2].Visitors != 12 {
-		t.Errorf("most visitors first: %+v", x.Mentions)
+		t.Errorf("most people first: %+v", x.Mentions)
 	}
 	if x.Mentions[0].Mark.Letter != "Y" || x.Mentions[0].Source != "Hacker News" || x.Mentions[2].Source != "blog.example.org" {
 		t.Errorf("source marks: %+v", x.Mentions)

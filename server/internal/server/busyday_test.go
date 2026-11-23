@@ -13,7 +13,7 @@ func TestBusyDayWords(t *testing.T) {
 		t.Fatalf("a site under a week old: %q", title)
 	}
 	title, msg = busyDay("example.com", 1230, 100, 7)
-	if title != "Busy day" || msg != "example.com has 1230 people today — about 12× a normal day." {
+	if title != "Busy day" || msg != "example.com has 1,230 people today — about 12× a normal day." {
 		t.Fatalf("%q %q", title, msg)
 	}
 	if _, msg := busyDay("example.com", 250, 100, 7); msg != "example.com has 250 people today — about 2.5× a normal day." {

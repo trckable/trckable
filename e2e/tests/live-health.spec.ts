@@ -21,6 +21,8 @@ interface Fake {
   hold?: Promise<void>
   /** The speed switch is a real one: the modules answer follows what a write sets, as the server does. */
   switchable?: boolean
+  /** The vitals the speed answer carries, in place of the default (a busy site whose visitors are mostly on iPhone, say). */
+  vitals?: Record<string, number>
 }
 
 async function fake(page: Page, o: Fake = {}) {
@@ -50,7 +52,7 @@ async function fake(page: Page, o: Fake = {}) {
   } else {
     await page.route(/\/api\/v1\/sites\/[^/]+\/modules/, (r) => r.fulfill({ json: { modules: [{ id: 'vitals', enabled: !o.noVitals }] } }))
   }
-  await page.route(/\/api\/v1\/sites\/[^/]+\/report\/vitals/, (r) => r.fulfill({ json: o.empty ? { samples: 0, good: 0 } : { samples: 80, lcp_ms: 1800, lcp_n: 80, inp_ms: 120, inp_n: 80, cls_1k: 20, cls_n: 80, good: 70 } }))
+  await page.route(/\/api\/v1\/sites\/[^/]+\/report\/vitals/, (r) => r.fulfill({ json: o.vitals ? { good: 0, ...o.vitals } : o.empty ? { samples: 0, good: 0 } : { samples: 80, lcp_ms: 1800, lcp_n: 80, inp_ms: 120, inp_n: 80, cls_1k: 20, cls_n: 80, good: 70 } }))
   const open = { id: 'i1', site: 'example.com', kind: 'down', started_at: NOW - 12 * 60, ended_at: null, cause: 'timeout', expected_visits: null, note: '' }
   await page.route(/\/api\/v1\/sites\/[^/]+\/incidents/, (r) => r.fulfill({ json: { incidents: o.down ? [open] : [], summary: { count: o.down ? 1 : 0, seconds: o.down ? 720 : 0, lost: 0, lost_some: false }, quiet_tracked: true } }))
   await page.route(/\/api\/v1\/sites\/[^/]+\/report\/crawlers/, async (r) => {
@@ -106,7 +108,7 @@ test('switching speed on updates the card at once, with no reload', async ({ pag
   await expect(speed).toContainText('No speed or uptime data yet')
   await speed.getByRole('button', { name: 'Turn on speed' }).click()
   await page.locator('#rec-vitals').click()
-  await expect(speed).toContainText('Collecting')
+  await expect(speed).toContainText('Speed: 0 of 5 readings so far')
   await expect(speed.getByRole('button')).toHaveCount(0)
 })
 
@@ -119,8 +121,24 @@ test('Connect AI crawlers opens the connect sheet in AI & Search', async ({ page
 
 test('a speed that is recorded but has too few visits says so, with no button', async ({ page }) => {
   await fake(page, { empty: true })
-  await expect(cards(page).locator('.lhempty').first()).toContainText('Collecting')
+  await expect(cards(page).locator('.lhempty').first()).toContainText('Speed: 0 of 5 readings so far')
+  await expect(cards(page).locator('.lhempty').first()).not.toContainText('Not every browser reports this')
   await expect(cards(page).locator('.lhempty').first().getByRole('button')).toHaveCount(0)
+})
+
+test('a busy site whose visitors are on iPhone says why the speed is still filling', async ({ page }) => {
+  await fake(page, { vitals: { samples: 2, lcp_n: 2, people: 120 } })
+  const empty = cards(page).locator('.lhempty').first()
+  await expect(empty).toContainText('Speed: 2 of 5 readings so far')
+  await expect(empty).toContainText('Not every browser reports this')
+})
+
+test('the first content shown stands in when too few browsers report the main content, and is labelled', async ({ page }) => {
+  await fake(page, { vitals: { samples: 90, lcp_n: 2, lcp_ms: 3000, fcp_n: 90, fcp_ms: 1400, people: 120 } })
+  const speed = cards(page).locator('.lhspeed')
+  await expect(speed).toContainText('1.4 s')
+  await expect(speed).toContainText('Page load · first content shown')
+  await expect(speed).toContainText('From 90 page views.')
 })
 
 test('uptime that has not been probed yet only waits: no button, a collecting line', async ({ page }) => {

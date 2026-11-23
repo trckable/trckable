@@ -3,23 +3,14 @@ package mailkit
 import (
 	"strconv"
 	"strings"
+
+	"github.com/trckable/trckable/server/internal/say"
 )
 
 func itoa(n int) string { return strconv.Itoa(n) }
 
 // Number writes a count with thousands commas: 12,450.
-func Number(n int64) string {
-	s := strconv.FormatInt(n, 10)
-	neg := strings.HasPrefix(s, "-")
-	s = strings.TrimPrefix(s, "-")
-	for i := len(s) - 3; i > 0; i -= 3 {
-		s = s[:i] + "," + s[i:]
-	}
-	if neg {
-		return "-" + s
-	}
-	return s
-}
+func Number(n int64) string { return say.For("en").Number(n) }
 
 // Spark is a small column chart drawn with table cells, so it shows with
 // images off and in every client: one bar per value, the last ones lit.

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"strings"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/trckable/trckable/server/internal/query"
 	"github.com/trckable/trckable/server/internal/reports"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
+	"github.com/trckable/trckable/server/internal/summary"
 	"github.com/trckable/trckable/server/internal/surge"
 )
 
@@ -52,59 +52,37 @@ func hadAWeek(createdAt, lastEventAt int64, weekEnd time.Time) bool {
 
 var channelNames = map[string]string{"AI": "AI assistants"}
 
-func change(cur, prev float64) string {
-	if prev <= 0 {
-		if cur > 0 {
-			return "new this week"
-		}
-		return "no change"
+// weeklyLang is the language the weekly report is written in, email and text
+// alike: both read the same reports.Words, so a figure or a change is worded
+// once.
+const weeklyLang = "en"
+
+// weeklyChange is a change worded for the weekly text: "up 12% vs the week
+// before"; a new number and a flat one say no more than that.
+func weeklyChange(w reports.Words, m summary.Move) string {
+	if m.Fresh || m.Dir == 0 {
+		return w.Say.Say(m)
 	}
-	d := (cur - prev) / prev * 100
-	if math.Abs(d) < 0.5 {
-		return "about the same as the week before"
-	}
-	dir := "up"
-	if d < 0 {
-		dir = "down"
-	}
-	return fmt.Sprintf("%s %.0f%% on the week before", dir, math.Abs(d))
+	return w.Say.Say(m) + " " + w.VsWeek
 }
 
-func number(n int64) string {
-	s := fmt.Sprint(n)
-	for i := len(s) - 3; i > 0; i -= 3 {
-		s = s[:i] + "," + s[i:]
-	}
-	return s
-}
-
-// amount writes minor units as whole currency, the way a summary reads.
-func amount(minor int64, cur string, exp int) string {
-	whole := int64(math.Round(float64(minor) / math.Pow10(exp)))
-	sym := map[string]string{"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}[cur]
-	if sym == "" {
-		return number(whole) + " " + cur
-	}
-	return sym + number(whole)
-}
-
-// aiWeek is what AI did in the week: the visitors its assistants sent, and the
+// aiWeek is what AI did in the week: the people its assistants sent, and the
 // hits its crawlers made (answering and training).
-type aiWeek struct{ Visitors, Crawls int64 }
+type aiWeek = summary.AI
 
 // aiLine is the report's one line about AI, or none when it was quiet.
-func aiLine(a aiWeek) string {
+func aiLine(w reports.Words, a aiWeek) string {
 	plural := func(n int64, one, many string) string {
 		if n == 1 {
-			return number(n) + " " + one
+			return w.Number(n) + " " + one
 		}
-		return number(n) + " " + many
+		return w.Number(n) + " " + many
 	}
 	switch {
-	case a.Visitors > 0 && a.Crawls > 0:
-		return fmt.Sprintf("AI assistants sent %s; crawlers read %s.", plural(a.Visitors, "person", "people"), plural(a.Crawls, "page", "pages"))
-	case a.Visitors > 0:
-		return fmt.Sprintf("AI assistants sent %s.", plural(a.Visitors, "person", "people"))
+	case a.People > 0 && a.Crawls > 0:
+		return fmt.Sprintf("AI assistants sent %s; crawlers read %s.", plural(a.People, "person", "people"), plural(a.Crawls, "page", "pages"))
+	case a.People > 0:
+		return fmt.Sprintf("AI assistants sent %s.", plural(a.People, "person", "people"))
 	case a.Crawls > 0:
 		return fmt.Sprintf("AI crawlers read %s.", plural(a.Crawls, "page", "pages"))
 	}
@@ -112,28 +90,35 @@ func aiLine(a aiWeek) string {
 }
 
 // goalLine is the report's line about its top goal, or none.
-func goalLine(cur *query.Result) string {
-	if len(cur.Goals) == 0 {
+func goalLine(w reports.Words, s summary.Summary) string {
+	if len(s.Goals) == 0 {
 		return ""
 	}
-	g := cur.Goals[0]
-	return fmt.Sprintf("Top goal: %s, %s people", g.Name(), number(g.Visitors))
+	g := s.Goals[0]
+	return fmt.Sprintf("Top goal: %s, %s people", g.Name, w.Number(g.Visitors))
 }
 
 // revenueLine is the report's line about money, or none without payments.
-func revenueLine(cur, prev *query.Result) string {
-	m := cur.Money
-	if m == nil || m.Payments == 0 {
+func revenueLine(w reports.Words, s summary.Summary) string {
+	m := s.Money
+	if m == nil {
 		return ""
 	}
-	line := fmt.Sprintf("Revenue: %s from %s payment", amount(m.Revenue, m.Currency, m.Exponent), number(m.Payments))
+	line := fmt.Sprintf("Revenue: %s from %s payment", w.Money(m.Revenue.Now, m.Currency, m.Exponent), w.Number(m.Payments))
 	if m.Payments != 1 {
 		line += "s"
 	}
-	if prev.Money != nil {
-		line += ", " + change(float64(m.Revenue), float64(prev.Money.Revenue))
+	if m.HasPrev {
+		line += ", " + weeklyChange(w, m.Revenue.Move)
 	}
 	return line
+}
+
+// weekSummary is the week's numbers as the email and the text both read them.
+func weekSummary(cur, prev *query.Result, ai aiWeek, busiest string) summary.Summary {
+	s := summary.Build(cur, prev)
+	s.AI, s.Busiest = ai, busiest
+	return s
 }
 
 // weeklyEmail is the report as a designed email: the same numbers and
@@ -142,16 +127,17 @@ func revenueLine(cur, prev *query.Result) string {
 func weeklyEmail(domain string, from, to time.Time, cur, prev *query.Result, ai aiWeek, busiest, link string, men reports.Weekly, answersLine string, cookieless bool) *mailkit.Email {
 	x := men
 	x.Link = link
+	w, sum := reports.For(weeklyLang), weekSummary(cur, prev, ai, busiest)
 	if cur.KPIs.Visitors > 0 {
-		for _, line := range []string{aiLine(ai), revenueLine(cur, prev), goalLine(cur)} {
+		for _, line := range []string{aiLine(w, sum.AI), revenueLine(w, sum), goalLine(w, sum)} {
 			if line != "" {
 				x.Facts = append(x.Facts, line)
 			}
 		}
-		if busiest != "" {
-			x.Moments = append(x.Moments, busiest)
+		if sum.Busiest != "" {
+			x.Moments = append(x.Moments, sum.Busiest)
 		}
-		x.Moments = append(x.Moments, weeklyInsights(cur, prev)...)
+		x.Moments = append(x.Moments, weeklyInsights(w, cur, prev)...)
 	}
 	// What the AI assistants said is not about this week's visitors: told even when none came.
 	if answersLine != "" {
@@ -160,7 +146,7 @@ func weeklyEmail(domain string, from, to time.Time, cur, prev *query.Result, ai 
 	if headcount.OncePerDay(cookieless, int(to.Sub(from).Hours()/24+0.5)) {
 		x.Facts = append(x.Facts, "People are "+headcount.OncePerDayNote+" on a site without cookies.")
 	}
-	d := reports.Data{Site: domain, Cadence: "weekly", Lang: "en", From: from, To: to, Cur: cur, Prev: prev}
+	d := reports.Data{Site: domain, Cadence: "weekly", Lang: weeklyLang, From: from, To: to, Cur: cur, Prev: prev}
 	return reports.WeeklyEmail(d, x)
 }
 
@@ -178,48 +164,49 @@ func weeklyText(domain string, from, to time.Time, cur, prev *query.Result, ai a
 	last := to.AddDate(0, 0, -1)
 	title = "Your week"
 	lines := []string{fmt.Sprintf("%s, %s – %s", domain, from.Format("Jan 2"), last.Format("Jan 2"))}
+	w, sum := reports.For(weeklyLang), weekSummary(cur, prev, ai, busiest)
 	k := cur.KPIs
-	lines = append(lines, fmt.Sprintf("%s people%s, %s.", number(k.Visitors), onceNote(cookieless, from, to), change(float64(k.Visitors), float64(prev.KPIs.Visitors))))
+	lines = append(lines, fmt.Sprintf("%s people%s, %s.", w.Number(sum.People.Now), onceNote(cookieless, from, to), weeklyChange(w, sum.People.Move)))
 	if k.Visitors == 0 {
 		lines = append(lines, "Nothing arrived this week. If that is unexpected, check that the script is still on the site.")
 	} else {
-		lines = append(lines, fmt.Sprintf("%s pageviews · bounce %.0f%% · %s a visit", number(k.Pageviews), k.BounceRate*100, (time.Duration(k.AvgSessionS)*time.Second).Round(time.Second)))
-		top := func(label string, rows []query.Row, name func(string) string) {
+		lines = append(lines, fmt.Sprintf("%s pageviews · bounce %.0f%% · %s a visit", w.Number(sum.Pageviews.Now), sum.BounceRate*100, (time.Duration(sum.AvgSessionS)*time.Second).Round(time.Second)))
+		top := func(label string, rows []summary.Row, name func(string) string) {
 			var parts []string
 			for i, r := range rows {
 				if i == 3 {
 					break
 				}
-				parts = append(parts, fmt.Sprintf("%s %s", name(r.Value), number(r.Visitors)))
+				parts = append(parts, fmt.Sprintf("%s %s", name(r.Name), w.Number(r.Visitors)))
 			}
 			if len(parts) > 0 {
 				lines = append(lines, label+": "+strings.Join(parts, " · "))
 			}
 		}
-		top("Top sources", cur.Dims["channel"], func(v string) string {
+		top("Top sources", sum.Sources, func(v string) string {
 			if n, ok := channelNames[v]; ok {
 				return n
 			}
 			return v
 		})
-		top("Top pages", cur.Dims["entry_page"], func(v string) string { return v })
-		if line := aiLine(ai); line != "" {
+		top("Top pages", sum.Pages, func(v string) string { return v })
+		if line := aiLine(w, sum.AI); line != "" {
 			lines = append(lines, line)
 		}
-		if line := goalLine(cur); line != "" {
+		if line := goalLine(w, sum); line != "" {
 			lines = append(lines, line)
 		}
-		if line := revenueLine(cur, prev); line != "" {
+		if line := revenueLine(w, sum); line != "" {
 			lines = append(lines, line)
 		}
 	}
 	if answersLine != "" {
 		lines = append(lines, answersLine)
 	}
-	if busiest != "" && k.Visitors > 0 {
-		lines = append(lines, busiest)
+	if sum.Busiest != "" && k.Visitors > 0 {
+		lines = append(lines, sum.Busiest)
 	}
-	if more := weeklyInsights(cur, prev); len(more) > 0 {
+	if more := weeklyInsights(w, cur, prev); len(more) > 0 {
 		lines = append(lines, "")
 		lines = append(lines, more...)
 	}
@@ -283,12 +270,7 @@ func (s *Server) weeklyEvent(ctx context.Context, q *query.Q, info sqlite.SiteIn
 	if err != nil {
 		return ev, false
 	}
-	ai := aiWeek{}
-	for _, r := range cur.Dims["channel"] {
-		if r.Value == "AI" {
-			ai.Visitors = r.Visitors
-		}
-	}
+	ai := summary.Build(cur, prev).AI
 	if rep, err := q.Crawlers(ctx, p); err == nil {
 		ai.Crawls = rep.Kinds["answer"] + rep.Kinds["train"]
 	}

@@ -41,7 +41,7 @@ func widgetRefresh(kind string) int {
 func fillOnline(d *widgetData, wd sqlite.Widget, n widgetNumbers, words widgetWords) {
 	d.Mode = onlineModeOf(wd)
 	d.Pill = d.Mode != "card"
-	d.Count, d.N = number(n.Online), number(n.Online)
+	d.Count, d.N = words.number(n.Online), words.number(n.Online)
 	if n.Online > 0 && n.Online < query.OnlineMin {
 		d.Count = words.msg("few")
 	}

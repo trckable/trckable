@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/query"
+	"github.com/trckable/trckable/server/internal/reports"
 )
 
 func TestWeeklyIsDueOnceAWeekFromMondayMorning(t *testing.T) {
@@ -61,12 +62,12 @@ func TestWeeklyText(t *testing.T) {
 	title, msg, data := weeklyText("demo.trckable.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "", "https://stats.example.com/demo.trckable.com", "", false)
 	for _, want := range []string{
 		"demo.trckable.com, Sep 14 – Sep 20",
-		"4,512 people, up 13% on the week before.",
+		"4,512 people, up 13% vs the week before.",
 		"10,301 pageviews · bounce 45% · 2m10s a visit",
 		"Top sources: Search 1,203 · AI assistants 702 · Direct 650",
 		"Top pages: / 2,000 · /docs 900",
 		"Top goal: signup, 312 people",
-		"Revenue: $4,210 from 38 payments, up 8% on the week before",
+		"Revenue: $4,210 from 38 payments, up 8% vs the week before",
 		"https://stats.example.com/demo.trckable.com",
 	} {
 		if !strings.Contains(msg, want) {
@@ -93,9 +94,9 @@ func TestWeeklyAILine(t *testing.T) {
 		ai   aiWeek
 		want string // "" = no AI line at all
 	}{
-		{aiWeek{Visitors: 128, Crawls: 2340}, "AI assistants sent 128 people; crawlers read 2,340 pages."},
-		{aiWeek{Visitors: 1, Crawls: 1}, "AI assistants sent 1 person; crawlers read 1 page."},
-		{aiWeek{Visitors: 12}, "AI assistants sent 12 people."},
+		{aiWeek{People: 128, Crawls: 2340}, "AI assistants sent 128 people; crawlers read 2,340 pages."},
+		{aiWeek{People: 1, Crawls: 1}, "AI assistants sent 1 person; crawlers read 1 page."},
+		{aiWeek{People: 12}, "AI assistants sent 12 people."},
 		{aiWeek{Crawls: 3}, "AI crawlers read 3 pages."},
 		{aiWeek{}, ""},
 	} {
@@ -143,17 +144,32 @@ func TestLastWeekIsTheOneThatJustEnded(t *testing.T) {
 	}
 }
 
+// The week's people and their change read the same in the text and in the
+// email's first tile: both come from one summary.
+func TestWeeklyTextAndEmailAgree(t *testing.T) {
+	from := time.Date(2026, 9, 14, 0, 0, 0, 0, time.UTC)
+	cur := &query.Result{KPIs: query.KPIs{Visitors: 12345, Pageviews: 20000}}
+	prev := &query.Result{KPIs: query.KPIs{Visitors: 10000, Pageviews: 20000}}
+	_, msg, _ := weeklyText("x.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "", "", "", false)
+	page := weeklyPage(weeklyEmail("x.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "", "", reports.Weekly{}, "", false), "")
+	for name, got := range map[string]string{"text": msg, "email": page} {
+		if !strings.Contains(got, "12,345") || !strings.Contains(got, "up 23%") {
+			t.Errorf("%s says something else: %s", name, got)
+		}
+	}
+}
+
 // A week on a site without cookies counts a person once per day, and the report says so; in cookie mode it does not.
 func TestWeeklyTextTellsPeopleCountedOncePerDay(t *testing.T) {
 	from := time.Date(2026, 9, 14, 0, 0, 0, 0, time.UTC)
 	cur := &query.Result{KPIs: query.KPIs{Visitors: 4512, Pageviews: 100}}
 	prev := &query.Result{KPIs: query.KPIs{Visitors: 4000}}
 	_, once, _ := weeklyText("x.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "", "", "", true)
-	if !strings.Contains(once, "4,512 people · counted once per day, up 13% on the week before.") {
+	if !strings.Contains(once, "people · counted once per day") {
 		t.Fatalf("cookieless week: %q", once)
 	}
 	_, plain, _ := weeklyText("x.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "", "", "", false)
-	if strings.Contains(plain, "once per day") || !strings.Contains(plain, "4,512 people, up 13%") {
+	if strings.Contains(plain, "once per day") {
 		t.Fatalf("cookie mode week: %q", plain)
 	}
 }

@@ -433,7 +433,7 @@ func widgetLabels(words widgetWords, d widgetData) map[string]string {
 }
 
 func fill(d *widgetData, wd sqlite.Widget, si sqlite.SiteInfo, n widgetNumbers, now time.Time, loc *time.Location, words widgetWords) {
-	d.Now, d.Week = number(n.Now), number(n.Week)
+	d.Now, d.Week = words.number(n.Now), words.number(n.Week)
 	d.N = d.Now
 	if wd.Has("ai") && n.Week > 0 {
 		d.AI = fmt.Sprintf("%.0f%%", n.AIShare*100)
@@ -455,14 +455,14 @@ func fill(d *widgetData, wd sqlite.Widget, si sqlite.SiteInfo, n widgetNumbers, 
 	d.From, d.Mid, d.Till = end.Add(-29*time.Minute).Format("15:04"), end.Add(-15*time.Minute).Format("15:04"), end.Format("15:04")
 	if wd.Has("countries") {
 		for _, c := range n.Countries {
-			d.Countries = append(d.Countries, widgetLine{Mark: flag(c.Code), Name: importer.CountryName(c.Code), N: number(c.Visitors)})
+			d.Countries = append(d.Countries, widgetLine{Mark: flag(c.Code), Name: importer.CountryName(c.Code), N: words.number(c.Visitors)})
 		}
 	}
 	for _, p := range n.Pages {
-		d.Pages = append(d.Pages, widgetLine{Name: p.Name, N: number(p.Visitors)})
+		d.Pages = append(d.Pages, widgetLine{Name: p.Name, N: words.number(p.Visitors)})
 	}
 	for _, c := range n.Channels {
-		d.Channels = append(d.Channels, widgetLine{Name: channelName(c.Name, words), N: number(c.Visitors)})
+		d.Channels = append(d.Channels, widgetLine{Name: channelName(c.Name, words), N: words.number(c.Visitors)})
 	}
 	if wd.Kind == "revenue" {
 		exp := fx.Exponent(si.Currency)
@@ -470,13 +470,13 @@ func fill(d *widgetData, wd sqlite.Widget, si sqlite.SiteInfo, n widgetNumbers, 
 		if n.Revenue != nil {
 			total = *n.Revenue
 		}
-		d.Revenue = money(total, si.Currency, exp)
+		d.Revenue = words.money(total, si.Currency, exp)
 		if wd.Has("channels") {
 			for _, row := range n.RevChannels {
 				if row.Revenue == nil || *row.Revenue <= 0 {
 					continue
 				}
-				d.Channels = append(d.Channels, widgetLine{Name: channelName(row.Value, words), N: money(*row.Revenue, si.Currency, exp)})
+				d.Channels = append(d.Channels, widgetLine{Name: channelName(row.Value, words), N: words.money(*row.Revenue, si.Currency, exp)})
 			}
 		}
 	}
@@ -515,18 +515,6 @@ func privacyFacts(c sqlite.SiteConfig, consent bool, words widgetWords) []string
 	return append(out, words.plain("p_never"))
 }
 
-func money(minor int64, cur string, exp int) string {
-	whole := minor
-	for i := 0; i < exp; i++ {
-		whole /= 10
-	}
-	sym := map[string]string{"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥", "CHF": "CHF "}[cur]
-	if sym == "" {
-		return number(whole) + " " + cur
-	}
-	return sym + number(whole)
-}
-
 // flag is a country's flag as the two regional-indicator letters of its code.
 func flag(code string) string {
 	code = strings.ToUpper(code)
@@ -534,14 +522,6 @@ func flag(code string) string {
 		return ""
 	}
 	return string([]rune{rune(code[0]) - 'A' + 0x1F1E6, rune(code[1]) - 'A' + 0x1F1E6})
-}
-
-func number(n int64) string {
-	s := fmt.Sprint(n)
-	for i := len(s) - 3; i > 0; i -= 3 {
-		s = s[:i] + "," + s[i:]
-	}
-	return s
 }
 
 var widgetTmpl = template.Must(template.New("w").Parse(strings.Replace(`<!doctype html>
