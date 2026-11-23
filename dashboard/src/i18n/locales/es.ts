@@ -485,6 +485,7 @@ export default {
   'share.copyLink': 'Copiar enlace',
   'share.copyLinkNote': 'Una página con esta tarjeta, para cualquier sitio',
   'share.linkCopied': 'Enlace copiado',
+  'share.allTimeNote': 'Los enlaces muestran hasta 30 días o 12 meses: elige un periodo para publicar o copiar un enlace.',
   'share.linkName': 'Estudio de compartir',
   'share.needsOwner': 'Solo un propietario puede crear el enlace público que necesita una publicación',
   'share.previewAlt': (name: string) => `Tarjeta ${name}`,

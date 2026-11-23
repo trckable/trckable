@@ -3,7 +3,7 @@
 // section and nothing else.
 import { more, type Share } from '../../lib/apiMore'
 import { copy } from './copy'
-import { linkPeriod, pictureParams, sectionsOf, type Look } from './card'
+import { hasPeriod, linkPeriod, pictureParams, sectionsOf, type Look } from './card'
 
 // The public page a card goes out with: a link of the site whose preview picture is the card, at the size of the place
 // it goes to. It is always the studio's own link for that card, made to show what the card shows and no more: the
@@ -18,6 +18,9 @@ export const linkFor = (links: Share[], l: Pick<Look, 'card' | 'ms' | 'period'>,
     (x) =>
       x.url && x.name === copy.linkName && !x.has_password && !x.revenue && (!x.expires_at || x.expires_at * 1000 > now) && same(x.sections ?? [], sectionsOf(l)) && (x.period ?? '') === linkPeriod(l),
   )
+
+/** Whether a link can carry the card: not while the card is for all time, which no link shows (a link shows up to 30 days, or a year). */
+export const linkable = (l: Pick<Look, 'card' | 'period'>) => !(hasPeriod(l.card) && l.period === 'all')
 
 /** The link's address with the card named in it: the page's preview is that card at that size. */
 export const withCard = (url: string, l: Look) => `${url}?${pictureParams(l)}`

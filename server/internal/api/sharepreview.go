@@ -68,6 +68,24 @@ func linkPeriod(sh sqlite.Share, asked string) string {
 	return "7d"
 }
 
+// linkAccents are the colours the studio offers (dashboard card.ts ACCENTS): a link's address names no other, so the
+// pictures there can be are few.
+var linkAccents = []string{"#b8ff3c", "#4f8cff", "#ff5ca8", "#ffb547", "#2dd4bf", "#c792ff"}
+
+// linkCard is the card a request for a link's page or picture asks for: linkCardQuery, and a milestone only when the
+// site has reached it.
+func (a *API) linkCard(r *http.Request, sh sqlite.Share) url.Values {
+	q := linkCardQuery(sh, r.URL.Query())
+	if ms := q.Get("ms"); ms != "" {
+		list, err := a.Ctl.Milestones(r.Context(), sh.SiteID, "")
+		if err != nil || !slices.ContainsFunc(list, func(m sqlite.Milestone) bool { return m.Kind+"~"+m.Step == ms }) {
+			q.Del("ms")
+			q.Set("t", "overview")
+		}
+	}
+	return q
+}
+
 // allShown says whether the link shows every one of the sections.
 func allShown(sh sqlite.Share, sections []string) bool {
 	return !slices.ContainsFunc(sections, func(s string) bool { return !sh.Shows(s) })
@@ -88,8 +106,8 @@ func linkCardQuery(sh sqlite.Share, in url.Values) url.Values {
 	if in.Get("theme") == "light" {
 		q.Set("theme", "light")
 	}
-	if a := in.Get("accent"); len(a) == 7 && a[0] == '#' && strings.Trim(a[1:], "0123456789abcdefABCDEF") == "" {
-		q.Set("accent", a)
+	if slices.Contains(linkAccents, strings.ToLower(in.Get("accent"))) {
+		q.Set("accent", strings.ToLower(in.Get("accent")))
 	}
 	if slices.Contains(cards.Backgrounds, in.Get("bg")) {
 		q.Set("bg", in.Get("bg"))
@@ -138,7 +156,7 @@ func (a *API) SharePreview(r *http.Request) (title, tags string) {
 	}
 	e := html.EscapeString
 	page := a.shareBase(r, sh.SiteID) + "/s/" + url.PathEscape(token)
-	card := linkCardQuery(sh, r.URL.Query())
+	card := a.linkCard(r, sh)
 	size := cards.FormatOf(card.Get("shape"))
 	image := page + "/card.png"
 	if len(r.URL.Query()) > 0 {
@@ -173,7 +191,7 @@ func (a *API) SharePreviewImage(w http.ResponseWriter, r *http.Request) {
 	}
 	want := sharePreviewQuery
 	if len(r.URL.Query()) > 0 {
-		want = linkCardQuery(sh, r.URL.Query()).Encode()
+		want = a.linkCard(r, sh).Encode()
 	}
 	key := sh.ID + "|" + strings.Join(sh.Sections, ",") + "|" + sh.Period + "?" + want
 	if png, ok := linkPNGs.get(key, a.Now()); ok {
@@ -197,8 +215,9 @@ func (a *API) SharePreviewImage(w http.ResponseWriter, r *http.Request) {
 var linkPNGs = &linkCache{m: map[string]linkPNG{}}
 
 const (
-	linkPNGTTL  = 10 * time.Minute
-	linkPNGKept = 256
+	linkPNGTTL   = 10 * time.Minute
+	linkPNGKept  = 256
+	linkPNGBytes = 64 << 20
 )
 
 type linkPNG struct {
@@ -207,35 +226,46 @@ type linkPNG struct {
 }
 
 type linkCache struct {
-	mu sync.Mutex
-	m  map[string]linkPNG
+	mu    sync.Mutex
+	m     map[string]linkPNG
+	bytes int
 }
 
 func (c *linkCache) get(key string, now time.Time) ([]byte, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	e, ok := c.m[key]
-	if !ok || now.Sub(e.at) > linkPNGTTL {
-		delete(c.m, key)
+	if ok && now.Sub(e.at) > linkPNGTTL {
+		c.drop(key)
 		return nil, false
 	}
-	return e.body, true
+	return e.body, ok
 }
 
+func (c *linkCache) drop(key string) {
+	c.bytes -= len(c.m[key].body)
+	delete(c.m, key)
+}
+
+// put keeps a picture, first letting go of the oldest ones until it fits in the count and the bytes kept.
 func (c *linkCache) put(key string, body []byte, now time.Time) {
+	if len(body) > linkPNGBytes {
+		return
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if len(c.m) >= linkPNGKept {
+	c.drop(key)
+	for len(c.m) > 0 && (len(c.m) >= linkPNGKept || c.bytes+len(body) > linkPNGBytes) {
+		oldest, first := "", true
 		for k, e := range c.m {
-			if now.Sub(e.at) > linkPNGTTL {
-				delete(c.m, k)
+			if first || e.at.Before(c.m[oldest].at) {
+				oldest, first = k, false
 			}
 		}
-		if len(c.m) >= linkPNGKept {
-			clear(c.m)
-		}
+		c.drop(oldest)
 	}
 	c.m[key] = linkPNG{body: body, at: now}
+	c.bytes += len(body)
 }
 
 // pngRecorder passes an answer on and keeps a copy of a good picture.

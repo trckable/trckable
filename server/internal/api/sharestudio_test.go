@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"image"
 	"net/http"
 	"net/http/httptest"
@@ -25,7 +26,9 @@ func TestLinkCardQuery(t *testing.T) {
 		want  map[string]string
 	}{
 		{"nothing asked", all, "", map[string]string{"t": "overview", "period": "7d", "shape": "link", "theme": "dark"}},
-		{"a size of every place", all, "t=toppage&period=30d&shape=portrait&theme=light&bg=ocean&accent=%23ff8a5c&name=0", map[string]string{"t": "toppage", "period": "30d", "shape": "portrait", "theme": "light", "bg": "ocean", "accent": "#ff8a5c", "name": "0"}},
+		{"a size of every place", all, "t=toppage&period=30d&shape=portrait&theme=light&bg=ocean&accent=%23ffb547&name=0", map[string]string{"t": "toppage", "period": "30d", "shape": "portrait", "theme": "light", "bg": "ocean", "accent": "#ffb547", "name": "0"}},
+		{"a colour of the palette in capitals", all, "accent=%23B8FF3C", map[string]string{"accent": "#b8ff3c"}},
+		{"a colour outside the palette", all, "accent=%23123456", map[string]string{}},
 		{"a section the link hides", headline, "t=sources", map[string]string{"t": "overview"}},
 		{"revenue is never drawn", all, "t=sales&metric=revenue&stats=revenue", map[string]string{"t": "overview", "stats": "engaged"}},
 		{"nonsense is the default", all, "period=24h&shape=huge&bg=plaid&accent=red&theme=neon", map[string]string{"period": "7d", "shape": "link", "theme": "dark"}},
@@ -137,9 +140,63 @@ func TestLinkPNGCache(t *testing.T) {
 		t.Fatal("kept past its time")
 	}
 	for i := 0; i < linkPNGKept*2; i++ {
-		c.put(strconv.Itoa(i), []byte("y"), now)
+		c.put(strconv.Itoa(i), []byte("y"), now.Add(time.Duration(i)*time.Second))
 	}
-	if len(c.m) > linkPNGKept {
+	if len(c.m) != linkPNGKept {
 		t.Fatalf("%d kept", len(c.m))
+	}
+	// The oldest go first, not everything at once.
+	c.put("new", []byte("z"), now.Add(time.Duration(linkPNGKept*2)*time.Second))
+	if _, ok := c.get("new", now.Add(time.Duration(linkPNGKept*2)*time.Second)); !ok || len(c.m) != linkPNGKept {
+		t.Fatalf("%d kept", len(c.m))
+	}
+	if _, ok := c.m[strconv.Itoa(linkPNGKept)]; ok {
+		t.Fatal("the oldest stayed")
+	}
+	if _, ok := c.m[strconv.Itoa(linkPNGKept*2-2)]; !ok {
+		t.Fatal("a newer one went")
+	}
+}
+
+// The bytes kept stay under their cap: a big picture pushes out the oldest, and one that cannot fit is not kept.
+func TestLinkPNGCacheBytes(t *testing.T) {
+	c := &linkCache{m: map[string]linkPNG{}}
+	now := time.Date(2026, 11, 23, 12, 0, 0, 0, time.UTC)
+	big := make([]byte, linkPNGBytes/4+1)
+	for i := 0; i < 6; i++ {
+		c.put(strconv.Itoa(i), big, now.Add(time.Duration(i)*time.Second))
+		if c.bytes > linkPNGBytes {
+			t.Fatalf("%d bytes kept", c.bytes)
+		}
+	}
+	if _, ok := c.m["0"]; ok {
+		t.Fatal("the oldest stayed")
+	}
+	if _, ok := c.m["5"]; !ok {
+		t.Fatal("the newest was not kept")
+	}
+	c.put("huge", make([]byte, linkPNGBytes+1), now)
+	if _, ok := c.m["huge"]; ok {
+		t.Fatal("a picture over the cap was kept")
+	}
+}
+
+// A milestone is drawn for a link only when the site has reached it.
+func TestSharePreviewMilestoneReached(t *testing.T) {
+	g := newRig(t)
+	c := client()
+	g.setup(t, c)
+	base := g.srv.URL + "/api/v1/sites/" + g.site
+	_, open := do(t, c, "POST", base+"/shares", `{"name":"Board"}`, csrf, "1")
+	u := open["url"].(string)
+	token := u[strings.LastIndex(u, "/")+1:]
+	if _, err := g.ctl.AddMilestones(context.Background(), g.site, []sqlite.Milestone{{Kind: "visitors", Step: "100", Value: 100, Day: "2026-09-18"}}); err != nil {
+		t.Fatal(err)
+	}
+	for ms, want := range map[string]string{"visitors~100": "t=milestone", "visitors~100000": "t=overview", "nonsense": "t=overview"} {
+		_, tags := g.api.SharePreview(httptest.NewRequest(http.MethodGet, "/s/"+token+"?t=milestone&ms="+ms, nil))
+		if !strings.Contains(tags, want) {
+			t.Errorf("%s: %s", ms, tags)
+		}
 	}
 }

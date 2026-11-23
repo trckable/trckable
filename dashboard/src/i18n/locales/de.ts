@@ -482,6 +482,7 @@ export default {
   'share.copyLink': 'Link kopieren',
   'share.copyLinkNote': 'Eine Seite mit dieser Karte, für überall',
   'share.linkCopied': 'Link kopiert',
+  'share.allTimeNote': 'Links zeigen bis zu 30 Tage oder 12 Monate: wähle einen Zeitraum, um zu posten oder einen Link zu kopieren.',
   'share.linkName': 'Share-Studio',
   'share.needsOwner': 'Nur ein Eigentümer kann den öffentlichen Link erstellen, den ein Beitrag braucht',
   'share.previewAlt': (name: string) => `Karte ${name}`,

@@ -16,7 +16,7 @@ import { isMoney, say } from '../milestones/words'
 import { cardOf, cardOfTopic, cardUrl, fileName, formatOf, hasOf, offered, type CardWords, type Group, type Look, type Period, type Style, type Topic } from './card'
 import { CardStrip, type Tab, type Tile } from './CardStrip'
 import { LinkPanel } from './LinkPanel'
-import { cardLink, linkFor } from './link'
+import { cardLink, linkFor, linkable } from './link'
 import { canShareImage, saveImage, shareImage } from './image'
 import { copy } from './copy'
 import { OPENERS, postText, takesText } from './post'
@@ -34,6 +34,9 @@ import './ShareDialog.css'
 type Props = { site: Site; sites: Site[]; period?: Period; /** The topic the dialog opens on: its card is the one shown. */ topic?: Topic; onClose: () => void }
 
 /** The milestones a card may carry: the ones that are not money (a link shows no revenue, and no AI visits), the newest first. */
+/** The places whose main action is a link. */
+const NEEDS_LINK = new Set<Place>(['linkedin', 'x', 'threads', 'facebook', 'bluesky', 'email'])
+
 const reached = (list: Milestone[]) => list.filter((m) => !isMoney(m.kind) && m.kind !== 'ai_visits').sort((a, b) => b.day.localeCompare(a.day) || b.created_at - a.created_at)
 
 export default function ShareDialog({ site, period = '30d', topic, onClose }: Props) {
@@ -154,6 +157,7 @@ export default function ShareDialog({ site, period = '30d', topic, onClose }: Pr
     }
   }
   const go = async (act: Act) => {
+    if (!linkable(shown) && (act === 'link' || (act === 'main' && NEEDS_LINK.has(place)))) return
     setBusy(act)
     try {
       if (act === 'save' || (act === 'main' && place === 'download')) await save()
@@ -207,7 +211,7 @@ export default function ShareDialog({ site, period = '30d', topic, onClose }: Pr
               <h3 className="sd-cap">{copy.styleTitle}</h3>
               <StylePanel card={look.card} style={look} onChange={style} />
             </div>
-            <StudioActions place={place} shape={shape} busy={busy} done={done} link={owner} onAct={(a) => void go(a)} />
+            <StudioActions place={place} shape={shape} busy={busy} done={done} link={owner} allTime={!linkable(shown)} onAct={(a) => void go(a)} />
           </aside>
         </div>
       )}

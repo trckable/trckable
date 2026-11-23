@@ -479,6 +479,7 @@ export default {
   'share.copyLink': 'Copia link',
   'share.copyLinkNote': 'Una pagina con questa card, per ovunque',
   'share.linkCopied': 'Link copiato',
+  'share.allTimeNote': 'I link mostrano fino a 30 giorni o 12 mesi: scegli un periodo per pubblicare o copiare un link.',
   'share.linkName': 'Studio di condivisione',
   'share.needsOwner': 'Solo un proprietario può creare il link pubblico che serve a un post',
   'share.previewAlt': (name: string) => `Card ${name}`,

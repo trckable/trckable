@@ -5,7 +5,7 @@ import { copy } from './copy'
 import type { Place } from './places'
 
 export type Act = 'main' | 'save' | 'link'
-type Props = { place: Place; shape: Shape; busy: Act | null; done: Act | null; link: boolean; onAct: (a: Act) => void }
+type Props = { place: Place; shape: Shape; busy: Act | null; done: Act | null; link: boolean; /** The card is for a period no link can carry: posting and copying the link wait. */ allTime: boolean; onAct: (a: Act) => void }
 
 /** The button's mark: a spinner while it works, a tick when it is done, else its own icon. */
 function mark(working: boolean, done: boolean, Icon: typeof Send) {
@@ -38,9 +38,10 @@ export function StudioActions(p: Props) {
   const needsLink = place !== 'download' && !(place === 'instagram')
   return (
     <div className="sd-actions" role="group" aria-label={copy.actions}>
-      <Line act="main" primary title={mainTitle} note={place === 'download' ? copy.png(px) : copy.mainNote[place]} Icon={mainIcon(place)} p={p} off={needsLink && !p.link} />
+      <Line act="main" primary title={mainTitle} note={place === 'download' ? copy.png(px) : copy.mainNote[place]} Icon={mainIcon(place)} p={p} off={needsLink && (!p.link || p.allTime)} />
       <Line act="save" title={done === 'save' ? copy.saved : copy.downloadImage} note={copy.downloadNote(px, anywhere ? copy.anywhere : copy.places[place])} Icon={Download} p={p} />
-      <Line act="link" title={done === 'link' ? copy.linkCopied : copy.copyLink} note={copy.copyLinkNote} Icon={Link2} p={p} off={!p.link} />
+      <Line act="link" title={done === 'link' ? copy.linkCopied : copy.copyLink} note={copy.copyLinkNote} Icon={Link2} p={p} off={!p.link || p.allTime} />
+      {p.allTime && <p className="sd-note faint">{copy.allTimeNote}</p>}
     </div>
   )
 }

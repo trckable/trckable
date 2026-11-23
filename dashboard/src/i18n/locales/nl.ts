@@ -472,6 +472,7 @@ export default {
   'share.copyLink': 'Link kopiëren',
   'share.copyLinkNote': 'Een pagina met deze kaart, voor overal',
   'share.linkCopied': 'Link gekopieerd',
+  'share.allTimeNote': 'Links tonen tot 30 dagen of 12 maanden: kies een periode om te posten of een link te kopiëren.',
   'share.linkName': 'Deelstudio',
   'share.needsOwner': 'Alleen een eigenaar kan de openbare link maken die een bericht nodig heeft',
   'share.previewAlt': (name: string) => `Kaart ${name}`,

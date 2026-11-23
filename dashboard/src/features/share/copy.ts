@@ -55,6 +55,7 @@ export const copy = defineCopy('share', {
   copyLink: 'Copy link',
   copyLinkNote: 'A page with this card, for anywhere',
   linkCopied: 'Link copied',
+  allTimeNote: 'Links show up to 30 days, or 12 months: pick a period to post or copy a link.',
   linkName: 'Share studio',
   needsOwner: 'Only an owner can make the public link a post needs',
   previewAlt: (name: string) => `${name} card`,
