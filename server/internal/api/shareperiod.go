@@ -70,3 +70,51 @@ func (a *API) fixSharePeriod(r *http.Request, siteID string) {
 	v.Set("to", today.Format("2006-01-02"))
 	r.URL.RawQuery = v.Encode()
 }
+
+// last24Hours is the card's 24 hours: the 24 hour buckets that end with the one
+// running now. The end is an instant (a local hour boundary), so a clock change
+// inside the window does not move it.
+func last24Hours(now time.Time) (from, to time.Time) {
+	// The next hour boundary of the site's own clock (zones of +5:30 or +5:45 have
+	// theirs at :30 and :45 of UTC's hours): subtract the clock's minutes, then add the hour.
+	to = now.Add(-time.Duration(now.Minute())*time.Minute - time.Duration(now.Second())*time.Second - time.Duration(now.Nanosecond())).Add(time.Hour)
+	return to.Add(-24 * time.Hour), to
+}
+
+// periodDays is the days a period covers, in the zone of now, ending today at
+// the latest: a share period (sharePeriods), all time (from first, the site's
+// first data; today when there is none) or a custom from..to (two dates). ok is
+// false for a name or a range that is not one of these, which the caller reads
+// as the default. A card and a shared link ask the same days for the same name.
+func periodDays(name, fromS, toS string, now, first time.Time) (from, to time.Time, ok bool) {
+	loc := now.Location()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+	switch name {
+	case "all":
+		from = today
+		if !first.IsZero() {
+			f := first.In(loc)
+			from = time.Date(f.Year(), f.Month(), f.Day(), 0, 0, 0, 0, loc)
+		}
+		if from.After(today) {
+			from = today
+		}
+		return from, today, true
+	case "custom":
+		f, e1 := time.ParseInLocation("2006-01-02", fromS, loc)
+		t, e2 := time.ParseInLocation("2006-01-02", toS, loc)
+		if e1 != nil || e2 != nil || f.After(t) || f.After(today) || t.Sub(f) >= 20*366*24*time.Hour {
+			return today, today, false
+		}
+		if t.After(today) {
+			t = today
+		}
+		return f, t, true
+	}
+	for _, p := range sharePeriods {
+		if p.ID == name {
+			return p.start(today), today, true
+		}
+	}
+	return today, today, false
+}

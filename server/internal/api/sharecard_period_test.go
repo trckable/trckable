@@ -11,7 +11,7 @@ import (
 )
 
 // The pill's words for a preset, a custom range and all time, and where each
-// one ends: on the last full day, never the day still running.
+// one ends: today, the day still running, as the dashboard's does.
 func TestResolvePeriod(t *testing.T) {
 	now := time.Date(2026, 11, 9, 15, 30, 0, 0, time.UTC)
 	made := time.Date(2025, 3, 14, 8, 0, 0, 0, time.UTC)
@@ -20,22 +20,22 @@ func TestResolvePeriod(t *testing.T) {
 		days                      int
 		compare                   bool
 	}{
-		{"30d", "", "", "10 Oct – 8 Nov 2026", "previous 30 days", 30, true},
-		{"7d", "", "", "2 Nov – 8 Nov 2026", "", 7, false},
+		{"30d", "", "", "11 Oct – 9 Nov 2026", "previous 30 days", 30, true},
+		{"7d", "", "", "3 Nov – 9 Nov 2026", "", 7, false},
 		{"24h", "", "", "Last 24 hours", "previous 24 hours", 0, true},
 		{"all", "", "", "Since Mar 2025", "", 0, true},
-		{"custom", "2026-12-28", "2027-01-03", "2 Nov – 8 Nov 2026", "previous 7 days", 7, true}, // not yet: falls back to a 7-day preset
+		{"custom", "2026-12-28", "2027-01-03", "3 Nov – 9 Nov 2026", "previous 7 days", 7, true}, // not yet: falls back to a 7-day preset
 		{"custom", "2025-12-28", "2026-01-03", "28 Dec 2025 – 3 Jan 2026", "previous 7 days", 7, true},
-		{"custom", "2026-11-01", "2026-11-20", "1 Nov – 8 Nov 2026", "previous 8 days", 8, true}, // cut back to yesterday
+		{"custom", "2026-11-01", "2026-11-20", "1 Nov – 9 Nov 2026", "previous 9 days", 9, true}, // cut back to today
 		{"custom", "2026-11-05", "2026-11-05", "5 Nov 2026", "previous day", 1, true},
-		{"nope", "", "", "2 Nov – 8 Nov 2026", "", 7, false},
+		{"nope", "", "", "3 Nov – 9 Nov 2026", "", 7, false},
 	} {
 		p := resolvePeriod(cardWords, c.name, c.from, c.to, now, made, c.compare)
 		if p.label != c.label || p.vs != c.vs || (c.days > 0 && p.days != c.days) {
 			t.Errorf("%+v: %q vs %q, %d days", c, p.label, p.vs, p.days)
 		}
-		if p.hours == 0 && !p.to.Before(time.Date(2026, 11, 9, 0, 0, 0, 0, time.UTC)) {
-			t.Errorf("%+v ends on %s, the day still running", c, p.to)
+		if p.hours == 0 && p.to.After(time.Date(2026, 11, 9, 0, 0, 0, 0, time.UTC)) {
+			t.Errorf("%+v ends on %s, after today", c, p.to)
 		}
 	}
 	// All time has nothing before it: no comparison, even when asked.

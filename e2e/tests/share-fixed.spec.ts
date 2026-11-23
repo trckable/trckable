@@ -59,7 +59,7 @@ for (const width of [1280, 390]) {
       await dialog.getByRole('button', { name: p, exact: true }).click()
       await same(`period ${p}`)
     }
-    await expect(dialog.getByText('Full days, up to yesterday').or(dialog.getByText('The last full 24 hours'))).toBeVisible()
+    await expect(dialog.getByText('Up to now, today included').or(dialog.getByText('The last 24 hours, up to now'))).toBeVisible()
     await open_(/^Look/)
     for (const bg of ['Solid', 'Grid', 'Gradient']) {
       await dialog.getByRole('radio', { name: bg }).click()
