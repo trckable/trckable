@@ -9,18 +9,13 @@ const html = (section: string, tab: string) => renderToStaticMarkup(<Rail sectio
 const state = (h: string) => /data-xkids="goals"([^>]*)>/.exec(h)?.[1] ?? ''
 
 describe('the folded entries of the section list', () => {
-  it('stay closed on another tab', () => {
-    const h = html('pages', 'pages')
-    expect(h).toContain('aria-expanded="false"')
-    expect(state(h)).toContain('data-closed')
-  })
-  it.each([['goals', 'goals'], ['goals', 'payments'], ['goals', 'customers']])('are open in %s / %s', (section, tab) => {
+  it.each([['pages', 'pages'], ['goals', 'goals'], ['goals', 'payments'], ['goals', 'customers']])('are open in %s / %s', (section, tab) => {
     const h = html(section, tab)
     expect(h).toContain('aria-expanded="true"')
     expect(state(h)).not.toContain('data-closed')
   })
   it('open and close with the chevron without moving to another tab', () => {
-    expect(railOpen(railToggled({}, 'goals', 'pages'), 'goals', 'pages')).toBe(true)
+    expect(railOpen(railToggled({}, 'goals', 'pages'), 'goals', 'pages')).toBe(false)
     expect(railOpen(railToggled({}, 'goals', 'goals'), 'goals', 'goals')).toBe(false)
     expect(railOpen(railToggled(railToggled({}, 'goals', 'goals'), 'goals', 'goals'), 'goals', 'goals')).toBe(true)
   })

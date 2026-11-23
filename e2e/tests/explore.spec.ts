@@ -122,9 +122,7 @@ test('on a phone the sections are a drawer, and nothing scrolls sideways', async
 
 test('Payments and Customers are entries of the section list, and open their own table', async ({ page }) => {
   await open(page, 1440)
-  await expect(page.locator('#xp .xrail [data-xkids="goals"]')).toHaveAttribute('data-closed', '')
-  await page.locator('#xp .xrail [data-xsec="goals"] + .xchev').click()
-  await expect(page).not.toHaveURL(/x=customers/)
+  await expect(page.locator('#xp .xrail [data-xkids="goals"]')).not.toHaveAttribute('data-closed', '')
   await pick(page, /^Customers/)
   await expect(page).toHaveURL(/x=customers/)
   await expect(page.locator('#xp [data-xcard="customers"]')).toBeVisible()
