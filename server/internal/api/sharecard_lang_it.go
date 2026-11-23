@@ -3,7 +3,7 @@ package api
 import "github.com/trckable/trckable/server/internal/milestones"
 
 var cardIT = &cardLang{
-	code: "it", group: ".", decimal: ",", moneyAt: moneyAfter,
+	code:   "it",
 	months: [12]string{"gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"},
 
 	visitors:   "visitatori",

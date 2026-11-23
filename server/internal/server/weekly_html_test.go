@@ -32,7 +32,7 @@ func TestWeeklyEmail(t *testing.T) {
 	from, cur, prev := weeklySample()
 	link := "https://stats.example.com/demo.trckable.com?from=2026-09-28&to=2026-10-04&compare=previous"
 	cur.Series = []query.Point{{T: "2026-09-28", Visitors: 600}, {T: "2026-09-29", Visitors: 900}, {T: "2026-09-30", Visitors: 700}}
-	page := weeklyPage(weeklyEmail("demo.trckable.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{Visitors: 702}, "Busiest: Tuesday", link, weeklyMentions(weekMentionSample(), "https://stats.example.com/demo.trckable.com/mentions"), ""), "https://stats.example.com/u/abc.def")
+	page := weeklyPage(weeklyEmail("demo.trckable.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{People: 702}, "Busiest: Tuesday", link, weeklyMentions(weekMentionSample(), "https://stats.example.com/demo.trckable.com/mentions"), ""), "https://stats.example.com/u/abc.def")
 	for _, want := range []string{
 		"cid:logo@report", "Your week", "demo.trckable.com", "Sep 28 – Oct 4",
 		"Visitors", "4,512", "up 13%", "Pageviews", "Bounce rate", "45%", "Visit length", "2m 10s",

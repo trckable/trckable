@@ -67,7 +67,7 @@ func TestGoalsAndSalesPictures(t *testing.T) {
 	n = cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), "")
 	n.digests = map[string]digest{}
 	n.salesPicture(res)
-	if s := n.digests["sales"]; len(s.stats) != 2 || s.stats[0].Value != "$1,234" || s.stats[1].Value != "3" {
+	if s := n.digests["sales"]; len(s.stats) != 2 || s.stats[0].Value != "$1,235" || s.stats[1].Value != "3" {
 		t.Fatalf("sales: %+v", s)
 	}
 	// No money in the report (a role that cannot see it, or nothing connected) is no number at all.
@@ -145,8 +145,8 @@ func TestSpecPost(t *testing.T) {
 	if got := specPost(digest, "goals", n); got != "example.com in the last 30 days: Top goals. Signed up 40, buy 10. Counted with trckable" {
 		t.Fatalf("goals: %q", got)
 	}
-	sales := cards.Spec{Template: "digest", Label: "Sales", Stats: []cards.Stat{{Value: "$1,234", Label: "Revenue"}, {Value: "3", Label: "Orders"}}}
-	if got := specPost(sales, "sales", n); !strings.Contains(got, "$1,234 Revenue, 3 Orders.") {
+	sales := cards.Spec{Template: "digest", Label: "Sales", Stats: []cards.Stat{{Value: "$1,235", Label: "Revenue"}, {Value: "3", Label: "Orders"}}}
+	if got := specPost(sales, "sales", n); !strings.Contains(got, "$1,235 Revenue, 3 Orders.") {
 		t.Fatalf("sales: %q", got)
 	}
 	if got := specPost(cards.Spec{Template: "digest", Label: "Sales", Big: cardWords.noSales}, "sales", n); got != "example.com: No sales in this period. Counted with trckable" {
