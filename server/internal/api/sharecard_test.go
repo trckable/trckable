@@ -12,6 +12,7 @@ import (
 
 	"github.com/trckable/trckable/server/internal/cards"
 	"github.com/trckable/trckable/server/internal/query"
+	"github.com/trckable/trckable/server/internal/summary"
 )
 
 // Revenue asked for where the report has none (module off, nothing
@@ -30,7 +31,7 @@ func TestCardNeverSlipsInRevenue(t *testing.T) {
 	if n := cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), ""); n.Metric != "visitors" || strings.Contains(n.Post, "$") {
 		t.Fatalf("default: %+v", n)
 	}
-	if n := cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), "revenue"); n.Big != "$1,234" || !strings.Contains(n.Post, "$1,234 revenue") {
+	if n := cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), "revenue"); n.Big != "$1,235" || !strings.Contains(n.Post, "$1,235 revenue") {
 		t.Fatalf("revenue: %+v", n)
 	}
 }
@@ -467,5 +468,54 @@ func TestCardTopicRoutes(t *testing.T) {
 	}
 	if code, _, body := get(t, owner, card+"?format=json"); code != http.StatusOK || !strings.Contains(body, `"has_sources"`) {
 		t.Errorf("json: %d %s", code, body)
+	}
+}
+
+// A share card and a widget write the period's people the way the report
+// does: one count, one grouping, from one summary.
+func TestCardAndWidgetAgreeWithTheSummary(t *testing.T) {
+	cur := &query.Result{KPIs: query.KPIs{Visitors: 12345, Pageviews: 20000}}
+	prev := &query.Result{KPIs: query.KPIs{Visitors: 10000}}
+	sum := summary.Build(cur, prev)
+	for _, lang := range summary.Langs {
+		want := summary.For(lang).Number(sum.People.Now)
+		if got := cardLangOf(lang).number(sum.People.Now); got != want {
+			t.Errorf("%s card %q, want %q", lang, got, want)
+		}
+		if got := (widgetWords{lang: lang}).number(sum.People.Now); got != want {
+			t.Errorf("%s widget %q, want %q", lang, got, want)
+		}
+	}
+	if n := cardWordsOf(cardWords, cur, "example.com", testPeriod("7d"), "visitors"); n.Big != summary.For("en").Number(sum.People.Now) {
+		t.Errorf("card big number %q", n.Big)
+	}
+}
+
+// Every picture the dialog offers draws, for every period and language: a
+// number's words never make a card fail.
+func TestEveryCardDrawsForEveryPeriodAndLanguage(t *testing.T) {
+	g := newRig(t)
+	noOutbound(t, g)
+	owner := client()
+	g.setup(t, owner)
+	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card?thumb=1&compare=1"
+	templates := []string{"overview", "numbers", "grid", "leaderboard", "sources", "places", "browsers", "devices", "toppage", "topsource", "topplace", "changed", "search", "ai", "goals", "sales", "milestone"}
+	periods := []string{"24h", "7d", "30d", "all", "custom&from=2026-10-01&to=2026-10-31"}
+	draw := func(tpl, p, lang string) {
+		t.Helper()
+		code, ct, body := get(t, owner, card+"&t="+tpl+"&period="+p+"&lang="+lang)
+		if code != http.StatusOK || ct != "image/png" || !strings.HasPrefix(body, "\x89PNG") {
+			t.Errorf("%s %s %s: %d %s", tpl, p, lang, code, ct)
+		}
+	}
+	// Each axis once against the others' default: the templates, then the periods, then the languages.
+	for _, tpl := range templates {
+		draw(tpl, "7d", "en")
+	}
+	for _, p := range periods {
+		draw("overview", p, "en")
+	}
+	for _, lang := range summary.Langs {
+		draw("overview", "7d", lang)
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/milestones"
+	"github.com/trckable/trckable/server/internal/summary"
 )
 
 // cardLang is every word a share picture and its post say, and how it writes numbers, money and dates, in one
@@ -16,10 +17,8 @@ import (
 type cardLang struct {
 	code string
 	// How numbers, money and days are written.
-	group, decimal string
-	moneyAt        int        // moneyBefore, moneyAfter or moneySpaced
-	months         [12]string // short names
-	dayDot         string     // after the day of the month ("9." in German)
+	months [12]string // short names
+	dayDot string     // after the day of the month ("9." in German)
 	// Words.
 	visitors, pageviews, revenue, noVisits, counted    string
 	engaged, avgTime, topCountry                       string
@@ -42,12 +41,6 @@ type cardLang struct {
 	// The milestone picture.
 	ms milestones.Tongue
 }
-
-const (
-	moneyBefore = iota // $1,234
-	moneyAfter         // 1.234 $
-	moneySpaced        // $ 1.234
-)
 
 // cardLangs are the languages a picture speaks: the dashboard's.
 var cardLangs = map[string]*cardLang{"en": cardEN, "de": cardDE, "es": cardES, "fr": cardFR, "it": cardIT, "nl": cardNL}
@@ -80,19 +73,14 @@ func cardLangOf(s string) *cardLang {
 	return cardEN
 }
 
+// words are the shared words of this language: its numbers, money and changes.
+func (l *cardLang) words() summary.Words { return summary.For(l.code) }
+
 // number is a count with its language's grouping: 1,234 / 1.234 / 1 234.
-func (l *cardLang) number(n int64) string {
-	s := strconv.FormatInt(n, 10)
-	for i := len(s) - 3; i > 0 && s[i-1] != '-'; i -= 3 {
-		s = s[:i] + l.group + s[i:]
-	}
-	return s
-}
+func (l *cardLang) number(n int64) string { return l.words().Number(n) }
 
 // float is a number with its language's decimal mark (prec -1: as short as it goes).
-func (l *cardLang) float(f float64, prec int) string {
-	return strings.Replace(strconv.FormatFloat(f, 'f', prec, 64), ".", l.decimal, 1)
-}
+func (l *cardLang) float(f float64, prec int) string { return l.words().Float(f, prec) }
 
 // signed is a change with its sign: +120, −45.
 func (l *cardLang) signed(n int64) string {
@@ -113,20 +101,7 @@ func (l *cardLang) times(r float64) string {
 
 // money is an amount with its symbol where its language puts it; a currency with no symbol is its code after.
 func (l *cardLang) money(minor int64, cur string, exp int) string {
-	whole := minor
-	for i := 0; i < exp; i++ {
-		whole /= 10
-	}
-	sym := map[string]string{"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥", "CHF": "CHF", "INR": "₹", "AUD": "A$", "CAD": "C$"}[cur]
-	switch {
-	case sym == "":
-		return l.number(whole) + " " + cur
-	case l.moneyAt == moneyAfter:
-		return l.number(whole) + " " + sym
-	case l.moneyAt == moneySpaced || cur == "CHF":
-		return sym + " " + l.number(whole)
-	}
-	return sym + l.number(whole)
+	return l.words().Money(minor, cur, exp)
 }
 
 // shortCount says a large count briefly: 1.2M, 606K, 950.

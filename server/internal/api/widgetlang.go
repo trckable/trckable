@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/trckable/trckable/server/internal/store/sqlite"
+	"github.com/trckable/trckable/server/internal/summary"
 )
 
 // The words of a widget. Every visible label is a message in a per-language
@@ -111,7 +112,14 @@ func (w widgetWords) plain(key string) string {
 
 // plural picks a message's form for n and fills it in.
 func (w widgetWords) plural(key string, n int64, vars ...string) string {
-	return fillMarks(w.plain(key+"."+pluralForm(w.lang, n)), append([]string{"n", number(n)}, vars...))
+	return fillMarks(w.plain(key+"."+pluralForm(w.lang, n)), append([]string{"n", w.number(n)}, vars...))
+}
+
+// number and money write a figure the way the page's language does: the same
+// words every other surface uses.
+func (w widgetWords) number(n int64) string { return summary.For(w.lang).Number(n) }
+func (w widgetWords) money(minor int64, cur string, exp int) string {
+	return summary.For(w.lang).Money(minor, cur, exp)
 }
 
 // pluralForm is the CLDR plural category of a whole number in the languages
