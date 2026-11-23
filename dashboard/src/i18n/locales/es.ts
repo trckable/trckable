@@ -2951,6 +2951,7 @@ export default {
   'briefing.vsLine': (pct: string, name: string) => `${pct} frente a ${name}`,
   'briefing.legendNow': 'Este periodo',
   'briefing.outcomePeople': 'Personas',
+  'briefing.outcomePeopleOnce': 'Personas · contadas una vez al día',
   'briefing.outcomeRevenue': 'Ingresos',
   'briefing.outcomePayments': 'Pagos',
   'briefing.outcomeSignups': 'Registros',

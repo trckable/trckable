@@ -98,6 +98,7 @@ export const copy = defineCopy('briefing', {
   legendNow: 'This period',
   // What the plot shows besides the line, named in its corner.
   outcomePeople: 'People',
+  outcomePeopleOnce: 'People · counted once per day',
   outcomeRevenue: 'Revenue',
   outcomePayments: 'Payments',
   outcomeSignups: 'Sign-ups',

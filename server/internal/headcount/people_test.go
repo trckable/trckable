@@ -21,3 +21,9 @@ func TestOncePerDay(t *testing.T) {
 		}
 	}
 }
+
+func TestLast24HoursIsOneDay(t *testing.T) {
+	if OncePerDay(true, 1) {
+		t.Fatal("one day, however it is cut, has no note")
+	}
+}

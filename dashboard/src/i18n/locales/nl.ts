@@ -2958,6 +2958,7 @@ export default {
   'briefing.vsLine': (pct: string, name: string) => `${pct} t.o.v. ${name}`,
   'briefing.legendNow': 'Deze periode',
   'briefing.outcomePeople': 'Mensen',
+  'briefing.outcomePeopleOnce': 'Mensen · eenmaal per dag geteld',
   'briefing.outcomeRevenue': 'Omzet',
   'briefing.outcomePayments': 'Betalingen',
   'briefing.outcomeSignups': 'Aanmeldingen',

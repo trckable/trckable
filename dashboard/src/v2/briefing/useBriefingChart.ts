@@ -2,7 +2,8 @@
 // is cut so, the site's past (its usual), the outages, and the outcome behind the bars and faces. The chart's lines are worked out here.
 import { useMemo } from 'react'
 import type { Bucket, Point, Report, ReportQuery, Site } from '../../lib/api'
-import { todayIn, type CompareMode, type Range } from '../../lib/dates'
+import { diffDays, todayIn, type CompareMode, type Range } from '../../lib/dates'
+import { countedOncePerDay } from '../../lib/oncePerDay'
 import { useNow } from '../../features/incidents/useIncidents'
 import type { ChartIn } from '../ui/DayChart'
 import { chartOf, siteNow } from './chart'
@@ -118,7 +119,7 @@ export function useBriefingChart(o: ChartRead): BriefingChart | null {
       return [{ i: hourly ? Math.min(first + 12, last) : first, text: n.text }]
     })
     const base = chartOf({ cur, prev, against, bucket: shownBucket, unit, nowT: live ? clock : undefined, downs, notes: marks, bands, overall: st })
-    const chart = { ...base, ...outcomeChart(outcome, cur.series.map((p) => p.t), money && cur.money ? { currency: cur.money.currency, exponent: cur.money.exponent, write: money } : null) }
+    const chart = { ...base, ...outcomeChart(outcome, cur.series.map((p) => p.t), money && cur.money ? { currency: cur.money.currency, exponent: cur.money.exponent, write: money } : null, countedOncePerDay(site.cookieless, diffDays(range.from, range.to) + 1)) }
     const mo = hist.daily && !learning && !low ? moments({ totals, days, todayUp: unit === 'today' ? st === 'up' : false, from: Math.max(0, days.indexOf(range.from)), to: Math.max(0, days.indexOf(range.to)), elapsed: Math.round(nowHour * 60), today: unit === 'today', week: unit === 'week', filtered: false }) : { pills: [], record: null }
     return { chart, series: cur.series.slice(0, chart.points.length), bucket: shownBucket, record: mo.record, learning, low, hd, down: downNow && !!site.watched_since && !site.uptime_paused, ready: !hist.loading }
   }, [on, cur, prev, against, usual, unit, up.list, up.from0, downNow, site.watched_since, site.uptime_paused, range.to, range.from, shownBucket, nowSec, hist, hourly, today, notes, clock, outcome, money])

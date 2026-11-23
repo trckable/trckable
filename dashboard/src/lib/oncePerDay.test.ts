@@ -11,4 +11,7 @@ describe('when a count of people is counted once per day', () => {
     expect(countedOncePerDay(false, 30)).toBe(false)
     expect(countedOncePerDay(undefined, 30)).toBe(false)
   })
+  it('counts the last 24 hours as one day, so it has no note', () => {
+    expect(countedOncePerDay(true, 1)).toBe(false)
+  })
 })

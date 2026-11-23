@@ -2948,6 +2948,7 @@ export default {
   'briefing.vsLine': (pct: string, name: string) => `${pct} gegenüber ${name}`,
   'briefing.legendNow': 'Dieser Zeitraum',
   'briefing.outcomePeople': 'Personen',
+  'briefing.outcomePeopleOnce': 'Personen · einmal pro Tag gezählt',
   'briefing.outcomeRevenue': 'Umsatz',
   'briefing.outcomePayments': 'Zahlungen',
   'briefing.outcomeSignups': 'Anmeldungen',
