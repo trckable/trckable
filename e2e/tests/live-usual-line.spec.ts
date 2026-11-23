@@ -11,7 +11,7 @@ test.beforeAll(async () => {
   cookie = await flowSession()
 })
 
-const SHOTS = '/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad'
+const SHOTS = 'test-results/shots'
 
 for (const [scheme, width] of [['dark', 1280], ['light', 1280], ['dark', 390]] as const) {
   test(`the usual line sits under today's number, ${scheme} ${width}px`, async ({ page }) => {
