@@ -1,8 +1,12 @@
 package api
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"time"
+
+	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
 // A shared link reads three periods and no other: the last 7 days, the last
@@ -100,6 +104,12 @@ func periodDays(name, fromS, toS string, now, first time.Time) (from, to time.Ti
 			from = today
 		}
 		return from, today, true
+	case "since":
+		f, err := time.ParseInLocation("2006-01-02", fromS, loc)
+		if err != nil || f.After(today) {
+			return today, today, false
+		}
+		return f, today, true
 	case "custom":
 		f, e1 := time.ParseInLocation("2006-01-02", fromS, loc)
 		t, e2 := time.ParseInLocation("2006-01-02", toS, loc)
@@ -117,4 +127,69 @@ func periodDays(name, fromS, toS string, now, first time.Time) (from, to time.Ti
 		}
 	}
 	return today, today, false
+}
+
+// fixedDays is the days a link fixed to a period covers on the day of now: a preset, a range
+// (cut back to today) or a start (up to today). ok is false for none, and for what is not a period.
+func fixedDays(p string, now time.Time) (from, to time.Time, ok bool) {
+	loc := now.Location()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+	first, last, span := sqlite.SharePeriodDays(p)
+	if !span {
+		if p == "" {
+			return today, today, false
+		}
+		sp := sharePeriodByID(p)
+		return sp.start(today), today, true
+	}
+	f, err := time.ParseInLocation(time.DateOnly, first, loc)
+	if err != nil {
+		return today, today, false
+	}
+	to = today
+	if last != "" {
+		if t, err := time.ParseInLocation(time.DateOnly, last, loc); err == nil && t.Before(today) {
+			to = t
+		}
+	}
+	if f.After(to) {
+		f = to
+	}
+	return f, to, true
+}
+
+var errSharePeriod = errors.New("period can be 7d, 30d, 12mo, all, or two days (from..to, from no later than to, neither after today)")
+
+// sharePeriodIn is the period a link is made with, from what its owner sent: the same word for a
+// preset, the start of the site's data for "all" (kept as that day, so the link shows the same days
+// whenever it is opened), and a range as written once it is a real one that does not reach past today.
+func (a *API) sharePeriodIn(ctx context.Context, site, in string) (string, error) {
+	if in == "" {
+		return "", nil
+	}
+	if err := sqlite.CheckSharePeriod(in); err != nil && in != "all" {
+		return "", errSharePeriod
+	}
+	tz := ""
+	if si, err := a.Ctl.SiteInfo(ctx, site); err == nil {
+		tz = si.Timezone
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		loc = time.UTC
+	}
+	today := a.Now().In(loc).Format(time.DateOnly)
+	if in == "all" {
+		first := today
+		if q := a.Query(); q != nil {
+			if day, err := a.firstDayOf(ctx, q, site, tz); err == nil && day != "" && day < today {
+				first = day
+			}
+		}
+		return sqlite.SinceDay(first), nil
+	}
+	if f, l, ok := sqlite.SharePeriodDays(in); ok && (f > today || l > today) {
+		return "", errSharePeriod
+	}
+	return in, nil
 }

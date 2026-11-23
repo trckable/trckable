@@ -124,7 +124,7 @@ func scopedDims(sh sqlite.Share, in map[string][]query.Row) map[string][]query.R
 // to that period, whatever dates came with it: the range is written here,
 // before the request is read, in the site's own time zone, with no comparison
 // and no other cut of the range (the same rules fixSharePeriod gives a link
-// whose reader chooses). The period is one of sharePeriods.
+// whose reader chooses). The period is one of sharePeriods, or a range or a start the owner fixed.
 func (a *API) lockPeriod(r *http.Request, sh sqlite.Share) {
 	tz := ""
 	if si, err := a.Ctl.SiteInfo(r.Context(), sh.SiteID); err == nil {
@@ -135,13 +135,13 @@ func (a *API) lockPeriod(r *http.Request, sh sqlite.Share) {
 		loc = time.UTC
 	}
 	today := a.Now().In(loc)
-	p := sharePeriodByID(sh.Period)
+	from, to, _ := fixedDays(sh.Period, today)
 	v := r.URL.Query()
 	for _, k := range []string{"compare", "cfrom", "cto", "sofar", "sincehour", "bucket", "tz"} {
 		v.Del(k)
 	}
-	v.Set("from", p.start(today).Format("2006-01-02"))
-	v.Set("to", today.Format("2006-01-02"))
+	v.Set("from", from.Format("2006-01-02"))
+	v.Set("to", to.Format("2006-01-02"))
 	r.URL.RawQuery = v.Encode()
 }
 

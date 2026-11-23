@@ -69,6 +69,8 @@ type cardNumbers struct {
 	Revenue bool   `json:"revenue"` // revenue may be picked
 	HasData bool   `json:"has_data"`
 	Post    string `json:"post"`
+	// First is the day of the site's first data, where the card is read as words: the earliest a period can start.
+	First string `json:"first_day,omitempty"`
 	// What the other topics have to show, so the dialog can disable a picture with nothing behind it.
 	HasSources bool `json:"has_sources"`
 	HasPlaces  bool `json:"has_places"`
@@ -204,7 +206,7 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 	now := a.Now().In(loc)
 	l := cardLangOf(v.Get("lang"))
 	var first time.Time
-	if v.Get("period") == "all" {
+	if v.Get("period") == "all" || kind == "" {
 		// All time begins at the site's first data, imported history included, never at its creation.
 		day, err := a.firstDayOf(r.Context(), q, site, si.Timezone)
 		if err != nil {
@@ -240,6 +242,9 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 		return cardNumbers{}, false
 	}
 	n := cardWordsOf(l, res, si.Domain, p, v.Get("metric"))
+	if kind == "" && !first.IsZero() {
+		n.First = first.Format(time.DateOnly)
+	}
 	if c, err := a.Ctl.SiteConfig(r.Context(), site); err == nil && n.Metric == "visitors" && headcount.OncePerDay(c.ConsentFree, cardDays(p)) {
 		n.Label += " · " + l.oncePerDay
 	}

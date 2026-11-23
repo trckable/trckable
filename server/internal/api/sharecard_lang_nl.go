@@ -61,11 +61,12 @@ var cardNL = &cardLang{
 	bestDay:           "mensen op je beste dag",
 	noBestDay:         "Heeft een dag met bezoeken nodig",
 
-	gridTitle: map[string]string{"24h": "Vandaag in cijfers", "7d": "Deze week in cijfers", "30d": "Deze maand in cijfers", "all": "Alle tijd in cijfers", "custom": "Jouw cijfers"},
+	gridTitle: map[string]string{"24h": "Vandaag in cijfers", "7d": "Deze week in cijfers", "30d": "Deze maand in cijfers", "12mo": "Laatste 12 maanden in cijfers", "all": "Alle tijd in cijfers", "custom": "Jouw cijfers"},
 	listTitle: map[string]string{"leaderboard": "Toppagina’s", "sources": "Topbronnen", "places": "Toplanden", "browsers": "Topbrowsers", "devices": "Mobiel en desktop"},
 	heroLabel: map[string]string{"toppage": "Je meest bezochte pagina", "topsource": "De meeste mensen kwamen van", "topplace": "De meeste mensen zijn in"},
 
 	last24: "Laatste 24 uur", post24: "in de laatste 24 uur", postDays: "in de laatste %d dagen", postAll: "in alle tijd", postRange: "in %s", since: "Sinds %s",
+	lastDays: "Laatste %d dagen", last12: "Laatste 12 maanden", post12: "in de laatste 12 maanden",
 	prev24: "voorgaande 24 uur", prevDay: "voorgaande dag", prevDays: "voorgaande %d dagen", vs: "t.o.v.",
 
 	postBegun: "%s: het tellen is begonnen. %s", postTopPage: "Toppagina: %s.",

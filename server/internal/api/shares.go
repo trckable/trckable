@@ -99,7 +99,12 @@ func (a *API) createShare(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	sh, token, err := a.Ctl.CreateShare(r.Context(), r.PathValue("site"), in.Name, in.Password, in.Revenue, in.Notes, in.Live, expires, origins, sqlite.ShareScope{Sections: in.Sections, Period: in.Period})
+	period, err := a.sharePeriodIn(r.Context(), r.PathValue("site"), in.Period)
+	if err != nil {
+		fail(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	sh, token, err := a.Ctl.CreateShare(r.Context(), r.PathValue("site"), in.Name, in.Password, in.Revenue, in.Notes, in.Live, expires, origins, sqlite.ShareScope{Sections: in.Sections, Period: period})
 	if busy(w, err) {
 		return
 	}
@@ -168,11 +173,12 @@ func (a *API) updateShare(w http.ResponseWriter, r *http.Request) {
 		e.Sections = in.Sections
 	}
 	if in.Period != nil {
-		if err := sqlite.CheckSharePeriod(*in.Period); err != nil {
-			fail(w, http.StatusBadRequest, "period can be "+strings.Join(sqlite.SharePeriods, ", "))
+		period, err := a.sharePeriodIn(r.Context(), r.PathValue("site"), *in.Period)
+		if err != nil {
+			fail(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		e.Period = in.Period
+		e.Period = &period
 	}
 	if in.Name != nil {
 		if err := checkShareName(*in.Name); err != nil {

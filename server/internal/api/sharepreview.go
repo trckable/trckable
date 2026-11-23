@@ -54,18 +54,27 @@ func linkMilestoneSection(kind string) (section string, ok bool) {
 	return "", !milestones.Money(kind)
 }
 
-// linkPeriod is the period a link's card is drawn for: the one the link is fixed to (a year is drawn as a month, the
-// longest a card has), else the one asked for among the two a reader may choose. All time is not offered.
-func linkPeriod(sh sqlite.Share, asked string) string {
-	switch {
-	case sh.Period == "12mo":
-		return "30d"
-	case sh.Period != "":
-		return sh.Period
-	case asked == "30d":
-		return "30d"
+// linkPeriod writes the period a link's card is drawn for into q: the one the link is fixed to (a preset, a range of
+// days or all time from its first day, set by its owner), else the one asked for among the two a reader may choose.
+// A link that is fixed takes nothing from the address: no period, and no day.
+func linkPeriod(sh sqlite.Share, asked string, q url.Values) {
+	if first, last, ok := sqlite.SharePeriodDays(sh.Period); ok {
+		q.Set("period", "since")
+		if last != "" {
+			q.Set("period", "custom")
+			q.Set("to", last)
+		}
+		q.Set("from", first)
+		return
 	}
-	return "7d"
+	switch {
+	case sh.Period != "":
+		q.Set("period", sh.Period)
+	case asked == "30d":
+		q.Set("period", "30d")
+	default:
+		q.Set("period", "7d")
+	}
 }
 
 // linkAccents are the colours the studio offers (dashboard card.ts ACCENTS): a link's address names no other, so the
@@ -99,7 +108,7 @@ func linkCardQuery(sh sqlite.Share, in url.Values) url.Values {
 	if need, ok := linkCards[in.Get("t")]; ok && allShown(sh, need) {
 		q.Set("t", in.Get("t"))
 	}
-	q.Set("period", linkPeriod(sh, in.Get("period")))
+	linkPeriod(sh, in.Get("period"), q)
 	if f := cards.FormatOf(in.Get("shape")); f.ID == in.Get("shape") {
 		q.Set("shape", f.ID)
 	}
@@ -190,7 +199,7 @@ func (a *API) SharePreviewImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	want := sharePreviewQuery
-	if len(r.URL.Query()) > 0 {
+	if len(r.URL.Query()) > 0 || sh.Period != "" {
 		want = a.linkCard(r, sh).Encode()
 	}
 	key := sh.ID + "|" + strings.Join(sh.Sections, ",") + "|" + sh.Period + "?" + want

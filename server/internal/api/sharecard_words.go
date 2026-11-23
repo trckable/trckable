@@ -54,8 +54,8 @@ func cardPost(n cardNumbers, p cardPeriod) string {
 }
 
 // resolvePeriod is the period the card asks for, at the site's now: a preset
-// (24h, 7d, 30d), "all" (since the site's first data, first) or a custom
-// from..to (two dates). The last day is today, the one still running, and the
+// (24h, 7d, 30d, 12mo), "all" (since the site's first data, first), "since" (from
+// one day, a link's all time) or a custom from..to (two dates). The last day is today, the one still running, and the
 // last hour the one running now, as on the dashboard, so a card never says
 // less than the page; the presets' days are the share links' (sharePeriods),
 // the one list. A custom range that reaches past today is cut back to it.
@@ -83,16 +83,19 @@ func resolvePeriod(l *cardLang, name, fromS, toS string, now, first time.Time, c
 	}
 	p := cardPeriod{from: from, to: to, days: int(to.Sub(from).Hours()/24+0.5) + 1}
 	switch name {
-	case "all":
+	case "all", "since":
 		p.post = l.postAll
-		p.label = fmt.Sprintf(l.since, l.monthYear(p.from))
+		p.label = fmt.Sprintf(l.since, l.shortDay(p.from, true))
 		return p
 	case "custom":
 		p.label = l.datesLabel(p.from, p.to)
 		p.post = fmt.Sprintf(l.postRange, p.label)
 		return vs(p)
+	case "12mo":
+		p.label, p.post = l.last12, l.post12
+		return vs(p)
 	}
-	p.label = l.datesLabel(p.from, p.to)
+	p.label = fmt.Sprintf(l.lastDays, p.days)
 	p.post = fmt.Sprintf(l.postDays, p.days)
 	return vs(p)
 }

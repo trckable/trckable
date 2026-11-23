@@ -61,11 +61,12 @@ var cardIT = &cardLang{
 	bestDay:           "persone nel tuo giorno migliore",
 	noBestDay:         "Serve un giorno con visite",
 
-	gridTitle: map[string]string{"24h": "Oggi in numeri", "7d": "Questa settimana in numeri", "30d": "Questo mese in numeri", "all": "Tutto il periodo in numeri", "custom": "I tuoi numeri"},
+	gridTitle: map[string]string{"24h": "Oggi in numeri", "7d": "Questa settimana in numeri", "30d": "Questo mese in numeri", "12mo": "Ultimi 12 mesi in numeri", "all": "Tutto il periodo in numeri", "custom": "I tuoi numeri"},
 	listTitle: map[string]string{"leaderboard": "Pagine principali", "sources": "Fonti principali", "places": "Paesi principali", "browsers": "Browser principali", "devices": "Mobile e desktop"},
 	heroLabel: map[string]string{"toppage": "La tua pagina più visitata", "topsource": "La maggior parte delle persone è arrivata da", "topplace": "La maggior parte delle persone è in"},
 
 	last24: "Ultime 24 ore", post24: "nelle ultime 24 ore", postDays: "negli ultimi %d giorni", postAll: "in tutto il periodo", postRange: "in %s", since: "Da %s",
+	lastDays: "Ultimi %d giorni", last12: "Ultimi 12 mesi", post12: "negli ultimi 12 mesi",
 	prev24: "24 ore precedenti", prevDay: "giorno precedente", prevDays: "%d giorni precedenti", vs: "vs",
 
 	postBegun: "%s: il conteggio è iniziato. %s", postTopPage: "Pagina principale: %s.",

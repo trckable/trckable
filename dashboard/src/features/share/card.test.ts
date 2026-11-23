@@ -47,7 +47,17 @@ describe('cardUrl', () => {
     expect(q({ ...look, hideBrand: true }).brand).toBe('0')
     expect(q({ ...look, hideBrand: false }).brand).toBe('1')
   })
+  it('asks for each period chip by its own name, a custom range with its two days and no other', () => {
+    expect(q({ ...look, period: '7d' }).period).toBe('7d')
+    expect(q({ ...look, period: '12mo' }).period).toBe('12mo')
+    expect(q({ ...look, period: 'all' })).toMatchObject({ period: 'all' })
+    expect(q({ ...look, period: 'all' })).not.toHaveProperty('from')
+    expect(q({ ...look, period: 'custom', from: '2026-03-01', to: '2026-06-14' })).toMatchObject({ period: 'custom', from: '2026-03-01', to: '2026-06-14' })
+    expect(q({ ...look, period: '30d', from: '2026-03-01', to: '2026-06-14' })).not.toHaveProperty('from')
+    expect(q({ ...look, period: 'custom', from: '2026-03-01', to: '2026-06-14' }, 'json')).toMatchObject({ period: 'custom', from: '2026-03-01', to: '2026-06-14', format: 'json' })
+  })
   it('names the file by card, size and period', () => {
+    expect(fileName('example.com', { ...look, period: 'custom', from: '2026-03-01', to: '2026-06-14' })).toBe('trckable-example.com-toppage-post-2026-03-01_2026-06-14.png')
     expect(fileName('example.com', look)).toBe('trckable-example.com-toppage-post-30d.png')
     expect(fileName('example.com', { ...look, card: 'milestone', ms: 'visitors~10000', shape: 'square' })).toBe('trckable-example.com-milestone-visitors-10000-square.png')
   })

@@ -3,7 +3,7 @@
 // section and nothing else.
 import { more, type Share } from '../../lib/apiMore'
 import { copy } from './copy'
-import { hasPeriod, linkPeriod, pictureParams, sectionsOf, type Look } from './card'
+import { linkPeriod, pictureParams, sectionsOf, type Look } from './card'
 
 // The public page a card goes out with: a link of the site whose preview picture is the card, at the size of the place
 // it goes to. It is always the studio's own link for that card, made to show what the card shows and no more: the
@@ -12,23 +12,24 @@ import { hasPeriod, linkPeriod, pictureParams, sectionsOf, type Look } from './c
 
 const same = (a: string[], b: string[]) => a.length === b.length && b.every((x) => a.includes(x))
 
-/** The studio's link for this card: named by the studio, open to anybody, no revenue, not ended, showing exactly the card's sections and period. */
-export const linkFor = (links: Share[], l: Pick<Look, 'card' | 'ms' | 'period'>, now = Date.now()): Share | undefined =>
+/** The studio's link for this card: named by the studio, open to anybody, no revenue, not ended, showing exactly the card's sections and period (for all time, from the site's first day). */
+export const linkFor = (links: Share[], l: Pick<Look, 'card' | 'ms' | 'period' | 'from' | 'to'>, first?: string, now = Date.now()): Share | undefined =>
   links.find(
     (x) =>
-      x.url && x.name === copy.linkName && !x.has_password && !x.revenue && (!x.expires_at || x.expires_at * 1000 > now) && same(x.sections ?? [], sectionsOf(l)) && (x.period ?? '') === linkPeriod(l),
+      x.url && x.name === copy.linkName && !x.has_password && !x.revenue && (!x.expires_at || x.expires_at * 1000 > now) && same(x.sections ?? [], sectionsOf(l)) && (x.period ?? '') === linkPeriod(l, first),
   )
 
-/** Whether a link can carry the card: not while the card is for all time, which no link shows (a link shows up to 30 days, or a year). */
-export const linkable = (l: Pick<Look, 'card' | 'period'>) => !(hasPeriod(l.card) && l.period === 'all')
-
-/** The link's address with the card named in it: the page's preview is that card at that size. */
-export const withCard = (url: string, l: Look) => `${url}?${pictureParams(l)}`
+/** The link's address with the card named in it: the page's preview is that card at that size. The period is the link's own, kept on the server, so the address does not name one. */
+export function withCard(url: string, l: Look): string {
+  const p = pictureParams(l)
+  for (const k of ['period', 'from', 'to']) p.delete(k)
+  return `${url}?${p}`
+}
 
 /** The address a card goes out with: the studio's link for it, made when there is none. */
-export async function cardLink(site: string, links: Share[], l: Look): Promise<string> {
-  const have = linkFor(links, l)
+export async function cardLink(site: string, links: Share[], l: Look, first?: string): Promise<string> {
+  const have = linkFor(links, l, first)
   if (have?.url) return withCard(have.url, l)
-  const made = await more.createShare(site, { name: copy.linkName, revenue: false, days: 0, sections: sectionsOf(l), period: linkPeriod(l) })
+  const made = await more.createShare(site, { name: copy.linkName, revenue: false, days: 0, sections: sectionsOf(l), period: linkPeriod(l, first) })
   return withCard(made.url, l)
 }
