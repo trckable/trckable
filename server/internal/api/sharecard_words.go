@@ -19,7 +19,7 @@ type cardPeriod struct {
 
 func cardTemplateOf(s string) string {
 	switch s {
-	case "leaderboard", "numbers", "grid", "milestone":
+	case "leaderboard", "numbers", "grid", "milestone", "bestday":
 		return s
 	}
 	if _, ok := cardDigests[s]; ok {

@@ -200,7 +200,9 @@ func overviewChart(s Spec, f Frame) string {
 	}
 	b.WriteString(`</defs>`)
 	fmt.Fprintf(&b, `<path d="%s L%d %.0f L0 %.0f Z" fill="url(#area)"/>`, d, l.W, chartBase, chartBase)
-	fmt.Fprintf(&b, `<rect x="0" %s width="%.0f" fill="url(#left)"/><rect x="%.0f" %s width="%.0f" fill="url(#right)"/>`, band, edge, W-edge, band, edge)
+	if _, field := fields[f.Bg]; !field { // a colour field has no flat colour for the sides to fade into: the line fades by itself
+		fmt.Fprintf(&b, `<rect x="0" %s width="%.0f" fill="url(#left)"/><rect x="%.0f" %s width="%.0f" fill="url(#right)"/>`, band, edge, W-edge, band, edge)
+	}
 	if f.Bg == "gradient" {
 		b.WriteString(glow(f))
 	}

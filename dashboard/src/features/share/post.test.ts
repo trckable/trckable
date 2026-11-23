@@ -1,59 +1,56 @@
 import { describe, expect, it } from 'vitest'
-import type { Share } from '../../lib/api'
-import { linkedInAddress, postLink, slackText, withLink, xAddress } from './post'
+import { OPENERS, X_LINK, X_MAX, postText, takesText, withLink, xLength } from './post'
 
-const post = 'We passed 10,000 people & counting\nThanks to everyone who read it'
-const url = 'https://reports.acme.com/s/abc123'
+const opener = (place: string) => OPENERS[place] ?? (() => '')
+const link = 'https://example.com/s/abc?t=toppage&period=30d&shape=post'
+const text = '10,685 people on example.com (last 30 days). Counted with trckable, no cookies.'
 
-describe('a post and its link', () => {
-  it('puts the link on a line of its own, and nothing when there is none', () => {
-    expect(withLink('Hello', url)).toBe(`Hello\n${url}`)
-    expect(withLink('Hello')).toBe('Hello')
+describe('the post text', () => {
+  it('is the card\'s own words until a person writes their own, which stay', () => {
+    expect(postText('from the card', null)).toBe('from the card')
+    expect(postText('from the card', 'mine')).toBe('mine')
+    expect(postText('from the card', '')).toBe('')
   })
+  it('puts the link on a line of its own', () => expect(withLink('a', 'https://x.y/z')).toBe('a\nhttps://x.y/z'))
 })
 
-describe('X', () => {
-  it("opens the composer with the post as text and the link as its own field", () => {
-    const u = new URL(xAddress(post, url))
-    expect(u.origin + u.pathname).toBe('https://x.com/intent/post')
-    expect(u.searchParams.get('text')).toBe(post)
-    expect(u.searchParams.get('url')).toBe(url)
+describe('the count on X', () => {
+  it('counts the link as 24 characters whatever its length', () => {
+    expect(xLength('')).toBe(X_LINK)
+    expect(xLength(text)).toBe(text.length + 24)
   })
-  it('leaves the link out when there is none', () => {
-    expect(new URL(xAddress(post)).searchParams.has('url')).toBe(false)
-  })
+  it('counts a character, not a code unit', () => expect(xLength('😀😀')).toBe(2 + X_LINK))
+  it('stops at 280', () => expect(xLength('a'.repeat(X_MAX - X_LINK))).toBe(X_MAX))
 })
 
-describe('LinkedIn', () => {
-  it('opens the composer with the post and the link as its text', () => {
-    const u = new URL(linkedInAddress(post, url))
-    expect(u.origin + u.pathname).toBe('https://www.linkedin.com/feed/')
-    expect(u.searchParams.get('shareActive')).toBe('true')
-    expect(u.searchParams.get('text')).toBe(`${post}\n${url}`)
+describe('the address each place opens', () => {
+  const at = (place: string) => new URL(opener(place)(text, link))
+  it('opens the network\'s own composer, the text and the link encoded', () => {
+    const x = at('x')
+    expect(`${x.origin}${x.pathname}`).toBe('https://x.com/intent/post')
+    expect(x.searchParams.get('text')).toBe(text)
+    expect(x.searchParams.get('url')).toBe(link)
+    for (const place of ['threads', 'bluesky']) expect(at(place).searchParams.get('text')).toBe(`${text}\n${link}`)
+    expect(`${at('threads').origin}${at('threads').pathname}`).toBe('https://www.threads.net/intent/post')
+    expect(`${at('bluesky').origin}${at('bluesky').pathname}`).toBe('https://bsky.app/intent/compose')
   })
-})
-
-describe('Slack', () => {
-  it('is the plain text, and HTML that turns the link into a link and keeps the words safe', () => {
-    const { text, html } = slackText('<b>Big</b> news\nSecond line', url)
-    expect(text).toBe(`<b>Big</b> news\nSecond line\n${url}`)
-    expect(html).toBe(`<p>&lt;b&gt;Big&lt;/b&gt; news<br>Second line<br><a href="${url}">${url}</a></p>`)
+  it('opens LinkedIn and Facebook with the link, from which they read the card', () => {
+    const li = at('linkedin')
+    expect(li.href.startsWith('https://www.linkedin.com/sharing/share-offsite/?')).toBe(true)
+    expect(li.searchParams.get('url')).toBe(link)
+    const fb = at('facebook')
+    expect(`${fb.origin}${fb.pathname}`).toBe('https://www.facebook.com/sharer/sharer.php')
+    expect(fb.searchParams.get('u')).toBe(link)
   })
-  it('has no link line without a link', () => {
-    expect(slackText('Hello').html).toBe('<p>Hello</p>')
+  it('keeps what is written out of the address\'s own structure', () => {
+    const tricky = 'a&b=c#d é'
+    expect(new URL(opener('x')(tricky, link)).searchParams.get('text')).toBe(tricky)
   })
-})
-
-describe('the link a post carries', () => {
-  const link = (s: Partial<Share>): Share => ({ id: 'a', site_id: 's', name: 'x', revenue: false, has_password: false, created_at: 1, views: 0, url: 'https://t.example/s/a', ...s })
-  const now = 1_800_000_000_000
-  it('is the first one anybody can open that shows no revenue and has not ended', () => {
-    expect(postLink([link({ has_password: true, url: 'https://t.example/s/pw' }), link({ revenue: true, url: 'https://t.example/s/rev' }), link({ expires_at: 1_700_000_000, url: 'https://t.example/s/old' }), link({ url: 'https://t.example/s/ok' })], now)).toBe('https://t.example/s/ok')
-    expect(postLink([link({ expires_at: 1_900_000_000 })], now)).toBe('https://t.example/s/a')
+  it('has no composer for Instagram, the file or the link', () => {
+    for (const p of ['instagram', 'download', 'email']) expect(OPENERS[p]).toBeUndefined()
   })
-  it('is none when no link is fit to be in a post, and a link with no address is never one', () => {
-    expect(postLink([link({ has_password: true })], now)).toBeUndefined()
-    expect(postLink([link({ url: undefined })], now)).toBeUndefined()
-    expect(postLink([], now)).toBeUndefined()
+  it('copies the text for the networks that take only a link', () => {
+    expect(['x', 'threads', 'bluesky'].every(takesText)).toBe(true)
+    expect(['linkedin', 'facebook'].some(takesText)).toBe(false)
   })
 })
