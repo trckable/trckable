@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"slices"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/trckable/trckable/server/internal/cards"
 	"github.com/trckable/trckable/server/internal/milestones"
@@ -28,12 +30,47 @@ const (
 // page itself opens with.
 const sharePreviewQuery = "t=overview&period=7d&shape=link&theme=dark&stats=engaged"
 
-// linkCards are the pictures a link's address may ask for (?t=), and the section of the shared dashboard each needs: a
-// link that does not show that section shows the overview instead. Revenue, sales, goals, AI and the places and tech
-// lists are never drawn for a link; nor is a money milestone. "" needs nothing beyond the headline numbers.
-var linkCards = map[string]string{
-	"overview": "", "numbers": "", "grid": "", "changed": "", "milestone": "", "bestday": "",
-	"leaderboard": "pages", "toppage": "pages", "sources": "sources", "topsource": "sources", "search": "sources",
+// linkCards are the pictures a link's address may ask for (?t=), and the sections of the shared dashboard each needs: a
+// link that does not show all of them shows the overview instead. Revenue, sales, goals, AI and the places and tech
+// lists are never drawn for a link; nor is a money milestone. No section: the headline numbers are enough. What
+// changed names referrers, pages, countries and devices, so it needs every section.
+var linkCards = map[string][]string{
+	"overview": nil, "numbers": nil, "grid": nil, "bestday": nil, "milestone": nil,
+	"changed":     sqlite.ShareSections,
+	"leaderboard": {"pages"}, "toppage": {"pages"}, "sources": {"sources"}, "topsource": {"sources"}, "search": {"sources"},
+}
+
+// linkMilestoneSection is the section a milestone's kind belongs to: "" for the headline numbers; ok is false for a
+// kind a link never carries (money, and AI visits).
+func linkMilestoneSection(kind string) (section string, ok bool) {
+	switch kind {
+	case milestones.SearchClicks:
+		return "sources", true
+	case milestones.Countries:
+		return "places", true
+	case milestones.AIVisits:
+		return "", false
+	}
+	return "", !milestones.Money(kind)
+}
+
+// linkPeriod is the period a link's card is drawn for: the one the link is fixed to (a year is drawn as a month, the
+// longest a card has), else the one asked for among the two a reader may choose. All time is not offered.
+func linkPeriod(sh sqlite.Share, asked string) string {
+	switch {
+	case sh.Period == "12mo":
+		return "30d"
+	case sh.Period != "":
+		return sh.Period
+	case asked == "30d":
+		return "30d"
+	}
+	return "7d"
+}
+
+// allShown says whether the link shows every one of the sections.
+func allShown(sh sqlite.Share, sections []string) bool {
+	return !slices.ContainsFunc(sections, func(s string) bool { return !sh.Shows(s) })
 }
 
 // linkCardQuery is the card a link's address asks for, as the card endpoint reads it: only the picture's own choices
@@ -41,12 +78,10 @@ var linkCards = map[string]string{
 // out, so an address cannot ask a link for more than the link shows.
 func linkCardQuery(sh sqlite.Share, in url.Values) url.Values {
 	q := url.Values{"t": {"overview"}, "period": {"7d"}, "shape": {"link"}, "theme": {"dark"}, "stats": {"engaged"}}
-	if need, ok := linkCards[in.Get("t")]; ok && (need == "" || sh.Shows(need)) {
+	if need, ok := linkCards[in.Get("t")]; ok && allShown(sh, need) {
 		q.Set("t", in.Get("t"))
 	}
-	if slices.Contains([]string{"7d", "30d", "all"}, in.Get("period")) {
-		q.Set("period", in.Get("period"))
-	}
+	q.Set("period", linkPeriod(sh, in.Get("period")))
 	if f := cards.FormatOf(in.Get("shape")); f.ID == in.Get("shape") {
 		q.Set("shape", f.ID)
 	}
@@ -66,7 +101,9 @@ func linkCardQuery(sh sqlite.Share, in url.Values) url.Values {
 	}
 	// A milestone card names its milestone, and never a money one: the biggest of a period might be revenue.
 	if q.Get("t") == "milestone" {
-		if kind, _, ok := strings.Cut(in.Get("ms"), "~"); ok && !milestones.Money(kind) {
+		kind, _, named := strings.Cut(in.Get("ms"), "~")
+		section, carried := linkMilestoneSection(kind)
+		if named && carried && (section == "" || sh.Shows(section)) {
 			q.Set("ms", in.Get("ms"))
 		} else {
 			q.Set("t", "overview")
@@ -134,11 +171,90 @@ func (a *API) SharePreviewImage(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	ask := r.Clone(r.Context())
-	ask.URL.RawQuery = sharePreviewQuery
+	want := sharePreviewQuery
 	if len(r.URL.Query()) > 0 {
-		ask.URL.RawQuery = linkCardQuery(sh, r.URL.Query()).Encode()
+		want = linkCardQuery(sh, r.URL.Query()).Encode()
 	}
+	key := sh.ID + "|" + strings.Join(sh.Sections, ",") + "|" + sh.Period + "?" + want
+	if png, ok := linkPNGs.get(key, a.Now()); ok {
+		w.Header().Set("Content-Type", "image/png")
+		w.Header().Set("Cache-Control", "private, max-age=30")
+		_, _ = w.Write(png) //nolint:gosec // a PNG the server drew, not markup
+		return
+	}
+	ask := r.Clone(r.Context())
+	ask.URL.RawQuery = want
 	ask.SetPathValue("site", sh.SiteID)
-	a.shareCard(w, ask)
+	rec := &pngRecorder{ResponseWriter: w}
+	a.shareCard(rec, ask)
+	if rec.ok() {
+		linkPNGs.put(key, rec.body, a.Now())
+	}
+}
+
+// linkPNGs keeps the pictures drawn for links' addresses for a while, so the public picture cannot be made to draw
+// without limit: the same address is drawn once in ten minutes, and the number kept is small.
+var linkPNGs = &linkCache{m: map[string]linkPNG{}}
+
+const (
+	linkPNGTTL  = 10 * time.Minute
+	linkPNGKept = 256
+)
+
+type linkPNG struct {
+	body []byte
+	at   time.Time
+}
+
+type linkCache struct {
+	mu sync.Mutex
+	m  map[string]linkPNG
+}
+
+func (c *linkCache) get(key string, now time.Time) ([]byte, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	e, ok := c.m[key]
+	if !ok || now.Sub(e.at) > linkPNGTTL {
+		delete(c.m, key)
+		return nil, false
+	}
+	return e.body, true
+}
+
+func (c *linkCache) put(key string, body []byte, now time.Time) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if len(c.m) >= linkPNGKept {
+		for k, e := range c.m {
+			if now.Sub(e.at) > linkPNGTTL {
+				delete(c.m, k)
+			}
+		}
+		if len(c.m) >= linkPNGKept {
+			clear(c.m)
+		}
+	}
+	c.m[key] = linkPNG{body: body, at: now}
+}
+
+// pngRecorder passes an answer on and keeps a copy of a good picture.
+type pngRecorder struct {
+	http.ResponseWriter
+	status int
+	body   []byte
+}
+
+func (p *pngRecorder) WriteHeader(code int) {
+	p.status = code
+	p.ResponseWriter.WriteHeader(code)
+}
+
+func (p *pngRecorder) Write(b []byte) (int, error) {
+	p.body = append(p.body, b...)
+	return p.ResponseWriter.Write(b)
+}
+
+func (p *pngRecorder) ok() bool {
+	return (p.status == 0 || p.status == http.StatusOK) && p.Header().Get("Content-Type") == "image/png" && len(p.body) > 0
 }

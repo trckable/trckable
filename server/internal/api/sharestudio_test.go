@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/trckable/trckable/server/internal/cards"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
@@ -28,10 +29,23 @@ func TestLinkCardQuery(t *testing.T) {
 		{"a section the link hides", headline, "t=sources", map[string]string{"t": "overview"}},
 		{"revenue is never drawn", all, "t=sales&metric=revenue&stats=revenue", map[string]string{"t": "overview", "stats": "engaged"}},
 		{"nonsense is the default", all, "period=24h&shape=huge&bg=plaid&accent=red&theme=neon", map[string]string{"period": "7d", "shape": "link", "theme": "dark"}},
-		{"a milestone", all, "t=milestone&ms=sites~1", map[string]string{"t": "milestone", "ms": "sites~1"}},
+		{"a milestone", all, "t=milestone&ms=visitors~10000", map[string]string{"t": "milestone", "ms": "visitors~10000"}},
 		{"a money milestone", all, "t=milestone&ms=revenue~1000", map[string]string{"t": "overview"}},
 		{"a milestone with no name", all, "t=milestone", map[string]string{"t": "overview"}},
-		{"a milestone of another picture", all, "t=overview&ms=sites~1", map[string]string{"t": "overview"}},
+		{"what changed on a headline link", headline, "t=changed", map[string]string{"t": "overview"}},
+		{"what changed on a link missing one section", sqlite.Share{Sections: []string{"pages", "sources", "places"}}, "t=changed", map[string]string{"t": "overview"}},
+		{"what changed on a link showing everything", all, "t=changed", map[string]string{"t": "changed"}},
+		{"a link fixed to a week", sqlite.Share{Sections: sqlite.ShareSections, Period: "7d"}, "period=30d", map[string]string{"period": "7d"}},
+		{"a link fixed to a month", sqlite.Share{Period: "30d"}, "period=7d", map[string]string{"period": "30d"}},
+		{"a link fixed to a year", sqlite.Share{Period: "12mo"}, "period=7d", map[string]string{"period": "30d"}},
+		{"all time is not offered", all, "period=all", map[string]string{"period": "7d"}},
+		{"a search milestone on a link without sources", headline, "t=milestone&ms=search_clicks~100", map[string]string{"t": "overview"}},
+		{"a search milestone on a link with sources", sqlite.Share{Sections: []string{"sources"}}, "t=milestone&ms=search_clicks~100", map[string]string{"t": "milestone", "ms": "search_clicks~100"}},
+		{"a countries milestone on a link without places", headline, "t=milestone&ms=countries~10", map[string]string{"t": "overview"}},
+		{"a countries milestone on a link with places", sqlite.Share{Sections: []string{"places"}}, "t=milestone&ms=countries~10", map[string]string{"t": "milestone", "ms": "countries~10"}},
+		{"an AI milestone is never carried", all, "t=milestone&ms=ai_visits~10", map[string]string{"t": "overview"}},
+		{"a first sale is never carried", all, "t=milestone&ms=first_sale~1", map[string]string{"t": "overview"}},
+		{"a milestone of another picture", all, "t=overview&ms=visitors~10000", map[string]string{"t": "overview"}},
 	} {
 		got := linkCardQuery(c.share, mustQuery(t, c.in))
 		for k, v := range c.want {
@@ -108,5 +122,24 @@ func TestCardBestDay(t *testing.T) {
 	code, _, body = get(t, owner, card+"?format=json&period=24h")
 	if code != http.StatusOK || !strings.Contains(body, `"has_bestday":false`) {
 		t.Errorf("a day read by the hour has a best day: %d %s", code, body)
+	}
+}
+
+// A picture drawn for a link's address is kept for ten minutes and then drawn again; the cache stays small.
+func TestLinkPNGCache(t *testing.T) {
+	c := &linkCache{m: map[string]linkPNG{}}
+	now := time.Date(2026, 11, 23, 12, 0, 0, 0, time.UTC)
+	c.put("a", []byte("x"), now)
+	if b, ok := c.get("a", now.Add(linkPNGTTL-time.Second)); !ok || string(b) != "x" {
+		t.Fatal("not kept")
+	}
+	if _, ok := c.get("a", now.Add(linkPNGTTL+time.Second)); ok {
+		t.Fatal("kept past its time")
+	}
+	for i := 0; i < linkPNGKept*2; i++ {
+		c.put(strconv.Itoa(i), []byte("y"), now)
+	}
+	if len(c.m) > linkPNGKept {
+		t.Fatalf("%d kept", len(c.m))
 	}
 }

@@ -6,16 +6,31 @@ import { linkFor, withCard } from './link'
 const share = (o: Partial<Share>): Share => ({ id: 'a', site_id: 's', name: 'n', revenue: false, has_password: false, created_at: 0, views: 0, url: 'https://x.test/s/a', sections: ['pages', 'sources', 'places', 'tech'], ...o })
 const now = Date.UTC(2026, 10, 1)
 
+const card = { card: 'toppage', period: '30d' } as const
+const mine = (o: Partial<Share> = {}) => share({ name: 'Share studio', sections: ['pages'], period: '30d', ...o })
+
 describe('the link a card goes out with', () => {
-  it('is one anybody can open that shows no revenue and has not ended', () => {
-    expect(linkFor([share({ has_password: true }), share({ revenue: true }), share({ expires_at: 1 }), share({ url: undefined })], '', now)).toBeUndefined()
-    expect(linkFor([share({ has_password: true }), share({ id: 'ok' })], '', now)?.id).toBe('ok')
-    expect(linkFor([share({ expires_at: now / 1000 + 60, id: 'later' })], '', now)?.id).toBe('later')
+  it('is the studio\'s own, open to anybody, with no revenue, not ended', () => {
+    expect(linkFor([mine({ has_password: true }), mine({ revenue: true }), mine({ expires_at: 1 }), mine({ url: undefined })], card, now)).toBeUndefined()
+    expect(linkFor([mine({ has_password: true }), mine({ id: 'ok' })], card, now)?.id).toBe('ok')
+    expect(linkFor([mine({ expires_at: now / 1000 + 60, id: 'later' })], card, now)?.id).toBe('later')
   })
-  it('shows the section the card is drawn from', () => {
-    expect(linkFor([share({ sections: [] })], 'pages', now)).toBeUndefined()
-    expect(linkFor([share({ sections: [] })], '', now)).toBeDefined()
-    expect(linkFor([share({ sections: ['sources'] })], 'sources', now)).toBeDefined()
+  it('is never a link made for anything else, which may show more', () => {
+    expect(linkFor([share({ name: 'Board' })], { card: 'overview', period: '30d' }, now)).toBeUndefined()
+    expect(linkFor([mine({ name: 'Board' })], card, now)).toBeUndefined()
+  })
+  it('shows exactly the sections of the card, no more and no fewer', () => {
+    expect(linkFor([mine({ sections: ['pages', 'sources'] })], card, now)).toBeUndefined()
+    expect(linkFor([mine({ sections: [] })], card, now)).toBeUndefined()
+    expect(linkFor([mine({ sections: ['pages'] })], card, now)).toBeDefined()
+    expect(linkFor([mine({ sections: [], period: '7d' })], { card: 'overview', period: '7d' }, now)).toBeDefined()
+    expect(linkFor([mine({ sections: ['pages', 'sources', 'places', 'tech'], period: '30d' })], { card: 'changed', period: '30d' }, now)).toBeDefined()
+    expect(linkFor([mine({ sections: ['places'], period: '' })], { card: 'milestone', ms: 'countries~10', period: '30d' }, now)).toBeDefined()
+    expect(linkFor([mine({ sections: [], period: '' })], { card: 'milestone', ms: 'visitors~1000', period: '30d' }, now)).toBeDefined()
+  })
+  it('is for the card\'s period only', () => {
+    expect(linkFor([mine({ period: '7d' })], card, now)).toBeUndefined()
+    expect(linkFor([mine({ period: '' })], card, now)).toBeUndefined()
   })
   it('names the card in the address, so the page\'s preview is that card at that size', () => {
     const look: Look = { card: 'toppage', shape: 'portrait', period: '30d', ...DEFAULT_STYLE }

@@ -33,8 +33,8 @@ import './ShareDialog.css'
 
 type Props = { site: Site; sites: Site[]; period?: Period; /** The topic the dialog opens on: its card is the one shown. */ topic?: Topic; onClose: () => void }
 
-/** The milestones a card may carry: the ones that are not money (a link shows no revenue), the newest first. */
-const reached = (list: Milestone[]) => list.filter((m) => !isMoney(m.kind)).sort((a, b) => b.day.localeCompare(a.day) || b.created_at - a.created_at)
+/** The milestones a card may carry: the ones that are not money (a link shows no revenue, and no AI visits), the newest first. */
+const reached = (list: Milestone[]) => list.filter((m) => !isMoney(m.kind) && m.kind !== 'ai_visits').sort((a, b) => b.day.localeCompare(a.day) || b.created_at - a.created_at)
 
 export default function ShareDialog({ site, period = '30d', topic, onClose }: Props) {
   const [place, setPlace] = useState<Place>('linkedin')
@@ -133,7 +133,7 @@ export default function ShareDialog({ site, period = '30d', topic, onClose }: Pr
 
   const ensureLink = async () => {
     const url = await cardLink(site.id, links, shown)
-    if (!linkFor(links, cardOf(shown.card).section)) setLinks((await more.shares(site.id)).shares.filter((x) => x.url))
+    if (!linkFor(links, shown)) setLinks((await more.shares(site.id)).shares.filter((x) => x.url))
     return url
   }
   const save = () => saveImage(cardUrl(site.id, shown), fileName(site.domain, shown))

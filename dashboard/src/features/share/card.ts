@@ -18,19 +18,31 @@ export type Group = 'people' | 'milestones' | 'sources' | 'pages'
 export type Period = '7d' | '30d' | 'all'
 export const PERIODS: Period[] = ['7d', '30d', 'all']
 
-/** A card, its group, what it needs, and the section of a shared link it is drawn from ('' when the headline numbers do). */
-export type Card = { id: CardId; group: Group; need: Need | null; section: string }
+/** A card, its group, what it needs, and the sections of a shared link it is drawn from (none when the headline numbers do). */
+export type Card = { id: CardId; group: Group; need: Need | null; sections: string[] }
+const ALL_SECTIONS = ['pages', 'sources', 'places', 'tech']
 export const CARDS: Card[] = [
-  { id: 'overview', group: 'people', need: 'data', section: '' },
-  { id: 'changed', group: 'people', need: 'changed', section: '' },
-  { id: 'bestday', group: 'people', need: 'bestday', section: '' },
-  { id: 'milestone', group: 'milestones', need: null, section: '' },
-  { id: 'sources', group: 'sources', need: 'sources', section: 'sources' },
-  { id: 'search', group: 'sources', need: 'search', section: 'sources' },
-  { id: 'toppage', group: 'pages', need: 'data', section: 'pages' },
-  { id: 'leaderboard', group: 'pages', need: 'data', section: 'pages' },
+  { id: 'overview', group: 'people', need: 'data', sections: [] },
+  { id: 'changed', group: 'people', need: 'changed', sections: ALL_SECTIONS },
+  { id: 'bestday', group: 'people', need: 'bestday', sections: [] },
+  { id: 'milestone', group: 'milestones', need: null, sections: [] },
+  { id: 'sources', group: 'sources', need: 'sources', sections: ['sources'] },
+  { id: 'search', group: 'sources', need: 'search', sections: ['sources'] },
+  { id: 'toppage', group: 'pages', need: 'data', sections: ['pages'] },
+  { id: 'leaderboard', group: 'pages', need: 'data', sections: ['pages'] },
 ]
 export const GROUPS: Group[] = ['people', 'milestones', 'sources', 'pages']
+/** The sections a link must show, and no more, to carry this card: a milestone of searches or countries is drawn from its own section. */
+export function sectionsOf(l: Pick<Look, 'card' | 'ms'>): string[] {
+  if (l.card !== 'milestone') return cardOf(l.card).sections
+  const kind = l.ms?.split('~')[0]
+  if (kind === 'search_clicks') return ['sources']
+  return kind === 'countries' ? ['places'] : []
+}
+
+/** The period a link is fixed to for a card: the card's own, none for a card with no span of time. All time is not one a link can have. */
+export const linkPeriod = (l: Pick<Look, 'card' | 'period'>): string => (hasPeriod(l.card) && l.period !== 'all' ? l.period : '')
+
 export const cardOf = (id: CardId) => CARDS.find((c) => c.id === id) ?? CARDS[0]
 /** A milestone has no span of time; every other card is drawn for a period. */
 export const hasPeriod = (id: CardId) => id !== 'milestone'
