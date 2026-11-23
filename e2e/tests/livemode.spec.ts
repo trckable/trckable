@@ -162,8 +162,10 @@ test('a visit that arrives later is marked as arriving, then settles; the first 
   await signIn(page, '/example.com?view=live')
   await expect(online(page)).toBeVisible({ timeout: 15_000 })
   await expect(page.locator('.lfeed .lv').first()).toBeVisible({ timeout: 15_000 })
-  // Whoever was there at the first look came in without a mark.
-  await expect(page.locator('.lfeed .lv.arriving')).toHaveCount(0)
+  // Whoever was there at the first look came in without a mark. Other specs' visits may arrive meanwhile on the shared site: only the first rows are held to it.
+  await page.locator('.lfeed .lv').evaluateAll((rows) => rows.forEach((r) => r.setAttribute('data-first-look', '')))
+  await page.waitForTimeout(300)
+  await expect(page.locator('.lfeed .lv[data-first-look].arriving')).toHaveCount(0)
   const run = await visit(page, 'livearrive')
   const row = page.locator('.lfeed .lv', { has: page.locator(`.pg[title*="${run}"]`) })
   await expect(row).toHaveClass(/arriving/, { timeout: 5_000 })
