@@ -37,7 +37,7 @@ const OWN_CHROME: Record<string, string> = {
   'features/signals/SurgeModal.tsx': 'the surge hero: a live count is the header',
   'features/bounce/BounceGuideModal.tsx': 'the bounce guide: a hero header like the surge dialog',
   'features/heatmap/HeatOverlay.tsx': 'the heatmap: its header is the toolbar (page, width, layers)',
-  'features/share/ShareDialog.tsx': 'the share image: header carries the period and link switches, body is a preview grid',
+  'features/share/ShareDialog.tsx': 'the share studio: a header with the site and the links corner, a body of three columns held at one size',
   'features/milestones/ShareSheet.tsx': 'a two-column sheet: the card and its side actions share one grid',
   'features/milestones/Timeline.tsx': 'the milestones window: its own scroll region and a full screen on a phone',
   'components/CardModal/CardModal.tsx': 'a story card: tinted kind header and its own action row',

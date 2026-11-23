@@ -10,13 +10,15 @@ type Format struct {
 	W, H int
 }
 
-// Formats are the sizes there are: the link preview (1.91:1, X and LinkedIn),
-// square (Instagram, LinkedIn), story (9:16) and wide (16:9).
+// Formats are the sizes there are: the link preview (1.91:1, Facebook and email), square, story (9:16), wide
+// (16:9, X and Bluesky), LinkedIn's post (1200 × 627) and the 4:5 portrait of Instagram and Threads.
 var Formats = []Format{
 	{"link", 1200, 630},
 	{"square", 1080, 1080},
 	{"story", 1080, 1920},
 	{"wide", 1600, 900},
+	{"post", 1200, 627},
+	{"portrait", 1080, 1350},
 }
 
 // FormatOf is a format by id, the link preview for anything unknown.
@@ -103,7 +105,7 @@ func layoutFor(f Format) Layout {
 		TitlePx: 40 * k, RowPx: 26 * k, BarGap: int(math.Round(150 * k)),
 	}
 	switch f.ID {
-	case "square":
+	case "square", "portrait":
 		l.K, l.Display = 1.15, 1.4
 		l.Left, l.Right = 88, f.W-88
 		l.Tile, l.TileR, l.StatStep = 60, 17, (f.W-176)/3
@@ -118,6 +120,10 @@ func layoutFor(f Format) Layout {
 		l.GridTop, l.GridH, l.GridGap, l.GridPx = 310, 300, 24, 92
 		l.TitleY, l.RowTop, l.RowStep, l.RowH = 250, 310, 124, 100
 		l.TitlePx, l.RowPx, l.BarGap = 58, 38, 160
+		if f.ID == "portrait" {
+			// The square's design, with the extra height (1350 against 1080) spread over every vertical place.
+			l.stretch(float64(f.H) / 1080)
+		}
 	case "story":
 		l.K, l.Display = 1.3, 1.55
 		l.Left, l.Right = 92, f.W-92
@@ -140,6 +146,16 @@ func layoutFor(f Format) Layout {
 
 // layout is the spec's, by its format.
 func (s Spec) layout() Layout { return layoutFor(FormatOf(s.Format)) }
+
+// stretch moves every vertical place of the layout by k: a taller card with the same design (the header, at the top, stays where it is).
+func (l *Layout) stretch(k float64) {
+	for _, v := range []*int{&l.FootY, &l.BigY, &l.LabelY, &l.StatValueY, &l.StatLabelY, &l.SpotBigY, &l.SpotLabelY, &l.NumTop, &l.NumH, &l.GridTop, &l.GridH, &l.RowTop, &l.RowStep, &l.RowH} {
+		*v = int(math.Round(float64(*v) * k))
+	}
+	for _, v := range []*float64{&l.ChartTop, &l.ChartBase, &l.GhostY, &l.LineLo, &l.LineHi} {
+		*v *= k
+	}
+}
 
 // fitPx is the largest size up to px at which s fits its room in the bold
 // font, never below min.

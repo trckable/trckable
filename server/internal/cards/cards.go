@@ -81,8 +81,12 @@ type Spec struct {
 	Badge, Source string
 }
 
-// Backgrounds are the ones a card can have; anything else is the gradient.
-var Backgrounds = []string{"gradient", "solid", "grid"}
+// Backgrounds are the ones a card can have; anything else is the gradient. Sunset and ocean are colour fields of their
+// own: they replace the theme's flat background (a dark card reads on ocean, a light one on sunset).
+var Backgrounds = []string{"gradient", "solid", "grid", "sunset", "ocean"}
+
+// fields are the two colour backgrounds: the corners of a diagonal.
+var fields = map[string][2]string{"sunset": {"#ff8a5c", "#c792ff"}, "ocean": {"#0b2a4a", "#0f6e7a"}}
 
 func (s Spec) bg() string {
 	for _, b := range Backgrounds {
@@ -234,10 +238,12 @@ func (s Spec) shapes(raster bool) ([]byte, error) {
 	var b bytes.Buffer
 	l := s.layout()
 	fmt.Fprintf(&b, `<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d">`, l.W, l.H, l.W, l.H)
-	if err := t.Shapes.Execute(&b, s.frame(raster)); err != nil {
+	var body bytes.Buffer
+	if err := t.Shapes.Execute(&body, s.frame(raster)); err != nil {
 		return nil, err
 	}
 	f := s.frame(raster)
+	b.WriteString(fieldOver(body.String(), f))
 	if f.Bg == "grid" {
 		b.WriteString(gridLines(f))
 	}
@@ -249,6 +255,18 @@ func (s Spec) shapes(raster bool) ([]byte, error) {
 	}
 	b.WriteString(badgeCheck(s, s.frame(raster)))
 	return b.Bytes(), nil
+}
+
+// fieldOver paints a colour background in place of the flat one the template starts with (its first rectangle, the
+// whole card); any other background is left as the template drew it.
+func fieldOver(shapes string, f Frame) string {
+	c, ok := fields[f.Bg]
+	if !ok {
+		return shapes
+	}
+	flat := fmt.Sprintf(`<rect width="%d" height="%d" fill="%s"/>`, f.L.W, f.L.H, f.BG)
+	paint := fmt.Sprintf(`<defs><linearGradient id="field" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="%d" y2="%d"><stop offset="0" stop-color="%s"/><stop offset="1" stop-color="%s"/></linearGradient></defs><rect width="%d" height="%d" fill="url(#field)"/>`, f.L.W, f.L.H, c[0], c[1], f.L.W, f.L.H)
+	return strings.Replace(shapes, flat, paint, 1)
 }
 
 // SVG draws the card as SVG, text and all.

@@ -19,14 +19,15 @@ import (
 // dialog shows it and downloads it, so preview and file are one picture.
 //
 //	GET /api/v1/sites/{site}/card
-//	t        overview | numbers | grid | leaderboard (the top pages) | sources | places | browsers | devices (top five with bars) | toppage | topsource | topplace (one hero) | changed | search | ai | goals | sales (a title, number cards and lines) | milestone (the biggest of the period) (default overview). numbers is the overview without its chart, grid is four numbers, two by two
+//	t        overview | numbers | grid | leaderboard (the top pages) | sources | places | browsers | devices (top five with bars) | toppage | topsource | topplace (one hero) | changed | search | ai | goals | sales (a title, number cards and lines) | milestone (the biggest of the period) | bestday (the day with the most people) (default overview). numbers is the overview without its chart, grid is four numbers, two by two
 //	period   24h | 7d | 30d | all | custom (default 7d); custom takes from and to (YYYY-MM-DD). A period ends today (or this hour), as the dashboard's does; all time begins at the site's first data
 //	compare  1: the change against the period just before, in a pill (off by default; not for all time)
 //	metric   visitors | pageviews | engaged | revenue (default visitors)
 //	stats    up to three small numbers under the chart, comma-separated (see cardStatIDs); default engaged,avgtime,country
-//	shape    link | square | story | wide: the picture's size (cards.Formats; default link, 1200 × 630)
+//	shape    link | square | story | wide | post | portrait: the picture's size (cards.Formats; default link, 1200 × 630)
+//	ms       milestone, with t=milestone: kind~step of the one to draw, whenever it was reached (default: the biggest of the period)
 //	theme    dark | light
-//	bg       gradient (default) | solid | grid
+//	bg       gradient (default) | solid | grid | sunset | ocean
 //	date     0: no period on the picture
 //	name     0: no site name (and no tile) on the picture
 //	accent   #rrggbb
@@ -78,6 +79,8 @@ type cardNumbers struct {
 	HasAI        bool              `json:"has_ai"`
 	HasGoals     bool              `json:"has_goals"`
 	HasMilestone bool              `json:"has_milestone"`
+	HasBestDay   bool              `json:"has_bestday"`
+	bestDay      *cards.Spec       // the best day's words, when the period has one
 	digests      map[string]digest // the digest pictures, by t
 	milestone    *milestoneLine
 	rows         []cards.Item

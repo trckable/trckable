@@ -17,7 +17,8 @@ import (
 //	ai         the visitors AI assistants sent, by assistant, and the mentions found in the period
 //	goals      the goals reached most
 //	sales      revenue and orders (only where the report shows money)
-//	milestone  the biggest milestone reached in the period, as its own card says it
+//	milestone  the biggest milestone reached in the period, as its own card says it, or the one asked for with ms (kind~step)
+//	bestday    the day of the period with the most people, and how many
 //
 // Each is asked for only by its own t (the dialog's json asks for all, to know which the site can make).
 
@@ -80,6 +81,9 @@ func (a *API) pictures(c cardReading, n *cardNumbers, hours bool, kind string) {
 	}
 	if want("milestone") {
 		a.milestonePicture(c, n)
+	}
+	if want("bestday") {
+		n.bestDayPicture(c, hours)
 	}
 	n.vouchDigests()
 }
@@ -265,8 +269,33 @@ func (n *cardNumbers) salesPicture(res *query.Result) {
 	n.digests["sales"] = d
 }
 
-// milestonePicture is the biggest milestone found in the period, in the milestone card's own words. A money one
-// never shows its amount here.
+// bestDayPicture is the day of the period with the most people, as the spotlight says it: the count, what it is and the
+// day. A period read by the hour, or by weeks or months, has no day to name.
+func (n *cardNumbers) bestDayPicture(c cardReading, hours bool) {
+	if hours || (c.params.Bucket != "" && c.params.Bucket != "day") {
+		return
+	}
+	best := -1
+	for i, pt := range c.res.Series {
+		if len(pt.T) >= 10 && pt.Visitors > 0 && (best < 0 || pt.Visitors > c.res.Series[best].Visitors) {
+			best = i
+		}
+	}
+	if best < 0 {
+		return
+	}
+	day, err := time.ParseInLocation("2006-01-02", c.res.Series[best].T[:10], c.loc)
+	if err != nil {
+		return
+	}
+	l := n.l()
+	n.HasBestDay = true
+	n.bestDay = &cards.Spec{Big: l.number(c.res.Series[best].Visitors), Label: l.bestDay, Foot: l.shortDay(day, true)}
+}
+
+// milestonePicture is the biggest milestone found in the period, in the milestone card's own words; with ms (kind~step)
+// the one asked for, whenever it was reached. A money one never shows its amount here, and never on the pictures a
+// link may carry (see publicCard).
 func (a *API) milestonePicture(c cardReading, n *cardNumbers) {
 	list, _, err := a.visibleMilestones(c.r, c.site)
 	if err != nil {
@@ -275,7 +304,14 @@ func (a *API) milestonePicture(c cardReading, n *cardNumbers) {
 	first := c.params.From.In(c.loc).Format("2006-01-02")
 	last := c.params.To.Add(-time.Nanosecond).In(c.loc).Format("2006-01-02")
 	best := -1
+	asked := c.r.URL.Query().Get("ms")
 	for i, m := range list {
+		if asked != "" {
+			if m.Kind+"~"+m.Step == asked {
+				best = i
+			}
+			continue
+		}
 		if m.Day >= first && m.Day <= last && (best < 0 || milestones.Bigger(m, list[best])) {
 			best = i
 		}

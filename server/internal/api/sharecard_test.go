@@ -300,8 +300,8 @@ func TestCardShapeSizes(t *testing.T) {
 	// Drawing a 1080x1920 picture under the race detector takes longer than the rig's 5 s.
 	owner.Timeout = 60 * time.Second
 	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
-	for shape, want := range map[string]image.Point{"": {1200, 630}, "link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}, "nope": {1200, 630}} {
-		for _, tpl := range []string{"overview", "leaderboard"} {
+	for shape, want := range map[string]image.Point{"": {1200, 630}, "link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}, "post": {1200, 627}, "portrait": {1080, 1350}, "nope": {1200, 630}} {
+		for _, tpl := range []string{"overview", "leaderboard", "bestday", "milestone"} {
 			code, _, body := get(t, owner, card+"?t="+tpl+"&shape="+shape)
 			if code != http.StatusOK {
 				t.Fatalf("%s %s: %d", tpl, shape, code)

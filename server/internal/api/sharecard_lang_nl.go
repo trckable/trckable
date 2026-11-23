@@ -58,6 +58,8 @@ var cardNL = &cardLang{
 	noGoals:           "Geen doelen bereikt in deze periode",
 	noSales:           "Geen verkopen in deze periode",
 	noMilestone:       "Geen mijlpaal in deze periode",
+	bestDay:           "mensen op je beste dag",
+	noBestDay:         "Heeft een dag met bezoeken nodig",
 
 	gridTitle: map[string]string{"24h": "Vandaag in cijfers", "7d": "Deze week in cijfers", "30d": "Deze maand in cijfers", "all": "Alle tijd in cijfers", "custom": "Jouw cijfers"},
 	listTitle: map[string]string{"leaderboard": "Toppagina’s", "sources": "Topbronnen", "places": "Toplanden", "browsers": "Topbrowsers", "devices": "Mobiel en desktop"},

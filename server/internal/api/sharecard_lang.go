@@ -33,7 +33,7 @@ type cardLang struct {
 	changedPeople, homePage, theHomePage, direct, changedTitle                                           string
 	// The other pictures.
 	searchTitle, searchBadge, searchClicks, searchImpressions, aiTitle, aiVisits, aiMentions, aiRequests, aiPerVisitor, aiTop, aiRequestsOf, goalsTitle, salesTitle, salesRevenue, salesOrders string
-	noChanged, noSearch, noAI, noGoals, noSales, noMilestone                                                                                                                                   string
+	noChanged, noSearch, noAI, noGoals, noSales, noMilestone, bestDay, noBestDay                                                                                                               string
 	// Periods: the pill, how a post says it, what a change is against.
 	last24, post24, postDays, postAll, postRange, since string
 	prev24, prevDay, prevDays, vs                       string

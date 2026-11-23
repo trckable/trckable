@@ -3,5 +3,5 @@
 .mk .lhc button.lhwhy{color:var(--mk-muted);font-size:13px;padding:var(--mk-s1) var(--mk-s2);border-radius:8px}
 .mk .lhc button.lhwhy:hover{color:var(--mk-text);text-decoration:underline}
 /* The quiet second line under an empty block's line, and under a figure that stands in for another. */
-.mk .lhnote{max-width:36ch;font-size:12px;line-height:1.4;color:var(--mk-faint);opacity:.85}
+.mk .lhnote{max-width:36ch;font-size:12px;line-height:1.4;color:var(--mk-muted)}
 .mk .lhspeed .lhwhat{font-size:12px;color:var(--mk-muted)}

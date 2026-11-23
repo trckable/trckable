@@ -86,7 +86,7 @@ func (n *cardNumbers) vouchMoney(spec *cards.Spec, t string) {
 // Console has no numbers to vouch for there.
 func (n *cardNumbers) empty(spec *cards.Spec, t string) bool {
 	l := n.l()
-	return (spec.Big == l.noVisits && len(spec.Rows) == 0) || spec.Big == l.noMilestone || (t == "grid" && !n.HasData)
+	return (spec.Big == l.noVisits && len(spec.Rows) == 0) || spec.Big == l.noMilestone || spec.Big == l.noBestDay || (t == "grid" && !n.HasData)
 }
 
 // pictureOf sets what the picture says on the spec: a list or hero from its items, and for every picture
@@ -115,11 +115,26 @@ func (n *cardNumbers) pictureOf(spec *cards.Spec, t string) {
 		n.milestoneOf(spec)
 		return
 	}
+	if t == "bestday" {
+		n.bestDayOf(spec)
+		return
+	}
 	if (t == "overview" || t == "numbers" || t == "grid") && !n.HasData && n.Metric != "revenue" {
 		// The grid is drawn as the overview here: its four numbers would all be zeros.
 		spec.Template = "overview"
 		spec.Big, spec.Label, spec.Change, spec.Dir, spec.Series, spec.Stats = l.noVisits, "", "", 0, nil, nil
 	}
+}
+
+// bestDayOf makes the spec the best day's card: the spotlight, with the count and the day; with no day to name, the line
+// that says so.
+func (n *cardNumbers) bestDayOf(spec *cards.Spec) {
+	spec.Template, spec.Change, spec.Dir, spec.Series, spec.Stats = "spotlight", "", 0, nil, nil
+	if n.bestDay == nil {
+		spec.Big, spec.Label = n.l().noBestDay, ""
+		return
+	}
+	spec.Big, spec.Label, spec.Foot = n.bestDay.Big, n.bestDay.Label, n.bestDay.Foot
 }
 
 // milestoneOf makes the spec the milestone's own card (the spotlight, in its words and colours), on the format and

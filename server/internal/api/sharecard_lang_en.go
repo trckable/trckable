@@ -58,6 +58,8 @@ var cardEN = &cardLang{
 	noGoals:           "No goals reached in this period",
 	noSales:           "No sales in this period",
 	noMilestone:       "No milestone in this period",
+	bestDay:           "people on your best day",
+	noBestDay:         "Needs a day with visits",
 
 	gridTitle: map[string]string{"24h": "Today in numbers", "7d": "This week in numbers", "30d": "This month in numbers", "all": "All time in numbers", "custom": "Your numbers"},
 	listTitle: map[string]string{"leaderboard": "Top pages", "sources": "Top sources", "places": "Top countries", "browsers": "Top browsers", "devices": "Mobile and desktop"},

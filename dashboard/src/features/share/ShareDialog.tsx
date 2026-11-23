@@ -1,147 +1,189 @@
-// Share your numbers: the picture on the left, the panel on the right (what to share, the period, the numbers,
-// the look, then download or copy). The picture is drawn on the server from the site's totals, top pages, chart
-// and top country (never a visitor), and revenue is in it only where the report would show it. A read-only link is
-// the Link corner.
-import { Link2, X } from 'lucide-react'
+// The share studio: one screen that never scrolls or folds. Pick where the card goes (left), see it at that place's size
+// (middle) with the cards to pick from under it, style it (right), then post it, download it or copy a link.
+// The card is drawn on the server from the site's own numbers: the picture here, the file and the picture a shared
+// link carries are one card. Nothing is posted by the server; a network opens with the post written.
+import { Link2, Palette, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { api, type Milestone, type Site } from '../../lib/api'
 import { more, type Share } from '../../lib/apiMore'
-import { useEffect, useState } from 'react'
-import type { Site } from '../../lib/api'
 import { can } from '../../lib/permissions'
+import { QUERY } from '../../kit/breakpoints'
 import { Modal } from '../../kit/Modal'
+import { useMedia } from '../../lib/useNarrow'
 import { toast } from '../../components/Toast'
-import { ACCENTS, DEFAULT_STATS, METRICS, cardUrl, fileName, formatOf, hasNumbers, hasOf, missing, PICTURES, picturesOf, statsWith, type CardWords, type Look, type Mode, type Period, type Topic } from './card'
-import { Actions, type Act } from './Actions'
-import { LinkPicker } from './LinkPicker'
-import { copyForSlack, linkedInAddress, postLink, xAddress } from './post'
-import { nameOf } from '../sharelinks/copy'
-import { copy } from './copy'
-import { copyImage, saveImage, shareImage } from './image'
+import { fail } from '../../components/toastBus'
+import { isMoney, say } from '../milestones/words'
+import { cardOf, cardOfTopic, cardUrl, fileName, formatOf, hasOf, offered, type CardWords, type Group, type Look, type Period, type Style, type Topic } from './card'
+import { CardStrip, type Tab, type Tile } from './CardStrip'
 import { LinkPanel } from './LinkPanel'
+import { cardLink, linkFor, linkable } from './link'
+import { canShareImage, saveImage, shareImage } from './image'
+import { copy } from './copy'
+import { OPENERS, postText, takesText } from './post'
+import { PostText } from './PostText'
 import { Preview } from './Preview'
-import { CardSection } from './CardSection'
-import { LookSection } from './LookSection'
-import { NumbersSection } from './NumbersSection'
-import { PeriodSection } from './PeriodSection'
-import { ModeSwitch } from './ModeSwitch'
-import { Section } from './Section'
+import { placeOf, sizeAt, type Place } from './places'
+import { ShareTo } from './ShareTo'
+import { SizeBar } from './SizeBar'
+import { StudioActions, type Act } from './StudioActions'
+import { StylePanel } from './StylePanel'
+import { keepStyle, savedStyle } from './style'
 import { useLook } from './useLook'
 import './ShareDialog.css'
-import { fail } from '../../components/toastBus'
 
-type Props = { site: Site; sites: Site[]; period?: Period; /** The gallery's group the dialog opens on: its first picture is the one shown. */ topic?: Topic; onClose: () => void }
+type Props = { site: Site; sites: Site[]; period?: Period; /** The topic the dialog opens on: its card is the one shown. */ topic?: Topic; onClose: () => void }
 
-export default function ShareDialog({ site: first, sites, period = '7d', topic = 'overview', onClose }: Props) {
-  const [siteId, setSiteId] = useState(first.id)
-  const site = sites.find((s) => s.id === siteId) ?? first
-  const [look, setLook] = useState<Look>({ template: picturesOf(topic)[0].id, shape: 'link', period, compare: false, metric: 'visitors', stats: DEFAULT_STATS, theme: 'dark', accent: ACCENTS[0] })
-  // A new big number is not shown again among the small ones.
-  const set = (l: Partial<Look>) => setLook((x) => (l.metric ? { ...x, ...l, stats: statsWith(l.stats ?? x.stats, l.metric) } : { ...x, ...l }))
-  const brand = useLook(site.id)
-  // The picture asks with the site's choice, so it is drawn again when that flips.
-  const shown: Look = { ...look, hideBrand: brand.look && !brand.look.brand_locked ? brand.look.hide_brand : undefined }
+/** The milestones a card may carry: the ones that are not money (a link shows no revenue, and no AI visits), the newest first. */
+/** The places whose main action is a link. */
+const NEEDS_LINK = new Set<Place>(['linkedin', 'x', 'threads', 'facebook', 'bluesky', 'email'])
+
+const reached = (list: Milestone[]) => list.filter((m) => !isMoney(m.kind) && m.kind !== 'ai_visits').sort((a, b) => b.day.localeCompare(a.day) || b.created_at - a.created_at)
+
+export default function ShareDialog({ site, period = '30d', topic, onClose }: Props) {
+  const [place, setPlace] = useState<Place>('linkedin')
+  const [size, setSize] = useState(0)
+  const [look, setLook] = useState<Look>(() => ({ card: cardOfTopic(topic), shape: sizeAt('linkedin', 0).shape, period, ...savedStyle(site.id) }))
+  const [group, setGroup] = useState<Group>(() => cardOf(cardOfTopic(topic)).group)
   const [words, setWords] = useState<CardWords | null>(null)
+  const [edited, setEdited] = useState<string | null>(null)
+  const [reachedAll, setReached] = useState<Milestone[] | null>(null)
+  const [links, setLinks] = useState<Share[]>([])
+  const [linking, setLinking] = useState(false)
+  const [styling, setStyling] = useState(false)
   const [busy, setBusy] = useState<Act | null>(null)
   const [done, setDone] = useState<Act | null>(null)
-  const [linking, setLinking] = useState(false)
-  // The site's links: what Copy link copies, and the link a post carries. Read when the dialog opens and when the link panel closes.
-  const [links, setLinks] = useState<Share[]>([])
-  const [picking, setPicking] = useState(false)
-  const [mode, setMode] = useState<Mode>('picture')
-  const [open, setOpen] = useState('')
-  const toggle = (id: string) => setOpen((o) => (o === id ? '' : id))
+  const phone = useMedia(QUERY.handheld)
+  const owner = can('share.manage')
+  const brand = useLook(site.id)
 
-  // The words: whether revenue may be picked, and the post's text. Revenue
-  // is never the default; asked for where it is not allowed, the server
-  // answers with visitors, and the switch follows.
+  const shape = sizeAt(place, size).shape
+  // The picture asks with the site's choice, so it is drawn again when that flips.
+  const shown: Look = { ...look, shape, hideBrand: brand.look && !brand.look.brand_locked ? brand.look.hide_brand : undefined }
+  const set = (l: Partial<Look>) => setLook((x) => ({ ...x, ...l }))
+  const style = (s: Partial<Style>) => {
+    set(s)
+    keepStyle(site.id, { style: look.style, accent: look.accent, name: look.name, date: look.date, chart: look.chart, ...s })
+  }
+
+  // The card's words and what the site can make, for this card and period.
+  const wordsAt = cardUrl(site.id, shown, 'json')
   useEffect(() => {
     let stale = false
-    fetch(cardUrl(site.id, look, 'json'), { credentials: 'same-origin' })
+    fetch(wordsAt, { credentials: 'same-origin' })
       .then((r) => (r.ok ? (r.json() as Promise<CardWords>) : null))
-      .then((w) => {
-        if (stale || !w) return
-        setWords(w)
-        if (w.metric !== look.metric) set({ metric: w.metric })
-        // A picture the period cannot fill (no visit in it) gives way to the overview.
-        const now = PICTURES.find((p) => p.id === look.template)
-        if (now && missing(now, hasOf(w))) set({ template: 'overview' })
-      })
+      .then((w) => !stale && w && setWords(w))
       .catch(() => undefined)
     return () => {
       stale = true
     }
-  }, [site.id, look.period, look.range?.from, look.range?.to, look.compare, look.metric, look.template]) // eslint-disable-line react-hooks/exhaustive-deps -- the words depend on these only
+  }, [wordsAt])
   useEffect(() => {
-    if (!can('share.manage') || linking) return
+    api
+      .milestones(site.id)
+      .then((r) => setReached(r.enabled ? reached(r.milestones) : []))
+      .catch(() => setReached([]))
+  }, [site.id])
+  useEffect(() => {
+    if (!owner) return
     more
       .shares(site.id)
       .then((r) => setLinks(r.shares.filter((x) => x.url)))
       .catch(() => setLinks([]))
-  }, [site.id, linking])
+  }, [site.id, owner])
   useEffect(() => {
     if (!done) return
     const t = setTimeout(() => setDone(null), 1600)
     return () => clearTimeout(t)
   }, [done])
 
-  const copyLink = async (link: Share) => {
-    if (!link.url) return
-    setPicking(false)
-    await navigator.clipboard.writeText(link.url)
-    toast(copy.linkCopiedNamed(nameOf(link)))
-    setDone('link')
+  const reachedList = useMemo(() => reachedAll ?? [], [reachedAll])
+  const has = hasOf(words)
+  const tabs: Tab[] = useMemo(
+    () =>
+      offered(has, reachedList.length).map(({ group: g, cards }) => ({
+        group: g,
+        name: copy.groups[g],
+        tiles: cards.flatMap((id): Tile[] =>
+          id === 'milestone'
+            ? reachedList.map((m) => ({ key: `${m.kind}~${m.step}`, card: id, ms: `${m.kind}~${m.step}`, name: [say(m).big, say(m).label].filter(Boolean).join(' ') }))
+            : [{ key: id, card: id, name: copy.cards[id] }],
+        ),
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `has` is read from the words
+    [reachedList, words],
+  )
+  // A card the site cannot make in this period (or no longer has) gives way to the first it can.
+  useEffect(() => {
+    if (!words || !reachedAll) return
+    const now = tabs.flatMap((t) => t.tiles).some((t) => t.card === look.card && t.ms === look.ms)
+    const first = tabs[0]?.tiles[0]
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- a card the site cannot make gives way once the words say so
+    if (!now && first) set({ card: first.card, ms: first.ms })
+    if (!tabs.some((t) => t.group === group) && tabs[0]) setGroup(tabs[0].group)
+  }, [tabs]) // eslint-disable-line react-hooks/exhaustive-deps -- only when what can be made changes
+
+  const pickPlace = (p: Place) => {
+    setPlace(p)
+    setSize(0)
+  }
+  const pickGroup = (g: Group) => {
+    setGroup(g)
+    const t = tabs.find((x) => x.group === g)?.tiles[0]
+    if (t && cardOf(look.card).group !== g) set({ card: t.card, ms: t.ms })
+  }
+  const text = postText(words?.post ?? '', edited)
+  const px = formatOf(shape)
+
+  const ensureLink = async () => {
+    const url = await cardLink(site.id, links, shown)
+    if (!linkFor(links, shown)) setLinks((await more.shares(site.id)).shares.filter((x) => x.url))
+    return url
+  }
+  const save = () => saveImage(cardUrl(site.id, shown), fileName(site.domain, shown))
+  const open = async () => {
+    // The window is opened in the click: one asked for after a wait is one a browser may refuse. Its address follows.
+    const win = window.open('', '_blank')
+    try {
+      if (!takesText(place)) await navigator.clipboard.writeText(text)
+      const url = OPENERS[place]?.(text, await ensureLink())
+      if (!url) throw new Error(copy.failed)
+      if (win) {
+        win.opener = null
+        win.location.href = url
+      } else window.open(url, '_blank', 'noopener,noreferrer')
+    } catch (e) {
+      win?.close()
+      throw e
+    }
   }
   const go = async (act: Act) => {
+    if (!linkable(shown) && (act === 'link' || (act === 'main' && NEEDS_LINK.has(place)))) return
     setBusy(act)
     try {
-      const url = cardUrl(site.id, shown)
-      if (act === 'text') {
-        await navigator.clipboard.writeText(words?.post ?? '')
-        toast(copy.copied)
-      } else if (act === 'link') {
-        // A link that exists; one is never made by a click on Copy. Several: the person says which.
-        if (!links.length) {
-          toast(copy.noLink)
-          setLinking(true)
-          return
-        }
-        if (links.length > 1) {
-          setPicking(true)
-          return
-        }
-        await copyLink(links[0])
-      } else if (act === 'x' || act === 'linkedin') {
-        // Opened at once, in the click: a window asked for after a wait is one a browser may refuse.
-        window.open(act === 'x' ? xAddress(words?.post ?? '', postLink(links)) : linkedInAddress(words?.post ?? '', postLink(links)), '_blank', 'noopener,noreferrer')
-      } else if (act === 'slack') {
-        await copyForSlack(words?.post ?? '', postLink(links))
-        toast(copy.slackCopied)
-      } else if (act === 'copy') {
-        await copyImage(url)
-        toast(copy.imageCopied)
-      } else if (act === 'share') await shareImage(url, fileName(site.domain, look), site.domain)
-      else await saveImage(url, fileName(site.domain, look))
+      if (act === 'save' || (act === 'main' && place === 'download')) await save()
+      else if (act === 'link' || (act === 'main' && place === 'email')) await navigator.clipboard.writeText(await ensureLink())
+      else if (place === 'instagram') {
+        if (phone && canShareImage()) await shareImage(cardUrl(site.id, shown), fileName(site.domain, shown), site.domain)
+        else await save()
+      } else await open()
       setDone(act)
     } catch (e) {
-      fail(e)
+      if (!owner) toast(copy.needsOwner, 'error')
+      else fail(e)
     } finally {
       setBusy(null)
     }
   }
-  const has = hasOf(words)
-  const px = formatOf(look.shape)
-  const metrics = METRICS.filter((m) => m !== 'revenue' || words?.revenue)
-
-  const numbersSummary = copy.metrics[look.metric]
 
   return (
     <Modal label={copy.title} className="sd-modal" onClose={onClose}>
       <span className="sd-handle" aria-hidden="true" />
       <div className="sd-head">
         <h2>{copy.title}</h2>
-        {can('share.manage') && (
-          <button type="button" className="btn sd-links" aria-pressed={linking} title={copy.linkTitle} onClick={() => setLinking((x) => !x)}>
+        <span className="sd-site">{site.domain}</span>
+        {owner && (
+          <button type="button" className="btn icon sd-links" aria-pressed={linking} aria-label={copy.link} title={copy.linkTitle} onClick={() => setLinking((x) => !x)}>
             <Link2 size={16} strokeWidth={1.8} aria-hidden="true" />
-            <span>{copy.link}</span>
           </button>
         )}
         <button type="button" className="btn icon sd-close" aria-label={copy.close} onClick={onClose}>
@@ -150,35 +192,27 @@ export default function ShareDialog({ site: first, sites, period = '7d', topic =
       </div>
       {linking && <LinkPanel site={site} onBack={() => setLinking(false)} />}
       {!linking && (
-        <div className="sd-body">
+        <div className="sd-studio">
+          <ShareTo place={place} onPick={pickPlace} />
           <div className="sd-stage">
-            <Preview site={site.id} look={shown} words={words} mode={mode} />
+            <SizeBar place={place} size={size} card={look.card} period={look.period} onSize={setSize} onPeriod={(p) => set({ period: p })} />
+            <Preview site={site.id} look={shown} alt={copy.previewAlt(copy.cards[look.card])} />
+            {placeOf(place).social ? <PostText place={place} text={text} onChange={setEdited} /> : <span className="sd-note faint">{copy.sizes[sizeAt(place, size).name]} {px.w}×{px.h}</span>}
           </div>
-          <div className="sd-panel">
-            <div className="sd-sections">
-              <ModeSwitch mode={mode} onChange={setMode} />
-              {/* The period first and always open: it is what a person changes most. */}
-              <div className="sd-period" aria-label={copy.period} role="group">
-                <span className="sd-label">{copy.period}</span>
-                <PeriodSection look={look} tz={site.timezone} set={set} />
-              </div>
-              {hasNumbers(look.template) && (
-                <Section id="numbers" title={copy.numbers} summary={numbersSummary} open={open === 'numbers'} onToggle={() => toggle('numbers')}>
-                  <NumbersSection look={look} metrics={metrics} revenue={words?.revenue ?? false} set={set} />
-                </Section>
-              )}
-              <CardSection site={site.id} look={shown} has={has} onChange={(t) => set({ template: t })} />
+          <CardStrip site={site.id} look={shown} tabs={tabs} group={group} onGroup={pickGroup} onPick={(t) => set({ card: t.card, ms: t.ms })} label={copy.cardsLabel} />
+          {phone && (
+            <button type="button" className="btn sd-style-open" aria-expanded={styling} onClick={() => setStyling((s) => !s)}>
+              <Palette size={16} strokeWidth={1.8} aria-hidden="true" />
+              {copy.styleTitle}
+            </button>
+          )}
+          <aside className={'sd-side' + (styling ? ' is-open' : '')} aria-label={copy.styleTitle}>
+            <div className="sd-sheet">
+              <h3 className="sd-cap">{copy.styleTitle}</h3>
+              <StylePanel card={look.card} style={look} onChange={style} />
             </div>
-            {mode === 'picture' && (
-              <div className="sd-look-row">
-                <Section id="look" title={copy.lookTitle} summary={copy[look.theme]} open={open === 'look'} onToggle={() => toggle('look')}>
-                  <LookSection site={site} sites={sites.length ? sites : [site]} onSite={setSiteId} look={look} set={set} brand={brand} />
-                </Section>
-              </div>
-            )}
-            {picking && <LinkPicker shares={links} onPick={(l) => void copyLink(l).catch(fail)} onClose={() => setPicking(false)} />}
-            <Actions post={mode === 'text'} link={can('share.manage')} size={`${px.w}×${px.h}`} busy={busy} done={done} onAct={(a) => void go(a)} />
-          </div>
+            <StudioActions place={place} shape={shape} busy={busy} done={done} link={owner} allTime={!linkable(shown)} onAct={(a) => void go(a)} />
+          </aside>
         </div>
       )}
     </Modal>

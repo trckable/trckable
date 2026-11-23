@@ -58,6 +58,8 @@ var cardFR = &cardLang{
 	noGoals:           "Aucun objectif atteint sur cette période",
 	noSales:           "Aucune vente sur cette période",
 	noMilestone:       "Aucun jalon sur cette période",
+	bestDay:           "personnes lors de votre meilleur jour",
+	noBestDay:         "Il faut un jour avec des visites",
 
 	gridTitle: map[string]string{"24h": "Aujourd’hui en chiffres", "7d": "Cette semaine en chiffres", "30d": "Ce mois en chiffres", "all": "Tout l’historique en chiffres", "custom": "Vos chiffres"},
 	listTitle: map[string]string{"leaderboard": "Pages principales", "sources": "Sources principales", "places": "Pays principaux", "browsers": "Navigateurs principaux", "devices": "Mobile et ordinateur"},
