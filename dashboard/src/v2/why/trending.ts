@@ -1,7 +1,5 @@
-// Top, trending up and trending down for one breakdown (pages, sources): the report's own current and previous rows, ranked.
+// The top of one breakdown (pages, sources): the report's own current and previous rows, ranked, each with its change.
 import type { Row } from '../../lib/api'
-
-export type Kind = 'top' | 'up' | 'down'
 
 export interface Item {
   value: string
@@ -15,8 +13,6 @@ export interface Item {
   fresh: boolean
 }
 
-/** A value counts as trending only when it has at least this many visitors in one of the two periods. Below that, a swing from 1 to 3 is noise. */
-export const MIN_COUNT = 5
 export const ROWS = 5
 const TRUNCATED = 10 // a list this long may have been cut: a value missing from it is not proven to be zero
 
@@ -40,28 +36,10 @@ export function itemsOf(cur: Row[] | null | undefined, prev: Row[] | null | unde
   return out
 }
 
-/** Most to least movement; the same movement orders by the bigger percent, then the bigger list, then the name, so the order never flickers. */
-const byMove = (sign: 1 | -1) => (a: Item, b: Item) =>
-  sign * (b.now - b.was) - sign * (a.now - a.was) ||
-  sign * ((b.pct ?? Infinity) - (a.pct ?? Infinity)) ||
-  b.now - a.now ||
-  a.value.localeCompare(b.value)
-
-/**
- * Top: the most visitors this period. Trending up and down: the biggest rise and fall in visitors against the period
- * before, among values with at least MIN_COUNT visitors in one of the two periods. A value with nothing before it is new.
- */
-export function listOf(kind: Kind, cur: Row[] | null | undefined, prev: Row[] | null | undefined, rows = ROWS): Item[] {
-  const all = itemsOf(cur, prev)
-  if (kind === 'top') {
-    return all
-      .filter((i) => i.now > 0)
-      .sort((a, b) => b.now - a.now || a.value.localeCompare(b.value))
-      .slice(0, rows)
-  }
-  const sign = kind === 'up' ? 1 : -1
-  return all
-    .filter((i) => Math.max(i.now, i.was) >= MIN_COUNT && sign * (i.now - i.was) > 0)
-    .sort(byMove(sign))
+/** The most visitors this period, each with its change against the period before; the same count orders by name, so the order never flickers. */
+export function topOf(cur: Row[] | null | undefined, prev: Row[] | null | undefined, rows = ROWS): Item[] {
+  return itemsOf(cur, prev)
+    .filter((i) => i.now > 0)
+    .sort((a, b) => b.now - a.now || a.value.localeCompare(b.value))
     .slice(0, rows)
 }

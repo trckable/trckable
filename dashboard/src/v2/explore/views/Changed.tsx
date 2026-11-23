@@ -1,149 +1,103 @@
-// What changed: Overview's own cards, the one sentence that says what moved, and the biggest changes of every table as one ranked list.
-import { lazy, Suspense, useEffect, useState } from 'react'
+// What changed, the Briefing: four cards. Today (the one sentence, people and sign-ups, the chart), what moved, where they came from and what they looked at.
+import { useState } from 'react'
 import { useNotes } from '../../../features/notes/useNotes'
-import type { Report, Site } from '../../../lib/api'
 import { fmtInt } from '../../../lib/format'
+import { todayIn } from '../../../lib/dates'
 import { isShared } from '../../../lib/me'
-import { can } from '../../../lib/permissions'
-import { openSettings } from '../../../lib/settings'
-import { NotesSheet } from '../../ui/BriefingSheets'
 import { mult } from '../../briefing/model'
-import { explain, movers, type Cause, type Metric, type Why } from '../../why/model'
+import { periodName } from '../../ui/PagePeriod'
+import { explain, movers, type Cause } from '../../why/model'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
-import { ChangedChart } from './chartChunk'
-import type { Overview as Model } from '../types'
-import { Downtime } from './Downtime'
-import { XKcs } from '../../ui/XKcs'
+import { pathOf } from '../googlePath'
+import type { Briefing } from '../types'
 import { viewerKcs } from '../viewerKcs'
-import { MoverChips, MoverList, nameOf } from './Movers'
-import { Trending } from './Trending'
+import { BriefCard } from './BriefCard'
+import { MoverList, nameOf } from './Movers'
+import { NotesHost } from './NotesHost'
+import { Today } from './Today'
+import { PagesCard, SourcesCard } from './Trending'
 
-const NoteDialog = lazy(() => import('../../../components/NoteDialog').then((m) => ({ default: m.NoteDialog })))
+const MOVED = 5
+
+/** How much a number moved as the sentence and the figure beside the people both write it: "10%", or "2.1x" from a doubling. */
+export const movedBy = (pct: number): string => (pct >= 100 ? mult(pct / 100 + 1) : `${Math.abs(Math.round(pct))}%`)
 
 function sentence(name: string, kind: string, pct: number | null, diff: number, top?: Cause): string {
   if (kind === 'few') return copy.sayFew
   if (kind === 'flat') return copy.sayFlat
   if (kind === 'mix') return copy.sayMix(name)
   if (pct === null) return copy.sayNew(name)
-  const moved = pct >= 100 ? copy.sayRose(name, mult(pct / 100 + 1)) : (pct < 0 ? copy.sayFell : copy.sayRose)(name, `${Math.abs(Math.round(pct))}%`)
+  const moved = (pct < 0 ? copy.sayFell : copy.sayRose)(name, movedBy(pct))
   if (!top) return copy.sayEnd(moved)
   // "Mostly" only when it is more than half of the move.
   const place = top.value === '/' ? copy.theHomePage : nameOf(top.value)
   return (diff !== 0 && top.diff / diff > 0.5 ? copy.sayMostly : copy.sayLed)(moved, place)
 }
 
-/** One number under its floor: the line names it, with both figures, and leaves the rest of the page as it is. */
-function fewOf(w: Why, fmt: (n: number) => string): string {
-  return w.now === 0 && w.was === 0 ? copy.sayNone[w.metric] : copy.sayFewOf(copy.metric[w.metric], fmt(w.now), fmt(w.was))
+/** The people under their floor: the line names the number, with both figures, and leaves the rest of the page as it is. */
+function fewOf(now: number, was: number): string {
+  return now === 0 && was === 0 ? copy.sayNone : copy.sayFewOf(copy.people, fmtInt(now), fmtInt(was))
 }
 
 /** The daily email's lines from the same numbers: the sentence, the four cards, and the biggest changes. */
-export function mailOf(d: Model & { report: Report }) {
+export function mailOf(d: Briefing) {
   const cur = { ...d.report.current, series: d.report.current.series ?? [] }
   const prev = d.report.previous ? { ...d.report.previous, series: d.report.previous.series ?? [] } : undefined
   const w = prev ? explain(cur, prev, 'visitors') : null
   return {
-    headline: w ? sentence(copy.metric.visitors, w.kind, w.pct, w.diff, w.causes[0]) : copy.sayChoose,
+    headline: w ? sentence(copy.people, w.kind, w.pct, w.diff, w.causes[0]) : copy.sayChoose,
     facts: d.kcs.map((k) => ({ n: k.val, u: k.label.toLowerCase(), t: k.note.t })),
     claims: (w?.causes ?? []).slice(0, 3).map((k) => `${nameOf(k.value)}: ${fmtInt(k.was)} → ${fmtInt(k.now)}`),
   }
 }
 
-/** The period's notes and the daily email, which have no other home on this screen. */
-function Tools({ site, to, notes, sheet, setSheet }: { site: Site; to: string; notes: ReturnType<typeof useNotes>; sheet: boolean; setSheet: (on: boolean) => void }) {
-  const [add, setAdd] = useState(false)
-  const canNote = can('note.write') && !isShared()
-  useEffect(() => {
-    const open = () => canNote && setAdd(true)
-    window.addEventListener('trckable:note', open)
-    return () => window.removeEventListener('trckable:note', open)
-  }, [canNote])
-  if (isShared()) return null
-  return (
-    <div className="xchg-tools">
-      <button type="button" className="xb" onClick={() => setSheet(true)}>{copy.notesBtn(notes.notes.length)}</button>
-      {canNote && <button type="button" className="xb" onClick={() => openSettings(site, 'alerts')}>{copy.dailyEmail}</button>}
-      {sheet && <NotesSheet site={site.domain} siteId={site.id} notes={notes.notes} onChanged={notes.load} onClose={() => setSheet(false)} onAdd={canNote ? () => setAdd(true) : undefined} />}
-      {add && (
-        <Suspense fallback={null}>
-          <NoteDialog site={site} day={to} today={to} days={[]} notes={notes.notes} onClose={() => setAdd(false)} onSaved={() => { setAdd(false); notes.load() }} />
-        </Suspense>
-      )}
-    </div>
-  )
+/** The causes the sentence names first (so the lead it names is always row 1), then the rest of the biggest changes, five in all. */
+export function moversOf(causes: Cause[], rest: Cause[]): Cause[] {
+  const named = new Set(causes.map((c) => `${c.dim}:${c.value}`))
+  return [...causes, ...rest.filter((c) => !named.has(`${c.dim}:${c.value}`))].slice(0, MOVED)
 }
 
-/** The chart's place: its height is held from the first paint, so the cards under it do not move when it arrives. */
-function ChartSlot({ x, report, notes, onNotes }: { x: XCtx; report: Report; notes: { day: string; text: string }[]; onNotes: () => void }) {
-  return (
-    <div className="xchg-chart">
-      <Suspense fallback={<i className="sk" />}>
-        <ChangedChart x={x} report={report} notes={notes} onNotes={onNotes} />
-      </Suspense>
-    </div>
-  )
-}
-
-/** Too little to compare: the one line that says why there is no comparison, and the one way to widen the period. */
-function Plain({ x }: { x: XCtx }) {
-  return (
-    <>
-      <p className="xchg-few">{copy.fewHere}</p>
-      {x.widen && (
-        <button type="button" className="xb" onClick={x.widen}>
-          {copy.widen}
-        </button>
-      )}
-    </>
-  )
-}
-
-/** The biggest changes of every table: which number to explain, and the ranked list. */
-function Biggest({ metrics, metric, setMetric, list, fmt, few }: { metrics: Metric[]; metric: Metric; setMetric: (m: Metric) => void; list: Cause[]; fmt: (n: number) => string; few: boolean }) {
-  return (
-    <>
-      <div className="xsec xchg-head">
-        <span>{copy.biggestChanges}<em className="xmv-note">{copy.moversNote}</em></span>
-        <span className="xchg-kinds" role="group" aria-label={copy.explainNumber}>
-          {metrics.map((m) => (
-            <button key={m} type="button" aria-pressed={m === metric} className={m === metric ? 'on' : ''} onClick={() => setMetric(m)}>{copy.metric[m]}</button>
-          ))}
-        </span>
-      </div>
-      {list.length > 0 && <MoverList list={list} fmt={fmt} />}
-      {list.length === 0 && !few && <div className="mk-quiet">{copy.nothingMoved}</div>}
-    </>
-  )
-}
-
-export function Changed({ x, d }: { x: XCtx; d: Model & { report: Report } }) {
+export function Changed({ x, d }: { x: XCtx; d: Briefing }) {
   const cur = { ...d.report.current, series: d.report.current.series ?? [] }
   const prev = d.report.previous ? { ...d.report.previous, series: d.report.previous.series ?? [] } : undefined
-  const metrics = (['visitors', 'pageviews', 'signups', 'revenue'] as Metric[]).filter((m) => (m === 'signups' ? !!cur.signup : m !== 'revenue' || !!cur.money))
-  const [metric, setMetric] = useState<Metric>('visitors')
   const notes = useNotes(x.site.id, { from: x.query.from, to: x.query.to }, () => undefined)
   const [sheet, setSheet] = useState(false)
   // Only where the chart can tell the same numbers as the cards: the whole site, not a share of it, and not on a shared page.
   const chart = !isShared() && x.filters.length === 0 && cur.series.length > 0 && cur.kpis.visitors > 0
-  const w = prev ? explain(cur, prev, metric) : null
-  const list = prev ? movers(cur, prev, metric) : []
-  const fmt = (n: number) => (metric === 'revenue' ? x.money(n) : fmtInt(n))
+  const w = prev ? explain(cur, prev, 'visitors') : null
+  const list = prev && w ? moversOf(w.causes, movers(cur, prev, 'visitors')) : []
   // The whole period is too little only when the people of both periods are: one number under its floor says so for itself.
-  const whole = !!prev && explain(cur, prev, 'visitors').kind === 'few' && list.length === 0
+  const whole = !!prev && w?.kind === 'few' && list.length === 0
   let say = copy.sayChoose
-  if (w) say = w.kind === 'few' && !whole ? fewOf(w, fmt) : sentence(copy.metric[metric], w.kind, w.pct, w.diff, w.causes[0])
+  if (w) say = w.kind === 'few' && !whole ? fewOf(w.now, w.was) : sentence(copy.people, w.kind, w.pct, w.diff, w.causes[0])
   return (
     <>
-      <p className="xchg-say">{say}</p>
-      <MoverChips list={w?.causes ?? []} metric={metric} fmt={fmt} />
-      {chart && <ChartSlot x={x} report={d.report} notes={notes.notes} onNotes={() => setSheet(true)} />}
-      <XKcs items={viewerKcs(d.kcs)} />
-      <Biggest metrics={metrics} metric={metric} setMetric={setMetric} list={list} fmt={fmt} few={w?.kind === 'few'} />
-      {whole && <Plain x={x} />}
-      {!whole && <Trending x={x} cur={cur} prev={prev} />}
-      <Downtime down={d.down} />
-      <Tools site={x.site} to={x.query.to} notes={notes} sheet={sheet} setSheet={setSheet} />
+      <Today
+        x={x}
+        say={say}
+        people={viewerKcs(d.kcs)[0]}
+        change={w?.kind === 'moved' && w.pct !== null ? { text: `${w.pct < 0 ? '↓' : '↑'} ${movedBy(w.pct)}`, tone: w.pct < 0 ? 'dn' : 'up' } : null}
+        title={periodName(x.view.period, { from: x.query.from, to: x.query.to }, todayIn(x.site.timezone))}
+        signups={cur.signup ? { n: cur.signup.visitors, of: cur.kpis.visitors } : undefined}
+        lost={d.lost}
+        incidents={d.down.length}
+        report={d.report}
+        chart={chart}
+        notes={notes.notes}
+        plain={whole}
+      />
+      {!whole && (
+        <div className="xbr-row">
+          <BriefCard id="moved" title={copy.cardMoved}>
+            {list.length > 0 && <MoverList list={list} />}
+            {list.length === 0 && <div className="mk-quiet">{copy.nothingMoved}</div>}
+          </BriefCard>
+          <SourcesCard x={x} cur={cur} prev={prev} google={pathOf(d.google, cur.dims.referrer)} />
+          <PagesCard x={x} cur={cur} prev={prev} />
+        </div>
+      )}
+      <NotesHost site={x.site} to={x.query.to} notes={notes.notes} onChanged={notes.load} sheet={sheet} setSheet={setSheet} />
     </>
   )
 }

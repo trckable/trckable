@@ -63,7 +63,7 @@ test('Pages shows each page title with its path under it', async ({ page, contex
 
     // What changed: the same title above the path in the Top list.
     await page.goto(`${API}/${domain}?view=briefing&period=7d&x=changed`)
-    const trend = page.locator('#xp .xtr[data-trend="page"]')
+    const trend = page.locator('#xp [data-briefing="pages"]')
     await expect(trend.locator('.xtr-row', { hasText: '/pricing' }).locator('b').first()).toHaveText('Plans and pricing | Acme')
     await expect(trend.locator('.xtr-row', { hasText: '/about' }).locator('small')).toHaveCount(0)
     if (SHOTS) await trend.screenshot({ path: `${SHOTS}/changed-${width}-${theme}.png` })

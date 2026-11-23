@@ -1,4 +1,4 @@
-// The chart header on What changed: the line of words, the Notes button under it, and the moments' labels
+// The chart header on What changed: the line of words and the moments' labels
 // are each their own box, none on top of another, on a quiet site and a busy one, on a wide screen and a phone.
 import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
@@ -44,7 +44,7 @@ test.beforeAll(async () => {
 
 type Box = { name: string; x: number; y: number; w: number; h: number }
 
-// Every box that should stand alone: the words, the buttons under the chart, and each label inside the chart.
+// Every box that should stand alone: the words and each label inside the chart.
 async function boxes(page: Page): Promise<Box[]> {
   return page.evaluate(() => {
     const out: Box[] = []
@@ -54,7 +54,6 @@ async function boxes(page: Page): Promise<Box[]> {
     }
     const note = document.querySelector('#chNote')
     if (note) add('note', note)
-    document.querySelectorAll('.xchg-tools .xb').forEach((el) => add(`button: ${el.textContent?.trim()}`, el))
     document.querySelectorAll('svg#chart text').forEach((el) => add(`label: ${el.textContent?.trim()}`, el))
     document.querySelectorAll('.chwrap .moment-mark').forEach((el, i) => add(`mark ${i}`, el))
     return out
@@ -76,10 +75,9 @@ for (const [kind, domain, width, scheme] of cases) {
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
     await page.goto(`${API}/${domain}?view=briefing&period=7d&v=`)
     await expect(page.locator('svg#chart')).toBeVisible({ timeout: 20_000 })
-    await expect(page.locator('.xchg-tools .xb').first()).toBeVisible()
     await page.waitForTimeout(800)
     const list = await boxes(page)
-    expect(list.length).toBeGreaterThanOrEqual(3)
+    expect(list.length).toBeGreaterThanOrEqual(1)
     for (let i = 0; i < list.length; i++) {
       for (let j = i + 1; j < list.length; j++) {
         const a = list[i]

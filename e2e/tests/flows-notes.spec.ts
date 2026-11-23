@@ -12,10 +12,9 @@ test.beforeAll(async () => {
 const sheet = (page: Page) => page.locator('.cd.on')
 const form = (page: Page) => page.getByRole('dialog', { name: 'Add a note' })
 const ask = (page: Page) => page.getByRole('dialog', { name: 'Delete this note?' })
-const notesButton = (page: Page) => page.getByRole('button', { name: /^Notes/ }).first()
-
 async function openNotes(page: Page) {
-  await notesButton(page).click()
+  await page.locator('#xp [data-xm=more]').click()
+  await page.locator('#xp [data-notes]').click()
   await expect(sheet(page)).toBeVisible()
 }
 
@@ -45,7 +44,7 @@ for (const look of LOOKS) {
       expect(await overlays(page)).toEqual(['All notes'])
       await page.keyboard.press('Escape')
       await expect(sheet(page)).toHaveCount(0)
-      await expect(notesButton(page)).toBeFocused()
+      await expect(page.locator('#xp [data-xm=more]')).toBeFocused()
     })
 
     test('a note is added, edited and deleted (with Undo) without a reload', async ({ page }) => {

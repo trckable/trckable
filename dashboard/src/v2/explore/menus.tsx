@@ -67,7 +67,7 @@ function ViewTail(p: ViewsProps) {
   )
 }
 
-export function MoreMenu({ views, details, onDetails, onCsv, onCopy, onMail, onShare }: { views: ViewsProps; details: boolean; onDetails: () => void; onCsv: () => void; onCopy: () => void; onMail?: () => void; onShare?: () => void }) {
+export function MoreMenu({ views, details, onDetails, onCsv, onCopy, onMail, onShare, onNotes, onDaily }: { views: ViewsProps; details: boolean; onDetails: () => void; onCsv: () => void; onCopy: () => void; onMail?: () => void; onShare?: () => void; onNotes?: () => void; onDaily?: () => void }) {
   return (
     <>
       <XGrab />
@@ -82,6 +82,8 @@ export function MoreMenu({ views, details, onDetails, onCsv, onCopy, onMail, onS
       </div>
       {details && <XMi data={{ 'data-pgd': '1' }} name={copy.pageDetails} desc={copy.pageDetailsHint} onClick={onDetails} />}
       <XMi id="xCsv" name={copy.exportCsv} desc={copy.exportHint} disabled={!can('data.export')} title={can('data.export') ? undefined : copy.exportDenied} onClick={onCsv} />
+      {onNotes && <XMi data={{ 'data-notes': '1' }} name={copy.notes} onClick={onNotes} />}
+      {onDaily && <XMi data={{ 'data-daily': '1' }} name={copy.dailyEmail} onClick={onDaily} />}
       {onMail && <XMi data={{ 'data-mail': '1' }} name={copy.emailPreview} desc={copy.emailPreviewHint} onClick={onMail} />}
       <XMi data={{ 'data-copy': '1' }} name={copy.copyLink} onClick={onCopy} />
     </>

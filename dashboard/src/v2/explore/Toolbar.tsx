@@ -48,6 +48,10 @@ interface ToolbarProps {
   onMail?: () => void
   /** Opens the Share sheet from the ⋯ menu, where the header has no room for its button (a phone); absent elsewhere. */
   onShare?: () => void
+  /** Opens the period's notes; only on the Briefing, for someone who may see them. */
+  onNotes?: () => void
+  /** Opens the daily email's settings; only on the Briefing, for someone who may set it. */
+  onDaily?: () => void
 }
 
 function Caret() {
@@ -127,7 +131,7 @@ export function Toolbar(p: ToolbarProps) {
               </button>
             }
           >
-            <MoreMenu views={p.views} details={p.details} onDetails={p.onDetails} onCsv={p.onCsv} onCopy={p.onCopy} onMail={p.onMail} onShare={p.onShare} />
+            <MoreMenu views={p.views} details={p.details} onDetails={p.onDetails} onCsv={p.onCsv} onCopy={p.onCopy} onMail={p.onMail} onShare={p.onShare} onNotes={p.onNotes} onDaily={p.onDaily} />
           </XMenu>
         )}
       </div>

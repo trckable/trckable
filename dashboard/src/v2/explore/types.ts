@@ -90,6 +90,8 @@ export interface Overview {
   per: string
   shape: Shape | null
   down: Down[]
+  /** What the incidents cost the period, in seconds; null while the site is not watched (or too briefly to say). */
+  lost: number | null
   pages: Row[]
   sources: Row[]
   /** How a visit went: engaged visits, pages per visit and time on site, each against the period before. */
@@ -295,8 +297,11 @@ export type Tab = HostedTab | DeepTab | 'changed' | 'overview' | 'pages' | 'sour
 export type Section = 'changed' | 'overview' | 'pages' | 'sources' | 'search' | 'places' | 'tech' | 'results' | 'sales' | 'speed' | 'mentions' | 'links' | 'ai' | 'answers'
 
 /** Every section's answer for one site, period and set of filters. */
+/** What the Briefing reads: the overview's numbers, the report behind them, and what Google says of the same days (nothing where Search Console is off). */
+export type Briefing = Overview & { report: import('../../lib/api').Report; google: import('./googlePath').Seen | null }
+
 export interface Tabs {
-  changed: Overview & { report: import('../../lib/api').Report }
+  changed: Briefing
   overview: Overview & { report: import('../../lib/api').Report }
   pages: Table
   sources: Table
