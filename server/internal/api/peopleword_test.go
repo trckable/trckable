@@ -14,7 +14,7 @@ func sayVisitor(v reflect.Value, path string, found *[]string) {
 		if strings.Contains(strings.ToLower(v.String()), "visitor") {
 			*found = append(*found, path+": "+v.String())
 		}
-	case reflect.Ptr, reflect.Interface:
+	case reflect.Pointer, reflect.Interface:
 		if !v.IsNil() {
 			sayVisitor(v.Elem(), path, found)
 		}

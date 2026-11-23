@@ -122,5 +122,5 @@ export function useBriefingChart(o: ChartRead): BriefingChart | null {
     const chart = { ...base, ...outcomeChart(outcome, cur.series.map((p) => p.t), money && cur.money ? { currency: cur.money.currency, exponent: cur.money.exponent, write: money } : null, countedOncePerDay(site.cookieless, diffDays(range.from, range.to) + 1)) }
     const mo = hist.daily && !learning && !low ? moments({ totals, days, todayUp: unit === 'today' ? st === 'up' : false, from: Math.max(0, days.indexOf(range.from)), to: Math.max(0, days.indexOf(range.to)), elapsed: Math.round(nowHour * 60), today: unit === 'today', week: unit === 'week', filtered: false }) : { pills: [], record: null }
     return { chart, series: cur.series.slice(0, chart.points.length), bucket: shownBucket, record: mo.record, learning, low, hd, down: downNow && !!site.watched_since && !site.uptime_paused, ready: !hist.loading }
-  }, [on, cur, prev, against, usual, unit, up.list, up.from0, downNow, site.watched_since, site.uptime_paused, range.to, range.from, shownBucket, nowSec, hist, hourly, today, notes, clock, outcome, money])
+  }, [on, cur, prev, against, usual, unit, up.list, up.from0, downNow, site.watched_since, site.uptime_paused, site.cookieless, range.to, range.from, shownBucket, nowSec, hist, hourly, today, notes, clock, outcome, money])
 }
