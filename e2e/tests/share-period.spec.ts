@@ -71,5 +71,5 @@ test('Share: the card number is the dashboard number for 7 days and all time', a
     return ((await res.json()) as { big: string }).big
   }
   expect(await big('7d')).toBe((await visitors(day(6))).toLocaleString('en-US'))
-  expect(await big('all')).toBe((await visitors('2000-01-01')).toLocaleString('en-US'))
+  expect(await big('all')).toBe((await visitors('2012-01-01')).toLocaleString('en-US'))
 })
