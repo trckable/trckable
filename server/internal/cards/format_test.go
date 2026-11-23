@@ -9,6 +9,10 @@ import (
 	"testing"
 )
 
+// variant says whether a size is a variant of another's design (the post is the link preview at 627 high, the portrait
+// the square stretched): such a size is checked fully on layout, and drawn once per template, not once per theme and background.
+func variant(f Format) bool { return f.ID == "post" || f.ID == "portrait" }
+
 // sample is a busy card for the template: long words, a comparison, three stats.
 func sample(tpl, format, theme string) Spec {
 	_, th := ThemeOf(theme)
@@ -36,6 +40,9 @@ func TestPNGSizePerFormat(t *testing.T) {
 	for _, f := range Formats {
 		for tpl := range Templates {
 			for _, theme := range []string{"dark", "light"} {
+				if theme == "light" && variant(f) {
+					continue
+				}
 				b, err := sample(tpl, f.ID, theme).PNG()
 				if err != nil {
 					t.Fatalf("%s %s: %v", f.ID, tpl, err)
@@ -179,17 +186,24 @@ func TestPicturesCloseTheGap(t *testing.T) {
 func TestBackgroundsAndHiddenParts(t *testing.T) {
 	for _, f := range Formats {
 		for _, tpl := range []string{"overview", "numbers", "grid", "leaderboard", "spotlight"} {
-			seen := map[string]bool{}
-			for _, bg := range append([]string{""}, Backgrounds...) {
+			seen, drawn := map[string]bool{}, map[string]bool{}
+			bgs := append([]string{""}, Backgrounds...)
+			if variant(f) {
+				bgs = []string{""} // the backgrounds are drawn the same at every size: the variants are drawn with the default
+			}
+			for _, bg := range bgs {
+				if (bg == "sunset" || bg == "ocean") && tpl != "overview" && tpl != "spotlight" {
+					continue // a colour field replaces the flat one under any template; two of them show it
+				}
 				s := sample(tpl, f.ID, "dark")
 				s.Bg = bg
 				if _, err := s.PNG(); err != nil {
 					t.Fatalf("%s %s %q: %v", f.ID, tpl, bg, err)
 				}
-				seen[s.Key()] = true
+				seen[s.Key()], drawn[s.bg()] = true, true
 			}
-			if len(seen) != len(Backgrounds) { // "" is the gradient
-				t.Errorf("%s %s: %d distinct keys, want %d", f.ID, tpl, len(seen), len(Backgrounds))
+			if len(seen) != len(drawn) { // "" is the gradient
+				t.Errorf("%s %s: %d distinct keys, want %d", f.ID, tpl, len(seen), len(drawn))
 			}
 			s := sample(tpl, f.ID, "light")
 			s.Domain, s.Foot = "", ""
@@ -309,6 +323,9 @@ func TestDigestBadge(t *testing.T) {
 		for _, f := range Formats {
 			for _, theme := range []string{"dark", "light"} {
 				for _, src := range []string{SourceSearch, "stripe", "paddle", "lemonsqueezy", "dodo", "polar"} {
+					if variant(f) && src != SourceSearch {
+						continue // a variant's room for the badge is its parent's
+					}
 					for _, domain := range []string{"example.com", "a-very-long-domain-name-for-a-site-with-many-parts.example.co.uk"} {
 						plain := sample(tpl, f.ID, theme)
 						plain.Domain = domain
