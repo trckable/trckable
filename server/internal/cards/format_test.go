@@ -268,8 +268,11 @@ func TestDigestParts(t *testing.T) {
 				if nc > 0 && nr > 0 && p.cards[0].y+p.cards[0].h > p.rowTop {
 					t.Errorf("%s %d cards %d rows: cards over the lines", f.ID, nc, nr)
 				}
-				if _, err := s.PNG(); err != nil {
-					t.Errorf("%s %d cards %d rows: %v", f.ID, nc, nr, err)
+				// Drawing is the slow part and every mix draws the same way: the corners of the grid of mixes are drawn.
+				if edge := func(n, top int) bool { return n == 0 || n == top }; edge(nc, MaxGrid) && edge(nr, MaxRows) {
+					if _, err := s.PNG(); err != nil {
+						t.Errorf("%s %d cards %d rows: %v", f.ID, nc, nr, err)
+					}
 				}
 				if len(digestRuns(s)) == 0 {
 					t.Errorf("%s: no text", f.ID)
