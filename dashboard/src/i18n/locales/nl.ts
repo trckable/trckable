@@ -623,6 +623,7 @@ export default {
   'links.sectionsEvery': 'Toont alle onderdelen',
   'links.period': 'Periode',
   'links.periodChoose': 'Lezer kiest',
+  'links.periodSince': (day: string) => `Sinds ${day}`,
   'links.periodFixed': (name: string) => `Altijd ${name}`,
   'links.periodFree': 'De lezer kiest de periode',
 

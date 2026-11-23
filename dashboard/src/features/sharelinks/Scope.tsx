@@ -2,12 +2,10 @@
 // period is fixed or the reader chooses. The server holds both: a section left off is refused,
 // not only left out of the page.
 import { LayoutGrid, CalendarRange } from 'lucide-react'
-import { PRESETS } from '../../lib/dates'
 import { copy } from './copy'
 import { PERIODS, SECTIONS, type Draft } from './logic'
 import { Opt } from './Opt'
-
-const periodName = (id: string) => PRESETS.find((p) => p.id === id)?.label ?? id
+import { periodName } from './periodName'
 
 export function Scope({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) => void }) {
   const flip = (s: string) => set({ sections: draft.sections.includes(s) ? draft.sections.filter((x) => x !== s) : [...draft.sections, s] })
@@ -36,6 +34,7 @@ export function Scope({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) =
               {periodName(p)}
             </option>
           ))}
+          {draft.period && !(PERIODS as readonly string[]).includes(draft.period) && <option value={draft.period}>{periodName(draft.period)}</option>}
         </select>
       </Opt>
     </>
