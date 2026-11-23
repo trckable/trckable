@@ -1,4 +1,4 @@
-// What changed: pages and sources as Top, Trending up and Trending down, five rows each, one column on a phone.
+// What changed: four cards (Today, What moved, Where they came from, What they looked at), three side by side under Today, one column on a phone.
 // Chromium only.
 import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
@@ -50,40 +50,49 @@ for (const [width, height, theme] of [
   [390, 844, 'dark'],
   [390, 844, 'light'],
 ] as const) {
-  test(`What changed lists pages and sources in three tabs at ${width} px, ${theme}`, async ({ page }) => {
+  test(`What changed is four cards, no tabs, at ${width} px, ${theme}`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: theme })
     await page.setViewportSize({ width, height })
     await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
     await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
     await expect(page.locator('#xp.on')).toBeVisible()
-    const lists = page.locator('#xp .xtr')
-    await expect(lists).toHaveCount(2)
-    for (const list of await lists.all()) {
-      await expect(list.getByRole('tab')).toHaveCount(3)
-      await expect(list.getByRole('tab', { name: 'Top' })).toHaveAttribute('aria-selected', 'true')
-      expect(await list.locator('.xtr-row').count()).toBeLessThanOrEqual(5)
-      await list.getByRole('tab', { name: 'Trending up' }).click()
-      await expect(list.getByRole('tab', { name: 'Trending up' })).toHaveAttribute('aria-selected', 'true')
-      await list.getByRole('tab', { name: 'Trending down' }).click()
-      await expect(list.getByRole('tab', { name: 'Trending down' })).toHaveAttribute('aria-selected', 'true')
-      await expect(list.locator('.mk-more')).toBeVisible()
-      await list.getByRole('tab', { name: 'Top' }).click()
+    const cards = page.locator('#xp [data-briefing]')
+    await expect(cards).toHaveCount(4)
+    await expect(page.locator('#xp [data-briefing] .xcp-h')).toHaveText(['Last 7 days', 'What moved', 'Where they came from', 'What they looked at'])
+    await expect(page.locator('#xp [data-briefing] [role=tab]')).toHaveCount(0)
+    expect(await page.locator('#xp [data-briefing=sources] .xtr-row, #xp [data-briefing=sources] [data-google]').count()).toBeLessThanOrEqual(5)
+    expect(await page.locator('#xp [data-briefing=pages] .xtr-row').count()).toBeLessThanOrEqual(5)
+    expect(await page.locator('#xp [data-briefing=moved] .xmv-row').count()).toBeLessThanOrEqual(5)
+    const tops = await cards.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)))
+    if (width < 700) expect(new Set(tops).size, 'one column on a phone').toBe(4)
+    else {
+      expect(new Set(tops.slice(1)).size, 'three side by side under Today').toBe(1)
+      expect(tops[1], 'under Today').toBeGreaterThan(tops[0])
     }
-    const tops = await lists.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)))
-    if (width < 700) expect(new Set(tops).size, 'one column on a phone').toBe(2)
-    else expect(new Set(tops).size, 'side by side').toBe(1)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'no sideways scroll').toBe(true)
     if (process.env.SHOTS) {
-      await lists.first().scrollIntoViewIfNeeded()
+      await cards.nth(1).scrollIntoViewIfNeeded()
       await page.screenshot({ path: `${process.env.SHOTS}/changed-${width}-${theme}.png` })
     }
   })
 }
 
-test('View more opens the matching table', async ({ page }) => {
+test('All pages in Explore opens the pages table', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
-  await page.locator('#xp .xtr[data-trend=page] .mk-more').click()
+  await page.locator('#xp [data-briefing=pages] .mk-more').click()
   await expect(page).toHaveURL(/x=pages/)
+})
+
+test('Notes and the daily email are in the ⋯ menu, not on the page', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
+  await expect(page.locator('#xp [data-briefing=today]')).toBeVisible()
+  await expect(page.locator('#xp [data-briefing]').getByRole('button', { name: /^(Notes|Daily email)/ })).toHaveCount(0)
+  await page.locator('#xp [data-xm=more]').click()
+  await expect(page.locator('#xp [data-daily]')).toBeVisible()
+  await page.locator('#xp [data-notes]').click()
+  await expect(page.getByText('All notes')).toBeVisible()
 })

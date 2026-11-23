@@ -1,4 +1,4 @@
-// The chart over What changed and Overview: the line of words, the busy-moment band, the moments' markers, the mentions and the
+// The chart over What changed and Overview (with no `onNotes` the Briefing's own words stand over it, and Notes is in the ⋯ menu): the line of words, the busy-moment band, the moments' markers, the mentions and the
 // note flags, for the page's own site and period. Its own chunk, drawn after the numbers.
 import { useState } from 'react'
 import type { Report } from '../../../lib/api'
@@ -8,7 +8,7 @@ import { chartLine } from '../../briefing/lines'
 import { chartNote, chartTone } from '../../ui/chartNote'
 import type { XCtx } from '../ctx'
 
-export default function ChangedChart({ x, report, notes, onNotes }: { x: XCtx; report: Report; notes: { day: string; text: string }[]; onNotes: () => void }) {
+export default function ChangedChart({ x, report, notes, onNotes }: { x: XCtx; report: Report; notes: { day: string; text: string }[]; onNotes?: () => void }) {
   const [at, setAt] = useState<number | null>(null)
   const { view, site, query } = x
   const ask = { ...query }
@@ -28,8 +28,8 @@ export default function ChangedChart({ x, report, notes, onNotes }: { x: XCtx; r
       bucket={b.bucket}
       money={x.money}
       record={b.record}
-      note={chartLine(b.learning, b.low, b.hd, () => chartNote(chart, at, down))}
-      tone={b.learning || b.low ? undefined : chartTone(chart, at, down)}
+      note={onNotes ? chartLine(b.learning, b.low, b.hd, () => chartNote(chart, at, down)) : undefined}
+      tone={onNotes && !b.learning && !b.low ? chartTone(chart, at, down) : undefined}
       down={b.down}
       notes={notes.length}
       onNotes={onNotes}

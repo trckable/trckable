@@ -9,7 +9,7 @@ import type { Loaded } from './data/useLoad'
 import type { Report } from '../../lib/api'
 import { Changed } from './views/Changed'
 import { HOSTED } from './sections'
-import type { Networks as NetworksModel, Paths as PathsModel, Quality as QualityModel, HostedTab, BotsModel, Funnel, Mention, Overview as OverviewModel, Sales as SalesModel, Search as SearchModel, Speed as SpeedModel, Tab, Table } from './types'
+import type { Briefing, Networks as NetworksModel, Paths as PathsModel, Quality as QualityModel, HostedTab, BotsModel, Funnel, Mention, Overview as OverviewModel, Sales as SalesModel, Search as SearchModel, Speed as SpeedModel, Tab, Table } from './types'
 import { Hosted } from './views/Hosted'
 import { Overview } from './views/Overview'
 import { Networks } from './views/Networks'
@@ -28,7 +28,7 @@ const CARDS: Partial<Record<Tab, number>> = { changed: 4, overview: 4, search: 4
 function Shown({ tab, x, d }: { tab: Tab; x: XCtx; d: TabData }) {
   switch (tab) {
     case 'changed':
-      return <Changed x={x} d={d as OverviewModel & { report: Report }} />
+      return <Changed x={x} d={d as Briefing} />
     case 'overview':
       return <Overview x={x} d={d as OverviewModel & { report: Report }} />
     case 'paths':

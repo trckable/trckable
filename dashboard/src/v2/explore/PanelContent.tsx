@@ -16,6 +16,7 @@ import { openSettings } from '../../lib/settings'
 import { setView, type ViewState } from '../../lib/url'
 import { say } from '../ui/toast'
 import { MailPreview } from './MailPreview'
+import { NOTES_EVENT } from './views/NotesHost'
 import { Rail, RailDrawer } from './Rail'
 import { PeriodNote, Updated } from './PeriodsLine'
 import { SectionPage } from './SectionPage'
@@ -160,6 +161,14 @@ export default function PanelContent(p: ContentProps) {
             a.copyLink()
           }}
           onShare={handheld ? share : undefined}
+          onNotes={tab === 'changed' && !isShared() ? () => {
+            act.shut()
+            window.dispatchEvent(new Event(NOTES_EVENT))
+          } : undefined}
+          onDaily={tab === 'changed' && can('note.write') && !isShared() ? () => {
+            act.shut()
+            openSettings(p.site, 'alerts')
+          } : undefined}
           onMail={can('note.write') ? () => {
             act.shut()
             setMail(true)

@@ -12,13 +12,8 @@
 .mk .xchg .xth,.mk .xchg .xrw{grid-template-columns:minmax(0,1fr) 70px 70px 84px}
 .mk .xchg .d.dn{color:var(--mk-red,var(--x-red))}
 .mk .xchg .d.up{color:var(--mk-accent,var(--x-lime))}
-.mk .xchg-head{align-items:center}
-.mk .xchg-kinds{display:flex;gap:2px;flex-wrap:wrap}
-.mk .xchg-kinds button{background:none;border:0;border-radius:8px;padding:4px 9px;color:var(--mk-muted);font:inherit;font-size:12.5px;cursor:pointer}
-.mk .xchg-kinds button.on{background:var(--mk-card2);color:var(--mk-text)}
 .mk .xchg-rest{margin:var(--mk-s2) 0 0;font-size:13px;opacity:.65}
 .mk .xslow-how{margin:0 0 var(--mk-s3);font-size:12px;color:var(--mk-faint)}
-.mk .xchg-tools{display:flex;gap:var(--mk-s2);margin-top:var(--mk-s5)}
 .mk .view-pane{animation:view-in .14s ease-out}
 .mk .view-pane[hidden]{animation:none}
 @keyframes view-in{from{opacity:.4}to{opacity:1}}
@@ -50,7 +45,6 @@
 .mk .xp.xpage .xrail{top:76px}
 .mk .xrail .xgl:first-child{margin-top:0}
 .mk .xp.xpage .xtb{min-height:36px}
-.mk .xchg-tools{margin-top:var(--mk-s5)}
 .mk .xp.xpage.full .xlay .xtb{margin-top:0}
 .mk .xp.xpage.full .xrail{position:static;transform:none;translate:none}
 .mk .xp.xpage.full .xrail>:first-child{margin-top:0;padding-top:0}
@@ -151,8 +145,8 @@
 .mk .xfade>.xsec+*:not(.xsec){padding-top:var(--mk-s3)}
 .mk .xfade>.xsec~*:not(.xsec):has(+.xsec),.mk .xfade>.xsec~*:not(.xsec):last-child{margin-bottom:var(--mk-s4);padding-bottom:var(--mk-s4);border-bottom:1px solid var(--mk-line);border-radius:0 0 16px 16px}
 /* A section with no headings of its own is one card. */
-.mk .xfade:not(:has(>.xsec,>.xkw,>.xchg-say)){padding:var(--mk-s4);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px}
-.mk .xfade:not(:has(>.xsec,>.xkw,>.xchg-say))>:last-child{margin-bottom:0}
+.mk .xfade:not(:has(>.xsec,>.xkw,>.xchg-say,>.xcp)){padding:var(--mk-s4);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px}
+.mk .xfade:not(:has(>.xsec,>.xkw,>.xchg-say,>.xcp))>:last-child{margin-bottom:0}
 .mk .xp.xpage .xchg-say.xsay-table{margin-top:0}
 .mk .xfade>.xsay-table+.xt,.mk .xfade>.xchg-say+.xqual{padding:var(--mk-s2) var(--mk-s4);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px}
 /* Tabs inside a card are small buttons, not a second row of page tabs. */
@@ -421,28 +415,14 @@
 .mk .xcards .xflag{margin-left:6px;padding:1px 6px;border-radius:6px;background:color-mix(in srgb,var(--mk-red) 18%,transparent);color:var(--mk-red);font-size:11px;font-style:normal;font-family:var(--mk-font,inherit)}
 .mk .xcards .xcp-bare .xfade>:last-child{border-bottom-left-radius:16px;border-bottom-right-radius:16px}
 .mk .xcards .mk-bar .xflag{background:color-mix(in srgb,var(--mk-red) 16%,var(--mk-card))}
-/* What changed: the biggest changes of every table as one ranked list. */
-.mk .xmv-note{margin-inline-start:var(--mk-s3);color:var(--mk-muted);font-size:12px;font-style:normal;font-weight:400}
-.mk .xmv-chips{display:flex;flex-wrap:wrap;gap:6px;margin:calc(var(--mk-s2) * -1) 0 var(--mk-s4)}
-.mk .xmv-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border:0;border-radius:999px;font:inherit;font-size:12.5px;color:var(--mk-text);cursor:pointer}
-.mk .xmv-chip.dn{background:color-mix(in srgb,var(--mk-red) 16%,transparent)}
-.mk .xmv-chip.up{background:color-mix(in srgb,var(--mk-lime) 16%,transparent)}
-.mk .xmv-chip b{font-weight:650;font-variant-numeric:tabular-nums}
-.mk .xmv-chip.dn b{color:color-mix(in srgb,var(--mk-red) 78%,var(--mk-text))}
-.mk .xmv-chip.up b{color:color-mix(in srgb,var(--mk-lime) 78%,var(--mk-text))}
+/* What moved: the biggest changes of every table as one ranked list. */
 .mk .xmv-n.dn{color:var(--mk-red)}
 .mk .xmv-n.up{color:var(--mk-lime)}
 .mk .xmv{display:flex;flex-direction:column;padding-top:var(--mk-s2)}
-.mk .xmv-row{display:grid;grid-template-columns:minmax(0,1.2fr) 130px minmax(160px,1fr) 64px;align-items:center;gap:var(--mk-s3);padding:8px 6px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;text-align:start;cursor:pointer}
+.mk .xmv-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:var(--mk-s3);padding:8px 6px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;text-align:start;cursor:pointer}
 .mk .xmv-row:hover{background:var(--mk-band)}
 .mk .xmv-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mk .xmv-name em{margin-inline-start:4px;color:var(--mk-muted);font-size:11.5px;font-style:normal}
-.mk .xmv-was{color:var(--mk-muted);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.mk .xmv-bar{position:relative;height:8px}
-.mk .xmv-bar::before{content:"";position:absolute;inset-block:-3px;inset-inline-start:50%;width:1px;background:color-mix(in srgb,var(--mk-text) 22%,transparent)}
-.mk .xmv-bar>i{position:absolute;top:0;bottom:0;border-radius:4px}
-.mk .xmv-bar>i.dn{right:50%;background:var(--mk-red)}
-.mk .xmv-bar>i.up{left:50%;background:var(--mk-lime)}
 .mk .xmv-n{font-weight:650;font-variant-numeric:tabular-nums;text-align:end;white-space:nowrap}
 .mk .xmv-ask{display:block;margin-top:var(--mk-s3);padding:4px 6px;border:0;background:none;color:var(--mk-muted);font:inherit;font-size:12.5px;cursor:pointer}
 .mk .xmv-ask:hover{color:var(--mk-text)}
@@ -481,13 +461,6 @@
 .mk .xcards .xcp:has(.xempty){display:flex;flex-direction:column}
 /* Cards side by side share one height: an empty one centres its words in it. */
 .mk .xcards .xcp:has(.xempty) .xempty{flex:1;justify-content:center}
-@media (--xs){
-  .mk .xmv-row{grid-template-columns:minmax(0,1fr) auto;row-gap:4px}
-  .mk .xmv-was{display:none}
-  .mk .xmv-bar{grid-column:1 / -1;grid-row:2}
-  .mk .xmv-n{grid-row:1;grid-column:2}
-  .mk .xchg-head{flex-wrap:wrap}
-}
 /* Motion: numbers rise in, bars and lines grow, cards answer the pointer. All of it stays still for who asks for less. */
 .mk .roll{display:inline-flex;white-space:pre}
 @keyframes roll-in{from{opacity:0;transform:translateY(.55em)}to{opacity:1;transform:none}}
@@ -603,24 +576,47 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 /* Every segmented switch centres its label exactly: one line box, flex centre, no baseline offset. */
 .mk :is(.mk-seg,.xsub) button{display:inline-flex;align-items:center;justify-content:center;padding-block:0;line-height:1;text-align:center}
 .mk :is(.mk-seg,.xsub) button>*{line-height:1}
-/* What changed: pages and sources, Top / Trending up / Trending down. Two columns where there is room, one on a phone. */
-.mk .xtr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:var(--mk-s4);margin-top:var(--mk-s5)}
-.mk .xtr{display:flex;flex-direction:column;min-width:0;padding:var(--mk-s3) var(--mk-s3) var(--mk-s2);background:var(--mk-card);border-radius:16px}
-.mk .xtr-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--mk-s2);padding:0 6px var(--mk-s2)}
-.mk .xtr-head h3{margin:0;font-size:14px;font-weight:600}
-.mk .xtr-row{display:grid;grid-template-columns:20px minmax(0,1fr) auto 44px;align-items:center;gap:var(--mk-s2);padding:8px 6px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;text-align:start;cursor:pointer}
+/* What changed, the Briefing: Today across the page, then what moved, where they came from and what they looked at in three equal columns where there is room (the rail's breakpoint), one column on a phone. */
+/* Today: the sentence, the numbers with the site's status, the chart. */
+.mk .xbr-card{margin-bottom:var(--mk-s4)}
+.mk .xbr-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--mk-s4)}
+.mk .xbr-row>.xbr-card{margin-bottom:0}
+/* Three columns only where the page is wider than 1200 px: any narrower and a name would be cut. */
+@container (--pane-max-1200){.mk .xbr-row{grid-template-columns:minmax(0,1fr)}}
+.mk .xbr-say{margin:0 0 var(--mk-s3);font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.2;text-wrap:balance}
+@media (--sm-down){.mk .xbr-say{font-size:21px}}
+.mk .xbr-nums{display:flex;flex-wrap:wrap;align-items:flex-end;gap:var(--mk-s3) var(--mk-s5)}
+.mk .xbr-big,.mk .xbr-small{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px var(--mk-s2);min-width:0}
+.mk .xbr-big>b{font-size:34px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.mk .xbr-small>b{font-size:20px;font-weight:650;font-variant-numeric:tabular-nums}
+.mk .xbr-big>span,.mk .xbr-small>span,.mk .xbr-small>em{color:var(--mk-muted);font-size:13px;font-style:normal}
+.mk .xbr-big>em{font-size:13px;font-style:normal;color:var(--mk-muted)}
+.mk .xbr-big>em.up{color:var(--mk-lime)}
+.mk .xbr-big>em.dn{color:var(--mk-red)}
+.mk .xbr-pill{margin-inline-start:auto;padding:3px 10px;border-radius:999px;font-size:12.5px;white-space:nowrap}
+.mk .xbr-pill.ok{background:color-mix(in srgb,var(--mk-lime) 16%,transparent);color:color-mix(in srgb,var(--mk-lime) 78%,var(--mk-text))}
+.mk .xbr-pill.dn{background:color-mix(in srgb,var(--mk-red) 16%,transparent);color:color-mix(in srgb,var(--mk-red) 78%,var(--mk-text))}
+/* The Google path inside the sources card: who we saw, then what Google showed and what was clicked. */
+.mk .xbr-g{margin:4px 0;padding:6px 0 8px;border-radius:10px;background:var(--mk-band)}
+.mk .xbr-g .xtr-row:hover{background:none}
+.mk .xbr-g .xtr-name{white-space:normal}
+.mk .xbr-g-path,.mk .xbr-g-note{margin:0;padding:0 8px 0 26px}
+.mk .xbr-g-path{font-size:13px;font-variant-numeric:tabular-nums;line-height:1.5}
+.mk .xbr-g-path b{font-weight:650}
+.mk .xbr-g-note{margin-top:2px;color:var(--mk-muted);font-size:11.5px;line-height:1.35}
+.mk .xtr-row{display:grid;grid-template-columns:16px minmax(0,1fr) auto auto;align-items:center;gap:6px;padding:8px 2px;font-size:13px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;text-align:start;cursor:pointer}
 .mk .xtr-row:hover{background:var(--mk-band)}
 .mk .xtr-mark{display:flex;color:var(--mk-muted)}
 .mk .xtr-titled{display:flex;flex-direction:column;line-height:1.25}
 .mk .xtr-titled>b{font-weight:500;overflow:hidden;text-overflow:ellipsis}
 .mk .xtr-titled>small{font-size:11px;font-weight:400;color:var(--mk-muted);overflow:hidden;text-overflow:ellipsis}
 .mk .xtr-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mk .xtr-d{min-width:48px;color:var(--mk-muted);font-size:12.5px;font-variant-numeric:tabular-nums;text-align:end;white-space:nowrap}
+.mk .xtr-d{min-width:36px;color:var(--mk-muted);font-size:12px;font-variant-numeric:tabular-nums;text-align:end;white-space:nowrap}
 .mk .xtr-d.up{color:var(--mk-lime)}
 .mk .xtr-d.dn{color:var(--mk-red)}
 .mk .xtr-n{font-weight:650;font-variant-numeric:tabular-nums;text-align:end}
-.mk .xtr .mk-quiet{padding:var(--mk-s3) 6px}
-.mk .xtr .mk-more{margin-top:auto;border:0;background:none;text-align:start;padding:8px 6px}
+.mk .xbr-card .mk-quiet{padding:var(--mk-s3) 6px}
+.mk .xbr-card .mk-more{margin-top:auto;border:0;background:none;text-align:start;padding:8px 6px}
 /* "1 down" under All sites opens what happened: its own button, laid exactly over the row's red words (hidden under it). */
 .mk .all-wrap{position:relative}
 .mk .all-wrap .all-problems .down{visibility:hidden}

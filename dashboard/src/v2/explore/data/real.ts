@@ -25,6 +25,7 @@ import { funnelBuilt } from '../../setup/funnelBuilt'
 import { seeMoney, seeNetworks } from '../sections'
 import type { Down, SavedView, Tab } from '../types'
 import { basisOf, type Basis } from './basis'
+import { seenWindow, type Seen } from '../googlePath'
 import { insightOf } from './insight'
 import { ENOUGH, headline, mainOf, ranked, rateOf, type QualityRow } from './quality'
 import { EXPLORE_ROWS, LINKS_ROWS } from './rows'
@@ -143,6 +144,29 @@ const periodFor = (c: DataCtx): Period => {
   return days <= 90 ? '90d' : '1y'
 }
 
+/** Whether Search Console is connected: the menu's read and the Briefing's, started together, are one request. */
+const connected = new Map<string, { at: number; p: Promise<{ connected: boolean }> }>()
+function searchOn(site: string): Promise<{ connected: boolean }> {
+  const seen = connected.get(site)
+  if (seen && Date.now() - seen.at < 3000) return seen.p
+  const p = more.searchConsole(site)
+  connected.set(site, { at: Date.now(), p })
+  return p
+}
+
+/** What Google says of the site for the days it has, where Search Console is connected; nothing where it is not or does not answer. */
+async function googleSeen(c: DataCtx, today: string, signal: AbortSignal): Promise<Seen | null> {
+  try {
+    const conn = await searchOn(c.site.id)
+    if (!conn.connected) return null
+    const days = seenWindow(c.range, today)
+    const r = await more.searchReport(c.site.id, { ...query(c), from: days.from, to: days.to, compare: undefined }, 'date', signal)
+    return { shown: r.impressions, clicked: r.clicks }
+  } catch {
+    return null
+  }
+}
+
 export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal, soon?: (d: TabData) => void): Promise<TabData> {
   const q = query(c)
   const today = todayIn(c.site.timezone)
@@ -150,8 +174,8 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal, soon?: 
     case 'changed':
     {
       // Measured against the same period as the changes below it: the cards and the table have to agree.
-      const [report, uptime] = await Promise.all([cachedReport(c.site.id, plainQuery(c), undefined, signal), periodUptime(c)])
-      return { ...mapOverview(report, { money: c.money, uptime, now: today, basis: 'previous', against: againstName(c.view.period, c.view.compare === 'none' ? 'previous' : c.view.compare, c.range) }), report }
+      const [report, uptime, google] = await Promise.all([cachedReport(c.site.id, plainQuery(c), undefined, signal), periodUptime(c), c.filters.length === 0 ? googleSeen(c, today, signal) : null])
+      return { ...mapOverview(report, { money: c.money, uptime, now: today, basis: 'previous', against: againstName(c.view.period, c.view.compare === 'none' ? 'previous' : c.view.compare, c.range) }), report, google }
     }
     case 'overview': {
       const pre = basisOf({ range: c.range, filters: c.filters, compare: c.view.compare }) === 'usual' ? earlyOf(c) : null
@@ -275,7 +299,7 @@ const viewOf = (s: { id: string; name: string; query: string }): SavedView => ({
 export async function loadMeta(c: DataCtx): Promise<Meta> {
   const [report, search, segments] = await Promise.all([
     cachedReport(c.site.id, query(c, [])),
-    more.searchConsole(c.site.id).then(
+    searchOn(c.site.id).then(
       (r) => r.connected,
       () => false,
     ),

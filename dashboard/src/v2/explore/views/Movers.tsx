@@ -1,10 +1,10 @@
-// What changed: the biggest changes of every table as one ranked list, a bar from the centre for each, and the top three as chips.
+// What moved: the biggest changes of every table as one ranked list, the way each went in tone.
 import { isShared } from '../../../lib/me'
-import { countryName } from '../../../lib/format'
+import { countryName, fmtInt } from '../../../lib/format'
 import { midTruncate } from '../../../features/signals/surge'
 import { Flag } from '../../ui/Flag'
 import { useV2Extras } from '../../slots'
-import type { Cause, Dim, Metric } from '../../why/model'
+import type { Cause, Dim } from '../../why/model'
 import { copy } from '../copy'
 import { openThing, type Thing } from '../thing'
 
@@ -17,43 +17,25 @@ export function nameOf(v: string): string {
 }
 
 const pick = (c: Cause) => openThing(c.dim === 'referrer' && !c.value ? { kind: 'channel', value: 'Direct' } : { kind: KIND[c.dim], value: c.value })
-const signed = (n: number, fmt: (n: number) => string) => `${n < 0 ? '−' : '+'}${fmt(Math.abs(n))}`
+const signed = (n: number) => `${n < 0 ? '−' : '+'}${fmtInt(Math.abs(n))}`
 const kind = (c: Cause) => (c.diff < 0 ? 'dn' : 'up')
 /** A country by its name beside its flag; anything else as it is called. */
 const label = (c: Cause) => (c.dim === 'country' && c.value ? countryName(c.value) : nameOf(c.value))
 
-/** Under the headline: the top three movers, tinted by the way they went. */
-export function MoverChips({ list, metric, fmt }: { list: Cause[]; metric: Metric; fmt: (n: number) => string }) {
-  if (!list.length) return null
-  return (
-    <div className="xmv-chips">
-      {list.slice(0, 3).map((c) => (
-        <button key={`${c.dim}:${c.value}`} type="button" className={`xmv-chip ${kind(c)}`} title={copy.metric[metric]} onClick={() => pick(c)}>
-          {c.dim === 'country' && c.value && <Flag code={c.value} />}
-          {label(c)} <b>{signed(c.diff, fmt)}</b>
-        </button>
-      ))}
-    </div>
-  )
-}
-
-export function MoverList({ list, fmt }: { list: Cause[]; fmt: (n: number) => string }) {
+export function MoverList({ list }: { list: Cause[] }) {
   const { askPeekNow } = useV2Extras()
-  const max = Math.max(...list.map((c) => Math.abs(c.diff)), 1)
   const lead = list[0]
   const way = lead.diff < 0 ? 'fell' : 'rose'
   return (
     <>
       <div className="xmv">
         {list.map((c) => (
-          <button key={`${c.dim}:${c.value}`} type="button" className="xmv-row" title={`${c.value || copy.direct}: ${fmt(c.was)} → ${fmt(c.now)}`} onClick={() => pick(c)}>
+          <button key={`${c.dim}:${c.value}`} type="button" className="xmv-row" title={`${c.value || copy.direct}: ${fmtInt(c.was)} → ${fmtInt(c.now)}`} onClick={() => pick(c)}>
             <span className="xmv-name">
               {c.dim === 'country' && c.value && <><Flag code={c.value} />{' '}</>}
               {label(c)} <em>{copy.dimWord[c.dim]}</em>
             </span>
-            <span className="xmv-was">{fmt(c.was)} → {fmt(c.now)}</span>
-            <span className="xmv-bar" aria-hidden="true"><i className={kind(c)} style={{ width: `${(Math.abs(c.diff) / max) * 50}%` }} /></span>
-            <b className={`xmv-n ${kind(c)}`}>{signed(c.diff, fmt)}</b>
+            <b className={`xmv-n ${kind(c)}`}>{signed(c.diff)}</b>
           </button>
         ))}
       </div>
