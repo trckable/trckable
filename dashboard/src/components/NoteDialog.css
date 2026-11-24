@@ -172,10 +172,9 @@
   transform: translateY(-50%);
   font-size: 12px;
 }
-/* The note and its Add button stay on one row in the footer, on a phone too. */
-.note-modal .modal-foot {
-  flex-wrap: nowrap;
-  gap: 8px;
+/* The note takes a row of the footer when it does not fit beside Cancel and Add (a phone). */
+.note-modal .modal-foot > .note-input {
+  flex: 1 1 220px;
 }
 .note-modal .modal-foot > .dialog-actions {
   flex: 0 0 auto;
@@ -183,10 +182,10 @@
 @media (--xs) {
   .note-modal .modal-foot {
     flex-direction: row;
-    align-items: center;
+    justify-content: flex-end;
   }
-  .note-modal .modal-foot > .dialog-actions {
-    width: auto;
+  .note-modal .modal-foot > .note-input {
+    flex-basis: 100%;
   }
 }
 /* On a phone the day switcher takes the header: the icon says what the dialog is. */

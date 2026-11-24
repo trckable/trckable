@@ -5,7 +5,6 @@ import { useState } from 'react'
 import { CodeBlock } from '../components/Code'
 import { Modal } from '../kit/Modal'
 import { ModalMark } from '../kit/ModalMark'
-import { toast } from '../components/Toast'
 import { fail, more, type Site, type Widget, type WidgetLook } from '../lib/apiMore'
 import { EMPTY_LOOK, TEXT, cornerCode, frameCode, snippet, type Place } from './widgetKinds'
 import { WidgetStudio } from './WidgetStudio'
@@ -22,7 +21,6 @@ export function WidgetCreator({ site, base, onClose, onMade }: { site: Site; bas
       .then((w) => {
         setMade(w)
         onMade()
-        toast(TEXT.ready)
       })
       .catch((e: unknown) => fail(e))
       .finally(() => setBusy(false))

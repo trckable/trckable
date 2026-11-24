@@ -105,7 +105,6 @@ export function NoteDialog({
         icon: <ModalMark icon={NotebookPen} />,
         size: 'md',
         busy,
-        cancel: false,
         onSubmit: save,
         tools: (
           <div className="note-day">
@@ -141,7 +140,7 @@ export function NoteDialog({
         actions: (
           <button type="submit" className="btn primary" disabled={busy || !text.trim()}>
             <Plus size={14} strokeWidth={2} aria-hidden="true" />
-            {busy ? 'Saving…' : 'Add'}
+            {busy ? 'Saving…' : 'Add note'}
           </button>
         ),
       }}
