@@ -23,7 +23,7 @@ export type Frame = {
   /** Small controls left of the close button (a Reset pill). */
   tools?: ReactNode
   busy?: boolean
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'xs' | 'sm' | 'md' | 'lg'
 }
 
 export function Framed({ f, onClose, children }: { f: Frame; onClose?: () => void; children?: ReactNode }) {

@@ -45,7 +45,7 @@ export default function ConfirmDialog({ req, done }: { req: Req; done: (v: strin
       frame={{
         title: req.title,
         icon: <ModalMark icon={Mark} danger={req.danger} />,
-        size: 'sm',
+        size: 'xs',
         busy,
         cancel: req.cancelLabel ?? 'Cancel',
         onSubmit: submit,

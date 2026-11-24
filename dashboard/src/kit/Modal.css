@@ -281,6 +281,10 @@
   gap: 0;
   overflow: hidden;
 }
+.modal.framed.modal-xs {
+  --modal-h: 260px;
+  width: min(420px, 100%);
+}
 .modal.framed.modal-sm {
   --modal-h: 560px;
   width: min(420px, 100%);

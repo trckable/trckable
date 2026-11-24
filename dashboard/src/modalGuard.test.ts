@@ -92,7 +92,7 @@ describe('dialogs', () => {
   it('have one fixed size per size class, held in kit/Modal.css, and no dialog sets a height of its own', () => {
     const css = readFileSync(join(SRC, 'kit/Modal.css'), 'utf8')
     // The one place: each class a fixed height, capped by the screen, and the frame's body is what scrolls.
-    for (const [size, px] of [['sm', 560], ['md', 620], ['lg', 680]] as const) {
+    for (const [size, px] of [['xs', 260], ['sm', 560], ['md', 620], ['lg', 680]] as const) {
       const rule = css.match(new RegExp(`\\.modal\\.framed\\.modal-${size} \\{[^}]*\\}`))?.[0] ?? ''
       expect(rule).toContain(`--modal-h: ${px}px`)
     }
