@@ -29,9 +29,9 @@ async function make(page: Page, design: string, tweak?: (studio: Locator) => Pro
 }
 
 const DESIGNS: { design: string; says: RegExp }[] = [
-  { design: 'Live now', says: /Visitors in the last 30 minutes/ },
+  { design: 'Live now', says: /People in the last 30 minutes/ },
   { design: 'Online', says: /online/i },
-  { design: 'Last 7 days', says: /visitors in the last 7 days/ },
+  { design: 'Last 7 days', says: /people in the last 7 days/ },
   { design: 'Counter', says: /in the last 30 min/ },
   { design: 'Open revenue', says: /Revenue in /i },
   { design: 'Privacy seal', says: /How .* measures visits/ },
@@ -104,7 +104,7 @@ test('theme, brand and language chosen in the dialog are what the page is', asyn
   const [w] = await widgets(page, site)
   const body = await (await shown(page, w.id)).text()
   expect(body).toMatch(/data-theme="dark"/)
-  expect(body).toContain('Besucher')
+  expect(body).toContain('Personen')
   expect(body).not.toContain('Counted by trckable')
   expect(body).toMatch(/border-radius:\s*4px/) // Square
 })

@@ -41,7 +41,7 @@ for (const size of [{ w: 1440, h: 900 }, { w: 390, h: 844 }]) {
     await expect(page.locator('#siteBtn .mk-dot.down')).toBeVisible()
     // Empty: a line that says why nobody is there, no heading over nothing.
     await expect(page.getByText('Waiting for the first visit since')).toHaveCount(0)
-    await expect(page.locator('.lfeed')).toContainText('No visitors while it is down.')
+    await expect(page.locator('.lfeed')).toContainText('No people while it is down.')
     await expect(page.locator('.lfeed .lv')).toHaveCount(0)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0)
     await shoot(page, 'live')

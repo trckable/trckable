@@ -54,7 +54,7 @@ export default function HeatOverlay({ site, path, query, demo = false, onClose }
       .then(() => markHeatDone(site.id))
       .catch((e: unknown) => fail(e))
   return (
-    <Modal label={heatCopy.open(path)} className="heat" keepSize={false} onClose={onClose}>
+    <Modal label={heatCopy.open(path)} className="heat" onClose={onClose}>
       <HeatBar map={map} path={path} width={width} onWidth={setWidth} layers={layers} onLayer={(k) => setLayers((l) => ({ ...l, [k]: !l[k] }))} noPage={isRisky(path)} demo={demo} onClose={onClose} />
       {failed && <div className="empty">{failed}</div>}
       {!map && !failed && <div className="empty">{heatCopy.loading}</div>}

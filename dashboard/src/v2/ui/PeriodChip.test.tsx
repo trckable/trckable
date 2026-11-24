@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
+import { PillNote } from './pillNote'
 import { PeriodChip, type PeriodChipProps } from './PeriodChip'
 
 const base: PeriodChipProps = {
@@ -17,5 +18,10 @@ describe('the period chip', () => {
 
   it('has none on today', () => {
     expect(renderToStaticMarkup(<PeriodChip {...base} value="today" />)).not.toContain('pill-x')
+  })
+
+  it('carries a note as a second line inside the button', () => {
+    const html = renderToStaticMarkup(<PillNote.Provider value="Updated 15:35"><PeriodChip {...base} /></PillNote.Provider>)
+    expect(html).toMatch(/<button[^>]*id="perBtn"[\s\S]*pl-note">Updated 15:35<\/span>[\s\S]*<\/button>/)
   })
 })

@@ -42,7 +42,7 @@ describe('buildReport', () => {
     const p = input({ modules: { consent: true } })
     const r = buildReport(p)
     expect(value(r, /Consent mode/)).toBe('On')
-    expect(r.notCollected.join('\n')).toContain('only after the visitor agrees')
+    expect(r.notCollected.join('\n')).toContain('only after the person agrees')
     expect(bannerKind(p)).toBe('asks')
   })
 
@@ -80,7 +80,7 @@ describe('buildReport and Answers', () => {
     expect(buildReport(input()).whereAnswers).toBeUndefined()
     expect(buildReport(input({ answers: [] } as never)).whereAnswers).toBeUndefined()
     const r = buildReport({ ...input(), answers: ['OpenAI', 'Perplexity', 'Anthropic'] })
-    expect(r.whereAnswers).toBe('Answers sends your questions to OpenAI, Perplexity, and Anthropic. Nothing about your visitors.')
+    expect(r.whereAnswers).toBe('Answers sends your questions to OpenAI, Perplexity, and Anthropic. Nothing about your people.')
     expect(r.where).toContain('On your server')
   })
 })

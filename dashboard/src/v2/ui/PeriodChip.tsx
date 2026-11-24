@@ -1,13 +1,14 @@
 // The period, as the header says it ("Today · Fri 16 Oct", and what it is set against), and its menu: five periods, More,
 // the comparison, and a calendar for custom dates. The menu is a sheet from the bottom on a phone.
 import { SHELL } from '../../kit/PopShell'
-import { useRef, useState, type KeyboardEvent } from 'react'
+import { useContext, useRef, useState, type KeyboardEvent } from 'react'
 import { bucketsFor, diffDays, type ISODate } from '../../lib/dates'
 import { rangeWords } from '../dayWords'
 import { copy } from '../copy'
 import { Calendar } from './PeriodCalendar'
 import { useMenu } from './useMenu'
 import { useTopLayerWhen } from '../../lib/topLayer'
+import { PillNote } from './pillNote'
 
 export interface PeriodOption {
   id: string
@@ -54,6 +55,7 @@ export function PeriodChip(p: PeriodChipProps) {
   const [head, ...tail] = p.label.split(' · ')
   const rest = tail.join(" · ")
   const base = p.idBase ?? 'per'
+  const note = useContext(PillNote)
   const { open, attach, toggle, close } = useMenu()
   const menu = useRef<HTMLDivElement>(null)
   useTopLayerWhen(open, menu)
@@ -108,12 +110,15 @@ export function PeriodChip(p: PeriodChipProps) {
           toggle()
         }}
       >
-        <span>
-          {head}
-          {rest && <span className="pl-rest">{` · ${rest}`}</span>}
+        <span className="pl-main">
+          <span>
+            {head}
+            {rest && <span className="pl-rest">{` · ${rest}`}</span>}
+            {p.vs && ' '}
+            {p.vs && <span className="vs hide-s">{p.vs}</span>}
+          </span>
+          {note && <span className="pl-note">{note}</span>}
         </span>
-        {p.vs && ' '}
-        {p.vs && <span className="vs hide-s">{p.vs}</span>}
       </button>
       {p.onReset && (
         <button type="button" className="pill-x" onKeyDown={esc} aria-label={copy.backToToday} title={copy.backToToday} onClick={p.onReset}>

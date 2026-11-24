@@ -23,12 +23,12 @@ const requests = set(
 )
 
 const metrics = set(
-  'visitors visitor sales revenue bounce rate views pageviews traffic sessions signups conversions clicks orders ' +
-    'besucher umsatz verkaufe absprungrate aufrufe seitenaufrufe sitzungen ' +
-    'visiteurs ventes revenu rebond vues trafic taux ' +
-    'visitantes ventas ingresos rebote visitas trafico tasa ' +
-    'visitatori vendite ricavi rimbalzo visualizzazioni traffico tasso ' +
-    'bezoekers verkoop omzet bouncepercentage weergaven verkeer',
+  'people person visitors visitor sales revenue bounce rate views pageviews traffic sessions signups conversions clicks orders ' +
+    'personen besucher umsatz verkaufe absprungrate aufrufe seitenaufrufe sitzungen ' +
+    'personnes visiteurs ventes revenu rebond vues trafic taux ' +
+    'personas visitantes ventas ingresos rebote visitas trafico tasa ' +
+    'persone visitatori vendite ricavi rimbalzo visualizzazioni traffico tasso ' +
+    'mensen bezoekers verkoop omzet bouncepercentage weergaven verkeer',
 )
 
 const dates = set(

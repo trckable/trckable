@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { nameOf } from '../../lib/visitor'
 import { faceOf } from './face'
 
-describe('a visitor\'s face and name', () => {
+describe('a person\'s face and name', () => {
   it('come only from the id: the same id is the same face and name, drawn once', () => {
     expect(faceOf('abc123')).toBe(faceOf('abc123'))
     expect(nameOf('abc123')).toBe(nameOf('abc123'))

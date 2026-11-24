@@ -3,6 +3,22 @@
 import type { Milestone } from '../../lib/api'
 import { more } from '../../lib/apiMore'
 
+/** One goal of a day's goals row: its count, when it was last reached, and whether it stands out today (the server's one rule). */
+export interface FeedGoal {
+  goal: string
+  name?: string
+  count: number
+  last?: number
+  out?: boolean
+  why?: 'first' | 'times'
+  factor?: number
+  usual?: number
+  /** This person hears of the goal only when it stands out. */
+  quiet?: boolean
+  /** Reached by seeing a page, not by an event the site sends. */
+  page?: boolean
+}
+
 export interface FeedRow {
   id: string
   kind: 'down' | 'milestone' | 'busy' | 'mention' | 'answer' | 'signup' | 'sale' | 'goal' | 'alert'
@@ -34,7 +50,7 @@ export interface FeedRow {
   /** Goal and signup: the goal's own key (for the goals row, the one reached last). */
   goal?: string
   /** Goals: the day's goals with their counts and when each was last reached (unix seconds), the one reached last first. */
-  goals?: { goal: string; name?: string; count: number; last?: number }[]
+  goals?: FeedGoal[]
   /** Mention: the post's own address. */
   link?: string
   milestone?: Milestone

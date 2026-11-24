@@ -43,7 +43,7 @@ export default function SurgeModal({ surge: given, site, tz, explore, head, onCl
   const st = surge.story
   const w = surge.why
   return (
-    <Modal label={t.modalLabel} onClose={onClose} className="surge-modal" keepSize={false} focus="box">
+    <Modal label={t.modalLabel} onClose={onClose} className="surge-modal" focus="box">
       <button type="button" className="sgm-x" aria-label={t.close} onClick={onClose}>
         <X size={16} strokeWidth={2} aria-hidden="true" />
       </button>

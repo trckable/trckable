@@ -9,7 +9,7 @@ describe('the moment', () => {
   it('is one line: the ghost, the number, the label, Share and close', () => {
     const html = renderToStaticMarkup(<Moment m={m({})} onShare={() => {}} onClose={() => {}} />)
     expect(html).toContain('tkb-ghost')
-    expect(html).toContain('visitors')
+    expect(html).toContain('people')
     expect(html).toContain('Share')
     expect(html).toContain('aria-label="Dismiss"')
     expect(html).not.toContain('money')

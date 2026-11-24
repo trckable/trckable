@@ -180,8 +180,8 @@ const at = (url: () => string, ready: string): Go => async (page) => {
 }
 
 // Explore's page on one section of its list (the rail at wide widths, the drawer on a phone).
-// The sections of the Explore list (the folded Payments and Customers are not counted).
-const SECTIONS = 13
+// The sections of the Explore list (the folded Sales, Payments and Customers are not counted).
+const SECTIONS = 7
 const explore = (n: number): Go => async (page) => {
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=`)
   await expect(page.locator('#xp.on')).toBeVisible()

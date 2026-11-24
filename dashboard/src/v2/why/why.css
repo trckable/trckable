@@ -12,13 +12,8 @@
 .mk .xchg .xth,.mk .xchg .xrw{grid-template-columns:minmax(0,1fr) 70px 70px 84px}
 .mk .xchg .d.dn{color:var(--mk-red,var(--x-red))}
 .mk .xchg .d.up{color:var(--mk-accent,var(--x-lime))}
-.mk .xchg-head{align-items:center}
-.mk .xchg-kinds{display:flex;gap:2px;flex-wrap:wrap}
-.mk .xchg-kinds button{background:none;border:0;border-radius:8px;padding:4px 9px;color:var(--mk-muted);font:inherit;font-size:12.5px;cursor:pointer}
-.mk .xchg-kinds button.on{background:var(--mk-card2);color:var(--mk-text)}
 .mk .xchg-rest{margin:var(--mk-s2) 0 0;font-size:13px;opacity:.65}
 .mk .xslow-how{margin:0 0 var(--mk-s3);font-size:12px;color:var(--mk-faint)}
-.mk .xchg-tools{display:flex;gap:var(--mk-s2);margin-top:var(--mk-s5)}
 .mk .view-pane{animation:view-in .14s ease-out}
 .mk .view-pane[hidden]{animation:none}
 @keyframes view-in{from{opacity:.4}to{opacity:1}}
@@ -50,7 +45,6 @@
 .mk .xp.xpage .xrail{top:76px}
 .mk .xrail .xgl:first-child{margin-top:0}
 .mk .xp.xpage .xtb{min-height:36px}
-.mk .xchg-tools{margin-top:var(--mk-s5)}
 .mk .xp.xpage.full .xlay .xtb{margin-top:0}
 .mk .xp.xpage.full .xrail{position:static;transform:none;translate:none}
 .mk .xp.xpage.full .xrail>:first-child{margin-top:0;padding-top:0}
@@ -94,27 +88,17 @@
 }
 /* The first heading of a section has nothing above it to divide from. */
 .mk .xfade>.xsec:first-child::before{display:none}
-/* Channel quality */
-.mk .xqual-page{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mk .xqual .xth,.mk .xqual .xrw{grid-template-columns:var(--xq)!important;gap:var(--mk-s3);align-items:center;text-align:left}
-.mk .xqual .xth span:not(:first-child):not(:nth-child(3)){text-align:right}
-.mk .xqual .xth span:nth-child(3){text-align:left}
-.mk .xqual .xq-name{display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mk .xcards .xqual .xth>:first-child{visibility:hidden}
-.mk .xqual .xq-name small{flex:none;font-size:12px;color:var(--mk-muted)}
-.mk .xqual .xq-meta{display:none}
-.mk .xqual-slow{color:var(--mk-red)}
-@media (--xs){
-  .mk .xqual .xth{display:none}
-  .mk .xqual .xrw{grid-template-columns:minmax(0,1fr) 120px!important;grid-template-areas:"name rate" "meta meta";row-gap:2px;padding-block:var(--mk-s2)}
-  .mk .xqual .xq-name{grid-area:name}
-  .mk .xqual .xqual-rate{grid-area:rate}
-  .mk .xqual .xq-col,.mk .xqual .xq-name small{display:none}
-  .mk .xqual .xq-meta{display:block;grid-area:meta;overflow:hidden;font-size:12px;color:var(--mk-muted);text-overflow:ellipsis;white-space:nowrap}
-  .mk .xqual .xq-meta.xqual-slow{color:var(--mk-red)}
-}
 /* One control row, then quiet tabs on a soft line: no boxed strip, no third row. */
 .mk .xupdated{align-self:center;margin-right:var(--mk-s3);font-size:12px;color:var(--mk-muted);white-space:nowrap}
+.mk .xtitle-sub{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:var(--mk-muted)}
+@media (--handheld){.mk .xtitle-sub{display:none}}
+/* The time the numbers were read: a small muted second line inside the period pill. */
+.mk .pill .pl-main{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-width:0;line-height:1.15;text-align:left}
+.mk .pill:has(.pl-note){height:44px}
+.mk .pill .pl-main .vs{padding-block:1px}
+.mk .pill .pl-note{font-size:11px;font-weight:500;color:var(--mk-muted)}
+.mk .pill .pl-note .xupdated{margin:0;font-size:inherit}
+@media (--handheld){.mk .pill .pl-note{display:none}.mk .pill:has(.pl-note){height:36px}}
 .mk .xperiod-note{margin:0 0 var(--mk-s3);font-size:13px;color:var(--mk-muted)}
 .mk .xp.xpage .xsub{display:flex;gap:var(--mk-s4);width:100%;padding:0;border:0;border-radius:0;background:linear-gradient(90deg,var(--mk-line),transparent) bottom/100% 1px no-repeat}
 .mk .xp.xpage .xsub button{flex:none!important;width:auto;height:36px;padding:0 2px;border-radius:0;background:none;border-bottom:2px solid transparent;transition:color .15s ease,border-color .15s ease}
@@ -151,10 +135,10 @@
 .mk .xfade>.xsec+*:not(.xsec){padding-top:var(--mk-s3)}
 .mk .xfade>.xsec~*:not(.xsec):has(+.xsec),.mk .xfade>.xsec~*:not(.xsec):last-child{margin-bottom:var(--mk-s4);padding-bottom:var(--mk-s4);border-bottom:1px solid var(--mk-line);border-radius:0 0 16px 16px}
 /* A section with no headings of its own is one card. */
-.mk .xfade:not(:has(>.xsec,>.xkw,>.xchg-say)){padding:var(--mk-s4);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px}
-.mk .xfade:not(:has(>.xsec,>.xkw,>.xchg-say))>:last-child{margin-bottom:0}
+.mk .xfade:not(:has(>.xsec,>.xkw,>.xchg-say,>.xcp)){padding:var(--mk-s4);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px}
+.mk .xfade:not(:has(>.xsec,>.xkw,>.xchg-say,>.xcp))>:last-child{margin-bottom:0}
 .mk .xp.xpage .xchg-say.xsay-table{margin-top:0}
-.mk .xfade>.xsay-table+.xt,.mk .xfade>.xchg-say+.xqual{padding:var(--mk-s2) var(--mk-s4);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px}
+.mk .xfade>.xsay-table+.xt{padding:var(--mk-s2) var(--mk-s4);background:var(--mk-card);border:1px solid var(--mk-line);border-radius:16px}
 /* Tabs inside a card are small buttons, not a second row of page tabs. */
 .mk .xp.xpage .xfade .xsub{display:inline-flex;width:auto;align-self:flex-start;gap:2px;padding:3px;border-radius:10px;background:var(--mk-field)}
 .mk .xp.xpage .xfade .xsub button{height:28px;padding:0 10px;border:0;border-radius:7px}
@@ -183,19 +167,16 @@
 .mk .xcp .xfade>.xsay-table+.xt{padding:0;background:none;border:0;border-radius:0}
 .mk .xcp .xchg-say{font-size:15px!important;margin:0 0 var(--mk-s3)!important}
 /* Nothing to show: slim, half width, last. */
-.mk .xcards>.xcp:has(.xempty){order:9;grid-column:auto}
+.mk .xcards>.xcp:has(.xempty):not([data-xcard=sources]){order:9;grid-column:auto}
 /* An empty card: as much room under the message as the heading takes above it, so it sits in the middle. */
 .mk .xcards>.xcp:has(.xempty) .xcp-b{padding-block:var(--mk-s2) calc(var(--mk-s2) + 30px)}
 @media (--sm-down){.mk .xcards{grid-template-columns:minmax(0,1fr)}}
-.mk .xpage-desc{margin:calc(var(--mk-s1,4px) * -1) 0 var(--mk-s4);font-size:14px;color:var(--mk-muted)}
 .mk .xcards{grid-auto-flow:dense}
-.mk .xcp .xfade>.xchg-say+.xqual{padding:0;background:none;border:0;border-radius:0}
-.mk .xp.xpage .xpage-desc{margin:-12px 0 var(--mk-s4)}
 /* In a half-width card the name keeps its room: money has its own cards. */
 .mk .xcp:not(.wide) .xt.xc:not(.xsu):has(.sh){--xc:minmax(0,1fr) 56px 76px 48px!important}
 .mk .xcp:not(.wide) .xt.xc:not(.xsu):has(.sh) .hm{display:none}
 /* What needs connecting comes last. */
-.mk .xcards>:has(.lkc){order:9}
+.mk .xcards>:has(.lkc):not([data-xcard=sources]){order:9}
 /* Cards in a row are one height, their columns start level, and notes sit on the floor of the card. */
 .mk .xcards{align-items:stretch}
 .mk .xcp{display:flex;flex-direction:column}
@@ -343,23 +324,6 @@
   .mk .xcards [data-chart]>.xsec .xb{position:absolute;top:10px;right:var(--mk-s3)}
 }
 .mk .shwhy{margin:var(--mk-s2) 0 0;font-size:12px;color:var(--mk-muted)}
-/* Channels: the ring beside its table. */
-.mk [data-xcard=sources] .xfade{display:grid;grid-template-columns:190px minmax(0,1fr);gap:var(--mk-s5);align-items:center}
-.mk [data-xcard=sources] .xfade>.xsay-table{grid-column:1/-1}
-.mk .dn-ring{position:relative;width:190px;height:190px}
-.mk .dn-ring svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
-.mk .dn-ring circle{cursor:pointer;transition:stroke-width .15s,opacity .15s}
-.mk .dn-mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:34px;text-align:center;pointer-events:none}
-.mk .dn-mid b{font-size:25px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.mk .dn-mid span{font-size:11.5px;line-height:1.25;color:var(--mk-muted)}
-@media (--xs){.mk [data-xcard=sources] .xfade{grid-template-columns:minmax(0,1fr);justify-items:center}.mk [data-xcard=sources] .xfade>*{width:100%}.mk [data-xcard=sources] .dn-ring{width:190px}}
-/* Quality: the rate as a filled meter, the page as a chip. */
-.mk .xqual-rate{display:grid;grid-template-columns:minmax(40px,1fr) 34px;align-items:center;gap:8px;min-width:0}
-.mk .xqual-rate i{display:block;height:10px;border-radius:6px;background:var(--mk-band);overflow:hidden}
-.mk .xqual-rate b{display:block;height:100%;border-radius:6px;background:color-mix(in srgb,var(--mk-lime) 45%,transparent)}
-.mk .xqual-rate.best b{background:var(--mk-lime)}
-.mk .xqual-rate em{font-style:normal;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
-.mk .xcards .xqual .xqual-page{justify-self:start;max-width:100%;overflow:hidden;padding:2px 8px;border-radius:7px;background:var(--mk-band);font-size:12px;text-overflow:ellipsis;white-space:nowrap}
 .mk .xcards .xchg-rest{display:none}
 /* Sources that pay: the two switches on one line. */
 .mk [data-xcard=earners] .xfade{display:flex;flex-wrap:wrap;column-gap:var(--mk-s3);align-items:center}
@@ -391,7 +355,6 @@
   .mk .xp.xpage .xperiod .vs{padding:0;background:none!important;color:var(--mk-muted);font-weight:500}
   .mk .xp.xpage .xperiod button{min-height:32px}
   .mk .xp.xpage .xupdated{font-size:11.5px}
-  .mk .xp.xpage .xpage-desc{display:none}
   .mk .xsay-page{margin-block:var(--mk-s2) var(--mk-s3);font-size:15px}
 }
 @media (--xs){
@@ -421,28 +384,14 @@
 .mk .xcards .xflag{margin-left:6px;padding:1px 6px;border-radius:6px;background:color-mix(in srgb,var(--mk-red) 18%,transparent);color:var(--mk-red);font-size:11px;font-style:normal;font-family:var(--mk-font,inherit)}
 .mk .xcards .xcp-bare .xfade>:last-child{border-bottom-left-radius:16px;border-bottom-right-radius:16px}
 .mk .xcards .mk-bar .xflag{background:color-mix(in srgb,var(--mk-red) 16%,var(--mk-card))}
-/* What changed: the biggest changes of every table as one ranked list. */
-.mk .xmv-note{margin-inline-start:var(--mk-s3);color:var(--mk-muted);font-size:12px;font-style:normal;font-weight:400}
-.mk .xmv-chips{display:flex;flex-wrap:wrap;gap:6px;margin:calc(var(--mk-s2) * -1) 0 var(--mk-s4)}
-.mk .xmv-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border:0;border-radius:999px;font:inherit;font-size:12.5px;color:var(--mk-text);cursor:pointer}
-.mk .xmv-chip.dn{background:color-mix(in srgb,var(--mk-red) 16%,transparent)}
-.mk .xmv-chip.up{background:color-mix(in srgb,var(--mk-lime) 16%,transparent)}
-.mk .xmv-chip b{font-weight:650;font-variant-numeric:tabular-nums}
-.mk .xmv-chip.dn b{color:color-mix(in srgb,var(--mk-red) 78%,var(--mk-text))}
-.mk .xmv-chip.up b{color:color-mix(in srgb,var(--mk-lime) 78%,var(--mk-text))}
+/* What moved: the biggest changes of every table as one ranked list. */
 .mk .xmv-n.dn{color:var(--mk-red)}
 .mk .xmv-n.up{color:var(--mk-lime)}
 .mk .xmv{display:flex;flex-direction:column;padding-top:var(--mk-s2)}
-.mk .xmv-row{display:grid;grid-template-columns:minmax(0,1.2fr) 130px minmax(160px,1fr) 64px;align-items:center;gap:var(--mk-s3);padding:8px 6px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;text-align:start;cursor:pointer}
+.mk .xmv-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:var(--mk-s3);padding:8px 6px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;text-align:start;cursor:pointer}
 .mk .xmv-row:hover{background:var(--mk-band)}
 .mk .xmv-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mk .xmv-name em{margin-inline-start:4px;color:var(--mk-muted);font-size:11.5px;font-style:normal}
-.mk .xmv-was{color:var(--mk-muted);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.mk .xmv-bar{position:relative;height:8px}
-.mk .xmv-bar::before{content:"";position:absolute;inset-block:-3px;inset-inline-start:50%;width:1px;background:color-mix(in srgb,var(--mk-text) 22%,transparent)}
-.mk .xmv-bar>i{position:absolute;top:0;bottom:0;border-radius:4px}
-.mk .xmv-bar>i.dn{right:50%;background:var(--mk-red)}
-.mk .xmv-bar>i.up{left:50%;background:var(--mk-lime)}
 .mk .xmv-n{font-weight:650;font-variant-numeric:tabular-nums;text-align:end;white-space:nowrap}
 .mk .xmv-ask{display:block;margin-top:var(--mk-s3);padding:4px 6px;border:0;background:none;color:var(--mk-muted);font:inherit;font-size:12.5px;cursor:pointer}
 .mk .xmv-ask:hover{color:var(--mk-text)}
@@ -458,8 +407,6 @@
 /* Big fills: the green with some gray in it, easy on the eye. Bright lime stays for small accents. */
 .mk{--mk-soft:color-mix(in srgb,var(--mk-lime) 52%,var(--x-soft-hi))}
 .mk .xcards .mk-bar>i,.mk .xcards .mk-bar.g-good>i{background:linear-gradient(90deg,color-mix(in srgb,var(--mk-soft) 58%,transparent),color-mix(in srgb,var(--mk-soft) 26%,transparent))!important}
-.mk .xqual-rate b{background:color-mix(in srgb,var(--mk-soft) 55%,transparent)}
-.mk .xqual-rate.best b{background:var(--mk-soft)}
 .mk .xsplit-bar i[style*="--mk-lime"]{background:var(--mk-soft)!important}
 .mk .xrcell{background-blend-mode:normal;filter:saturate(.6)}
 /* Softer still: a light gray with only a hint of green; muted follows the theme. */
@@ -481,13 +428,6 @@
 .mk .xcards .xcp:has(.xempty){display:flex;flex-direction:column}
 /* Cards side by side share one height: an empty one centres its words in it. */
 .mk .xcards .xcp:has(.xempty) .xempty{flex:1;justify-content:center}
-@media (--xs){
-  .mk .xmv-row{grid-template-columns:minmax(0,1fr) auto;row-gap:4px}
-  .mk .xmv-was{display:none}
-  .mk .xmv-bar{grid-column:1 / -1;grid-row:2}
-  .mk .xmv-n{grid-row:1;grid-column:2}
-  .mk .xchg-head{flex-wrap:wrap}
-}
 /* Motion: numbers rise in, bars and lines grow, cards answer the pointer. All of it stays still for who asks for less. */
 .mk .roll{display:inline-flex;white-space:pre}
 @keyframes roll-in{from{opacity:0;transform:translateY(.55em)}to{opacity:1;transform:none}}
@@ -495,7 +435,7 @@
 @keyframes spark-in{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
 @media (prefers-reduced-motion:no-preference){
   .mk .roll>span{display:inline-block;animation:roll-in .5s cubic-bezier(.22,1,.36,1) both}
-  .mk .xcards .mk-bar>i,.mk .xsplit-bar>i,.mk .xqual-rate b{transform-origin:left;animation:bar-in .75s cubic-bezier(.22,1,.36,1) both}
+  .mk .xcards .mk-bar>i,.mk .xsplit-bar>i{transform-origin:left;animation:bar-in .75s cubic-bezier(.22,1,.36,1) both}
   .mk .xcards .xrw:nth-child(2) i{animation-delay:.04s}
   .mk .xcards .xrw:nth-child(3) i{animation-delay:.08s}
   .mk .xcards .xrw:nth-child(4) i{animation-delay:.12s}
@@ -555,18 +495,12 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 .xtile[data-xtile=overview],.xri[data-xsec=overview],.xtitle[data-xtitle=overview]{--c:#4f8ef7}
 .xtile[data-xtile=pages],.xri[data-xsec=pages],.xtitle[data-xtitle=pages]{--c:#2fb8c6}
 .xtile[data-xtile=sources],.xri[data-xsec=sources],.xtitle[data-xtitle=sources]{--c:#f08a5d}
-.xtile[data-xtile=search],.xri[data-xsec=search],.xtitle[data-xtitle=search]{--c:#7fb83a}
-.xtile[data-xtile=places],.xri[data-xsec=places],.xtitle[data-xtitle=places]{--c:#34b37e}
-.xtile[data-xtile=tech],.xri[data-xsec=tech],.xtitle[data-xtitle=tech]{--c:#6c7a91}
-.xtile[data-xtile=results],.xri[data-xsec=results],.xtitle[data-xtitle=results]{--c:#e9668f}
-.xtile[data-xtile=sales],.xri[data-xsec=sales],.xtitle[data-xtitle=sales]{--c:#d9a62e}
-.xtile[data-xtile=speed],.xri[data-xsec=speed],.xtitle[data-xtitle=speed]{--c:#ef6a5a}
+.xtile[data-xtile=audience],.xri[data-xsec=audience],.xtitle[data-xtitle=audience]{--c:#34b37e}
+.xtile[data-xtile=goals],.xri[data-xsec=goals],.xtitle[data-xtitle=goals]{--c:#e9668f}
+.xtile[data-xtile=health],.xri[data-xsec=health],.xtitle[data-xtitle=health]{--c:#ef6a5a}
 .xri[data-xtab=payments]{--c:#d9a62e}
 .xri[data-xtab=customers]{--c:#f08a5d}
-.xtile[data-xtile=mentions],.xri[data-xsec=mentions],.xtitle[data-xtitle=mentions]{--c:#c26bdc}
-.xtile[data-xtile=links],.xri[data-xsec=links],.xtitle[data-xtitle=links]{--c:#3f9fd8}
-.xtile[data-xtile=ai],.xri[data-xsec=ai],.xtitle[data-xtitle=ai]{--c:#7a6cf0}
-.xtile[data-xtile=answers],.xri[data-xsec=answers],.xtitle[data-xtitle=answers]{--c:#22a699}
+.xtile[data-xtile=web],.xri[data-xsec=web],.xtitle[data-xtitle=web]{--c:#7a6cf0}
 .mk .xgoal-next{margin-inline-end:8px}
 /* The list beside the numbers wears the same colours as the grid. */
 .mk .xrail .xri svg,.mk .xrail .xri:hover svg,.mk .xrail .xri.on svg{color:var(--x-white);border-radius:9px;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 92%,var(--x-white)),color-mix(in srgb,var(--c) 72%,var(--x-black)));box-shadow:inset 0 1px 0 var(--x-gloss2)}
@@ -603,24 +537,47 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 /* Every segmented switch centres its label exactly: one line box, flex centre, no baseline offset. */
 .mk :is(.mk-seg,.xsub) button{display:inline-flex;align-items:center;justify-content:center;padding-block:0;line-height:1;text-align:center}
 .mk :is(.mk-seg,.xsub) button>*{line-height:1}
-/* What changed: pages and sources, Top / Trending up / Trending down. Two columns where there is room, one on a phone. */
-.mk .xtr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:var(--mk-s4);margin-top:var(--mk-s5)}
-.mk .xtr{display:flex;flex-direction:column;min-width:0;padding:var(--mk-s3) var(--mk-s3) var(--mk-s2);background:var(--mk-card);border-radius:16px}
-.mk .xtr-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--mk-s2);padding:0 6px var(--mk-s2)}
-.mk .xtr-head h3{margin:0;font-size:14px;font-weight:600}
-.mk .xtr-row{display:grid;grid-template-columns:20px minmax(0,1fr) auto 44px;align-items:center;gap:var(--mk-s2);padding:8px 6px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;text-align:start;cursor:pointer}
+/* What changed, the Briefing: Today across the page, then what moved, where they came from and what they looked at in three equal columns where there is room (the rail's breakpoint), one column on a phone. */
+/* Today: the sentence, the numbers with the site's status, the chart. */
+.mk .xbr-card{margin-bottom:var(--mk-s4)}
+.mk .xbr-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--mk-s4)}
+.mk .xbr-row>.xbr-card{margin-bottom:0}
+/* Three columns only where the page is wider than 1200 px: any narrower and a name would be cut. */
+@container (--pane-max-1200){.mk .xbr-row{grid-template-columns:minmax(0,1fr)}}
+.mk .xbr-say{margin:0 0 var(--mk-s3);font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.2;text-wrap:balance}
+@media (--sm-down){.mk .xbr-say{font-size:21px}}
+.mk .xbr-nums{display:flex;flex-wrap:wrap;align-items:flex-end;gap:var(--mk-s3) var(--mk-s5)}
+.mk .xbr-big,.mk .xbr-small{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px var(--mk-s2);min-width:0}
+.mk .xbr-big>b{font-size:34px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.mk .xbr-small>b{font-size:20px;font-weight:650;font-variant-numeric:tabular-nums}
+.mk .xbr-big>span,.mk .xbr-small>span,.mk .xbr-small>em{color:var(--mk-muted);font-size:13px;font-style:normal}
+.mk .xbr-big>em{font-size:13px;font-style:normal;color:var(--mk-muted)}
+.mk .xbr-big>em.up{color:var(--mk-lime)}
+.mk .xbr-big>em.dn{color:var(--mk-red)}
+.mk .xbr-pill{margin-inline-start:auto;padding:3px 10px;border-radius:999px;font-size:12.5px;white-space:nowrap}
+.mk .xbr-pill.ok{background:color-mix(in srgb,var(--mk-lime) 16%,transparent);color:color-mix(in srgb,var(--mk-lime) 78%,var(--mk-text))}
+.mk .xbr-pill.dn{background:color-mix(in srgb,var(--mk-red) 16%,transparent);color:color-mix(in srgb,var(--mk-red) 78%,var(--mk-text))}
+/* The Google path inside the sources card: who we saw, then what Google showed and what was clicked. */
+.mk .xbr-g{margin:4px 0;padding:6px 0 8px;border-radius:10px;background:var(--mk-band)}
+.mk .xbr-g .xtr-row:hover{background:none}
+.mk .xbr-g .xtr-name{white-space:normal}
+.mk .xbr-g-path,.mk .xbr-g-note{margin:0;padding:0 8px 0 26px}
+.mk .xbr-g-path{font-size:13px;font-variant-numeric:tabular-nums;line-height:1.5}
+.mk .xbr-g-path b{font-weight:650}
+.mk .xbr-g-note{margin-top:2px;color:var(--mk-muted);font-size:11.5px;line-height:1.35}
+.mk .xtr-row{display:grid;grid-template-columns:16px minmax(0,1fr) auto auto;align-items:center;gap:6px;padding:8px 2px;font-size:13px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;text-align:start;cursor:pointer}
 .mk .xtr-row:hover{background:var(--mk-band)}
 .mk .xtr-mark{display:flex;color:var(--mk-muted)}
 .mk .xtr-titled{display:flex;flex-direction:column;line-height:1.25}
 .mk .xtr-titled>b{font-weight:500;overflow:hidden;text-overflow:ellipsis}
 .mk .xtr-titled>small{font-size:11px;font-weight:400;color:var(--mk-muted);overflow:hidden;text-overflow:ellipsis}
 .mk .xtr-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mk .xtr-d{min-width:48px;color:var(--mk-muted);font-size:12.5px;font-variant-numeric:tabular-nums;text-align:end;white-space:nowrap}
+.mk .xtr-d{min-width:36px;color:var(--mk-muted);font-size:12px;font-variant-numeric:tabular-nums;text-align:end;white-space:nowrap}
 .mk .xtr-d.up{color:var(--mk-lime)}
 .mk .xtr-d.dn{color:var(--mk-red)}
 .mk .xtr-n{font-weight:650;font-variant-numeric:tabular-nums;text-align:end}
-.mk .xtr .mk-quiet{padding:var(--mk-s3) 6px}
-.mk .xtr .mk-more{margin-top:auto;border:0;background:none;text-align:start;padding:8px 6px}
+.mk .xbr-card .mk-quiet{padding:var(--mk-s3) 6px}
+.mk .xbr-card .mk-more{margin-top:auto;border:0;background:none;text-align:start;padding:8px 6px}
 /* "1 down" under All sites opens what happened: its own button, laid exactly over the row's red words (hidden under it). */
 .mk .all-wrap{position:relative}
 .mk .all-wrap .all-problems .down{visibility:hidden}

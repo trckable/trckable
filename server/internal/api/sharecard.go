@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"log/slog"
 	"math"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/cards"
+	"github.com/trckable/trckable/server/internal/headcount"
 	"github.com/trckable/trckable/server/internal/query"
 )
 
@@ -17,14 +19,15 @@ import (
 // dialog shows it and downloads it, so preview and file are one picture.
 //
 //	GET /api/v1/sites/{site}/card
-//	t        overview | numbers | grid | leaderboard (the top pages) | sources | places | browsers | devices (top five with bars) | toppage | topsource | topplace (one hero) | changed | search | ai | goals | sales (a title, number cards and lines) | milestone (the biggest of the period) (default overview). numbers is the overview without its chart, grid is four numbers, two by two
-//	period   24h | 7d | 30d | all | custom (default 7d); custom takes from and to (YYYY-MM-DD). A period ends on the last full day or hour
+//	t        overview | numbers | grid | leaderboard (the top pages) | sources | places | browsers | devices (top five with bars) | toppage | topsource | topplace (one hero) | changed | search | ai | goals | sales (a title, number cards and lines) | milestone (the biggest of the period) | bestday (the day with the most people) (default overview). numbers is the overview without its chart, grid is four numbers, two by two
+//	period   24h | 7d | 30d | all | custom (default 7d); custom takes from and to (YYYY-MM-DD). A period ends today (or this hour), as the dashboard's does; all time begins at the site's first data
 //	compare  1: the change against the period just before, in a pill (off by default; not for all time)
 //	metric   visitors | pageviews | engaged | revenue (default visitors)
 //	stats    up to three small numbers under the chart, comma-separated (see cardStatIDs); default engaged,avgtime,country
-//	shape    link | square | story | wide: the picture's size (cards.Formats; default link, 1200 × 630)
+//	shape    link | square | story | wide | post | portrait: the picture's size (cards.Formats; default link, 1200 × 630)
+//	ms       milestone, with t=milestone: kind~step of the one to draw, whenever it was reached (default: the biggest of the period)
 //	theme    dark | light
-//	bg       gradient (default) | solid | grid
+//	bg       gradient (default) | solid | grid | sunset | ocean
 //	date     0: no period on the picture
 //	name     0: no site name (and no tile) on the picture
 //	accent   #rrggbb
@@ -66,6 +69,10 @@ type cardNumbers struct {
 	Revenue bool   `json:"revenue"` // revenue may be picked
 	HasData bool   `json:"has_data"`
 	Post    string `json:"post"`
+	// Facts are the numbers the card says, in its words, for a post to be written from: nothing is recalculated from them.
+	Facts *cardFacts `json:"facts,omitempty"`
+	// First is the day of the site's first data, where the card is read as words: the earliest a period can start.
+	First string `json:"first_day,omitempty"`
 	// What the other topics have to show, so the dialog can disable a picture with nothing behind it.
 	HasSources bool `json:"has_sources"`
 	HasPlaces  bool `json:"has_places"`
@@ -76,13 +83,16 @@ type cardNumbers struct {
 	HasAI        bool              `json:"has_ai"`
 	HasGoals     bool              `json:"has_goals"`
 	HasMilestone bool              `json:"has_milestone"`
+	HasBestDay   bool              `json:"has_bestday"`
+	bestDay      *cards.Spec       // the best day's words, when the period has one
 	digests      map[string]digest // the digest pictures, by t
 	milestone    *milestoneLine
 	rows         []cards.Item
 	lists        map[string][]cards.Item // the top five of each list picture, by its t
 	grid         []cards.Stat            // the grid's four numbers
 	series       []float64
-	change       string // the pick against the period before: "+12%", "" when there is none
+	change       string // the pick against the period before: "+12% vs previous 30 days", "" when there is none
+	pct          string // the same as the percentage alone: "+12%"
 	vs           string // what it is against ("previous 30 days"), said after the change
 	dir          int
 	stats        []cards.Stat
@@ -128,6 +138,9 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 			}
 			n.pictureOf(&spec, tpl)
 			n.Post = specPost(spec, tpl, n)
+			n.Facts = n.factsOf(spec, tpl)
+		} else {
+			n.Facts = n.overviewFacts()
 		}
 		writeJSON(w, http.StatusOK, n)
 		return
@@ -186,7 +199,9 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 // it into the card's words; with overview, also the small numbers and the
 // change against the period before.
 func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site string, v url.Values, kind string) (cardNumbers, bool) {
-	overview := kind == "overview" || kind == "numbers"
+	// The json's words read the overview too, when that is the card asked for: its change against the period before.
+	t := cardTemplateOf(v.Get("t"))
+	overview := kind == "overview" || kind == "numbers" || (kind == "" && (t == "overview" || t == "numbers"))
 	si, err := a.Ctl.SiteInfo(r.Context(), site)
 	if err != nil {
 		fail(w, http.StatusNotFound, "site not found")
@@ -198,7 +213,23 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 	}
 	now := a.Now().In(loc)
 	l := cardLangOf(v.Get("lang"))
-	p := resolvePeriod(l, v.Get("period"), v.Get("from"), v.Get("to"), now, time.Unix(si.CreatedAt, 0), v.Get("compare") == "1")
+	var first time.Time
+	if v.Get("period") == "all" || kind == "" {
+		// All time begins at the site's first data, imported history included, never at its creation.
+		day, err := a.firstDayOf(r.Context(), q, site, si.Timezone)
+		if err != nil {
+			slog.Error("share card: first day", "site", site, "err", err)
+			if kind != "" || v.Get("period") == "all" {
+				fail(w, http.StatusServiceUnavailable, "the site's first day could not be read")
+				return cardNumbers{}, false
+			}
+			day = "" // the words still answer, without the first day
+		}
+		if day != "" {
+			first, _ = time.ParseInLocation(time.DateOnly, day, loc)
+		}
+	}
+	p := resolvePeriod(l, v.Get("period"), v.Get("from"), v.Get("to"), now, first, v.Get("compare") == "1")
 	reading := cardReading{r: r, q: q, loc: loc, site: site, domain: si.Domain}
 	ask := r.Clone(r.Context())
 	if p.hours > 0 {
@@ -212,9 +243,9 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 	}
 	params := parsed.Params
 	if p.hours > 0 {
-		// The last 24 full hours: the hour now is still running, so it is left out.
-		end := now.Truncate(time.Hour)
-		params.From, params.To, params.Bucket = end.Add(-time.Duration(p.hours)*time.Hour).UTC(), end.UTC(), "hour"
+		// The last 24 hours up to now: the hour still running counts, as on the dashboard.
+		from, to := last24Hours(now)
+		params.From, params.To, params.Bucket = from.UTC(), to.UTC(), "hour"
 	}
 	res, err := a.cachedReport(ask, q, params)
 	if err != nil {
@@ -222,6 +253,12 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 		return cardNumbers{}, false
 	}
 	n := cardWordsOf(l, res, si.Domain, p, v.Get("metric"))
+	if kind == "" && !first.IsZero() {
+		n.First = first.Format(time.DateOnly)
+	}
+	if c, err := a.Ctl.SiteConfig(r.Context(), site); err == nil && n.Metric == "visitors" && headcount.OncePerDay(c.ConsentFree, cardDays(p)) {
+		n.Label += " · " + l.oncePerDay
+	}
 	reading.ask, reading.res, reading.params = ask, res, params
 	if overview {
 		var prev *query.Result
@@ -244,6 +281,14 @@ func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site 
 	return n, true
 }
 
+// cardDays is how many days the picture's people span: the last 24 hours is one day, whatever midnight it crosses.
+func cardDays(p cardPeriod) int {
+	if p.hours > 0 {
+		return 1
+	}
+	return p.days
+}
+
 // overview sets what only the overview card draws: the change of the people
 // against the period before (nothing when that had none), and the small
 // numbers the reader picked (stats: see cardStatsOf).
@@ -258,7 +303,8 @@ func (n *cardNumbers) overview(res, prev *query.Result, stats string, icon func(
 			n.dir = 0
 		}
 		if n.dir != 0 {
-			n.change = fmt.Sprintf("%+.0f%%", d)
+			n.pct = fmt.Sprintf("%+.0f%%", d)
+			n.change = n.pct
 			if n.vs != "" {
 				n.change += " " + n.l().vs + " " + n.vs
 			}

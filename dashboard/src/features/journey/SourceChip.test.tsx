@@ -21,7 +21,7 @@ describe('the source chip', () => {
   })
 })
 
-describe('a visitor on the site pulses once in the window', () => {
+describe('a person on the site pulses once in the window', () => {
   it('only the page they are on animates; the bar, the rail and the face hold still', () => {
     const css = readFileSync(new URL('./Journey.css', import.meta.url), 'utf8')
     const rules = [...css.matchAll(/([^{}]+)\{([^{}]*animation:\s*jr-ping[^{}]*)\}/g)].map((m) => m[1].trim())

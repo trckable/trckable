@@ -89,15 +89,14 @@ describe('what has no switch says so when nothing is there', () => {
     expect(host.querySelector('.mfn .lk3')).toBeNull()
   })
 
-  it('funnels: a line, and goals the one step to set them up', () => {
+  it('funnels: a line, and no goals card: goals have their own page', () => {
     setRole('owner')
     const d = { steps: [], spec: [], leak: { at: -1, r: 0, ur: 0 }, goals: [], vs: '', ghost: false, goalsOn: false, pages: [] }
     const ctx = { ...x, custom: { steps: [], goals: [] }, edit: false, setEdit: vi.fn() } as unknown as XCtx
     act(() => root.render(<Results x={ctx} d={d} />))
     expect(host.textContent).toContain(copy.emptyFunnel)
-    const go = [...host.querySelectorAll('button')].find((b) => !/how|edit/i.test(b.textContent ?? '') && b.className !== 'xb')
-    act(() => go?.click())
-    expect(connect).toHaveBeenCalledWith('goals')
+    expect(host.querySelector('#xTrack')).toBeNull()
+    expect(connect).not.toHaveBeenCalled()
   })
 
   it('map: no country has paid, and the chart says so', () => {

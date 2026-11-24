@@ -1,5 +1,5 @@
 // Live, in the walkthrough's own layout: the half hour as bars with who is here now, the people on the site, and under
-// them Analytics, Speed & uptime, and AI & mentions. The numbers are the server's last half hour and the stream's newer visits.
+// them Analytics, Speed & uptime, and AI. The numbers are the server's last half hour and the stream's newer visits.
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { onlineNow } from '../../lib/live'
@@ -21,6 +21,7 @@ import { feedOf, onlineAt, peopleAt, seriesAt } from '../../features/live/model'
 import type { Busier, LiveNow } from '../../features/live/api'
 import { useTicking } from '../../features/live/useTicking'
 import { AnalyticsCard } from './AnalyticsCard'
+import { TodayStat } from './TodayStat'
 import { useTodayLists } from './useTodayLists'
 import { HealthCards } from './HealthCards'
 import { useNear } from './useNear'
@@ -155,6 +156,7 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
               <b className="lbign"><Tick n={visitors30(data.visitors, online)} /></b>
               {ch && <span className={`mk-ld ${ch.up ? 'up' : 'dn'}`}>{copy.change(ch.up, ch.pct)}</span>}
             </div>
+            <TodayStat today={data.today} timezone={timezone} />
           </div>
           {!isShared() && !feed.sample && !!whole?.mentions && hasMentions() && (
             <Suspense fallback={null}>
@@ -196,7 +198,6 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
         <section className="mk-card lon">
           <div className="lhead">
             <span className="lt">{copy.onSite}</span>
-            <span className="mk-quiet lm">{copy.people(n)}</span>
           </div>
           <FeedList key={site} rows={rows} up={upSources} signup={data.signup} clock={now} empty={down && !checkOnly ? copy.nobodyDown : copy.nobody} onVisitor={onVisitor} cookieless={whole?.cookieless} />
         </section>
@@ -205,8 +206,8 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
       </div>
       {!globe && (
         <div className="lcards" ref={cardsRef}>
-          <AnalyticsCard today={data.today} lists={day === null ? lists : day} timezone={timezone} />
-          {whole && !feed.sample && !isShared() && <HealthCards site={whole} now={now} downSince={downSince} near={cardsNear} />}
+          <AnalyticsCard today={data.today} lists={day === null ? lists : day} />
+          {whole && !feed.sample && !isShared() && <HealthCards site={whole} downSince={downSince} near={cardsNear} />}
         </div>
       )}
     </>

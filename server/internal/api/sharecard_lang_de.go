@@ -3,21 +3,22 @@ package api
 import "github.com/trckable/trckable/server/internal/milestones"
 
 var cardDE = &cardLang{
-	code: "de", group: ".", decimal: ",", moneyAt: moneyAfter, dayDot: ".",
+	code: "de", dayDot: ".",
 	months: [12]string{"Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"},
 
-	visitors:   "Besucher",
+	visitors:   "Personen",
 	pageviews:  "Seitenaufrufe",
 	revenue:    "Umsatz",
 	noVisits:   "Braucht einen Besuch in diesem Zeitraum",
 	counted:    "Gezählt mit trckable",
+	oncePerDay: "einmal pro Tag gezählt",
 	engaged:    "Engagierte Besuche",
 	avgTime:    "Ø Zeit",
 	topCountry: "Top-Land",
 
 	engagedVisits: "engagierte Besuche",
 	statPageviews: "Seitenaufrufe",
-	statVisitors:  "Besucher",
+	statVisitors:  "Personen",
 	bounce:        "Absprungrate",
 	topPage:       "Top-Seite",
 	topSource:     "Top-Quelle",
@@ -30,7 +31,7 @@ var cardDE = &cardLang{
 	changedFell:   "%s sanken um %s",
 	changedMostly: "%s, vor allem durch %s.",
 	changedLed:    "%s, angeführt von %s.",
-	changedPeople: "Besucher",
+	changedPeople: "Personen",
 	changedTitle:  "Was sich geändert hat",
 	homePage:      "Startseite",
 	theHomePage:   "die Startseite",
@@ -44,7 +45,7 @@ var cardDE = &cardLang{
 	aiVisits:          "KI-Besuche",
 	aiMentions:        "Erwähnungen",
 	aiRequests:        "KI-Anfragen",
-	aiPerVisitor:      "Bots/Besucher",
+	aiPerVisitor:      "Bots/Person",
 	aiTop:             "Top-Firma",
 	aiRequestsOf:      "Anfragen",
 	goalsTitle:        "Top-Ziele",
@@ -57,22 +58,25 @@ var cardDE = &cardLang{
 	noGoals:           "Keine Ziele in diesem Zeitraum erreicht",
 	noSales:           "Keine Verkäufe in diesem Zeitraum",
 	noMilestone:       "Kein Meilenstein in diesem Zeitraum",
+	bestDay:           "Personen an deinem besten Tag",
+	noBestDay:         "Braucht einen Tag mit Besuchen",
 
-	gridTitle: map[string]string{"24h": "Heute in Zahlen", "7d": "Diese Woche in Zahlen", "30d": "Dieser Monat in Zahlen", "all": "Gesamte Zeit in Zahlen", "custom": "Deine Zahlen"},
+	gridTitle: map[string]string{"24h": "Heute in Zahlen", "7d": "Diese Woche in Zahlen", "30d": "Dieser Monat in Zahlen", "12mo": "Letzte 12 Monate in Zahlen", "all": "Gesamte Zeit in Zahlen", "custom": "Deine Zahlen"},
 	listTitle: map[string]string{"leaderboard": "Top-Seiten", "sources": "Top-Quellen", "places": "Top-Länder", "browsers": "Top-Browser", "devices": "Mobil und Desktop"},
-	heroLabel: map[string]string{"toppage": "Deine meistbesuchte Seite", "topsource": "Die meisten Besucher kamen von", "topplace": "Die meisten Besucher sind in"},
+	heroLabel: map[string]string{"toppage": "Deine meistbesuchte Seite", "topsource": "Die meisten Personen kamen von", "topplace": "Die meisten Personen sind in"},
 
 	last24: "Letzte 24 Stunden", post24: "in den letzten 24 Stunden", postDays: "in den letzten %d Tagen", postAll: "in der gesamten Zeit", postRange: "im Zeitraum %s", since: "Seit %s",
+	post12: "in den letzten 12 Monaten",
 	prev24: "vorherige 24 Stunden", prevDay: "Vortag", prevDays: "vorherige %d Tage", vs: "ggü.",
 
 	postBegun: "%s: Das Zählen hat begonnen. %s", postTopPage: "Top-Seite: %s.",
 
 	ms: milestones.Tongue{
-		Visitors:       "Besucher",
+		Visitors:       "Personen",
 		Pageviews:      "Seitenaufrufe",
 		FirstPageview:  "Seitenaufruf",
 		Countries:      "Länder",
-		Record:         "Besucher · Rekordtag",
+		Record:         "Personen · Rekordtag",
 		Revenue:        "Umsatz",
 		RevenueHidden:  "Umsatz",
 		RevenueReached: "Umsatz-Meilenstein erreicht",

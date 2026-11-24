@@ -90,8 +90,8 @@ export interface Overview {
   per: string
   shape: Shape | null
   down: Down[]
-  pages: Row[]
-  sources: Row[]
+  /** What the incidents cost the period, in seconds; null while the site is not watched (or too briefly to say). */
+  lost: number | null
   /** How a visit went: engaged visits, pages per visit and time on site, each against the period before. */
   visits: Xkc[]
   /** The people of the period: the whole a row's share is a share of. */
@@ -149,6 +149,11 @@ export interface Search {
   pages: SearchRow[]
   /** Clicks and impressions, a day each, oldest first. */
   days: SearchDay[]
+  /** What Google showed and what was clicked over the window: the numbers the tiles say, for the table of sources to say again. */
+  seen: number
+  clicked: number
+  /** The days Google's numbers are for, in words. */
+  window: string
 }
 
 export interface SearchDay {
@@ -244,6 +249,10 @@ export interface Speed {
   pages: SlowPage[]
   /** Loading time by kind of device, once there are enough views on it. */
   devices: SlowPage[]
+  /** The share of the period the site answered, as a card of its own. */
+  uptime: Xkc | null
+  /** Each time it did not. */
+  down: Down[]
 }
 
 export interface Mention {
@@ -253,20 +262,6 @@ export interface Mention {
   pts: number | null
   cm: number | null
   when: string
-}
-
-export interface Bot {
-  name: string
-  count: number
-}
-
-/** The Bots table: the robots that read the site, and what was dropped on purpose besides them (the period's counts, each shown only when above zero). */
-export interface BotsModel {
-  rows: Bot[]
-  /** Left out by the site's own settings: excluded paths, Do Not Track, the owner's addresses. */
-  left: number
-  /** Refused as too old to count. */
-  aged: number
 }
 
 /** The values a filter can take, as menus list them. */
@@ -285,23 +280,26 @@ export interface Connected {
 }
 
 /** Tables that bring their own numbers: the cards the old Full page had, each opened by its section as it was. */
-export type HostedTab = 'highlights' | 'overtime' | 'hours' | 'revmap' | 'earners' | 'sells' | 'people' | 'payments' | 'customers' | 'retention' | 'vsale' | 'toconvert' | 'flow' | 'ai' | 'answers'
+export type HostedTab = 'goals' | 'highlights' | 'overtime' | 'hours' | 'revmap' | 'earners' | 'sells' | 'people' | 'payments' | 'customers' | 'retention' | 'vsale' | 'toconvert' | 'flow' | 'ai' | 'answers'
 
 /** The breakdowns only the deep report has: where people left, regions and cities, the parts of a campaign, language, browser version, screen width, page groups. */
 export type DeepTab = 'paths' | 'entries' | 'exits' | 'groups' | 'regions' | 'cities' | 'utmsource' | 'medium' | 'bversion' | 'screens' | 'languages' | 'timezones'
 
-export type Tab = HostedTab | DeepTab | 'changed' | 'overview' | 'pages' | 'sources' | 'quality' | 'referrers' | 'utm' | 'search' | 'countries' | 'devices' | 'browsers' | 'funnels' | 'sales' | 'speed' | 'mentions' | 'outbound' | 'bots' | 'networks'
+export type Tab = HostedTab | DeepTab | 'changed' | 'overview' | 'pages' | 'sources' | 'quality' | 'utm' | 'search' | 'countries' | 'devices' | 'browsers' | 'funnels' | 'sales' | 'speed' | 'mentions' | 'outbound' | 'networks'
 
-export type Section = 'changed' | 'overview' | 'pages' | 'sources' | 'search' | 'places' | 'tech' | 'results' | 'sales' | 'speed' | 'mentions' | 'links' | 'ai' | 'answers'
+/** The seven sections Explore lists, and the Briefing (`changed`), which is its own view and is not listed. */
+export type Section = 'changed' | 'overview' | 'pages' | 'sources' | 'audience' | 'goals' | 'health' | 'web'
 
 /** Every section's answer for one site, period and set of filters. */
+/** What the Briefing reads: the overview's numbers, the report behind them, and what Google says of the same days (nothing where Search Console is off). */
+export type Briefing = Overview & { report: import('../../lib/api').Report; google: import('./googlePath').Seen | null }
+
 export interface Tabs {
-  changed: Overview & { report: import('../../lib/api').Report }
+  changed: Briefing
   overview: Overview & { report: import('../../lib/api').Report }
   pages: Table
   sources: Table
   quality: Quality
-  referrers: Table
   utm: Table
   browsers: Table
   countries: Table
@@ -319,13 +317,13 @@ export interface Tabs {
   screens: Table
   languages: Table
   timezones: Table
-  bots: BotsModel
   networks: Networks
   search: Search
   funnels: Funnel
   sales: Sales
   speed: Speed
   mentions: Mention[]
+  goals: null
   highlights: null
   overtime: null
   hours: null

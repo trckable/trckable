@@ -2,12 +2,11 @@
 // the rest (this page's details, the table as a file, a link).
 import { Share2, Trophy } from 'lucide-react'
 import { copy as milestonesCopy } from '../../features/milestones/copy'
-import { Fragment } from 'react'
 import { XGl, XGrab, XMi, XSep } from '../ui/XMenu'
 import { XIco } from '../ui/XIcons'
 import { copy as shareCopy } from '../../features/share/copy'
 import { copy } from './copy'
-import { groups } from './sections'
+import { listedSections } from './sections'
 import { can } from '../../lib/permissions'
 import type { Connected, SavedView, Section } from './types'
 
@@ -15,13 +14,8 @@ export function PickMenu({ section, conn, onPick }: { section: Section; conn: Co
   return (
     <>
       <XGrab />
-      {groups().map((g) => (
-        <Fragment key={g.key}>
-          <XGl>{copy.groups[g.key]}</XGl>
-          {g.items.map((k) => (
-            <XMi key={k} data={{ 'data-xsec': k }} icon={<XIco name={k} />} name={copy.names[k][0]} desc={copy.names[k][1]} on={k === section} tag={k === 'sales' && !conn.rev ? copy.connectTag : undefined} onClick={() => onPick(k)} />
-          ))}
-        </Fragment>
+      {listedSections().map((k) => (
+        <XMi key={k} data={{ 'data-xsec': k }} icon={<XIco name={k} />} name={copy.names[k][0]} desc={copy.names[k][1]} on={k === section} tag={k === 'goals' && !conn.rev ? copy.connectTag : undefined} onClick={() => onPick(k)} />
       ))}
     </>
   )
@@ -67,7 +61,7 @@ function ViewTail(p: ViewsProps) {
   )
 }
 
-export function MoreMenu({ views, details, onDetails, onCsv, onCopy, onMail, onShare }: { views: ViewsProps; details: boolean; onDetails: () => void; onCsv: () => void; onCopy: () => void; onMail?: () => void; onShare?: () => void }) {
+export function MoreMenu({ views, details, onDetails, onCsv, onCopy, onMail, onShare, onNotes, onDaily }: { views: ViewsProps; details: boolean; onDetails: () => void; onCsv: () => void; onCopy: () => void; onMail?: () => void; onShare?: () => void; onNotes?: () => void; onDaily?: () => void }) {
   return (
     <>
       <XGrab />
@@ -82,6 +76,8 @@ export function MoreMenu({ views, details, onDetails, onCsv, onCopy, onMail, onS
       </div>
       {details && <XMi data={{ 'data-pgd': '1' }} name={copy.pageDetails} desc={copy.pageDetailsHint} onClick={onDetails} />}
       <XMi id="xCsv" name={copy.exportCsv} desc={copy.exportHint} disabled={!can('data.export')} title={can('data.export') ? undefined : copy.exportDenied} onClick={onCsv} />
+      {onNotes && <XMi data={{ 'data-notes': '1' }} name={copy.notes} onClick={onNotes} />}
+      {onDaily && <XMi data={{ 'data-daily': '1' }} name={copy.dailyEmail} onClick={onDaily} />}
       {onMail && <XMi data={{ 'data-mail': '1' }} name={copy.emailPreview} desc={copy.emailPreviewHint} onClick={onMail} />}
       <XMi data={{ 'data-copy': '1' }} name={copy.copyLink} onClick={onCopy} />
     </>

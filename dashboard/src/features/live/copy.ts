@@ -14,7 +14,7 @@ export const copy = defineCopy('live', {
   window: 'Last 30 minutes',
   loading: 'Loading the last 30 minutes…',
   failed: 'Couldn’t load the last 30 minutes. Trying again…',
-  visitors30: 'Visitors, last 30 min',
+  visitors30: 'People, last 30 min',
   vsBefore: 'vs the 30 minutes before',
   chartLabel: (total: number) => `Pageviews per minute over the last 30 minutes: ${plural(total, 'pageview', 'pageviews')} in all. Arrow keys read one minute at a time, Enter opens it in Data`,
   sources: 'Top sources right now',
@@ -38,5 +38,5 @@ export const copy = defineCopy('live', {
   },
   from: (source: string, device: string) => (device ? `${source} · ${device}` : source),
   active: 'Active in the last 30 seconds',
-  footer: 'New visits slide in · visitors idle for 5 minutes leave',
+  footer: 'New visits slide in · people idle for 5 minutes leave',
 })

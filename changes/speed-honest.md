@@ -1,0 +1,1 @@
+Live's Speed card says what is true while it collects: how many readings it has, why a busy site with mostly iPhone visitors fills slowly (iPhones do not report load speed), and, once enough browsers report it, the time the first content appears, labelled as such. The script also reports the first contentful paint with the other Web Vitals (30 bytes more).

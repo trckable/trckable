@@ -91,6 +91,9 @@ func (n *cardNumbers) gridOf(res *query.Result, icon func(host string) image.Ima
 
 // periodKey is the period's name as the card words know it: an unknown one is 7d, as everywhere.
 func periodKey(s string) string {
+	if s == "since" {
+		return "all"
+	}
 	if _, ok := cardWords.gridTitle[s]; ok {
 		return s
 	}

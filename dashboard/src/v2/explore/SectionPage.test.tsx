@@ -9,7 +9,7 @@ vi.mock('./data/useExplore', () => ({ useTab: () => ({ state: 'ok', data: { say:
 vi.mock('./SectionBody', () => ({ SectionBody: () => <p>{'numbers'}</p> }))
 
 const x = { query: { from: '2026-10-01', to: '2026-10-30' }, filters: [], limit: 5, showAll: () => {} } as unknown as XCtx
-const page = () => <SectionPage section="links" tab="outbound" x={x} c={{} as DataCtx} onRead={() => {}} />
+const page = () => <SectionPage section="web" tab="outbound" x={x} c={{} as DataCtx} onRead={() => {}} />
 
 describe('a card and Peek', () => {
   it('offers Why? once it has numbers, in a build with Peek', () => {

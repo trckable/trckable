@@ -24,7 +24,7 @@ function find(node: ReactNode, test: (e: ReactElement<Record<string, unknown>>) 
 }
 
 describe('a site in the list', () => {
-  it('shows today’s visitors only, on a mark that carries the state dot', () => {
+  it('shows today’s people only, on a mark that carries the state dot', () => {
     const html = row(site(), 1284)
     expect(html).toContain('<b>1,284</b>')
     expect(html).toContain('title="1,284 today"')

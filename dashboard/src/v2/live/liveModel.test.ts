@@ -24,7 +24,7 @@ describe('Live', () => {
     expect(sourceParts([])).toEqual({ parts: [], other: 0 })
   })
 
-  it('shows sources that add up to the half hour: each visitor is one source', () => {
+  it('shows sources that add up to the half hour: each person is one source', () => {
     const sources = [{ channel: 'Search', visitors: 11 }, { channel: 'Direct', visitors: 4 }]
     const sum = sourceParts(sources).parts.reduce((n, p) => n + p.n, 0)
     expect(sum).toBe(visitors30(15, 3))
@@ -63,6 +63,15 @@ describe('Live', () => {
     ])
     expect(listsOf([row(1, { device: 'Mobile', os: 'iOS' }), row(2, { device: 'Desktop', os: 'macOS' }), row(3, { device: 'Desktop', os: 'macOS' }), row(4)]).devices).toEqual([{ key: 'mac', n: 2 }, { key: 'iphone', n: 1 }])
     expect(listsOf([row(1)]).devices).toEqual([])
+  })
+
+  it("gives the site's own app its own row only when visits came through it", () => {
+    expect(deviceCounts([['Mobile', 'iOS', 5], ['Mobile', 'iOS', 2, true], ['Desktop', 'macOS', 1]])).toEqual([
+      { key: 'iphone', n: 5 }, { key: 'iphone:app', n: 2 }, { key: 'mac', n: 1 },
+    ])
+    expect(listsOf([row(1, { device: 'Mobile', os: 'iOS', app: 'app' }), row(2, { device: 'Mobile', os: 'iOS', app: 'instagram' })]).devices).toEqual([
+      { key: 'iphone:app', n: 1 }, { key: 'iphone', n: 1 },
+    ])
   })
 })
 

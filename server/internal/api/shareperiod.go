@@ -1,8 +1,12 @@
 package api
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"time"
+
+	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
 // A shared link reads three periods and no other: the last 7 days, the last
@@ -69,4 +73,182 @@ func (a *API) fixSharePeriod(r *http.Request, siteID string) {
 	v.Set("from", p.start(today).Format("2006-01-02"))
 	v.Set("to", today.Format("2006-01-02"))
 	r.URL.RawQuery = v.Encode()
+}
+
+// last24Hours is the card's 24 hours: the 24 hour buckets that end with the one
+// running now. The end is an instant (a local hour boundary), so a clock change
+// inside the window does not move it.
+func last24Hours(now time.Time) (from, to time.Time) {
+	// The next hour boundary of the site's own clock (zones of +5:30 or +5:45 have
+	// theirs at :30 and :45 of UTC's hours): subtract the clock's minutes, then add the hour.
+	to = now.Add(-time.Duration(now.Minute())*time.Minute - time.Duration(now.Second())*time.Second - time.Duration(now.Nanosecond())).Add(time.Hour)
+	return to.Add(-24 * time.Hour), to
+}
+
+// periodDays is the days a period covers, in the zone of now, ending today at
+// the latest: a share period (sharePeriods), all time (from first, the site's
+// first data; today when there is none) or a custom from..to (two dates). ok is
+// false for a name or a range that is not one of these, which the caller reads
+// as the default. A card and a shared link ask the same days for the same name.
+func periodDays(name, fromS, toS string, now, first time.Time) (from, to time.Time, ok bool) {
+	loc := now.Location()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+	switch name {
+	case "all":
+		from = today
+		if !first.IsZero() {
+			f := first.In(loc)
+			from = time.Date(f.Year(), f.Month(), f.Day(), 0, 0, 0, 0, loc)
+		}
+		if from.After(today) {
+			from = today
+		}
+		return from, today, true
+	case "since":
+		f, err := time.ParseInLocation("2006-01-02", fromS, loc)
+		if err != nil {
+			return today, today, false
+		}
+		if f, t, ok := clampDays(f, today, today); ok {
+			return f, t, true
+		}
+		return today, today, false
+	case "custom":
+		f, e1 := time.ParseInLocation("2006-01-02", fromS, loc)
+		t, e2 := time.ParseInLocation("2006-01-02", toS, loc)
+		if e1 != nil || e2 != nil {
+			return today, today, false
+		}
+		if f, t, ok := clampDays(f, t, today); ok {
+			return f, t, true
+		}
+		return today, today, false
+	}
+	for _, p := range sharePeriods {
+		if p.ID == name {
+			return p.start(today), today, true
+		}
+	}
+	return today, today, false
+}
+
+// maxPeriodSpan is the longest range a card or a link can cover.
+const maxPeriodSpan = 20 * 366 * 24 * time.Hour
+
+// clampDays is the one check of a range of days, for the card and the page of a link alike: the end is cut back
+// to today, and a start after the end, or a range longer than maxPeriodSpan, is no range.
+func clampDays(from, to, today time.Time) (time.Time, time.Time, bool) {
+	if to.After(today) {
+		to = today
+	}
+	return from, to, !from.After(to) && to.Sub(from) < maxPeriodSpan
+}
+
+// fixedDays is the days a link fixed to a period covers on the day of now: a preset, a range
+// (cut back to today) or a start (up to today). ok is false for none, and for what is not a period.
+func fixedDays(p string, now time.Time) (from, to time.Time, ok bool) {
+	loc := now.Location()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+	first, last, span := sqlite.SharePeriodDays(p)
+	if !span {
+		if p == "" {
+			return today, today, false
+		}
+		for _, sp := range sharePeriods {
+			if sp.ID == p {
+				return sp.start(today), today, true
+			}
+		}
+		return sharePeriods[0].start(today), today, false // not a period: the week, as the card draws it
+	}
+	f, err := time.ParseInLocation(time.DateOnly, first, loc)
+	to = today
+	if last != "" {
+		if t, err2 := time.ParseInLocation(time.DateOnly, last, loc); err2 == nil {
+			to = t
+		}
+	}
+	// A range that is none is what the card draws for it: the week.
+	if f, to, ok = clampDays(f, to, today); err != nil || !ok {
+		return sharePeriods[0].start(today), today, false
+	}
+	return f, to, true
+}
+
+var errSharePeriod = errors.New("period can be 7d, 30d, 12mo, all, or two days (from..to, from no later than to, neither after today)")
+
+// sharePeriodIn is the period a link is made with, from what its owner sent: the same word for a
+// preset, the start of the site's data for "all" (kept as that day, so the link shows the same days
+// whenever it is opened), and a range as written once it is a real one that does not reach past today.
+func (a *API) sharePeriodIn(ctx context.Context, site, in string) (string, error) {
+	if in == "" {
+		return "", nil
+	}
+	if err := sqlite.CheckSharePeriod(in); err != nil && in != "all" {
+		return "", errSharePeriod
+	}
+	tz := ""
+	if si, err := a.Ctl.SiteInfo(ctx, site); err == nil {
+		tz = si.Timezone
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		loc = time.UTC
+	}
+	today := a.Now().In(loc).Format(time.DateOnly)
+	if in == "all" {
+		first := today
+		if day := a.firstDay(ctx, site, tz); day != "" && day < today {
+			first = day
+		}
+		return sqlite.SinceDay(first), nil
+	}
+	f, l, span := sqlite.SharePeriodDays(in)
+	if !span {
+		return in, nil
+	}
+	if f > today || l > today {
+		return "", errSharePeriod
+	}
+	// Nothing starts before the site's first data: a start further back is the first day.
+	if first := a.firstDay(ctx, site, tz); first != "" && f < first {
+		f = first
+	}
+	if l == "" {
+		return sqlite.SinceDay(f), nil
+	}
+	from, e1 := time.ParseInLocation(time.DateOnly, f, loc)
+	to, e2 := time.ParseInLocation(time.DateOnly, l, loc)
+	if _, _, ok := clampDays(from, to, to); e1 != nil || e2 != nil || !ok {
+		return "", errSharePeriod
+	}
+	return f + ".." + l, nil
+}
+
+// sharePeriodLabel is a link's fixed period in the card's words, in the card's language: the same function the
+// card's own period line is made by. "" for a link whose reader chooses.
+func sharePeriodLabel(l *cardLang, period string, now time.Time) string {
+	if period == "" {
+		return ""
+	}
+	if first, last, ok := sqlite.SharePeriodDays(period); ok {
+		if last == "" {
+			return resolvePeriod(l, "since", first, "", now, time.Time{}, false).label
+		}
+		return resolvePeriod(l, "custom", first, last, now, time.Time{}, false).label
+	}
+	return resolvePeriod(l, period, "", "", now, time.Time{}, false).label
+}
+
+// firstDay is the site's first day of data, or "" when it has none or cannot be read.
+func (a *API) firstDay(ctx context.Context, site, tz string) string {
+	q := a.Query()
+	if q == nil {
+		return ""
+	}
+	day, err := a.firstDayOf(ctx, q, site, tz)
+	if err != nil {
+		return ""
+	}
+	return day
 }

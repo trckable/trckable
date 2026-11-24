@@ -28,7 +28,7 @@ func TestSharePreviewTags(t *testing.T) {
 	}
 	for _, want := range []string{
 		`<meta property="og:title" content="site.com analytics">`,
-		`<meta property="og:description" content="Visitors, pages and sources for site.com, live.">`,
+		`<meta property="og:description" content="People, pages and sources for site.com, live.">`,
 		`<meta property="og:image" content="http://example.com/s/` + token(open) + `/card.png">`,
 		`<meta property="og:url" content="http://example.com/s/` + token(open) + `">`,
 		`<meta name="twitter:card" content="summary_large_image">`,

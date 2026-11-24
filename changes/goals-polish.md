@@ -1,0 +1,1 @@
+The goals card in the bell keeps one size whichever goal you open, with an icon for each kind of goal and a flag, a source and a device mark on each time; goal names and times fit on a phone; share cards for 7 days, 30 days and 12 months print their dates again.

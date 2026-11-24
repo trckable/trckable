@@ -1,40 +1,13 @@
 /* ---- Add a site ------------------------------------------------------------
-   Loaded with the wizard. A tall step scrolls the dialog: nothing in it may
-   shrink, or the steps and the footer would be drawn over the code. The
-   dialog is as tall as its step, on every step. */
-.modal.add-site > * {
-  flex-shrink: 0;
-}
+   Loaded with the wizard. Its size is the frame's (kit/Modal.css): the same box on every step. */
 .modal.framed.add-site {
   width: min(620px, 100%);
   max-width: 620px;
-  gap: 12px;
 }
 .wiz-step {
   gap: 12px;
 }
 
-/* A phone: the dialog is the whole screen, and its buttons stay at the bottom while the rest scrolls. */
-@media (max-width: 640px) {
-  :root .modal-back:has(> .modal.add-site) {
-    place-items: stretch;
-  }
-  :root .modal.add-site {
-    height: 100dvh;
-    max-height: 100dvh;
-    padding-bottom: 0;
-    border-width: 0;
-    border-radius: 0;
-  }
-  :root .modal.add-site > .modal-foot {
-    position: sticky;
-    bottom: 0;
-    margin: auto -20px 0;
-    padding: 12px 20px max(16px, env(safe-area-inset-bottom));
-    background: var(--surface);
-    box-shadow: 0 -1px 0 var(--border);
-  }
-}
 .wiz-domain {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

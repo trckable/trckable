@@ -12,7 +12,7 @@ export const extrasCopy = defineCopy('extras', {
   ring: {
     spike: (factor: number) => `Spike · ${times(factor)} the usual`,
     /** A spike on a site whose usual is too small for a multiplier: the count says it. */
-    newTraffic: (visitors: number) => `New traffic · ${plural(visitors, 'visitor', 'visitors')}`,
+    newTraffic: (visitors: number) => `New traffic · ${plural(visitors, 'person', 'people')}`,
     from: (referrer: string) => `mostly from ${referrer}`,
     burst: (factor: number) => `Sales burst · ${times(factor)} the usual`,
     mostly: (channel: string) => `mostly ${channel}`,
@@ -25,11 +25,11 @@ export const extrasCopy = defineCopy('extras', {
     moved: (name: string, change: number, now: number, was: number, by: 'percent' | 'capped' | 'bare') => {
       const dir = change >= 0 ? 'up' : 'down'
       const how = { percent: ` ${fmtPct(Math.abs(change))}`, capped: ' more than 10x', bare: '' }[by]
-      return `${name} ${dir}${how} · ${fmtInt(was)} → ${fmtInt(now)} visitors`
+      return `${name} ${dir}${how} · ${fmtInt(was)} → ${fmtInt(now)} people`
     },
-    pays: (name: string, each: string, multiple: number) => `${name} earns ${each} a visitor, ${times(multiple)} the average`,
+    pays: (name: string, each: string, multiple: number) => `${name} earns ${each} a person, ${times(multiple)} the average`,
     drop: (page: string, was: number, now: number) => `${page} converts ${fmtPct(now)}, was ${fmtPct(was)}`,
-    fresh: (referrer: string, visitors: number) => `New referrer: ${referrer} sent ${plural(visitors, 'visitor', 'visitors')}`,
+    fresh: (referrer: string, visitors: number) => `New referrer: ${referrer} sent ${plural(visitors, 'person', 'people')}`,
     filter: (what: string) => `Filter by ${what}`,
   },
   sells: {

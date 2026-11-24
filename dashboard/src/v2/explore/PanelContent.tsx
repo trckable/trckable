@@ -16,8 +16,10 @@ import { openSettings } from '../../lib/settings'
 import { setView, type ViewState } from '../../lib/url'
 import { say } from '../ui/toast'
 import { MailPreview } from './MailPreview'
+import { NOTES_EVENT } from './views/NotesHost'
 import { Rail, RailDrawer } from './Rail'
 import { PeriodNote, Updated } from './PeriodsLine'
+import { PillNote } from '../ui/pillNote'
 import { SectionPage } from './SectionPage'
 import { Toolbar } from './Toolbar'
 import { copy } from './copy'
@@ -91,6 +93,9 @@ export default function PanelContent(p: ContentProps) {
     addCustom: act.addCustom,
     removeCustom: act.removeCustom,
     pageDetails: a.pageDetails,
+    data: c,
+    source: p.ask.source,
+    setSource: act.source,
   }
   // A click in the panel that is not in a menu shuts the menu; one on the dim of a phone's sheet does too.
   const away = (e: MouseEvent) => {
@@ -105,13 +110,15 @@ export default function PanelContent(p: ContentProps) {
     act.shut()
     openShare({ topic: topicOfSection(section), period: periodOf(p.view.period) })
   }
+  const updated = <Updated site={p.site} read={reads} />
   const content = (
+    <PillNote.Provider value={isShared() ? null : updated}>
       <>
         <Toolbar
           period={p.period}
           noTabs
           onDrawer={!p.full ? () => setDrawer(true) : undefined}
-          updated={<Updated site={p.site} read={reads} />}
+          updated={isShared() ? updated : undefined}
           verified={isShared() ? p.site.verified : undefined}
           section={section}
           tab={tab}
@@ -160,6 +167,14 @@ export default function PanelContent(p: ContentProps) {
             a.copyLink()
           }}
           onShare={handheld ? share : undefined}
+          onNotes={tab === 'changed' && !isShared() ? () => {
+            act.shut()
+            window.dispatchEvent(new Event(NOTES_EVENT))
+          } : undefined}
+          onDaily={tab === 'changed' && can('note.write') && !isShared() ? () => {
+            act.shut()
+            openSettings(p.site, 'alerts')
+          } : undefined}
           onMail={can('note.write') ? () => {
             act.shut()
             setMail(true)
@@ -169,6 +184,7 @@ export default function PanelContent(p: ContentProps) {
         <PeriodNote site={p.site} view={p.view} range={p.range} compares={compares(tab)} />
         <SectionPage section={section} tab={tab} x={x} c={c} onRead={() => setReads((n) => n + 1)} />
       </>
+    </PillNote.Provider>
   )
   return (
     <>
@@ -181,14 +197,14 @@ export default function PanelContent(p: ContentProps) {
       </div>
       {drawer && (
         <RailDrawer onClose={() => setDrawer(false)}>
-          <Rail section={section} tab={tab} conn={meta.connected} onPick={(sec) => { setDrawer(false); act.section(sec) }} onTab={(t) => { setDrawer(false); act.tab(t) }} />
+          <Rail section={section} tab={tab} onPick={(sec) => { setDrawer(false); act.section(sec) }} onTab={(t) => { setDrawer(false); act.tab(t) }} />
         </RailDrawer>
       )}
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- one place for the keys of every menu and list below */}
       <div id="xpBody" ref={body} onClick={away} onKeyDown={(e: KeyboardEvent) => keys.onKey(e)}>
         {p.full ? (
           <div className="xlay">
-            <Rail section={section} tab={tab} conn={meta.connected} onPick={act.section} onTab={act.tab} />
+            <Rail section={section} tab={tab} onPick={act.section} onTab={act.tab} />
             <div className="xmain">{content}</div>
           </div>
         ) : (

@@ -295,6 +295,10 @@ var migrations = []string{
 	// count with the browser visits rather than guess.
 	`ALTER TABLE events ADD COLUMN app VARCHAR;
 	ALTER TABLE sessions ADD COLUMN app VARCHAR;`,
+	// 15: first contentful paint, reported with the Web Vitals. Safari and every
+	// browser on an iPhone report no largest contentful paint, so this is the
+	// loading time those visits can give. Null on every row recorded before.
+	`ALTER TABLE events ADD COLUMN fcp_ms UINTEGER;`,
 }
 
 // tableSince is the migration that created each table added after the first

@@ -56,7 +56,6 @@ export function DomainDialog({ site, grace, onClose, onChanged }: { site: Site; 
       <Modal
         label={copy.title}
         over
-        keepSize={false}
         onClose={onClose}
         frame={{
           title: copy.title,
@@ -95,7 +94,6 @@ export function DomainDialog({ site, grace, onClose, onChanged }: { site: Site; 
     <Modal
       label={copy.title}
       over
-      keepSize={false}
       onClose={onClose}
       frame={{
         title: copy.confirmTitle(site.domain, asked.domain),

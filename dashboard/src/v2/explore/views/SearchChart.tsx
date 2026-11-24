@@ -33,8 +33,8 @@ export function SearchChart({ days }: { days: SearchDay[] }) {
     <div className="xschart" data-xschart="1" role="img" aria-label={copy.searchDays}>
       <div className="xschart-read">
         <span className="xschart-day">{fmtDay(shown.date)}</span>
-        <span className="xschart-k"><i style={{ background: 'var(--mk-lime)' }} />{copy.heads.clicks} <b>{fmtInt(shown.clicks)}</b></span>
-        <span className="xschart-k"><i style={{ background: 'var(--mk-blue)' }} />{copy.impressions} <b>{fmtK(shown.impr)}</b></span>
+        <span className="xschart-k"><i style={{ background: 'var(--mk-lime)' }} />{copy.clicked} <b>{fmtInt(shown.clicks)}</b></span>
+        <span className="xschart-k"><i style={{ background: 'var(--mk-blue)' }} />{copy.seen} <b>{fmtK(shown.impr)}</b></span>
       </div>
       <div className="xschart-plot" onPointerMove={move} onPointerLeave={() => setAt(null)}>
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">

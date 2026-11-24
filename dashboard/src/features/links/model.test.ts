@@ -41,11 +41,11 @@ describe('isLocalName', () => {
 
 describe('bestLinks', () => {
   const row = (value: string, visitors: number, goals = 0) => ({ value, visitors, goals })
-  it('is none while no link has enough visitors or a goal', () => {
+  it('is none while no link has enough people or a goal', () => {
     expect(bestLinks([row('a', 19), row('b', 3)], false)).toBeNull()
     expect(bestLinks([], true)).toBeNull()
   })
-  it('names the link with the most visitors, and the next one', () => {
+  it('names the link with the most people, and the next one', () => {
     const got = bestLinks([row('b', 40), row('a', 120), row('c', 5)], false)
     expect(got?.best.value).toBe('a')
     expect(got?.runner?.value).toBe('b')

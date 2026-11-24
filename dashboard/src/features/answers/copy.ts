@@ -37,7 +37,7 @@ export const answersCopy = defineCopy('answers', {
   pagesHead: 'Pages AI links to',
   pagesTotal: (earned: string, k: number) => `${earned} earned from ${n(k)} pages`,
   page: { path: 'Page', answers: 'Answers', read: 'AI read', sent: 'Sent', earned: 'Earned' },
-  pageHints: { answers: 'Answers that linked this page', read: 'Times an AI crawler read the page', sent: 'Visitors an AI assistant sent', earned: 'Revenue those visitors made' },
+  pageHints: { answers: 'Answers that linked this page', read: 'Times an AI crawler read the page', sent: 'People an AI assistant sent', earned: 'Revenue those people made' },
   paused: 'Paused until the 1st: this month’s budget is used.',
   docs: 'https://trckable.com/docs/answers/',
   empty: {
@@ -62,12 +62,6 @@ export const answersCopy = defineCopy('answers', {
     gone: 'The text of older answers is not kept.',
     errored: 'This one could not be asked.',
     run: (k: number) => `Run ${n(k)}`,
-  },
-  line: {
-    ai: 'Answers',
-    more: 'Open Answers',
-    noQuestions: ['Answers has no questions yet', 'Add a few questions and see if ChatGPT, Perplexity and Claude name you.'],
-    add: 'Add questions',
   },
   alert: { label: 'Answers', hint: 'When an assistant that named you in the last two rounds stops naming you: once per question' },
   change: {
@@ -114,7 +108,7 @@ export const answersCopy = defineCopy('answers', {
     count: (a: number, total: number) => `${n(a)} of ${n(total)}`,
     max: (k: number) => `That is the most you can add: ${n(k)}.`,
     ownName: 'This question names your site, which would change the answer. Leave your name out.',
-    sends: (names: string) => `Your questions go to ${names}. Nothing about your visitors does.`,
+    sends: (names: string) => `Your questions go to ${names}. Nothing about your people does.`,
     budget: (used: string, cap: string) => `This month about ${used} of ${cap}`,
     budgetLabel: 'Monthly budget',
     engines: 'Asking',

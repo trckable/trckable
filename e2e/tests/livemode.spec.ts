@@ -162,8 +162,10 @@ test('a visit that arrives later is marked as arriving, then settles; the first 
   await signIn(page, '/example.com?view=live')
   await expect(online(page)).toBeVisible({ timeout: 15_000 })
   await expect(page.locator('.lfeed .lv').first()).toBeVisible({ timeout: 15_000 })
-  // Whoever was there at the first look came in without a mark.
-  await expect(page.locator('.lfeed .lv.arriving')).toHaveCount(0)
+  // Whoever was there at the first look came in without a mark. Other specs' visits may arrive meanwhile on the shared site: only the first rows are held to it.
+  await page.locator('.lfeed .lv').evaluateAll((rows) => rows.forEach((r) => r.setAttribute('data-first-look', '')))
+  await page.waitForTimeout(300)
+  await expect(page.locator('.lfeed .lv[data-first-look].arriving')).toHaveCount(0)
   const run = await visit(page, 'livearrive')
   const row = page.locator('.lfeed .lv', { has: page.locator(`.pg[title*="${run}"]`) })
   await expect(row).toHaveClass(/arriving/, { timeout: 5_000 })
@@ -453,7 +455,7 @@ test('a site with visits opens in Live when the address has no mode', async ({ p
 })
 
 // A person's row: the country is a flag and its code (a dash when unknown), the hover is a soft rounded fill inset from the list's edges.
-const LIVEROW = '/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad'
+const LIVEROW = 'test-results/shots'
 for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark']] as const) {
   test(`a hovered Live row is a soft fill and shows the country's flag, ${width}px ${colorScheme}`, async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'one engine is enough for the row')
@@ -472,13 +474,20 @@ for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark
     await row.hover()
     await expect.poll(() => row.locator('img.cflag').evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0)
     await expect(row.locator('.ccn')).toHaveText('US')
-    // The fill eases in: read it once the row has settled under the pointer.
-    await expect.poll(() => row.evaluate((el) => getComputedStyle(el).backgroundColor), { timeout: 5000 }).not.toBe('rgba(0, 0, 0, 0)')
+    // The fill eases in: read it once the row has settled under the pointer. A visit arriving meanwhile moves the rows, so point at it again each try.
+    await expect
+      .poll(async () => {
+        await row.hover()
+        return row.evaluate((el) => getComputedStyle(el).backgroundColor)
+      }, { timeout: 5000 })
+      .not.toBe('rgba(0, 0, 0, 0)')
     const look = await row.evaluate((el) => ({ radius: getComputedStyle(el).borderTopLeftRadius, weight: getComputedStyle(el.querySelector('.pg')!).fontWeight }))
     expect(look.radius).toBe('8px')
     expect(look.weight).toBe('400')
     // The page gets the flexible width (14 characters at least); the device is its icon with its name as the tooltip.
-    expect(await row.locator('.pg').evaluate((e) => e.getBoundingClientRect().width)).toBeGreaterThan(100)
+    const pg = await row.locator('.pg').evaluate((e) => ({ width: e.getBoundingClientRect().width, min: parseFloat(getComputedStyle(e).minWidth) }))
+    expect(pg.min).toBeGreaterThan(0)
+    expect(pg.width).toBeGreaterThanOrEqual(pg.min - 0.5)
     await expect(row.locator('.dv svg')).toBeVisible()
     await expect(row.locator('.dv')).toHaveAttribute('title', /\w/)
     await page.waitForTimeout(400)
@@ -487,7 +496,7 @@ for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark
 }
 
 // The half-hour line fades at its ends and a hairline with a dot follows the pointer, snapping to the minute (and the arrow keys).
-const LIVECHART = '/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad'
+const LIVECHART = 'test-results/shots'
 for (const [width, colorScheme] of [[1280, 'dark'], [1280, 'light'], [390, 'dark']] as const) {
   test(`the Live line fades at its ends and a guide follows the pointer, ${width}px ${colorScheme}`, async ({ page }) => {
     await page.emulateMedia({ colorScheme })

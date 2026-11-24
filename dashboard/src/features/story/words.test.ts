@@ -12,7 +12,7 @@ describe('how a spike reads in Replay', () => {
 
   it('without one: new traffic, the count and who sent it', () => {
     const w = wordsOf(spike({ visitors: 230, referrer: 'news.example' }))
-    expect(w.line).toBe('New traffic · 230 visitors')
+    expect(w.line).toBe('New traffic · 230 people')
     expect(w.sub).toBe('from news.example')
   })
 })

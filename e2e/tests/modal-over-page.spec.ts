@@ -51,7 +51,7 @@ const ENTRIES: Entry[] = [
   { name: 'bell milestone', feed: (site) => [milestone(site, '1k', 1000, 1)] },
   { name: 'site settings', palette: 'Site settings' },
   { name: 'milestones window', palette: 'Milestones' },
-  { name: 'bounce guide', palette: 'Why visitors leave' },
+  { name: 'bounce guide', palette: 'Why people leave' },
   { name: 'tracking options', palette: 'Tracking options' },
 ]
 

@@ -440,6 +440,11 @@ export interface WebVitals {
   lcp_n?: number
   cls_n?: number
   inp_n?: number
+  /** First contentful paint, the loading time of browsers that report no LCP (every browser on an iPhone). */
+  fcp_ms?: number | null
+  fcp_n?: number
+  /** Different people whose page view sent an engagement report. */
+  people?: number
   good: number
   /** The slowest pages: visitors carries that page's own p75 LCP in ms. */
   pages?: Row[]
@@ -812,6 +817,8 @@ export interface ShareLook {
 }
 
 export interface Share {
+  /** The fixed period in words, made by the server as the card says it, in the page's language. */
+  period_label?: string
   id: string
   site_id: string
   name: string

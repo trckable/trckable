@@ -73,16 +73,19 @@ test('⌘K opens the palette over the page, and Escape shuts only the palette', 
   await expect(panel(page)).toBeVisible()
 })
 
-test('the section list has its four groups, and a section shows its tables as cards', async ({ page }) => {
+test('the section list has seven sections, and a section shows its tables as cards', async ({ page }) => {
   await open(page, 1440)
-  await expect(page.locator('#xp .xrail .xgl')).toContainText(['Traffic', 'Audience', 'Results', 'Site'])
+  await expect(page.locator('#xp .xrail [data-xsec] .nm')).toHaveText(['Overview', 'Pages', 'Sources', 'Audience', 'Goals & sales', 'Site health', 'AI & web'])
   await pick(page, /^Sources/)
-  await expect(page.locator('#xp [data-xcard="referrers"]')).toBeVisible()
+  await expect(page.locator('#xp [data-xcard="sources"]')).toBeVisible()
   await expect(page.locator('#xp .xsub')).toHaveCount(0)
-  // Payments are not connected here: Sales says so and tags itself in the list.
-  await expect(page.locator('#xp .xrail [data-xsec="sales"] .xtag')).toHaveText('Connect')
+  // Payments are not connected here: the row stays plain (Sales inside marks it), so nothing sits under its arrow.
+  await expect(page.locator('#xp .xrail [data-xsec="goals"] .xtag')).toHaveCount(0)
+  await pick(page, /^Goals & sales/)
+  await expect(page).toHaveURL(/x=goals/)
+  await expect(page.locator('#xp [data-xcard="goals"]')).toBeVisible()
   await pick(page, /^Sales/)
-  await expect(page.locator('#xp .lkc').first()).toContainText('See what each source earns')
+  await expect(page.locator('#xp [data-xcard="sales"] .lkc').first()).toContainText('See what each source earns')
 })
 
 test('a tapped row filters, and the chip takes it off', async ({ page }) => {
@@ -104,7 +107,7 @@ test('a tapped row filters, and the chip takes it off', async ({ page }) => {
 test('full width has the section list beside it, with no control to fold it', async ({ page }) => {
   await open(page, 1440)
   await expect(page.locator('#xp.full .xrail .xri').first()).toBeVisible()
-  await page.locator('#xp .xrail').getByRole('button', { name: /^Speed/ }).click()
+  await page.locator('#xp .xrail').getByRole('button', { name: /^Site health/ }).click()
   await expect(page.locator('#xp [data-xcard="speed"]')).toBeVisible()
   await expect(page.locator('#xp .xrail .nm').first()).toBeVisible()
   await expect(page.locator('#xp .xrail').getByRole('button', { name: /section list/i })).toHaveCount(0)
@@ -120,28 +123,34 @@ test('on a phone the sections are a drawer, and nothing scrolls sideways', async
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })
 
-test('Payments and Customers are entries of the section list, and open their own table', async ({ page }) => {
+test('Goals & sales is four pages in the section list, each its own address, and the tables stay on their page', async ({ page }) => {
   await open(page, 1440)
-  await expect(page.locator('#xp .xrail [data-xkids="sales"]')).toHaveAttribute('data-closed', '')
-  await page.locator('#xp .xrail .xchev').click()
-  await expect(page).not.toHaveURL(/x=sales/)
-  await pick(page, /^Customers/)
-  await expect(page).toHaveURL(/x=customers/)
+  const kids = page.locator('#xp .xrail [data-xkids="goals"]')
+  await expect(kids).not.toHaveAttribute('data-closed', '')
+  await expect(kids.locator('[data-xtab] .nm')).toHaveText(['Goals', 'Funnels', 'Sales', 'Coming back'])
+  await page.locator('#xp .xrail [data-xsec="goals"]').click()
+  await expect(page).toHaveURL(/x=goals/)
+  await expect(kids.locator('[data-xtab="goals"]')).toHaveAttribute('aria-current', 'page')
+  await pick(page, /^Coming back/)
+  await expect(page).toHaveURL(/x=retention/)
+  await expect(page.locator('#xp [data-xcard="retention"]')).toBeVisible()
+  await expect(page.locator('#xp [data-xcard="sales"]')).toHaveCount(0)
+  // A table's own address opens its page, with that table in view and its page's entry marked.
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=&x=customers`)
   await expect(page.locator('#xp [data-xcard="customers"]')).toBeVisible()
-  await expect(page.locator('#xp .xrail [data-xtab="customers"]')).toHaveAttribute('aria-current', 'page')
-  await expect(page.locator('#xp .xrail [data-xsec="sales"]')).not.toHaveAttribute('aria-current', 'page')
+  await expect(page.locator('#xp .xrail [data-xtab="sales"]')).toHaveAttribute('aria-current', 'page')
+  await expect(page.locator('#xp .xrail [data-xsec="goals"]')).not.toHaveAttribute('aria-current', 'page')
 })
 
 // Nothing of the old Data page is without a home: each of its cards is a tab of a section, and opens without an error.
 const HOMES: Record<string, string[]> = {
   overview: ['overtime', 'hours'],
-  pages: ['paths', 'exits', 'groups', 'sells'],
-  sources: ['earners'],
-  places: ['places', 'revmap', 'people'],
-  tech: ['bversion', 'screens'],
-  results: ['retention', 'vsale', 'toconvert', 'flow'],
-  sales: ['payments', 'customers'],
-  ai: ['ai'],
+  pages: ['paths', 'exits', 'groups'],
+  sources: ['sources'],
+  audience: ['places', 'people', 'bversion', 'screens'],
+  goals: ['goals', 'funnels', 'toconvert', 'flow', 'sales', 'vsale', 'earners', 'sells', 'revmap', 'payments', 'customers', 'retention'],
+  health: ['speed'],
+  web: ['ai'],
 }
 
 test('every card of the old Data page has a place in a section', async ({ page }) => {
@@ -149,6 +158,8 @@ test('every card of the old Data page has a place in a section', async ({ page }
   for (const [section, tabs] of Object.entries(HOMES)) {
     await page.locator(`#xp .xrail [data-xsec="${section}"]`).click()
     for (const t of tabs) {
+      // Goals & sales is four pages: a table is opened by its own address, which shows the page it is on.
+      if (section === 'goals') await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=&x=${t}`)
       const card = page.locator(`#xp [data-xcard="${t}"]`)
       await card.evaluate((el) => el.scrollIntoView())
       await expect(card).toBeVisible()
@@ -254,18 +265,20 @@ test('the grid in the header lists every section, and a tile opens its page from
   await page.goto(`${API}/${HISTORY_DOMAIN}?view=live`)
   await page.locator('#sectionsBtn').click()
   await expect(page.locator('.xtile').first()).toBeVisible()
-  await page.locator('[data-xtile="speed"]').click()
+  await page.locator('[data-xtile="health"]').click()
   await expect(page.locator('.xtile')).toHaveCount(0)
   await expect(page.locator('#xp [data-xcard="speed"]')).toBeVisible()
   await expect(page).toHaveURL(/x=speed/)
 })
 
-test('Search is a section of its own in the grid', async ({ page }) => {
+test('the old Search address opens Sources with Google\'s panel', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(`${API}/${HISTORY_DOMAIN}?view=live`)
-  await page.locator('#sectionsBtn').click()
-  await page.locator('[data-xtile="search"]').click()
-  await expect(page.locator('#xp [data-xcard="search"]')).toBeVisible()
-  await expect(page).toHaveURL(/x=search/)
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&x=search`)
+  await expect(page.locator('#xp [data-xcard="sources"]')).toBeVisible()
+  await expect(page.locator('#xp [data-xpanel="google"]')).toBeVisible()
+  await expect(page).toHaveURL(/x=sources/)
+  await expect(page).toHaveURL(/xs=google/)
+  await page.locator('#xp [data-xpanel="google"] .xsrc-x').click()
+  await expect(page.locator('#xp [data-xpanel="google"]')).toHaveCount(0)
 })

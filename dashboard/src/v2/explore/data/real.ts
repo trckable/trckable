@@ -9,6 +9,7 @@ import { channelLabel } from '../../../lib/palette'
 import { copy } from '../copy'
 import { MIN_VITALS } from '../../../lib/api'
 import { queryOf } from '../../../lib/dashQuery'
+import { countedOncePerDay } from '../../../lib/oncePerDay'
 import { addDays, diffDays, fmtRange, todayIn, type Range } from '../../../lib/dates'
 import { parseFilterParam } from '../../../lib/filterSet'
 import { writeView } from '../../../lib/url'
@@ -25,18 +26,21 @@ import { funnelBuilt } from '../../setup/funnelBuilt'
 import { seeMoney, seeNetworks } from '../sections'
 import type { Down, SavedView, Tab } from '../types'
 import { basisOf, type Basis } from './basis'
+import { seenWindow, type Seen } from '../googlePath'
 import { insightOf } from './insight'
 import { ENOUGH, headline, mainOf, ranked, rateOf, type QualityRow } from './quality'
 import { EXPLORE_ROWS, LINKS_ROWS } from './rows'
 import { scaled, withSourceUsuals } from './scaled'
-import { mapEngage, mapOverview, mapTable, mapTops, optionsOf, type Uptime } from './mapReport'
+import { mapEngage, mapOverview, mapTable, mapTops, optionsOf, uptimeXkc, type Uptime } from './mapReport'
 import { mapSlowCost } from './slowCost'
 import { mapNetworks } from './networks'
-import { botsModel, mapBots, mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, salesCountries, mapSearch, mapSpeed } from './mapSections'
+import { mapFunnel, stepsOf, mapLinks, mapMentions, mapSales, salesCountries, mapSearch, mapSpeed } from './mapSections'
 import type { DataCtx, Meta, TabData } from './useExplore'
 import { dateFmt } from '../../../lib/format'
 
 /** Explore asks for the deep report: the breakdowns of regions, cities, exit pages and the rest ride in the same read. */
+/** The people of this period are counted once per day: a site without cookies, over more than one day. */
+const once = (c: DataCtx) => countedOncePerDay(c.site.cookieless, diffDays(c.range.from, c.range.to) + 1)
 const query = (c: DataCtx, filters: Filter[] = c.filters): ReportQuery => ({ ...queryOf({ ...c.view, filters }, c.range), deep: true, limit: EXPLORE_ROWS })
 /** Overview and What changed read only pages, sources and the other plain breakdowns, never the deep ones, so they ask for the lighter report and it comes back sooner. */
 const plainQuery = (c: DataCtx): ReportQuery => ({ ...query(c), deep: false })
@@ -143,6 +147,29 @@ const periodFor = (c: DataCtx): Period => {
   return days <= 90 ? '90d' : '1y'
 }
 
+/** Whether Search Console is connected: the menu's read and the Briefing's, started together, are one request. */
+const connected = new Map<string, { at: number; p: Promise<{ connected: boolean }> }>()
+function searchOn(site: string): Promise<{ connected: boolean }> {
+  const seen = connected.get(site)
+  if (seen && Date.now() - seen.at < 3000) return seen.p
+  const p = more.searchConsole(site)
+  connected.set(site, { at: Date.now(), p })
+  return p
+}
+
+/** What Google says of the site for the days it has, where Search Console is connected; nothing where it is not or does not answer. */
+async function googleSeen(c: DataCtx, today: string, signal: AbortSignal): Promise<Seen | null> {
+  try {
+    const conn = await searchOn(c.site.id)
+    if (!conn.connected) return null
+    const days = seenWindow(c.range, today)
+    const r = await more.searchReport(c.site.id, { ...query(c), from: days.from, to: days.to, compare: undefined }, 'date', signal)
+    return { shown: r.impressions, clicked: r.clicks }
+  } catch {
+    return null
+  }
+}
+
 export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal, soon?: (d: TabData) => void): Promise<TabData> {
   const q = query(c)
   const today = todayIn(c.site.timezone)
@@ -150,14 +177,14 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal, soon?: 
     case 'changed':
     {
       // Measured against the same period as the changes below it: the cards and the table have to agree.
-      const [report, uptime] = await Promise.all([cachedReport(c.site.id, plainQuery(c), undefined, signal), periodUptime(c)])
-      return { ...mapOverview(report, { money: c.money, uptime, now: today, basis: 'previous', against: againstName(c.view.period, c.view.compare === 'none' ? 'previous' : c.view.compare, c.range) }), report }
+      const [report, uptime, google] = await Promise.all([cachedReport(c.site.id, plainQuery(c), undefined, signal), periodUptime(c), c.filters.length === 0 ? googleSeen(c, today, signal) : null])
+      return { ...mapOverview(report, { money: c.money, uptime, now: today, once: once(c), basis: 'previous', against: againstName(c.view.period, c.view.compare === 'none' ? 'previous' : c.view.compare, c.range) }), report, google }
     }
     case 'overview': {
       const pre = basisOf({ range: c.range, filters: c.filters, compare: c.view.compare }) === 'usual' ? earlyOf(c) : null
       const [raw, uptime] = await Promise.all([cachedReport(c.site.id, plainQuery(c), undefined, signal), periodUptime(c)])
       const against = c.view.compare === 'none' ? undefined : againstName(c.view.period, c.view.compare, c.range)
-      const cards = (report: Report, basis: Basis) => mapOverview(report, { money: c.money, uptime, now: today, basis, against })
+      const cards = (report: Report, basis: Basis) => mapOverview(report, { money: c.money, uptime, now: today, once: once(c), basis, against })
       // The cards show from the plain report at once; the numbers told against the usual replace them when they are here.
       if (pre) soon?.({ ...cards(raw, 'previous'), report: raw })
       const { report, basis } = await toBasis(c, raw, pre)
@@ -182,11 +209,14 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal, soon?: 
     }
     case 'search': {
       const conn = await more.searchConsole(c.site.id)
-      if (!conn.connected) return { on: false, enough: false, kcs: [], queries: [], pages: [], days: [] }
-      const report = await cachedReport(c.site.id, q, undefined, signal)
-      const p = before(report)
-      const [query_, pages, days, prev] = await Promise.all([more.searchReport(c.site.id, q, 'query', signal), more.searchReport(c.site.id, q, 'page', signal), more.searchReport(c.site.id, q, 'date', signal).catch(() => undefined), more.searchReport(c.site.id, { ...q, from: p.from, to: p.to, compare: undefined }, 'query', signal).catch(() => undefined)])
-      return mapSearch({ query: query_, pages, days, prev })
+      if (!conn.connected) return { on: false, enough: false, kcs: [], queries: [], pages: [], days: [], seen: 0, clicked: 0, window: '' }
+      // Google's numbers run a few days behind: one window for the tiles, the table of sources and the chart, the last complete days and as many as the period.
+      const w = seenWindow(c.range, today)
+      const gq = { ...q, from: w.from, to: w.to, compare: undefined }
+      const prevTo = addDays(w.from, -1)
+      const p = { from: addDays(prevTo, -diffDays(w.from, w.to)), to: prevTo }
+      const [query_, pages, days, prev] = await Promise.all([more.searchReport(c.site.id, gq, 'query', signal), more.searchReport(c.site.id, gq, 'page', signal), more.searchReport(c.site.id, gq, 'date', signal).catch(() => undefined), more.searchReport(c.site.id, { ...gq, from: p.from, to: p.to }, 'query', signal).catch(() => undefined)])
+      return mapSearch({ query: query_, pages, days, prev, window: fmtRange(w, today) })
     }
     case 'paths': {
       const r = await more.paths(c.site.id, q, signal)
@@ -226,12 +256,13 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal, soon?: 
       const p = before(report)
       // A site that does not measure speed has none to show.
       const none: WebVitals = { samples: 0, good: 0 }
-      const [cur, prev, cost] = await Promise.all([
+      const [cur, prev, cost, up] = await Promise.all([
         more.vitals(c.site.id, q).catch(() => none),
         more.vitals(c.site.id, { ...q, from: p.from, to: p.to, compare: undefined }).catch(() => undefined),
         more.slowCost(c.site.id, q).catch(() => null),
+        periodUptime(c).catch(() => null),
       ])
-      return { ...mapSpeed(cur, prev), cost: mapSlowCost(cost) }
+      return { ...mapSpeed(cur, prev), cost: mapSlowCost(cost), uptime: up && uptimeXkc(up), down: up?.down ?? [] }
     }
     case 'networks': {
       const report = await cachedReport(c.site.id, q, undefined, signal)
@@ -242,11 +273,6 @@ export async function loadTab(tab: Tab, c: DataCtx, signal: AbortSignal, soon?: 
     case 'mentions': {
       const r = await mentionsApi.list(c.site.id, periodFor(c), signal)
       return mapMentions(r.mentions, c.site.timezone, today)
-    }
-    case 'bots': {
-      // A site that does not watch for robots has none to list; what was dropped on purpose comes with the report.
-      const [rows, report] = await Promise.all([more.crawlers(c.site.id, q).then(mapBots, () => []), cachedReport(c.site.id, q, undefined, signal).catch(() => undefined)])
-      return botsModel(rows, report?.bots)
     }
     case 'outbound': {
       const r = await call<{ properties: { key: string; value: string; visitors: number }[] | null }>('GET', `/sites/${c.site.id}/report/goal-props${rangeQS(q)}&goal=outbound_click&limit=${LINKS_ROWS}`, undefined, signal)
@@ -275,7 +301,7 @@ const viewOf = (s: { id: string; name: string; query: string }): SavedView => ({
 export async function loadMeta(c: DataCtx): Promise<Meta> {
   const [report, search, segments] = await Promise.all([
     cachedReport(c.site.id, query(c, [])),
-    more.searchConsole(c.site.id).then(
+    searchOn(c.site.id).then(
       (r) => r.connected,
       () => false,
     ),

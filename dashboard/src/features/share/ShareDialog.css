@@ -1,11 +1,14 @@
-/* Share your numbers: the picture is the hero on the left; on the right a
-   300px panel of sections, one open at a time, each closed one a line long.
-   On a phone the panel goes under the picture and the dialog is a sheet. */
-/* One size whatever is picked: the dialog, the picture's box and the panel never change; what does not fit scrolls
-   inside the panel. */
+/* The share studio: one screen of one size, whatever is picked. Three columns (where to, the card and its cards,
+   the style and the actions), the picture in the middle; nothing scrolls but the strip of cards (sideways) and the
+   list of more places. On a phone it is one column in a sheet, the style behind a button. */
 .modal.sd-modal {
-  width: min(1040px, 100%);
-  height: min(760px, calc(100vh - 32px));
+  position: relative;
+  width: min(1180px, 100%);
+  height: min(740px, calc(100vh - 32px));
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  border-radius: 22px;
 }
 .sd-handle {
   display: none;
@@ -13,42 +16,434 @@
 .sd-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-.sd-links span {
-  font-size: 13px;
+  gap: 12px;
+  flex: none;
+  height: 56px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
 }
 .sd-head h2 {
-  margin: 0 auto 0 0;
-  font-size: 18px;
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
 }
-.sd-body {
+.sd-site {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sd-studio {
   display: grid;
   flex: 1;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  grid-template-rows: minmax(0, 1fr);
-  gap: 20px;
+  grid-template-columns: 200px minmax(0, 1fr) 240px;
+  grid-template-rows: minmax(0, 1fr) 150px;
+  grid-template-areas: 'to stage side' 'to strip side';
   min-height: 0;
 }
-.sd-stage {
+.sd-cap {
+  margin: 0;
+  padding: 0 8px 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.sd-note {
+  margin: 0;
+  padding: 0 8px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* Where it goes. */
+.sd-shareto {
+  display: flex;
+  grid-area: to;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  padding: 16px 12px;
+  border-right: 1px solid var(--border);
+}
+.sd-shareto .sd-note {
+  margin-top: auto;
+}
+.sd-place {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--text-2);
+  font-size: 13px;
+  text-align: left;
+}
+.sd-place:hover {
+  background: color-mix(in srgb, var(--text) 5%, transparent);
+}
+.sd-place[aria-pressed='true'] {
+  background: var(--sunken);
+  color: var(--text);
+}
+.sd-place-name {
+  flex: 1;
   min-width: 0;
-  min-height: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.sd-panel {
+.sd-glyph {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto auto; /* the sections scroll; Look and the actions stay in view */
-  gap: 8px;
-  min-width: 0;
-  min-height: 0;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--sunken);
+  font-size: 12px;
+  font-weight: 700;
 }
-.sd-sections {
-  display: grid;
-  align-content: start;
-  gap: 8px;
-  min-height: 0;
-  padding: 2px 6px 2px 2px;
+.sd-place[aria-pressed='true'] .sd-glyph {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.sd-morelist {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 210px;
+  margin-top: 2px;
+  padding: 6px;
   overflow-y: auto;
-  scrollbar-gutter: stable;
+  border-radius: 12px;
+  background: var(--sunken);
+}
+
+/* The card: its sizes and periods, the picture, the post. */
+.sd-stage {
+  display: flex;
+  grid-area: stage;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+  padding: 16px 18px 10px;
+}
+.sd-chips {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.sd-chips-set {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sd-sep {
+  width: 1px;
+  height: 18px;
+  margin: 0 6px;
+  background: var(--border-2);
+}
+.sd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 3px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--sunken);
+  color: var(--text-2);
+  font-size: 12px;
+}
+.sd-chip[aria-pressed='true'] {
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 600;
+}
+.sd-range {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  font-size: 12px;
+}
+.sd-range label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+.sd-date {
+  width: auto;
+  min-height: 28px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+.sd-range-note {
+  color: var(--down);
+}
+.sd-px {
+  opacity: 0.6;
+}
+.sd-stage .sd-preview {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+}
+.sd-post {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 4px;
+  width: min(560px, 100%);
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--sunken);
+}
+.sd-post-head {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 11px;
+}
+.sd-post-name {
+  display: flex;
+  gap: 10px;
+}
+.sd-post-head .sd-reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.sd-post-head .sd-over {
+  color: var(--down);
+}
+.sd-post textarea {
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  resize: none;
+}
+
+/* The cards to pick from. */
+.sd-strip {
+  display: flex;
+  grid-area: strip;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+}
+.sd-tabs {
+  display: flex;
+  flex: none;
+  gap: 4px;
+}
+.sd-tiles {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  min-height: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.sd-tile {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 4px;
+  width: 128px;
+  padding: 3px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: none;
+  color: var(--text-2);
+  font-size: 11px;
+  text-align: left;
+}
+.sd-tile[aria-checked='true'] {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.sd-tile img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1200 / 630;
+  border-radius: 8px;
+  background: var(--sunken);
+  object-fit: cover;
+}
+.sd-tile span {
+  overflow: hidden;
+  padding: 0 4px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The style and the actions. */
+.sd-side {
+  display: flex;
+  grid-area: side;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 16px;
+  border-left: 1px solid var(--border);
+  font-size: 13px;
+}
+.sd-sheet {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+.sd-sheet .sd-cap {
+  padding: 0;
+}
+.sd-style {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sd-bgs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.sd-bg {
+  display: flex;
+  align-items: flex-end;
+  height: 44px;
+  padding: 4px 6px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  color: #ececec;
+  font-size: 10px;
+  text-align: left;
+}
+.sd-bg[aria-checked='true'] {
+  border-color: var(--text);
+}
+.sd-bg.is-ink {
+  background: #0f1012;
+}
+.sd-bg.is-paper {
+  background: #f4f3ee;
+  color: #141414;
+}
+.sd-bg.is-grid {
+  background: repeating-linear-gradient(0deg, #1c1f24 0 1px, transparent 1px 8px), repeating-linear-gradient(90deg, #1c1f24 0 1px, transparent 1px 8px), #0f1012;
+}
+.sd-bg.is-glow {
+  background: radial-gradient(circle at 20% 0%, #2c3b16, #0f1012 60%);
+}
+.sd-bg.is-sunset {
+  background: linear-gradient(135deg, #ff8a5c, #c792ff);
+  color: #111;
+}
+.sd-bg.is-ocean {
+  background: linear-gradient(135deg, #0b2a4a, #0f6e7a);
+}
+.sd-colours {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sd-colours div {
+  display: flex;
+  gap: 8px;
+}
+.sd-swatch {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+}
+.sd-swatch[aria-checked='true'] {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+.sd-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sd-row[aria-disabled='true'] {
+  opacity: 0.45;
+}
+.sd-actions {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 8px;
+}
+.sd-act {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--sunken);
+  color: var(--text);
+  text-align: left;
+}
+.sd-act:disabled {
+  opacity: 0.5;
+}
+.sd-act.is-main {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.sd-act-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.sd-act-text b {
+  font-size: 14px;
+  font-weight: 600;
+}
+.sd-act:not(.is-main) b {
+  font-size: 13px;
+  font-weight: 500;
+}
+.sd-act-text span {
+  font-size: 11px;
+  opacity: 0.75;
+}
+.sd-style-open {
+  display: none;
 }
 .sd-preview {
   display: grid;
@@ -129,197 +524,112 @@
     display: none;
   }
 }
-.sd-preview.is-post {
-  place-items: center stretch;
-}
-.sd-post {
-  margin: 0 auto;
-  max-width: 460px;
-  padding: 16px 18px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--surface);
-  font-size: 15px;
-  line-height: 1.5;
-  white-space: pre-wrap;
+
+/* A phone: a bottom sheet of one column: where to as a row of chips, the picture, its chips, the cards; the style
+   behind one button and the actions held at the bottom. */
+@media (--handheld) {
+  .modal-back:has(> .sd-modal) {
+    padding: 0;
+    place-items: end stretch;
+  }
+  .modal.sd-modal {
+    width: 100%;
+    max-width: none;
+    min-height: 0 !important; /* the dialog's held height is for wide screens */
+    height: 92dvh;
+    max-height: 92dvh;
+    border-radius: 20px 20px 0 0;
+    border-bottom: 0;
+  }
+  .sd-handle {
+    display: block;
+    width: 40px;
+    height: 5px;
+    margin: 8px auto 0;
+    border-radius: 3px;
+    background: var(--border-2);
+  }
+  .sd-head {
+    height: 48px;
+    padding: 0 12px 0 16px;
+  }
+  .sd-studio {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .sd-shareto {
+    flex: none;
+    flex-flow: row wrap;
+    align-items: center;
+    padding: 10px 12px 4px;
+    border-right: 0;
+  }
+  .sd-shareto .sd-cap,
+  .sd-shareto .sd-note {
+    display: none;
+  }
+  .sd-place {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: var(--sunken);
+  }
+  .sd-morelist {
+    width: 100%;
+    max-height: 180px;
+  }
+  .sd-stage {
+    flex: none;
+    padding: 8px 12px;
+  }
+  .sd-stage .sd-preview {
+    flex: none;
+    height: 220px;
+    padding: 12px;
+  }
+  .sd-strip {
+    flex: none;
+    height: 132px;
+    padding: 8px 12px;
+  }
+  .sd-style-open {
+    display: inline-flex;
+    flex: none;
+    align-self: flex-start;
+    gap: 8px;
+    margin: 4px 12px 8px;
+  }
+  .sd-side {
+    position: sticky;
+    bottom: 0;
+    flex: none;
+    gap: 8px;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border);
+    border-left: 0;
+    background: var(--modal-surface);
+  }
+  .sd-sheet {
+    display: none;
+    flex: none;
+  }
+  .sd-side.is-open .sd-sheet {
+    display: flex;
+  }
+  .sd-act {
+    min-height: var(--ph-sheet-row, 48px);
+  }
+  .sd-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .sd-act.is-main {
+    grid-column: 1 / -1;
+  }
 }
 
-/* A section: its title and, closed, one line of what it is set to. */
-.sd-sec {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-.sd-sec-head {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas: 'title chev' 'sum chev';
-  align-items: center;
-  column-gap: 8px;
-  width: 100%;
-  padding: 9px 12px;
-  border: 0;
-  background: none;
-  color: var(--text);
-  text-align: left;
-}
-.sd-sec-head b {
-  grid-area: title;
-  font-size: 13px;
-}
-.sd-sec-sum {
-  grid-area: sum;
-  overflow: hidden;
-  color: var(--text-2);
-  font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.sd-sec-head svg {
-  grid-area: chev;
-  color: var(--text-2);
-  transition: transform 0.15s;
-}
-.sd-sec.is-open > .sd-sec-head svg {
-  transform: rotate(180deg);
-}
-.sd-sec.is-open .sd-sec-sum {
-  display: none;
-}
-.sd-sec-body {
-  display: grid;
-  gap: 10px;
-  padding: 2px 12px 12px;
-}
-.sd-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.sd-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 32px;
-  padding: 4px 11px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: none;
-  color: var(--text);
-  font-size: 13px;
-}
-.sd-chip[aria-pressed='true'],
-.sd-chip[aria-checked='true'] {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-}
-.sd-topic h3 {
-  margin: 4px 0 6px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.sd-gallery {
-  display: grid;
-  gap: 6px;
-}
-.sd-pics {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-}
-.sd-pic {
-  display: grid;
-  gap: 3px;
-  min-width: 0;
-  padding: 4px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: none;
-  color: var(--text);
-  font-size: 12px;
-  text-align: left;
-}
-.sd-pic[aria-checked='true'] {
-  border-color: var(--ring, var(--accent));
-  background: color-mix(in srgb, var(--ring, var(--accent)) 8%, transparent);
-  box-shadow: 0 0 0 1px var(--ring, var(--accent));
-}
-.sd-shape {
-  flex: none;
-}
-.sd-note {
-  margin: 0;
-}
-.sd-pic b {
-  overflow: hidden;
-  font-size: 11px;
-  font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.sd-thumb {
-  display: grid;
-  place-items: center;
-  aspect-ratio: 1200 / 630;
-  overflow: hidden;
-  border-radius: 6px;
-  background: var(--sunken);
-  color: var(--muted);
-}
-.sd-thumb img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.sd-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 13px;
-}
-.sd-hint {
-  margin: 0;
-  font-size: 12px;
-}
-.sd-swatches {
-  display: flex;
-  gap: 5px;
-}
-.sd-swatch {
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: 2px solid var(--bg);
-  border-radius: 50%;
-  box-shadow: 0 0 0 1px var(--border-2);
-}
-.sd-swatch[aria-checked='true'] {
-  box-shadow: 0 0 0 2px var(--text);
-}
-.sd-site {
-  max-width: 100%;
-}
-.sd-actions {
-  display: grid;
-  gap: 8px;
-  margin-top: 4px;
-}
-.sd-actions .sd-act {
-  justify-content: center;
-  height: 36px;
-}
-.sd-actions-more {
-  display: flex;
-  gap: 8px;
-}
-.sd-actions-more .sd-act {
-  flex: 1;
-  min-width: 0;
-}
+/* The links: the public links of the site and the look they open with, in place of the studio. */
 .sd-link {
   display: grid;
   gap: 12px;
@@ -353,70 +663,6 @@
   font-size: 12px;
 }
 
-/* A phone: a bottom sheet, the picture first with the panel under it, and the
-   main action held at the bottom. */
-@media (--xs) {
-  .modal-back:has(> .sd-modal) {
-    padding: 0;
-    place-items: end stretch;
-  }
-  .modal.sd-modal {
-    width: 100%;
-    max-width: none;
-    min-height: 0 !important; /* the dialog's held height is for wide screens */
-    height: 92dvh;
-    max-height: 92dvh;
-    border-radius: 20px 20px 0 0;
-    border-bottom: 0;
-    padding: 8px 16px calc(12px + env(safe-area-inset-bottom));
-    gap: 12px;
-  }
-  .sd-handle {
-    display: block;
-    width: 40px;
-    height: 5px;
-    margin: 0 auto;
-    border-radius: 3px;
-    background: var(--border-2);
-  }
-  .sd-head h2 {
-    font-size: 17px;
-  }
-  :root .sd-head .btn.icon {
-    width: var(--ph-hit);
-    height: var(--ph-hit);
-    padding: 0;
-    justify-content: center;
-  }
-  .sd-body {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: 240px minmax(0, 1fr);
-    gap: 12px;
-  }
-  .sd-preview {
-    padding: 8px;
-  }
-  :root .sd-chip {
-    min-height: var(--ph-hit);
-  }
-  :root .sd-swatch {
-    width: var(--ph-hit);
-    height: var(--ph-hit);
-    padding: 12px;
-    border: 0;
-    background-clip: content-box;
-    box-shadow: none;
-  }
-  :root .sd-swatch[aria-checked='true'] {
-    outline: 2px solid var(--text);
-    outline-offset: -10px;
-    box-shadow: none;
-  }
-  :root .sd-actions .sd-act {
-    height: var(--ph-sheet-row);
-    font-size: var(--ph-text-2);
-  }
-}
 /* The look of the links: logo, colour, switch and domain, under the link. */
 .sd-look {
   display: grid;
@@ -572,3 +818,4 @@
 .sd-look-row .sd-sec {
   width: 100%;
 }
+

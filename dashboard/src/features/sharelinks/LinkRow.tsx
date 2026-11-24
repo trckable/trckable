@@ -7,7 +7,6 @@ import { CalendarRange, CircleDollarSign, Clock, Code, ExternalLink, Eye, Globe,
 import { useState } from 'react'
 import { toast } from '../../components/Toast'
 import { fail, type Share, more } from '../../lib/apiMore'
-import { PRESETS } from '../../lib/dates'
 import { fmtInt, dateFmt } from '../../lib/format'
 import { Ask } from './Ask'
 import { CopyButton } from './CopyButton'
@@ -168,7 +167,7 @@ export function LinkRow({ site, share, readOnly, onChanged, onAddress }: RowProp
           <Flag on={shown.length < SECTIONS.length} label={sectionsLabel(shown)}>
             <LayoutGrid size={14} strokeWidth={1.75} />
           </Flag>
-          <Flag on={!!share.period} label={share.period ? copy.periodFixed(PRESETS.find((p) => p.id === share.period)?.label ?? share.period) : copy.periodFree}>
+          <Flag on={!!share.period} label={share.period ? copy.periodFixed(share.period_label || share.period) : copy.periodFree}>
             <CalendarRange size={14} strokeWidth={1.75} />
           </Flag>
           <Flag on={embeds.length > 0} label={embeds.length ? copy.embedOn(embeds) : copy.embedOff}>

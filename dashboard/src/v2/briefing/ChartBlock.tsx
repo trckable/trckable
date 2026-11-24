@@ -31,12 +31,13 @@ export interface ChartBlockProps {
   money?: (minor: number) => string
   /** The busiest day of the last 90, when the chart shows it: a star on the chips' lane. */
   record?: { day: string; people: number } | null
-  note: string
+  /** The line over the chart; absent where the page already says it in its own words (the Briefing's sentence). */
+  note?: string
   /** Green or red when the line over the chart says how the period stands against the one before. */
   tone?: 'up' | 'dn'
   down: boolean
-  notes: number
-  onNotes: () => void
+  notes?: number
+  onNotes?: () => void
 }
 
 export function ChartBlock(p: ChartBlockProps) {
@@ -63,17 +64,21 @@ export function ChartBlock(p: ChartBlockProps) {
     <>
       <div className="chwrap" ref={block}>
         <div className="ch-top">
-          <span className="mk-quiet" id="chNote" data-tone={p.down ? 'dn' : p.tone} style={TONE[p.down ? 'dn' : (p.tone ?? 'none')]}>
-            {p.note}
-          </span>
+          {p.note !== undefined && (
+            <span className="mk-quiet" id="chNote" data-tone={p.down ? 'dn' : p.tone} style={TONE[p.down ? 'dn' : (p.tone ?? 'none')]}>
+              {p.note}
+            </span>
+          )}
           <span className="mk-quiet" id="chCall" />
           <Suspense fallback={null}>
             <MentionsChip site={p.site} labels={labels} from={p.series[0]?.t.slice(0, 10) ?? p.range.from} to={p.range.to} />
           </Suspense>
           <UsualRange c={p.chart} />
-          <button type="button" className="gh nbtn" data-info="notes" onClick={p.onNotes}>
-            {copy.noteBtn(p.notes)}
-          </button>
+          {p.onNotes && (
+            <button type="button" className="gh nbtn" data-info="notes" onClick={p.onNotes}>
+              {copy.noteBtn(p.notes ?? 0)}
+            </button>
+          )}
         </div>
         <div className="chplot">
           {p.chart.compare && !p.chart.band && (

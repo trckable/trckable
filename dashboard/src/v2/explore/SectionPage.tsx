@@ -10,7 +10,7 @@ import type { XCtx } from './ctx'
 import { readAhead, useTab, type DataCtx } from './data/useExplore'
 import { SectionBody } from './SectionBody'
 import { isPlaceTab, PlacesCard } from './views/Places'
-import { HOSTED, relatedTo, TABS } from './sections'
+import { HOSTED, onPageWith, relatedTo, TABS } from './sections'
 import type { Paths as PathsModel, Row, Section, Tab, Table } from './types'
 import { XKcsPlain } from '../ui/XKcs'
 import { PathsTiles } from './views/Paths'
@@ -19,9 +19,9 @@ import { TAB_ICONS } from './tabIcons'
 import { biggestMover, whyContext } from './whyLine'
 
 /** Tables that already are cards with their own headings. */
-const BARE: Tab[] = ['changed', 'overview', 'funnels', 'speed', 'search', 'ai', 'sales']
+const BARE: Tab[] = ['changed', 'overview', 'goals', 'funnels', 'speed', 'search', 'ai', 'sales']
 /** Charts and long rows that need the whole width. */
-const WIDE: Tab[] = ['pages', 'paths', 'devices', 'sources', 'earners', 'highlights', 'overtime', 'hours', 'revmap', 'people', 'flow', 'vsale', 'retention', 'toconvert', 'quality', 'networks', 'mentions', 'answers', 'payments', 'customers']
+const WIDE: Tab[] = ['pages', 'paths', 'devices', 'sources', 'earners', 'highlights', 'overtime', 'hours', 'revmap', 'people', 'flow', 'vsale', 'retention', 'toconvert', 'networks', 'mentions', 'answers', 'payments', 'customers']
 const ROWS = 5
 
 function Card({ tab, x, c, open, onRead, onSay }: { tab: Tab; x: XCtx; c: DataCtx; open: boolean; onRead: () => void; onSay: (s: string | null) => void }) {
@@ -98,20 +98,30 @@ function glow(e: PointerEvent<HTMLDivElement>) {
   card.style.setProperty('--my', `${e.clientY - r.top}px`)
 }
 
+/** The tables of the page the address names: Sources shows one of its two, Goals & sales the page the table is on, the rest every table. */
+function pageTabs(section: Section, tab: Tab, tabs: Tab[]): Tab[] {
+  if (section === 'sources') return tabs.filter((t) => t === (tab === 'utm' ? 'utm' : 'sources'))
+  if (section === 'goals') return tabs.filter((t) => onPageWith(tab).includes(t))
+  return tabs
+}
+
 export function SectionPage({ section, tab, x, c, onRead }: { section: Section; tab: Tab; x: XCtx; c: DataCtx; onRead: () => void }) {
   const tabs = TABS[section]
+  // Sources is two views, one at a time: the table of sources, or the campaigns. Goals & sales is four pages, one at a time.
+  const shown = pageTabs(section, tab, tabs)
+  const first = section === 'goals' ? shown[0] : tabs[0]
   // The places tables are one card, with a switch between them: it stands where the first of them would.
-  const cards = tabs.filter((t, i) => !isPlaceTab(t) || tabs.findIndex(isPlaceTab) === i)
+  const cards = shown.filter((t, i) => !isPlaceTab(t) || shown.findIndex(isPlaceTab) === i)
   const [say, setSay] = useState<string | null>(null)
   // The way on stands under the cards: drawn once the first has answered, so it does not slide down as they fill.
   const [answered, setAnswered] = useState<Section | null>(null)
   useEffect(() => {
-    if (scrollY > 0 && tab === tabs[0]) scrollTo({ top: 0 })
-    // A new section starts from its top.
+    if (scrollY > 0 && tab === first) scrollTo({ top: 0 })
+    // A new section, or a new page of one, starts from its top.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [section])
+  }, [section, first])
   useEffect(() => {
-    if (tab === tabs[0]) return
+    if (tab === first) return
     // The table the address names, each time it names another; after a move from Live has put the page at its top.
     const f = requestAnimationFrame(() => {
       // The page's own window only: scrollIntoView would also move a page this one is embedded in.
@@ -131,7 +141,7 @@ export function SectionPage({ section, tab, x, c, onRead }: { section: Section; 
   return (
     <>
       {say && <p className="xchg-say xsay-page">{say}</p>}
-      <div className="xcards" key={section} onPointerMove={glow}>
+      <div className="xcards" key={`${section}:${first}`} onPointerMove={glow}>
         {cards.map((t, i) => {
           const read = (s: string | null) => { setAnswered(section); if (s) setSay(s) }
           return isPlaceTab(t) ? <PlacesCard key="places" x={x} c={c} tab={tab} onRead={onRead} onSay={read} /> : <Card key={t} tab={t} x={x} c={c} open={i === 0 || t === tab} onRead={onRead} onSay={read} />

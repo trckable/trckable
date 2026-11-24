@@ -1,10 +1,9 @@
-// Live's AI & mentions card: how many AI crawlers read the site and which assistants they came from, how often the
-// assistants name the site in an answer (where Answers is on), and where people mentioned it (where Mentions is on).
+// Live's AI card: how many AI crawlers read the site and which assistants they came from, and how often the
+// assistants name the site in an answer (where Answers is on).
 import { answersCopy } from '../../features/answers/copy'
-import type { Source } from '../../features/mentions/api'
 import type { Site } from '../../lib/api'
 import { fmtInt } from '../../lib/format'
-import { hasAnswers, hasMentions } from '../../lib/me'
+import { hasAnswers } from '../../lib/me'
 import { openExplore } from '../explore/open'
 import { copy } from './copy'
 import { EmptyBlock } from './EmptyBlock'
@@ -12,7 +11,6 @@ import { CardSkeleton } from './CardSkeleton'
 import { loading, type Health } from './useHealth'
 
 const h = copy.health
-const MARK: Record<Source, string> = { hn: 'Y', ph: 'P', news: 'N', ref: 'R' }
 
 function Ring({ seen, total }: { seen: number; total: number }) {
   const r = 34
@@ -50,49 +48,21 @@ function Crawlers({ ai, answers }: { ai: Health['ai']; answers: Health['answers'
   )
 }
 
-function Mentions({ m }: { m: NonNullable<Health['mentions']> }) {
-  return (
-    <button type="button" className="lhment" onClick={() => openExplore('mentions')}>
-      <span className="lhl">
-        <b>{m.n > 0 ? h.mentionsNew(m.n) : h.noMentions}</b>
-        {m.n > 0 && <span>{h.thisWeek}</span>}
-        <span className="mk-tag new">{h.preview}</span>
-      </span>
-      {m.sources.length > 0 && (
-        <span className="lhchips">
-          {m.sources.map((s) => (
-            <span key={s} className="lhchip">
-              <i>{MARK[s]}</i>
-              {h.sources[s]}
-            </span>
-          ))}
-        </span>
-      )}
-    </button>
-  )
-}
-
 interface Props {
   site: Site
   health: Health
 }
 
 export function AiMentionsCard({ site, health }: Props) {
-  const { ai, answers, mentions } = health
+  const { ai, answers } = health
+  const body = ai || answers ? <Crawlers ai={ai} answers={answers} /> : <EmptyBlock site={site} line={h.empty.ai} ghost={['rows']} action={{ label: h.connectCrawlers, setup: 'crawlers', ask: h.askAi }} />
   return (
     <section className="mk-card lcard lhc" aria-label={h.aiMentions}>
       <div className="ph">
         <span className="t">{h.aiMentions}</span>
       </div>
       <div className="pb lhbody">
-        {loading(health) ? (
-          <CardSkeleton kind="ai" />
-        ) : (
-          <>
-            {ai || answers ? <Crawlers ai={ai} answers={answers} /> : <EmptyBlock site={site} line={h.empty.ai} ghost={['rows']} action={{ label: h.connectCrawlers, setup: 'crawlers', ask: h.askAi }} />}
-            {hasMentions() && site.mentions && mentions && <Mentions m={mentions} />}
-          </>
-        )}
+        {loading(health) ? <CardSkeleton kind="ai" /> : body}
       </div>
     </section>
   )

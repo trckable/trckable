@@ -32,15 +32,15 @@ func TestWeeklyEmail(t *testing.T) {
 	from, cur, prev := weeklySample()
 	link := "https://stats.example.com/demo.trckable.com?from=2026-09-28&to=2026-10-04&compare=previous"
 	cur.Series = []query.Point{{T: "2026-09-28", Visitors: 600}, {T: "2026-09-29", Visitors: 900}, {T: "2026-09-30", Visitors: 700}}
-	page := weeklyPage(weeklyEmail("demo.trckable.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{Visitors: 702}, "Busiest: Tuesday", link, weeklyMentions(weekMentionSample(), "https://stats.example.com/demo.trckable.com/mentions"), ""), "https://stats.example.com/u/abc.def")
+	page := weeklyPage(weeklyEmail("demo.trckable.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{People: 702}, "Busiest: Tuesday", link, weeklyMentions(weekMentionSample(), "https://stats.example.com/demo.trckable.com/mentions"), "", false), "https://stats.example.com/u/abc.def")
 	for _, want := range []string{
 		"cid:logo@report", "Your week", "demo.trckable.com", "Sep 28 – Oct 4",
-		"Visitors", "4,512", "up 13%", "Pageviews", "Bounce rate", "45%", "Visit length", "2m 10s",
+		"People", "4,512", "up 13%", "Pageviews", "Bounce rate", "45%", "Visit length", "2m 10s",
 		"Top sources", "AI assistants", "Top pages",
-		"AI assistants sent 702 visitors.", "Busiest: Tuesday",
+		"AI assistants sent 702 people.", "Busiest: Tuesday",
 		"Who talked about you", "Show HN: first", "1,240", "+1 more", `href="https://news.ycombinator.com/item?id=1"`, `href="https://stats.example.com/demo.trckable.com/mentions"`, "Open your week", `href="https://stats.example.com/demo.trckable.com?from=2026-09-28&amp;to=2026-10-04&amp;compare=previous"`,
 		`href="https://stats.example.com/u/abc.def"`, "Stop receiving this report",
-		"prefers-color-scheme:dark", `width="600"`, "max-width:600px", "Visitors per day", "Mon", "Tue",
+		"prefers-color-scheme:dark", `width="600"`, "max-width:600px", "People per day", "Mon", "Tue",
 	} {
 		if !strings.Contains(page, want) {
 			t.Errorf("missing %q", want)
@@ -56,8 +56,8 @@ func TestWeeklyEmail(t *testing.T) {
 		t.Errorf("a week with no mention has no mentions section")
 	}
 	// No address, no button; a week with nobody says so.
-	quiet := weeklyPage(weeklyEmail("x.com", from, from.AddDate(0, 0, 7), &query.Result{}, prev, aiWeek{}, "", "", reports.Weekly{}, ""), "")
-	if strings.Contains(quiet, "Open your week") || strings.Contains(quiet, "Stop receiving") || !strings.Contains(quiet, "No visitors arrived") {
+	quiet := weeklyPage(weeklyEmail("x.com", from, from.AddDate(0, 0, 7), &query.Result{}, prev, aiWeek{}, "", "", reports.Weekly{}, "", false), "")
+	if strings.Contains(quiet, "Open your week") || strings.Contains(quiet, "Stop receiving") || !strings.Contains(quiet, "No people arrived") {
 		t.Errorf("a quiet week without links:\n%s", quiet)
 	}
 }
@@ -79,7 +79,7 @@ func weekMentionSample() []sqlite.Mention {
 
 func quiet0(from time.Time, prev *query.Result) string {
 	cur := &query.Result{KPIs: query.KPIs{Visitors: 10, Pageviews: 20}}
-	return weeklyPage(weeklyEmail("x.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "", "", weeklyMentions([]sqlite.Mention{{Source: "hn", Title: "none", Visitors: 0}}, ""), ""), "")
+	return weeklyPage(weeklyEmail("x.com", from, from.AddDate(0, 0, 7), cur, prev, aiWeek{}, "", "", weeklyMentions([]sqlite.Mention{{Source: "hn", Title: "none", Visitors: 0}}, ""), "", false), "")
 }
 
 // The section keeps the three that brought the most, counts the rest that
@@ -90,7 +90,7 @@ func TestWeeklyMentionsPicksTheTop(t *testing.T) {
 		t.Fatalf("got %d shown, %d more, link %q", len(x.Mentions), x.MentionsMore, x.MentionsLink)
 	}
 	if x.Mentions[0].Title != "Show HN: first" || x.Mentions[1].Title != "Launch day" || x.Mentions[2].Visitors != 12 {
-		t.Errorf("most visitors first: %+v", x.Mentions)
+		t.Errorf("most people first: %+v", x.Mentions)
 	}
 	if x.Mentions[0].Mark.Letter != "Y" || x.Mentions[0].Source != "Hacker News" || x.Mentions[2].Source != "blog.example.org" {
 		t.Errorf("source marks: %+v", x.Mentions)

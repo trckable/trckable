@@ -1,11 +1,14 @@
 // Leaving a note on a day. The calendar opens and closes inside it (the day
-// label toggles it), so the dialog follows its content (keepSize off).
+// label toggles it) inside the dialog's fixed size: the day switcher sits in the
+// header, the note and its Add button in the footer, and the middle scrolls.
 // A note is almost always about a bump or a dip, so
 // the dialog shows the period's traffic and you point at the day you mean,
 // seeing what you are about to explain. Days outside the period come from the
 // same calendar the date picker uses, not the browser's own.
+import { CalendarDays, NotebookPen, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Modal } from '../kit/Modal'
+import { ModalMark } from '../kit/ModalMark'
 import { Chevron } from './Chevron'
 import { Month } from './DateRangeMonth'
 import { toast } from './Toast'
@@ -96,15 +99,47 @@ export function NoteDialog({
     <Modal
       label="Add a note"
       onClose={onClose}
-      keepSize={false}
       className="note-modal"
       frame={{
         title: 'Add a note',
+        icon: <ModalMark icon={NotebookPen} />,
         size: 'md',
         busy,
         onSubmit: save,
+        tools: (
+          <div className="note-day">
+            <button type="button" className="btn icon ghost" aria-label="The day before" onClick={() => move(-1)}>
+              <Chevron dir="left" />
+            </button>
+            <button type="button" className="note-day-label" aria-expanded={calendar} title={dayNote()} onClick={() => setCalendar((c) => !c)}>
+              <CalendarDays size={14} strokeWidth={1.75} aria-hidden="true" />
+              <b>{fmtDay(on, { weekday: true, year: on.slice(0, 4) !== today.slice(0, 4) })}</b>
+            </button>
+            <button type="button" className="btn icon ghost" aria-label="The day after" disabled={on >= today} onClick={() => move(1)}>
+              <Chevron dir="right" />
+            </button>
+          </div>
+        ),
+        extra: (
+          <div className="note-input">
+            <input
+              ref={input}
+              className="input"
+              value={text}
+              maxLength={MAX}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="What happened? A launch, a post, an outage…"
+              aria-label={`Note for ${fmtDay(on, { weekday: true })}`}
+              autoFocus
+            />
+            <span className="faint num" aria-hidden="true">
+              {MAX - text.length}
+            </span>
+          </div>
+        ),
         actions: (
-          <button type="submit" className="btn primary big" disabled={busy || !text.trim()}>
+          <button type="submit" className="btn primary" disabled={busy || !text.trim()}>
+            <Plus size={14} strokeWidth={2} aria-hidden="true" />
             {busy ? 'Saving…' : 'Add note'}
           </button>
         ),
@@ -129,19 +164,6 @@ export function NoteDialog({
           </div>
         )}
 
-        <div className="note-day">
-          <button type="button" className="btn icon ghost" aria-label="The day before" onClick={() => move(-1)}>
-            <Chevron dir="left" />
-          </button>
-          <button type="button" className="note-day-label" aria-expanded={calendar} onClick={() => setCalendar((c) => !c)}>
-            <b>{fmtDay(on, { weekday: true, year: on.slice(0, 4) !== today.slice(0, 4) })}</b>
-            <span className={bar ? 'faint num' : 'faint'}>{dayNote()}</span>
-          </button>
-          <button type="button" className="btn icon ghost" aria-label="The day after" disabled={on >= today} onClick={() => move(1)}>
-            <Chevron dir="right" />
-          </button>
-        </div>
-
         {calendar && (
           <DayCalendar
             value={on}
@@ -155,27 +177,17 @@ export function NoteDialog({
           />
         )}
 
-        <div className="note-input">
-          <input
-            ref={input}
-            className="input"
-            value={text}
-            maxLength={MAX}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="What happened? A launch, a post, an outage…"
-            aria-label={`Note for ${fmtDay(on, { weekday: true })}`}
-            autoFocus
-          />
-          <span className="faint num" aria-hidden="true">
-            {MAX - text.length}
-          </span>
-        </div>
-
+        <p className="note-visits faint">{dayNote()}</p>
         {here.length > 0 && (
           <ul className="note-list" aria-label="Notes already on this day">
             {here.map((n) => (
               <li key={n.id}>
-                <span>{n.text}</span>
+                {n.author && (
+                  <i className="note-by" title={n.author} aria-hidden="true">
+                    {n.author.slice(0, 1).toUpperCase()}
+                  </i>
+                )}
+                <span title={n.text}>{n.text}</span>
                 <button
                   type="button"
                   aria-label={`Remove note: ${n.text}`}
@@ -189,7 +201,7 @@ export function NoteDialog({
                       .catch((e: unknown) => fail(e))
                   }
                 >
-                  ×
+                  <Trash2 size={14} strokeWidth={1.75} aria-hidden="true" />
                 </button>
               </li>
             ))}

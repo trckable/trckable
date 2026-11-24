@@ -58,10 +58,10 @@ export function DataRequest({ site }: { site: Site }) {
     <section className="card" id="requests" style={{ gap: 12 }}>
       <div className="card-head">
         <h2>Answer a data request</h2>
-        <Info text="Someone has the right to ask what you hold about them and to ask for it to go. trckable keeps no IP address and no name, so a request is answered by visitor id — or by the email used at checkout, which is the one thing that connects a person to a visit." />
+        <Info text="Someone has the right to ask what you hold about them and to ask for it to go. trckable keeps no IP address and no name, so a request is answered by person id — or by the email used at checkout, which is the one thing that connects a person to a visit." />
       </div>
       <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>
-        trckable stores no IP addresses and no names: a visitor is a number from a salted hash. Find them here, hand over the file, or erase them.
+        trckable stores no IP addresses and no names: a person is a number from a salted hash. Find them here, hand over the file, or erase them.
       </p>
 
       <div className="request-find">
@@ -70,7 +70,7 @@ export function DataRequest({ site }: { site: Site }) {
               setBy('visitor')
               setFound(null)
             }}>
-            Visitor id
+            Person id
           </button>
           <button type="button" aria-pressed={by === 'email'} onClick={() => {
               setBy('email')
@@ -124,7 +124,7 @@ export function DataRequest({ site }: { site: Site }) {
             ) : null}
           </div>
           {found.found.events === 0 && found.payments.length === 0 ? (
-            <p className="faint" style={{ margin: 0, fontSize: 13 }}>Nothing is held for this visitor. There is nothing to export or erase.</p>
+            <p className="faint" style={{ margin: 0, fontSize: 13 }}>Nothing is held for this person. There is nothing to export or erase.</p>
           ) : (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <a className="btn primary" href={more.exportPersonURL(site.id, by, value.trim())} download>

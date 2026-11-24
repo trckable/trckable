@@ -1,10 +1,11 @@
 // "How do I track a signup?" — four answers. The first needs no code at all:
 // a page seen is a goal reached, counted from the pageviews trckable already
 // has, so it reads history too. The other three are one snippet each.
-import { Check, Code, FileCheck, MousePointerClick, Server, X } from 'lucide-react'
+import { Check, Code, FileCheck, MousePointerClick, Server, Target, X } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { Field } from '../components/Field'
 import { Modal } from '../kit/Modal'
+import { ModalMark } from '../kit/ModalMark'
 import { CodeBlock } from '../components/Code'
 import { OptionCards, type Option } from '../components/OptionCards'
 import { fail, type ContentGroup, type SiteConfig, type Site, more } from '../lib/apiMore'
@@ -36,7 +37,7 @@ export function AddGoals({ site, pages, goals, onClose, onChanged }: { site: Sit
   const signup = <SignupChoice site={site} goals={goals} onChanged={onChanged} />
   if (route === 'page') return <PageGoals site={site} pages={pages} onChanged={onChanged} onClose={onClose} cards={cards} signup={signup} />
   return (
-    <Modal label={copy.label} onClose={onClose} frame={{ title: copy.title, subtitle: copy.hint, size: 'md', cancel: false, actions: <button type="button" className="btn primary big" onClick={onClose}>{copy.done}</button> }}>
+    <Modal label={copy.label} onClose={onClose} frame={{ icon: <ModalMark icon={Target} />, title: copy.title, subtitle: copy.hint, size: 'md', cancel: false, actions: <button type="button" className="btn primary big" onClick={onClose}>{copy.done}</button> }}>
       {cards}
       <CodeBlock code={code[route]} />
       <span className="faint goal-hint">{copy.hints[route]}</span>
@@ -92,6 +93,7 @@ function PageGoals({ site, pages, onChanged, onClose, cards, signup }: { site: S
       onClose={onClose}
       frame={{
         title: copy.title,
+        icon: <ModalMark icon={Target} />,
         subtitle: copy.hint,
         size: 'md',
         cancel: copy.done,

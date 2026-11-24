@@ -15,11 +15,11 @@ describe('highlights', () => {
     ]
     const rows = highlightRows(list, usd)
     expect(rows.map((r) => r.text)).toEqual([
-      'AI assistants up 200% · 100 → 300 visitors',
-      'Social down 88% · 400 → 50 visitors',
-      'Email earns $0.60 a visitor, 2.4× the average',
+      'AI assistants up 200% · 100 → 300 people',
+      'Social down 88% · 400 → 50 people',
+      'Email earns $0.60 a person, 2.4× the average',
       '/pricing converts 1.0%, was 3.0%',
-      'New referrer: news.example sent 50 visitors',
+      'New referrer: news.example sent 50 people',
     ])
     expect(rows.map((r) => r.tone)).toEqual(['up', 'down', 'money', 'warn', 'new'])
     expect(rows.map((r) => [r.dim, r.value])).toEqual([['channel', 'AI'], ['channel', 'Social'], ['channel', 'Email'], ['entry_page', '/pricing'], ['referrer', 'news.example']])
@@ -30,7 +30,7 @@ describe('highlights', () => {
       { kind: 'source_move', dim: 'channel', value: 'Direct', now: 1414, was: 1, change: 1413 },
       { kind: 'source_move', dim: 'channel', value: 'Search', now: 1000, was: 50, change: 19 },
     ]
-    expect(highlightRows(list, usd).map((r) => r.text)).toEqual(['Direct up · 1 → 1,414 visitors', 'Search up more than 10x · 50 → 1,000 visitors'])
+    expect(highlightRows(list, usd).map((r) => r.text)).toEqual(['Direct up · 1 → 1,414 people', 'Search up more than 10x · 50 → 1,000 people'])
   })
 
   it('is empty when the server found nothing', () => {

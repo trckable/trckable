@@ -101,7 +101,7 @@ func EmailSamples(base string) []mailkit.Page {
 	}
 	prev := &query.Result{KPIs: query.KPIs{Visitors: 4000, Pageviews: 10800, BounceRate: 0.5, AvgSessionS: 120}}
 	link := base + "/" + domain + "?from=2026-10-05&to=2026-10-11&compare=previous"
-	weekly := alerts.Event{Kind: "weekly", Title: "Your week", Email: weeklyEmail(domain, from, from.AddDate(0, 0, 7), cur, prev, aiWeek{Visitors: 702}, "Busiest moment: Thu 18:45, 53 people online, mostly from Facebook.", link, weeklyMentions(weekMentionSamples(), base+"/"+domain+"/mentions"), "AI assistants named you in 9 of 30 answers (+3).")}
+	weekly := alerts.Event{Kind: "weekly", Title: "Your week", Email: weeklyEmail(domain, from, from.AddDate(0, 0, 7), cur, prev, aiWeek{People: 702}, "Busiest moment: Thu 18:45, 53 people online, mostly from Facebook.", link, weeklyMentions(weekMentionSamples(), base+"/"+domain+"/mentions"), "AI assistants named you in 9 of 30 answers (+3).", false)}
 	out = append(out, alert("weekly", weekly))
 
 	// A client's report in German, in the client's colour.

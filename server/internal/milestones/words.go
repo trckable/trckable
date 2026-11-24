@@ -2,11 +2,11 @@ package milestones
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/store/sqlite"
+	"github.com/trckable/trckable/server/internal/summary"
 )
 
 // Tongue is the words a milestone card says, in one language, and the way that language writes its numbers,
@@ -35,11 +35,11 @@ func (englishFmt) Day(t time.Time) string              { return t.Format("Jan 2,
 
 // English is the language of everything but a card asked for in another.
 var English = &Tongue{
-	Visitors:       "visitors",
+	Visitors:       "people",
 	Pageviews:      "pageviews",
 	FirstPageview:  "pageview",
 	Countries:      "countries",
-	Record:         "visitors · record day",
+	Record:         "people · record day",
 	Revenue:        "revenue",
 	RevenueHidden:  "Revenue",
 	RevenueReached: "Revenue milestone reached",
@@ -110,32 +110,15 @@ func SayIn(t *Tongue, m sqlite.Milestone, showAmount bool) Words {
 	return w
 }
 
-// Line is the milestone in one line: "10,000 visitors", "First sale".
+// Line is the milestone in one line: "10,000 people", "First sale".
 func (w Words) Line() string { return strings.TrimSpace(w.Big + " " + w.Label) }
 
 // Number writes 10000 as 10,000.
-func Number(v float64) string {
-	s := strconv.FormatInt(int64(v), 10)
-	var b strings.Builder
-	for i, c := range s {
-		if i > 0 && (len(s)-i)%3 == 0 {
-			b.WriteByte(',')
-		}
-		b.WriteRune(c)
-	}
-	return b.String()
-}
-
-var symbols = map[string]string{"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥", "INR": "₹", "AUD": "A$", "CAD": "C$"}
+func Number(v float64) string { return summary.For("en").Number(int64(v)) }
 
 // Amount writes an amount of a currency the way a card shows it: $1,000,
-// or 1,000 CHF where the currency has no short sign.
-func Amount(v float64, currency string) string {
-	if s, ok := symbols[strings.ToUpper(currency)]; ok {
-		return s + Number(v)
-	}
-	return strings.TrimSpace(Number(v) + " " + strings.ToUpper(currency))
-}
+// or 1,000 XYZ where the currency has no short sign.
+func Amount(v float64, currency string) string { return summary.For("en").Money(int64(v), currency, 0) }
 
 func longDay(t *Tongue, day string) string {
 	d, err := time.Parse(time.DateOnly, day)

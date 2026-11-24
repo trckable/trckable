@@ -1,0 +1,1 @@
+The weekly email and text, scheduled reports, share cards and widgets now write their numbers, money and changes through one set of words, so the same week reads the same everywhere: a count is grouped the way its language does, an amount is rounded to the nearest whole unit, and a change is up, down, about the same or new by one rule.

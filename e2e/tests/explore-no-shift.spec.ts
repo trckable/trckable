@@ -49,11 +49,13 @@ async function walk(f: Page | Frame, host: () => Promise<number> | number) {
     await click(f, id)
     const now = await rects(f)
     for (const one of ['#xp', '.xrail', '#xpBody']) await expect(f.locator(one), `${one} after ${id}`).toHaveCount(1)
+    // A table further down its section's page is scrolled to: things then stand higher on the screen, which is the scroll, not a shift.
+    const scrolled = await f.evaluate(() => scrollY > 0)
     for (const [key, b] of Object.entries(base)) {
       if (!b) continue
       const n = now[key]
       expect(n, `${key} after ${id}`).not.toBeNull()
-      for (const k of key === 'page' ? (['x', 'w'] as const) : key === '.xrail' ? (['x', 'w'] as const) : (['x', 'w', 'y'] as const)) expect(Math.abs(n![k] - b[k]), `${key}.${k} after ${id}`).toBeLessThanOrEqual(0.5)
+      for (const k of key === 'page' ? (['x', 'w'] as const) : key === '.xrail' ? (['x', 'w'] as const) : (scrolled ? (['x', 'w'] as const) : (['x', 'w', 'y'] as const))) expect(Math.abs(n![k] - b[k]), `${key}.${k} after ${id}`).toBeLessThanOrEqual(0.5)
     }
     expect(await host(), `the outer page's scroll after ${id}`).toBe(y)
   }

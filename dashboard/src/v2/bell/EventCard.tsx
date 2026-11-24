@@ -32,12 +32,12 @@ function seeOf(n: Notice): string {
 /** `onSee` leads on to where the event lives (the row's own page); the card closes with it. */
 export default function EventCard({ n, site, onSee, onClose }: { n: Notice; site: Site; onSee: () => void; onClose: () => void }) {
   return (
-    <Modal label={t.label} onClose={onClose} className="ev-card" keepSize={false} focus="box">
+    <Modal label={t.label} onClose={onClose} className="ev-card" focus="box">
       <button type="button" className="ev-x" aria-label={t.close} onClick={onClose}>
         <X size={16} strokeWidth={2} aria-hidden="true" />
       </button>
       <h2 className="ev-head">
-        {(n.kind === 'signup' || n.kind === 'goal') && <XIco name="results" className="ev-tile" />}
+        {(n.kind === 'signup' || n.kind === 'goal') && <XIco name="goals" className="ev-tile" />}
         {/* An outage's title already carries its time, and the body its start: no second time in the head. */}
         {[n.title, n.title.includes(n.site) ? '' : n.site, n.kind === 'down' || n.kind === 'up' ? '' : whenOf(n.exact ?? n.at, undefined, site.timezone)].filter(Boolean).join(' · ')}
       </h2>

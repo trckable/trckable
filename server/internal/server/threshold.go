@@ -118,7 +118,7 @@ func paidSince(ctx context.Context, ctl *sqlite.Store, info sqlite.SiteInfo, fro
 
 // The words of a threshold alert: "10 sales today", "$5,000 in revenue this week".
 var (
-	metricWords = map[string]string{alerts.MetricSales: "sales", alerts.MetricRevenue: "in revenue", alerts.MetricVisitors: "visitors"}
+	metricWords = map[string]string{alerts.MetricSales: "sales", alerts.MetricRevenue: "in revenue", alerts.MetricVisitors: "people"}
 	periodWords = map[string]string{alerts.PeriodDay: "today", alerts.PeriodWeek: "this week", alerts.PeriodMonth: "this month", alerts.PeriodAll: "so far"}
 )
 

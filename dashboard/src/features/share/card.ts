@@ -1,128 +1,144 @@
+import { sectionNamed } from '../../v2/explore/sections'
 import { lang } from '../../i18n/lang'
 import formats from './formats.json'
 
-// What the dialog asks the server for: a card is one address, so the preview
-// and the download are the same picture.
-export type Template = 'overview' | 'numbers' | 'grid' | 'leaderboard' | 'toppage' | 'sources' | 'topsource' | 'places' | 'topplace' | 'devices' | 'browsers' | 'changed' | 'search' | 'ai' | 'goals' | 'sales' | 'milestone'
-/** A group of pictures in the gallery. */
-export type Topic = 'overview' | 'changed' | 'sources' | 'pages' | 'places' | 'tech' | 'search' | 'ai' | 'goals' | 'sales' | 'milestone'
-/** What a picture needs of the site; without it the picture is shown disabled, with the reason. */
-export type Need = 'revenue' | 'data' | 'sources' | 'places' | 'tech' | 'changed' | 'search' | 'ai' | 'goals' | 'milestone'
-export type Period = '24h' | '7d' | '30d' | 'all' | 'custom'
-export type Metric = 'visitors' | 'pageviews' | 'engaged' | 'revenue'
-/** The small numbers under the chart: the ones that are also a metric are not offered while it is the big number. */
-export type Stat = 'engaged' | 'avgtime' | 'pageviews' | 'visitors' | 'bounce' | 'country' | 'page' | 'source' | 'revenue'
-export type Theme = 'dark' | 'light'
-/** The picture's size: the link preview (1.91:1), square, story (9:16) or wide (16:9). */
-/** The background of the picture. */
-export type Bg = 'gradient' | 'solid' | 'grid'
-export const BACKGROUNDS: Bg[] = ['gradient', 'solid', 'grid']
-export type Shape = 'link' | 'square' | 'story' | 'wide'
+// What the studio asks the server for: a card is one address, so the preview, the download and the picture a
+// shared link carries are the same card.
 
-/** The sizes, from the one list the server draws by (formats.json, kept equal to cards.Formats). */
+/** The picture's size, by id: the sizes are the one list the server draws by (formats.json, kept equal to cards.Formats). */
+export type Shape = 'link' | 'square' | 'story' | 'wide' | 'post' | 'portrait'
 export const FORMATS = formats as { id: Shape; w: number; h: number }[]
 export const formatOf = (shape: Shape) => FORMATS.find((f) => f.id === shape) ?? FORMATS[0]
 
-/** The gallery: every picture, in its topic. A topic's pictures come first-to-last as listed. */
-export type Picture = { id: Template; topic: Topic; need?: Need }
-export const PICTURES: Picture[] = [
-  { id: 'overview', topic: 'overview', need: 'data' },
-  { id: 'numbers', topic: 'overview', need: 'data' },
-  { id: 'grid', topic: 'overview', need: 'data' },
-  { id: 'changed', topic: 'changed', need: 'changed' },
-  { id: 'sources', topic: 'sources', need: 'sources' },
-  { id: 'topsource', topic: 'sources', need: 'sources' },
-  { id: 'leaderboard', topic: 'pages', need: 'data' },
-  { id: 'toppage', topic: 'pages', need: 'data' },
-  { id: 'places', topic: 'places', need: 'places' },
-  { id: 'topplace', topic: 'places', need: 'places' },
-  { id: 'devices', topic: 'tech', need: 'tech' },
-  { id: 'browsers', topic: 'tech', need: 'tech' },
-  { id: 'search', topic: 'search', need: 'search' },
-  { id: 'ai', topic: 'ai', need: 'ai' },
-  { id: 'goals', topic: 'goals', need: 'goals' },
-  { id: 'sales', topic: 'sales', need: 'revenue' },
-  { id: 'milestone', topic: 'milestone', need: 'milestone' },
+/** The cards the studio shows: each is a card template of the server. */
+export type CardId = 'overview' | 'changed' | 'bestday' | 'milestone' | 'sources' | 'search' | 'toppage' | 'leaderboard'
+/** What a card needs of the site; without it the card is not offered. */
+export type Need = 'data' | 'changed' | 'bestday' | 'sources' | 'search'
+export type Group = 'people' | 'milestones' | 'sources' | 'pages'
+export type Period = '7d' | '30d' | '12mo' | 'all' | 'custom'
+export const PERIODS: Period[] = ['7d', '30d', '12mo', 'all', 'custom']
+
+/** A card, its group, what it needs, and the sections of a shared link it is drawn from (none when the headline numbers do). */
+export type Card = { id: CardId; group: Group; need: Need | null; sections: string[] }
+const ALL_SECTIONS = ['pages', 'sources', 'places', 'tech']
+export const CARDS: Card[] = [
+  { id: 'overview', group: 'people', need: 'data', sections: [] },
+  { id: 'changed', group: 'people', need: 'changed', sections: ALL_SECTIONS },
+  { id: 'bestday', group: 'people', need: 'bestday', sections: [] },
+  { id: 'milestone', group: 'milestones', need: null, sections: [] },
+  { id: 'sources', group: 'sources', need: 'sources', sections: ['sources'] },
+  { id: 'search', group: 'sources', need: 'search', sections: ['sources'] },
+  { id: 'toppage', group: 'pages', need: 'data', sections: ['pages'] },
+  { id: 'leaderboard', group: 'pages', need: 'data', sections: ['pages'] },
 ]
-export const TOPICS: Topic[] = ['overview', 'changed', 'sources', 'pages', 'places', 'tech', 'search', 'ai', 'goals', 'sales', 'milestone']
-export const picturesOf = (t: Topic) => PICTURES.filter((p) => p.topic === t)
-/** What the picture lacks on this site, if anything (it is then disabled, saying why). */
-export const missing = (p: Picture, has: Record<Need, boolean>): Need | null => (p.need && !has[p.need] ? p.need : null)
-/** Whether the Numbers section (the big number and the small stats) applies to the picture. */
-export const hasNumbers = (t: Template) => t === 'overview' || t === 'numbers'
-export const METRICS: Metric[] = ['visitors', 'pageviews', 'engaged', 'revenue']
-export const STATS: Stat[] = ['engaged', 'avgtime', 'pageviews', 'visitors', 'bounce', 'country', 'page', 'source', 'revenue']
-export const MAX_STATS = 3
-export const DEFAULT_STATS: Stat[] = ['engaged', 'avgtime', 'country']
-export const PERIODS: Period[] = ['24h', '7d', '30d', 'all', 'custom']
-/** The swatches: the site's own colour first, when it has one. */
-export const ACCENTS = ['#b8ff3c', '#4f8cff', '#ff5ca8', '#ffb547', '#2dd4bf']
+export const GROUPS: Group[] = ['people', 'milestones', 'sources', 'pages']
+/** The sections a link must show, and no more, to carry this card: a milestone of searches or countries is drawn from its own section. */
+export function sectionsOf(l: Pick<Look, 'card' | 'ms'>): string[] {
+  if (l.card !== 'milestone') return cardOf(l.card).sections
+  const kind = l.ms?.split('~')[0]
+  if (kind === 'search_clicks') return ['sources']
+  return kind === 'countries' ? ['places'] : []
+}
 
-export type Look = { template: Template; shape: Shape; period: Period; /** A custom range's first and last day. */ range?: { from: string; to: string }; /** The change against the period just before, in a pill. Off by default; nothing before all time. */ compare: boolean; metric: Metric; stats: Stat[]; theme: Theme; accent: string; /** The site's hide-branding choice, only where it can change the picture: it makes the address new when it flips. */ hideBrand?: boolean; /** The background; the gradient when missing. */ bg?: Bg; /** Leave the period off the picture. */ hideDate?: boolean; /** Leave the site's name off the picture. */ hideName?: boolean }
+/**
+ * The period a link is fixed to for a card, as the server keeps it: the card's own, none for a card with no span of time.
+ * A range is `from..to`; all time is kept as its first day (`since:`), or sent as `all` for the server to read the day
+ * when it is not known yet.
+ */
+export function linkPeriod(l: Pick<Look, 'card' | 'period' | 'from' | 'to'>, first?: string): string {
+  if (!hasPeriod(l.card)) return ''
+  if (l.period === 'custom') return l.from && l.to ? `${l.from}..${l.to}` : ''
+  if (l.period === 'all') return first ? `since:${first}` : 'all'
+  return l.period
+}
 
-/** The numbers in words, and the post's text. */
-export type CardWords = { metric: Metric; big: string; label: string; foot: string; revenue: boolean; has_data: boolean; has_sources: boolean; has_places: boolean; has_tech: boolean; has_changed: boolean; has_search: boolean; has_ai: boolean; has_goals: boolean; has_milestone: boolean; post: string }
+export const cardOf = (id: CardId) => CARDS.find((c) => c.id === id) ?? CARDS[0]
+/** A milestone has no span of time; every other card is drawn for a period. */
+export const hasPeriod = (id: CardId) => id !== 'milestone'
+/** Only the people card has a chart to switch off. */
+export const hasChart = (id: CardId) => id === 'overview'
 
-/** What the site has to show, by what a picture needs. */
-export const hasOf = (w: CardWords | null): Record<Need, boolean> => ({ revenue: w?.revenue ?? false, data: w?.has_data ?? true, sources: w?.has_sources ?? true, places: w?.has_places ?? true, tech: w?.has_tech ?? true, changed: w?.has_changed ?? true, search: w?.has_search ?? true, ai: w?.has_ai ?? true, goals: w?.has_goals ?? true, milestone: w?.has_milestone ?? true })
+/** The cards the site can make, by group, in the order of the groups: a card needs what it needs, the milestone card needs a milestone reached, and a group with no card is left out. */
+export const offered = (has: Record<Need, boolean>, reached: number): { group: Group; cards: CardId[] }[] =>
+  GROUPS.map((group) => ({ group, cards: CARDS.filter((c) => c.group === group && (c.need ? has[c.need] : reached > 0)).map((c) => c.id) })).filter((g) => g.cards.length > 0)
+
+/** The backgrounds: each is a theme and the server's background. Ink and Night grid, Glow and Ocean are dark cards; Paper and Sunset light ones. */
+export type StyleId = 'ink' | 'paper' | 'grid' | 'glow' | 'sunset' | 'ocean'
+export const STYLES: { id: StyleId; theme: 'dark' | 'light'; bg: 'solid' | 'grid' | 'gradient' | 'sunset' | 'ocean' }[] = [
+  { id: 'ink', theme: 'dark', bg: 'solid' },
+  { id: 'paper', theme: 'light', bg: 'solid' },
+  { id: 'grid', theme: 'dark', bg: 'grid' },
+  { id: 'glow', theme: 'dark', bg: 'gradient' },
+  { id: 'sunset', theme: 'light', bg: 'sunset' },
+  { id: 'ocean', theme: 'dark', bg: 'ocean' },
+]
+export const ACCENTS = ['#b8ff3c', '#4f8cff', '#ff5ca8', '#ffb547', '#2dd4bf', '#c792ff']
+
+/** What a person picks: the card, its period and size, and the style (which is kept for the site). */
+export type Look = { card: CardId; /** The milestone, as kind~step. */ ms?: string; shape: Shape; period: Period; /** The days of a custom range, from and to. */ from?: string; to?: string; style: StyleId; accent: string; name: boolean; date: boolean; chart: boolean; /** The site's hide-branding choice, only where it can change the picture: it makes the address new when it flips. */ hideBrand?: boolean }
+export type Style = Pick<Look, 'style' | 'accent' | 'name' | 'date' | 'chart'>
+export const DEFAULT_STYLE: Style = { style: 'ink', accent: ACCENTS[0], name: true, date: true, chart: true }
+
+/** What a card says, in its own words: the facts a post is written from (the server's, never recalculated). */
+export type Fact = { name: string; value: string }
+export type Facts = { template: string; domain: string; big: string; label: string; /** The period's dates, or the day of a best day or milestone. */ foot: string; change?: string; dir?: number; vs?: string; rows?: Fact[]; stats?: Fact[]; /** Nothing behind the card: the post is the server's own line. */ empty?: boolean }
+
+/** The numbers in words, and the post's text; the has_ flags say which cards the site can make. */
+export type CardWords = { /** The site's first day with data, the earliest a period can start. */ first_day?: string; has_data: boolean; has_sources: boolean; has_changed: boolean; has_search: boolean; has_bestday: boolean; has_milestone: boolean; post: string; facts?: Facts }
+
+/** What the site has to show, by what a card needs. */
+export const hasOf = (w: CardWords | null): Record<Need, boolean> => ({ data: w?.has_data ?? true, sources: w?.has_sources ?? true, changed: w?.has_changed ?? true, search: w?.has_search ?? true, bestday: w?.has_bestday ?? true })
+
+/** The choices that make the picture, as the card endpoint and a shared link's address read them. */
+export function pictureParams(l: Look): URLSearchParams {
+  const style = STYLES.find((s) => s.id === l.style) ?? STYLES[0]
+  const p = new URLSearchParams({ t: l.card === 'overview' && !l.chart ? 'numbers' : l.card })
+  p.set('period', l.period)
+  if (l.period === 'custom' && l.from && l.to) {
+    p.set('from', l.from)
+    p.set('to', l.to)
+  }
+  if (l.ms && l.card === 'milestone') p.set('ms', l.ms)
+  p.set('shape', l.shape)
+  p.set('theme', style.theme)
+  p.set('bg', style.bg)
+  p.set('accent', l.accent)
+  if (!l.date) p.set('date', '0')
+  if (!l.name) p.set('name', '0')
+  if (lang !== 'en') p.set('lang', lang) // the words, numbers and dates of the card and its post are the page's language
+  return p
+}
 
 export function cardUrl(site: string, l: Look, format: 'png' | 'json' | 'thumb' = 'png'): string {
-  const p = new URLSearchParams({ period: l.period, metric: l.metric })
-  if (lang !== 'en') p.set('lang', lang) // the words, numbers and dates of the picture and its post are the page's language
-  if (l.period === 'custom' && l.range) {
-    p.set('from', l.range.from)
-    p.set('to', l.range.to)
-  }
+  const p = pictureParams(l)
   if (format === 'json') {
+    // The post's text says what the card says: its words, not its look.
+    for (const k of ['shape', 'theme', 'bg', 'accent', 'date', 'name']) p.delete(k)
     p.set('format', 'json')
-    p.set('t', l.template) // the post's text says what its picture says
-  }
-  else {
-    if (format === 'thumb') p.set('thumb', '1')
-    if (comparing(l)) p.set('compare', '1')
-    p.set('t', l.template)
-    if (l.shape !== 'link') p.set('shape', l.shape)
-    p.set('theme', l.theme)
-    p.set('accent', l.accent)
-    if (l.bg && l.bg !== 'gradient') p.set('bg', l.bg)
-    if (l.hideDate) p.set('date', '0')
-    if (l.hideName) p.set('name', '0')
-    p.set('stats', l.stats.join(','))
+    p.set('compare', '1') // the people card says its change against the period before
+  } else {
+    p.set('metric', 'visitors')
+    if (format === 'thumb') {
+      p.delete('shape') // the strip's pictures are the link preview's
+      p.set('thumb', '1')
+    }
     if (l.hideBrand !== undefined) p.set('brand', l.hideBrand ? '0' : '1')
   }
   return `/api/v1/sites/${encodeURIComponent(site)}/card?${p}`
 }
 
-/** Whether the picture carries a comparison: asked for, and there is a period before (not for all time). */
-export const comparing = (l: Pick<Look, 'compare' | 'period'>) => l.compare && l.period !== 'all'
+/** The gallery topic an Explore section shares; the sections with no card have none. */
+export type Topic = 'overview' | 'changed' | 'sources' | 'pages' | 'places' | 'tech' | 'search' | 'ai' | 'goals' | 'sales' | 'milestone'
+const SECTION_TOPIC: Record<string, Topic> = { changed: 'changed', overview: 'overview', pages: 'pages', sources: 'sources', audience: 'places', goals: 'goals', web: 'ai' }
+/** An old section id (search, places, tech, results, sales...) is read as the section it became. */
+export const topicOfSection = (section: string): Topic | undefined => SECTION_TOPIC[sectionNamed(section) ?? section]
 
-/** Whether the dialog gives the picture or the post's text. */
-export type Mode = 'picture' | 'text'
+/** The card a topic opens the studio on: the topics with no card of their own open on the people card. */
+const TOPIC_CARD: Partial<Record<Topic, CardId>> = { changed: 'changed', sources: 'sources', pages: 'toppage', search: 'search', milestone: 'milestone' }
+export const cardOfTopic = (t?: Topic): CardId => (t && TOPIC_CARD[t]) || 'overview'
 
-/** The gallery topic an Explore section shares; the sections with no picture have none. */
-const SECTION_TOPIC: Record<string, Topic> = { changed: 'changed', overview: 'overview', pages: 'pages', sources: 'sources', search: 'search', places: 'places', tech: 'tech', results: 'goals', sales: 'sales', ai: 'ai' }
-export const topicOfSection = (section: string): Topic | undefined => SECTION_TOPIC[section]
-
-/** The card's period for the page's: a day is the last 24 hours, a week or a month is itself, anything longer is a month. */
-const PAGE_PERIOD = new Map<string, Period>([['today', '24h'], ['yesterday', '24h'], ['7d', '7d']])
+/** The card's period for the page's: a week or a day is a week, anything longer is a month. */
+const PAGE_PERIOD = new Map<string, Period>([['today', '7d'], ['yesterday', '7d'], ['7d', '7d']])
 export const periodOf = (page?: string): Period => PAGE_PERIOD.get(page ?? '') ?? '30d'
 
-export const fileName = (domain: string, l: Look) => `trckable-${domain}-${l.template}${l.shape === 'link' ? '' : `-${l.shape}`}-${l.period === 'custom' && l.range ? `${l.range.from}_${l.range.to}` : l.period}.png`
-
-/** The accent on the card: a swatch, or the theme's own when none fits the light card. */
-export const accentsFor = (color?: string) => (color && /^#[0-9a-f]{6}$/i.test(color) && !ACCENTS.includes(color.toLowerCase()) ? [color.toLowerCase(), ...ACCENTS] : ACCENTS)
-
-/** The stats that may be picked beside this big number: not itself, and revenue only where the site has it. */
-export const statsFor = (metric: Metric, revenue: boolean): Stat[] => STATS.filter((s) => s !== metric && (s !== 'revenue' || revenue))
-
-/** A stat picked or put away: at most three (a fourth pushes out the oldest), never none. */
-export function toggleStat(stats: Stat[], s: Stat): Stat[] {
-  if (stats.includes(s)) return stats.length > 1 ? stats.filter((x) => x !== s) : stats
-  return [...stats, s].slice(-MAX_STATS)
-}
-
-/** The stats once `metric` is the big number: it is not shown twice; with none left, the defaults. */
-export function statsWith(stats: Stat[], metric: Metric): Stat[] {
-  const left = stats.filter((s) => s !== metric)
-  return left.length ? left : DEFAULT_STATS.filter((s) => s !== metric)
-}
+export const fileName = (domain: string, l: Look) => `trckable-${domain}-${l.card}${l.ms ? `-${l.ms.replace('~', '-')}` : ''}-${l.shape}${hasPeriod(l.card) ? `-${l.period === 'custom' ? `${l.from}_${l.to}` : l.period}` : ''}.png`

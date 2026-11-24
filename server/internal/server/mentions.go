@@ -786,7 +786,7 @@ func mentionEmail(domain, title, where string, m sqlite.Mention, link string) *m
 	}
 	switch {
 	case m.Visitors > 0:
-		e.Blocks = append(e.Blocks, mailkit.Hero{Tone: mailkit.Celebrate, Badge: front, Big: mailkit.Number(m.Visitors), Unit: "visitors", Line: "came from it so far"})
+		e.Blocks = append(e.Blocks, mailkit.Hero{Tone: mailkit.Celebrate, Badge: front, Big: mailkit.Number(m.Visitors), Unit: "people", Line: "came from it so far"})
 	case front != nil:
 		e.Blocks = append(e.Blocks, *front)
 	}

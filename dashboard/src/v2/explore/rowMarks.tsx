@@ -1,5 +1,5 @@
-// The small picture before a row of Tech, Sources and Referrers: a device's icon, a browser's, a system's or a site's mark (drawn here, so nothing is fetched).
-import { BadgeDollarSign, Globe, Link, Mail, Monitor, MousePointer, Search, Smartphone, Sparkles, Tablet, TabletSmartphone, Users, type LucideIcon } from 'lucide-react'
+// The small picture before a row of Tech and Sources: a device's icon, a browser's, a system's or a site's mark (drawn here, so nothing is fetched).
+import { Globe, Monitor, Smartphone, Tablet, TabletSmartphone, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { brandOf } from '../../lib/brandIcons'
 import { pageIcon } from './pageIcon'
@@ -135,8 +135,6 @@ const LOGOS: [RegExp, () => ReactNode][] = [
   ],
 ]
 
-const CHANNELS: Record<string, LucideIcon> = { Direct: MousePointer, Search, Social: Users, AI: Sparkles, Email: Mail, Referral: Link, Paid: BadgeDollarSign }
-
 /** A referring site by its mark from lib/brandIcons (the one the Quality table draws), a globe when none is known. */
 function siteMark(host: string): ReactNode {
   const brand = brandOf(host)
@@ -163,10 +161,6 @@ export function rowMark(tab: Tab, r: Row): ReactNode {
   }
   if (tab === 'pages' || tab === 'entries' || tab === 'exits' || tab === 'groups') return plain(pageIcon(r.val))
   if (tab === 'browsers' || tab === 'bversion') return logoOf(r.name) ?? plain(Globe)
-  if (tab === 'sources') {
-    const c = CHANNELS[r.val]
-    return c ? plain(c) : null
-  }
-  if (tab === 'referrers') return siteMark(r.val)
+  if (tab === 'sources') return siteMark(r.val)
   return null
 }

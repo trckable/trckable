@@ -1,0 +1,1 @@
+Goals & sales is four pages (Goals, Funnels, Sales, Coming back), and each goal has its own page with each time it happened; the bell tells a day's goals as one card that says which stand out, and you can choose to hear of a goal only when it stands out.

@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 8px;
   border-bottom: 1px solid var(--grid);
   font-size: 14px;
@@ -14,20 +14,20 @@
   opacity: 0.6;
 }
 .access-sites {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
   margin: 0;
   padding: 0;
   border: 0;
-  max-height: min(280px, 40dvh);
-  overflow-y: auto;
 }
 .access-site {
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 36px;
+  min-height: 40px;
   padding: 0 8px;
   border-radius: 8px;
   font-size: 14px;
@@ -42,4 +42,28 @@
 .access-site .faint {
   margin-left: auto;
   font-size: 12px;
+}
+
+.access-all-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.access-all-label svg {
+  color: var(--accent);
+}
+.access-name,
+.access-domain {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.access-domain {
+  flex: 0 1 45%;
+  text-align: end;
+}
+.access-count {
+  margin-inline-end: auto;
+  font-size: 12.5px;
 }

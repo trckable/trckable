@@ -43,7 +43,7 @@ describe('the chart’s minutes', () => {
 })
 
 describe('who is on the site', () => {
-  it('puts newer stream visits on top, a known visitor moving up', () => {
+  it('puts newer stream visits on top, a known person moving up', () => {
     const recent = [here(T0, T0 + 5000, { visitor: 'a', path: '/a' }), here(T0 - 1000, T0, { visitor: 'b', path: '/b' })]
     const at = T0 + 10_000
     // Newest first, like useLive's list.
@@ -57,7 +57,7 @@ describe('who is on the site', () => {
     expect(rows[1].last).toBe(T0 + 20_000)
   })
 
-  it('without visitor ids, every visit is its own row', () => {
+  it('without person ids, every visit is its own row', () => {
     const rows = feedOf([here(T0, T0, { path: '/x' })], [pv(T0 + 20_000, { path: '/x' })], T0 + 1, T0 + 30_000)
     expect(rows).toHaveLength(2)
     expect(new Set(rows.map((r) => r.key)).size).toBe(2)

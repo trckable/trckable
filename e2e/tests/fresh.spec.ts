@@ -32,7 +32,7 @@ test('before the first visit: the setup screen, Not installed, a locked ring, no
   await expect(page.locator('#xp')).toHaveCount(0)
   await expect(page.locator('nav.tabbar')).toHaveCount(0)
   // No empty numbers on the page.
-  await expect(page.locator('.xchg-say, .sumrow')).toHaveCount(0)
+  await expect(page.locator('.xbr-say, .sumrow')).toHaveCount(0)
   // The ring: Install is the step to do, the ones after it wait.
   await page.locator('.ringb').click()
   await expect(page.locator('.setupmenu [data-step="verified"]')).toContainText('Install', { timeout: 15_000 })

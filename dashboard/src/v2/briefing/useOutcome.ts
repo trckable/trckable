@@ -72,12 +72,12 @@ export function useOutcome(o: Ask): OutcomeRead {
 }
 
 /** The chart's bars and faces from what was read. None while the bars are being read, and none when nothing was sold or signed up. */
-export function outcomeChart(r: OutcomeRead, labels: string[], money: { currency: string; exponent: number; write: (minor: number) => string } | null): Pick<ChartIn, 'bars' | 'faces'> {
+export function outcomeChart(r: OutcomeRead, labels: string[], money: { currency: string; exponent: number; write: (minor: number) => string } | null, once = false): Pick<ChartIn, 'bars' | 'faces'> {
   if (!r.vals || (r.kind !== 'views' && !r.vals.some((v) => v > 0))) return {}
   const label = { revenue: copy.outcomeRevenue, signups: copy.outcomeSignups, views: copy.outcomeViews }[r.kind]
   const faceLabel = r.kind === 'revenue' ? copy.outcomePayments : ''
   const axis = r.kind === 'revenue' && money ? (n: number) => fmtMoneyAxis(n, money.currency, money.exponent) : fmtCompact
   const read = r.kind === 'revenue' && money ? money.write : (n: number) => `${fmtInt(n)} ${label.toLowerCase()}`
   const faces = r.kind === 'views' ? [] : facesOf(labels, r.marks)
-  return { bars: { kind: r.kind, vals: r.vals, label, faceLabel, people: copy.outcomePeople, axis, read }, faces }
+  return { bars: { kind: r.kind, vals: r.vals, label, faceLabel, people: once ? copy.outcomePeopleOnce : copy.outcomePeople, axis, read }, faces }
 }

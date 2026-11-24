@@ -35,17 +35,18 @@ export function usePanelState(ask: Ask) {
   const act = {
     section: (sec: Section) => {
       const to: Tab = TABS[sec].includes(tab) ? tab : TABS[sec][0]
-      setView({ xp: to, xf: filters })
+      setView({ xp: to, xf: filters, xg: undefined })
       set({ n: FIRST, menu: null, manage: false })
     },
     tab: (to: Tab) => {
-      setView({ xp: to, xf: filters })
+      setView({ xp: to, xf: filters, xg: undefined })
       set({ n: FIRST, menu: null })
     },
     goWith: (to: Tab, dim: string, value: string) => {
       setView({ xp: to, xf: [...without(filters, dim), { dim, value }] })
       set({ n: FIRST, menu: null })
     },
+    source: (to: string | null) => setView({ xs: to ?? undefined }),
     pick: (dim: string, value: string) => narrow(toggled(filters, dim, value)),
     pickAny: (dim: string, values: string[]) => narrow(toggledAny(filters, dim, values)),
     remove: (dim: string) => narrow(without(filters, dim)),

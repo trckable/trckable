@@ -1,15 +1,15 @@
-// Live's first card under the half hour: today's visitors, and where they are, as a bar list of the pages or of the
+// Live's first card under the half hour: where today's people are, as a bar list of the pages or of the
 // countries behind one small switch.
 import { useState, type ReactNode } from 'react'
-import { countryName, fmtInt, weekdayName } from '../../lib/format'
-import { todayIn } from '../../lib/dates'
+import { countryName } from '../../lib/format'
 import { copy } from './copy'
 import { CardSkeleton } from './CardSkeleton'
-import { usualLine, type Lists } from './liveModel'
+import type { Lists } from './liveModel'
 import type { LiveNow } from '../../features/live/api'
 import { Flag } from '../ui/Flag'
 import { deviceLabel, type DeviceKey } from '../../lib/deviceName'
 import { logoOf } from '../explore/rowMarks'
+import { appOf } from '../../features/apps/copy'
 
 type Mode = 'pages' | 'countries' | 'devices'
 
@@ -17,8 +17,6 @@ interface Props {
   today: LiveNow['today']
   /** undefined while the day's own lists are read. */
   lists?: Lists
-  /** The site's time zone: the weekday "usual" is told for. */
-  timezone: string
 }
 
 interface Bar {
@@ -35,13 +33,17 @@ const MARKS: Partial<Record<DeviceKey, string>> = { iphone: 'ios', ipad: 'ios', 
 
 function barsOf(lists: Lists, mode: Mode): Bar[] {
   if (mode === 'pages') return lists.pages.map((p) => ({ key: p.label, label: p.label, n: p.n, mono: true }))
-  if (mode === 'devices') return lists.devices.map((d) => ({ key: d.key, label: deviceLabel(d.key), n: d.n, mono: false, mark: logoOf(MARKS[d.key] ?? '') }))
+  if (mode === 'devices')
+    return lists.devices.map((d) => {
+      const [device, app] = d.key.split(':') as [DeviceKey, string?]
+      const name = deviceLabel(device)
+      return { key: d.key, label: app ? appOf(name) : name, n: d.n, mono: false, mark: logoOf(MARKS[device] ?? '') }
+    })
   return lists.countries.map((c) => ({ key: c.key, label: c.label || countryName(c.key), n: c.n, mono: false, flag: c.key }))
 }
 
-export function AnalyticsCard({ today, lists, timezone }: Props) {
+export function AnalyticsCard({ today, lists }: Props) {
   const [mode, setMode] = useState<Mode>('pages')
-  const line = today ? usualLine(today.visitors, today.before, today.compare) : null
   const rows = lists ? barsOf(lists, mode) : []
   const max = Math.max(1, ...rows.map((r) => r.n))
   return (
@@ -57,23 +59,6 @@ export function AnalyticsCard({ today, lists, timezone }: Props) {
         </div>
       </div>
       <div className="pb">
-        {today && today.visitors > 0 && (
-          <div className="lbig lhero">
-            {fmtInt(today.visitors)}
-            <small>{copy.visitors}</small>
-          </div>
-        )}
-        {today && today.visitors > 0 && line && (
-          <p className="lusual" data-tone={line.tone}>
-            {line.tone === 'flat' ? (
-              copy.aboutUsual
-            ) : (
-              <>
-                <b>{`${line.tone === 'up' ? '↑' : '↓'} ${line.pct}%`}</b> {(line.tone === 'up' ? copy.aboveDay : copy.belowDay)(weekdayName(todayIn(timezone)))}
-              </>
-            )}
-          </p>
-        )}
         {!lists && <CardSkeleton kind="rows" />}
         {lists && !(today && today.visitors > 0) && rows.length === 0 && <p className="mk-quiet">{copy.noneToday}</p>}
         <div className="lbars">

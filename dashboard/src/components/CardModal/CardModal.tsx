@@ -26,7 +26,7 @@ export interface CardModalProps {
 
 export function CardModal({ label, kind, when, title, onClose, children, actions }: CardModalProps) {
   return (
-    <Modal label={label} onClose={onClose} className="card-modal" keepSize={false} focus="box">
+    <Modal label={label} onClose={onClose} className="card-modal" focus="box">
       <div className="cm" style={kind.tint ? ({ '--tint': kind.tint } as CSSProperties) : undefined}>
         <button type="button" className="cm-x" aria-label={cardModal.close} onClick={onClose}>
           <X size={16} strokeWidth={2} aria-hidden="true" />

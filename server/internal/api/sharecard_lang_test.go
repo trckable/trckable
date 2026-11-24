@@ -128,18 +128,18 @@ func TestCardLangFormats(t *testing.T) {
 	for _, c := range []struct {
 		code, num, money, signed, dates, times, per string
 	}{
-		{"en", "1,234,567", "$1,234", "−1,200", "9 Oct – 8 Nov 2026", "2.5×", "1.5"},
-		{"de", "1.234.567", "1.234 $", "−1.200", "9. Okt – 8. Nov 2026", "2,5×", "1,5"},
-		{"fr", "1 234 567", "1 234 $", "−1 200", "9 oct. – 8 nov. 2026", "2,5×", "1,5"},
-		{"es", "1.234.567", "1.234 $", "−1.200", "9 oct – 8 nov 2026", "2,5×", "1,5"},
-		{"it", "1.234.567", "1.234 $", "−1.200", "9 ott – 8 nov 2026", "2,5×", "1,5"},
-		{"nl", "1.234.567", "$ 1.234", "−1.200", "9 okt – 8 nov 2026", "2,5×", "1,5"},
+		{"en", "1,234,567", "$1,235", "−1,200", "9 Oct – 8 Nov 2026", "2.5×", "1.5"},
+		{"de", "1.234.567", "1.235 $", "−1.200", "9. Okt – 8. Nov 2026", "2,5×", "1,5"},
+		{"fr", "1 234 567", "1 235 $", "−1 200", "9 oct. – 8 nov. 2026", "2,5×", "1,5"},
+		{"es", "1.234.567", "1.235 $", "−1.200", "9 oct – 8 nov 2026", "2,5×", "1,5"},
+		{"it", "1.234.567", "1.235 $", "−1.200", "9 ott – 8 nov 2026", "2,5×", "1,5"},
+		{"nl", "1.234.567", "$ 1.235", "−1.200", "9 okt – 8 nov 2026", "2,5×", "1,5"},
 	} {
 		l := cardLangOf(c.code)
 		if got := l.number(1234567); got != c.num {
 			t.Errorf("%s number %q, want %q", c.code, got, c.num)
 		}
-		if got := l.number(-1234); !strings.HasPrefix(got, "-") || strings.HasPrefix(got, "-"+l.group) {
+		if got := l.number(-1234); !strings.HasPrefix(got, "-") || strings.HasPrefix(got, "-"+l.words().Number(1)[:0]+"-") {
 			t.Errorf("%s negative %q", c.code, got)
 		}
 		if got := l.money(123456, "USD", 2); got != c.money {
@@ -176,7 +176,7 @@ func TestCardLangCountries(t *testing.T) {
 func TestCardLangSentences(t *testing.T) {
 	cur := visitorsResult(300, map[string][]query.Row{"referrer": {{Value: "news.ycombinator.com", Visitors: 200}, {Value: "google.com", Visitors: 100}}})
 	prev := visitorsResult(100, map[string][]query.Row{"referrer": {{Value: "google.com", Visitors: 90}, {Value: "news.ycombinator.com", Visitors: 10}}})
-	if got := explainChange(cardDE, cur, prev).say; got != "Besucher stiegen um 3×, vor allem durch news.ycombinator.com." {
+	if got := explainChange(cardDE, cur, prev).say; got != "Personen stiegen um 3×, vor allem durch news.ycombinator.com." {
 		t.Errorf("de: %q", got)
 	}
 	if got := explainChange(cardFR, cur, prev).say; got != "Personnes en hausse de 3×, surtout grâce à news.ycombinator.com." {
@@ -185,10 +185,10 @@ func TestCardLangSentences(t *testing.T) {
 	now := time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
 	made := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	p := resolvePeriod(cardDE, "30d", "", "", now, made, true)
-	if p.post != "in den letzten 30 Tagen" || p.vs != "vorherige 30 Tage" || p.label != "11. Okt – 9. Nov 2026" {
+	if p.post != "in den letzten 30 Tagen" || p.vs != "vorherige 30 Tage" || p.label != "12. Okt – 10. Nov 2026" {
 		t.Errorf("de period: %+v", p)
 	}
-	if p := resolvePeriod(cardFR, "all", "", "", now, made, true); p.label != "Depuis janv. 2026" || p.vs != "" {
+	if p := resolvePeriod(cardFR, "all", "", "", now, made, true); p.label != "Depuis 1 janv. 2026" || p.vs != "" {
 		t.Errorf("fr all time: %+v", p)
 	}
 	if p := resolvePeriod(cardNL, "24h", "", "", now, made, true); p.label != "Laatste 24 uur" || p.vs != "voorgaande 24 uur" {
@@ -303,9 +303,9 @@ func TestCardRouteLang(t *testing.T) {
 func TestCardLangMilestone(t *testing.T) {
 	m := sqlite.Milestone{Kind: milestones.Visitors, Value: 10000, Day: "2026-09-21"}
 	for code, want := range map[string][3]string{
-		"en": {"10,000", "visitors", "Sep 21, 2026"},
-		"de": {"10.000", "Besucher", "21. Sep 2026"},
-		"fr": {"10\u00a0000", "visiteurs", "21 sept. 2026"},
+		"en": {"10,000", "people", "Sep 21, 2026"},
+		"de": {"10.000", "Personen", "21. Sep 2026"},
+		"fr": {"10\u00a0000", "personnes", "21 sept. 2026"},
 	} {
 		l := cardLangOf(code)
 		s := milestones.CardIn(&l.ms, m, "", "demo.trckable.com", "light", false)

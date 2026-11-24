@@ -67,7 +67,7 @@ test('the period chip switches the period and the comparison, and the chart and 
   // The point under the pointer is read out next to it, with both numbers.
   const box = (await page.locator('svg#chart').boundingBox())!
   await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5)
-  await expect(page.locator('.chart-tip')).toHaveText(/^.+ · [\d,]+ (visitors|people) · .+ [\d,]+ · [+-]?\d+%$/)
+  await expect(page.locator('.chart-tip')).toHaveText(/^.+ · [\d,]+ people · .+ [\d,]+ · [+-]?\d+%$/)
 })
 
 for (const [scheme, width] of [['light', 1280], ['dark', 390]] as const) {

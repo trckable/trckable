@@ -46,47 +46,26 @@ const ICONS: Record<string, ReactNode> = {
       <Part on={{ x: [0, 2, 0] }} off={{ x: 0 }}><path d="M18 3l3 3-3 3M18 15l3 3-3 3" /></Part>
     </>
   ),
-  search: (
-    <Part on={{ x: [0, 2.2, -1.6, 0], y: [0, -1.6, 1.4, 0] }} off={{ x: 0, y: 0 }}>
-      <circle cx="10.5" cy="10.5" r="5.5" />
-      <path d="M14.6 14.6L20 20" />
-    </Part>
-  ),
-  places: (
+  audience: (
     <>
       <circle cx="12" cy="12" r="8" />
       <path d="M4 12h16" />
       <Part on={{ scaleX: [1, 0.15, 1] }} off={{ scaleX: 1 }}><path d="M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16" /></Part>
     </>
   ),
-  tech: (
-    <Part on={{ rotate: [0, -14, 9, 0] }} off={{ rotate: 0 }}>
-      <rect x="7" y="3" width="10" height="18" rx="2" />
-      <path d="M11 18h2" />
-    </Part>
-  ),
-  results: <Part on={{ y: [0, 2.2, -0.6, 0], scaleY: [1, 0.9, 1.03, 1] }} off={{ y: 0, scaleY: 1 }}><path d="M4 5h16l-6 8v6l-4-2v-4z" /></Part>,
-  sales: (
-    <Part on={{ scaleX: [1, 0.05, 1] }} off={{ scaleX: 1 }}>
-      <circle cx="12" cy="12" r="8" />
-      <path d="M12 7.5v9M14.5 9.6c0-1-1.1-1.6-2.5-1.6s-2.5.6-2.5 1.6 1.1 1.4 2.5 1.7 2.5.7 2.5 1.7-1.1 1.6-2.5 1.6-2.5-.6-2.5-1.6" />
-    </Part>
-  ),
-  speed: (
+  goals: <Part on={{ y: [0, 2.2, -0.6, 0], scaleY: [1, 0.9, 1.03, 1] }} off={{ y: 0, scaleY: 1 }}><path d="M4 5h16l-6 8v6l-4-2v-4z" /></Part>,
+  health: (
     <>
       <path d="M4 16a8 8 0 1 1 16 0" />
       <Part on={{ rotate: [-50, 25, 0] }} off={{ rotate: 0 }} style={pivot(12, 16)}><path d="M12 16l4-5" /></Part>
     </>
   ),
-  mentions: <Part on={{ y: [0, -2, 0], rotate: [0, -4, 0] }} off={{ y: 0, rotate: 0 }}><path d="M4 5h16v11H9l-5 4z" /></Part>,
-  links: <Part on={{ rotate: [0, -14, 10, 0] }} off={{ rotate: 0 }}><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></Part>,
-  ai: (
+  web: (
     <>
       <Part on={{ scale: [1, 0.78, 1.12, 1], rotate: [0, 0, 12, 0] }} off={{ scale: 1, rotate: 0 }}><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" /></Part>
       <Part on={{ scale: [1, 0.3, 1.25, 1], opacity: [1, 0.3, 1] }} off={{ scale: 1, opacity: 1 }}><path d="M18 16l.8 2.2L21 19l-2.2.8L18 22l-.8-2.2L15 19l2.2-.8z" /></Part>
     </>
   ),
-  answers: <Part on={{ y: [0, -2.5, 0.5, 0] }} off={{ y: 0 }}><path d="M12 3a7 7 0 0 0-7 7v10l2.5-1.8 2.2 1.8 2.3-1.8 2.3 1.8 2.2-1.8 2.5 1.8V10a7 7 0 0 0-7-7z" /></Part>,
 }
 
 /** A section's icon in the grid; it plays its motion while `active` (the tile is hovered or focused). */

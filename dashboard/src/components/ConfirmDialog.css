@@ -1,8 +1,4 @@
 /* ConfirmDialog's styles: they load with its chunk, not with the first load. */
-.modal.confirm-modal.framed {
-  width: min(440px, 100%);
-}
-
 .confirm-body {
   display: flex;
   flex-direction: column;

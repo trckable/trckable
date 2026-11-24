@@ -19,8 +19,8 @@ describe('one number for one moment', () => {
 
   it('every place that writes a spike says the count the pin holds', () => {
     const pin = spike(1955)
-    expect(say(pin, money).line).toContain('1,955 visitors')
-    expect(say(pin, money).big).toBe('1,955 visitors')
+    expect(say(pin, money).line).toContain('1,955 people')
+    expect(say(pin, money).big).toBe('1,955 people')
     const fig = figureOf(pin, money)
     expect(fig.n).toBe(1955)
     expect(fig.fmt?.(fig.n ?? 0)).toBe('1,955')

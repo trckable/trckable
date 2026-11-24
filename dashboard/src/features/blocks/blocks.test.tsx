@@ -24,7 +24,7 @@ describe('amountText', () => {
 })
 
 describe('NumberCard', () => {
-  const b: NumberBlock = { type: 'number', title: 'Visitors', period, explore: '/x.example', data: { unit: 'count', value: 1500, previous: 1000 } }
+  const b: NumberBlock = { type: 'number', title: 'People', period, explore: '/x.example', data: { unit: 'count', value: 1500, previous: 1000 } }
   it('shows the value, the change against the period before, and the period', () => {
     const out = html(<NumberCard b={b} />)
     expect(out).toContain('1,500')
@@ -47,7 +47,7 @@ describe('NumberCard', () => {
 
 describe('LineBlock', () => {
   it('draws the points through the Live chart and names the ends', () => {
-    const b: Line = { type: 'line', title: 'Visitors', data: { unit: 'count', points: [1, 4, 2, 8], labels: ['Oct 12', 'Oct 18'] } }
+    const b: Line = { type: 'line', title: 'People', data: { unit: 'count', points: [1, 4, 2, 8], labels: ['Oct 12', 'Oct 18'] } }
     const out = html(<LineBlock b={b} />)
     expect(out).toContain('mline-in')
     expect(out).toContain('Oct 12')
@@ -89,12 +89,12 @@ describe('IncidentTimeline', () => {
 
 describe('MentionsList', () => {
   const m = { id: 1, source: 'hn' as const, url: 'https://news.ycombinator.com/item?id=1', title: 'Show HN: Trckable', author: 'sam', points: 120, posted_at: 1, visitors: 42 }
-  it('lists the mention with its place, link and the visitors it brought', () => {
+  it('lists the mention with its place, link and the people it brought', () => {
     const b: MentionsBlock = { type: 'mentions', title: 'Mentions', data: { mentions: [m] } }
     const out = html(<MentionsList b={b} />)
     expect(out).toContain('Show HN: Trckable')
     expect(out).toContain('Hacker News')
-    expect(out).toContain('42 visitors')
+    expect(out).toContain('42 people')
     expect(out).toContain('noopener')
   })
   it('does not link an address that is not a web address', () => {
@@ -105,7 +105,7 @@ describe('MentionsList', () => {
 
 describe('Compare', () => {
   it('puts both periods on one scale with the change', () => {
-    const b: CompareBlock = { type: 'compare', title: 'Visitors', data: { unit: 'count', current: { label: 'This week', value: 200 }, previous: { label: 'Last week', value: 100 } } }
+    const b: CompareBlock = { type: 'compare', title: 'People', data: { unit: 'count', current: { label: 'This week', value: 200 }, previous: { label: 'Last week', value: 100 } } }
     const out = html(<Compare b={b} />)
     expect(out).toContain('width:100%')
     expect(out).toContain('width:50%')

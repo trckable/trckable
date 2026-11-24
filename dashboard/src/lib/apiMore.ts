@@ -3,6 +3,7 @@
 // from lib/api.ts so the first load does not carry them. Same shapes, same error
 // handling (api.ts's call).
 import type { Feed } from '../v2/bell/feed'
+import { lang } from '../i18n/lang'
 import { act, call, raw, rangeQS } from './api'
 
 /** The extra hostnames a site accepts, and the ones refused this week that it does not list. */
@@ -63,6 +64,51 @@ export interface SavedFunnel {
   steps: { kind: 'page' | 'goal'; value: string }[]
   created_at: number
   updated_at: number
+}
+
+/** One goal over a period as the server tells it: its count, a usual day, and whether it stands out (the server's one rule). */
+export interface GoalRow {
+  goal: string
+  name: string
+  /** Reached by seeing a page, not by an event the site sends. */
+  page?: boolean
+  count: number
+  out: boolean
+  why?: 'first' | 'times'
+  factor?: number
+  usual: number
+  spark: number[]
+}
+
+export interface GoalList {
+  goals: GoalRow[]
+  reached: number
+  out: number
+  days: number
+  /** The host or channel that sent most of the goals, and its share of them (0 to 1). */
+  source: string
+  source_share: number
+}
+
+/** One time a goal was reached. */
+export interface GoalWho {
+  at: number
+  path?: string
+  source?: string
+  country?: string
+  device?: string
+  os?: string
+}
+
+export interface GoalPage {
+  goal: GoalRow
+  events: GoalWho[]
+  sources: { source: string; count: number }[]
+  /** The pages it was reached on, most first. */
+  paths: { source: string; count: number }[]
+  days: number
+  /** This person hears of the goal in the bell only when it stands out. */
+  quiet?: boolean
 }
 
 export * from './api'
@@ -265,7 +311,7 @@ export const more = {
   createWidget: (site: string, w: WidgetLook) => call<Widget>('POST', `/sites/${site}/widgets`, w),
   updateWidget: (site: string, id: string, w: WidgetLook & { on: boolean }) => call<Widget>('PUT', `/sites/${site}/widgets/${id}`, w),
   deleteWidget: (site: string, id: string) => act('DELETE', `/sites/${site}/widgets/${id}`),
-  shares: (site: string) => call<{ shares: Share[]; base: string }>('GET', `/sites/${site}/shares`),
+  shares: (site: string) => call<{ shares: Share[]; base: string }>('GET', `/sites/${site}/shares?lang=${lang}`),
   /** Changes only what is in the body: the name, the notes, the days to the end (0: none), the password ("" removes it) and the embed sites. */
   updateShare: (site: string, id: string, body: { name?: string; notes?: boolean; live?: boolean; days?: number; password?: string; embed_origins?: string[]; sections?: string[]; period?: string }) => call<{ share: Share; notes: boolean; live: boolean }>('PATCH', `/sites/${site}/shares/${id}`, body),
   /** Opens the page a link with these options would, as a link of its own for an hour: the address (a path of this server) to draw. */
@@ -357,6 +403,9 @@ export const more = {
   crawlers: (site: string, q: ReportQuery) => call<CrawlerReport>('GET', `/sites/${site}/report/crawlers` + rangeQS(q)),
   vitals: (site: string, q: ReportQuery) => call<WebVitals>('GET', `/sites/${site}/report/vitals` + rangeQS(q)),
   slowCost: (site: string, q: ReportQuery) => call<SlowCostReport>('GET', `/sites/${site}/report/slow-cost` + rangeQS(q)),
+  goalList: (site: string, q: { from: string; to: string }, signal?: AbortSignal) => call<GoalList>('GET', `/sites/${site}/report/goals` + rangeQS(q), undefined, signal),
+  goalPage: (site: string, goal: string, q: { from: string; to: string }, signal?: AbortSignal) => call<GoalPage>('GET', `/sites/${site}/report/goal` + rangeQS(q) + `&goal=${encodeURIComponent(goal)}`, undefined, signal),
+  setGoalQuiet: (site: string, goal: string, quiet: boolean) => act('PUT', '/me/goal-quiet', { site, goal, quiet }),
   retention: (site: string, q: ReportQuery) => call<Cohorts>('GET', `/sites/${site}/report/retention` + rangeQS(q)),
   setModule: (site: string, id: string, enabled: boolean) =>
     call<{ modules: ModuleInfo[]; script: ScriptInfo }>('PUT', `/sites/${site}/modules/${id}`, { enabled }),

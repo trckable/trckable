@@ -153,7 +153,7 @@ export function PaymentsSettings({ site, onSiteChange }: { site: Site; onSiteCha
           </span>
           <span className="pay-link-text">
             <b>Link sales to visits</b>
-            <span className="faint">Pass the visitor id to checkout, so each payment is credited to the visit that brought it.</span>
+            <span className="faint">Pass the person id to checkout, so each payment is credited to the visit that brought it.</span>
           </span>
           <button type="button" className="btn" onClick={() => setSnippets(true)}>
             Show how

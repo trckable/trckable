@@ -8,10 +8,10 @@ import { copy } from './widgetCopy'
 export type Place = 'inline' | 'br' | 'bl'
 
 export const KINDS: { id: WidgetKind; name: string; hint: string; Icon: typeof Activity; w: number; fresh?: boolean }[] = [
-  { id: 'live', name: 'Live now', hint: 'Visitors in the last 30 minutes, minute by minute', Icon: Activity, w: 320 },
+  { id: 'live', name: 'Live now', hint: 'People in the last 30 minutes, minute by minute', Icon: Activity, w: 320 },
   { id: 'online', name: 'Online', hint: 'How many are on the site now: a pill, a pill with a graph, or a card', Icon: Users, w: 280 },
-  { id: 'badge', name: 'Last 7 days', hint: 'Visitors in the last seven days', Icon: BadgeCheck, w: 260 },
-  { id: 'counter', name: 'Counter', hint: 'Visitors in the last 30 minutes, in one line', Icon: CircleDot, w: 200 },
+  { id: 'badge', name: 'Last 7 days', hint: 'People in the last seven days', Icon: BadgeCheck, w: 260 },
+  { id: 'counter', name: 'Counter', hint: 'People in the last 30 minutes, in one line', Icon: CircleDot, w: 200 },
   { id: 'revenue', name: 'Open revenue', hint: "This month's revenue and the channels that brought it", Icon: Banknote, w: 320, fresh: true },
   { id: 'privacy', name: 'Privacy seal', hint: 'What this site records, read live from its settings', Icon: ShieldCheck, w: 320, fresh: true },
   { id: 'verified', name: 'Verified badge', hint: 'Which sources stand behind your numbers, read live. Shows nothing while none works', Icon: Stamp, w: 300, fresh: true },
@@ -32,7 +32,7 @@ export const PARTS: Record<WidgetKind, { id: string; name: string; hint?: string
     { id: 'pages', name: 'Reading now', hint: 'Pages with three or more people on them. Their paths become public' },
     { id: 'countries', name: 'Where from', hint: 'Countries with three or more people' },
   ],
-  badge: [{ id: 'ai', name: 'Share from AI assistants', hint: 'Visitors who came from ChatGPT, Claude, Perplexity…' }],
+  badge: [{ id: 'ai', name: 'Share from AI assistants', hint: 'People who came from ChatGPT, Claude, Perplexity…' }],
   counter: [],
   revenue: [{ id: 'channels', name: 'Where it came from', hint: 'The channels that brought the money' }],
   privacy: [],
@@ -69,7 +69,7 @@ export const previewUrl = (site: string, l: WidgetLook) => {
 
 // The languages a widget speaks (the server's message files), by their own names.
 export const LANGS = [
-  { id: 'auto', label: "Auto: the visitor's language" },
+  { id: 'auto', label: "Auto: the person's language" },
   { id: 'en', label: 'English' },
   { id: 'de', label: 'Deutsch' },
   { id: 'fr', label: 'Français' },
@@ -98,13 +98,13 @@ export const TEXT_FIELDS: Record<WidgetKind, TextField[]> = {
     { key: 'countries', msg: 'from', label: 'Countries', def: 'Where from' },
   ],
   live: [
-    { key: 'title', msg: 'live_title', label: 'Title', def: 'Visitors in the last 30 minutes' },
+    { key: 'title', msg: 'live_title', label: 'Title', def: 'People in the last 30 minutes' },
     { key: 'countries', msg: 'from', label: 'Countries', def: 'Where from' },
     { key: 'channels', msg: 'came', label: 'Channels', def: 'Came from' },
     { key: 'pages', msg: 'reading', label: 'Pages', def: 'Reading now' },
   ],
   badge: [
-    { key: 'week', msg: 'week', label: 'Caption', def: 'visitors in the last 7 days' },
+    { key: 'week', msg: 'week', label: 'Caption', def: 'people in the last 7 days' },
     { key: 'ai', msg: 'ai', label: 'AI share', def: '{pct} from AI assistants' },
   ],
   counter: [{ key: 'now', msg: 'counter', label: 'Line', def: '{n} in the last 30 min' }],

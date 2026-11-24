@@ -6,7 +6,7 @@ import { API, STEADY_DOMAIN } from '../playwright.config'
 
 test.skip(({ browserName }) => browserName !== 'chromium', 'one engine is enough for the picker')
 
-const SHOTS = '/private/tmp/claude-501/-Users-albi-Projects-trckable/ca6f67f6-3760-464f-975f-418264032c74/scratchpad'
+const SHOTS = 'test-results/shots'
 const NAMES = ['www', 'blog', 'docs', 'app', 'status', 'cdn', 'shop', 'help', 'api', 'beta']
 let cookie = ''
 test.beforeAll(async () => {

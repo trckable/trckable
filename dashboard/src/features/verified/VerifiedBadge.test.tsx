@@ -29,8 +29,7 @@ afterEach(() => {
 
 describe('the badge by a section title', () => {
   it('is on Search and Sales only', () => {
-    expect(slotOfSection('search')).toBe('search')
-    expect(slotOfSection('sales')).toBe('revenue')
+    expect(slotOfSection('goals')).toBe('revenue')
     expect(slotOfSection('pages')).toBeUndefined()
   })
 

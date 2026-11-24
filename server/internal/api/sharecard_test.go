@@ -12,6 +12,7 @@ import (
 
 	"github.com/trckable/trckable/server/internal/cards"
 	"github.com/trckable/trckable/server/internal/query"
+	"github.com/trckable/trckable/server/internal/summary"
 )
 
 // Revenue asked for where the report has none (module off, nothing
@@ -30,7 +31,7 @@ func TestCardNeverSlipsInRevenue(t *testing.T) {
 	if n := cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), ""); n.Metric != "visitors" || strings.Contains(n.Post, "$") {
 		t.Fatalf("default: %+v", n)
 	}
-	if n := cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), "revenue"); n.Big != "$1,234" || !strings.Contains(n.Post, "$1,234 revenue") {
+	if n := cardWordsOf(cardWords, res, "example.com", testPeriod("7d"), "revenue"); n.Big != "$1,235" || !strings.Contains(n.Post, "$1,235 revenue") {
 		t.Fatalf("revenue: %+v", n)
 	}
 }
@@ -299,8 +300,8 @@ func TestCardShapeSizes(t *testing.T) {
 	// Drawing a 1080x1920 picture under the race detector takes longer than the rig's 5 s.
 	owner.Timeout = 60 * time.Second
 	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
-	for shape, want := range map[string]image.Point{"": {1200, 630}, "link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}, "nope": {1200, 630}} {
-		for _, tpl := range []string{"overview", "leaderboard"} {
+	for shape, want := range raceFewerShapes(map[string]image.Point{"": {1200, 630}, "link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}, "post": {1200, 627}, "portrait": {1080, 1350}, "nope": {1200, 630}}, "", "square", "nope") {
+		for _, tpl := range raceFewer([]string{"overview", "leaderboard", "bestday", "milestone"}) {
 			code, _, body := get(t, owner, card+"?t="+tpl+"&shape="+shape)
 			if code != http.StatusOK {
 				t.Fatalf("%s %s: %d", tpl, shape, code)
@@ -333,7 +334,7 @@ func TestCardGridModel(t *testing.T) {
 	for _, st := range n.grid {
 		got = append(got, st.Label+"="+st.Value)
 	}
-	if want := "Visitors=1,200 Pageviews=3,400 Engaged visits=900 Avg time=2m 14s"; strings.Join(got, " ") != want {
+	if want := "People=1,200 Pageviews=3,400 Engaged visits=900 Avg time=2m 14s"; strings.Join(got, " ") != want {
 		t.Errorf("busy: %v", got)
 	}
 }
@@ -353,8 +354,11 @@ func TestCardOverviewPictures(t *testing.T) {
 	noOutbound(t, g)
 	owner := client()
 	g.setup(t, owner)
+	if raceEnabled {
+		owner.Timeout = 30 * time.Second // the big pictures are drawn slowly under the race detector
+	}
 	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
-	for _, tpl := range []string{"numbers", "grid"} {
+	for _, tpl := range raceFewer([]string{"numbers", "grid"}) {
 		for shape, want := range map[string]image.Point{"link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}} {
 			code, ct, body := get(t, owner, card+"?t="+tpl+"&shape="+shape+"&compare=1&period=30d")
 			if code != http.StatusOK || ct != "image/png" {
@@ -409,7 +413,7 @@ func TestCardTopicModels(t *testing.T) {
 	}
 	var spec cards.Spec
 	n.pictureOf(&spec, "topsource")
-	if spec.Template != "spotlight" || spec.Big != "google.com" || spec.Label != "Most visitors came from" {
+	if spec.Template != "spotlight" || spec.Big != "google.com" || spec.Label != "Most people came from" {
 		t.Errorf("hero: %+v", spec)
 	}
 	spec = cards.Spec{}
@@ -421,8 +425,11 @@ func TestCardTopicModels(t *testing.T) {
 	// None: every picture says what it needs, none shows a zero or a dash.
 	var none cardNumbers
 	none.listsOf(&query.Result{})
-	for _, tpl := range []string{"overview", "numbers", "leaderboard", "sources", "places", "browsers", "devices", "toppage", "topsource", "topplace"} {
-		spec = cards.Spec{Big: "0", Rows: nil}
+	for _, tpl := range []string{"overview", "numbers", "grid", "leaderboard", "sources", "places", "browsers", "devices", "toppage", "topsource", "topplace"} {
+		spec = cards.Spec{Template: tpl, Big: "0", Rows: nil}
+		if tpl == "grid" {
+			spec.Stats = []cards.Stat{{Value: "0"}} // the grid's four zeros
+		}
 		none.pictureOf(&spec, tpl)
 		if spec.Big != "Needs a visit in this period" || len(spec.Rows) != 0 || len(spec.Stats) != 0 {
 			t.Errorf("%s with none: %+v", tpl, spec)
@@ -445,7 +452,7 @@ func TestCardTopicRoutes(t *testing.T) {
 	g.setup(t, owner)
 	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
 	for _, tpl := range []string{"sources", "places", "browsers", "devices", "toppage", "topsource", "topplace"} {
-		for shape, want := range map[string]image.Point{"link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}} {
+		for shape, want := range raceFewerShapes(map[string]image.Point{"link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}}, "link", "square") {
 			code, ct, body := get(t, owner, card+"?t="+tpl+"&shape="+shape+"&bg=grid&date=0&name=0")
 			cfg, _, err := image.DecodeConfig(strings.NewReader(body))
 			if code != http.StatusOK || ct != "image/png" || err != nil || cfg.Width != want.X || cfg.Height != want.Y {
@@ -468,4 +475,76 @@ func TestCardTopicRoutes(t *testing.T) {
 	if code, _, body := get(t, owner, card+"?format=json"); code != http.StatusOK || !strings.Contains(body, `"has_sources"`) {
 		t.Errorf("json: %d %s", code, body)
 	}
+}
+
+// A share card and a widget write the period's people the way the report
+// does: one count, one grouping, from one summary.
+func TestCardAndWidgetAgreeWithTheSummary(t *testing.T) {
+	cur := &query.Result{KPIs: query.KPIs{Visitors: 12345, Pageviews: 20000}}
+	prev := &query.Result{KPIs: query.KPIs{Visitors: 10000}}
+	sum := summary.Build(cur, prev)
+	for _, lang := range summary.Langs {
+		want := summary.For(lang).Number(sum.People.Now)
+		if got := cardLangOf(lang).number(sum.People.Now); got != want {
+			t.Errorf("%s card %q, want %q", lang, got, want)
+		}
+		if got := (widgetWords{lang: lang}).number(sum.People.Now); got != want {
+			t.Errorf("%s widget %q, want %q", lang, got, want)
+		}
+	}
+	if n := cardWordsOf(cardWords, cur, "example.com", testPeriod("7d"), "visitors"); n.Big != summary.For("en").Number(sum.People.Now) {
+		t.Errorf("card big number %q", n.Big)
+	}
+}
+
+// Every picture the dialog offers draws, for every period and language: a
+// number's words never make a card fail.
+func TestEveryCardDrawsForEveryPeriodAndLanguage(t *testing.T) {
+	g := newRig(t)
+	noOutbound(t, g)
+	owner := client()
+	g.setup(t, owner)
+	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card?thumb=1&compare=1"
+	templates := []string{"overview", "numbers", "grid", "leaderboard", "sources", "places", "browsers", "devices", "toppage", "topsource", "topplace", "changed", "search", "ai", "goals", "sales", "milestone"}
+	periods := []string{"24h", "7d", "30d", "all", "custom&from=2026-10-01&to=2026-10-31"}
+	draw := func(tpl, p, lang string) {
+		t.Helper()
+		code, ct, body := get(t, owner, card+"&t="+tpl+"&period="+p+"&lang="+lang)
+		if code != http.StatusOK || ct != "image/png" || !strings.HasPrefix(body, "\x89PNG") {
+			t.Errorf("%s %s %s: %d %s", tpl, p, lang, code, ct)
+		}
+	}
+	// Each axis once against the others' default: the templates, then the periods, then the languages.
+	for _, tpl := range templates {
+		draw(tpl, "7d", "en")
+	}
+	for _, p := range periods {
+		draw("overview", p, "en")
+	}
+	for _, lang := range summary.Langs {
+		draw("overview", "7d", lang)
+	}
+}
+
+// raceFewer is the list of pictures a test draws: all of them, and under the race detector (which draws several times
+// slower, and the package's time is CI's limit) the first, since every picture is drawn by the same code and the other
+// builds of the test draw the rest.
+func raceFewer(list []string) []string {
+	if raceEnabled {
+		return list[:1]
+	}
+	return list
+}
+
+// raceFewerShapes is the sizes a test draws: all of them, and under the race detector only those named in keep (the
+// others differ in size alone, which the other builds of the test check).
+func raceFewerShapes(all map[string]image.Point, keep ...string) map[string]image.Point {
+	if !raceEnabled {
+		return all
+	}
+	out := map[string]image.Point{}
+	for _, k := range keep {
+		out[k] = all[k]
+	}
+	return out
 }

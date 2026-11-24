@@ -124,7 +124,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
           </span>
           <span className="eu-title">
             <h2>Cookieless mode</h2>
-            <span className="faint">{free ? 'On — the script stores nothing in the browser' : 'Store nothing in the browser, and count visitors by a daily hash'}</span>
+            <span className="faint">{free ? 'On — the script stores nothing in the browser' : 'Store nothing in the browser, and count people by a daily hash'}</span>
           </span>
           <Switch on={free} label="Cookieless mode" onChange={() => save({ consent_free: !free }, free ? 'Cookieless mode is off' : 'Cookieless mode is on — the script stores nothing')} />
         </div>
@@ -143,7 +143,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
             <ul className="bullets gone">
               <li>Journeys and new vs returning: the dashboard says “Off: cookieless mode” there</li>
               <li>Revenue credited across days</li>
-              <li>One visitor across midnight UTC{utcMidnight(site.timezone)} counts as two</li>
+              <li>One person across midnight UTC{utcMidnight(site.timezone)} counts as two</li>
             </ul>
           </div>
         </div>
@@ -153,7 +153,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
             Often, yes. Countries with an analytics exemption (France, Italy, the Netherlands, Spain, the UK) generally allow it for a mode like this; Germany and Austria generally still ask for consent. The rules are enforced by this server, so a cached script cannot opt back in. Check your own rules.
           </p>
         </details>
-        <span className="faint eu-note" data-testid={free ? undefined : 'cookie-mode-note'}>{free ? 'Visitors get the smaller, storage-free script within the hour.' : copy.cookieless.cookieModeNote}</span>
+        <span className="faint eu-note" data-testid={free ? undefined : 'cookie-mode-note'}>{free ? 'People get the smaller, storage-free script within the hour.' : copy.cookieless.cookieModeNote}</span>
       </section>
 
       {!free && <Consent site={site} config={c} on={!!mods?.consent} onSave={save} onOn={() => setMods((m) => ({ ...m, consent: true }))} />}
@@ -161,7 +161,7 @@ export function PrivacySettings({ site, onSites }: { site: Site; onSites?: () =>
       <section className="card" style={{ gap: 0 }}>
         <div className="card-head" style={{ paddingBottom: 10 }}>
           <h2>What is recorded</h2>
-          <Info text="trckable never stores an IP address, never makes your visitors' browsers load anything from another company, and never sells or shares your data. These switches are about recording less than that floor, not more." />
+          <Info text="trckable never stores an IP address, never makes your people's browsers load anything from another company, and never sells or shares your data. These switches are about recording less than that floor, not more." />
         </div>
 
         <Row label="Region and city" hint={free ? 'Cookieless mode keeps the country only' : 'The country is always recorded; region, city and internet provider are yours to choose'}>
@@ -279,7 +279,7 @@ function Consent({ site, config, on, onSave, onOn }: { site: Site; config: SiteC
       <div className="card-head">
         <h2>Cookie consent</h2>
         <span className="tag live">on</span>
-        <Info text="Until a visitor answers, the script stores nothing and their visit still counts. With trckable's own bar, a browser already sending Do Not Track is never asked; with your consent manager, Do Not Track counts as a no." />
+        <Info text="Until a person answers, the script stores nothing and their visit still counts. With trckable's own bar, a browser already sending Do Not Track is never asked; with your consent manager, Do Not Track counts as a no." />
       </div>
 
       <Row
@@ -305,7 +305,7 @@ function Consent({ site, config, on, onSave, onOn }: { site: Site; config: SiteC
           <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>
             A banner that speaks neither — Cookiebot, Usercentrics, CookieYes, Osano, Complianz and most one-file banners can all do this — tells trckable directly. It costs no extra bytes:
           </p>
-          <CodeBlock code={"// when the visitor accepts statistics\ntrckable('consent', true)\n\n// when they refuse, or change their mind\ntrckable('consent', false)"} lang="js" />
+          <CodeBlock code={"// when the person accepts statistics\ntrckable('consent', true)\n\n// when they refuse, or change their mind\ntrckable('consent', false)"} lang="js" />
         </>
       ) : (
         <>
@@ -419,11 +419,11 @@ function Consent({ site, config, on, onSave, onOn }: { site: Site; config: SiteC
               Undo
             </button>
           ) : (
-            <span className="faint" style={{ fontSize: 12 }}>Visitors see a change within the hour.</span>
+            <span className="faint" style={{ fontSize: 12 }}>People see a change within the hour.</span>
           )
         }
       >
-        <button type="button" className="btn primary" disabled={!dirty} onClick={() => onSave({ banner: b }, 'Saved — visitors see it within the hour')}>
+        <button type="button" className="btn primary" disabled={!dirty} onClick={() => onSave({ banner: b }, 'Saved — people see it within the hour')}>
           Save
         </button>
       </ActionRow>

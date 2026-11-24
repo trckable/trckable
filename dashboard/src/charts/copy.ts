@@ -6,7 +6,7 @@ export const kitCopy = defineCopy('chart.kit', {
   failed: "Couldn't draw this.",
   reload: 'Reload',
   updated: 'Updated, reloading…',
-  visitors: 'Visitors',
+  visitors: 'People',
   revenue: 'Revenue',
   up: '▲',
   down: '▼',

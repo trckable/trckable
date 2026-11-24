@@ -1,22 +1,17 @@
-// The sections about the site itself rather than its people: how fast it loads, where it is talked about, and which
-// robots read it.
+// The tables about the site itself rather than its people: how fast it loads and whether it answered, and where it is talked about.
 import { fmtInt } from '../../../lib/format'
 import { XEmpty, XNote, XSec } from '../../ui/XBits'
 import { XKcsPlain } from '../../ui/XKcs'
 import { XCols, type CRow } from '../../ui/XTable'
 import { copy } from '../copy'
 import { SlowCost } from './SlowCost'
-import { EmptyTab } from './PeopleTable'
 import type { XCtx } from '../ctx'
-import type { BotsModel, Mention, Speed as SpeedModel } from '../types'
-import { openAi } from '../../ui/AiHost'
-import { crawlerSetupAsked } from '../../../features/crawlers/ask'
+import type { Mention, Speed as SpeedModel } from '../types'
 import { can } from '../../../lib/permissions'
 import { isOn } from '../../../lib/modules'
 import { openSettings } from '../../../lib/settings'
 import { useMods } from '../../../lib/useMods'
 import { runSetup } from '../../live/setupLinks'
-import { openExplore } from '../open'
 
 /** Nothing measured: with the switch off, an owner gets it; with it on, the wait is only for visits. */
 function SpeedEmpty({ x }: { x: XCtx }) {
@@ -115,56 +110,6 @@ export function Mentions({ x, d }: { x: XCtx; d: Mention[] }) {
     <>
       <XCols first={copy.mention} cols={[{ h: copy.points }, { h: copy.comments, hm: true }, { h: copy.when, hm: true }]} rows={rows} xc="minmax(0,1fr) 56px 76px 92px" xcm="minmax(0,1fr) 52px" limit={x.limit} onAll={x.showAll} />
       <XNote>{copy.noteMentions(x.siteName)}</XNote>
-    </>
-  )
-}
-
-/** What was dropped on purpose besides robots: each line only when something was. */
-function Dropped({ d }: { d: BotsModel }) {
-  if (!d.left && !d.aged) return null
-  return (
-    <XNote>
-      {[d.left ? copy.leftOut(fmtInt(d.left)) : '', d.aged ? copy.tooOld(fmtInt(d.aged)) : ''].filter(Boolean).join(' · ')}
-    </XNote>
-  )
-}
-
-export function Bots({ x, d: model }: { x: XCtx; d: BotsModel }) {
-  const d = model.rows
-  if (d.length === 0) {
-    return (
-      <>
-        <EmptyTab x={x}>
-          {can('site.settings') && (
-            <button
-              type="button"
-              className="xb"
-              onClick={() => {
-                crawlerSetupAsked()
-                openExplore('ai')
-              }}
-            >
-              {copy.connectCrawlers}
-            </button>
-          )}
-        </EmptyTab>
-        <Dropped d={model} />
-      </>
-    )
-  }
-  const total = d.reduce((p, b) => p + b.count, 0) || 1
-  const max = Math.max(1, ...d.map((b) => b.count))
-  const rows: CRow[] = d.map((b) => ({ key: b.name, a: b.name, bar: b.count / max, c: [fmtInt(b.count), `${Math.round((b.count / total) * 100)}%`] }))
-  return (
-    <>
-      <XCols first={copy.bot} cols={[{ h: copy.requests }, { h: copy.share }]} rows={rows} xc="minmax(0,1fr) 84px 64px" limit={x.limit} onAll={x.showAll} />
-      <XNote>
-        {copy.noteBots}{' '}
-        <button type="button" className="xb" onClick={() => openAi('crawler')}>
-          {copy.aboutAi}
-        </button>
-      </XNote>
-      <Dropped d={model} />
     </>
   )
 }

@@ -403,8 +403,8 @@ test('Server-side (any language): the curl command counts', async ({ request, br
   const m = METHODS.find((x) => x.id === 'server')!
   const host = `${runId('server', browserName)}.example.com`
   const code = m.code(ctxFor(host))
-  expect(code).toContain("user-agent: <the visitor's browser user agent>")
-  execFileSync('sh', ['-c', code.replace("<the visitor's browser user agent>", CHROME_UA)], { stdio: 'ignore', env: { ...process.env, http_proxy: PROXY } })
+  expect(code).toContain("user-agent: <the person's browser user agent>")
+  execFileSync('sh', ['-c', code.replace("<the person's browser user agent>", CHROME_UA)], { stdio: 'ignore', env: { ...process.env, http_proxy: PROXY } })
   await counted(request, '/pricing', host)
 })
 

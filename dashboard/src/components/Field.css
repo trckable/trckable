@@ -12,6 +12,16 @@
   font-size: 13px;
   color: var(--text-2);
 }
+.dlg-field-label > :is(label, span) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.dlg-field-label svg {
+  flex: none;
+  color: var(--text-3);
+}
 .dlg-field-label .info {
   position: relative;
   display: inline-flex;

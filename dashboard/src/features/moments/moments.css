@@ -303,3 +303,8 @@
 .moment-mark.record {
   --mk: var(--money);
 }
+
+/* Inside the Explore sheet the record button stays unfilled, as the sheet's old button reset drew it. */
+.mk .moment-mark.record {
+  background: none;
+}

@@ -5,7 +5,7 @@ import { SharePeriod } from '../v2/ui/SharePeriod'
 import fixture from './sharePeriods.json'
 import { addDays, addMonths, presetById } from './dates'
 import { setShared } from './me'
-import { SHARE_DEFAULT, SHARE_PERIODS, sharePeriodOf } from './sharePeriods'
+import { SHARE_DEFAULT, SHARE_PERIODS, fixedDays, sharePeriodOf } from './sharePeriods'
 import { readView, writeView } from './url'
 
 const TODAY = '2026-11-16'
@@ -57,5 +57,16 @@ describe('the address of a shared link', () => {
   })
   it('writes no comparison into the address', () => {
     expect(writeView(readView(new URLSearchParams('period=7d')))).toBe('?period=7d')
+  })
+})
+
+describe('the days a link fixed to a stretch shows', () => {
+  it('is the range, or all time from its first day, never past today', () => {
+    expect(fixedDays('2026-03-01..2026-06-14', TODAY)).toEqual({ from: '2026-03-01', to: '2026-06-14' })
+    expect(fixedDays('2026-03-01..2027-01-01', TODAY)).toEqual({ from: '2026-03-01', to: TODAY })
+    expect(fixedDays('since:2024-02-04', TODAY)).toEqual({ from: '2024-02-04', to: TODAY })
+  })
+  it('is nothing for a preset or for words that are no days', () => {
+    expect([fixedDays('30d', TODAY), fixedDays('12mo', TODAY), fixedDays('since:soon', TODAY), fixedDays('', TODAY)]).toEqual([null, null, null, null])
   })
 })

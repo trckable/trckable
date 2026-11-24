@@ -21,8 +21,8 @@ func specPost(s cards.Spec, tpl string, n cardNumbers) string {
 		}
 	}
 	if s.Template == "spotlight" {
-		// A milestone says its number first, a hero its words first.
-		if tpl == "milestone" {
+		// A milestone and the best day say their number first, a hero its words first.
+		if tpl == "milestone" || tpl == "bestday" {
 			say(s.Big + " " + s.Label)
 		} else {
 			say(s.Label + " " + s.Big)

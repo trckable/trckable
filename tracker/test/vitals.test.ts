@@ -72,7 +72,7 @@ const open = (opts?: { hidden?: boolean }) => {
 beforeEach(() => {
   sent = []
   observers = []
-  supported = ['largest-contentful-paint', 'layout-shift', 'event']
+  supported = ['largest-contentful-paint', 'paint', 'layout-shift', 'event']
   vi.useFakeTimers({ toFake: ['Date'] })
 })
 afterEach(() => {
@@ -86,6 +86,21 @@ describe('web vitals', () => {
     emit('largest-contentful-paint', { startTime: 800.4 }, { startTime: 1234.6 })
     await hide()
     expect(lastE().lcp).toBe(1234)
+  })
+
+  it('reports the first contentful paint, not the first paint, once', async () => {
+    open()
+    emit('paint', { name: 'first-paint', startTime: 300.2 }, { name: 'first-contentful-paint', startTime: 450.7 })
+    await hide()
+    expect(lastE().fcp).toBe(450)
+  })
+
+  it('leaves out the first contentful paint of a page that loaded in the background', async () => {
+    open({ hidden: true })
+    emit('paint', { name: 'first-contentful-paint', startTime: 40000 })
+    setHidden(false)
+    await hide()
+    expect('fcp' in lastE()).toBe(false)
   })
 
   it('reports a layout shift of 0 as 0, and nothing where the browser cannot measure it', async () => {

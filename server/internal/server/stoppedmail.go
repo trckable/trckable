@@ -98,7 +98,7 @@ func (s *Server) probeWords(ev *alerts.Event, site sqlite.SiteRow, before, after
 		m.Blocks = []mailkit.Block{
 			mailkit.Heading{Eyebrow: "Not answering", Title: site.Domain},
 			mailkit.Callout{Tone: mailkit.Bad, Title: site.Domain + " isn't answering", Text: fmt.Sprintf("Our checks have not got an answer from %s since %s (%s).", site.Domain, at(after.DownSince), after.Error)},
-			mailkit.Paragraph{Lead: checkedLead, Text: fmt.Sprintf("%d checks in a row got no answer, the last at %s. That usually means the site or its server is down. Some visitors may still get through, which is why you may still see people online.", after.Failures, at(after.At))},
+			mailkit.Paragraph{Lead: checkedLead, Text: fmt.Sprintf("%d checks in a row got no answer, the last at %s. That usually means the site or its server is down. Some people may still get through, which is why you may still see people online.", after.Failures, at(after.At))},
 			mailkit.Rows{Rows: [][2]string{{"Down since", at(after.DownSince)}, {"Failed checks in a row", fmt.Sprint(after.Failures)}, {"Last check", at(after.At)}}},
 			mailkit.Button{Label: statusButton, URL: link},
 		}

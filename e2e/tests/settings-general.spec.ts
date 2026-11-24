@@ -152,7 +152,7 @@ test('Site id: "Used by the snippet and the API": Copy puts exactly the id on th
   expect(await script.text()).toContain(site.id)
 })
 
-test('Proxy key: Show reveals it, Copy copies it exactly, and "lets your own server forward a visitor\'s location": only with the key is the forwarded address believed', async ({ page, context }) => {
+test('Proxy key: Show reveals it, Copy copies it exactly, and "lets your own server forward a person\'s location": only with the key is the forwarded address believed', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: API })
   const site = await newSite(page, 'proxykey')
   const key = ((await (await page.request.get(`${API}/api/v1/sites/${site.id}`, { headers: H })).json()) as { proxy_key: string }).proxy_key

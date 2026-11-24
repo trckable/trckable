@@ -11,12 +11,12 @@ export const copy = defineCopy('mentions', {
   tabCount: (n: number) => `Mentions ${n}`,
   jumpTag: (name: string, n: number) => `${name} mention · +${n}`,
   name: { hn: 'Hacker News', ph: 'Product Hunt', news: 'News & blogs', ref: 'Confirmed pages' },
-  posted: { hn: 'posted on Hacker News', ph: 'launched on Product Hunt', news: 'written about in the news', ref: 'linked from a page that sent visitors' },
-  postedHead: { hn: 'Posted on Hacker News', ph: 'Launched on Product Hunt', news: 'Written about in the news', ref: 'A page that sent visitors' },
+  posted: { hn: 'posted on Hacker News', ph: 'launched on Product Hunt', news: 'written about in the news', ref: 'linked from a page that sent people' },
+  postedHead: { hn: 'Posted on Hacker News', ph: 'Launched on Product Hunt', news: 'Written about in the news', ref: 'A page that sent people' },
   empty: 'No mentions yet',
-  brought: (n: number) => `${count(n, 'visitor', 'visitors')} came from it`,
-  noneYet: 'No visitors counted yet',
-  visitorsLabel: 'visitors',
+  brought: (n: number) => `${count(n, 'person', 'people')} came from it`,
+  noneYet: 'No people counted yet',
+  visitorsLabel: 'people',
   comment: 'Comment',
   front: 'Front page',
   by: (author: string) => `by ${author}`,
@@ -24,14 +24,14 @@ export const copy = defineCopy('mentions', {
   open: (title: string) => `Open: ${title}`,
   more: (n: number) => `Show ${n} more`,
   // Replay: a jump a mention explains, and a mention of its own.
-  jumped: (change: string, at: string, posted: string, n: number) => `Visits jumped ${change} at ${at}: ${posted}, ${count(n, 'visitor', 'visitors')} came from it.`,
-  jumpedDay: (change: string, posted: string, n: number) => `Visits jumped ${change}: ${posted}, ${count(n, 'visitor', 'visitors')} came from it.`,
-  postedLine: (head: string, n: number) => `${head}: ${count(n, 'visitor', 'visitors')} came from it`,
+  jumped: (change: string, at: string, posted: string, n: number) => `Visits jumped ${change} at ${at}: ${posted}, ${count(n, 'person', 'people')} came from it.`,
+  jumpedDay: (change: string, posted: string, n: number) => `Visits jumped ${change}: ${posted}, ${count(n, 'person', 'people')} came from it.`,
+  postedLine: (head: string, n: number) => `${head}: ${count(n, 'person', 'people')} came from it`,
   // Live
   chip: (name: string) => `From ${name} now`,
   // Settings
   settings: {
-    intro: (places: string) => `trckable looks for these words on ${places} every 20 minutes, and ties each mention to the visitors it brought. Your address and your site name are always searched.`,
+    intro: (places: string) => `trckable looks for these words on ${places} every 20 minutes, and ties each mention to the people it brought. Your address and your site name are always searched.`,
     always: 'Always searched',
     yours: 'Your words',
     none: 'No words added',
@@ -45,5 +45,5 @@ export const copy = defineCopy('mentions', {
     full: (n: number) => `That is the most you can add: ${n}.`,
   },
   // Settings → Alerts
-  alert: { label: 'Mention', hint: 'When a mention brings 20 or more visitors, or reaches the Hacker News front page: once per mention' },
+  alert: { label: 'Mention', hint: 'When a mention brings 20 or more people, or reaches the Hacker News front page: once per mention' },
 })

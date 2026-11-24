@@ -16,7 +16,7 @@ describe('a site the uptime probe finds not answering', () => {
 })
 
 describe('how a down site is told', () => {
-  it('is down when nobody is known to get through, and a failing check when visitors still arrive', () => {
+  it('is down when nobody is known to get through, and a failing check when people still arrive', () => {
     expect(downStateOf(site())).toBeUndefined()
     expect(downStateOf(site({ down_since: sec - 600 }))).toBe('down')
     expect(downStateOf(site({ down_since: sec - 600, down_visitors: true }))).toBe('visitors')

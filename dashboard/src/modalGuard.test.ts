@@ -33,15 +33,16 @@ const OWN_SURFACE = new Set(['v2/explore/Rail.tsx', 'features/mentions/Detail.ts
 // frame today: its header or footer carries the dialog's live content, or the dialog is a layout of its own.
 const OWN_CHROME: Record<string, string> = {
   'components/Window.tsx': 'settings and profile: a left-nav window whose header is the section head',
-  'features/journey/JourneyDialog.tsx': 'the visit story: its header is the visitor, with a menu in the corner',
+  'features/journey/JourneyDialog.tsx': 'the visit story: its header is the person, with a menu in the corner',
   'features/signals/SurgeModal.tsx': 'the surge hero: a live count is the header',
   'features/bounce/BounceGuideModal.tsx': 'the bounce guide: a hero header like the surge dialog',
   'features/heatmap/HeatOverlay.tsx': 'the heatmap: its header is the toolbar (page, width, layers)',
-  'features/share/ShareDialog.tsx': 'the share image: header carries the period and link switches, body is a preview grid',
+  'features/share/ShareDialog.tsx': 'the share studio: a header with the site and the links corner, a body of three columns held at one size',
   'features/milestones/ShareSheet.tsx': 'a two-column sheet: the card and its side actions share one grid',
   'features/milestones/Timeline.tsx': 'the milestones window: its own scroll region and a full screen on a phone',
   'components/CardModal/CardModal.tsx': 'a story card: tinted kind header and its own action row',
   'v2/bell/EventCard.tsx': 'the event card: its header is the event, with a corner close, and its one action is the row\'s own link',
+  'v2/bell/GoalsStory.tsx': 'the goals card: the day\'s goals beside one goal\'s times, a full sheet with a way back on a phone',
   'v2/explore/views/hosted/CustomerSheet.tsx': 'the customer sheet: its header is the customer (name, email, country) and it is a bottom sheet on a phone',
 }
 
@@ -86,5 +87,41 @@ describe('dialogs', () => {
     const all = [...files(SRC, '.css'), ...files(SRC, '.tsx'), ...files(SRC, '.ts')].filter((f) => !f.endsWith('modalGuard.test.ts'))
     const hiding = all.filter((f) => /body\[data-modal\]|body:has\(\.modal-back[^)]*\)[^{]*\{[^}]*(visibility|display|opacity)/.test(readFileSync(f, 'utf8')))
     expect(hiding.map((f) => f.slice(SRC.length + 1))).toEqual([])
+  })
+
+  it('have one fixed size per size class, held in kit/Modal.css, and no dialog sets a height of its own', () => {
+    const css = readFileSync(join(SRC, 'kit/Modal.css'), 'utf8')
+    // The one place: each class a fixed height, capped by the screen, and the frame's body is what scrolls.
+    for (const [size, px] of [['xs', 260], ['sm', 560], ['md', 620], ['lg', 680]] as const) {
+      const rule = css.match(new RegExp(`\\.modal\\.framed\\.modal-${size} \\{[^}]*\\}`))?.[0] ?? ''
+      expect(rule).toContain(`--modal-h: ${px}px`)
+    }
+    const frame = css.match(/\n\.modal\.framed \{[^}]*\}/)?.[0] ?? ''
+    expect(frame).toContain('height: min(var(--modal-h), calc(100dvh - 32px))')
+    expect(css.match(/\n\.modal-body \{[^}]*\}/)?.[0]).toContain('overflow-y: auto')
+    expect(css.match(/\n\.modal-head \{[^}]*\}/)?.[0]).toContain('flex: none')
+    expect(css.match(/\n\.modal-foot \{[^}]*\}/)?.[0]).toContain('flex: none')
+
+    // Every dialog that uses the frame (all but the named ones that keep their own layout).
+    const framed = files(SRC, '.tsx')
+      .map((f) => f.slice(SRC.length + 1))
+      .filter((f) => f !== 'kit/Modal.tsx' && !(f in OWN_CHROME))
+      .filter((f) => /<Modal\b/.test(readFileSync(join(SRC, f), 'utf8')))
+    const classes = new Set(['framed'])
+    for (const f of framed)
+      for (const m of readFileSync(join(SRC, f), 'utf8').matchAll(/<Modal\b[^>]*?className="([^"]+)"/g)) m[1].split(/\s+/).forEach((c) => classes.add(c))
+    const own: string[] = []
+    for (const f of files(SRC, '.css')) {
+      const rel = f.slice(SRC.length + 1)
+      if (rel === 'kit/Modal.css') continue
+      for (const m of readFileSync(f, 'utf8').matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+        // The dialog's own box (a selector that ends on .modal), not something inside it.
+        const mine = m[1].split(',').some((sel) => /\.modal(\.[\w-]+)*\s*$/.test(sel) && sel.split('.').some((c) => classes.has(c.trim().split(/[\s:]/)[0])))
+        if (mine && /(^|[;\s])(min-|max-)?height\s*:/.test(m[2])) own.push(`${rel}: ${m[1].trim()}`)
+      }
+    }
+    expect(own).toEqual([])
+    // The height easing is gone: a dialog never changes size while open.
+    expect(readFileSync(join(SRC, 'kit/Modal.tsx'), 'utf8')).not.toMatch(/keepSize|useGlide/)
   })
 })

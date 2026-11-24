@@ -6,7 +6,7 @@ describe('parseBlocks', () => {
   it('keeps a block that fits and leaves out one that does not', () => {
     const r = parseBlocks({
       blocks: [
-        { type: 'number', title: 'Visitors', period: { from: 'a', to: 'b', label: 'This week' }, data: { unit: 'count', value: 12, previous: 10 } },
+        { type: 'number', title: 'People', period: { from: 'a', to: 'b', label: 'This week' }, data: { unit: 'count', value: 12, previous: 10 } },
         { type: 'number', title: 'Broken', data: { value: 'twelve' } },
         { type: 'nope', data: {} },
         { type: 'line', title: 'One point', data: { points: [1] } },

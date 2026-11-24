@@ -1,9 +1,7 @@
 // The sections that are one table of people: pages, sources and where they came from, countries, devices, browsers and
 // the links people leave by. Each says what a tap on a row does and what is written under it.
 import { fmtInt } from '../../../lib/format'
-import { channelColor } from '../../../lib/palette'
 import { PageMap } from '../../ui/PageMap'
-import { ShareDonut } from '../../ui/ShareDonut'
 import { XNote } from '../../ui/XBits'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
@@ -29,7 +27,6 @@ const CFG: Partial<Record<Tab, Cfg>> = {
   sources: { head: copy.heads.source },
   countries: { head: copy.heads.country, flags: true },
   devices: { head: copy.heads.device },
-  referrers: { head: copy.heads.referrer },
   utm: { head: copy.heads.campaign },
   browsers: { head: copy.heads.browser },
   outbound: { head: copy.heads.link, mono: true, unit: copy.heads.clicks },
@@ -59,7 +56,7 @@ function Note({ tab, x }: { tab: Tab; x: XCtx }) {
         )}
       </XNote>
     )
-  if (tab === 'referrers') return <XNote>{rowWords().source}</XNote>
+  if (tab === 'sources') return <XNote>{rowWords().source}</XNote>
   if (tab === 'utm') return <XNote>{copy.noteUtm}</XNote>
   if (tab === 'outbound') return <XNote>{copy.noteLinks}</XNote>
   return null
@@ -68,11 +65,9 @@ function Note({ tab, x }: { tab: Tab; x: XCtx }) {
 export function Tables({ tab, x, d }: { tab: Tab; x: XCtx; d: Table }) {
   const c = CFG[tab] ?? CFG.pages ?? { head: '' }
   const dim = d.dim ?? ROW_DIM[tab]
-  const donut = tab === 'sources' && d.rows.length > 0 && <ShareDonut label={copy.people} people={d.of} parts={d.rows.map((r) => ({ key: r.val, name: r.name, v: r.v, color: channelColor(r.val) }))} />
   return (
     <>
       {d.say && <p className="xchg-say xsay-table">{d.say}</p>}
-      {donut}
       {tab === 'pages' && d.rows.length > 1 && <PageMap label={copy.people} rows={d.rows.map((r) => ({ key: r.val, name: r.name === '/' ? copy.homePage : r.name, v: r.v, icon: pageIcon(r.val) }))} onPick={dim ? (k) => x.pick(dim, k) : undefined} />}
       {d.how && <HowBar parts={d.how} of={d.of} selected={valueOf(x.filters, 'device_app')} onPick={x.pick} />}
       {(tab === 'devices' || tab === 'browsers' || tab === 'screens') && d.rows.length > 0 && (

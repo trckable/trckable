@@ -1,6 +1,5 @@
 // The bell's list: what happened that a person would want to hear of, put together from what the server already
 // records (incidents, milestones, mentions). Pure; read marks are kept by useNotices.
-import { goalName } from '../../lib/goalName'
 import { lineOf, tileLabel } from '../../features/milestones/words'
 import type { Alert, Milestone, Site } from '../../lib/api'
 import { answersCopy } from '../../features/answers/copy'
@@ -9,7 +8,10 @@ import { sourceName } from '../briefing/model'
 import { duration, startOfDay } from '../../features/incidents/model'
 import { clock } from '../../lib/site'
 import { fmtFixed, fmtInt, fmtMoney } from '../../lib/format'
-import type { FeedRow } from './feed'
+import { dayWords } from '../dayWords'
+import { before, dayOf } from './days'
+import { stand } from '../goals/standCopy'
+import type { FeedGoal, FeedRow } from './feed'
 import { copy } from './copy'
 import { openSettings } from '../../lib/settings'
 
@@ -59,8 +61,8 @@ export interface Notice {
   link?: string
   /** Several notices drawn as one row (busy moments of different sites at the same time), newest first. */
   members?: Notice[]
-  /** One notice whose members are its parts (a day's goals, one each): drawn as one row, read as one, listed when tapped. */
-  fold?: boolean
+  /** A day's goals: the goals reached, which of them stand out, and the day; a tap opens the goals card. */
+  stand?: { day: string; goals: FeedGoal[] }
 }
 
 export type AlertKind = Alert['kind']
@@ -129,17 +131,9 @@ export function fromFeed(rows: FeedRow[], sites: Site[], now: number): Notice[] 
         out.push({ ...base, kind: 'signup', title: copy.signups(r.count ?? 1), sub: '', visitor: r.visitor, exact: r.seen, goal: r.goal })
         break
       case 'goal': {
-        const each = (r.goals ?? []).map((g) => copy.goalEach(fmtInt(g.count), goalName(undefined, g.name ?? g.goal)))
-        // A day with several goals keeps the title short and lists them on the second line, which may wrap to two on a phone.
-        const title = each.length ? copy.goals : copy.goalCount(goalName(undefined, r.text ?? ''), r.count ?? 1)
-        const row: Notice = { ...base, kind: 'goal', title, sub: each.length ? each.join(' · ') : copy.goalSub, visitor: r.visitor, exact: r.seen, goal: r.goal }
-        // Several goals: a tap lists each, with its count and when it was last reached, and each opens Explore on that goal.
         const goals = r.goals ?? []
-        if (goals.length > 1) {
-          row.fold = true
-          row.members = goals.map((g, i) => ({ ...base, id: `${r.id}:${g.goal}`, kind: 'goal', title: each[i], sub: '', at: g.last || r.at, goal: g.goal }))
-        }
-        out.push(row)
+        const day = r.day ?? dayOf(r.at, zone)
+        out.push({ ...base, kind: 'goal', title: goalsTitle(r.count ?? 0, day, now, zone), sub: goalsSub(goals), visitor: r.visitor, exact: r.seen, goal: r.goal, stand: { day, goals } })
         break
       }
       case 'alert': {
@@ -205,7 +199,7 @@ export function arrange(all: Notice[], now: number): Notice[] {
 export type NoticeRow = Notice & { unread: boolean }
 
 /** Whether a notice counts as unread: the one rule for the dot on its row and for the bell's badge. A row of several is unread while any of them is. */
-export const isUnread = (n: Notice, read: ReadonlySet<string>): boolean => (n.members && !n.fold ? n.members.some((m) => isUnread(m, read)) : !n.seen && !read.has(n.id))
+export const isUnread = (n: Notice, read: ReadonlySet<string>): boolean => (n.members ? n.members.some((m) => isUnread(m, read)) : !n.seen && !read.has(n.id))
 
 /** Busy moments of different sites within this long of each other are one row. */
 export const TOGETHER_S = 15 * 60
@@ -254,4 +248,22 @@ export function settle(shown: readonly NoticeRow[], next: readonly NoticeRow[], 
   const live = new Set(next.map((r) => r.id))
   const kept = shown.filter((r) => !live.has(r.id) && !gone.has(r.id)).map((r) => (r.unread ? { ...r, unread: false } : r))
   return [...next.filter((r) => !gone.has(r.id)), ...kept].sort(byNewest)
+}
+
+/** A day as a sentence says it: "today", "yesterday", else the date ("Tue 20 Oct"). */
+export function dayName(day: string, now: number, zone?: string): string {
+  const today = dayOf(now, zone)
+  if (day === today) return stand.today
+  return day === before(today) ? stand.yesterday : dayWords(day)
+}
+
+/** "18 goals reached today": what a day's goals row says, the day as a word when it is today or yesterday. */
+function goalsTitle(n: number, day: string, now: number, zone?: string): string {
+  const when = dayName(day, now, zone)
+  return stand.reached(n, fmtInt(n), when === dayWords(day) ? stand.onDay(when) : when)
+}
+
+/** "2 stand out. The rest is a normal day." */
+function goalsSub(goals: FeedGoal[]): string {
+  return stand.outOf(goals.filter((g) => g.out).length, goals.length)
 }

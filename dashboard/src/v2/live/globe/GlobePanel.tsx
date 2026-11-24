@@ -55,7 +55,6 @@ export default function GlobePanel({ rows, clock, online, bar, pulse, minutes, b
         <div className="lhead">
           <span className={`mk-pulse ${pulse}`} />
           <span className="lt">{copy.live}</span>
-          <span className="mk-quiet lm">{copy.people(online)}</span>
           {bar}
           <button type="button" className="gfs" aria-label={label} title={label} onClick={full.toggle}>
             <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

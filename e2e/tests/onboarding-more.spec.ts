@@ -108,7 +108,7 @@ test('another site: two waiting sites, an inline picker in the sentence, the fir
   await expect(card.locator('pre').first()).toContainText(`data-site="${second.id}"`)
   // A visit on the second site moves on, for that site.
   await visit(page, second.id)
-  await expect(run.getByRole('heading', { name: 'Your first visitor just arrived' })).toBeVisible({ timeout: 20_000 })
+  await expect(run.getByRole('heading', { name: 'Your first person just arrived' })).toBeVisible({ timeout: 20_000 })
   await run.getByRole('button', { name: /Open my dashboard/ }).click()
   await expect(page).toHaveURL(new RegExp(`/${two.replace(/\./g, '\\.')}\\?view=live`))
   await expect(run).toBeHidden()

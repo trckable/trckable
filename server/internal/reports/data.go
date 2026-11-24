@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/trckable/trckable/server/internal/query"
+	"github.com/trckable/trckable/server/internal/summary"
 )
 
 // Brand is the look a report wears: the same as the site's share links.
@@ -95,16 +96,19 @@ func (d Data) Goals() []Row   { return d.rows(d.Cur.Goals, 3) }
 // Empty says nobody came in the period.
 func (d Data) Empty() bool { return d.Cur.KPIs.Visitors == 0 }
 
+// Summary is the report's numbers, read once: every line below says these.
+func (d Data) Summary() summary.Summary { return summary.Build(d.Cur, d.Prev) }
+
 // Money is the period's revenue line, or "" when there is none to say.
 func (d Data) Money() (amount, change string) {
-	m := d.Cur.Money
-	if m == nil || m.Payments == 0 {
+	m := d.Summary().Money
+	if m == nil {
 		return "", ""
 	}
 	w := d.words()
-	amount = w.Money(m.Revenue, m.Currency, m.Exponent) + " · " + w.Number(m.Payments) + " " + w.Payments
-	if d.Prev != nil && d.Prev.Money != nil {
-		change = w.Change(float64(m.Revenue), float64(d.Prev.Money.Revenue))
+	amount = w.Say.Money(m.Revenue.Now, m.Currency, m.Exponent) + " · " + w.Number(m.Payments) + " " + w.Payments
+	if m.HasPrev {
+		change = w.Say.Say(m.Revenue.Move)
 	}
 	return amount, change
 }
@@ -118,27 +122,11 @@ type Tile struct {
 // Tiles are the four numbers on top: visitors, pageviews, bounce rate and
 // how long a visit lasted, each against the period before.
 func (d Data) Tiles() []Tile {
-	w, k, p := d.words(), d.Cur.KPIs, d.Prev.KPIs
+	w, s := d.words(), d.Summary()
 	return []Tile{
-		{w.Visitors, w.Number(k.Visitors), w.Change(float64(k.Visitors), float64(p.Visitors)), trend(float64(k.Visitors), float64(p.Visitors))},
-		{w.Pageviews, w.Number(k.Pageviews), w.Change(float64(k.Pageviews), float64(p.Pageviews)), trend(float64(k.Pageviews), float64(p.Pageviews))},
-		{w.Bounce, w.Number(int64(k.BounceRate*100+0.5)) + "%", "", 0},
-		{w.Session, Duration(k.AvgSessionS), "", 0},
+		{w.Visitors, w.Number(s.People.Now), w.Say.Say(s.People.Move), s.People.Move.Dir},
+		{w.Pageviews, w.Number(s.Pageviews.Now), w.Say.Say(s.Pageviews.Move), s.Pageviews.Move.Dir},
+		{w.Bounce, w.Number(int64(s.BounceRate*100+0.5)) + "%", "", 0},
+		{w.Session, Duration(s.AvgSessionS), "", 0},
 	}
-}
-
-// trend is the direction Change words: up, down, or about the same (within
-// half a percent, or nothing to compare with).
-func trend(cur, prev float64) int {
-	if prev <= 0 {
-		return 0
-	}
-	d := (cur - prev) / prev * 100
-	switch {
-	case d >= 0.5:
-		return 1
-	case d <= -0.5:
-		return -1
-	}
-	return 0
 }

@@ -1,11 +1,13 @@
 // "Attribute each sale": how each checkout passes the visitor id.
+import { Link2 } from 'lucide-react'
 import { useState } from 'react'
 import { CodeBlock } from '../components/Code'
 import { Modal } from '../kit/Modal'
+import { ModalMark } from '../kit/ModalMark'
 import { ProviderMark } from './ProviderMark'
 
 const snippets: Record<string, string> = {
-  'Payment links': `<!-- Nothing to do: the trckable script adds the visitor to
+  'Payment links': `<!-- Nothing to do: the trckable script adds the person to
      Stripe Payment Links, Lemon Squeezy, Polar and Dodo checkout links on click. -->
 <a href="https://buy.stripe.com/…">Buy</a>`,
   Stripe: `import { getIds, checkoutFields } from 'trckable/server'
@@ -48,7 +50,8 @@ export function Attribution({ onClose }: { onClose: () => void }) {
       onClose={onClose}
       frame={{
         title: 'Attribute each sale',
-        subtitle: 'Pass the visitor id to your checkout.',
+        icon: <ModalMark icon={Link2} />,
+        subtitle: 'Pass the person id to your checkout.',
         help: 'Renewals follow it automatically. Without it, revenue still counts in totals but shows as unattributed.',
         size: 'md',
         cancel: false,

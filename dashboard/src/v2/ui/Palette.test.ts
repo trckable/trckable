@@ -8,7 +8,7 @@ const first = [
   'Por qué bajaron las visitas', '¿cuántas ventas hoy', 'cómo subo el tráfico', 'muestra las mejores páginas', 'cuál es la tasa de rebote',
   'Perché il traffico è calato', 'come aumentare le vendite', 'quali pagine sono lente', 'mostra le pagine migliori', 'confronta questa settimana',
   'Waarom daalt het verkeer', 'hoe veel bezoekers vandaag', 'welke pagina is het traagst', 'toon de beste landen', 'vergelijk deze maand',
-  'visitors last week', 'sales yesterday', 'bounce rate march', 'Besucher letzte Woche', 'ventes hier', 'visitas ayer', 'visitatori oggi', 'bezoekers gisteren',
+  'people last week', 'sales yesterday', 'bounce rate march', 'Besucher letzte Woche', 'ventes hier', 'visitas ayer', 'visitatori oggi', 'bezoekers gisteren',
   'revenue 30 days', 'one two three four',
   'top pages', 'spike in signups',
 ]
@@ -34,9 +34,9 @@ describe('where the Ask row goes', () => {
     expect(askIntent('top', 3, true)).toBe('last')
   })
   it('keeps a command named in full first, even when its name reads as a question', () => {
-    expect(askIntent('Why visitors leave', 1, true)).toBe('last')
-    expect(askIntent('why visitors leave', 1, false)).toBe('first')
-    expect(askIntent('Why visitors leave?', 1, true)).toBe('first')
+    expect(askIntent('Why people leave', 1, true)).toBe('last')
+    expect(askIntent('why people leave', 1, false)).toBe('first')
+    expect(askIntent('Why people leave?', 1, true)).toBe('first')
   })
   it('has no row for empty text', () => {
     expect(askIntent('', 0, false)).toBe('none')

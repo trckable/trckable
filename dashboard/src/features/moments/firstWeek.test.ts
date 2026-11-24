@@ -78,7 +78,7 @@ describe('the card about your own visits', () => {
 describe('the card about AI', () => {
   const seen = { ...none, ai: true }
 
-  it('only when an AI assistant has sent a visitor or an AI crawler has read the site', () => {
+  it('only when an AI assistant has sent a person or an AI crawler has read the site', () => {
     expect(eligible(none, fresh)).not.toContain('ai')
     expect(eligible(seen, fresh)).toEqual(['ai', 'replay', 'full', 'weekly', 'search'])
   })
