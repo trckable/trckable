@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Site } from '../../lib/api'
 import type { FeedRow } from './feed'
 import { GOAL_CAP, arrange, badge, fromFeed, isUnread, rowsOf, settle, unreadCount, withFeed, type Notice } from './notices'
+import { dayOf } from './days'
 
 const n = (id: string, at: number, kind: Notice['kind'] = 'down'): Notice => ({ id, kind, site: 'a.com', title: id, sub: '', at })
 
@@ -166,9 +167,9 @@ describe('the server’s list as the bell’s rows', () => {
     expect(once).toEqual([...ids].sort())
   })
 
-  it('never tells a goal without its number, and keeps one milestone of a family and day', () => {
+  it('always tells how many goals, and keeps one milestone of a family and day', () => {
     const [g] = fromFeed([row({ id: 'goal:s1:dl:d', kind: 'goal', count: 126, text: 'file_download' })], sites, now)
-    expect(g.title).toBe('File download: 126')
+    expect(g.title).toBe('126 goals reached today')
     const m = (value: number) => ({ kind: 'visitors', step: String(value), value, day: '2026-10-30', created_at: 1, new: true, shared: false }) as never
     const out = fromFeed([row({ id: 'mile:s1:visitors:100', kind: 'milestone', day: '2026-10-30', milestone: m(100) }), row({ id: 'mile:s1:visitors:1000', kind: 'milestone', day: '2026-10-30', milestone: m(1000) })], sites, now)
     expect(out.map((n) => n.id)).toEqual(['mile:s1:visitors:1000'])
@@ -176,7 +177,7 @@ describe('the server’s list as the bell’s rows', () => {
 
   it('tells sales, signups and goals of an hour as one row with their count', () => {
     const out = fromFeed([row({ id: 'sale:s1:h', kind: 'sale', count: 3, amount: 4500, currency: 'USD', exponent: 2 }), row({ id: 'signup:s1:h', kind: 'signup', count: 2 }), row({ id: 'goal:s1:g:h', kind: 'goal', count: 1, text: 'Newsletter' })], sites, now)
-    expect(out.map((r) => r.title)).toEqual(['3 sales', '2 new signups', 'Newsletter: 1'])
+    expect(out.map((r) => r.title)).toEqual(['3 sales', '2 new signups', '1 goal reached today'])
     expect(out[0].sub).toContain('45')
   })
 
@@ -232,41 +233,39 @@ describe('the goals row', () => {
   const sites1 = [{ id: 's1', domain: 'a.com' }] as Site[]
   const at = 1_000_000
 
-  it('is one row that sums the day’s goals, at the time of the latest goal', () => {
-    const goals = [
-      { goal: 'outbound_click', count: 131 },
-      { goal: 'form_submit', count: 816 },
-    ]
-    const [g] = fromFeed([{ id: 'goal:s1:2026-11-10:2', kind: 'goal', site: 's1', at: at - 7, count: 947, goals }], sites1, at)
-    expect(g.title).toBe('Goals')
-    expect(g.sub).toBe('131 Outbound clicks · 816 Form submissions')
+  const day = dayOf(at)
+  const goals = [
+    { goal: 'signup', name: 'Signup', count: 6, last: at - 7, out: true, why: 'times' as const, factor: 3, usual: 2 },
+    { goal: 'newsletter', name: 'Newsletter', count: 1, last: at - 600, out: true, why: 'first' as const },
+    { goal: 'scroll', name: 'Scroll', count: 9, last: at - 900, usual: 8 },
+  ]
+  const card = () => fromFeed([{ id: `goal:s1:${day}:3`, kind: 'goal', site: 's1', at: at - 7, day, count: 16, goals }], sites1, at)[0]
+
+  it('is one card: how many goals were reached, and how many of them stand out', () => {
+    const g = card()
+    expect(g.title).toBe('16 goals reached today')
+    expect(g.sub).toBe('2 stand out. The rest is a normal day.')
     expect(g.at).toBe(at - 7)
   })
 
-  it('lists each goal as its part, with its count and when it was last reached, and is read as one row', () => {
-    const goals = [
-      { goal: 'scroll', name: 'Scroll', count: 5, last: at - 7 },
-      { goal: 'buy_click', name: 'Buy click', count: 1, last: at - 600 },
-    ]
-    const [g] = fromFeed([{ id: 'goal:s1:2026-11-10:2', kind: 'goal', site: 's1', at: at - 7, count: 6, goals }], sites1, at)
-    expect(g.fold).toBe(true)
-    expect(g.members?.map((m) => [m.id, m.title, m.at, m.goal])).toEqual([
-      ['goal:s1:2026-11-10:2:scroll', '5 Scroll', at - 7, 'scroll'],
-      ['goal:s1:2026-11-10:2:buy_click', '1 Buy click', at - 600, 'buy_click'],
-    ])
+  it('carries the goals with what the server said of each, and is read as one row', () => {
+    const g = card()
+    expect(g.stand?.day).toBe(day)
+    expect(g.stand?.goals.map((x) => [x.goal, x.out ?? false, x.why])).toEqual([['signup', true, 'times'], ['newsletter', true, 'first'], ['scroll', false, undefined]])
+    expect(g.members).toBeUndefined()
     expect(isUnread(g, new Set([g.id]))).toBe(false)
     expect(isUnread(g, new Set())).toBe(true)
     expect(rowsOf([g], new Set()).map((r) => r.id)).toEqual([g.id])
   })
 
-  it('keeps a day of one goal as it was: no parts', () => {
-    const one = fromFeed([{ id: 'goal:s1:2026-11-10:1', kind: 'goal', site: 's1', at, count: 3, goals: [{ goal: 'scroll', name: 'Scroll', count: 3, last: at }] }], sites1, at)[0]
-    const bare = fromFeed([{ id: 'goal:s1:x', kind: 'goal', site: 's1', at, count: 3, text: 'Scroll', goal: 'scroll' }], sites1, at)[0]
-    expect(one.members).toBeUndefined()
-    expect(one.fold).toBeUndefined()
-    expect(one.sub).toBe('3 Scroll')
-    expect(bare.members).toBeUndefined()
-    expect(bare.goal).toBe('scroll')
+  it('says a normal day when nothing stands out, one goal in the singular, and the day as a word', () => {
+    const quiet = fromFeed([{ id: 'goal:s1:a:1', kind: 'goal', site: 's1', at, day, count: 1, goals: [{ goal: 'scroll', count: 1, usual: 1 }] }], sites1, at)[0]
+    expect(quiet.title).toBe('1 goal reached today')
+    expect(quiet.sub).toBe('Nothing stands out. A normal day.')
+    const old = fromFeed([{ id: 'goal:s1:b:1', kind: 'goal', site: 's1', at: at - 86_400, day: '1970-01-10', count: 2, goals: [{ goal: 'scroll', count: 2 }] }], sites1, at)[0]
+    expect(old.title).toMatch(/^2 goals reached on /)
+    const yesterday = fromFeed([{ id: 'goal:s1:c:1', kind: 'goal', site: 's1', at: at - 86_400, day: dayOf(at - 86_400), count: 2, goals: [{ goal: 'scroll', count: 2 }] }], sites1, at)[0]
+    expect(yesterday.title).toBe('2 goals reached yesterday')
   })
 
   it('has a cap of its own: a sale and a site that is down stay listed among 100 goal rows', () => {

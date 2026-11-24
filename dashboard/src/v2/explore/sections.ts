@@ -9,13 +9,27 @@ const LISTED_SECTIONS: Section[] = ['overview', 'pages', 'sources', 'audience', 
 
 const SECTIONS: Section[] = ['changed', ...LISTED_SECTIONS]
 
+/** Goals & sales is four pages, each its own address: the tables on one page, the first of them the page's name. */
+const GOAL_PAGES: Tab[][] = [
+  ['goals'],
+  ['funnels', 'toconvert', 'flow'],
+  ['sales', 'vsale', 'earners', 'sells', 'revmap', 'payments', 'customers'],
+  ['retention'],
+]
+
+/** The page of Goals & sales a table is on (its first table), or the table itself anywhere else. */
+export const pageOf = (t: Tab): Tab => GOAL_PAGES.find((p) => p.includes(t))?.[0] ?? t
+
+/** The tables that stand on the same page as this one: Goals & sales' page it is on, else the table alone. */
+export const onPageWith = (t: Tab): Tab[] => GOAL_PAGES.find((p) => p.includes(t)) ?? [t]
+
 const EVERY: Record<Section, Tab[]> = {
   changed: ['changed'],
   overview: ['overview', 'highlights', 'overtime', 'hours'],
   pages: ['pages', 'paths', 'entries', 'exits', 'groups'],
   sources: ['sources', 'utm'],
   audience: ['countries', 'regions', 'cities', 'timezones', 'languages', 'people', 'devices', 'browsers', 'networks', 'bversion', 'screens'],
-  goals: ['funnels', 'retention', 'vsale', 'toconvert', 'flow', 'sales', 'earners', 'sells', 'revmap', 'payments', 'customers'],
+  goals: ['goals', 'funnels', 'toconvert', 'flow', 'sales', 'vsale', 'earners', 'sells', 'revmap', 'payments', 'customers', 'retention'],
   health: ['speed'],
   web: ['ai', 'answers', 'outbound', 'mentions'],
 }
@@ -59,7 +73,7 @@ export const listedSections = (): Section[] => LISTED_SECTIONS.filter((sec) => T
 export const sectionOf = (t: Tab): Section => SECTIONS.find((s) => EVERY[s].includes(t)) ?? 'overview'
 
 /** Tables the section list shows as their own entries, under their section (the section's own tab strip is unchanged). */
-const LISTED: Partial<Record<Section, Tab[]>> = { goals: ['sales', 'payments', 'customers'], sources: ['sources', 'utm'] }
+const LISTED: Partial<Record<Section, Tab[]>> = { goals: GOAL_PAGES.map((p) => p[0]), sources: ['sources', 'utm'] }
 export const listedTabs = (s: Section): Tab[] => (LISTED[s] ?? []).filter(offered)
 
 /** Where a section leads next: the sections that answer the question it raises. */
@@ -89,7 +103,7 @@ export const FILTER_DIMS: FilterDim[] = ['referrer', 'page', 'country', 'device'
 export const ROW_DIM: Partial<Record<Tab, FilterDim>> = { pages: 'page', sources: 'referrer', utm: 'referrer', countries: 'country', devices: 'device' }
 
 /** The tabs whose numbers their own card reads (views/Hosted.tsx). */
-export const HOSTED: Tab[] = ['highlights', 'overtime', 'hours', 'revmap', 'earners', 'sells', 'people', 'payments', 'customers', 'retention', 'vsale', 'toconvert', 'flow', 'ai', 'answers']
+export const HOSTED: Tab[] = ['goals', 'highlights', 'overtime', 'hours', 'revmap', 'earners', 'sells', 'people', 'payments', 'customers', 'retention', 'vsale', 'toconvert', 'flow', 'ai', 'answers']
 
 /** Tables that were folded into another: an old address (?x=search) opens where they went. Search is Google's panel in Sources. */
 const MOVED: Record<string, { tab: Tab; source?: string }> = { search: { tab: 'sources', source: 'google' }, referrers: { tab: 'sources' }, quality: { tab: 'sources' }, bots: { tab: 'ai' } }

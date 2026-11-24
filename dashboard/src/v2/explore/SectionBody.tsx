@@ -10,6 +10,7 @@ import type { Report } from '../../lib/api'
 import { Changed } from './views/Changed'
 import { HOSTED } from './sections'
 import type { Briefing, Networks as NetworksModel, Paths as PathsModel, HostedTab, Funnel, Mention, Overview as OverviewModel, Sales as SalesModel, Speed as SpeedModel, Tab, Table } from './types'
+import { GoalsPage } from '../goals/GoalsPage'
 import { Hosted } from './views/Hosted'
 import { Overview } from './views/Overview'
 import { Networks } from './views/Networks'
@@ -66,6 +67,7 @@ export function SectionBody({ tab, x, r, still }: { tab: Tab; x: XCtx; r: Loaded
   useEffect(() => {
     if (!still && scrollY > 0) scrollTo({ top: 0 })
   }, [tab, still])
+  if (tab === 'goals') return <div key={tab} className="xfade"><GoalsPage x={x} /></div>
   if (isHosted(tab)) return <div key={tab} className="xfade"><Hosted tab={tab} x={x} /></div>
   if (r.state === 'loading') return <div className="xhold" style={{ minHeight: held?.tab === tab ? held.h : undefined }} aria-busy="true"><XSkeleton cards={CARDS[tab] ?? 0} label={copy.loading} /></div>
   if (r.state === 'error') return <XError title={copy.failed} hint={r.message} onRetry={r.retry} />

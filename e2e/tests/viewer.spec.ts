@@ -221,9 +221,10 @@ test('a viewer sees the empty goals and funnel with the ask line and no add butt
   await open(page, `/${domain}?view=briefing&x=funnels`)
   const explore = page.getByRole('region', { name: 'Explore' })
   await expect(explore.getByText('Not enough to draw a funnel')).toBeVisible({ timeout: 20_000 })
-  await expect(explore.locator('[data-lock="goals"]')).toBeVisible()
-  // The funnel's empty state and the goals lock say it (the page's payment locks, further down, say it too).
+  // The funnel's empty state says it, and the goals page's lock does too.
   await expect(explore.getByText('Not enough to draw a funnel').locator('..').getByText(ASK)).toHaveCount(1)
+  await open(page, `/${domain}?view=briefing&x=goals`)
+  await expect(explore.locator('[data-lock="goals"]')).toBeVisible({ timeout: 20_000 })
   await expect(explore.locator('[data-lock="goals"]').getByText(ASK)).toHaveCount(1)
   await expect(explore.locator('[data-lock="goals"] .lkgo')).toHaveCount(0)
   await expect(explore.locator('#xTrack')).toHaveCount(0)
@@ -231,8 +232,8 @@ test('a viewer sees the empty goals and funnel with the ask line and no add butt
 
 // With goals on, the viewer reads them and is offered no way to add one.
 test('a viewer sees the goals section with no Track a goal button', async ({ page }) => {
-  await open(page, '/example.com?view=briefing&x=funnels')
-  await expect(page.locator('.xsec').first()).toBeVisible({ timeout: 20_000 })
+  await open(page, '/example.com?view=briefing&x=goals')
+  await expect(page.locator('#xp [data-xcard="goals"]')).toBeVisible({ timeout: 20_000 })
   await expect(page.locator('#xTrack')).toHaveCount(0)
   await expect(page.locator('[data-lock="goals"] .lkgo')).toHaveCount(0)
 })

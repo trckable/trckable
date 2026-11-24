@@ -212,7 +212,9 @@ test('goals and the funnel count the people who got there', async ({ page }) => 
   const steps = card(page).locator('.mf .fs-heads li:not(.ghost) b')
   await expect(steps).toHaveCount(3)
   await expect.poll(() => numbers(steps)).toEqual(['24', '12', '4'])
-  await expect.poll(() => numbers(card(page).locator('.grs .gr .gr-ring b'))).toEqual(['4'])
+  // The goals are their own page now: the one goal, reached by the 4 who signed up.
+  await open(page, 'goals')
+  await expect(card(page).locator('.gl-row .gl-n')).toHaveText(['4'])
 })
 
 test('the screens and the other cards of a site with no payments or robots show no error and no placeholder', async ({ page }) => {

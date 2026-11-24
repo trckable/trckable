@@ -1,14 +1,12 @@
-// Goals & funnels: the funnel as bars with where people leave, the goals under it, and the card to change the funnel.
+// Funnels: the funnel as bars with where people leave, the saved funnels, and the card to change the funnel.
 import { Plus } from 'lucide-react'
 import { XSec } from '../../ui/XBits'
-import { SuggestedGoal } from '../../goals/SuggestedGoal'
 import { XGoals, XMiniFunnel } from '../../ui/XFunnel'
 import { can } from '../../../lib/permissions'
 import { lockCopy } from '../../ui/lockCopy'
 import { copy } from '../copy'
 import type { XCtx } from '../ctx'
 import { FunnelEditor } from './FunnelEditor'
-import { Lock } from './Lock'
 import { SavedFunnels } from './SavedFunnels'
 import type { Funnel, Goal, Step } from '../types'
 
@@ -45,14 +43,11 @@ export function Results({ x, d }: { x: XCtx; d: Funnel }) {
           )}
         </div>
       )}
-      <XSec a={copy.goals} />
-      {!d.goalsOn && <Lock k="goals" x={x} />}
-      <XGoals goals={d.goalsOn ? [...d.goals, ...own] : []} />
-      {d.goalsOn && <SuggestedGoal site={x.site} pages={d.pages.map((p) => p.name)} goals={d.goals.map((g) => ({ label: g.name, value: g.name, visitors: g.v }))} />}
-      {d.goalsOn && can('goal.create') && (
-        <button type="button" className="xb" id="xTrack" onClick={() => x.connect('goals')}>
-          {copy.trackGoal}
-        </button>
+      {own.length > 0 && (
+        <>
+          <XSec a={copy.goals} />
+          <XGoals goals={own} />
+        </>
       )}
     </>
   )

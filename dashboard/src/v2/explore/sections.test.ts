@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as me from '../../lib/me'
-import { ALL_TABS, isTab, listedSections, movedTo, sectionNamed, sectionOf, seeMoney, seeNetworks, TABS } from './sections'
+import { readView, writeView } from '../../lib/url'
+import { askOf } from './open'
+import { ALL_TABS, isTab, listedSections, listedTabs, movedTo, onPageWith, pageOf, sectionNamed, sectionOf, seeMoney, seeNetworks, TABS } from './sections'
 
 describe('the Sources section', () => {
   it('has one UTM tab, not a second pair for source and medium', () => {
@@ -84,6 +86,41 @@ describe('a shared link and payments', () => {
     vi.spyOn(me, 'isShared').mockReturnValue(false)
     seeMoney(false)
     expect(sections()).toContain('goals')
-    expect(TABS.goals).toEqual(['funnels', 'retention', 'vsale', 'toconvert', 'flow', 'sales', 'earners', 'sells', 'revmap', 'payments', 'customers'])
+    expect(TABS.goals).toEqual(['goals', 'funnels', 'toconvert', 'flow', 'sales', 'vsale', 'earners', 'sells', 'revmap', 'payments', 'customers', 'retention'])
+  })
+})
+
+describe('Goals & sales is four pages', () => {
+  it('lists Goals, Funnels, Sales and Coming back as its own entries', () => {
+    vi.spyOn(me, 'isShared').mockReturnValue(false)
+    expect(listedTabs('goals')).toEqual(['goals', 'funnels', 'sales', 'retention'])
+  })
+  it('puts every table on the page it belongs to, and leads each page with its first', () => {
+    expect(pageOf('payments')).toBe('sales')
+    expect(pageOf('customers')).toBe('sales')
+    expect(pageOf('vsale')).toBe('sales')
+    expect(pageOf('toconvert')).toBe('funnels')
+    expect(pageOf('flow')).toBe('funnels')
+    expect(pageOf('retention')).toBe('retention')
+    expect(pageOf('goals')).toBe('goals')
+    expect(onPageWith('earners')).toEqual(['sales', 'vsale', 'earners', 'sells', 'revmap', 'payments', 'customers'])
+    expect(onPageWith('pages')).toEqual(['pages'])
+  })
+  it('keeps every table on exactly one page', () => {
+    const every = ['goals', 'funnels', 'toconvert', 'flow', 'sales', 'vsale', 'earners', 'sells', 'revmap', 'payments', 'customers', 'retention'] as const
+    for (const t of every) expect(onPageWith(t)).toContain(t)
+    expect(new Set(every.flatMap((t) => onPageWith(t))).size).toBe(every.length)
+  })
+  it('opens on the goals tab by its address, with the goal it names', () => {
+    expect(askOf({ xp: 'goals', xg: 'signup', xf: undefined, xs: undefined, filters: [] })).toMatchObject({ tab: 'goals', goal: 'signup' })
+    expect(askOf({ xp: 'goals', xf: undefined, xs: undefined, filters: [] })?.goal).toBeUndefined()
+    expect(askOf({ xp: 'overview', xg: 'signup', xf: undefined, xs: undefined, filters: [] })?.goal).toBeUndefined()
+  })
+  it('writes the goal in the address and reads it back, long names cut', () => {
+    const view = readView(new URLSearchParams('x=goals&xg=Saw%20pricing'))
+    expect(view.xg).toBe('Saw pricing')
+    expect(writeView(view)).toContain('xg=Saw+pricing')
+    expect(readView(new URLSearchParams('x=goals&xg=' + 'a'.repeat(300))).xg).toHaveLength(200)
+    expect(readView(new URLSearchParams('x=goals')).xg).toBeUndefined()
   })
 })

@@ -35,11 +35,11 @@ export function usePanelState(ask: Ask) {
   const act = {
     section: (sec: Section) => {
       const to: Tab = TABS[sec].includes(tab) ? tab : TABS[sec][0]
-      setView({ xp: to, xf: filters })
+      setView({ xp: to, xf: filters, xg: undefined })
       set({ n: FIRST, menu: null, manage: false })
     },
     tab: (to: Tab) => {
-      setView({ xp: to, xf: filters })
+      setView({ xp: to, xf: filters, xg: undefined })
       set({ n: FIRST, menu: null })
     },
     goWith: (to: Tab, dim: string, value: string) => {
