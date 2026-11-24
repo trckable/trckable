@@ -111,6 +111,27 @@ describe('the goals card', () => {
     m.stop()
   })
 
+  it('heads the card with the count, the day and the site, and the way on names that same day', async () => {
+    const m = mount()
+    act(() => m.host.querySelector<HTMLButtonElement>('.nf')?.click())
+    await vi.waitFor(() => expect(card()).not.toBeNull(), { timeout: 5000 })
+    expect(document.querySelector('.gs-bar-title')?.textContent).toBe('9 goals · today · a.com')
+    expect(document.querySelector('.gs-bar-pill')?.textContent).toBe('2 stand out')
+    expect(document.querySelector('.gs-all')?.textContent).toBe('Open today in Goals →')
+    m.stop()
+  })
+
+  it('tells each time with marks, and keeps the page only where it is not the home page', async () => {
+    const m = mount()
+    act(() => m.host.querySelector<HTMLButtonElement>('.nf')?.click())
+    await vi.waitFor(() => expect(card()).not.toBeNull(), { timeout: 5000 })
+    await vi.waitFor(() => expect(document.querySelector('.gs-slim')).not.toBeNull(), { timeout: 5000 })
+    const row = document.querySelector('.gs-slim') as HTMLElement
+    expect([...row.querySelectorAll('.gs-ico')].map((e) => e.getAttribute('title'))).toEqual(['Google', 'Germany', 'iPhone'])
+    expect(row.querySelector('.gs-path')?.textContent).toBe('/planner')
+    m.stop()
+  })
+
   it('opens the list of goals for the day from its foot', async () => {
     const set = vi.spyOn(url, 'setView').mockImplementation(() => undefined)
     const m = mount()

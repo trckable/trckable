@@ -34,7 +34,9 @@ export function GoalPage({ x, goal }: { x: XCtx; goal: string }) {
       {backTo}
       <div className="gp-head">
         <h2 title={nameOf(p.goal)}>{nameOf(p.goal)}</h2>
-        <QuietButton key={goal} site={x.site.id} goal={goal} quiet={!!p.quiet} />
+        <div className="gp-actions">
+          <QuietButton key={goal} site={x.site.id} goal={goal} quiet={!!p.quiet} />
+        </div>
       </div>
       <GoalFacts page={p} zone={x.site.timezone} label={x.view.period === 'today' ? stand.tileToday : stand.tileReached} withDay={from !== to} wide />
     </>

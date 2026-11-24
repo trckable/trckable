@@ -39,7 +39,7 @@
 }
 .gs-time {
   display: grid;
-  grid-template-columns: minmax(64px, auto) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(64px, auto) minmax(0, 3fr) minmax(0, 1.2fr) minmax(0, 1.6fr);
   gap: 4px 12px;
   align-items: center;
   padding: 9px 10px;
@@ -58,6 +58,22 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* On the goal's page the rows share their columns: the page takes what the time, the source and the place leave. */
+.gs-times-wide {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) fit-content(160px) fit-content(220px);
+  gap: 2px 12px;
+}
+.gs-times-wide > li {
+  grid-column: 1 / -1;
+}
+.gs-times-wide > .gs-time {
+  grid-template-columns: subgrid;
+}
+/* Who sent them and where from take the grid's columns beside the page. */
+.gs-meta {
+  display: contents;
+}
 .gs-dim {
   color: var(--text-2, var(--text-3));
 }
@@ -66,12 +82,18 @@
   color: var(--text-3);
   font-size: 13px;
 }
-/* The goal's own page: the times, then who sent them and the pages, side by side. */
+/* The goal's own page: the times in the wide column, who sent them and the pages stacked beside it. */
 .gs-grid {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 3fr) minmax(220px, 1fr);
   gap: 12px;
   align-items: start;
+}
+.gs-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
 }
 .gs-times-box,
 .gs-top {
@@ -94,37 +116,179 @@
   padding: 4px 0;
   font-size: 13px;
 }
+.gs-wrap {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+/* Long goal names and sources: the line under a tile is cut to two lines (its title holds the rest). */
+.gs-tiles .sum-d {
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+/* A phone: the time and page are one line (the page wraps, nothing is cut), who sent them and where from the line under it. */
 @media (--xs) {
   .gs-grid {
     grid-template-columns: minmax(0, 1fr);
   }
-}
-/* A phone: the time and page on one line, the source and place under them. */
-@media (--xs) {
+  .gs-times-wide {
+    display: flex;
+    flex-direction: column;
+  }
+  .gs-times-wide > .gs-time,
   .gs-time {
     grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
   }
-  .gs-time .gs-dim {
-    grid-column: 2;
+  .gs-time .gs-cell {
+    overflow: visible;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
+  .gs-meta {
+    display: flex;
+    flex-wrap: wrap;
+    grid-column: 1 / -1;
+    gap: 0 6px;
+    min-width: 0;
+  }
+  .gs-meta .gs-cell:empty {
+    display: none;
+  }
+  .gs-meta .gs-cell + .gs-cell:not(:empty)::before {
+    content: '·';
+    margin-inline-end: 6px;
+  }
+}
+
+/* The marks a row is told with: the kind of goal, who sent them, the flag and the device. */
+.gs-glyph {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  color: var(--text-2, var(--text-3));
+}
+.gs-ico {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+}
+.gs-dev {
+  color: var(--text-3);
+}
+.gs-cc {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* The bell's card tells a goal slim: three chips, then rows of marks that scroll inside while the chips and buttons stay. */
+.gs-card-facts {
+  gap: 8px;
+}
+.gs-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 5px 10px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  color: var(--text-2, var(--text-3));
+  font-size: 12px;
+  white-space: nowrap;
+}
+.gs-chip b {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+.gs-chip svg {
+  flex: none;
+}
+.gs-card-facts .gs-why {
+  overflow: hidden;
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gs-card-facts .gs-times-box {
+  flex: 1 1 0;
+  min-height: 0;
+  padding: 0;
+  overflow-y: auto;
+  border: 0;
+  border-radius: 0;
+}
+.gs-card-facts .gs-h {
+  margin: 4px 0 0;
+}
+.gs-time.gs-slim {
+  grid-template-columns: 44px 18px minmax(0, 1fr) 18px 18px;
+  gap: 10px;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+}
+.gs-time.gs-slim .gs-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+li.gs-empty {
+  padding: 6px 10px;
 }
 
 /* The goal's page (GoalPage.tsx) and the buttons that choose what the bell says. */
 .gp-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 8px 12px;
   margin: 12px 0;
 }
+/* A long name wraps to two lines, then is cut (its title holds the whole name). */
 .gp-head h2 {
+  display: -webkit-box;
   flex: 1 1 240px;
   min-width: 0;
   margin: 0;
   overflow: hidden;
   font-size: 22px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.gp-actions {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-inline-start: auto;
+}
+@media (--xs) {
+  .gp-actions {
+    flex: 1 1 100%;
+    margin-inline-start: 0;
+  }
 }
 .gp-back {
   display: inline-flex;
@@ -138,12 +302,12 @@
   font-size: 13px;
   cursor: pointer;
 }
-.gp-head .gs-quiet {
-  margin-inline-start: auto;
-}
-.gs-quiet {
-  padding: 8px 12px;
-  border: 0;
+/* On the goal's page the Explore sheet's own button reset (.mk button) is the stronger rule: the same button drawn there too. */
+.gs-quiet,
+.mk .gs-quiet {
+  min-height: 36px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-2, var(--mk-line));
   border-radius: 10px;
   background: color-mix(in srgb, var(--text) 8%, transparent);
   color: var(--text);
@@ -151,7 +315,8 @@
   font-size: 13px;
   cursor: pointer;
 }
-.gs-quiet[aria-pressed='true'] {
+.gs-quiet[aria-pressed='true'],
+.mk .gs-quiet[aria-pressed='true'] {
   background: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
@@ -247,36 +412,86 @@
   }
 }
 
-/* The bell's goals card (GoalsStory.tsx). */
+/* The bell's goals card (GoalsStory.tsx): one fixed size, whatever goal is chosen. */
 .modal.gs-card {
   color: var(--text);
   position: relative;
-  width: min(880px, 100%);
-  gap: 16px;
+  gap: 0;
+  width: min(1040px, 100%);
+  height: min(640px, 85vh);
+  max-height: none;
+  padding: 0;
+  overflow: hidden;
+}
+.gs-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--mk-line, var(--border));
+}
+.gs-bar-ico {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+}
+.gs-bar-title {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gs-bar-pill {
+  flex: none;
+  padding: 3px 8px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  color: var(--text-2, var(--text-3));
+  font-size: 12px;
+  white-space: nowrap;
+}
+.gs-bar .gs-x {
+  position: static;
+  flex: none;
+  margin-inline-start: auto;
 }
 .gs-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
-  gap: 20px;
+  flex: 1 1 0;
+  grid-template-columns: 340px minmax(0, 1fr);
   min-height: 0;
 }
 .gs-side {
   display: flex;
   flex-direction: column;
-  gap: 4px;
   min-width: 0;
+  min-height: 0;
+  border-inline-end: 1px solid var(--mk-line, var(--border));
 }
-.gs-sub {
-  margin: 0 0 6px;
-  color: var(--text-2, var(--text-3));
-  font-size: 13px;
+.gs-scroll {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  padding: 8px;
+  overflow-y: auto;
 }
 .gs-sec {
-  margin: 10px 0 2px;
+  margin: 8px 8px 2px;
   color: var(--text-3);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .gs-pick {
@@ -284,9 +499,10 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 8px 12px;
+  min-height: 36px;
+  padding: 4px 8px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 9px;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -294,7 +510,6 @@
   cursor: pointer;
 }
 .gs-pick.out {
-  padding: 10px 12px;
   background: color-mix(in srgb, var(--mk-amber) 10%, transparent);
 }
 .gs-pick:hover,
@@ -305,12 +520,11 @@
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
-  gap: 2px;
   min-width: 0;
 }
 .gs-pick-name {
   overflow: hidden;
-  font-size: 13.5px;
+  font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -318,45 +532,74 @@
   font-weight: 600;
 }
 .gs-pick-why {
+  overflow: hidden;
   color: var(--mk-amber);
-  font-size: 12px;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .gs-pick-last {
   color: var(--text-3);
-  font-size: 12px;
+  font-size: 11px;
   white-space: nowrap;
 }
 .gs-pick-n {
-  min-width: 22px;
+  min-width: 24px;
+  font-size: 13px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
-.gs-pick-go {
-  color: var(--text-3);
+.gs-all {
+  flex: none;
+  padding: 12px 16px;
+  border: 0;
+  border-top: 1px solid var(--mk-line, var(--border));
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
 }
 .gs-detail {
   display: flex;
   flex-direction: column;
-  gap: 14px;
   min-width: 0;
+  min-height: 0;
+}
+.gs-detail-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px 8px;
 }
 .gs-detail-head {
+  flex: 1 1 0;
+  min-width: 0;
   margin: 0;
   overflow: hidden;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.gs-detail > .gs-facts {
+  flex: 1 1 0;
+  min-height: 0;
+  padding: 0 18px;
+}
 .gs-actions {
   display: flex;
+  flex: none;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: auto;
+  padding: 12px 18px;
+  border-top: 1px solid var(--mk-line, var(--border));
 }
 .gs-open {
-  padding: 10px 16px;
+  padding: 9px 14px;
   border: 0;
   border-radius: 10px;
   background: var(--accent);
@@ -366,28 +609,28 @@
   font-weight: 600;
   cursor: pointer;
 }
-.gs-all {
-  align-self: flex-start;
-  margin-top: 6px;
-  padding: 4px 0;
-  border: 0;
-  background: none;
-  color: var(--accent);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-}
 .gs-back {
   display: none;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  color: var(--text);
+  cursor: pointer;
 }
 /* A phone: a full sheet, the goals first and one goal's detail in place of them. */
 @media (--xs) {
   .modal.gs-card {
     width: 100%;
     height: 100%;
-    max-height: 100%;
     border-radius: 0;
-    overflow-y: auto;
+  }
+  .gs-bar-pill {
+    display: none;
   }
   .gs-body {
     grid-template-columns: minmax(0, 1fr);
@@ -396,8 +639,21 @@
   .gs-body[data-view='detail'] .gs-side {
     display: none;
   }
+  .gs-side {
+    border-inline-end: 0;
+  }
   .gs-back {
-    display: inline-flex;
+    display: grid;
+  }
+  .gs-pick {
+    min-height: 44px;
+  }
+  .gs-time.gs-slim {
+    min-height: 40px;
+  }
+  .gs-actions > * {
+    flex: 1 1 0;
+    min-height: 44px;
   }
   /* Nothing is chosen until a goal is tapped. */
   .gs-body[data-view='list'] .gs-pick.out[aria-current='true'] {

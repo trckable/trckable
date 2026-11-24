@@ -2,6 +2,7 @@
 // (server/internal/standsout): these only word what it answered. Pure: standing.test.ts.
 import { fmtFixed, fmtInt } from '../../lib/format'
 import { goalName } from '../../lib/goalName'
+import { sourceName } from '../briefing/model'
 import { stand } from './standCopy'
 
 /** What the server says of one goal over a stretch: whether it stands out and why. */
@@ -45,4 +46,10 @@ export function split<T extends Standing>(goals: T[]): { out: T[]; usual: T[] } 
 export function versus(g: Standing): string {
   if (!g.out) return stand.vsAsUsual
   return g.why === 'first' ? stand.vsFirst : `↑ ${fmtInt(g.factor ?? 0)}×`
+}
+
+/** Who sent them, as people say it: the brand or host, "Direct" for none. */
+export function sourceWords(s: string | undefined): string {
+  if (!s || s === 'Direct') return stand.direct
+  return s.includes('.') ? sourceName(s) : s
 }

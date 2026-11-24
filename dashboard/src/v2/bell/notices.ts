@@ -250,13 +250,17 @@ export function settle(shown: readonly NoticeRow[], next: readonly NoticeRow[], 
   return [...next.filter((r) => !gone.has(r.id)), ...kept].sort(byNewest)
 }
 
+/** A day as a sentence says it: "today", "yesterday", else the date ("Tue 20 Oct"). */
+export function dayName(day: string, now: number, zone?: string): string {
+  const today = dayOf(now, zone)
+  if (day === today) return stand.today
+  return day === before(today) ? stand.yesterday : dayWords(day)
+}
+
 /** "18 goals reached today": what a day's goals row says, the day as a word when it is today or yesterday. */
 function goalsTitle(n: number, day: string, now: number, zone?: string): string {
-  const today = dayOf(now, zone)
-  let when = stand.onDay(dayWords(day))
-  if (day === today) when = stand.today
-  else if (day === before(today)) when = stand.yesterday
-  return stand.reached(n, fmtInt(n), when)
+  const when = dayName(day, now, zone)
+  return stand.reached(n, fmtInt(n), when === dayWords(day) ? stand.onDay(when) : when)
 }
 
 /** "2 stand out. The rest is a normal day." */

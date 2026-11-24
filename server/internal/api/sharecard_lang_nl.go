@@ -66,7 +66,7 @@ var cardNL = &cardLang{
 	heroLabel: map[string]string{"toppage": "Je meest bezochte pagina", "topsource": "De meeste mensen kwamen van", "topplace": "De meeste mensen zijn in"},
 
 	last24: "Laatste 24 uur", post24: "in de laatste 24 uur", postDays: "in de laatste %d dagen", postAll: "in alle tijd", postRange: "in %s", since: "Sinds %s",
-	lastDays: "Laatste %d dagen", last12: "Laatste 12 maanden", post12: "in de laatste 12 maanden",
+	post12: "in de laatste 12 maanden",
 	prev24: "voorgaande 24 uur", prevDay: "voorgaande dag", prevDays: "voorgaande %d dagen", vs: "t.o.v.",
 
 	postBegun: "%s: het tellen is begonnen. %s", postTopPage: "Toppagina: %s.",

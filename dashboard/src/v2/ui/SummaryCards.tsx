@@ -17,6 +17,8 @@ export interface SumItem {
   tone?: Tone
   /** What the number is of or against. */
   sub?: string
+  /** The line in full, when the card shows it shortened. */
+  subTitle?: string
   /** A small picture of the icon set in a soft square before the label. */
   icon?: string
   /** A country's flag, a device's mark or a status dot shown before the number. */
@@ -55,7 +57,7 @@ function Body({ k }: { k: SumItem }) {
         </div>
       )}
       {(k.tag || k.sub) && (
-        <div className="sum-d">
+        <div className="sum-d" title={k.subTitle}>
           {k.tag && <span className={`sum-n ${k.tone ?? ''}`}>{ARROW[k.tone ?? ''] + k.tag}</span>}
           {k.sub}
         </div>

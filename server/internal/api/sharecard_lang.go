@@ -36,7 +36,7 @@ type cardLang struct {
 	noChanged, noSearch, noAI, noGoals, noSales, noMilestone, bestDay, noBestDay                                                                                                               string
 	// Periods: the pill, how a post says it, what a change is against.
 	last24, post24, postDays, postAll, postRange, since string
-	lastDays, last12, post12                            string // "Last 30 days", "Last 12 months" and how a post says it
+	post12                                              string // how a post says "in the last 12 months"
 	prev24, prevDay, prevDays, vs                       string
 	// A post.
 	postBegun, postTopPage string

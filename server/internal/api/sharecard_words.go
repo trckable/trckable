@@ -10,7 +10,7 @@ import (
 // the day (and hour) still running, as the dashboard does.
 type cardPeriod struct {
 	days, hours int
-	label       string // the pill: real dates, or "Last 24 hours"
+	label       string // the pill: real dates ("25 Oct – 23 Nov 2026"), or "Last 24 hours"
 	post        string // how the post says it, with its preposition ("in the last 7 days")
 	vs          string // what a comparison is against ("previous 30 days"); "" when there is none to make
 	// from and to are the first and last day covered, in the site's zone; set by resolvePeriod, not by the presets.
@@ -92,10 +92,10 @@ func resolvePeriod(l *cardLang, name, fromS, toS string, now, first time.Time, c
 		p.post = fmt.Sprintf(l.postRange, p.label)
 		return vs(p)
 	case "12mo":
-		p.label, p.post = l.last12, l.post12
+		p.label, p.post = l.datesLabel(p.from, p.to), l.post12
 		return vs(p)
 	}
-	p.label = fmt.Sprintf(l.lastDays, p.days)
+	p.label = l.datesLabel(p.from, p.to)
 	p.post = fmt.Sprintf(l.postDays, p.days)
 	return vs(p)
 }

@@ -20,17 +20,17 @@ func TestResolvePeriod(t *testing.T) {
 		days                      int
 		compare                   bool
 	}{
-		{"30d", "", "", "Last 30 days", "previous 30 days", 30, true},
-		{"7d", "", "", "Last 7 days", "", 7, false},
-		{"12mo", "", "", "Last 12 months", "previous 365 days", 365, true},
+		{"30d", "", "", "11 Oct – 9 Nov 2026", "previous 30 days", 30, true},
+		{"7d", "", "", "3 Nov – 9 Nov 2026", "", 7, false},
+		{"12mo", "", "", "10 Nov 2025 – 9 Nov 2026", "previous 365 days", 365, true},
 		{"24h", "", "", "Last 24 hours", "previous 24 hours", 0, true},
 		{"all", "", "", "Since 14 Mar 2025", "", 0, true},
 		{"since", "2024-02-04", "", "Since 4 Feb 2024", "", 1010, true},
-		{"custom", "2026-12-28", "2027-01-03", "Last 7 days", "previous 7 days", 7, true}, // not yet: falls back to a 7-day preset
+		{"custom", "2026-12-28", "2027-01-03", "3 Nov – 9 Nov 2026", "previous 7 days", 7, true}, // not yet: falls back to a 7-day preset
 		{"custom", "2025-12-28", "2026-01-03", "28 Dec 2025 – 3 Jan 2026", "previous 7 days", 7, true},
 		{"custom", "2026-11-01", "2026-11-20", "1 Nov – 9 Nov 2026", "previous 9 days", 9, true}, // cut back to today
 		{"custom", "2026-11-05", "2026-11-05", "5 Nov 2026", "previous day", 1, true},
-		{"nope", "", "", "Last 7 days", "", 7, false},
+		{"nope", "", "", "3 Nov – 9 Nov 2026", "", 7, false},
 	} {
 		p := resolvePeriod(cardWords, c.name, c.from, c.to, now, made, c.compare)
 		if p.label != c.label || p.vs != c.vs || (c.days > 0 && p.days != c.days) {

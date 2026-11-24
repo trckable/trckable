@@ -109,9 +109,9 @@ func TestCardPeriodWords(t *testing.T) {
 	now := time.Date(2026, 11, 9, 15, 30, 0, 0, time.UTC)
 	first := time.Date(2024, 2, 4, 9, 0, 0, 0, time.UTC)
 	for _, c := range []struct{ name, from, to, want string }{
-		{"7d", "", "", "Last 7 days"},
-		{"30d", "", "", "Last 30 days"},
-		{"12mo", "", "", "Last 12 months"},
+		{"7d", "", "", "3 Nov – 9 Nov 2026"},
+		{"30d", "", "", "11 Oct – 9 Nov 2026"},
+		{"12mo", "", "", "10 Nov 2025 – 9 Nov 2026"},
 		{"custom", "2026-03-01", "2026-06-14", "1 Mar – 14 Jun 2026"},
 		{"custom", "2025-12-01", "2026-06-14", "1 Dec 2025 – 14 Jun 2026"},
 		{"all", "", "", "Since 4 Feb 2024"},
@@ -142,10 +142,10 @@ func TestCardWordsNameTheFirstDay(t *testing.T) {
 func TestShareListNamesPeriods(t *testing.T) {
 	now := time.Date(2026, 11, 9, 15, 30, 0, 0, time.UTC)
 	for _, c := range []struct{ code, period, want string }{
-		{"en", "12mo", "Last 12 months"},
+		{"en", "12mo", "10 Nov 2025 – 9 Nov 2026"},
 		{"en", "2026-03-01..2026-06-14", "1 Mar – 14 Jun 2026"},
 		{"en", "since:2024-02-04", "Since 4 Feb 2024"},
-		{"de", "30d", "Letzte 30 Tage"},
+		{"de", "30d", "11. Okt – 9. Nov 2026"},
 		{"en", "", ""},
 	} {
 		if got := sharePeriodLabel(cardLangOf(c.code), c.period, now); got != c.want {
