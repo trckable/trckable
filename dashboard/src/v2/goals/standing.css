@@ -290,9 +290,8 @@ li.gs-empty {
     margin-inline-start: 0;
   }
 }
-/* Beside the quiet button: the Explore sheet's .mk button reset outranks a bare class. */
-.gp-back,
-.mk .gp-back {
+/* Beside the quiet button. */
+.gp-back {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -304,9 +303,7 @@ li.gs-empty {
   font-size: 13px;
   cursor: pointer;
 }
-/* On the goal's page the Explore sheet's own button reset (.mk button) is the stronger rule: the same button drawn there too. */
-.gs-quiet,
-.mk .gs-quiet {
+.gs-quiet {
   min-height: 36px;
   padding: 8px 14px;
   border: 1px solid var(--border-2, var(--mk-line));
@@ -317,8 +314,7 @@ li.gs-empty {
   font-size: 13px;
   cursor: pointer;
 }
-.gs-quiet[aria-pressed='true'],
-.mk .gs-quiet[aria-pressed='true'] {
+.gs-quiet[aria-pressed='true'] {
   background: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 

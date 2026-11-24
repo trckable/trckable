@@ -3,8 +3,9 @@
 // reports them to /api/crawl, sending only the robot's name, the page and the
 // time. The code carries this site's id, key and server address.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check } from 'lucide-react'
+import { Bot, Check } from 'lucide-react'
 import { Modal } from '../../kit/Modal'
+import { ModalMark } from '../../kit/ModalMark'
 import { Stepper } from '../../components/Stepper'
 import { type Site, more } from '../../lib/apiMore'
 import { addDays, todayIn } from '../../lib/dates'
@@ -69,6 +70,7 @@ export function CrawlerSetup({ site, onChanged, onClose }: { site: Site; onChang
       onClose={close}
       frame={{
         title: t.titles[step - 1],
+        icon: <ModalMark icon={Bot} />,
         subtitle: t.leads[step - 1],
         help: t.help,
         size: 'md',

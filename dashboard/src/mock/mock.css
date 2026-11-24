@@ -4,7 +4,8 @@
 .mk{margin:0;background:var(--mk-bg);color:var(--mk-text);font:14px/1.4 Inter,system-ui,-apple-system,sans-serif}
 /* The walkthrough draws its text with the browser's own smoothing; the page's global setting (styles.css) thins it. */
 .mk{-webkit-font-smoothing:auto;-moz-osx-font-smoothing:auto}
-.mk button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+/* A weak reset (zero specificity above the element): any component class on a button wins over it, inside the Explore sheet too. */
+:where(.mk) button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .mk .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .mk{width:100%;max-width:1440px;padding:22px 32px 40px;container-type:inline-size}
 .mk .hd{display:flex;align-items:center;gap:14px}

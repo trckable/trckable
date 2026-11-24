@@ -683,3 +683,8 @@
 .mentions-rules { display: grid; gap: 12px; margin-top: 16px; }
 .mentions-rules h4 { margin: 0; }
 .mentions-rule { display: grid; gap: 6px; }
+
+/* Inside the Explore sheet the chip stays borderless, as the sheet's old button reset drew it. */
+.mk .mp-chip {
+  border: 0;
+}

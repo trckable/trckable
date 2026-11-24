@@ -2,11 +2,12 @@
 // Adding a site is a short wizard (features/install: your site → install →
 // revenue), and each
 // site can be renamed or removed from the same list.
-import { Plus, Settings2 } from 'lucide-react'
+import { Check, Clock, Coins, Globe, Plus, Settings2, Tag } from 'lucide-react'
 import { closeAccount } from '../lib/account'
 import { SiteMark } from '../components/SiteMark'
 import { Field } from '../components/Field'
 import { Modal } from '../kit/Modal'
+import { ModalMark } from '../kit/ModalMark'
 import { CURRENCIES, withCurrent, zones } from '../lib/site'
 import { Picker } from '../components/Picker'
 import { useState } from 'react'
@@ -157,6 +158,8 @@ function SiteRow({ site, onSites, onDelete }: { site: Site; onSites: () => void;
   )
 }
 
+const LABEL = { 'Display name': 'Display name', Timezone: 'Timezone', Currency: 'Currency', Domain: 'Domain' } as const
+
 /** Changing a site is the same three questions as adding one, in one place:
  *  the add wizard asked them, so editing should not scatter them across a
  *  settings page. */
@@ -185,9 +188,8 @@ function EditSite({ site, onClose, onSaved }: { site: Site; onClose: () => void;
       label={`Edit ${site.domain}`}
       onClose={onClose}
       frame={{
-        title: site.domain,
-        subtitle: 'The domain never changes.',
-        help: 'It is what the snippet reports. Everything else is yours.',
+        title: `Edit site · ${site.domain}`,
+        icon: <ModalMark icon={Settings2} />,
         size: 'md',
         busy,
         onSubmit: save,
@@ -198,23 +200,32 @@ function EditSite({ site, onClose, onSaved }: { site: Site; onClose: () => void;
         ),
         actions: (
           <button type="submit" className="btn primary" disabled={busy || !changed}>
+            <Check size={14} strokeWidth={2} aria-hidden="true" />
             {busy ? 'Saving…' : 'Save'}
           </button>
         ),
       }}
     >
-        <Field label="Display name">
+        <Field label={<><Tag size={14} strokeWidth={1.75} aria-hidden="true" />{LABEL['Display name']}</>}>
           {(f) => <input {...f} className="input" value={name} placeholder={site.domain} autoFocus onChange={(e) => setName(e.target.value)} />}
         </Field>
 
         <div className="edit-pair">
-          <Field label="Timezone" plain help="Which day and hour a visit belongs to. Changing it reshapes past days.">
+          <Field label={<><Clock size={14} strokeWidth={1.75} aria-hidden="true" />{LABEL['Timezone']}</>} plain help="Which day and hour a visit belongs to. Changing it reshapes past days.">
             {() => <Picker label="Timezone" placeholder="Search a city or zone…" value={timezone} onPick={setTimezone} items={withCurrent(zones, timezone, (z) => z.replace(/_/g, ' '))} />}
           </Field>
-          <Field label="Currency" plain help="Revenue is converted at the payment date, so past sales keep their value.">
+          <Field label={<><Coins size={14} strokeWidth={1.75} aria-hidden="true" />{LABEL['Currency']}</>} plain help="Revenue is converted at the payment date, so past sales keep their value.">
             {() => <Picker label="Currency" placeholder="Search a currency…" value={currency} onPick={setCurrency} items={withCurrent(CURRENCIES, currency)} />}
           </Field>
         </div>
+
+        <Field label={<><Globe size={14} strokeWidth={1.75} aria-hidden="true" />{LABEL['Domain']}</>} plain help="It is what the snippet reports, so it never changes. Everything else is yours.">
+          {() => (
+            <div className="edit-domain" title={site.domain}>
+              {site.domain}
+            </div>
+          )}
+        </Field>
     </Modal>
   )
 }

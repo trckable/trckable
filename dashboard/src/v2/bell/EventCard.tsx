@@ -32,7 +32,7 @@ function seeOf(n: Notice): string {
 /** `onSee` leads on to where the event lives (the row's own page); the card closes with it. */
 export default function EventCard({ n, site, onSee, onClose }: { n: Notice; site: Site; onSee: () => void; onClose: () => void }) {
   return (
-    <Modal label={t.label} onClose={onClose} className="ev-card" keepSize={false} focus="box">
+    <Modal label={t.label} onClose={onClose} className="ev-card" focus="box">
       <button type="button" className="ev-x" aria-label={t.close} onClick={onClose}>
         <X size={16} strokeWidth={2} aria-hidden="true" />
       </button>

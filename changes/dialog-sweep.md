@@ -1,0 +1,1 @@
+Every dialog keeps one fixed size, whatever step or tab it is on: the title bar and the buttons stay in place and only the middle scrolls, rows are compact, and each dialog has icons beside its words (on a phone it is a full-height sheet).

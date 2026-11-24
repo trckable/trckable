@@ -88,4 +88,40 @@ describe('dialogs', () => {
     const hiding = all.filter((f) => /body\[data-modal\]|body:has\(\.modal-back[^)]*\)[^{]*\{[^}]*(visibility|display|opacity)/.test(readFileSync(f, 'utf8')))
     expect(hiding.map((f) => f.slice(SRC.length + 1))).toEqual([])
   })
+
+  it('have one fixed size per size class, held in kit/Modal.css, and no dialog sets a height of its own', () => {
+    const css = readFileSync(join(SRC, 'kit/Modal.css'), 'utf8')
+    // The one place: each class a fixed height, capped by the screen, and the frame's body is what scrolls.
+    for (const [size, px] of [['xs', 260], ['sm', 560], ['md', 620], ['lg', 680]] as const) {
+      const rule = css.match(new RegExp(`\\.modal\\.framed\\.modal-${size} \\{[^}]*\\}`))?.[0] ?? ''
+      expect(rule).toContain(`--modal-h: ${px}px`)
+    }
+    const frame = css.match(/\n\.modal\.framed \{[^}]*\}/)?.[0] ?? ''
+    expect(frame).toContain('height: min(var(--modal-h), calc(100dvh - 32px))')
+    expect(css.match(/\n\.modal-body \{[^}]*\}/)?.[0]).toContain('overflow-y: auto')
+    expect(css.match(/\n\.modal-head \{[^}]*\}/)?.[0]).toContain('flex: none')
+    expect(css.match(/\n\.modal-foot \{[^}]*\}/)?.[0]).toContain('flex: none')
+
+    // Every dialog that uses the frame (all but the named ones that keep their own layout).
+    const framed = files(SRC, '.tsx')
+      .map((f) => f.slice(SRC.length + 1))
+      .filter((f) => f !== 'kit/Modal.tsx' && !(f in OWN_CHROME))
+      .filter((f) => /<Modal\b/.test(readFileSync(join(SRC, f), 'utf8')))
+    const classes = new Set(['framed'])
+    for (const f of framed)
+      for (const m of readFileSync(join(SRC, f), 'utf8').matchAll(/<Modal\b[^>]*?className="([^"]+)"/g)) m[1].split(/\s+/).forEach((c) => classes.add(c))
+    const own: string[] = []
+    for (const f of files(SRC, '.css')) {
+      const rel = f.slice(SRC.length + 1)
+      if (rel === 'kit/Modal.css') continue
+      for (const m of readFileSync(f, 'utf8').matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+        // The dialog's own box (a selector that ends on .modal), not something inside it.
+        const mine = m[1].split(',').some((sel) => /\.modal(\.[\w-]+)*\s*$/.test(sel) && sel.split('.').some((c) => classes.has(c.trim().split(/[\s:]/)[0])))
+        if (mine && /(^|[;\s])(min-|max-)?height\s*:/.test(m[2])) own.push(`${rel}: ${m[1].trim()}`)
+      }
+    }
+    expect(own).toEqual([])
+    // The height easing is gone: a dialog never changes size while open.
+    expect(readFileSync(join(SRC, 'kit/Modal.tsx'), 'utf8')).not.toMatch(/keepSize|useGlide/)
+  })
 })

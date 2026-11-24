@@ -17,7 +17,6 @@ export function ImportDialog({ domain, site, onClose }: { domain: string; site: 
     <Modal
       label={t.title}
       onClose={onClose}
-      keepSize={false}
       frame={{
         title: t.title,
         icon: <ModalMark icon={History} />,

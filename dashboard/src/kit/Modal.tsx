@@ -6,7 +6,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Framed, type Frame } from './ModalFrame'
-import { useGlide } from '../components/glide'
 import { useLockScroll } from '../components/lockScroll'
 import './Modal.css'
 
@@ -129,7 +128,6 @@ export function Modal({
   frame,
   onClose,
   className = '',
-  keepSize = true,
   focus = 'first',
   over = false,
   children,
@@ -137,9 +135,6 @@ export function Modal({
   label: string
   /** The standard header, body and footer. Without it, children are the dialog's own content. */
   frame?: Frame
-  /** Ease from one height to the next while open (tabs, steps), instead of
-   *  jumping. Off for a dialog that should follow its content at once. */
-  keepSize?: boolean
   /** Left out while the dialog must not be dismissed — mid-delete, say. */
   onClose?: () => void
   /** Where focus lands when it opens: the first control, or the dialog itself
@@ -172,12 +167,7 @@ export function Modal({
       settle()
     }
   }, [over])
-  // While it is open, a dialog that changes shape (a tab, a step) eases to
-  // its new height instead of jumping, and always ends at its content's own
-  // height. A dialog that kept the tallest tab's height left an empty block
-  // under its buttons on the shorter ones.
   const box = useRef<HTMLDivElement>(null)
-  useGlide(box, keepSize)
   // Focus moves into the dialog when it opens (unless a field in it already
   // took it) and back to what had it when it closes. A help dot is never the
   // first stop: its tip would open by itself.

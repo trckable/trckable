@@ -13,5 +13,6 @@ export const copy = defineCopy('access', {
   cancel: 'Cancel',
   save: 'Save',
   saving: 'Saving…',
+  count: (n: number, of: number) => `${n} of ${of} sites`,
   saved: (email: string) => `Allowed sites for ${email} saved`,
 })

@@ -1,7 +1,10 @@
 // The popup behind a person's ⋯ → Allowed sites: All sites, or the ones
 // ticked. Nothing changes until Save; Cancel and Escape leave it as it was.
+import { Check, Grid2x2, Users } from 'lucide-react'
 import { useState } from 'react'
 import { Modal } from '../../kit/Modal'
+import { ModalMark } from '../../kit/ModalMark'
+import { SiteMark } from '../../components/SiteMark'
 import { Switch } from '../../components/Switch'
 import { fail, type SiteAccessList } from '../../lib/api'
 import { copy } from './copy'
@@ -37,32 +40,46 @@ export default function AccessDialog({ viewer, sites, onSave, onClose }: { viewe
   return (
     <Modal
       label={copy.editFor(viewer.email)}
-      keepSize={false}
       onClose={busy ? undefined : onClose}
       frame={{
         title: copy.menuItem,
         subtitle: viewer.email,
+        icon: <ModalMark icon={Users} />,
         size: 'sm',
         busy,
         cancel: copy.cancel,
+        extra: (
+          <span className="access-count faint num">{copy.count(all ? sites.length : chosen.size, sites.length)}</span>
+        ),
         onSubmit: () => void submit(),
         actions: (
           <button type="submit" className="btn primary" disabled={busy || !dirty}>
+            <Check size={14} strokeWidth={2} aria-hidden="true" />
             {busy ? copy.saving : copy.save}
           </button>
         ),
       }}
     >
     <div className="access-all">
-      <span>{copy.allToggle}</span>
+      <span className="access-all-label">
+        <Grid2x2 size={16} strokeWidth={1.75} aria-hidden="true" />
+        {copy.allToggle}
+      </span>
       <Switch on={all} label={copy.allToggle} disabled={busy} onChange={() => setAll((a) => !a)} />
     </div>
     <fieldset className="access-sites" aria-label={copy.sitesLabel} disabled={all || busy}>
       {sites.map((s) => (
         <label key={s.id} className="access-site">
           <input type="checkbox" checked={all || chosen.has(s.id)} onChange={() => toggle(s.id)} />
-          <span>{s.name || s.domain}</span>
-          {s.name && s.name !== s.domain && <span className="faint">{s.domain}</span>}
+          <SiteMark site={{ domain: s.domain }} size={20} />
+          <span className="access-name" title={s.name || s.domain}>
+            {s.name || s.domain}
+          </span>
+          {s.name && s.name !== s.domain && (
+            <span className="faint access-domain" title={s.domain}>
+              {s.domain}
+            </span>
+          )}
         </label>
       ))}
     </fieldset>

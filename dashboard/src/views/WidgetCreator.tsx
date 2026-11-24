@@ -1,9 +1,10 @@
 // Making a widget: a dialog with the studio, and after Make this widget the
 // code to paste, in the same dialog. Opened by "New widget" on the page.
+import { PanelsTopLeft } from 'lucide-react'
 import { useState } from 'react'
 import { CodeBlock } from '../components/Code'
 import { Modal } from '../kit/Modal'
-import { toast } from '../components/Toast'
+import { ModalMark } from '../kit/ModalMark'
 import { fail, more, type Site, type Widget, type WidgetLook } from '../lib/apiMore'
 import { EMPTY_LOOK, TEXT, cornerCode, frameCode, snippet, type Place } from './widgetKinds'
 import { WidgetStudio } from './WidgetStudio'
@@ -20,7 +21,6 @@ export function WidgetCreator({ site, base, onClose, onMade }: { site: Site; bas
       .then((w) => {
         setMade(w)
         onMade()
-        toast(TEXT.ready)
       })
       .catch((e: unknown) => fail(e))
       .finally(() => setBusy(false))
@@ -32,6 +32,7 @@ export function WidgetCreator({ site, base, onClose, onMade }: { site: Site; bas
       onClose={busy ? undefined : onClose}
       frame={{
         title: made ? TEXT.ready : TEXT.newWidget,
+        icon: <ModalMark icon={PanelsTopLeft} />,
         help: TEXT.pageHint,
         size: 'lg',
         busy,

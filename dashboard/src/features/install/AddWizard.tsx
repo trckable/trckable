@@ -200,7 +200,6 @@ export function AddWizard({ onClose, onSites, sites = [], prefill = null }: { on
       label={t.label}
       className="add-site"
       onClose={onClose}
-      keepSize={false}
       frame={{ title: <Title step={step} site={site} live={live} />, subtitle: t.sub[step - 1], icon: <ModalMark icon={headIcon(step)} />, size: 'lg', busy, ...foot() }}
     >
       <Steps compact labels={t.steps} at={step - 1} done={live && step === 3 ? 2 : undefined} onGo={(i) => setStep(i + 1)} />

@@ -1,9 +1,10 @@
 // The privacy report as a sheet: what one site collects, read from its real
 // settings, laid out to be read on screen and printed (or saved as a PDF)
 // through the browser. Everything else on the page is hidden while printing.
-import { Printer } from 'lucide-react'
+import { FileText, Printer } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Modal } from '../../kit/Modal'
+import { ModalMark } from '../../kit/ModalMark'
 import { Loading } from '../../components/loading/Loading'
 import { tag } from '../../i18n'
 import { api, more, type Site } from '../../lib/apiMore'
@@ -89,9 +90,9 @@ export default function ReportSheet({ site, print, onClose }: { site: Site; prin
       label={t.title(site.domain)}
       className="pr-modal"
       onClose={onClose}
-      keepSize={false}
       frame={{
         title: t.title(site.domain),
+        icon: <ModalMark icon={FileText} />,
         subtitle: t.made(dateFmt(tag, {}).format(new Date())),
         size: 'md',
         cancel: false,

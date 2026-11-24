@@ -38,7 +38,6 @@ export function ReportForm({ title, site, from, langs, max, onDone }: { title: s
     <Modal
       label={title}
       onClose={() => onDone()}
-      keepSize={false}
       className="rp-modal"
       frame={{
         title,

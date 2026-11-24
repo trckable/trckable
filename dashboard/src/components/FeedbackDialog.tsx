@@ -33,7 +33,6 @@ export default function FeedbackDialog({ site, onClose }: { site?: string; onClo
     <Modal
       label={footerMoreCopy.feedback}
       onClose={onClose}
-      keepSize={false}
       frame={{
         title: footerMoreCopy.feedback,
         subtitle: t.hint,

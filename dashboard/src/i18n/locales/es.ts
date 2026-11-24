@@ -69,6 +69,7 @@ export default {
   'access.cancel': 'Cancelar',
   'access.save': 'Guardar',
   'access.saving': 'Guardando…',
+  'access.count': (n: number, of: number) => `${n} de ${of} sitios`,
   'access.saved': (email: string) => `Sitios permitidos para ${email} guardados`,
 
   // range
