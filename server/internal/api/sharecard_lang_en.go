@@ -66,7 +66,7 @@ var cardEN = &cardLang{
 	heroLabel: map[string]string{"toppage": "Your most visited page", "topsource": "Most people came from", "topplace": "Most people are in"},
 
 	last24: "Last 24 hours", post24: "in the last 24 hours", postDays: "in the last %d days", postAll: "in all time", postRange: "in %s", since: "Since %s",
-	lastDays: "Last %d days", last12: "Last 12 months", post12: "in the last 12 months",
+	post12: "in the last 12 months",
 	prev24: "previous 24 hours", prevDay: "previous day", prevDays: "previous %d days", vs: "vs",
 
 	postBegun: "%s: counting has begun. %s", postTopPage: "Top page: %s.",

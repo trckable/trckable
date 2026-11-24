@@ -15,9 +15,8 @@ import { more, type GoalList, type GoalRow } from '../../lib/apiMore'
 import { can } from '../../lib/permissions'
 import { setView } from '../../lib/url'
 import { SuggestedGoal } from './SuggestedGoal'
-import { sourceWords } from './GoalFacts'
 import { stand } from './standCopy'
-import { nameOf, versus } from './standing'
+import { nameOf, sourceWords, versus } from './standing'
 import './standing.css'
 
 /** The period as a line: one point per day. */
@@ -33,11 +32,13 @@ function Spark({ n }: { n: number[] }) {
 
 function Tiles({ d }: { d: GoalList }) {
   const out = d.goals.filter((g) => g.out)
+  const names = out.map(nameOf).join(', ') || undefined
+  // A label is a span, so a long one wraps; the shared card cuts a plain string.
   const items: SumItem[] = [
-    { key: 'reached', label: stand.listReached, val: fmtInt(d.reached) },
-    { key: 'out', label: stand.listOut, val: out.length ? fmtInt(out.length) : stand.listNone, sub: out.map(nameOf).join(', ') || undefined, tone: out.length ? 'up' : '' },
+    { key: 'reached', label: <span>{stand.listReached}</span>, val: fmtInt(d.reached) },
+    { key: 'out', label: <span>{stand.listOut}</span>, val: out.length ? fmtInt(out.length) : stand.listNone, sub: names, subTitle: names, tone: out.length ? 'up' : '' },
   ]
-  if (d.source) items.push({ key: 'source', label: stand.listBest, val: sourceWords(d.source), sub: d.source_share > 0 ? stand.listShare(`${Math.round(d.source_share * 100)}%`) : undefined })
+  if (d.source) items.push({ key: 'source', label: <span>{stand.listBest}</span>, val: sourceWords(d.source), sub: d.source_share > 0 ? stand.listShare(`${Math.round(d.source_share * 100)}%`) : undefined })
   return (
     <div className="mk gs-tiles">
       <SummaryCards items={items} />

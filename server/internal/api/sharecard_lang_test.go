@@ -185,7 +185,7 @@ func TestCardLangSentences(t *testing.T) {
 	now := time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
 	made := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	p := resolvePeriod(cardDE, "30d", "", "", now, made, true)
-	if p.post != "in den letzten 30 Tagen" || p.vs != "vorherige 30 Tage" || p.label != "Letzte 30 Tage" {
+	if p.post != "in den letzten 30 Tagen" || p.vs != "vorherige 30 Tage" || p.label != "12. Okt – 10. Nov 2026" {
 		t.Errorf("de period: %+v", p)
 	}
 	if p := resolvePeriod(cardFR, "all", "", "", now, made, true); p.label != "Depuis 1 janv. 2026" || p.vs != "" {
