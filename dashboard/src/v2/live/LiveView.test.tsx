@@ -51,9 +51,9 @@ describe('Live says each number once', () => {
     expect(figures(draw(feed()), fmtInt(4217))).toBe(1)
   })
   it('tells today once, in the card, and not in the Analytics card', () => {
-    const html = draw(feed()).innerHTML
-    expect(html.split('Today 132 people').length - 1).toBe(1)
-    expect(html).toContain('lusual')
+    const box = draw(feed())
+    expect(figures(box, fmtInt(132))).toBe(1)
+    expect(box.querySelectorAll('.lfig .ltoday').length).toBe(1)
   })
   it('shows one box for a site that is down', () => {
     expect(draw(feed(NOW / 1000 - 600)).innerHTML.split('downbox').length - 1).toBe(1)
