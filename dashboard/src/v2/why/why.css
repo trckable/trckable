@@ -90,6 +90,14 @@
 .mk .xfade>.xsec:first-child::before{display:none}
 /* One control row, then quiet tabs on a soft line: no boxed strip, no third row. */
 .mk .xupdated{align-self:center;margin-right:var(--mk-s3);font-size:12px;color:var(--mk-muted);white-space:nowrap}
+.mk .xtitle-sub{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:var(--mk-muted)}
+@media (--handheld){.mk .xtitle-sub{display:none}}
+/* The time the numbers were read: a small muted second line inside the period pill. */
+.mk .pill .pl-main{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-width:0;line-height:1.15;text-align:left}
+.mk .pill:has(.pl-note){height:44px}
+.mk .pill .pl-main .vs{padding-block:1px}
+.mk .pill .pl-note{font-size:11px;font-weight:500;color:var(--mk-muted)}
+.mk .pill .pl-note .xupdated{margin:0;font-size:inherit}
 .mk .xperiod-note{margin:0 0 var(--mk-s3);font-size:13px;color:var(--mk-muted)}
 .mk .xp.xpage .xsub{display:flex;gap:var(--mk-s4);width:100%;padding:0;border:0;border-radius:0;background:linear-gradient(90deg,var(--mk-line),transparent) bottom/100% 1px no-repeat}
 .mk .xp.xpage .xsub button{flex:none!important;width:auto;height:36px;padding:0 2px;border-radius:0;background:none;border-bottom:2px solid transparent;transition:color .15s ease,border-color .15s ease}
@@ -162,9 +170,7 @@
 /* An empty card: as much room under the message as the heading takes above it, so it sits in the middle. */
 .mk .xcards>.xcp:has(.xempty) .xcp-b{padding-block:var(--mk-s2) calc(var(--mk-s2) + 30px)}
 @media (--sm-down){.mk .xcards{grid-template-columns:minmax(0,1fr)}}
-.mk .xpage-desc{margin:calc(var(--mk-s1,4px) * -1) 0 var(--mk-s4);font-size:14px;color:var(--mk-muted)}
 .mk .xcards{grid-auto-flow:dense}
-.mk .xp.xpage .xpage-desc{margin:-12px 0 var(--mk-s4)}
 /* In a half-width card the name keeps its room: money has its own cards. */
 .mk .xcp:not(.wide) .xt.xc:not(.xsu):has(.sh){--xc:minmax(0,1fr) 56px 76px 48px!important}
 .mk .xcp:not(.wide) .xt.xc:not(.xsu):has(.sh) .hm{display:none}
@@ -348,7 +354,6 @@
   .mk .xp.xpage .xperiod .vs{padding:0;background:none!important;color:var(--mk-muted);font-weight:500}
   .mk .xp.xpage .xperiod button{min-height:32px}
   .mk .xp.xpage .xupdated{font-size:11.5px}
-  .mk .xp.xpage .xpage-desc{display:none}
   .mk .xsay-page{margin-block:var(--mk-s2) var(--mk-s3);font-size:15px}
 }
 @media (--xs){

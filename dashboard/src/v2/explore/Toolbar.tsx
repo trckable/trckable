@@ -22,6 +22,7 @@ export type MenuKey = 'pick' | 'views' | 'more'
 
 interface ToolbarProps {
   period?: ReactNode
+  /** Where the period has no pill of its own to carry it (a shared page): the time the numbers were read, as a line in the row. */
   updated?: ReactNode
   noTabs?: boolean
   /** Opens the menu of sections, where it is a drawer: the name is then a heading, not a menu. */
@@ -84,7 +85,7 @@ function Chips({ p }: { p: ToolbarProps }) {
 }
 
 export function Toolbar(p: ToolbarProps) {
-  const name = copy.names[p.section][0]
+  const [name, sub] = copy.names[p.section]
   const btn = (k: MenuKey) => ({ 'aria-haspopup': 'menu' as const, 'aria-expanded': p.menu === k, onClick: () => p.onMenu(k) })
   const tabs = TABS[p.section]
   return (
@@ -100,6 +101,7 @@ export function Toolbar(p: ToolbarProps) {
           <b>{name}</b>
         </span>
         <VerifiedBadge verified={p.verified} slot={slotOfSection(p.section)} />
+        {p.noTabs && <span className="xtitle-sub" title={sub}>{sub}</span>}
         {!p.onDrawer && <XMenu
           id="pick"
           cls="xpw"
@@ -135,7 +137,6 @@ export function Toolbar(p: ToolbarProps) {
           </XMenu>
         )}
       </div>
-      {p.noTabs && <p className="xpage-desc">{copy.names[p.section][1]}</p>}
       <Chips p={p} />
       {!p.noTabs && tabs.length > 1 && <XSub label={name} attr="xtab" value={p.tab} items={tabs.map((t) => ({ key: t, label: copy.sub[t], icon: TAB_ICONS[t], dot: (t === 'search' && !p.conn.search) || (!p.conn.rev && PAID.includes(t)) ? copy.notConnected : undefined }))} onPick={p.onTab} />}
     </>
