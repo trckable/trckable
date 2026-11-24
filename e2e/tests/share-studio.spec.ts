@@ -59,6 +59,33 @@ test('Share studio: the post is written from the card, can be edited, and X coun
   await expect(text).toHaveValue('My own words')
 })
 
+test('Share studio: LinkedIn gets a short multi-line post with the dashboard number, X a line or two within 280', async ({ page }) => {
+  const dialog = await openStudio(page, 1280, cookie)
+  const { day, visitors } = await steady(page)
+  const text = dialog.getByRole('textbox')
+  const words = page.waitForResponse((r) => r.url().includes('format=json') && r.url().includes('period=30d') && r.url().includes('t=overview'))
+  await dialog.getByRole('button', { name: '30 days', exact: true }).click()
+  await words
+  const number = await visitors(day(29))
+  await expect(dialog.getByRole('button', { name: 'LinkedIn', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(text).toHaveValue(new RegExp(`^${number} people on .+\\n\\n[\\s\\S]*Counted without cookies`))
+  expect((await text.inputValue()).split('\n').length).toBeGreaterThanOrEqual(3)
+  await expect(dialog.getByRole('button', { name: /^Post on LinkedIn/ })).toContainText('Text copied, paste it in the post')
+  await dialog.getByRole('button', { name: 'X', exact: true }).click()
+  await expect(text).toHaveValue(new RegExp(`^${number} people on `))
+  const written = await text.inputValue()
+  expect(written.split('\n').length).toBeLessThanOrEqual(2)
+  expect(written).not.toContain('Counted without cookies')
+  const len = written.length + 24
+  expect(len).toBeLessThanOrEqual(280)
+  await expect(dialog.getByText(`${len} / 280`)).toBeVisible()
+  // The person's own words stay until the text is reset to the written one.
+  await text.fill('My own words')
+  await dialog.getByRole('button', { name: 'Reset text' }).click()
+  await expect(text).toHaveValue(written)
+  await expect(dialog.getByRole('button', { name: 'Reset text' })).toHaveCount(0)
+})
+
 test('Share studio: the style is kept for the site', async ({ page }) => {
   const dialog = await openStudio(page, 1280, cookie)
   await dialog.getByRole('radio', { name: 'Ocean' }).click()

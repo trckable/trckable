@@ -221,6 +221,19 @@
   color: var(--muted);
   font-size: 11px;
 }
+.sd-post-name {
+  display: flex;
+  gap: 10px;
+}
+.sd-post-head .sd-reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
 .sd-post-head .sd-over {
   color: var(--down);
 }

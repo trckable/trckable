@@ -79,8 +79,12 @@ export type Look = { card: CardId; /** The milestone, as kind~step. */ ms?: stri
 export type Style = Pick<Look, 'style' | 'accent' | 'name' | 'date' | 'chart'>
 export const DEFAULT_STYLE: Style = { style: 'ink', accent: ACCENTS[0], name: true, date: true, chart: true }
 
+/** What a card says, in its own words: the facts a post is written from (the server's, never recalculated). */
+export type Fact = { name: string; value: string }
+export type Facts = { template: string; domain: string; big: string; label: string; /** The period's dates, or the day of a best day or milestone. */ foot: string; change?: string; dir?: number; vs?: string; rows?: Fact[]; stats?: Fact[]; /** Nothing behind the card: the post is the server's own line. */ empty?: boolean }
+
 /** The numbers in words, and the post's text; the has_ flags say which cards the site can make. */
-export type CardWords = { /** The site's first day with data, the earliest a period can start. */ first_day?: string; has_data: boolean; has_sources: boolean; has_changed: boolean; has_search: boolean; has_bestday: boolean; has_milestone: boolean; post: string }
+export type CardWords = { /** The site's first day with data, the earliest a period can start. */ first_day?: string; has_data: boolean; has_sources: boolean; has_changed: boolean; has_search: boolean; has_bestday: boolean; has_milestone: boolean; post: string; facts?: Facts }
 
 /** What the site has to show, by what a card needs. */
 export const hasOf = (w: CardWords | null): Record<Need, boolean> => ({ data: w?.has_data ?? true, sources: w?.has_sources ?? true, changed: w?.has_changed ?? true, search: w?.has_search ?? true, bestday: w?.has_bestday ?? true })
@@ -111,6 +115,7 @@ export function cardUrl(site: string, l: Look, format: 'png' | 'json' | 'thumb' 
     // The post's text says what the card says: its words, not its look.
     for (const k of ['shape', 'theme', 'bg', 'accent', 'date', 'name']) p.delete(k)
     p.set('format', 'json')
+    p.set('compare', '1') // the people card says its change against the period before
   } else {
     p.set('metric', 'visitors')
     if (format === 'thumb') {

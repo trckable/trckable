@@ -1,0 +1,1 @@
+Sharing a card writes the post for you from what you picked: the number, the period's dates, the change against the period before and the top lines, shaped for the network (a line or two for X, Threads and Bluesky; a short post with a closing line for LinkedIn and Facebook). Your own edits stay, and Reset text brings the written one back.

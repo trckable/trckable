@@ -44,11 +44,11 @@ export const copy = defineCopy('share', {
   main: { linkedin: 'Post on LinkedIn', x: 'Post on X', instagram: 'Post on Instagram', threads: 'Post on Threads', facebook: 'Post on Facebook', bluesky: 'Post on Bluesky', download: 'Download image', email: 'Copy link' },
   mainDone: { linkedin: 'Opening LinkedIn…', x: 'Opening X…', instagram: 'Opening Instagram…', threads: 'Opening Threads…', facebook: 'Opening Facebook…', bluesky: 'Opening Bluesky…', download: 'Saved to Downloads', email: 'Link copied' },
   mainNote: {
-    linkedin: 'Opens LinkedIn, the card is the preview',
+    linkedin: 'Text copied, paste it in the post',
     x: 'Opens X, the post is ready',
     instagram: 'Phone: straight to Instagram',
     threads: 'Opens Threads, the post is ready',
-    facebook: 'Opens Facebook, the card is the preview',
+    facebook: 'Text copied, paste it in the post',
     bluesky: 'Opens Bluesky, the post is ready',
     download: 'Saves the image',
     email: 'Link with this card as preview',

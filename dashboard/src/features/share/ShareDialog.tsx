@@ -21,6 +21,7 @@ import { cardLink, linkFor } from './link'
 import { canShareImage, saveImage, shareImage } from './image'
 import { copy } from './copy'
 import { OPENERS, postText, takesText } from './post'
+import { writePost } from './postWriter'
 import { PostText } from './PostText'
 import { Preview } from './Preview'
 import { placeOf, sizeAt, type Place } from './places'
@@ -134,7 +135,9 @@ export default function ShareDialog({ site, period = '30d', topic, onClose }: Pr
     const t = tabs.find((x) => x.group === g)?.tiles[0]
     if (t && cardOf(look.card).group !== g) set({ card: t.card, ms: t.ms })
   }
-  const text = postText(words?.post ?? '', edited)
+  // Trckable is named unless the card hides its brand.
+  const written = writePost(words?.facts, words?.post ?? '', place, shown.hideBrand !== true)
+  const text = postText(written, edited)
   const px = formatOf(shape)
 
   const ensureLink = async () => {
@@ -199,7 +202,7 @@ export default function ShareDialog({ site, period = '30d', topic, onClose }: Pr
           <div className="sd-stage">
             <SizeBar place={place} size={size} card={look.card} look={look} today={today} first={first} onSize={setSize} onPeriod={pickPeriod} onRange={(from, to) => set({ from, to })} />
             <Preview site={site.id} look={shown} alt={copy.previewAlt(copy.cards[look.card])} />
-            {placeOf(place).social ? <PostText place={place} text={text} onChange={setEdited} /> : <span className="sd-note faint">{copy.sizes[sizeAt(place, size).name]} {px.w}×{px.h}</span>}
+            {placeOf(place).social ? <PostText place={place} text={text} edited={edited !== null} onChange={setEdited} onReset={() => setEdited(null)} /> : <span className="sd-note faint">{copy.sizes[sizeAt(place, size).name]} {px.w}×{px.h}</span>}
           </div>
           <CardStrip site={site.id} look={shown} tabs={tabs} group={group} onGroup={pickGroup} onPick={(t) => set({ card: t.card, ms: t.ms })} label={copy.cardsLabel} />
           {phone && (

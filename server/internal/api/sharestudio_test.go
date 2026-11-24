@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"image"
 	"net/http"
 	"net/http/httptest"
@@ -200,6 +201,44 @@ func TestSharePreviewMilestoneReached(t *testing.T) {
 		_, tags := g.api.SharePreview(httptest.NewRequest(http.MethodGet, "/s/"+token+"?t=milestone&ms="+ms, nil))
 		if !strings.Contains(tags, want) {
 			t.Errorf("%s: %s", ms, tags)
+		}
+	}
+}
+
+// The words carry the card's facts for a post to be written from: the same number and dates the card says, and for the
+// people card the change against the period before when it is asked for.
+func TestCardFacts(t *testing.T) {
+	g := newRig(t)
+	noOutbound(t, g)
+	owner := client()
+	g.setup(t, owner)
+	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
+	type words struct {
+		Big, Foot string
+		Facts     *cardFacts
+	}
+	read := func(q string) words {
+		t.Helper()
+		code, _, body := get(t, owner, card+"?format=json&"+q)
+		var w words
+		if err := json.Unmarshal([]byte(body), &w); code != http.StatusOK || err != nil {
+			t.Fatalf("%s: %d %v %s", q, code, err, body)
+		}
+		if w.Facts == nil {
+			t.Fatalf("%s: no facts: %s", q, body)
+		}
+		return w
+	}
+	people := read("t=overview&period=30d&compare=1")
+	if people.Facts.Template != "overview" || people.Facts.Big != people.Big || people.Facts.Foot != people.Foot || people.Facts.Domain == "" {
+		t.Errorf("the people card's facts are not its words: %+v vs %+v", people.Facts, people)
+	}
+	if read("t=overview&period=all&compare=1").Facts.Change != "" {
+		t.Error("all time has no change against a period before it")
+	}
+	for tpl, want := range map[string]string{"bestday": "bestday", "sources": "sources", "toppage": "toppage", "leaderboard": "leaderboard", "changed": "changed", "milestone": "milestone"} {
+		if f := read("t=" + tpl + "&period=30d&compare=1").Facts; f.Template != want {
+			t.Errorf("%s: facts say %q", tpl, f.Template)
 		}
 	}
 }
