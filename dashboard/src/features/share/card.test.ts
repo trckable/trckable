@@ -36,7 +36,7 @@ describe('cardUrl', () => {
     expect(q({ ...look, ms: 'visitors~10000' })).not.toHaveProperty('ms')
   })
   it('asks for the words with the card they are for, and without the look', () => {
-    expect(q(look, 'json')).toEqual({ t: 'toppage', period: '30d', format: 'json' })
+    expect(q(look, 'json')).toEqual({ t: 'toppage', period: '30d', compare: '1', format: 'json' })
   })
   it('asks for the strip\'s small picture at the link preview\'s size', () => {
     expect(q(look, 'thumb')).toMatchObject({ thumb: '1', t: 'toppage' })

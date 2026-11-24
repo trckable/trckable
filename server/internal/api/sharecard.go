@@ -69,6 +69,8 @@ type cardNumbers struct {
 	Revenue bool   `json:"revenue"` // revenue may be picked
 	HasData bool   `json:"has_data"`
 	Post    string `json:"post"`
+	// Facts are the numbers the card says, in its words, for a post to be written from: nothing is recalculated from them.
+	Facts *cardFacts `json:"facts,omitempty"`
 	// First is the day of the site's first data, where the card is read as words: the earliest a period can start.
 	First string `json:"first_day,omitempty"`
 	// What the other topics have to show, so the dialog can disable a picture with nothing behind it.
@@ -89,7 +91,8 @@ type cardNumbers struct {
 	lists        map[string][]cards.Item // the top five of each list picture, by its t
 	grid         []cards.Stat            // the grid's four numbers
 	series       []float64
-	change       string // the pick against the period before: "+12%", "" when there is none
+	change       string // the pick against the period before: "+12% vs previous 30 days", "" when there is none
+	pct          string // the same as the percentage alone: "+12%"
 	vs           string // what it is against ("previous 30 days"), said after the change
 	dir          int
 	stats        []cards.Stat
@@ -135,6 +138,9 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 			}
 			n.pictureOf(&spec, tpl)
 			n.Post = specPost(spec, tpl, n)
+			n.Facts = n.factsOf(spec, tpl)
+		} else {
+			n.Facts = n.overviewFacts()
 		}
 		writeJSON(w, http.StatusOK, n)
 		return
@@ -193,7 +199,9 @@ func (a *API) shareCard(w http.ResponseWriter, r *http.Request) {
 // it into the card's words; with overview, also the small numbers and the
 // change against the period before.
 func (a *API) cardRead(w http.ResponseWriter, r *http.Request, q *query.Q, site string, v url.Values, kind string) (cardNumbers, bool) {
-	overview := kind == "overview" || kind == "numbers"
+	// The json's words read the overview too, when that is the card asked for: its change against the period before.
+	t := cardTemplateOf(v.Get("t"))
+	overview := kind == "overview" || kind == "numbers" || (kind == "" && (t == "overview" || t == "numbers"))
 	si, err := a.Ctl.SiteInfo(r.Context(), site)
 	if err != nil {
 		fail(w, http.StatusNotFound, "site not found")
@@ -295,7 +303,8 @@ func (n *cardNumbers) overview(res, prev *query.Result, stats string, icon func(
 			n.dir = 0
 		}
 		if n.dir != 0 {
-			n.change = fmt.Sprintf("%+.0f%%", d)
+			n.pct = fmt.Sprintf("%+.0f%%", d)
+			n.change = n.pct
 			if n.vs != "" {
 				n.change += " " + n.l().vs + " " + n.vs
 			}
