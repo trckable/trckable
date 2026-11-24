@@ -1275,8 +1275,8 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .lnow .lfig .ll{order:0;font-size:13px}
 .mk .lnow .lfig .mk-ld{order:2;flex-basis:auto;font-size:12px}
 /* The pair reads as main and side: the people on the site now are the big number on the left, the half hour the small one on the right; labels share a row, numbers share a baseline. */
-.mk .lnow .lfig{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto auto;justify-content:start;align-items:start;column-gap:var(--mk-s6);row-gap:var(--mk-s1)}
-.mk .lnow .lfig>div.lmain,.mk .lnow .lfig>div.lside{display:grid;grid-template-rows:subgrid;grid-row:span 3;gap:0}
+.mk .lnow .lfig{display:grid;grid-template-columns:auto auto auto;grid-template-rows:auto auto auto;justify-content:start;align-items:start;column-gap:var(--mk-s6);row-gap:var(--mk-s1)}
+.mk .lnow .lfig>div.lmain,.mk .lnow .lfig>div.lside,.mk .lnow .lfig>div.ltoday{display:grid;grid-template-rows:subgrid;grid-row:span 3;gap:0}
 .mk .lnow .lfig .lbign{line-height:1;font-weight:700;letter-spacing:-.05em;align-self:baseline}
 .mk .lnow .lfig .lmain .lbign{font-size:80px}
 .mk .lnow .lfig .lside .lbign{font-size:40px;font-weight:600}
@@ -1483,11 +1483,6 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on:not(.xpage),.
 .mk .lcards>.mk-card{min-height:300px}
 .mk .lsw{margin-left:auto}
 .mk .lsw button{width:auto;padding:0 var(--mk-s2);font-size:12px;font-weight:500}
-/* Under the number: one quiet line; the tone is on the arrow and the figure only. */
-.mk .lusual{margin:var(--mk-s2) 0 0;font-size:13px;color:var(--mk-muted)}
-.mk .lusual b{font-weight:600;font-variant-numeric:tabular-nums}
-.mk .lusual[data-tone=up] b{color:var(--mk-lime)}
-.mk .lusual[data-tone=dn] b{color:var(--mk-red)}
 .mk .lbars{display:flex;flex-direction:column;gap:6px;margin-top:auto}
 .mk .lbar{position:relative;display:flex;justify-content:space-between;align-items:center;gap:var(--mk-s2);height:28px;padding:0 10px;font-size:13px}
 .mk .lbar i{position:absolute;inset:0 auto 0 0;border-radius:8px;background:var(--mk-limeD)}

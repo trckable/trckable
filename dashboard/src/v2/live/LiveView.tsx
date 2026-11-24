@@ -21,7 +21,7 @@ import { feedOf, onlineAt, peopleAt, seriesAt } from '../../features/live/model'
 import type { Busier, LiveNow } from '../../features/live/api'
 import { useTicking } from '../../features/live/useTicking'
 import { AnalyticsCard } from './AnalyticsCard'
-import { TodayLine } from './TodayLine'
+import { TodayStat } from './TodayStat'
 import { useTodayLists } from './useTodayLists'
 import { HealthCards } from './HealthCards'
 import { useNear } from './useNear'
@@ -156,8 +156,8 @@ export function LiveView({ feed, site, timezone, stream, onVisitor, whole }: Pro
               <b className="lbign"><Tick n={visitors30(data.visitors, online)} /></b>
               {ch && <span className={`mk-ld ${ch.up ? 'up' : 'dn'}`}>{copy.change(ch.up, ch.pct)}</span>}
             </div>
+            <TodayStat today={data.today} timezone={timezone} />
           </div>
-          <TodayLine today={data.today} timezone={timezone} />
           {!isShared() && !feed.sample && !!whole?.mentions && hasMentions() && (
             <Suspense fallback={null}>
               <MentionChip site={site} domain={whole?.domain} />
