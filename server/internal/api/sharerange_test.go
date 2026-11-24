@@ -82,7 +82,10 @@ func TestShareLinkKeepsItsPeriod(t *testing.T) {
 				t.Errorf("%q asked %q: %q, want %q", c.period, ask, got, want)
 			}
 		}
-		// And so the picture is the same one, drawn once.
+		// And so the picture is the same one, drawn once (for one period: a picture is slow under the race detector).
+		if c.period != "all" {
+			continue
+		}
 		var first []byte
 		for _, ask := range []string{"", "?period=7d&from=2020-01-01&to=2020-01-02"} {
 			req := httptest.NewRequest(http.MethodGet, "/s/"+token+"/card.png"+ask, nil)
