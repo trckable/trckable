@@ -1,5 +1,5 @@
 // The cards under Live: Analytics (today so far, the pages, the countries and the devices behind one switch),
-// then Speed & uptime and AI & mentions.
+// then Speed & uptime and AI.
 import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'
@@ -82,7 +82,7 @@ test('the cards show today and the pages people are on', async ({ page }) => {
   run = await visit(page, 'livecards', 4)
   const today = cards(page).locator('.lan')
   await expect(today).toBeVisible({ timeout: 10_000 })
-  await expect(today.locator('.lhero')).not.toHaveText(/^0/)
+  await expect(page.locator('.lnow .lusual')).toContainText(/^Today [1-9]/)
   const pages = cards(page).locator('.lan')
   await expect(pages.locator('.lbar', { hasText: run })).toBeVisible({ timeout: 10_000 })
   // Devices sit behind the same switch, beside the pages and the countries; each is named (iPhone, Mac, Windows PC, …).

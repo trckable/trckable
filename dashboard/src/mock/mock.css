@@ -1478,14 +1478,12 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on:not(.xpage),.
 .mk .mk-waiting b{font-size:15px;font-weight:600}
 .mk .mk-waiting .xb{margin-top:8px}
 .mk .mk-waiting-fig{width:clamp(140px,18vw,200px);margin-bottom:6px}
-/* Live's three cards under the half hour: Analytics, Speed & uptime, AI & mentions. Each keeps one height from the first frame, loading, empty or full. */
+/* Live's three cards under the half hour: Analytics, Speed & uptime, AI. Each keeps one height from the first frame, loading, empty or full. */
 .mk .lcards>.mk-card{min-height:300px}
 .mk .lsw{margin-left:auto}
 .mk .lsw button{width:auto;padding:0 var(--mk-s2);font-size:12px;font-weight:500}
-.mk .lhero{display:flex;align-items:baseline;flex-wrap:wrap;gap:var(--mk-s1) var(--mk-s2);font-size:44px;margin:var(--mk-s2) 0 var(--mk-s1)}
-.mk .lhero small{margin-left:0}
 /* Under the number: one quiet line; the tone is on the arrow and the figure only. */
-.mk .lusual{margin:0 0 var(--mk-s4);font-size:13px;color:var(--mk-muted)}
+.mk .lusual{margin:var(--mk-s2) 0 0;font-size:13px;color:var(--mk-muted)}
 .mk .lusual b{font-weight:600;font-variant-numeric:tabular-nums}
 .mk .lusual[data-tone=up] b{color:var(--mk-lime)}
 .mk .lusual[data-tone=dn] b{color:var(--mk-red)}
@@ -1523,9 +1521,8 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on:not(.xpage),.
 .mk .lhaxis{display:flex;justify-content:space-between;gap:var(--mk-s2);font-size:11px;color:var(--mk-faint)}
 .mk .lhc.bad{border-color:var(--mk-redL);background:var(--mk-redD)}
 .mk .lhc.bad .lhaxis{color:var(--mk-muted)}
-.mk .lhdown{color:var(--mk-red);font-weight:600}
 .mk .lhc.warn{border-color:color-mix(in srgb,var(--mk-amber) 40%,transparent);background:color-mix(in srgb,var(--mk-amber) 12%,transparent)}
-.mk .lhc.warn .lhdown,.mk .lhbig.warn b{color:var(--mk-amber)}
+.mk .lhbig.warn b{color:var(--mk-amber)}
 .mk .lhc.warn .lhaxis{color:var(--mk-muted)}
 .mk .lhbig{display:flex;flex-direction:column;gap:var(--mk-s2);margin-top:var(--mk-s3)}
 .mk .lhbig b{font-size:56px;font-weight:600;letter-spacing:-.04em;line-height:1;color:var(--mk-red)}
@@ -1543,12 +1540,6 @@ body:has(.modal-back:not(.leaving),[aria-modal=true],.cd.on,.xp.on:not(.xpage),.
 .mk .lhfill{fill:none;stroke:var(--mk-lime);stroke-width:9;stroke-linecap:round}
 .mk .lhrg b{position:relative;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
 .mk .lhrl{font-size:13px;color:var(--mk-muted)}
-.mk .lhment{display:flex;flex-direction:column;gap:var(--mk-s2);padding-top:var(--mk-s3)!important;border-top:1px solid var(--mk-line)!important;border-radius:0;margin-top:auto}
-.mk .lhment .lhl{display:flex;align-items:center;gap:var(--mk-s2);font-size:13px;color:var(--mk-muted)}
-.mk .lhment .lhl b{color:var(--mk-text);font-weight:600}
-.mk .lhchips{display:flex;flex-wrap:wrap;gap:6px}
-.mk .lhchip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:3px 9px 3px 4px;border-radius:99px;background:var(--mk-sel);color:var(--mk-muted)}
-.mk .lhchip i{width:16px;height:16px;border-radius:5px;display:grid;place-items:center;font-style:normal;font-size:9px;font-weight:700;background:var(--mk-sel2);color:var(--mk-text)}
 .mk .lsk{display:flex;flex-direction:column;align-items:center;gap:var(--mk-s4);flex:1}
 .mk .lsk:is(.analytics,.rows){align-items:stretch;gap:0}
 .mk .lskhead{margin-bottom:8px}

@@ -10,7 +10,7 @@ import { SpeedUptimeCard } from './SpeedUptimeCard'
 
 const site = { id: 's1', domain: 'a.test', timezone: 'UTC', watched_since: 1 } as Site
 const up = { pct: 100, days: [] }
-const draw = (speed: Speed | null) => renderToStaticMarkup(createElement(SpeedUptimeCard, { site, now: 0, health: { speed, vitalsOn: true, uptime: up, ai: null } }))
+const draw = (speed: Speed | null) => renderToStaticMarkup(createElement(SpeedUptimeCard, { site, health: { speed, vitalsOn: true, uptime: up, ai: null } }))
 const speed = (o: Partial<Speed>): Speed => ({ kind: 'lcp', sec: null, n: 0, people: 0, ...o })
 
 describe('the speed half of the card', () => {

@@ -1,4 +1,4 @@
-// The Speed & uptime and AI & mentions cards' figures, as plain functions: the speed headline, how the last thirty days
+// The Speed & uptime and AI cards' figures, as plain functions: the speed headline, how the last thirty days
 // read, and the AI crawler count by assistant. Nothing here knows the browser; the hook reads, the cards show.
 import type { CrawlerReport, WebVitals } from '../../lib/api'
 import { MIN_VITALS } from '../../lib/api'
@@ -6,7 +6,6 @@ import { addDays, type ISODate } from '../../lib/dates'
 import { dayStates, daysBetween, rowTotals, uptimeOf, type DayState } from '../../features/incidents/model'
 import type { Incident, PausedSpan } from '../../features/incidents/api'
 import { copy as briefing } from '../briefing/copy'
-import type { Mention, Source } from '../../features/mentions/api'
 
 export const UPTIME_DAYS = 30
 
@@ -85,16 +84,4 @@ export function aiOf(r: CrawlerReport | null): AiFigure | null {
     .filter((e) => e.hits > 0)
     .sort((a, b) => b.hits - a.hits)
   return { hits, engines }
-}
-
-export interface MentionsFigure {
-  n: number
-  /** Where they were found, most first. */
-  sources: Source[]
-}
-
-export function mentionsOf(list: Mention[]): MentionsFigure {
-  const by = new Map<Source, number>()
-  for (const m of list) by.set(m.source, (by.get(m.source) ?? 0) + 1)
-  return { n: list.length, sources: [...by].sort((a, b) => b[1] - a[1]).map(([s]) => s) }
 }
