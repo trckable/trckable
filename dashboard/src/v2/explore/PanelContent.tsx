@@ -19,6 +19,7 @@ import { MailPreview } from './MailPreview'
 import { NOTES_EVENT } from './views/NotesHost'
 import { Rail, RailDrawer } from './Rail'
 import { PeriodNote, Updated } from './PeriodsLine'
+import { PillNote } from '../ui/pillNote'
 import { SectionPage } from './SectionPage'
 import { Toolbar } from './Toolbar'
 import { copy } from './copy'
@@ -109,13 +110,15 @@ export default function PanelContent(p: ContentProps) {
     act.shut()
     openShare({ topic: topicOfSection(section), period: periodOf(p.view.period) })
   }
+  const updated = <Updated site={p.site} read={reads} />
   const content = (
+    <PillNote.Provider value={isShared() ? null : updated}>
       <>
         <Toolbar
           period={p.period}
           noTabs
           onDrawer={!p.full ? () => setDrawer(true) : undefined}
-          updated={<Updated site={p.site} read={reads} />}
+          updated={isShared() ? updated : undefined}
           verified={isShared() ? p.site.verified : undefined}
           section={section}
           tab={tab}
@@ -181,6 +184,7 @@ export default function PanelContent(p: ContentProps) {
         <PeriodNote site={p.site} view={p.view} range={p.range} compares={compares(tab)} />
         <SectionPage section={section} tab={tab} x={x} c={c} onRead={() => setReads((n) => n + 1)} />
       </>
+    </PillNote.Provider>
   )
   return (
     <>
