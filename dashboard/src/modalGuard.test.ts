@@ -42,6 +42,7 @@ const OWN_CHROME: Record<string, string> = {
   'features/milestones/Timeline.tsx': 'the milestones window: its own scroll region and a full screen on a phone',
   'components/CardModal/CardModal.tsx': 'a story card: tinted kind header and its own action row',
   'v2/bell/EventCard.tsx': 'the event card: its header is the event, with a corner close, and its one action is the row\'s own link',
+  'v2/bell/GoalsStory.tsx': 'the goals card: the day\'s goals beside one goal\'s times, a full sheet with a way back on a phone',
   'v2/explore/views/hosted/CustomerSheet.tsx': 'the customer sheet: its header is the customer (name, email, country) and it is a bottom sheet on a phone',
 }
 

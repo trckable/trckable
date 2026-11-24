@@ -245,6 +245,7 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("GET /api/v1/me", a.authed(a.me))
 	handle("PUT /api/v1/me/keys", a.authed(a.setKeys))
 	handle("GET /api/v1/me/notifications", a.authed(a.bellFeed))
+	handle("PUT /api/v1/me/goal-quiet", a.authed(a.setGoalQuiet))
 	handle("GET /api/v1/me/bell-read", a.authed(a.bellRead))
 	handle("POST /api/v1/me/bell-read", a.authed(a.markBellRead))
 	handle("GET /api/v1/me/devices", a.authed(a.devices))
@@ -445,6 +446,8 @@ func (a *API) Routes(mux *http.ServeMux) {
 	handle("DELETE /api/v1/sites/{site}/annotations/{id}", a.authed(a.deleteAnnotation))
 	handle("GET /api/v1/sites/{site}/report/funnel", a.authed(a.funnel))
 	handle("GET /api/v1/sites/{site}/report/goal-props", a.authed(a.goalProps))
+	handle("GET /api/v1/sites/{site}/report/goals", a.authed(a.goalList))
+	handle("GET /api/v1/sites/{site}/report/goal", a.authed(a.goalOne))
 	handle("GET /api/v1/sites/{site}/journey/{visitor}", a.authed(a.journey))
 	handle("GET /api/v1/sites/{site}/payments", a.authed(a.payConnections))
 	handle("POST /api/v1/sites/{site}/payments", a.authed(a.payConnect))
@@ -713,7 +716,7 @@ func mustChangeAllowed(r *http.Request) bool {
 // rather than to the instance: their password, name, picture, second step
 // keyboard shortcuts and read notices.
 func ownAccount(path string) bool {
-	return strings.HasPrefix(path, "/api/v1/account/") || path == "/api/v1/account" || path == "/api/v1/logout" || path == "/api/v1/me/keys" || path == "/api/v1/me/bell-read" || path == "/api/v1/feedback" || strings.HasPrefix(path, "/api/v1/me/devices") || closingMilestones(path)
+	return strings.HasPrefix(path, "/api/v1/account/") || path == "/api/v1/account" || path == "/api/v1/logout" || path == "/api/v1/me/keys" || path == "/api/v1/me/bell-read" || path == "/api/v1/me/goal-quiet" || path == "/api/v1/feedback" || strings.HasPrefix(path, "/api/v1/me/devices") || closingMilestones(path)
 }
 
 // closingMilestones is a person closing a milestone's moment: their own

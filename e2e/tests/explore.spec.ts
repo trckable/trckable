@@ -82,6 +82,9 @@ test('the section list has seven sections, and a section shows its tables as car
   // Payments are not connected here: Goals & sales says so and tags itself in the list.
   await expect(page.locator('#xp .xrail [data-xsec="goals"] .xtag')).toHaveText('Connect')
   await pick(page, /^Goals & sales/)
+  await expect(page).toHaveURL(/x=goals/)
+  await expect(page.locator('#xp [data-xcard="goals"]')).toBeVisible()
+  await pick(page, /^Sales/)
   await expect(page.locator('#xp [data-xcard="sales"] .lkc').first()).toContainText('See what each source earns')
 })
 
@@ -120,13 +123,22 @@ test('on a phone the sections are a drawer, and nothing scrolls sideways', async
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })
 
-test('Payments and Customers are entries of the section list, and open their own table', async ({ page }) => {
+test('Goals & sales is four pages in the section list, each its own address, and the tables stay on their page', async ({ page }) => {
   await open(page, 1440)
-  await expect(page.locator('#xp .xrail [data-xkids="goals"]')).not.toHaveAttribute('data-closed', '')
-  await pick(page, /^Customers/)
-  await expect(page).toHaveURL(/x=customers/)
+  const kids = page.locator('#xp .xrail [data-xkids="goals"]')
+  await expect(kids).not.toHaveAttribute('data-closed', '')
+  await expect(kids.locator('[data-xtab] .nm')).toHaveText(['Goals', 'Funnels', 'Sales', 'Coming back'])
+  await page.locator('#xp .xrail [data-xsec="goals"]').click()
+  await expect(page).toHaveURL(/x=goals/)
+  await expect(kids.locator('[data-xtab="goals"]')).toHaveAttribute('aria-current', 'page')
+  await pick(page, /^Coming back/)
+  await expect(page).toHaveURL(/x=retention/)
+  await expect(page.locator('#xp [data-xcard="retention"]')).toBeVisible()
+  await expect(page.locator('#xp [data-xcard="sales"]')).toHaveCount(0)
+  // A table's own address opens its page, with that table in view and its page's entry marked.
+  await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=&x=customers`)
   await expect(page.locator('#xp [data-xcard="customers"]')).toBeVisible()
-  await expect(page.locator('#xp .xrail [data-xtab="customers"]')).toHaveAttribute('aria-current', 'page')
+  await expect(page.locator('#xp .xrail [data-xtab="sales"]')).toHaveAttribute('aria-current', 'page')
   await expect(page.locator('#xp .xrail [data-xsec="goals"]')).not.toHaveAttribute('aria-current', 'page')
 })
 
@@ -136,7 +148,7 @@ const HOMES: Record<string, string[]> = {
   pages: ['paths', 'exits', 'groups'],
   sources: ['sources'],
   audience: ['places', 'people', 'bversion', 'screens'],
-  goals: ['retention', 'vsale', 'toconvert', 'flow', 'payments', 'customers', 'earners', 'sells', 'revmap'],
+  goals: ['goals', 'funnels', 'toconvert', 'flow', 'sales', 'vsale', 'earners', 'sells', 'revmap', 'payments', 'customers', 'retention'],
   health: ['speed'],
   web: ['ai'],
 }
@@ -146,6 +158,8 @@ test('every card of the old Data page has a place in a section', async ({ page }
   for (const [section, tabs] of Object.entries(HOMES)) {
     await page.locator(`#xp .xrail [data-xsec="${section}"]`).click()
     for (const t of tabs) {
+      // Goals & sales is four pages: a table is opened by its own address, which shows the page it is on.
+      if (section === 'goals') await page.goto(`${API}/${HISTORY_DOMAIN}?view=briefing&period=7d&v=&x=${t}`)
       const card = page.locator(`#xp [data-xcard="${t}"]`)
       await card.evaluate((el) => el.scrollIntoView())
       await expect(card).toBeVisible()

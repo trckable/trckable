@@ -31,11 +31,13 @@ export interface Ask {
   filters: Filter[]
   /** The source whose details stand beside Sources' table. */
   source?: string
+  /** The goal whose page the Goals tab shows (its key); absent = the list. */
+  goal?: string
 }
 
-export function askOf(view: Pick<ViewState, 'xp' | 'xf' | 'xs' | 'filters'>): Ask | null {
+export function askOf(view: Pick<ViewState, 'xp' | 'xf' | 'xs' | 'xg' | 'filters'>): Ask | null {
   if (!view.xp) return null
   const moved = movedTo(view.xp)
   const tab = moved?.tab ?? (isTab(view.xp) ? view.xp : 'overview')
-  return { tab, filters: view.xf ?? view.filters, source: moved?.source ?? (tab === 'sources' ? view.xs : undefined) }
+  return { tab, filters: view.xf ?? view.filters, source: moved?.source ?? (tab === 'sources' ? view.xs : undefined), goal: tab === 'goals' ? view.xg : undefined }
 }

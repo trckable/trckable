@@ -334,6 +334,22 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
   switch (rest) {
     case 'report':
       return ok(reportOf(c, id, parseQuery(sp)))
+    case 'report/goals': {
+      // Each goal of the report, the first of them standing out.
+      const q = parseQuery(sp)
+      const days = Math.max(1, dayIndex(c, q.to) - dayIndex(c, q.from) + 1)
+      const rows = (reportOf(c, id, q).current.goals ?? []).map((g, i) => ({ goal: g.value, name: g.label ?? g.value, count: g.visitors, out: i === 0, why: i === 0 ? 'times' : undefined, factor: i === 0 ? 3 : undefined, usual: Math.max(1, Math.round(g.visitors / 3)), spark: Array.from({ length: Math.min(days, 14) }, (_, k) => Math.round(g.visitors / days) + (k % 3)) }))
+      return ok({ goals: rows, reached: rows.reduce((n, g) => n + g.count, 0), out: rows.filter((g) => g.out).length, days, source: 'google.com', source_share: 0.44 })
+    }
+    case 'report/goal': {
+      const goal = sp.get('goal') ?? ''
+      const q = parseQuery(sp)
+      const g = (reportOf(c, id, q).current.goals ?? []).find((x) => x.value === goal)
+      if (!g) return { status: 404, body: { error: 'no such goal' } }
+      const at = Math.floor(Date.now() / 1000)
+      const events = Array.from({ length: Math.min(g.visitors, 6) }, (_, k) => ({ at: at - k * 3600, path: site.pages[k % site.pages.length][0], source: k % 2 ? '' : 'google.com', country: 'DE', device: 'mobile', os: 'iOS' }))
+      return ok({ goal: { goal, name: g.label ?? goal, count: g.visitors, out: false, usual: Math.max(1, Math.round(g.visitors / 3)), spark: [] }, events, sources: [{ source: 'google.com', count: Math.ceil(g.visitors / 2) }], days: 1 })
+    }
     case 'report/vitals': {
       const q = parseQuery(sp)
       const long = dayIndex(c, q.to) - dayIndex(c, q.from) > 1

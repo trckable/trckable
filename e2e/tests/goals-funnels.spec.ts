@@ -1,6 +1,6 @@
 // Goals, end to end: a goal made in the dialog counts the visit that reached its page, and a button's attribute and a
 // call from code count the way a real visitor sends them (the real tracker in a browser), each then read where a
-// person reads it: the goals under the funnel in Explore. A goal is counted under a lowercase key and shown as written.
+// person reads it: the Goals page of Goals & sales in Explore. A goal is counted under a lowercase key and shown as written.
 import { execFileSync } from 'node:child_process'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -24,27 +24,24 @@ const runId = (name: string) => `${name}-${Date.now()}-${Math.random().toString(
 /** A page of the test site that carries the real tracker, with the given body. */
 const open = (page: Page, path: string, body: string) => page.goto(`${SITE_ORIGIN}${path}?b=${encodeURIComponent(body)}`)
 
-/** Explore's goals card, narrowed to one page of the test site (the site holds the goals of every run). */
+/** Explore's Goals page, narrowed to one page of the test site (the site holds the goals of every run). */
 async function goals(page: Page, path: string) {
   await page.context().addCookies([{ name: 'trckable_session', value: cookie, url: API }])
-  await page.goto(`${API}/example.com?view=briefing&x=funnels&xf=${encodeURIComponent(`page:${path}`)}`)
+  await page.goto(`${API}/example.com?view=briefing&x=goals&xf=${encodeURIComponent(`page:${path}`)}`)
   await expect(page.locator('#xp.on')).toBeVisible({ timeout: 15_000 })
   // The card is filled in when it is scrolled to.
-  await page.locator('#xp [data-xcard="funnels"]').evaluate((el) => el.scrollIntoView())
+  await page.locator('#xp [data-xcard="goals"]').evaluate((el) => el.scrollIntoView())
 }
 
-const row = (page: Page, name: string) => page.locator('#xp .grs .gr', { has: page.locator('span', { hasText: new RegExp(`^${name}$`) }) })
-/** A goal's count is an animated number (a number-flow element): each digit wheel stands at its --current. */
-const count = (page: Page, name: string) =>
-  row(page, name)
-    .locator('.gr-ring b')
-    .evaluate((b) => [...(b.firstElementChild?.shadowRoot?.querySelectorAll('[part~="integer-digit"]') ?? [])].map((d) => (d as HTMLElement).style.getPropertyValue('--current').trim()).join(''))
+const row = (page: Page, name: string) => page.locator('#xp .gl-row', { has: page.locator('.gl-name', { hasText: new RegExp(`^${name}$`) }) })
+/** A goal's count, as the list says it. */
+const count = (page: Page, name: string) => row(page, name).locator('.gl-n').innerText()
 
 /** Reloads until the goal is listed with this many visitors: the writer flushes about once a second. */
 async function expectGoal(page: Page, name: string, visitors: number) {
   await expect(async () => {
     await page.reload()
-    await page.locator('#xp [data-xcard="funnels"]').evaluate((el) => el.scrollIntoView())
+    await page.locator('#xp [data-xcard="goals"]').evaluate((el) => el.scrollIntoView())
     await expect(row(page, name)).toHaveCount(1, { timeout: 4_000 })
     await expect.poll(() => count(page, name), { timeout: 4_000 }).toBe(String(visitors))
   }).toPass({ timeout: 30_000, intervals: [1_000, 1_500, 2_000] })

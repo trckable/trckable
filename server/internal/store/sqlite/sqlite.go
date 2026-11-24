@@ -1167,6 +1167,14 @@ var migrations = []string{
 	// 89: a share made only to be looked at (sharepreview.go): the owner's
 	// picture of the page a link would open. Never listed or counted.
 	`ALTER TABLE site_shares ADD COLUMN preview INTEGER NOT NULL DEFAULT 0;`,
+	// 90: the goals a person only wants to hear of in the bell when they stand
+	// out (goalquiet.go), one row per person, site and goal.
+	`CREATE TABLE IF NOT EXISTS goal_quiet (
+		user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		site_id TEXT NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+		goal    TEXT NOT NULL,
+		PRIMARY KEY (user_id, site_id, goal)
+	) WITHOUT ROWID;`,
 }
 
 // migrationApplied reports migrations (1-based) whose effect is already in the

@@ -4,7 +4,7 @@ import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { XIco } from '../ui/XIcons'
 import { copy } from './copy'
-import { listedSections, listedTabs, TABS } from './sections'
+import { listedSections, listedTabs, pageOf, TABS } from './sections'
 import { railOpen, railPressed, railToggled, type RailForce } from './railOpen'
 import { TAB_ICONS } from './tabIcons'
 import type { Connected, Section, Tab } from './types'
@@ -18,7 +18,7 @@ export function Rail({ section, tab, conn, onPick, onTab }: { section: Section; 
     <nav className="xrail" aria-label={copy.railLabel}>
       {listedSections().map((k) => {
         const subs = listedTabs(k)
-        const on = k === section && !subs.includes(tab)
+        const on = k === section && !subs.includes(pageOf(tab))
         const open = railOpen(force, k)
         return (
           <Fragment key={k}>
@@ -40,7 +40,7 @@ export function Rail({ section, tab, conn, onPick, onTab }: { section: Section; 
                   {subs.map((t) => {
                     const Ico = TAB_ICONS[t]
                     return (
-                      <button key={t} type="button" data-xtab={t} className={`xri sub${t === tab ? ' on' : ''}`} aria-current={t === tab ? 'page' : undefined} onClick={() => onTab(t)}>
+                      <button key={t} type="button" data-xtab={t} className={`xri sub${t === pageOf(tab) ? ' on' : ''}`} aria-current={t === pageOf(tab) ? 'page' : undefined} onClick={() => onTab(t)}>
                         {Ico && <Ico className="xi" strokeWidth={1.7} aria-hidden="true" />}
                         <span className="nm">{copy.sub[t]}</span>
                       </button>

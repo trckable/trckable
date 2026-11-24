@@ -15,6 +15,8 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/trckable/trckable/server/internal/moments"
+	"github.com/trckable/trckable/server/internal/query"
+	"github.com/trckable/trckable/server/internal/standsout"
 	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
@@ -76,6 +78,10 @@ type bellGoal struct {
 	Name  string `json:"name,omitempty"`
 	Count int64  `json:"count"`
 	Last  int64  `json:"last"`
+	// Out and Why say whether the goal stands out today and why (the one rule of the standsout package); Usual is a usual day.
+	standsout.Verdict
+	// Quiet: this person wants to hear of the goal only when it stands out.
+	Quiet bool `json:"quiet,omitempty"`
 }
 
 // bellCache keeps each person's complete list for bellKeep, and shares one build among the requests that ask for it at once.
@@ -156,7 +162,11 @@ func (a *API) bellList(r *http.Request, p principal) ([]bellRow, bool, bool) {
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), bellTimeout)
 	defer cancel()
 	req := r.Clone(ctx)
-	rows, partial, err := a.bell.build(r.Context(), key, now, func() ([]bellRow, bool) { return a.bellRows(req, p.account, sites, now) })
+	quiet, qerr := a.Ctl.GoalQuiet(r.Context(), p.user.ID)
+	if qerr != nil {
+		quiet = nil
+	}
+	rows, partial, err := a.bell.build(r.Context(), key, now, func() ([]bellRow, bool) { return a.bellRows(req, p.account, sites, now, quiet) })
 	return rows, partial, err == nil
 }
 
@@ -205,7 +215,7 @@ func (a *API) bellFeed(w http.ResponseWriter, r *http.Request) {
 }
 
 // bellRows puts the sites' week together: one list, in the one order (at, then id). The second value is true when a source could not be read.
-func (a *API) bellRows(r *http.Request, account string, sites []sqlite.SiteRow, now time.Time) ([]bellRow, bool) {
+func (a *API) bellRows(r *http.Request, account string, sites []sqlite.SiteRow, now time.Time, quiet map[string]bool) ([]bellRow, bool) {
 	ctx := r.Context()
 	from := now.Unix() - bellDays*86400
 	var (
@@ -253,7 +263,7 @@ func (a *API) bellRows(r *http.Request, account string, sites []sqlite.SiteRow, 
 	g.SetLimit(bellSites)
 	for _, s := range sites {
 		g.Go(func() error {
-			list, ok := a.bellSite(r, s, now, from)
+			list, ok := a.bellSite(r, s, now, from, quiet)
 			if !ok {
 				partial.Store(true)
 			}
@@ -326,7 +336,7 @@ func (w *nullWriter) Write(b []byte) (int, error) { return len(b), nil }
 func (w *nullWriter) WriteHeader(int)             {}
 
 // bellSite is what one site's stores say of the week.
-func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from int64) ([]bellRow, bool) {
+func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from int64, quiet map[string]bool) ([]bellRow, bool) {
 	ctx := r.Context()
 	loc, err := time.LoadLocation(s.Timezone)
 	if err != nil {
@@ -418,6 +428,10 @@ func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from in
 		// A site that does not tell visitors apart (or whose setting cannot be read) names none.
 		cfg, cfgErr := a.Ctl.SiteConfig(ctx, s.ID)
 		named := cfgErr == nil && !cfg.ConsentFree
+		hist, siteFirst, firsts, herr := a.goalHistory(ctx, q, s.ID, p.TZ, from, now)
+		if herr != nil {
+			ok = false
+		}
 		if list, err := q.GoalHours(ctx, s.ID, p.TZ, time.Unix(from, 0).UTC(), now.UTC(), 2000); err != nil {
 			ok = false
 		} else {
@@ -486,7 +500,25 @@ func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from in
 					continue
 				}
 				sort.SliceStable(x.goals, func(i, j int) bool { return x.goals[i].Last > x.goals[j].Last })
-				row := bellRow{ID: "goal:" + s.ID + ":" + d + ":" + strconv.Itoa(len(x.goals)), Kind: "goal", Site: s.ID, At: x.last, Goal: x.key, Goals: x.goals}
+				// The id is of every goal the day has, so what a person keeps quiet never makes the row unread again.
+				id := "goal:" + s.ID + ":" + d + ":" + strconv.Itoa(len(x.goals))
+				day, derr := time.ParseInLocation(time.DateOnly, d, loc)
+				kept := x.goals[:0:0]
+				for _, g := range x.goals {
+					if herr == nil && derr == nil {
+						g.Verdict = standsout.Judge(standsout.In{Count: g.Count, Days: 1, History: standsout.History(hist[g.Goal], time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, time.UTC)), Seen: firsts[g.Goal] > 0 && firsts[g.Goal] < day.Unix(), Known: siteFirst > 0 && siteFirst < day.Unix()})
+					}
+					g.Quiet = quiet[sqlite.QuietKey(s.ID, g.Goal)]
+					if g.Quiet && !g.Out {
+						continue
+					}
+					kept = append(kept, g)
+				}
+				if len(kept) == 0 {
+					continue
+				}
+				x.goals = kept
+				row := bellRow{ID: id, Kind: "goal", Site: s.ID, At: x.last, Day: d, Goal: x.key, Goals: x.goals}
 				for _, g := range x.goals {
 					row.Count += g.Count
 				}
@@ -498,4 +530,24 @@ func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from in
 		}
 	}
 	return out, ok
+}
+
+// goalHistory reads what the rule needs of a site's goals for the bell's week: each goal's count on each day (the week and the
+// window before it), when each was first reached, and when the site's first event was.
+func (a *API) goalHistory(ctx context.Context, q *query.Q, site, tz string, from int64, now time.Time) (map[string]map[string]int64, int64, map[string]int64, error) {
+	loc := locOf(tz)
+	since := time.Unix(from, 0).In(loc).AddDate(0, 0, -standsout.Window-1)
+	rows, err := q.GoalDays(ctx, query.Params{Site: site, TZ: tz, To: now.UTC()}, time.Date(since.Year(), since.Month(), since.Day(), 0, 0, 0, 0, loc).UTC(), nil)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+	days := map[string]map[string]int64{}
+	for _, d := range rows {
+		if days[d.Goal] == nil {
+			days[d.Goal] = map[string]int64{}
+		}
+		days[d.Goal][d.Day] += d.Count
+	}
+	firsts, siteFirst, err := q.GoalFirsts(ctx, site, nil)
+	return days, siteFirst, firsts, err
 }

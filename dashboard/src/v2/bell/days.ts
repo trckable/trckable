@@ -19,7 +19,7 @@ const headingOf = (day: string, today: string, yesterday: string): string => {
   return day === yesterday ? copy.yesterday : dayWords(day)
 }
 
-const before = (day: string): string => new Date(Date.parse(day + 'T12:00:00Z') - 86_400_000).toISOString().slice(0, 10)
+export const before = (day: string): string => new Date(Date.parse(day + 'T12:00:00Z') - 86_400_000).toISOString().slice(0, 10)
 
 /** When a moment was, as a sentence says it: "today 19:10", "yesterday 08:05", "Tue 20 Oct 19:10". */
 export function whenOf(at: number, now = Date.now() / 1000, zone?: string): string {

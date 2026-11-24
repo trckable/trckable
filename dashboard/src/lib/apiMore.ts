@@ -66,6 +66,49 @@ export interface SavedFunnel {
   updated_at: number
 }
 
+/** One goal over a period as the server tells it: its count, a usual day, and whether it stands out (the server's one rule). */
+export interface GoalRow {
+  goal: string
+  name: string
+  /** Reached by seeing a page, not by an event the site sends. */
+  page?: boolean
+  count: number
+  out: boolean
+  why?: 'first' | 'times'
+  factor?: number
+  usual: number
+  spark: number[]
+}
+
+export interface GoalList {
+  goals: GoalRow[]
+  reached: number
+  out: number
+  days: number
+  /** The host or channel that sent most of the goals, and its share of them (0 to 1). */
+  source: string
+  source_share: number
+}
+
+/** One time a goal was reached. */
+export interface GoalWho {
+  at: number
+  path?: string
+  source?: string
+  country?: string
+  device?: string
+  os?: string
+}
+
+export interface GoalPage {
+  goal: GoalRow
+  events: GoalWho[]
+  sources: { source: string; count: number }[]
+  days: number
+  /** This person hears of the goal in the bell only when it stands out. */
+  quiet?: boolean
+}
+
 export * from './api'
 export { siteState, type SiteState } from '../features/sitestatus/status'
 import type { APIKey, Added, Alert, Annotation, Brand, Cohorts, CrawlerReport, FunnelResult, FunnelStep, Health, Heatmap, InstallCheck, JourneyResult, ModuleInfo, PaidStep, PayConnection, Person, PersonFound, PersonPayment, Profile, Provider, ReportQuery, ReportSchedule, ReportSchedules, ScriptInfo, ScrollReport, SearchConnection, SearchProperty, SearchReport, Segment, Share, ShareLook, Site, SiteAccessList, SiteConfig, SiteRow, SlowCostReport, TwoStep, Verified, WebVitals, Widget, WidgetLook } from './api'
@@ -358,6 +401,9 @@ export const more = {
   crawlers: (site: string, q: ReportQuery) => call<CrawlerReport>('GET', `/sites/${site}/report/crawlers` + rangeQS(q)),
   vitals: (site: string, q: ReportQuery) => call<WebVitals>('GET', `/sites/${site}/report/vitals` + rangeQS(q)),
   slowCost: (site: string, q: ReportQuery) => call<SlowCostReport>('GET', `/sites/${site}/report/slow-cost` + rangeQS(q)),
+  goalList: (site: string, q: { from: string; to: string }, signal?: AbortSignal) => call<GoalList>('GET', `/sites/${site}/report/goals` + rangeQS(q), undefined, signal),
+  goalPage: (site: string, goal: string, q: { from: string; to: string }, signal?: AbortSignal) => call<GoalPage>('GET', `/sites/${site}/report/goal` + rangeQS(q) + `&goal=${encodeURIComponent(goal)}`, undefined, signal),
+  setGoalQuiet: (site: string, goal: string, quiet: boolean) => act('PUT', '/me/goal-quiet', { site, goal, quiet }),
   retention: (site: string, q: ReportQuery) => call<Cohorts>('GET', `/sites/${site}/report/retention` + rangeQS(q)),
   setModule: (site: string, id: string, enabled: boolean) =>
     call<{ modules: ModuleInfo[]; script: ScriptInfo }>('PUT', `/sites/${site}/modules/${id}`, { enabled }),
