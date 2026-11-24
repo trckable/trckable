@@ -76,7 +76,6 @@ describe('the globe popover', () => {
     expect(box.querySelector('.gnew')).toBeNull()
     // The count online now above the list is the number the pill shows, and in full screen the same block floats over the globe.
     expect(box.querySelector('.gside .gbig')?.textContent).toContain('3')
-    expect(box.querySelector('.gcard .lm')?.textContent).toContain('3')
     expect(box.querySelector('.gfloat')).toBeNull()
     act(() => (box.querySelector('.gfs') as HTMLElement).click())
     expect(box.querySelector('.gfloat .gbig')?.textContent).toContain('3')

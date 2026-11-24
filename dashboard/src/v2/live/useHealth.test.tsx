@@ -21,7 +21,6 @@ vi.mock('../../lib/apiMore', () => ({
 }))
 vi.mock('../../features/incidents/api', () => ({ incidents: { period: () => Promise.resolve({ incidents: [] }) } }))
 vi.mock('../../features/answers/api', () => ({ answersApi: { report: () => Promise.resolve({ latest: null }) } }))
-vi.mock('../../features/mentions/api', () => ({ mentionsApi: { list: () => Promise.resolve({ mentions: [] }) } }))
 vi.mock('./health', async (orig) => ({ ...(await orig<typeof import('./health')>()), speedOf: () => null, aiOf: () => null }))
 
 import { announceSiteWrite } from '../../lib/siteWrites'

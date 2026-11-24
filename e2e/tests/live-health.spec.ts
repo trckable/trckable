@@ -75,7 +75,6 @@ test('the cards tell the real figures, and each opens its part of Explore', asyn
   await expect(cards(page).locator('.lhup')).toContainText('up · 30 days')
   await expect(cards(page).locator('.lhcount')).toContainText('214')
   await expect(cards(page).locator('.lhmarks i')).toHaveText(['O', 'C'])
-  await expect(cards(page).locator('.lhment')).toContainText('Hacker News')
   await cards(page).locator('.lhcount').click()
   await expect(page).toHaveURL(/x=ai/)
 })
@@ -84,7 +83,8 @@ test('a site that is down shows red with how long, as the header does, and the c
   await page.setViewportSize({ width: 390, height: 844 })
   await fake(page, { down: true })
   const card = cards(page).locator('.lhc.bad')
-  await expect(card).toContainText(/Down for 1[2-3] min/)
+  await expect(card.locator('.lhbig')).toContainText(/No answer since/)
+  await expect(card.locator('.ph')).toHaveText('Speed & uptime') // the title does not tell the outage again
   await expect(card.locator('.lhstrip i.down')).toHaveCount(1)
   const cols = await cards(page).evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length)
   expect(cols).toBe(1)
@@ -94,7 +94,6 @@ test('a site that is down shows red with how long, as the header does, and the c
 test('with nothing behind a figure an owner is offered a button only where there is something to set up, and each goes to its own place', async ({ page }) => {
   await fake(page, { empty: true, noVitals: true })
   await expect(cards(page).locator('.lhempty')).toHaveCount(2) // speed and uptime say it once
-  await expect(cards(page).locator('.lhment')).toContainText('No new mentions') // a site that looks for mentions and has none is a real zero
   await expect(cards(page).getByRole('button', { name: /^(Turn on speed|Connect AI crawlers)$/ })).toHaveCount(2) // uptime is watched on its own: no button of its own
   await cards(page).locator('.lhempty').first().getByRole('button', { name: 'Turn on speed' }).click()
   await expect(page).toHaveURL(/settings=site/)

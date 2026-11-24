@@ -10,7 +10,6 @@ import { EmptyBlock } from './EmptyBlock'
 import { CardSkeleton } from './CardSkeleton'
 import { BANDS, pausedWords, speedGrade, type Speed } from './health'
 import { loading, type Health } from './useHealth'
-import { plainSpan } from '../../lib/plainSpan'
 import { downStateOf } from '../../features/sitestatus/status'
 import './liveUptime.css'
 import type { DayState } from '../../features/incidents/model'
@@ -54,8 +53,6 @@ function Strip({ days }: { days: DayState[] }) {
 interface Props {
   site: Site
   health: Health
-  /** The clock Live runs by (ms), for how long a site has been down. */
-  now: number
   /** Unix seconds the site stopped answering, while it is down. */
   downSince?: number
 }
@@ -140,16 +137,15 @@ function body(site: Site, health: Health, downSince?: number) {
   return loading(health) ? <CardSkeleton kind="speed" /> : <UpBody site={site} health={health} />
 }
 
-export function SpeedUptimeCard({ site, health, now, downSince }: Props) {
+export function SpeedUptimeCard({ site, health, downSince }: Props) {
   const down = downSince !== undefined
-  const span = down ? plainSpan((now - downSince * 1000) / 1000) : ''
   const checkOnly = down && downStateOf(site) === 'visitors'
   let tone = ''
   if (down) tone = checkOnly ? ' warn' : ' bad'
   return (
     <section className={`mk-card lcard lhc${tone}`} aria-label={h.speedUptime}>
       <div className="ph">
-        <span className={down ? 'lhdown' : 't'}>{down ? (checkOnly ? h.checkFor : h.downFor)(span) : h.speedUptime}</span>
+        <span className="t">{h.speedUptime}</span>
       </div>
       <div className="pb lhbody">{body(site, health, downSince)}</div>
     </section>

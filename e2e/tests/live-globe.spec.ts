@@ -221,14 +221,11 @@ test('zoom: the buttons and Ctrl + wheel, the spin waits while zoomed in and com
   inBudget(ms)
 })
 
-test('the list head shows the online count the pill shows, with the half hour as a line; full screen floats the same block', async ({ page }) => {
+test('the list head shows the online count once, with the half hour as a line; full screen floats the same block', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('trckable.live.globe', 'on'))
   await open(page)
   await expect(page.locator('.gside .gbig')).toBeVisible({ timeout: 10_000 })
-  const num = (t: string) => Number(t.replace(/[^\d]/g, '') || 0)
-  const big = num((await page.locator('.gside .gbig .rn-text').textContent()) ?? '')
-  const pill = num(await page.locator('.gcard .lm').innerText())
-  expect(big).toBe(pill)
+  await expect(page.locator('.gcard .lm')).toHaveCount(0) // the count is told once, in the side panel
   await expect(page.locator('.gside .gspark svg')).toBeVisible()
   expect((await page.locator('.gside .gspark').boundingBox())!.height).toBeCloseTo(56, 0)
   await page.getByRole('button', { name: 'Full screen' }).click()
