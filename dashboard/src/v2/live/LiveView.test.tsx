@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { act, createElement } from 'react'
 import { createRoot } from 'react-dom/client'
-import { describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { fmtInt } from '../../lib/format'
 import type { LiveNow } from '../../features/live/api'
 import { LiveView, type LiveFeed } from './LiveView'
@@ -32,6 +32,9 @@ const figures = (box: HTMLElement, text: string) => [...box.querySelectorAll('.r
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 describe('Live says each number once', () => {
+  // No request may leave the test: any fetch a hook makes stays pending.
+  beforeAll(() => vi.stubGlobal('fetch', () => new Promise(() => {})))
+  afterAll(() => vi.unstubAllGlobals())
   it('tells the people on the site now once: in the card, not again in the list header', () => {
     expect(figures(draw(feed()), fmtInt(4217))).toBe(1)
   })
