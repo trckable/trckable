@@ -5,6 +5,10 @@ updates:
     directory: /server
     schedule: { interval: weekly }
     groups: { go: { patterns: ["*"] } }
+    # DuckDB 2.2 (0.20000) made the image 39 MB (budget 34) and the report p95 278 ms (budget 250): held until that is solved.
+    ignore:
+      - dependency-name: "github.com/duckdb/*"
+      - dependency-name: "go.duckdb.org/*"
   - package-ecosystem: npm
     directory: /
     schedule: { interval: weekly }
