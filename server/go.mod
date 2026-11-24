@@ -4,7 +4,7 @@ go 1.27.4
 
 require (
 	github.com/coreos/go-oidc/v3 v3.21.0
-	github.com/duckdb/duckdb-go/v2 v2.20000.0
+	github.com/duckdb/duckdb-go/v2 v2.10506.0
 	github.com/go-jose/go-jose/v4 v4.1.9
 	github.com/mileusna/useragent v1.3.5
 	github.com/oschwald/maxminddb-golang/v2 v2.9.1

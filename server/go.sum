@@ -8,8 +8,8 @@ github.com/coreos/go-oidc/v3 v3.21.0 h1:wZo4Q9Pum8dYEj0eMUPrqR+kvuGkeUplbLpNCkBq
 github.com/coreos/go-oidc/v3 v3.21.0/go.mod h1:DYCf24+ncYi+XkIH97GY1+dqoRlbaSI26KVTCI9SrY4=
 github.com/duckdb/duckdb-go-bindings v0.20000.0 h1:jCIPcbfOCvGcu6yJxekEspry+5MuxrpOSrRWTqinn20=
 github.com/duckdb/duckdb-go-bindings v0.20000.0/go.mod h1:2bPkl/YewTvhg0+0tHbCR9KNaJVmVZAGD3YJ5Tim23g=
-github.com/duckdb/duckdb-go/v2 v2.20000.0 h1:9iR4duWnUGWjjSpUj56iDNrxxUmHP/xD4YN9h8JRVSQ=
-github.com/duckdb/duckdb-go/v2 v2.20000.0/go.mod h1:78pkJ2q7V0UpIjh6kLpszSmiifa6s+Z8Gy6DnMcYIoA=
+github.com/duckdb/duckdb-go/v2 v2.10506.0 h1:mcZjUQ/kSNeZdtGCqyj5/JEDUdj7/kvILfIOUTzQIu0=
+github.com/duckdb/duckdb-go/v2 v2.10506.0/go.mod h1:6pLO+4GMcb0q36+z+RlQ7h+MMxum1lL0eAVf4GsPAxs=
 github.com/dustin/go-humanize v1.1.0 h1:dbKTrvD0klcbBV/h4AWJdMuZogJACoMlvWIWZ5b2xWg=
 github.com/dustin/go-humanize v1.1.0/go.mod h1:hc1CvRkJMsgxqjmjMQF3QNRAZBwY8AXBAzKYoSX9sFI=
 github.com/go-jose/go-jose/v4 v4.1.9 h1:pKfeQkig1NmgK4hJrZYXLEYURXfoJB61Larw0uIW4gY=
