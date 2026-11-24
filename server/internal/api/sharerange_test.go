@@ -65,8 +65,8 @@ func TestShareLinkKeepsItsPeriod(t *testing.T) {
 		{"2026-09-01..2026-09-10", "2026-09-01..2026-09-10", "1 Sep – 10 Sep 2026|1"},
 		{"2026-08-30..2026-09-22", "2026-08-30..2026-09-22", "30 Aug – 22 Sep 2026|3"},
 		{"all", "since:2026-03-06", "Since 6 Mar 2026|4"},
-		{"12mo", "12mo", "Last 12 months|4"},
-		{"30d", "30d", "Last 30 days|3"},
+		{"12mo", "12mo", "23 Sep 2025 – 22 Sep 2026|4"},
+		{"30d", "30d", "24 Aug – 22 Sep 2026|3"},
 	} {
 		code, token, stored := make(c.period)
 		if code != http.StatusCreated || stored != c.stored {
