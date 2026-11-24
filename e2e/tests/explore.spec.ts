@@ -79,8 +79,8 @@ test('the section list has seven sections, and a section shows its tables as car
   await pick(page, /^Sources/)
   await expect(page.locator('#xp [data-xcard="sources"]')).toBeVisible()
   await expect(page.locator('#xp .xsub')).toHaveCount(0)
-  // Payments are not connected here: Goals & sales says so and tags itself in the list.
-  await expect(page.locator('#xp .xrail [data-xsec="goals"] .xtag')).toHaveText('Connect')
+  // Payments are not connected here: the row stays plain (Sales inside marks it), so nothing sits under its arrow.
+  await expect(page.locator('#xp .xrail [data-xsec="goals"] .xtag')).toHaveCount(0)
   await pick(page, /^Goals & sales/)
   await expect(page).toHaveURL(/x=goals/)
   await expect(page.locator('#xp [data-xcard="goals"]')).toBeVisible()
