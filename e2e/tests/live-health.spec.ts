@@ -1,4 +1,4 @@
-// Live's Speed & uptime and AI & mentions cards beside Analytics: a gauge for loading time, thirty days of uptime, AI crawler
+// Live's Speed & uptime and AI cards beside Analytics: a gauge for loading time, thirty days of uptime, AI crawler
 // visits with the assistants that came, and mentions. A site that is
 // down shows it in red, a figure with nothing behind it says "Set up" where there is something to set up (nothing to a viewer), and on a phone the four
 // sit two by two. The answers are faked through the routes; what is under test is how the cards tell them.

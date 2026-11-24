@@ -68,7 +68,7 @@ export const copy = defineCopy('v2.live', {
   line: 'Line',
   health: {
     speedUptime: 'Speed & uptime',
-    aiMentions: 'AI & mentions',
+    aiMentions: 'AI',
     sec: (v: string) => `${v} s`,
     pct: (v: string) => `${v}%`,
     grades: { good: 'fast', mid: 'OK', poor: 'slow' },
@@ -88,6 +88,6 @@ export const copy = defineCopy('v2.live', {
     connectCrawlers: 'Connect AI crawlers',
     why: 'Why?',
     askSpeed: 'What does Speed & uptime do, and should I turn it on?',
-    askAi: 'What does AI & mentions do, and should I turn it on?',
+    askAi: 'What does AI do, and should I turn it on?',
   },
 })

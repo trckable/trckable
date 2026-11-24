@@ -1,4 +1,4 @@
-// The Speed & uptime and AI & mentions cards' figures, as plain functions: the speed headline, how the last thirty days
+// The Speed & uptime and AI cards' figures, as plain functions: the speed headline, how the last thirty days
 // read, and the AI crawler count by assistant. Nothing here knows the browser; the hook reads, the cards show.
 import type { CrawlerReport, WebVitals } from '../../lib/api'
 import { MIN_VITALS } from '../../lib/api'

@@ -1,4 +1,4 @@
-// Live's AI & mentions card: how many AI crawlers read the site and which assistants they came from, and how often the
+// Live's AI card: how many AI crawlers read the site and which assistants they came from, and how often the
 // assistants name the site in an answer (where Answers is on).
 import { answersCopy } from '../../features/answers/copy'
 import type { Site } from '../../lib/api'

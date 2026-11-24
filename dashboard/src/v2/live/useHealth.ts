@@ -1,4 +1,4 @@
-// What the Speed & uptime and AI & mentions cards read: loading time, uptime, AI crawler hits, and Answers. None of it is asked before the page
+// What the Speed & uptime and AI cards read: loading time, uptime, AI crawler hits, and Answers. None of it is asked before the page
 // has painted, and a read that fails is a quiet empty block, never an error over Live. Speed goes through the same
 // module check the Briefing uses, so a site that records no speed is not asked.
 import { useEffect, useRef, useState } from 'react'

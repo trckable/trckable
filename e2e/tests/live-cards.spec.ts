@@ -1,5 +1,5 @@
 // The cards under Live: Analytics (today so far, the pages, the countries and the devices behind one switch),
-// then Speed & uptime and AI & mentions.
+// then Speed & uptime and AI.
 import { expect, test, type Page } from './fixtures'
 import { execFileSync } from 'node:child_process'
 import { existsSync, openSync, readFileSync, writeFileSync } from 'node:fs'

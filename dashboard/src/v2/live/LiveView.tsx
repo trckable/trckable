@@ -1,5 +1,5 @@
 // Live, in the walkthrough's own layout: the half hour as bars with who is here now, the people on the site, and under
-// them Analytics, Speed & uptime, and AI & mentions. The numbers are the server's last half hour and the stream's newer visits.
+// them Analytics, Speed & uptime, and AI. The numbers are the server's last half hour and the stream's newer visits.
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { lazyLoad, warm } from '../../lib/lazyLoad'
 import { onlineNow } from '../../lib/live'
