@@ -1,17 +1,4 @@
 /* The Tracking options pop-up (FeaturesDialog.tsx): loads with its chunk. */
-/* A phone: the whole screen and a finger-high close. */
-@media (max-width: 640px) {
-  .modal-back:has(.feat-modal) {
-    padding: 0;
-  }
-  .modal.feat-modal {
-    width: 100vw;
-    height: 100dvh;
-    max-height: none;
-    border-radius: 0;
-    border: 0;
-  }
-}
 .feat-modal .modal-body .card {
   border: 0;
   background: none;

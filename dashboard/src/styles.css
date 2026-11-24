@@ -1005,18 +1005,16 @@ table.t td {
 }
 .modal-badge.danger {
   background: color-mix(in srgb, var(--down) 14%, transparent);
-  border-color: color-mix(in srgb, var(--down) 40%, transparent);
   color: var(--down);
 }
-/* The dialog heading, with an optional icon tile before it. */
+/* The dialog heading, with an optional icon tile before it: 28 px, tinted. */
 .modal-badge {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   background: color-mix(in srgb, var(--accent) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
   color: var(--accent);
   flex: none;
 }

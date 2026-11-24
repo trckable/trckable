@@ -13,6 +13,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 40px;
   padding: 6px 8px 6px 10px;
   border-radius: 8px;
   background: var(--sunken);
@@ -20,13 +21,35 @@
 }
 .note-list li span {
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.note-by {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+}
+.note-visits {
+  margin: 0;
+  font-size: 12.5px;
 }
 .note-list button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
   border: 0;
   background: transparent;
   color: var(--text-3);
   cursor: pointer;
-  font-size: 15px;
 }
 .note-list button:hover {
   color: var(--down);
@@ -35,9 +58,6 @@
    The period's days as a strip of bars: you point at the bump you are about to
    explain. The chosen day is the accent; a day that already has a note wears
    a small dot, the same dot the chart shows. */
-.note-modal {
-  width: min(520px, calc(100vw - 32px));
-}
 .note-strip {
   display: flex;
   align-items: flex-end;
@@ -89,33 +109,37 @@
 }
 .note-day {
   display: flex;
+  flex: none;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
+  min-width: 0;
 }
 .note-day-label {
-  flex: 1;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: center;
-  gap: 10px;
-  height: 36px;
+  gap: 6px;
+  min-width: 0;
+  height: 28px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 8px;
   background: color-mix(in srgb, var(--text) 7%, transparent);
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
-  padding: 8px 12px 0;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+.note-day-label svg {
+  flex: none;
+  color: var(--accent);
 }
 .note-day-label:hover {
   background-image: var(--hover-veil);
 }
 .note-day-label[aria-expanded='true'] {
   border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-}
-.note-day-label .faint {
-  font-size: 12.5px;
 }
 .note-cal {
   position: relative;
@@ -133,11 +157,13 @@
 }
 .note-input {
   position: relative;
+  flex: 1 1 160px;
+  min-width: 0;
 }
 .note-input .input {
   width: 100%;
-  height: 46px;
-  padding-right: 52px;
+  height: 40px;
+  padding-right: 44px;
 }
 .note-input > span {
   position: absolute;
@@ -145,4 +171,33 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 12px;
+}
+/* The note and its Add button stay on one row in the footer, on a phone too. */
+.note-modal .modal-foot {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+.note-modal .modal-foot > .dialog-actions {
+  flex: 0 0 auto;
+}
+@media (--xs) {
+  .note-modal .modal-foot {
+    flex-direction: row;
+    align-items: center;
+  }
+  .note-modal .modal-foot > .dialog-actions {
+    width: auto;
+  }
+}
+/* On a phone the day switcher takes the header: the icon says what the dialog is. */
+@media (--xs) {
+  .note-modal .modal-title {
+    display: none;
+  }
+  .note-modal .modal-head-text {
+    flex: 0 0 0;
+  }
+  .note-modal .note-day {
+    margin-inline-start: auto;
+  }
 }

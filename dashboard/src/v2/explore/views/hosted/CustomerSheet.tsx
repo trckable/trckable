@@ -101,7 +101,7 @@ export default function CustomerSheet({ x, query, c, onJourney, onClose }: { x: 
   const visitor = c.visitor
   const name = customerName(detail?.name || c.name, copy.pay.customer)
   return (
-    <Modal label={copy.pay.customer} className="cust-dialog" keepSize={false} over onClose={onClose}>
+    <Modal label={copy.pay.customer} className="cust-dialog" over onClose={onClose}>
       <div className="mk">
         <button type="button" className="modal-close cs-close" aria-label={copy.cust.close} onClick={onClose}>
           <X size={16} strokeWidth={2} aria-hidden="true" />

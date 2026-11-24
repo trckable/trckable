@@ -1,7 +1,9 @@
 // "Attribute each sale": how each checkout passes the visitor id.
+import { Link2 } from 'lucide-react'
 import { useState } from 'react'
 import { CodeBlock } from '../components/Code'
 import { Modal } from '../kit/Modal'
+import { ModalMark } from '../kit/ModalMark'
 import { ProviderMark } from './ProviderMark'
 
 const snippets: Record<string, string> = {
@@ -48,6 +50,7 @@ export function Attribution({ onClose }: { onClose: () => void }) {
       onClose={onClose}
       frame={{
         title: 'Attribute each sale',
+        icon: <ModalMark icon={Link2} />,
         subtitle: 'Pass the person id to your checkout.',
         help: 'Renewals follow it automatically. Without it, revenue still counts in totals but shows as unattributed.',
         size: 'md',

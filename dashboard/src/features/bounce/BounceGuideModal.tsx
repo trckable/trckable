@@ -89,7 +89,7 @@ function Walk({ g, site, domain, onClose }: { g: BounceGuide; site: string; doma
 export default function BounceGuideModal({ site, domain, qs, onClose }: Props) {
   const { guide, state } = useBounceGuide(site, qs)
   return (
-    <Modal label={copy.label} onClose={onClose} className="surge-modal bounce-modal" keepSize={false} focus="box">
+    <Modal label={copy.label} onClose={onClose} className="surge-modal bounce-modal" focus="box">
       <button type="button" className="sgm-x" aria-label={copy.close} onClick={onClose}>
         <X size={16} strokeWidth={2} aria-hidden="true" />
       </button>

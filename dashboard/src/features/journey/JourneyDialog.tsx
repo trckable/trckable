@@ -63,7 +63,7 @@ export function JourneyDialog({ site, visitor, query, onClose, onFilter }: { sit
       }
     : undefined
   return (
-    <Modal label={copy.dialog} className="journey-dialog" keepSize={false} onClose={onClose}>
+    <Modal label={copy.dialog} className="journey-dialog" onClose={onClose}>
       <div className="jr-corner">
         <JourneyMenu site={site} visitor={visitor} />
         <button type="button" className="modal-close" aria-label={copy.close} onClick={onClose}>

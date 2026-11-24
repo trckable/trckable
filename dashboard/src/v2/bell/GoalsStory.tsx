@@ -59,7 +59,7 @@ export default function GoalsStory({ n, site, onOpen, onClose }: { n: Notice; si
       </>
     )
   return (
-    <Modal label={stand.label} onClose={onClose} className="gs-card mk-tokens" keepSize={false} focus="box">
+    <Modal label={stand.label} onClose={onClose} className="gs-card mk-tokens" focus="box">
       <header className="gs-bar">
         {view === 'detail' && (
           <button type="button" className="gs-back" aria-label={stand.back} onClick={() => setView('list')}>

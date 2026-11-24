@@ -69,16 +69,6 @@
   color: var(--down);
 }
 @media (max-width: 640px) {
-  /* A full-height sheet on a phone. */
-  .modal-back:has(> .rp-modal) {
-    place-items: stretch;
-  }
-  .modal.rp-modal {
-    height: 100dvh;
-    max-height: none;
-    border-radius: 0;
-    border-width: 0;
-  }
   .rp-form {
     flex: 1;
     display: flex;

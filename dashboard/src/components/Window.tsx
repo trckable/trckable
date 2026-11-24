@@ -49,7 +49,7 @@ export function Window({
   const current = tabs.find((t) => t.id === tab)
   const equal = tabs.length > 1 && tabs.length <= 5
   return (
-    <Modal label={label} className={'mk-tokens ' + (tabs.length > 1 ? 'window' : 'window single') + (equal ? ' equal' : '') + (many ? ' many view-' + view : '')} keepSize={false} focus="box" onClose={onClose}>
+    <Modal label={label} className={'mk-tokens ' + (tabs.length > 1 ? 'window' : 'window single') + (equal ? ' equal' : '') + (many ? ' many view-' + view : '')} focus="box" onClose={onClose}>
       <header className="window-head">
         {many && view === 'detail' && (
           <button type="button" className="btn icon window-back" aria-label="All sections" onClick={() => setView('list')}>

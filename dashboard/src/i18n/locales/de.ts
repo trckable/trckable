@@ -66,6 +66,7 @@ export default {
   'access.cancel': 'Abbrechen',
   'access.save': 'Speichern',
   'access.saving': 'Speichern…',
+  'access.count': (n: number, of: number) => `${n} von ${of} Websites`,
   'access.saved': (email: string) => `Erlaubte Websites für ${email} gespeichert`,
 
   // range

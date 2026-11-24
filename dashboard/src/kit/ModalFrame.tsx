@@ -33,15 +33,21 @@ export function Framed({ f, onClose, children }: { f: Frame; onClose?: () => voi
         {f.icon}
         <div className="modal-head-text">
           <h2>
-            {f.title}
+            <span className="modal-title" title={typeof f.title === 'string' ? f.title : undefined}>
+              {f.title}
+            </span>
             {f.help && <Info text={f.help} />}
           </h2>
-          {f.subtitle && <span className="faint">{f.subtitle}</span>}
+          {f.subtitle && (
+            <span className="faint" title={typeof f.subtitle === 'string' ? f.subtitle : undefined}>
+              {f.subtitle}
+            </span>
+          )}
         </div>
         {f.tools}
         {onClose && (
           <button type="button" className="modal-close" aria-label="Close" title="Close" onClick={onClose}>
-            <X size={16} strokeWidth={1.75} aria-hidden="true" />
+            <X size={14} strokeWidth={1.75} aria-hidden="true" />
           </button>
         )}
       </header>

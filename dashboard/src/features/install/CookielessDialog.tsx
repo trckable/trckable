@@ -18,7 +18,6 @@ export function CookielessDialog({ on, onCancel, onConfirm }: { on: boolean; onC
     <Modal
       label={title}
       onClose={onCancel}
-      keepSize={false}
       frame={{
         title,
         icon: <ModalMark icon={Cookie} />,

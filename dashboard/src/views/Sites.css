@@ -448,6 +448,19 @@
 }
 
 /* Moved out of the first load: only this component uses these rules. */
+.edit-domain {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 12px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--sunken);
+  color: var(--text-2);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .edit-pair {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));

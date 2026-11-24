@@ -1,9 +1,11 @@
 // Turning on two-step sign-in, in three steps. It loads only when someone
 // starts the setup, so the QR encoder never reaches anyone else.
+import { ShieldCheck } from 'lucide-react'
 import { useMemo, useState } from "react";
 import { fail, refused, wrong, more } from "../lib/apiMore";
 import { Field } from "../components/Field";
 import { Modal, type Frame } from "../kit/Modal";
+import { ModalMark } from '../kit/ModalMark'
 import { StepBody } from "../components/StepBody";
 import { Steps } from "../components/Steps";
 import { toast } from "../components/Toast";
@@ -63,6 +65,7 @@ export default function TwoStepSetup({
   const frame = (): Frame => {
     if (step === 0) return {
           title: "Confirm it's you",
+          icon: <ModalMark icon={ShieldCheck} />,
           subtitle: "Adding a second step asks for your password again.",
           help: "It is the one change that could lock you out, so trckable asks even though you are signed in.",
           size: "lg",
@@ -75,6 +78,7 @@ export default function TwoStepSetup({
         }
     if (step === 1) return {
             title: "Scan with your app",
+            icon: <ModalMark icon={ShieldCheck} />,
             subtitle: "Any authenticator app works.",
             help: "1Password, Bitwarden, Google Authenticator, Aegis. The QR code is drawn in this browser; the secret never goes to a QR service.",
             size: "lg",
@@ -87,6 +91,7 @@ export default function TwoStepSetup({
           }
     return {
             title: "Save these somewhere safe",
+            icon: <ModalMark icon={ShieldCheck} />,
             subtitle: "Each signs you in once if you lose your phone.",
             help: "This is the only time they are shown: trckable keeps only their hashes.",
             size: "lg",

@@ -56,6 +56,7 @@ export default {
   'access.cancel': 'Annuleren',
   'access.save': 'Opslaan',
   'access.saving': 'Opslaan…',
+  'access.count': (n: number, of: number) => `${n} van ${of} sites`,
   'access.saved': (email: string) => `Toegestane sites voor ${email} opgeslagen`,
 
   // range

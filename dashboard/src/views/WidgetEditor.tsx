@@ -1,8 +1,10 @@
 // Editing a widget that exists: its real rendering large, with every setting
 // of the studio beside it. Save keeps the same id, so the code on the owner's
 // pages keeps working and shows the change; Cancel keeps the old version.
+import { Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { Modal } from '../kit/Modal'
+import { ModalMark } from '../kit/ModalMark'
 import { toast } from '../components/Toast'
 import { fail, type Site, type Widget, type WidgetLook, more } from '../lib/apiMore'
 import { TEXT, placeOf, type Place } from './widgetKinds'
@@ -31,6 +33,7 @@ export function WidgetEditor({ site, w, onClose, onSaved }: { site: Site; w: Wid
       onClose={busy ? undefined : onClose}
       frame={{
         title: w.name,
+        icon: <ModalMark icon={Pencil} />,
         help: TEXT.editHint,
         size: 'lg',
         busy,
