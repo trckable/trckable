@@ -15,8 +15,8 @@ export type CardId = 'overview' | 'changed' | 'bestday' | 'milestone' | 'sources
 /** What a card needs of the site; without it the card is not offered. */
 export type Need = 'data' | 'changed' | 'bestday' | 'sources' | 'search'
 export type Group = 'people' | 'milestones' | 'sources' | 'pages'
-export type Period = '7d' | '30d' | 'all'
-export const PERIODS: Period[] = ['7d', '30d', 'all']
+export type Period = '7d' | '30d' | '12mo' | 'all' | 'custom'
+export const PERIODS: Period[] = ['7d', '30d', '12mo', 'all', 'custom']
 
 /** A card, its group, what it needs, and the sections of a shared link it is drawn from (none when the headline numbers do). */
 export type Card = { id: CardId; group: Group; need: Need | null; sections: string[] }
@@ -40,8 +40,17 @@ export function sectionsOf(l: Pick<Look, 'card' | 'ms'>): string[] {
   return kind === 'countries' ? ['places'] : []
 }
 
-/** The period a link is fixed to for a card: the card's own, none for a card with no span of time. All time is not one a link can have. */
-export const linkPeriod = (l: Pick<Look, 'card' | 'period'>): string => (hasPeriod(l.card) && l.period !== 'all' ? l.period : '')
+/**
+ * The period a link is fixed to for a card, as the server keeps it: the card's own, none for a card with no span of time.
+ * A range is `from..to`; all time is kept as its first day (`since:`), or sent as `all` for the server to read the day
+ * when it is not known yet.
+ */
+export function linkPeriod(l: Pick<Look, 'card' | 'period' | 'from' | 'to'>, first?: string): string {
+  if (!hasPeriod(l.card)) return ''
+  if (l.period === 'custom') return l.from && l.to ? `${l.from}..${l.to}` : ''
+  if (l.period === 'all') return first ? `since:${first}` : 'all'
+  return l.period
+}
 
 export const cardOf = (id: CardId) => CARDS.find((c) => c.id === id) ?? CARDS[0]
 /** A milestone has no span of time; every other card is drawn for a period. */
@@ -66,12 +75,12 @@ export const STYLES: { id: StyleId; theme: 'dark' | 'light'; bg: 'solid' | 'grid
 export const ACCENTS = ['#b8ff3c', '#4f8cff', '#ff5ca8', '#ffb547', '#2dd4bf', '#c792ff']
 
 /** What a person picks: the card, its period and size, and the style (which is kept for the site). */
-export type Look = { card: CardId; /** The milestone, as kind~step. */ ms?: string; shape: Shape; period: Period; style: StyleId; accent: string; name: boolean; date: boolean; chart: boolean; /** The site's hide-branding choice, only where it can change the picture: it makes the address new when it flips. */ hideBrand?: boolean }
+export type Look = { card: CardId; /** The milestone, as kind~step. */ ms?: string; shape: Shape; period: Period; /** The days of a custom range, from and to. */ from?: string; to?: string; style: StyleId; accent: string; name: boolean; date: boolean; chart: boolean; /** The site's hide-branding choice, only where it can change the picture: it makes the address new when it flips. */ hideBrand?: boolean }
 export type Style = Pick<Look, 'style' | 'accent' | 'name' | 'date' | 'chart'>
 export const DEFAULT_STYLE: Style = { style: 'ink', accent: ACCENTS[0], name: true, date: true, chart: true }
 
 /** The numbers in words, and the post's text; the has_ flags say which cards the site can make. */
-export type CardWords = { has_data: boolean; has_sources: boolean; has_changed: boolean; has_search: boolean; has_bestday: boolean; has_milestone: boolean; post: string }
+export type CardWords = { /** The site's first day with data, the earliest a period can start. */ first_day?: string; has_data: boolean; has_sources: boolean; has_changed: boolean; has_search: boolean; has_bestday: boolean; has_milestone: boolean; post: string }
 
 /** What the site has to show, by what a card needs. */
 export const hasOf = (w: CardWords | null): Record<Need, boolean> => ({ data: w?.has_data ?? true, sources: w?.has_sources ?? true, changed: w?.has_changed ?? true, search: w?.has_search ?? true, bestday: w?.has_bestday ?? true })
@@ -81,6 +90,10 @@ export function pictureParams(l: Look): URLSearchParams {
   const style = STYLES.find((s) => s.id === l.style) ?? STYLES[0]
   const p = new URLSearchParams({ t: l.card === 'overview' && !l.chart ? 'numbers' : l.card })
   p.set('period', l.period)
+  if (l.period === 'custom' && l.from && l.to) {
+    p.set('from', l.from)
+    p.set('to', l.to)
+  }
   if (l.ms && l.card === 'milestone') p.set('ms', l.ms)
   p.set('shape', l.shape)
   p.set('theme', style.theme)
@@ -123,4 +136,4 @@ export const cardOfTopic = (t?: Topic): CardId => (t && TOPIC_CARD[t]) || 'overv
 const PAGE_PERIOD = new Map<string, Period>([['today', '7d'], ['yesterday', '7d'], ['7d', '7d']])
 export const periodOf = (page?: string): Period => PAGE_PERIOD.get(page ?? '') ?? '30d'
 
-export const fileName = (domain: string, l: Look) => `trckable-${domain}-${l.card}${l.ms ? `-${l.ms.replace('~', '-')}` : ''}-${l.shape}${hasPeriod(l.card) ? `-${l.period}` : ''}.png`
+export const fileName = (domain: string, l: Look) => `trckable-${domain}-${l.card}${l.ms ? `-${l.ms.replace('~', '-')}` : ''}-${l.shape}${hasPeriod(l.card) ? `-${l.period === 'custom' ? `${l.from}_${l.to}` : l.period}` : ''}.png`

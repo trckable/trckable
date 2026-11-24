@@ -300,8 +300,8 @@ func TestCardShapeSizes(t *testing.T) {
 	// Drawing a 1080x1920 picture under the race detector takes longer than the rig's 5 s.
 	owner.Timeout = 60 * time.Second
 	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
-	for shape, want := range map[string]image.Point{"": {1200, 630}, "link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}, "post": {1200, 627}, "portrait": {1080, 1350}, "nope": {1200, 630}} {
-		for _, tpl := range []string{"overview", "leaderboard", "bestday", "milestone"} {
+	for shape, want := range raceFewerShapes(map[string]image.Point{"": {1200, 630}, "link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}, "post": {1200, 627}, "portrait": {1080, 1350}, "nope": {1200, 630}}, "", "square", "nope") {
+		for _, tpl := range raceFewer([]string{"overview", "leaderboard", "bestday", "milestone"}) {
 			code, _, body := get(t, owner, card+"?t="+tpl+"&shape="+shape)
 			if code != http.StatusOK {
 				t.Fatalf("%s %s: %d", tpl, shape, code)
@@ -358,7 +358,7 @@ func TestCardOverviewPictures(t *testing.T) {
 		owner.Timeout = 30 * time.Second // the big pictures are drawn slowly under the race detector
 	}
 	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
-	for _, tpl := range []string{"numbers", "grid"} {
+	for _, tpl := range raceFewer([]string{"numbers", "grid"}) {
 		for shape, want := range map[string]image.Point{"link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}} {
 			code, ct, body := get(t, owner, card+"?t="+tpl+"&shape="+shape+"&compare=1&period=30d")
 			if code != http.StatusOK || ct != "image/png" {
@@ -452,7 +452,7 @@ func TestCardTopicRoutes(t *testing.T) {
 	g.setup(t, owner)
 	card := g.srv.URL + "/api/v1/sites/" + g.site + "/card"
 	for _, tpl := range []string{"sources", "places", "browsers", "devices", "toppage", "topsource", "topplace"} {
-		for shape, want := range map[string]image.Point{"link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}} {
+		for shape, want := range raceFewerShapes(map[string]image.Point{"link": {1200, 630}, "square": {1080, 1080}, "story": {1080, 1920}, "wide": {1600, 900}}, "link", "square") {
 			code, ct, body := get(t, owner, card+"?t="+tpl+"&shape="+shape+"&bg=grid&date=0&name=0")
 			cfg, _, err := image.DecodeConfig(strings.NewReader(body))
 			if code != http.StatusOK || ct != "image/png" || err != nil || cfg.Width != want.X || cfg.Height != want.Y {
@@ -524,4 +524,27 @@ func TestEveryCardDrawsForEveryPeriodAndLanguage(t *testing.T) {
 	for _, lang := range summary.Langs {
 		draw("overview", "7d", lang)
 	}
+}
+
+// raceFewer is the list of pictures a test draws: all of them, and under the race detector (which draws several times
+// slower, and the package's time is CI's limit) the first, since every picture is drawn by the same code and the other
+// builds of the test draw the rest.
+func raceFewer(list []string) []string {
+	if raceEnabled {
+		return list[:1]
+	}
+	return list
+}
+
+// raceFewerShapes is the sizes a test draws: all of them, and under the race detector only those named in keep (the
+// others differ in size alone, which the other builds of the test check).
+func raceFewerShapes(all map[string]image.Point, keep ...string) map[string]image.Point {
+	if !raceEnabled {
+		return all
+	}
+	out := map[string]image.Point{}
+	for _, k := range keep {
+		out[k] = all[k]
+	}
+	return out
 }

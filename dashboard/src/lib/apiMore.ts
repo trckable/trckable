@@ -3,6 +3,7 @@
 // from lib/api.ts so the first load does not carry them. Same shapes, same error
 // handling (api.ts's call).
 import type { Feed } from '../v2/bell/feed'
+import { lang } from '../i18n/lang'
 import { act, call, raw, rangeQS } from './api'
 
 /** The extra hostnames a site accepts, and the ones refused this week that it does not list. */
@@ -265,7 +266,7 @@ export const more = {
   createWidget: (site: string, w: WidgetLook) => call<Widget>('POST', `/sites/${site}/widgets`, w),
   updateWidget: (site: string, id: string, w: WidgetLook & { on: boolean }) => call<Widget>('PUT', `/sites/${site}/widgets/${id}`, w),
   deleteWidget: (site: string, id: string) => act('DELETE', `/sites/${site}/widgets/${id}`),
-  shares: (site: string) => call<{ shares: Share[]; base: string }>('GET', `/sites/${site}/shares`),
+  shares: (site: string) => call<{ shares: Share[]; base: string }>('GET', `/sites/${site}/shares?lang=${lang}`),
   /** Changes only what is in the body: the name, the notes, the days to the end (0: none), the password ("" removes it) and the embed sites. */
   updateShare: (site: string, id: string, body: { name?: string; notes?: boolean; live?: boolean; days?: number; password?: string; embed_origins?: string[]; sections?: string[]; period?: string }) => call<{ share: Share; notes: boolean; live: boolean }>('PATCH', `/sites/${site}/shares/${id}`, body),
   /** Opens the page a link with these options would, as a link of its own for an hour: the address (a path of this server) to draw. */

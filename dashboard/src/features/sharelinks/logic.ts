@@ -22,6 +22,8 @@ export interface Draft {
   sections: string[]
   /** The period the link is fixed to; '' lets whoever opens it choose. */
   period: string
+  /** The server's words for a fixed period that is no preset (a range, all time), kept to name it in the select. */
+  periodLabel?: string
   /** Editing a link that already has a password: leaving the field empty keeps it. */
   hadPassword?: boolean
 }
@@ -54,6 +56,7 @@ export function draftOf(s: Share): Draft {
     sites: origins.join(' '),
     sections: ordered(s.sections ?? SECTIONS),
     period: s.period ?? '',
+    periodLabel: s.period_label,
   }
 }
 

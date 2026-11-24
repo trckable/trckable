@@ -40,8 +40,11 @@ func TestLinkCardQuery(t *testing.T) {
 		{"what changed on a link showing everything", all, "t=changed", map[string]string{"t": "changed"}},
 		{"a link fixed to a week", sqlite.Share{Sections: sqlite.ShareSections, Period: "7d"}, "period=30d", map[string]string{"period": "7d"}},
 		{"a link fixed to a month", sqlite.Share{Period: "30d"}, "period=7d", map[string]string{"period": "30d"}},
-		{"a link fixed to a year", sqlite.Share{Period: "12mo"}, "period=7d", map[string]string{"period": "30d"}},
-		{"all time is not offered", all, "period=all", map[string]string{"period": "7d"}},
+		{"a link fixed to a year", sqlite.Share{Period: "12mo"}, "period=7d", map[string]string{"period": "12mo"}},
+		{"a link fixed to a range", sqlite.Share{Period: "2026-03-01..2026-06-14"}, "period=7d&from=2026-01-01&to=2026-01-02", map[string]string{"period": "custom", "from": "2026-03-01", "to": "2026-06-14"}},
+		{"a link fixed to all time", sqlite.Share{Period: "since:2024-02-04"}, "period=30d&from=2026-01-01&to=2026-01-02", map[string]string{"period": "since", "from": "2024-02-04"}},
+		{"all time is not offered to a reader", all, "period=all", map[string]string{"period": "7d"}},
+		{"a range is not offered to a reader", all, "period=custom&from=2026-01-01&to=2026-01-02", map[string]string{"period": "7d"}},
 		{"a search milestone on a link without sources", headline, "t=milestone&ms=search_clicks~100", map[string]string{"t": "overview"}},
 		{"a search milestone on a link with sources", sqlite.Share{Sections: []string{"sources"}}, "t=milestone&ms=search_clicks~100", map[string]string{"t": "milestone", "ms": "search_clicks~100"}},
 		{"a countries milestone on a link without places", headline, "t=milestone&ms=countries~10", map[string]string{"t": "overview"}},
@@ -56,7 +59,7 @@ func TestLinkCardQuery(t *testing.T) {
 				t.Errorf("%s: %s = %q, want %q (%v)", c.name, k, got.Get(k), v, got)
 			}
 		}
-		for _, k := range []string{"ms", "bg", "accent", "name"} {
+		for _, k := range []string{"ms", "bg", "accent", "name", "from", "to"} {
 			if _, asked := c.want[k]; !asked && got.Has(k) {
 				t.Errorf("%s: %s was let through (%v)", c.name, k, got)
 			}

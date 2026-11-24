@@ -36,6 +36,7 @@ type cardLang struct {
 	noChanged, noSearch, noAI, noGoals, noSales, noMilestone, bestDay, noBestDay                                                                                                               string
 	// Periods: the pill, how a post says it, what a change is against.
 	last24, post24, postDays, postAll, postRange, since string
+	lastDays, last12, post12                            string // "Last 30 days", "Last 12 months" and how a post says it
 	prev24, prevDay, prevDays, vs                       string
 	// A post.
 	postBegun, postTopPage string
@@ -137,9 +138,4 @@ func (l *cardLang) datesLabel(from, to time.Time) string {
 		return l.shortDay(from, false) + " – " + l.shortDay(to, true)
 	}
 	return l.shortDay(from, true) + " – " + l.shortDay(to, true)
-}
-
-// monthYear is "Nov 2026".
-func (l *cardLang) monthYear(d time.Time) string {
-	return fmt.Sprintf("%s %d", l.months[d.Month()-1], d.Year())
 }

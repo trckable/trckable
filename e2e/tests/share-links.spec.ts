@@ -190,7 +190,7 @@ test('a link made before addresses were kept gets a new address, and the old one
   const old = ((await res.json()) as { url: string }).url
   const oldToken = old.slice(old.lastIndexOf('/') + 1)
   // Such a link lists without an address: the same answer, minus the url.
-  await page.route(`**/api/v1/sites/${site}/shares`, async (route) => {
+  await page.route((u) => u.pathname === `/api/v1/sites/${site}/shares`, async (route) => {
     if (route.request().method() !== 'GET') return route.fallback()
     const body = (await (await route.fetch()).json()) as { shares: { url?: string }[] }
     for (const s of body.shares) delete s.url

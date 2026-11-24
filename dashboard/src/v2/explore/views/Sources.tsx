@@ -125,7 +125,15 @@ export function SourcesView({ x, d }: { x: XCtx; d: Table }) {
   const quality = asked.state === 'ok' ? (asked.data as QualityModel) : null
   const answers = useMentions(x.site.id, x.query)
   const row = d.rows.find((r) => isGoogle(r.val))?.val
-  if (d.rows.length === 0) return <PeopleTable x={x} noneAtAll={d.noneAtAll} rows={[]} head={copy.heads.source} limit={x.limit} of={d.of} onAll={x.showAll} />
+  if (d.rows.length === 0) {
+    // Nothing came from anywhere in this period; the table says so by the section's name, and Google's details, when asked for, still open.
+    return (
+      <>
+        <PeopleTable x={{ ...x, tabName: copy.names.sources[0] }} noneAtAll={d.noneAtAll} rows={[]} head={copy.heads.source} limit={x.limit} of={d.of} onAll={x.showAll} />
+        {x.source === GOOGLE && <GooglePanel x={x} d={g} row={undefined} />}
+      </>
+    )
+  }
   const rows = rowsOf(d, googleSeen(g), answers, quality, x)
   // Google's details open in place, the width of the table, under its own row.
   const at = rows.findIndex((r) => r.key === row)

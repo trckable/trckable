@@ -36,6 +36,8 @@ const sharePath = "/api/v1/share"
 type shareRow struct {
 	sqlite.Share
 	URL string `json:"url,omitempty"`
+	// PeriodLabel is the fixed period in words, as the card says it ("Last 12 months", "Since 4 Feb 2024").
+	PeriodLabel string `json:"period_label,omitempty"`
 }
 
 // shares lists a site's links to an owner, and only to an owner: the address
@@ -52,8 +54,15 @@ func (a *API) shares(w http.ResponseWriter, r *http.Request) {
 	}
 	base := a.shareBase(r, r.PathValue("site"))
 	rows := make([]shareRow, 0, len(list))
+	lang := cardLangOf(widgetLang(r.URL.Query().Get("lang"), r))
+	now := a.Now()
+	if si, err := a.Ctl.SiteInfo(r.Context(), r.PathValue("site")); err == nil {
+		if loc, err := time.LoadLocation(si.Timezone); err == nil {
+			now = now.In(loc)
+		}
+	}
 	for _, sh := range list {
-		row := shareRow{Share: sh}
+		row := shareRow{Share: sh, PeriodLabel: sharePeriodLabel(lang, sh.Period, now)}
 		if sh.Token != "" {
 			row.URL = base + "/s/" + sh.Token
 		}
@@ -99,7 +108,12 @@ func (a *API) createShare(w http.ResponseWriter, r *http.Request) {
 		fail(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	sh, token, err := a.Ctl.CreateShare(r.Context(), r.PathValue("site"), in.Name, in.Password, in.Revenue, in.Notes, in.Live, expires, origins, sqlite.ShareScope{Sections: in.Sections, Period: in.Period})
+	period, err := a.sharePeriodIn(r.Context(), r.PathValue("site"), in.Period)
+	if err != nil {
+		fail(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	sh, token, err := a.Ctl.CreateShare(r.Context(), r.PathValue("site"), in.Name, in.Password, in.Revenue, in.Notes, in.Live, expires, origins, sqlite.ShareScope{Sections: in.Sections, Period: period})
 	if busy(w, err) {
 		return
 	}
@@ -168,11 +182,12 @@ func (a *API) updateShare(w http.ResponseWriter, r *http.Request) {
 		e.Sections = in.Sections
 	}
 	if in.Period != nil {
-		if err := sqlite.CheckSharePeriod(*in.Period); err != nil {
-			fail(w, http.StatusBadRequest, "period can be "+strings.Join(sqlite.SharePeriods, ", "))
+		period, err := a.sharePeriodIn(r.Context(), r.PathValue("site"), *in.Period)
+		if err != nil {
+			fail(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		e.Period = in.Period
+		e.Period = &period
 	}
 	if in.Name != nil {
 		if err := checkShareName(*in.Name); err != nil {

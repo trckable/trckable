@@ -1,0 +1,1 @@
+The share studio shares any period: 7 days, 30 days, 12 months, all time or a custom range of days. The card says its period in words, a link keeps the period it was made with (a link made for 12 months now draws a 12-month card, not a 30-day one), and Post and Copy link work for all time.

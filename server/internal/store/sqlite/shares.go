@@ -89,14 +89,39 @@ func ParseSections(in []string) ([]string, error) {
 	return out, nil
 }
 
-// CheckSharePeriod says whether p is a period a link can be fixed to ("" is
-// not fixed).
+// A link fixed to a stretch of days keeps it as written: "2026-03-01..2026-06-14" for a
+// range, "since:2024-02-04" for all time from its first day (up to today, whenever it is
+// opened). Both are set by the owner when the link is made; nothing a reader sends changes them.
+const sinceMark = "since:"
+
+// CheckSharePeriod says whether p is a period a link can be fixed to: one of
+// SharePeriods, a range or a start ("" is not fixed).
 func CheckSharePeriod(p string) error {
-	if p != "" && !slices.Contains(SharePeriods, p) {
-		return ErrBadScope
+	if p == "" || slices.Contains(SharePeriods, p) {
+		return nil
 	}
-	return nil
+	if _, _, ok := SharePeriodDays(p); ok {
+		return nil
+	}
+	return ErrBadScope
 }
+
+// SharePeriodDays reads a fixed stretch of days: the first and last day of a range, or the first
+// day of a start (last is "" then: it ends today). ok is false for anything else, a preset included.
+func SharePeriodDays(p string) (first, last string, ok bool) {
+	day := func(s string) bool {
+		t, err := time.Parse(time.DateOnly, s)
+		return err == nil && t.Format(time.DateOnly) == s
+	}
+	if s, found := strings.CutPrefix(p, sinceMark); found {
+		return s, "", day(s)
+	}
+	first, last, found := strings.Cut(p, "..")
+	return first, last, found && day(first) && day(last) && first <= last
+}
+
+// SinceDay is the period of a link that shows all time from a first day.
+func SinceDay(first string) string { return sinceMark + first }
 
 // Shows says whether the link shows a section. The headline numbers always
 // show; a name that is no section shows nothing.

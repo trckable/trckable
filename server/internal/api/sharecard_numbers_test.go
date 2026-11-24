@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -170,7 +171,7 @@ func TestCardAllTimeBeginsAtImportedDays(t *testing.T) {
 	if err := json.Unmarshal([]byte(rb), &rep); err != nil {
 		t.Fatal(err)
 	}
-	if rep.Current.KPIs.Visitors != 41 || n.Big != "41" || n.Foot != "Since Jun 2026" {
+	if rep.Current.KPIs.Visitors != 41 || n.Big != "41" || n.Foot != "Since 1 Jun 2026" {
 		t.Errorf("all time: card %s %q, report %d, want 41 since Jun 2026", n.Big, n.Foot, rep.Current.KPIs.Visitors)
 	}
 }
@@ -203,7 +204,7 @@ func TestCardAllTimeMovesWhenOlderDataArrives(t *testing.T) {
 	now := g.advance(0)
 	g.event(t, event.Event{Kind: event.KindPageview, EventID: 1, Pageview: 1, TS: now.Add(-2 * time.Hour).UnixMilli(), Visitor: 1, Path: "/"})
 	g.waitApplied(t, 1)
-	if n := g.cardOf(t, "period=all"); n.Big != "1" || n.Foot != "Since Sep 2026" {
+	if n := g.cardOf(t, "period=all"); n.Big != "1" || !strings.HasPrefix(n.Foot, "Since ") || !strings.HasSuffix(n.Foot, " Sep 2026") {
 		t.Fatalf("before: %s %q", n.Big, n.Foot)
 	}
 	// An import writes its days and tells the report cache, as the import's job does.
@@ -212,13 +213,13 @@ func TestCardAllTimeMovesWhenOlderDataArrives(t *testing.T) {
 		t.Fatal(err)
 	}
 	g.api.PurgeSite(g.site)
-	if n := g.cardOf(t, "period=all"); n.Big != "21" || n.Foot != "Since Mar 2026" {
+	if n := g.cardOf(t, "period=all"); n.Big != "21" || n.Foot != "Since 1 Mar 2026" {
 		t.Errorf("after an import: %s %q, want 21 since Mar 2026", n.Big, n.Foot)
 	}
 	// An older event of the site's own moves it too.
 	g.event(t, event.Event{Kind: event.KindPageview, EventID: 2, Pageview: 2, TS: now.Add(-250 * 24 * time.Hour).UnixMilli(), Visitor: 2, Path: "/"})
 	g.waitApplied(t, 2)
-	if n := g.cardOf(t, "period=all"); n.Foot != "Since Jan 2026" {
+	if n := g.cardOf(t, "period=all"); !strings.HasSuffix(n.Foot, " Jan 2026") {
 		t.Errorf("after an older event: %q", n.Foot)
 	}
 }

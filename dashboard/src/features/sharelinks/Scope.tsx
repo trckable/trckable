@@ -36,6 +36,7 @@ export function Scope({ draft, set }: { draft: Draft; set: (p: Partial<Draft>) =
               {periodName(p)}
             </option>
           ))}
+          {draft.period && !(PERIODS as readonly string[]).includes(draft.period) && <option value={draft.period}>{draft.periodLabel || draft.period}</option>}
         </select>
       </Opt>
     </>
