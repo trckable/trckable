@@ -1,5 +1,6 @@
 // The small pictures a goal is told with, so a row reads at a glance: an icon for the kind of goal, a mark for who sent them, the
 // country's flag and the device. Each carries its words as a title and a label. One map of kinds, with a default.
+import { createElement } from 'react'
 import { ClipboardList, Download, ExternalLink, FileText, Monitor, MousePointerClick, Play, ScanLine, ShoppingCart, Smartphone, Tablet, Target, UserPlus, type LucideIcon } from 'lucide-react'
 import { SourceMark } from '../../components/visitor/SourceMark'
 import { deviceKey, deviceName, type DeviceKey } from '../../lib/deviceName'
@@ -28,10 +29,9 @@ export function goalIcon(g: { goal: string; page?: boolean }): LucideIcon {
 
 /** The icon of a goal's kind, in a soft square. */
 export function GoalGlyph({ g, size = 14 }: { g: { goal: string; page?: boolean }; size?: number }) {
-  const Icon = goalIcon(g)
   return (
     <span className="gs-glyph" aria-hidden="true">
-      <Icon size={size} />
+      {createElement(goalIcon(g), { size })}
     </span>
   )
 }
