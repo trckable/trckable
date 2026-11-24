@@ -2,10 +2,8 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { Rail } from './Rail'
 import { railOpen, railPressed, railToggled } from './railOpen'
-import type { Connected } from './types'
 
-const conn = { rev: true } as unknown as Connected
-const html = (section: string, tab: string) => renderToStaticMarkup(<Rail section={section as never} tab={tab as never} conn={conn} onPick={() => {}} onTab={() => {}} />)
+const html = (section: string, tab: string) => renderToStaticMarkup(<Rail section={section as never} tab={tab as never} onPick={() => {}} onTab={() => {}} />)
 const state = (h: string) => /data-xkids="goals"([^>]*)>/.exec(h)?.[1] ?? ''
 
 describe('the folded entries of the section list', () => {

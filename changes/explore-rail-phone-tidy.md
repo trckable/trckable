@@ -1,0 +1,1 @@
+- Explore: the menu's Goals & sales row no longer shows a Connect mark under its arrow; on phones the date button no longer adds the update time.

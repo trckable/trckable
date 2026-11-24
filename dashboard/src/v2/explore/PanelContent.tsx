@@ -197,14 +197,14 @@ export default function PanelContent(p: ContentProps) {
       </div>
       {drawer && (
         <RailDrawer onClose={() => setDrawer(false)}>
-          <Rail section={section} tab={tab} conn={meta.connected} onPick={(sec) => { setDrawer(false); act.section(sec) }} onTab={(t) => { setDrawer(false); act.tab(t) }} />
+          <Rail section={section} tab={tab} onPick={(sec) => { setDrawer(false); act.section(sec) }} onTab={(t) => { setDrawer(false); act.tab(t) }} />
         </RailDrawer>
       )}
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- one place for the keys of every menu and list below */}
       <div id="xpBody" ref={body} onClick={away} onKeyDown={(e: KeyboardEvent) => keys.onKey(e)}>
         {p.full ? (
           <div className="xlay">
-            <Rail section={section} tab={tab} conn={meta.connected} onPick={act.section} onTab={act.tab} />
+            <Rail section={section} tab={tab} onPick={act.section} onTab={act.tab} />
             <div className="xmain">{content}</div>
           </div>
         ) : (

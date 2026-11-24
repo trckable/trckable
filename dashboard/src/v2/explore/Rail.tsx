@@ -7,9 +7,9 @@ import { copy } from './copy'
 import { listedSections, listedTabs, pageOf, TABS } from './sections'
 import { railOpen, railPressed, railToggled, type RailForce } from './railOpen'
 import { TAB_ICONS } from './tabIcons'
-import type { Connected, Section, Tab } from './types'
+import type { Section, Tab } from './types'
 
-export function Rail({ section, tab, conn, onPick, onTab }: { section: Section; tab: Tab; conn: Connected; onPick: (s: Section) => void; onTab: (t: Tab) => void }) {
+export function Rail({ section, tab, onPick, onTab }: { section: Section; tab: Tab; onPick: (s: Section) => void; onTab: (t: Tab) => void }) {
   // Moving to another section hands the folds back to the page you are on.
   const [mine, setMine] = useState<{ at: Section; force: RailForce }>({ at: section, force: {} })
   const force = mine.at === section ? mine.force : {}
@@ -26,7 +26,6 @@ export function Rail({ section, tab, conn, onPick, onTab }: { section: Section; 
               <button type="button" data-xsec={k} className={`xri${on ? ' on' : ''}`} aria-current={on ? 'page' : undefined} title={copy.names[k][0]} onClick={() => { setForce((f) => railPressed(f, k)); if (subs.length > 0) onTab(TABS[k][0]); else onPick(k) }}>
                 <XIco name={k} />
                 <span className="nm">{copy.names[k][0]}</span>
-                {k === 'goals' && !conn.rev && <span className="xtag">{copy.connectTag}</span>}
               </button>
               {subs.length > 0 && (
                 <button type="button" className="xchev" data-open={open ? '' : undefined} aria-expanded={open} aria-controls={`xkids-${k}`} aria-label={copy.railToggle} onClick={() => setForce((f) => railToggled(f, k))}>

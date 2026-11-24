@@ -98,6 +98,7 @@
 .mk .pill .pl-main .vs{padding-block:1px}
 .mk .pill .pl-note{font-size:11px;font-weight:500;color:var(--mk-muted)}
 .mk .pill .pl-note .xupdated{margin:0;font-size:inherit}
+@media (--handheld){.mk .pill .pl-note{display:none}.mk .pill:has(.pl-note){height:36px}}
 .mk .xperiod-note{margin:0 0 var(--mk-s3);font-size:13px;color:var(--mk-muted)}
 .mk .xp.xpage .xsub{display:flex;gap:var(--mk-s4);width:100%;padding:0;border:0;border-radius:0;background:linear-gradient(90deg,var(--mk-line),transparent) bottom/100% 1px no-repeat}
 .mk .xp.xpage .xsub button{flex:none!important;width:auto;height:36px;padding:0 2px;border-radius:0;background:none;border-bottom:2px solid transparent;transition:color .15s ease,border-color .15s ease}
@@ -521,7 +522,6 @@ body:has(.mk.mk-body) .app-footer>span{display:none}
 /* Sales folds Payments and Customers under it: open while you are in them, a chevron opens or closes it anywhere else. */
 .mk .xrail .xrg{position:relative;display:flex}
 .mk .xrail .xrg .xri{padding-inline-end:36px}
-.mk .xrail .xri .xtag{padding:1px 5px;font-size:10px}
 .mk .xrail .xchev{all:unset;box-sizing:border-box;position:absolute;inset-inline-end:4px;top:50%;display:grid;place-items:center;width:28px;height:28px;margin-top:-14px;border-radius:8px;cursor:pointer;color:var(--mk-muted);transition:background .15s ease,color .15s ease}
 .mk .xrail .xchev:hover,.mk .xrail .xchev:focus-visible{background:var(--mk-band);color:var(--mk-text)}
 .mk .xrail .xchev svg{transition:transform .15s ease}
