@@ -956,7 +956,6 @@ body:has(#xscrim.on) .mk .xscrim:has(+ .cd){background:color-mix(in srgb,var(--m
 .mk .xmi.back{color:var(--mk-muted)}
 .mk .xtag{flex:none;font-size:11px;font-weight:600;color:var(--mk-lime);background:var(--mk-limeD);border-radius:999px;padding:1px 7px;margin-left:auto}
 /* In the section list the tag is a dot (its words stay for a screen reader): the name beside it shows in full. */
-.mk .xrail .xri .xtag{font-size:0;padding:0;width:8px;height:8px;min-width:8px}
 .mk .xsep{height:1px;background:var(--mk-line);margin:var(--mk-s2) 0}
 .mk .xnone{padding:var(--mk-s2) var(--mk-s3);color:var(--mk-muted);font-size:13px}
 .mk .xchips{display:flex;flex-wrap:wrap;gap:var(--mk-s2);align-items:center;margin:0 0 var(--mk-s3)}
