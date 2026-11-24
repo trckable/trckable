@@ -290,7 +290,9 @@ li.gs-empty {
     margin-inline-start: 0;
   }
 }
-.gp-back {
+/* Beside the quiet button: the Explore sheet's .mk button reset outranks a bare class. */
+.gp-back,
+.mk .gp-back {
   display: inline-flex;
   align-items: center;
   gap: 4px;
