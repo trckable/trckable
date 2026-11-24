@@ -348,7 +348,7 @@ export function answer(c: Ctx, method: string, path: string, sp: URLSearchParams
       if (!g) return { status: 404, body: { error: 'no such goal' } }
       const at = Math.floor(Date.now() / 1000)
       const events = Array.from({ length: Math.min(g.visitors, 6) }, (_, k) => ({ at: at - k * 3600, path: site.pages[k % site.pages.length][0], source: k % 2 ? '' : 'google.com', country: 'DE', device: 'mobile', os: 'iOS' }))
-      return ok({ goal: { goal, name: g.label ?? goal, count: g.visitors, out: false, usual: Math.max(1, Math.round(g.visitors / 3)), spark: [] }, events, sources: [{ source: 'google.com', count: Math.ceil(g.visitors / 2) }], days: 1 })
+      return ok({ goal: { goal, name: g.label ?? goal, count: g.visitors, out: false, usual: Math.max(1, Math.round(g.visitors / 3)), spark: [] }, events, sources: [{ source: 'google.com', count: Math.ceil(g.visitors / 2) }], paths: [{ source: site.pages[0][0], count: Math.ceil(g.visitors / 2) }], days: 1 })
     }
     case 'report/vitals': {
       const q = parseQuery(sp)

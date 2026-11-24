@@ -104,6 +104,8 @@ export interface GoalPage {
   goal: GoalRow
   events: GoalWho[]
   sources: { source: string; count: number }[]
+  /** The pages it was reached on, most first. */
+  paths: { source: string; count: number }[]
   days: number
   /** This person hears of the goal in the bell only when it stands out. */
   quiet?: boolean

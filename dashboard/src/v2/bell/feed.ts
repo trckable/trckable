@@ -15,6 +15,8 @@ export interface FeedGoal {
   usual?: number
   /** This person hears of the goal only when it stands out. */
   quiet?: boolean
+  /** Reached by seeing a page, not by an event the site sends. */
+  page?: boolean
 }
 
 export interface FeedRow {

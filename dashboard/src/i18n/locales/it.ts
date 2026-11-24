@@ -3678,6 +3678,8 @@ export default {
   'goalstand.whyFirst': 'Prima volta: questo obiettivo non era mai stato raggiunto.',
   'goalstand.whyTimes': (n: string, usual: string) => `${n}× un giorno normale (un giorno normale: ${usual}).`,
   'goalstand.each': 'Ogni volta che è successo',
+  'goalstand.cameFrom': 'Da dove sono arrivati',
+  'goalstand.onPage': 'Sulla pagina',
   'goalstand.noTimes': 'Niente da elencare.',
   'goalstand.direct': 'Diretto',
   'goalstand.more': (n: string) => `${n} in più in questo periodo`,

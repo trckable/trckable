@@ -48,6 +48,8 @@ export const stand = defineCopy('goalstand', {
   whyFirst: 'First time ever: this goal had not been reached before.',
   whyTimes: (n: string, usual: string) => `${n}× a usual day (a usual day is ${usual}).`,
   each: 'Each time it happened',
+  cameFrom: 'Came from',
+  onPage: 'On page',
   noTimes: 'Nothing to list.',
   direct: 'Direct',
   more: (n: string) => `${n} more in this period`,

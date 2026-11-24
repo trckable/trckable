@@ -28,6 +28,7 @@ test('the goals card tells what stands out, a goal’s times, and leads to the g
     goal: { goal: goal.goal, name: goal.name, count: goal.count, out: !!goal.out, why: goal.why, factor: goal.factor, usual: goal.usual, spark: [goal.count] },
     events: [{ at: goal.last, path: '/planner', source: 'google.com', country: 'DE', device: 'mobile', os: 'iOS' }],
     sources: [{ source: 'google.com', count: goal.count }],
+    paths: [{ source: '/planner', count: goal.count }],
     days: 1,
     quiet: false,
   })

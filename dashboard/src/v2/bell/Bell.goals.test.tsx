@@ -28,6 +28,7 @@ const goalPage = (g: FeedGoal) => ({
   goal: { goal: g.goal, name: g.name ?? g.goal, count: g.count, out: !!g.out, why: g.why, factor: g.factor, usual: g.usual ?? 0, spark: [] },
   events: [{ at: now - 600, path: '/planner', source: 'google.com', country: 'DE', device: 'mobile', os: 'iOS' }],
   sources: [{ source: 'google.com', count: g.count }],
+  paths: [{ source: '/planner', count: g.count }],
   days: 1,
   quiet: false,
 })

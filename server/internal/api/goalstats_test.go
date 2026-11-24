@@ -1,11 +1,13 @@
 package api
 
 import (
+	"context"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/trckable/trckable/server/internal/event"
+	"github.com/trckable/trckable/server/internal/store/sqlite"
 )
 
 // goalWeek puts a site's goals in the shape the rule is told about: "plan" is reached twice a day for ten days and seven
@@ -147,6 +149,9 @@ func TestGoalListAndPage(t *testing.T) {
 	if s := one["sources"].([]any); len(s) != 1 || s[0].(map[string]any)["source"] != "google.com" {
 		t.Fatalf("mostly from: %v", s)
 	}
+	if s := one["paths"].([]any); len(s) != 1 || s[0].(map[string]any)["source"] != "/planner" || s[0].(map[string]any)["count"] != 7.0 {
+		t.Fatalf("on page: %v", s)
+	}
 	// A week: seven days of the ten-day history are in it, the days before it are the usual.
 	_, week := do(t, owner, "GET", base+"goals?from=2026-09-16&to=2026-09-22", "")
 	if p := goalOf(week["goals"].([]any), "plan"); p["count"] != 19.0 || p["out"] == true {
@@ -186,5 +191,38 @@ func TestGoalListIsNarrowedByFilters(t *testing.T) {
 	_, one := do(t, owner, "GET", base+"goal?goal=plan&from=2026-09-22&to=2026-09-22&f=country:AT", "")
 	if ev := one["events"].([]any); len(ev) != 4 {
 		t.Fatalf("each time, of those visits: %v", ev)
+	}
+}
+
+// A page goal counts in the bell like any other goal: the same rule says when it stands out.
+func TestBellPageGoalStandsOut(t *testing.T) {
+	g := newRig(t)
+	owner := client()
+	g.setup(t, owner)
+	cfg, _ := g.ctl.SiteConfig(context.Background(), g.site)
+	cfg.PageGoals = []sqlite.Group{{Name: "Saw planner", Path: "/planner"}}
+	if err := g.ctl.SetSiteConfig(context.Background(), g.site, cfg); err != nil {
+		t.Fatal(err)
+	}
+	id := uint64(9800)
+	visit := func(at time.Time, n int) {
+		for i := 0; i < n; i++ {
+			id++
+			g.event(t, event.Event{Kind: event.KindPageview, EventID: id, TS: at.Add(time.Duration(i) * time.Minute).UnixMilli(), Visitor: id, Path: "/planner"})
+		}
+	}
+	for d := 1; d <= 10; d++ {
+		visit(g.now.AddDate(0, 0, -d).Add(-3*time.Hour), 2)
+	}
+	visit(g.now.Add(-3*time.Hour), 8)
+	g.waitApplied(t, 28)
+	var plan map[string]any
+	for _, r := range feedOf(t, g, owner) {
+		if r["kind"] == "goal" && r["day"] == "2026-09-22" {
+			plan = goalOf(r["goals"].([]any), "Saw planner")
+		}
+	}
+	if plan == nil || plan["page"] != true || plan["count"] != 8.0 || plan["out"] != true || plan["why"] != "times" || plan["factor"] != 4.0 {
+		t.Fatalf("a page goal is told in the card with the one rule: %v", plan)
 	}
 }

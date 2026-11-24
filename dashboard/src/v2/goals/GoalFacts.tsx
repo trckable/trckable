@@ -33,7 +33,22 @@ function whenOf(w: GoalWho, zone: string | undefined, withDay: boolean): string 
 const place = (w: GoalWho): string => [w.country ? countryName(w.country) : '', w.device ? deviceName({ device: w.device, os: w.os }) : ''].filter(Boolean).join(' · ')
 
 /** The goal's numbers, why, and the times; `label` names the count ("Today" or "Reached"), `withDay` puts the day before each time. */
-export function GoalFacts({ page, zone, label, withDay }: { page: GoalPage; zone?: string; label: string; withDay: boolean }) {
+function Top({ title, rows, words }: { title: string; rows: { source: string; count: number }[]; words: (s: string) => string }) {
+  return (
+    <section className="gs-top">
+      <h3 className="gs-h">{title}</h3>
+      {rows.map((r) => (
+        <div key={r.source} className="gs-top-row">
+          <span className="gs-cell" title={words(r.source)}>{words(r.source)}</span>
+          <span className="gs-dim">{fmtInt(r.count)}</span>
+        </div>
+      ))}
+    </section>
+  )
+}
+
+/** `wide`: the goal's own page, with who sent them and the pages beside the times. */
+export function GoalFacts({ page, zone, label, withDay, wide }: { page: GoalPage; zone?: string; label: string; withDay: boolean; wide?: boolean }) {
   const g = page.goal
   const top = page.sources[0]
   const tiles: SumItem[] = [
@@ -47,6 +62,8 @@ export function GoalFacts({ page, zone, label, withDay }: { page: GoalPage; zone
         <SummaryCards items={tiles} />
       </div>
       <p className={`gs-why${g.out ? ' out' : ''}`}>{whyOf(g)}</p>
+      <div className={wide ? 'gs-grid' : undefined}>
+      <div className="gs-times-box">
       <h3 className="gs-h">{stand.each}</h3>
       {page.events.length === 0 ? (
         <p className="gs-empty">{stand.noTimes}</p>
@@ -63,6 +80,10 @@ export function GoalFacts({ page, zone, label, withDay }: { page: GoalPage; zone
         </ol>
       )}
       {g.count > page.events.length && <p className="gs-empty">{stand.more(fmtInt(g.count - page.events.length))}</p>}
+      </div>
+      {wide && page.sources.length > 0 && <Top title={stand.cameFrom} rows={page.sources} words={sourceWords} />}
+      {wide && page.paths.length > 0 && <Top title={stand.onPage} rows={page.paths} words={(s) => s || '/'} />}
+      </div>
     </div>
   )
 }

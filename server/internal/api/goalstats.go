@@ -20,7 +20,7 @@ import (
 const (
 	goalEventsMax  = 200
 	goalSparkDays  = 30
-	goalSourcesTop = 3
+	goalSourcesTop = 5
 )
 
 // goalRow is one goal over the period.
@@ -213,6 +213,7 @@ func (a *API) goalOne(w http.ResponseWriter, r *http.Request) {
 		who[i] = goalWho{At: e.At, Path: e.Path, Source: e.Source, Country: e.Country, Device: e.Device, OS: e.OS}
 	}
 	sources, _ := q.GoalSources(r.Context(), p, goal, pages, goalSourcesTop)
+	paths, _ := q.GoalPaths(r.Context(), p, goal, pages, goalSourcesTop)
 	type src struct {
 		Source string `json:"source"`
 		Count  int64  `json:"count"`
@@ -221,8 +222,12 @@ func (a *API) goalOne(w http.ResponseWriter, r *http.Request) {
 	for i, s := range sources {
 		top[i] = src{Source: s.Source, Count: s.Count}
 	}
+	onPage := make([]src, len(paths))
+	for i, s := range paths {
+		onPage[i] = src{Source: s.Source, Count: s.Count}
+	}
 	_, _, days := goalDates(p.From, p.To, locOf(p.TZ))
-	out := map[string]any{"goal": row, "events": who, "sources": top, "days": days}
+	out := map[string]any{"goal": row, "events": who, "sources": top, "paths": onPage, "days": days}
 	if pr := principalOf(r); pr.user != nil {
 		if quiet, err := a.Ctl.GoalQuiet(r.Context(), pr.user.ID); err == nil {
 			out["quiet"] = quiet[sqlite.QuietKey(p.Site, goal)]

@@ -17,6 +17,7 @@ type GoalDay struct {
 	Goal  string
 	Day   string // 2026-11-24, in the site's zone
 	Count int64
+	Last  int64 // the latest of them, unix seconds
 }
 
 // goalDayExpr is the site's calendar day of an event, as text.
@@ -90,9 +91,9 @@ func (q Q) GoalDays(ctx context.Context, p Params, from time.Time, pages []Group
 	site, to := p.Site, p.To
 	day := goalDayExpr(tz)
 	where := `site_id = ? AND ts >= ? AND ts < ?` + and
-	text := with + `SELECT ` + day + ` AS d, goal AS g, count(*) AS n FROM events WHERE ` + where + ` AND kind = 2 AND goal IS NOT NULL GROUP BY 1, 2`
+	text := with + `SELECT ` + day + ` AS d, goal AS g, count(*) AS n, epoch(max(ts))::BIGINT AS l FROM events WHERE ` + where + ` AND kind = 2 AND goal IS NOT NULL GROUP BY 1, 2`
 	args := append(cargs, site, from, to)
-	for _, part := range pageGoalParts(pages, day+` AS d, {goal} AS g, count(DISTINCT session_id) AS n`, where, ` GROUP BY 1`) {
+	for _, part := range pageGoalParts(pages, day+` AS d, {goal} AS g, count(DISTINCT session_id) AS n, epoch(max(ts))::BIGINT AS l`, where, ` GROUP BY 1`) {
 		text += " UNION ALL " + part
 		args = append(args, site, from, to)
 	}
@@ -105,7 +106,7 @@ func (q Q) GoalDays(ctx context.Context, p Params, from time.Time, pages []Group
 	var out []GoalDay
 	for rows.Next() {
 		var g GoalDay
-		if err := rows.Scan(&g.Day, &g.Goal, &g.Count); err != nil {
+		if err := rows.Scan(&g.Day, &g.Goal, &g.Count, &g.Last); err != nil {
 			return nil, err
 		}
 		out = append(out, g)
@@ -208,6 +209,15 @@ type GoalSource struct {
 
 // GoalSources ranks who sent the visitors over [p.From, p.To): of one goal, or (goal "") of every goal the site sends.
 func (q Q) GoalSources(ctx context.Context, p Params, goal string, pages []Group, limit int) ([]GoalSource, error) {
+	return q.goalTop(ctx, p, goal, pages, limit, sourceExpr)
+}
+
+// GoalPaths ranks the pages the goal was reached on (the page a visit was on when it counted), as GoalSources ranks who sent them.
+func (q Q) GoalPaths(ctx context.Context, p Params, goal string, pages []Group, limit int) ([]GoalSource, error) {
+	return q.goalTop(ctx, p, goal, pages, limit, `coalesce(path, '')`)
+}
+
+func (q Q) goalTop(ctx context.Context, p Params, goal string, pages []Group, limit int, expr string) ([]GoalSource, error) {
 	run, with, scopeArgs, and, done, err := q.goalScope(ctx, p, p.From)
 	if err != nil {
 		return nil, err
@@ -219,7 +229,7 @@ func (q Q) GoalSources(ctx context.Context, p Params, goal string, pages []Group
 	}
 	args := append(append(scopeArgs, p.Site, p.From, p.To), cargs...)
 	//nolint:gosec // the page rule is quoted by lit; every value is bound
-	rows, err := run.QueryContext(ctx, with+`SELECT `+sourceExpr+` AS s, count(*) AS n FROM events
+	rows, err := run.QueryContext(ctx, with+`SELECT `+expr+` AS s, count(*) AS n FROM events
 		WHERE site_id = ? AND ts >= ? AND ts < ?`+and+` AND `+cond+` GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT ?`, append(args, limit)...)
 	if err != nil {
 		return nil, fmt.Errorf("goal sources: %w", err)

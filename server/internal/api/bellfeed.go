@@ -82,6 +82,8 @@ type bellGoal struct {
 	standsout.Verdict
 	// Quiet: this person wants to hear of the goal only when it stands out.
 	Quiet bool `json:"quiet,omitempty"`
+	// Page: reached by seeing a page, not by an event the site sends.
+	Page bool `json:"page,omitempty"`
 }
 
 // bellCache keeps each person's complete list for bellKeep, and shares one build among the requests that ask for it at once.
@@ -428,7 +430,8 @@ func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from in
 		// A site that does not tell visitors apart (or whose setting cannot be read) names none.
 		cfg, cfgErr := a.Ctl.SiteConfig(ctx, s.ID)
 		named := cfgErr == nil && !cfg.ConsentFree
-		hist, siteFirst, firsts, herr := a.goalHistory(ctx, q, s.ID, p.TZ, from, now)
+		pages := pageGoals(ctx, a, s.ID)
+		hist, lasts, siteFirst, firsts, herr := a.goalHistory(ctx, q, s.ID, p.TZ, from, now, pages)
 		if herr != nil {
 			ok = false
 		}
@@ -491,6 +494,36 @@ func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from in
 					x.seen, x.who = g.Last, g.Visitor
 				}
 			}
+			// A page goal counts like any other: the days it was reached, each at the time of the latest.
+			isPage := map[string]bool{}
+			for _, g := range pages {
+				isPage[strings.TrimSpace(g.Name)] = true
+			}
+			if herr == nil {
+				bellFrom := time.Unix(from, 0).In(loc).Format(time.DateOnly)
+				for goal, byDay := range hist {
+					if !isPage[goal] {
+						continue
+					}
+					for d, n := range byDay {
+						if n == 0 || d < bellFrom {
+							continue
+						}
+						x := days[d]
+						if x == nil {
+							x = &day{}
+							days[d] = x
+							order = append(order, d)
+						}
+						last := lasts[goal][d]
+						x.goals = append(x.goals, bellGoal{Goal: goal, Name: goal, Count: n, Last: last, Page: true})
+						if last >= x.last {
+							x.last, x.key, x.seen, x.who = last, goal, 0, 0
+						}
+					}
+				}
+				sort.Strings(order)
+			}
 			for _, d := range order {
 				x := days[d]
 				if x.signup != nil {
@@ -534,20 +567,21 @@ func (a *API) bellSite(r *http.Request, s sqlite.SiteRow, now time.Time, from in
 
 // goalHistory reads what the rule needs of a site's goals for the bell's week: each goal's count on each day (the week and the
 // window before it), when each was first reached, and when the site's first event was.
-func (a *API) goalHistory(ctx context.Context, q *query.Q, site, tz string, from int64, now time.Time) (map[string]map[string]int64, int64, map[string]int64, error) {
+func (a *API) goalHistory(ctx context.Context, q *query.Q, site, tz string, from int64, now time.Time, pages []query.Group) (map[string]map[string]int64, map[string]map[string]int64, int64, map[string]int64, error) {
 	loc := locOf(tz)
 	since := time.Unix(from, 0).In(loc).AddDate(0, 0, -standsout.Window-1)
-	rows, err := q.GoalDays(ctx, query.Params{Site: site, TZ: tz, To: now.UTC()}, time.Date(since.Year(), since.Month(), since.Day(), 0, 0, 0, 0, loc).UTC(), nil)
+	rows, err := q.GoalDays(ctx, query.Params{Site: site, TZ: tz, To: now.UTC()}, time.Date(since.Year(), since.Month(), since.Day(), 0, 0, 0, 0, loc).UTC(), pages)
 	if err != nil {
-		return nil, 0, nil, err
+		return nil, nil, 0, nil, err
 	}
-	days := map[string]map[string]int64{}
+	days, lasts := map[string]map[string]int64{}, map[string]map[string]int64{}
 	for _, d := range rows {
 		if days[d.Goal] == nil {
-			days[d.Goal] = map[string]int64{}
+			days[d.Goal], lasts[d.Goal] = map[string]int64{}, map[string]int64{}
 		}
 		days[d.Goal][d.Day] += d.Count
+		lasts[d.Goal][d.Day] = max(lasts[d.Goal][d.Day], d.Last)
 	}
-	firsts, siteFirst, err := q.GoalFirsts(ctx, site, nil)
-	return days, siteFirst, firsts, err
+	firsts, siteFirst, err := q.GoalFirsts(ctx, site, pages)
+	return days, lasts, siteFirst, firsts, err
 }

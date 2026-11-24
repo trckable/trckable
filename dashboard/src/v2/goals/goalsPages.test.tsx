@@ -105,6 +105,7 @@ describe('a goal’s page', () => {
       { at: 1_794_990_000, path: '/', source: '', country: 'AT', device: 'desktop', os: 'macOS' },
     ],
     sources: [{ source: 'google.com', count: 4 }],
+    paths: [{ source: '/planner', count: 3 }, { source: '/', count: 1 }],
     days: 7,
     quiet: false,
   }
@@ -120,6 +121,9 @@ describe('a goal’s page', () => {
     expect(host.querySelectorAll('.gs-time')[0].textContent).toContain('/planner')
     expect(host.querySelectorAll('.gs-time')[0].textContent).toContain('Germany')
     expect(host.querySelectorAll('.gs-time')[1].textContent).toContain('Direct')
+    // Beside the times: who sent them, and the pages.
+    expect([...host.querySelectorAll('.gs-top .gs-h')].map((h) => h.textContent)).toEqual(['Came from', 'On page'])
+    expect([...host.querySelectorAll('.gs-top')[1].querySelectorAll('.gs-top-row')].map((r) => r.textContent)).toEqual(['/planner3', '/1'])
   })
 
   it('says As usual. for a goal that does not stand out', async () => {

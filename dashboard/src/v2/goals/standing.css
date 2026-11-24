@@ -66,6 +66,39 @@
   color: var(--text-3);
   font-size: 13px;
 }
+/* The goal's own page: the times, then who sent them and the pages, side by side. */
+.gs-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.gs-times-box,
+.gs-top {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--mk-line, var(--border));
+  border-radius: 14px;
+}
+.gs-times-box .gs-h,
+.gs-top .gs-h {
+  margin: 0 0 4px;
+}
+.gs-top-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  font-size: 13px;
+}
+@media (--xs) {
+  .gs-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 /* A phone: the time and page on one line, the source and place under them. */
 @media (--xs) {
   .gs-time {
